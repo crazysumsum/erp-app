@@ -19,10 +19,10 @@
 | --- | --- | --- |
 | `framework/` | 框架本身。開發業務功能時不會改這裡。 | — |
 | `services/` | **公用技術服務**：資料庫、日誌、排程、限流、認證策略、檔案型別。跟業務無關，換一個專案照樣適用。 | 框架自動發現並注入 |
-| `module/` | **業務模組**：只在這個 ERP 有意義的邏輯，例如 `module/user/`（帳密驗證、角色權限）。 | Handler 直接 `import` 再自己建 |
+| `modules/` | **業務模組**：只在這個 ERP 有意義的邏輯，例如 `modules/user/`（帳密驗證、角色權限）。 | Handler 直接 `import` 再自己建 |
 | `handlers/` | 一支 API 一個檔案。 | 框架自動發現並註冊路由 |
 
-判準只有一句：**這段程式碼換一個專案還適不適用？**適用就是 `services/`，不適用就是 `module/`。
+判準只有一句：**這段程式碼換一個專案還適不適用？**適用就是 `services/`，不適用就是 `modules/`。
 
 ### 為什麼業務模組不走自動發現
 
@@ -32,7 +32,7 @@
 
 ```js
 // server/src/handlers/loginHandler.js
-import { UserService } from "../module/user/UserService.js";
+import { UserService } from "../modules/user/UserService.js";
 
 constructor(services = {}) {
   super(services);

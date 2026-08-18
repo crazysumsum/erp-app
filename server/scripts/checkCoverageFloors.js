@@ -38,10 +38,10 @@ const FLOORS = {
   "src/services/auth/JwtService.js": { lines: 95, branches: 95 },
   // 密碼雜湊的每一種壞法都是安靜的：鹽沒隨機、比較不是定時、參數解析錯掉，
   // 症狀全部都是「登入照常運作」。
-  "src/module/user/passwordHash.js": { lines: 95, branches: 95, functions: 95 },
+  "src/modules/user/passwordHash.js": { lines: 95, branches: 95, functions: 95 },
   // 帳號鎖定、停用檢查、失敗次數歸零。這裡少一條分支就是一個能被無限次嘗試的
   // 帳號，或一個明明停用了還登得進去的帳號，而兩者都不會有錯誤浮現。
-  "src/module/user/UserService.js": { lines: 95, branches: 92, functions: 95 },
+  "src/modules/user/UserService.js": { lines: 95, branches: 92, functions: 95 },
   // 登入是唯一會簽出憑證的地方：漏簽版本號的 token 撤銷不掉，回應多帶一個
   // 欄位就是一次資料外洩。
   "src/handlers/loginHandler.js": { lines: 95, branches: 90, functions: 95 },

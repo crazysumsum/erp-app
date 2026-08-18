@@ -1,6 +1,6 @@
 import { ApplicationError } from "../framework/errors/ApplicationError.js";
 import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
-import { UserService } from "../module/user/UserService.js";
+import { UserService } from "../modules/user/UserService.js";
 
 // 使用者物件的形狀，登入與 /me 共用。前端的 session store 直接吃這個。
 export const USER_SCHEMA = Object.freeze({

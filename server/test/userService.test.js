@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AUTH_FAILURE, UserService } from "../src/module/user/UserService.js";
-import { hashPassword } from "../src/module/user/passwordHash.js";
+import { AUTH_FAILURE, UserService } from "../src/modules/user/UserService.js";
+import { hashPassword } from "../src/modules/user/passwordHash.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 
 // 登入的每一種錯法都不會有錯誤訊息浮現：鎖定沒生效、失敗次數沒歸零、停用的

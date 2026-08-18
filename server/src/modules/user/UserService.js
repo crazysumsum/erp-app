@@ -3,7 +3,7 @@ import { hashPassword, verifyPassword } from "./passwordHash.js";
 /**
  * 使用者查詢與登入憑證驗證。
  *
- * 這是一個**業務模組**，不是框架的 service：它住在 src/module/ 而不是
+ * 這是一個**業務模組**，不是框架的 service：它住在 src/modules/ 而不是
  * src/services/，不宣告 static service metadata，也不參與 service container 的
  * 自動發現。需要它的 handler 直接 import 再自己建一個，把它要用的技術服務
  * （資料庫、日誌、時間）當參數傳進來。

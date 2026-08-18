@@ -26,7 +26,7 @@ Node.js + MySQL + Vue 3 開發環境。本專案的 `server/` 是一個自製的
 
 框架的核心設計原則：
 
-- **只有兩種自動發現機制**：`server/src/handlers/` 底下的 Handler、`server/src/services/` 底下的 Service（含放在 Service 目錄底下 `jobs/` 子目錄的 Job）。新增一個檔案並宣告好 `static` metadata，框架啟動時就會自動找到並註冊，**不需要修改任何中央 registry、router 或 factory**。業務邏輯模組（`server/src/module/`）刻意不在此列——見本專案 README 的「程式碼放哪裡」。
+- **只有兩種自動發現機制**：`server/src/handlers/` 底下的 Handler、`server/src/services/` 底下的 Service（含放在 Service 目錄底下 `jobs/` 子目錄的 Job）。新增一個檔案並宣告好 `static` metadata，框架啟動時就會自動找到並註冊，**不需要修改任何中央 registry、router 或 factory**。業務邏輯模組（`server/src/modules/`）刻意不在此列——見本專案 README 的「程式碼放哪裡」。
 - **依賴宣告是強制的，不是參考用的**。Service 透過 `static service.dependencies` 宣告它要用的其他 Service，Service Container 依照宣告的依賴圖決定初始化順序、關機順序，並在啟動時就擋下循環依賴、缺少依賴等問題——而不是等到執行期才炸開。
 - **設定驗證在啟動時完成，而不是執行期才發現**。所有全域設定（application、api、database、jwt、logging、security、request 生命週期）在應用程式建立時一次驗證，錯誤的設定會讓應用程式直接無法啟動，不會帶著壞掉的設定繼續跑。
 - **安全預設值優先**：API 預設要求 JWT 身份認證與 `authenticated` 授權策略；上傳、下載、Idempotency 都預設關閉，需要的 API 明確 opt-in；`JWT_SECRET` 沒有內建預設值,未設定就拒絕啟動。
@@ -193,7 +193,7 @@ export class CreateOrderHandler extends BaseRequestHandler {
 
 Service 放在 `server/src/services/` 底下任意子目錄，同樣是自動發現，不需要註冊。
 
-> **這個目錄只放公用技術服務**——資料庫、日誌、排程、限流、認證策略這類換一個專案照樣適用的東西。業務邏輯放 `server/src/module/`，不走自動發現，由 Handler 直接 import。見本專案 README 的「程式碼放哪裡」。
+> **這個目錄只放公用技術服務**——資料庫、日誌、排程、限流、認證策略這類換一個專案照樣適用的東西。業務邏輯放 `server/src/modules/`，不走自動發現，由 Handler 直接 import。見本專案 README 的「程式碼放哪裡」。
 
 ```js
 // server/src/services/audit/AuditTrailService.js

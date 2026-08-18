@@ -3,7 +3,7 @@ import test from "node:test";
 import { LoginHandler } from "../src/handlers/loginHandler.js";
 import { LogoutHandler } from "../src/handlers/logoutHandler.js";
 import { MeHandler } from "../src/handlers/meHandler.js";
-import { AUTH_FAILURE } from "../src/module/user/UserService.js";
+import { AUTH_FAILURE } from "../src/modules/user/UserService.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 
 // 這幾支 handler 決定「誰進得來、進來之後算是誰」。它們的錯法都不會有錯誤訊息

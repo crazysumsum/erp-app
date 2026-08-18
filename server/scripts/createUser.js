@@ -13,7 +13,7 @@
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { normalizeDatabaseConfig } from "../src/framework/configuration/normalizeDatabaseConfig.js";
-import { hashPassword } from "../src/module/user/passwordHash.js";
+import { hashPassword } from "../src/modules/user/passwordHash.js";
 
 // 與 migrate.js 相同的載入順序：config/database.js 在載入當下就讀
 // process.env.DB_*，所以必須先 dotenv.config() 再動態 import 它。
