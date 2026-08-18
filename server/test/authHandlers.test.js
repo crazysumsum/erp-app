@@ -3,7 +3,7 @@ import test from "node:test";
 import { LoginHandler } from "../src/handlers/loginHandler.js";
 import { LogoutHandler } from "../src/handlers/logoutHandler.js";
 import { MeHandler } from "../src/handlers/meHandler.js";
-import { AUTH_FAILURE } from "../src/services/user/UserService.js";
+import { AUTH_FAILURE } from "../src/module/user/UserService.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 
 // 這幾支 handler 決定「誰進得來、進來之後算是誰」。它們的錯法都不會有錯誤訊息
@@ -31,6 +31,9 @@ function createServices(overrides = {}) {
   const available = {
     logging: { logger, loggers: {} },
     time,
+    // handler 的 constructor 會拿它去建 UserService。這些測試不碰資料庫——建好
+    // 之後那個 UserService 就被替身換掉了——所以這裡只要有個物件在就夠。
+    mysqldatabase: {},
     ...overrides.services
   };
 
@@ -48,6 +51,25 @@ function createServices(overrides = {}) {
       }
     }
   };
+}
+
+/**
+ * 建一支 handler，再把它自己 new 出來的 UserService 換成替身。
+ *
+ * UserService 是業務模組，不經 service container，所以 handler 是自己 import
+ * 再 new 的——測試沒辦法靠注入換掉它。這幾個測試要驗的是 handler 怎麼處理
+ * UserService 的回覆（錯誤訊息一不一致、claims 有沒有簽進去），不是 UserService
+ * 自己的判斷邏輯，那些在 userService.test.js。
+ */
+function createHandler(HandlerClass, { userService, ...overrides } = {}) {
+  const { services, logger } = createServices(overrides);
+  const handler = new HandlerClass(services);
+
+  if (userService) {
+    handler.userService = userService;
+  }
+
+  return { handler, logger };
 }
 
 const SAMPLE_USER = Object.freeze({
@@ -86,18 +108,14 @@ function fakeTokenRevocation({ version = 3, revoked = [] } = {}) {
 test("login issues a token carrying the roles and permissions claims", async () => {
   const jwt = fakeJwt();
   const tokenRevocation = fakeTokenRevocation({ version: 3 });
-  const { services } = createServices({
-    services: {
-      user: {
-        async authenticate() {
-          return { ok: true, user: SAMPLE_USER };
-        }
-      },
-      jwt,
-      tokenRevocation
-    }
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt, tokenRevocation }
   });
-  const handler = new LoginHandler(services);
 
   const response = await handler.execute({
     input: { body: { username: "alice", password: "right" } }
@@ -123,18 +141,14 @@ test("login issues a token carrying the roles and permissions claims", async () 
 
 test("login answers every failure with the same message", async () => {
   for (const reason of Object.values(AUTH_FAILURE)) {
-    const { services } = createServices({
-      services: {
-        user: {
-          async authenticate() {
-            return { ok: false, reason };
-          }
-        },
-        jwt: fakeJwt(),
-        tokenRevocation: fakeTokenRevocation()
-      }
+    const { handler } = createHandler(LoginHandler, {
+      userService: {
+        async authenticate() {
+          return { ok: false, reason };
+        }
+      },
+      services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
     });
-    const handler = new LoginHandler(services);
 
     // 逐一區分的訊息會告訴攻擊者哪些帳號存在、哪些已被鎖定。
     await assert.rejects(
@@ -153,18 +167,14 @@ test("login answers every failure with the same message", async () => {
 });
 
 test("login records the real failure reason in the log", async () => {
-  const { services, logger } = createServices({
-    services: {
-      user: {
-        async authenticate() {
-          return { ok: false, reason: AUTH_FAILURE.LOCKED };
-        }
-      },
-      jwt: fakeJwt(),
-      tokenRevocation: fakeTokenRevocation()
-    }
+  const { handler, logger } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: false, reason: AUTH_FAILURE.LOCKED };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
   });
-  const handler = new LoginHandler(services);
 
   await assert.rejects(() =>
     handler.execute({
@@ -182,18 +192,14 @@ test("login records the real failure reason in the log", async () => {
 });
 
 test("login never puts the password in the log context", async () => {
-  const { services, logger } = createServices({
-    services: {
-      user: {
-        async authenticate() {
-          return { ok: false, reason: AUTH_FAILURE.BAD_PASSWORD };
-        }
-      },
-      jwt: fakeJwt(),
-      tokenRevocation: fakeTokenRevocation()
-    }
+  const { handler, logger } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: false, reason: AUTH_FAILURE.BAD_PASSWORD };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
   });
-  const handler = new LoginHandler(services);
 
   await assert.rejects(() =>
     handler.execute({
@@ -212,8 +218,7 @@ test("login never puts the password in the log context", async () => {
 
 test("logout revokes every token for the subject", async () => {
   const tokenRevocation = fakeTokenRevocation();
-  const { services } = createServices({ services: { tokenRevocation } });
-  const handler = new LogoutHandler(services);
+  const { handler } = createHandler(LogoutHandler, { services: { tokenRevocation } });
 
   const response = await handler.execute({
     auth: { claims: { sub: "7" } }
@@ -227,17 +232,14 @@ test("logout revokes every token for the subject", async () => {
 
 test("me reads the current database state rather than the token claims", async () => {
   const queried = [];
-  const { services } = createServices({
-    services: {
-      user: {
-        async findActiveById(id) {
-          queried.push(id);
-          return SAMPLE_USER;
-        }
+  const { handler } = createHandler(MeHandler, {
+    userService: {
+      async findActiveById(id) {
+        queried.push(id);
+        return SAMPLE_USER;
       }
     }
   });
-  const handler = new MeHandler(services);
 
   const response = await handler.execute({
     // claims 帶著一組過期的權限：token 是簽發當下的快照，回它等於讓已經被收回
@@ -250,16 +252,13 @@ test("me reads the current database state rather than the token claims", async (
 });
 
 test("me rejects a valid token whose account no longer exists", async () => {
-  const { services } = createServices({
-    services: {
-      user: {
-        async findActiveById() {
-          return null;
-        }
+  const { handler } = createHandler(MeHandler, {
+    userService: {
+      async findActiveById() {
+        return null;
       }
     }
   });
-  const handler = new MeHandler(services);
 
   // 401 而不是 403：憑證本身已經沒有意義，客戶端該回登入頁而不是以為權限不足。
   await assert.rejects(

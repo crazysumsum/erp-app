@@ -11,6 +11,41 @@
 
 （TODO：補充 erp-app 本身的專案簡介、業務範圍與進度）
 
+## 程式碼放哪裡
+
+後端的 `server/src/` 底下分三種角色，界線由**目錄**維持，而不是靠命名習慣或口頭約定：
+
+| 目錄 | 放什麼 | 誰負責建立 |
+| --- | --- | --- |
+| `framework/` | 框架本身。開發業務功能時不會改這裡。 | — |
+| `services/` | **公用技術服務**：資料庫、日誌、排程、限流、認證策略、檔案型別。跟業務無關，換一個專案照樣適用。 | 框架自動發現並注入 |
+| `module/` | **業務模組**：只在這個 ERP 有意義的邏輯，例如 `module/user/`（帳密驗證、角色權限）。 | Handler 直接 `import` 再自己建 |
+| `handlers/` | 一支 API 一個檔案。 | 框架自動發現並註冊路由 |
+
+判準只有一句：**這段程式碼換一個專案還適不適用？**適用就是 `services/`，不適用就是 `module/`。
+
+### 為什麼業務模組不走自動發現
+
+`services/` 的自動發現機制附帶一整套生命週期管理——啟動順序、關機順序、依賴圖驗證、eager／lazy。那些是技術服務需要的（資料庫要比用它的人先開、後關），業務邏輯不需要。讓業務模組也走同一套，只會把它綁進框架的生命週期，換來的好處是零。
+
+所以業務模組就是普通的 class，依賴以建構參數傳入：
+
+```js
+// server/src/handlers/loginHandler.js
+import { UserService } from "../module/user/UserService.js";
+
+constructor(services = {}) {
+  super(services);
+  this.userService = new UserService({
+    database: services.require("mysqldatabase"),   // 技術服務仍然從 container 拿
+    logger: services.require("logging").logger,
+    time: services.require("time")
+  });
+}
+```
+
+附帶的好處是測試不需要先架一個 service container，直接給替身就可以。
+
 ## 安裝與啟動
 
 ### 需求

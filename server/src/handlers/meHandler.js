@@ -1,6 +1,7 @@
 import { ApplicationError } from "../framework/errors/ApplicationError.js";
 import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
 import { USER_SCHEMA } from "./loginHandler.js";
+import { UserService } from "../module/user/UserService.js";
 
 const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -26,7 +27,11 @@ export class MeHandler extends BaseRequestHandler {
 
   constructor(services = {}) {
     super(services);
-    this.userService = services.require("user");
+    this.userService = new UserService({
+      database: services.require("mysqldatabase"),
+      logger: services.require("logging").logger,
+      time: services.require("time")
+    });
   }
 
   async execute(req) {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AUTH_FAILURE, UserService } from "../src/services/user/UserService.js";
-import { hashPassword } from "../src/services/user/passwordHash.js";
+import { AUTH_FAILURE, UserService } from "../src/module/user/UserService.js";
+import { hashPassword } from "../src/module/user/passwordHash.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 
 // 登入的每一種錯法都不會有錯誤訊息浮現：鎖定沒生效、失敗次數沒歸零、停用的
@@ -62,24 +62,11 @@ function fakeDatabase({ user = null, roles = [], permissions = [] } = {}) {
 }
 
 function createService(database, { logger = collectingLogger() } = {}) {
-  const time = createTestTime({ clock: () => new Date(NOW_MS) });
-
+  // 業務模組不認得 service container，所以測試直接給替身，不需要先架一個容器。
   return new UserService({
-    config: {},
-    services: {
-      require(name) {
-        if (name === "mysqldatabase") {
-          return database;
-        }
-        if (name === "logging") {
-          return { logger };
-        }
-        if (name === "time") {
-          return time;
-        }
-        throw new Error(`Unexpected test service: ${name}`);
-      }
-    }
+    database,
+    logger,
+    time: createTestTime({ clock: () => new Date(NOW_MS) })
   });
 }
 

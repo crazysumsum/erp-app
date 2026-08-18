@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hashPassword, verifyPassword } from "../src/services/user/passwordHash.js";
+import { hashPassword, verifyPassword } from "../src/module/user/passwordHash.js";
 
 // 密碼雜湊的失效模式全部都是安靜的：鹽沒隨機、比較不是定時、參數解析錯掉，
 // 症狀都是「登入照常運作」。只有針對性的測試會發現。

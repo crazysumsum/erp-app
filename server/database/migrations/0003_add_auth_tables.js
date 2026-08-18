@@ -65,7 +65,7 @@ export async function up(connection) {
     CREATE TABLE users (
       id                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       username              VARCHAR(190)    NOT NULL,
-      -- 雜湊字串自帶演算法與參數（見 src/services/user/passwordHash.js），所以
+      -- 雜湊字串自帶演算法與參數（見 src/module/user/passwordHash.js），所以
       -- 調整成本參數不需要改這個欄位，也不需要重算既有密碼。
       password_hash         VARCHAR(255)    NOT NULL,
       display_name          VARCHAR(190)    NOT NULL DEFAULT '',

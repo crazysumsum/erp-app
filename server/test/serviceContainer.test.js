@@ -252,13 +252,6 @@ test("service discovery finds the built-in public services", async () => {
       name: "job.tokenRevocationRefresh",
       lifecycle: "singleton",
       dependencies: ["scheduler", "tokenRevocation", "logging"]
-    },
-    {
-      // 帳密驗證與使用者的角色／權限查詢。登入 handler 用它換 token，
-      // /me 用它讀出目前的狀態而不是 token 裡的舊快照。
-      name: "user",
-      lifecycle: "singleton",
-      dependencies: ["mysqldatabase", "logging", "time"]
     }
   ]);
 });

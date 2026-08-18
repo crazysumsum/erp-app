@@ -1,13 +1,20 @@
-import { BaseService } from "../../framework/services/BaseService.js";
 import { hashPassword, verifyPassword } from "./passwordHash.js";
-
 
 /**
  * 使用者查詢與登入憑證驗證。
  *
- * 這個 service 只負責「這組帳密對不對，這個人有什麼角色與權限」。簽發 token 不
- * 在這裡：那需要同時持有 jwt 與 tokenRevocation 兩個 service，而登入 handler
- * 本來就兩個都拿得到（見 JwtService.issue() 的註解）。
+ * 這是一個**業務模組**，不是框架的 service：它住在 src/module/ 而不是
+ * src/services/，不宣告 static service metadata，也不參與 service container 的
+ * 自動發現。需要它的 handler 直接 import 再自己建一個，把它要用的技術服務
+ * （資料庫、日誌、時間）當參數傳進來。
+ *
+ * 這樣分是因為兩者的壽命不一樣：src/services/ 底下的東西換一個專案照樣適用，
+ * 由框架負責發現、注入、排初始化順序；業務模組只在這個專案有意義，讓它走同一
+ * 套註冊機制只會把業務邏輯綁進框架的生命週期，換來的好處是零。
+ *
+ * 只負責「這組帳密對不對，這個人有什麼角色與權限」。簽發 token 不在這裡：那需要
+ * 同時持有 jwt 與 tokenRevocation 兩個 service，而登入 handler 本來就兩個都
+ * 拿得到（見 JwtService.issue() 的註解）。
  */
 
 // 連續失敗幾次之後鎖定帳號。
@@ -31,18 +38,19 @@ export const AUTH_FAILURE = Object.freeze({
   DISABLED: "disabled"
 });
 
-export class UserService extends BaseService {
-  static service = Object.freeze({
-    name: "user",
-    lifecycle: "singleton",
-    dependencies: ["mysqldatabase", "logging", "time"]
-  });
+export class UserService {
+  /**
+   * 依賴以參數傳入，不從 container 取：這個模組不知道 container 存在，所以測試
+   * 直接給替身就好，不需要先架一個容器。
+   */
+  constructor({ database, logger, time } = {}) {
+    if (!database || !logger || !time) {
+      throw new TypeError("UserService requires database, logger and time");
+    }
 
-  constructor({ config, services, options = {} } = {}) {
-    super({ config, services, options });
-    this.database = services.require("mysqldatabase");
-    this.logger = services.require("logging").logger;
-    this.time = services.require("time");
+    this.database = database;
+    this.logger = logger;
+    this.time = time;
     this.dummyHash = null;
   }
 

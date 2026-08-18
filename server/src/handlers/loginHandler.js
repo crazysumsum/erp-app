@@ -1,5 +1,6 @@
 import { ApplicationError } from "../framework/errors/ApplicationError.js";
 import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
+import { UserService } from "../module/user/UserService.js";
 
 // 使用者物件的形狀，登入與 /me 共用。前端的 session store 直接吃這個。
 export const USER_SCHEMA = Object.freeze({
@@ -67,7 +68,13 @@ export class LoginHandler extends BaseRequestHandler {
 
   constructor(services = {}) {
     super(services);
-    this.userService = services.require("user");
+    // 業務模組直接 import 再自己建，不經 service container——container 管的是
+    // 公用技術服務。它要用的那幾個技術服務仍然從 container 拿。
+    this.userService = new UserService({
+      database: services.require("mysqldatabase"),
+      logger: services.require("logging").logger,
+      time: services.require("time")
+    });
     this.jwt = services.require("jwt");
     this.tokenRevocation = services.require("tokenRevocation");
   }
