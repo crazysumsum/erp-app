@@ -14,7 +14,7 @@
 
 ## 一、現況與缺口
 
-- **後端只有一支 API**：`src/handlers/` 只有 `healthHandler.js`。冇 login / logout / me，冇 `users`、`roles` 資料表。
+- ~~**後端只有一支 API**：`src/handlers/` 只有 `healthHandler.js`。冇 login / logout / me，冇 `users`、`roles` 資料表。~~ → **Phase 0 已完成**：`login` / `logout` / `me` 三支 handler、`users` / `roles` / `permissions` 資料表、`UserService` 同建立帳號腳本都已落地。
 - **後端認證機制已齊備**：`JwtService.issue()` 可簽發、`tokenRevocation` 支援撤銷、授權策略已註冊 `allowAll` / `authenticated` / `hasRole` / `hasPermission`。前端只需對接。
 - **後端已經支援 header token**：`JwtAuthStrategy.authenticate()` 讀 `Authorization: Bearer <token>`，CORS 亦已允許 `Authorization` header 同 `http://localhost:5173` —— **localStorage 方案唔需要改任何後端框架程式碼**，只需要新增 handler。
 - **前端係零基礎**：單一個 `App.vue`，冇 router、冇 store、冇測試，而且 **ESLint 完全冇覆蓋 `.vue` 檔案**（`eslint.config.js` 只 match `client/**/*.js`）。
@@ -54,7 +54,7 @@
 
 **要補嘅防護（因為 token 俾 JS 讀得到，XSS 就等於 token 外洩）：**
 
-5. **Content Security Policy**：後端已啟用 helmet，Phase 0 要實際配好 CSP（限制 script 來源），呢個係對 XSS 最有效嘅一道防線。
+5. **Content Security Policy**：CSP 要落喺**送出 HTML 嗰一邊**——即係 dev 時嘅 Vite server、正式部署時嘅靜態主機——唔係後端 API。API 回嘅係 JSON，佢自己嘅 CSP 保護唔到前端頁面。（後端經 helmet 已經有一組嚴格嘅預設 CSP，`default-src 'self'`、`object-src 'none'`、`script-src 'self'`，唔需要再加。）呢項屬於 Phase 1。
 6. **前端唔用 `v-html`**：Vue 預設會 escape，`v-html` 係主要嘅自開後門途徑。列入 lint 規則同 code review 檢查點。
 7. **短 token 效期 + 撤銷**：維持現有 `JWT_EXPIRES_IN=2h`，並用已有嘅 `tokenRevocation` 支援即時踢人。
 8. **依賴稽核**：`npm audit --audit-level=high` 已經喺 `npm run verify` 關卡入面，前端依賴一齊納入。
@@ -109,84 +109,87 @@ const orderApi = useService("order");
 
 ### Phase 0 — 後端認證 API（阻塞項）
 
-1. **資料表 migration**：`users`（帳號、密碼雜湊、狀態）、`roles`、`permissions` 及關聯表。密碼用 argon2 或 bcrypt 雜湊，**唔可以存明文**。
-2. **`LoginHandler`**（`POST /api/v1/auth/login`，`authType: "public"`）：驗證帳密 → 由 `tokenRevocation.currentVersion()` 攞 version → `jwt.issue()` → response body 回傳 token 同 user 資料。加登入失敗限流（用已有嘅 `requestLimiter`）。
+1. **資料表 migration**：`users`（帳號、密碼雜湊、狀態）、`roles`、`permissions` 及關聯表。密碼用 **scrypt**（`node:crypto` 內建）雜湊，**唔可以存明文**。原本寫 argon2／bcrypt，改用 scrypt 係因為嗰兩個都要 node-gyp 原生編譯，而呢個專案預設擋安裝腳本；scrypt 同樣係記憶體困難嘅 KDF，參數存喺雜湊字串入面所以日後可以調高。
+2. **`LoginHandler`**（`POST /api/v1/auth/login`，`authType: "public"`）：驗證帳密 → 由 `tokenRevocation.currentVersion()` 攞 version → `jwt.issue()` → response body 回傳 token 同 user 資料。**帳號鎖定**：連續 5 次失敗鎖 15 分鐘（自動到期）。原本寫「用已有嘅 `requestLimiter`」，但佢係全域 per-IP token bucket，做唔到 per-route 或 per-account 限制，所以改為喺 `users` 表記失敗次數。
 3. **`LogoutHandler`**（`POST /api/v1/auth/logout`）：撤銷當前 token（bump version），令 token 即時失效而唔使等 2 小時過期。
 4. **`MeHandler`**（`GET /api/v1/auth/me`）：回傳當前 user、roles、permissions，作為前端 session 嘅唯一真實來源。
-5. **配置 CSP**：後端已啟用 helmet，實際設定 Content Security Policy 限制 script 來源 —— 呢個係 localStorage 方案下最重要嘅補償措施。
+5. **建立首個帳號嘅腳本**：`npm run create-user -- <username> <password> --role admin`。登入 API 需要一個已存在嘅帳號，而建立帳號嘅 API 需要一個已登入嘅人——呢支腳本就係打破呢個循環嗰一步。
 
-   驗證：curl 登入攞到 token；用 token 叫 `/me` 回傳正確 roles / permissions；登出之後同一個 token 即時被拒；連續登入失敗會被限流。
+   驗證：curl 登入攞到 token；用 token 叫 `/me` 回傳正確 roles / permissions；登出之後同一個 token 即時被拒；連續 5 次密碼錯會鎖定帳號。
+
+   > **已完成**（見 `server/src/handlers/`、`server/src/services/user/`）。原本列喺呢個 phase 嘅「配置 CSP」已經移去 Phase 1：CSP 要落喺送出 HTML 嗰一邊先有用，而後端 API 經 helmet 已經有嚴格嘅預設 CSP。
 
 ### Phase 1 — 前端地基：依賴與工具鏈
 
 6. **裝依賴**：`vue-router`、`pinia`、`quasar`、`@quasar/vite-plugin`、`@quasar/extras`（圖示字型）。
 7. **設定 Vite**：加 Quasar plugin、`@/` path alias。
 8. **註冊 Quasar plugins**：`Notify`、`Dialog`、`Loading`。
-9. **補 ESLint 覆蓋 `.vue`**：加 `eslint-plugin-vue`，喺 `eslint.config.js` 加 `client/**/*.vue` glob 同對應 parser；同時加規則禁止 `v-html`（XSS 防線）。
-10. **加前端測試**：`vitest` + `@vue/test-utils` + `jsdom`，client workspace 加 `test` script。
-11. **接入 CI 關卡**：root `npm run verify` 由只跑 server 改成前後端都跑 lint 同測試。
-12. **建立 `client/config/`**（對應 `server/config/`）：`app.js`（標題、分頁大小）、`http.js`（baseURL、逾時）、`auth.js`（token storage key、登入路徑、逾時行為）、`menu.js`（菜單群組定義）。
+9. **配置前端 CSP**：dev 用 Vite `server.headers` 落 CSP，正式部署由靜態主機／reverse proxy 落同一組。限制 `script-src` 至 `'self'`——呢個係 localStorage 方案下對 XSS 最有效嘅一道防線，而且**只有喺送出 HTML 嗰一邊先有作用**。要留意 Vite dev 會用 inline script 同 eval，dev 同 prod 嘅 CSP 需要分開設。
+10. **補 ESLint 覆蓋 `.vue`**：加 `eslint-plugin-vue`，喺 `eslint.config.js` 加 `client/**/*.vue` glob 同對應 parser；同時加規則禁止 `v-html`（XSS 防線）。
+11. **加前端測試**：`vitest` + `@vue/test-utils` + `jsdom`，client workspace 加 `test` script。
+12. **接入 CI 關卡**：root `npm run verify` 由只跑 server 改成前後端都跑 lint 同測試。
+13. **建立 `client/config/`**（對應 `server/config/`）：`app.js`（標題、分頁大小）、`http.js`（baseURL、逾時）、`auth.js`（token storage key、登入路徑、逾時行為）、`menu.js`（菜單群組定義）。
 
     驗證：`npm run lint` 捉到 `.vue` 內嘅錯誤同 `v-html` 使用；`npm run verify` 前後端都跑；Quasar 元件喺頁面正常顯示。
 
 ### Phase 2 — HTTP 層
 
-13. **`framework/http/HttpClient.js`**：包住 `fetch`，統一 baseURL、逾時（`AbortController`）、JSON 序列化。
-14. **自動注入 JWT header**：每個請求自動由 storage 讀 token 並加 `Authorization: Bearer <token>`，header 名同 scheme 同後端 `config/jwt.js` 對齊。
-15. **自動拆信封**：成功時 `{success, data, meta}` → 直接回 `data`；失敗時 `{success:false, error}` → `throw new ApiError(code, message, details, requestId)`。
-16. **統一 HTTP 狀態處理**：401 清 session + 轉登入頁（記住原本路徑）；403 顯示無權限；429 讀 `Retry-After` 提示；5xx 顯示 `requestId` 方便查後端 log。
-17. **Idempotency 支援**：呼叫時加 `{ idempotent: true }` 自動帶 `Idempotency-Key`（`crypto.randomUUID()`），對應後端 idempotency 機制。
-18. **請求取消**：頁面卸載自動 abort 未完成請求，避免 race 同已卸載元件更新狀態。
+14. **`framework/http/HttpClient.js`**：包住 `fetch`，統一 baseURL、逾時（`AbortController`）、JSON 序列化。
+15. **自動注入 JWT header**：每個請求自動由 storage 讀 token 並加 `Authorization: Bearer <token>`，header 名同 scheme 同後端 `config/jwt.js` 對齊。
+16. **自動拆信封**：成功時 `{success, data, meta}` → 直接回 `data`；失敗時 `{success:false, error}` → `throw new ApiError(code, message, details, requestId)`。
+17. **統一 HTTP 狀態處理**：401 清 session + 轉登入頁（記住原本路徑）；403 顯示無權限；429 讀 `Retry-After` 提示；5xx 顯示 `requestId` 方便查後端 log。
+18. **Idempotency 支援**：呼叫時加 `{ idempotent: true }` 自動帶 `Idempotency-Key`（`crypto.randomUUID()`），對應後端 idempotency 機制。
+19. **請求取消**：頁面卸載自動 abort 未完成請求，避免 race 同已卸載元件更新狀態。
 
     驗證：單元測試覆蓋信封拆解、錯誤映射、401 轉向、逾時、header 注入。
 
 ### Phase 3 — 認證與授權
 
-19. **Token 儲存層**：集中喺一個模組讀寫 localStorage（日後要改儲存方式只改呢一個檔）。
-20. **`stores/session.js`（Pinia）**：保存 token、user、roles、permissions；提供 `login()`、`logout()`、`restore()`。
-21. **開機還原 session**：App 啟動時如果 storage 有 token 就叫一次 `/me` 確認仲有效 —— 有效即已登入，401 即清除 storage 當未登入。避免用過期 token 進入系統再逐個請求失敗。
-22. **登入頁 `pages/login.vue`**：標記 `page.public = true`，唔套用 AppShell 版面。
-23. **登出**：叫後端 `/logout` 撤銷 token，再清 storage 同轉登入頁。
-24. **路由守衛**：未登入 → 轉登入頁；已登入但權限唔夠 → 403 頁；登入後跳返原本目標路徑。
-25. **`can()` / `v-can`**：對應後端 `hasRole` / `hasPermission` 嘅比對邏輯（支援 `match: "all" | "any"`），用嚟控制頁內按鈕顯示。
+20. **Token 儲存層**：集中喺一個模組讀寫 localStorage（日後要改儲存方式只改呢一個檔）。
+21. **`stores/session.js`（Pinia）**：保存 token、user、roles、permissions；提供 `login()`、`logout()`、`restore()`。
+22. **開機還原 session**：App 啟動時如果 storage 有 token 就叫一次 `/me` 確認仲有效 —— 有效即已登入，401 即清除 storage 當未登入。避免用過期 token 進入系統再逐個請求失敗。
+23. **登入頁 `pages/login.vue`**：標記 `page.public = true`，唔套用 AppShell 版面。
+24. **登出**：叫後端 `/logout` 撤銷 token，再清 storage 同轉登入頁。
+25. **路由守衛**：未登入 → 轉登入頁；已登入但權限唔夠 → 403 頁；登入後跳返原本目標路徑。
+26. **`can()` / `v-can`**：對應後端 `hasRole` / `hasPermission` 嘅比對邏輯（支援 `match: "all" | "any"`），用嚟控制頁內按鈕顯示。
 
     驗證：測試守衛三種情境；無權限用戶直接打 URL 見到 403 而唔係頁面；重新整頁保持登入；登出後 token 即時失效（後端拒絕）。
 
 ### Phase 4 — 自動發現 + 路由 + 菜單
 
-26. **`framework/discovery/pages.js`**：`import.meta.glob("@/pages/**/*.vue", { eager: true })` 收集所有 `export const page`。
-27. **啟動驗證**（對應後端「設定錯就唔啟動」）：檢查 `name` / `path` 全域唯一、必填欄位齊、`menu.group` 喺 `config/menu.js` 有定義、`requires` 格式正確；任何一項唔過就顯示 fatal 畫面並**指名邊個檔案錯**。
-28. **路由生成**：由 metadata 生成 vue-router routes，全部包喺 AppShell 之下（`public` 頁除外），加 404 頁。
-29. **菜單生成**：按 `menu.group` + `menu.order` 組樹，經權限過濾；**冇 `menu` 欄位嘅頁面有路由但唔上菜單**（詳情頁、編輯頁用）。
-30. **`framework/discovery/services.js`**：同樣機制發現 `src/services/**/*.js`，`useService(name)` 取用，缺依賴喺 boot 時報錯而唔係執行期。
+27. **`framework/discovery/pages.js`**：`import.meta.glob("@/pages/**/*.vue", { eager: true })` 收集所有 `export const page`。
+28. **啟動驗證**（對應後端「設定錯就唔啟動」）：檢查 `name` / `path` 全域唯一、必填欄位齊、`menu.group` 喺 `config/menu.js` 有定義、`requires` 格式正確；任何一項唔過就顯示 fatal 畫面並**指名邊個檔案錯**。
+29. **路由生成**：由 metadata 生成 vue-router routes，全部包喺 AppShell 之下（`public` 頁除外），加 404 頁。
+30. **菜單生成**：按 `menu.group` + `menu.order` 組樹，經權限過濾；**冇 `menu` 欄位嘅頁面有路由但唔上菜單**（詳情頁、編輯頁用）。
+31. **`framework/discovery/services.js`**：同樣機制發現 `src/services/**/*.js`，`useService(name)` 取用，缺依賴喺 boot 時報錯而唔係執行期。
 
     驗證：新增一個測試頁面檔案，唔改任何其他檔案，路由同菜單自動出現；故意寫重複 `name` 會 boot 失敗並指名檔案。
 
 ### Phase 5 — 版面外殼（用 Quasar）
 
-31. **`AppShell.vue`**：`QLayout` + `QDrawer`（左菜單，可收合）+ `QPageContainer`（右內容）+ `QHeader`。
-32. **`Sidebar.vue`**：用 `QList` / `QExpansionItem` 渲染菜單樹，當前路由高亮，群組可摺疊。
-33. **`Topbar.vue`**：當前用戶、登出按鈕，按需要加通知。
-34. **`PageHeader.vue`**：由頁面 metadata 自動出標題同麵包屑，右側留 slot 俾頁面放操作按鈕。
-35. **錯誤邊界**：`onErrorCaptured` 攔截頁面例外，顯示錯誤區塊而唔係白畫面。
-36. **響應式**：窄畫面 `QDrawer` 自動變抽屜式（Quasar 內建行為，只需配置）。
+32. **`AppShell.vue`**：`QLayout` + `QDrawer`（左菜單，可收合）+ `QPageContainer`（右內容）+ `QHeader`。
+33. **`Sidebar.vue`**：用 `QList` / `QExpansionItem` 渲染菜單樹，當前路由高亮，群組可摺疊。
+34. **`Topbar.vue`**：當前用戶、登出按鈕，按需要加通知。
+35. **`PageHeader.vue`**：由頁面 metadata 自動出標題同麵包屑，右側留 slot 俾頁面放操作按鈕。
+36. **錯誤邊界**：`onErrorCaptured` 攔截頁面例外，顯示錯誤區塊而唔係白畫面。
+37. **響應式**：窄畫面 `QDrawer` 自動變抽屜式（Quasar 內建行為，只需配置）。
 
     驗證：瀏覽器實測切換頁面、收合菜單；用唔同權限嘅帳號登入見到唔同菜單。
 
 ### Phase 6 — 業務開發套件（薄封裝 Quasar）
 
-37. **`DataTable.vue`**：封裝 `QTable` 嘅 server-side 模式，把佢嘅 `request` 事件同分頁 / 排序 / 篩選參數，接上 HttpClient 同後端 query schema，統一載入 / 空 / 錯誤狀態。
-38. **`FormPanel.vue`**：封裝 `QForm`，重點係**把後端回傳嘅 `error.details`（schema 驗證錯誤）自動對應返去各個欄位顯示** —— 呢個係 Quasar 冇提供、而每個頁面都會用到嘅接線。
-39. **`useCrud()` composable**：一個 resource 嘅 list / create / update / delete 樣板，令新增一個 CRUD 頁面約 20 行。
-40. **`confirm()` / `notify()` 薄封裝**：統一刪除確認同操作提示嘅文案風格，底層用 Quasar `Dialog` / `Notify`。
+38. **`DataTable.vue`**：封裝 `QTable` 嘅 server-side 模式，把佢嘅 `request` 事件同分頁 / 排序 / 篩選參數，接上 HttpClient 同後端 query schema，統一載入 / 空 / 錯誤狀態。
+39. **`FormPanel.vue`**：封裝 `QForm`，重點係**把後端回傳嘅 `error.details`（schema 驗證錯誤）自動對應返去各個欄位顯示** —— 呢個係 Quasar 冇提供、而每個頁面都會用到嘅接線。
+40. **`useCrud()` composable**：一個 resource 嘅 list / create / update / delete 樣板，令新增一個 CRUD 頁面約 20 行。
+41. **`confirm()` / `notify()` 薄封裝**：統一刪除確認同操作提示嘅文案風格，底層用 Quasar `Dialog` / `Notify`。
 
     驗證：用呢套砌一個真實 CRUD 頁面，同手寫版本比較行數同重複程式碼。
 
 ### Phase 7 — 範例與文件
 
-41. **落地一個真實業務頁**：建議「用戶管理」，啱好用到 Phase 0 建嘅 `users` / `roles` 表，可以完整驗證整條鏈路。
-42. **寫 `client_framework_readme.md`**：對應後端框架文件，重點係「點樣加一個頁面 / 加一個 Service」同 metadata 欄位說明。
-43. **更新 `README.md`**：補前端架構同開發流程。
+42. **落地一個真實業務頁**：建議「用戶管理」，啱好用到 Phase 0 建嘅 `users` / `roles` 表，可以完整驗證整條鏈路。
+43. **寫 `client_framework_readme.md`**：對應後端框架文件，重點係「點樣加一個頁面 / 加一個 Service」同 metadata 欄位說明。
+44. **更新 `README.md`**：補前端架構同開發流程。
 
     驗證：照住文件由零加一個新頁面，唔使問人。
 
