@@ -130,18 +130,20 @@ npm run verify
 
 ### 開發一個 Handler（新增一支 API）
 
-新增一支業務 API，只需要在 `server/src/handlers/` 底下新增**一個檔案**，不需要改任何中央 API 設定、registry、factory 或 router：
+新增一支業務 API，只需要在 `server/src/handlers/` 底下新增**一個檔案**，不需要改任何中央 API 設定、registry、factory 或 router。目錄會被遞迴掃描，所以可以自由分子目錄。
+
+> **本專案的約定**：子目錄名稱就是 URL 前綴——`handlers/order/createOrderHandler.js` 的路徑是 `/api/v1/order/create`。框架不強制這件事，由 `test/handlerConventions.test.js` 守著。見本專案 README 的「Handler 的子目錄就是 URL 前綴」。
 
 ```js
-// server/src/handlers/CreateOrderHandler.js
-import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
+// server/src/handlers/order/createOrderHandler.js
+import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 
 export class CreateOrderHandler extends BaseRequestHandler {
   static handlerName = "createOrder"; // 全域唯一，重複或缺漏會讓啟動失敗
 
   static api = {
     method: "POST",
-    path: "/api/v1/orders",
+    path: "/api/v1/order/create",
     description: "Create an order.",
     idempotency: { enabled: true },
     requestSchema: {

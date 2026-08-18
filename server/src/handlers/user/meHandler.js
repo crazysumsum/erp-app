@@ -1,7 +1,7 @@
-import { ApplicationError } from "../framework/errors/ApplicationError.js";
-import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
+import { ApplicationError } from "../../framework/errors/ApplicationError.js";
+import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { USER_SCHEMA } from "./loginHandler.js";
-import { UserService } from "../modules/user/UserService.js";
+import { UserService } from "../../modules/user/UserService.js";
 
 const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -14,7 +14,7 @@ export class MeHandler extends BaseRequestHandler {
 
   static api = {
     method: "GET",
-    path: "/api/v1/auth/me",
+    path: "/api/v1/user/me",
     description: "回傳目前登入使用者的資料、角色與權限。",
     requestSchema: {
       params: EMPTY_OBJECT_SCHEMA,

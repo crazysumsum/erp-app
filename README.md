@@ -20,9 +20,21 @@
 | `framework/` | 框架本身。開發業務功能時不會改這裡。 | — |
 | `services/` | **公用技術服務**：資料庫、日誌、排程、限流、認證策略、檔案型別。跟業務無關，換一個專案照樣適用。 | 框架自動發現並注入 |
 | `modules/` | **業務模組**：只在這個 ERP 有意義的邏輯，例如 `modules/user/`（帳密驗證、角色權限）。 | Handler 直接 `import` 再自己建 |
-| `handlers/` | 一支 API 一個檔案。 | 框架自動發現並註冊路由 |
+| `handlers/` | 一支 API 一個檔案，**按 URL 前綴分子目錄**（見下）。 | 框架自動發現並註冊路由 |
 
 判準只有一句：**這段程式碼換一個專案還適不適用？**適用就是 `services/`，不適用就是 `modules/`。
+
+### Handler 的子目錄就是 URL 前綴
+
+`handlers/` 底下的子目錄名稱對應 API 路徑的前綴，放在最上層的 handler 則沒有前綴：
+
+| 檔案 | URL |
+| --- | --- |
+| `handlers/user/loginHandler.js` | `/api/v1/user/login` |
+| `handlers/user/meHandler.js` | `/api/v1/user/me` |
+| `handlers/healthHandler.js` | `/api/v1/health` |
+
+框架本身**不強制**這件事——它照目錄遞迴發現 handler，路徑則完全由 `static api.path` 決定，兩者之間沒有任何連結。所以這個約定由 `test/handlerConventions.test.js` 守著：路徑跟目錄對不上，測試會直接指名是哪一支 handler。沒有這個測試的話，約定會慢慢漂移，最後目錄結構跟 URL 結構各說各話，而不會有任何東西出聲。
 
 ### 為什麼業務模組不走自動發現
 

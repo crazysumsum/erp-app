@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { LoginHandler } from "../src/handlers/loginHandler.js";
-import { LogoutHandler } from "../src/handlers/logoutHandler.js";
-import { MeHandler } from "../src/handlers/meHandler.js";
+import { LoginHandler } from "../src/handlers/user/loginHandler.js";
+import { LogoutHandler } from "../src/handlers/user/logoutHandler.js";
+import { MeHandler } from "../src/handlers/user/meHandler.js";
 import { AUTH_FAILURE } from "../src/modules/user/UserService.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 

@@ -110,14 +110,14 @@ const orderApi = useService("order");
 ### Phase 0 — 後端認證 API（阻塞項）
 
 1. **資料表 migration**：`users`（帳號、密碼雜湊、狀態）、`roles`、`permissions` 及關聯表。密碼用 **scrypt**（`node:crypto` 內建）雜湊，**唔可以存明文**。原本寫 argon2／bcrypt，改用 scrypt 係因為嗰兩個都要 node-gyp 原生編譯，而呢個專案預設擋安裝腳本；scrypt 同樣係記憶體困難嘅 KDF，參數存喺雜湊字串入面所以日後可以調高。
-2. **`LoginHandler`**（`POST /api/v1/auth/login`，`authType: "public"`）：驗證帳密 → 由 `tokenRevocation.currentVersion()` 攞 version → `jwt.issue()` → response body 回傳 token 同 user 資料。**帳號鎖定**：連續 5 次失敗鎖 15 分鐘（自動到期）。原本寫「用已有嘅 `requestLimiter`」，但佢係全域 per-IP token bucket，做唔到 per-route 或 per-account 限制，所以改為喺 `users` 表記失敗次數。
-3. **`LogoutHandler`**（`POST /api/v1/auth/logout`）：撤銷當前 token（bump version），令 token 即時失效而唔使等 2 小時過期。
-4. **`MeHandler`**（`GET /api/v1/auth/me`）：回傳當前 user、roles、permissions，作為前端 session 嘅唯一真實來源。
+2. **`LoginHandler`**（`POST /api/v1/user/login`，`authType: "public"`）：驗證帳密 → 由 `tokenRevocation.currentVersion()` 攞 version → `jwt.issue()` → response body 回傳 token 同 user 資料。**帳號鎖定**：連續 5 次失敗鎖 15 分鐘（自動到期）。原本寫「用已有嘅 `requestLimiter`」，但佢係全域 per-IP token bucket，做唔到 per-route 或 per-account 限制，所以改為喺 `users` 表記失敗次數。
+3. **`LogoutHandler`**（`POST /api/v1/user/logout`）：撤銷當前 token（bump version），令 token 即時失效而唔使等 2 小時過期。
+4. **`MeHandler`**（`GET /api/v1/user/me`）：回傳當前 user、roles、permissions，作為前端 session 嘅唯一真實來源。
 5. **建立首個帳號嘅腳本**：`npm run create-user -- <username> <password> --role admin`。登入 API 需要一個已存在嘅帳號，而建立帳號嘅 API 需要一個已登入嘅人——呢支腳本就係打破呢個循環嗰一步。
 
    驗證：curl 登入攞到 token；用 token 叫 `/me` 回傳正確 roles / permissions；登出之後同一個 token 即時被拒；連續 5 次密碼錯會鎖定帳號。
 
-   > **已完成**（見 `server/src/handlers/`、`server/src/services/user/`）。原本列喺呢個 phase 嘅「配置 CSP」已經移去 Phase 1：CSP 要落喺送出 HTML 嗰一邊先有用，而後端 API 經 helmet 已經有嚴格嘅預設 CSP。
+   > **已完成**（見 `server/src/handlers/user/`、`server/src/modules/user/`）。原本列喺呢個 phase 嘅「配置 CSP」已經移去 Phase 1：CSP 要落喺送出 HTML 嗰一邊先有用，而後端 API 經 helmet 已經有嚴格嘅預設 CSP。
 
 ### Phase 1 — 前端地基：依賴與工具鏈
 
