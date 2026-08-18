@@ -36,6 +36,31 @@
 
 框架本身**不強制**這件事——它照目錄遞迴發現 handler，路徑則完全由 `static api.path` 決定，兩者之間沒有任何連結。所以這個約定由 `test/handlerConventions.test.js` 守著：路徑跟目錄對不上，測試會直接指名是哪一支 handler。沒有這個測試的話，約定會慢慢漂移，最後目錄結構跟 URL 結構各說各話，而不會有任何東西出聲。
 
+### 前端的目錄
+
+`client/` 底下 `config/` 與 `src/` 平行擺放，對應後端 `server/config/` 與 `server/src/` 的分法：
+
+| 目錄 | 放什麼 |
+| --- | --- |
+| `config/` | 設定資料，不放邏輯：`app.js`（標題、分頁大小）、`http.js`（API 位址、逾時）、`auth.js`（token 儲存鍵、登入路徑）、`menu.js`（菜單群組）、`csp.js`（正式建置的 CSP） |
+| `src/` | 應用程式碼。`@/` 指向這裡，`@config/` 指向 `config/` |
+| `test/` | Vitest 測試 |
+
+## 前端安全：CSP
+
+Token 存在 localStorage，代價是任何一次 XSS 都等於憑證外洩。CSP 是唯一能在「注入成功」與「腳本真的跑起來」之間擋一道的東西，所以它不是選配的。
+
+政策定義在 `client/config/csp.js`，**只注入正式建置的產物**——dev server 的 HMR 需要 inline script 與 eval，套用正式版 CSP 會讓開發完全動不了，而 dev server 只監聽本機。
+
+部署時有兩層，建議都做：
+
+1. **`<meta>`（已自動處理）**：`npm run build` 會把政策寫進 `dist/index.html`。換哪個靜態主機都在。
+2. **HTTP header（要主機配合）**：把 `contentSecurityPolicyHeader(apiOrigin)` 產生的字串設成 `Content-Security-Policy` header。這一層才拿得到 `frame-ancestors`（防點擊劫持）——瀏覽器**明確忽略** meta 送來的這一條。
+
+API 位址改了要一起改：CSP 的 `connect-src` 與前端讀的 `VITE_API_BASE_URL` 是同一個值，兩邊不一致的話請求會被 CSP 擋下，而瀏覽器只會說「被 CSP 拒絕」，不會說是哪個設定不對。
+
+另一道防線是 lint：`vue/no-v-html` 設為 error，因為 `v-html` 是 Vue 裡唯一預設繞過跳脫的出口。
+
 ### 為什麼業務模組不走自動發現
 
 `services/` 的自動發現機制附帶一整套生命週期管理——啟動順序、關機順序、依賴圖驗證、eager／lazy。那些是技術服務需要的（資料庫要比用它的人先開、後關），業務邏輯不需要。讓業務模組也走同一套，只會把它綁進框架的生命週期，換來的好處是零。
@@ -118,4 +143,21 @@ npm run dev
 
 啟動後可呼叫 `http://localhost:3000/api/v1/health` 驗證安裝成功，應回傳 `database: connected`。
 
-更詳細的步驟說明、疑難排解（MySQL 補充）、程式碼品質檢查（`npm run verify`）等，見 [框架說明文件](framework_readme.md#二安裝與啟動)。
+更詳細的步驟說明與疑難排解（MySQL 補充），見 [框架說明文件](framework_readme.md#二安裝與啟動)。
+
+## 程式碼品質關卡
+
+```bash
+npm run verify
+```
+
+依序跑三道關卡，**前後端都涵蓋**：ESLint（含 `.vue`）、測試加覆蓋率（server 用 `node --test`，client 用 Vitest）、依賴安全稽核。
+
+單獨跑某一部分：
+
+```bash
+npm test --workspace client
+npm run test:watch --workspace client
+```
+
+client 目前只有一個煙霧測試，覆蓋率沒有設門檻——第一段值得釘住的前端邏輯是 Phase 2 的 HttpClient，那時再設。先設一個數字只會逼著為了湊數而寫測試。

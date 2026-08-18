@@ -1,7 +1,10 @@
 <script setup>
 import { onMounted, ref } from "vue";
+import httpConfig from "@config/http.js";
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+// 這一頁是 Phase 1 的驗證用畫面：它證明 Quasar 的元件、圖示與樣式都接好了。
+// Phase 5 會用 AppShell（QLayout + QDrawer + QPageContainer）取代它，Phase 4 之後
+// 內容區則由路由決定。
 const health = ref(null);
 const loading = ref(false);
 const error = ref("");
@@ -11,7 +14,7 @@ async function loadHealth() {
   error.value = "";
 
   try {
-    const response = await fetch(`${apiBaseUrl}/api/v1/health`);
+    const response = await fetch(`${httpConfig.baseUrl}/api/v1/health`);
 
     if (!response.ok) {
       throw new Error(`API returned ${response.status}`);
@@ -31,45 +34,63 @@ onMounted(loadHealth);
 </script>
 
 <template>
-  <main class="shell">
-    <section class="workspace">
-      <div class="intro">
-        <p class="eyebrow">ERP Development Environment</p>
-        <h1>Node.js + MySQL + Vue 3</h1>
-        <p>
-          前後端專案已經分離，後端提供 Express API，前端使用 Vue 3 與 Vite。
-        </p>
-      </div>
-
-      <div class="status-panel">
-        <div class="panel-header">
-          <h2>系統狀態</h2>
-          <button type="button" @click="loadHealth" :disabled="loading">
-            {{ loading ? "檢查中" : "重新檢查" }}
-          </button>
-        </div>
-
-        <dl v-if="health" class="status-grid">
+  <!--
+    刻意不用 QLayout／QPageContainer：那一組是 Phase 5 的 AppShell（左菜單、右
+    內容）的骨架，QPageContainer 也必須是 QLayout 的子節點。這一頁只是驗證用的
+    臨時畫面，用普通容器加 Quasar 的排版 class 就夠。
+  -->
+  <div class="bg-grey-2 window-height">
+    <div class="row justify-center items-center full-height q-pa-lg">
+      <q-card class="full-width" style="max-width: 520px">
+        <q-card-section class="row items-center justify-between">
           <div>
-            <dt>API</dt>
-            <dd>{{ health.status }}</dd>
+            <div class="text-overline text-primary">ERP Development Environment</div>
+            <div class="text-h6">系統狀態</div>
           </div>
-          <div>
-            <dt>Database</dt>
-            <dd>{{ health.database }}</dd>
-          </div>
-          <div>
-            <dt>Time</dt>
-            <dd>{{ health.timestamp }}</dd>
-          </div>
-        </dl>
+          <q-btn
+            color="primary"
+            icon="refresh"
+            label="重新檢查"
+            :loading="loading"
+            unelevated
+            @click="loadHealth"
+          />
+        </q-card-section>
 
-        <p v-else-if="error" class="error">
+        <q-separator />
+
+        <q-list v-if="health" separator>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>API</q-item-label>
+              <q-item-label>{{ health.status }}</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>Database</q-item-label>
+              <q-item-label>{{ health.database }}</q-item-label>
+            </q-item-section>
+          </q-item>
+          <q-item>
+            <q-item-section>
+              <q-item-label caption>Time</q-item-label>
+              <q-item-label>{{ health.timestamp }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+
+        <q-banner v-else-if="error" class="bg-negative text-white">
+          <template #avatar>
+            <q-icon name="error" />
+          </template>
           無法連線 API：{{ error }}
-        </p>
+        </q-banner>
 
-        <p v-else class="muted">等待檢查結果...</p>
-      </div>
-    </section>
-  </main>
+        <q-card-section v-else class="text-grey-7">
+          等待檢查結果...
+        </q-card-section>
+      </q-card>
+    </div>
+  </div>
 </template>

@@ -124,13 +124,20 @@ const orderApi = useService("order");
 6. **裝依賴**：`vue-router`、`pinia`、`quasar`、`@quasar/vite-plugin`、`@quasar/extras`（圖示字型）。
 7. **設定 Vite**：加 Quasar plugin、`@/` path alias。
 8. **註冊 Quasar plugins**：`Notify`、`Dialog`、`Loading`。
-9. **配置前端 CSP**：dev 用 Vite `server.headers` 落 CSP，正式部署由靜態主機／reverse proxy 落同一組。限制 `script-src` 至 `'self'`——呢個係 localStorage 方案下對 XSS 最有效嘅一道防線，而且**只有喺送出 HTML 嗰一邊先有作用**。要留意 Vite dev 會用 inline script 同 eval，dev 同 prod 嘅 CSP 需要分開設。
-10. **補 ESLint 覆蓋 `.vue`**：加 `eslint-plugin-vue`，喺 `eslint.config.js` 加 `client/**/*.vue` glob 同對應 parser；同時加規則禁止 `v-html`（XSS 防線）。
+9. **配置前端 CSP**：政策定義喺 `client/config/csp.js`，**只注入正式建置**（dev 嘅 HMR 要 inline script 同 eval，套上去就開發唔到，而 dev server 只監聽本機）。原本寫用 Vite `server.headers`，改成喺 build 時注入 `<meta>`——因為 dev 根本唔應該套，而正式產物要跟住 HTML 走先唔使假設主機肯畀你設 header。`frame-ancestors` 只放喺 header 版本：瀏覽器**明確忽略** meta 送嘅呢一條，仲會每次載入噴一個 console error。
+10. **補 ESLint 覆蓋 `.vue`**：加 `eslint-plugin-vue`，喺 `eslint.config.js` 加 `client/**/*.vue` glob 同對應 parser；同時加規則禁止 `v-html`（XSS 防線）。用 `flat/essential` 而唔係 `flat/recommended`——後者大半係排版規則，同呢個專案 lint 設定開頭寫住嘅原則（擋缺陷唔擋排版）相反。
 11. **加前端測試**：`vitest` + `@vue/test-utils` + `jsdom`，client workspace 加 `test` script。
 12. **接入 CI 關卡**：root `npm run verify` 由只跑 server 改成前後端都跑 lint 同測試。
 13. **建立 `client/config/`**（對應 `server/config/`）：`app.js`（標題、分頁大小）、`http.js`（baseURL、逾時）、`auth.js`（token storage key、登入路徑、逾時行為）、`menu.js`（菜單群組定義）。
 
     驗證：`npm run lint` 捉到 `.vue` 內嘅錯誤同 `v-html` 使用；`npm run verify` 前後端都跑；Quasar 元件喺頁面正常顯示。
+
+    > **已完成**。同原計劃唔同嘅地方：
+    >
+    > - **Quasar 用 `@quasar/vite-plugin@1.12`**，唔係最新嘅 v2 —— v2 要求 Vite ^8，而專案係 Vite 6。v1.12 同時支援 Vite 6 至 8，唔使為咗一個 plugin 做兩個大版本嘅 build tool 升級。
+    > - **唔裝 sass**：用 Quasar 預編譯嘅 `dist/quasar.css`。品牌色可以用 CSS 變數覆蓋，真係要 sass 層級客製再裝。
+    > - **刪咗 `client/src/styles.css`**（155 行）：全部係為舊 markup 而寫，而且入面嘅全域 `button` / `h1` / `dt` 覆蓋會同 Quasar 打架。轉用 Quasar 樣式系統之後佢變成孤兒代碼。
+    > - **client 覆蓋率暫時唔設門檻**：而家得一個煙霧測試，第一段值得釘住嘅前端邏輯係 Phase 2 嘅 HttpClient。
 
 ### Phase 2 — HTTP 層
 
