@@ -1,6 +1,6 @@
-import { ApplicationError } from "../framework/errors/ApplicationError.js";
-import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
-import { UserService } from "../modules/user/UserService.js";
+import { ApplicationError } from "../../framework/errors/ApplicationError.js";
+import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { UserService } from "../../modules/user/UserService.js";
 
 // 使用者物件的形狀，登入與 /me 共用。前端的 session store 直接吃這個。
 export const USER_SCHEMA = Object.freeze({
@@ -27,7 +27,7 @@ export class LoginHandler extends BaseRequestHandler {
 
   static api = {
     method: "POST",
-    path: "/api/v1/auth/login",
+    path: "/api/v1/user/login",
     description: "以帳號密碼登入，成功時簽發 JWT。",
     authType: "public",
     authorizationPolicies: [

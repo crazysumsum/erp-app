@@ -1,4 +1,4 @@
-import { BaseRequestHandler } from "../framework/api/BaseRequestHandler.js";
+import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 
 const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -11,7 +11,7 @@ export class LogoutHandler extends BaseRequestHandler {
 
   static api = {
     method: "POST",
-    path: "/api/v1/auth/logout",
+    path: "/api/v1/user/logout",
     description: "撤銷目前使用者已簽發的所有 JWT。",
     requestSchema: {
       params: EMPTY_OBJECT_SCHEMA,

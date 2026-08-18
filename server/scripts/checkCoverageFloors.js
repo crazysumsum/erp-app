@@ -44,7 +44,7 @@ const FLOORS = {
   "src/modules/user/UserService.js": { lines: 95, branches: 92, functions: 95 },
   // 登入是唯一會簽出憑證的地方：漏簽版本號的 token 撤銷不掉，回應多帶一個
   // 欄位就是一次資料外洩。
-  "src/handlers/loginHandler.js": { lines: 95, branches: 90, functions: 95 },
+  "src/handlers/user/loginHandler.js": { lines: 95, branches: 90, functions: 95 },
   "src/framework/configuration/SecretValue.js": { lines: 90, branches: 90 },
   // 排程器錯了的後果是背景工作靜靜停掉，或 cluster 工作在每個實例上重複執行。
   // 兩者都不會在開發時被發現。
