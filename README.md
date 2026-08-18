@@ -53,7 +53,15 @@ cd server && npm run migrate
 
 第一行用 root/管理員帳號建立資料庫（`erp_dev`）與應用程式帳號（`erp_user`），只需要執行一次；第二行套用框架與業務的資料表，`git pull` 之後重新執行是安全的（已套用的檔案會被跳過）。
 
-### Step 4：啟動開發伺服器
+### Step 4：建立第一個帳號
+
+```bash
+cd server && npm run create-user -- admin "選一個強密碼" --name "System Admin" --role admin
+```
+
+登入 API 需要一個已存在的帳號，而建立帳號的 API 需要一個已登入的人——這支腳本就是打破這個循環的那一步。密碼以 scrypt 雜湊儲存，不會寫進資料庫明文。
+
+### Step 5：啟動開發伺服器
 
 ```bash
 npm run dev

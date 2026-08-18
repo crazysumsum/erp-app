@@ -279,7 +279,11 @@ test("the application factory does not itself require the scheduler", async (t) 
         new URL("../src/services/auth/publicAuthStrategy.js", import.meta.url).href,
         new URL("../src/services/mysqldatabase/MySqlDatabaseService.js", import.meta.url).href,
         // auth.jwt 現在宣告 tokenRevocation，所以這份清單也要帶上它。
-        new URL("../src/services/tokenRevocation/TokenRevocationService.js", import.meta.url).href
+        new URL("../src/services/tokenRevocation/TokenRevocationService.js", import.meta.url).href,
+        // handler 是照目錄自動發現的，所以這個應用一定會建出 login／me 兩支
+        // handler，而它們在 constructor 就 require("user")。這份清單漏掉它，
+        // 應用會在 handler 註冊階段就失敗。
+        new URL("../src/services/user/UserService.js", import.meta.url).href
       ]
     },
     serviceOptions: {
