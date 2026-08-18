@@ -2,6 +2,8 @@
 
 *[English](README.en.md)*
 
+> **說明**：本專案（`erp-app`）是從 [node_simple_crud_backend](https://github.com/crazysumsum/node_simple_crud_backend) 複製出來的獨立新專案，與原專案沒有 fork 關聯，可自由修改、獨立演進。
+
 Node.js + MySQL + Vue 3 開發環境。本專案的 `server/` 是一個自製的 CRUD backend 框架，`client/` 是對應的 Vue 3 前端。
 
 本文件分為五個部分：

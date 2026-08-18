@@ -2,6 +2,8 @@
 
 *[中文版](README.md)*
 
+> **Note**: This project (`erp-app`) is an independent copy created from [node_simple_crud_backend](https://github.com/crazysumsum/node_simple_crud_backend). It has no fork relationship with the original and can be freely modified and evolved on its own.
+
 A Node.js + MySQL + Vue 3 development environment. `server/` is a self-built CRUD backend framework; `client/` is the matching Vue 3 frontend.
 
 This document has five parts:
