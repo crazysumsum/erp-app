@@ -218,6 +218,13 @@ const orderApi = useService("order");
 
     驗證：用呢套砌一個真實 CRUD 頁面，同手寫版本比較行數同重複程式碼。
 
+    > **已完成**（見 `client/src/framework/ui/`）。同原計劃唔同嘅地方：
+    >
+    > - **`DataTable.vue` 唔直接掂 HttpClient**：`fetch` 係一個由頁面傳入嘅 function（形狀跟 QTable 原生 `@request` 一致：page/rowsPerPage/sortBy/descending/filter 入，`{ rows, rowsNumber }` 出），實際點樣將呢個形狀對應去後端 query schema 係 service 層（`services/xxx.js`）嘅工作。原因係**後端而家未有分頁／排序／篩選嘅慣例**（搜完成個 `server/src/framework/api/` 冇搵到任何 `pagination`/`sortBy`/`limit`/`offset` 呢類設計），DataTable 揸實一個同 HTTP 完全解耦嘅介面，等佢喺冇真實 API 之前都試得，日後第一個 list handler 落地先決定實際 query schema。
+    > - **`FormPanel.vue` 嘅 `error.details` 解析格式係實測返嚟嘅**：後端 `requestValidator.js` 嘅 `details` 係 `[{ location, path, keyword, message }]`（`path` 係 JSON Pointer 式，例如 `/address/city`），唔係扁平嘅 `{fieldName: message}`。FormPanel 淨係揀 `location === "body"` 嘅項目，將 `path` 轉做 dot notation（`address.city`）做 field key，經預設 slot 嘅 `fieldError(name)` 傳返俾頁面。
+    > - **手動測試揭發咗一個真正嘅設計缺口**：`DataTable.vue` 第一版冇將自己收到嘅 slot 轉發俾內部嘅 `QTable`，令頁面用 `#body-cell-actions` 放操作按鈕完全冇反應（單元測試冇捉到，因為冇一個測試實際攞咗個 slot 出嚟斷言）。加咗 `v-for="(_, slotName) in $slots"` 轉發之後先修好，並且補返 regression 測試。
+    > - 手動驗證：用一個記憶體內嘅 fake resource（冇真實後端 list API）砌咗一個臨時 CRUD 示範頁——list 會分頁顯示、非法輸入即時喺欄位度顯示後端式嘅 validation 錯誤、合法新增會加返一行入表且清空表單、刪除會彈確認對話框，確認之後先真係刪走同重新整理。
+
 ### Phase 7 — 範例與文件
 
 42. **落地一個真實業務頁**：建議「用戶管理」，啱好用到 Phase 0 建嘅 `users` / `roles` 表，可以完整驗證整條鏈路。
