@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
+import vue from "eslint-plugin-vue";
 
 // 這個框架大量使用 duck typing（例如 typeof x.require === "function"），沒有型別
 // 檢查護航，所以 lint 的重點放在能真正擋下缺陷的規則：未使用的變數、意外的
@@ -57,6 +58,29 @@ export default [
       globals: { ...globals.browser }
     },
     rules: correctness
+  },
+  // .vue 檔案先前完全沒有被 lint 到：上面的 glob 只 match .js/.mjs，所以整個
+  // 元件層——也就是前端絕大部分的程式碼——一條規則都沒有套用過。
+  //
+  // 用 essential 而不是 recommended：後者大半是排版規則（屬性要不要換行、單行
+  // 元素要不要斷行），與這份設定開頭講的原則相反——lint 要擋的是缺陷，不是
+  // 排版偏好。essential 收的是真的會出事的那一類：重複的 key、v-for 少了 key、
+  // 用了不存在的元件語法。
+  ...vue.configs["flat/essential"],
+  {
+    files: ["client/**/*.vue"],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: "module",
+      globals: { ...globals.browser }
+    },
+    rules: {
+      ...correctness,
+      // v-html 是 Vue 裡唯一一個預設會繞過跳脫的出口，而 token 存在 localStorage
+      // 的前提下，一次 XSS 就等於憑證外洩。要用的地方必須明確 disable 並在
+      // review 說明為什麼那段內容是可信的。
+      "vue/no-v-html": "error"
+    }
   },
   {
     files: ["eslint.config.js"],

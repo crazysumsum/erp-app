@@ -1,0 +1,24 @@
+/**
+ * 左側菜單的群組定義。
+ *
+ * 頁面自己不決定菜單的順序與標題，只宣告「我屬於哪一組」（`page.menu.group`）。
+ * 群組的顯示名稱、排序與圖示集中在這裡，否則「為什麼這一組排在那一組前面」的
+ * 答案會散落在幾十個頁面檔案裡。
+ *
+ * Phase 4 的啟動驗證會檢查每個頁面宣告的 group 都在這份清單裡；打錯字會讓
+ * 應用程式在啟動時就指名是哪個檔案，而不是讓那一頁安靜地從菜單消失。
+ *
+ * icon 用 Material Icons 的名稱（由 @quasar/extras 提供）。
+ */
+const menuConfig = {
+  groups: [
+    {
+      name: "system",
+      label: "系統管理",
+      icon: "settings",
+      order: 900
+    }
+  ]
+};
+
+export default menuConfig;
