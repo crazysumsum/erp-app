@@ -184,6 +184,13 @@ const orderApi = useService("order");
 
     驗證：新增一個測試頁面檔案，唔改任何其他檔案，路由同菜單自動出現；故意寫重複 `name` 會 boot 失敗並指名檔案。
 
+    > **已完成**（見 `client/src/framework/discovery/`、`framework/errors/renderFatalBootError.js`、`framework/routing/buildRoutes.js`、`framework/layout/AppShell.vue`）。同原計劃唔同嘅地方：
+    >
+    > - **AppShell 喺 Phase 4 淨係一個佔位嘅 `<router-view />`**：真正嘅 QLayout／QDrawer／QToolbar 版面係 Phase 5 嘅工作，呢個 phase 淨係需要路由結構已經將受保護嘅頁面包喺一個共同嘅父路由之下（`buildRoutes.js`）。Phase 5 淨係要填呢一個檔案嘅內容，路由生成邏輯唔使再改。
+    > - **Fatal 開機畫面刻意冇用 Vue／Quasar**：出事嗰陣連 `app.mount()` 都仲未行到，用最基本嘅 DOM API（`renderFatalBootError.js`）先可靠，唔使假設任何框架已經初始化好。
+    > - **`framework/discovery/services.js` 而家冇任何真正嘅 consumer**：`src/services/` 仲係空嘅，第一個真正嘅 service 要等 Phase 7 嘅「用戶管理」頁面先會出現。呢個 phase 淨係起返個機制（`buildServiceRegistry` 已經有測試覆蓋），`useService()` 而家會即刻拋錯。
+    > - 手動驗證：起咗一個測試頁面檔案，冇改任何其他檔案，路由（`/probe-test` 直接打得入）同菜單（`buildMenu()` 出到嗰組）都自動出現；改咗個 `name` 撞返 `HomePage.vue` 之後，重新整理見到 fatal 畫面，並且準確指名咗兩個撞名嘅檔案。
+
 ### Phase 5 — 版面外殼（用 Quasar）
 
 32. **`AppShell.vue`**：`QLayout` + `QDrawer`（左菜單，可收合）+ `QPageContainer`（右內容）+ `QHeader`。
