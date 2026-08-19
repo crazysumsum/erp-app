@@ -2,6 +2,10 @@ import { createPinia } from "pinia";
 import { Dialog, Loading, Notify, Quasar } from "quasar";
 import { createApp } from "vue";
 import App from "./App.vue";
+import { vCan } from "./framework/authorization/vCan.js";
+import { httpClient } from "./framework/http/HttpClient.js";
+import { createAppRouter } from "./framework/routing/router.js";
+import { useSessionStore } from "./stores/session.js";
 
 // Quasar 的預編譯 CSS。用 dist/quasar.css 而不是 src/css/index.sass，是為了不必
 // 為了一個還沒有客製主題的專案裝一整套 sass 工具鏈。品牌色可以用 CSS 變數
@@ -11,12 +15,39 @@ import "quasar/dist/quasar.css";
 import "@quasar/extras/material-icons/material-icons.css";
 
 const app = createApp(App);
+const pinia = createPinia();
 
-app.use(createPinia());
+app.use(pinia);
 app.use(Quasar, {
   // 只註冊真的會用到的：Notify 是操作結果提示，Dialog 是刪除確認，Loading 是
   // 全域載入遮罩。三者都是全域單例，Phase 6 會在它們上面包一層統一文案。
   plugins: { Notify, Dialog, Loading }
 });
+app.directive("can", vCan);
 
-app.mount("#app");
+// 明確傳 pinia instance：main.js 這裡沒有 component context，不能靠 inject
+// 拿到正確的 pinia（見 pinia 的 outside-component-usage 文件）。
+const session = useSessionStore(pinia);
+const router = createAppRouter({ session });
+
+// Phase 2 的 HttpClient 建構子刻意沒有直接依賴 router／session——那時候兩者都
+// 還不存在，只留了這個掛勾（見 HttpClient.js 的說明）。這裡接上：401 就清掉
+// session 並轉去登入頁，順便記住原本想去的路徑。
+httpClient.onUnauthorized = () => {
+  session.clear();
+  const current = router.currentRoute.value;
+  if (current.name !== "login") {
+    router.push({ name: "login", query: { redirect: current.fullPath } });
+  }
+};
+
+// 開機先還原 session（storage 有 token 就叫一次 /me），再 app.use(router)：
+// vue-router 一 install 就會馬上觸發第一次導航（見 install() 內部直接
+// push(routerHistory.location)），唔使等 app.mount()。如果喺 restore 完成之前
+// 就 app.use(router)，guard 會喺 session 仲未還原嗰陣就判斷「未登入」，就算
+// 之後 restore 成功都嚟唔切——呢個順序錯誤試過令有 token 嘅用戶一 refresh
+// 就被踢返登入頁。
+session.restore().finally(() => {
+  app.use(router);
+  app.mount("#app");
+});
