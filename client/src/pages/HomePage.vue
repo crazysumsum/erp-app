@@ -9,10 +9,11 @@ export const page = {
 <script setup>
 import { onMounted, ref } from "vue";
 import httpConfig from "@config/http.js";
+import PageHeader from "@/framework/layout/PageHeader.vue";
 
 // 呢一頁原本喺 App.vue，係 Phase 1 嘅驗證用畫面：證明 Quasar 嘅元件、圖示與
-// 樣式都接好了。Phase 3 加咗路由之後搬過嚟做暫時嘅登入後首頁，Phase 5 會用
-// AppShell 取代呢個容器，Phase 7 先會有真正嘅首頁內容。
+// 樣式都接好了。Phase 3 加咗路由之後搬過嚟做暫時嘅登入後首頁，Phase 5 而家
+// 套咗真正嘅 AppShell（唔再自己整全屏置中），Phase 7 先會有真正嘅首頁內容。
 const health = ref(null);
 const loading = ref(false);
 const error = ref("");
@@ -42,9 +43,11 @@ onMounted(loadHealth);
 </script>
 
 <template>
-  <div class="bg-grey-2 window-height">
-    <div class="row justify-center items-center full-height q-pa-lg">
-      <q-card class="full-width" style="max-width: 520px">
+  <div>
+    <PageHeader />
+
+    <div class="q-px-md">
+      <q-card style="max-width: 520px">
         <q-card-section class="row items-center justify-between">
           <div>
             <div class="text-overline text-primary">ERP Development Environment</div>

@@ -16,7 +16,7 @@ export function buildRoutes(discoveredPages) {
       path: page.path,
       name: page.name,
       component,
-      meta: { title: page.title, public: !!page.public, requires: page.requires }
+      meta: { title: page.title, public: !!page.public, requires: page.requires, menuGroup: page.menu?.group }
     };
 
     if (page.public) {

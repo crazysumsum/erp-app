@@ -1,24 +1,71 @@
 import { mount } from "@vue/test-utils";
+import { createPinia, setActivePinia } from "pinia";
+import { QDrawer, Quasar } from "quasar";
 import { createMemoryHistory, createRouter } from "vue-router";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import AppShell from "@/framework/layout/AppShell.vue";
 
-/**
- * Phase 4 嘅 AppShell 淨係一個佔位嘅 `<router-view />`——真正嘅版面（QLayout
- * + QDrawer + QToolbar）係 Phase 5 嘅工作。呢度只需要證明佢會將父路由嘅
- * child route 渲染出嚟，等 buildRoutes.js 嘅 nesting 有嘢好掛。
- */
-describe("AppShell", () => {
-  it("渲染子路由嘅元件", async () => {
-    const router = createRouter({
-      history: createMemoryHistory(),
-      routes: [{ path: "/", component: AppShell, children: [{ path: "", component: { template: "<div class='child'>ok</div>" } }] }]
-    });
-    router.push("/");
-    await router.isReady();
+function fixturePages() {
+  return [
+    {
+      page: {
+        name: "orderList",
+        path: "/orders",
+        title: "訂單管理",
+        menu: { group: "system", order: 10, icon: "receipt" }
+      },
+      component: {}
+    }
+  ];
+}
 
-    const wrapper = mount({ template: "<router-view />" }, { global: { plugins: [router] } });
+async function mountAppShell({ pages = fixturePages() } = {}) {
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: "/",
+        component: AppShell,
+        children: [{ path: "orders", name: "orderList", component: { template: "<div class='child'>訂單內容</div>" } }]
+      }
+    ]
+  });
+  await router.push("/orders");
+  await router.isReady();
+
+  const wrapper = mount(AppShell, {
+    props: { pages },
+    global: { plugins: [Quasar, router] }
+  });
+
+  return { wrapper, router };
+}
+
+describe("AppShell", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it("渲染子路由嘅元件", async () => {
+    const { wrapper } = await mountAppShell();
 
     expect(wrapper.find(".child").exists()).toBe(true);
+  });
+
+  it("Sidebar 顯示由 pages prop 算出嚟嘅菜單項目", async () => {
+    const { wrapper } = await mountAppShell();
+
+    expect(wrapper.text()).toContain("訂單管理");
+  });
+
+  it("撳 Topbar 嘅選單按鈕會切換 drawer 開關", async () => {
+    const { wrapper } = await mountAppShell();
+    const drawer = wrapper.findComponent(QDrawer);
+
+    expect(drawer.props("modelValue")).toBe(true);
+
+    await wrapper.find('button[aria-label="開關側邊欄"]').trigger("click");
+
+    expect(drawer.props("modelValue")).toBe(false);
   });
 });
