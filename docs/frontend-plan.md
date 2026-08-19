@@ -202,6 +202,13 @@ const orderApi = useService("order");
 
     驗證：瀏覽器實測切換頁面、收合菜單；用唔同權限嘅帳號登入見到唔同菜單。
 
+    > **已完成**（見 `client/src/framework/layout/`、`framework/errors/ErrorBoundary.vue`）。同原計劃唔同嘅地方：
+    >
+    > - **`Sidebar.vue` / `Topbar.vue` 改名做 `AppSidebar.vue` / `AppTopbar.vue`**：同 Phase 3 嘅 `login.vue` / `home.vue` 撞著同一條 lint 規則（`vue/multi-word-component-names`，`flat/essential` preset 嘅一部分），單字檔名過唔到。
+    > - **`PageHeader.vue` 唔係由 `AppShell` 用 slot 塞入頁面，而係頁面自己 import 嚟用**：由當前路由嘅 `meta.title` / `meta.menuGroup`（`buildRoutes.js` 新加）自動讀標題同麵包屑，右側留 `actions` slot。呢個設計避免咗 `AppShell` 要將 slot 內容穿過 `router-view` 塞俾隨路由變化嘅頁面元件呢種跨元件樹嘅 slot 注入，一個頁面套件已經解決晒個問題。
+    > - **手動測試喺瀏覽器度揭發咗一個真正嘅版面 bug**：`AppShell` 原本抄咗 Quasar 官方 quick-start 常見範例嘅 `view="lHh Lpr lFf"`（drawer 由最頂開始，同 header 疊埋），結果 drawer 開嗰陣會遮埋 Topbar 嘅開關按鈕同標題。呢個 shell 嘅 header 要喺任何時候都撳得到，所以改用 `QLayout` 嘅預設 view（`"hhh lpr fff"`：header 一定跨成個闊度，drawer 喺佢落面先開始）。手動測試仲揭發 Quasar 冇幫 `QPage` 設預設背景色（之前每頁自己包一層 `bg-grey-2`），而家喺 `AppShell` 統一設，頁面唔使再各自處理。
+    > - 手動驗證：登入之後見到完整版面；撳開關掣會收合／展開 drawer；加一個帶 `menu` 欄位嘅測試頁面，Sidebar 自動出現對應項目，撳落去會導航同 highlight；窄畫面 drawer 自動變 overlay；登出會轉返登入頁。
+
 ### Phase 6 — 業務開發套件（薄封裝 Quasar）
 
 38. **`DataTable.vue`**：封裝 `QTable` 嘅 server-side 模式，把佢嘅 `request` 事件同分頁 / 排序 / 篩選參數，接上 HttpClient 同後端 query schema，統一載入 / 空 / 錯誤狀態。
