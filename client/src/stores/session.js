@@ -44,7 +44,13 @@ export const useSessionStore = defineStore("session", {
     },
 
     // 開機還原：storage 有 token 就叫一次 /me 確認仲有效，避免帶住過期 token
-    // 進入系統再逐個請求先發現 401。冇 token 或 /me 拒絕都當未登入處理。
+    // 進入系統再逐個請求先發現 401。冇 token 就當未登入處理。
+    //
+    // /me 淨係喺確認 401（token 本身無效／過期／已撤銷，見
+    // server/src/services/auth/jwtAuthStrategy.js）先清 token；網路錯誤、
+    // 逾時或 503（例如撤銷快照未 ready，見同一個檔案）都保留 token 淨係
+    // 令呢次還原失敗，等下次再試——後端刻意用 503 而唔係 401 分開呢兩種
+    // 情況，就是為咗唔想伺服器一次故障就逼全部人重新登入。
     async restore() {
       if (!getToken()) {
         this.user = null;
@@ -53,8 +59,11 @@ export const useSessionStore = defineStore("session", {
 
       try {
         this.user = await httpClient.get("/api/v1/user/me");
-      } catch {
-        this.clear();
+      } catch (error) {
+        this.user = null;
+        if (error.status === 401) {
+          this.clear();
+        }
       }
     }
   }

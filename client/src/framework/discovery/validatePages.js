@@ -3,6 +3,20 @@ import menuConfig from "@config/menu.js";
 const menuGroupNames = new Set(menuConfig.groups.map((group) => group.name));
 const REQUIRED_STRING_FIELDS = ["name", "path", "title"];
 
+// buildRoutes.js 喺呢啲頁面之外，額外掛咗 /403 同 catch-all 呢兩條框架自己嘅
+// 路由（見 buildRoutes.js）。discovered 頁面撞到呢兩個 path／name 唔會喺
+// vue-router 報錯，只會靜靜哋令框架路由永遠攞唔到請求。
+const RESERVED_PATHS = new Set(["/403"]);
+const RESERVED_NAMES = new Set(["forbidden", "not-found"]);
+
+// vue-router 預設 sensitive:false、strict:false（同 Express 一樣），所以
+// /Orders 同 /orders、/reports 同 /reports/ 會撞埋同一條路由——用原始字串
+// 查重嘅話兩個都會過驗證，但後註冊嗰個永遠收唔到導覽。
+function canonicalPath(path) {
+  const lower = path.toLowerCase();
+  return lower.length > 1 ? lower.replace(/\/+$/, "") : lower;
+}
+
 /**
  * 逐個頁面檢查 metadata：必填欄位齊唔齊、name/path 撞唔撞、menu.group 有冇
  * 定義、requires 個形狀啱唔啱。回傳錯誤陣列（每個帶埋邊個檔案），唔喺呢度
@@ -35,11 +49,17 @@ export function validatePages(discovered) {
     }
 
     if (typeof page.name === "string") {
+      if (RESERVED_NAMES.has(page.name)) {
+        errors.push({ filePath, message: `page.name「${page.name}」係框架保留路由名，唔可以用` });
+      }
       recordUnique(errors, seenNames, filePath, page.name, "page.name");
     }
 
     if (typeof page.path === "string") {
-      recordUnique(errors, seenPaths, filePath, page.path, "page.path");
+      if (RESERVED_PATHS.has(canonicalPath(page.path))) {
+        errors.push({ filePath, message: `page.path「${page.path}」係框架保留路由，唔可以用` });
+      }
+      recordUnique(errors, seenPaths, filePath, page.path, "page.path", canonicalPath(page.path));
     }
 
     if (page.public !== undefined && typeof page.public !== "boolean") {
@@ -62,11 +82,11 @@ export function validatePages(discovered) {
   return errors;
 }
 
-function recordUnique(errors, seen, filePath, value, label) {
-  if (seen.has(value)) {
-    errors.push({ filePath, message: `${label} 重複：「${value}」（同 ${seen.get(value)} 撞）` });
+function recordUnique(errors, seen, filePath, value, label, key = value) {
+  if (seen.has(key)) {
+    errors.push({ filePath, message: `${label} 重複：「${value}」（同 ${seen.get(key)} 撞）` });
   } else {
-    seen.set(value, filePath);
+    seen.set(key, filePath);
   }
 }
 

@@ -89,14 +89,40 @@ describe("session store", () => {
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/user/me");
   });
 
-  it("restore：token 已失效（/me 拋錯）就清返 storage 當未登入", async () => {
+  it("restore：/me 確認 401（token 本身無效）先至清返 storage 當未登入", async () => {
     localStorage.setItem("erp.token", "expired");
-    httpClient.get.mockRejectedValue(new Error("Unauthorized"));
+    const error = new Error("Unauthorized");
+    error.status = 401;
+    httpClient.get.mockRejectedValue(error);
     const session = useSessionStore();
 
     await session.restore();
 
     expect(session.isAuthenticated).toBe(false);
     expect(localStorage.getItem("erp.token")).toBeNull();
+  });
+
+  it("restore：網路錯誤（冇 status）當呢次未登入，但唔清 token——留返下次重試", async () => {
+    localStorage.setItem("erp.token", "tok-1");
+    httpClient.get.mockRejectedValue(new Error("網路錯誤"));
+    const session = useSessionStore();
+
+    await session.restore();
+
+    expect(session.isAuthenticated).toBe(false);
+    expect(localStorage.getItem("erp.token")).toBe("tok-1");
+  });
+
+  it("restore：503（例如撤銷快照未 ready）當呢次未登入，但唔清 token——留返下次重試", async () => {
+    localStorage.setItem("erp.token", "tok-1");
+    const error = new Error("Service unavailable");
+    error.status = 503;
+    httpClient.get.mockRejectedValue(error);
+    const session = useSessionStore();
+
+    await session.restore();
+
+    expect(session.isAuthenticated).toBe(false);
+    expect(localStorage.getItem("erp.token")).toBe("tok-1");
   });
 });

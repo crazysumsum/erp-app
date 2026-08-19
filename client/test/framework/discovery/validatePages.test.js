@@ -89,6 +89,60 @@ describe("validatePages", () => {
     });
   });
 
+  it("path 淨係大小寫唔同都算撞（vue-router 預設 sensitive:false）", () => {
+    const pages = [
+      ...discovered(),
+      {
+        filePath: "src/pages/duplicateCase.vue",
+        component,
+        page: { name: "orderList2", path: "/Orders", title: "又係訂單" }
+      }
+    ];
+
+    const errors = validatePages(pages);
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/duplicateCase.vue",
+      message: "page.path 重複：「/Orders」（同 src/pages/orders.vue 撞）"
+    });
+  });
+
+  it("path 有冇尾隨「/」都算撞（vue-router 預設 strict:false）", () => {
+    const pages = [
+      ...discovered(),
+      {
+        filePath: "src/pages/duplicateSlash.vue",
+        component,
+        page: { name: "orderList2", path: "/orders/", title: "又係訂單" }
+      }
+    ];
+
+    const errors = validatePages(pages);
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/duplicateSlash.vue",
+      message: "page.path 重複：「/orders/」（同 src/pages/orders.vue 撞）"
+    });
+  });
+
+  it("page.path 用 /403 會報錯（框架保留路由）", () => {
+    const errors = validatePages(discovered({ path: "/403" }));
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: "page.path「/403」係框架保留路由，唔可以用"
+    });
+  });
+
+  it.each(["forbidden", "not-found"])("page.name 用 %s 會報錯（框架保留路由名）", (name) => {
+    const errors = validatePages(discovered({ name }));
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: `page.name「${name}」係框架保留路由名，唔可以用`
+    });
+  });
+
   it("page.public 唔係 boolean 會報錯", () => {
     const errors = validatePages(discovered({ public: "yes" }));
 
