@@ -134,7 +134,7 @@ const orderApi = useService("order");
 
     > **已完成**。同原計劃唔同嘅地方：
     >
-    > - **Quasar 用 `@quasar/vite-plugin@1.12`**，唔係最新嘅 v2 —— v2 要求 Vite ^8，而專案係 Vite 6。v1.12 同時支援 Vite 6 至 8，唔使為咗一個 plugin 做兩個大版本嘅 build tool 升級。
+    > - **同時升級到 Vite 8 + `@quasar/vite-plugin@2`**（`@vitejs/plugin-vue` 亦一併升到 v6）。原本打算用支援 Vite 6 嘅 `@quasar/vite-plugin@1.12` 避開 build tool 升級，但趁 client 得一個元件嗰陣做，成本遠低過項目做到一半先升。
     > - **唔裝 sass**：用 Quasar 預編譯嘅 `dist/quasar.css`。品牌色可以用 CSS 變數覆蓋，真係要 sass 層級客製再裝。
     > - **刪咗 `client/src/styles.css`**（155 行）：全部係為舊 markup 而寫，而且入面嘅全域 `button` / `h1` / `dt` 覆蓋會同 Quasar 打架。轉用 Quasar 樣式系統之後佢變成孤兒代碼。
     > - **client 覆蓋率暫時唔設門檻**：而家得一個煙霧測試，第一段值得釘住嘅前端邏輯係 Phase 2 嘅 HttpClient。
