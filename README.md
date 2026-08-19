@@ -161,3 +161,23 @@ npm run test:watch --workspace client
 ```
 
 client 目前只有一個煙霧測試，覆蓋率沒有設門檻——第一段值得釘住的前端邏輯是 Phase 2 的 HttpClient，那時再設。先設一個數字只會逼著為了湊數而寫測試。
+
+## CI
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) 四個 job 並行跑，互相沒有依賴：依賴掃描、lint、前端建置、以及帶 MySQL service 的測試。
+
+**CI 不是強制關卡。** 這個 repo 目前是私有的免費方案，GitHub 分支保護要求 Pro 或轉 public，兩者都還沒做，所以檢查紅了照樣 merge 得到——`main` 完全靠自律守住。Merge 前務必看 `gh pr checks` 或 PR 頁面的檢查結果，不要假設「開了 PR 就有人幫忙擋」。
+
+### 為什麼要真的接 MySQL
+
+`test` job 起一個 MySQL service，跑 `npm run migrate` 建表，再連真資料庫跑測試——這是刻意的，不是排場。`server/test/` 底下所有單元測試都用假 pool（`test-support/fakeMySqlPool.js`），比對的是「SQL 字串有沒有包含 `FROM roles r`」這類片段；表名、欄名、join 條件打錯字，假 pool 照樣通過。`server/database/migrations/0003_add_auth_tables.js` 那個會 `DROP TABLE users` 的守衛邏輯，在這之前也從來沒有真的執行過一次。
+
+[test/integration/authFlow.integration.test.js](server/test/integration/authFlow.integration.test.js) 補這個缺口：起一個真的 `application`、打真 HTTP 請求，讓 `UserService` 的 join、`tokenRevocation` 的版本號比對、JWT 簽發驗證全部真的跑一次。
+
+**本機預設不跑**：這組測試靠 `DB_INTEGRATION_TESTS=1` 開關，沒設就 `skip`（在測試報告裡看得到，不是靜默通過），這樣沒裝 MySQL 的環境 `npm test` 照樣能跑。本機要跑就跟 Step 3、Step 4 一樣先準備好 MySQL 與 migration，再：
+
+```bash
+DB_INTEGRATION_TESTS=1 npm test --workspace server
+```
+
+CI 的 `test` job 一定會設這個變數——那裡的 MySQL 是特地起的，連不上就該讓 build 紅，不該被當成「這個環境沒有資料庫」而悄悄跳過。
