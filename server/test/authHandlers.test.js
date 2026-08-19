@@ -92,6 +92,16 @@ function fakeJwt({ issued = [] } = {}) {
   };
 }
 
+function fakeRes() {
+  const headers = {};
+  return {
+    headers,
+    setHeader(name, value) {
+      headers[name] = value;
+    }
+  };
+}
+
 function fakeTokenRevocation({ version = 3, revoked = [] } = {}) {
   return {
     revoked,
@@ -213,6 +223,83 @@ test("login never puts the password in the log context", async () => {
   assert.ok(
     !JSON.stringify(logger.entries).includes("hunter2"),
     "the password reached the log"
+  );
+});
+
+test("login throttles repeated requests from the same client IP", async () => {
+  const { handler, logger } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: false, reason: AUTH_FAILURE.BAD_PASSWORD };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
+  });
+  const req = {
+    ip: "203.0.113.9",
+    input: { body: { username: "alice", password: "wrong" } }
+  };
+  const res = fakeRes();
+
+  // 節流門檻是每個 IP 20 次／10 分鐘（見 loginHandler.js 的 LOGIN_IP_LIMIT）。
+  // 用掉整個配額，每一次都應該正常打進 authenticate，回 401 而不是 429。
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await assert.rejects(
+      () => handler.execute(req, res),
+      (error) => {
+        assert.equal(error.statusCode, 401);
+        return true;
+      }
+    );
+  }
+
+  // 第 21 次應該被節流擋下，連 authenticate 都不會打進去。
+  await assert.rejects(
+    () => handler.execute(req, res),
+    (error) => {
+      assert.equal(error.statusCode, 429);
+      assert.equal(error.code, "LOGIN_RATE_LIMITED");
+      return true;
+    }
+  );
+
+  assert.ok(res.headers["Retry-After"], "Retry-After header was not set");
+
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+  assert.ok(
+    logger.entries.some((entry) => entry.event === "auth.login.rate_limited"),
+    "rate limit rejection was not logged"
+  );
+});
+
+test("login throttle tracks each client IP independently", async () => {
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: false, reason: AUTH_FAILURE.BAD_PASSWORD };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
+  });
+  const requestFrom = (ip) => ({
+    ip,
+    input: { body: { username: "alice", password: "wrong" } }
+  });
+  const res = fakeRes();
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await assert.rejects(() => handler.execute(requestFrom("203.0.113.1"), res));
+  }
+
+  // 另一個 IP 沒有共用配額：第一次仍然正常打進 authenticate，回 401 而不是 429。
+  await assert.rejects(
+    () => handler.execute(requestFrom("203.0.113.2"), res),
+    (error) => {
+      assert.equal(error.statusCode, 401);
+      return true;
+    }
   );
 });
 
