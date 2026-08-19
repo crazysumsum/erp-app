@@ -117,6 +117,10 @@ export class HttpClient {
 function buildUrl(baseUrl, path, params) {
   const url = new URL(path, baseUrl);
 
+  if (url.origin !== new URL(baseUrl).origin) {
+    throw new Error(`拒絕跨 origin 請求：${path} 解析成 ${url.origin}，非 baseUrl origin`);
+  }
+
   if (params) {
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && value !== null) {
