@@ -54,6 +54,27 @@ describe("FormPanel", () => {
     expect(wrapper.find(".submitting").text()).toBe("false");
   });
 
+  it("submit 未完成之前再 submit 一次，唔會再次呼叫 onSubmit（防止雙擊／重複提交）", async () => {
+    let resolveSubmit;
+    const onSubmit = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveSubmit = resolve;
+        })
+    );
+    const wrapper = mountFormPanel(onSubmit);
+
+    wrapper.find("form").trigger("submit");
+    await flushPromises();
+    wrapper.find("form").trigger("submit");
+    await flushPromises();
+
+    expect(onSubmit).toHaveBeenCalledOnce();
+
+    resolveSubmit();
+    await flushPromises();
+  });
+
   it("onSubmit 拋出帶 body location details 嘅錯誤，會經 fieldError 顯示喺對應欄位", async () => {
     const error = new Error("Request validation failed");
     error.details = [

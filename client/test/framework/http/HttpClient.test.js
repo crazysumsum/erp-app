@@ -62,6 +62,32 @@ describe("HttpClient", () => {
     );
   });
 
+  it("冇指定 idempotencyKey 時，每次呼叫都係新 key", async () => {
+    fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: null, meta: {} }));
+    const client = new HttpClient({ fetchImpl, getToken: () => null });
+
+    await client.post("/api/v1/orders", { body: { total: 10 }, idempotent: true });
+    await client.post("/api/v1/orders", { body: { total: 10 }, idempotent: true });
+
+    const [, firstInit] = fetchImpl.mock.calls[0];
+    const [, secondInit] = fetchImpl.mock.calls[1];
+    expect(firstInit.headers["Idempotency-Key"]).not.toBe(secondInit.headers["Idempotency-Key"]);
+  });
+
+  it("指定 idempotencyKey 時，重試會重用同一個 key", async () => {
+    fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: null, meta: {} }));
+    const client = new HttpClient({ fetchImpl, getToken: () => null });
+    const idempotencyKey = "fixed-key-123";
+
+    await client.post("/api/v1/orders", { body: { total: 10 }, idempotent: true, idempotencyKey });
+    await client.post("/api/v1/orders", { body: { total: 10 }, idempotent: true, idempotencyKey });
+
+    const [, firstInit] = fetchImpl.mock.calls[0];
+    const [, secondInit] = fetchImpl.mock.calls[1];
+    expect(firstInit.headers["Idempotency-Key"]).toBe(idempotencyKey);
+    expect(secondInit.headers["Idempotency-Key"]).toBe(idempotencyKey);
+  });
+
   it("query params 會被序列化到 URL", async () => {
     fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: [], meta: {} }));
     const client = new HttpClient({ fetchImpl, baseUrl: "http://localhost:3000", getToken: () => null });

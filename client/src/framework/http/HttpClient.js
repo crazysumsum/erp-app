@@ -49,7 +49,7 @@ export class HttpClient {
     return this.request("DELETE", path, options);
   }
 
-  async request(method, path, { params, body, idempotent = false, signal } = {}) {
+  async request(method, path, { params, body, idempotent = false, idempotencyKey, signal } = {}) {
     const url = buildUrl(this.baseUrl, path, params);
     const headers = { Accept: "application/json" };
 
@@ -59,7 +59,7 @@ export class HttpClient {
     }
 
     if (idempotent) {
-      headers["Idempotency-Key"] = crypto.randomUUID();
+      headers["Idempotency-Key"] = idempotencyKey || crypto.randomUUID();
     }
 
     let payload;

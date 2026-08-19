@@ -32,6 +32,10 @@ function fieldError(name) {
 }
 
 async function handleSubmit() {
+  if (submitting.value) {
+    return;
+  }
+
   submitting.value = true;
   errorMessage.value = "";
   fieldErrors.value = {};
