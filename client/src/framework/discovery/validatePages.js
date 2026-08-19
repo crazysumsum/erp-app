@@ -46,6 +46,10 @@ export function validatePages(discovered) {
       errors.push({ filePath, message: "page.public 必須係 boolean" });
     }
 
+    if (page.public === true && page.requires !== undefined) {
+      errors.push({ filePath, message: "page.public 同 page.requires 唔可以同時設定" });
+    }
+
     if (page.menu !== undefined) {
       errors.push(...validateMenu(filePath, page.menu));
     }
@@ -89,19 +93,33 @@ function validateMenu(filePath, menu) {
   return errors;
 }
 
+const REQUIRES_KEYS = new Set(["roles", "permissions", "match"]);
+
 function validateRequires(filePath, requires) {
-  if (typeof requires !== "object" || requires === null) {
+  if (typeof requires !== "object" || requires === null || Array.isArray(requires)) {
     return [{ filePath, message: "page.requires 必須係物件" }];
   }
 
   const errors = [];
+
+  for (const key of Object.keys(requires)) {
+    if (!REQUIRES_KEYS.has(key)) {
+      errors.push({ filePath, message: `page.requires 有未知欄位：「${key}」` });
+    }
+  }
+
+  if (requires.roles === undefined && requires.permissions === undefined) {
+    errors.push({ filePath, message: "page.requires 必須至少設定 roles 或 permissions 其中一個" });
+  }
 
   for (const key of ["roles", "permissions"]) {
     if (requires[key] === undefined) {
       continue;
     }
     const isValidStringArray =
-      Array.isArray(requires[key]) && requires[key].every((value) => typeof value === "string" && value.trim());
+      Array.isArray(requires[key]) &&
+      requires[key].length > 0 &&
+      requires[key].every((value) => typeof value === "string" && value.trim());
     if (!isValidStringArray) {
       errors.push({ filePath, message: `page.requires.${key} 必須係非空字串陣列` });
     }

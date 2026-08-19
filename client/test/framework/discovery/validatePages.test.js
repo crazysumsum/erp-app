@@ -140,4 +140,51 @@ describe("validatePages", () => {
 
     expect(errors).toEqual([]);
   });
+
+  it("page.requires 冇 roles 亦冇 permissions 會報錯（唔可以 fail-open）", () => {
+    const errors = validatePages(discovered({ menu: undefined, requires: {} }));
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: "page.requires 必須至少設定 roles 或 permissions 其中一個"
+    });
+  });
+
+  it("page.requires.roles 係空陣列會報錯（唔可以 fail-open）", () => {
+    const errors = validatePages(discovered({ menu: undefined, requires: { roles: [] } }));
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: "page.requires.roles 必須係非空字串陣列"
+    });
+  });
+
+  it("page.requires.permissions 係空陣列會報錯（唔可以 fail-open）", () => {
+    const errors = validatePages(discovered({ menu: undefined, requires: { permissions: [] } }));
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: "page.requires.permissions 必須係非空字串陣列"
+    });
+  });
+
+  it("page.requires 有未知欄位（例如拼錯 permission）會報錯", () => {
+    const errors = validatePages(discovered({ menu: undefined, requires: { permission: ["order.read"] } }));
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: "page.requires 有未知欄位：「permission」"
+    });
+  });
+
+  it("page.public 同 page.requires 同時設定會報錯", () => {
+    const errors = validatePages(
+      discovered({ menu: undefined, public: true, requires: { roles: ["admin"] } })
+    );
+
+    expect(errors).toContainEqual({
+      filePath: "src/pages/orders.vue",
+      message: "page.public 同 page.requires 唔可以同時設定"
+    });
+  });
 });
