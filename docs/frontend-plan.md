@@ -150,6 +150,12 @@ const orderApi = useService("order");
 
     驗證：單元測試覆蓋信封拆解、錯誤映射、401 轉向、逾時、header 注入。
 
+    > **已完成**（見 `client/src/framework/http/HttpClient.js`、`ApiError.js`、`useRequestAbort.js`）。同原計劃唔同嘅地方：
+    >
+    > - **401「轉登入頁」用依賴注入掛勾，唔係直接綁 router**：`getToken` 同 `onUnauthorized` 係建構子參數，預設分別讀 `localStorage`（用 `config/auth.js` 嘅 key）同 no-op。原因係 session store 同路由都係 Phase 3 先起，HttpClient 唔應該喺呢個階段就去 import 一個仲未存在嘅模組；Phase 3 只需要 `httpClient.onUnauthorized = () => { session.clear(); router.push(...) }`，唔使改 HttpClient 本身。403 同樣唔喺 HttpClient 入面處理畫面（佢冇畫面可以顯示），單純俾 `ApiError.status === 403`，交返俾頁面 / 路由守衛判斷。
+    > - **請求取消用 `AbortSignal.any` 合併逾時同外部 signal**：`request()` 接受 caller 傳入嘅 `signal`（例如 `useRequestAbort()` 出嘅），同內部逾時嘅 `AbortController` 合併成一個。外部取消會原樣拋出 `AbortError`（唔包裝做 `ApiError`），等調用方可以識別呢個係「主動取消」而唔係錯誤，唔使彈錯誤提示。呢個要 Node ≥ 20 / 現代瀏覽器，項目 `engines.node` 已經係 `>=26`，冇問題。
+    > - **`useRequestAbort()` composable 已經建立**（`framework/http/useRequestAbort.js`），但仲未有頁面用到——要等 Phase 4 有真正嘅頁面先派用場，已用一個獨立測試元件驗證卸載時會 abort。
+
 ### Phase 3 — 認證與授權
 
 20. **Token 儲存層**：集中喺一個模組讀寫 localStorage（日後要改儲存方式只改呢一個檔）。
