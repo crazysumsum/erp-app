@@ -168,6 +168,12 @@ const orderApi = useService("order");
 
     驗證：測試守衛三種情境；無權限用戶直接打 URL 見到 403 而唔係頁面；重新整頁保持登入；登出後 token 即時失效（後端拒絕）。
 
+    > **已完成**（見 `client/src/framework/auth/`、`framework/authorization/`、`framework/routing/router.js`、`stores/session.js`、`pages/LoginPage.vue`）。同原計劃唔同嘅地方：
+    >
+    > - **路由係 Phase 3 手寫，唔係由頁面 metadata 生成**：真正嘅自動發現係 Phase 4 嘅工作，呢個 phase 淨係需要一個 router 俾 guard 有嘢好測，所以 `framework/routing/router.js` 暫時手寫一個小型 route table（login、403、home）。`route.meta.public` / `route.meta.requires` 嘅形狀特登同 `page.public` / `page.requires` 對齊，Phase 4 換成自動生成之後，`framework/auth/routeGuard.js` 嘅 guard 邏輯唔使改。
+    > - **`pages/login.vue` 同 `pages/home.vue` 改名做 `LoginPage.vue` / `HomePage.vue`**：專案嘅 ESLint 用緊 `vue/multi-word-component-names`（`flat/essential` preset 嘅一部分，唔係額外加），單字檔名會擋唔到 lint。`HomePage.vue` 係原本 App.vue 嗰個 Phase 1 驗證畫面搬過去，Phase 7 先會有真正嘅首頁內容。
+    > - **`main.js` 嘅開機順序要留意一個坑**：`app.use(router)` 一裝好就會即時觸發 vue-router 嘅第一次導航（唔使等 `app.mount()`）。原本寫法係 `app.use(router)` 之後先 `await session.restore()` 先 `app.mount()`，結果 guard 喺 session 仲未還原嗰陣就判斷「未登入」——手動喺瀏覽器測先發現：有 token 嘅用戶一 refresh 就被踢返登入頁。修正後 `app.use(router)` 本身都要等 `restore()` 完成先做。
+
 ### Phase 4 — 自動發現 + 路由 + 菜單
 
 27. **`framework/discovery/pages.js`**：`import.meta.glob("@/pages/**/*.vue", { eager: true })` 收集所有 `export const page`。
