@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同一個 ref 有新的一輪 push 時，取消還在跑的舊一輪——PR 連續推幾次 commit
+# 不需要每一輪都跑到底，跑到一半的舊結果反正也不會被採用。
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 四個 job 互相沒有 needs 依賴，並行跑：依賴掃描、lint、前端建置都不需要
+  # 資料庫，沒理由跟著需要 MySQL 的 test job 排隊。
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Scan dependencies
+        run: npm run security:audit
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Lint (server + client, including .vue)
+        run: npm run lint
+
+  test:
+    name: Test (server + client, MySQL integration)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          # MySQL 官方映像收到這三個變數會自動建庫、建帳號並把該資料庫的
+          # 全部權限授予這個帳號——同 server/database/init.sql 手動做的事一樣，
+          # 這裡不必再另外跑一次 init.sql。權限含 DROP，migrations/
+          # 0003_add_auth_tables.js 換走 demo users 表需要的就是這個。
+          MYSQL_DATABASE: erp_dev
+          MYSQL_USER: erp_user
+          MYSQL_PASSWORD: erp_password
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        # GitHub Actions 會等 service 的健康檢查通過才開始跑這個 job 的 steps，
+        # 所以不需要另外寫一個「等 MySQL 就緒」的 step。
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: erp_user
+      DB_PASSWORD: erp_password
+      DB_NAME: erp_dev
+      # 打開 test/integration/authFlow.integration.test.js 那組真連線測試。
+      # 本機沒設這個變數時它們會 skip 而不是失敗，讓沒裝 MySQL 的環境仍然可以
+      # 跑 npm test；CI 這裡確定有一個剛 migrate 過的 MySQL，設了就要求它真的
+      # 跑起來、真的通過——連不上不該被靜默跳過，那會把「CI 的 MySQL 設定壞了」
+      # 偽裝成「一切正常」。
+      DB_INTEGRATION_TESTS: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Apply database migrations
+        run: npm run migrate --workspace server
+
+      - name: Run tests with coverage thresholds
+        run: npm run test:coverage
+
+  build:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build --workspace client
