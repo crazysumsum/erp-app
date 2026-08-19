@@ -27,6 +27,11 @@ const LOCKOUT_MS = 15 * 60 * 1000;
 // 使用者不存在時，仍然跑一次雜湊比對用的假雜湊。見 authenticate() 的說明。
 const DUMMY_HASH_PASSWORD = "dummy-password-for-constant-time-comparison";
 
+// 鎖定期間用來取代雜湊比對的固定延遲（毫秒）。約略對齊 passwordHash.js 記錄的
+// scrypt 實測耗時（86ms），但不是同一個常數：這裡刻意不花 CPU／記憶體，只花
+// 時間，兩邊的用途不同，沒有理由耦合在一起。
+const LOCKOUT_RESPONSE_DELAY_MS = 86;
+
 /**
  * 登入失敗的原因。一律不會出現在 API 回應裡——回應只有一句籠統的「帳號或密碼
  * 錯誤」，避免洩漏某個帳號是否存在。這個分類只寫進日誌，給防守方看。
@@ -80,7 +85,11 @@ export class UserService {
 
     if (row.locked_until !== null && Number(row.locked_until) > nowMs) {
       // 鎖定期間不比對密碼：比對是這個端點最貴的操作，而鎖定的用意正是讓
-      // 攻擊者不能靠不停送密碼把它跑起來。
+      // 攻擊者不能靠不停送密碼把它跑起來。但完全不花時間直接返回，會讓「已
+      // 鎖定」比「使用者不存在」／「密碼錯」快兩個數量級，回應時間本身就變成
+      // 一個帳號是否存在、是否已被鎖定的探測器。用不花 CPU／記憶體的延遲頂
+      // 替雜湊，把耗時拉到同一個量級，同時不重新引入鎖定原本要避免的成本。
+      await this.#delay(LOCKOUT_RESPONSE_DELAY_MS);
       return { ok: false, reason: AUTH_FAILURE.LOCKED };
     }
 
@@ -156,21 +165,33 @@ export class UserService {
   }
 
   async #recordFailedAttempt(row, nowMs) {
-    const attempts = Number(row.failed_login_attempts) + 1;
-    const lockedUntil = attempts >= MAX_FAILED_ATTEMPTS ? nowMs + LOCKOUT_MS : null;
-
+    // 遞增交給資料庫做，不是「SELECT 讀舊值 -> JS 加一 -> UPDATE 寫回絕對值」：
+    // 後者是 read-modify-write 競態，並行的錯誤密碼請求會各自讀到同一個舊值、
+    // 各自加一，最後寫入的那次蓋掉前面所有次，20 次並行猜密碼可能只被計成 1
+    // 次。純 `col = col + 1` 這句在並行下是原子的，InnoDB 對這一列的寫入會互相
+    // 序列化。
+    //
+    // 鎖定判斷特意拆成第二句獨立的 UPDATE，而不是塞進同一句的 SET 子句用 CASE
+    // 判斷（實測過：把「col = col + 1」跟「CASE WHEN col + 1 >= N」放進同一句
+    // UPDATE 的 SET 清單，在真並行下 CASE 讀到的門檻比對值會跟遞增本身的值不
+    // 一致，4 次並行猜密碼可能就把帳號誤鎖，即使實際次數還沒到門檻）。第二句
+    // 的 WHERE 條件是一次乾淨的比較讀取，不受這個問題影響，並行下驗證過準確。
     await this.database.execute(
-      `UPDATE users
-       SET failed_login_attempts = ?, locked_until = ?, updated_at = ?
-       WHERE id = ?`,
-      [attempts, lockedUntil, nowMs, row.id]
+      `UPDATE users SET failed_login_attempts = failed_login_attempts + 1, updated_at = ? WHERE id = ?`,
+      [nowMs, row.id]
     );
 
-    if (lockedUntil !== null) {
+    const lockedUntil = nowMs + LOCKOUT_MS;
+    const [lockResult] = await this.database.execute(
+      `UPDATE users SET locked_until = ? WHERE id = ? AND failed_login_attempts >= ?`,
+      [lockedUntil, row.id, MAX_FAILED_ATTEMPTS]
+    );
+
+    if (lockResult.affectedRows > 0) {
       await this.logger.warn(
         "auth.login.locked",
         "The account was locked after repeated failed logins",
-        { userId: Number(row.id), attempts, lockedUntilMs: lockedUntil }
+        { userId: Number(row.id), lockedUntilMs: lockedUntil }
       );
     }
   }
@@ -191,5 +212,11 @@ export class UserService {
   async #burnPasswordComparison(password) {
     this.dummyHash ??= await hashPassword(DUMMY_HASH_PASSWORD);
     await verifyPassword(password, this.dummyHash);
+  }
+
+  async #delay(ms) {
+    await new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
   }
 }

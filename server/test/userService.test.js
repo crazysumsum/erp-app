@@ -25,18 +25,23 @@ function collectingLogger() {
 }
 
 /**
- * 只實作這個 service 真正下的那幾句 SQL。updates 記下每一次寫入，讓「失敗次數
- * 有沒有真的被寫回去」測得到。
+ * 只實作這個 service 真正下的那幾句 SQL。updates 記下每一次寫入。
+ *
+ * user 是可變狀態而不是靜態快照：#recordFailedAttempt 現在是兩句獨立的
+ * UPDATE——先原子遞增，再用一句以 `failed_login_attempts >= ?` 為條件的 UPDATE
+ * 決定要不要鎖定，靠 affectedRows 判斷條件有沒有命中。假資料庫必須真的套用
+ * 第一句對 state.user 的影響，第二句的條件判斷才測得出「鎖定邏輯本身對不對」，
+ * 不會只測到「SQL 有沒有被呼叫」。
  */
 function fakeDatabase({ user = null, roles = [], permissions = [] } = {}) {
-  const state = { updates: [], queries: [] };
+  const state = { updates: [], queries: [], user: user ? { ...user } : null };
 
   const query = async (sql, parameters = []) => {
     const text = sql.replace(/\s+/g, " ").trim();
     state.queries.push({ sql: text, parameters });
 
     if (text.includes("FROM users")) {
-      return [user ? [{ ...user }] : []];
+      return [state.user ? [{ ...state.user }] : []];
     }
 
     if (text.includes("FROM roles r")) {
@@ -51,10 +56,30 @@ function fakeDatabase({ user = null, roles = [], permissions = [] } = {}) {
   };
 
   const execute = async (sql, parameters = []) => {
-    state.updates.push({
-      sql: sql.replace(/\s+/g, " ").trim(),
-      parameters
-    });
+    const text = sql.replace(/\s+/g, " ").trim();
+    state.updates.push({ sql: text, parameters });
+
+    if (text.includes("failed_login_attempts = failed_login_attempts + 1")) {
+      state.user.failed_login_attempts += 1;
+      return [{ affectedRows: 1 }];
+    }
+
+    if (text.includes("SET locked_until = ?") && text.includes("failed_login_attempts >=")) {
+      const [lockedUntil, , maxAttempts] = parameters;
+
+      if (state.user.failed_login_attempts >= maxAttempts) {
+        state.user.locked_until = lockedUntil;
+        return [{ affectedRows: 1 }];
+      }
+
+      return [{ affectedRows: 0 }];
+    }
+
+    if (text.includes("failed_login_attempts = 0")) {
+      state.user.failed_login_attempts = 0;
+      state.user.locked_until = null;
+    }
+
     return [{ affectedRows: 1 }];
   };
 
@@ -126,7 +151,15 @@ test("authenticate rejects the wrong password and counts the attempt", async () 
 
   assert.equal(result.ok, false);
   assert.equal(result.reason, AUTH_FAILURE.BAD_PASSWORD);
-  assert.deepEqual(database.state.updates[0].parameters, [1, null, NOW_MS, 7]);
+
+  // 遞增在資料庫端做（`failed_login_attempts + 1`），第一句 UPDATE 的參數因此
+  // 只有 nowMs 跟 id；真正累加後的次數要看 state.user，那才是這句 UPDATE 對
+  // 假資料庫造成的實際效果。
+  const [increment] = database.state.updates;
+  assert.match(increment.sql, /failed_login_attempts = failed_login_attempts \+ 1/);
+  assert.deepEqual(increment.parameters, [NOW_MS, 7]);
+  assert.equal(database.state.user.failed_login_attempts, 1);
+  assert.equal(database.state.user.locked_until, null);
 });
 
 test("authenticate locks the account on the fifth consecutive failure", async () => {
@@ -138,10 +171,27 @@ test("authenticate locks the account on the fifth consecutive failure", async ()
 
   await service.authenticate("alice", "wrong-password");
 
-  const [attempts, lockedUntil] = database.state.updates[0].parameters;
-  assert.equal(attempts, 5);
-  assert.equal(lockedUntil, NOW_MS + 15 * 60 * 1000);
-  assert.ok(logger.entries.some((entry) => entry.event === "auth.login.locked"));
+  assert.equal(database.state.user.failed_login_attempts, 5);
+  assert.equal(database.state.user.locked_until, NOW_MS + 15 * 60 * 1000);
+
+  const lockedEntry = logger.entries.find((entry) => entry.event === "auth.login.locked");
+  assert.ok(lockedEntry);
+  assert.equal(lockedEntry.context.userId, 7);
+  assert.equal(lockedEntry.context.lockedUntilMs, NOW_MS + 15 * 60 * 1000);
+});
+
+test("authenticate does not lock the account before the fifth consecutive failure", async () => {
+  const logger = collectingLogger();
+  const database = fakeDatabase({
+    user: await activeUser({ failed_login_attempts: 3 })
+  });
+  const service = createService(database, { logger });
+
+  await service.authenticate("alice", "wrong-password");
+
+  assert.equal(database.state.user.failed_login_attempts, 4);
+  assert.equal(database.state.user.locked_until, null);
+  assert.ok(!logger.entries.some((entry) => entry.event === "auth.login.locked"));
 });
 
 test("authenticate rejects a locked account even with the right password", async () => {
@@ -216,6 +266,30 @@ test("authenticate spends the same work on an unknown user as on a wrong passwor
   assert.ok(
     ratio > 0.25,
     `unknown-user path was ${(1 / ratio).toFixed(1)}x faster than the wrong-password path`
+  );
+});
+
+test("authenticate spends comparable time on a locked account as on a wrong password", async () => {
+  const wrongPasswordDatabase = fakeDatabase({ user: await activeUser() });
+  const lockedDatabase = fakeDatabase({
+    user: await activeUser({ failed_login_attempts: 5, locked_until: NOW_MS + 60_000 })
+  });
+
+  const wrongPasswordStart = process.hrtime.bigint();
+  await createService(wrongPasswordDatabase).authenticate("alice", "wrong-password");
+  const wrongPasswordNs = Number(process.hrtime.bigint() - wrongPasswordStart);
+
+  const lockedStart = process.hrtime.bigint();
+  await createService(lockedDatabase).authenticate("alice", "wrong-password");
+  const lockedNs = Number(process.hrtime.bigint() - lockedStart);
+
+  // 鎖定期間跳過雜湊、改用固定延遲頂替：如果補償被拿掉，鎖定路徑會比密碼錯的
+  // 路徑快兩個數量級，回應時間本身就變成「這個帳號是否已被鎖定」的探測器。
+  // 門檻一樣放得很鬆，只抓「補償整個不見了」。
+  const ratio = lockedNs / wrongPasswordNs;
+  assert.ok(
+    ratio > 0.25,
+    `locked-account path was ${(1 / ratio).toFixed(1)}x faster than the wrong-password path`
   );
 });
 

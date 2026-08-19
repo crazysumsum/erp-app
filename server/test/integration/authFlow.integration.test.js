@@ -188,3 +188,85 @@ test("five consecutive failed logins lock the account for fifteen minutes", { sk
   // 第五次已經觸發鎖定；用返正確密碼都應該仍然被拒。
   assert.equal(await attemptLogin(password), 401);
 });
+
+test("concurrent failed logins are all counted, not lost to a race", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const username = `it-race-${randomUUID().slice(0, 8)}`;
+  const password = "Integration-Test-Pass-3!";
+  const seeded = await seedUser(db, { username, password });
+
+  t.after(async () => {
+    await cleanupUser(db, seeded);
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+
+  async function attemptLogin(loginPassword) {
+    const response = await fetch(`${url}/api/v1/user/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password: loginPassword })
+    });
+    return response.status;
+  }
+
+  // 只送 4 次（鎖定門檻是 5 次），確保鎖定不會被觸發：這樣每個並行請求在
+  // authenticate() 讀到的 locked_until 都是 null，一定會走到
+  // #recordFailedAttempt()，這條測試才只量到「計數本身準不準」，不會被「鎖定
+  // 判斷跟遞增之間也有先後之分」這個另一個、預期中的競態混進來干擾。
+  //
+  // 修復前，#recordFailedAttempt 是「SELECT 讀舊值 -> JS 加一 -> UPDATE 寫回
+  // 絕對值」：4 個並行請求各自讀到同一個舊值 0，各自算出 1，最後寫入的那次會
+  // 蓋掉前面所有次，資料庫最後只會停在 1。這條測試在假 pool（單元測試）上測不
+  // 出來——假 pool 是同步模擬，不會真的交錯；只有打真資料庫、真的並行送出才
+  // 會暴露這個競態。
+  const CONCURRENT_ATTEMPTS = 4;
+  const statuses = await Promise.all(
+    Array.from({ length: CONCURRENT_ATTEMPTS }, () => attemptLogin("wrong-password"))
+  );
+
+  assert.ok(statuses.every((status) => status === 401));
+
+  const [rows] = await db.query(
+    "SELECT failed_login_attempts, locked_until FROM users WHERE id = ?",
+    [seeded.userId]
+  );
+
+  assert.equal(rows[0].failed_login_attempts, CONCURRENT_ATTEMPTS);
+  assert.equal(rows[0].locked_until, null);
+});
+
+test("more than twenty login attempts from one client are throttled", { skip }, async (t) => {
+  const application = await startApplication();
+
+  t.after(async () => {
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+
+  async function attemptLogin(username) {
+    const response = await fetch(`${url}/api/v1/user/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password: "wrong-password" })
+    });
+    return { status: response.status, retryAfter: response.headers.get("retry-after") };
+  }
+
+  // 節流門檻是每個 IP 20 次／10 分鐘（見 loginHandler.js 的 LOGIN_IP_LIMIT），
+  // 跟帳號本身無關——每次換一個不存在的帳號，確保觸發的一定是 IP 節流，不是
+  // 上面兩條測試在驗的帳號鎖定。這條測試要防的是：有人繞過全站的 requestLimiter
+  // service（例如它被關掉，或個別部署把配額調鬆），登入端點也不能因此完全沒有
+  // 節流——單一帳號被鎖只需要 5 次請求，遠低於任何合理的全站配額。
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { status } = await attemptLogin(`it-throttle-${attempt}`);
+    assert.equal(status, 401);
+  }
+
+  const throttled = await attemptLogin("it-throttle-final");
+  assert.equal(throttled.status, 429);
+  assert.ok(throttled.retryAfter, "Retry-After header was not set");
+});
