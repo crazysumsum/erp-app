@@ -47,6 +47,14 @@ export class JwtService extends BaseService {
   }
 
   /**
+   * 同一個有效期的秒數。前端要靠它算出到期時刻，才能排定續期與強制登出——
+   * 給字串 "15m" 的話，前端得自己再實作一次同一套單位解析。
+   */
+  get expiresInSeconds() {
+    return this.#jwt.expiresInSeconds;
+  }
+
+  /**
    * 簽發一個 token。subject 與 version 都是必填。
    *
    * 這個 service 沒有依賴，也不該有——讓它依賴資料庫會把整個 auth 堆疊綁死在

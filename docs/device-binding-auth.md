@@ -160,6 +160,20 @@ migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：
 
 **驗簽必須指定 `dsaEncoding: "ieee-p1363"`**：Web Crypto 的 ECDSA 簽章是 r||s 直接接起來（P-256 為 64 bytes），而 Node 對 EC 預設吃 DER。不指定的話，**每一份由瀏覽器產生的合法簽章都會被判成無效**，而錯誤訊息不會提到格式。這是這個介面最容易踩的一顆雷。
 
+**對外的錯誤只有三種**，內部的失敗原因一律只進日誌：
+
+| 對外 code | HTTP | 何時 |
+| --- | --- | --- |
+| `DEVICE_SIGNATURE_REQUIRED` | 400 | 完全沒帶簽章 header |
+| `DEVICE_SIGNATURE_STALE` | 400 | 時鐘偏差超出容忍 |
+| `DEVICE_SIGNATURE_INVALID` | 400 | 其他全部：簽章不符、公鑰不合法、nonce 重放、device id 與公鑰不符 |
+
+時鐘偏差刻意獨立出來，因為它是唯一一個**使用者自己修得好**的原因，而攻擊者從「你的時間差太多」學不到任何東西；收斂掉它只會換來一通查不出原因的客服電話。其餘全部收斂，因為「簽章不符」與「nonce 用過了」的差別會告訴攻擊者他離成功還差多遠。
+
+**body 的雜湊必須用原始 bytes。** `express.json()` 解析完就把 stream 消耗掉了，所以框架在 `express.json({ verify })` 裡把原始 Buffer 留在 `req.rawBody`。不能改用 `JSON.stringify(req.body)` 重算——鍵順序、空白、Unicode escape 都可能與客戶端送出的那份不同，那樣簽章會時好時壞，是最難查的一種。記憶體成本有界：`jsonBodyLimit`（預設 100kb）就是上限。
+
+**待簽字串的格式由兩邊各一條 golden 測試釘住**（`server/test/deviceBinding.test.js` 與 `client/test/framework/auth/deviceKey.test.js`）。兩邊漂移的症狀是「每一次登入都說簽章無效」，而錯誤訊息不會提到格式——所以改那個字串時兩條測試一定要一起改。
+
 ⚠️ CORS 要放行這些 header：`server/config/security.js` 的 `cors.allowedHeaders` 目前是 `["Content-Type", "Authorization", "X-Request-Id", "Idempotency-Key"]`，要加上五個 `X-Device-*`。漏了的話瀏覽器會在 preflight 就擋下，而且只會說「被 CORS 拒絕」。
 
 ---
@@ -181,6 +195,8 @@ const keyPair = await crypto.subtle.generateKey(
 // 公鑰不受 extractable 影響（規格規定非對稱金鑰的公鑰恆為可匯出），
 // 所以照樣能匯出來送給後端、算 thumbprint。
 ```
+
+登入 body 多一個選填的 `deviceLabel`，成為審批佇列裡給人看的裝置名稱。前端由 User-Agent 撮要出來（例如「Chrome on Mac」）而不是叫使用者自己填——第一次登入時他還沒進到系統，沒有地方可以問。選填是因為審批者本來就還有完整的 UA 與 IP 可看，不該因為少一個標籤就擋下整個登入。
 
 登入請求一律攜帶設備簽章 header。後端處理順序**不可調換**：
 

@@ -39,6 +39,9 @@ test("the service surface is issue, verify and the header settings", () => {
   assert.equal(service.headerName, "authorization");
   assert.equal(service.authScheme, "Bearer");
   assert.equal(service.expiresIn, "2h");
+  // 同一個有效期的秒數。前端靠它算到期時刻來排定續期與強制登出；只給
+  // "2h" 的話，前端得自己再實作一次同一套單位解析。
+  assert.equal(service.expiresInSeconds, 7200);
 
   // 正規化後的設定是私有欄位，所以這個 service 自己的介面上沒有密鑰。
   // 注意這只收窄了它自己：每個 service 都會收到整份應用設定，config.jwt.secret
@@ -47,7 +50,15 @@ test("the service surface is issue, verify and the header settings", () => {
   assert.equal(service.jwtConfig, undefined);
   assert.deepEqual(
     Object.getOwnPropertyNames(Object.getPrototypeOf(service)).sort(),
-    ["authScheme", "constructor", "expiresIn", "headerName", "issue", "verify"]
+    [
+      "authScheme",
+      "constructor",
+      "expiresIn",
+      "expiresInSeconds",
+      "headerName",
+      "issue",
+      "verify"
+    ]
   );
 });
 

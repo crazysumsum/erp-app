@@ -11,7 +11,7 @@ export const page = {
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import authConfig from "@config/auth.js";
-import { useSessionStore } from "@/stores/session.js";
+import { DEVICE_BLOCKED_CODES, useSessionStore } from "@/stores/session.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -33,6 +33,14 @@ async function handleSubmit() {
     const redirect = typeof route.query.redirect === "string" ? route.query.redirect : authConfig.homePath;
     router.push(redirect);
   } catch (error) {
+    // 設備被擋唔係「登入失敗」：密碼係啱嘅。留喺登入頁淨係顯示一句紅字嘅話，
+    // 用戶只會不停重試密碼，然後撞上登入節流——真正要做嘅事（等審批、搵管理員）
+    // 一件都唔會發生。所以送佢去一頁講得清楚嘅畫面。
+    if (DEVICE_BLOCKED_CODES.includes(error.code)) {
+      router.push(authConfig.devicePendingPath);
+      return;
+    }
+
     errorMessage.value = error.message || "登入失敗";
   } finally {
     submitting.value = false;

@@ -9,10 +9,31 @@ export function getToken() {
   return localStorage.getItem(authConfig.tokenStorageKey);
 }
 
-export function setToken(token) {
+/**
+ * 寫入 token，同時記低佢嘅到期時刻。
+ *
+ * 兩樣嘢一定要一齊寫：watchdog 靠 deadline 決定幾時續期同幾時強制登出，
+ * 得 token 冇 deadline 嘅話佢會當成「已經過期」即刻登出，得 deadline 冇 token
+ * 就會拎住一個過期時刻去等一個唔存在嘅 session。
+ *
+ * deadline 用「收到當下 + 伺服器畀嘅秒數」算，唔係讀 JWT 自己嘅 exp 去比本地
+ * 時鐘：用戶部機嘅時鐘唔可信，而呢個算法淨係倚賴「收到之後過咗幾耐」。睡眠期間
+ * wall clock 照常前進，所以闔上部機再打開都計得啱。
+ */
+export function setToken(token, expiresInSeconds) {
   localStorage.setItem(authConfig.tokenStorageKey, token);
+  localStorage.setItem(
+    authConfig.tokenDeadlineKey,
+    String(Date.now() + Number(expiresInSeconds) * 1000)
+  );
+}
+
+/** token 嘅到期時刻（epoch 毫秒）。冇記錄當作 0，即係已經過期。 */
+export function getTokenDeadline() {
+  return Number(localStorage.getItem(authConfig.tokenDeadlineKey) || 0);
 }
 
 export function clearToken() {
   localStorage.removeItem(authConfig.tokenStorageKey);
+  localStorage.removeItem(authConfig.tokenDeadlineKey);
 }

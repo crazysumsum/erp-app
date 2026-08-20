@@ -581,7 +581,21 @@ export async function createApplication({
         time
       })
     );
-    app.use(express.json({ limit: security.jsonBodyLimit }));
+    // verify 是唯一拿得到原始 body bytes 的位置——express.json() 解析完就把
+    // stream 消耗掉了，之後只剩解析後的物件。設備簽章覆蓋的是 body 的雜湊，
+    // 而重新 JSON.stringify(req.body) 算出來的 bytes 不保證與客戶端送出的那份
+    // 逐字元相同（鍵順序、空白、Unicode escape 都可能不同），那樣簽章會時好
+    // 時壞——最難查的那一種。
+    //
+    // 保留 Buffer 的記憶體成本有界：jsonBodyLimit（預設 100kb）就是它的上限。
+    app.use(
+      express.json({
+        limit: security.jsonBodyLimit,
+        verify: (req, _res, buffer) => {
+          req.rawBody = buffer;
+        }
+      })
+    );
     // 解析階段結束，看門狗的任務完成。走到這裡 body 還在傳的只可能是 multipart，
     // 由 route 的 timeoutMs 接手——那個逾時是照著上傳大小訂的。
     app.use(bodyParsingComplete);

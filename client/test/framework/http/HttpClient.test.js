@@ -200,6 +200,66 @@ describe("HttpClient", () => {
 
     await expect(client.get("/api/v1/widgets")).rejects.toMatchObject({ code: "NETWORK_ERROR" });
   });
+
+  describe("設備簽章", () => {
+    it("signed 嘅請求會簽 pathname 同真正送出嗰個 body 字串", async () => {
+      fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: null, meta: {} }));
+      const signRequest = vi.fn(async () => ({ "X-Device-Id": "abc" }));
+      const client = new HttpClient({ fetchImpl, getToken: () => null, signRequest });
+
+      await client.post("/api/v1/user/login", {
+        body: { username: "sam" },
+        params: { lang: "zh" },
+        signed: true,
+        includePublicKey: true
+      });
+
+      const [signed] = signRequest.mock.calls[0];
+      expect(signed.method).toBe("POST");
+      // 後端簽嘅係 req.path——唔含 origin 亦唔含 query string。呢兩邊唔一致
+      // 嘅話，每一個帶 params 嘅簽名請求都會驗簽失敗。
+      expect(signed.path).toBe("/api/v1/user/login");
+      // 簽嘅要係真正送出去嗰個字串。重新 stringify 一次可能得出唔同嘅 bytes，
+      // 令簽章時好時壞。
+      const [, init] = fetchImpl.mock.calls[0];
+      expect(signed.body).toBe(init.body);
+      expect(signed.includePublicKey).toBe(true);
+      expect(init.headers["X-Device-Id"]).toBe("abc");
+    });
+
+    it("冇 body 嗰陣簽 undefined，同後端對空 body 嘅處理一致", async () => {
+      fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: null, meta: {} }));
+      const signRequest = vi.fn(async () => ({}));
+      const client = new HttpClient({ fetchImpl, getToken: () => null, signRequest });
+
+      await client.post("/api/v1/user/token/refresh", { signed: true });
+
+      expect(signRequest.mock.calls[0][0].body).toBeUndefined();
+    });
+
+    it("冇設定簽名器就即刻炸，唔會靜靜哋send一個冇簽章嘅請求", async () => {
+      const client = new HttpClient({ fetchImpl, getToken: () => null });
+
+      // 靜默唔簽會令請求一路去到後端先被拒，而錯誤係「簽章缺失」——查極都查唔到
+      // 原因喺客戶端根本冇裝簽名器。
+      await expect(client.post("/api/v1/user/login", { signed: true })).rejects.toThrow(
+        /no signRequest was configured/
+      );
+      expect(fetchImpl).not.toHaveBeenCalled();
+    });
+
+    it("冇 signed 嘅請求唔會叫簽名器", async () => {
+      fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: null, meta: {} }));
+      const signRequest = vi.fn(async () => ({}));
+      const client = new HttpClient({ fetchImpl, getToken: () => null, signRequest });
+
+      await client.get("/api/v1/user/me");
+
+      // 每個請求都簽會令 nonce 表嘅寫入量變成同請求量一樣，而簽章對呢啲請求
+      // 冇任何作用——帶住 JWT 已經足夠。
+      expect(signRequest).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe("HttpClient 預設值", () => {
@@ -230,4 +290,5 @@ describe("HttpClient 預設值", () => {
     const [, init] = globalThis.fetch.mock.calls[0];
     expect(init.headers.Authorization).toBe("Bearer stored-token");
   });
+
 });

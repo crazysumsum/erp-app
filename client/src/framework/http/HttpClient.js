@@ -18,7 +18,8 @@ export class HttpClient {
     authScheme = httpConfig.authScheme,
     fetchImpl = (...args) => fetch(...args),
     getToken = defaultGetToken,
-    onUnauthorized = () => {}
+    onUnauthorized = () => {},
+    signRequest = null
   } = {}) {
     this.baseUrl = baseUrl;
     this.timeoutMs = timeoutMs;
@@ -27,6 +28,10 @@ export class HttpClient {
     this.fetchImpl = fetchImpl;
     this.getToken = getToken;
     this.onUnauthorized = onUnauthorized;
+    // 同 getToken／onUnauthorized 一樣用注入：簽名要用 Web Crypto 同 IndexedDB，
+    // 直接 import 會令每一個 HttpClient 測試都要備妥呢兩樣。真正嘅簽名器喺
+    // main.js 接上（見 framework/auth/deviceKey.js）。
+    this.signRequest = signRequest;
   }
 
   get(path, options) {
@@ -49,7 +54,19 @@ export class HttpClient {
     return this.request("DELETE", path, options);
   }
 
-  async request(method, path, { params, body, idempotent = false, idempotencyKey, signal } = {}) {
+  async request(
+    method,
+    path,
+    {
+      params,
+      body,
+      idempotent = false,
+      idempotencyKey,
+      signal,
+      signed = false,
+      includePublicKey = false
+    } = {}
+  ) {
     const url = buildUrl(this.baseUrl, path, params);
     const headers = { Accept: "application/json" };
 
@@ -66,6 +83,28 @@ export class HttpClient {
     if (body !== undefined) {
       headers["Content-Type"] = "application/json";
       payload = JSON.stringify(body);
+    }
+
+    if (signed) {
+      if (!this.signRequest) {
+        // 靜默唔簽會令請求一路去到後端先被拒，而錯誤係「簽章缺失」——查極都
+        // 查唔到原因喺客戶端根本冇裝簽名器。喺呢度即刻炸。
+        throw new Error("A signed request was made but no signRequest was configured");
+      }
+
+      Object.assign(
+        headers,
+        await this.signRequest({
+          method,
+          // 簽 pathname 而唔係完整 URL：後端簽嘅係 req.path，唔含 origin 同
+          // query string。呢兩邊唔一致嘅話每一個帶 params 嘅簽名請求都會失敗。
+          path: new URL(url).pathname,
+          // 簽嘅係真正送出去嗰個字串。重新 stringify 一次可能得出唔同嘅 bytes
+          // （鍵順序、空白），咁樣簽章會時好時壞——最難查嗰一種。
+          body: payload,
+          includePublicKey
+        })
+      );
     }
 
     const timeoutController = new AbortController();

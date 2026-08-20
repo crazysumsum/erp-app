@@ -60,9 +60,12 @@ export function normalizeJwtConfig(source) {
   const clockToleranceSeconds = Number(source?.clockToleranceSeconds);
   const expiresIn = requiredText(source?.expiresIn, "expiresIn");
 
-  // 解析出來的秒數刻意不留下來：撤銷改用版本號之後，已經沒有任何跨檔檢查需要
-  // 它了。這裡呼叫它純粹是為了驗證格式，原字串照樣交給 jwt.sign() 自己解析。
-  durationSeconds(expiresIn, "expiresIn");
+  // 秒數要留下來給登入與續期的回應用：前端要靠它算出「這個 token 什麼時候
+  // 到期」，才能排定續期與強制登出。回字串 "15m" 的話前端得自己再解析一次
+  // 同一套單位規則，那是同一段邏輯的第二份實作。
+  //
+  // 原字串照樣一併保留，交給 jwt.sign() 自己解析——不改簽發那一端的行為。
+  const expiresInSeconds = durationSeconds(expiresIn, "expiresIn");
 
   if (secret.length < 32) {
     throw new Error("JWT config secret must contain at least 32 characters");
@@ -85,6 +88,7 @@ export function normalizeJwtConfig(source) {
     audience: requiredText(source?.audience, "audience"),
     algorithm,
     expiresIn,
+    expiresInSeconds,
     clockToleranceSeconds,
     headerName: requiredText(source?.headerName, "headerName").toLowerCase(),
     authScheme: requiredText(source?.authScheme, "authScheme")

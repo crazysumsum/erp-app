@@ -279,7 +279,9 @@ test("the application factory does not itself require the scheduler", async (t) 
         new URL("../src/services/auth/publicAuthStrategy.js", import.meta.url).href,
         new URL("../src/services/mysqldatabase/MySqlDatabaseService.js", import.meta.url).href,
         // auth.jwt 現在宣告 tokenRevocation，所以這份清單也要帶上它。
-        new URL("../src/services/tokenRevocation/TokenRevocationService.js", import.meta.url).href
+        new URL("../src/services/tokenRevocation/TokenRevocationService.js", import.meta.url).href,
+        // 同理：loginHandler 現在要求 deviceBinding，少了它 handler registry 建不起來。
+        new URL("../src/services/deviceBinding/DeviceBindingService.js", import.meta.url).href
       ]
     },
     serviceOptions: {
