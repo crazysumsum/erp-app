@@ -45,8 +45,9 @@ const FLOORS = {
   // 登入是唯一會簽出憑證的地方：漏簽版本號的 token 撤銷不掉，回應多帶一個
   // 欄位就是一次資料外洩。
   "src/handlers/user/loginHandler.js": { lines: 95, branches: 90, functions: 95 },
-  // 續期是另一道門，而且它的失效完全沒有症狀：設備比對或帳號狀態檢查靜靜地
-  // 停止運作時，畫面上什麼都不會變——只是本來該結束的 session 一直活著。
+  // 續期是另一道門，而且它的失效完全沒有症狀：帳號狀態檢查或版本號比對靜靜地
+  // 停止運作時，畫面上什麼都不會變——只是本來該結束的 session 一直活著。設備
+  // 簽章的檢查在 JwtDeviceAuthStrategy 裡，見下面那一條。
   "src/handlers/user/refreshTokenHandler.js": { lines: 95, branches: 90, functions: 95 },
   // 設備簽章是續期唯一的憑證：它形同虛設的話，被偷走的 JWT 就能自己無限續期
   // 下去，而整個設備綁定方案的安全性論證就沒有了。驗簽的每一條拒絕路徑
@@ -110,6 +111,14 @@ const FLOORS = {
   "src/services/auth/jwtAuthStrategy.js": {
     lines: 95,
     branches: 95,
+    functions: 95
+  },
+  // JWT 加設備簽章那一層：did 比對漏了一條分支，就是任何一台已審批的設備都能
+  // 替任何一個 token 通過驗證；狀態檢查漏一條，就是撤銷後的設備還能繼續用。
+  // 兩者都不會讓任何測試以外的東西出聲。
+  "src/services/auth/jwtDeviceAuthStrategy.js": {
+    lines: 95,
+    branches: 90,
     functions: 95
   },
   // 每請求 service scope 的拆解。這裡的洩漏是安靜且累積的——scope 沒關就是

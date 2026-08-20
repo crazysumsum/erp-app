@@ -49,7 +49,12 @@ const strategyContainer = await createServiceContainer({
       isRevoked: () => false,
       snapshotAgeSeconds: () => 0,
       snapshotUsable: () => true
-    }
+    },
+    // auth.jwtDevice 宣告依賴 deviceBinding，但那個 service 在 src/services/
+    // deviceBinding/ 底下——discoveryOptions 把發現範圍縮到 auth/ 這一層，
+    // 掃不到它。這裡不測設備簽章（那是 jwtDeviceAuthStrategy.test.js 的事），
+    // 只要讓依賴圖能通過驗證。
+    deviceBinding: {}
   },
   discoveryOptions: {
     servicesDirectory: new URL("../src/services/auth/", import.meta.url)

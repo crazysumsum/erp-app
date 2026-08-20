@@ -173,13 +173,18 @@ export class AuthorizationPolicyRegistry {
 export function createAuthorizationPolicyRegistry() {
   return new AuthorizationPolicyRegistry()
     .register("allowAll", async () => true, { normalizeOptions: noOptions })
-    .register("authenticated", async ({ auth }) => auth?.type === "jwt", {
+    // 「已認證」問的是「有沒有查得出身份」，不是「用了哪一種策略」——所以判準
+    // 是有沒有 claims，不是 type 是不是字串 "jwt"。authStrategyRegistry 本身
+    // 也是靠同一個訊號決定要不要設 req.user（見 authStrategyRegistry.js）。
+    // "public" 策略不帶 claims，任何會核發身份的策略（"jwt"、"jwt-device"，
+    // 未來還可能有別的）都帶，這裡不需要跟著每一種新策略加白名單。
+    .register("authenticated", async ({ auth }) => auth?.claims !== undefined, {
       normalizeOptions: noOptions
     })
     .register(
       "hasRole",
       async ({ auth, options }) =>
-        auth?.type === "jwt" &&
+        auth?.claims !== undefined &&
         matchesClaim(
           options.roles,
           claimValues(auth.claims, "role", "roles"),
@@ -193,7 +198,7 @@ export function createAuthorizationPolicyRegistry() {
     .register(
       "hasPermission",
       async ({ auth, options }) =>
-        auth?.type === "jwt" &&
+        auth?.claims !== undefined &&
         matchesClaim(
           options.permissions,
           claimValues(auth.claims, "permission", "permissions"),
