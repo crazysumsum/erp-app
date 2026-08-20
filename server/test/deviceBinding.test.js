@@ -210,6 +210,46 @@ async function signedRequest(service, keyPair, spki, overrides = {}) {
   };
 }
 
+// --- 與前端的格式契約 --------------------------------------------------------
+
+// 前端簽的字串與後端重組的字串必須逐字元一樣。兩邊漂移的症狀是「每一次登入都
+// 說簽章無效」，而錯誤訊息不會提到格式——所以兩邊各釘住同一個 golden 值。
+//
+// 對應的前端測試：client/test/framework/auth/deviceKey.test.js 裡同名的 golden。
+// 改這個字串時兩條測試一定要一起改，否則就是一次會讓所有人登入不了的部署。
+const GOLDEN_INPUT =
+  '{"bodyHash":"Xr4t8g","deviceId":"aaaa","method":"POST","nonce":"n-1","path":"/api/v1/user/login","timestamp":1755600000000}';
+
+test("the signing input matches the format the client signs, byte for byte", () => {
+  const { service } = createService();
+
+  assert.equal(
+    service.signingInput({
+      bodyHash: "Xr4t8g",
+      deviceId: "aaaa",
+      method: "POST",
+      nonce: "n-1",
+      path: "/api/v1/user/login",
+      timestamp: 1755600000000
+    }),
+    GOLDEN_INPUT
+  );
+
+  // 鍵順序不能跟著呼叫端傳入的順序走：物件實字的鍵是插入順序，若實作改成
+  // 直接 JSON.stringify(input)，同一個請求在兩邊就會算出不同的字串。
+  assert.equal(
+    service.signingInput({
+      timestamp: 1755600000000,
+      path: "/api/v1/user/login",
+      nonce: "n-1",
+      method: "POST",
+      deviceId: "aaaa",
+      bodyHash: "Xr4t8g"
+    }),
+    GOLDEN_INPUT
+  );
+});
+
 // --- 簽章驗證 ----------------------------------------------------------------
 
 test("a genuine Web Crypto signature verifies, proving the P1363 encoding is handled", async () => {
@@ -247,6 +287,20 @@ test("a signature made for one request is rejected on another", async () => {
   ]) {
     const result = await service.verifyRequest({ ...request, ...tamper });
     assert.deepEqual(result, { ok: false, reason: "signature_invalid" }, JSON.stringify(tamper));
+  }
+});
+
+test("a malformed signature is rejected rather than thrown out of verifyRequest", async () => {
+  const { service } = createService();
+  const { keyPair, spki } = await generateDeviceKey();
+  const request = await signedRequest(service, keyPair, spki);
+
+  // P-256 的 P1363 簽章固定 64 bytes。長度不對時 Node 的 verify 會直接拋，而不是
+  // 回 false——沒接住的話，一個畸形的 header 就變成 500 而不是 400，還會在日誌
+  // 留下一個看起來像伺服器出錯的堆疊。
+  for (const signature of [Buffer.alloc(0), Buffer.alloc(10), Buffer.alloc(200)]) {
+    const result = await service.verifyRequest({ ...request, signature });
+    assert.deepEqual(result, { ok: false, reason: "signature_invalid" }, `${signature.length} bytes`);
   }
 });
 

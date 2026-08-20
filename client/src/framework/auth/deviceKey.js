@@ -1,0 +1,193 @@
+import authConfig from "@config/auth.js";
+
+/**
+ * 設備金鑰：識別「這台機器」嘅私鑰，同埋用佢簽請求。
+ * 設計說明見 docs/device-binding-auth.md。
+ *
+ * 整個方案嘅安全性繫於一件事：**私鑰係 non-extractable**。
+ *
+ *   crypto.subtle.generateKey(..., false, ...)  ← 第二個參數
+ *
+ * 咁樣產出嘅 CryptoKey，JS 只可以攞去簽名，永遠讀唔到金鑰內容本身。所以就算
+ * 中咗 XSS，攻擊者都只可以喺受害者部機、有 foothold 嗰段時間內就地簽名，
+ * 帶唔走條匙。如果改成 extractable + 存 JWK 落 localStorage，攻擊者一次就可以
+ * 攞走條匙，之後喺自己部機永久冒充呢台設備——成套綁定即刻等於零。
+ *
+ * 存 IndexedDB 而唔係 localStorage：localStorage 淨係食字串，存 CryptoKey 一定
+ * 要先 export（就要 extractable）。IndexedDB 嘅 structured clone 可以直接存
+ * CryptoKey 物件本身。
+ *
+ * ⚠️ IndexedDB 唔係持久儲存。用戶清瀏覽器資料、Safari ITP 七日無互動後清除、
+ * 無痕視窗、公司政策清理——條匙一冇，device id 就變，等於一台全新未綁定嘅設備，
+ * 要重新審批。開機會叫 navigator.storage.persist() 降低機會率，但保證唔到。
+ */
+
+const STORE = "keys";
+const RECORD = "device";
+
+function openDatabase() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(authConfig.deviceKeyDbName, 1);
+
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(STORE)) {
+        request.result.createObjectStore(STORE);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+function transact(db, mode, run) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORE, mode);
+    const request = run(transaction.objectStore(STORE));
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function loadKeyPair() {
+  const db = await openDatabase();
+
+  try {
+    return (await transact(db, "readonly", (store) => store.get(RECORD))) ?? null;
+  } finally {
+    db.close();
+  }
+}
+
+async function createKeyPair() {
+  const keyPair = await crypto.subtle.generateKey(
+    { name: "ECDSA", namedCurve: authConfig.deviceKeyCurve },
+    // extractable: false —— 見檔案頂部。呢個 false 係成個方案嘅地基，
+    // 改成 true 會令 XSS 由「要維持 foothold」變成「攞完就走」。
+    false,
+    ["sign", "verify"]
+  );
+  const db = await openDatabase();
+
+  try {
+    await transact(db, "readwrite", (store) => store.put(keyPair, RECORD));
+  } finally {
+    db.close();
+  }
+
+  return keyPair;
+}
+
+/**
+ * 攞現有嘅金鑰，冇就產一把新嘅。
+ *
+ * 併發呼叫會共用同一個 promise：登入頁如果同時觸發兩次，兩次各自產一把匙就會
+ * 有一把即刻變成孤兒，而用戶睇到嘅 device id 會係邊一把要睇邊個 put 後寫——
+ * 之後佢申請綁定嗰個 id 同真正簽名嗰把匙可以係唔同嘅兩樣嘢。
+ */
+let pending = null;
+
+export function ensureDeviceKey() {
+  pending ??= (async () => {
+    try {
+      return (await loadKeyPair()) ?? (await createKeyPair());
+    } finally {
+      pending = null;
+    }
+  })();
+
+  return pending;
+}
+
+/** 匯出公鑰嘅 SPKI DER。公鑰唔受 extractable 影響（規格規定恆為可匯出）。 */
+export async function exportPublicKey(keyPair) {
+  return new Uint8Array(await crypto.subtle.exportKey("spki", keyPair.publicKey));
+}
+
+/** device id：公鑰 SPKI DER 嘅 SHA-256（hex）。同後端 deviceIdFor() 一致。 */
+export async function deviceIdFor(publicKeySpki) {
+  const digest = await crypto.subtle.digest("SHA-256", publicKeySpki);
+
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function base64url(bytes) {
+  let binary = "";
+
+  for (const byte of new Uint8Array(bytes)) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function sha256Base64url(text) {
+  return base64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+}
+
+/**
+ * 組出待簽嘅字串。**必須同後端 DeviceBindingService.signingInput() 逐字元一樣**，
+ * 否則每一份簽章都會驗唔過，而錯誤訊息淨係會話「簽章無效」，唔會話兩邊格式唔同。
+ *
+ * 鍵照字典序排——靠 JS 物件實字嘅字串鍵維持插入順序，照字母寫落去就係照字母
+ * 輸出。兩邊各有一條測試釘住同一個 golden 字串，任何一邊漂移都會即刻紅。
+ *
+ * method / path / bodyHash 都要入去：少咗佢哋，簽章淨係證明「呢台設備某個時候
+ * 簽過嘢」，唔證明「呢個請求嚟自呢台設備」，攻擊者可以將簽章搬去第二個請求。
+ */
+export function buildSigningInput({ bodyHash, deviceId, method, nonce, path, timestamp }) {
+  return JSON.stringify({
+    bodyHash: String(bodyHash ?? ""),
+    deviceId: String(deviceId ?? ""),
+    method: String(method ?? "").toUpperCase(),
+    nonce: String(nonce ?? ""),
+    path: String(path ?? ""),
+    timestamp: Number(timestamp)
+  });
+}
+
+/**
+ * 簽一個請求，回傳要掛上去嘅 X-Device-* headers。
+ */
+export async function signRequest({ method, path, body, includePublicKey = false }) {
+  const keyPair = await ensureDeviceKey();
+  const publicKeySpki = await exportPublicKey(keyPair);
+  const deviceId = await deviceIdFor(publicKeySpki);
+  const nonce = crypto.randomUUID();
+  const timestamp = Date.now();
+  // body 未定義時係空字串，同後端 bodyHash() 對 undefined／零長度嘅處理一致。
+  const bodyHash = body === undefined ? "" : await sha256Base64url(body);
+
+  const signingInput = buildSigningInput({ bodyHash, deviceId, method, nonce, path, timestamp });
+
+  const signature = await crypto.subtle.sign(
+    { name: "ECDSA", hash: authConfig.deviceKeyHash },
+    keyPair.privateKey,
+    new TextEncoder().encode(signingInput)
+  );
+
+  const headers = {
+    "X-Device-Id": deviceId,
+    "X-Device-Timestamp": String(timestamp),
+    "X-Device-Nonce": nonce,
+    // Web Crypto 出嘅係 IEEE P1363（r||s 直接接埋，P-256 為 64 bytes）。後端
+    // 驗簽要指明 dsaEncoding: "ieee-p1363"，否則 Node 會當佢係 DER 而全部判錯。
+    "X-Device-Signature": base64url(signature)
+  };
+
+  // 公鑰淨係喺首次綁定申請先帶。已經有綁定嘅請求，後端一律用資料庫入面嗰把，
+  // 帶上去都會被忽略——唔係咁嘅話，任何人都可以用自己嘅匙簽名再附上自己嘅公鑰。
+  if (includePublicKey) {
+    headers["X-Device-Public-Key"] = base64url(publicKeySpki);
+  }
+
+  return headers;
+}
+
+/** 目前呢台機嘅 device id，畀等待審批頁顯示用。 */
+export async function currentDeviceId() {
+  return deviceIdFor(await exportPublicKey(await ensureDeviceKey()));
+}

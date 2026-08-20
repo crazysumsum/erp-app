@@ -3,6 +3,12 @@ import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { UserService } from "../../modules/user/UserService.js";
 import { clientQuotaKey } from "../../services/requestLimiter/clientKey.js";
 import { MemoryRateLimitStore } from "../../services/requestLimiter/RateLimitStore.js";
+import { DEVICE_STATUS } from "../../services/deviceBinding/DeviceBindingService.js";
+import {
+  deviceSignatureError,
+  deviceStatusError,
+  readDeviceSignature
+} from "../../services/deviceBinding/deviceSignatureRequest.js";
 
 // 這個節流只管登入端點，跟全站的 requestLimiter service 完全分開、各自計算：
 // 全站配額是為了扛流量，這裡是為了讓「用一個 IP 對很多不同帳號各送 5 次錯密碼、
@@ -62,19 +68,26 @@ export class LoginHandler extends BaseRequestHandler {
           username: { type: "string", minLength: 1, maxLength: 190 },
           // 上限不是密碼強度的限制，是成本的限制：沒有上限的話，一個貼滿整個
           // body limit 的「密碼」也會走完一次完整的雜湊。
-          password: { type: "string", minLength: 1, maxLength: 1024 }
+          password: { type: "string", minLength: 1, maxLength: 1024 },
+          // 首次從一台設備登入時附上，成為審批佇列裡給人看的裝置名稱。選填：
+          // 沒有它審批者還有 IP 與 User-Agent 可看，不該因為少一個標籤就擋下
+          // 整個登入。
+          deviceLabel: { type: "string", maxLength: 190 }
         }
       }
     },
     responseSchema: {
       200: {
         type: "object",
-        required: ["token", "tokenType", "expiresIn", "user"],
+        required: ["token", "tokenType", "expiresIn", "expiresInSeconds", "user"],
         additionalProperties: false,
         properties: {
           token: { type: "string" },
           tokenType: { type: "string" },
           expiresIn: { type: "string" },
+          // 前端要靠這個數字算出到期時刻，才能排定續期與強制登出。字串
+          // "15m" 會逼前端自己再實作一次單位解析。
+          expiresInSeconds: { type: "integer", minimum: 1 },
           user: USER_SCHEMA
         }
       }
@@ -92,6 +105,7 @@ export class LoginHandler extends BaseRequestHandler {
     });
     this.jwt = services.require("jwt");
     this.tokenRevocation = services.require("tokenRevocation");
+    this.deviceBinding = services.require("deviceBinding");
     // Handler 由 handlerRegistry 在啟動時建一次、之後每個請求重用（見
     // createHandlerRegistry），所以這個 store 的狀態會跨請求累積，不是每次
     // 登入都重建一個空的。
@@ -155,28 +169,103 @@ export class LoginHandler extends BaseRequestHandler {
     const { user } = result;
     const subject = String(user.id);
 
+    // 設備檢查排在密碼**之後**，順序不可調換。反過來的話，任何人都能對任意
+    // 帳號灌爆審批佇列，而且「這個帳號的設備還沒審批」這個回應本身就會洩漏
+    // 帳號存不存在。走到這一行代表對方確實握有這個帳號的密碼。
+    const binding = await this.#verifyDevice(req, user);
+
     // 版本號要從資料庫讀當下的值，不能用撤銷快照——快照可以落後，用它簽出來的
     // token 會在下一次刷新時被自己的實例判成已撤銷。見 currentVersion() 的註解。
     const version = await this.tokenRevocation.currentVersion(subject);
 
     // roles 與 permissions 進 claims，授權策略 hasRole／hasPermission 直接讀它們，
     // 請求路徑上因此不需要再查資料庫。代價是改權限要等 token 過期或被撤銷。
+    //
+    // did 是設備 id：續期時會比對它與請求簽章的設備是否為同一台，所以一個
+    // token 只能被簽發它的那台設備續期。
     const token = this.jwt.issue(
-      { roles: user.roles, permissions: user.permissions },
+      { roles: user.roles, permissions: user.permissions, did: binding.device_id },
       { subject, version }
     );
+
+    await this.deviceBinding.markUsed(binding.id);
 
     this.writeLog("info", "auth.login.succeeded", "Login succeeded", {
       requestId: req.requestId || null,
       userId: user.id,
-      username: user.username
+      username: user.username,
+      deviceId: binding.device_id
     });
 
     return this.response({
       token,
       tokenType: this.jwt.authScheme,
       expiresIn: this.jwt.expiresIn,
+      expiresInSeconds: this.jwt.expiresInSeconds,
       user
     });
+  }
+
+  /**
+   * 驗證請求由一台已審批的設備發出，回傳那筆綁定。
+   *
+   * 沒有綁定就建立一筆待審批的並拋出 403——第一次從新設備登入的正常路徑就是
+   * 走到這裡，使用者會看到「等待審批」而不是「登入失敗」。
+   */
+  async #verifyDevice(req, user) {
+    const signature = readDeviceSignature(req);
+    const existing = await this.deviceBinding.findBinding(user.id, signature.deviceId);
+
+    // 已有綁定就一律用資料庫裡那把公鑰，請求自帶的直接忽略；否則任何人都能
+    // 用自己的金鑰簽名、再附上自己的公鑰，整個綁定形同虛設。
+    const publicKeyDer = existing ? existing.public_key : signature.publicKeyDer;
+
+    if (!publicKeyDer) {
+      throw deviceSignatureError("public_key_missing");
+    }
+
+    // 首次申請時 device id 必須真的是所附公鑰的 thumbprint。少了這一步，申請
+    // 者可以宣稱一個與自己金鑰無關的 id，之後那個 id 對應到誰的金鑰就說不準了。
+    if (!existing && this.deviceBinding.deviceIdFor(publicKeyDer) !== signature.deviceId) {
+      throw deviceSignatureError("device_id_mismatch");
+    }
+
+    const verification = await this.deviceBinding.verifyRequest({
+      ...signature,
+      publicKeyDer,
+      bodyHash: this.deviceBinding.bodyHash(req.rawBody)
+    });
+
+    if (!verification.ok) {
+      // 原因只進日誌：「簽章不符」與「nonce 用過了」的差別會告訴攻擊者他離
+      // 成功還差多遠。對外只有籠統的兩種（見 deviceSignatureError）。
+      this.writeLog("warn", "auth.device.signature_rejected", "Device signature was rejected", {
+        requestId: req.requestId || null,
+        userId: user.id,
+        deviceId: signature.deviceId,
+        reason: verification.reason,
+        detail: verification.detail ?? null
+      });
+      throw deviceSignatureError(verification.reason);
+    }
+
+    if (!existing) {
+      const created = await this.deviceBinding.requestBinding({
+        userId: user.id,
+        deviceId: signature.deviceId,
+        publicKeyDer,
+        label: req.input.body.deviceLabel ?? "",
+        ip: req.ip || req.socket?.remoteAddress || "",
+        userAgent: req.get("user-agent") || ""
+      });
+
+      throw deviceStatusError(created.status);
+    }
+
+    if (existing.status !== DEVICE_STATUS.approved) {
+      throw deviceStatusError(existing.status);
+    }
+
+    return existing;
   }
 }

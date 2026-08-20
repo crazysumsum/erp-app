@@ -2,13 +2,25 @@ import { defineStore } from "pinia";
 import { httpClient } from "@/framework/http/HttpClient.js";
 import { clearToken, getToken, setToken } from "@/framework/auth/tokenStorage.js";
 
+// 後端喺設備綁定唔畀用系統嗰陣回嘅三個 code（見
+// server/src/services/deviceBinding/deviceSignatureRequest.js）。三個分開而唔係
+// 一句「登入失敗」：混埋一齊嘅話，用戶會以為打錯密碼而不停重試，然後撞上登入
+// 節流——真正要做嘅事（等審批、搵管理員）一件都唔會發生。
+export const DEVICE_BLOCKED_CODES = Object.freeze([
+  "DEVICE_PENDING_APPROVAL",
+  "DEVICE_REJECTED",
+  "DEVICE_REVOKED"
+]);
+
 /**
  * Session 嘅唯一真實來源。`user` 有值即代表已登入——冇獨立嘅
  * `isAuthenticated` 布林狀態要同步，避免兩個狀態不一致。
  */
 export const useSessionStore = defineStore("session", {
   state: () => ({
-    user: null
+    user: null,
+    // 設備被擋嗰陣記低係邊一種，等待審批頁靠佢決定顯示乜。登入成功會清返 null。
+    deviceStatus: null
   }),
 
   getters: {
@@ -18,14 +30,33 @@ export const useSessionStore = defineStore("session", {
   },
 
   actions: {
-    async login(username, password) {
-      const result = await httpClient.post("/api/v1/user/login", {
-        body: { username, password }
-      });
+    /**
+     * 登入。請求要帶設備簽章，所以係 signed。
+     *
+     * includePublicKey：後端淨係喺「呢個用戶未有呢台設備嘅綁定」嗰陣先會用到
+     * 公鑰，已經有綁定就一律用資料庫入面嗰把。呢度每次都帶，因為前端根本唔知
+     * 自己有冇被綁定過——多帶一個 header 嘅成本，換走一次「先問後登入」嘅來回。
+     */
+    async login(username, password, deviceLabel = defaultDeviceLabel()) {
+      try {
+        const result = await httpClient.post("/api/v1/user/login", {
+          body: { username, password, deviceLabel },
+          signed: true,
+          includePublicKey: true
+        });
 
-      setToken(result.token);
-      this.user = result.user;
-      return result.user;
+        setToken(result.token, result.expiresInSeconds);
+        this.user = result.user;
+        this.deviceStatus = null;
+        return result.user;
+      } catch (error) {
+        if (DEVICE_BLOCKED_CODES.includes(error.code)) {
+          // 密碼係啱嘅，擋住佢嘅係設備綁定。記低係邊一種，畀等待審批頁講返
+          // 一句人睇得明嘅嘢，而唔係得一句「登入失敗」。
+          this.deviceStatus = error.code;
+        }
+        throw error;
+      }
     },
 
     async logout() {
@@ -40,6 +71,7 @@ export const useSessionStore = defineStore("session", {
 
     clear() {
       this.user = null;
+      this.deviceStatus = null;
       clearToken();
     },
 
@@ -68,3 +100,25 @@ export const useSessionStore = defineStore("session", {
     }
   }
 });
+
+/**
+ * 預設嘅裝置名稱，畀審批者喺佇列入面認得出邊台機。
+ *
+ * 由 User-Agent 撮要而唔係叫用戶自己填：第一次登入嗰陣佢仲未入到系統，冇地方
+ * 可以問。後端本身亦都會記低完整嘅 UA 同 IP，呢個標籤淨係令佇列易讀啲。
+ */
+function defaultDeviceLabel() {
+  if (typeof navigator === "undefined") {
+    return "";
+  }
+
+  const ua = navigator.userAgent;
+  const browser =
+    ["Edg", "Chrome", "Firefox", "Safari"].find((name) => ua.includes(name)) ?? "Browser";
+  const platform =
+    ["Windows", "Mac", "Linux", "Android", "iPhone", "iPad"].find((name) => ua.includes(name)) ??
+    "Unknown";
+
+  // Edg 係 Edge 嘅 UA token，直接顯示會好怪。
+  return `${browser === "Edg" ? "Edge" : browser} on ${platform}`;
+}

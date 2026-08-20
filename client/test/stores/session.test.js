@@ -20,19 +20,48 @@ describe("session store", () => {
   });
 
   it("login 成功會存 token、記低 user，仲會回傳 user", async () => {
-    httpClient.post.mockResolvedValue({ token: "tok-1", tokenType: "Bearer", expiresIn: "2h", user });
+    httpClient.post.mockResolvedValue({
+      token: "tok-1",
+      tokenType: "Bearer",
+      expiresIn: "15m",
+      expiresInSeconds: 900,
+      user
+    });
     const session = useSessionStore();
 
-    const returnedUser = await session.login("sam", "secret");
+    const returnedUser = await session.login("sam", "secret", "Chrome on Mac");
 
     expect(returnedUser).toEqual(user);
     expect(session.isAuthenticated).toBe(true);
     expect(session.roles).toEqual(["admin"]);
     expect(session.permissions).toEqual(["order.read"]);
     expect(localStorage.getItem("erp.token")).toBe("tok-1");
+    // deadline 一定要同 token 一齊寫低：得 token 冇 deadline 嘅話，watchdog 會
+    // 當成已經過期而即刻登出。
+    expect(Number(localStorage.getItem("erp.token.deadline"))).toBeGreaterThan(Date.now());
     expect(httpClient.post).toHaveBeenCalledWith("/api/v1/user/login", {
-      body: { username: "sam", password: "secret" }
+      body: { username: "sam", password: "secret", deviceLabel: "Chrome on Mac" },
+      // 冇簽章嘅登入請求會直接被後端拒絕。
+      signed: true,
+      includePublicKey: true
     });
+  });
+
+  it("設備被擋唔算登入失敗，會記低係邊一種", async () => {
+    for (const code of ["DEVICE_PENDING_APPROVAL", "DEVICE_REJECTED", "DEVICE_REVOKED"]) {
+      setActivePinia(createPinia());
+      installFakeLocalStorage();
+      httpClient.post.mockRejectedValue(Object.assign(new Error("blocked"), { code }));
+      const session = useSessionStore();
+
+      await expect(session.login("sam", "secret")).rejects.toThrow("blocked");
+
+      // 密碼係啱嘅，擋住佢嘅係設備。等待審批頁靠呢個值決定顯示乜——冇咗佢
+      // 就只可以一律顯示「待審批」，連「已被拒絕」都講唔出。
+      expect(session.deviceStatus).toBe(code);
+      expect(session.isAuthenticated).toBe(false);
+      expect(localStorage.getItem("erp.token")).toBeNull();
+    }
   });
 
   it("login 失敗會拋出，唔會存到 token 或改到 user", async () => {

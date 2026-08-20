@@ -21,11 +21,20 @@ const securityConfig = {
     allowedMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
     // 瀏覽器可以發送的 request headers。
+    //
+    // X-Device-* 是設備綁定的簽章（見 docs/device-binding-auth.md）。少了任何
+    // 一個，瀏覽器會在 preflight 就把請求擋掉，而且只會說「被 CORS 拒絕」，
+    // 不會指出是哪個 header 沒被允許。
     allowedHeaders: [
       "Content-Type",
       "Authorization",
       "X-Request-Id",
-      "Idempotency-Key"
+      "Idempotency-Key",
+      "X-Device-Id",
+      "X-Device-Timestamp",
+      "X-Device-Nonce",
+      "X-Device-Signature",
+      "X-Device-Public-Key"
     ],
 
     // 允許瀏覽器 JavaScript 讀取的 response headers。

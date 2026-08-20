@@ -3,6 +3,7 @@ import { Dialog, Loading, Notify, Quasar } from "quasar";
 import { createApp } from "vue";
 import App from "./App.vue";
 import { vCan } from "./framework/authorization/vCan.js";
+import { signRequest } from "./framework/auth/deviceKey.js";
 import { discoverPages } from "./framework/discovery/pages.js";
 import { validatePages } from "./framework/discovery/validatePages.js";
 import { renderFatalBootError } from "./framework/errors/renderFatalBootError.js";
@@ -56,6 +57,11 @@ function boot(pages) {
       router.push({ name: "login", query: { redirect: current.fullPath } });
     }
   };
+
+  // 設備簽名器同樣用注入接上（見 HttpClient 建構子）：簽名要用 Web Crypto 同
+  // IndexedDB，直接喺 HttpClient import 會令每一個 HttpClient 測試都要備妥
+  // 呢兩樣。只有 login／refresh 呢啲帶 signed: true 嘅請求先會用到佢。
+  httpClient.signRequest = signRequest;
 
   // 開機先還原 session（storage 有 token 就叫一次 /me），再 app.use(router)：
   // vue-router 一 install 就會馬上觸發第一次導航（見 install() 內部直接

@@ -14,7 +14,7 @@
  * 會喺報告入面列出嚟，唔會當冇發生過。
  */
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { randomUUID, webcrypto } from "node:crypto";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
@@ -86,6 +86,7 @@ async function cleanupUser(db, seeded) {
   // 順序由子到父，配合外鍵約束（user_roles/role_permissions 先於 users/roles/
   // permissions；見 migrations/0003_add_auth_tables.js 的 ON DELETE CASCADE——
   // 這裡不依賴它，手動清乾淨，讓測試資料的生命週期不悄悄綁死在某條 FK 行為上）。
+  await db.execute("DELETE FROM user_devices WHERE user_id = ?", [seeded.userId]);
   await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [seeded.roleId]);
   await db.execute("DELETE FROM user_roles WHERE user_id = ?", [seeded.userId]);
   await db.execute("DELETE FROM permissions WHERE id = ?", [seeded.permissionId]);
@@ -94,6 +95,65 @@ async function cleanupUser(db, seeded) {
   await db.execute("DELETE FROM fr_token_versions WHERE subject = ?", [
     String(seeded.userId)
   ]);
+}
+
+/**
+ * 一台模擬嘅設備：真嘅 P-256 金鑰，簽名格式同前端 deviceKey.js 一樣。
+ *
+ * 用真金鑰而唔係假簽章，係因為呢個檔案要驗嘅正正係接縫：原始 body 有冇被留低、
+ * IEEE P1363 有冇被當成 DER、nonce 有冇真係寫到入表。呢啲喺假 pool 上全部測唔到。
+ */
+async function createTestDevice() {
+  const keyPair = await webcrypto.subtle.generateKey(
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign", "verify"]
+  );
+  const spki = new Uint8Array(await webcrypto.subtle.exportKey("spki", keyPair.publicKey));
+  const digest = await webcrypto.subtle.digest("SHA-256", spki);
+  const deviceId = Buffer.from(digest).toString("hex");
+
+  return {
+    deviceId,
+    async headers({ method, path, body, includePublicKey = false }) {
+      const nonce = randomUUID();
+      const timestamp = Date.now();
+      const bodyHash =
+        body === undefined
+          ? ""
+          : Buffer.from(await webcrypto.subtle.digest("SHA-256", Buffer.from(body))).toString(
+              "base64url"
+            );
+      // 鍵照字典序——同 DeviceBindingService.signingInput() 逐字元一樣。
+      const signingInput = JSON.stringify({
+        bodyHash,
+        deviceId,
+        method: method.toUpperCase(),
+        nonce,
+        path,
+        timestamp
+      });
+      const signature = await webcrypto.subtle.sign(
+        { name: "ECDSA", hash: "SHA-256" },
+        keyPair.privateKey,
+        Buffer.from(signingInput)
+      );
+
+      const headers = {
+        "Content-Type": "application/json",
+        "X-Device-Id": deviceId,
+        "X-Device-Timestamp": String(timestamp),
+        "X-Device-Nonce": nonce,
+        "X-Device-Signature": Buffer.from(signature).toString("base64url")
+      };
+
+      if (includePublicKey) {
+        headers["X-Device-Public-Key"] = Buffer.from(spki).toString("base64url");
+      }
+
+      return headers;
+    }
+  };
 }
 
 test("login, me and logout work end to end against a real database", { skip }, async (t) => {
@@ -112,16 +172,46 @@ test("login, me and logout work end to end against a real database", { skip }, a
   });
 
   const { url } = await application.start();
+  const device = await createTestDevice();
+  const path = "/api/v1/user/login";
+  const body = JSON.stringify({ username, password, deviceLabel: "Integration device" });
 
-  const loginResponse = await fetch(`${url}/api/v1/user/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  });
+  const login = async ({ includePublicKey = false } = {}) =>
+    fetch(`${url}${path}`, {
+      method: "POST",
+      headers: await device.headers({ method: "POST", path, body, includePublicKey }),
+      body
+    });
+
+  // 第一次登入：密碼啱，但設備未綁定。呢一步同時驗到原始 body 有冇被留低——
+  // 冇嘅話 bodyHash 對唔上，收到嘅會係簽章無效而唔係待審批。
+  const pending = await login({ includePublicKey: true });
+  const pendingBody = await pending.json();
+
+  assert.equal(pending.status, 403);
+  assert.equal(pendingBody.error.code, "DEVICE_PENDING_APPROVAL");
+
+  const [bindings] = await db.query(
+    "SELECT id, status, label FROM user_devices WHERE user_id = ?",
+    [seeded.userId]
+  );
+  assert.equal(bindings.length, 1);
+  assert.equal(bindings[0].status, "pending");
+  assert.equal(bindings[0].label, "Integration device");
+
+  // 核准之後再登入一次。reviewed_at 一定要寫，否則清理規則二永遠掃唔到佢。
+  await db.execute(
+    "UPDATE user_devices SET status = 'approved', reviewed_at = ? WHERE id = ?",
+    [Date.now(), bindings[0].id]
+  );
+
+  const loginResponse = await login();
   const loginBody = await loginResponse.json();
 
   assert.equal(loginResponse.status, 200);
   assert.equal(loginBody.data.user.username, username);
+  // 前端靠呢個數字算到期時刻；漏咗嘅話 watchdog 會當成即刻過期而登出。
+  assert.equal(typeof loginBody.data.expiresInSeconds, "number");
   // 呢兩句先係整合測試嘅重點：UserService 讀 roles/permissions 用嘅係三張表
   // join，假 pool 測試比對嘅係 SQL 字串有冇出現「FROM roles r」呢類片段，表名
   // 或欄名打錯字一樣通過。呢度行緊嘅係真連線、真 schema。
@@ -129,6 +219,10 @@ test("login, me and logout work end to end against a real database", { skip }, a
   assert.deepEqual(loginBody.data.user.permissions, [seeded.permissionName]);
 
   const { token } = loginBody.data;
+
+  // did 少咗嘅話，續期（階段 3）就無從判斷請求係咪嚟自簽發佢嗰台設備。
+  const claims = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+  assert.equal(claims.did, device.deviceId);
 
   const meResponse = await fetch(`${url}/api/v1/user/me`, {
     headers: { Authorization: `Bearer ${token}` }

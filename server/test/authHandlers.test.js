@@ -34,6 +34,9 @@ function createServices(overrides = {}) {
     // handler 的 constructor 會拿它去建 UserService。這些測試不碰資料庫——建好
     // 之後那個 UserService 就被替身換掉了——所以這裡只要有個物件在就夠。
     mysqldatabase: {},
+    // 預設放一個已審批的設備，讓「跟設備無關」的測試（密碼錯、節流）不必各自
+    // 交代設備狀態。驗簽本身在 deviceBinding.test.js 用真的金鑰測。
+    deviceBinding: fakeDeviceBinding(),
     ...overrides.services
   };
 
@@ -84,6 +87,7 @@ function fakeJwt({ issued = [] } = {}) {
   return {
     authScheme: "Bearer",
     expiresIn: "2h",
+    expiresInSeconds: 7200,
     issue(payload, options) {
       issued.push({ payload, options });
       return "signed.jwt.token";
@@ -99,6 +103,61 @@ function fakeRes() {
     setHeader(name, value) {
       headers[name] = value;
     }
+  };
+}
+
+const DEVICE_ID = "a".repeat(64);
+
+/**
+ * 設備綁定的替身。這幾個測試驗的是 loginHandler 怎麼編排——先驗密碼再驗設備、
+ * 各種綁定狀態回什麼——而不是簽章本身對不對，那在 deviceBinding.test.js 用真的
+ * Web Crypto 金鑰測。
+ */
+function fakeDeviceBinding({
+  binding = { id: 11, device_id: DEVICE_ID, public_key: Buffer.from("stored-key"), status: "approved" },
+  verification = { ok: true },
+  requested = [],
+  used = [],
+  verified = []
+} = {}) {
+  return {
+    requested,
+    used,
+    verified,
+    deviceIdFor: () => DEVICE_ID,
+    bodyHash: () => "body-hash",
+    async findBinding() {
+      return binding;
+    },
+    async verifyRequest(request) {
+      verified.push(request);
+      return verification;
+    },
+    async requestBinding(request) {
+      requested.push(request);
+      return { ...request, id: 99, status: "pending" };
+    },
+    async markUsed(id) {
+      used.push(id);
+    }
+  };
+}
+
+function fakeRequest({ body = {}, ip = "203.0.113.5", headers = {} } = {}) {
+  const all = {
+    "x-device-id": DEVICE_ID,
+    "x-device-timestamp": "1755600000000",
+    "x-device-nonce": "11111111-1111-4111-8111-111111111111",
+    "x-device-signature": Buffer.from("signature").toString("base64url"),
+    "user-agent": "Firefox",
+    ...headers
+  };
+
+  return {
+    ip,
+    rawBody: Buffer.from(JSON.stringify(body)),
+    input: { body },
+    get: (name) => all[String(name).toLowerCase()]
   };
 }
 
@@ -118,23 +177,26 @@ function fakeTokenRevocation({ version = 3, revoked = [] } = {}) {
 test("login issues a token carrying the roles and permissions claims", async () => {
   const jwt = fakeJwt();
   const tokenRevocation = fakeTokenRevocation({ version: 3 });
+  const deviceBinding = fakeDeviceBinding();
   const { handler } = createHandler(LoginHandler, {
     userService: {
       async authenticate() {
         return { ok: true, user: SAMPLE_USER };
       }
     },
-    services: { jwt, tokenRevocation }
+    services: { jwt, tokenRevocation, deviceBinding }
   });
 
-  const response = await handler.execute({
-    input: { body: { username: "alice", password: "right" } }
-  });
+  const response = await handler.execute(
+    fakeRequest({ body: { username: "alice", password: "right" } })
+  );
 
   assert.deepEqual(response.data, {
     token: "signed.jwt.token",
     tokenType: "Bearer",
     expiresIn: "2h",
+    // 前端靠這個數字算到期時刻。回字串 "2h" 的話它得自己再解析一次單位。
+    expiresInSeconds: 7200,
     user: SAMPLE_USER
   });
 
@@ -143,10 +205,307 @@ test("login issues a token carrying the roles and permissions claims", async () 
   const [issued] = jwt.issued;
   assert.deepEqual(issued.payload, {
     roles: ["admin"],
-    permissions: ["order.read"]
+    permissions: ["order.read"],
+    // did 少了的話，續期時無從判斷請求是不是來自簽發它的那台設備——任何一台
+    // 已審批的設備都能續期任何一個 token。
+    did: DEVICE_ID
   });
   // 版本號必須跟著簽進去，否則這個 token 對撤銷永久免疫。
   assert.deepEqual(issued.options, { subject: "7", version: 3 });
+  // last_used_at 是清理工作判斷「這台還在用嗎」的唯一依據。
+  assert.deepEqual(deviceBinding.used, [11]);
+});
+
+test("an approved device is verified with the stored key, never the one in the request", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await handler.execute(
+    fakeRequest({
+      body: { username: "alice", password: "right" },
+      // 攻擊者附上自己的公鑰，想讓伺服器拿它來驗自己的簽章。
+      headers: { "x-device-public-key": Buffer.from("attacker-key").toString("base64url") }
+    })
+  );
+
+  // 用請求自帶的公鑰驗簽等於完全不驗：任何人都能簽出一份「有效」的簽章。
+  const [verified] = deviceBinding.verified;
+  assert.deepEqual(verified.publicKeyDer, Buffer.from("stored-key"));
+});
+
+test("an unknown device is recorded for approval and told so, not told the login failed", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await assert.rejects(
+    () =>
+      handler.execute(
+        fakeRequest({
+          body: { username: "alice", password: "right", deviceLabel: "Sam 的辦公室桌機" },
+          headers: { "x-device-public-key": Buffer.from("new-key").toString("base64url") }
+        })
+      ),
+    (error) => {
+      // 混成「登入失敗」的話，使用者會以為密碼打錯而一直重試，然後撞上登入
+      // 節流——真正該做的事（等審批）一件都不會發生。
+      assert.equal(error.statusCode, 403);
+      assert.equal(error.publicCode, "DEVICE_PENDING_APPROVAL");
+      return true;
+    }
+  );
+
+  const [request] = deviceBinding.requested;
+  assert.equal(request.label, "Sam 的辦公室桌機");
+  // IP 與 UA 是審批者唯一的判斷依據，漏掉的話審批只能靠猜。
+  assert.equal(request.ip, "203.0.113.5");
+  assert.equal(request.userAgent, "Firefox");
+});
+
+test("rejected and revoked devices get their own codes, not the pending one", async () => {
+  for (const [status, expected] of [
+    ["rejected", "DEVICE_REJECTED"],
+    ["revoked", "DEVICE_REVOKED"],
+    ["pending", "DEVICE_PENDING_APPROVAL"]
+  ]) {
+    const { handler } = createHandler(LoginHandler, {
+      userService: {
+        async authenticate() {
+          return { ok: true, user: SAMPLE_USER };
+        }
+      },
+      services: {
+        jwt: fakeJwt(),
+        tokenRevocation: fakeTokenRevocation(),
+        deviceBinding: fakeDeviceBinding({
+          binding: { id: 11, device_id: DEVICE_ID, public_key: Buffer.from("k"), status }
+        })
+      }
+    });
+
+    await assert.rejects(
+      () => handler.execute(fakeRequest({ body: { username: "alice", password: "right" } })),
+      (error) => {
+        assert.equal(error.statusCode, 403, status);
+        assert.equal(error.publicCode, expected, status);
+        return true;
+      }
+    );
+  }
+});
+
+test("a wrong password never reaches the device check", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: false, reason: AUTH_FAILURE.BAD_PASSWORD };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await assert.rejects(() =>
+    handler.execute(fakeRequest({ body: { username: "alice", password: "wrong" } }))
+  );
+
+  // 順序反過來的話，任何人都能對任意帳號灌爆審批佇列，而且「這個帳號的設備
+  // 還沒審批」這個回應本身就會洩漏帳號存不存在。
+  assert.deepEqual(deviceBinding.requested, []);
+  assert.deepEqual(deviceBinding.verified, []);
+});
+
+test("a failed signature says nothing specific publicly but records why in the log", async () => {
+  const { handler, logger } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: {
+      jwt: fakeJwt(),
+      tokenRevocation: fakeTokenRevocation(),
+      deviceBinding: fakeDeviceBinding({ verification: { ok: false, reason: "nonce_replayed" } })
+    }
+  });
+
+  await assert.rejects(
+    () => handler.execute(fakeRequest({ body: { username: "alice", password: "right" } })),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      // 「簽章不符」與「nonce 用過了」的差別會告訴攻擊者他離成功還差多遠。
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_INVALID");
+      return true;
+    }
+  );
+
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+  const rejection = logger.entries.find(
+    (entry) => entry.event === "auth.device.signature_rejected"
+  );
+  assert.equal(rejection.context.reason, "nonce_replayed");
+});
+
+test("a clock skew rejection is told apart, because only the user can fix that one", async () => {
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: {
+      jwt: fakeJwt(),
+      tokenRevocation: fakeTokenRevocation(),
+      deviceBinding: fakeDeviceBinding({ verification: { ok: false, reason: "timestamp_stale" } })
+    }
+  });
+
+  await assert.rejects(
+    () => handler.execute(fakeRequest({ body: { username: "alice", password: "right" } })),
+    (error) => {
+      // 攻擊者從「你的時間差太多」學不到任何東西，而收斂掉它只會換來一通
+      // 查不出原因的客服電話。
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_STALE");
+      assert.match(error.publicMessage, /clock/);
+      return true;
+    }
+  );
+});
+
+test("missing device headers are refused before anything is looked up", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await assert.rejects(
+    () =>
+      handler.execute(
+        fakeRequest({
+          body: { username: "alice", password: "right" },
+          headers: { "x-device-signature": undefined }
+        })
+      ),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_REQUIRED");
+      return true;
+    }
+  );
+
+  assert.deepEqual(deviceBinding.verified, []);
+});
+
+test("a first-time device that sends no public key is refused, not crashed on", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  // 未綁定的設備冇附公鑰就無從驗證任何嘢——資料庫入面又冇一把可以用。
+  await assert.rejects(
+    () =>
+      handler.execute(fakeRequest({ body: { username: "alice", password: "right" } })),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_INVALID");
+      return true;
+    }
+  );
+
+  assert.deepEqual(deviceBinding.requested, []);
+});
+
+test("a binding request without a label or client details still records cleanly", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await assert.rejects(() =>
+    handler.execute(
+      fakeRequest({
+        // deviceLabel 係選填；審批者仲有 IP 同 UA 可以睇，唔應該因為少一個
+        // 標籤就擋低成個登入。
+        body: { username: "alice", password: "right" },
+        ip: "",
+        headers: {
+          "user-agent": undefined,
+          "x-device-public-key": Buffer.from("new-key").toString("base64url")
+        }
+      })
+    )
+  );
+
+  const [request] = deviceBinding.requested;
+  // 欄位係 NOT NULL DEFAULT ''，所以呢度一定要係空字串而唔係 undefined，
+  // 否則 INSERT 會炸。
+  assert.equal(request.label, "");
+  assert.equal(request.ip, "");
+  assert.equal(request.userAgent, "");
+});
+
+test("a first-time device must prove the id really is its own key's thumbprint", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  // deviceIdFor 回傳的是這把公鑰真正的 thumbprint；請求宣稱的是另一個 id。
+  deviceBinding.deviceIdFor = () => "b".repeat(64);
+
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await assert.rejects(
+    () =>
+      handler.execute(
+        fakeRequest({
+          body: { username: "alice", password: "right" },
+          headers: { "x-device-public-key": Buffer.from("some-key").toString("base64url") }
+        })
+      ),
+    (error) => {
+      // 少了這一步，申請者可以宣稱一個與自己金鑰無關的 id，之後那個 id 對應
+      // 到誰的金鑰就說不準了。
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_INVALID");
+      return true;
+    }
+  );
+
+  assert.deepEqual(deviceBinding.requested, []);
 });
 
 test("login answers every failure with the same message", async () => {
