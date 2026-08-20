@@ -2,6 +2,7 @@ import { getHeapStatistics } from "node:v8";
 import applicationConfig from "../../../config/application.js";
 import apiConfig from "../../../config/api.js";
 import databaseConfig from "../../../config/database.js";
+import deviceBindingConfig from "../../../config/deviceBinding.js";
 import idempotencyConfig from "../../../config/idempotency.js";
 import jwtConfig from "../../../config/jwt.js";
 import loggingConfig from "../../../config/logging.js";
@@ -16,6 +17,7 @@ import { normalizeApiConfig } from "../api/normalizeApiConfig.js";
 import { ConfigurationError } from "./ConfigurationError.js";
 import { normalizeApplicationConfig } from "./normalizeApplicationConfig.js";
 import { normalizeDatabaseConfig } from "./normalizeDatabaseConfig.js";
+import { normalizeDeviceBindingConfig } from "../../services/deviceBinding/normalizeDeviceBindingConfig.js";
 import { normalizeIdempotencyConfig } from "../../services/idempotency/normalizeIdempotencyConfig.js";
 import { normalizeJwtConfig } from "./normalizeJwtConfig.js";
 import { normalizeRequestConfig } from "./normalizeRequestConfig.js";
@@ -29,6 +31,7 @@ export function defaultConfigurationSource() {
     application: applicationConfig,
     api: apiConfig,
     database: databaseConfig,
+    deviceBinding: deviceBindingConfig,
     idempotency: idempotencyConfig,
     jwt: jwtConfig,
     logging: loggingConfig,
@@ -78,6 +81,9 @@ export function validateApplicationConfiguration(
   );
   validateSection("api", () => normalizeApiConfig(source?.api));
   validateSection("database", () => normalizeDatabaseConfig(source?.database));
+  validateSection("deviceBinding", () =>
+    normalizeDeviceBindingConfig(source?.deviceBinding)
+  );
   validateSection("idempotency", () =>
     normalizeIdempotencyConfig(source?.idempotency)
   );

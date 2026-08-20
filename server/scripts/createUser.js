@@ -23,6 +23,10 @@ const { createMySqlDatabasePool } = await import(
   "../src/services/mysqldatabase/connection.js"
 );
 
+// 系統第一個帳號自動取得這個角色。角色與它的 device.approve 權限由
+// 0004_add_device_binding_tables.js 種入。
+const SYSTEM_ADMIN_ROLE = "system-admin";
+
 function parseArguments(argv) {
   const positional = [];
   const roles = [];
@@ -65,6 +69,20 @@ async function createUser(connection, { username, password, displayName, roles }
   await connection.beginTransaction();
 
   try {
+    // 系統第一個帳號自動成為 system admin，無論有沒有給 --role。
+    //
+    // 少了這一步，bootstrap 會斷在一個沒有症狀的地方：帳號建出來了、登得進去，
+    // 但沒有人握有 device.approve，於是所有設備綁定申請都沒有人能核准。查在
+    // 交易裡而且在 INSERT 之前，判準是「users 表原本是空的」——放在 INSERT
+    // 之後就得改成跟 1 比較，那個 1 是哪來的並不明顯。
+    const [[{ existing }]] = await connection.query(
+      "SELECT COUNT(*) AS existing FROM users"
+    );
+    const isFirstUser = Number(existing) === 0;
+    const effectiveRoles = isFirstUser
+      ? [...new Set([...roles, SYSTEM_ADMIN_ROLE])]
+      : roles;
+
     const [result] = await connection.execute(
       `INSERT INTO users (username, password_hash, display_name, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?)`,
@@ -73,7 +91,7 @@ async function createUser(connection, { username, password, displayName, roles }
 
     const userId = result.insertId;
 
-    for (const role of roles) {
+    for (const role of effectiveRoles) {
       // 角色不存在就順手建出來：第一個帳號建立時角色表一定是空的，要求先手動
       // 建角色只會讓第一步多一個必踩的坑。
       await connection.execute(
@@ -88,7 +106,7 @@ async function createUser(connection, { username, password, displayName, roles }
     }
 
     await connection.commit();
-    return userId;
+    return { userId, roles: effectiveRoles, isFirstUser };
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -100,11 +118,22 @@ const pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
 const connection = await pool.getConnection();
 
 try {
-  const userId = await createUser(connection, options);
+  const { userId, roles, isFirstUser } = await createUser(connection, options);
   console.log(
     `Created user ${options.username} (id ${userId})` +
-      (options.roles.length > 0 ? ` with roles: ${options.roles.join(", ")}` : "")
+      (roles.length > 0 ? ` with roles: ${roles.join(", ")}` : "")
   );
+
+  if (isFirstUser) {
+    // 明講而不是靜默授予：這個帳號拿到了呼叫端沒有要求的權限，看不到就等於
+    // 沒發生過。第二句是因為建好帳號的下一步幾乎一定會撞到設備綁定那道門。
+    console.log(
+      `This is the first account, so it was granted "${SYSTEM_ADMIN_ROLE}" ` +
+        "(which holds device.approve).\n" +
+        "Log in once from a browser to create a device binding request, then approve it " +
+        "with: node scripts/approveDevice.js --list"
+    );
+  }
 } catch (error) {
   if (error.code === "ER_DUP_ENTRY") {
     console.error(`User already exists: ${options.username}`);
