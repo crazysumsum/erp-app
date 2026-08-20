@@ -64,6 +64,30 @@ describe("session store", () => {
     }
   });
 
+  it("refresh 會換新 token、順手更新 user，而且唔帶公鑰", async () => {
+    httpClient.post.mockResolvedValue({
+      token: "tok-2",
+      tokenType: "Bearer",
+      expiresIn: "15m",
+      expiresInSeconds: 900,
+      user: { ...user, permissions: ["order.read", "order.write"] }
+    });
+    const session = useSessionStore();
+
+    await session.refresh();
+
+    expect(localStorage.getItem("erp.token")).toBe("tok-2");
+    expect(Number(localStorage.getItem("erp.token.deadline"))).toBeGreaterThan(Date.now());
+    // 後端每次續期都會重讀 roles/permissions，所以權限變更會喺一次續期之內
+    // 反映到畫面上，唔使等重新登入。
+    expect(session.permissions).toEqual(["order.read", "order.write"]);
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/user/token/refresh", {
+      // 續期嘅前提就係呢台設備已經綁定過，所以後端一律用資料庫嗰把公鑰；
+      // 帶 includePublicKey 上去毫無意義。
+      signed: true
+    });
+  });
+
   it("login 失敗會拋出，唔會存到 token 或改到 user", async () => {
     httpClient.post.mockRejectedValue(new Error("Invalid username or password"));
     const session = useSessionStore();

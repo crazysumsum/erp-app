@@ -441,7 +441,7 @@ registerCustomTypes() {
 | `issuer` | `JWT_ISSUER` | `erp-api` | Token 簽發者，防止接受其他系統簽的 token |
 | `audience` | `JWT_AUDIENCE` | `erp-web` | Token 預期使用者 |
 | `algorithm` | — | `HS256` | 簽署演算法，驗證時只接受此演算法，防降級攻擊 |
-| `expiresIn` | `JWT_EXPIRES_IN` | `2h` | Token 有效期，必須是數字加單位（`s`/`m`/`h`/`d`/`w`），純數字會被當成毫秒 |
+| `expiresIn` | `JWT_EXPIRES_IN` | `15m` | Token 有效期，必須是數字加單位（`s`/`m`/`h`/`d`/`w`），純數字會被當成毫秒。短效期靠設備綁定的自動續期撐著，見 `docs/device-binding-auth.md` |
 | `clockToleranceSeconds` | `JWT_CLOCK_TOLERANCE_SECONDS` | `5` | 驗證 `exp`/`nbf` 容許的時鐘誤差 |
 | `headerName` / `authScheme` | — | `authorization` / `Bearer` | Token 所在 header 與認證方案 |
 

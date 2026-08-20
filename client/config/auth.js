@@ -35,7 +35,33 @@ const authConfig = {
   // 設備金鑰的曲線與雜湊。必須與 server/config/deviceBinding.js 一致，否則
   // 後端會把每一份合法簽章都判成公鑰不符。
   deviceKeyCurve: "P-256",
-  deviceKeyHash: "SHA-256"
+  deviceKeyHash: "SHA-256",
+
+  // session watchdog 每隔多久檢查一次。
+  refreshTickMs: 60_000,
+
+  // 剩多少時間就去換新 token。
+  //
+  // **必須遠大於 refreshTickMs。** 反過來的話會在第一個週期就漏掉：例如 10 分鐘
+  // 檢查一次、剩 1 分鐘才續，到期時間落在「檢查後 1 分鐘到 10 分鐘」之間時，
+  // 兩次檢查都不會觸發，token 就這樣死了。5 分鐘配 60 秒的 tick 也順帶給一次
+  // 短暫斷網 5 次左右的重試機會——續期沒有 401 兜底，所以可重試是硬性要求。
+  refreshThresholdMs: 5 * 60_000,
+
+  // 多久沒有真實使用者操作就停止續期。
+  //
+  // 這是「多久不續期」的門檻，不是「多久後登出」：停止續期那一刻手上還有一個
+  // 沒用完的 token。實際登出 = 這個值 + 5 到 15 分鐘（下界是 token 壽命減續期
+  // 週期，上界是整個 token 壽命），所以 30 分鐘對應到最後一次操作後的 35–45
+  // 分鐘。
+  //
+  // 注意「活動」只認這個應用分頁裡的操作：使用者開著 ERP 轉去 Excel 做四十
+  // 分鐘，對這個機制來說是純閒置。真正防「有人走到沒鎖的電腦前」的是作業系統
+  // 的螢幕鎖定，這裡是它後面的第二道。
+  idleTimeoutMs: 30 * 60_000,
+
+  // 續期一直失敗、又剩不到這麼多時間，就提醒使用者存檔。
+  expiryWarningThresholdMs: 2 * 60_000
 };
 
 export default authConfig;

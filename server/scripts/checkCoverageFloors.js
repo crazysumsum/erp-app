@@ -45,6 +45,17 @@ const FLOORS = {
   // 登入是唯一會簽出憑證的地方：漏簽版本號的 token 撤銷不掉，回應多帶一個
   // 欄位就是一次資料外洩。
   "src/handlers/user/loginHandler.js": { lines: 95, branches: 90, functions: 95 },
+  // 續期是另一道門，而且它的失效完全沒有症狀：設備比對或帳號狀態檢查靜靜地
+  // 停止運作時，畫面上什麼都不會變——只是本來該結束的 session 一直活著。
+  "src/handlers/user/refreshTokenHandler.js": { lines: 95, branches: 90, functions: 95 },
+  // 設備簽章是續期唯一的憑證：它形同虛設的話，被偷走的 JWT 就能自己無限續期
+  // 下去，而整個設備綁定方案的安全性論證就沒有了。驗簽的每一條拒絕路徑
+  // ——時鐘、重放、曲線、格式——都必須有人踩過。
+  "src/services/deviceBinding/DeviceBindingService.js": {
+    lines: 95,
+    branches: 80,
+    functions: 90
+  },
   "src/framework/configuration/SecretValue.js": { lines: 90, branches: 90 },
   // 排程器錯了的後果是背景工作靜靜停掉，或 cluster 工作在每個實例上重複執行。
   // 兩者都不會在開發時被發現。

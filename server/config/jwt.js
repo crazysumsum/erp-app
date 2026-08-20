@@ -16,7 +16,12 @@ const jwtConfig = {
   // 登入成功後簽發的 Token 有效期。必須是整數加上單位 s、m、h、d 或 w，例如
   // 2h、30m、7d。不接受純數字：jsonwebtoken 把字串 "3600" 當成 3600 毫秒，
   // 會簽出 3 秒壽命的 token，而且沒有任何地方會說出來。
-  expiresIn: process.env.JWT_EXPIRES_IN || "2h",
+  //
+  // 15 分鐘而不是原本的 2 小時：有了設備綁定的自動續期（見
+  // docs/device-binding-auth.md），原本那個「安全 vs 多久踢人一次」的妥協就
+  // 消失了。縮短是純賺——被偷 token 的存活時間、撤銷的生效延遲、權限變更的
+  // 生效延遲全部一起縮短，而使用者感覺不到，因為續期是背景進行的。
+  expiresIn: process.env.JWT_EXPIRES_IN || "15m",
 
   // 驗證 exp、nbf 等時間欄位時容許的時鐘誤差，單位為秒。
   clockToleranceSeconds: Number(process.env.JWT_CLOCK_TOLERANCE_SECONDS || 5),

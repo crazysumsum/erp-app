@@ -48,7 +48,19 @@ test("the shipped defaults pass their own check", () => {
   const configuration = validateApplicationConfiguration(defaultConfigurationSource());
 
   assert.equal(configuration.scheduler.enabled, true);
-  assert.equal(configuration.jwt.expiresIn, "2h");
+
+  // config/jwt.js 是 `JWT_EXPIRES_IN || "15m"`，所以這一欄讀到的是環境變數
+  // 或出廠預設。只有在沒有覆寫時才比對確切的數字，否則這條測試會變成「你的
+  // .env 寫了什麼」的鏡子——CI 沒有 .env、開發機有，兩邊必定有一邊是紅的。
+  //
+  // 15m 而不是原本的 2h：有了設備綁定的自動續期，原本那個「安全 vs 多久踢人
+  // 一次」的妥協就消失了（見 docs/device-binding-auth.md）。
+  if (process.env.JWT_EXPIRES_IN === undefined) {
+    assert.equal(configuration.jwt.expiresIn, "15m");
+  } else {
+    // 有覆寫時仍然要求它是一個看得懂的時長——那才是這條檢查真正在守的東西。
+    assert.match(configuration.jwt.expiresIn, /^\d+[smhdw]$/);
+  }
   // 版本表永久保留，所以這裡沒有保留期可以配錯。
   assert.equal(Object.hasOwn(configuration.tokenRevocation, "retentionSeconds"), false);
 });
