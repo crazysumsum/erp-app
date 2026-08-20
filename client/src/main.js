@@ -4,11 +4,17 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import { vCan } from "./framework/authorization/vCan.js";
 import { signRequest } from "./framework/auth/deviceKey.js";
+import {
+  attachSessionWatchdog,
+  createSessionWatchdog
+} from "./framework/auth/sessionWatchdog.js";
+import { getTokenDeadline } from "./framework/auth/tokenStorage.js";
 import { discoverPages } from "./framework/discovery/pages.js";
 import { validatePages } from "./framework/discovery/validatePages.js";
 import { renderFatalBootError } from "./framework/errors/renderFatalBootError.js";
 import { httpClient } from "./framework/http/HttpClient.js";
 import { createAppRouter } from "./framework/routing/router.js";
+import { notifyError } from "./framework/ui/notify.js";
 import { useSessionStore } from "./stores/session.js";
 
 // Quasar 的預編譯 CSS。用 dist/quasar.css 而不是 src/css/index.sass，是為了不必
@@ -69,8 +75,23 @@ function boot(pages) {
   // 就 app.use(router)，guard 會喺 session 仲未還原嗰陣就判斷「未登入」，就算
   // 之後 restore 成功都嚟唔切——呢個順序錯誤試過令有 token 嘅用戶一 refresh
   // 就被踢返登入頁。
+  // Session watchdog：快到期就喺背景換新 token，真係過咗期就即刻登出。
+  //
+  // 強制登出刻意重用上面 onUnauthorized 嗰段——兩條路（過期同 401）應該落喺
+  // 同一個地方，否則其中一條會慢慢同另一條長得唔一樣。
+  const watchdog = createSessionWatchdog({
+    refresh: () => session.refresh(),
+    onExpired: () => httpClient.onUnauthorized(),
+    onWarning: () =>
+      notifyError("連線階段即將結束，請儲存目前的工作"),
+    getDeadline: getTokenDeadline
+  });
+
   session.restore().finally(() => {
     app.use(router);
     app.mount("#app");
+    // 掛喺 mount 之後：watchdog 一 start 就可能即刻 check()，而強制登出要導頁，
+    // 嗰陣 router 一定要已經裝好。
+    attachSessionWatchdog(watchdog);
   });
 }

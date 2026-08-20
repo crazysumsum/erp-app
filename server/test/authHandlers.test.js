@@ -3,6 +3,7 @@ import test from "node:test";
 import { LoginHandler } from "../src/handlers/user/loginHandler.js";
 import { LogoutHandler } from "../src/handlers/user/logoutHandler.js";
 import { MeHandler } from "../src/handlers/user/meHandler.js";
+import { RefreshTokenHandler } from "../src/handlers/user/refreshTokenHandler.js";
 import { AUTH_FAILURE } from "../src/modules/user/UserService.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 
@@ -717,6 +718,166 @@ test("me rejects a valid token whose account no longer exists", async () => {
   );
 });
 
+// --- 續期 --------------------------------------------------------------------
+
+function refreshRequest({ did = DEVICE_ID, sub = "7", headers = {} } = {}) {
+  return {
+    ...fakeRequest({ body: {}, headers }),
+    auth: { claims: { sub, did, roles: ["admin"], permissions: ["order.read"] } }
+  };
+}
+
+function createRefreshHandler({ deviceBinding, userService, jwt = fakeJwt() } = {}) {
+  const { handler, logger } = createHandler(RefreshTokenHandler, {
+    services: {
+      jwt,
+      tokenRevocation: fakeTokenRevocation({ version: 9 }),
+      deviceBinding: deviceBinding ?? fakeDeviceBinding()
+    }
+  });
+
+  handler.userService = userService ?? {
+    async findActiveById() {
+      return SAMPLE_USER;
+    }
+  };
+
+  return { handler, logger, jwt };
+}
+
+test("refresh issues a new token with freshly read roles and the current version", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  const jwt = fakeJwt();
+  const { handler } = createRefreshHandler({ deviceBinding, jwt });
+
+  const response = await handler.execute(refreshRequest());
+
+  assert.equal(response.data.token, "signed.jwt.token");
+  assert.equal(response.data.expiresInSeconds, 7200);
+
+  const [issued] = jwt.issued;
+  // roles/permissions 取自剛剛重讀的那一份，所以權限變更會在一次續期內生效。
+  assert.deepEqual(issued.payload, {
+    roles: ["admin"],
+    permissions: ["order.read"],
+    did: DEVICE_ID
+  });
+  // 版本號要重讀，否則新 token 會帶著舊版本，撤銷過的人可以一直換新的。
+  assert.deepEqual(issued.options, { subject: "7", version: 9 });
+  assert.deepEqual(deviceBinding.used, [11]);
+});
+
+test("refresh from a device other than the one in the token is refused", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  const { handler } = createRefreshHandler({ deviceBinding });
+
+  await assert.rejects(
+    // token 說它發給了另一台設備，但簽名的是這一台。
+    () => handler.execute(refreshRequest({ did: "b".repeat(64) })),
+    (error) => {
+      // 少了這一步，任何一台已審批的設備都能替任何一個 token 續期——包括用
+      // 自己的金鑰去續一個偷來的 token。
+      assert.equal(error.statusCode, 403);
+      assert.equal(error.publicCode, "DEVICE_MISMATCH");
+      return true;
+    }
+  );
+
+  assert.deepEqual(deviceBinding.verified, []);
+});
+
+test("refresh stops working once the device is no longer approved", async () => {
+  for (const [status, expected] of [
+    ["revoked", "DEVICE_REVOKED"],
+    ["rejected", "DEVICE_REJECTED"],
+    ["pending", "DEVICE_PENDING_APPROVAL"]
+  ]) {
+    const { handler } = createRefreshHandler({
+      deviceBinding: fakeDeviceBinding({
+        binding: { id: 11, device_id: DEVICE_ID, public_key: Buffer.from("k"), status }
+      })
+    });
+
+    await assert.rejects(
+      () => handler.execute(refreshRequest()),
+      (error) => {
+        assert.equal(error.statusCode, 403, status);
+        assert.equal(error.publicCode, expected, status);
+        return true;
+      }
+    );
+  }
+});
+
+test("refresh is refused when the binding is gone entirely", async () => {
+  const { handler } = createRefreshHandler({
+    deviceBinding: fakeDeviceBinding({ binding: null })
+  });
+
+  // 綁定被刪掉（例如清理工作掃走了一台很久沒用的設備）與被撤銷，對持有 token
+  // 的人來說是同一件事：這台機器不再被信任。
+  await assert.rejects(
+    () => handler.execute(refreshRequest()),
+    (error) => {
+      assert.equal(error.publicCode, "DEVICE_REVOKED");
+      return true;
+    }
+  );
+});
+
+test("a disabled account cannot refresh, which is what ends its session", async () => {
+  const { handler } = createRefreshHandler({
+    userService: {
+      async findActiveById() {
+        // findActiveById 只回傳 status 為 active 的人。
+        return null;
+      }
+    }
+  });
+
+  // 沒有絕對 session 上限，所以 session 不會自己過期。少了這個檢查，HR 把離職
+  // 員工設成 disabled 之後，那個人已經開著的 session 會一直續期下去，永遠不死。
+  await assert.rejects(
+    () => handler.execute(refreshRequest()),
+    (error) => {
+      assert.equal(error.statusCode, 401);
+      assert.equal(error.code, "USER_INACTIVE");
+      return true;
+    }
+  );
+});
+
+test("refresh verifies against the stored key and refuses a bad signature", async () => {
+  const deviceBinding = fakeDeviceBinding({
+    verification: { ok: false, reason: "nonce_replayed" }
+  });
+  const { handler, logger } = createRefreshHandler({ deviceBinding });
+
+  await assert.rejects(
+    () =>
+      handler.execute(
+        refreshRequest({
+          headers: { "x-device-public-key": Buffer.from("attacker-key").toString("base64url") }
+        })
+      ),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_INVALID");
+      return true;
+    }
+  );
+
+  // 續期的前提就是這台設備已經綁定過，所以請求自帶的公鑰完全沒有意義。
+  assert.deepEqual(deviceBinding.verified[0].publicKeyDer, Buffer.from("stored-key"));
+
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+  assert.ok(
+    logger.entries.some((entry) => entry.event === "auth.device.signature_rejected")
+  );
+});
+
 test("auth routes declare the access they need", () => {
   // 登入必須是 public：預設是 jwt，而要求 token 才能登入是一個沒有出口的迴圈。
   assert.equal(LoginHandler.api.authType, "public");
@@ -731,6 +892,12 @@ test("auth routes declare the access they need", () => {
   assert.equal(LogoutHandler.api.authorizationPolicies, undefined);
   assert.equal(MeHandler.api.authType, undefined);
   assert.equal(MeHandler.api.authorizationPolicies, undefined);
+
+  // 續期同樣沿用預設。這一項是承重的：改成 public 的話，過期的 JWT 就不會在
+  // 進 handler 之前被擋成 401，這支端點會變成一台可以用任意過期 token 換新
+  // token 的機器——「過期即強制登出」整條保證會靜靜地消失。
+  assert.equal(RefreshTokenHandler.api.authType, undefined);
+  assert.equal(RefreshTokenHandler.api.authorizationPolicies, undefined);
 });
 
 test("login response schema does not leak the password hash", () => {

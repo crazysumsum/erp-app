@@ -233,9 +233,56 @@ test("login, me and logout work end to end against a real database", { skip }, a
   assert.equal(meBody.data.username, username);
   assert.deepEqual(meBody.data.roles, [seeded.roleName]);
 
+  // 續期：真嘅設備簽名 + 真嘅 JWT 換一個新 token 出嚟。
+  const refreshPath = "/api/v1/user/token/refresh";
+  const refresh = async (bearer) =>
+    fetch(`${url}${refreshPath}`, {
+      method: "POST",
+      headers: {
+        ...(await device.headers({ method: "POST", path: refreshPath })),
+        Authorization: `Bearer ${bearer}`
+      }
+    });
+
+  const refreshed = await refresh(token);
+  const refreshedBody = await refreshed.json();
+
+  assert.equal(refreshed.status, 200);
+  assert.equal(typeof refreshedBody.data.expiresInSeconds, "number");
+  assert.deepEqual(refreshedBody.data.user.roles, [seeded.roleName]);
+
+  const refreshedToken = refreshedBody.data.token;
+  const refreshedClaims = JSON.parse(
+    Buffer.from(refreshedToken.split(".")[1], "base64url").toString()
+  );
+  assert.equal(refreshedClaims.did, device.deviceId);
+
+  // 新 token 要真係用得——續期簽出一個驗唔過嘅 token，症狀係下一個請求 401，
+  // 而前端會當成「已被撤銷」直接登出。
+  const meAfterRefresh = await fetch(`${url}/api/v1/user/me`, {
+    headers: { Authorization: `Bearer ${refreshedToken}` }
+  });
+  assert.equal(meAfterRefresh.status, 200);
+
+  // 另一台設備攞住同一個 token 都續唔到期。冇呢一層嘅話，任何一台已審批嘅設備
+  // 都可以幫任何一個 token 續期——包括用自己嘅金鑰去續一個偷返嚟嘅 token。
+  const otherDevice = await createTestDevice();
+  const fromOtherDevice = await fetch(`${url}${refreshPath}`, {
+    method: "POST",
+    headers: {
+      ...(await otherDevice.headers({ method: "POST", path: refreshPath })),
+      Authorization: `Bearer ${refreshedToken}`
+    }
+  });
+  assert.equal(fromOtherDevice.status, 403);
+  assert.equal((await fromOtherDevice.json()).error.code, "DEVICE_MISMATCH");
+
   const logoutResponse = await fetch(`${url}/api/v1/user/logout`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${refreshedToken}`,
+      "Content-Type": "application/json"
+    },
     body: "{}"
   });
 
@@ -244,12 +291,16 @@ test("login, me and logout work end to end against a real database", { skip }, a
     revoked: true
   });
 
-  // 撤銷要即時生效：同一個 token 登出之後應該即刻被拒，唔使等 2 小時過期。
+  // 撤銷要即時生效：同一個 token 登出之後應該即刻被拒，唔使等佢自己過期。
   const afterLogout = await fetch(`${url}/api/v1/user/me`, {
-    headers: { Authorization: `Bearer ${token}` }
+    headers: { Authorization: `Bearer ${refreshedToken}` }
   });
 
   assert.equal(afterLogout.status, 401);
+
+  // 撤銷之後亦都唔可以再續期，否則登出就等於冇登出過。
+  const refreshAfterLogout = await refresh(refreshedToken);
+  assert.equal(refreshAfterLogout.status, 401);
 });
 
 test("five consecutive failed logins lock the account for fifteen minutes", { skip }, async (t) => {

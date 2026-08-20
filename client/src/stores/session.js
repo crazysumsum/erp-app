@@ -59,6 +59,23 @@ export const useSessionStore = defineStore("session", {
       }
     },
 
+    /**
+     * 換一個新 token。由 session watchdog 喺快到期嗰陣叫。
+     *
+     * 同登入一樣要簽名，但**唔帶公鑰**：續期嘅前提就係呢台設備已經綁定過，
+     * 後端一律用資料庫入面嗰把公鑰驗簽，帶上去都會被忽略。
+     *
+     * 順手更新 user：後端每次續期都會重讀 roles/permissions，所以權限變更會喺
+     * 一次續期（最多 15 分鐘）之內反映到畫面上，唔使等重新登入。
+     */
+    async refresh() {
+      const result = await httpClient.post("/api/v1/user/token/refresh", { signed: true });
+
+      setToken(result.token, result.expiresInSeconds);
+      this.user = result.user;
+      return result.user;
+    },
+
     async logout() {
       try {
         await httpClient.post("/api/v1/user/logout");

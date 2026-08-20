@@ -398,6 +398,69 @@ test("keys that are not on the configured curve are rejected", async () => {
   assert.match(result.detail, /P-256/);
 });
 
+test("bytes that are not a key at all are rejected, not thrown as a 500", async () => {
+  const { service } = createService();
+
+  // 客戶端送一段垃圾當公鑰。createPublicKey 會直接拋，沒接住的話一個畸形的
+  // header 就變成 500 加一段看起來像伺服器出錯的堆疊，而不是 400。
+  const result = await service.verifyRequest({
+    publicKeyDer: Buffer.from("not a key at all"),
+    deviceId: "c".repeat(64),
+    method: "POST",
+    path: "/x",
+    bodyHash: "",
+    timestamp: NOW_MS,
+    nonce: "33333333-3333-4333-8333-333333333333",
+    signature: Buffer.alloc(64)
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, "public_key_invalid");
+});
+
+test("a timestamp that is not a number is rejected before anything else", async () => {
+  const { service, database } = createService();
+  const { keyPair, spki } = await generateDeviceKey();
+  const request = await signedRequest(service, keyPair, spki);
+
+  for (const timestamp of ["not-a-number", undefined, NaN]) {
+    const result = await service.verifyRequest({ ...request, timestamp });
+    assert.deepEqual(
+      result,
+      { ok: false, reason: "timestamp_invalid" },
+      String(timestamp)
+    );
+  }
+
+  // 空字串是個例外，值得知道：Number("") 是 0，不是 NaN，所以它通過 isFinite
+  // 之後被當成 epoch 0 去比時鐘，判成 stale 而不是 invalid。兩者都會拒絕，而且
+  // 空 header 早就被 readDeviceSignature 擋在更前面，所以實務上到不了這裡。
+  assert.deepEqual(await service.verifyRequest({ ...request, timestamp: "" }), {
+    ok: false,
+    reason: "timestamp_stale"
+  });
+
+  // 全部都在碰資料庫之前就被拒。
+  assert.equal(database.state.nonces.size, 0);
+});
+
+test("a missing table becomes an error that says how to fix it", async () => {
+  const database = fakeDatabase();
+  const failing = {
+    ...database,
+    query: async () => {
+      throw Object.assign(new Error("Table 'user_devices' doesn't exist"), {
+        code: "ER_NO_SUCH_TABLE"
+      });
+    }
+  };
+  const { service } = createService({ database: failing });
+
+  // 裸的 ER_NO_SUCH_TABLE 只會說表不見了，不會說它本來該從哪裡來——而這張表
+  // 是 migration 建的，不是框架的 .sql 檔案。
+  await assert.rejects(() => service.findBinding(1, "a".repeat(64)), /npm run migrate/);
+});
+
 test("a non-EC key is rejected", async () => {
   const { service } = createService();
   const rsa = await crypto.subtle.generateKey(
