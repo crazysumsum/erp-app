@@ -51,11 +51,6 @@ export class DeviceBindingService extends BaseService {
     this.time = services.require("time");
   }
 
-  /** 簽章設定，供呼叫端顯示或記錄。 */
-  get signatureMaxSkewSeconds() {
-    return this.#config.signatureMaxSkewSeconds;
-  }
-
   /**
    * 公鑰的 device id：SPKI DER 的 SHA-256（hex）。
    *
@@ -290,40 +285,161 @@ export class DeviceBindingService extends BaseService {
   }
 
   /**
-   * 核准一筆綁定。
+   * 狀態轉移。回傳轉移後的那一列，或 null 代表什麼都沒發生。
+   *
+   * UPDATE 的條件帶著來源狀態，所以整個「檢查現況再改」是一句原子的 SQL——
+   * 分成先 SELECT 再 UPDATE 的話，兩個審批者同時按下核准與拒絕，兩句都會成功，
+   * 最後的狀態取決於誰先寫入，而兩個人都會看到「操作成功」。
    *
    * reviewed_at 一定要寫：清理工作的第二條規則（已核准但從未使用）靠它判斷年齡，
    * 而第三條規則看的是 last_used_at。兩欄都是 NULL 的列會同時逃過兩條規則，
    * 變成永遠清不掉的孤兒。
    */
-  async approve(bindingId, { reviewerId = null, note = "" } = {}) {
+  async #transition(bindingId, { from, to, reviewerId, note, event, message }) {
     const [result] = await this.database.execute(
       `UPDATE ${DEVICES_TABLE}
        SET status = ?, reviewed_at = ?, reviewed_by = ?, review_note = ?
        WHERE id = ? AND status = ?`,
       [
-        DEVICE_STATUS.approved,
+        to,
         this.time.nowMs(),
-        reviewerId === null ? null : Number(reviewerId),
+        reviewerId === null || reviewerId === undefined ? null : Number(reviewerId),
         String(note ?? "").slice(0, 190),
         Number(bindingId),
-        DEVICE_STATUS.pending
+        from
       ]
     );
 
-    // 條件帶著 status = 'pending'，所以影響 0 列代表它不是待審批狀態——已經批過、
-    // 已被拒絕，或這個 id 根本不存在。呼叫端要分得出「批准成功」與「什麼都沒發生」。
     if (result.affectedRows === 0) {
-      return false;
+      return null;
     }
 
-    await this.logger.info(
-      "auth.device.binding_approved",
-      "A device binding was approved",
-      { bindingId: Number(bindingId), reviewerId, note: String(note ?? "") }
-    );
+    const binding = await this.findById(bindingId);
 
-    return true;
+    await this.logger.info(event, message, {
+      bindingId: Number(bindingId),
+      userId: binding ? Number(binding.user_id) : null,
+      reviewerId: reviewerId ?? null,
+      note: String(note ?? "")
+    });
+
+    return binding;
+  }
+
+  /** 核准一筆待審批的綁定。 */
+  async approve(bindingId, { reviewerId = null, note = "" } = {}) {
+    return this.#transition(bindingId, {
+      from: DEVICE_STATUS.pending,
+      to: DEVICE_STATUS.approved,
+      reviewerId,
+      note,
+      event: "auth.device.binding_approved",
+      message: "A device binding was approved"
+    });
+  }
+
+  /** 拒絕一筆待審批的綁定。 */
+  async reject(bindingId, { reviewerId = null, note = "" } = {}) {
+    return this.#transition(bindingId, {
+      from: DEVICE_STATUS.pending,
+      to: DEVICE_STATUS.rejected,
+      reviewerId,
+      note,
+      event: "auth.device.binding_rejected",
+      message: "A device binding was rejected"
+    });
+  }
+
+  /**
+   * 撤銷一台已核准的設備。
+   *
+   * 只從 approved 撤銷：pending 的該用 reject，而重覆撤銷一台已撤銷的設備應該
+   * 是一次明確的「沒有東西可做」，不是靜默成功。
+   *
+   * 撤銷之後那台設備最多還能用到手上 token 自己過期為止——它續不了期（續期會
+   * 檢查綁定仍是 approved）。要立刻生效，呼叫端還要 revoke 那個 subject 的
+   * token 版本；那一步屬於業務決定，不在這個 service。
+   */
+  async revoke(bindingId, { reviewerId = null, note = "" } = {}) {
+    return this.#transition(bindingId, {
+      from: DEVICE_STATUS.approved,
+      to: DEVICE_STATUS.revoked,
+      reviewerId,
+      note,
+      event: "auth.device.binding_revoked",
+      message: "A device binding was revoked"
+    });
+  }
+
+  /** 依 id 取一筆綁定。找不到回傳 null。 */
+  async findById(bindingId) {
+    let rows;
+
+    try {
+      [rows] = await this.database.query(
+        `SELECT id, user_id, device_id, label, status, requested_at,
+                requested_ip, requested_ua, reviewed_at, reviewed_by, last_used_at
+         FROM ${DEVICES_TABLE}
+         WHERE id = ?`,
+        [Number(bindingId)]
+      );
+    } catch (error) {
+      throw describeMissingTable(error, { table: DEVICES_TABLE, sqlFile: MIGRATE_HINT });
+    }
+
+    return rows.length === 0 ? null : rows[0];
+  }
+
+  /**
+   * 待審批的申請，附上申請人的帳號。
+   *
+   * 刻意不回傳 public_key：審批者看不懂它，而它是驗簽用的資料，沒有理由出現在
+   * 一個給人看的清單裡。
+   */
+  async listPending({ limit = 200 } = {}) {
+    let rows;
+
+    // LIMIT 不能用佔位符：MySQL 的 binary protocol 會以 ER_WRONG_ARGUMENTS 拒絕
+    // `LIMIT ?`（見 MySqlIdempotencyStore.purge()）。所以先收斂成一個正整數再
+    // 內插——沒有這一步，一個非數字的 limit 會變成 `LIMIT NaN`。
+    const rowLimit = Math.max(1, Math.floor(Number(limit) || 200));
+
+    try {
+      [rows] = await this.database.query(
+        `SELECT d.id, d.user_id, u.username, u.display_name, d.device_id, d.label,
+                d.status, d.requested_at, d.requested_ip, d.requested_ua
+         FROM ${DEVICES_TABLE} d
+         JOIN users u ON u.id = d.user_id
+         WHERE d.status = ?
+         ORDER BY d.requested_at
+         LIMIT ${rowLimit}`,
+        [DEVICE_STATUS.pending]
+      );
+    } catch (error) {
+      throw describeMissingTable(error, { table: DEVICES_TABLE, sqlFile: MIGRATE_HINT });
+    }
+
+    return rows;
+  }
+
+  /** 一個使用者自己的設備清單。 */
+  async listForUser(userId) {
+    let rows;
+
+    try {
+      [rows] = await this.database.query(
+        `SELECT id, device_id, label, status, requested_at, requested_ip,
+                requested_ua, reviewed_at, last_used_at
+         FROM ${DEVICES_TABLE}
+         WHERE user_id = ?
+         ORDER BY requested_at DESC`,
+        [Number(userId)]
+      );
+    } catch (error) {
+      throw describeMissingTable(error, { table: DEVICES_TABLE, sqlFile: MIGRATE_HINT });
+    }
+
+    return rows;
   }
 
   /** 記下這台設備剛剛被成功使用過。登入與續期都要呼叫。 */
