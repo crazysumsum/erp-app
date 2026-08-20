@@ -247,6 +247,87 @@ test("authenticate rejects an unknown user", async () => {
   assert.deepEqual(database.state.updates, []);
 });
 
+test("verifyPasswordById accepts the right password without returning a user", async () => {
+  const database = fakeDatabase({ user: await activeUser() });
+  const service = createService(database);
+
+  const result = await service.verifyPasswordById(7, "right-password");
+
+  // 呼叫端已經有一個有效 JWT，claims 裡的身份夠用——這裡只回答「密碼對不
+  // 對」，不必再查一次角色與權限（那不是這個方法的工作）。
+  assert.deepEqual(result, { ok: true });
+});
+
+test("verifyPasswordById rejects the wrong password and counts toward the same lockout as authenticate", async () => {
+  const database = fakeDatabase({ user: await activeUser() });
+  const service = createService(database);
+
+  const result = await service.verifyPasswordById(7, "wrong-password");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.BAD_PASSWORD);
+  // 用偷來的 JWT 猜密碼，計的是同一個 failed_login_attempts——不是另一組
+  // 只屬於這個方法的計數器。
+  assert.equal(database.state.user.failed_login_attempts, 1);
+});
+
+test("verifyPasswordById and authenticate share one lockout: five failures from either one locks both", async () => {
+  const database = fakeDatabase({ user: await activeUser() });
+  const service = createService(database);
+
+  await service.verifyPasswordById(7, "wrong-password");
+  await service.authenticate("alice", "wrong-password");
+  await service.verifyPasswordById(7, "wrong-password");
+  await service.authenticate("alice", "wrong-password");
+  await service.verifyPasswordById(7, "wrong-password");
+
+  assert.equal(database.state.user.failed_login_attempts, 5);
+  assert.ok(database.state.user.locked_until !== null);
+
+  // 鎖定生效之後，換另一個入口用對的密碼也一樣進不去。
+  const result = await service.authenticate("alice", "right-password");
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.LOCKED);
+});
+
+test("verifyPasswordById rejects a locked account even with the right password", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({
+      failed_login_attempts: 5,
+      locked_until: NOW_MS + 60_000
+    })
+  });
+  const service = createService(database);
+
+  const result = await service.verifyPasswordById(7, "right-password");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.LOCKED);
+});
+
+test("verifyPasswordById rejects a disabled account", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({ status: "disabled" })
+  });
+  const service = createService(database);
+
+  const result = await service.verifyPasswordById(7, "right-password");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.DISABLED);
+});
+
+test("verifyPasswordById rejects an unknown id", async () => {
+  const database = fakeDatabase({ user: null });
+  const service = createService(database);
+
+  const result = await service.verifyPasswordById(999, "any-password");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.UNKNOWN_USER);
+  assert.deepEqual(database.state.updates, []);
+});
+
 test("authenticate spends the same work on an unknown user as on a wrong password", async () => {
   const knownDatabase = fakeDatabase({ user: await activeUser() });
   const unknownDatabase = fakeDatabase({ user: null });

@@ -54,7 +54,12 @@ const strategyContainer = await createServiceContainer({
     // deviceBinding/ 底下——discoveryOptions 把發現範圍縮到 auth/ 這一層，
     // 掃不到它。這裡不測設備簽章（那是 jwtDeviceAuthStrategy.test.js 的事），
     // 只要讓依賴圖能通過驗證。
-    deviceBinding: {}
+    deviceBinding: {},
+    // 同理：auth.jwtPassword 宣告依賴 mysqldatabase 與 time，一樣不在 auth/
+    // 這個掃描範圍內。密碼再確認本身有自己的測試
+    // （jwtPasswordAuthStrategy.test.js），這裡一樣只要讓依賴圖能通過驗證。
+    mysqldatabase: {},
+    time: {}
   },
   discoveryOptions: {
     servicesDirectory: new URL("../src/services/auth/", import.meta.url)
