@@ -11,6 +11,20 @@ import { createTestTime } from "../test-support/createTestTime.js";
 // 浮現：登入回應多帶了不該帶的東西、登出沒有真的撤銷、/me 回的是 token 裡的
 // 舊快照而不是現在的狀態。
 
+/**
+ * 一對可以從測試外部控制何時 resolve 的 promise。用來在兩個 handler 呼叫之間
+ * 逼出一個確定的交錯順序，而不是賭 setTimeout 的時間差——見下面幾個「A vs B」
+ * 的競態測試。
+ */
+function createDeferred() {
+  let resolve;
+  const promise = new Promise((res) => {
+    resolve = res;
+  });
+
+  return { promise, resolve };
+}
+
 function collectingLogger() {
   const entries = [];
   const write = (level) => async (event, message, context) => {
@@ -163,14 +177,20 @@ function fakeRequest({ body = {}, ip = "203.0.113.5", headers = {} } = {}) {
 }
 
 function fakeTokenRevocation({ version = 3, revoked = [] } = {}) {
+  // 用一個可變的閉包變數，而不是直接回傳建構時的 version：revoke() 真的要
+  // 推高它，後續的 currentVersion() 才讀得到——這正是競態測試需要的行為，
+  // 真正的 TokenRevocationService 也是這樣（見它的註解）。
+  let current = version;
+
   return {
     revoked,
     async currentVersion() {
-      return version;
+      return current;
     },
     async revoke(subject, options) {
+      current += 1;
       revoked.push({ subject, options });
-      return version + 1;
+      return current;
     }
   };
 }
@@ -509,6 +529,104 @@ test("a first-time device must prove the id really is its own key's thumbprint",
   assert.deepEqual(deviceBinding.requested, []);
 });
 
+// --- 登入 vs 同時發生的裝置撤銷 ------------------------------------------------
+//
+// loginHandler 先讀版本號、再檢查設備狀態（順序見 loginHandler.js 的註解）。
+// 這兩支測試逼出兩種可能的交錯，證明不管哪一種都不會有「剛被撤銷的裝置復活」
+// 這件事——要嘛設備檢查追上撤銷、直接擋下登入，要嘛設備檢查沒追上，但簽出的
+// token 帶著撤銷前的舊版本號，一過期或撤銷快照一刷新就作廢。
+
+test("login vs concurrent device revoke: a revoke that lands before the device check fails the login closed", async () => {
+  const versionGate = createDeferred();
+  const bindingRow = {
+    id: 11,
+    device_id: DEVICE_ID,
+    public_key: Buffer.from("stored-key"),
+    status: "approved"
+  };
+  const deviceBinding = fakeDeviceBinding({ binding: bindingRow });
+
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: {
+      jwt: fakeJwt(),
+      tokenRevocation: { async currentVersion() { return versionGate.promise; } },
+      deviceBinding
+    }
+  });
+
+  const resultPromise = handler.execute(
+    fakeRequest({ body: { username: "alice", password: "right" } })
+  );
+
+  // 版本號還卡在讀取中，這時撤銷落地：狀態轉 revoked。這模擬的是「版本號讀到
+  // 撤銷前的舊值，但緊接著的設備檢查會讀到撤銷後的新狀態」這種交錯。
+  bindingRow.status = "revoked";
+  versionGate.resolve(9);
+
+  await assert.rejects(resultPromise, (error) => {
+    // #verifyDevice 是在版本號之後才跑的，所以它看見的是撤銷後的狀態——登入
+    // 直接被擋下，沒有任何 token 被簽出去。
+    assert.equal(error.publicCode, "DEVICE_REVOKED");
+    return true;
+  });
+});
+
+test("login vs concurrent device revoke: a revoke that lands after the device check ships a token already stale, not a resurrected one", async () => {
+  let version = 9;
+  const verifyStarted = createDeferred();
+  const verifyGate = createDeferred();
+
+  const deviceBinding = fakeDeviceBinding();
+  const baseVerifyRequest = deviceBinding.verifyRequest;
+  deviceBinding.verifyRequest = async (request) => {
+    // #verifyDevice 最後一次 await，也是簽出 token 前的最後一關：執行卡在
+    // 這裡的期間，就是版本號已經讀走、但 token 還沒真正簽出去的那段窗口。
+    verifyStarted.resolve();
+    await verifyGate.promise;
+    return baseVerifyRequest(request);
+  };
+
+  const jwt = fakeJwt();
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: {
+      jwt,
+      tokenRevocation: { async currentVersion() { return version; } },
+      deviceBinding
+    }
+  });
+
+  const resultPromise = handler.execute(
+    fakeRequest({ body: { username: "alice", password: "right" } })
+  );
+
+  await verifyStarted.promise;
+  // 撤銷此刻才真正落地——但登入早在設備檢查開始之前就把版本號讀走了，不會
+  // 再重讀，所以這次撤銷追不上這次登入。
+  version += 1;
+  verifyGate.resolve();
+
+  await resultPromise;
+
+  const [issued] = jwt.issued;
+  // 簽出的是撤銷**之前**的版本號，不是撤銷之後的新版本號——這裡不該看到 10。
+  assert.equal(issued.options.version, 9);
+  // 而現在的版本號已經是 10：這個剛簽出來的 token 立刻就對不上了。它不是一個
+  // 逃過撤銷的 token，只是活得比撤銷本身短——撤銷快照一刷新，下一次用它就會
+  // 被判成已撤銷（見 TokenRevocationService.isRevoked）。
+  assert.equal(deviceBinding.verified.length, 1);
+  assert.equal(version, 10);
+});
+
 test("login answers every failure with the same message", async () => {
   for (const reason of Object.values(AUTH_FAILURE)) {
     const { handler } = createHandler(LoginHandler, {
@@ -720,18 +838,26 @@ test("me rejects a valid token whose account no longer exists", async () => {
 
 // --- 續期 --------------------------------------------------------------------
 
-function refreshRequest({ did = DEVICE_ID, sub = "7", headers = {} } = {}) {
+// ver 預設跟 createRefreshHandler() 底下 fakeTokenRevocation 的預設版本號
+// （9）對齊：這代表「這個 token 是在目前版本號下簽的」，也就是續期該會成功的
+// 一般情況。故意讓版本號不一致時，測試會自己傳一個不同的 ver。
+function refreshRequest({ did = DEVICE_ID, sub = "7", ver = 9, headers = {} } = {}) {
   return {
     ...fakeRequest({ body: {}, headers }),
-    auth: { claims: { sub, did, roles: ["admin"], permissions: ["order.read"] } }
+    auth: { claims: { sub, did, ver, roles: ["admin"], permissions: ["order.read"] } }
   };
 }
 
-function createRefreshHandler({ deviceBinding, userService, jwt = fakeJwt() } = {}) {
+function createRefreshHandler({
+  deviceBinding,
+  userService,
+  jwt = fakeJwt(),
+  tokenRevocation = fakeTokenRevocation({ version: 9 })
+} = {}) {
   const { handler, logger } = createHandler(RefreshTokenHandler, {
     services: {
       jwt,
-      tokenRevocation: fakeTokenRevocation({ version: 9 }),
+      tokenRevocation,
       deviceBinding: deviceBinding ?? fakeDeviceBinding()
     }
   });
@@ -742,7 +868,7 @@ function createRefreshHandler({ deviceBinding, userService, jwt = fakeJwt() } = 
     }
   };
 
-  return { handler, logger, jwt };
+  return { handler, logger, jwt, tokenRevocation };
 }
 
 test("refresh issues a new token with freshly read roles and the current version", async () => {
@@ -876,6 +1002,91 @@ test("refresh verifies against the stored key and refuses a bad signature", asyn
   assert.ok(
     logger.entries.some((entry) => entry.event === "auth.device.signature_rejected")
   );
+});
+
+// --- 續期 vs 同時發生的登出／裝置撤銷 ------------------------------------------
+//
+// #verifyDevice 讀到 approved 之後，還有 findActiveById 這次額外查詢，才輪到
+// 版本號。這兩支測試把交錯點卡在 findActiveById——正是正式流程裡那段「多一次
+// 查詢換來的窗口」——證明版本號比對能抓住在這段窗口裡發生的登出或裝置撤銷，
+// 而不會把一個已經被結束的 session 續回來。
+
+test("refresh vs concurrent logout: a logout that lands mid-refresh is not outrun", async () => {
+  const findStarted = createDeferred();
+  const findGate = createDeferred();
+
+  const tokenRevocation = fakeTokenRevocation({ version: 9 });
+  const { handler, logger } = createRefreshHandler({
+    tokenRevocation,
+    userService: {
+      async findActiveById() {
+        findStarted.resolve();
+        await findGate.promise;
+        return SAMPLE_USER;
+      }
+    }
+  });
+
+  const resultPromise = handler.execute(refreshRequest({ ver: 9 }));
+
+  await findStarted.promise;
+  // 這次續期完全不知情的登出，在它卡在 findActiveById 的時候發生並落地。
+  await tokenRevocation.revoke("7", { reason: "logout" });
+  findGate.resolve();
+
+  await assert.rejects(resultPromise, (error) => {
+    // claims.ver（9）已經追不上登出後的新版本號（10），續期整個被拒絕——
+    // 而不是安靜地簽出一個蓋著新版本號、把登出繞過去的 token。
+    assert.equal(error.statusCode, 401);
+    assert.equal(error.code, "TOKEN_VERSION_STALE");
+    return true;
+  });
+
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+  assert.ok(logger.entries.some((entry) => entry.event === "auth.token.version_stale"));
+});
+
+test("refresh vs concurrent device revoke: the version check catches what the already-read approved status cannot", async () => {
+  const findStarted = createDeferred();
+  const findGate = createDeferred();
+
+  const bindingRow = {
+    id: 11,
+    device_id: DEVICE_ID,
+    public_key: Buffer.from("stored-key"),
+    status: "approved"
+  };
+  const deviceBinding = fakeDeviceBinding({ binding: bindingRow });
+  const tokenRevocation = fakeTokenRevocation({ version: 9 });
+
+  const { handler } = createRefreshHandler({
+    deviceBinding,
+    tokenRevocation,
+    userService: {
+      async findActiveById() {
+        findStarted.resolve();
+        await findGate.promise;
+        return SAMPLE_USER;
+      }
+    }
+  });
+
+  const resultPromise = handler.execute(refreshRequest({ ver: 9 }));
+
+  await findStarted.promise;
+  // 管理員這時撤銷了這台設備。#verifyDevice 早就把 approved 讀走了，不會回頭
+  // 再檢查一次——兩個寫入都落地之後，抓住這次撤銷的只剩版本號比對。
+  bindingRow.status = "revoked";
+  await tokenRevocation.revoke("7", { reason: "device_revoked" });
+  findGate.resolve();
+
+  await assert.rejects(resultPromise, (error) => {
+    assert.equal(error.statusCode, 401);
+    assert.equal(error.code, "TOKEN_VERSION_STALE");
+    return true;
+  });
 });
 
 test("auth routes declare the access they need", () => {
