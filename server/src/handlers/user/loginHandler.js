@@ -169,14 +169,25 @@ export class LoginHandler extends BaseRequestHandler {
     const { user } = result;
     const subject = String(user.id);
 
+    // 版本號要在設備檢查**之前**讀，且不能用撤銷快照——快照可以落後，用它簽
+    // 出來的 token 會在下一次刷新時被自己的實例判成已撤銷。見 currentVersion()
+    // 的註解。
+    //
+    // 順序是刻意的：#verifyDevice 之後還有簽章驗證與 nonce 寫入等好幾次 await，
+    // 如果版本號在那之後才讀，管理員在這段時間撤銷這台設備，會被讀到撤銷後的
+    // 新版本號——這支請求早於撤銷發生前就通過的設備檢查，反而簽出一個蓋著
+    // 最新版本號、永遠追不上這次撤銷的 token，讓剛撤銷的裝置復活。
+    //
+    // 提前讀版本號不會讓這個洞消失，但會讓結果永遠落在兩種安全的情況之一：
+    // 設備檢查追上撤銷（讀到 revoked，登入失敗），或設備檢查沒追上（登入
+    // 「成功」，但簽出的 token 帶著舊版本號，下一次撤銷快照刷新就會讓它作廢）
+    // ——不管哪一種，都不會有一個蓋著當下版本號、逃過撤銷的 token 被發出去。
+    const version = await this.tokenRevocation.currentVersion(subject);
+
     // 設備檢查排在密碼**之後**，順序不可調換。反過來的話，任何人都能對任意
     // 帳號灌爆審批佇列，而且「這個帳號的設備還沒審批」這個回應本身就會洩漏
     // 帳號存不存在。走到這一行代表對方確實握有這個帳號的密碼。
     const binding = await this.#verifyDevice(req, user);
-
-    // 版本號要從資料庫讀當下的值，不能用撤銷快照——快照可以落後，用它簽出來的
-    // token 會在下一次刷新時被自己的實例判成已撤銷。見 currentVersion() 的註解。
-    const version = await this.tokenRevocation.currentVersion(subject);
 
     // roles 與 permissions 進 claims，授權策略 hasRole／hasPermission 直接讀它們，
     // 請求路徑上因此不需要再查資料庫。代價是改權限要等 token 過期或被撤銷。

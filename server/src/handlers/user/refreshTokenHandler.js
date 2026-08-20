@@ -97,6 +97,30 @@ export class RefreshTokenHandler extends BaseRequestHandler {
     // token 會在下一次刷新時被自己的實例判成已撤銷。見 currentVersion() 的註解。
     const version = await this.tokenRevocation.currentVersion(subject);
 
+    // 這個 token 簽發當下的版本號，必須跟現在讀到的完全一樣。不相等代表版本號
+    // 在 #verifyDevice 讀到「approved」之後、這一行之前被推高了——可能是這個
+    // 使用者登出、密碼被改，或者正是這台裝置在這次續期途中被撤銷。不管哪一種，
+    // 繼續簽下去都是把一次已經追不上的舊快照，複寫成一個蓋著最新版本號、從此
+    // 對這次撤銷免疫的新 token，讓一個已經被撤銷的 session 復活。
+    //
+    // 這裡不需要重新查一次設備狀態：版本號本身就是那個判準，而且比較就在讀到
+    // 版本號的下一行，中間沒有任何 await，不會再開新的競態窗口。
+    if (claims.ver !== version) {
+      this.writeLog("warn", "auth.token.version_stale", "Refresh token version no longer matches", {
+        requestId: req.requestId || null,
+        userId: Number(subject),
+        deviceId: binding.device_id,
+        tokenVersion: claims.ver ?? null,
+        currentVersion: version
+      });
+      throw new ApplicationError("Token was issued under a version that no longer exists", {
+        code: "TOKEN_VERSION_STALE",
+        statusCode: 401,
+        publicCode: "Unauthorized Access",
+        publicMessage: "Unauthorized Access"
+      });
+    }
+
     // roles 與 permissions 取自剛剛重讀的那一份，所以權限變更會在一次續期
     // （最多 15 分鐘）內生效，不必等到 token 過期或被撤銷。這是白賺的。
     const token = this.jwt.issue(
