@@ -240,18 +240,21 @@ JWT 有效期 **15 分鐘**（`JWT_EXPIRES_IN` 由 `2h` 改為 `15m`）。有了
 
 ### 3.4 背景續期
 
-`POST /api/v1/user/token/refresh`，`authType: "jwt"`。
+`POST /api/v1/user/token/refresh`，`authType: "jwt-device"`。
 
-用 `authType: "jwt"` 而不是 `public`，是為了直接沿用 `JwtAuthStrategy` ——簽章驗證、撤銷檢查、快照熔斷的 503 全部免費繼承，而且**過期的 JWT 在進 handler 之前就被擋成 401**，正好對應「過期即強制登出、不給寬限」的決定。
+`jwt-device` 是一個獨立的 authStrategy（`JwtDeviceAuthStrategy`，繼承 `JwtAuthStrategy`），不是 handler 裡的手動檢查——這是為了讓「JWT + 設備簽章」這個保證成為身份層的一部分，可以直接套用在未來其他要求設備綁定的高風險端點上，不需要每支 handler 各自重寫一次。它在進 handler 之前做完：
 
-handler 額外做四件事：
+1. 沿用 `JwtAuthStrategy`：簽章驗證、撤銷檢查、快照熔斷的 503。**過期的 JWT 在這裡就被擋成 401**，正好對應「過期即強制登出、不給寬限」的決定
+2. 驗設備簽章（第二節）
+3. `claims.did === X-Device-Id` → 否則 `403 DEVICE_MISMATCH`。這是「只接受相同 device id 發出的申請」那條規則
+4. `user_devices` 目前仍是 `approved` → 否則 `403 DEVICE_REVOKED` / `DEVICE_REJECTED` / `DEVICE_PENDING_APPROVAL`
 
-1. 驗設備簽章（第二節）
-2. `claims.did === X-Device-Id` → 否則 `403 DEVICE_MISMATCH`。這是「只接受相同 device id 發出的申請」那條規則
-3. `user_devices` 目前仍是 `approved` → 否則 `403 DEVICE_REVOKED`
-4. **`users.status === 'active'` → 否則 `403 ACCOUNT_DISABLED`**
+通過後，strategy 把 `claims` 與查到的那筆 `deviceBinding` 一併交給 handler，handler 不再重查一次。
 
-第 4 點是必要的，不是選配。沒有絕對 session 上限，代表 session 不會自己過期；少了這個檢查，HR 把離職員工設成 `disabled` 之後，`UserService.authenticate()` 只擋得住**新登入**，那個人**已經開著的 session 會一直續期下去，永遠不死**。加上之後，停用帳號會在 15 分鐘內自動結束該使用者的所有 session，不需要任何人額外記得做第二件事。
+handler 自己還做兩件事：
+
+1. **`users.status === 'active'` → 否則 `401 USER_INACTIVE`**。沒有絕對 session 上限，代表 session 不會自己過期；少了這個檢查，HR 把離職員工設成 `disabled` 之後，`UserService.authenticate()` 只擋得住**新登入**，那個人**已經開著的 session 會一直續期下去，永遠不死**。加上之後，停用帳號會在 15 分鐘內自動結束該使用者的所有 session，不需要任何人額外記得做第二件事
+2. **`claims.ver === currentVersion(subject)` → 否則 `401 TOKEN_VERSION_STALE`**。這是續期與撤銷之間的競態修法，見〈安全性分析〉「登入／續期與撤銷之間的競態」一節——它是簽發新 token 這個動作本身的業務規則，不是身份問題，所以留在 handler，不在 strategy 裡
 
 通過後：
 
@@ -508,7 +511,9 @@ WHERE (status = 'pending'
 | `server/scripts/createUser.js` | `users` 表為空時，自動授予第一個帳號 `system-admin` |
 | `server/src/services/deviceBinding/` | **新增**：`DeviceBindingService`（驗簽、查狀態、審批）+ 兩支清理 job |
 | `server/src/handlers/user/loginHandler.js` | 加設備驗證與三種 403；responseSchema 加 `expiresInSeconds` |
-| `server/src/handlers/user/refreshTokenHandler.js` | **新增** |
+| `server/src/handlers/user/refreshTokenHandler.js` | **新增**（`authType: "jwt-device"`，只管換不換發，不再自己驗設備） |
+| `server/src/services/auth/jwtDeviceAuthStrategy.js` | **新增**：JWT + 設備簽章的 authStrategy，繼承 `JwtAuthStrategy` |
+| `server/src/framework/authorization/authorizationPolicyRegistry.js` | `authenticated` / `hasRole` / `hasPermission` 改判「有沒有 claims」，不再寫死判斷 `auth.type === "jwt"` |
 | `server/src/handlers/device/` | **新增**：審批佇列與 approve / reject / revoke |
 | `server/src/modules/user/UserService.js` | 加一支「重讀 status + roles + permissions」給續期用 |
 | `server/scripts/approveDevice.js` | **新增**：break-glass |
@@ -519,7 +524,7 @@ WHERE (status = 'pending'
 | `client/src/pages/device/` | **新增**：pending 等待頁、我的設備、審批佇列頁 |
 | `client/config/auth.js` | 加 tick / 續期閾值 / 閒置逾時 / 警告門檻參數 |
 
-`fr_token_versions`、`TokenRevocationService`、`JwtAuthStrategy` **完全不動**——設備綁定掛在它們外面，撤銷仍然是唯一那一套機制。
+`fr_token_versions`、`TokenRevocationService`、`JwtAuthStrategy` 本身**完全不動**——撤銷仍然是唯一那一套機制，`JwtDeviceAuthStrategy` 是繼承它、疊加設備簽章檢查，不是重寫一份。
 
 ---
 

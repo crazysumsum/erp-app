@@ -841,10 +841,32 @@ test("me rejects a valid token whose account no longer exists", async () => {
 // ver 預設跟 createRefreshHandler() 底下 fakeTokenRevocation 的預設版本號
 // （9）對齊：這代表「這個 token 是在目前版本號下簽的」，也就是續期該會成功的
 // 一般情況。故意讓版本號不一致時，測試會自己傳一個不同的 ver。
-function refreshRequest({ did = DEVICE_ID, sub = "7", ver = 9, headers = {} } = {}) {
+// refreshTokenHandler 不再自己驗簽——JwtDeviceAuthStrategy 在進 handler 之前
+// 就做完了 JWT 驗證、撤銷檢查與設備簽章比對，見 jwtDeviceAuthStrategy.test.js。
+// 這裡的 req.auth 直接給出那個 strategy 應該產出的形狀（claims 加
+// deviceBinding），handler 自己的測試只管「拿到一個通過身份驗證的請求之後，
+// 該不該真的換發」這件事。
+const DEFAULT_BINDING = Object.freeze({
+  id: 11,
+  device_id: DEVICE_ID,
+  public_key: Buffer.from("stored-key"),
+  status: "approved"
+});
+
+function refreshRequest({ sub = "7", ver = 9, deviceBinding = DEFAULT_BINDING } = {}) {
   return {
-    ...fakeRequest({ body: {}, headers }),
-    auth: { claims: { sub, did, ver, roles: ["admin"], permissions: ["order.read"] } }
+    requestId: null,
+    auth: {
+      type: "jwt-device",
+      claims: {
+        sub,
+        did: deviceBinding.device_id,
+        ver,
+        roles: ["admin"],
+        permissions: ["order.read"]
+      },
+      deviceBinding
+    }
   };
 }
 
@@ -893,64 +915,6 @@ test("refresh issues a new token with freshly read roles and the current version
   assert.deepEqual(deviceBinding.used, [11]);
 });
 
-test("refresh from a device other than the one in the token is refused", async () => {
-  const deviceBinding = fakeDeviceBinding();
-  const { handler } = createRefreshHandler({ deviceBinding });
-
-  await assert.rejects(
-    // token 說它發給了另一台設備，但簽名的是這一台。
-    () => handler.execute(refreshRequest({ did: "b".repeat(64) })),
-    (error) => {
-      // 少了這一步，任何一台已審批的設備都能替任何一個 token 續期——包括用
-      // 自己的金鑰去續一個偷來的 token。
-      assert.equal(error.statusCode, 403);
-      assert.equal(error.publicCode, "DEVICE_MISMATCH");
-      return true;
-    }
-  );
-
-  assert.deepEqual(deviceBinding.verified, []);
-});
-
-test("refresh stops working once the device is no longer approved", async () => {
-  for (const [status, expected] of [
-    ["revoked", "DEVICE_REVOKED"],
-    ["rejected", "DEVICE_REJECTED"],
-    ["pending", "DEVICE_PENDING_APPROVAL"]
-  ]) {
-    const { handler } = createRefreshHandler({
-      deviceBinding: fakeDeviceBinding({
-        binding: { id: 11, device_id: DEVICE_ID, public_key: Buffer.from("k"), status }
-      })
-    });
-
-    await assert.rejects(
-      () => handler.execute(refreshRequest()),
-      (error) => {
-        assert.equal(error.statusCode, 403, status);
-        assert.equal(error.publicCode, expected, status);
-        return true;
-      }
-    );
-  }
-});
-
-test("refresh is refused when the binding is gone entirely", async () => {
-  const { handler } = createRefreshHandler({
-    deviceBinding: fakeDeviceBinding({ binding: null })
-  });
-
-  // 綁定被刪掉（例如清理工作掃走了一台很久沒用的設備）與被撤銷，對持有 token
-  // 的人來說是同一件事：這台機器不再被信任。
-  await assert.rejects(
-    () => handler.execute(refreshRequest()),
-    (error) => {
-      assert.equal(error.publicCode, "DEVICE_REVOKED");
-      return true;
-    }
-  );
-});
-
 test("a disabled account cannot refresh, which is what ends its session", async () => {
   const { handler } = createRefreshHandler({
     userService: {
@@ -973,43 +937,12 @@ test("a disabled account cannot refresh, which is what ends its session", async 
   );
 });
 
-test("refresh verifies against the stored key and refuses a bad signature", async () => {
-  const deviceBinding = fakeDeviceBinding({
-    verification: { ok: false, reason: "nonce_replayed" }
-  });
-  const { handler, logger } = createRefreshHandler({ deviceBinding });
-
-  await assert.rejects(
-    () =>
-      handler.execute(
-        refreshRequest({
-          headers: { "x-device-public-key": Buffer.from("attacker-key").toString("base64url") }
-        })
-      ),
-    (error) => {
-      assert.equal(error.statusCode, 400);
-      assert.equal(error.publicCode, "DEVICE_SIGNATURE_INVALID");
-      return true;
-    }
-  );
-
-  // 續期的前提就是這台設備已經綁定過，所以請求自帶的公鑰完全沒有意義。
-  assert.deepEqual(deviceBinding.verified[0].publicKeyDer, Buffer.from("stored-key"));
-
-  await new Promise((resolve) => {
-    setImmediate(resolve);
-  });
-  assert.ok(
-    logger.entries.some((entry) => entry.event === "auth.device.signature_rejected")
-  );
-});
-
 // --- 續期 vs 同時發生的登出／裝置撤銷 ------------------------------------------
 //
-// #verifyDevice 讀到 approved 之後，還有 findActiveById 這次額外查詢，才輪到
-// 版本號。這兩支測試把交錯點卡在 findActiveById——正是正式流程裡那段「多一次
-// 查詢換來的窗口」——證明版本號比對能抓住在這段窗口裡發生的登出或裝置撤銷，
-// 而不會把一個已經被結束的 session 續回來。
+// findActiveById 是 JwtDeviceAuthStrategy 通過之後、簽出新 token 之前唯一
+// 還在跑的一次額外查詢。這兩支測試把交錯點卡在這裡，證明版本號比對能抓住在
+// 這段窗口裡發生的登出或裝置撤銷，而不會把一個已經被結束的 session 續回來——
+// 即使 strategy 早就把「approved」的快照交給了 handler。
 
 test("refresh vs concurrent logout: a logout that lands mid-refresh is not outrun", async () => {
   const findStarted = createDeferred();
@@ -1048,21 +981,13 @@ test("refresh vs concurrent logout: a logout that lands mid-refresh is not outru
   assert.ok(logger.entries.some((entry) => entry.event === "auth.token.version_stale"));
 });
 
-test("refresh vs concurrent device revoke: the version check catches what the already-read approved status cannot", async () => {
+test("refresh vs concurrent device revoke: the version check catches what the strategy's already-issued snapshot cannot", async () => {
   const findStarted = createDeferred();
   const findGate = createDeferred();
 
-  const bindingRow = {
-    id: 11,
-    device_id: DEVICE_ID,
-    public_key: Buffer.from("stored-key"),
-    status: "approved"
-  };
-  const deviceBinding = fakeDeviceBinding({ binding: bindingRow });
   const tokenRevocation = fakeTokenRevocation({ version: 9 });
 
   const { handler } = createRefreshHandler({
-    deviceBinding,
     tokenRevocation,
     userService: {
       async findActiveById() {
@@ -1076,9 +1001,9 @@ test("refresh vs concurrent device revoke: the version check catches what the al
   const resultPromise = handler.execute(refreshRequest({ ver: 9 }));
 
   await findStarted.promise;
-  // 管理員這時撤銷了這台設備。#verifyDevice 早就把 approved 讀走了，不會回頭
-  // 再檢查一次——兩個寫入都落地之後，抓住這次撤銷的只剩版本號比對。
-  bindingRow.status = "revoked";
+  // 管理員這時撤銷了這台設備。JwtDeviceAuthStrategy 早就把 approved 讀走、
+  // 把 deviceBinding 交給了 handler，不會回頭再檢查一次——抓住這次撤銷的
+  // 只剩版本號比對。
   await tokenRevocation.revoke("7", { reason: "device_revoked" });
   findGate.resolve();
 
@@ -1104,10 +1029,11 @@ test("auth routes declare the access they need", () => {
   assert.equal(MeHandler.api.authType, undefined);
   assert.equal(MeHandler.api.authorizationPolicies, undefined);
 
-  // 續期同樣沿用預設。這一項是承重的：改成 public 的話，過期的 JWT 就不會在
-  // 進 handler 之前被擋成 401，這支端點會變成一台可以用任意過期 token 換新
-  // token 的機器——「過期即強制登出」整條保證會靜靜地消失。
-  assert.equal(RefreshTokenHandler.api.authType, undefined);
+  // 續期明確宣告 "jwt-device"，不是沿用預設的 "jwt"：JWT 驗證、撤銷檢查與
+  // 設備簽章比對全部在 JwtDeviceAuthStrategy 裡完成，這支 handler 才會被
+  // 呼叫。少了這個宣告——不管是漏寫還是誤寫回 "jwt"——設備簽章檢查會整個
+  // 消失，續期端點就變成一台可以用任意已知使用者的 JWT 換新 token 的機器。
+  assert.equal(RefreshTokenHandler.api.authType, "jwt-device");
   assert.equal(RefreshTokenHandler.api.authorizationPolicies, undefined);
 });
 

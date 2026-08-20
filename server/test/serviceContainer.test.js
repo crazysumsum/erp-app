@@ -159,6 +159,13 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["jwt", "tokenRevocation", "logging"]
     },
     {
+      // JWT 加設備簽章：繼承 auth.jwt 的 JWT 驗證與撤銷檢查，多要求請求本身
+      // 由簽發這個 token 的那台已核准設備發出。目前只有續期在用。
+      name: "auth.jwtDevice",
+      lifecycle: "singleton",
+      dependencies: ["jwt", "tokenRevocation", "deviceBinding", "logging"]
+    },
+    {
       // 自己不記錄任何東西，但 BaseAuthStrategy 會取用 logging。
       name: "auth.public",
       lifecycle: "singleton",

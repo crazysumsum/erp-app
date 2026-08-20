@@ -276,6 +276,9 @@ test("the application factory does not itself require the scheduler", async (t) 
         new URL("../src/services/filetype/FileTypeService.js", import.meta.url).href,
         new URL("../src/services/auth/JwtService.js", import.meta.url).href,
         new URL("../src/services/auth/jwtAuthStrategy.js", import.meta.url).href,
+        // refreshTokenHandler 宣告 authType "jwt-device"，少了這個 strategy
+        // 路由註冊會直接失敗——不是設備簽章沒驗到，是應用開不起來。
+        new URL("../src/services/auth/jwtDeviceAuthStrategy.js", import.meta.url).href,
         new URL("../src/services/auth/publicAuthStrategy.js", import.meta.url).href,
         new URL("../src/services/mysqldatabase/MySqlDatabaseService.js", import.meta.url).href,
         // auth.jwt 現在宣告 tokenRevocation，所以這份清單也要帶上它。
