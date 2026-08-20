@@ -68,6 +68,52 @@ export class UserService {
    */
   async authenticate(username, password) {
     const row = await this.#findByUsername(username);
+    const result = await this.#checkPassword(row, password);
+
+    if (!result.ok) {
+      return result;
+    }
+
+    return { ok: true, user: await this.#loadUser(row) };
+  }
+
+  /**
+   * 驗證某個已知 id 的使用者現在的密碼——給「已經持有有效 JWT，要再次確認
+   * 密碼」的高風險操作用（例如改密碼），不查帳號、不回傳使用者資料，只回
+   * `authenticate()` 同一種 `{ ok, reason }`。
+   *
+   * 跟 authenticate() 共用 #checkPassword()：鎖定計數器、假雜湊墊時間、逐位元
+   * 比對這些都是同一組——用偷來的 JWT 猜密碼，測的是同一個祕密，理應撞上同一
+   * 個鎖定門檻，不必另外維護一套。
+   */
+  async verifyPasswordById(userId, password) {
+    const row = await this.#findById(userId);
+    return this.#checkPassword(row, password);
+  }
+
+  /**
+   * 依 id 載入使用者及其角色與權限。找不到或已停用回傳 null。
+   *
+   * /me 用它重新讀一次資料庫，而不是直接回 token 裡的 claims：claims 是簽發當下
+   * 的快照，帳號在那之後可能已經被停用或改了權限。
+   */
+  async findActiveById(id) {
+    const [rows] = await this.database.query(
+      `SELECT id, username, display_name, status
+       FROM users
+       WHERE id = ? AND status = 'active'`,
+      [id]
+    );
+
+    return rows.length === 0 ? null : this.#loadUser(rows[0]);
+  }
+
+  /**
+   * 比對密碼是否正確，含帳號狀態與鎖定判斷、失敗計次、時間旁路防護。
+   * `authenticate()` 與 `verifyPasswordById()` 共用這一段——差別只在怎麼把
+   * `row` 找出來（帳號名 vs id），驗證本身的每一條規則兩邊要完全一致。
+   */
+  async #checkPassword(row, password) {
     const nowMs = this.time.nowMs();
 
     if (!row) {
@@ -100,24 +146,7 @@ export class UserService {
 
     await this.#clearFailedAttempts(row.id, nowMs);
 
-    return { ok: true, user: await this.#loadUser(row) };
-  }
-
-  /**
-   * 依 id 載入使用者及其角色與權限。找不到或已停用回傳 null。
-   *
-   * /me 用它重新讀一次資料庫，而不是直接回 token 裡的 claims：claims 是簽發當下
-   * 的快照，帳號在那之後可能已經被停用或改了權限。
-   */
-  async findActiveById(id) {
-    const [rows] = await this.database.query(
-      `SELECT id, username, display_name, status
-       FROM users
-       WHERE id = ? AND status = 'active'`,
-      [id]
-    );
-
-    return rows.length === 0 ? null : this.#loadUser(rows[0]);
+    return { ok: true };
   }
 
   async #findByUsername(username) {
@@ -127,6 +156,17 @@ export class UserService {
        FROM users
        WHERE username = ?`,
       [String(username ?? "")]
+    );
+
+    return rows.length === 0 ? null : rows[0];
+  }
+
+  async #findById(id) {
+    const [rows] = await this.database.query(
+      `SELECT id, password_hash, status, failed_login_attempts, locked_until
+       FROM users
+       WHERE id = ?`,
+      [id]
     );
 
     return rows.length === 0 ? null : rows[0];

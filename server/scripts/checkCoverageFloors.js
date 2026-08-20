@@ -121,6 +121,14 @@ const FLOORS = {
     branches: 90,
     functions: 95
   },
+  // JWT 加密碼再確認那一層：密碼錯、帳號被鎖、帳號停用三種結果要對應到對的
+  // 公開錯誤碼，漏一條分支就是把「已被鎖定」洩漏成跟「密碼錯」不一樣的回應，
+  // 或反過來讓停用的帳號被當成密碼錯——兩者都不會讓任何測試以外的東西出聲。
+  "src/services/auth/jwtPasswordAuthStrategy.js": {
+    lines: 95,
+    branches: 90,
+    functions: 95
+  },
   // 每請求 service scope 的拆解。這裡的洩漏是安靜且累積的——scope 沒關就是
   // request-scoped 的資源一路留著，症狀要跑上幾天才顯現，而那時已經沒有線索
   // 指回這個中間件。拆解本身還跑在回應送出之後，那裡拋錯沒有人接得住。

@@ -166,6 +166,13 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["jwt", "tokenRevocation", "deviceBinding", "logging"]
     },
     {
+      // JWT 加密碼再確認：同一個模式的另一個實例，第二因子換成密碼。給改密碼
+      // 這類「已登入但要再次確認身份」的高風險端點用。
+      name: "auth.jwtPassword",
+      lifecycle: "singleton",
+      dependencies: ["jwt", "tokenRevocation", "mysqldatabase", "time", "logging"]
+    },
+    {
       // 自己不記錄任何東西，但 BaseAuthStrategy 會取用 logging。
       name: "auth.public",
       lifecycle: "singleton",
