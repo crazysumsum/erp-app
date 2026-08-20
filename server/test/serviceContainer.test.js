@@ -170,6 +170,18 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["time"]
     },
     {
+      // 設備綁定：驗證請求確實由某一台已綁定的設備發出。續期靠它，所以它是
+      // 認證路徑的一部分，而不是附加功能。
+      name: "deviceBinding",
+      lifecycle: "singleton",
+      dependencies: ["mysqldatabase", "logging", "time"]
+    },
+    {
+      name: "job.deviceBindingPurge",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "deviceBinding"]
+    },
+    {
       name: "filetypes",
       lifecycle: "singleton",
       dependencies: []

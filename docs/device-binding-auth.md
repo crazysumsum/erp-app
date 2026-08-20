@@ -37,8 +37,10 @@ CREATE TABLE user_devices (
   -- 公鑰的 SHA-256 thumbprint（hex）。不是前端自選的隨機數：自選 ID 多一個
   -- 可偽造的輸入卻換不到任何好處，而 thumbprint 只有持有私鑰的人用得了。
   device_id     CHAR(64)        NOT NULL,
-  -- SPKI DER 格式的公鑰。P-256 約 91 bytes，255 是給日後換演算法的餘裕。
-  public_key    VARBINARY(255)  NOT NULL,
+  -- SPKI DER 格式的公鑰。目前用 ECDSA P-256，約 91 bytes。宣告 512 是給日後
+  -- 換演算法的餘裕（RSA-2048 的 SPKI 約 294 bytes，塞不進 255）——VARBINARY
+  -- 是變長型別，宣告得寬不會多佔任何儲存空間。
+  public_key    VARBINARY(512)  NOT NULL,
   -- 使用者自填的裝置名稱，例如「Sam 的辦公室桌機」。審批者要靠它做判斷——
   -- 一組 thumbprint 加一串公鑰對人類毫無意義，沒有這欄審批只會變成無腦按核准。
   label         VARCHAR(190)    NOT NULL DEFAULT '',
@@ -98,29 +100,21 @@ CREATE TABLE user_device_nonces (
 
 `device.approve` 套現有的 `hasPermission` 授權策略與 `v-can` 指令，不需要任何新機制。
 
-migration 一併種入三樣東西：
-
-```sql
-INSERT INTO permissions (name, description, created_at)
-  VALUES ('device.approve', '審批設備綁定申請', :now);
-
-INSERT INTO roles (id, name, description, created_at)
-  VALUES (1, 'system-admin', 'System Admin', :now);
-
-INSERT INTO role_permissions (role_id, permission_id)
-  SELECT 1, id FROM permissions WHERE name = 'device.approve';
-```
+migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：角色 `system-admin`、權限 `device.approve`、以及兩者之間的 `role_permissions` 關聯。
 
 `system-admin` 種入時**只給 `device.approve` 這一個權限**，不預先塞其他的。日後要什麼再逐項加——一個上線第一天就握有所有權限的角色，之後沒有人敢動它。
 
 **角色名用 slug `system-admin`，不是帶空格的 `system admin`。** 這一欄的值會直接進 JWT 的 `roles` claim，也是 `hasRole` 策略與前端 `page.requires.roles` 的比對字串——那些位置都是機器讀的識別碼，慣例與 `device.approve` 一致。給人看的字串放 `description`（`System Admin`），`roles` 表本來就有這一欄。
 
-> ⚠️ **`role_id = 1` 不能當成既有錨點。** `0003_add_auth_tables.js` 只建表不種資料，`roles` 目前是空的；現有環境裡的角色全部是 `scripts/createUser.js` 在 `--role admin` 時順手 `INSERT IGNORE` 建出來的（見該檔第 80 行）。所以：
+> **為什麼不指定 id、也不去碰 `role_id = 1`。**
 >
-> - **乾淨的資料庫**：`roles` 是空的，上面的 `INSERT` 拿到 id 1，符合預期
-> - **已經跑過 `createUser.js` 的環境**：id 1 是當時隨手打的那個名字（很可能是 `admin`）。直接改名會**靜默改掉一個正在使用中的角色名**，而角色名會出現在 JWT claims、`hasRole` 策略與前端頁面 metadata 裡——那些地方不會報錯，只會安靜地開始比對失敗
+> `0003_add_auth_tables.js` 只建表不種資料，所以 `roles` 沒有任何種子；現有環境裡的角色全部是 `scripts/createUser.js` 在 `--role` 時順手建出來的，id 1 是什麼完全取決於誰先跑過那支腳本。**實測 `erp_dev`：`role_id = 1` 是 `admin`。**
 >
-> 所以 migration 要照 `0003` 處理示範 `users` 表的同一套做法：**先檢查再決定**。id 1 不存在就照上面插入；已存在且名稱已經是 `system-admin` 就跳過（冪等）；已存在但是別的名字就**中止 migration**，並在錯誤訊息裡寫出它目前叫什麼、要人工確認是要改名還是要把 `system-admin` 建成另一個 id。寧可 migration 失敗，也不要無聲改掉一個在用的角色名。
+> 以 id 當錨點去「改名」，在那些環境裡等於靜默改掉一個正在使用中的角色名，而角色名會出現在 JWT claims、`hasRole` 策略與前端頁面 metadata 裡——那些地方不會報錯，只會安靜地開始比對失敗。
+>
+> 改以名稱為準之後這個問題整個消失，也不需要任何守衛或人工介入：乾淨的資料庫裡 `system-admin` 自然拿到 id 1；既有環境裡它拿到下一個可用的 id，原本的 `admin` 完全不動。
+>
+> 種入用「先查再寫」而不是 `INSERT IGNORE`：後者會把所有錯誤一起降級成警告，包含型別不符、欄位缺失這些真正該中止 migration 的問題。這裡只跑一次，多一次 `SELECT` 沒有成本。
 
 **系統第一個使用者自動成為 system admin**：改 `scripts/createUser.js`——建立帳號時若 `users` 表是空的，無論有沒有給 `--role`，一律額外授予 `system-admin`，並在輸出裡明講。這樣 bootstrap 是自洽的：第一個帳號建出來就有 `device.approve`，可以審批後續所有人的設備。
 
@@ -157,10 +151,14 @@ INSERT INTO role_permissions (role_id, permission_id)
 
 伺服器端驗證順序：
 
-1. `|timestamp - now| <= signatureMaxSkewSeconds` → 否則 `DEVICE_SIGNATURE_STALE`
-2. `INSERT INTO user_device_nonces` → 主鍵衝突即重放 → `DEVICE_SIGNATURE_REPLAY`
-3. 重建 canonical JSON，用公鑰驗簽 → 失敗 `DEVICE_SIGNATURE_INVALID`
+1. `|timestamp - now| <= signatureMaxSkewSeconds` → 否則 `DEVICE_SIGNATURE_STALE`（雙向的窗：只擋「太舊」的話，攻擊者送一個遠在未來的 timestamp 就能讓同一份簽章的可用時間無限延長）
+2. 重建 canonical JSON，用公鑰驗簽 → 失敗 `DEVICE_SIGNATURE_INVALID`
+3. `INSERT INTO user_device_nonces` → 主鍵衝突即重放 → `DEVICE_SIGNATURE_REPLAY`
 4. 公鑰來源：**首次申請**用請求自帶的 `X-Device-Public-Key`（這是持有證明——證明申請者確實握有所宣稱公鑰的私鑰），**其後**一律用資料庫裡 approved 那筆，請求自帶的公鑰直接忽略
+
+**nonce 刻意排在簽章之後**：消耗 nonce 是一次資料庫寫入，放在前面的話任何人都能用一堆沒有簽章的垃圾請求往那張表灌資料；放在後面，只有已經證明自己握有私鑰的請求才碰得到資料庫。ECDSA 驗簽只花幾十微秒，先做不虧。
+
+**驗簽必須指定 `dsaEncoding: "ieee-p1363"`**：Web Crypto 的 ECDSA 簽章是 r||s 直接接起來（P-256 為 64 bytes），而 Node 對 EC 預設吃 DER。不指定的話，**每一份由瀏覽器產生的合法簽章都會被判成無效**，而錯誤訊息不會提到格式。這是這個介面最容易踩的一顆雷。
 
 ⚠️ CORS 要放行這些 header：`server/config/security.js` 的 `cors.allowedHeaders` 目前是 `["Content-Type", "Authorization", "X-Request-Id", "Idempotency-Key"]`，要加上五個 `X-Device-*`。漏了的話瀏覽器會在 preflight 就擋下，而且只會說「被 CORS 拒絕」。
 
