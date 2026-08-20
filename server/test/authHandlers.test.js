@@ -416,6 +416,65 @@ test("missing device headers are refused before anything is looked up", async ()
   assert.deepEqual(deviceBinding.verified, []);
 });
 
+test("a first-time device that sends no public key is refused, not crashed on", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  // 未綁定的設備冇附公鑰就無從驗證任何嘢——資料庫入面又冇一把可以用。
+  await assert.rejects(
+    () =>
+      handler.execute(fakeRequest({ body: { username: "alice", password: "right" } })),
+    (error) => {
+      assert.equal(error.statusCode, 400);
+      assert.equal(error.publicCode, "DEVICE_SIGNATURE_INVALID");
+      return true;
+    }
+  );
+
+  assert.deepEqual(deviceBinding.requested, []);
+});
+
+test("a binding request without a label or client details still records cleanly", async () => {
+  const deviceBinding = fakeDeviceBinding({ binding: null });
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: true, user: SAMPLE_USER };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+  });
+
+  await assert.rejects(() =>
+    handler.execute(
+      fakeRequest({
+        // deviceLabel 係選填；審批者仲有 IP 同 UA 可以睇，唔應該因為少一個
+        // 標籤就擋低成個登入。
+        body: { username: "alice", password: "right" },
+        ip: "",
+        headers: {
+          "user-agent": undefined,
+          "x-device-public-key": Buffer.from("new-key").toString("base64url")
+        }
+      })
+    )
+  );
+
+  const [request] = deviceBinding.requested;
+  // 欄位係 NOT NULL DEFAULT ''，所以呢度一定要係空字串而唔係 undefined，
+  // 否則 INSERT 會炸。
+  assert.equal(request.label, "");
+  assert.equal(request.ip, "");
+  assert.equal(request.userAgent, "");
+});
+
 test("a first-time device must prove the id really is its own key's thumbprint", async () => {
   const deviceBinding = fakeDeviceBinding({ binding: null });
   // deviceIdFor 回傳的是這把公鑰真正的 thumbprint；請求宣稱的是另一個 id。

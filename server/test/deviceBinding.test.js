@@ -290,6 +290,20 @@ test("a signature made for one request is rejected on another", async () => {
   }
 });
 
+test("a malformed signature is rejected rather than thrown out of verifyRequest", async () => {
+  const { service } = createService();
+  const { keyPair, spki } = await generateDeviceKey();
+  const request = await signedRequest(service, keyPair, spki);
+
+  // P-256 的 P1363 簽章固定 64 bytes。長度不對時 Node 的 verify 會直接拋，而不是
+  // 回 false——沒接住的話，一個畸形的 header 就變成 500 而不是 400，還會在日誌
+  // 留下一個看起來像伺服器出錯的堆疊。
+  for (const signature of [Buffer.alloc(0), Buffer.alloc(10), Buffer.alloc(200)]) {
+    const result = await service.verifyRequest({ ...request, signature });
+    assert.deepEqual(result, { ok: false, reason: "signature_invalid" }, `${signature.length} bytes`);
+  }
+});
+
 test("a signature from a different key is rejected", async () => {
   const { service } = createService();
   const { keyPair, spki } = await generateDeviceKey();
