@@ -93,12 +93,40 @@ function fakeDatabase({ devices = [], nonces = [] } = {}) {
       return [{ affectedRows: removed }];
     }
 
-    if (normalized.startsWith("SELECT id, user_id, device_id")) {
+    // findBinding 同 findById 嘅 SELECT 開頭一樣，靠 WHERE 分辨——公鑰只有前者
+    // 會取，正因為後者係畀人睇嘅清單。
+    if (normalized.includes("WHERE user_id = ? AND device_id = ?")) {
       const [userId, deviceId] = params;
       const row = state.devices.find(
         (device) => device.user_id === userId && device.device_id === deviceId
       );
       return [row ? [{ ...row }] : []];
+    }
+
+    if (normalized.startsWith("SELECT id, user_id, device_id") && normalized.includes("WHERE id = ?")) {
+      const [id] = params;
+      const row = state.devices.find((device) => device.id === id);
+      return [row ? [{ ...row }] : []];
+    }
+
+    if (normalized.includes("JOIN users u")) {
+      const [status] = params;
+      return [
+        state.devices
+          .filter((device) => device.status === status)
+          .sort((a, b) => a.requested_at - b.requested_at)
+          .map((device) => ({ ...device, username: `user-${device.user_id}` }))
+      ];
+    }
+
+    if (normalized.startsWith("SELECT id, device_id")) {
+      const [userId] = params;
+      return [
+        state.devices
+          .filter((device) => device.user_id === userId)
+          .sort((a, b) => b.requested_at - a.requested_at)
+          .map((device) => ({ ...device }))
+      ];
     }
 
     if (normalized.startsWith("INSERT INTO user_devices")) {
@@ -444,21 +472,82 @@ test("a timestamp that is not a number is rejected before anything else", async 
   assert.equal(database.state.nonces.size, 0);
 });
 
-test("a missing table becomes an error that says how to fix it", async () => {
-  const database = fakeDatabase();
-  const failing = {
-    ...database,
-    query: async () => {
-      throw Object.assign(new Error("Table 'user_devices' doesn't exist"), {
-        code: "ER_NO_SUCH_TABLE"
-      });
-    }
+test("every read path turns a missing table into an error that says how to fix it", async () => {
+  const missingTable = async () => {
+    throw Object.assign(new Error("Table doesn't exist"), { code: "ER_NO_SUCH_TABLE" });
   };
-  const { service } = createService({ database: failing });
+  const { service } = createService({
+    database: { state: {}, query: missingTable, execute: missingTable }
+  });
 
-  // 裸的 ER_NO_SUCH_TABLE 只會說表不見了，不會說它本來該從哪裡來——而這張表
-  // 是 migration 建的，不是框架的 .sql 檔案。
-  await assert.rejects(() => service.findBinding(1, "a".repeat(64)), /npm run migrate/);
+  // 裸的 ER_NO_SUCH_TABLE 只會說表不見了，不會說它本來該從哪裡來——而這兩張表
+  // 是 migration 建的，不是框架的 .sql 檔案。每一條入口都要講得出同一句話，
+  // 否則忘了跑 migration 的人會照他先撞到哪一支 API 而得到不同的線索。
+  const paths = [
+    ["findBinding", () => service.findBinding(1, "a".repeat(64))],
+    ["findById", () => service.findById(1)],
+    ["listPending", () => service.listPending()],
+    ["listForUser", () => service.listForUser(1)]
+  ];
+
+  for (const [name, run] of paths) {
+    await assert.rejects(run, /npm run migrate/, name);
+  }
+
+});
+
+test("a broken nonce table is an error, not a silently accepted replay", async () => {
+  // nonce 的 INSERT 要先分辨「主鍵衝突」（＝重放，回 false）與其他錯誤。少了
+  // 那個分辨，一張壞掉的表會被當成「每一次都是重放」——或更糟，當成每一次都
+  // 不是重放，於是防重放靜靜地整個失效。
+  const missingTable = async () => {
+    throw Object.assign(new Error("Table doesn't exist"), { code: "ER_NO_SUCH_TABLE" });
+  };
+  const { service } = createService({
+    database: { state: {}, query: missingTable, execute: missingTable }
+  });
+  const { keyPair, spki } = await generateDeviceKey();
+
+  // 簽章本身合法，所以一定會走到 nonce 那一步。
+  const request = await signedRequest(service, keyPair, spki);
+
+  await assert.rejects(() => service.verifyRequest(request), /npm run migrate/);
+});
+
+test("an absent body hashes to the same empty string the client signs", () => {
+  const { service } = createService();
+
+  // 續期是 POST 但沒有 body，所以前端簽的是空字串。這裡任何一種「沒有 body」
+  // 的表示法都必須得出同一個值，否則續期會每一次都驗簽失敗——而錯誤訊息只會
+  // 說簽章無效，不會說是 body 雜湊對不上。
+  for (const empty of [undefined, null, Buffer.alloc(0)]) {
+    assert.equal(service.bodyHash(empty), "", String(empty));
+  }
+
+  assert.match(service.bodyHash(Buffer.from('{"a":1}')), /^[A-Za-z0-9_-]+$/);
+});
+
+test("marking a device used stamps the current time", async () => {
+  const database = fakeDatabase({
+    devices: [
+      {
+        id: 1,
+        user_id: 7,
+        device_id: "a".repeat(64),
+        status: "approved",
+        requested_at: NOW_MS - 1000,
+        reviewed_at: NOW_MS - 1000,
+        last_used_at: null
+      }
+    ]
+  });
+  const { service } = createService({ database });
+
+  await service.markUsed(1);
+
+  // last_used_at 是清理規則三唯一的依據，也是「這台還在用嗎」在審批介面上
+  // 唯一看得出來的線索。
+  assert.equal(database.state.devices[0].last_used_at, NOW_MS);
 });
 
 test("a non-EC key is rejected", async () => {
@@ -533,7 +622,9 @@ test("approving writes reviewed_at, without which the row can never be purged", 
   });
   const { service } = createService({ database });
 
-  assert.equal(await service.approve(1, { reviewerId: 3, note: "new laptop" }), true);
+  const approved = await service.approve(1, { reviewerId: 3, note: "new laptop" });
+
+  assert.equal(approved.status, "approved");
 
   const row = database.state.devices[0];
   assert.equal(row.status, "approved");
@@ -551,9 +642,80 @@ test("approving anything that is not pending reports failure instead of reviving
   });
   const { service } = createService({ database });
 
-  assert.equal(await service.approve(1), false);
-  assert.equal(await service.approve(999), false);
+  assert.equal(await service.approve(1), null);
+  assert.equal(await service.approve(999), null);
   assert.equal(database.state.devices[0].status, "revoked");
+});
+
+test("each review action only accepts the status it is meant for", async () => {
+  const seed = (status) =>
+    fakeDatabase({
+      devices: [
+        {
+          id: 1,
+          user_id: 7,
+          device_id: "c".repeat(64),
+          status,
+          requested_at: NOW_MS,
+          reviewed_at: null,
+          last_used_at: null
+        }
+      ]
+    });
+
+  // approve 同 reject 都係處理待審批嘅申請；revoke 係收回一台已經批咗嘅設備。
+  // 混在一起嘅話，「撤銷」就會變成可以復活一筆已拒絕嘅申請。
+  const pending = seed("pending");
+  const { service: onPending } = createService({ database: pending });
+  assert.equal((await onPending.reject(1, { reviewerId: 3 })).status, "rejected");
+  assert.equal(await onPending.revoke(1), null);
+
+  const approved = seed("approved");
+  const { service: onApproved } = createService({ database: approved });
+  assert.equal(await onApproved.reject(1), null);
+  assert.equal((await onApproved.revoke(1, { reviewerId: 3, note: "lost laptop" })).status, "revoked");
+
+  const rejected = seed("rejected");
+  const { service: onRejected } = createService({ database: rejected });
+  assert.equal(await onRejected.approve(1), null);
+  assert.equal(await onRejected.revoke(1), null);
+  assert.equal(rejected.state.devices[0].status, "rejected");
+});
+
+test("the pending queue carries what an approver needs to judge, and no key material", async () => {
+  const database = fakeDatabase({
+    devices: [
+      { id: 2, user_id: 7, device_id: "d".repeat(64), status: "pending", requested_at: NOW_MS, label: "Sam 的筆電", requested_ip: "10.0.0.5", requested_ua: "Firefox", public_key: Buffer.from("secret-ish"), reviewed_at: null, last_used_at: null },
+      { id: 1, user_id: 8, device_id: "e".repeat(64), status: "pending", requested_at: NOW_MS - 1000, label: "櫃檯機", requested_ip: "10.0.0.9", requested_ua: "Chrome", public_key: Buffer.from("x"), reviewed_at: null, last_used_at: null },
+      { id: 3, user_id: 9, device_id: "f".repeat(64), status: "approved", requested_at: NOW_MS, reviewed_at: NOW_MS, last_used_at: NOW_MS }
+    ]
+  });
+  const { service } = createService({ database });
+
+  const pending = await service.listPending();
+
+  // 照申請時間排序：審批者應該先看到等最久嗰個。
+  assert.deepEqual(pending.map((row) => row.id), [1, 2]);
+  assert.equal(pending[1].label, "Sam 的筆電");
+  // 少咗 IP 同 UA，審批就只可以靠估。
+  assert.equal(pending[1].requested_ip, "10.0.0.5");
+  assert.equal(pending[1].requested_ua, "Firefox");
+});
+
+test("a user's device list is scoped to that user", async () => {
+  const database = fakeDatabase({
+    devices: [
+      { id: 1, user_id: 7, device_id: "a".repeat(64), status: "approved", requested_at: NOW_MS - 5000, reviewed_at: NOW_MS, last_used_at: NOW_MS },
+      { id: 2, user_id: 7, device_id: "b".repeat(64), status: "pending", requested_at: NOW_MS, reviewed_at: null, last_used_at: null },
+      { id: 3, user_id: 8, device_id: "c".repeat(64), status: "approved", requested_at: NOW_MS, reviewed_at: NOW_MS, last_used_at: NOW_MS }
+    ]
+  });
+  const { service } = createService({ database });
+
+  const mine = await service.listForUser(7);
+
+  // 最新嘅排前面，而且完全睇唔到 user 8 嘅嘢。
+  assert.deepEqual(mine.map((row) => row.id), [2, 1]);
 });
 
 // --- 清理 --------------------------------------------------------------------

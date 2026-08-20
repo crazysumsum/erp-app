@@ -42,12 +42,13 @@ async function startApplication() {
  * 建一個帳號，附一個角色同一個權限。回傳嘅 id 供測試結束後清理，同埋
  * subject（token 撤銷用嘅 key，UserService 內部一律轉成字串）。
  */
-async function seedUser(db, { username, password }) {
+async function seedUser(db, { username, password, permission }) {
   const passwordHash = await hashPassword(password);
   const nowMs = Date.now();
   const suffix = randomUUID().slice(0, 8);
   const roleName = `it-role-${suffix}`;
-  const permissionName = `it-permission-${suffix}`;
+  // 預設給一個不會撞名的權限；要測真正的授權規則時傳一個具體的進來。
+  const permissionName = permission ?? `it-permission-${suffix}`;
 
   const [userResult] = await db.execute(
     `INSERT INTO users (username, password_hash, display_name, created_at, updated_at)
@@ -60,23 +61,37 @@ async function seedUser(db, { username, password }) {
     "INSERT INTO roles (name, created_at) VALUES (?, ?)",
     [roleName, nowMs]
   );
-  const [permissionResult] = await db.execute(
-    "INSERT INTO permissions (name, created_at) VALUES (?, ?)",
-    [permissionName, nowMs]
-  );
+  // device.approve 已經由 migration 0004 種入，而 permissions.name 是唯一鍵，
+  // 所以要求那個權限時只能查、不能插。ownsPermission 記著這一筆是不是這個測試
+  // 建的——清理時不能把 migration 種的那一列刪掉。
+  const [existing] = await db.query("SELECT id FROM permissions WHERE name = ?", [
+    permissionName
+  ]);
+  const ownsPermission = existing.length === 0;
+  const permissionId = ownsPermission
+    ? (
+        await db.execute("INSERT INTO permissions (name, created_at) VALUES (?, ?)", [
+          permissionName,
+          nowMs
+        ])
+      )[0].insertId
+    : existing[0].id;
+
   await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [
     userId,
     roleResult.insertId
   ]);
   await db.execute(
     "INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)",
-    [roleResult.insertId, permissionResult.insertId]
+    [roleResult.insertId, permissionId]
   );
 
   return {
     userId,
+    username,
     roleId: roleResult.insertId,
-    permissionId: permissionResult.insertId,
+    permissionId,
+    ownsPermission,
     roleName,
     permissionName
   };
@@ -89,7 +104,14 @@ async function cleanupUser(db, seeded) {
   await db.execute("DELETE FROM user_devices WHERE user_id = ?", [seeded.userId]);
   await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [seeded.roleId]);
   await db.execute("DELETE FROM user_roles WHERE user_id = ?", [seeded.userId]);
-  await db.execute("DELETE FROM permissions WHERE id = ?", [seeded.permissionId]);
+
+  // 只刪這個測試自己建的權限。device.approve 是 migration 種的，刪掉它會讓
+  // system-admin 悄悄失去審批能力——而且下一次跑 migration 不會補回來，因為
+  // 它已經被記成套用過了。
+  if (seeded.ownsPermission) {
+    await db.execute("DELETE FROM permissions WHERE id = ?", [seeded.permissionId]);
+  }
+
   await db.execute("DELETE FROM roles WHERE id = ?", [seeded.roleId]);
   await db.execute("DELETE FROM users WHERE id = ?", [seeded.userId]);
   await db.execute("DELETE FROM fr_token_versions WHERE subject = ?", [
@@ -301,6 +323,120 @@ test("login, me and logout work end to end against a real database", { skip }, a
   // 撤銷之後亦都唔可以再續期，否則登出就等於冇登出過。
   const refreshAfterLogout = await refresh(refreshedToken);
   assert.equal(refreshAfterLogout.status, 401);
+});
+
+test("an approver can clear the queue over HTTP, and the approved user then gets in", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const password = "Integration-Test-Pass-4!";
+
+  // 審批者需要 device.approve；申請人拿的是一個無關的權限。
+  const approver = await seedUser(db, {
+    username: `it-approver-${randomUUID().slice(0, 8)}`,
+    password,
+    permission: "device.approve"
+  });
+  const applicant = await seedUser(db, {
+    username: `it-applicant-${randomUUID().slice(0, 8)}`,
+    password
+  });
+
+  t.after(async () => {
+    await cleanupUser(db, applicant);
+    await cleanupUser(db, approver);
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+
+  // 兩個人各自從自己的設備登入一次，各留下一筆待審批。
+  const login = async (user, device) => {
+    const path = "/api/v1/user/login";
+    const body = JSON.stringify({ username: user.username, password, deviceLabel: "IT device" });
+
+    return fetch(`${url}${path}`, {
+      method: "POST",
+      headers: await device.headers({ method: "POST", path, body, includePublicKey: true }),
+      body
+    });
+  };
+
+  const approverDevice = await createTestDevice();
+  const applicantDevice = await createTestDevice();
+
+  assert.equal((await login(approver, approverDevice)).status, 403);
+  assert.equal((await login(applicant, applicantDevice)).status, 403);
+
+  // 審批者自己那台用 break-glass 的方式核准（就是 §5.1 上線程序那一步）。
+  await db.execute(
+    "UPDATE user_devices SET status = 'approved', reviewed_at = ? WHERE user_id = ?",
+    [Date.now(), approver.userId]
+  );
+
+  const approverLogin = await login(approver, approverDevice);
+  assert.equal(approverLogin.status, 200);
+  const approverToken = (await approverLogin.json()).data.token;
+
+  // 佇列裡應該看得到申請人那一筆，連同審批者要靠的判斷依據。
+  const queue = await fetch(`${url}/api/v1/device/bindings/pending`, {
+    headers: { Authorization: `Bearer ${approverToken}` }
+  });
+  const queueBody = await queue.json();
+
+  assert.equal(queue.status, 200);
+
+  const entry = queueBody.data.items.find((item) => item.userId === applicant.userId);
+  assert.ok(entry, "the applicant's request was not in the queue");
+  assert.equal(entry.label, "IT device");
+  assert.ok(!("publicKey" in entry), "key material must not reach the approver's screen");
+
+  // 核准。這是整個專案第一支帶路徑參數的 route，所以這一步同時在驗
+  // `:id` 真的會被解析並通過 params schema——單元測試是自己造 req.input.params
+  // 的，永遠測不到那一段。
+  const approveResponse = await fetch(
+    `${url}/api/v1/device/bindings/${entry.id}/approve`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${approverToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ note: "整合測試" })
+    }
+  );
+
+  assert.equal(approveResponse.status, 200);
+  assert.deepEqual((await approveResponse.json()).data, {
+    id: entry.id,
+    status: "approved"
+  });
+
+  // 現在申請人登得入了。
+  assert.equal((await login(applicant, applicantDevice)).status, 200);
+
+  // 重覆核准同一筆是 409，不是靜默成功——兩個審批者同時開著佇列時，第二個
+  // 必須知道自己撲空了。
+  const again = await fetch(`${url}/api/v1/device/bindings/${entry.id}/approve`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${approverToken}`, "Content-Type": "application/json" },
+    body: "{}"
+  });
+  assert.equal(again.status, 409);
+
+  // 申請人自己看得到自己的設備，但看不到佇列——他沒有 device.approve。
+  const applicantToken = (await login(applicant, applicantDevice).then((r) => r.json())).data
+    .token;
+
+  const mine = await fetch(`${url}/api/v1/device/bindings`, {
+    headers: { Authorization: `Bearer ${applicantToken}` }
+  });
+  assert.equal(mine.status, 200);
+  assert.equal((await mine.json()).data.items.length, 1);
+
+  const forbidden = await fetch(`${url}/api/v1/device/bindings/pending`, {
+    headers: { Authorization: `Bearer ${applicantToken}` }
+  });
+  assert.equal(forbidden.status, 403);
 });
 
 test("five consecutive failed logins lock the account for fifteen minutes", { skip }, async (t) => {

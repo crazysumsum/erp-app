@@ -498,15 +498,23 @@ WHERE (status = 'pending'
 
 ---
 
-## 七、實作階段
+## 七、實作狀態
 
-設計已無未決事項。分四階段，每一階段都能獨立驗證：
+四個階段都已經落地。
 
-| 階段 | 內容 | 驗證方式 |
+| 階段 | 內容 | 主要位置 |
 | --- | --- | --- |
-| 1 | migration（兩張表 + 角色權限種子 + role_id 1 守衛）、`DeviceBindingService`（驗簽、狀態查詢）、`approveDevice.js`、`createUser.js` 首帳號授權 | 單元測試驗簽章與三條清理規則；在乾淨與髒的資料庫上各跑一次 migration，確認守衛會擋 |
-| 2 | 登入流程：`loginHandler` 加設備驗證與三種 403、`expiresInSeconds`、前端 `deviceKey.js` 與 pending 等待頁 | 整合測試走完 §5.1 的五步 bootstrap |
-| 3 | 續期：`refreshTokenHandler`（含 `users.status` 檢查）、前端 watchdog、活動追蹤、Web Locks | 整合測試涵蓋撤銷／停用／設備不符三種 403；前端測試涵蓋閒置停止續期與到期強制登出 |
-| 4 | 審批 UI：佇列頁、我的設備頁、approve / reject / revoke | 端對端走一次完整的申請到核准 |
+| 1 ✅ | 兩張表的 migration、角色權限種子、`DeviceBindingService`、break-glass 腳本 | `database/migrations/0004_*.js`、`src/services/deviceBinding/`、`scripts/approveDevice.js` |
+| 2 ✅ | 登入要求設備簽章、三種 403、`expiresInSeconds`、前端金鑰與等待審批頁 | `src/handlers/user/loginHandler.js`、`client/src/framework/auth/deviceKey.js` |
+| 3 ✅ | 續期端點（含 `users.status` 檢查）、前端 watchdog、活動閘門、Web Locks | `src/handlers/user/refreshTokenHandler.js`、`client/src/framework/auth/sessionWatchdog.js` |
+| 4 ✅ | 審批佇列與我的設備、approve / reject / revoke | `src/handlers/device/`、`client/src/pages/device/` |
 
-階段 1 和 2 之間有一個部署順序上的限制：**階段 2 一上線，所有沒有已審批設備的使用者都會登不進去**。所以階段 1 的 migration 與 break-glass 腳本必須先上線並確認可用，才能部署階段 2。
+⚠️ **部署順序**：階段 2 一上線，所有沒有已審批設備的使用者都會登不進去。階段 1 的 migration 與 break-glass 腳本必須先上線並確認可用。完整程序見 §5.1。
+
+### 測試涵蓋到哪裡
+
+- **簽章格式的跨端契約**由前後端各一條 golden 測試釘住（§2 末段）
+- **真資料庫的整合測試**走完整條路：待審批 → 核准 → 登入 → 續期 → 換設備被拒 → 登出後既不能用也不能續期 → 審批者用 HTTP 清佇列 → 重覆核准回 409 → 沒有 `device.approve` 的人拿不到佇列
+- **每檔覆蓋率門檻**涵蓋 `loginHandler`、`refreshTokenHandler` 與 `DeviceBindingService`。三者壞掉都沒有症狀：畫面上什麼都不會變，只是本來該結束的 session 一直活著
+
+驗證要用 CI 的指令（`DB_INTEGRATION_TESTS=1 npm run test:coverage`）。`npm test` 不含覆蓋率門檻，而整合測試預設是 skip 的——本機綠燈不代表 CI 會綠。
