@@ -19,7 +19,7 @@ import authConfig from "@config/auth.js";
  *
  * ⚠️ IndexedDB 唔係持久儲存。用戶清瀏覽器資料、Safari ITP 七日無互動後清除、
  * 無痕視窗、公司政策清理——條匙一冇，device id 就變，等於一台全新未綁定嘅設備，
- * 要重新審批。開機會叫 navigator.storage.persist() 降低機會率，但保證唔到。
+ * 要重新審批。開機會叫 ensurePersistentStorage() 降低機會率，但保證唔到。
  */
 
 const STORE = "keys";
@@ -87,6 +87,35 @@ async function createKeyPair() {
  * 之後佢申請綁定嗰個 id 同真正簽名嗰把匙可以係唔同嘅兩樣嘢。
  */
 let pending = null;
+
+/**
+ * 叫瀏覽器唔好清呢個 origin 嘅儲存空間。
+ *
+ * 設備私鑰住喺 IndexedDB，而 IndexedDB 預設係「best-effort」——瀏覽器喺磁碟壓力
+ * 下、或者 Safari ITP 七日無互動之後可以清走佢。條匙一冇，device id 就變咗，
+ * 等於一台全新未綁定嘅設備：用戶登入唔到，要重新走一次審批。呢個係可用性缺口，
+ * 唔係安全缺口，但佢會落喺管理員身上（多一單審批）同用戶身上（登入唔到）。
+ *
+ * persist() 唔保證得到——Chrome 睇 engagement heuristics，Firefox 可能問用戶。
+ * 所以每次開機都試一次而唔係淨係喺產生金鑰嗰陣試：第一次俾人拒絕之後，用戶
+ * 用得多咗、engagement 上嚟，下次就可能批。已經 persisted 就即刻返，唔會重覆問。
+ *
+ * 全程唔會 throw：呢個係盡力而為嘅優化，唔應該有任何一條路令佢阻到開機。
+ * 舊瀏覽器、非安全 context 都冇 navigator.storage，直接當做唔支援。
+ */
+export async function ensurePersistentStorage() {
+  const storage = globalThis.navigator?.storage;
+
+  if (typeof storage?.persist !== "function" || typeof storage?.persisted !== "function") {
+    return false;
+  }
+
+  try {
+    return (await storage.persisted()) || (await storage.persist());
+  } catch {
+    return false;
+  }
+}
 
 export function ensureDeviceKey() {
   pending ??= (async () => {

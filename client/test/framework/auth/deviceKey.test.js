@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { buildSigningInput, deviceIdFor } from "@/framework/auth/deviceKey.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  buildSigningInput,
+  deviceIdFor,
+  ensurePersistentStorage
+} from "@/framework/auth/deviceKey.js";
 
 // 前端簽嘅字串同後端重組嘅字串必須逐字元一樣。兩邊漂移嘅症狀係「每一次登入
 // 都話簽章無效」，而錯誤訊息唔會提到格式——所以兩邊各釘住同一個 golden 值。
@@ -50,5 +54,68 @@ describe("deviceKey", () => {
     // 同一份輸入一定得出同一個 id，否則每次開機都會變成一台新設備。
     expect(await deviceIdFor(new Uint8Array([1, 2, 3]))).toBe(id);
     expect(await deviceIdFor(new Uint8Array([1, 2, 4]))).not.toBe(id);
+  });
+});
+
+describe("ensurePersistentStorage", () => {
+  const original = globalThis.navigator;
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete globalThis.navigator;
+    } else {
+      Object.defineProperty(globalThis, "navigator", {
+        value: original,
+        configurable: true
+      });
+    }
+  });
+
+  const withStorage = (storage) => {
+    Object.defineProperty(globalThis, "navigator", {
+      value: storage === null ? {} : { storage },
+      configurable: true
+    });
+  };
+
+  it("已經 persisted 就唔會再問一次", async () => {
+    const persist = vi.fn(async () => true);
+    withStorage({ persisted: async () => true, persist });
+
+    await expect(ensurePersistentStorage()).resolves.toBe(true);
+    // 重覆問喺 Firefox 會彈permission prompt，喺用戶眼中係無端端跳出嚟嘅。
+    expect(persist).not.toHaveBeenCalled();
+  });
+
+  it("未 persisted 就請求一次", async () => {
+    const persist = vi.fn(async () => true);
+    withStorage({ persisted: async () => false, persist });
+
+    await expect(ensurePersistentStorage()).resolves.toBe(true);
+    expect(persist).toHaveBeenCalledOnce();
+  });
+
+  it("俾人拒絕就回 false，唔會掉錯", async () => {
+    withStorage({ persisted: async () => false, persist: async () => false });
+
+    await expect(ensurePersistentStorage()).resolves.toBe(false);
+  });
+
+  it("瀏覽器唔支援就當做冇呢件事", async () => {
+    // 舊瀏覽器同非安全 context 都冇 navigator.storage。開機路徑上任何一個
+    // throw 都會變成白畫面，所以呢條唔可以拋。
+    withStorage(null);
+    await expect(ensurePersistentStorage()).resolves.toBe(false);
+  });
+
+  it("storage API 自己掉錯都吞得住", async () => {
+    withStorage({
+      persisted: async () => {
+        throw new Error("SecurityError");
+      },
+      persist: async () => true
+    });
+
+    await expect(ensurePersistentStorage()).resolves.toBe(false);
   });
 });

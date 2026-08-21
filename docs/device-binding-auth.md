@@ -488,7 +488,7 @@ refresh vs 登出、refresh vs 裝置撤銷、login vs 裝置撤銷（含撤銷�
 上線程序：
 
 1. 跑 migration —— 種入 `system-admin` 角色與 `device.approve` 權限（§1.3）
-2. `node scripts/createUser.js <帳號> <密碼>` —— 這是系統第一個使用者，自動取得 `system-admin`
+2. `node scripts/createUser.js <帳號>` —— 這是系統第一個使用者，自動取得 `system-admin`。密碼在提示字元輸入（不回顯），或由 stdin 餵進來：`<secrets-manager> | node scripts/createUser.js <帳號>`。**不接受把密碼寫在 command line**——那會留在 shell history 與 `ps` 的輸出裡
 3. 該使用者在瀏覽器登入一次 —— 密碼會過，但設備還沒綁定，得到 `403 DEVICE_PENDING_APPROVAL`，同時在 `user_devices` 留下一筆 pending
 4. `node scripts/approveDevice.js <id>` —— 核准他自己的設備
 5. 他現在登得進去，且有 `device.approve`，之後所有人的設備都走正常審批流程
@@ -499,7 +499,7 @@ refresh vs 登出、refresh vs 裝置撤銷、login vs 裝置撤銷（含撤銷�
 
 IndexedDB **不是持久儲存**。使用者清瀏覽器資料、Safari ITP 在 7 天無互動後清除、無痕視窗、公司政策清理——金鑰一沒，device_id 跟著變，使用者變成一台全新的未綁定設備，要重跑審批。
 
-- 開機時呼叫 `navigator.storage.persist()` 降低被清除的機率（不保證）
+- 開機時呼叫 `ensurePersistentStorage()`（包住 `navigator.storage.persist()`）降低被清除的機率。**保證不了**：Chrome 依 engagement heuristics 決定、Firefox 可能問使用者、舊瀏覽器與非安全 context 根本沒有這個 API。所以每次開機都試一次而不是只在產生金鑰時試——第一次被拒之後，使用者用久了 engagement 上來，下次就可能批。已經 persisted 就直接返回，不重覆問
 - 這會是**最大宗的客服來源**，審批流程必須夠輕（例如主管在系統內兩次點擊就能批），否則會塞住
 
 ### 5.3 撤銷設備
@@ -577,7 +577,7 @@ WHERE (status = 'pending'
 | `server/config/security.js` | `cors.allowedHeaders` 加五個 `X-Device-*` |
 | `server/config/deviceBinding.js` | **新增**：`signatureMaxSkewSeconds`、`nonceRetentionSeconds`、`staleDeviceRetentionDays`、演算法參數 |
 | `server/database/migrations/0004_*.js` | **新增**：`user_devices`、`user_device_nonces`、`device.approve` permission、`system-admin` role（含 role_id 1 的守衛） |
-| `server/scripts/createUser.js` | `users` 表為空時，自動授予第一個帳號 `system-admin` |
+| `server/scripts/createUser.js` | `users` 表為空時，自動授予第一個帳號 `system-admin`；密碼改由 stdin 讀，不再收 command line 參數 |
 | `server/src/services/deviceBinding/` | **新增**：`DeviceBindingService`（驗簽、查狀態、審批）+ 兩支清理 job |
 | `server/src/handlers/user/loginHandler.js` | 加設備驗證與三種 403；responseSchema 加 `expiresInSeconds` 與 `sessionExpiresInSeconds` |
 | `server/src/handlers/user/refreshTokenHandler.js` | **新增**（`authType: "jwt-device"`，只管換不換發，不再自己驗設備） |
