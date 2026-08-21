@@ -393,6 +393,8 @@ test("an approver can clear the queue over HTTP, and the approved user then gets
   // 核准。這是整個專案第一支帶路徑參數的 route，所以這一步同時在驗
   // `:id` 真的會被解析並通過 params schema——單元測試是自己造 req.input.params
   // 的，永遠測不到那一段。
+  // 核准要求 authType "jwt-password"：光有效的 session 不夠，還要再送一次
+  // 目前的密碼——approver 跟 applicant 種進資料庫時共用同一個 `password`。
   const approveResponse = await fetch(
     `${url}/api/v1/device/bindings/${entry.id}/approve`,
     {
@@ -401,7 +403,7 @@ test("an approver can clear the queue over HTTP, and the approved user then gets
         Authorization: `Bearer ${approverToken}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ note: "整合測試" })
+      body: JSON.stringify({ password, note: "整合測試" })
     }
   );
 
@@ -415,11 +417,11 @@ test("an approver can clear the queue over HTTP, and the approved user then gets
   assert.equal((await login(applicant, applicantDevice)).status, 200);
 
   // 重覆核准同一筆是 409，不是靜默成功——兩個審批者同時開著佇列時，第二個
-  // 必須知道自己撲空了。
+  // 必須知道自己撲空了。密碼還是要帶對，否則會在 401 就被擋下，測不到 409。
   const again = await fetch(`${url}/api/v1/device/bindings/${entry.id}/approve`, {
     method: "POST",
     headers: { Authorization: `Bearer ${approverToken}`, "Content-Type": "application/json" },
-    body: "{}"
+    body: JSON.stringify({ password })
   });
   assert.equal(again.status, 409);
 

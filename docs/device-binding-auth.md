@@ -219,10 +219,21 @@ const keyPair = await crypto.subtle.generateKey(
 ### 3.2 審批
 
 - `GET /api/v1/device/bindings/pending` — 審批佇列，需 `device.approve`
-- `POST /api/v1/device/bindings/:id/approve` — 需 `device.approve`
-- `POST /api/v1/device/bindings/:id/reject` — 需 `device.approve`
-- `POST /api/v1/device/bindings/:id/revoke` — 需 `device.approve`
+- `POST /api/v1/device/bindings/:id/approve` — 需 `device.approve`，`authType: "jwt-password"`
+- `POST /api/v1/device/bindings/:id/reject` — 需 `device.approve`，`authType: "jwt-password"`
+- `POST /api/v1/device/bindings/:id/revoke` — 需 `device.approve`，`authType: "jwt-password"`
 - `GET /api/v1/device/bindings` — 使用者看自己的設備清單，authenticated 即可
+
+核准、拒絕、撤銷這三個動作要求密碼再確認（見 `JwtPasswordAuthStrategy`）：核准
+會讓一台設備拿到長期存取權，撤銷會讓一個使用者所有 session 立刻失效，兩者都
+值得要求審批者當場再證明一次「現在仍然是我」，而不是只憑一個可能已經開著很
+久的 session。密碼從 request body 的 `password` 欄位讀，前端一個對話框同時
+收確認與密碼（`promptPassword()`）。
+
+⚠️ `PASSWORD_INVALID` 用 403，不是 401——前端把任何 401 都當成 JWT 本身失效、
+全域登出（見 `HttpClient.js` 的 `onUnauthorized`）。密碼打錯一次不該把審批者
+的整個 session 弄丟，這點在接上真正的前端流程之後才靠瀏覽器測試抓到，不是一
+開始設計 `jwt-password` 時就想到的。
 
 暫不做通知，審批者需要主動查看佇列。
 
