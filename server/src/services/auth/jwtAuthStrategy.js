@@ -2,6 +2,27 @@ import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { AuthenticationError } from "../../framework/auth/AuthenticationError.js";
 import { BaseAuthStrategy } from "../../framework/auth/BaseAuthStrategy.js";
 
+/**
+ * 從 Authorization header 取出 bearer token。格式不對回 null——呼叫端自己決定
+ * 那要翻成什麼錯誤。
+ *
+ * 抽出來共用，是因為 JwtDeviceAuthStrategy 也需要**原始 token**（拿去算
+ * accessTokenHash）。另一條路是讓 authenticate() 把 token 一併放進回傳的 auth
+ * 物件，但那個物件會被塞進 req.auth 與 request context，也就是說一份憑證會跟著
+ * 請求到處跑、包括進日誌。重新拆一次字串遠比那個便宜。
+ */
+export function readBearerToken(req, jwt) {
+  const [scheme, token, extra] = String(req.get(jwt.headerName) || "")
+    .trim()
+    .split(/\s+/);
+
+  if (!token || extra || scheme.toLowerCase() !== jwt.authScheme.toLowerCase()) {
+    return null;
+  }
+
+  return token;
+}
+
 export class JwtAuthStrategy extends BaseAuthStrategy {
   static authType = "jwt";
 
@@ -25,14 +46,9 @@ export class JwtAuthStrategy extends BaseAuthStrategy {
   }
 
   async authenticate(req) {
-    const authorization = req.get(this.jwt.headerName);
-    const [scheme, token, extra] = String(authorization || "").trim().split(/\s+/);
+    const token = readBearerToken(req, this.jwt);
 
-    if (
-      !token ||
-      extra ||
-      scheme.toLowerCase() !== this.jwt.authScheme.toLowerCase()
-    ) {
+    if (!token) {
       throw new AuthenticationError(
         "JWT_REQUIRED",
         `A valid ${this.jwt.authScheme} token is required`

@@ -68,6 +68,8 @@ function fakeDeviceBinding({
     verified,
     calls,
     bodyHash: () => "body-hash",
+    // 真嘅實作雜湊個 token；替身直接標記出嚟，等測試睇得出傳落去嘅係邊個 token。
+    accessTokenHash: (token) => (token ? `hash(${token})` : ""),
     async findBinding() {
       calls.findBinding += 1;
       return binding;

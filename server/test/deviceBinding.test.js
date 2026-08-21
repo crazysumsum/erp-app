@@ -246,7 +246,7 @@ async function signedRequest(service, keyPair, spki, overrides = {}) {
 // 對應的前端測試：client/test/framework/auth/deviceKey.test.js 裡同名的 golden。
 // 改這個字串時兩條測試一定要一起改，否則就是一次會讓所有人登入不了的部署。
 const GOLDEN_INPUT =
-  '{"bodyHash":"Xr4t8g","deviceId":"aaaa","method":"POST","nonce":"n-1","path":"/api/v1/user/login","timestamp":1755600000000}';
+  '{"accessTokenHash":"","bodyHash":"Xr4t8g","deviceId":"aaaa","method":"POST","nonce":"n-1","path":"/api/v1/user/login","timestamp":1755600000000}';
 
 test("the signing input matches the format the client signs, byte for byte", () => {
   const { service } = createService();

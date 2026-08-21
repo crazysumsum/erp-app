@@ -72,8 +72,16 @@ export class DeviceBindingService extends BaseService {
    * 鍵照字典序排列，且這裡是唯一決定順序的地方——JS 物件實字的字串鍵維持插入
    * 順序，所以照字母寫下來就是照字母輸出。
    */
-  signingInput({ bodyHash, deviceId, method, nonce, path, timestamp }) {
+  signingInput({ accessTokenHash, bodyHash, deviceId, method, nonce, path, timestamp }) {
     return JSON.stringify({
+      // 這份簽章綁死在哪一個 access token 上。RFC 9449（DPoP）的 `ath` 就是
+      // 同一件事，理由也一樣：少了它，簽章只證明「這台設備簽了一個往這個路徑
+      // 的請求」，不證明「這台設備簽的是**配這個 token** 的那個請求」。攻擊者
+      // 只要拿得到一份已簽名的續期請求（MITM、或含 header 的存取紀錄），就能
+      // 換上同一台設備的另一枚 token 送出去。
+      //
+      // 沒有 token 的請求（登入）是空字串，與 bodyHash 的慣例一致。
+      accessTokenHash: String(accessTokenHash ?? ""),
       bodyHash: String(bodyHash ?? ""),
       deviceId: String(deviceId ?? ""),
       method: String(method ?? "").toUpperCase(),
@@ -90,6 +98,20 @@ export class DeviceBindingService extends BaseService {
     }
 
     return createHash("sha256").update(rawBody).digest("base64url");
+  }
+
+  /**
+   * Bearer token 的 SHA-256（base64url）。沒有 token 時是空字串。
+   *
+   * 雜湊而不是把 token 本身放進簽章輸入：簽章輸入會進日誌與錯誤路徑，而 token
+   * 是憑證。RFC 9449 的 `ath` 也是同一個做法。
+   */
+  accessTokenHash(token) {
+    if (!token) {
+      return "";
+    }
+
+    return createHash("sha256").update(String(token)).digest("base64url");
   }
 
   /**
@@ -140,6 +162,7 @@ export class DeviceBindingService extends BaseService {
    */
   async verifyRequest({
     publicKeyDer,
+    accessTokenHash,
     deviceId,
     method,
     path,
@@ -173,7 +196,15 @@ export class DeviceBindingService extends BaseService {
     }
 
     const input = Buffer.from(
-      this.signingInput({ bodyHash, deviceId, method, nonce, path, timestamp: timestampMs })
+      this.signingInput({
+        accessTokenHash,
+        bodyHash,
+        deviceId,
+        method,
+        nonce,
+        path,
+        timestamp: timestampMs
+      })
     );
 
     let signatureValid = false;

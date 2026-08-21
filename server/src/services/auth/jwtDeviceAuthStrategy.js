@@ -1,5 +1,5 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
-import { JwtAuthStrategy } from "./jwtAuthStrategy.js";
+import { JwtAuthStrategy, readBearerToken } from "./jwtAuthStrategy.js";
 import { DEVICE_STATUS } from "../deviceBinding/DeviceBindingService.js";
 import {
   deviceSignatureError,
@@ -85,7 +85,14 @@ export class JwtDeviceAuthStrategy extends JwtAuthStrategy {
     const verification = await this.deviceBinding.verifyRequest({
       ...signature,
       publicKeyDer: binding.public_key,
-      bodyHash: this.deviceBinding.bodyHash(req.rawBody)
+      bodyHash: this.deviceBinding.bodyHash(req.rawBody),
+      // 把這份簽章綁死在**正在用的那一枚 token** 上（RFC 9449 的 `ath`）。少了
+      // 它，簽章只證明「這台設備簽了一個往這個路徑的請求」，不證明它簽的是配
+      // 這一枚 token 的那個——攻擊者拿到一份已簽名的續期請求（MITM、或含
+      // header 的存取紀錄），就能換上同一台設備的另一枚 token 送出去。
+      //
+      // super.authenticate() 已經驗過 header，走到這裡一定拿得到 token。
+      accessTokenHash: this.deviceBinding.accessTokenHash(readBearerToken(req, this.jwt))
     });
 
     if (!verification.ok) {
