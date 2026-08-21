@@ -179,6 +179,13 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["logging"]
     },
     {
+      // 啟動時比對程式碼裡的權限目錄與 permissions 表，缺項就拒絕啟動。
+      // eager，所以它在這份清單裡出現就代表它真的會在每次啟動時跑。
+      name: "permissionCatalogue",
+      lifecycle: "singleton",
+      dependencies: ["mysqldatabase", "logging"]
+    },
+    {
       name: "context",
       lifecycle: "singleton",
       dependencies: ["time"]
