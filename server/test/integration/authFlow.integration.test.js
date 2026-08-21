@@ -25,13 +25,16 @@ const skip =
     ? false
     : "set DB_INTEGRATION_TESTS=1 against a real, migrated MySQL to run this suite (see README's CI section)";
 
-async function startApplication() {
+async function startApplication({ jwt: jwtOverrides } = {}) {
   const source = defaultConfigurationSource();
   const application = await createApplication({
     configurationSource: {
       ...source,
       // port: 0 拿一個隨機空 port，避免同其他跑緊嘅實例撞。
-      application: { ...source.application, port: 0 }
+      application: { ...source.application, port: 0 },
+      // 絕對 session 上限預設係 8 小時，測試等唔起。呢個 hook 俾嗰個 case
+      // 用一個以秒計嘅上限，行完整條真嘅 HTTP 流程。
+      jwt: { ...source.jwt, ...jwtOverrides }
     }
   });
 
@@ -323,6 +326,90 @@ test("login, me and logout work end to end against a real database", { skip }, a
   // 撤銷之後亦都唔可以再續期，否則登出就等於冇登出過。
   const refreshAfterLogout = await refresh(refreshedToken);
   assert.equal(refreshAfterLogout.status, 401);
+});
+
+test("a session cannot outlive the absolute cap, no matter how often it refreshes", { skip }, async (t) => {
+  // 上限設成 2 秒，其餘照真實設定行。呢個 case 要驗嘅唔係「token 過期」而係
+  // 「session 過期」——所以 token 自己嘅壽命刻意留喺預設值（15 分鐘），過期
+  // 嗰個一定係 session。
+  const application = await startApplication({ jwt: { sessionMaxAge: "2s" } });
+  const db = application.services.require("mysqldatabase");
+  const username = `it-cap-${randomUUID().slice(0, 8)}`;
+  const password = "Integration-Test-Pass-5!";
+  const seeded = await seedUser(db, { username, password });
+
+  t.after(async () => {
+    await cleanupUser(db, seeded);
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const device = await createTestDevice();
+  const loginPath = "/api/v1/user/login";
+  const body = JSON.stringify({ username, password, deviceLabel: "Cap device" });
+
+  const login = async () =>
+    fetch(`${url}${loginPath}`, {
+      method: "POST",
+      headers: await device.headers({
+        method: "POST",
+        path: loginPath,
+        body,
+        includePublicKey: true
+      }),
+      body
+    });
+
+  // 第一次登入留低一筆待審批，核准之後再登入。
+  assert.equal((await login()).status, 403);
+  await db.execute(
+    "UPDATE user_devices SET status = 'approved', reviewed_at = ? WHERE user_id = ?",
+    [Date.now(), seeded.userId]
+  );
+
+  const loggedIn = await login();
+  assert.equal(loggedIn.status, 200);
+  const token = (await loggedIn.json()).data.token;
+
+  const refreshPath = "/api/v1/user/token/refresh";
+  const refresh = async (bearer) =>
+    fetch(`${url}${refreshPath}`, {
+      method: "POST",
+      headers: {
+        ...(await device.headers({ method: "POST", path: refreshPath })),
+        Authorization: `Bearer ${bearer}`
+      }
+    });
+
+  // 上限之內：續期照樣成功。
+  const refreshed = await refresh(token);
+  assert.equal(refreshed.status, 200);
+  const refreshedToken = (await refreshed.json()).data.token;
+
+  // 兩個 token 嘅 auth_time 必須一模一樣——續期唔可以重設起算點。
+  const authTimeOf = (jwtToken) =>
+    JSON.parse(Buffer.from(jwtToken.split(".")[1], "base64url").toString()).auth_time;
+  assert.equal(authTimeOf(refreshedToken), authTimeOf(token));
+
+  // 等到「一定超過」而唔係「啱啱好」：auth_time 同「而家」兩邊都取整到秒，
+  // 所以等 2.1 秒喺秒數上可能只差 2，即係啱啱等於上限而唔係超過。等 3.5 秒
+  // 令秒差一定 ≥ 3，避免呢個 case 間歇性紅。
+  await new Promise((resolve) => {
+    setTimeout(resolve, 3500);
+  });
+
+  // 過咗上限：續期換唔到新 token。呢個係「不能再續 token」嗰句嘅實際意思。
+  assert.equal((await refresh(refreshedToken)).status, 401);
+
+  // 而且啱啱先簽出嚟嗰個 token 自己都用唔到——上限係準確嘅 2 秒，唔係
+  // 「2 秒再加上最後一個 token 剩返嘅壽命」。
+  const meAfterCap = await fetch(`${url}/api/v1/user/me`, {
+    headers: { Authorization: `Bearer ${refreshedToken}` }
+  });
+  assert.equal(meAfterCap.status, 401);
+
+  // 重新登入照樣得——上限結束嘅係 session，唔係封鎖個帳號。
+  assert.equal((await login()).status, 200);
 });
 
 test("an approver can clear the queue over HTTP, and the approved user then gets in", { skip }, async (t) => {

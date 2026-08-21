@@ -67,6 +67,12 @@ export function normalizeJwtConfig(source) {
   // 原字串照樣一併保留，交給 jwt.sign() 自己解析——不改簽發那一端的行為。
   const expiresInSeconds = durationSeconds(expiresIn, "expiresIn");
 
+  // 絕對 session 上限。走同一套解析，理由完全一樣：一個看起來像設定值、實際
+  // 算出來是別的數字的東西，在這裡的後果是全公司以錯誤的頻率被踢出系統，而
+  // 沒有任何地方會說出原因。
+  const sessionMaxAge = requiredText(source?.sessionMaxAge, "sessionMaxAge");
+  const sessionMaxAgeSeconds = durationSeconds(sessionMaxAge, "sessionMaxAge");
+
   if (secret.length < 32) {
     throw new Error("JWT config secret must contain at least 32 characters");
   }
@@ -89,6 +95,8 @@ export function normalizeJwtConfig(source) {
     algorithm,
     expiresIn,
     expiresInSeconds,
+    sessionMaxAge,
+    sessionMaxAgeSeconds,
     clockToleranceSeconds,
     headerName: requiredText(source?.headerName, "headerName").toLowerCase(),
     authScheme: requiredText(source?.authScheme, "authScheme")

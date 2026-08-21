@@ -55,16 +55,26 @@ export class JwtService extends BaseService {
   }
 
   /**
-   * 簽發一個 token。subject 與 version 都是必填。
+   * 一條 session 從登入起最多能活多久（秒）。JwtAuthStrategy 拿它跟 auth_time
+   * 比對，決定這條 session 是不是已經到了絕對上限。
+   */
+  get sessionMaxAgeSeconds() {
+    return this.#jwt.sessionMaxAgeSeconds;
+  }
+
+  /**
+   * 簽發一個 token。subject、version、authTime 三個都是必填。
    *
    * 這個 service 沒有依賴，也不該有——讓它依賴資料庫會把整個 auth 堆疊綁死在
    * MySQL 上。所以 version 由呼叫端從 tokenRevocation.currentVersion() 取來再
-   * 傳進來，登入 handler 同時持有兩個 service，那一步很自然。
+   * 傳進來，登入 handler 同時持有兩個 service，那一步很自然。同理，authTime 也
+   * 由呼叫端給：登入給「現在」，續期原封不動沿用舊 token 的值。
    */
-  issue(payload, { subject, version } = {}) {
-    // sub 是撤銷的 key，ver 是撤銷的判準。少了任何一個，這個 token 都天然免疫
-    // 於所有撤銷——登出、改密碼、強制下線對它全部無效，而且沒有任何症狀。
-    // 兩者都是必填：簽不出來遠比簽出一個永遠撤銷不掉的 token 好。
+  issue(payload, { subject, version, authTime } = {}) {
+    // 這三個是讓一個 token 殺得死的全部依據：sub 是撤銷的 key，ver 是撤銷的
+    // 判準，auth_time 是絕對上限的起算點。少了任何一個，這個 token 就對相對應
+    // 的那條路免疫——而且沒有任何症狀。三個都是必填：簽不出來遠比簽出一個
+    // 撤銷不掉、或者永遠不會到期的 token 好。
     const sub = String(subject ?? "").trim();
 
     if (!sub) {
@@ -80,13 +90,28 @@ export class JwtService extends BaseService {
       );
     }
 
-    return jwt.sign({ ...payload, ver: version }, this.#jwt.secret.reveal(), {
-      algorithm: this.#jwt.algorithm,
-      expiresIn: this.#jwt.expiresIn,
-      issuer: this.#jwt.issuer,
-      audience: this.#jwt.audience,
-      subject: sub
-    });
+    // 續期必須把舊 token 的 auth_time 原樣帶過來。改成「每次都給現在」的話，
+    // 每一次續期都會把起算點重設，絕對上限就再也不會到——而症狀是「沒有人被
+    // 登出」，沒有任何錯誤浮現。
+    if (!Number.isInteger(authTime) || authTime <= 0) {
+      throw new TypeError(
+        "JWT issue requires authTime in epoch seconds: on login use the current time, " +
+          "on refresh carry the existing token's auth_time forward, " +
+          "or the session can never reach its absolute maximum age"
+      );
+    }
+
+    return jwt.sign(
+      { ...payload, ver: version, auth_time: authTime },
+      this.#jwt.secret.reveal(),
+      {
+        algorithm: this.#jwt.algorithm,
+        expiresIn: this.#jwt.expiresIn,
+        issuer: this.#jwt.issuer,
+        audience: this.#jwt.audience,
+        subject: sub
+      }
+    );
   }
 
   /**
@@ -109,6 +134,16 @@ export class JwtService extends BaseService {
     // 原樣接住，原因進日誌，對外仍然只有籠統的 JWT_INVALID。
     if (typeof claims.sub !== "string" || claims.sub.trim() === "") {
       throw new jwt.JsonWebTokenError("jwt subject is required");
+    }
+
+    // 同一條規則套用在 auth_time 上：issue() 一定會帶它，所以缺了它的 token
+    // 要嘛是這個功能上線前簽的，要嘛是手工造的——而後者正是攻擊者想要的那一
+    // 種，因為沒有起算點就永遠算不出「這條 session 已經超過八小時」。
+    //
+    // 只擋「有沒有」，不判斷「夠不夠新」：後者是 JwtAuthStrategy 的事，跟撤銷
+    // 檢查放在一起，因為那是「token 本身合法，但已經不該再用」的結論。
+    if (!Number.isInteger(claims.auth_time)) {
+      throw new jwt.JsonWebTokenError("jwt auth_time is required");
     }
 
     return claims;

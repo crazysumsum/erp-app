@@ -123,7 +123,17 @@ export class RefreshTokenHandler extends BaseRequestHandler {
     // （最多 15 分鐘）內生效，不必等到 token 過期或被撤銷。這是白賺的。
     const token = this.jwt.issue(
       { roles: user.roles, permissions: user.permissions, did: binding.device_id },
-      { subject, version }
+      {
+        subject,
+        version,
+        // 原封不動沿用舊 token 的起算點——絕對 session 上限的全部意義就在這一
+        // 行。改成「現在」的話，每一次背景續期都會把上限往後推，session 就永遠
+        // 不會到期，而症狀是「沒有人被登出」，不會有任何錯誤浮現。
+        //
+        // 這裡不必自己檢查有沒有超過上限：JwtDeviceAuthStrategy 繼承的
+        // JwtAuthStrategy 已經在進到這支 handler 之前就擋掉了。
+        authTime: claims.auth_time
+      }
     );
 
     await this.deviceBinding.markUsed(binding.id);

@@ -90,6 +90,10 @@ function createHandler(HandlerClass, { userService, ...overrides } = {}) {
   return { handler, logger };
 }
 
+// createTestTime() 的時鐘固定在 2026-08-07T06:00:00Z，所以登入蓋出來的
+// auth_time 是可以直接寫死比對的。
+const NOW_SECONDS = Math.floor(Date.parse("2026-08-07T06:00:00.000Z") / 1000);
+
 const SAMPLE_USER = Object.freeze({
   id: 7,
   username: "alice",
@@ -231,8 +235,13 @@ test("login issues a token carrying the roles and permissions claims", async () 
     // 已審批的設備都能續期任何一個 token。
     did: DEVICE_ID
   });
-  // 版本號必須跟著簽進去，否則這個 token 對撤銷永久免疫。
-  assert.deepEqual(issued.options, { subject: "7", version: 3 });
+  // 版本號必須跟著簽進去，否則這個 token 對撤銷永久免疫。authTime 同理：少了
+  // 它這條 session 永遠不會撞到絕對上限。登入是唯一會把它設成「現在」的地方。
+  assert.deepEqual(issued.options, {
+    subject: "7",
+    version: 3,
+    authTime: NOW_SECONDS
+  });
   // last_used_at 是清理工作判斷「這台還在用嗎」的唯一依據。
   assert.deepEqual(deviceBinding.used, [11]);
 });
@@ -853,7 +862,13 @@ const DEFAULT_BINDING = Object.freeze({
   status: "approved"
 });
 
-function refreshRequest({ sub = "7", ver = 9, deviceBinding = DEFAULT_BINDING } = {}) {
+function refreshRequest({
+  sub = "7",
+  ver = 9,
+  // 預設是一個「兩小時前登入」的 session：還沒到八小時上限，續期該成功。
+  authTime = NOW_SECONDS - 2 * 3600,
+  deviceBinding = DEFAULT_BINDING
+} = {}) {
   return {
     requestId: null,
     auth: {
@@ -862,6 +877,7 @@ function refreshRequest({ sub = "7", ver = 9, deviceBinding = DEFAULT_BINDING } 
         sub,
         did: deviceBinding.device_id,
         ver,
+        auth_time: authTime,
         roles: ["admin"],
         permissions: ["order.read"]
       },
@@ -911,7 +927,15 @@ test("refresh issues a new token with freshly read roles and the current version
     did: DEVICE_ID
   });
   // 版本號要重讀，否則新 token 會帶著舊版本，撤銷過的人可以一直換新的。
-  assert.deepEqual(issued.options, { subject: "7", version: 9 });
+  //
+  // authTime 相反，必須原封不動沿用——這一行就是絕對 session 上限的全部意義。
+  // 改成「現在」的話每次背景續期都會把上限往後推，session 永遠不會到期，而
+  // 症狀是「沒有人被登出」，不會有任何錯誤浮現。
+  assert.deepEqual(issued.options, {
+    subject: "7",
+    version: 9,
+    authTime: NOW_SECONDS - 2 * 3600
+  });
   assert.deepEqual(deviceBinding.used, [11]);
 });
 

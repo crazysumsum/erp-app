@@ -98,10 +98,11 @@ export class LoginHandler extends BaseRequestHandler {
     super(services);
     // 業務模組直接 import 再自己建，不經 service container——container 管的是
     // 公用技術服務。它要用的那幾個技術服務仍然從 container 拿。
+    this.time = services.require("time");
     this.userService = new UserService({
       database: services.require("mysqldatabase"),
       logger: services.require("logging").logger,
-      time: services.require("time")
+      time: this.time
     });
     this.jwt = services.require("jwt");
     this.tokenRevocation = services.require("tokenRevocation");
@@ -196,7 +197,13 @@ export class LoginHandler extends BaseRequestHandler {
     // token 只能被簽發它的那台設備續期。
     const token = this.jwt.issue(
       { roles: user.roles, permissions: user.permissions, did: binding.device_id },
-      { subject, version }
+      {
+        subject,
+        version,
+        // 這裡是絕對 session 上限唯一的起算點：登入是唯一一個「現在這一刻真的
+        // 有人輸入了密碼」的時刻。續期只會把這個值原樣帶著走，推不動它。
+        authTime: Math.floor(this.time.nowMs() / 1000)
+      }
     );
 
     await this.deviceBinding.markUsed(binding.id);

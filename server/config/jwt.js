@@ -23,6 +23,15 @@ const jwtConfig = {
   // 生效延遲全部一起縮短，而使用者感覺不到，因為續期是背景進行的。
   expiresIn: process.env.JWT_EXPIRES_IN || "15m",
 
+  // 一條 session 從登入那一刻算起最多能活多久，不管中間續期過幾次。到期就必須
+  // 重新輸入帳號密碼登入。格式與 expiresIn 相同（整數加單位）。
+  //
+  // 這跟 expiresIn 是兩件事：expiresIn 管的是「單一個 token 活多久」，每次續期
+  // 都會把它往後推；這個值管的是「這條 session 總共能活多久」，續期推不動它。
+  // 少了它，一台一直開著的機器可以無限續期下去，session 永遠不會自己結束——
+  // 那時要結束一條 session 只剩撤銷設備與 tokenRevocation 兩條**手動**的路。
+  sessionMaxAge: process.env.JWT_SESSION_MAX_AGE || "8h",
+
   // 驗證 exp、nbf 等時間欄位時容許的時鐘誤差，單位為秒。
   clockToleranceSeconds: Number(process.env.JWT_CLOCK_TOLERANCE_SECONDS || 5),
 
