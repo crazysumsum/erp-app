@@ -7,7 +7,7 @@ export const service = { name: "device" };
  * 後端改路徑或欄位名嗰陣，要跟住改嘅係一個檔案而唔係散落喺幾個 .vue 入面。
  */
 export default {
-  /** 待審批嘅申請。需要 device.approve 權限。 */
+  /** 待審批嘅申請。需要 device.mgmt 權限。 */
   async listPending() {
     const { items } = await httpClient.get("/api/v1/device/bindings/pending");
     return items;

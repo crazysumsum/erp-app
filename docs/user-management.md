@@ -61,9 +61,9 @@
 
 ### 1.2 `device.approve` → `device.mgmt`（純改名）
 
-現有的三支審批 handler（approve / reject / revoke）與審批佇列，全部共用 `deviceBindingSchemas.js` 裡的同一個 `DEVICE_APPROVE_POLICY`。也就是說「審批」「拒絕」「撤銷」本來就是同一個權限，這次只是把名字改成與實際涵蓋範圍相符的 `device.mgmt`，**授權行為完全沒有變化**。
+現有的三支審批 handler（approve / reject / revoke）與審批佇列，全部共用 `deviceBindingSchemas.js` 裡的同一個授權政策常數（改名後叫 `DEVICE_MGMT_POLICY`）。也就是說「審批」「拒絕」「撤銷」本來就是同一個權限，這次只是把名字改成與實際涵蓋範圍相符的 `device.mgmt`，**授權行為完全沒有變化**。
 
-改名用 `UPDATE permissions SET name = 'device.mgmt' WHERE name = 'device.approve'`，不是「刪掉舊的、插入新的」：
+改名用 `UPDATE permissions SET name = 'device.mgmt' WHERE name = 'device.approve'`（**Phase 0 已完成**，見 `0005_rename_device_permission.js`），不是「刪掉舊的、插入新的」：
 
 - 權限 id 不變，`role_permissions` 裡既有的關聯原封不動——刪除會被 `ON DELETE CASCADE` 連帶清掉，然後要靠 migration 自己重建，多一個會出錯的步驟。
 - migration 可重複執行：`device.approve` 不在了就什麼都不做，`device.mgmt` 已經在了也什麼都不做。
@@ -165,13 +165,13 @@ WHERE id = ? AND status = 'active'
 
 ## 二、資料模型（需簽核）
 
-**三支 migration，不是一支。** 一支加欄位、一支建稽核表、一支種權限。
+**三支 migration，不是一支。** 一支加欄位、一支建稽核表、一支種權限。（Phase 0 的改名是第四支 `0005_rename_device_permission.js`，已經投產，所以下面三支從 `0006` 起算——**已經套用過的 migration 不能事後改內容**，runner 只認檔名，改了也不會重跑。）
 
 拆這麼細不是潔癖，是因為 runner 只在整個 `up()` 成功之後才寫 `fr_schema_migrations`（見 `scripts/migrate.js`），而**MySQL 的 DDL 會隱式提交**：`ADD COLUMN` 成功、後面的 `CREATE TABLE` 失敗的話，這一支 migration 沒有被記錄成已套用，但它的前半段已經真的改了資料庫；重跑會炸在「欄位已存在」上，然後整條部署流程卡死在一個要人手動判斷的狀態。一支 migration 只做一次 DDL，這個問題就不存在。
 
 同一個理由，`ADD COLUMN` 之前仍然查一次 `information_schema`（`0003_add_auth_tables.js` 的 `columnsOf()` 已經有這個手法可以直接用），建表一律 `CREATE TABLE IF NOT EXISTS`。**每一支都必須真的可以重跑**，而且要有一個測試證明它——不是「應該可以」。
 
-### 2.1 `0005_add_user_password_columns.js`（DDL）
+### 2.1 `0006_add_user_password_columns.js`（DDL）
 
 ```sql
 ALTER TABLE users
@@ -191,7 +191,7 @@ ALTER TABLE users
 - **為什麼臨時密碼的到期時間是一欄，而不是一套 activation token**：審閱建議的做法（DB 只存 token hash、使用者自己設密碼）更好，但它換掉的是你已經拍板的整條流程。加一欄能拿到那套方案八成的效果——過期的臨時密碼登不進來——而且不必改任何既有的登入路徑。真的要走 activation token，那是一次獨立的設計。
 - **為什麼不做成 `password_changed_at`（記時間，靠比較判斷）**：那是「密碼每 90 天要換」的資料模型；這裡要的是一次性旗標加一個死線。日後真要做密碼過期再加那一欄，三者不衝突。
 
-### 2.2 `0006_add_user_audit_logs.js`（DDL）
+### 2.2 `0007_add_user_audit_logs.js`（DDL）
 
 ```sql
 CREATE TABLE IF NOT EXISTS user_audit_logs (
@@ -239,14 +239,15 @@ CREATE TABLE IF NOT EXISTS user_audit_logs (
 - **對既有資料的影響**：純新增，不動任何既有表。
 - **保留**：不清理，也不寫清理 job。一次用戶維護才一列，量級與 `user_devices` 相當——後者需要清理是因為它會累積從來沒被批准過的申請，稽核沒有這種垃圾。真要設年限時再加一個 job（比照 `LogRetentionJob`），那是一次獨立的決定。
 
-### 2.3 `0007_seed_user_management_permissions.js`（DML）
+### 2.3 `0008_seed_user_management_permissions.js`（DML）
 
 沿用 `0004` 的 `ensureRow()`（先查再寫、以名稱為準、有就跳過），順序：
 
-1. `UPDATE permissions SET name = 'device.mgmt', description = ? WHERE name = 'device.approve'`——只在舊名還在時才會影響到列。
-2. `ensureRow` 種入 `device.mgmt`（給乾淨資料庫用；上一步已經改好的話這裡跳過）、`user.mgmt`、`role.mgmt`。
-3. 確保 `system-admin` 角色存在（`0004` 已種，這裡照 `ensureRow` 再確認一次）。
-4. 確保三個 `role_permissions` 關聯存在。
+1. `ensureRow` 種入 `user.mgmt`、`role.mgmt`，以及 `device.mgmt`——最後這個在正常路徑上已經由 `0005` 改名改出來了，這裡只是給「`permissions` 被人手動清過」那種資料庫一條回得去的路。
+2. 確保 `system-admin` 角色存在（`0004` 已種，這裡照 `ensureRow` 再確認一次）。
+3. 確保三個 `role_permissions` 關聯存在。
+
+`device.approve` → `device.mgmt` 的改名**不在這一支**：它是 Phase 0 獨立投產的 `0005_rename_device_permission.js`。兩者分開是因為改名對舊程式碼是破壞性的（舊版找的是舊名），而種新權限不是——分開才能讓改名先單獨上線、單獨觀察、單獨回滾。
 
 這一支完全沒有 DDL，所以它是三支裡唯一一支「跑到一半失敗，重跑一定收斂」的——它的每一步本來就是冪等的。
 
@@ -672,9 +673,10 @@ static service = Object.freeze({
 
 | 檔案 | 改動 |
 | --- | --- |
-| `server/database/migrations/0005_add_user_password_columns.js` | **新增**：`users.must_change_password`、`users.temporary_password_expires_at`（各自一句 DDL，前面查 `information_schema`） |
-| `server/database/migrations/0006_add_user_audit_logs.js` | **新增**：`user_audit_logs` |
-| `server/database/migrations/0007_seed_user_management_permissions.js` | **新增**：`device.approve` → `device.mgmt` 改名、種入 `user.mgmt` / `role.mgmt`、授予 `system-admin` |
+| `server/database/migrations/0005_rename_device_permission.js` | **新增（Phase 0，已完成）**：`device.approve` → `device.mgmt` 改名 |
+| `server/database/migrations/0006_add_user_password_columns.js` | **新增**：`users.must_change_password`、`users.temporary_password_expires_at`（各自一句 DDL，前面查 `information_schema`） |
+| `server/database/migrations/0007_add_user_audit_logs.js` | **新增**：`user_audit_logs` |
+| `server/database/migrations/0008_seed_user_management_permissions.js` | **新增**：種入 `user.mgmt` / `role.mgmt`、授予 `system-admin` |
 | `server/src/handlers/device/deviceBindingSchemas.js` | `DEVICE_APPROVE_POLICY` → `DEVICE_MGMT_POLICY`，權限字串改 `device.mgmt` |
 | `server/src/handlers/user/loginHandler.js` | `USER_SCHEMA` 加 `mustChangePassword`；簽發時視情況加 `mcp` claim |
 | `server/src/handlers/user/refreshTokenHandler.js` | 同上（重讀資料庫時一併帶出旗標） |
@@ -707,20 +709,20 @@ static service = Object.freeze({
 
 每一階段結束時系統都應該是可跑、測試全綠的。驗收條件寫成「跑什麼、看到什麼」，不是「做完了」。
 
-### Phase 0 — 權限改名（可獨立投產）
+### Phase 0 — 權限改名（可獨立投產）✅ 已完成
 
 範圍最小、風險最低的一刀，先切乾淨。
 
-1. `0007` migration 的改名部分（先不種 `user.mgmt` / `role.mgmt`）。
+1. `0005_rename_device_permission.js`——**只有改名**，不種 `user.mgmt` / `role.mgmt`。獨立成一支而不是併進後面那支種子 migration，是因為 Phase 0 會先單獨投產：套用過的 migration 事後改內容不會重跑，所以「先寫一半、之後補上」在這裡是行不通的。
 2. `deviceBindingSchemas.js`、`DeviceApprovalsPage.vue`、`createUser.js`、測試、`docs/device-binding-auth.md` 裡的字串。
 
 **驗收**：`npm test`（前後端）全綠；跑完 migration 後 `SELECT * FROM permissions` 只看到 `device.mgmt`，而 `role_permissions` 的列數不變；用 `system-admin` 登入仍然進得了設備審批頁。
 
 ### Phase 1 — 資料模型、權限目錄與約定測試
 
-1. `0005`（兩個欄位）、`0006`（稽核表）migration，各自帶 `information_schema` 守衛。
+1. `0006`（兩個欄位）、`0007`（稽核表）migration，各自帶 `information_schema` 守衛。
 2. `permissionCatalogue.js` + `PermissionCatalogueService.js`。
-3. `0007` 補上 `user.mgmt` / `role.mgmt` 的種入與授予。
+3. `0008` 種入 `user.mgmt` / `role.mgmt` 並授予 `system-admin`。
 4. §3.7 的約定測試（權限字串、前端 metadata、禁用 `hasRole`）。
 
 **驗收**：三支 migration 跑完啟動成功；**任何一支中途失敗後重跑都會收斂**（測試要真的模擬：第一次跑到一半拋錯，第二次跑完成功）；手動 `DELETE FROM permissions WHERE name = 'user.mgmt'` 之後啟動**失敗**且訊息指名缺哪一個；把某支 handler 的權限字串改成 `uesr.mgmt` 之後約定測試失敗。
@@ -803,16 +805,19 @@ static service = Object.freeze({
 
 部署方式是**單節點／排空後重啟**（已確認），所以不需要新舊並存的相容窗。這個前提如果變了，§1.2 的權限改名與 §3.5 的 `mcp` claim 都要改成兩階段。
 
-1. **備份資料庫。** 這次有兩支 DDL 與一次權限改名，備份是回滾的唯一保證。
+以下是 Phase 1–6 一起投產的步驟。**Phase 0 自己投產時走的是同一套，只是第 3 步只有 `0005`、第 5 步只驗設備審批頁。** 那一次要特別留意的是第 6 步：改名當下已經簽發的 token 帶的仍然是舊的 `device.approve` claim。
+
+1. **備份資料庫。** 這次有兩支 DDL 與一支種子 migration，備份是回滾的唯一保證。
 2. **排空舊節點**（停止進新請求，等現有請求結束），確認沒有舊版程式還在跑。
-3. **跑 migration**：`node scripts/migrate.js`——`0005` 加欄位、`0006` 建稽核表、`0007` 改名並種入權限。三支都可以重複執行；中途失敗就修完再跑一次，不要手動補 SQL。
+3. **跑 migration**：`node scripts/migrate.js`——`0006` 加欄位、`0007` 建稽核表、`0008` 種入權限（`0005` 的改名已經在 Phase 0 跑過了）。三支都可以重複執行；中途失敗就修完再跑一次，不要手動補 SQL。
 4. **啟動新版程式。** 順序不能反：舊版程式配新 schema 沒問題（多兩欄、多一張表它不看），但新版程式配舊 schema 會在啟動自檢那一步直接拒絕啟動——那是刻意的。
 5. **驗收**：用 `system-admin` 登入，確認菜單出現用戶管理、角色管理、變更紀錄；`GET /api/v1/permissions` 回三個權限；設備審批頁仍然進得去。
-6. **告知使用者**：投產前簽發的 token 帶的仍然是舊的 `device.approve` claim，設備審批頁在一次背景續期（最多 15 分鐘）之內可能回 403，重新整理即可。
+6. **告知使用者**（這一步屬於 Phase 0 那一次投產）：改名前簽發的 token 帶的仍然是舊的 `device.approve` claim，設備審批頁在一次背景續期（最多 15 分鐘）之內可能回 403，重新整理即可。刻意不做補償——它會自己好，而為了它撤銷全體 token 反而會把所有人踢出去一次。
 7. **演練一次 break-glass**（第一次投產時做，之後每次改動 IAM 相關程式時重做）：在測試環境停用最後一個 admin，用 `scripts/grantRole.js` 救回來，把每一步的實際指令記進 runbook。
 
 **回滾**：
 
-- `0005`、`0006` 是純新增（兩欄、一張表），舊版程式不會讀它們，程式碼回滾即可，不必回滾 schema。
-- `0007` 的改名**不對稱**：舊版程式找的是 `device.approve`，所以回滾程式碼之後設備審批會失效，必須一併 `UPDATE permissions SET name = 'device.approve' WHERE name = 'device.mgmt'`。新種的 `user.mgmt` / `role.mgmt` 留著無害（舊版程式不認得，也不會用到）。
+- `0006`、`0007` 是純新增（兩欄、一張表），舊版程式不會讀它們，程式碼回滾即可，不必回滾 schema。
+- `0008` 種的 `user.mgmt` / `role.mgmt` 留著無害：舊版程式不認得，也不會用到。
+- 要**回滾到 Phase 0 之前**才是不對稱的那一步：`0005` 的改名對舊版程式是破壞性的（它找的是 `device.approve`），所以回滾程式碼之後設備審批會失效，必須一併 `UPDATE permissions SET name = 'device.approve' WHERE name = 'device.mgmt'`。
 - 這一條寫在這裡，是為了讓決定回滾的人當下就看得到，而不是回滾完才發現審批頁壞了。

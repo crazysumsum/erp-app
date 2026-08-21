@@ -98,12 +98,12 @@ function fakeTokenRevocation() {
 
 const reviewerRequest = (id = "5", body = {}) => ({
   input: { params: { id }, query: {}, body },
-  auth: { claims: { sub: "3", permissions: ["device.approve"] } }
+  auth: { claims: { sub: "3", permissions: ["device.mgmt"] } }
 });
 
 // --- 權限 --------------------------------------------------------------------
 
-test("every review route demands device.approve, and the listing routes agree", () => {
+test("every review route demands device.mgmt, and the listing routes agree", () => {
   for (const HandlerClass of [
     PendingDevicesHandler,
     ApproveDeviceHandler,
@@ -112,7 +112,7 @@ test("every review route demands device.approve, and the listing routes agree", 
   ]) {
     assert.deepEqual(
       HandlerClass.api.authorizationPolicies,
-      [{ name: "hasPermission", options: { permissions: ["device.approve"] } }],
+      [{ name: "hasPermission", options: { permissions: ["device.mgmt"] } }],
       HandlerClass.handlerName
     );
   }

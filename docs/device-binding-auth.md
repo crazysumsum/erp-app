@@ -16,10 +16,10 @@
 | 私鑰儲存 | IndexedDB 的 non-extractable `CryptoKey` | XSS 只能在受害者瀏覽器上就地簽名，帶不走金鑰 |
 | 簽章演算法 | **ECDSA P-256**（非 RSA） | 產鑰近乎瞬間（RSA-2048 在弱機器上是可見的 UI 停頓），簽章 64 bytes vs 256 bytes |
 | Device ID | **canonical SPKI 的 SHA-256 thumbprint**，非前端隨機數 | ID 自證：持有對應私鑰才能用這個 ID；一把金鑰只對應一個 ID（見 §2 的正規化）；也不必另外存一份、不會與金鑰失去同步 |
-| 審批權限 | 新增 permission **`device.approve`** | 綁 permission 而非 role，人事調整不必改程式碼 |
+| 審批權限 | 新增 permission **`device.mgmt`** | 綁 permission 而非 role，人事調整不必改程式碼 |
 | 通知 | **暫不做**（email / 站內通知） | 審批者需要自己去看佇列 |
 | 綁定記錄保留 | 三條規則，見 §5.4 | pending 一個月、approved 未使用 14 天、已使用過的一個月 |
-| 審批角色 | 種一個 **`system-admin`** 角色持有 `device.approve` | 系統第一個帳號自動成為 system admin |
+| 審批角色 | 種一個 **`system-admin`** 角色持有 `device.mgmt` | 系統第一個帳號自動成為 system admin |
 | 資料表命名 | 使用者相關一律 `user_` 前綴 | 與既有的 `users` / `user_roles` 一致 |
 
 ---
@@ -98,15 +98,17 @@ CREATE TABLE user_device_nonces (
 
 > **這是唯一可以砍的一張表。** 砍掉之後只靠 timestamp 時效窗防護，代價是：任何能取得一次完整簽名請求的人（反向代理的 body/header 日誌、TLS 攔截）可以在時效窗內重放它換到一個 JWT。XSS 情境下有沒有這張表都一樣——攻擊者可以就地簽新的。要縮範圍的話這裡可以先不做，但要知道放棄的是什麼。
 
-### 1.3 種入 `system-admin` 角色與 `device.approve` 權限
+### 1.3 種入 `system-admin` 角色與 `device.mgmt` 權限
 
-`device.approve` 套現有的 `hasPermission` 授權策略與 `v-can` 指令，不需要任何新機制。
+> **這個權限原本叫 `device.approve`。** `0004_add_device_binding_tables.js` 種的是舊名，`0005_rename_device_permission.js` 用 `UPDATE` 把它改成 `device.mgmt`（權限 id 與既有的 `role_permissions` 關聯全部保留）。改名的理由與整套用戶／角色／權限體系的設計見 [user-management.md](user-management.md) §1.2。這一份文件以下一律用新名字——授權行為從頭到尾沒有變過，只有那個字串換了。
 
-migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：角色 `system-admin`、權限 `device.approve`、以及兩者之間的 `role_permissions` 關聯。
+`device.mgmt` 套現有的 `hasPermission` 授權策略與 `v-can` 指令，不需要任何新機制。
 
-`system-admin` 種入時**只給 `device.approve` 這一個權限**，不預先塞其他的。日後要什麼再逐項加——一個上線第一天就握有所有權限的角色，之後沒有人敢動它。
+migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：角色 `system-admin`、權限 `device.mgmt`、以及兩者之間的 `role_permissions` 關聯。
 
-**角色名用 slug `system-admin`，不是帶空格的 `system admin`。** 這一欄的值會直接進 JWT 的 `roles` claim，也是 `hasRole` 策略與前端 `page.requires.roles` 的比對字串——那些位置都是機器讀的識別碼，慣例與 `device.approve` 一致。給人看的字串放 `description`（`System Admin`），`roles` 表本來就有這一欄。
+`system-admin` 種入時**只給 `device.mgmt` 這一個權限**，不預先塞其他的。日後要什麼再逐項加——一個上線第一天就握有所有權限的角色，之後沒有人敢動它。
+
+**角色名用 slug `system-admin`，不是帶空格的 `system admin`。** 這一欄的值會直接進 JWT 的 `roles` claim，也是 `hasRole` 策略與前端 `page.requires.roles` 的比對字串——那些位置都是機器讀的識別碼，慣例與 `device.mgmt` 一致。給人看的字串放 `description`（`System Admin`），`roles` 表本來就有這一欄。
 
 > **為什麼不指定 id、也不去碰 `role_id = 1`。**
 >
@@ -118,7 +120,7 @@ migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：
 >
 > 種入用「先查再寫」而不是 `INSERT IGNORE`：後者會把所有錯誤一起降級成警告，包含型別不符、欄位缺失這些真正該中止 migration 的問題。這裡只跑一次，多一次 `SELECT` 沒有成本。
 
-**系統第一個使用者自動成為 system admin**：改 `scripts/createUser.js`——建立帳號時若 `users` 表是空的，無論有沒有給 `--role`，一律額外授予 `system-admin`，並在輸出裡明講。這樣 bootstrap 是自洽的：第一個帳號建出來就有 `device.approve`，可以審批後續所有人的設備。
+**系統第一個使用者自動成為 system admin**：改 `scripts/createUser.js`——建立帳號時若 `users` 表是空的，無論有沒有給 `--role`，一律額外授予 `system-admin`，並在輸出裡明講。這樣 bootstrap 是自洽的：第一個帳號建出來就有 `device.mgmt`，可以審批後續所有人的設備。
 
 （但他自己的設備仍然需要 §5.1 的 break-glass 腳本核准——帳號存在不等於設備已綁定，這是兩個獨立的 bootstrap 步驟。）
 
@@ -229,10 +231,10 @@ const keyPair = await crypto.subtle.generateKey(
 
 ### 3.2 審批
 
-- `GET /api/v1/device/bindings/pending` — 審批佇列，需 `device.approve`
-- `POST /api/v1/device/bindings/:id/approve` — 需 `device.approve`，`authType: "jwt-password"`
-- `POST /api/v1/device/bindings/:id/reject` — 需 `device.approve`，`authType: "jwt-password"`
-- `POST /api/v1/device/bindings/:id/revoke` — 需 `device.approve`，`authType: "jwt-password"`
+- `GET /api/v1/device/bindings/pending` — 審批佇列，需 `device.mgmt`
+- `POST /api/v1/device/bindings/:id/approve` — 需 `device.mgmt`，`authType: "jwt-password"`
+- `POST /api/v1/device/bindings/:id/reject` — 需 `device.mgmt`，`authType: "jwt-password"`
+- `POST /api/v1/device/bindings/:id/revoke` — 需 `device.mgmt`，`authType: "jwt-password"`
 - `GET /api/v1/device/bindings` — 使用者看自己的設備清單，authenticated 即可
 
 核准、拒絕、撤銷這三個動作要求密碼再確認（見 `JwtPasswordAuthStrategy`）：核准
@@ -487,11 +489,11 @@ refresh vs 登出、refresh vs 裝置撤銷、login vs 裝置撤銷（含撤銷�
 
 上線程序：
 
-1. 跑 migration —— 種入 `system-admin` 角色與 `device.approve` 權限（§1.3）
+1. 跑 migration —— 種入 `system-admin` 角色與 `device.mgmt` 權限（§1.3）
 2. `node scripts/createUser.js <帳號>` —— 這是系統第一個使用者，自動取得 `system-admin`。密碼在提示字元輸入（不回顯），或由 stdin 餵進來：`<secrets-manager> | node scripts/createUser.js <帳號>`。**不接受把密碼寫在 command line**——那會留在 shell history 與 `ps` 的輸出裡
 3. 該使用者在瀏覽器登入一次 —— 密碼會過，但設備還沒綁定，得到 `403 DEVICE_PENDING_APPROVAL`，同時在 `user_devices` 留下一筆 pending
 4. `node scripts/approveDevice.js <id>` —— 核准他自己的設備
-5. 他現在登得進去，且有 `device.approve`，之後所有人的設備都走正常審批流程
+5. 他現在登得進去，且有 `device.mgmt`，之後所有人的設備都走正常審批流程
 
 第 2 步和第 4 步是**兩個獨立的 bootstrap 步驟**：帳號存在不等於設備已綁定。
 
@@ -576,7 +578,7 @@ WHERE (status = 'pending'
 | `server/config/jwt.js` | `JWT_EXPIRES_IN` 預設 `2h` → `15m` |
 | `server/config/security.js` | `cors.allowedHeaders` 加五個 `X-Device-*` |
 | `server/config/deviceBinding.js` | **新增**：`signatureMaxSkewSeconds`、`nonceRetentionSeconds`、`staleDeviceRetentionDays`、演算法參數 |
-| `server/database/migrations/0004_*.js` | **新增**：`user_devices`、`user_device_nonces`、`device.approve` permission、`system-admin` role（含 role_id 1 的守衛） |
+| `server/database/migrations/0004_*.js` | **新增**：`user_devices`、`user_device_nonces`、`device.approve` permission（後由 `0005_*.js` 改名為 `device.mgmt`）、`system-admin` role（含 role_id 1 的守衛） |
 | `server/scripts/createUser.js` | `users` 表為空時，自動授予第一個帳號 `system-admin`；密碼改由 stdin 讀，不再收 command line 參數 |
 | `server/src/services/deviceBinding/` | **新增**：`DeviceBindingService`（驗簽、查狀態、審批）+ 兩支清理 job |
 | `server/src/handlers/user/loginHandler.js` | 加設備驗證與三種 403；responseSchema 加 `expiresInSeconds` 與 `sessionExpiresInSeconds` |
@@ -613,7 +615,7 @@ WHERE (status = 'pending'
 ### 測試涵蓋到哪裡
 
 - **簽章格式的跨端契約**由前後端各一條 golden 測試釘住（§2 末段）
-- **真資料庫的整合測試**走完整條路：待審批 → 核准 → 登入 → 續期 → 換設備被拒 → 登出後既不能用也不能續期 → 審批者用 HTTP 清佇列 → 重覆核准回 409 → 沒有 `device.approve` 的人拿不到佇列
+- **真資料庫的整合測試**走完整條路：待審批 → 核准 → 登入 → 續期 → 換設備被拒 → 登出後既不能用也不能續期 → 審批者用 HTTP 清佇列 → 重覆核准回 409 → 沒有 `device.mgmt` 的人拿不到佇列
 - **每檔覆蓋率門檻**涵蓋 `loginHandler`、`refreshTokenHandler` 與 `DeviceBindingService`。三者壞掉都沒有症狀：畫面上什麼都不會變，只是本來該結束的 session 一直活著
 
 驗證要用 CI 的指令（`DB_INTEGRATION_TESTS=1 npm run test:coverage`）。`npm test` 不含覆蓋率門檻，而整合測試預設是 skip 的——本機綠燈不代表 CI 會綠。

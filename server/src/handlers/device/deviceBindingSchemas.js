@@ -4,11 +4,17 @@ export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   additionalProperties: false
 });
 
-/** 審批這個功能的權限。migration 0004 種入，掛在 system-admin 角色上。 */
-export const DEVICE_APPROVE_POLICY = Object.freeze([
+/**
+ * 審批這個功能的權限。migration 0004 種入，0005 改名為 device.mgmt，掛在
+ * system-admin 角色上。
+ *
+ * 核准、拒絕、撤銷與審批佇列共用同一個權限——名字用 mgmt 而不是 approve，
+ * 就是為了讓字串與這個事實相符。
+ */
+export const DEVICE_MGMT_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
-    options: Object.freeze({ permissions: Object.freeze(["device.approve"]) })
+    options: Object.freeze({ permissions: Object.freeze(["device.mgmt"]) })
   })
 ]);
 

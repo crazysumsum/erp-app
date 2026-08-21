@@ -12,6 +12,9 @@
 // 跳過、沒有就新增」，那需要先查再寫。
 
 const SYSTEM_ADMIN_ROLE = "system-admin";
+// ⚠️ 這個權限之後由 0005_rename_device_permission.js 改名為 device.mgmt。這裡
+// 保留舊名不動：這支 migration 在既有環境已經套用過，改它的內容不會重跑，只會讓
+// 檔案內容與資料庫的實際狀態對不上。程式碼要找的權限字串請看那一支。
 const DEVICE_APPROVE_PERMISSION = "device.approve";
 
 async function createTables(connection) {

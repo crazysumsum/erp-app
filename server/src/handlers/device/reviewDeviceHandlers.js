@@ -3,7 +3,7 @@ import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { DEVICE_STATUS } from "../../services/deviceBinding/DeviceBindingService.js";
 import {
   BINDING_ID_PARAMS_SCHEMA,
-  DEVICE_APPROVE_POLICY,
+  DEVICE_MGMT_POLICY,
   EMPTY_OBJECT_SCHEMA,
   REVIEW_BODY_SCHEMA,
   REVIEW_RESULT_SCHEMA
@@ -73,7 +73,7 @@ function reviewApi({ path, description }) {
     path,
     description,
     authType: "jwt-password",
-    authorizationPolicies: DEVICE_APPROVE_POLICY,
+    authorizationPolicies: DEVICE_MGMT_POLICY,
     requestSchema: {
       params: BINDING_ID_PARAMS_SCHEMA,
       query: EMPTY_OBJECT_SCHEMA,

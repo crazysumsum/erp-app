@@ -27,8 +27,8 @@ const { createMySqlDatabasePool } = await import(
   "../src/services/mysqldatabase/connection.js"
 );
 
-// 系統第一個帳號自動取得這個角色。角色與它的 device.approve 權限由
-// 0004_add_device_binding_tables.js 種入。
+// 系統第一個帳號自動取得這個角色。角色與它的 device.mgmt 權限由
+// 0004_add_device_binding_tables.js 種入（0005 把該權限由 device.approve 改名）。
 const SYSTEM_ADMIN_ROLE = "system-admin";
 
 function parseArguments(argv) {
@@ -155,7 +155,7 @@ async function createUser(connection, { username, password, displayName, roles }
     // 系統第一個帳號自動成為 system admin，無論有沒有給 --role。
     //
     // 少了這一步，bootstrap 會斷在一個沒有症狀的地方：帳號建出來了、登得進去，
-    // 但沒有人握有 device.approve，於是所有設備綁定申請都沒有人能核准。查在
+    // 但沒有人握有 device.mgmt，於是所有設備綁定申請都沒有人能核准。查在
     // 交易裡而且在 INSERT 之前，判準是「users 表原本是空的」——放在 INSERT
     // 之後就得改成跟 1 比較，那個 1 是哪來的並不明顯。
     const [[{ existing }]] = await connection.query(
@@ -218,7 +218,7 @@ try {
     // 沒發生過。第二句是因為建好帳號的下一步幾乎一定會撞到設備綁定那道門。
     console.log(
       `This is the first account, so it was granted "${SYSTEM_ADMIN_ROLE}" ` +
-        "(which holds device.approve).\n" +
+        "(which holds device.mgmt).\n" +
         "Log in once from a browser to create a device binding request, then approve it " +
         "with: node scripts/approveDevice.js --list"
     );

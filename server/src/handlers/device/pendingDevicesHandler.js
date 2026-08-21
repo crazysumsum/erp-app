@@ -1,6 +1,6 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import {
-  DEVICE_APPROVE_POLICY,
+  DEVICE_MGMT_POLICY,
   EMPTY_OBJECT_SCHEMA,
   PENDING_BINDING_SCHEMA,
   toPendingBinding
@@ -20,7 +20,7 @@ export class PendingDevicesHandler extends BaseRequestHandler {
     method: "GET",
     path: "/api/v1/device/bindings/pending",
     description: "列出所有等待審批的設備綁定申請。",
-    authorizationPolicies: DEVICE_APPROVE_POLICY,
+    authorizationPolicies: DEVICE_MGMT_POLICY,
     requestSchema: {
       params: EMPTY_OBJECT_SCHEMA,
       query: EMPTY_OBJECT_SCHEMA
