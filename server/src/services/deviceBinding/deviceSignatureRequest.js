@@ -45,6 +45,23 @@ export function readDeviceSignature(req) {
     });
   }
 
+  // nonce 同理，而且這裡的後果更具體：它會被原樣塞進 user_device_nonces.nonce，
+  // 那是一個 CHAR(36)。超長的值在 strict mode 下是 ER_DATA_TOO_LONG，也就是
+  // 一個 500——而且是在簽章已經驗過之後才發生，所以一個持有合法金鑰但送出畸形
+  // nonce 的客戶端，症狀會是「簽名沒問題但伺服器爆了」。在這裡擋掉，回一個
+  // 說得通的 400。
+  //
+  // 收到 v4 的形狀而不是只檢查長度：規格寫的就是 v4（見 §2 的 header 表），
+  // 客戶端用的是 crypto.randomUUID()，本來就只會產生 v4。
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(nonce)) {
+    throw new ApplicationError("Device nonce is not a UUID v4", {
+      code: "DEVICE_SIGNATURE_INVALID",
+      statusCode: 400,
+      publicCode: "DEVICE_SIGNATURE_INVALID",
+      publicMessage: "Device signature is invalid"
+    });
+  }
+
   return {
     deviceId,
     timestamp: Number(timestamp),
