@@ -131,6 +131,17 @@ function fakeDatabase({ devices = [], nonces = [] } = {}) {
 
     if (normalized.startsWith("INSERT INTO user_devices")) {
       const [userId, deviceId, publicKey, label, status, requestedAt, ip, ua] = params;
+
+      // 真表有 UNIQUE (user_id, device_id)。假資料庫唔照做嘅話，「先查後寫」
+      // 嗰個競態喺呢度永遠測唔到——第二次 INSERT 會靜靜哋成功。
+      if (
+        state.devices.some(
+          (device) => device.user_id === userId && device.device_id === deviceId
+        )
+      ) {
+        throw Object.assign(new Error("Duplicate entry"), { code: "ER_DUP_ENTRY" });
+      }
+
       state.devices.push({
         id: state.nextId,
         user_id: userId,
@@ -299,6 +310,73 @@ test("the device id is the SHA-256 thumbprint of the public key, so it cannot be
   assert.match(service.deviceIdFor(spki), /^[0-9a-f]{64}$/);
   assert.equal(service.deviceIdFor(spki), service.deviceIdFor(Buffer.from(spki)));
   assert.notEqual(service.deviceIdFor(spki), service.deviceIdFor(other.spki));
+});
+
+test("trailing bytes after the SPKI cannot mint extra device ids for one key", async () => {
+  const { service } = createService();
+  const { spki } = await generateDeviceKey();
+  const canonicalId = service.deviceIdFor(spki);
+
+  // Node 嘅 createPublicKey() 會照收 SPKI 後面多出嚟嘅位元組（實測 +1／+8／+64
+  // 都收），re-export 返出嚟係同一份。直接雜湊原始位元組嘅話，同一把金鑰可以
+  // 生出無限多個唔同嘅 device id，而 UNIQUE (user_id, device_id) 擋唔到——
+  // 審批佇列可以俾同一台機用睇落各不相同嘅申請灌爆。
+  for (const extra of [1, 8, 64]) {
+    const padded = Buffer.concat([Buffer.from(spki), Buffer.alloc(extra, 0x41)]);
+    assert.equal(
+      service.deviceIdFor(padded),
+      canonicalId,
+      `${extra} trailing bytes must not change the device id`
+    );
+  }
+});
+
+test("the stored public key is the canonical encoding, not whatever was submitted", async () => {
+  const { service, database } = createService();
+  const { spki } = await generateDeviceKey();
+  const padded = Buffer.concat([Buffer.from(spki), Buffer.alloc(16, 0x41)]);
+
+  await service.requestBinding({
+    userId: 1,
+    deviceId: service.deviceIdFor(padded),
+    publicKeyDer: padded,
+    label: "padded",
+    ip: "127.0.0.1",
+    userAgent: "test"
+  });
+
+  // 存原始位元組嘅話，public_key 欄位裡面會躺住嗰串垃圾，而之後每次驗簽都要
+  // 靠 createPublicKey() 再幫佢忽略一次。
+  const [[row]] = await database.query(
+    "SELECT id, user_id, device_id, public_key, label, status FROM user_devices WHERE user_id = ? AND device_id = ?",
+    [1, service.deviceIdFor(padded)]
+  );
+  assert.deepEqual(Buffer.from(row.public_key), Buffer.from(spki));
+});
+
+test("a concurrent first login returns the binding the other request created, not a 500", async () => {
+  const { service } = createService();
+  const { spki } = await generateDeviceKey();
+  const deviceId = service.deviceIdFor(spki);
+  const request = () =>
+    service.requestBinding({
+      userId: 1,
+      deviceId,
+      publicKeyDer: spki,
+      label: "same device",
+      ip: "127.0.0.1",
+      userAgent: "test"
+    });
+
+  // 同一台設備第一次登入，兩個分頁同時打：兩邊都會查到「冇」，然後第二個
+  // INSERT 撞 UNIQUE。往上丟嘅話使用者喺第一次登入就攞到 500，而重試又會成功
+  // ——最難重現嗰一種。
+  const [first, second] = await Promise.all([request(), request()]);
+
+  assert.ok(first, "the first request must get a binding back");
+  assert.ok(second, "the losing request must get the winner's binding, not an error");
+  assert.equal(first.id, second.id);
+  assert.equal(first.status, "pending");
 });
 
 test("a signature made for one request is rejected on another", async () => {
