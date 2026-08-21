@@ -19,15 +19,19 @@ export default {
     return items;
   },
 
-  approve(id, note = "") {
-    return httpClient.post(`/api/v1/device/bindings/${id}/approve`, { body: { note } });
+  // 呢三個動作後端要求 authType "jwt-password"：核准會俾一台設備長期存取權，
+  // 撤銷會即刻踢晒一個使用者所有 session，都值得要求操作者當場再打一次
+  // 現時嘅密碼，唔淨係靠仲有效嘅 session。
+
+  approve(id, password, note = "") {
+    return httpClient.post(`/api/v1/device/bindings/${id}/approve`, { body: { password, note } });
   },
 
-  reject(id, note = "") {
-    return httpClient.post(`/api/v1/device/bindings/${id}/reject`, { body: { note } });
+  reject(id, password, note = "") {
+    return httpClient.post(`/api/v1/device/bindings/${id}/reject`, { body: { password, note } });
   },
 
-  revoke(id, note = "") {
-    return httpClient.post(`/api/v1/device/bindings/${id}/revoke`, { body: { note } });
+  revoke(id, password, note = "") {
+    return httpClient.post(`/api/v1/device/bindings/${id}/revoke`, { body: { password, note } });
   }
 };

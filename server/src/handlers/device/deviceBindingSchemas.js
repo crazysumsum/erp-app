@@ -22,11 +22,19 @@ export const BINDING_ID_PARAMS_SCHEMA = Object.freeze({
   }
 });
 
-/** 審批動作的 body：一句可選的備註，會寫進 review_note 供日後稽核。 */
+/**
+ * 審批動作的 body：一句可選的備註，會寫進 review_note 供日後稽核，加上密碼
+ * 再確認——approve / reject / revoke 全部走 `authType: "jwt-password"`
+ * （見 reviewDeviceHandlers.js），password 是那個 strategy 在 schema
+ * 驗證之前就讀走的欄位。這裡仍然要宣告它：沒宣告的話 additionalProperties:
+ * false 會讓通過了 strategy 的請求，反而在 schema 驗證這一步被擋下來。
+ */
 export const REVIEW_BODY_SCHEMA = Object.freeze({
   type: "object",
+  required: ["password"],
   additionalProperties: false,
   properties: {
+    password: { type: "string", minLength: 1 },
     note: { type: "string", maxLength: 190 }
   }
 });

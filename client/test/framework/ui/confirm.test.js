@@ -3,13 +3,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("quasar", () => ({ Dialog: { create: vi.fn() } }));
 
 import { Dialog } from "quasar";
-import { confirm, confirmDelete } from "@/framework/ui/confirm.js";
+import { confirm, confirmDelete, promptPassword } from "@/framework/ui/confirm.js";
 
-function mockDialogOutcome(outcome) {
+function mockDialogOutcome(outcome, value) {
   Dialog.create.mockImplementation(() => {
     const chain = {
       onOk: (cb) => {
-        if (outcome === "ok") cb();
+        if (outcome === "ok") cb(value);
         return chain;
       },
       onCancel: (cb) => {
@@ -64,5 +64,46 @@ describe("confirmDelete", () => {
         ok: expect.objectContaining({ label: "刪除" })
       })
     );
+  });
+});
+
+describe("promptPassword", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("撳確認會 resolve 輸入咗嘅密碼", async () => {
+    mockDialogOutcome("ok", "hunter2");
+
+    await expect(promptPassword({ message: "請輸入密碼" })).resolves.toBe("hunter2");
+  });
+
+  it("撳取消會 resolve null，唔係 false——同 confirm() 分得出嚟", async () => {
+    mockDialogOutcome("cancel");
+
+    await expect(promptPassword({ message: "請輸入密碼" })).resolves.toBe(null);
+  });
+
+  it("prompt 型別係 password，唔係普通 text", async () => {
+    mockDialogOutcome("ok", "hunter2");
+
+    await promptPassword({ message: "test" });
+
+    expect(Dialog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        persistent: true,
+        prompt: expect.objectContaining({ type: "password" })
+      })
+    );
+  });
+
+  it("空密碼過唔到 isValid", async () => {
+    mockDialogOutcome("ok", "hunter2");
+
+    await promptPassword({ message: "test" });
+
+    const { isValid } = Dialog.create.mock.calls[0][0].prompt;
+    expect(isValid("")).toBe(false);
+    expect(isValid("hunter2")).toBe(true);
   });
 });

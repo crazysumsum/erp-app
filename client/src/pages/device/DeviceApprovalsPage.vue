@@ -12,7 +12,7 @@ export const page = {
 import { ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
-import { confirm } from "@/framework/ui/confirm.js";
+import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import deviceService from "@/services/device.js";
 
@@ -40,20 +40,22 @@ function formatTime(epochMs) {
 }
 
 async function act(row, { verb, label }) {
-  const ok = await confirm({
+  // 核准／拒絕都要求再打一次密碼（後端 authType "jwt-password"）：核准會俾
+  // 一台設備長期存取權，值得多呢一步確認。一個對話框同時做埋確認同收密碼。
+  const password = await promptPassword({
     title: `${label}設備`,
-    message: `確定要${label}「${row.username}」嘅設備「${row.label || "未命名"}」？`,
+    message: `確定要${label}「${row.username}」嘅設備「${row.label || "未命名"}」？請輸入你的密碼確認。`,
     okLabel: label
   });
 
-  if (!ok) {
+  if (password === null) {
     return;
   }
 
   busyId.value = row.id;
 
   try {
-    await deviceService[verb](row.id);
+    await deviceService[verb](row.id, password);
     notifySuccess(`已${label}`);
   } catch (error) {
     // 409 代表另一個審批者啱啱處理咗同一筆。呢個唔係錯誤，係要話返畀佢知

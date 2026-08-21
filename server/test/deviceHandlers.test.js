@@ -112,6 +112,19 @@ test("every review route demands device.approve, and the listing routes agree", 
   assert.equal(MyDevicesHandler.api.authorizationPolicies, undefined);
 });
 
+test("approve, reject and revoke require a fresh password, not just a valid session", () => {
+  for (const HandlerClass of [ApproveDeviceHandler, RejectDeviceHandler, RevokeDeviceHandler]) {
+    // 核准會讓一台設備拿到長期存取權，撤銷會讓一個使用者所有 session 立刻
+    // 失效——兩者都值得要求審批者當場再證明一次「現在仍然是我」。密碼本身
+    // 的驗證邏輯在 jwtPasswordAuthStrategy.test.js。
+    assert.equal(HandlerClass.api.authType, "jwt-password", HandlerClass.handlerName);
+  }
+
+  // 清單型的兩支路由不變：讀取不是這裡要多防的動作。
+  assert.equal(PendingDevicesHandler.api.authType, undefined);
+  assert.equal(MyDevicesHandler.api.authType, undefined);
+});
+
 test("the pending queue never exposes key material", () => {
   const item = PendingDevicesHandler.api.responseSchema[200].properties.items.items;
 

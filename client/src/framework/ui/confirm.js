@@ -31,3 +31,29 @@ export function confirmDelete(subject) {
     okLabel: "刪除"
   });
 }
+
+/**
+ * 要求輸入密碼再確認高風險操作，回傳輸入嘅密碼；用戶取消就回 null。
+ *
+ * 用嚟配合後端 `jwt-password` 呢個 authType——單一個對話框同時做埋確認同
+ * 收密碼，唔使先彈一個 confirm() 再彈一個輸入框：兩步變一步，用戶少click
+ * 一次，我哋亦少一個「用戶喺兩個對話框之間改咗主意」嘅狀態要處理。
+ */
+export function promptPassword({ title = "請確認密碼", message, okLabel = "確認" }) {
+  return new Promise((resolve) => {
+    Dialog.create({
+      title,
+      message,
+      prompt: {
+        model: "",
+        type: "password",
+        isValid: (value) => value.length > 0
+      },
+      persistent: true,
+      cancel: { label: "取消", flat: true },
+      ok: { label: okLabel, color: "negative", unelevated: true }
+    })
+      .onOk((password) => resolve(password))
+      .onCancel(() => resolve(null));
+  });
+}

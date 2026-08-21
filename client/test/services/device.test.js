@@ -31,24 +31,25 @@ describe("device service", () => {
     expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/device/bindings");
   });
 
-  it("三個審批動作各自打各自嘅路徑", async () => {
+  it("三個審批動作各自打各自嘅路徑，帶埋密碼", async () => {
     httpClient.post.mockResolvedValue({ id: 5, status: "approved" });
 
     // 路徑打錯字嘅症狀係 404，而畫面上淨係會見到一句「操作失敗」——所以逐條
-    // 釘住。
-    await deviceService.approve(5, "已致電確認");
+    // 釘住。password 一定要帶到：後端呢三個動作要求 authType "jwt-password"，
+    // 冇密碼就會 400。
+    await deviceService.approve(5, "hunter2", "已致電確認");
     expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/device/bindings/5/approve", {
-      body: { note: "已致電確認" }
+      body: { password: "hunter2", note: "已致電確認" }
     });
 
-    await deviceService.reject(6);
+    await deviceService.reject(6, "hunter2");
     expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/device/bindings/6/reject", {
-      body: { note: "" }
+      body: { password: "hunter2", note: "" }
     });
 
-    await deviceService.revoke(7);
+    await deviceService.revoke(7, "hunter2");
     expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/device/bindings/7/revoke", {
-      body: { note: "" }
+      body: { password: "hunter2", note: "" }
     });
   });
 });

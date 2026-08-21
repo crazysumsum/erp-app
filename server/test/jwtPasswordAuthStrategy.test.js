@@ -227,7 +227,10 @@ test("the wrong password, an unknown user and a locked account all collapse into
       (error) => {
         // 呼叫端已經握有這個帳號的有效 JWT，但不該從回應差異分辨出「密碼錯」
         // 跟「已被鎖定」——這對拿著偷來的 token 的人是校準策略用的資訊。
-        assert.equal(error.statusCode, 401, reason);
+        //
+        // 403 不是 401：前端把任何 401 都當成 JWT 本身失效，全域登出。打錯
+        // 一次密碼不該把整個 session 弄丟——那正是這個檢查要避免的事。
+        assert.equal(error.statusCode, 403, reason);
         assert.equal(error.publicCode, "PASSWORD_INVALID", reason);
         return true;
       }

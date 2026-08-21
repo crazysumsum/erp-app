@@ -15,6 +15,11 @@ import {
  * 其餘（權限、schema、找不到就 409、記日誌）完全一樣。抽成基底類別而不是三份
  * 各自複製，是因為那些相同的部分裡有兩個容易寫錯又看不出來的地方：權限政策，
  * 以及「什麼都沒發生」要回 409 而不是 200。
+ *
+ * `authType: "jwt-password"`（見 JwtPasswordAuthStrategy）：核准會讓一台設備
+ * 拿到長期存取權，撤銷會讓一個使用者所有 session 立刻失效——兩者都是光有
+ * session 還不夠、值得要求審批者當場再證明一次「現在仍然是我」的動作。密碼
+ * 的驗證與錯誤碼全部在 strategy 裡處理，這裡不重複。
  */
 class ReviewDeviceHandler extends BaseRequestHandler {
   constructor(services = {}) {
@@ -66,6 +71,7 @@ function reviewApi({ path, description }) {
     method: "POST",
     path,
     description,
+    authType: "jwt-password",
     authorizationPolicies: DEVICE_APPROVE_POLICY,
     requestSchema: {
       params: BINDING_ID_PARAMS_SCHEMA,

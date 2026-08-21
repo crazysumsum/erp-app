@@ -18,6 +18,15 @@ import { AUTH_FAILURE, UserService } from "../../modules/user/UserService.js";
  * USER_INACTIVE，跟 refreshTokenHandler 的 USER_INACTIVE 同一個理由：那對
  * 正常使用者是「找管理員」這種可行動的資訊，不是密碼猜測相關的洩漏。
  *
+ * PASSWORD_INVALID 是 403，不是 401——這不是措辭問題。前端把任何 401 都當成
+ * 「這個 JWT 已經不算數」，全域清 session、踢回登入頁（見 HttpClient.js 的
+ * onUnauthorized）。JWT 本身是有效的，錯的是再次確認用的密碼；用 401 的話，
+ * 單純打錯一次密碼就會把整個工作階段登出，這正是這個 strategy 的存在意義
+ * 想避免的事——它要做的是多一層確認，不是意外提早結束一個原本有效的 session。
+ * 跟 JwtDeviceAuthStrategy 的 DEVICE_MISMATCH 用 403 是同一個判斷：JWT 已經
+ * 驗過，只是第二個因子不符，回應語意上更接近「被拒絕」而不是「未認證」。
+ * USER_INACTIVE 維持 401：帳號被停用是真的要結束這個 session，不是意外副作用。
+ *
  * 繼承 JwtAuthStrategy 而不是重寫一份：JWT 驗證、撤銷檢查、快照熔斷完全一樣，
  * 複製一份只會讓兩份未來各自漂移。
  */
@@ -82,7 +91,7 @@ export class JwtPasswordAuthStrategy extends JwtAuthStrategy {
 
       throw new ApplicationError(`Password re-authentication rejected: ${result.reason}`, {
         code: "PASSWORD_INVALID",
-        statusCode: 401,
+        statusCode: 403,
         publicCode: "PASSWORD_INVALID",
         publicMessage: "Please confirm your current password"
       });
