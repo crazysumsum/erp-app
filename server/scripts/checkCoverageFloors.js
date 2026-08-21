@@ -106,6 +106,14 @@ const FLOORS = {
     branches: 95,
     functions: 95
   },
+  // 啟動自檢：它壞掉的方式是「什麼都沒發生」——比對寫反、只查第一項、或是
+  // 把 throw 改成 warn，系統照樣啟動，然後用「登得進去但功能一個都用不了」
+  // 這種最花時間查的方式壞掉。而那正是它存在的理由。
+  "src/services/authorization/PermissionCatalogueService.js": {
+    lines: 95,
+    branches: 90,
+    functions: 95
+  },
   // 熔斷的判斷住在這裡。回 401 而不是 503、或是漏掉快照可用性這一問，兩者
   // 都不會讓任何測試以外的東西出聲。
   "src/services/auth/jwtAuthStrategy.js": {

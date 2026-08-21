@@ -695,7 +695,12 @@ static service = Object.freeze({
 | `server/src/handlers/user/changePasswordHandler.js` | **新增**：`POST /api/v1/user/password/change` |
 | `server/scripts/createUser.js` | 註解與輸出裡的 `device.approve` 改成 `device.mgmt`；提及新的兩個權限 |
 | `server/scripts/grantRole.js` | **新增**：break-glass——授予角色、啟用帳號、清鎖定，並寫一列稽核（§5.1） |
-| `server/test/permissionCatalogueConventions.test.js` | **新增**：§3.7 的四條約定（權限字串、前端 metadata、禁用 `hasRole`、豁免清單） |
+| `server/test/permissionCatalogueConventions.test.js` | **新增**：§3.7 的約定（權限字串、禁用 `hasRole`、種子與目錄一致；豁免清單那條在 Phase 4 補上） |
+| `server/test/permissionCatalogueStartupGuard.test.js` | **新增**：自檢的三種處置，含「它從不寫入」那條斷言 |
+| `server/test/integration/migrations.integration.test.js` | **新增**：三支 migration 對真 MySQL 的驗收與重跑收斂 |
+| `client/test/framework/authorization/permissionConventions.test.js` | **新增**：頁面 metadata 的權限字串與禁用 `requires.roles` |
+| `server/test-support/fakeMySqlPool.js` | 回答權限目錄那一句查詢——啟動自檢是 eager 的，每個測試用應用都會經過它 |
+| `server/scripts/checkCoverageFloors.js` | 加 `PermissionCatalogueService.js` 的 per-file 下限 |
 | `client/src/pages/device/DeviceApprovalsPage.vue` | `requires` 改 `device.mgmt` |
 | `client/src/services/device.js` | 註解 |
 | `client/src/framework/auth/routeGuard.js` | 加「必須改密碼」的重導 |
@@ -718,7 +723,7 @@ static service = Object.freeze({
 
 **驗收**：`npm test`（前後端）全綠；跑完 migration 後 `SELECT * FROM permissions` 只看到 `device.mgmt`，而 `role_permissions` 的列數不變；用 `system-admin` 登入仍然進得了設備審批頁。
 
-### Phase 1 — 資料模型、權限目錄與約定測試
+### Phase 1 — 資料模型、權限目錄與約定測試 ✅ 已完成
 
 1. `0006`（兩個欄位）、`0007`（稽核表）migration，各自帶 `information_schema` 守衛。
 2. `permissionCatalogue.js` + `PermissionCatalogueService.js`。
@@ -726,6 +731,12 @@ static service = Object.freeze({
 4. §3.7 的約定測試（權限字串、前端 metadata、禁用 `hasRole`）。
 
 **驗收**：三支 migration 跑完啟動成功；**任何一支中途失敗後重跑都會收斂**（測試要真的模擬：第一次跑到一半拋錯，第二次跑完成功）；手動 `DELETE FROM permissions WHERE name = 'user.mgmt'` 之後啟動**失敗**且訊息指名缺哪一個；把某支 handler 的權限字串改成 `uesr.mgmt` 之後約定測試失敗。
+
+> **實作時多出來的三件事**（都不改設計，只是設計沒寫到）：
+>
+> 1. **「跑到一半失敗」用假連線模擬，不用真資料庫。** 要在真資料庫上精準地製造「第一句 `ALTER` 成功、第二句沒有」，就得先 `DROP` 掉一欄——而整合測試也會在開發者自己的 `erp_dev` 上跑。改成 `migrate.test.js` 用假連線把那個中間狀態直接擺出來（破壞不到任何東西），真資料庫那邊則證明 DDL 合法、重跑收斂。
+> 2. **`PermissionCatalogueService` 是 eager 的，所以每一個「啟動一個測試用應用」的測試都會經過它。** `test-support/fakeMySqlPool.js` 因此要回答權限目錄那一句查詢——那個替身代表的本來就是一個已經 migrate 過的資料庫。順帶把 `applicationFactory.test.js` 釘住的啟動查詢次數由 3 改成 4，並在註解裡寫明第四次是誰。
+> 3. **前端的約定測試直接 import 後端那份目錄**（`server/src/modules/authorization/permissionCatalogue.js`，純資料、零依賴），不在前端再抄一份。抄一份的話，兩份分岔的症狀會是「前端說你看不到這一頁，後端卻放行」——而那正是這條測試要防的事。
 
 ### Phase 2 — 後端：守衛與用戶管理
 
