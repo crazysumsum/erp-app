@@ -167,8 +167,21 @@ async function sha256Base64url(text) {
  * method / path / bodyHash 都要入去：少咗佢哋，簽章淨係證明「呢台設備某個時候
  * 簽過嘢」，唔證明「呢個請求嚟自呢台設備」，攻擊者可以將簽章搬去第二個請求。
  */
-export function buildSigningInput({ bodyHash, deviceId, method, nonce, path, timestamp }) {
+export function buildSigningInput({
+  accessTokenHash,
+  bodyHash,
+  deviceId,
+  method,
+  nonce,
+  path,
+  timestamp
+}) {
   return JSON.stringify({
+    // 呢份簽章綁死喺邊一枚 access token 上。即係 RFC 9449（DPoP）嘅 `ath`：
+    // 少咗佢，簽章淨係證明「呢台設備簽咗一個往呢個路徑嘅請求」，唔證明佢簽嘅
+    // 係**配呢一枚 token** 嗰個。冇 token 嘅請求（登入）係空字串，同 bodyHash
+    // 一樣嘅慣例。鍵順序照字典序，所以佢排喺最前。
+    accessTokenHash: String(accessTokenHash ?? ""),
     bodyHash: String(bodyHash ?? ""),
     deviceId: String(deviceId ?? ""),
     method: String(method ?? "").toUpperCase(),
@@ -181,7 +194,13 @@ export function buildSigningInput({ bodyHash, deviceId, method, nonce, path, tim
 /**
  * 簽一個請求，回傳要掛上去嘅 X-Device-* headers。
  */
-export async function signRequest({ method, path, body, includePublicKey = false }) {
+export async function signRequest({
+  method,
+  path,
+  body,
+  token,
+  includePublicKey = false
+}) {
   const keyPair = await ensureDeviceKey();
   const publicKeySpki = await exportPublicKey(keyPair);
   const deviceId = await deviceIdFor(publicKeySpki);
@@ -189,8 +208,19 @@ export async function signRequest({ method, path, body, includePublicKey = false
   const timestamp = Date.now();
   // body 未定義時係空字串，同後端 bodyHash() 對 undefined／零長度嘅處理一致。
   const bodyHash = body === undefined ? "" : await sha256Base64url(body);
+  // 雜湊個 token 而唔係將佢本身放入簽章輸入：簽章輸入會出現喺日誌同錯誤路徑，
+  // 而 token 係憑證。RFC 9449 嘅 `ath` 都係咁做。
+  const accessTokenHash = token ? await sha256Base64url(token) : "";
 
-  const signingInput = buildSigningInput({ bodyHash, deviceId, method, nonce, path, timestamp });
+  const signingInput = buildSigningInput({
+    accessTokenHash,
+    bodyHash,
+    deviceId,
+    method,
+    nonce,
+    path,
+    timestamp
+  });
 
   const signature = await crypto.subtle.sign(
     { name: "ECDSA", hash: authConfig.deviceKeyHash },

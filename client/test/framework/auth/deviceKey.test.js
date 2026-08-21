@@ -12,7 +12,7 @@ import {
 // 改呢個字串嘅時候，兩條測試一定要一齊改，否則就係一次會令全部人登入唔到嘅
 // 部署。
 const GOLDEN_INPUT =
-  '{"bodyHash":"Xr4t8g","deviceId":"aaaa","method":"POST","nonce":"n-1","path":"/api/v1/user/login","timestamp":1755600000000}';
+  '{"accessTokenHash":"","bodyHash":"Xr4t8g","deviceId":"aaaa","method":"POST","nonce":"n-1","path":"/api/v1/user/login","timestamp":1755600000000}';
 
 describe("deviceKey", () => {
   it("待簽字串嘅格式同鍵順序係固定嘅", () => {

@@ -102,6 +102,9 @@ export class HttpClient {
           // 簽嘅係真正送出去嗰個字串。重新 stringify 一次可能得出唔同嘅 bytes
           // （鍵順序、空白），咁樣簽章會時好時壞——最難查嗰一種。
           body: payload,
+          // 簽章要綁死喺呢個請求用緊嗰枚 token 上（見 deviceKey.js 嘅
+          // accessTokenHash）。冇 token 嘅請求（登入）傳 undefined。
+          token,
           includePublicKey
         })
       );

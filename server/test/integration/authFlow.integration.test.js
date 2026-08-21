@@ -140,17 +140,19 @@ async function createTestDevice() {
 
   return {
     deviceId,
-    async headers({ method, path, body, includePublicKey = false }) {
+    async headers({ method, path, body, token, includePublicKey = false }) {
       const nonce = randomUUID();
       const timestamp = Date.now();
-      const bodyHash =
-        body === undefined
-          ? ""
-          : Buffer.from(await webcrypto.subtle.digest("SHA-256", Buffer.from(body))).toString(
-              "base64url"
-            );
+      const sha256 = async (value) =>
+        Buffer.from(await webcrypto.subtle.digest("SHA-256", Buffer.from(value))).toString(
+          "base64url"
+        );
+      const bodyHash = body === undefined ? "" : await sha256(body);
+      // 綁死喺呢個請求用緊嗰枚 token 上（RFC 9449 嘅 ath）。冇 token 就空字串。
+      const accessTokenHash = token ? await sha256(token) : "";
       // 鍵照字典序——同 DeviceBindingService.signingInput() 逐字元一樣。
       const signingInput = JSON.stringify({
+        accessTokenHash,
         bodyHash,
         deviceId,
         method: method.toUpperCase(),
@@ -264,7 +266,7 @@ test("login, me and logout work end to end against a real database", { skip }, a
     fetch(`${url}${refreshPath}`, {
       method: "POST",
       headers: {
-        ...(await device.headers({ method: "POST", path: refreshPath })),
+        ...(await device.headers({ method: "POST", path: refreshPath, token: bearer })),
         Authorization: `Bearer ${bearer}`
       }
     });
@@ -305,12 +307,45 @@ test("login, me and logout work end to end against a real database", { skip }, a
   const fromOtherDevice = await fetch(`${url}${refreshPath}`, {
     method: "POST",
     headers: {
-      ...(await otherDevice.headers({ method: "POST", path: refreshPath })),
+      ...(await otherDevice.headers({
+        method: "POST",
+        path: refreshPath,
+        token: refreshedToken
+      })),
       Authorization: `Bearer ${refreshedToken}`
     }
   });
   assert.equal(fromOtherDevice.status, 403);
   assert.equal((await fromOtherDevice.json()).error.code, "DEVICE_MISMATCH");
+
+  // 同一台設備、同一個使用者，但簽章係為**另一枚 token** 簽嘅。冇 accessTokenHash
+  // （RFC 9449 嘅 ath）嘅話呢個會過：簽章淨係綁 method／path／body／nonce／時間，
+  // 完全冇提過係配邊枚 token。攻擊者攞到一份已簽名嘅續期請求（MITM、或者含
+  // header 嘅存取紀錄），就可以換上同一台設備嘅另一枚 token 送出去。
+  // 要兩枚**真係唔同**嘅 token 先測得到。JWT 嘅 claims 完全一樣嘅話（同一秒
+  // 登入再續期，sub／ver／did／auth_time／iat／exp 全部一樣），簽出嚟係同一條
+  // 字串——用嗰對去做「換 token」測試，實際上乜都冇換過，條測試會永遠綠。
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1100);
+  });
+
+  const laterResponse = await refresh(refreshedToken);
+  assert.equal(laterResponse.status, 200);
+  const laterToken = (await laterResponse.json()).data.token;
+  assert.notEqual(laterToken, refreshedToken, "the two tokens must actually differ");
+
+  const headersForEarlierToken = await device.headers({
+    method: "POST",
+    path: refreshPath,
+    token: refreshedToken
+  });
+  const swappedToken = await fetch(`${url}${refreshPath}`, {
+    method: "POST",
+    headers: { ...headersForEarlierToken, Authorization: `Bearer ${laterToken}` }
+  });
+
+  assert.equal(swappedToken.status, 400);
+  assert.equal((await swappedToken.json()).error.code, "DEVICE_SIGNATURE_INVALID");
 
   const logoutResponse = await fetch(`${url}/api/v1/user/logout`, {
     method: "POST",
@@ -386,7 +421,7 @@ test("a session cannot outlive the absolute cap, no matter how often it refreshe
     fetch(`${url}${refreshPath}`, {
       method: "POST",
       headers: {
-        ...(await device.headers({ method: "POST", path: refreshPath })),
+        ...(await device.headers({ method: "POST", path: refreshPath, token: bearer })),
         Authorization: `Bearer ${bearer}`
       }
     });
