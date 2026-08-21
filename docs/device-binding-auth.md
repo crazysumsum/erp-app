@@ -15,7 +15,7 @@
 | JWT 過期後 | **強制登出**，不做 401 續期重放 | 少一整類 bug（重放、Idempotency-Key、迴圈防護），代價是續期必須夠可靠 |
 | 私鑰儲存 | IndexedDB 的 non-extractable `CryptoKey` | XSS 只能在受害者瀏覽器上就地簽名，帶不走金鑰 |
 | 簽章演算法 | **ECDSA P-256**（非 RSA） | 產鑰近乎瞬間（RSA-2048 在弱機器上是可見的 UI 停頓），簽章 64 bytes vs 256 bytes |
-| Device ID | **公鑰的 SHA-256 thumbprint**，非前端隨機數 | ID 自證：持有對應私鑰才能用這個 ID，不可能偽造或碰撞；也不必另外存一份、不會與金鑰失去同步 |
+| Device ID | **canonical SPKI 的 SHA-256 thumbprint**，非前端隨機數 | ID 自證：持有對應私鑰才能用這個 ID；一把金鑰只對應一個 ID（見 §2 的正規化）；也不必另外存一份、不會與金鑰失去同步 |
 | 審批權限 | 新增 permission **`device.approve`** | 綁 permission 而非 role，人事調整不必改程式碼 |
 | 通知 | **暫不做**（email / 站內通知） | 審批者需要自己去看佇列 |
 | 綁定記錄保留 | 三條規則，見 §5.4 | pending 一個月、approved 未使用 14 天、已使用過的一個月 |
@@ -77,6 +77,8 @@ CREATE TABLE user_devices (
 
 **對既有資料的影響**：純新增，不動任何既有表，沒有鎖表風險。但**上線當下所有使用者都沒有已審批的設備**，見 §5.1。
 
+`requestBinding()` 是先查再寫，兩者之間有一個窗：同一台設備第一次登入時，兩個並行請求（多分頁、連按兩下）會雙雙查到「沒有」，第二個 INSERT 撞上 `UNIQUE (user_id, device_id)`。那不是錯誤，是別人先寫好了——所以撞到 `ER_DUP_ENTRY` 時重讀一次回傳現有那筆，而不是往上丟一個 500。
+
 ### 1.2 `user_device_nonces`（新表，需簽核）
 
 防簽章重放。客戶端每次簽名帶一個 UUID，伺服器 INSERT，主鍵衝突就是重放。
@@ -130,7 +132,7 @@ migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：
 | --- | --- |
 | `X-Device-Id` | 公鑰 thumbprint（hex） |
 | `X-Device-Timestamp` | epoch 毫秒 |
-| `X-Device-Nonce` | UUID v4 |
+| `X-Device-Nonce` | UUID v4，格式嚴格檢查（見下） |
 | `X-Device-Signature` | ECDSA P-256 / SHA-256 簽章，base64url |
 | `X-Device-Public-Key` | SPKI DER 的 base64url。**只在首次綁定申請時攜帶** |
 
@@ -162,6 +164,10 @@ migration 一併種入三樣東西，**全部以名稱為準、有就跳過**：
 4. 公鑰來源：**首次申請**用請求自帶的 `X-Device-Public-Key`（這是持有證明——證明申請者確實握有所宣稱公鑰的私鑰），**其後**一律用資料庫裡 approved 那筆，請求自帶的公鑰直接忽略
 
 **nonce 刻意排在簽章之後**：消耗 nonce 是一次資料庫寫入，放在前面的話任何人都能用一堆沒有簽章的垃圾請求往那張表灌資料；放在後面，只有已經證明自己握有私鑰的請求才碰得到資料庫。ECDSA 驗簽只花幾十微秒，先做不虧。
+
+**公鑰要先正規化再算 thumbprint。** Node 的 `createPublicKey()` 會**接受 SPKI DER 後面多出來的位元組**（實測加 1、8、64 個位元組都照收，而 re-export 出來的都是同一份 canonical DER）。直接雜湊呼叫端送來的原始位元組的話，同一把金鑰可以生出無限多個不同的 device id——只要在後面補不同的垃圾。那會打破「一把金鑰一個 id」這個前提：`UNIQUE (user_id, device_id)` 擋不住它們，審批佇列可以被同一台機器用看起來各不相同的申請灌爆，而每一筆看起來都是一台新設備。所以 `deviceIdFor()` 先 parse 再 re-export 才雜湊，存進 `public_key` 的也是正規化後那一份。
+
+**nonce 的格式要嚴格檢查。** 它會被原樣塞進 `user_device_nonces.nonce`，那是一個 `CHAR(36)`；超長的值在 strict mode 下是 `ER_DATA_TOO_LONG`，也就是一個 500——而且是在簽章已經驗過之後才發生，所以症狀會是「簽名沒問題但伺服器爆了」。收 v4 的完整形狀而不是只檢查長度：規格寫的就是 v4，客戶端用的 `crypto.randomUUID()` 本來就只產生 v4。
 
 **驗簽必須指定 `dsaEncoding: "ieee-p1363"`**：Web Crypto 的 ECDSA 簽章是 r||s 直接接起來（P-256 為 64 bytes），而 Node 對 EC 預設吃 DER。不指定的話，**每一份由瀏覽器產生的合法簽章都會被判成無效**，而錯誤訊息不會提到格式。這是這個介面最容易踩的一顆雷。
 

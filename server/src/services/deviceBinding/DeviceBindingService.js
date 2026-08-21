@@ -59,7 +59,27 @@ export class DeviceBindingService extends BaseService {
    * 這個 ID，不可能偽造，也不可能與別人碰撞。
    */
   deviceIdFor(publicKeyDer) {
-    return createHash("sha256").update(publicKeyDer).digest("hex");
+    return createHash("sha256").update(this.canonicalPublicKey(publicKeyDer)).digest("hex");
+  }
+
+  /**
+   * 把一份 SPKI DER 正規化成它的標準編碼。
+   *
+   * **Node 的 createPublicKey() 會接受 SPKI 後面多出來的位元組**（實測：加 1、
+   * 8、64 個位元組都照收，而 re-export 出來的都是同一份 canonical DER）。直接
+   * 雜湊呼叫端送來的原始位元組的話，同一把金鑰可以生出無限多個不同的 device
+   * id——只要在後面補不同的垃圾就行。那會打破「device id 自證、一把金鑰一個
+   * id」這個前提：`UNIQUE (user_id, device_id)` 擋不住它們，審批佇列可以被同
+   * 一台機器用看起來各不相同的申請灌爆，而每一筆看起來都是一台新設備。
+   *
+   * 先 parse 再 re-export，之後才雜湊，那些多餘的位元組就不存在了。存進資料庫
+   * 的也是這一份——否則 public_key 欄位裡會躺著那串垃圾。
+   */
+  canonicalPublicKey(publicKeyDer) {
+    return createPublicKey({ key: publicKeyDer, format: "der", type: "spki" }).export({
+      type: "spki",
+      format: "der"
+    });
   }
 
   /**
@@ -290,21 +310,20 @@ export class DeviceBindingService extends BaseService {
       return existing;
     }
 
-    await this.database.execute(
-      `INSERT INTO ${DEVICES_TABLE}
-         (user_id, device_id, public_key, label, status, requested_at, requested_ip, requested_ua)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        Number(userId),
-        String(deviceId),
-        publicKeyDer,
-        String(label ?? "").slice(0, 190),
-        DEVICE_STATUS.pending,
-        this.time.nowMs(),
-        String(ip ?? "").slice(0, 45),
-        String(userAgent ?? "").slice(0, 255)
-      ]
-    );
+    try {
+      await this.#insertBinding({ userId, deviceId, publicKeyDer, label, ip, userAgent });
+    } catch (error) {
+      // 先查再寫之間有一個窗。同一台設備第一次登入時，兩個並行的請求（多分頁、
+      // 使用者連按兩下）會雙雙查到「沒有」，然後第二個 INSERT 撞上
+      // UNIQUE (user_id, device_id)。那不是錯誤——那正是我們要的狀態，只是別人
+      // 先寫好了。往上丟的話使用者會在第一次登入拿到 500，而重試又會成功，
+      // 是最難重現的那一種。
+      if ((error?.cause?.code || error?.code) !== "ER_DUP_ENTRY") {
+        throw error;
+      }
+
+      return this.findBinding(userId, deviceId);
+    }
 
     await this.logger.info(
       "auth.device.binding_requested",
@@ -313,6 +332,26 @@ export class DeviceBindingService extends BaseService {
     );
 
     return this.findBinding(userId, deviceId);
+  }
+
+  async #insertBinding({ userId, deviceId, publicKeyDer, label, ip, userAgent }) {
+    await this.database.execute(
+      `INSERT INTO ${DEVICES_TABLE}
+         (user_id, device_id, public_key, label, status, requested_at, requested_ip, requested_ua)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        Number(userId),
+        String(deviceId),
+        // 存正規化後的那一份，不是呼叫端送來的原始位元組：後者可能夾著
+        // createPublicKey() 會忽略、但會被一起存進資料庫的多餘位元組。
+        this.canonicalPublicKey(publicKeyDer),
+        String(label ?? "").slice(0, 190),
+        DEVICE_STATUS.pending,
+        this.time.nowMs(),
+        String(ip ?? "").slice(0, 45),
+        String(userAgent ?? "").slice(0, 255)
+      ]
+    );
   }
 
   /**

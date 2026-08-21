@@ -449,6 +449,55 @@ test("missing device headers are refused before anything is looked up", async ()
   assert.deepEqual(deviceBinding.verified, []);
 });
 
+test("a malformed nonce is refused up front, not carried into the database", async () => {
+  // nonce 會被原樣塞進 user_device_nonces.nonce，一個 CHAR(36)。超長值喺 strict
+  // mode 係 ER_DATA_TOO_LONG，而且係喺簽章驗過之後先發生——所以一個持有合法金鑰
+  // 但送出畸形 nonce 嘅客戶端，症狀會係「簽名冇問題但伺服器爆咗」。
+  const malformed = [
+    "x".repeat(200),
+    "not-a-uuid",
+    "",
+    // v1 UUID：長度啱，但規格寫明係 v4，而客戶端用嘅 crypto.randomUUID()
+    // 本來就只會出 v4。
+    "11111111-1111-1111-8111-111111111111"
+  ];
+
+  for (const nonce of malformed) {
+    const deviceBinding = fakeDeviceBinding();
+    const { handler } = createHandler(LoginHandler, {
+      userService: {
+        async authenticate() {
+          return { ok: true, user: SAMPLE_USER };
+        }
+      },
+      services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation(), deviceBinding }
+    });
+
+    await assert.rejects(
+      () =>
+        handler.execute(
+          fakeRequest({
+            body: { username: "alice", password: "right" },
+            headers: { "x-device-nonce": nonce }
+          })
+        ),
+      (error) => {
+        assert.equal(error.statusCode, 400, JSON.stringify(nonce));
+        // 空字串走「header 冇齊」那條，其餘走「形狀唔啱」那條。兩條都係 400，
+        // 而且對外都唔會講出係邊個欄位有問題。
+        assert.ok(
+          ["DEVICE_SIGNATURE_REQUIRED", "DEVICE_SIGNATURE_INVALID"].includes(error.publicCode),
+          `${JSON.stringify(nonce)} gave ${error.publicCode}`
+        );
+        return true;
+      }
+    );
+
+    // 關鍵：驗簽同資料庫都唔應該掂過。
+    assert.deepEqual(deviceBinding.verified, [], JSON.stringify(nonce));
+  }
+});
+
 test("a first-time device that sends no public key is refused, not crashed on", async () => {
   const deviceBinding = fakeDeviceBinding({ binding: null });
   const { handler } = createHandler(LoginHandler, {
