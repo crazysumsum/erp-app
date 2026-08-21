@@ -79,7 +79,14 @@ export class LoginHandler extends BaseRequestHandler {
     responseSchema: {
       200: {
         type: "object",
-        required: ["token", "tokenType", "expiresIn", "expiresInSeconds", "user"],
+        required: [
+          "token",
+          "tokenType",
+          "expiresIn",
+          "expiresInSeconds",
+          "sessionExpiresInSeconds",
+          "user"
+        ],
         additionalProperties: false,
         properties: {
           token: { type: "string" },
@@ -88,6 +95,11 @@ export class LoginHandler extends BaseRequestHandler {
           // 前端要靠這個數字算出到期時刻，才能排定續期與強制登出。字串
           // "15m" 會逼前端自己再實作一次單位解析。
           expiresInSeconds: { type: "integer", minimum: 1 },
+          // 這條 session 還剩多久到絕對上限（見 JWT_SESSION_MAX_AGE）。與
+          // expiresInSeconds 是兩回事：後者每次續期都會回到滿值，這個只會
+          // 一路遞減。前端靠它提早提醒使用者存檔——少了它，前端無從得知
+          // 上限什麼時候到，使用者會在毫無預警下被登出。
+          sessionExpiresInSeconds: { type: "integer", minimum: 0 },
           user: USER_SCHEMA
         }
       }
@@ -195,15 +207,12 @@ export class LoginHandler extends BaseRequestHandler {
     //
     // did 是設備 id：續期時會比對它與請求簽章的設備是否為同一台，所以一個
     // token 只能被簽發它的那台設備續期。
+    // 這裡是絕對 session 上限唯一的起算點：登入是唯一一個「現在這一刻真的
+    // 有人輸入了密碼」的時刻。續期只會把這個值原樣帶著走，推不動它。
+    const authTime = Math.floor(this.time.nowMs() / 1000);
     const token = this.jwt.issue(
       { roles: user.roles, permissions: user.permissions, did: binding.device_id },
-      {
-        subject,
-        version,
-        // 這裡是絕對 session 上限唯一的起算點：登入是唯一一個「現在這一刻真的
-        // 有人輸入了密碼」的時刻。續期只會把這個值原樣帶著走，推不動它。
-        authTime: Math.floor(this.time.nowMs() / 1000)
-      }
+      { subject, version, authTime }
     );
 
     await this.deviceBinding.markUsed(binding.id);
@@ -220,6 +229,8 @@ export class LoginHandler extends BaseRequestHandler {
       tokenType: this.jwt.authScheme,
       expiresIn: this.jwt.expiresIn,
       expiresInSeconds: this.jwt.expiresInSeconds,
+      // 剛登入，所以整個上限都還在。續期那邊算的是剩餘，見 refreshTokenHandler。
+      sessionExpiresInSeconds: this.jwt.sessionMaxAgeSeconds,
       user
     });
   }

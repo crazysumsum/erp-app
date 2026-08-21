@@ -8,7 +8,7 @@ import {
   attachSessionWatchdog,
   createSessionWatchdog
 } from "./framework/auth/sessionWatchdog.js";
-import { getTokenDeadline } from "./framework/auth/tokenStorage.js";
+import { getSessionDeadline, getTokenDeadline } from "./framework/auth/tokenStorage.js";
 import { discoverPages } from "./framework/discovery/pages.js";
 import { validatePages } from "./framework/discovery/validatePages.js";
 import { renderFatalBootError } from "./framework/errors/renderFatalBootError.js";
@@ -84,7 +84,15 @@ function boot(pages) {
     onExpired: () => httpClient.onUnauthorized(),
     onWarning: () =>
       notifyError("連線階段即將結束，請儲存目前的工作"),
-    getDeadline: getTokenDeadline
+    // 絕對 session 上限夠鐘之前提醒一次。講明大概仲有幾耐同埋「要重新登入」，
+    // 因為呢個同上面嗰個提醒唔同：續期救唔到，冇得等佢自己好返。
+    onSessionEnding: (remainingMs) =>
+      notifyError(
+        `工作階段將於約 ${Math.max(1, Math.round(remainingMs / 60_000))} 分鐘後結束，` +
+          "請儲存目前的工作，屆時需要重新登入"
+      ),
+    getDeadline: getTokenDeadline,
+    getSessionDeadline
   });
 
   session.restore().finally(() => {

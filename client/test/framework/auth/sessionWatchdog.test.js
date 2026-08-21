@@ -12,6 +12,8 @@ const MINUTE = 60_000;
 
 function harness({
   remaining = 10 * MINUTE,
+  // 預設留一大段時間，等「同絕對上限無關」嗰啲測試唔使逐個交代。
+  sessionRemaining = 8 * 60 * MINUTE,
   refresh = vi.fn(async () => {}),
   idleFor = 0,
   // 預設冇 Web Locks，行 process 內旗標嗰條路；要測鎖就自己傳一個。
@@ -19,36 +21,46 @@ function harness({
 } = {}) {
   let nowMs = 1_000_000;
   let deadline = nowMs + remaining;
+  let sessionDeadline = nowMs + sessionRemaining;
 
   const onExpired = vi.fn();
   const onWarning = vi.fn();
+  const onSessionEnding = vi.fn();
   const watchdog = createSessionWatchdog({
     refresh,
     onExpired,
     onWarning,
+    onSessionEnding,
     getDeadline: () => deadline,
+    getSessionDeadline: () => sessionDeadline,
     now: () => nowMs,
     locks,
     tickMs: MINUTE,
     refreshThresholdMs: 5 * MINUTE,
     idleTimeoutMs: 30 * MINUTE,
-    warningThresholdMs: 2 * MINUTE
+    warningThresholdMs: 2 * MINUTE,
+    sessionWarningThresholdMs: 10 * MINUTE
   });
 
   // 建構嗰刻先記低 lastActivityAt，所以要「已經閒置咗」就將時鐘推前。
   nowMs += idleFor;
   deadline += idleFor;
+  sessionDeadline += idleFor;
 
   return {
     watchdog,
     onExpired,
     onWarning,
+    onSessionEnding,
     refresh,
     advance(ms) {
       nowMs += ms;
     },
     setRemaining(ms) {
       deadline = nowMs + ms;
+    },
+    setSessionRemaining(ms) {
+      sessionDeadline = nowMs + ms;
     }
   };
 }
@@ -67,6 +79,77 @@ describe("session watchdog", () => {
     // 本地比對到期時刻就夠。打 API 再「失敗就登出」嘅話，一次後端抖動就會
     // 踢曬全部人——正正係後端特登用 503 而唔係 401 要避免嗰件事。
     expect(h.refresh).not.toHaveBeenCalled();
+  });
+
+  it("絕對上限夠鐘就登出，就算 token 仲有一大段命", async () => {
+    // token 啱啱先續完，仲有 10 分鐘；但 session 上限已經到咗。上限贏。
+    const h = harness({ remaining: 10 * MINUTE, sessionRemaining: 0 });
+
+    await h.watchdog.check();
+
+    expect(h.onExpired).toHaveBeenCalledOnce();
+    // 唔等後端回 401：用戶可能坐喺度乜都冇撳，然後對住一個睇落仲登入緊、
+    // 但每一個動作都會失敗嘅畫面。
+    expect(h.refresh).not.toHaveBeenCalled();
+  });
+
+  it("絕對上限快到就提醒一次，唔會每個 tick 都嘈", async () => {
+    const h = harness({ sessionRemaining: 9 * MINUTE });
+
+    await h.watchdog.check();
+    await h.watchdog.check();
+    await h.watchdog.check();
+
+    expect(h.onSessionEnding).toHaveBeenCalledOnce();
+    // 帶埋仲有幾耐，畀呼叫端寫得出「約 9 分鐘後結束」而唔係含糊嘅「即將」。
+    expect(h.onSessionEnding).toHaveBeenCalledWith(9 * MINUTE);
+  });
+
+  it("仲未到閾值就唔提醒", async () => {
+    const h = harness({ sessionRemaining: 30 * MINUTE });
+
+    await h.watchdog.check();
+
+    expect(h.onSessionEnding).not.toHaveBeenCalled();
+  });
+
+  it("續期救唔到絕對上限：續完之後照樣提醒", async () => {
+    // 呢個係最容易寫錯嗰個：如果提醒嘅旗標喺續期成功嗰陣連同 token 嗰個一齊
+    // 清咗，用戶就會喺最後 10 分鐘每隔一分鐘俾人嘈一次。
+    const h = harness({ remaining: 4 * MINUTE, sessionRemaining: 9 * MINUTE });
+
+    await h.watchdog.check();
+    await vi.waitFor(() => expect(h.refresh).toHaveBeenCalledOnce());
+
+    h.setRemaining(15 * MINUTE);
+    await h.watchdog.check();
+
+    expect(h.onSessionEnding).toHaveBeenCalledOnce();
+  });
+
+  it("重新登入之後會再武裝，第二條 session 一樣提醒得到", async () => {
+    const h = harness({ sessionRemaining: 9 * MINUTE });
+
+    await h.watchdog.check();
+    expect(h.onSessionEnding).toHaveBeenCalledOnce();
+
+    // 重新登入：新嘅 session deadline。旗標用 deadline 本身做標記，所以呢度
+    // 唔使有人記得清——換一個新值就自動重新武裝。
+    h.setSessionRemaining(8 * 60 * MINUTE);
+    await h.watchdog.check();
+    expect(h.onSessionEnding).toHaveBeenCalledOnce();
+
+    h.setSessionRemaining(5 * MINUTE);
+    await h.watchdog.check();
+    expect(h.onSessionEnding).toHaveBeenCalledTimes(2);
+  });
+
+  it("閒置都照提醒：夠鐘一樣會被登出，返嚟見到好過乜都冇見過", async () => {
+    const h = harness({ sessionRemaining: 9 * MINUTE, idleFor: 45 * MINUTE });
+
+    await h.watchdog.check();
+
+    expect(h.onSessionEnding).toHaveBeenCalledOnce();
   });
 
   it("剩得少過閾值就續期", async () => {

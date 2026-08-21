@@ -9,6 +9,7 @@ import authConfig from "@config/auth.js";
  *   1. **主動續期**：仲有 refreshThresholdMs 就到期嗰陣喺背景換新 token。
  *   2. **強制登出**：真係過咗期就即刻登出，唔會等用戶撳「儲存」嗰陣先發現。
  *   3. **活動閘門**：冇真人操作就唔續期，等 token 自然過期。
+ *   4. **絕對 session 上限**：夠鐘就登出，續期救唔到；到期之前提早提醒一次。
  *
  * 第 3 點解決一個唔明顯嘅問題：tick 淨係睇**分頁生存**，唔睇**用戶在唔在**。
  * 冇呢個閘門嘅話，session 撐幾耐實際上取決於部機會唔會瞓——辦公室桌機開通宵、
@@ -21,20 +22,30 @@ export function createSessionWatchdog({
   refresh,
   onExpired,
   onWarning = () => {},
+  onSessionEnding = () => {},
   getDeadline,
+  // 絕對 session 上限嘅到期時刻。預設 Infinity 即係「冇上限」——呢個模組唔應該
+  // 因為呼叫端冇接呢條線就當成已經過期，咁樣會靜靜哋登出全部人。
+  getSessionDeadline = () => Number.POSITIVE_INFINITY,
   now = () => Date.now(),
   locks = globalThis.navigator?.locks ?? null,
   tickMs = authConfig.refreshTickMs,
   refreshThresholdMs = authConfig.refreshThresholdMs,
   idleTimeoutMs = authConfig.idleTimeoutMs,
-  warningThresholdMs = authConfig.expiryWarningThresholdMs
+  warningThresholdMs = authConfig.expiryWarningThresholdMs,
+  sessionWarningThresholdMs = authConfig.sessionWarningThresholdMs
 } = {}) {
   let lastActivityAt = now();
   let timer = null;
   let warned = false;
+  // 記住「已經為邊一個 deadline 提醒過」而唔係一個 boolean：boolean 要喺重新
+  // 登入嗰陣記得清，唔清嘅話第二條 session 就唔會再提醒。用 deadline 本身做
+  // 標記，新 session 換一個新值就自動重新武裝，唔使有人記得清。
+  let warnedSessionDeadline = null;
   let refreshing = false;
 
   const remainingMs = () => getDeadline() - now();
+  const sessionRemainingMs = () => getSessionDeadline() - now();
   const isIdle = () => now() - lastActivityAt > idleTimeoutMs;
 
   function markActivity() {
@@ -91,6 +102,28 @@ export function createSessionWatchdog({
   }
 
   function check() {
+    // 絕對上限排喺最前：夠鐘就係夠鐘，token 仲有幾耐命都冇意義。後端喺下一個
+    // 請求一定會回 401，但唔等嗰個請求——用戶可能坐喺度乜都冇撳，然後對住一個
+    // 睇落仲登入緊、但每一個動作都會失敗嘅畫面。
+    const sessionRemaining = sessionRemainingMs();
+
+    if (sessionRemaining <= 0) {
+      onExpired();
+      return;
+    }
+
+    // 一條 session 一世提醒一次。呢個同下面 token 嗰個提醒唔同：token 嗰個係
+    // 異常狀況（續期一直失敗），呢個係一定會發生嘅事，而且冇得補救——夠鐘就
+    // 一定要重新登入，所以要留夠時間畀人存檔。
+    //
+    // 刻意唔用 isIdle() 做閘：閒置嘅人一樣會被登出，而佢返嚟嗰陣見到提醒，
+    // 好過乜都冇見過就發現自己已經登出咗。
+    if (sessionRemaining < sessionWarningThresholdMs
+        && warnedSessionDeadline !== getSessionDeadline()) {
+      warnedSessionDeadline = getSessionDeadline();
+      onSessionEnding(sessionRemaining);
+    }
+
     const remaining = remainingMs();
 
     if (remaining <= 0) {

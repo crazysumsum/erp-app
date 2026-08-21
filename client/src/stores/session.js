@@ -45,7 +45,7 @@ export const useSessionStore = defineStore("session", {
           includePublicKey: true
         });
 
-        setToken(result.token, result.expiresInSeconds);
+        setToken(result.token, result.expiresInSeconds, result.sessionExpiresInSeconds);
         this.user = result.user;
         this.deviceStatus = null;
         return result.user;
@@ -71,7 +71,7 @@ export const useSessionStore = defineStore("session", {
     async refresh() {
       const result = await httpClient.post("/api/v1/user/token/refresh", { signed: true });
 
-      setToken(result.token, result.expiresInSeconds);
+      setToken(result.token, result.expiresInSeconds, result.sessionExpiresInSeconds);
       this.user = result.user;
       return result.user;
     },

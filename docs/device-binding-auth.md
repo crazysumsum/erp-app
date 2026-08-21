@@ -272,7 +272,7 @@ handler 自己還做兩件事：
 - 從資料庫重讀 `tokenRevocation.currentVersion(subject)`（不能讀快照，理由同 `currentVersion()` 的註解）
 - **從資料庫重讀 roles / permissions**（與 status 同一次查詢）。權限寫在 claims，現在改權限要等 token 過期；續期是天然的更新點，這是白賺的——權限變更 15 分鐘內生效
 - 簽新 JWT，更新 `last_used_at`
-- 回 `{ token, tokenType, expiresInSeconds, user }`
+- 回 `{ token, tokenType, expiresIn, expiresInSeconds, sessionExpiresInSeconds, user }`——最後那個是這條 session 距離絕對上限的**剩餘**秒數，見〈絕對 session 上限〉的〈提早提醒〉
 
 舊 JWT 不作廢，自己過期即可。沒有輪替，因此不需要重用偵測，也沒有多分頁輪替競態。
 
@@ -426,7 +426,18 @@ async function tryRefresh() {
 
 ⚠️ **部署當下所有既存 token 一起失效**：它們沒有 `auth_time`，`verify()` 會擋下來。這與當初把撤銷從時間切線換成版本號時是同一種相容性斷點，代價一樣——所有人重新登入一次。
 
-⚠️ **使用者不會收到事前警告**：8 小時一到，下一個請求就是 401，前端直接登出並轉去登入頁。正在填一張長表單的人會丟掉未儲存的內容。要修的話，登入／續期的回應要多回一個 session 到期時刻，前端才有東西可以拿來提早提醒——目前沒有做。
+#### 提早提醒
+
+登入與續期的回應都帶一個 `sessionExpiresInSeconds`：**這條 session 還剩多久**，不是 token 還剩多久。兩者刻意分開，因為性質相反——`expiresInSeconds` 每次續期都回到滿值，`sessionExpiresInSeconds` 只會一路遞減。續期那邊回滿值的話，前端會在每次續期後都以為還有一整個上限，提醒就永遠不會出現，而這個欄位存在的唯一理由就是那個提醒。
+
+前端把它換算成一個本地的絕對時刻存起來（`erp.session.deadline`，與 token 的 deadline **分開存**——合成一個的話續期就會把上限一併推掉，正是後端花力氣防住的事），然後 watchdog 多做兩件事：
+
+- **剩不到 10 分鐘就提醒一次**（`sessionWarningThresholdMs`），訊息裡帶實際分鐘數與「屆時需要重新登入」。閾值比 token 那個警告（2 分鐘）長很多，因為性質不同：token 警告是異常狀況（續期一直失敗），多半自己會好；這個是必然會發生、而且無法補救的事，10 分鐘是留給人把手上那張單填完存檔的時間。
+- **夠鐘就自己登出**，不等後端回 401。等 401 的話，一個坐在位子上什麼都沒按的人會對著一個看起來仍然登入、但每一個動作都會失敗的畫面。
+
+提醒只發一次。旗標記的是「已經為哪一個 deadline 提醒過」而不是一個 boolean——boolean 要在重新登入時記得清掉，忘了清第二條 session 就不會再提醒；用 deadline 本身當標記，新 session 換一個新值就自動重新武裝，不需要有人記得。
+
+它也刻意**不受閒置閘門管**：閒置的人一樣會被登出，而他回來時看到提醒，好過什麼都沒看到就發現自己已經登出了。
 
 ### 登入／續期與撤銷之間的競態
 
@@ -541,7 +552,7 @@ WHERE (status = 'pending'
 | `server/database/migrations/0004_*.js` | **新增**：`user_devices`、`user_device_nonces`、`device.approve` permission、`system-admin` role（含 role_id 1 的守衛） |
 | `server/scripts/createUser.js` | `users` 表為空時，自動授予第一個帳號 `system-admin` |
 | `server/src/services/deviceBinding/` | **新增**：`DeviceBindingService`（驗簽、查狀態、審批）+ 兩支清理 job |
-| `server/src/handlers/user/loginHandler.js` | 加設備驗證與三種 403；responseSchema 加 `expiresInSeconds` |
+| `server/src/handlers/user/loginHandler.js` | 加設備驗證與三種 403；responseSchema 加 `expiresInSeconds` 與 `sessionExpiresInSeconds` |
 | `server/src/handlers/user/refreshTokenHandler.js` | **新增**（`authType: "jwt-device"`，只管換不換發，不再自己驗設備） |
 | `server/src/services/auth/jwtDeviceAuthStrategy.js` | **新增**：JWT + 設備簽章的 authStrategy，繼承 `JwtAuthStrategy` |
 | `server/src/framework/authorization/authorizationPolicyRegistry.js` | `authenticated` / `hasRole` / `hasPermission` 改判「有沒有 claims」，不再寫死判斷 `auth.type === "jwt"` |
