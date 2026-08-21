@@ -107,6 +107,7 @@ function fakeJwt({ issued = [] } = {}) {
     authScheme: "Bearer",
     expiresIn: "2h",
     expiresInSeconds: 7200,
+    sessionMaxAgeSeconds: 8 * 3600,
     issue(payload, options) {
       issued.push({ payload, options });
       return "signed.jwt.token";
@@ -222,6 +223,8 @@ test("login issues a token carrying the roles and permissions claims", async () 
     expiresIn: "2h",
     // 前端靠這個數字算到期時刻。回字串 "2h" 的話它得自己再解析一次單位。
     expiresInSeconds: 7200,
+    // 剛登入，整個絕對上限都還在。
+    sessionExpiresInSeconds: 8 * 3600,
     user: SAMPLE_USER
   });
 
@@ -918,6 +921,10 @@ test("refresh issues a new token with freshly read roles and the current version
 
   assert.equal(response.data.token, "signed.jwt.token");
   assert.equal(response.data.expiresInSeconds, 7200);
+  // refreshRequest 預設是「兩小時前登入」，所以絕對上限還剩六小時。回滿值
+  // （八小時）的話，前端會在每次續期後都以為還有一整個上限，那個提醒就永遠
+  // 不會出現——而這個欄位存在的唯一理由就是那個提醒。
+  assert.equal(response.data.sessionExpiresInSeconds, 6 * 3600);
 
   const [issued] = jwt.issued;
   // roles/permissions 取自剛剛重讀的那一份，所以權限變更會在一次續期內生效。
@@ -937,6 +944,24 @@ test("refresh issues a new token with freshly read roles and the current version
     authTime: NOW_SECONDS - 2 * 3600
   });
   assert.deepEqual(deviceBinding.used, [11]);
+});
+
+test("refresh never reports a negative session remainder, even right on the boundary", async () => {
+  const jwt = fakeJwt();
+  // 起算點正好在八小時又三秒前。JwtAuthStrategy 是在這支 handler 開始之前才
+  // 檢查的，中間隔著兩次查詢——剛好踩線進來的請求走到算剩餘那一行時已經超過
+  // 了。不夾住的話這裡是 -3，會撞到 responseSchema 的 minimum: 0 變成 500，
+  // 而使用者看到的是「伺服器錯誤」而不是「請重新登入」。
+  const { handler } = createRefreshHandler({
+    jwt,
+    tokenRevocation: fakeTokenRevocation({ version: 9 })
+  });
+
+  const response = await handler.execute(
+    refreshRequest({ ver: 9, authTime: NOW_SECONDS - (8 * 3600 + 3) })
+  );
+
+  assert.equal(response.data.sessionExpiresInSeconds, 0);
 });
 
 test("a disabled account cannot refresh, which is what ends its session", async () => {

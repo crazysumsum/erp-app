@@ -274,6 +274,16 @@ test("login, me and logout work end to end against a real database", { skip }, a
 
   assert.equal(refreshed.status, 200);
   assert.equal(typeof refreshedBody.data.expiresInSeconds, "number");
+
+  // 續期唔可以令剩餘變多。呢度登入同續期只差幾毫秒，所以兩個值實際上一樣，
+  // 呢條淨係擋得住「變大」——「有冇真係遞減」由下面 2 秒上限嗰個 case 驗，
+  // 嗰度時間差夠大先分得出。
+  assert.ok(
+    refreshedBody.data.sessionExpiresInSeconds <= loginBody.data.sessionExpiresInSeconds,
+    "session remainder must not grow across a refresh"
+  );
+  // token 嘅 expiresInSeconds 相反：每次續期都回滿值。兩者唔同就係重點。
+  assert.equal(refreshedBody.data.expiresInSeconds, loginBody.data.expiresInSeconds);
   assert.deepEqual(refreshedBody.data.user.roles, [seeded.roleName]);
 
   const refreshedToken = refreshedBody.data.token;
@@ -384,7 +394,29 @@ test("a session cannot outlive the absolute cap, no matter how often it refreshe
   // 上限之內：續期照樣成功。
   const refreshed = await refresh(token);
   assert.equal(refreshed.status, 200);
-  const refreshedToken = (await refreshed.json()).data.token;
+  const refreshedBody = await refreshed.json();
+  const refreshedToken = refreshedBody.data.token;
+
+  // 上限係 2 秒，所以剩餘一定係 0 到 2 之間——而唔係 8 小時嗰個預設值。
+  const firstRemainder = refreshedBody.data.sessionExpiresInSeconds;
+  assert.ok(
+    firstRemainder >= 0 && firstRemainder <= 2,
+    `expected a remainder within the 2s cap, got ${firstRemainder}`
+  );
+
+  // 等一秒再續一次（仲喺 2 秒上限之內），剩餘必須真係變細咗。回滿值嘅話呢兩個
+  // 數會一樣——而前端就係靠呢個遞減去決定幾時提醒使用者存檔。
+  await new Promise((resolve) => {
+    setTimeout(resolve, 1100);
+  });
+
+  const refreshedAgain = await refresh(refreshedToken);
+  assert.equal(refreshedAgain.status, 200);
+  const secondRemainder = (await refreshedAgain.json()).data.sessionExpiresInSeconds;
+  assert.ok(
+    secondRemainder < firstRemainder,
+    `the session remainder must shrink as the session ages: ${firstRemainder} -> ${secondRemainder}`
+  );
 
   // 兩個 token 嘅 auth_time 必須一模一樣——續期唔可以重設起算點。
   const authTimeOf = (jwtToken) =>

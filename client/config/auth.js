@@ -20,6 +20,13 @@ const authConfig = {
   // 過了多久」。睡眠期間 wall clock 照常前進，所以闔上筆電再打開也算得對。
   tokenDeadlineKey: "erp.token.deadline",
 
+  // 絕對 session 上限的到期時刻（epoch 毫秒）的鍵名。
+  //
+  // 同 tokenDeadlineKey 分開存，因為兩者是兩件事：token 的到期時刻每次背景續期
+  // 都會往後跳，session 的到期時刻不會動。合成一個的話，續期就會把上限一併推
+  // 掉，而那正是後端花力氣防住的事（見 JWT_SESSION_MAX_AGE）。
+  sessionDeadlineKey: "erp.session.deadline",
+
   // 未登入時要轉去的路徑。
   loginPath: "/login",
 
@@ -61,7 +68,17 @@ const authConfig = {
   idleTimeoutMs: 30 * 60_000,
 
   // 續期一直失敗、又剩不到這麼多時間，就提醒使用者存檔。
-  expiryWarningThresholdMs: 2 * 60_000
+  expiryWarningThresholdMs: 2 * 60_000,
+
+  // 絕對 session 上限剩不到這麼多時間，就提醒使用者存檔並準備重新登入。
+  //
+  // 比 expiryWarningThresholdMs 長很多，因為兩者的性質不同：那個是異常狀況
+  // （續期一直失敗），多半自己會好；這個是必然會發生的事，每個使用者每天都會
+  // 撞到一次，而且撞到之後沒有任何補救——只能重新登入。10 分鐘是留給人把手上
+  // 那張單填完、存檔的時間。
+  //
+  // 必須遠大於 refreshTickMs（60 秒），否則會在兩次 check() 之間整段跳過。
+  sessionWarningThresholdMs: 10 * 60_000
 };
 
 export default authConfig;

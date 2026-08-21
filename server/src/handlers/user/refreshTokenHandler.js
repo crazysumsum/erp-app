@@ -42,13 +42,27 @@ export class RefreshTokenHandler extends BaseRequestHandler {
     responseSchema: {
       200: {
         type: "object",
-        required: ["token", "tokenType", "expiresIn", "expiresInSeconds", "user"],
+        required: [
+          "token",
+          "tokenType",
+          "expiresIn",
+          "expiresInSeconds",
+          "sessionExpiresInSeconds",
+          "user"
+        ],
         additionalProperties: false,
         properties: {
           token: { type: "string" },
           tokenType: { type: "string" },
           expiresIn: { type: "string" },
           expiresInSeconds: { type: "integer", minimum: 1 },
+          // 這條 session 還剩多久到絕對上限。這裡回的是**剩餘**而不是滿值——
+          // 每次續期都回滿值的話，前端會永遠以為還有八小時，那個提醒就永遠
+          // 不會出現，而這個欄位存在的唯一理由就是那個提醒。
+          //
+          // minimum 是 0 不是 1：strategy 用的是「超過才擋」，所以剛好踩在
+          // 上限那一刻續期是會過的，那時剩餘正好是 0。
+          sessionExpiresInSeconds: { type: "integer", minimum: 0 },
           user: USER_SCHEMA
         }
       }
@@ -57,10 +71,11 @@ export class RefreshTokenHandler extends BaseRequestHandler {
 
   constructor(services = {}) {
     super(services);
+    this.time = services.require("time");
     this.userService = new UserService({
       database: services.require("mysqldatabase"),
       logger: services.require("logging").logger,
-      time: services.require("time")
+      time: this.time
     });
     this.jwt = services.require("jwt");
     this.tokenRevocation = services.require("tokenRevocation");
@@ -149,7 +164,21 @@ export class RefreshTokenHandler extends BaseRequestHandler {
       tokenType: this.jwt.authScheme,
       expiresIn: this.jwt.expiresIn,
       expiresInSeconds: this.jwt.expiresInSeconds,
+      sessionExpiresInSeconds: this.#sessionSecondsLeft(claims.auth_time),
       user
     });
+  }
+
+  /**
+   * 這條 session 距離絕對上限還剩幾秒。
+   *
+   * 夾在 0 以上：JwtAuthStrategy 是在這支 handler 開始之前檢查的，中間隔著
+   * findActiveById 與 currentVersion 兩次查詢。剛好踩在上限那一刻進來的請求，
+   * 走到這一行時可能已經超過一兩秒，算出來是負數——那會撞到 responseSchema
+   * 的 minimum: 0 變成 500。夾住它，讓那個罕見的邊界情況回一個誠實的 0。
+   */
+  #sessionSecondsLeft(authTime) {
+    const elapsed = Math.floor(this.time.nowMs() / 1000) - authTime;
+    return Math.max(0, this.jwt.sessionMaxAgeSeconds - elapsed);
   }
 }

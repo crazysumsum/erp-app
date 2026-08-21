@@ -20,11 +20,17 @@ export function getToken() {
  * 時鐘：用戶部機嘅時鐘唔可信，而呢個算法淨係倚賴「收到之後過咗幾耐」。睡眠期間
  * wall clock 照常前進，所以闔上部機再打開都計得啱。
  */
-export function setToken(token, expiresInSeconds) {
+export function setToken(token, expiresInSeconds, sessionExpiresInSeconds) {
+  const receivedAt = Date.now();
+
   localStorage.setItem(authConfig.tokenStorageKey, token);
   localStorage.setItem(
     authConfig.tokenDeadlineKey,
-    String(Date.now() + Number(expiresInSeconds) * 1000)
+    String(receivedAt + Number(expiresInSeconds) * 1000)
+  );
+  localStorage.setItem(
+    authConfig.sessionDeadlineKey,
+    String(receivedAt + Number(sessionExpiresInSeconds) * 1000)
   );
 }
 
@@ -33,7 +39,18 @@ export function getTokenDeadline() {
   return Number(localStorage.getItem(authConfig.tokenDeadlineKey) || 0);
 }
 
+/**
+ * 絕對 session 上限嘅到期時刻（epoch 毫秒）。
+ *
+ * 冇記錄當作 0（已經過期），同 getTokenDeadline() 一樣 fail closed：呢個值淨係
+ * 由 setToken() 寫入，讀唔到即係冇 token 或者 storage 俾人清咗，兩種都應該登出。
+ */
+export function getSessionDeadline() {
+  return Number(localStorage.getItem(authConfig.sessionDeadlineKey) || 0);
+}
+
 export function clearToken() {
   localStorage.removeItem(authConfig.tokenStorageKey);
   localStorage.removeItem(authConfig.tokenDeadlineKey);
+  localStorage.removeItem(authConfig.sessionDeadlineKey);
 }
