@@ -558,6 +558,46 @@ test("an approver can clear the queue over HTTP, and the approved user then gets
     headers: { Authorization: `Bearer ${applicantToken}` }
   });
   assert.equal(forbidden.status, 403);
+
+  // --- 撤銷 ---------------------------------------------------------------
+  //
+  // 撤銷會先查一次綁定現況、確認仍是 approved，才推 token 版本號同轉狀態。
+  // 單元測試用替身餵嗰個 status，餵咩就係咩；呢度行真嘅資料庫，驗嗰個
+  // status 真係比對得到 'approved'。比唔到嘅話撤銷會永遠 409，而且靜靜哋
+  // ——冇任何單元測試睇得出。
+  const revokePath = `/api/v1/device/bindings/${entry.id}/revoke`;
+  const revoked = await fetch(`${url}${revokePath}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${approverToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ password, note: "整合測試撤銷" })
+  });
+
+  assert.equal(revoked.status, 200);
+  assert.deepEqual((await revoked.json()).data, { id: entry.id, status: "revoked" });
+
+  // 兩件事都要真係發生咗。只轉狀態嘅話，申請人手上嗰個 token 仲用得到自己
+  // 過期為止——正正係呢次改動要防嘅嗰個「少撤銷」。
+  const afterRevoke = await fetch(`${url}/api/v1/user/me`, {
+    headers: { Authorization: `Bearer ${applicantToken}` }
+  });
+  assert.equal(afterRevoke.status, 401, "the revoked device's token must stop working");
+
+  // 而且佢再登入唔返：設備已經唔係 approved。
+  assert.equal((await login(applicant, applicantDevice)).status, 403);
+
+  // 重覆撤銷係 409，唔會再推一次版本號。
+  const revokedAgain = await fetch(`${url}${revokePath}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${approverToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ password })
+  });
+  assert.equal(revokedAgain.status, 409);
 });
 
 test("five consecutive failed logins lock the account for fifteen minutes", { skip }, async (t) => {

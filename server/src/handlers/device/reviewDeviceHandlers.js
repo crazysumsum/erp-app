@@ -1,5 +1,6 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { DEVICE_STATUS } from "../../services/deviceBinding/DeviceBindingService.js";
 import {
   BINDING_ID_PARAMS_SCHEMA,
   DEVICE_APPROVE_POLICY,
@@ -113,7 +114,7 @@ export class RevokeDeviceHandler extends ReviewDeviceHandler {
   static requiredStatus = "approved";
   static api = reviewApi({
     path: "/api/v1/device/bindings/:id/revoke",
-    description: "撤銷一台已核准的設備，並讓該使用者手上的 token 立即失效。"
+    description: "撤銷一台已核准的設備，並讓該使用者手上的 token 失效。"
   });
 
   constructor(services = {}) {
@@ -121,26 +122,59 @@ export class RevokeDeviceHandler extends ReviewDeviceHandler {
     this.tokenRevocation = services.require("tokenRevocation");
   }
 
+  /**
+   * 撤銷是兩次獨立的寫入：推高 token 版本號，以及把綁定轉成 revoked。跨兩張
+   * 表、沒有共用交易，所以一定要決定「先做哪一個」——而這個順序是承重的。
+   *
+   * **先推版本號，再轉狀態。** 反過來的話（本來就是反過來的），第二步失敗會
+   * 留下一台狀態已經是 revoked、但手上 token 仍然有效到自己過期為止的設備；
+   * 而重試會因為狀態已經不是 approved 而回 409，永遠不會補做那次 token 撤銷。
+   * 也就是說那次失敗是**永久性的少撤銷**，而且畫面上看起來是撤銷成功的。
+   *
+   * 照現在的順序，每一種失敗都落在安全的一邊，而且重試一定補得回來：
+   *
+   *   - 版本號那一步失敗 → 什麼都沒改，綁定仍是 approved，重試會完整重做
+   *   - 轉狀態那一步失敗 → token 已經撤銷（多撤了，安全的方向），綁定仍是
+   *     approved，重試會完整重做
+   *   - 轉狀態回 null（另一個審批者同時做完了）→ 回 409，而最終狀態仍然正確：
+   *     設備是 revoked、token 也撤銷了
+   *
+   * 代價是先查一次狀態：不查的話，對一台早就 revoked 的設備再按一次撤銷，會在
+   * 什麼都不該發生的情況下把那個使用者從所有設備登出。查完到推版本號之間仍然
+   * 有一個極窄的窗，那段時間內的並行撤銷會讓版本號被多推一次——那只是多一次
+   * 登出，不是少一次撤銷，可以接受。
+   */
   async review(bindingId, options) {
+    const existing = await this.deviceBinding.findById(bindingId);
+
+    if (!existing || existing.status !== DEVICE_STATUS.approved) {
+      // 交給基底類別翻成 409。這裡不推版本號：這個動作本來就不該發生。
+      return null;
+    }
+
+    // 只改 status 的話，那台設備手上的 token 還能再用到自己過期為止（最多 15
+    // 分鐘）——它續不了期，但還沒死。遺失電腦是分鐘級的事，撐不起那個窗。
+    //
+    // ⚠️ 版本號是**每個使用者一個**而不是每台設備一個，所以這會讓該使用者在
+    // 所有設備上一起登出。這可以接受：其他設備都是已審批的，重新登入一次即可、
+    // 不需要再審批。
+    await this.tokenRevocation.revoke(String(existing.user_id), {
+      reason: "device_revoked"
+    });
+
     return this.deviceBinding.revoke(bindingId, options);
   }
 
   async afterReview(binding, req) {
-    // 只改 status 的話，那台設備手上的 token 還能再用到自己過期為止（最多 15
-    // 分鐘）——它續不了期，但還沒死。遺失電腦是分鐘級的事，所以一併把版本號
-    // 推上去，讓現有 token 立刻失效。
-    //
-    // ⚠️ 版本號是**每個使用者一個**而不是每台設備一個，所以這會讓該使用者在
-    // 所有設備上一起登出。這可以接受：其他設備都是已審批的，重新登入一次即可、
-    // 不需要再審批，而換到的是撤銷立即生效。
-    await this.tokenRevocation.revoke(String(binding.user_id), {
-      reason: "device_revoked"
-    });
-
+    // 訊息刻意不寫「立即失效」：撤銷不是全域瞬時的。處理這個請求的實例會馬上
+    // 更新自己的快照，其他實例要等下一次刷新，上界是 tokenRevocation 設定裡的
+    // maxStalenessSeconds（見 TokenRevocationService 的說明，啟動時會與實際刷新
+    // 間隔交叉檢查）。事後查「為什麼撤銷後那半分鐘還進得來」的人，看到的第一
+    // 行就該是準確的。
     this.writeLog(
       "info",
       "auth.device.revoked_sessions",
-      "Revoking the device also invalidated the user's existing tokens",
+      "Revoking the device bumped the user's token version; other instances pick it up within the revocation staleness bound",
       {
         requestId: req.requestId || null,
         bindingId: Number(binding.id),

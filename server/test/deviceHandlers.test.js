@@ -46,11 +46,22 @@ function createHandler(HandlerClass, { deviceBinding, tokenRevocation } = {}) {
   return { handler, logger };
 }
 
-function fakeDeviceBinding({ result = { id: 5, user_id: 7, status: "approved" }, pending = [], mine = [] } = {}) {
+function fakeDeviceBinding({
+  result = { id: 5, user_id: 7, status: "approved" },
+  // RevokeDeviceHandler 先查一次現況再決定做唔做。同 result 分開，因為兩者
+  // 答嘅係唔同問題：current 係「而家係咩狀態」，result 係「轉移之後係咩」。
+  current = { id: 5, user_id: 7, status: "approved" },
+  pending = [],
+  mine = []
+} = {}) {
   const calls = [];
 
   return {
     calls,
+    async findById(id) {
+      calls.push({ method: "findById", id });
+      return current;
+    },
     async listPending() {
       return pending;
     },
@@ -201,6 +212,87 @@ test("revoking a device also kills the tokens that device already holds", async 
     logger.entries.some((entry) => entry.event === "auth.device.revoked_sessions"),
     "the blast radius of a revoke has to be visible in the log"
   );
+});
+
+test("the token version is bumped before the status changes, not after", async () => {
+  // 順序係承重嘅。反過來嘅話，轉狀態成功、撤 token 失敗，會留低一台狀態係
+  // revoked 但 token 仲有效嘅設備——而重試會因為狀態唔再係 approved 而 409，
+  // 永遠唔會補做。呢條測試釘住嗰個順序。
+  const order = [];
+  const deviceBinding = fakeDeviceBinding();
+  const baseRevoke = deviceBinding.revoke;
+  deviceBinding.revoke = async (id, options) => {
+    order.push("status");
+    return baseRevoke(id, options);
+  };
+
+  const tokenRevocation = fakeTokenRevocation();
+  const baseTokenRevoke = tokenRevocation.revoke;
+  tokenRevocation.revoke = async (subject, options) => {
+    order.push("token-version");
+    return baseTokenRevoke(subject, options);
+  };
+
+  const { handler } = createHandler(RevokeDeviceHandler, { deviceBinding, tokenRevocation });
+  await handler.execute(reviewerRequest());
+
+  assert.deepEqual(order, ["token-version", "status"]);
+});
+
+test("if the status change fails, the tokens are still revoked and a retry can finish the job", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  deviceBinding.revoke = async () => {
+    throw new Error("connection lost");
+  };
+  const tokenRevocation = fakeTokenRevocation();
+  const { handler } = createHandler(RevokeDeviceHandler, { deviceBinding, tokenRevocation });
+
+  await assert.rejects(() => handler.execute(reviewerRequest()), /connection lost/);
+
+  // 多撤咗（token 已經冇效），但綁定仲係 approved——所以重試會完整重做一次。
+  // 呢個方向係安全嘅：寧願多登出一次，都好過一台顯示已撤銷、實際仲用得嘅設備。
+  assert.deepEqual(tokenRevocation.revoked, [
+    { subject: "7", options: { reason: "device_revoked" } }
+  ]);
+});
+
+test("if the token revoke fails, the binding is left approved so the retry is a full retry", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  const tokenRevocation = fakeTokenRevocation();
+  tokenRevocation.revoke = async () => {
+    throw new Error("revocation table is down");
+  };
+
+  const { handler } = createHandler(RevokeDeviceHandler, { deviceBinding, tokenRevocation });
+
+  await assert.rejects(() => handler.execute(reviewerRequest()), /revocation table is down/);
+
+  // 狀態一定唔可以已經轉咗：轉咗嘅話重試會 409，而嗰次撤銷就永遠補唔返。
+  assert.ok(
+    !deviceBinding.calls.some(({ method }) => method === "revoke"),
+    "the binding must not be transitioned when the token revoke failed"
+  );
+});
+
+test("revoking a device that is already revoked is a conflict and does not log anyone out", async () => {
+  const deviceBinding = fakeDeviceBinding({
+    current: { id: 5, user_id: 7, status: "revoked" }
+  });
+  const tokenRevocation = fakeTokenRevocation();
+  const { handler } = createHandler(RevokeDeviceHandler, { deviceBinding, tokenRevocation });
+
+  await assert.rejects(
+    () => handler.execute(reviewerRequest()),
+    (error) => {
+      assert.equal(error.statusCode, 409);
+      return true;
+    }
+  );
+
+  // 冇呢個前置檢查嘅話，對一台早就撤銷咗嘅設備再撳一次，會喺乜都唔應該發生
+  // 嘅情況下將嗰個使用者喺所有設備登出。
+  assert.deepEqual(tokenRevocation.revoked, []);
+  assert.ok(!deviceBinding.calls.some(({ method }) => method === "revoke"));
 });
 
 test("approving and rejecting do not touch token revocation", async () => {
