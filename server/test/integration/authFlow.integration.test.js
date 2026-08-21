@@ -64,9 +64,9 @@ async function seedUser(db, { username, password, permission }) {
     "INSERT INTO roles (name, created_at) VALUES (?, ?)",
     [roleName, nowMs]
   );
-  // device.approve 已經由 migration 0004 種入，而 permissions.name 是唯一鍵，
-  // 所以要求那個權限時只能查、不能插。ownsPermission 記著這一筆是不是這個測試
-  // 建的——清理時不能把 migration 種的那一列刪掉。
+  // device.mgmt 已經由 migration 種入（0004 種、0005 改名），而 permissions.name
+  // 是唯一鍵，所以要求那個權限時只能查、不能插。ownsPermission 記著這一筆是不是
+  // 這個測試建的——清理時不能把 migration 種的那一列刪掉。
   const [existing] = await db.query("SELECT id FROM permissions WHERE name = ?", [
     permissionName
   ]);
@@ -108,7 +108,7 @@ async function cleanupUser(db, seeded) {
   await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [seeded.roleId]);
   await db.execute("DELETE FROM user_roles WHERE user_id = ?", [seeded.userId]);
 
-  // 只刪這個測試自己建的權限。device.approve 是 migration 種的，刪掉它會讓
+  // 只刪這個測試自己建的權限。device.mgmt 是 migration 種的，刪掉它會讓
   // system-admin 悄悄失去審批能力——而且下一次跑 migration 不會補回來，因為
   // 它已經被記成套用過了。
   if (seeded.ownsPermission) {
@@ -182,6 +182,39 @@ async function createTestDevice() {
     }
   };
 }
+
+/**
+ * 改名這件事只有真資料庫證明得了：0004 種的是 device.approve，0005 改成
+ * device.mgmt，而中間那一步是不是真的保住了既有的授權，靠讀原始碼看不出來。
+ *
+ * 這也順便釘住「重跑會收斂」——CI 每次都是全新資料庫從 0001 跑到最後，本機則是
+ * 對一個已經套用過的資料庫再跑一次，兩邊都該看到同一個結果。
+ */
+test("the device permission was renamed without losing its role link", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  t.after(() => application.shutdown("integration_test_complete"));
+
+  const [names] = await db.query(
+    "SELECT name FROM permissions WHERE name IN ('device.approve', 'device.mgmt')"
+  );
+  assert.deepEqual(
+    names.map((row) => row.name),
+    ["device.mgmt"],
+    "舊名應該已經不存在，而且不該兩個名字同時在"
+  );
+
+  // 承重的一句：改名走 UPDATE，permission id 沒變，所以 role_permissions 那一列
+  // 原封不動。改成「刪掉舊的、插入新的」的話，ON DELETE CASCADE 會把這一列清掉，
+  // 而這裡會是 0——也就是沒有人再有辦法審批設備。
+  const [links] = await db.query(
+    `SELECT 1 FROM role_permissions rp
+       JOIN roles r ON r.id = rp.role_id
+       JOIN permissions p ON p.id = rp.permission_id
+      WHERE r.name = 'system-admin' AND p.name = 'device.mgmt'`
+  );
+  assert.equal(links.length, 1, "system-admin 應該仍然握有設備審批權");
+});
 
 test("login, me and logout work end to end against a real database", { skip }, async (t) => {
   const application = await startApplication();
@@ -484,11 +517,11 @@ test("an approver can clear the queue over HTTP, and the approved user then gets
   const db = application.services.require("mysqldatabase");
   const password = "Integration-Test-Pass-4!";
 
-  // 審批者需要 device.approve；申請人拿的是一個無關的權限。
+  // 審批者需要 device.mgmt；申請人拿的是一個無關的權限。
   const approver = await seedUser(db, {
     username: `it-approver-${randomUUID().slice(0, 8)}`,
     password,
-    permission: "device.approve"
+    permission: "device.mgmt"
   });
   const applicant = await seedUser(db, {
     username: `it-applicant-${randomUUID().slice(0, 8)}`,
@@ -579,7 +612,7 @@ test("an approver can clear the queue over HTTP, and the approved user then gets
   });
   assert.equal(again.status, 409);
 
-  // 申請人自己看得到自己的設備，但看不到佇列——他沒有 device.approve。
+  // 申請人自己看得到自己的設備，但看不到佇列——他沒有 device.mgmt。
   const applicantToken = (await login(applicant, applicantDevice).then((r) => r.json())).data
     .token;
 

@@ -3,7 +3,7 @@ export const page = {
   name: "device-approvals",
   path: "/device/approvals",
   title: "設備審批",
-  requires: { permissions: ["device.approve"] },
+  requires: { permissions: ["device.mgmt"] },
   menu: { group: "system", icon: "devices", order: 10 }
 };
 </script>

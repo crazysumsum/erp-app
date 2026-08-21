@@ -62,13 +62,13 @@ describe("device pages", () => {
     expect(validatePages(discoverPages())).toEqual([]);
   });
 
-  it("審批頁要求 device.approve，我的設備頁唔使", () => {
+  it("審批頁要求 device.mgmt，我的設備頁唔使", () => {
     const pages = Object.fromEntries(
       discoverPages().map(({ page }) => [page.name, page])
     );
 
     expect(pages["device-approvals"].requires).toEqual({
-      permissions: ["device.approve"]
+      permissions: ["device.mgmt"]
     });
     // 呢一頁淨係顯示自己嘅設備，後端亦都只回 claims.sub 自己嗰啲——加一條
     // 權限要求反而會令普通用戶睇唔到自己嘅設備。
