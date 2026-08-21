@@ -71,6 +71,11 @@ test("a rejected JWT records why it failed without telling the client", async ()
           };
         }
 
+        // 同理：verify() 就拋了，絕對 session 上限那道檢查也輪不到。
+        if (name === "time") {
+          return { nowMs: () => Date.now() };
+        }
+
         throw new Error(`Unexpected service: ${name}`);
       },
       get: (name) => (name === "logging" ? { logger } : undefined)

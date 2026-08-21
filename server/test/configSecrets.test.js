@@ -23,6 +23,7 @@ const jwtSource = {
   audience: "erp-client",
   algorithm: "HS256",
   expiresIn: "2h",
+  sessionMaxAge: "8h",
   clockToleranceSeconds: 5,
   headerName: "Authorization",
   authScheme: "Bearer"
@@ -104,7 +105,10 @@ test("secret validation still runs on the unwrapped value", () => {
 test("the jwt service still signs and verifies through the wrapper", () => {
   const service = new JwtService({ config: { jwt: jwtSource } });
   const claims = service.verify(
-    service.issue({ role: "admin" }, { subject: "u-1", version: 0 })
+    service.issue(
+      { role: "admin" },
+      { subject: "u-1", version: 0, authTime: Math.floor(Date.now() / 1000) }
+    )
   );
 
   assert.equal(claims.sub, "u-1");

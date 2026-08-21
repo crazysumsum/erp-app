@@ -59,7 +59,9 @@ const strategyContainer = await createServiceContainer({
     // 這個掃描範圍內。密碼再確認本身有自己的測試
     // （jwtPasswordAuthStrategy.test.js），這裡一樣只要讓依賴圖能通過驗證。
     mysqldatabase: {},
-    time: {}
+    // time 不能是空物件：auth.jwt 會用它算絕對 session 上限，每個帶 token 的
+    // 請求都會走到。
+    time: { nowMs: () => Date.now() }
   },
   discoveryOptions: {
     servicesDirectory: new URL("../src/services/auth/", import.meta.url)
@@ -69,8 +71,15 @@ const strategyContainer = await createServiceContainer({
 const jwtService = strategyContainer.require("jwt");
 // 每個 token 都得帶簽發當下的撤銷版本號，否則 isRevoked() 會把它當成撤銷不掉
 // 的 token 擋下來。這些測試沒有撤銷過任何人，所以一律是 0。
+//
+// authTime 同理：少了它 JwtAuthStrategy 算不出這條 session 有多老。一律給
+// 「剛剛」，讓絕對上限那道檢查永遠通過——上限本身有自己的測試。
 const issueAccessToken = (payload, options) =>
-  jwtService.issue(payload, { version: 0, ...options });
+  jwtService.issue(payload, {
+    version: 0,
+    authTime: Math.floor(Date.now() / 1000),
+    ...options
+  });
 const defaultAuthStrategies = createAuthStrategyRegistry({
   services: strategyContainer,
   logger: silentLogger

@@ -10,10 +10,15 @@ const baseJwtConfig = {
   audience: "erp-client",
   algorithm: "HS256",
   expiresIn: "2h",
+  sessionMaxAge: "8h",
   clockToleranceSeconds: 5,
   headerName: "Authorization",
   authScheme: "Bearer"
 };
+
+// 大部分測試不在乎起算點是什麼，只要它存在且合法。要驗絕對上限本身的測試會
+// 自己傳一個過去的時間。
+const AUTH_TIME = Math.floor(Date.now() / 1000);
 
 function createService(overrides = {}) {
   // 與容器一致：service 拿到的是整份設定，自己取 jwt 那一節。
@@ -22,7 +27,10 @@ function createService(overrides = {}) {
 
 test("a token issued by the service verifies back to its claims", () => {
   const service = createService();
-  const token = service.issue({ role: "admin" }, { subject: "user-42", version: 3 });
+  const token = service.issue(
+    { role: "admin" },
+    { subject: "user-42", version: 3, authTime: AUTH_TIME }
+  );
   const claims = service.verify(token);
 
   assert.equal(claims.sub, "user-42");
@@ -31,6 +39,9 @@ test("a token issued by the service verifies back to its claims", () => {
   assert.equal(claims.aud, "erp-client");
   // 撤銷的判準。少了它，TokenRevocationService 沒有東西可以比較。
   assert.equal(claims.ver, 3);
+  // 絕對 session 上限的起算點。少了它，JwtAuthStrategy 沒有東西可以比較，
+  // 這條 session 就永遠不會到期。
+  assert.equal(claims.auth_time, AUTH_TIME);
 });
 
 test("the service surface is issue, verify and the header settings", () => {
@@ -42,6 +53,8 @@ test("the service surface is issue, verify and the header settings", () => {
   // 同一個有效期的秒數。前端靠它算到期時刻來排定續期與強制登出；只給
   // "2h" 的話，前端得自己再實作一次同一套單位解析。
   assert.equal(service.expiresInSeconds, 7200);
+  // 絕對 session 上限，給 JwtAuthStrategy 拿去跟 auth_time 比對。
+  assert.equal(service.sessionMaxAgeSeconds, 8 * 3600);
 
   // 正規化後的設定是私有欄位，所以這個 service 自己的介面上沒有密鑰。
   // 注意這只收窄了它自己：每個 service 都會收到整份應用設定，config.jwt.secret
@@ -57,6 +70,7 @@ test("the service surface is issue, verify and the header settings", () => {
       "expiresInSeconds",
       "headerName",
       "issue",
+      "sessionMaxAgeSeconds",
       "verify"
     ]
   );
@@ -129,13 +143,16 @@ test("issuing without a subject is refused", () => {
   const guest = { role: "guest" };
 
   assert.throws(() => service.issue(guest), /requires a subject/);
-  assert.throws(() => service.issue(guest, { version: 0 }), /requires a subject/);
   assert.throws(
-    () => service.issue(guest, { subject: "", version: 0 }),
+    () => service.issue(guest, { version: 0, authTime: AUTH_TIME }),
     /requires a subject/
   );
   assert.throws(
-    () => service.issue(guest, { subject: "   ", version: 0 }),
+    () => service.issue(guest, { subject: "", version: 0, authTime: AUTH_TIME }),
+    /requires a subject/
+  );
+  assert.throws(
+    () => service.issue(guest, { subject: "   ", version: 0, authTime: AUTH_TIME }),
     /requires a subject/
   );
 });
@@ -147,26 +164,29 @@ test("issuing without a version is refused for the same reason", () => {
   // ver 是撤銷的判準。忘記傳它的話 token 簽得出來卻永遠撤銷不掉——與忘記傳
   // subject 是同一類錯誤，所以擋在同一個地方，而且訊息要說出去哪裡拿。
   assert.throws(
-    () => service.issue(guest, { subject: "u-1" }),
+    () => service.issue(guest, { subject: "u-1", authTime: AUTH_TIME }),
     /requires a version: read it from tokenRevocation\.currentVersion/
   );
   assert.throws(
-    () => service.issue(guest, { subject: "u-1", version: null }),
+    () => service.issue(guest, { subject: "u-1", version: null, authTime: AUTH_TIME }),
     /requires a version/
   );
   // 字串會讓 isRevoked() 的 Number.isInteger 判定失敗，那個 token 一到就被
   // 當成已撤銷——簽發時就擋掉，比讓使用者登入後立刻被踢好。
   assert.throws(
-    () => service.issue(guest, { subject: "u-1", version: "3" }),
+    () => service.issue(guest, { subject: "u-1", version: "3", authTime: AUTH_TIME }),
     /requires a version/
   );
   assert.throws(
-    () => service.issue(guest, { subject: "u-1", version: -1 }),
+    () => service.issue(guest, { subject: "u-1", version: -1, authTime: AUTH_TIME }),
     /requires a version/
   );
 
   // 0 是合法的：從未被撤銷過的使用者就是這個值。
-  assert.equal(service.verify(service.issue(guest, { subject: "u-1", version: 0 })).ver, 0);
+  assert.equal(
+    service.verify(service.issue(guest, { subject: "u-1", version: 0, authTime: AUTH_TIME })).ver,
+    0
+  );
 });
 
 test("the caller cannot smuggle a different version through the payload", () => {
@@ -174,9 +194,93 @@ test("the caller cannot smuggle a different version through the payload", () => 
 
   // payload 是業務資料，ver 是框架的判準。傳進來的那個必須贏，否則一個把
   // claims 原樣轉發的 handler 就能簽出一個版本號永遠停在舊值的 token。
-  const token = service.issue({ role: "admin", ver: 99 }, { subject: "u-1", version: 2 });
+  const token = service.issue(
+    { role: "admin", ver: 99 },
+    { subject: "u-1", version: 2, authTime: AUTH_TIME }
+  );
 
   assert.equal(service.verify(token).ver, 2);
+});
+
+test("issuing without an authTime is refused for the same reason again", () => {
+  const service = createService();
+  const guest = { role: "guest" };
+
+  // auth_time 是絕對 session 上限的起算點。忘記傳它的話 token 簽得出來，但
+  // JwtAuthStrategy 永遠算不出這條 session 有多老——那條 session 就再也不會
+  // 到期，而症狀是「沒有人被登出」，不會有任何錯誤浮現。
+  assert.throws(
+    () => service.issue(guest, { subject: "u-1", version: 0 }),
+    /requires authTime in epoch seconds/
+  );
+  assert.throws(
+    () => service.issue(guest, { subject: "u-1", version: 0, authTime: null }),
+    /requires authTime/
+  );
+  // 字串會讓後面的減法算出 NaN，而 NaN > 任何數字都是 false——這條 session
+  // 就永遠不會超過上限。簽發時擋掉，不要等它自己顯現。
+  assert.throws(
+    () => service.issue(guest, { subject: "u-1", version: 0, authTime: "1787000000" }),
+    /requires authTime/
+  );
+  assert.throws(
+    () => service.issue(guest, { subject: "u-1", version: 0, authTime: 0 }),
+    /requires authTime/
+  );
+  assert.throws(
+    () => service.issue(guest, { subject: "u-1", version: 0, authTime: -1 }),
+    /requires authTime/
+  );
+});
+
+test("the caller cannot smuggle a different auth_time through the payload", () => {
+  const service = createService();
+
+  // 與 ver 完全同一個理由：一個把舊 claims 原樣轉發的 handler，如果 payload
+  // 贏，就能簽出一個起算點停在任意時間、永遠不會到期的 token。
+  const future = Math.floor(Date.now() / 1000) + 999_999;
+  const token = service.issue(
+    { role: "admin", auth_time: future },
+    { subject: "u-1", version: 0, authTime: AUTH_TIME }
+  );
+
+  assert.equal(service.verify(token).auth_time, AUTH_TIME);
+});
+
+test("a token that arrives without auth_time is rejected at verification", () => {
+  const service = createService();
+
+  // 跟 sub 同一條規則：issue() 擋不到手工造的 token，而一個沒有 auth_time 的
+  // token 永遠撞不到絕對上限——那正是攻擊者想要的那一種。
+  const withoutAuthTime = jwt.sign({ role: "admin", sub: "u-1", ver: 0 }, secret, {
+    algorithm: "HS256",
+    issuer: "erp-api",
+    audience: "erp-client",
+    expiresIn: "2h"
+  });
+
+  assert.throws(() => service.verify(withoutAuthTime), (error) => {
+    assert.equal(error.name, "JsonWebTokenError");
+    assert.match(error.message, /auth_time is required/);
+    return true;
+  });
+});
+
+test("sessionMaxAge must carry a unit too", () => {
+  // 與 expiresIn 同一套解析。有人想用 JWT_SESSION_MAX_AGE=28800 表示「八小時
+  // 的秒數」，但純數字對 ms() 是毫秒——不擋的話那是 29 秒，全公司每 29 秒被
+  // 登出一次，而設定檔看起來完全正常。
+  assert.throws(
+    () => createService({ sessionMaxAge: "28800" }),
+    /must be a whole number with a unit/
+  );
+  assert.throws(
+    () => createService({ sessionMaxAge: "banana" }),
+    /must be a whole number with a unit/
+  );
+  assert.throws(() => createService({ sessionMaxAge: "0h" }), /must be greater than zero/);
+
+  assert.equal(createService({ sessionMaxAge: "30m" }).sessionMaxAgeSeconds, 1800);
 });
 
 test("a token that arrives without sub is rejected at verification", () => {
@@ -219,7 +323,7 @@ test("expiresIn must carry a unit, because a bare number means milliseconds", ()
   // 帶單位的寫法照舊，而且解析出來的秒數與 jsonwebtoken 實際簽出來的一致。
   const service = createService({ expiresIn: "30m" });
   const claims = service.verify(
-    service.issue({ role: "admin" }, { subject: "u-1", version: 0 })
+    service.issue({ role: "admin" }, { subject: "u-1", version: 0, authTime: AUTH_TIME })
   );
 
   assert.equal(claims.exp - claims.iat, 1800);

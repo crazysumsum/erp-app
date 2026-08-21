@@ -6,11 +6,12 @@ export class JwtAuthStrategy extends BaseAuthStrategy {
   static authType = "jwt";
 
   // 完全一般的 service metadata：簽發與驗證都交給 jwt service，這個策略只
-  // 負責把 token 從 HTTP header 裡取出來，再問一次它有沒有被撤銷。
+  // 負責把 token 從 HTTP header 裡取出來，再問它有沒有被撤銷、有沒有超過
+  // 絕對 session 上限。
   static service = Object.freeze({
     name: "auth.jwt",
     lifecycle: "singleton",
-    dependencies: ["jwt", "tokenRevocation", "logging"],
+    dependencies: ["jwt", "tokenRevocation", "time", "logging"],
     eager: true
   });
 
@@ -18,6 +19,9 @@ export class JwtAuthStrategy extends BaseAuthStrategy {
     super({ config, services, options });
     this.jwt = services.require("jwt");
     this.tokenRevocation = services.require("tokenRevocation");
+    // 時鐘從 container 拿而不是直接叫 Date.now()：絕對上限的判斷完全建立在
+    // 「現在幾點」上面，注入進來才測得到「八小時又一秒」這種邊界。
+    this.time = services.require("time");
   }
 
   async authenticate(req) {
@@ -37,6 +41,35 @@ export class JwtAuthStrategy extends BaseAuthStrategy {
 
     try {
       const claims = this.jwt.verify(token);
+
+      // 絕對 session 上限。排在最前面，因為它是這三道檢查裡唯一不依賴任何外部
+      // 狀態的一道——純粹是兩個數字相減。撤銷要讀快照，快照可能不健康；而一條
+      // 已經超過上限的 session 是死的，跟快照健不健康完全無關。放在後面的話，
+      // 撤銷服務故障期間，一個九小時前的 token 會拿到 503（「稍後再試」）而不是
+      // 401（「請重新登入」）——那是個會誤導人的答案。
+      //
+      // auth_time 由 issue() 強制寫入，續期時原封不動沿用（見 JwtService），
+      // 所以續期推不動這個起算點。verify() 已經擋掉沒有 auth_time 的 token。
+      const sessionAgeSeconds =
+        Math.floor(this.time.nowMs() / 1000) - claims.auth_time;
+
+      if (sessionAgeSeconds > this.jwt.sessionMaxAgeSeconds) {
+        // info 而不是 warn：每個使用者每天都會撞到一次，這是設計本身要求的
+        // 行為，不是異常。記成 warn 只會把真正的 warn 淹掉。
+        void this.logger?.info?.(
+          "auth.jwt.session_expired",
+          "JWT was rejected because its session reached the absolute maximum age",
+          {
+            requestId: req.requestId || null,
+            subject: claims.sub ?? null,
+            sessionAgeSeconds,
+            sessionMaxAgeSeconds: this.jwt.sessionMaxAgeSeconds
+          }
+        );
+        // 對外仍然只有籠統的 401，跟其他認證失敗一致。客戶端要做的事情是一樣
+        // 的——清掉憑證、回登入頁——而那條路它已經走得很對了。
+        throw new AuthenticationError("SESSION_EXPIRED", "JWT is invalid or expired");
+      }
 
       // 撤銷檢查刻意放在這裡而不是 JwtService.verify() 裡：jwt service 沒有
       // 任何依賴，是純粹的簽發與驗證。讓它依賴資料庫，會把整個 auth 堆疊——

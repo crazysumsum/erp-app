@@ -156,14 +156,14 @@ test("service discovery finds the built-in public services", async () => {
       lifecycle: "singleton",
       // 撤銷檢查在策略裡，不在 jwt service 裡：jwt 保持零依賴，簽發與驗證
       // 不該被綁上資料庫。
-      dependencies: ["jwt", "tokenRevocation", "logging"]
+      dependencies: ["jwt", "tokenRevocation", "time", "logging"]
     },
     {
       // JWT 加設備簽章：繼承 auth.jwt 的 JWT 驗證與撤銷檢查，多要求請求本身
       // 由簽發這個 token 的那台已核准設備發出。目前只有續期在用。
       name: "auth.jwtDevice",
       lifecycle: "singleton",
-      dependencies: ["jwt", "tokenRevocation", "deviceBinding", "logging"]
+      dependencies: ["jwt", "tokenRevocation", "deviceBinding", "time", "logging"]
     },
     {
       // JWT 加密碼再確認：同一個模式的另一個實例，第二因子換成密碼。給改密碼

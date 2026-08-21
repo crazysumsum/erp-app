@@ -681,6 +681,13 @@ function strategyWith({
   requestId = "req-1"
 }) {
   const logger = collectingLogger();
+  // 真的 JwtService.verify() 保證 auth_time 一定在，所以這個替身也要給——
+  // 少了它，絕對 session 上限那道檢查會拿到 NaN，而這個檔案要驗的撤銷邏輯
+  // 根本走不到。這裡一律給「剛剛」，讓上限那道檢查永遠通過。
+  const withAuthTime = claims && {
+    auth_time: Math.floor(Date.now() / 1000),
+    ...claims
+  };
   const strategy = new JwtAuthStrategy({
     config: {},
     services: {
@@ -689,13 +696,15 @@ function strategyWith({
           jwt: {
             headerName: "authorization",
             authScheme: "Bearer",
-            verify: verify ?? (() => claims)
+            sessionMaxAgeSeconds: 8 * 3600,
+            verify: verify ?? (() => withAuthTime)
           },
           tokenRevocation: {
             isRevoked,
             snapshotAgeSeconds: () => snapshotAgeSeconds,
             snapshotUsable: () => snapshotUsable
-          }
+          },
+          time: { nowMs: () => Date.now() }
         })[name],
       get: (name) => (name === "logging" ? { logger } : undefined)
     }
@@ -823,7 +832,9 @@ test("a rejection logs a null request id rather than dropping the entry", async 
 });
 
 test("a token that is not revoked passes through untouched", async () => {
-  const claims = { sub: "42", iat: 100 };
+  // auth_time 明寫出來，這樣底下的 deepEqual 比的就是同一個物件——harness 只在
+  // 呼叫端沒給的時候才補一個。
+  const claims = { sub: "42", iat: 100, auth_time: Math.floor(Date.now() / 1000) };
   const { strategy, req, logger } = strategyWith({
     claims,
     isRevoked: () => false

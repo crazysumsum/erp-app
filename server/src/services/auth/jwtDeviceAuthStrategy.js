@@ -29,7 +29,9 @@ export class JwtDeviceAuthStrategy extends JwtAuthStrategy {
   static service = Object.freeze({
     name: "auth.jwtDevice",
     lifecycle: "singleton",
-    dependencies: ["jwt", "tokenRevocation", "deviceBinding", "logging"],
+    // time 是繼承來的：JwtAuthStrategy 用它判斷絕對 session 上限。子類別必須
+    // 自己列出來——service discovery 讀的是每個類別自己的 static metadata。
+    dependencies: ["jwt", "tokenRevocation", "deviceBinding", "time", "logging"],
     eager: true
   });
 

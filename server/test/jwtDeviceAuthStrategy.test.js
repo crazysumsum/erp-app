@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { JwtDeviceAuthStrategy } from "../src/services/auth/jwtDeviceAuthStrategy.js";
 import { JwtService } from "../src/services/auth/JwtService.js";
+import { createTestTime } from "../test-support/createTestTime.js";
 
 // 這支 strategy 是「JWT + 設備簽章」這個模式的身份層——JWT 有效嗎、沒被撤銷、
 // 這個簽章是不是這個 token 綁定的那台設備發出的。跟哪個 handler 在用它無關，
@@ -35,6 +36,7 @@ function createJwtService() {
         audience: "erp-client",
         algorithm: "HS256",
         expiresIn: "15m",
+        sessionMaxAge: "8h",
         clockToleranceSeconds: 5,
         headerName: "Authorization",
         authScheme: "Bearer"
@@ -83,7 +85,15 @@ function createStrategy({
   deviceBinding = fakeDeviceBinding(),
   logger = collectingLogger()
 } = {}) {
-  const available = { jwt, tokenRevocation, deviceBinding, logging: { logger, loggers: {} } };
+  const available = {
+    jwt,
+    tokenRevocation,
+    deviceBinding,
+    // 繼承來的 JwtAuthStrategy 用它判斷絕對 session 上限。真時鐘：這個檔案
+    // 驗的是設備簽章，token 都是當場簽的，上限那條路有自己的測試。
+    time: createTestTime({ clock: () => new Date() }),
+    logging: { logger, loggers: {} }
+  };
   const services = {
     get(name) {
       return available[name];
@@ -119,7 +129,7 @@ function fakeRequest({ token, headers = {}, body = {}, requestId = "req-1" } = {
 }
 
 function issueToken(jwt, { subject = "7", version = 1, did = DEVICE_ID } = {}) {
-  return jwt.issue({ did }, { subject, version });
+  return jwt.issue({ did }, { subject, version, authTime: Math.floor(Date.now() / 1000) });
 }
 
 test("a valid JWT with a matching device signature authenticates and hands back the binding", async () => {
@@ -216,7 +226,7 @@ test("a token with no did claim at all is a mismatch too, and the log falls back
   const { strategy, jwt, logger } = createStrategy();
   // 手工造一個沒有 did 的 token——理論上簽發端一律會帶，但這裡要確認少了它
   // 不會讓比對意外通過，也不會讓記錄那行自己先炸掉。
-  const token = jwt.issue({}, { subject: "7", version: 1 });
+  const token = jwt.issue({}, { subject: "7", version: 1, authTime: Math.floor(Date.now() / 1000) });
 
   await assert.rejects(
     // requestId 也留空：跟 tokenDeviceId 一樣，用同一個 "?? null" / "|| null"
@@ -340,10 +350,14 @@ test("a clock skew rejection is told apart, because only the user can fix that o
 
 test("authType and service metadata are declared correctly", () => {
   assert.equal(JwtDeviceAuthStrategy.authType, "jwt-device");
+  // time 是繼承來的需求（JwtAuthStrategy 用它算絕對 session 上限），但 service
+  // discovery 讀的是每個類別自己的 static metadata，所以子類別漏列它就會在啟動
+  // 時炸——這一條把那個容易漏的地方釘住。
   assert.deepEqual(JwtDeviceAuthStrategy.service.dependencies, [
     "jwt",
     "tokenRevocation",
     "deviceBinding",
+    "time",
     "logging"
   ]);
 });

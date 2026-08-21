@@ -3,6 +3,7 @@ import test from "node:test";
 import { JwtPasswordAuthStrategy } from "../src/services/auth/jwtPasswordAuthStrategy.js";
 import { JwtService } from "../src/services/auth/JwtService.js";
 import { AUTH_FAILURE } from "../src/modules/user/UserService.js";
+import { createTestTime } from "../test-support/createTestTime.js";
 
 // 這支 strategy 是「JWT + 密碼再確認」這個模式的身份層。跟哪個 handler 在用它
 // 無關，所以測試不透過任何 handler，直接對 strategy 送請求；密碼比對本身（含
@@ -33,6 +34,7 @@ function createJwtService() {
         audience: "erp-client",
         algorithm: "HS256",
         expiresIn: "15m",
+        sessionMaxAge: "8h",
         clockToleranceSeconds: 5,
         headerName: "Authorization",
         authScheme: "Bearer"
@@ -58,10 +60,11 @@ function createStrategy({
   const available = {
     jwt,
     tokenRevocation,
-    // UserService 在 constructor 裡就建了，這幾個只要存在即可——真正的驗證
-    // 邏輯由下面覆寫掉的 strategy.userService 接手，不會走到這幾個假物件。
+    // UserService 在 constructor 裡就建了，mysqldatabase 只要存在即可——真正
+    // 的驗證邏輯由下面覆寫掉的 strategy.userService 接手，不會走到這個假物件。
     mysqldatabase: {},
-    time: {},
+    // time 不能是空物件：繼承來的 JwtAuthStrategy 會用它算絕對 session 上限。
+    time: createTestTime({ clock: () => new Date() }),
     logging: { logger, loggers: {} }
   };
   const services = {
@@ -95,7 +98,7 @@ function fakeRequest({ token, body = {} } = {}) {
 }
 
 function issueToken(jwt, { subject = "7", version = 1 } = {}) {
-  return jwt.issue({}, { subject, version });
+  return jwt.issue({}, { subject, version, authTime: Math.floor(Date.now() / 1000) });
 }
 
 test("a valid JWT with the right password authenticates", async () => {
