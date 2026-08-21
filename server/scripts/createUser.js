@@ -1,7 +1,11 @@
 /**
  * 建立一個使用者帳號，並視需要建立角色與授權。
  *
- *   node scripts/createUser.js <username> <password> [--name "顯示名稱"] [--role admin --role staff]
+ *   node scripts/createUser.js <username> [--name "顯示名稱"] [--role admin --role staff]
+ *
+ * 密碼**唔會**由 command line 收：argv 會出現喺 shell history，亦會出現喺同一
+ * 部機上任何人跑 `ps` 睇到嘅 process list 入面。改為由 stdin 讀——係 TTY 就
+ * 收埋回顯提示輸入，唔係 TTY（pipe、secrets manager）就直接讀一行。
  *
  * 系統上第一個帳號只能這樣建出來——登入 API 需要一個已存在的帳號，而建立帳號
  * 的 API 需要一個已登入的人。這支腳本就是打破這個循環的那一步。
@@ -46,12 +50,25 @@ function parseArguments(argv) {
     }
   }
 
-  const [username, password] = positional;
+  const [username, extra] = positional;
 
-  if (!username || !password) {
+  if (!username) {
     throw new Error(
-      "Usage: node scripts/createUser.js <username> <password> " +
+      "Usage: node scripts/createUser.js <username> " +
         '[--name "Display Name"] [--role <role>]...'
+    );
+  }
+
+  // 靜靜哋忽略嘅話，密碼已經留咗喺 history 同 process list 入面，而使用者以為
+  // 自己用咗佢。明明白白講出嚟，順便叫佢清 history。
+  if (extra !== undefined) {
+    throw new Error(
+      "The password is no longer taken as an argument: it would be visible in shell " +
+        "history and in `ps` output for anyone on this machine.\n" +
+        "Run it without the password and type it at the prompt, or pipe it in:\n" +
+        "  node scripts/createUser.js <username>\n" +
+        "  <secrets-manager> | node scripts/createUser.js <username>\n" +
+        "You just passed one on the command line - clear it from your shell history."
     );
   }
 
@@ -59,7 +76,73 @@ function parseArguments(argv) {
     throw new Error("--role requires a non-empty value");
   }
 
-  return { username: username.trim(), password, displayName, roles };
+  return { username: username.trim(), displayName, roles };
+}
+
+/**
+ * 由 stdin 讀密碼。
+ *
+ * TTY：收埋回顯，逐個字元讀。用 readline 嘅話要覆寫佢個私有 _writeToOutput
+ * 先收得埋，倚賴一個冇文件嘅內部欄位；raw mode 係公開 API。
+ *
+ * 非 TTY：直接讀一行，畀 CI 或者 secrets manager 用 pipe 餵入。呢條路唔會有
+ * 提示字串，因為輸出可能俾人重新導向去第二度。
+ */
+function readPassword(prompt) {
+  const { stdin, stdout } = process;
+
+  if (!stdin.isTTY) {
+    return new Promise((resolve, reject) => {
+      let buffer = "";
+      stdin.setEncoding("utf8");
+      stdin.on("data", (chunk) => {
+        buffer += chunk;
+      });
+      stdin.on("end", () => resolve(buffer.replace(/\r?\n$/, "")));
+      stdin.on("error", reject);
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    stdout.write(prompt);
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding("utf8");
+
+    let value = "";
+
+    const finish = (callback) => {
+      stdin.setRawMode(false);
+      stdin.pause();
+      stdin.removeListener("data", onData);
+      stdout.write("\n");
+      callback();
+    };
+
+    function onData(char) {
+      // raw mode 落，一次 data 可能係貼上嚟嘅一整段，所以逐個字元行。
+      for (const character of char) {
+        if (character === "\n" || character === "\r" || character === "\u0004") {
+          finish(() => resolve(value));
+          return;
+        }
+
+        if (character === "\u0003") {
+          finish(() => reject(new Error("Aborted")));
+          return;
+        }
+
+        if (character === "\u007f" || character === "\b") {
+          value = value.slice(0, -1);
+          continue;
+        }
+
+        value += character;
+      }
+    }
+
+    stdin.on("data", onData);
+  });
 }
 
 async function createUser(connection, { username, password, displayName, roles }) {
@@ -114,11 +197,17 @@ async function createUser(connection, { username, password, displayName, roles }
 }
 
 const options = parseArguments(process.argv.slice(2));
+const password = await readPassword(`Password for ${options.username}: `);
+
+if (!password) {
+  throw new Error("A password is required");
+}
+
 const pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
 const connection = await pool.getConnection();
 
 try {
-  const { userId, roles, isFirstUser } = await createUser(connection, options);
+  const { userId, roles, isFirstUser } = await createUser(connection, { ...options, password });
   console.log(
     `Created user ${options.username} (id ${userId})` +
       (roles.length > 0 ? ` with roles: ${roles.join(", ")}` : "")
