@@ -3,10 +3,10 @@ import { AuditLogService } from "../audit/AuditLogService.js";
 import {
   assertLastActiveAdminPreserved,
   assertNoPermissionEscalation,
-  assertPermissionsCurrent,
   lastAdminProtectedError,
   newlyGrantedPermissions
 } from "../authorization/adminGuard.js";
+import { assertActorFresh, loadRoleNamesForUser } from "../authorization/directoryLookups.js";
 import { hashPassword } from "./passwordHash.js";
 import { assertPasswordChanged, assertPasswordStrength } from "./passwordPolicy.js";
 
@@ -114,7 +114,7 @@ export class UserAdminService {
     sortBy = "username",
     descending = false
   }) {
-    await this.#assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
 
     const conditions = [];
     const params = [];
@@ -157,7 +157,7 @@ export class UserAdminService {
   }
 
   async getById({ actorId, claimedRoles, claimedPermissions, id }) {
-    await this.#assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
 
     const [rows] = await this.database.query(
       `SELECT id, username, display_name, status, created_at, must_change_password
@@ -183,7 +183,7 @@ export class UserAdminService {
     assertPasswordStrength(password);
 
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.#assertActorFresh(connection, {
+      const actor = await assertActorFresh(connection, {
         actorId,
         claimedRoles,
         claimedPermissions
@@ -243,7 +243,7 @@ export class UserAdminService {
 
   async update({ actorId, claimedRoles, claimedPermissions, id, displayName }) {
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.#assertActorFresh(connection, {
+      const actor = await assertActorFresh(connection, {
         actorId,
         claimedRoles,
         claimedPermissions
@@ -279,7 +279,7 @@ export class UserAdminService {
    */
   async disable({ actorId, claimedRoles, claimedPermissions, id, reason }) {
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.#assertActorFresh(connection, {
+      const actor = await assertActorFresh(connection, {
         actorId,
         claimedRoles,
         claimedPermissions
@@ -293,7 +293,7 @@ export class UserAdminService {
       // 純函式的預檢查用「這個帳號現在還算不算 active admin」建模成一次角色
       // 變更：currentRoleNames 是他現在的角色，nextRoleNames 給空陣列——停用
       // 之後他不再能以任何身份行動，效果等同角色被拔光。
-      const currentRoleNames = await this.#roleNamesForUser(connection, id);
+      const currentRoleNames = await loadRoleNamesForUser(connection, id);
       const otherActiveAdminCount = await this.#otherActiveAdminCount(connection, id);
       assertLastActiveAdminPreserved({
         currentRoleNames,
@@ -360,7 +360,7 @@ export class UserAdminService {
    */
   async enable({ actorId, claimedRoles, claimedPermissions, id, reason }) {
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.#assertActorFresh(connection, {
+      const actor = await assertActorFresh(connection, {
         actorId,
         claimedRoles,
         claimedPermissions
@@ -406,7 +406,7 @@ export class UserAdminService {
     reason
   }) {
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.#assertActorFresh(connection, {
+      const actor = await assertActorFresh(connection, {
         actorId,
         claimedRoles,
         claimedPermissions
@@ -428,7 +428,7 @@ export class UserAdminService {
 
       const roles = await this.#rolesByIds(connection, roleIds);
       const nextRoleNames = roles.map((role) => role.name);
-      const currentRoleNames = await this.#roleNamesForUser(connection, id);
+      const currentRoleNames = await loadRoleNamesForUser(connection, id);
 
       const currentPermissionNames = await this.#permissionNamesForRoleIds(
         connection,
@@ -471,7 +471,7 @@ export class UserAdminService {
     assertPasswordStrength(newPassword);
 
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.#assertActorFresh(connection, {
+      const actor = await assertActorFresh(connection, {
         actorId,
         claimedRoles,
         claimedPermissions
@@ -508,34 +508,7 @@ export class UserAdminService {
     });
   }
 
-  // --- 內部：重讀操作者現況（§1.4 第四道） ------------------------------------
-
-  /**
-   * 重讀操作者現在的角色與權限，跟 claims 比對；不符就 403 PERMISSION_STALE。
-   * 回傳操作者現在真正持有的權限，餵給需要判斷提權的方法。
-   *
-   * 找不到操作者（帳號被刪除或停用）時，直接把「現在」視為空集合——一個空集合
-   * 幾乎必然跟 claims 對不上，會自然地被同一句比對擋下，不必另開一個錯誤碼。
-   */
-  async #assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions }) {
-    const [rows] = await connection.query(
-      "SELECT username FROM users WHERE id = ? AND status = 'active'",
-      [actorId]
-    );
-
-    const roles = rows.length === 0 ? [] : await this.#roleNamesForUser(connection, actorId);
-    const permissions =
-      rows.length === 0 ? [] : await this.#permissionNamesForUser(connection, actorId);
-
-    assertPermissionsCurrent({
-      claimedRoles,
-      claimedPermissions,
-      currentRoles: roles,
-      currentPermissions: permissions
-    });
-
-    return { id: actorId, username: rows[0]?.username ?? "", roles, permissions };
-  }
+  // --- 內部 ------------------------------------------------------------------
 
   async #requireUser(connection, id) {
     const [rows] = await connection.query(
@@ -573,25 +546,6 @@ export class UserAdminService {
     );
 
     return rows.map((row) => ({ id: Number(row.id), name: row.name }));
-  }
-
-  async #roleNamesForUser(connection, userId) {
-    const roles = await this.#rolesForUser(connection, userId);
-    return roles.map((role) => role.name);
-  }
-
-  async #permissionNamesForUser(connection, userId) {
-    const [rows] = await connection.query(
-      `SELECT DISTINCT p.name
-         FROM permissions p
-         JOIN role_permissions rp ON rp.permission_id = p.id
-         JOIN user_roles ur ON ur.role_id = rp.role_id
-        WHERE ur.user_id = ?
-        ORDER BY p.name`,
-      [userId]
-    );
-
-    return rows.map((row) => row.name);
   }
 
   /** 給定一組候選的角色 id（不一定是任何人現有的角色），算出它們聯集的權限。 */
