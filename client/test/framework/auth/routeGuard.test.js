@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { createAuthGuard, resolveNavigation } from "@/framework/auth/routeGuard.js";
 
-function session({ authenticated = false, roles = [], permissions = [] } = {}) {
-  return { isAuthenticated: authenticated, roles, permissions };
+function session({ authenticated = false, roles = [], permissions = [], mustChangePassword = false } = {}) {
+  return {
+    isAuthenticated: authenticated,
+    roles,
+    permissions,
+    user: authenticated ? { mustChangePassword } : null
+  };
 }
 
 describe("resolveNavigation", () => {
@@ -45,6 +50,33 @@ describe("resolveNavigation", () => {
     const to = { meta: {}, fullPath: "/" };
 
     expect(resolveNavigation(to, session({ authenticated: true }))).toEqual({ allow: true });
+  });
+
+  it("mustChangePassword 嘅使用者打任何頁都會轉去改密碼頁，即使權限本身夠", () => {
+    const to = { name: "orders", meta: { requires: { permissions: ["order.read"] } }, fullPath: "/orders" };
+    const forcedChange = session({ authenticated: true, permissions: ["order.read"], mustChangePassword: true });
+
+    expect(resolveNavigation(to, forcedChange)).toEqual({
+      allow: false,
+      redirect: { name: "change-password" }
+    });
+  });
+
+  it("mustChangePassword 唔會擋改密碼頁本身，否則使用者永遠去唔到", () => {
+    const to = { name: "change-password", meta: {}, fullPath: "/password/change" };
+    const forcedChange = session({ authenticated: true, mustChangePassword: true });
+
+    expect(resolveNavigation(to, forcedChange)).toEqual({ allow: true });
+  });
+
+  it("mustChangePassword 排喺權限檢查之前：權限唔夠都係轉去改密碼頁，唔係 403", () => {
+    const to = { name: "orders", meta: { requires: { permissions: ["order.delete"] } }, fullPath: "/orders" };
+    const forcedChange = session({ authenticated: true, permissions: [], mustChangePassword: true });
+
+    expect(resolveNavigation(to, forcedChange)).toEqual({
+      allow: false,
+      redirect: { name: "change-password" }
+    });
   });
 });
 

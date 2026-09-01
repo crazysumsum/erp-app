@@ -1,9 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("quasar", () => ({ Dialog: { create: vi.fn() } }));
+// PasswordReasonDialog.vue（confirm.js 依家會 import 佢）喺 <script setup>
+// 頂層讀 `useDialogPluginComponent.emits`（一個靜態陣列），mock 唔帶呢個
+// export 嘅話單單 import confirm.js 都會炸——呢度啲測試淨係斷言
+// Dialog.create 嘅傳入參數，唔會真正掛載個 component，所以呢個 stub 唔使
+// 做到完全似真（真正嘅行為由 PasswordReasonDialog.test.js 覆蓋）。
+vi.mock("quasar", () => ({
+  Dialog: { create: vi.fn() },
+  useDialogPluginComponent: Object.assign(vi.fn(), { emits: ["ok", "hide"] })
+}));
 
 import { Dialog } from "quasar";
 import { confirm, confirmDelete, promptPassword } from "@/framework/ui/confirm.js";
+import PasswordReasonDialog from "@/framework/ui/PasswordReasonDialog.vue";
 
 function mockDialogOutcome(outcome, value) {
   Dialog.create.mockImplementation(() => {
@@ -105,5 +114,34 @@ describe("promptPassword", () => {
     const { isValid } = Dialog.create.mock.calls[0][0].prompt;
     expect(isValid("")).toBe(false);
     expect(isValid("hunter2")).toBe(true);
+  });
+
+  describe("requireReason: true", () => {
+    it("用 PasswordReasonDialog 呢個 component，唔係內建嘅 prompt", async () => {
+      mockDialogOutcome("ok", { reason: "轉組", password: "hunter2" });
+
+      await promptPassword({ title: "配置角色", message: "test", okLabel: "儲存", requireReason: true });
+
+      expect(Dialog.create).toHaveBeenCalledWith({
+        component: PasswordReasonDialog,
+        componentProps: { title: "配置角色", message: "test", okLabel: "儲存" }
+      });
+    });
+
+    it("撳確認會 resolve { reason, password }，唔再係得返一個 string", async () => {
+      mockDialogOutcome("ok", { reason: "轉組", password: "hunter2" });
+
+      await expect(
+        promptPassword({ message: "test", requireReason: true })
+      ).resolves.toEqual({ reason: "轉組", password: "hunter2" });
+    });
+
+    it("撳取消一樣 resolve null", async () => {
+      mockDialogOutcome("cancel");
+
+      await expect(
+        promptPassword({ message: "test", requireReason: true })
+      ).resolves.toBe(null);
+    });
   });
 });

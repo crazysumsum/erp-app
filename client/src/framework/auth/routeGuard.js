@@ -17,6 +17,13 @@ export function resolveNavigation(to, session) {
     return { allow: false, redirect: { name: "login", query: { redirect: to.fullPath } } };
   }
 
+  // 強制首次改密碼：順序排喺權限檢查之前（見 docs/user-management.md §4.5）。
+  // 後端（jwtAuthStrategy 嘅 mcp claim 擋）先係真正嘅關卡，呢度淨係等使用者
+  // 見到一個講得通嘅畫面，而唔係一路撞 403。
+  if (session.user?.mustChangePassword && to.name !== "change-password") {
+    return { allow: false, redirect: { name: "change-password" } };
+  }
+
   if (to.meta?.requires && !can(session, to.meta.requires)) {
     return { allow: false, redirect: { name: "forbidden" } };
   }
