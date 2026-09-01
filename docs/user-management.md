@@ -125,13 +125,21 @@ WHERE id = ? AND status = 'active'
     -- 自己不是 system-admin，或者除了自己以外還有別的 active system-admin
     NOT EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
                 WHERE ur.user_id = users.id AND r.name = 'system-admin')
-    OR EXISTS (SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
-               JOIN users u2 ON u2.id = ur.user_id
-               WHERE r.name = 'system-admin' AND u2.status = 'active' AND u2.id <> users.id)
+    OR EXISTS (
+      -- 這裡多包一層 derived table，理由見下面「對真資料庫的修正」。
+      SELECT 1 FROM (
+        SELECT u2.id AS id FROM user_roles ur2
+          JOIN roles r2 ON r2.id = ur2.role_id
+          JOIN users u2 ON u2.id = ur2.user_id
+         WHERE r2.name = 'system-admin' AND u2.status = 'active' AND u2.id <> ?
+      ) AS other_active_admins
+    )
   );
 ```
 
 `affectedRows === 0` 就是「停不了」，回 409 `LAST_ADMIN_PROTECTED`。InnoDB 會對這一列的寫入序列化，兩個並行請求只有一個過得了。移除角色（`roles/assign` 送上來的清單不含 `system-admin`，而對方是最後一個 admin）套同一條規則。
+
+> **對真資料庫的修正（Phase 2 實作時發現）**：第二個 `EXISTS` 子查詢要判斷「除了這一列以外還有沒有別的 active admin」，需要 `JOIN` 到 `users` 本身——但 MySQL 不允許在 `UPDATE` 的子查詢裡以任何別名直接讀被更新的那張表，會拋 `ER_UPDATE_TABLE_USED`（"You can't specify target table 'users' for update in FROM clause"）。這一版設計文件最初寫的 SQL（少了外層那個 `SELECT 1 FROM (...) AS other_active_admins` 包裝）在單元測試裡看起來完全合理，只有對著真 MySQL 才會炸——這正是 §7 每個 Phase 都要求整合測試對真資料庫驗收的理由。外層再包一次子查詢會讓 MySQL 先把裡面的結果物化成一張暫存表，之後的讀取就不再算是「直接讀目標表」，繞過這個限制。第一個 `NOT EXISTS` 不需要這個包裝，因為它的子查詢沒有 `JOIN users`，只是拿外層那一列的 `id` 當常數比對，不受這條限制。上面的程式碼區塊已經是修正後、通過整合測試的版本。
 
 > 上一輪你選的是不加這條守衛。改的理由是審閱報告點出的那件事：**沒有守衛、又沒有復原工具**，兩者同時成立才是真正的問題。現在兩樣都補上（守衛在這裡，緊急腳本在 §5.1）。
 
@@ -698,6 +706,11 @@ static service = Object.freeze({
 | `server/test/permissionCatalogueConventions.test.js` | **新增**：§3.7 的約定（權限字串、禁用 `hasRole`、種子與目錄一致；豁免清單那條在 Phase 4 補上） |
 | `server/test/permissionCatalogueStartupGuard.test.js` | **新增**：自檢的三種處置，含「它從不寫入」那條斷言 |
 | `server/test/integration/migrations.integration.test.js` | **新增**：三支 migration 對真 MySQL 的驗收與重跑收斂 |
+| `server/test/adminGuard.test.js` | **新增**：四道守衛的純函式測試，含每一條規則的邊界 |
+| `server/test/passwordPolicy.test.js` | **新增** |
+| `server/test/auditLogService.test.js` | **新增**：含「用呼叫端給的連線，不是自己的」那條斷言 |
+| `server/test/userAdminService.test.js` | **新增**：關聯式記憶體替身，寫入路徑的分岔與 §3.8 錯誤碼 |
+| `server/test/integration/userManagement.integration.test.js` | **新增**：對真 MySQL 的端到端走查、提權防護、並行停用最後兩個 admin |
 | `client/test/framework/authorization/permissionConventions.test.js` | **新增**：頁面 metadata 的權限字串與禁用 `requires.roles` |
 | `server/test-support/fakeMySqlPool.js` | 回答權限目錄那一句查詢——啟動自檢是 eager 的，每個測試用應用都會經過它 |
 | `server/scripts/checkCoverageFloors.js` | 加 `PermissionCatalogueService.js` 的 per-file 下限 |
@@ -738,7 +751,7 @@ static service = Object.freeze({
 > 2. **`PermissionCatalogueService` 是 eager 的，所以每一個「啟動一個測試用應用」的測試都會經過它。** `test-support/fakeMySqlPool.js` 因此要回答權限目錄那一句查詢——那個替身代表的本來就是一個已經 migrate 過的資料庫。順帶把 `applicationFactory.test.js` 釘住的啟動查詢次數由 3 改成 4，並在註解裡寫明第四次是誰。
 > 3. **前端的約定測試直接 import 後端那份目錄**（`server/src/modules/authorization/permissionCatalogue.js`，純資料、零依賴），不在前端再抄一份。抄一份的話，兩份分岔的症狀會是「前端說你看不到這一頁，後端卻放行」——而那正是這條測試要防的事。
 
-### Phase 2 — 後端：守衛與用戶管理
+### Phase 2 — 後端：守衛與用戶管理 ✅ 已完成
 
 1. `adminGuard.js`（四道守衛，純函式，先寫測試）。
 2. `UserAdminService` + `AuditLogService`（含交易共用連線、`reason`、`detail` 截斷）。
@@ -747,6 +760,14 @@ static service = Object.freeze({
 5. 停用即刻撤銷（§3.6）。
 
 **驗收**：單元測試涵蓋 §3.8 每一個錯誤碼；整合測試（真資料庫）走一次「建帳號 → 配角色 → 停用 → 用舊 token 打任一端點被擋 → 啟用 → 重新登入」；**只有 `user.mgmt` 的帳號把 `system-admin` 指派給自己會回 403**；**兩個請求同時停用最後兩個 admin，只有一個成功**；`user_audit_logs` 對每一次變更各有一列（`reason` 有值），且 handler 拋錯的那次沒有留下任何列。
+
+> **實作時發現、且已修正的一件事：guard 3 的 SQL 在真 MySQL 上跑不動。** §1.4 原本給的那句 `UPDATE` 在單元測試（假連線）上看起來完全合理，對著真 MySQL 才會拋 `ER_UPDATE_TABLE_USED`——第二個 `EXISTS` 子查詢用不同別名 `JOIN` 了正在被更新的 `users` 表本身，MySQL 不允許這樣寫。修法是在那個子查詢外面再包一層 `derived table`，逼 MySQL 先把結果物化成暫存表。§1.4 的 SQL 範例已經同步改成修正後的版本，並附上這個限制的說明。這正是「每個 Phase 都要求整合測試對真資料庫驗收」存在的理由——這個錯誤在假連線的單元測試裡完全不會出現。
+>
+> **實作時多出來的三件事**（都不改設計，只是設計沒寫到）：
+>
+> 1. **三支提權端點（`create`、`roles/assign`、`password/reset`）暫時掛 `jwt-password`，不是終態的 `jwt-device-password`。** 後者要到 Phase 4 才存在（`jwtDevicePasswordAuthStrategy.js` 是 Phase 4 的產物）。每支 handler 上都留了註解指向這件事，Phase 4 落地時把 `authType` 換掉即可，這是唯一要改的地方。
+> 2. **`GET /api/v1/audit/logs` 這支端點沒有在 Phase 2 做。** Phase 2 的範圍明確寫的是「§3.1 前八列」，稽核查詢是第 16 列；`AuditLogService` 本身（寫入那一半）已經在用了，讀取的 HTTP 端點留給之後——它與 Phase 6 的前端稽核頁天生綁在一起，屆時一起做。
+> 3. **`UserAdminService` 的 constructor 多吃一個 `tokenRevocation`**，不是文件寫的「三個 admin 模組都吃 `{database, logger, time}`」。停用與重設密碼都要在改資料庫之前先撤銷對方的 token（§3.6），這個能力只有 `tokenRevocation` 有——`RoleAdminService`（Phase 3）不需要它，所以這個差異只在 `UserAdminService` 上。
 
 ### Phase 3 — 後端：角色與權限目錄
 
