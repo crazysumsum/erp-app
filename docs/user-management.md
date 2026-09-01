@@ -711,6 +711,12 @@ static service = Object.freeze({
 | `server/test/auditLogService.test.js` | **新增**：含「用呼叫端給的連線，不是自己的」那條斷言 |
 | `server/test/userAdminService.test.js` | **新增**：關聯式記憶體替身，寫入路徑的分岔與 §3.8 錯誤碼 |
 | `server/test/integration/userManagement.integration.test.js` | **新增**：對真 MySQL 的端到端走查、提權防護、並行停用最後兩個 admin |
+| `server/src/modules/authorization/directoryLookups.js` | **新增**：§1.4 第四道的共用查詢，`UserAdminService` 與 `RoleAdminService` 都用 |
+| `server/src/modules/role/RoleAdminService.js` | **新增** |
+| `server/src/handlers/roles/*.js`、`permissions/listPermissionsHandler.js` | **新增**：角色的五支端點 + `GET /api/v1/permissions` |
+| `server/test/directoryLookups.test.js` | **新增** |
+| `server/test/roleAdminService.test.js` | **新增**：關聯式記憶體替身，含 CASCADE 的模擬 |
+| `server/test/integration/roleManagement.integration.test.js` | **新增**：對真 MySQL 的 `ROLE_PROTECTED`、提權防護、`ASSIGNMENT_STALE`、CASCADE 驗收 |
 | `client/test/framework/authorization/permissionConventions.test.js` | **新增**：頁面 metadata 的權限字串與禁用 `requires.roles` |
 | `server/test-support/fakeMySqlPool.js` | 回答權限目錄那一句查詢——啟動自檢是 eager 的，每個測試用應用都會經過它 |
 | `server/scripts/checkCoverageFloors.js` | 加 `PermissionCatalogueService.js` 的 per-file 下限 |
@@ -769,13 +775,17 @@ static service = Object.freeze({
 > 2. **`GET /api/v1/audit/logs` 這支端點沒有在 Phase 2 做。** Phase 2 的範圍明確寫的是「§3.1 前八列」，稽核查詢是第 16 列；`AuditLogService` 本身（寫入那一半）已經在用了，讀取的 HTTP 端點留給之後——它與 Phase 6 的前端稽核頁天生綁在一起，屆時一起做。
 > 3. **`UserAdminService` 的 constructor 多吃一個 `tokenRevocation`**，不是文件寫的「三個 admin 模組都吃 `{database, logger, time}`」。停用與重設密碼都要在改資料庫之前先撤銷對方的 token（§3.6），這個能力只有 `tokenRevocation` 有——`RoleAdminService`（Phase 3）不需要它，所以這個差異只在 `UserAdminService` 上。
 
-### Phase 3 — 後端：角色與權限目錄
+### Phase 3 — 後端：角色與權限目錄 ✅ 已完成
 
 1. `RoleAdminService`。
 2. 角色的五支端點 + `GET /api/v1/permissions`。
 3. `system-admin` 的保護（§1.4 第一道）。
 
 **驗收**：對 `system-admin` 做四種寫入動作都回 409 `ROLE_PROTECTED`；只有 `role.mgmt` 的帳號替某角色加上 `user.mgmt` 會回 403；用舊的 `expectedPermissionIds` 送出會回 409 `ASSIGNMENT_STALE`；刪除一個有用戶持有的角色會成功，且那些用戶的 `user_roles` 列跟著消失（`CASCADE` 的行為要有測試釘住，因為我們刻意不擋它）。
+
+> **實作時多出來的一件事：§1.4 第四道的重讀邏輯抽成共用模組。** `UserAdminService`（Phase 2）與 `RoleAdminService` 原本會各自長出一份幾乎一模一樣的「重讀操作者現況、跟 claims 比對」私有方法——這是第二次真的需要同一段邏輯，所以抽成 `server/src/modules/authorization/directoryLookups.js`（會碰資料庫，所以不放進刻意保持純函式的 `adminGuard.js`）。`UserAdminService.js` 同步改用它，原本的私有方法整段刪掉；既有的 Phase 2 測試全部重跑過，行為不變。
+>
+> **`roles/:id/permissions/assign` 同樣暫時掛 `jwt-password`**，終態的 `jwt-device-password` 要 Phase 4 才存在——與 Phase 2 那三支的理由完全相同（見 `assignRolePermissionsHandler.js` 的註解）。
 
 ### Phase 4 — 後端：密碼、強制改密碼與設備簽章
 
