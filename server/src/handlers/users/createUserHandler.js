@@ -17,11 +17,8 @@ export class CreateUserHandler extends BaseRequestHandler {
     method: "POST",
     path: "/api/v1/users/create",
     description: "新增用戶，帶初始密碼與角色。建立即 must_change_password = 1。",
-    // 終態是 jwt-device-password（§3.1）。jwtDevicePasswordAuthStrategy 要到
-    // Phase 4 才會存在，這裡先掛 jwt-password；Phase 4 落地時把這一行換掉即可
-    // ——密碼再確認先生效，設備簽章晚一步補上，中間這段時間的風險模型與投產
-    // 前既有端點一致。
-    authType: "jwt-password",
+    // JWT + 已核准設備的簽章 + 當下的密碼，三者齊備才放行（§3.1）。
+    authType: "jwt-device-password",
     authorizationPolicies: USER_MGMT_POLICY,
     requestSchema: {
       params: EMPTY_OBJECT_SCHEMA,

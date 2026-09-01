@@ -1,6 +1,6 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
-import { UserService } from "../../modules/user/UserService.js";
+import { AUTH_FAILURE, UserService } from "../../modules/user/UserService.js";
 import { clientQuotaKey } from "../../services/requestLimiter/clientKey.js";
 import { MemoryRateLimitStore } from "../../services/requestLimiter/RateLimitStore.js";
 import { DEVICE_STATUS } from "../../services/deviceBinding/DeviceBindingService.js";
@@ -26,12 +26,16 @@ const IPV6_PREFIX_LENGTH = 64;
 // 使用者物件的形狀，登入與 /me 共用。前端的 session store 直接吃這個。
 export const USER_SCHEMA = Object.freeze({
   type: "object",
-  required: ["id", "username", "displayName", "roles", "permissions"],
+  required: ["id", "username", "displayName", "mustChangePassword", "roles", "permissions"],
   additionalProperties: false,
   properties: {
     id: { type: "integer", minimum: 1 },
     username: { type: "string" },
     displayName: { type: "string" },
+    // 前端靠這個決定要不要立刻導去改密碼頁——JWT 裡的 mcp claim 是後端擋
+    // 請求用的，這裡是同一件事在回應 body 上的鏡像，兩者永遠一起變（見
+    // §3.5、UserService.js 的 #loadUser()）。
+    mustChangePassword: { type: "boolean" },
     roles: { type: "array", items: { type: "string" } },
     permissions: { type: "array", items: { type: "string" } }
   }
@@ -171,6 +175,18 @@ export class LoginHandler extends BaseRequestHandler {
         }
       );
 
+      // 這是唯一一個不收斂成籠統訊息的失敗原因：它對正常使用者是一句可行動
+      // 的話（找管理員），而攻擊者從中學到的東西是零——他得先猜對密碼才看
+      // 得到這句（§3.4）。
+      if (result.reason === AUTH_FAILURE.TEMPORARY_EXPIRED) {
+        throw new ApplicationError("Temporary password has expired", {
+          code: "TEMPORARY_PASSWORD_EXPIRED",
+          statusCode: 401,
+          publicCode: "TEMPORARY_PASSWORD_EXPIRED",
+          publicMessage: "初始密碼已逾期，請聯絡管理員重設"
+        });
+      }
+
       throw new ApplicationError(`Login rejected: ${result.reason}`, {
         code: "LOGIN_FAILED",
         statusCode: 401,
@@ -210,10 +226,15 @@ export class LoginHandler extends BaseRequestHandler {
     // 這裡是絕對 session 上限唯一的起算點：登入是唯一一個「現在這一刻真的
     // 有人輸入了密碼」的時刻。續期只會把這個值原樣帶著走，推不動它。
     const authTime = Math.floor(this.time.nowMs() / 1000);
-    const token = this.jwt.issue(
-      { roles: user.roles, permissions: user.permissions, did: binding.device_id },
-      { subject, version, authTime }
-    );
+    const claims = { roles: user.roles, permissions: user.permissions, did: binding.device_id };
+
+    // mcp 只在 true 時才放進 claims，false 時完全不帶這個欄位——token 每個
+    // 請求都在傳，沒有意義的欄位不放進去（§3.5）。
+    if (user.mustChangePassword) {
+      claims.mcp = true;
+    }
+
+    const token = this.jwt.issue(claims, { subject, version, authTime });
 
     await this.deviceBinding.markUsed(binding.id);
 

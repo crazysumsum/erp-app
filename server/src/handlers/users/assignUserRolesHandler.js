@@ -25,9 +25,8 @@ export class AssignUserRolesHandler extends BaseRequestHandler {
     method: "POST",
     path: "/api/v1/users/:id/roles/assign",
     description: "整組覆蓋該用戶的角色（compare-and-set）。",
-    // 終態是 jwt-device-password（§3.1）；Phase 4 補上，理由與 createUserHandler
-    // 相同。
-    authType: "jwt-password",
+    // JWT + 已核准設備的簽章 + 當下的密碼，三者齊備才放行（§3.1）。
+    authType: "jwt-device-password",
     authorizationPolicies: USER_MGMT_POLICY,
     requestSchema: {
       params: USER_ID_PARAMS_SCHEMA,

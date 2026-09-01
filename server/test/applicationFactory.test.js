@@ -283,6 +283,9 @@ test("the application factory does not itself require the scheduler", async (t) 
         new URL("../src/services/auth/jwtDeviceAuthStrategy.js", import.meta.url).href,
         // approve/reject/revoke 宣告 authType "jwt-password"，同一個理由。
         new URL("../src/services/auth/jwtPasswordAuthStrategy.js", import.meta.url).href,
+        // 用戶／角色管理的提權端點（建立用戶、配角色、配權限、重設密碼）宣告
+        // authType "jwt-device-password"，同一個理由。
+        new URL("../src/services/auth/jwtDevicePasswordAuthStrategy.js", import.meta.url).href,
         new URL("../src/services/auth/publicAuthStrategy.js", import.meta.url).href,
         new URL("../src/services/mysqldatabase/MySqlDatabaseService.js", import.meta.url).href,
         // auth.jwt 現在宣告 tokenRevocation，所以這份清單也要帶上它。

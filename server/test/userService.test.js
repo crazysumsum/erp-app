@@ -123,6 +123,7 @@ test("authenticate accepts the right password and returns roles and permissions"
     id: 7,
     username: "alice",
     displayName: "Alice",
+    mustChangePassword: false,
     roles: ["admin"],
     permissions: ["order.read", "order.write"]
   });
@@ -245,6 +246,66 @@ test("authenticate rejects an unknown user", async () => {
   assert.equal(result.ok, false);
   assert.equal(result.reason, AUTH_FAILURE.UNKNOWN_USER);
   assert.deepEqual(database.state.updates, []);
+});
+
+test("authenticate rejects an expired temporary password even though it is correct", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({ temporary_password_expires_at: NOW_MS - 1 })
+  });
+  const service = createService(database);
+
+  const result = await service.authenticate("alice", "right-password");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.TEMPORARY_EXPIRED);
+});
+
+test("authenticate accepts a temporary password that has not expired yet", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({ temporary_password_expires_at: NOW_MS + 1 })
+  });
+  const service = createService(database);
+
+  const result = await service.authenticate("alice", "right-password");
+
+  assert.equal(result.ok, true);
+});
+
+test("authenticate accepts a password with no temporary deadline at all", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({ temporary_password_expires_at: null })
+  });
+  const service = createService(database);
+
+  const result = await service.authenticate("alice", "right-password");
+
+  assert.equal(result.ok, true);
+});
+
+test("an expired temporary password still clears the failure counter: the credential was correct", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({ failed_login_attempts: 3, temporary_password_expires_at: NOW_MS - 1 })
+  });
+  const service = createService(database);
+
+  await service.authenticate("alice", "right-password");
+
+  const clear = database.state.updates.find((u) => u.sql.includes("failed_login_attempts = 0"));
+  assert.ok(clear, "expected the failed-attempt counter to be cleared");
+});
+
+test("verifyPasswordById also rejects an expired temporary password", async () => {
+  // 改密碼等高風險端點的再次確認走的是同一套規則：一支已經過期的臨時密碼，
+  // 不該因為換了個呼叫端就重新變得可信。
+  const database = fakeDatabase({
+    user: await activeUser({ temporary_password_expires_at: NOW_MS - 1 })
+  });
+  const service = createService(database);
+
+  const result = await service.verifyPasswordById(7, "right-password");
+
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, AUTH_FAILURE.TEMPORARY_EXPIRED);
 });
 
 test("verifyPasswordById accepts the right password without returning a user", async () => {
@@ -388,9 +449,21 @@ test("findActiveById returns the user with roles and permissions", async () => {
     id: 7,
     username: "alice",
     displayName: "Alice",
+    mustChangePassword: false,
     roles: ["staff"],
     permissions: ["order.read"]
   });
+});
+
+test("findActiveById reports mustChangePassword when the flag is set", async () => {
+  const database = fakeDatabase({
+    user: await activeUser({ must_change_password: 1 })
+  });
+  const service = createService(database);
+
+  const user = await service.findActiveById(7);
+
+  assert.equal(user.mustChangePassword, true);
 });
 
 test("findActiveById returns null when the user is gone or disabled", async () => {

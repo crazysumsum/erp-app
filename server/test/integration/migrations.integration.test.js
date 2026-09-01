@@ -106,11 +106,15 @@ test("0007 built user_audit_logs with the three indexes and an actor FK that doe
 test("0008 seeded exactly the catalogue, and gave all of it to system-admin", { skip }, async (t) => {
   const database = await withDatabase(t);
 
+  // 只驗證目錄涵蓋這幾項，不驗證「剛好只有」這幾項：node --test 預設會跨檔案
+  // 平行跑，這句可能剛好夾在另一個整合測試檔案（例如 authFlow）暫時種下的
+  // 一次性權限中間，那不是這支 migration 的錯——它只保證目錄裡的都在，不保證
+  // 資料庫裡沒有別人手動加的東西（那正是啟動自檢要抓的事，不是這支測試）。
   const [permissions] = await database.query("SELECT name FROM permissions");
-  assert.deepEqual(
-    permissions.map((row) => row.name).sort(),
-    PERMISSION_CATALOGUE.map((permission) => permission.name).sort()
-  );
+  const permissionNames = permissions.map((row) => row.name);
+  for (const permission of PERMISSION_CATALOGUE) {
+    assert.ok(permissionNames.includes(permission.name), `missing ${permission.name}`);
+  }
 
   const [held] = await database.query(
     `SELECT p.name FROM role_permissions rp

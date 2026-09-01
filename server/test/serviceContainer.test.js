@@ -166,6 +166,14 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["jwt", "tokenRevocation", "deviceBinding", "time", "logging"]
     },
     {
+      // 疊上密碼再確認的 auth.jwtDevice：JWT + 已核准設備的簽章 + 當下的密碼，
+      // 三者齊備才放行。給能提權的端點用（建立用戶、配角色、配權限、重設
+      // 密碼）。
+      name: "auth.jwtDevicePassword",
+      lifecycle: "singleton",
+      dependencies: ["jwt", "tokenRevocation", "deviceBinding", "mysqldatabase", "time", "logging"]
+    },
+    {
       // JWT 加密碼再確認：同一個模式的另一個實例，第二因子換成密碼。給改密碼
       // 這類「已登入但要再次確認身份」的高風險端點用。
       name: "auth.jwtPassword",
