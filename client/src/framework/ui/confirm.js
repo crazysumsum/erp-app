@@ -1,4 +1,5 @@
 import { Dialog } from "quasar";
+import PasswordReasonDialog from "./PasswordReasonDialog.vue";
 
 /**
  * 統一確認對話框嘅文案風格。底層用 Quasar 嘅 Dialog plugin（main.js 已經
@@ -38,8 +39,31 @@ export function confirmDelete(subject) {
  * 用嚟配合後端 `jwt-password` 呢個 authType——單一個對話框同時做埋確認同
  * 收密碼，唔使先彈一個 confirm() 再彈一個輸入框：兩步變一步，用戶少click
  * 一次，我哋亦少一個「用戶喺兩個對話框之間改咗主意」嘅狀態要處理。
+ *
+ * `requireReason: true`：用戶管理嗰批高風險端點仲要多收一個必填嘅「原因」
+ * （寫入 `user_audit_logs.reason`，見 docs/user-management.md §3.1）。Quasar
+ * 內建嘅 `Dialog.create({ prompt })` 淨係支援一欄，所以呢種情況改用
+ * component-based dialog（PasswordReasonDialog.vue），回傳值亦都變成
+ * `{ reason, password }`，唔再係一個 string——呼叫方睇返有冇傳
+ * `requireReason` 就知道要點解構。
  */
-export function promptPassword({ title = "請確認密碼", message, okLabel = "確認" }) {
+export function promptPassword({
+  title = "請確認密碼",
+  message,
+  okLabel = "確認",
+  requireReason = false
+}) {
+  if (requireReason) {
+    return new Promise((resolve) => {
+      Dialog.create({
+        component: PasswordReasonDialog,
+        componentProps: { title, message, okLabel }
+      })
+        .onOk((payload) => resolve(payload))
+        .onCancel(() => resolve(null));
+    });
+  }
+
   return new Promise((resolve) => {
     Dialog.create({
       title,
