@@ -25,9 +25,8 @@ export class AssignRolePermissionsHandler extends BaseRequestHandler {
     method: "POST",
     path: "/api/v1/roles/:id/permissions/assign",
     description: "整組覆蓋該角色的權限（compare-and-set）。system-admin 拒絕修改。",
-    // 終態是 jwt-device-password（§3.1）；Phase 4 補上，理由與用戶管理那三支
-    // 相同（見 createUserHandler.js）。
-    authType: "jwt-password",
+    // JWT + 已核准設備的簽章 + 當下的密碼，三者齊備才放行（§3.1）。
+    authType: "jwt-device-password",
     authorizationPolicies: ROLE_MGMT_POLICY,
     requestSchema: {
       params: ROLE_ID_PARAMS_SCHEMA,

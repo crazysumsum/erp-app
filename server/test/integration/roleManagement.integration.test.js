@@ -4,6 +4,9 @@
  *
  * Token 直接用 jwt service 簽發，理由與 userManagement.integration.test.js
  * 相同——這裡要驗的是角色管理端點本身，不是登入或設備簽章。
+ *
+ * Phase 4 把 permissions/assign 升級成 jwt-device-password 之後，這支也需要
+ * 一台「已核准」的設備——理由與作法跟 userManagement.integration.test.js 一樣。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -11,6 +14,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
+import { createTestDevice } from "../../test-support/testDevice.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -94,15 +98,30 @@ async function systemAdminRoleId(db) {
   return row.id;
 }
 
+/** 直接把一台設備種成 approved，略過申請／審批流程——理由見檔案開頭的說明。 */
+async function seedApprovedDevice(db, { userId, device }) {
+  const nowMs = Date.now();
+  await db.execute(
+    `INSERT INTO user_devices
+       (user_id, device_id, public_key, label, status, requested_at, requested_ip, requested_ua, reviewed_at)
+     VALUES (?, ?, ?, '', 'approved', ?, '', '', ?)`,
+    [userId, device.deviceId, device.publicKeyDer, nowMs, nowMs]
+  );
+}
+
 function tokenIssuer(application) {
   const jwt = application.services.require("jwt");
   const tokenRevocation = application.services.require("tokenRevocation");
   const time = application.services.require("time");
 
-  return async (userId, { roles, permissions }) => {
+  return async (userId, { roles, permissions, did }) => {
     const version = await tokenRevocation.currentVersion(String(userId));
     const authTime = Math.floor(time.nowMs() / 1000);
-    return jwt.issue({ roles, permissions }, { subject: String(userId), version, authTime });
+    const claims = { roles, permissions };
+    if (did) {
+      claims.did = did;
+    }
+    return jwt.issue(claims, { subject: String(userId), version, authTime });
   };
 }
 
@@ -116,6 +135,13 @@ function authed(token, body) {
   };
 }
 
+/** 給 jwt-device-password 端點用：Authorization + 設備簽章 header 都要帶。 */
+async function signedAuthed(device, token, { path, body }) {
+  const bodyText = JSON.stringify(body);
+  const headers = await device.headers({ method: "POST", path, body: bodyText, token });
+  return { method: "POST", headers: { ...headers, Authorization: `Bearer ${token}` }, body: bodyText };
+}
+
 test("system-admin refuses every write path: update, delete, permissions/assign", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
@@ -127,6 +153,8 @@ test("system-admin refuses every write path: update, delete, permissions/assign"
     password,
     roleId: await systemAdminRoleId(db)
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   t.after(async () => {
     await cleanupUser(db, actor.userId);
@@ -136,7 +164,8 @@ test("system-admin refuses every write path: update, delete, permissions/assign"
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: ["system-admin"],
-    permissions: ADMIN_PERMISSIONS
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
   });
   const adminRoleId = await systemAdminRoleId(db);
 
@@ -162,17 +191,21 @@ test("system-admin refuses every write path: update, delete, permissions/assign"
   assert.equal(del.status, 409);
   assert.equal((await del.json()).error.code, "ROLE_PROTECTED");
 
+  const assignPath = `/api/v1/roles/${adminRoleId}/permissions/assign`;
   const assign = await fetch(
-    `${url}/api/v1/roles/${adminRoleId}/permissions/assign`,
-    authed(token, {
-      permissionIds: [await permissionId(db, "user.mgmt")],
-      expectedPermissionIds: [
-        await permissionId(db, "user.mgmt"),
-        await permissionId(db, "role.mgmt"),
-        await permissionId(db, "device.mgmt")
-      ],
-      reason: "測試角色保護",
-      password
+    `${url}${assignPath}`,
+    await signedAuthed(device, token, {
+      path: assignPath,
+      body: {
+        permissionIds: [await permissionId(db, "user.mgmt")],
+        expectedPermissionIds: [
+          await permissionId(db, "user.mgmt"),
+          await permissionId(db, "role.mgmt"),
+          await permissionId(db, "device.mgmt")
+        ],
+        reason: "測試角色保護",
+        password
+      }
     })
   );
   assert.equal(assign.status, 409);
@@ -195,6 +228,8 @@ test("an actor holding only role.mgmt cannot grant a role the user.mgmt permissi
     password,
     roleId: limitedRole.roleId
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   t.after(async () => {
     await cleanupUser(db, actor.userId);
@@ -206,16 +241,21 @@ test("an actor holding only role.mgmt cannot grant a role the user.mgmt permissi
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: [limitedRole.roleName],
-    permissions: ["role.mgmt"]
+    permissions: ["role.mgmt"],
+    did: device.deviceId
   });
 
+  const escalatePath = `/api/v1/roles/${targetRole.roleId}/permissions/assign`;
   const response = await fetch(
-    `${url}/api/v1/roles/${targetRole.roleId}/permissions/assign`,
-    authed(token, {
-      permissionIds: [await permissionId(db, "user.mgmt")],
-      expectedPermissionIds: [],
-      reason: "試圖授予自己沒有的權限",
-      password
+    `${url}${escalatePath}`,
+    await signedAuthed(device, token, {
+      path: escalatePath,
+      body: {
+        permissionIds: [await permissionId(db, "user.mgmt")],
+        expectedPermissionIds: [],
+        reason: "試圖授予自己沒有的權限",
+        password
+      }
     })
   );
 
@@ -241,6 +281,8 @@ test("assigning permissions with a stale expected set returns ASSIGNMENT_STALE",
     password,
     roleId: await systemAdminRoleId(db)
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   t.after(async () => {
     await cleanupUser(db, actor.userId);
@@ -251,16 +293,21 @@ test("assigning permissions with a stale expected set returns ASSIGNMENT_STALE",
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: ["system-admin"],
-    permissions: ADMIN_PERMISSIONS
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
   });
 
+  const stalePath = `/api/v1/roles/${role.roleId}/permissions/assign`;
   const response = await fetch(
-    `${url}/api/v1/roles/${role.roleId}/permissions/assign`,
-    authed(token, {
-      permissionIds: [],
-      expectedPermissionIds: [], // 畫面上看到的是空的，但這個角色實際上已經有 user.mgmt
-      reason: "畫面資料過期",
-      password
+    `${url}${stalePath}`,
+    await signedAuthed(device, token, {
+      path: stalePath,
+      body: {
+        permissionIds: [],
+        expectedPermissionIds: [], // 畫面上看到的是空的，但這個角色實際上已經有 user.mgmt
+        reason: "畫面資料過期",
+        password
+      }
     })
   );
 
@@ -348,6 +395,8 @@ test("create, list, assign permissions and update a role, with one audit row eac
     password,
     roleId: await systemAdminRoleId(db)
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
   let createdRoleId = null;
 
   t.after(async () => {
@@ -365,7 +414,8 @@ test("create, list, assign permissions and update a role, with one audit row eac
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: ["system-admin"],
-    permissions: ADMIN_PERMISSIONS
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
   });
 
   const roleName = `it-role-${randomUUID().slice(0, 8)}`;
@@ -386,13 +436,17 @@ test("create, list, assign permissions and update a role, with one audit row eac
   assert.deepEqual(listed.permissions, []);
   assert.equal(listed.userCount, 0);
 
+  const assignPath = `/api/v1/roles/${createdRoleId}/permissions/assign`;
   const assignResponse = await fetch(
-    `${url}/api/v1/roles/${createdRoleId}/permissions/assign`,
-    authed(token, {
-      permissionIds: [await permissionId(db, "user.mgmt")],
-      expectedPermissionIds: [],
-      reason: "整合測試：配權限",
-      password
+    `${url}${assignPath}`,
+    await signedAuthed(device, token, {
+      path: assignPath,
+      body: {
+        permissionIds: [await permissionId(db, "user.mgmt")],
+        expectedPermissionIds: [],
+        reason: "整合測試：配權限",
+        password
+      }
     })
   );
   const assignBody = await assignResponse.json();

@@ -6,6 +6,11 @@
  * authFlow.integration.test.js 證明過，這裡要驗的是用戶管理端點本身，簽章與
  * nonce 不是這個檔案的責任。`jwt-password` 端點仍然要求真的密碼，所以帳號一律
  * 用真的雜湊種進去。
+ *
+ * Phase 4 把 create／roles-assign／password-reset 升級成 jwt-device-password
+ * 之後，這幾支也需要一台「已核准」的設備：直接把 user_devices 種成 approved
+ * 狀態，跳過完整的申請／審批流程——那條路已經由 authFlow 的測試證明過，這裡
+ * 只是要一台能簽出合法簽章的設備。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -13,6 +18,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
+import { createTestDevice } from "../../test-support/testDevice.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -87,15 +93,34 @@ async function systemAdminRoleId(db) {
   return row.id;
 }
 
+/**
+ * 直接把一台設備種成 approved，略過申請／審批流程。user_devices 對 user_id
+ * 設了 ON DELETE CASCADE（見 0004_add_device_binding_tables.js），所以既有的
+ * cleanupUser() 刪掉 users 那一列時會連帶清掉，這裡不需要另外清理。
+ */
+async function seedApprovedDevice(db, { userId, device }) {
+  const nowMs = Date.now();
+  await db.execute(
+    `INSERT INTO user_devices
+       (user_id, device_id, public_key, label, status, requested_at, requested_ip, requested_ua, reviewed_at)
+     VALUES (?, ?, ?, '', 'approved', ?, '', '', ?)`,
+    [userId, device.deviceId, device.publicKeyDer, nowMs, nowMs]
+  );
+}
+
 function tokenIssuer(application) {
   const jwt = application.services.require("jwt");
   const tokenRevocation = application.services.require("tokenRevocation");
   const time = application.services.require("time");
 
-  return async (userId, { roles, permissions }) => {
+  return async (userId, { roles, permissions, did }) => {
     const version = await tokenRevocation.currentVersion(String(userId));
     const authTime = Math.floor(time.nowMs() / 1000);
-    return jwt.issue({ roles, permissions }, { subject: String(userId), version, authTime });
+    const claims = { roles, permissions };
+    if (did) {
+      claims.did = did;
+    }
+    return jwt.issue(claims, { subject: String(userId), version, authTime });
   };
 }
 
@@ -109,6 +134,13 @@ function authed(token, body) {
   };
 }
 
+/** 給 jwt-device-password 端點用：Authorization + 設備簽章 header 都要帶。 */
+async function signedAuthed(device, token, { path, body }) {
+  const bodyText = JSON.stringify(body);
+  const headers = await device.headers({ method: "POST", path, body: bodyText, token });
+  return { method: "POST", headers: { ...headers, Authorization: `Bearer ${token}` }, body: bodyText };
+}
+
 test("create, list, get, update, assign roles, disable and enable walk through with one audit row each", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
@@ -120,6 +152,8 @@ test("create, list, get, update, assign roles, disable and enable walk through w
     password,
     roleId: await systemAdminRoleId(db)
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   // 兩個目標各自的 id 要等到 create 那一步才知道，先宣告一個給單一
   // t.after 用的容器——多個 t.after 各自獨立註冊時執行順序係反向（後註冊先
@@ -142,20 +176,25 @@ test("create, list, get, update, assign roles, disable and enable walk through w
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: ["system-admin"],
-    permissions: ADMIN_PERMISSIONS
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
   });
 
-  // --- create ---------------------------------------------------------------
+  // --- create（jwt-device-password） -----------------------------------------
   const targetUsername = `it-target-${randomUUID().slice(0, 8)}`;
-  const createResponse = await fetch(`${url}/api/v1/users/create`, {
-    ...authed(token, {
-      username: targetUsername,
-      displayName: "Target User",
-      newUserPassword: "Initial-Password-99",
-      roleIds: [],
-      password
+  const createResponse = await fetch(
+    `${url}/api/v1/users/create`,
+    await signedAuthed(device, token, {
+      path: "/api/v1/users/create",
+      body: {
+        username: targetUsername,
+        displayName: "Target User",
+        newUserPassword: "Initial-Password-99",
+        roleIds: [],
+        password
+      }
     })
-  });
+  );
   const createBody = await createResponse.json();
   assert.equal(createResponse.status, 201, JSON.stringify(createBody));
   const created = createBody.data;
@@ -202,25 +241,32 @@ test("create, list, get, update, assign roles, disable and enable walk through w
   const staffRoleId = staffRole.roleId;
   staffRoleCleanup = staffRole.cleanup;
 
+  const assignPath = `/api/v1/users/${created.id}/roles/assign`;
   const staleAssign = await fetch(
-    `${url}/api/v1/users/${created.id}/roles/assign`,
-    authed(token, {
-      roleIds: [staffRoleId],
-      expectedRoleIds: [999999], // 假裝畫面上看到的不是實際現況
-      reason: "指派到客服團隊",
-      password
+    `${url}${assignPath}`,
+    await signedAuthed(device, token, {
+      path: assignPath,
+      body: {
+        roleIds: [staffRoleId],
+        expectedRoleIds: [999999], // 假裝畫面上看到的不是實際現況
+        reason: "指派到客服團隊",
+        password
+      }
     })
   );
   assert.equal(staleAssign.status, 409);
   assert.equal((await staleAssign.json()).error.code, "ASSIGNMENT_STALE");
 
   const assignResponse = await fetch(
-    `${url}/api/v1/users/${created.id}/roles/assign`,
-    authed(token, {
-      roleIds: [staffRoleId],
-      expectedRoleIds: [], // 剛建立時是空的，這才是真正的現況
-      reason: "指派到客服團隊",
-      password
+    `${url}${assignPath}`,
+    await signedAuthed(device, token, {
+      path: assignPath,
+      body: {
+        roleIds: [staffRoleId],
+        expectedRoleIds: [], // 剛建立時是空的，這才是真正的現況
+        reason: "指派到客服團隊",
+        password
+      }
     })
   );
   const assignBody = await assignResponse.json();
@@ -283,6 +329,8 @@ test("an actor holding only user.mgmt cannot grant themselves system-admin", { s
     roleId: limitedRole.roleId
   });
   const adminRoleId = await systemAdminRoleId(db);
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   t.after(async () => {
     await cleanupUser(db, actor.userId);
@@ -297,16 +345,21 @@ test("an actor holding only user.mgmt cannot grant themselves system-admin", { s
   const [[roleRow]] = await db.query("SELECT name FROM roles WHERE id = ?", [limitedRole.roleId]);
   const token = await issueToken(actor.userId, {
     roles: [roleRow.name],
-    permissions: ["user.mgmt"]
+    permissions: ["user.mgmt"],
+    did: device.deviceId
   });
 
+  const escalatePath = `/api/v1/users/${actor.userId}/roles/assign`;
   const escalate = await fetch(
-    `${url}/api/v1/users/${actor.userId}/roles/assign`,
-    authed(token, {
-      roleIds: [adminRoleId],
-      expectedRoleIds: [limitedRole.roleId],
-      reason: "試圖自我提權",
-      password
+    `${url}${escalatePath}`,
+    await signedAuthed(device, token, {
+      path: escalatePath,
+      body: {
+        roleIds: [adminRoleId],
+        expectedRoleIds: [limitedRole.roleId],
+        reason: "試圖自我提權",
+        password
+      }
     })
   );
 
@@ -368,6 +421,8 @@ test("creating a user whose name is already taken returns 409 without a stray au
     username: `it-taken-${randomUUID().slice(0, 8)}`,
     password
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   t.after(async () => {
     await cleanupUser(db, actor.userId);
@@ -378,7 +433,8 @@ test("creating a user whose name is already taken returns 409 without a stray au
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: ["system-admin"],
-    permissions: ADMIN_PERMISSIONS
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
   });
 
   const [beforeCount] = await db.query(
@@ -388,12 +444,15 @@ test("creating a user whose name is already taken returns 409 without a stray au
 
   const response = await fetch(
     `${url}/api/v1/users/create`,
-    authed(token, {
-      username: existing.username,
-      displayName: "",
-      newUserPassword: "Some-Valid-Password-1",
-      roleIds: [],
-      password
+    await signedAuthed(device, token, {
+      path: "/api/v1/users/create",
+      body: {
+        username: existing.username,
+        displayName: "",
+        newUserPassword: "Some-Valid-Password-1",
+        roleIds: [],
+        password
+      }
     })
   );
 
@@ -493,6 +552,8 @@ test("creating a user without an initial password is rejected by schema validati
     password,
     roleId: await systemAdminRoleId(db)
   });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
 
   t.after(async () => {
     await cleanupUser(db, actor.userId);
@@ -502,16 +563,22 @@ test("creating a user without an initial password is rejected by schema validati
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
     roles: ["system-admin"],
-    permissions: ADMIN_PERMISSIONS
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
   });
 
+  // 這裡一定要帶合法的設備簽章：認證排在 schema 驗證之前，沒有它這個請求會先
+  // 被擋在認證層，測不到這裡真正要測的東西。
   const response = await fetch(
     `${url}/api/v1/users/create`,
-    authed(token, {
-      username: `it-nopass-${randomUUID().slice(0, 8)}`,
-      displayName: "",
-      roleIds: [],
-      password
+    await signedAuthed(device, token, {
+      path: "/api/v1/users/create",
+      body: {
+        username: `it-nopass-${randomUUID().slice(0, 8)}`,
+        displayName: "",
+        roleIds: [],
+        password
+      }
     })
   );
 

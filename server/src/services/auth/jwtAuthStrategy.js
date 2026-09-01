@@ -1,6 +1,7 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { AuthenticationError } from "../../framework/auth/AuthenticationError.js";
 import { BaseAuthStrategy } from "../../framework/auth/BaseAuthStrategy.js";
+import { isExemptFromPasswordChangeGate } from "./passwordChangeGate.js";
 
 /**
  * 從 Authorization header 取出 bearer token。格式不對回 null——呼叫端自己決定
@@ -135,6 +136,29 @@ export class JwtAuthStrategy extends BaseAuthStrategy {
             publicMessage: "Service unavailable"
           }
         );
+      }
+
+      // mcp（must change password）：排在撤銷檢查與快照熔斷之後——一個已撤銷、
+      // 或者連撤銷狀態都無法判斷的 token，不該先被這道檢查攔下來，讓人以為
+      // 問題是要改密碼。
+      //
+      // 擋在認證層而不是授權層，是因為授權策略是逐條 route 宣告的，而 handler
+      // 只要自己寫了 authorizationPolicies 就會整組取代預設值（見
+      // apiDefinitionResolver.js）——提權端點那幾支就是這樣。掛在預設值上的
+      // 檢查會被它們安靜地繞過，而「安靜地繞過」正是這道門最不能有的失敗方式。
+      // JwtPasswordAuthStrategy 與 JwtDeviceAuthStrategy（含
+      // JwtDevicePasswordAuthStrategy）都繼承自這裡，所以四種認證方式一起被
+      // 擋住，不必各寫一次。
+      if (claims.mcp === true && !isExemptFromPasswordChangeGate(req)) {
+        // 403 而不是 401：token 本身有效。前端把任何 401 都當成「session 已死」
+        // 而清憑證（見 HttpClient.js），用 401 會讓使用者在改密碼之前先被踢回
+        // 登入頁，然後登入、再被擋、再被踢——一個迴圈。
+        throw new ApplicationError("Password change is required before continuing", {
+          code: "PASSWORD_CHANGE_REQUIRED",
+          statusCode: 403,
+          publicCode: "PASSWORD_CHANGE_REQUIRED",
+          publicMessage: "請先修改密碼"
+        });
       }
 
       return { type: this.authType, claims };

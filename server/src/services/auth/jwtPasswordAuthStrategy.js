@@ -1,31 +1,17 @@
-import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { JwtAuthStrategy } from "./jwtAuthStrategy.js";
-import { AUTH_FAILURE, UserService } from "../../modules/user/UserService.js";
+import { assertPasswordConfirmed } from "./passwordReauth.js";
+import { UserService } from "../../modules/user/UserService.js";
 
 /**
  * JWT 加密碼再確認的認證策略。給那些光有一個有效 JWT 還不夠、還要求呼叫端
  * 當場再證明一次「知道目前的密碼」的高風險端點用——例如改密碼。跟
- * JwtDeviceAuthStrategy（見同目錄）是同一個模式的另一個實例：JWT 證明這是
- * 誰的 session，第二個因子證明這一刻仍然握有那個身份的憑證。
+ * JwtDeviceAuthStrategy／JwtDevicePasswordAuthStrategy（見同目錄）是同一個
+ * 模式的另一個實例：JWT 證明這是誰的 session，第二個因子證明這一刻仍然握有
+ * 那個身份的憑證。
  *
- * 密碼從 request body 的 `password` 欄位讀，在 handler 的 schema 驗證之前——
- * 跟 JwtDeviceAuthStrategy 讀 X-Device-* header 是同一個理由：認證要先於
- * 「這個請求長什麼樣子對不對」的檢查。
- *
- * 密碼錯 / 帳號被鎖 / 帳號查無，統一收成一個 PASSWORD_INVALID：呼叫端雖然已經
- * 持有這個帳號的有效 JWT，但不該從回應差異分辨出「密碼錯」跟「已被鎖定」，
- * 這對一個拿著偷來的 token 的人是可以拿來校準策略的資訊。帳號被停用單獨給
- * USER_INACTIVE，跟 refreshTokenHandler 的 USER_INACTIVE 同一個理由：那對
- * 正常使用者是「找管理員」這種可行動的資訊，不是密碼猜測相關的洩漏。
- *
- * PASSWORD_INVALID 是 403，不是 401——這不是措辭問題。前端把任何 401 都當成
- * 「這個 JWT 已經不算數」，全域清 session、踢回登入頁（見 HttpClient.js 的
- * onUnauthorized）。JWT 本身是有效的，錯的是再次確認用的密碼；用 401 的話，
- * 單純打錯一次密碼就會把整個工作階段登出，這正是這個 strategy 的存在意義
- * 想避免的事——它要做的是多一層確認，不是意外提早結束一個原本有效的 session。
- * 跟 JwtDeviceAuthStrategy 的 DEVICE_MISMATCH 用 403 是同一個判斷：JWT 已經
- * 驗過，只是第二個因子不符，回應語意上更接近「被拒絕」而不是「未認證」。
- * USER_INACTIVE 維持 401：帳號被停用是真的要結束這個 session，不是意外副作用。
+ * 密碼檢查本身（欄位驗證、錯誤碼、訊息）在 passwordReauth.js——
+ * JwtDevicePasswordAuthStrategy 需要一模一樣的邏輯，抽出來共用，理由見那個
+ * 檔案開頭的說明。
  *
  * 繼承 JwtAuthStrategy 而不是重寫一份：JWT 驗證、撤銷檢查、快照熔斷完全一樣，
  * 複製一份只會讓兩份未來各自漂移。
@@ -54,48 +40,12 @@ export class JwtPasswordAuthStrategy extends JwtAuthStrategy {
   async authenticate(req) {
     // JWT 無效、過期或已撤銷會在這裡直接拋出，密碼檢查完全不會跑。
     const base = await super.authenticate(req);
-    const { claims } = base;
 
-    const password = req.body?.password;
-
-    if (typeof password !== "string" || password.length === 0) {
-      throw new ApplicationError("Password confirmation is required", {
-        code: "PASSWORD_REQUIRED",
-        statusCode: 400,
-        publicCode: "PASSWORD_REQUIRED",
-        publicMessage: "Please confirm your current password"
-      });
-    }
-
-    const result = await this.userService.verifyPasswordById(Number(claims.sub), password);
-
-    if (!result.ok) {
-      void this.logger?.warn?.(
-        "auth.password.rejected",
-        "Password re-authentication was rejected",
-        {
-          requestId: req.requestId || null,
-          userId: Number(claims.sub),
-          reason: result.reason
-        }
-      );
-
-      if (result.reason === AUTH_FAILURE.DISABLED) {
-        throw new ApplicationError("Account is disabled", {
-          code: "USER_INACTIVE",
-          statusCode: 401,
-          publicCode: "Unauthorized Access",
-          publicMessage: "Unauthorized Access"
-        });
-      }
-
-      throw new ApplicationError(`Password re-authentication rejected: ${result.reason}`, {
-        code: "PASSWORD_INVALID",
-        statusCode: 403,
-        publicCode: "PASSWORD_INVALID",
-        publicMessage: "Please confirm your current password"
-      });
-    }
+    await assertPasswordConfirmed(req, {
+      userId: Number(base.claims.sub),
+      userService: this.userService,
+      logger: this.logger
+    });
 
     return base;
   }

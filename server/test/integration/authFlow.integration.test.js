@@ -14,10 +14,11 @@
  * 會喺報告入面列出嚟，唔會當冇發生過。
  */
 import assert from "node:assert/strict";
-import { randomUUID, webcrypto } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { createTestDevice } from "../../test-support/testDevice.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
 
 const skip =
@@ -122,66 +123,9 @@ async function cleanupUser(db, seeded) {
   ]);
 }
 
-/**
- * 一台模擬嘅設備：真嘅 P-256 金鑰，簽名格式同前端 deviceKey.js 一樣。
- *
- * 用真金鑰而唔係假簽章，係因為呢個檔案要驗嘅正正係接縫：原始 body 有冇被留低、
- * IEEE P1363 有冇被當成 DER、nonce 有冇真係寫到入表。呢啲喺假 pool 上全部測唔到。
- */
-async function createTestDevice() {
-  const keyPair = await webcrypto.subtle.generateKey(
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign", "verify"]
-  );
-  const spki = new Uint8Array(await webcrypto.subtle.exportKey("spki", keyPair.publicKey));
-  const digest = await webcrypto.subtle.digest("SHA-256", spki);
-  const deviceId = Buffer.from(digest).toString("hex");
-
-  return {
-    deviceId,
-    async headers({ method, path, body, token, includePublicKey = false }) {
-      const nonce = randomUUID();
-      const timestamp = Date.now();
-      const sha256 = async (value) =>
-        Buffer.from(await webcrypto.subtle.digest("SHA-256", Buffer.from(value))).toString(
-          "base64url"
-        );
-      const bodyHash = body === undefined ? "" : await sha256(body);
-      // 綁死喺呢個請求用緊嗰枚 token 上（RFC 9449 嘅 ath）。冇 token 就空字串。
-      const accessTokenHash = token ? await sha256(token) : "";
-      // 鍵照字典序——同 DeviceBindingService.signingInput() 逐字元一樣。
-      const signingInput = JSON.stringify({
-        accessTokenHash,
-        bodyHash,
-        deviceId,
-        method: method.toUpperCase(),
-        nonce,
-        path,
-        timestamp
-      });
-      const signature = await webcrypto.subtle.sign(
-        { name: "ECDSA", hash: "SHA-256" },
-        keyPair.privateKey,
-        Buffer.from(signingInput)
-      );
-
-      const headers = {
-        "Content-Type": "application/json",
-        "X-Device-Id": deviceId,
-        "X-Device-Timestamp": String(timestamp),
-        "X-Device-Nonce": nonce,
-        "X-Device-Signature": Buffer.from(signature).toString("base64url")
-      };
-
-      if (includePublicKey) {
-        headers["X-Device-Public-Key"] = Buffer.from(spki).toString("base64url");
-      }
-
-      return headers;
-    }
-  };
-}
+// createTestDevice() 搬到 test-support/testDevice.js 了——Phase 4 把用戶／
+// 角色管理的四支提權端點升級成 jwt-device-password 之後，需要它的整合測試
+// 檔案不只這一個。
 
 /**
  * 改名這件事只有真資料庫證明得了：0004 種的是 device.approve，0005 改成

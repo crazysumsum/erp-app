@@ -688,8 +688,13 @@ test("login vs concurrent device revoke: a revoke that lands after the device ch
   assert.equal(version, 10);
 });
 
-test("login answers every failure with the same message", async () => {
-  for (const reason of Object.values(AUTH_FAILURE)) {
+test("login answers every failure with the same message, except an expired temporary password", async () => {
+  // TEMPORARY_EXPIRED 刻意不收斂——它對正常使用者是一句可行動的話，攻擊者從
+  // 中學不到東西（見 §3.4）。其餘原因才要逐一區分不出來，否則會告訴攻擊者
+  // 哪些帳號存在、哪些已被鎖定。
+  for (const reason of Object.values(AUTH_FAILURE).filter(
+    (value) => value !== AUTH_FAILURE.TEMPORARY_EXPIRED
+  )) {
     const { handler } = createHandler(LoginHandler, {
       userService: {
         async authenticate() {
@@ -699,7 +704,6 @@ test("login answers every failure with the same message", async () => {
       services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
     });
 
-    // 逐一區分的訊息會告訴攻擊者哪些帳號存在、哪些已被鎖定。
     await assert.rejects(
       () =>
         handler.execute({
@@ -713,6 +717,31 @@ test("login answers every failure with the same message", async () => {
       }
     );
   }
+});
+
+test("login gives an expired temporary password its own actionable message", async () => {
+  const { handler } = createHandler(LoginHandler, {
+    userService: {
+      async authenticate() {
+        return { ok: false, reason: AUTH_FAILURE.TEMPORARY_EXPIRED };
+      }
+    },
+    services: { jwt: fakeJwt(), tokenRevocation: fakeTokenRevocation() }
+  });
+
+  await assert.rejects(
+    () =>
+      handler.execute({
+        input: { body: { username: "alice", password: "whatever" } }
+      }),
+    (error) => {
+      assert.equal(error.statusCode, 401);
+      assert.equal(error.code, "TEMPORARY_PASSWORD_EXPIRED");
+      assert.equal(error.publicCode, "TEMPORARY_PASSWORD_EXPIRED");
+      assert.match(error.publicMessage, /聯絡管理員/);
+      return true;
+    }
+  );
 });
 
 test("login records the real failure reason in the log", async () => {

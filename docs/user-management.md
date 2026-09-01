@@ -691,7 +691,11 @@ static service = Object.freeze({
 | `server/src/modules/user/UserService.js` | `#loadUser()` 多回 `mustChangePassword`；`#checkPassword()` 加臨時密碼死線的判斷（新的 `AUTH_FAILURE.TEMPORARY_EXPIRED`） |
 | `server/src/services/auth/jwtAuthStrategy.js` | 加 `mcp` claim 的檢查與豁免清單 |
 | `server/src/services/auth/jwtDevicePasswordAuthStrategy.js` | **新增**：`jwt-device-password`（繼承 `JwtDeviceAuthStrategy`，再驗一次密碼） |
+| `server/src/services/auth/passwordReauth.js` | **新增**：`JwtPasswordAuthStrategy` 與 `JwtDevicePasswordAuthStrategy` 共用的密碼再確認邏輯 |
+| `server/src/services/auth/jwtPasswordAuthStrategy.js` | 改用 `passwordReauth.js`，原本內嵌的密碼檢查整段移出去 |
 | `server/src/services/auth/passwordChangeGate.js` | **新增**：豁免清單 |
+| `server/src/handlers/users/createUserHandler.js`、`assignUserRolesHandler.js`、`resetUserPasswordHandler.js`、`server/src/handlers/roles/assignRolePermissionsHandler.js` | `authType` 由 `jwt-password` 換成 `jwt-device-password`（Phase 2、3 的暫時做法在這裡補上） |
+| `server/test-support/testDevice.js` | **新增**：`createTestDevice()` 從 `authFlow.integration.test.js` 搬過來，供多個整合測試檔案共用 |
 | `server/src/modules/authorization/permissionCatalogue.js` | **新增**：權限目錄正本 |
 | `server/src/modules/authorization/adminGuard.js` | **新增**：§1.4 的包含規則與最後一個 admin 的判斷（純函式） |
 | `server/src/services/authorization/PermissionCatalogueService.js` | **新增**：啟動自檢 |
@@ -718,6 +722,17 @@ static service = Object.freeze({
 | `server/test/roleAdminService.test.js` | **新增**：關聯式記憶體替身，含 CASCADE 的模擬 |
 | `server/test/integration/roleManagement.integration.test.js` | **新增**：對真 MySQL 的 `ROLE_PROTECTED`、提權防護、`ASSIGNMENT_STALE`、CASCADE 驗收 |
 | `client/test/framework/authorization/permissionConventions.test.js` | **新增**：頁面 metadata 的權限字串與禁用 `requires.roles` |
+| `server/test/userService.test.js` | 新增 `mustChangePassword`／`TEMPORARY_EXPIRED` 的測試，既有兩處回傳值斷言補上新欄位 |
+| `server/test/jwtDevicePasswordAuthStrategy.test.js` | **新增**：設備先、密碼後的疊層順序 |
+| `server/test/passwordReauth.test.js` | **新增**：密碼再確認的錯誤碼映射，兩個 strategy 共用 |
+| `server/test/jwtAuthStrategyPasswordGate.test.js` | **新增**：mcp claim 的擋、豁免清單、跟撤銷檢查的順序 |
+| `server/test/passwordChangeGateConventions.test.js` | **新增**：豁免清單每一條都對得上一個已註冊的 route |
+| `server/test/authHandlers.test.js` | 「每種失敗同一句話」的測試排除 `TEMPORARY_EXPIRED`，另加一支測它自己的訊息 |
+| `server/test/serviceContainer.test.js` | 服務發現清單加 `auth.jwtDevicePassword` |
+| `server/test/applicationFactory.test.js` | 限縮版的 `serviceDiscoveryOptions.moduleUrls` 補上 `jwtDevicePasswordAuthStrategy.js` |
+| `server/test/integration/passwordChange.integration.test.js` | **新增**：Phase 4 的驗收條件，含一次真的登入＋改密碼＋重新登入全流程 |
+| `server/test/integration/userManagement.integration.test.js`、`roleManagement.integration.test.js` | 四支端點升級後改走真設備簽章（`signedAuthed()`），並各修一個真的會 flaky 的斷言 |
+| `server/test/integration/migrations.integration.test.js` | 修同一個 flaky 斷言（見上方的說明） |
 | `server/test-support/fakeMySqlPool.js` | 回答權限目錄那一句查詢——啟動自檢是 eager 的，每個測試用應用都會經過它 |
 | `server/scripts/checkCoverageFloors.js` | 加 `PermissionCatalogueService.js` 的 per-file 下限 |
 | `client/src/pages/device/DeviceApprovalsPage.vue` | `requires` 改 `device.mgmt` |
@@ -787,7 +802,7 @@ static service = Object.freeze({
 >
 > **`roles/:id/permissions/assign` 同樣暫時掛 `jwt-password`**，終態的 `jwt-device-password` 要 Phase 4 才存在——與 Phase 2 那三支的理由完全相同（見 `assignRolePermissionsHandler.js` 的註解）。
 
-### Phase 4 — 後端：密碼、強制改密碼與設備簽章
+### Phase 4 — 後端：密碼、強制改密碼與設備簽章 ✅ 已完成
 
 1. `POST /api/v1/user/password/change`。
 2. `mcp` claim（login / refresh）+ `jwtAuthStrategy` 的擋 + `passwordChangeGate.js`。
@@ -795,6 +810,12 @@ static service = Object.freeze({
 4. `USER_SCHEMA` 加 `mustChangePassword`。
 
 **驗收**：整合測試——管理員建帳號 → 新帳號登入 → 打 `/api/v1/users` 得 403 `PASSWORD_CHANGE_REQUIRED` → 打 `/api/v1/user/me` 得 200 → 改密碼 → 舊 token 全部失效 → 用新密碼登入 → 這次打 `/api/v1/users` 通過（權限足夠時）。另外：**沒有帶簽章的請求打提權端點會被擋**；**用過的 nonce 重放會被擋**；臨時密碼過了 72 小時之後登入回 `TEMPORARY_PASSWORD_EXPIRED`。
+
+> **實作時多出來的三件事**（都不改設計，只是設計沒寫到）：
+>
+> 1. **密碼再次確認的邏輯抽成 `passwordReauth.js`。** `JwtPasswordAuthStrategy` 與新的 `JwtDevicePasswordAuthStrategy` 都需要一模一樣的「讀 body 的 `password`、呼叫 `verifyPasswordById`、把失敗原因映射成對外錯誤碼」——這是第二次真的需要同一段邏輯（跟 Phase 3 把 §1.4 第四道抽成 `directoryLookups.js`是同一個判斷），所以抽出來共用，並在這裡順便把 `TEMPORARY_PASSWORD_EXPIRED` 也接進去：密碼再確認時遇到一支已過期的臨時密碼，回應跟登入時遇到的是同一個錯誤碼，不必另外決定一次。`JwtPasswordAuthStrategy.js` 同步改用它，既有測試全部重跑過，行為不變。
+> 2. **`createTestDevice()`（整合測試裡簽真設備簽章用的那個 helper）從 `authFlow.integration.test.js` 搬到 `test-support/testDevice.js`。** 四支提權端點升級成 `jwt-device-password` 之後，`userManagement.integration.test.js`、`roleManagement.integration.test.js`、新增的 Phase 4 整合測試都需要它——第三個真的要用的地方，不是預先抽的。
+> 3. **既有的兩支整合測試（Phase 1 的 `migrations.integration.test.js`、Phase 3 新增的一支）各修了一個真的會 flaky 的斷言**：兩者都對 `permissions` 表做「剛好只有這幾項」的 `deepEqual`，而 `node --test` 預設跨檔案平行跑，這句偶爾會夾在另一個整合測試檔案（`authFlow.integration.test.js` 的 `seedUser()`）暫時種下的一次性權限中間。改成「這幾項都在」的子集檢查——這才是那兩支測試真正該保證的事，不該連帶保證資料庫裡沒有別人手動加的東西。
 
 ### Phase 5 — 前端：用戶與角色管理
 

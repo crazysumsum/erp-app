@@ -40,7 +40,12 @@ export const AUTH_FAILURE = Object.freeze({
   UNKNOWN_USER: "unknown_user",
   BAD_PASSWORD: "bad_password",
   LOCKED: "locked",
-  DISABLED: "disabled"
+  DISABLED: "disabled",
+  // 密碼本身是對的，但它是管理員設的臨時密碼，而且已經過了 72 小時死線
+  // （§3.4）。刻意不收進籠統的「帳號或密碼錯誤」：這是少數幾個對外也要講清楚
+  // 原因的失敗——它對正常使用者是一句可行動的話（找管理員），而攻擊者從中
+  // 學到的東西是零，他得先猜對密碼才看得到這個訊息。
+  TEMPORARY_EXPIRED: "temporary_expired"
 });
 
 export class UserService {
@@ -99,7 +104,7 @@ export class UserService {
    */
   async findActiveById(id) {
     const [rows] = await this.database.query(
-      `SELECT id, username, display_name, status
+      `SELECT id, username, display_name, status, must_change_password
        FROM users
        WHERE id = ? AND status = 'active'`,
       [id]
@@ -146,13 +151,22 @@ export class UserService {
 
     await this.#clearFailedAttempts(row.id, nowMs);
 
+    // 密碼本身正確之後才判斷臨時密碼有沒有過期——先確認這確實是這個帳號的
+    // 密碼，再談它還算不算數。這條規則跟鎖定計數器共用同一個函式，所以
+    // verifyPasswordById()（改密碼等高風險端點的再次確認）走的是同一套：
+    // 一支已經過期的臨時密碼，不該因為換了個呼叫端就重新變得可信。
+    if (row.temporary_password_expires_at !== null && Number(row.temporary_password_expires_at) <= nowMs) {
+      return { ok: false, reason: AUTH_FAILURE.TEMPORARY_EXPIRED };
+    }
+
     return { ok: true };
   }
 
   async #findByUsername(username) {
     const [rows] = await this.database.query(
       `SELECT id, username, password_hash, display_name, status,
-              failed_login_attempts, locked_until
+              failed_login_attempts, locked_until, must_change_password,
+              temporary_password_expires_at
        FROM users
        WHERE username = ?`,
       [String(username ?? "")]
@@ -163,7 +177,8 @@ export class UserService {
 
   async #findById(id) {
     const [rows] = await this.database.query(
-      `SELECT id, password_hash, status, failed_login_attempts, locked_until
+      `SELECT id, password_hash, status, failed_login_attempts, locked_until,
+              temporary_password_expires_at
        FROM users
        WHERE id = ?`,
       [id]
@@ -199,6 +214,7 @@ export class UserService {
       id: Number(row.id),
       username: row.username,
       displayName: row.display_name,
+      mustChangePassword: Boolean(row.must_change_password),
       roles: roleRows.map((role) => role.name),
       permissions: permissionRows.map((permission) => permission.name)
     };

@@ -136,20 +136,25 @@ export class RefreshTokenHandler extends BaseRequestHandler {
 
     // roles 與 permissions 取自剛剛重讀的那一份，所以權限變更會在一次續期
     // （最多 15 分鐘）內生效，不必等到 token 過期或被撤銷。這是白賺的。
-    const token = this.jwt.issue(
-      { roles: user.roles, permissions: user.permissions, did: binding.device_id },
-      {
-        subject,
-        version,
-        // 原封不動沿用舊 token 的起算點——絕對 session 上限的全部意義就在這一
-        // 行。改成「現在」的話，每一次背景續期都會把上限往後推，session 就永遠
-        // 不會到期，而症狀是「沒有人被登出」，不會有任何錯誤浮現。
-        //
-        // 這裡不必自己檢查有沒有超過上限：JwtDeviceAuthStrategy 繼承的
-        // JwtAuthStrategy 已經在進到這支 handler 之前就擋掉了。
-        authTime: claims.auth_time
-      }
-    );
+    // mcp 同一個道理：管理員重設密碼之後，下一次續期就會把這個人重新鎖進
+    // 改密碼頁，不必等舊 token 自然過期。
+    const refreshedClaims = { roles: user.roles, permissions: user.permissions, did: binding.device_id };
+
+    if (user.mustChangePassword) {
+      refreshedClaims.mcp = true;
+    }
+
+    const token = this.jwt.issue(refreshedClaims, {
+      subject,
+      version,
+      // 原封不動沿用舊 token 的起算點——絕對 session 上限的全部意義就在這一
+      // 行。改成「現在」的話，每一次背景續期都會把上限往後推，session 就永遠
+      // 不會到期，而症狀是「沒有人被登出」，不會有任何錯誤浮現。
+      //
+      // 這裡不必自己檢查有沒有超過上限：JwtDeviceAuthStrategy 繼承的
+      // JwtAuthStrategy 已經在進到這支 handler 之前就擋掉了。
+      authTime: claims.auth_time
+    });
 
     await this.deviceBinding.markUsed(binding.id);
 
