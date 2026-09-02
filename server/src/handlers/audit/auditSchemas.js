@@ -1,5 +1,5 @@
 /**
- * 稽核查詢端點的 schema 片段。設計說明見 docs/user-management.md §3.1、§4.6。
+ * 稽核查詢端點的 schema 片段。設計說明見 docs/user_management/design_spec.md §3.1、§4.6。
  */
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({

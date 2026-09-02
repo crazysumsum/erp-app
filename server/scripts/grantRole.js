@@ -1,6 +1,6 @@
 /**
  * Break-glass：把一個角色授予某個帳號，不經過應用程式、不受任何提權防護。
- * 設計說明見 docs/user-management.md §5.1。
+ * 設計說明見 docs/user_management/design_spec.md §5.1。
  *
  *   node scripts/grantRole.js <username> <role> --reason "<原因>"
  *

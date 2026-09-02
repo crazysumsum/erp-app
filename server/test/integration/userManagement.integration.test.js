@@ -1,6 +1,6 @@
 /**
  * Phase 2 的用戶管理端點，對一個真的、已經 migrate 過的 MySQL 驗收。設計說明
- * 見 docs/user-management.md §3、§7 Phase 2 的驗收條件。
+ * 見 docs/user_management/design_spec.md §3、§7 Phase 2 的驗收條件。
  *
  * Token 用 jwt service 直接簽發，不走完整的登入＋設備綁定流程——那條路已經由
  * authFlow.integration.test.js 證明過，這裡要驗的是用戶管理端點本身，簽章與

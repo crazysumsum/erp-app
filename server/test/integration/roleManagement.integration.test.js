@@ -1,6 +1,6 @@
 /**
  * Phase 3 的角色管理端點，對一個真的、已經 migrate 過的 MySQL 驗收。設計說明
- * 見 docs/user-management.md §3、§7 Phase 3 的驗收條件。
+ * 見 docs/user_management/design_spec.md §3、§7 Phase 3 的驗收條件。
  *
  * Token 直接用 jwt service 簽發，理由與 userManagement.integration.test.js
  * 相同——這裡要驗的是角色管理端點本身，不是登入或設備簽章。

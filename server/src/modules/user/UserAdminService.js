@@ -12,7 +12,7 @@ import { assertPasswordChanged, assertPasswordStrength } from "./passwordPolicy.
 
 /**
  * 用戶的查詢、新增、修改、狀態切換、角色覆蓋、密碼設定。
- * 設計說明見 docs/user-management.md §3.1–§3.6。
+ * 設計說明見 docs/user_management/design_spec.md §3.1–§3.6。
  *
  * 業務模組，不進 service container，依賴由呼叫端傳入——與 UserService 同一個
  * 理由（見那個檔案開頭的說明）。多吃一個 `tokenRevocation`：停用與重設密碼都

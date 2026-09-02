@@ -10,7 +10,7 @@ import { PASSWORD_CHANGE_GATE_EXEMPTIONS } from "../src/services/auth/passwordCh
  * 路徑，清單卻沒跟著改，使用者就會被永久鎖在改密碼頁，連改密碼那一支都打不
  * 通。這裡把 handler 目錄掃一遍、解析出所有已註冊的 route，斷言豁免清單裡的
  * 每一條都真的對得上一條。改路徑而忘了改清單，這裡會紅。設計說明見
- * docs/user-management.md §3.5。
+ * docs/user_management/design_spec.md §3.5。
  */
 
 const handlersDirectory = fileURLToPath(new URL("../src/handlers/", import.meta.url));

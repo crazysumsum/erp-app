@@ -2,7 +2,7 @@ import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 import { verifyPassword } from "./passwordHash.js";
 
 /**
- * 新密碼的共用檢查。設計說明見 docs/user-management.md §3.4。
+ * 新密碼的共用檢查。設計說明見 docs/user_management/design_spec.md §3.4。
  *
  * 三條路徑（建立帳號、管理員重設、使用者自己改）共用這一個函式，寫在
  * passwordHash.js 隔壁：三處各寫一次的話，遲早有一處會漏——而漏掉的那一處

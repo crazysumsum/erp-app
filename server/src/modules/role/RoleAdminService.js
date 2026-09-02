@@ -9,7 +9,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 
 /**
  * 角色的查詢、新增、修改、刪除、權限覆蓋；權限目錄查詢。
- * 設計說明見 docs/user-management.md §3.1–§3.2、§1.4。
+ * 設計說明見 docs/user_management/design_spec.md §3.1–§3.2、§1.4。
  *
  * 業務模組，不進 service container，依賴由呼叫端傳入——與 UserAdminService
  * 同一個理由。不需要 `tokenRevocation`：角色與權限的變更本來就要等 token

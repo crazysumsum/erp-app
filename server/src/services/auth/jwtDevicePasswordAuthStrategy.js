@@ -4,7 +4,7 @@ import { UserService } from "../../modules/user/UserService.js";
 
 /**
  * JWT + 已核准設備的簽章 + 當下的密碼，三者齊備才放行。給能提權的端點用
- * （建立用戶、配角色、配權限、重設密碼——見 docs/user-management.md §3.1）。
+ * （建立用戶、配角色、配權限、重設密碼——見 docs/user_management/design_spec.md §3.1）。
  *
  * 擋的是這件事：偷到 token 又偷到密碼（例如側錄），仍然提不了權，因為簽名
  * 要用的私鑰是 IndexedDB 裡的 non-extractable `CryptoKey`，XSS 帶不走它、

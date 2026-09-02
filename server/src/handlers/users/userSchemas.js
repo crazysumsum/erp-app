@@ -1,5 +1,5 @@
 /**
- * 用戶管理端點共用的 schema 片段。設計說明見 docs/user-management.md §3.1、§3.3。
+ * 用戶管理端點共用的 schema 片段。設計說明見 docs/user_management/design_spec.md §3.1、§3.3。
  */
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({

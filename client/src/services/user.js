@@ -4,7 +4,7 @@ export const service = { name: "user" };
 
 /**
  * 用戶管理同自助改密碼嘅 API。路徑同回應形狀集中喺呢度，見
- * docs/user-management.md §3.1、§3.4。
+ * docs/user_management/design_spec.md §3.1、§3.4。
  *
  * `create`／`assignRoles`／`resetPassword` 三支後端要求 authType
  * "jwt-device-password"（JWT + 已核准設備嘅簽章 + 當下密碼），所以要帶

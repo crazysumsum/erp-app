@@ -1,7 +1,7 @@
 import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 
 /**
- * 提權防護：四道。設計說明見 docs/user-management.md §1.4。
+ * 提權防護：四道。設計說明見 docs/user_management/design_spec.md §1.4。
  *
  * `user.mgmt` 與 `role.mgmt` 本身就有能力製造更高的權限——一個只有 `user.mgmt`
  * 的人，可以把 `system-admin` 指派給自己，一步拿齊全部權限。「`system-admin`

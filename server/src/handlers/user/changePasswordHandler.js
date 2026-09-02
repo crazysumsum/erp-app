@@ -10,7 +10,7 @@ const EMPTY_OBJECT_SCHEMA = Object.freeze({
 });
 
 /**
- * 使用者自己改密碼。設計說明見 docs/user-management.md §3.4。
+ * 使用者自己改密碼。設計說明見 docs/user_management/design_spec.md §3.4。
  *
  * `authType: "jwt-password"`：`password` 是舊密碼，被 JwtPasswordAuthStrategy
  * 在 schema 驗證之前讀走、拿去確認「現在仍然是本人」；`newPassword` 才是這支

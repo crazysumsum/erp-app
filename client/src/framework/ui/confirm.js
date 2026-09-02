@@ -41,7 +41,7 @@ export function confirmDelete(subject) {
  * 一次，我哋亦少一個「用戶喺兩個對話框之間改咗主意」嘅狀態要處理。
  *
  * `requireReason: true`：用戶管理嗰批高風險端點仲要多收一個必填嘅「原因」
- * （寫入 `user_audit_logs.reason`，見 docs/user-management.md §3.1）。Quasar
+ * （寫入 `user_audit_logs.reason`，見 docs/user_management/design_spec.md §3.1）。Quasar
  * 內建嘅 `Dialog.create({ prompt })` 淨係支援一欄，所以呢種情況改用
  * component-based dialog（PasswordReasonDialog.vue），回傳值亦都變成
  * `{ reason, password }`，唔再係一個 string——呼叫方睇返有冇傳

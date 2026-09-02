@@ -1,4 +1,4 @@
-// 用戶與角色管理的變更紀錄。設計說明見 docs/user-management.md §2.2。
+// 用戶與角色管理的變更紀錄。設計說明見 docs/user_management/design_spec.md §2.2。
 //
 // user_ 前綴而不是 fr_：與 user_devices、user_device_nonces 同族。「要不要留
 // 稽核」是業務政策，不是框架機制。

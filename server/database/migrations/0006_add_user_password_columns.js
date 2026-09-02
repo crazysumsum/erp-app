@@ -1,5 +1,5 @@
 // users 表加兩個欄位，支撐「管理員建帳號 → 使用者首次登入必須改密碼」這條流程。
-// 設計說明見 docs/user-management.md §2.1。
+// 設計說明見 docs/user_management/design_spec.md §2.1。
 //
 // 兩句 ALTER 放在同一支 migration，但每一句前面各自查一次 information_schema。
 // 這件事是承重的，不是防禦性程式碼的裝飾：

@@ -26,7 +26,7 @@ async function handleLogout() {
     <q-btn flat round dense icon="menu" aria-label="開關側邊欄" @click="$emit('toggle-drawer')" />
     <q-toolbar-title>{{ appConfig.title }}</q-toolbar-title>
 
-    <!-- Phase 5 對既有版面唯一嘅改動（見 docs/user-management.md §4.5）：
+    <!-- Phase 5 對既有版面唯一嘅改動（見 docs/user_management/design_spec.md §4.5）：
          顯示名稱由純文字＋獨立登出按鈕，改做一個下拉選單。 -->
     <q-btn-dropdown flat no-caps :label="session.user?.displayName" icon="account_circle">
       <q-list>
