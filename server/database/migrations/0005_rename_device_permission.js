@@ -1,4 +1,4 @@
-// 把 device.approve 改名為 device.mgmt。設計說明見 docs/user-management.md §1.2。
+// 把 device.approve 改名為 device.mgmt。設計說明見 docs/user_management/design_spec.md §1.2。
 //
 // 改名的理由是名字一直都比實際涵蓋範圍窄：核准、拒絕、撤銷三支 handler 與審批
 // 佇列從一開始就共用同一個權限（見 deviceBindingSchemas.js），「approve」只描述

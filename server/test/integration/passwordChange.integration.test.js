@@ -1,6 +1,6 @@
 /**
  * Phase 4 對一個真的、已經 migrate 過的 MySQL 驗收。設計說明見
- * docs/user-management.md §3.4、§3.5、§7 Phase 4 的驗收條件。
+ * docs/user_management/design_spec.md §3.4、§3.5、§7 Phase 4 的驗收條件。
  *
  * 這是唯一一個真的走完整登入流程（含設備簽章）的用戶管理整合測試檔案——其他
  * 檔案直接用 jwt service 簽發 token，因為它們要驗的是各自的端點本身。這裡要

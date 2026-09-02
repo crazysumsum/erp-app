@@ -4,7 +4,7 @@ export const service = { name: "role" };
 
 /**
  * 角色與權限目錄嘅 API。路徑同回應形狀集中喺呢度，見
- * docs/user-management.md §3.1。
+ * docs/user_management/design_spec.md §3.1。
  *
  * `assignPermissions` 要求 authType "jwt-device-password"（見
  * services/user.js 開頭嗰段解釋），其餘寫入動作用返 jwt-password 或者

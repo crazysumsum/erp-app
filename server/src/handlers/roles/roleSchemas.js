@@ -1,5 +1,5 @@
 /**
- * 角色與權限管理端點共用的 schema 片段。設計說明見 docs/user-management.md §3.1。
+ * 角色與權限管理端點共用的 schema 片段。設計說明見 docs/user_management/design_spec.md §3.1。
  */
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({

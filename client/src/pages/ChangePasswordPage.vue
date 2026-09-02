@@ -1,7 +1,7 @@
 <script>
 // 冇 `requires`：validatePages.js 容許唔宣告，routeGuard.js 對「非
 // public 且冇 meta.requires」嘅頁面淨係要求已登入——正係要嘅語意（見
-// docs/user-management.md §4.1）。冇 `menu`，唔入菜單：入口喺
+// docs/user_management/design_spec.md §4.1）。冇 `menu`，唔入菜單：入口喺
 // AppTopbar.vue 個落拉選單。
 export const page = {
   name: "change-password",

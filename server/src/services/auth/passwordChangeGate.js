@@ -1,5 +1,5 @@
 /**
- * 強制首次改密碼的豁免清單。設計說明見 docs/user-management.md §3.5。
+ * 強制首次改密碼的豁免清單。設計說明見 docs/user_management/design_spec.md §3.5。
  *
  * `jwtAuthStrategy.js` 對帶著 `mcp: true` claim 的 token 一律擋下，除非這次
  * 請求落在這裡——少了這四條，使用者會被永久鎖在改密碼頁，連改密碼那一支都

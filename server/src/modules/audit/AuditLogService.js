@@ -1,7 +1,7 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 
 /**
- * 用戶與角色管理的變更紀錄。設計說明見 docs/user-management.md §2.2、§3.2、§3.3、§4.6。
+ * 用戶與角色管理的變更紀錄。設計說明見 docs/user_management/design_spec.md §2.2、§3.2、§3.3、§4.6。
  *
  * 業務模組，不進 service container，依賴由呼叫端傳入——與 UserService 同一個
  * 理由（見那個檔案開頭的說明）。

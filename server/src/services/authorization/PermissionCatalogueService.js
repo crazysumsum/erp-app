@@ -12,7 +12,7 @@ const MIGRATE_HINT = "node scripts/migrate.js";
  * 寫得了的表——而「沒有人能改這張表」正是這整套設計的第一條規則，會在第一次啟動
  * 時就被自己違反。
  *
- * 三種不一致的處置不同（見 docs/user-management.md §1.3）：
+ * 三種不一致的處置不同（見 docs/user_management/design_spec.md §1.3）：
  *
  *   - **目錄有、資料庫缺 → 拒絕啟動。** 這代表 migration 沒跑完，而這個狀態下
  *     系統會用最花時間查的方式壞掉：登得進去、每一頁都在、但功能一個都用不了，

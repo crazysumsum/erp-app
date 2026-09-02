@@ -4,7 +4,7 @@ import { JwtAuthStrategy } from "../src/services/auth/jwtAuthStrategy.js";
 import { JwtService } from "../src/services/auth/JwtService.js";
 
 /**
- * mcp（must change password）強制擋。設計說明見 docs/user-management.md §3.5。
+ * mcp（must change password）強制擋。設計說明見 docs/user_management/design_spec.md §3.5。
  *
  * 這支 strategy 其餘的行為（撤銷、快照熔斷、絕對 session 上限）已經分別在
  * tokenRevocation.test.js、sessionMaxAge.test.js 測過，這裡只管新加的這一段：

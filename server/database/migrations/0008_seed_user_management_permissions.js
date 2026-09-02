@@ -1,5 +1,5 @@
 // 種入用戶／角色管理的權限，並授予 system-admin。設計說明見
-// docs/user-management.md §2.3。
+// docs/user_management/design_spec.md §2.3。
 //
 // 權限目錄的正本在 src/modules/authorization/permissionCatalogue.js。這裡把那三項
 // 再寫一次，而**不是** import 它——雖然抄一份看起來像是在製造第二個正本。

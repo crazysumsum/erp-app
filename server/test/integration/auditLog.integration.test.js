@@ -1,6 +1,6 @@
 /**
  * Phase 6 的稽核查詢端點，對一個真的、已經 migrate 過的 MySQL 驗收。設計說明
- * 見 docs/user-management.md §3.1、§3.3、§4.6、§7 Phase 6 的驗收條件。
+ * 見 docs/user_management/design_spec.md §3.1、§3.3、§4.6、§7 Phase 6 的驗收條件。
  *
  * `AuditLogService.record()` 已經由 Phase 2–4 的寫入路徑（建帳號、配角色、
  * 改角色權限……）在別的整合測試裡間接驗過內容正確；這裡驗的是「讀」那一半：

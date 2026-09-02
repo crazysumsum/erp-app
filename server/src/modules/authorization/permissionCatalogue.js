@@ -2,7 +2,7 @@
  * 權限目錄的**正本**。
  *
  * 這份清單在程式碼裡，不在資料庫裡。`permissions` 表是它的投影：由 migration
- * 種入，沒有任何 handler 寫得了它（設計說明見 docs/user-management.md §1.3）。
+ * 種入，沒有任何 handler 寫得了它（設計說明見 docs/user_management/design_spec.md §1.3）。
  *
  * 為什麼權限是程式碼而角色是資料：一個權限的意義由「哪些 route 檢查它」定義，
  * 那件事只有原始碼說得算——資料庫裡憑空多一列 `invoice.approve`，不會讓任何

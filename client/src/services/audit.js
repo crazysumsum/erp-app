@@ -3,7 +3,7 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 export const service = { name: "audit" };
 
 /**
- * 稽核查詢的 API。見 docs/user-management.md §3.1、§4.6。
+ * 稽核查詢的 API。見 docs/user_management/design_spec.md §3.1、§4.6。
  *
  * 唯讀，沒有 create／update／delete，所以頁面不用 useCrud——那是給有寫入
  * 動作的清單頁用的。

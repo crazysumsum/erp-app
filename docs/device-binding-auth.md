@@ -100,7 +100,7 @@ CREATE TABLE user_device_nonces (
 
 ### 1.3 種入 `system-admin` 角色與 `device.mgmt` 權限
 
-> **這個權限原本叫 `device.approve`。** `0004_add_device_binding_tables.js` 種的是舊名，`0005_rename_device_permission.js` 用 `UPDATE` 把它改成 `device.mgmt`（權限 id 與既有的 `role_permissions` 關聯全部保留）。改名的理由與整套用戶／角色／權限體系的設計見 [user-management.md](user-management.md) §1.2。這一份文件以下一律用新名字——授權行為從頭到尾沒有變過，只有那個字串換了。
+> **這個權限原本叫 `device.approve`。** `0004_add_device_binding_tables.js` 種的是舊名，`0005_rename_device_permission.js` 用 `UPDATE` 把它改成 `device.mgmt`（權限 id 與既有的 `role_permissions` 關聯全部保留）。改名的理由與整套用戶／角色／權限體系的設計見 [design_spec.md](user_management/design_spec.md) §1.2。這一份文件以下一律用新名字——授權行為從頭到尾沒有變過，只有那個字串換了。
 
 `device.mgmt` 套現有的 `hasPermission` 授權策略與 `v-can` 指令，不需要任何新機制。
 
