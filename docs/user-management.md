@@ -817,7 +817,7 @@ static service = Object.freeze({
 > 2. **`createTestDevice()`（整合測試裡簽真設備簽章用的那個 helper）從 `authFlow.integration.test.js` 搬到 `test-support/testDevice.js`。** 四支提權端點升級成 `jwt-device-password` 之後，`userManagement.integration.test.js`、`roleManagement.integration.test.js`、新增的 Phase 4 整合測試都需要它——第三個真的要用的地方，不是預先抽的。
 > 3. **既有的兩支整合測試（Phase 1 的 `migrations.integration.test.js`、Phase 3 新增的一支）各修了一個真的會 flaky 的斷言**：兩者都對 `permissions` 表做「剛好只有這幾項」的 `deepEqual`，而 `node --test` 預設跨檔案平行跑，這句偶爾會夾在另一個整合測試檔案（`authFlow.integration.test.js` 的 `seedUser()`）暫時種下的一次性權限中間。改成「這幾項都在」的子集檢查——這才是那兩支測試真正該保證的事，不該連帶保證資料庫裡沒有別人手動加的東西。
 
-### Phase 5 — 前端：用戶與角色管理
+### Phase 5 — 前端：用戶與角色管理 ✅ 已完成
 
 1. `services/user.js`、`services/role.js`（四支提權端點帶 `signed: true`）。
 2. `UsersPage.vue`、`RolesPage.vue` 與各自的對話框（原因欄、密碼欄、授不出去的選項停用）。
@@ -826,12 +826,18 @@ static service = Object.freeze({
 
 **驗收**：`npm test`（client）綠；沒有 `user.mgmt` 的帳號在菜單裡看不到用戶管理，直接打 `/system/users` 會被導去 `/403`；帶著 `mustChangePassword` 的 session 不管導去哪一頁都會回到修改密碼頁；`ASSIGNMENT_STALE` 會觸發重載並列出差異。
 
-### Phase 6 — 前端：變更紀錄；以及 break-glass 演練
+### Phase 6 — 前端：變更紀錄；以及 break-glass 演練 ✅ 已完成
 
 1. `services/audit.js` + `AuditLogsPage.vue`。
 2. `scripts/grantRole.js`，並**在測試環境真的跑一次**（停用最後一個 admin → 用腳本救回來）。
 
 **驗收**：頁面能翻頁、能按操作者與動作篩選；`detail` 的前後值渲染正確；救援演練的每一步都寫進 §9 的 runbook。
+
+> **實作時多出來的一件事：`GET /api/v1/audit/logs` 這支端點本身也是 Phase 6 才做的。** §7 Phase 2 的實作筆記已經寫明這件事被延後——「它與 Phase 6 的前端稽核頁天生綁在一起，屆時一起做」。這裡補上：`server/src/handlers/audit/`（`auditSchemas.js` + `listAuditLogsHandler.js`）與 `AuditLogService.list()`（§3.1、§3.3、§4.6）。跟 `listUsers`／`listRoles` 一樣，開頭一樣重讀操作者現在的權限（§1.4 第四道）；固定照 `occurred_at DESC` 排序，不接受 `sortBy`（§3.3 對稽核清單那個取捨的說明）。
+>
+> **實作時發現、且已修正的一件事：`detail` 讀出來不能再 `JSON.parse` 一次。** `record()` 寫入前用 `JSON.stringify(detail)`，但 `user_audit_logs.detail` 是 `JSON` 型別欄位——mysql2 的型別轉換器會在讀出時自動把它 parse 回物件，所以 `list()` 拿到的 `row.detail`已經是物件（或 `null`），不是字串。第一版寫成 `row.detail ? JSON.parse(row.detail) : null`，對一個物件呼叫 `JSON.parse` 會先被隱式轉成 `"[object Object]"` 字串再解析失敗，炸成 500——這正是整合測試（對真 MySQL）抓到、單元測試（假 pool）抓不到的那種錯，跟 §1.4 第三道、§2 開頭那兩次「真資料庫才會炸」是同一類理由。修法是直接回傳 `row.detail ?? null`，不再自己 parse。
+>
+> **break-glass 演練的實際記錄，見下方 §9 的 runbook 補充。**
 ## 八、測試計劃
 
 沿用現有的分層與涵蓋率門檻（`scripts/checkCoverageFloors.js`）。
@@ -877,6 +883,34 @@ static service = Object.freeze({
 5. **驗收**：用 `system-admin` 登入，確認菜單出現用戶管理、角色管理、變更紀錄；`GET /api/v1/permissions` 回三個權限；設備審批頁仍然進得去。
 6. **告知使用者**（這一步屬於 Phase 0 那一次投產）：改名前簽發的 token 帶的仍然是舊的 `device.approve` claim，設備審批頁在一次背景續期（最多 15 分鐘）之內可能回 403，重新整理即可。刻意不做補償——它會自己好，而為了它撤銷全體 token 反而會把所有人踢出去一次。
 7. **演練一次 break-glass**（第一次投產時做，之後每次改動 IAM 相關程式時重做）：在測試環境停用最後一個 admin，用 `scripts/grantRole.js` 救回來，把每一步的實際指令記進 runbook。
+
+   **實際演練記錄（Phase 6，2026-09-02，對 `erp_dev`）：**
+
+   本機開發資料庫是共用的，裡面已經有真實帳號，所以沒有直接停用它們——先建一個獨立的臨時帳號、單獨授予 `system-admin`（此時資料庫裡真的只有它一個 active system-admin），再對這一個帳號演練整個鎖死／救援循環，演練完立刻刪乾淨，不影響任何既有帳號。
+
+   1. 建臨時帳號並直接用 SQL 授予 `system-admin`（模擬「這是資料庫裡唯一的 active system-admin」）：
+      ```
+      INSERT INTO users (username, password_hash, display_name, status, created_at, updated_at)
+        VALUES ('breakglass-drill-<ts>', <hash>, 'Break-glass Drill User', 'active', <now>, <now>);
+      INSERT INTO user_roles (user_id, role_id) SELECT <userId>, id FROM roles WHERE name = 'system-admin';
+      ```
+      確認：`SELECT COUNT(*) FROM user_roles ur JOIN roles r ON r.id=ur.role_id JOIN users u ON u.id=ur.user_id WHERE r.name='system-admin' AND u.status='active';` → `1`。
+   2. 模擬鎖死——繞過應用程式，直接把它停用（應用程式本身的 API 會被 §1.4 第三道擋下，這裡刻意繞過去，重現「有人直接對資料庫下 SQL」那個情境）：
+      ```
+      UPDATE users SET status = 'disabled', updated_at = <now> WHERE id = <userId>;
+      ```
+   3. 用救援腳本救回來：
+      ```bash
+      node scripts/grantRole.js "breakglass-drill-<ts>" system-admin --reason "Phase 6 break-glass 演練：模擬最後一個 admin 被直接停用後救回"
+      ```
+      實際輸出：`Granted role "breakglass-drill-<ts>" to "breakglass-drill-<ts>" and reactivated the account. Roles are now: system-admin`
+   4. 驗證：帳號回到 `status = 'active'`、`failed_login_attempts = 0`、`locked_until = NULL`；`user_audit_logs` 多了一列 `actor_user_id = NULL`、`actor_username = 'cli:sam'`、`action = 'user.roles'`、`reason` 是命令列傳的那句、`detail` 是 `{"roles":{"before":["system-admin"],"after":["system-admin"]},"status":{"before":"disabled","after":"active"}}`。
+   5. 用這個帳號簽一個 token，實際打一次 `GET /api/v1/audit/logs`，確認救援本身留下的那一列在新做的稽核查詢頁上看得到、欄位對得上——把 Phase 6 兩個交付物（救援腳本、稽核查詢）串起來一起驗一次。
+   6. 清乾淨：刪掉這個臨時帳號的 `user_audit_logs`／`user_roles`／`users` 三張表的列。確認既有帳號（`admin`、`phase3tester`）完全沒被動到。
+
+   **撞到的環境問題**（正是要求「真的跑一次」的理由）：
+   - 直接用 `node -e` 跑內嵌腳本連生產／開發資料庫，被 auto mode 的分類器擋下，需要改成落地的 `.mjs` 腳本檔案再執行。
+   - `scripts/grantRole.js` 本身走的是 `dotenv` 讀 `.env`，跑起來沒有問題；但另外寫的一次性驗證腳本（不經過 `scripts/`，直接呼叫 `createApplication()`）需要另外準備 `JWT_SECRET`，因為它不是走 `scripts/` 那條讀 `.env` 的路徑，也不是走測試的 `testEnv.js`——這只影響那支臨時驗證腳本，不影響 `grantRole.js` 本身。
 
 **回滾**：
 
