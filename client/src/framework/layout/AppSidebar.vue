@@ -26,7 +26,9 @@ const route = useRoute();
         clickable
         :to="{ name: item.name }"
         :active="route.name === item.name"
-        active-class="text-primary bg-blue-1"
+        active-class="text-primary app-active-tint"
+        class="rounded-borders q-mx-sm"
+        style="width: auto"
       >
         <q-item-section avatar>
           <q-icon :name="item.icon" />

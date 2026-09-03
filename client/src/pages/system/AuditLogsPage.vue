@@ -177,6 +177,7 @@ const SEGMENT_COLOUR = { add: "positive", remove: "negative", change: "grey-8", 
       />
     </div>
 
+    <div class="q-px-md q-pb-md">
     <DataTable :ref="(el) => (tableRef = el)" :fetch="fetchAuditLogs" :columns="columns" row-key="id">
       <template #body-cell-occurredAt="{ value }">
         <q-td class="text-left">{{ formatTime(value) }}</q-td>
@@ -215,5 +216,6 @@ const SEGMENT_COLOUR = { add: "positive", remove: "negative", change: "grey-8", 
         <q-td class="text-left">{{ value || "—" }}</q-td>
       </template>
     </DataTable>
+    </div>
   </div>
 </template>

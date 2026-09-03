@@ -292,6 +292,7 @@ async function toggleStatus(row) {
       />
     </div>
 
+    <div class="q-px-md q-pb-md">
     <DataTable
       :ref="(el) => (crud.dataTableRef.value = el)"
       :fetch="fetchUsers"
@@ -345,6 +346,7 @@ async function toggleStatus(row) {
         </q-td>
       </template>
     </DataTable>
+    </div>
 
     <!-- 新增用戶 -->
     <q-dialog v-model="showCreateDialog" persistent>

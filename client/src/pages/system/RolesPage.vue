@@ -213,6 +213,7 @@ async function deleteRole(role) {
       </template>
     </PageHeader>
 
+    <div class="q-px-md q-pb-md">
     <q-table :rows="roles" :columns="columns" row-key="id" :loading="loading" :pagination="{ rowsPerPage: 0 }">
       <template #body-cell-permissions="{ row }">
         <q-td class="text-left">{{ summarisePermissions(row.permissions) }}</q-td>
@@ -245,6 +246,7 @@ async function deleteRole(role) {
         <div class="full-width text-center text-grey-7 q-pa-lg">冇資料</div>
       </template>
     </q-table>
+    </div>
 
     <!-- 新增角色 -->
     <q-dialog v-model="showCreateDialog" persistent>

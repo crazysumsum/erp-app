@@ -75,6 +75,7 @@ const reject = (row) => act(row, { verb: "reject", label: "拒絕" });
   <div>
     <PageHeader title="設備審批" subtitle="每一台新設備都要經人手批准先可以使用系統" />
 
+    <div class="q-px-md q-pb-md">
     <DataTable ref="table" :fetch="fetchPending" :columns="columns" row-key="id">
       <template #body-cell-deviceId="{ value }">
         <q-td class="text-left">
@@ -119,5 +120,6 @@ const reject = (row) => act(row, { verb: "reject", label: "拒絕" });
         </q-td>
       </template>
     </DataTable>
+    </div>
   </div>
 </template>
