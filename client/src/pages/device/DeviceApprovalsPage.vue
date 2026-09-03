@@ -4,7 +4,7 @@ export const page = {
   path: "/device/approvals",
   title: "設備審批",
   requires: { permissions: ["device.mgmt"] },
-  menu: { group: "system", icon: "devices", order: 10 }
+  menu: { group: "userManagement", icon: "devices", order: 10 }
 };
 </script>
 

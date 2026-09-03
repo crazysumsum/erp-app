@@ -42,6 +42,11 @@
 | 初始／重設密碼 | **72 小時有效期** | `users` 加 `temporary_password_expires_at`；過期後要管理員重設 |
 | 角色名參與授權 | **不參與**：禁止任何 route 使用 `hasRole` | 約定測試釘住；授權一律走 permission |
 | 部署方式 | **單節點／排空後重啟** | 改名與 `mcp` claim 一步到位，不做兩階段相容遷移 |
+| 側欄菜單分組 | 設備審批、用戶管理、角色管理、變更紀錄四頁改掛獨立的「用戶管理」群組，不再借「系統管理」群組 | 「系統管理」群組定義保留（日後有非用戶管理的系統設定要掛的話用得上），但目前底下沒有任何頁面，不會出現在側欄 |
+| 「我的設備」獨立頁 | **移除**，改成個人資料頁裡的一個唯讀區塊 | 原本 `pages/device/MyDevicesPage.vue` 只是唯讀列出 `deviceService.listMine()`，沒有任何操作按鈕；併入個人資料頁後不用再多開一個側欄項目 |
+| 個人資料頁 | **新增**，掛在右上角帳號選單（不進側欄），可改自己的顯示名稱與 email，唯讀顯示自己的設備清單與角色 | 帳號選單原本只有「修改密碼」「登出」；改資料與改密碼是兩件風險不同的事，不合併成一個表單 |
+| `users.email` | **新增欄位**，`VARCHAR(254) NULL`，不設唯一索引 | 純聯絡資訊，目前登入仍然只認 `username`；沒有任何流程依賴 email 唯一，所以不加約束——需要的那天再加遷移 |
+| 個人資料自助更新 | 只需要已登入（`jwt`），不要求再輸入密碼 | 跟改密碼、管理端點的高風險動作不同級別：改的是自己的聯絡資訊，不是憑證也不是別人的權限 |
 
 ---
 
@@ -284,6 +289,7 @@ CREATE TABLE IF NOT EXISTS user_audit_logs (
 | POST | `/api/v1/roles/:id/permissions/assign` | **jwt-device-password** | `role.mgmt` | **必填** | 整組覆蓋該角色的權限 |
 | GET | `/api/v1/permissions` | jwt | `role.mgmt` | — | 權限目錄，唯讀 |
 | POST | `/api/v1/user/password/change` | jwt-password | 已登入即可 | — | 使用者改自己的密碼 |
+| POST | `/api/v1/user/profile` | jwt | 已登入即可 | — | 使用者改自己的 `displayName`／`email`；不動密碼、角色 |
 | GET | `/api/v1/audit/logs` | jwt | `user.mgmt` 或 `role.mgmt` | — | 稽核查詢，分頁 |
 
 **`jwt-device-password`（新的認證策略）** 用在四支能提權的端點上：JWT + **已核准設備的簽章** + 當下的密碼，三者齊備才放行。
@@ -497,14 +503,18 @@ static service = Object.freeze({
 
 | 檔案 | path | 標題 | `requires` | 菜單 |
 | --- | --- | --- | --- | --- |
-| `pages/system/UsersPage.vue` | `/system/users` | 用戶管理 | `{ permissions: ["user.mgmt"] }` | system / 20 |
-| `pages/system/RolesPage.vue` | `/system/roles` | 角色管理 | `{ permissions: ["role.mgmt"] }` | system / 30 |
-| `pages/system/AuditLogsPage.vue` | `/system/audit` | 變更紀錄 | `{ permissions: ["user.mgmt", "role.mgmt"], match: "any" }` | system / 40 |
+| `pages/device/DeviceApprovalsPage.vue` | `/device/approvals` | 設備審批 | `{ permissions: ["device.mgmt"] }` | userManagement / 10 |
+| `pages/system/UsersPage.vue` | `/system/users` | 用戶管理 | `{ permissions: ["user.mgmt"] }` | userManagement / 20 |
+| `pages/system/RolesPage.vue` | `/system/roles` | 角色管理 | `{ permissions: ["role.mgmt"] }` | userManagement / 30 |
+| `pages/system/AuditLogsPage.vue` | `/system/audit` | 變更紀錄 | `{ permissions: ["user.mgmt", "role.mgmt"], match: "any" }` | userManagement / 40 |
 | `pages/ChangePasswordPage.vue` | `/password/change` | 修改密碼 | 不設（＝登入即可） | 不進菜單 |
+| `pages/ProfilePage.vue` | `/account/profile` | 個人資料 | 不設（＝登入即可） | 不進菜單，掛帳號選單 |
 
-`DeviceApprovalsPage.vue` 的 `requires` 由 `device.approve` 改成 `device.mgmt`；菜單 order 10 維持不變，所以系統管理群組的順序是設備審批 → 用戶管理 → 角色管理 → 變更紀錄。
+四頁改掛獨立的 `userManagement` 群組（`config/menu.js` 新增，標籤「用戶管理」），排序沿用原本 10／20／30／40，所以群組內順序不變：設備審批 → 用戶管理 → 角色管理 → 變更紀錄。原本的 `system` 群組定義保留但目前空置（`buildMenu()` 已經會濾掉沒有任何頁面的群組，不需要為此特別處理）。
 
-修改密碼頁不設 `requires`：`validatePages.js` 允許不宣告 `requires`，而 `routeGuard.js` 對「非 public 且沒有 `meta.requires`」的頁面只要求已登入——正是要的語意。
+`pages/device/MyDevicesPage.vue`（`/device/mine`，我的設備）**移除**：唯讀列出自己設備那部分併入個人資料頁，不再是獨立的側欄項目與路由。
+
+修改密碼頁與個人資料頁都不設 `requires`：`validatePages.js` 允許不宣告 `requires`，而 `routeGuard.js` 對「非 public 且沒有 `meta.requires`」的頁面只要求已登入——正是要的語意；兩頁都不進菜單（`menu` 欄位不宣告），只能從 `AppTopbar.vue` 的帳號選單進入。
 
 **沒有「用戶詳情頁」。** 新增、編輯、配角色、重設密碼全部是清單頁上的對話框（`q-dialog` 包 `FormPanel`）。管理十來個欄位的實體不需要換頁；換頁反而讓「改完回到第幾頁」這種事變成要處理的狀態。
 
@@ -512,9 +522,10 @@ static service = Object.freeze({
 
 | 檔案 | 對應 |
 | --- | --- |
-| `src/services/user.js` | `/api/v1/users*` 與 `/api/v1/user/password/change` |
+| `src/services/user.js` | `/api/v1/users*`、`/api/v1/user/password/change`、`/api/v1/user/profile` |
 | `src/services/role.js` | `/api/v1/roles*` 與 `/api/v1/permissions` |
 | `src/services/audit.js` | `/api/v1/audit/logs` |
+| `src/services/device.js` | `/api/v1/device/bindings*`（既有，個人資料頁的設備清單原樣沿用 `listMine()`） |
 
 `user.js` 的 `list()` 直接吃 `DataTable` 傳來的參數形狀（`page` / `rowsPerPage` / `sortBy` / `descending` / `filter`），翻成後端的 query（`page` / `pageSize` / `sortBy` / `descending` / `q`），再把回應翻成 `{ rows, rowsNumber }`。這層翻譯只寫在 service 裡——`DataTable` 完全不理 HTTP，頁面也不該理。
 
@@ -579,9 +590,36 @@ static service = Object.freeze({
 - 新增角色與改名稱／描述不需要密碼，配置權限與刪除需要——判準是「這個動作改不改得動任何人的權限」（§5.2）。
 - 配置權限的對話框：權限清單來自 `GET /api/v1/permissions`，一組勾選框，每個權限顯示 `name` 與 `description`。清單旁邊一句「權限目錄由投產腳本維護，這裡只決定這個角色持有哪幾個」。
 
-### 4.5 修改密碼與強制首次改密碼
+### 4.5 個人資料頁
 
-**入口**：`AppTopbar.vue` 現在只有顯示名稱加一個登出按鈕。改成一個 `q-btn-dropdown`：顯示名稱 → 修改密碼 / 登出。這是這次對既有版面唯一的改動。
+```
+個人資料
+┌────────────────────────────────────────────────────────────────┐
+│ 帳號        sam（唯讀）                                          │
+│ 顯示名稱   [Sam Wong                    ]                       │
+│ Email      [sam@example.com             ]                       │
+│                                              [儲存]              │
+├────────────────────────────────────────────────────────────────┤
+│ 我的角色                                                          │
+│ system-admin                                                     │
+├────────────────────────────────────────────────────────────────┤
+│ 我的設備（唯讀）                                                   │
+│ 裝置名稱      狀態      設備編號         最後使用      申請時間     │
+│ Chrome on Mac 已核准    9d1de8d8…        08-21 14:02   08-18 09:00 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**入口**：`AppTopbar.vue` 帳號選單新增「個人資料」，排在「修改密碼」之前：顯示名稱 → 個人資料 / 修改密碼 / 登出。
+
+- 只有 `username`（唯讀，建立後不可改，理由同用戶管理頁）、`displayName`、`email` 一個表單，`儲存` 打 `POST /api/v1/user/profile`。不要密碼、不要原因欄——改的是自己的聯絡資訊，不是憑證也不是別人的權限（§已確認的決定）。
+- `email` 可留空（清空即傳空字串）；有值就要求合法 email 格式，後端 400 訊息指名是格式不對。
+- 「我的角色」直接讀 `session.user.roles`（`/api/v1/user/me` 本來就回這個），純顯示，沒有任何可互動的元素——改角色仍然只能由持有 `user.mgmt` 的人在用戶管理頁做。
+- 「我的設備」是原本 `MyDevicesPage.vue` 的表格原樣搬過來（`deviceService.listMine()`），一樣唯讀、一樣標出「目前這台」。
+- 成功儲存後 `notifySuccess("個人資料已更新")`，同時更新 `session.user` 讓 `AppTopbar` 上的顯示名稱立刻反映新值。
+
+### 4.6 修改密碼與強制首次改密碼
+
+**入口**：`AppTopbar.vue` 現在只有顯示名稱加一個登出按鈕。改成一個 `q-btn-dropdown`：顯示名稱 → 個人資料 / 修改密碼 / 登出。
 
 **強制模式**：`session.user.mustChangePassword` 為 true 時（後端 `USER_SCHEMA` 加這個欄位，login / refresh / me 三支都回），
 
@@ -593,7 +631,7 @@ static service = Object.freeze({
 
 **改密碼成功之後**：`session.clear()` → 導去登入頁 → `notifySuccess("密碼已更新，請用新密碼登入")`。理由見 §3.4。
 
-### 4.6 變更紀錄頁
+### 4.7 變更紀錄頁
 
 ```
 [時間範圍] [操作者] [對象] [動作 ▾]
@@ -610,9 +648,9 @@ static service = Object.freeze({
 - 「原因」欄是操作者當下填的那句話。命令列救援腳本寫進來的列，操作者顯示成 `cli:<系統帳號>`（§5.1）——那種列在清單上要一眼看得出與介面操作不同。
 - 唯讀，沒有任何操作按鈕。
 
-### 4.7 菜單
+### 4.8 菜單
 
-`config/menu.js` 的 `system` 群組已經存在，四頁全部掛在它底下，不新增群組。`buildMenu()` 本來就會照 `page.requires` 過濾，所以沒有 `user.mgmt` 的人不會看到用戶管理——不需要為此寫任何程式碼。
+`config/menu.js` 新增 `userManagement` 群組（標籤「用戶管理」），設備審批／用戶管理／角色管理／變更紀錄四頁的 `menu.group` 從 `"system"` 改成 `"userManagement"`；`system` 群組定義保留，目前空置。`buildMenu()` 本來就會照 `page.requires` 過濾、也會濾掉沒有任何頁面的群組，所以沒有 `user.mgmt` 的人不會看到用戶管理、`system` 群組在還沒有頁面掛上去之前不會出現在側欄——不需要為此另外寫程式碼。
 
 ---
 
@@ -833,7 +871,7 @@ static service = Object.freeze({
 
 **驗收**：頁面能翻頁、能按操作者與動作篩選；`detail` 的前後值渲染正確；救援演練的每一步都寫進 §9 的 runbook。
 
-> **實作時多出來的一件事：`GET /api/v1/audit/logs` 這支端點本身也是 Phase 6 才做的。** §7 Phase 2 的實作筆記已經寫明這件事被延後——「它與 Phase 6 的前端稽核頁天生綁在一起，屆時一起做」。這裡補上：`server/src/handlers/audit/`（`auditSchemas.js` + `listAuditLogsHandler.js`）與 `AuditLogService.list()`（§3.1、§3.3、§4.6）。跟 `listUsers`／`listRoles` 一樣，開頭一樣重讀操作者現在的權限（§1.4 第四道）；固定照 `occurred_at DESC` 排序，不接受 `sortBy`（§3.3 對稽核清單那個取捨的說明）。
+> **實作時多出來的一件事：`GET /api/v1/audit/logs` 這支端點本身也是 Phase 6 才做的。** §7 Phase 2 的實作筆記已經寫明這件事被延後——「它與 Phase 6 的前端稽核頁天生綁在一起，屆時一起做」。這裡補上：`server/src/handlers/audit/`（`auditSchemas.js` + `listAuditLogsHandler.js`）與 `AuditLogService.list()`（§3.1、§3.3、§4.7）。跟 `listUsers`／`listRoles` 一樣，開頭一樣重讀操作者現在的權限（§1.4 第四道）；固定照 `occurred_at DESC` 排序，不接受 `sortBy`（§3.3 對稽核清單那個取捨的說明）。
 >
 > **實作時發現、且已修正的一件事：`detail` 讀出來不能再 `JSON.parse` 一次。** `record()` 寫入前用 `JSON.stringify(detail)`，但 `user_audit_logs.detail` 是 `JSON` 型別欄位——mysql2 的型別轉換器會在讀出時自動把它 parse 回物件，所以 `list()` 拿到的 `row.detail`已經是物件（或 `null`），不是字串。第一版寫成 `row.detail ? JSON.parse(row.detail) : null`，對一個物件呼叫 `JSON.parse` 會先被隱式轉成 `"[object Object]"` 字串再解析失敗，炸成 500——這正是整合測試（對真 MySQL）抓到、單元測試（假 pool）抓不到的那種錯，跟 §1.4 第三道、§2 開頭那兩次「真資料庫才會炸」是同一類理由。修法是直接回傳 `row.detail ?? null`，不再自己 parse。
 >

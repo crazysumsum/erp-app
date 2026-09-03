@@ -4,8 +4,7 @@ export const page = {
   path: "/system/roles",
   title: "角色管理",
   requires: { permissions: ["role.mgmt"] },
-  // 見 UsersPage.vue 開頭嘅註解：order 淨係要求喺 users（25）之後就夠。
-  menu: { group: "system", icon: "admin_panel_settings", order: 35 }
+  menu: { group: "userManagement", icon: "admin_panel_settings", order: 30 }
 };
 </script>
 

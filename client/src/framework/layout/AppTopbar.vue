@@ -8,6 +8,10 @@ defineEmits(["toggle-drawer"]);
 const session = useSessionStore();
 const router = useRouter();
 
+function goToProfile() {
+  router.push({ name: "profile" });
+}
+
 function goToChangePassword() {
   router.push({ name: "change-password" });
 }
@@ -30,6 +34,13 @@ async function handleLogout() {
          顯示名稱由純文字＋獨立登出按鈕，改做一個下拉選單。 -->
     <q-btn-dropdown flat no-caps :label="session.user?.displayName" icon="account_circle">
       <q-list>
+        <q-item v-close-popup clickable @click="goToProfile">
+          <q-item-section avatar>
+            <q-icon name="account_circle" />
+          </q-item-section>
+          <q-item-section>個人資料</q-item-section>
+        </q-item>
+
         <q-item v-close-popup clickable @click="goToChangePassword">
           <q-item-section avatar>
             <q-icon name="password" />

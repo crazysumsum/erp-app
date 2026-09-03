@@ -139,4 +139,14 @@ describe("user service", () => {
       body: { password: "old", newPassword: "NewPassw0rd" }
     });
   });
+
+  it("updateOwnProfile() 唔簽章、唔帶密碼，body 係 { displayName, email }", async () => {
+    httpClient.post.mockResolvedValue({ id: 1, username: "sam", displayName: "Sam", email: "sam@example.com" });
+
+    await userService.updateOwnProfile({ displayName: "Sam", email: "sam@example.com" });
+
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/user/profile", {
+      body: { displayName: "Sam", email: "sam@example.com" }
+    });
+  });
 });

@@ -4,7 +4,7 @@ export const page = {
   path: "/system/audit",
   title: "變更紀錄",
   requires: { permissions: ["user.mgmt", "role.mgmt"], match: "any" },
-  menu: { group: "system", icon: "history", order: 45 }
+  menu: { group: "userManagement", icon: "history", order: 40 }
 };
 </script>
 

@@ -83,5 +83,10 @@ export default {
    */
   changeOwnPassword({ password, newPassword }) {
     return httpClient.post("/api/v1/user/password/change", { body: { password, newPassword } });
+  },
+
+  /** 使用者自己改顯示名稱與 email（§4.5）。不要密碼、不要簽章。 */
+  updateOwnProfile({ displayName, email }) {
+    return httpClient.post("/api/v1/user/profile", { body: { displayName, email } });
   }
 };

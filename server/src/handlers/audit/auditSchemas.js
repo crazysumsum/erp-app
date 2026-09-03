@@ -28,6 +28,7 @@ export const AUDIT_ACTIONS = Object.freeze([
   "user.roles",
   "user.password.reset",
   "user.password.change",
+  "user.profile",
   "role.create",
   "role.update",
   "role.delete",

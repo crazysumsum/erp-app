@@ -104,7 +104,7 @@ export class UserService {
    */
   async findActiveById(id) {
     const [rows] = await this.database.query(
-      `SELECT id, username, display_name, status, must_change_password
+      `SELECT id, username, display_name, email, status, must_change_password
        FROM users
        WHERE id = ? AND status = 'active'`,
       [id]
@@ -164,7 +164,7 @@ export class UserService {
 
   async #findByUsername(username) {
     const [rows] = await this.database.query(
-      `SELECT id, username, password_hash, display_name, status,
+      `SELECT id, username, password_hash, display_name, email, status,
               failed_login_attempts, locked_until, must_change_password,
               temporary_password_expires_at
        FROM users
@@ -214,6 +214,7 @@ export class UserService {
       id: Number(row.id),
       username: row.username,
       displayName: row.display_name,
+      email: row.email ?? "",
       mustChangePassword: Boolean(row.must_change_password),
       roles: roleRows.map((role) => role.name),
       permissions: permissionRows.map((permission) => permission.name)

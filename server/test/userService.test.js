@@ -123,6 +123,7 @@ test("authenticate accepts the right password and returns roles and permissions"
     id: 7,
     username: "alice",
     displayName: "Alice",
+    email: "",
     mustChangePassword: false,
     roles: ["admin"],
     permissions: ["order.read", "order.write"]
@@ -449,6 +450,7 @@ test("findActiveById returns the user with roles and permissions", async () => {
     id: 7,
     username: "alice",
     displayName: "Alice",
+    email: "",
     mustChangePassword: false,
     roles: ["staff"],
     permissions: ["order.read"]
