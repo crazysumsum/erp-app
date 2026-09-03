@@ -44,6 +44,10 @@ export class RequestValidator {
       strict: true
     });
     addFormats(this.ajv, { mode: "fast" });
+    // 純標註 keyword，冇對應驗證行為——單純畀 strict mode 唔好因為 body schema
+    // 帶咗 `trim: true` 就當佢係打錯字爆炸。實際 trim 喺 compile() 入面、AJV
+    // 驗證之前做（見下面 bodyTrimKeys），唔係靠呢個 keyword 本身。
+    this.ajv.addKeyword("trim");
   }
 
   compile(requestSchema, routeKey) {
@@ -77,6 +81,16 @@ export class RequestValidator {
         })
       : [];
 
+    // body 欄位帶 `trim: true`（例如 USERNAME_SCHEMA）要喺 pattern 一類驗證
+    // 之前就 trim 好——原始輸入含頭尾空白的話，驗證見到嘅已經係 trim 後嘅值，
+    // 不然合法值會因為外側空白被 pattern 擋走。淨係做 body：目前冇任何
+    // params/query/headers 欄位需要呢個行為。
+    const bodyTrimKeys = requestSchema.body?.properties
+      ? Object.keys(requestSchema.body.properties).filter(
+          (key) => requestSchema.body.properties[key]?.trim === true
+        )
+      : [];
+
     return (req) => {
       // Express 5 的 req.query 是每次存取都重新解析的 getter，而且不可寫入。
       // 先把每個位置取出成快照再驗證，coerceTypes/useDefaults 的改寫才會保留下來，
@@ -87,6 +101,14 @@ export class RequestValidator {
         body: req.body ?? {},
         headers: req.headers
       };
+
+      for (const key of bodyTrimKeys) {
+        const value = sources.body[key];
+        if (typeof value === "string") {
+          sources.body[key] = value.trim();
+        }
+      }
+
       const details = [];
 
       for (const [location, validate] of validators) {

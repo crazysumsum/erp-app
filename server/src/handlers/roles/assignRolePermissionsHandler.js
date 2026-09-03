@@ -64,7 +64,9 @@ export class AssignRolePermissionsHandler extends BaseRequestHandler {
       id: Number(req.input.params.id),
       permissionIds: req.input.body.permissionIds,
       expectedPermissionIds: req.input.body.expectedPermissionIds,
-      reason: req.input.body.reason
+      reason: req.input.body.reason,
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     return this.response(result);

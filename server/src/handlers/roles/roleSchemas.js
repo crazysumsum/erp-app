@@ -15,6 +15,24 @@ export const ROLE_MGMT_POLICY = Object.freeze([
   })
 ]);
 
+/**
+ * 只用喺 GET /api/v1/roles：user.mgmt 或 role.mgmt 都睇得到（match: "any"），
+ * 同 AUDIT_LOG_POLICY 嗰個判斷一樣——UsersPage 指派角色畀用戶嗰個對話框要靠
+ * 呢支 API 畫勾選清單，而指派角色本身淨係要 user.mgmt（見
+ * assignUserRolesHandler.js 嘅 USER_MGMT_POLICY）。呢個唔影響 create／
+ * update／delete／permissions assign 呢幾支寫入端點——嗰幾支繼續用返
+ * ROLE_MGMT_POLICY，淨係 role.mgmt 先入得。
+ */
+export const ROLE_LIST_POLICY = Object.freeze([
+  Object.freeze({
+    name: "hasPermission",
+    options: Object.freeze({
+      permissions: Object.freeze(["user.mgmt", "role.mgmt"]),
+      match: "any"
+    })
+  })
+]);
+
 /** 路徑上的角色 id。字串是因為 Express 的 req.params 一律是字串。 */
 export const ROLE_ID_PARAMS_SCHEMA = Object.freeze({
   type: "object",

@@ -480,3 +480,65 @@ test("create, list, assign permissions and update a role, with one audit row eac
     ["role.create", "role.permissions", "role.update"]
   );
 });
+
+test("an actor holding only user.mgmt can read GET /api/v1/roles (match: any)", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-6!";
+
+  const limitedRole = await seedRole(db, { permissionNames: ["user.mgmt"] });
+  const actor = await seedUser(db, {
+    username: `it-roles-list-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: limitedRole.roleId
+  });
+
+  t.after(async () => {
+    await cleanupUser(db, actor.userId);
+    await limitedRole.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, {
+    roles: [limitedRole.roleName],
+    permissions: ["user.mgmt"]
+  });
+
+  const listResponse = await fetch(`${url}/api/v1/roles`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  assert.equal(listResponse.status, 200);
+});
+
+test("an actor holding neither user.mgmt nor role.mgmt cannot read GET /api/v1/roles", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-7!";
+
+  const bareRole = await seedRole(db, { permissionNames: ["device.mgmt"] });
+  const actor = await seedUser(db, {
+    username: `it-roles-list-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: bareRole.roleId
+  });
+
+  t.after(async () => {
+    await cleanupUser(db, actor.userId);
+    await bareRole.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, {
+    roles: [bareRole.roleName],
+    permissions: ["device.mgmt"]
+  });
+
+  const listResponse = await fetch(`${url}/api/v1/roles`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  assert.equal(listResponse.status, 403);
+});

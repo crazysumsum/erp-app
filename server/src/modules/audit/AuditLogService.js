@@ -47,7 +47,9 @@ export class AuditLogService {
     targetId,
     targetLabel,
     reason = "",
-    detail = null
+    detail = null,
+    requestId = "",
+    ip = ""
   }) {
     const nowMs = this.time.nowMs();
     const serializedDetailValue = this.#truncatedDetail(detail, action);
@@ -67,8 +69,8 @@ export class AuditLogService {
         String(targetLabel ?? ""),
         String(reason ?? ""),
         serializedDetailValue,
-        "",
-        ""
+        String(requestId ?? ""),
+        String(ip ?? "")
       ]
     );
   }

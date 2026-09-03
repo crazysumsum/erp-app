@@ -178,9 +178,19 @@ export class UserAdminService {
     };
   }
 
-  async create({ actorId, claimedRoles, claimedPermissions, username, displayName, password, roleIds = [] }) {
+  async create({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    username,
+    displayName,
+    password,
+    roleIds = [],
+    requestId,
+    ip
+  }) {
     const normalizedUsername = String(username ?? "").trim();
-    assertPasswordStrength(password);
+    const normalizedPassword = assertPasswordStrength(password);
 
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
@@ -194,7 +204,7 @@ export class UserAdminService {
       const granted = newlyGrantedPermissions([], nextPermissionNames);
       assertNoPermissionEscalation({ actorPermissions: actor.permissions, grantedPermissions: granted });
 
-      const passwordHash = await hashPassword(password);
+      const passwordHash = await hashPassword(normalizedPassword);
       const nowMs = this.time.nowMs();
       const expiresAt = nowMs + TEMPORARY_PASSWORD_TTL_MS;
 
@@ -229,7 +239,9 @@ export class UserAdminService {
         targetType: "user",
         targetId: userId,
         targetLabel: normalizedUsername,
-        detail: { roles: roles.map((role) => role.name) }
+        detail: { roles: roles.map((role) => role.name) },
+        requestId,
+        ip
       });
 
       return {
@@ -241,7 +253,7 @@ export class UserAdminService {
     });
   }
 
-  async update({ actorId, claimedRoles, claimedPermissions, id, displayName }) {
+  async update({ actorId, claimedRoles, claimedPermissions, id, displayName, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
         actorId,
@@ -263,7 +275,9 @@ export class UserAdminService {
         targetType: "user",
         targetId: id,
         targetLabel: target.username,
-        detail: { displayName: { before: target.display_name, after: String(displayName ?? "") } }
+        detail: { displayName: { before: target.display_name, after: String(displayName ?? "") } },
+        requestId,
+        ip
       });
 
       return this.#toSummary({ ...target, display_name: String(displayName ?? "") });
@@ -277,7 +291,7 @@ export class UserAdminService {
    * 已經是停用狀態的帳號視為冪等：回傳現況，不撤銷、不寫稽核——POST 沒有協定
    * 保證的冪等性，這裡是自己選擇讓這支端點的行為看起來像有（見 §3.1）。
    */
-  async disable({ actorId, claimedRoles, claimedPermissions, id, reason }) {
+  async disable({ actorId, claimedRoles, claimedPermissions, id, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
         actorId,
@@ -346,7 +360,9 @@ export class UserAdminService {
         targetType: "user",
         targetId: id,
         targetLabel: target.username,
-        reason
+        reason,
+        requestId,
+        ip
       });
 
       return this.#toSummary({ ...target, status: "disabled" });
@@ -358,7 +374,7 @@ export class UserAdminService {
    * `failed_login_attempts` 歸零、`locked_until` 設回 NULL：管理員按下啟用，
    * 意思就是「這個人現在應該用得了」。
    */
-  async enable({ actorId, claimedRoles, claimedPermissions, id, reason }) {
+  async enable({ actorId, claimedRoles, claimedPermissions, id, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
         actorId,
@@ -386,7 +402,9 @@ export class UserAdminService {
         targetType: "user",
         targetId: id,
         targetLabel: target.username,
-        reason
+        reason,
+        requestId,
+        ip
       });
 
       return this.#toSummary({ ...target, status: "active" });
@@ -403,7 +421,9 @@ export class UserAdminService {
     id,
     roleIds = [],
     expectedRoleIds = [],
-    reason
+    reason,
+    requestId,
+    ip
   }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
@@ -457,7 +477,9 @@ export class UserAdminService {
         targetId: id,
         targetLabel: target.username,
         reason,
-        detail: { roles: { before: currentRoleNames, after: nextRoleNames } }
+        detail: { roles: { before: currentRoleNames, after: nextRoleNames } },
+        requestId,
+        ip
       });
 
       return { id: Number(id), roles: nextRoleNames };
@@ -467,8 +489,17 @@ export class UserAdminService {
   /**
    * 管理員重設密碼。先撤銷 token，再寫新的雜湊（§3.6，理由與停用相同）。
    */
-  async resetPassword({ actorId, claimedRoles, claimedPermissions, id, newPassword, reason }) {
-    assertPasswordStrength(newPassword);
+  async resetPassword({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    id,
+    newPassword,
+    reason,
+    requestId,
+    ip
+  }) {
+    const normalizedPassword = assertPasswordStrength(newPassword);
 
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
@@ -478,12 +509,12 @@ export class UserAdminService {
       });
       const target = await this.#requireUserWithHash(connection, id);
 
-      await assertPasswordChanged(newPassword, target.password_hash);
+      await assertPasswordChanged(normalizedPassword, target.password_hash);
 
       // 重設密碼的前提通常是舊密碼已經不可信，那麼舊 session 也一樣不可信。
       await this.tokenRevocation.revoke(String(id), { reason: "password_reset" });
 
-      const passwordHash = await hashPassword(newPassword);
+      const passwordHash = await hashPassword(normalizedPassword);
       const nowMs = this.time.nowMs();
       const expiresAt = nowMs + TEMPORARY_PASSWORD_TTL_MS;
 
@@ -501,7 +532,9 @@ export class UserAdminService {
         targetType: "user",
         targetId: id,
         targetLabel: target.username,
-        reason
+        reason,
+        requestId,
+        ip
       });
 
       return { id: Number(id) };

@@ -61,7 +61,9 @@ export class ResetUserPasswordHandler extends BaseRequestHandler {
       claimedPermissions: req.auth.claims.permissions,
       id: Number(req.input.params.id),
       newPassword: req.input.body.newUserPassword,
-      reason: req.input.body.reason
+      reason: req.input.body.reason,
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     return this.response(result);

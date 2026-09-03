@@ -1,6 +1,6 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { RoleAdminService } from "../../modules/role/RoleAdminService.js";
-import { EMPTY_OBJECT_SCHEMA, ROLE_LIST_RESPONSE_SCHEMA, ROLE_MGMT_POLICY } from "./roleSchemas.js";
+import { EMPTY_OBJECT_SCHEMA, ROLE_LIST_POLICY, ROLE_LIST_RESPONSE_SCHEMA } from "./roleSchemas.js";
 
 export class ListRolesHandler extends BaseRequestHandler {
   static handlerName = "listRoles";
@@ -9,7 +9,7 @@ export class ListRolesHandler extends BaseRequestHandler {
     method: "GET",
     path: "/api/v1/roles",
     description: "全部角色，含權限名與持有人數，不分頁。",
-    authorizationPolicies: ROLE_MGMT_POLICY,
+    authorizationPolicies: ROLE_LIST_POLICY,
     requestSchema: {
       params: EMPTY_OBJECT_SCHEMA,
       query: EMPTY_OBJECT_SCHEMA

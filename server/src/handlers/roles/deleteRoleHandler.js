@@ -58,7 +58,9 @@ export class DeleteRoleHandler extends BaseRequestHandler {
       claimedRoles: req.auth.claims.roles,
       claimedPermissions: req.auth.claims.permissions,
       id: Number(req.input.params.id),
-      reason: req.input.body.reason
+      reason: req.input.body.reason,
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     return this.response(result);

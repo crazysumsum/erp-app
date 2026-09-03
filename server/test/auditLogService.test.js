@@ -65,6 +65,26 @@ test("record writes every field, defaulting reason and detail", async () => {
   ]);
 });
 
+test("record writes the caller's requestId and ip instead of the empty-string default", async () => {
+  const { service } = createService();
+  const connection = fakeConnection();
+
+  await service.record(connection, {
+    actorUserId: 3,
+    actorUsername: "sam",
+    action: "user.update",
+    targetType: "user",
+    targetId: 42,
+    targetLabel: "new.hire",
+    requestId: "3f6e9a10-abcd-4e12-9f00-1234567890ab",
+    ip: "203.0.113.7"
+  });
+
+  const [{ params }] = connection.calls;
+  assert.equal(params[9], "3f6e9a10-abcd-4e12-9f00-1234567890ab");
+  assert.equal(params[10], "203.0.113.7");
+});
+
 test("record keeps the reason text verbatim", async () => {
   const { service } = createService();
   const connection = fakeConnection();

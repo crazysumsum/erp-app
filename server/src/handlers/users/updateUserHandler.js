@@ -54,7 +54,9 @@ export class UpdateUserHandler extends BaseRequestHandler {
     await this.userAdmin.update({
       ...actor,
       id: Number(req.input.params.id),
-      displayName: req.input.body.displayName
+      displayName: req.input.body.displayName,
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     const full = await this.userAdmin.getById({ ...actor, id: Number(req.input.params.id) });
