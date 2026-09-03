@@ -4,10 +4,7 @@ export const page = {
   path: "/system/users",
   title: "用戶管理",
   requires: { permissions: ["user.mgmt"] },
-  // order 特登唔用 20：嗰個位已經俾 my-devices 用咗（見 device/MyDevicesPage.vue）。
-  // 設計文件（docs/user_management/design_spec.md §4.1）淨係要求「設備審批 → 用戶管理 →
-  // 角色管理 → 變更紀錄」呢個相對次序，冇要求一定要係 10/20/30/40。
-  menu: { group: "system", icon: "people", order: 25 }
+  menu: { group: "userManagement", icon: "people", order: 20 }
 };
 </script>
 

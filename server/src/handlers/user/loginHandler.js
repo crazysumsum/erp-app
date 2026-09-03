@@ -26,12 +26,15 @@ const IPV6_PREFIX_LENGTH = 64;
 // 使用者物件的形狀，登入與 /me 共用。前端的 session store 直接吃這個。
 export const USER_SCHEMA = Object.freeze({
   type: "object",
-  required: ["id", "username", "displayName", "mustChangePassword", "roles", "permissions"],
+  required: ["id", "username", "displayName", "email", "mustChangePassword", "roles", "permissions"],
   additionalProperties: false,
   properties: {
     id: { type: "integer", minimum: 1 },
     username: { type: "string" },
     displayName: { type: "string" },
+    // 純聯絡資訊，可以係空字串（未填）——資料庫嗰邊係 NULL，UserService.js
+    // 嘅 #loadUser() 已經正規化做 ""，呢度唔使處理 null。
+    email: { type: "string" },
     // 前端靠這個決定要不要立刻導去改密碼頁——JWT 裡的 mcp claim 是後端擋
     // 請求用的，這裡是同一件事在回應 body 上的鏡像，兩者永遠一起變（見
     // §3.5、UserService.js 的 #loadUser()）。

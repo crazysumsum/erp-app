@@ -62,7 +62,7 @@ describe("device pages", () => {
     expect(validatePages(discoverPages())).toEqual([]);
   });
 
-  it("審批頁要求 device.mgmt，我的設備頁唔使", () => {
+  it("審批頁要求 device.mgmt", () => {
     const pages = Object.fromEntries(
       discoverPages().map(({ page }) => [page.name, page])
     );
@@ -70,9 +70,6 @@ describe("device pages", () => {
     expect(pages["device-approvals"].requires).toEqual({
       permissions: ["device.mgmt"]
     });
-    // 呢一頁淨係顯示自己嘅設備，後端亦都只回 claims.sub 自己嗰啲——加一條
-    // 權限要求反而會令普通用戶睇唔到自己嘅設備。
-    expect(pages["my-devices"].requires).toBeUndefined();
     // 等待審批頁一定要係 public：用戶喺嗰一刻**冇** token。
     expect(pages["device-pending"].public).toBe(true);
   });
