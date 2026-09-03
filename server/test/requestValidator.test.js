@@ -186,3 +186,52 @@ test("request validator exposes only the locations declared in the request schem
 
   assert.deepEqual(input, { params: {}, query: {}, body: null, headers: {} });
 });
+
+test("request validator trims a body field marked trim:true before pattern validation", async (t) => {
+  const trimSchema = {
+    body: {
+      type: "object",
+      required: ["username"],
+      additionalProperties: false,
+      properties: {
+        username: {
+          type: "string",
+          minLength: 3,
+          maxLength: 190,
+          pattern: "^[A-Za-z0-9._-]{3,190}$",
+          trim: true
+        }
+      }
+    }
+  };
+  const baseUrl = await startServer(
+    t,
+    createValidatorApp(trimSchema, { path: "/api/v1/users/create", method: "post" })
+  );
+
+  const response = await fetch(`${baseUrl}/api/v1/users/create`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: "  sam.wong  " })
+  });
+  const { input } = await response.json();
+
+  // 外側空白喺 pattern 驗證之前已經被 trim 走，所以合法輸入不會被拒；中間
+  // 沒有空白可比對，這裡不驗證「中間空白保留」——那是別的欄位（密碼）的規則。
+  assert.equal(response.status, 200);
+  assert.equal(input.body.username, "sam.wong");
+});
+
+test("request validator does not trim a body field without trim:true", async (t) => {
+  const baseUrl = await startServer(t, createValidatorApp(itemSchema));
+
+  const response = await fetch(`${baseUrl}/api/v1/items/42`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "  widget  " })
+  });
+  const { input } = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(input.body.name, "  widget  ");
+});

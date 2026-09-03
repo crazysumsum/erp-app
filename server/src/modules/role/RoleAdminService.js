@@ -115,7 +115,7 @@ export class RoleAdminService {
   }
 
   /** 建出來是空的，沒有任何權限——不需要提權檢查：新角色的權限集合是空集合。 */
-  async create({ actorId, claimedRoles, claimedPermissions, name, description }) {
+  async create({ actorId, claimedRoles, claimedPermissions, name, description, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       const nowMs = this.time.nowMs();
@@ -141,14 +141,16 @@ export class RoleAdminService {
         action: "role.create",
         targetType: "role",
         targetId: roleId,
-        targetLabel: normalizedName
+        targetLabel: normalizedName,
+        requestId,
+        ip
       });
 
       return { id: Number(roleId), name: normalizedName, description: String(description ?? "") };
     });
   }
 
-  async update({ actorId, claimedRoles, claimedPermissions, id, name, description }) {
+  async update({ actorId, claimedRoles, claimedPermissions, id, name, description, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       const target = await this.#requireRole(connection, id);
@@ -180,7 +182,9 @@ export class RoleAdminService {
         detail: {
           name: { before: target.name, after: normalizedName },
           description: { before: target.description, after: String(description ?? "") }
-        }
+        },
+        requestId,
+        ip
       });
 
       return { id: Number(id), name: normalizedName, description: String(description ?? "") };
@@ -193,7 +197,7 @@ export class RoleAdminService {
    * 會連帶失去它——刻意不擋這件事：先停用角色再手動清所有持有人的成本，遠高於
    * CASCADE 直接做掉，而且管理員刪角色的意圖本來就是「這個角色不該再存在」。
    */
-  async delete({ actorId, claimedRoles, claimedPermissions, id, reason }) {
+  async delete({ actorId, claimedRoles, claimedPermissions, id, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       const target = await this.#requireRole(connection, id);
@@ -208,7 +212,9 @@ export class RoleAdminService {
         targetType: "role",
         targetId: id,
         targetLabel: target.name,
-        reason
+        reason,
+        requestId,
+        ip
       });
 
       return { id: Number(id) };
@@ -223,7 +229,9 @@ export class RoleAdminService {
     id,
     permissionIds = [],
     expectedPermissionIds = [],
-    reason
+    reason,
+    requestId,
+    ip
   }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
@@ -265,7 +273,9 @@ export class RoleAdminService {
         targetId: id,
         targetLabel: target.name,
         reason,
-        detail: { permissions: { before: currentPermissionNames, after: nextPermissionNames } }
+        detail: { permissions: { before: currentPermissionNames, after: nextPermissionNames } },
+        requestId,
+        ip
       });
 
       return { id: Number(id), permissions: nextPermissionNames };

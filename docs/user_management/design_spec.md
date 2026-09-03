@@ -277,7 +277,7 @@ CREATE TABLE IF NOT EXISTS user_audit_logs (
 | POST | `/api/v1/users/:id/enable` | jwt-password | `user.mgmt` | **必填** | 啟用；清掉鎖定與失敗計數 |
 | POST | `/api/v1/users/:id/roles/assign` | **jwt-device-password** | `user.mgmt` | **必填** | 整組覆蓋該用戶的角色 |
 | POST | `/api/v1/users/:id/password/reset` | **jwt-device-password** | `user.mgmt` | **必填** | 管理員重設密碼，設 `must_change_password = 1` 與 72 小時死線 |
-| GET | `/api/v1/roles` | jwt | `role.mgmt` | — | 全部角色（含權限名與持有人數），不分頁 |
+| GET | `/api/v1/roles` | jwt | `user.mgmt` 或 `role.mgmt` | — | 全部角色（含權限名與持有人數），不分頁；`user.mgmt` 端要用嚟畫「為用戶指派角色」畫面嘅勾選清單 |
 | POST | `/api/v1/roles/create` | jwt | `role.mgmt` | — | 新增角色（建出來是空的，沒有任何權限） |
 | POST | `/api/v1/roles/:id/update` | jwt | `role.mgmt` | — | 改名稱／描述 |
 | POST | `/api/v1/roles/:id/delete` | jwt-password | `role.mgmt` | **必填** | 刪除角色 |

@@ -47,7 +47,9 @@ export class CreateRoleHandler extends BaseRequestHandler {
       claimedRoles: req.auth.claims.roles,
       claimedPermissions: req.auth.claims.permissions,
       name: req.input.body.name,
-      description: req.input.body.description ?? ""
+      description: req.input.body.description ?? "",
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     return this.response(role, { statusCode: 201 });

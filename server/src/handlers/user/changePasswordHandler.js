@@ -73,7 +73,7 @@ export class ChangePasswordHandler extends BaseRequestHandler {
     const userId = Number(req.auth.claims.sub);
     const { newPassword } = req.input.body;
 
-    assertPasswordStrength(newPassword);
+    const normalizedPassword = assertPasswordStrength(newPassword);
 
     await this.database.withTransaction(async (connection) => {
       const [rows] = await connection.query(
@@ -85,9 +85,9 @@ export class ChangePasswordHandler extends BaseRequestHandler {
       // 往上拋，不特別處理。
       const { username, password_hash: currentHash } = rows[0];
 
-      await assertPasswordChanged(newPassword, currentHash);
+      await assertPasswordChanged(normalizedPassword, currentHash);
 
-      const passwordHash = await hashPassword(newPassword);
+      const passwordHash = await hashPassword(normalizedPassword);
       const nowMs = this.time.nowMs();
 
       await connection.execute(
@@ -104,7 +104,9 @@ export class ChangePasswordHandler extends BaseRequestHandler {
         action: "user.password.change",
         targetType: "user",
         targetId: userId,
-        targetLabel: username
+        targetLabel: username,
+        requestId: req.requestId,
+        ip: req.ip || req.socket?.remoteAddress || ""
       });
     });
 

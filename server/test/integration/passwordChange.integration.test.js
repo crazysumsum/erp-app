@@ -265,6 +265,55 @@ test("create -> forced login -> blocked management action -> change password -> 
   assert.ok(audit, "self password change must be audited");
 });
 
+test("self-changing to a password with outer whitespace: only the trimmed value logs in (DEF-004)", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const initialPassword = "Integration-Test-Pass-10!";
+  // 頭尾各一個空白，中間合法字元——PWD-002/DEF-004 的原始 repro。
+  const paddedNewPassword = "  Padded-New-Password-1  ";
+  const trimmedNewPassword = "Padded-New-Password-1";
+
+  const user = await seedUser(db, {
+    username: `it-trim-pwd-${randomUUID().slice(0, 8)}`,
+    password: initialPassword
+  });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: user.userId, device });
+
+  t.after(async () => {
+    await cleanupUser(db, user.userId);
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+
+  const loginResponse = await login(url, device, { username: user.username, password: initialPassword });
+  const loginBody = await loginResponse.json();
+  assert.equal(loginResponse.status, 200, JSON.stringify(loginBody));
+  const token = loginBody.data.token;
+
+  const changePath = "/api/v1/user/password/change";
+  const changeResponse = await fetch(
+    `${url}${changePath}`,
+    await signedAuthed(device, token, {
+      path: changePath,
+      body: { password: initialPassword, newPassword: paddedNewPassword }
+    })
+  );
+  const changeBody = await changeResponse.json();
+  assert.equal(changeResponse.status, 200, JSON.stringify(changeBody));
+
+  // 規格要求的行為：驗證強度時用嘅 trim 後嘅值，同實際存落去 hash 嘅一定要
+  // 係同一個值。trim 後嘅密碼登入必須成功。
+  const trimmedLogin = await login(url, device, { username: user.username, password: trimmedNewPassword });
+  assert.equal(trimmedLogin.status, 200, await trimmedLogin.text());
+
+  // 帶住原本頭尾空白嗰個字串登入必須失敗——存落去嘅 hash 是 trim 後嘅值，
+  // 不是呼叫端傳入嗰個未 trim 原始字串（DEF-004 修好前，這裡反過來先會過）。
+  const paddedLogin = await login(url, device, { username: user.username, password: paddedNewPassword });
+  assert.equal(paddedLogin.status, 401, "the untrimmed password must no longer match the stored hash");
+});
+
 test("an unsigned request to an escalation endpoint is refused before it does anything", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");

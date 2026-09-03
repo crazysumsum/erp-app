@@ -35,12 +35,17 @@ export const REASON_SCHEMA = Object.freeze({
   maxLength: 190
 });
 
-/** username：3–190 字元，字元集限制在 URL、日誌與稽核裡都安全的範圍。 */
+/**
+ * username：3–190 字元，字元集限制在 URL、日誌與稽核裡都安全的範圍。
+ * `trim: true` 係畀 RequestValidator 讀嘅標註（design_spec.md:310：「收進來先
+ * trim()」）——喺 pattern 驗證之前去掉頭尾空白，唔係 AJV 自己嘅驗證行為。
+ */
 export const USERNAME_SCHEMA = Object.freeze({
   type: "string",
   minLength: 3,
   maxLength: 190,
-  pattern: "^[A-Za-z0-9._-]{3,190}$"
+  pattern: "^[A-Za-z0-9._-]{3,190}$",
+  trim: true
 });
 
 export const DISPLAY_NAME_SCHEMA = Object.freeze({

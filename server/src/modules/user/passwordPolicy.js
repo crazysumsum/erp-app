@@ -25,11 +25,15 @@ function weak(publicMessage) {
 }
 
 /**
- * 檢查密碼本身的強度。錯誤訊息指名差在哪，而不是一句「密碼不符要求」——
- * 後者只會讓人一直試。
+ * 檢查密碼本身的強度，並回傳 trim 後的值。錯誤訊息指名差在哪，而不是一句
+ * 「密碼不符要求」——後者只會讓人一直試。
  *
  * 只 trim 前後空白，中間原樣保留：允許空格與可列印字元，不擋密碼管理器產生
  * 的隨機字串。長度上限（200）與截斷防護留給 request schema，這裡不重複。
+ *
+ * 回傳值（而不是 void）是刻意的：呼叫端拿這個 trim 後的值去 hash、去跟目前
+ * 密碼比對，三處共用同一個 trim 結果，不會有「驗證時 trim、實際存的時候冇
+ * trim」這種落差（DEF-004）。
  */
 export function assertPasswordStrength(password) {
   const trimmed = String(password ?? "").trim();
@@ -45,6 +49,8 @@ export function assertPasswordStrength(password) {
   if (!/[A-Z]/.test(trimmed)) {
     throw weak("需要包含至少一個大寫英文字母");
   }
+
+  return trimmed;
 }
 
 /**

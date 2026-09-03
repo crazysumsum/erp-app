@@ -62,7 +62,9 @@ export class CreateUserHandler extends BaseRequestHandler {
       username,
       displayName: displayName ?? "",
       password: newUserPassword,
-      roleIds: roleIds ?? []
+      roleIds: roleIds ?? [],
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     const full = await this.userAdmin.getById({

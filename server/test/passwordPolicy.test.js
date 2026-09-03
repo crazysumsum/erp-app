@@ -68,6 +68,16 @@ test("assertPasswordStrength allows spaces and symbols; only trims the ends", ()
   assert.doesNotThrow(() => assertPasswordStrength("Correct Horse Battery"));
 });
 
+test("assertPasswordStrength returns the trimmed password, not the raw input", () => {
+  // DEF-004: 呼叫端一定要用呢個回傳值去 hash，唔可以再用原本未 trim 嘅
+  // password——否則強度檢查同實際存落去嘅值會唔一致。
+  assert.equal(assertPasswordStrength("  Correct-Horse-Battery-1  "), "Correct-Horse-Battery-1");
+});
+
+test("assertPasswordStrength keeps interior spaces untouched", () => {
+  assert.equal(assertPasswordStrength("Correct Horse Battery"), "Correct Horse Battery");
+});
+
 test("assertPasswordStrength does not require digits or symbols", () => {
   assert.doesNotThrow(() => assertPasswordStrength("OnlyLettersHere"));
 });

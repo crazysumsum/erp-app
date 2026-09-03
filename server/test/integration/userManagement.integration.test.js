@@ -466,6 +466,107 @@ test("creating a user whose name is already taken returns 409 without a stray au
   assert.equal(afterCount[0].c, beforeCount[0].c, "a failed create must not leave an audit row");
 });
 
+test("creating a user trims outer whitespace from username before it is stored", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-8!";
+
+  const actor = await seedUser(db, {
+    username: `it-actor-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: await systemAdminRoleId(db)
+  });
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
+
+  const trimmedUsername = `it-trim-${randomUUID().slice(0, 8)}`;
+  let createdUserId = null;
+
+  t.after(async () => {
+    if (createdUserId !== null) {
+      await cleanupUser(db, createdUserId);
+    }
+    await cleanupUser(db, actor.userId);
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, {
+    roles: ["system-admin"],
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
+  });
+
+  const response = await fetch(
+    `${url}/api/v1/users/create`,
+    await signedAuthed(device, token, {
+      path: "/api/v1/users/create",
+      body: {
+        // 頭尾各一個空白，中間是合法字元——DEF-001：pattern 之前一定要先 trim。
+        username: `  ${trimmedUsername}  `,
+        displayName: "",
+        newUserPassword: "Some-Valid-Password-1",
+        roleIds: [],
+        password
+      }
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 201, JSON.stringify(body));
+  assert.equal(body.data.username, trimmedUsername);
+  createdUserId = body.data.id;
+
+  const [[row]] = await db.query("SELECT username FROM users WHERE id = ?", [createdUserId]);
+  assert.equal(row.username, trimmedUsername, "the stored username must be the trimmed value");
+});
+
+test("user.update audit row records the request's X-Request-Id and client IP", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-9!";
+
+  const actor = await seedUser(db, {
+    username: `it-actor-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: await systemAdminRoleId(db)
+  });
+  const target = await seedUser(db, {
+    username: `it-target-${randomUUID().slice(0, 8)}`,
+    password
+  });
+
+  t.after(async () => {
+    await cleanupUser(db, actor.userId);
+    await cleanupUser(db, target.userId);
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, {
+    roles: ["system-admin"],
+    permissions: ADMIN_PERMISSIONS
+  });
+
+  const requestId = `it-req-${randomUUID()}`;
+  const request = authed(token, { displayName: "Updated by DEF-002 regression test" });
+  request.headers["X-Request-Id"] = requestId;
+
+  const response = await fetch(`${url}/api/v1/users/${target.userId}/update`, request);
+  assert.equal(response.status, 200);
+
+  const [[auditRow]] = await db.query(
+    `SELECT request_id, ip FROM user_audit_logs
+      WHERE target_id = ? AND target_type = 'user' AND action = 'user.update'
+      ORDER BY id DESC LIMIT 1`,
+    [target.userId]
+  );
+  assert.equal(auditRow.request_id, requestId);
+  assert.ok(auditRow.ip, "audit row must record a non-empty client IP");
+});
+
 test("only one of two concurrent requests can disable the last two active admins", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");

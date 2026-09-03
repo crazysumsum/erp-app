@@ -49,7 +49,9 @@ export class UpdateRoleHandler extends BaseRequestHandler {
       claimedPermissions: req.auth.claims.permissions,
       id: Number(req.input.params.id),
       name: req.input.body.name,
-      description: req.input.body.description ?? ""
+      description: req.input.body.description ?? "",
+      requestId: req.requestId,
+      ip: req.ip || req.socket?.remoteAddress || ""
     });
 
     return this.response(role);
