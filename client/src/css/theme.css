@@ -1,0 +1,38 @@
+/**
+ * 品牌色與版面共用的視覺 token，集中喺呢一個檔案，等「配色/圓角/陰影」呢類
+ * 全站設定只需要改一個地方。Quasar 嘅顏色 class（bg-primary、text-primary、
+ * QBtn color="primary" 等）底層用緊呢啲 CSS variable，唔使裝 SASS 工具鏈
+ * 就可以覆蓋（見 main.js import quasar.css 嗰段嘅說明）。
+ */
+:root {
+  --q-primary: #155e75;
+
+  --app-bg: #f5f7fa;
+  --app-border: #e2e8f0;
+  --app-radius: 10px;
+  --app-primary-tint: color-mix(in srgb, var(--q-primary) 10%, white);
+}
+
+.app-page-bg {
+  background: var(--app-bg);
+}
+
+.app-active-tint {
+  background: var(--app-primary-tint);
+}
+
+/* Quasar 預設卡片陰影偏重（Material 的 elevation-2），成頁好多張卡片疊埋
+   一齊會顯得雜。用一個更輕嘅陰影統一取代，`!important` 係刻意嘅：目的正正
+   係蓋過 Quasar 內建嗰個，唔係漏咗改用更高 specificity 選擇器。 */
+.q-card:not(.q-card--flat) {
+  border-radius: var(--app-radius);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 1px 3px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* 鍵盤操作一定要睇得見 focus 落喺邊（WCAG 2.4.7），用返品牌色做輪廓。 */
+:focus-visible {
+  outline: 2px solid var(--q-primary);
+  outline-offset: 2px;
+}

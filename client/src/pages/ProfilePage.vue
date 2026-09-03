@@ -101,7 +101,7 @@ function formatTime(epochMs) {
               />
               <q-input
                 v-model="email"
-                label="Email"
+                label="電子郵件"
                 filled
                 :error="!!fieldError('email')"
                 :error-message="fieldError('email')"

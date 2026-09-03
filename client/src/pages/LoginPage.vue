@@ -11,6 +11,7 @@ export const page = {
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import authConfig from "@config/auth.js";
+import AuthLayout from "@/framework/layout/AuthLayout.vue";
 import { DEVICE_BLOCKED_CODES, useSessionStore } from "@/stores/session.js";
 
 const route = useRoute();
@@ -41,7 +42,17 @@ async function handleSubmit() {
       return;
     }
 
-    errorMessage.value = error.message || "登入失敗";
+    // 後端登入失敗同「session 已經失效」共用同一個 code（"Unauthorized
+    // Access"，見 errorMessages.js），單靠 code 分唔到係邊一種——但呢度係
+    // 登入頁，401 一定係帳號密碼錯（節流、臨時密碼過期都有自己獨立嘅
+    // code，唔會行到呢一行），所以喺呢度直接寫死，唔用共用嗰句「登入已
+    // 失效」。
+    errorMessage.value =
+      error.code === "TEMPORARY_PASSWORD_EXPIRED"
+        ? error.message
+        : error.status === 401
+          ? "帳號或密碼不正確"
+          : error.message || "登入失敗";
   } finally {
     submitting.value = false;
   }
@@ -49,31 +60,34 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="bg-grey-2 window-height row justify-center items-center">
-    <q-card style="width: 360px" class="q-pa-md">
-      <q-card-section>
-        <div class="text-h6">登入</div>
-      </q-card-section>
+  <AuthLayout>
+    <q-card-section class="q-pt-lg q-px-lg">
+      <div class="text-h6">登入</div>
+      <div class="text-caption text-grey-7 q-mt-xs">請輸入帳號密碼以繼續</div>
+    </q-card-section>
 
-      <q-card-section>
-        <q-form class="q-gutter-md" @submit.prevent="handleSubmit">
-          <q-input v-model="username" label="帳號" filled autofocus :rules="[required]" />
-          <q-input v-model="password" label="密碼" type="password" filled :rules="[required]" />
+    <q-card-section class="q-pt-none q-px-lg q-pb-lg">
+      <q-form class="q-gutter-y-md" @submit.prevent="handleSubmit">
+        <q-input v-model="username" label="帳號" filled autofocus :rules="[required]">
+          <template #prepend><q-icon name="person" /></template>
+        </q-input>
+        <q-input v-model="password" label="密碼" type="password" filled :rules="[required]">
+          <template #prepend><q-icon name="lock" /></template>
+        </q-input>
 
-          <q-banner v-if="errorMessage" class="bg-negative text-white" dense>
-            {{ errorMessage }}
-          </q-banner>
+        <q-banner v-if="errorMessage" class="bg-negative text-white" dense rounded>
+          {{ errorMessage }}
+        </q-banner>
 
-          <q-btn
-            type="submit"
-            color="primary"
-            label="登入"
-            :loading="submitting"
-            class="full-width"
-            unelevated
-          />
-        </q-form>
-      </q-card-section>
-    </q-card>
-  </div>
+        <q-btn
+          type="submit"
+          color="primary"
+          label="登入"
+          :loading="submitting"
+          class="full-width"
+          unelevated
+        />
+      </q-form>
+    </q-card-section>
+  </AuthLayout>
 </template>

@@ -29,7 +29,7 @@ const drawerOpen = ref(true);
     嘅設計唔啱。
   -->
   <q-layout>
-    <q-header elevated>
+    <q-header bordered class="bg-white text-grey-9">
       <AppTopbar @toggle-drawer="drawerOpen = !drawerOpen" />
     </q-header>
 
@@ -43,12 +43,14 @@ const drawerOpen = ref(true);
     </q-drawer>
 
     <!--
-      bg-grey-2：Quasar 冇幫 QPage 設預設背景色，之前每個頁面自己包一層
+      app-page-bg：Quasar 冇幫 QPage 設預設背景色，之前每個頁面自己包一層
       bg-grey-2 嘅 div（見 HomePage.vue 改之前嘅版本），而家喺呢度統一設，
-      頁面唔使再各自處理。
+      頁面唔使再各自處理。用 theme.css 嗰個 --app-bg token 而唔係 Quasar
+      內建嘅 bg-grey-2，等成個 app（連埋 AuthLayout 嗰幾頁）用返同一種
+      背景色。
     -->
     <q-page-container>
-      <q-page class="bg-grey-2">
+      <q-page class="app-page-bg">
         <ErrorBoundary>
           <router-view />
         </ErrorBoundary>

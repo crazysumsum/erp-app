@@ -1,6 +1,7 @@
 import authConfig from "@config/auth.js";
 import httpConfig from "@config/http.js";
 import { ApiError } from "./ApiError.js";
+import { ERROR_CODE_MESSAGES } from "./errorMessages.js";
 
 /**
  * 包住 fetch，對應後端統一的 response 信封（{success, data, meta} /
@@ -136,10 +137,15 @@ export class HttpClient {
 
     if (!response.ok || envelope?.success === false) {
       const errorBody = envelope?.error || {};
+      const code = errorBody.code || `HTTP_${response.status}`;
+      // 後端嘅 message 好多時係俾開發者睇嘅英文 debug 字串，唔係設計俾用戶
+      // 睇（見 errorMessages.js 的說明）。已知係英文嗰啲用 code 揀返中文；
+      // 業務邏輯層本身已經用中文 publicMessage 嘅 code 唔喺表入面，原樣用
+      // errorBody.message。
       const apiError = new ApiError({
         status: response.status,
-        code: errorBody.code || `HTTP_${response.status}`,
-        message: errorBody.message || response.statusText || "請求失敗",
+        code,
+        message: ERROR_CODE_MESSAGES[code] || errorBody.message || response.statusText || "請求失敗",
         details: errorBody.details,
         requestId: envelope?.meta?.requestId || response.headers.get("x-request-id"),
         retryAfterSeconds: parseRetryAfter(response.headers.get("retry-after"))

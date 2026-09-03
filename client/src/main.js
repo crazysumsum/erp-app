@@ -23,6 +23,9 @@ import { useSessionStore } from "./stores/session.js";
 import "quasar/dist/quasar.css";
 // 圖示字型。菜單與元件的圖示名稱（config/menu.js 的 icon）都出自這一套。
 import "@quasar/extras/material-icons/material-icons.css";
+// 品牌色／陰影／圓角等全站視覺 token，見 css/theme.css 的說明。要喺 Quasar
+// 嘅 CSS 之後 import，先可以用 CSS variable 覆蓋佢嘅預設值。
+import "@/css/theme.css";
 
 // 先驗證頁面 metadata，過唔到就唔啟動：對應後端「設定錯就拒絕啟動」。呢一步
 // 要喺任何 Vue／Pinia／router 建立之前做——錯誤畫面本身唔應該依賴一個仲未

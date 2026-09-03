@@ -26,7 +26,7 @@ async function loadHealth() {
     const response = await fetch(`${httpConfig.baseUrl}/api/v1/health`);
 
     if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
+      throw new Error(`連線失敗（狀態碼 ${response.status}）`);
     }
 
     const responseBody = await response.json();
@@ -50,7 +50,7 @@ onMounted(loadHealth);
       <q-card style="max-width: 520px">
         <q-card-section class="row items-center justify-between">
           <div>
-            <div class="text-overline text-primary">ERP Development Environment</div>
+            <div class="text-overline text-primary">開發環境</div>
             <div class="text-h6">系統狀態</div>
           </div>
           <q-btn
@@ -68,19 +68,19 @@ onMounted(loadHealth);
         <q-list v-if="health" separator>
           <q-item>
             <q-item-section>
-              <q-item-label caption>API</q-item-label>
+              <q-item-label caption>服務狀態</q-item-label>
               <q-item-label>{{ health.status }}</q-item-label>
             </q-item-section>
           </q-item>
           <q-item>
             <q-item-section>
-              <q-item-label caption>Database</q-item-label>
+              <q-item-label caption>資料庫</q-item-label>
               <q-item-label>{{ health.database }}</q-item-label>
             </q-item-section>
           </q-item>
           <q-item>
             <q-item-section>
-              <q-item-label caption>Time</q-item-label>
+              <q-item-label caption>時間</q-item-label>
               <q-item-label>{{ health.timestamp }}</q-item-label>
             </q-item-section>
           </q-item>

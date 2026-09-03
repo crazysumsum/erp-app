@@ -14,6 +14,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import authConfig from "@config/auth.js";
 import { currentDeviceId } from "@/framework/auth/deviceKey.js";
+import AuthLayout from "@/framework/layout/AuthLayout.vue";
 import { useSessionStore } from "@/stores/session.js";
 
 const router = useRouter();
@@ -61,27 +62,25 @@ function backToLogin() {
 </script>
 
 <template>
-  <div class="bg-grey-2 window-height row justify-center items-center">
-    <q-card style="width: 460px" class="q-pa-md">
-      <q-card-section class="row items-center q-gutter-md">
-        <q-icon :name="state.icon" :color="state.colour" size="42px" />
-        <div class="text-h6">{{ state.title }}</div>
-      </q-card-section>
+  <AuthLayout>
+    <q-card-section class="row items-center q-gutter-md">
+      <q-icon :name="state.icon" :color="state.colour" size="42px" />
+      <div class="text-h6">{{ state.title }}</div>
+    </q-card-section>
 
-      <q-card-section class="text-body2">
-        {{ state.body }}
-      </q-card-section>
+    <q-card-section class="text-body2">
+      {{ state.body }}
+    </q-card-section>
 
-      <q-card-section v-if="deviceId">
-        <div class="text-caption text-grey-7">設備編號（報畀管理員對認）</div>
-        <!-- 淨係顯示頭 16 個字元：足夠喺兩台待審設備之間分辨，而完整嘅
-             thumbprint 對人嚟講讀唔到亦記唔到。 -->
-        <div class="text-caption">{{ deviceId.slice(0, 16) }}…</div>
-      </q-card-section>
+    <q-card-section v-if="deviceId">
+      <div class="text-caption text-grey-7">設備編號（報畀管理員對認）</div>
+      <!-- 淨係顯示頭 16 個字元：足夠喺兩台待審設備之間分辨，而完整嘅
+           thumbprint 對人嚟講讀唔到亦記唔到。 -->
+      <div class="text-caption">{{ deviceId.slice(0, 16) }}…</div>
+    </q-card-section>
 
-      <q-card-actions align="right">
-        <q-btn flat color="primary" label="返回登入" @click="backToLogin" />
-      </q-card-actions>
-    </q-card>
-  </div>
+    <q-card-actions align="right">
+      <q-btn flat color="primary" label="返回登入" @click="backToLogin" />
+    </q-card-actions>
+  </AuthLayout>
 </template>
