@@ -576,23 +576,25 @@ Primary key `(job_id,row_number)`，另有 `(job_id,status)`。
 
 | Migration | 內容 |
 | --- | --- |
-| `0009_seed_item_management_permissions.js` | 冪等種 `item.view`、`item.mgmt` 並授予 system-admin。 |
-| `0010_create_item_categories.js` | Category。 |
-| `0011_create_item_brands.js` | Brand。 |
-| `0012_create_item_uoms.js` | UOM。 |
-| `0013_create_items.js` | Item。 |
-| `0014_create_item_skus.js` | SKU。 |
-| `0015_create_item_sku_uoms.js` | SKU UOM。 |
-| `0016_create_item_sku_barcodes.js` | Barcode。 |
-| `0017_create_item_attribute_definitions.js` | Attribute definition。 |
-| `0018_create_item_attribute_options.js` | Attribute options。 |
-| `0019_create_item_category_attributes.js` | Category mapping。 |
-| `0020_create_item_attribute_values.js` | Item values。 |
-| `0021_create_item_sku_attribute_values.js` | SKU values。 |
-| `0022_create_item_media.js` | Media metadata。 |
-| `0023_create_item_audit_logs.js` | Item audit。 |
-| `0024_create_item_import_jobs.js` | Import jobs。 |
-| `0025_create_item_import_rows.js` | Import row results。 |
+| `0010_seed_item_management_permissions.js` | 冪等種 `item.view`、`item.mgmt` 並授予 system-admin。 |
+| `0011_create_item_categories.js` | Category。 |
+| `0012_create_item_brands.js` | Brand。 |
+| `0013_create_item_uoms.js` | UOM。 |
+| `0014_create_items.js` | Item。 |
+| `0015_create_item_skus.js` | SKU。 |
+| `0016_create_item_sku_uoms.js` | SKU UOM。 |
+| `0017_create_item_sku_barcodes.js` | Barcode。 |
+| `0018_create_item_attribute_definitions.js` | Attribute definition。 |
+| `0019_create_item_attribute_options.js` | Attribute options。 |
+| `0020_create_item_category_attributes.js` | Category mapping。 |
+| `0021_create_item_attribute_values.js` | Item values。 |
+| `0022_create_item_sku_attribute_values.js` | SKU values。 |
+| `0023_create_item_media.js` | Media metadata。 |
+| `0024_create_item_audit_logs.js` | Item audit。 |
+| `0025_create_item_import_jobs.js` | Import jobs。 |
+| `0026_create_item_import_rows.js` | Import row results。 |
+
+（此編號已依實作前置差異順延一位，保留既有 `0009_add_user_email.js` 不變；詳見 `docs/items_management/tasks.md` §1.2。）
 
 每支使用 `CREATE TABLE IF NOT EXISTS`；DML seed 採「先查再 insert」，不用 `INSERT IGNORE` 吞掉其他錯誤。已套用 migration 永不改內容。
 
@@ -1044,9 +1046,10 @@ Item 列表搜尋 SKU Code／name／barcode 時使用相關 `EXISTS`，避免 JO
 | 檔案 | 修改內容 |
 | --- | --- |
 | `server/src/modules/authorization/permissionCatalogue.js` | 加 `item.view`、`item.mgmt`。 |
-| `server/database/migrations/0008_seed_user_management_permissions.js` | **不修改**；已套用 migration 是歷史紀錄。新 permission 由 0009 種。 |
+| `server/database/migrations/0008_seed_user_management_permissions.js` | **不修改**；已套用 migration 是歷史紀錄。新 permission 由 0010 種。 |
+| `server/database/migrations/0009_add_user_email.js` | **不修改**；已套用 migration 是歷史紀錄，Item migrations 從 0010 開始順延，不重用或插入這個編號。 |
 | `server/test/permissionCatalogueConventions.test.js` | 不再假設 0008 包含未來所有 permission；改為掃描明確 permission seed migrations，確保 catalogue 每項恰有 seed。 |
-| `server/test/integration/migrations.integration.test.js` | 加 0009–0025 schema、索引、FK、generated unique slot、seed、重跑測試；測試可拆新檔避免單檔過大。 |
+| `server/test/integration/migrations.integration.test.js` | 加 0010–0026 schema、索引、FK、generated unique slot、seed、重跑測試；測試可拆新檔避免單檔過大。 |
 | `server/src/framework/configuration/applicationConfiguration.js` | 匯入 item config／normalizer，加入 `item` section；不把商品規則放 framework。 |
 | `server/config/scheduler.js` | 加 media cleanup，以及 Phase 3 import validation／execution／file-retention cleanup job 的可覆寫排程設定名稱。 |
 | `server/.env.example` | 記錄 item media root、import batch／timeout 等 deployment settings；固定 HKD／`tax_not_applicable` 不放 env。 |
@@ -1106,7 +1109,7 @@ Item 列表搜尋 SKU Code／name／barcode 時使用相關 `EXISTS`，避免 JO
 
 ### 9.5 新增 migrations
 
-新增 §5.15 的 `0009`–`0025`。不修改 `0003`–`0008`，不把新表塞入 `init.sql`；`init.sql` 仍只建 database／account，所有表由 migration 建立。
+新增 §5.15 的 `0010`–`0026`。不修改 `0001`–`0009`，不把新表塞入 `init.sql`；`init.sql` 仍只建 database／account，所有表由 migration 建立。
 
 ---
 
@@ -1244,7 +1247,7 @@ Item 列表搜尋 SKU Code／name／barcode 時使用相關 `EXISTS`，避免 JO
 
 `DB_INTEGRATION_TESTS=1` 對真 MySQL 驗證：
 
-- 0009 的 `item.view`、`item.mgmt` 均存在且 system-admin 持有。
+- 0010 的 `item.view`、`item.mgmt` 均存在且 system-admin 持有。
 - 每表 column type、nullability、default、index、FK delete rule。
 - Category root generated scope 能擋同名 root。
 - SKU Code 在 `utf8mb4_unicode_ci` 下擋大小寫差異。
@@ -1407,7 +1410,7 @@ Log context 只放 ID、Code、Job ID、count、duration、requestId；不放整
 ### Phase 0：決策與基礎設定
 
 1. 提供 UOM／分類／屬性及內部 Barcode 規則樣本。
-2. 0009 種 `item.view`／`item.mgmt`，再建立 catalog tables。
+2. 0010 種 `item.view`／`item.mgmt`，再建立 catalog tables。
 3. 驗證 system-admin 持有兩個權限，以及固定 HKD／`tax_not_applicable` contract。
 
 驗收：migration 重跑；permission catalogue／DB 一致；view／mgmt 分權及固定價格口徑測試通過。

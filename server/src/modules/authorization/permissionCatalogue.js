@@ -17,7 +17,13 @@
 export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "user.mgmt", description: "管理用戶與用戶的角色" }),
   Object.freeze({ name: "role.mgmt", description: "管理角色與角色的權限" }),
-  Object.freeze({ name: "device.mgmt", description: "審批、拒絕或撤銷設備綁定申請" })
+  Object.freeze({ name: "device.mgmt", description: "審批、拒絕或撤銷設備綁定申請" }),
+  // item.view／item.mgmt 是查看與管理分權，不是同一件事的兩個顆粒度。現有
+  // authorization 沒有 permission inheritance，持有 item.mgmt 不會自動得到
+  // item.view；商品管理員角色要兩者都配。設計見
+  // docs/items_management/design_spec.md §3.1。
+  Object.freeze({ name: "item.view", description: "查看商品、SKU 與商品變更歷史" }),
+  Object.freeze({ name: "item.mgmt", description: "管理商品、SKU 與商品主資料" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

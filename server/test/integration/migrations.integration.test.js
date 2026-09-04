@@ -1,5 +1,6 @@
 /**
- * Phase 1 的三支 migration，對一個真的、已經 migrate 過的 MySQL 驗收。
+ * Phase 1 的四支 migration（含 Item Management 的 0010 權限種子），對一個真的、
+ * 已經 migrate 過的 MySQL 驗收。
  *
  * 這裡要的是假連線給不了的兩件事：DDL 本身是不是合法的 MySQL（欄位型別、索引、
  * 外鍵的 ON DELETE 行為），以及**重跑會不會收斂**。後者在假連線上只是「我寫的
@@ -17,6 +18,7 @@ import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permission
 import { up as addUserPasswordColumns } from "../../database/migrations/0006_add_user_password_columns.js";
 import { up as addUserAuditLogs } from "../../database/migrations/0007_add_user_audit_logs.js";
 import { up as seedPermissions } from "../../database/migrations/0008_seed_user_management_permissions.js";
+import { up as seedItemPermissions } from "../../database/migrations/0010_seed_item_management_permissions.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -128,7 +130,33 @@ test("0008 seeded exactly the catalogue, and gave all of it to system-admin", { 
   );
 });
 
-test("re-running all three migrations changes nothing", { skip }, async (t) => {
+test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip }, async (t) => {
+  const database = await withDatabase(t);
+
+  const [permissions] = await database.query(
+    "SELECT name FROM permissions WHERE name IN ('item.view', 'item.mgmt')"
+  );
+  assert.deepEqual(
+    permissions.map((row) => row.name).sort(),
+    ["item.mgmt", "item.view"]
+  );
+
+  // item.mgmt 不隱含 item.view——現有 authorization 沒有 permission
+  // inheritance，這裡直接證明 0010 把兩項都種給了 system-admin，而不是只種了
+  // 其中一項就假設另一項會自動生效。
+  const [held] = await database.query(
+    `SELECT p.name FROM role_permissions rp
+       JOIN roles r ON r.id = rp.role_id
+       JOIN permissions p ON p.id = rp.permission_id
+      WHERE r.name = 'system-admin' AND p.name IN ('item.view', 'item.mgmt')`
+  );
+  assert.deepEqual(
+    held.map((row) => row.name).sort(),
+    ["item.mgmt", "item.view"]
+  );
+});
+
+test("re-running all four migrations changes nothing", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   const countRows = async () => {
@@ -151,6 +179,7 @@ test("re-running all three migrations changes nothing", { skip }, async (t) => {
   await addUserPasswordColumns(database);
   await addUserAuditLogs(database);
   await seedPermissions(database);
+  await seedItemPermissions(database);
 
   assert.deepEqual(await countRows(), before);
   assert.deepEqual(
