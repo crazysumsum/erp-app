@@ -81,3 +81,32 @@ export function promptPassword({
       .onCancel(() => resolve(null));
   });
 }
+
+/**
+ * 要求輸入原因再確認一個「唔使密碼」嘅狀態動作，回傳輸入嘅原因；用戶取消
+ * 就回 null。
+ *
+ * 對應後端 authType 一般 `jwt`（唔係 `jwt-password`）但 body 仍然要求
+ * `reason` 嗰類端點——Item Management 嘅啟用／停用就係呢種：会改變資料、
+ * 要留低原因，但唔算高風險到要再確認密碼（見
+ * docs/items_management/design_spec.md §6.4）。要密碼嗰種高風險動作用
+ * `promptPassword({ requireReason: true })`，唔好用呢個。
+ */
+export function promptReason({ title = "請確認", message, okLabel = "確認" }) {
+  return new Promise((resolve) => {
+    Dialog.create({
+      title,
+      message,
+      prompt: {
+        model: "",
+        type: "textarea",
+        isValid: (value) => value.length >= 5 && value.length <= 190
+      },
+      persistent: true,
+      cancel: { label: "取消", flat: true },
+      ok: { label: okLabel, color: "primary", unelevated: true }
+    })
+      .onOk((reason) => resolve(reason))
+      .onCancel(() => resolve(null));
+  });
+}
