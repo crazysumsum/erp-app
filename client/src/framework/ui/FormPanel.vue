@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 
 /**
  * 封裝 QForm，重點喺「後端 validation 錯咗，將 error.details 自動對應返去
@@ -23,6 +23,11 @@ const props = defineProps({
 const emit = defineEmits(["success"]);
 
 const formRef = ref(null);
+// 提交失敗嗰陣要俾焦點移過去呢個總覽區，等螢幕閱讀器嘅人即時知道「錯咗」
+// ——單靠個別欄位下面嘅紅字，冇經過任何嘢會宣讀，畫面又冇跳走，screen
+// reader 用戶會以為個表單靜靜哋咩都冇做過。role="alert" 加 focus 就係補
+// 返呢一步。
+const summaryRef = ref(null);
 const submitting = ref(false);
 const errorMessage = ref("");
 const fieldErrors = ref({});
@@ -49,6 +54,10 @@ async function handleSubmit() {
     if (Object.keys(fieldErrors.value).length === 0) {
       errorMessage.value = error.message || "提交失敗";
     }
+
+    // 要等 q-banner 真正渲染咗先揸得到個 DOM 元素。
+    await nextTick();
+    summaryRef.value?.focus();
   } finally {
     submitting.value = false;
   }
@@ -76,9 +85,22 @@ defineExpose({ fieldError, resetValidation: () => formRef.value?.resetValidation
 
 <template>
   <q-form ref="formRef" @submit="handleSubmit">
-    <q-banner v-if="errorMessage" class="bg-negative text-white q-mb-md">
-      {{ errorMessage }}
-    </q-banner>
+    <div
+      v-if="errorMessage || Object.keys(fieldErrors).length > 0"
+      ref="summaryRef"
+      role="alert"
+      tabindex="-1"
+    >
+      <q-banner class="bg-negative text-white q-mb-md">
+        <div v-if="errorMessage">{{ errorMessage }}</div>
+        <template v-else>
+          <div class="q-mb-xs">請檢查以下欄位：</div>
+          <ul class="q-ma-none q-pl-md">
+            <li v-for="(message, field) in fieldErrors" :key="field">{{ field }}：{{ message }}</li>
+          </ul>
+        </template>
+      </q-banner>
+    </div>
 
     <slot :field-error="fieldError" :submitting="submitting" />
   </q-form>

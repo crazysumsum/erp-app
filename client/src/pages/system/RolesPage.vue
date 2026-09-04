@@ -261,7 +261,7 @@ async function deleteRole(role) {
     <!-- 新增角色 -->
     <q-dialog v-model="showCreateDialog" persistent>
       <q-card style="min-width: 380px">
-        <q-card-section><div class="text-h6">新增角色</div></q-card-section>
+        <q-card-section><h2 class="text-h6 q-ma-none">新增角色</h2></q-card-section>
         <q-card-section class="q-pt-none">
           <FormPanel v-slot="{ fieldError, submitting }" :on-submit="submitCreate" @success="afterCreate">
             <div class="q-gutter-md">
@@ -293,7 +293,7 @@ async function deleteRole(role) {
     <!-- 改名稱／描述 -->
     <q-dialog v-model="showEditDialog" persistent>
       <q-card style="min-width: 380px">
-        <q-card-section><div class="text-h6">編輯角色</div></q-card-section>
+        <q-card-section><h2 class="text-h6 q-ma-none">編輯角色</h2></q-card-section>
         <q-card-section class="q-pt-none">
           <FormPanel v-slot="{ fieldError, submitting }" :on-submit="submitEdit" @success="afterEdit">
             <div class="q-gutter-md">
@@ -326,7 +326,7 @@ async function deleteRole(role) {
     <q-dialog v-model="showPermissionsDialog" persistent>
       <q-card style="min-width: 420px" v-if="permissionsDialogRole">
         <q-card-section>
-          <div class="text-h6">配置權限：{{ permissionsDialogRole.name }}</div>
+          <h2 class="text-h6 q-ma-none">配置權限：{{ permissionsDialogRole.name }}</h2>
           <div class="text-caption text-grey-7">權限目錄由投產腳本維護，這裡只決定這個角色持有哪幾個。</div>
         </q-card-section>
         <q-card-section class="q-pt-none">
@@ -336,7 +336,7 @@ async function deleteRole(role) {
             @success="afterPermissionsAssignment"
           >
             <div class="q-gutter-md">
-              <q-banner v-if="permissionsDialogError" class="bg-warning text-white">
+              <q-banner v-if="permissionsDialogError" class="bg-warning text-dark">
                 {{ permissionsDialogError }}
               </q-banner>
               <q-option-group v-model="selectedPermissionIds" type="checkbox" :options="permissionOptions" />

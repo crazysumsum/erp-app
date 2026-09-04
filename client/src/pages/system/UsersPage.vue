@@ -361,7 +361,7 @@ async function toggleStatus(row) {
     <!-- 新增用戶 -->
     <q-dialog v-model="showCreateDialog" persistent>
       <q-card style="min-width: 420px">
-        <q-card-section><div class="text-h6">新增用戶</div></q-card-section>
+        <q-card-section><h2 class="text-h6 q-ma-none">新增用戶</h2></q-card-section>
         <q-card-section class="q-pt-none">
           <FormPanel v-slot="{ fieldError, submitting }" :on-submit="submitCreate" @success="afterCreate">
             <div class="q-gutter-md">
@@ -413,7 +413,7 @@ async function toggleStatus(row) {
     <q-dialog v-model="showCredentialDialog">
       <q-card v-if="createdCredential" style="min-width: 360px">
         <q-card-section>
-          <div class="text-h6">用戶已建立</div>
+          <h2 class="text-h6 q-ma-none">用戶已建立</h2>
         </q-card-section>
         <q-card-section class="q-pt-none">
           帳號 <strong>{{ createdCredential.username }}</strong> 已建立，初始密碼為
@@ -429,7 +429,7 @@ async function toggleStatus(row) {
     <!-- 編輯（改顯示名稱） -->
     <q-dialog v-model="showEditDialog" persistent>
       <q-card style="min-width: 360px">
-        <q-card-section><div class="text-h6">編輯用戶</div></q-card-section>
+        <q-card-section><h2 class="text-h6 q-ma-none">編輯用戶</h2></q-card-section>
         <q-card-section class="q-pt-none">
           <FormPanel v-slot="{ fieldError, submitting }" :on-submit="submitEdit" @success="afterEdit">
             <div class="q-gutter-md">
@@ -449,7 +449,7 @@ async function toggleStatus(row) {
     <q-dialog v-model="showRolesDialog" persistent>
       <q-card style="min-width: 420px" v-if="rolesDialogUser">
         <q-card-section>
-          <div class="text-h6">配置角色：{{ rolesDialogUser.username }}</div>
+          <h2 class="text-h6 q-ma-none">配置角色：{{ rolesDialogUser.username }}</h2>
         </q-card-section>
         <q-card-section class="q-pt-none">
           <FormPanel
@@ -458,7 +458,7 @@ async function toggleStatus(row) {
             @success="afterRolesAssignment"
           >
             <div class="q-gutter-md">
-              <q-banner v-if="rolesDialogError" class="bg-warning text-white">{{ rolesDialogError }}</q-banner>
+              <q-banner v-if="rolesDialogError" class="bg-warning text-dark">{{ rolesDialogError }}</q-banner>
               <q-option-group v-model="selectedRoleIds" type="checkbox" :options="roleOptions" />
               <q-input
                 v-model="rolesReason"
@@ -483,7 +483,7 @@ async function toggleStatus(row) {
     <q-dialog v-model="showResetPasswordDialog" persistent>
       <q-card style="min-width: 380px" v-if="resetPasswordUser">
         <q-card-section>
-          <div class="text-h6">重設密碼：{{ resetPasswordUser.username }}</div>
+          <h2 class="text-h6 q-ma-none">重設密碼：{{ resetPasswordUser.username }}</h2>
         </q-card-section>
         <q-card-section class="q-pt-none">
           <FormPanel v-slot="{ fieldError, submitting }" :on-submit="submitResetPassword" @success="afterResetPassword">

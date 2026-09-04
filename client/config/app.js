@@ -5,7 +5,7 @@
  */
 const appConfig = {
   // 瀏覽器分頁標題的後綴。頁面標題會組成「<頁面標題> · <這個值>」。
-  title: "ERP System",
+  title: "F&M ERP",
 
   // 表格預設每頁筆數。DataTable（Phase 6）沒有指定時用這個。
   defaultPageSize: 20,
