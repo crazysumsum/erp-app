@@ -3,7 +3,7 @@ export const page = {
   name: "brands",
   path: "/items/brands",
   title: "品牌",
-  requires: { permissions: ["item.view"] },
+  requires: { permissions: ["item.mgmt"] },
   menu: { group: "items", icon: "sell", order: 30 }
 };
 </script>

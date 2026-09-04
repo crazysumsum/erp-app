@@ -3,7 +3,7 @@ export const page = {
   name: "uoms",
   path: "/items/uoms",
   title: "計量單位",
-  requires: { permissions: ["item.view"] },
+  requires: { permissions: ["item.mgmt"] },
   menu: { group: "items", icon: "straighten", order: 40 }
 };
 </script>

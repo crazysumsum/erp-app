@@ -124,7 +124,10 @@ function tokenIssuer(application) {
   };
 }
 
-const ADMIN_PERMISSIONS = ["user.mgmt", "role.mgmt", "device.mgmt"];
+// system-admin 現在持有 5 個權限（0010 migration 之後多咗 item.view／
+// item.mgmt）；claims 要同資料庫現況一致，否則會撞 PERMISSION_STALE 而唔係
+// 測試本身想驗嘅嘢——同 itemCatalog.integration.test.js 嗰份同一個理由。
+const ADMIN_PERMISSIONS = ["user.mgmt", "role.mgmt", "device.mgmt", "item.view", "item.mgmt"];
 
 function authed(token, body) {
   return {
