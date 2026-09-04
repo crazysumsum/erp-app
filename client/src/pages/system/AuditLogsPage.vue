@@ -11,6 +11,7 @@ export const page = {
 <script setup>
 import { computed, ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import auditService from "@/services/audit.js";
 
@@ -195,7 +196,7 @@ const SEGMENT_COLOUR = { add: "positive", remove: "negative", change: "grey-8", 
       </template>
 
       <template #body-cell-target="{ row }">
-        <q-td class="text-left">{{ row.targetType }}/{{ row.targetLabel }}</q-td>
+        <EllipsisCell :text="`${row.targetType}/${row.targetLabel}`" max-width="200px" />
       </template>
 
       <template #body-cell-detail="{ value }">
@@ -213,7 +214,7 @@ const SEGMENT_COLOUR = { add: "positive", remove: "negative", change: "grey-8", 
       </template>
 
       <template #body-cell-reason="{ value }">
-        <q-td class="text-left">{{ value || "—" }}</q-td>
+        <EllipsisCell :text="value || '—'" :tooltip="value || null" max-width="200px" />
       </template>
     </DataTable>
     </div>

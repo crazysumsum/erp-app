@@ -24,7 +24,11 @@ const resolvedTitle = computed(() => props.title ?? route.meta?.title);
 </script>
 
 <template>
-  <div class="page-header row items-center justify-between q-pa-md">
+  <!-- q-mb-md：分隔線同下面嘅頁面內容之間留返口氣，唔係貼住嚟。頁面自己嗰個
+       內容容器（例如 UsersPage 嘅 `q-px-md q-pb-md`）刻意冇補呢一份上邊
+       padding——留喺呢度統一控制，等所有頁面用返同一個間距，唔使逐頁記得
+       加。 -->
+  <div class="page-header row items-center justify-between q-pa-md q-mb-md">
     <div>
       <div v-if="groupLabel" class="text-caption text-grey-7">{{ groupLabel }}</div>
       <div class="text-h6">{{ resolvedTitle }}</div>

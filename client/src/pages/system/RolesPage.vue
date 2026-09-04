@@ -11,6 +11,8 @@ export const page = {
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import DataTable from "@/framework/ui/DataTable.vue";
+import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
 import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
@@ -214,9 +216,21 @@ async function deleteRole(role) {
     </PageHeader>
 
     <div class="q-px-md q-pb-md">
-    <q-table :rows="roles" :columns="columns" row-key="id" :loading="loading" :pagination="{ rowsPerPage: 0 }">
+    <DataTable :rows="roles" :columns="columns" row-key="id" :loading="loading" sticky-actions>
+      <template #body-cell-name="{ value }">
+        <EllipsisCell :text="value" max-width="160px" />
+      </template>
+
+      <template #body-cell-description="{ value }">
+        <EllipsisCell :text="value" max-width="240px" />
+      </template>
+
       <template #body-cell-permissions="{ row }">
-        <q-td class="text-left">{{ summarisePermissions(row.permissions) }}</q-td>
+        <EllipsisCell
+          :text="summarisePermissions(row.permissions)"
+          :tooltip="row.permissions.length > 0 ? row.permissions.join('、') : null"
+          max-width="200px"
+        />
       </template>
 
       <template #body-cell-actions="{ row }">
@@ -241,11 +255,7 @@ async function deleteRole(role) {
           </q-btn>
         </q-td>
       </template>
-
-      <template #no-data>
-        <div class="full-width text-center text-grey-7 q-pa-lg">冇資料</div>
-      </template>
-    </q-table>
+    </DataTable>
     </div>
 
     <!-- 新增角色 -->

@@ -11,6 +11,7 @@ export const page = {
 <script setup>
 import { ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { promptPassword } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
@@ -76,12 +77,20 @@ const reject = (row) => act(row, { verb: "reject", label: "拒絕" });
     <PageHeader title="設備審批" subtitle="每一台新設備都要經人手批准先可以使用系統" />
 
     <div class="q-px-md q-pb-md">
-    <DataTable ref="table" :fetch="fetchPending" :columns="columns" row-key="id">
+    <DataTable ref="table" :fetch="fetchPending" :columns="columns" row-key="id" sticky-actions>
+      <template #body-cell-label="{ value }">
+        <EllipsisCell :text="value || '（未命名）'" max-width="160px" />
+      </template>
+
       <template #body-cell-deviceId="{ value }">
         <q-td class="text-left">
           <!-- 完整嘅 thumbprint 對人讀唔到亦記唔到，頭 16 個字元已經足夠喺
-               兩台待審設備之間分辨，亦足夠同用戶電話對認。 -->
-          <span class="text-caption">{{ value.slice(0, 16) }}…</span>
+               兩台待審設備之間分辨，亦足夠同用戶電話對認；完整值留喺
+               tooltip，真係要對嗰陣（例如同 support ticket 核對）撈得返。 -->
+          <span class="text-caption">
+            {{ value.slice(0, 16) }}…
+            <q-tooltip>{{ value }}</q-tooltip>
+          </span>
         </q-td>
       </template>
 
@@ -93,8 +102,14 @@ const reject = (row) => act(row, { verb: "reject", label: "拒絕" });
         <q-td class="text-left">
           <div class="text-caption">{{ row.requestedIp || "—" }}</div>
           <!-- UA 同 IP 係審批者唯一嘅判斷依據：冇佢哋，審批就只會退化成
-               無腦按核准，而嗰陣呢道關卡就只係流程上嘅裝飾。 -->
-          <div class="text-caption text-grey-7">{{ row.requestedUserAgent || "—" }}</div>
+               無腦按核准，而嗰陣呢道關卡就只係流程上嘅裝飾——但完整
+               UA 成句可以長過 100 字元，直接印出嚟會逼成張表寬過螢幕，
+               結果「核准／拒絕」按鈕要拉去最右先見到。截斷得返一行，
+               完整內容用 tooltip hover 睇，判斷依據冇少，但唔會撐爆版面。 -->
+          <div class="text-caption text-grey-7 ellipsis" style="max-width: 220px">
+            {{ row.requestedUserAgent || "—" }}
+            <q-tooltip v-if="row.requestedUserAgent">{{ row.requestedUserAgent }}</q-tooltip>
+          </div>
         </q-td>
       </template>
 

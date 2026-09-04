@@ -13,6 +13,7 @@ export const page = {
 <script setup>
 import { ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { notifySuccess } from "@/framework/ui/notify.js";
@@ -85,7 +86,7 @@ function formatTime(epochMs) {
   <div>
     <PageHeader title="個人資料" />
 
-    <div class="row justify-center q-pa-md">
+    <div class="row justify-center q-px-md q-pb-md">
       <q-card style="width: 100%; max-width: 640px" class="q-pa-md">
         <q-card-section>
           <FormPanel v-slot="{ fieldError, submitting }" :on-submit="submit">
@@ -127,6 +128,10 @@ function formatTime(epochMs) {
         <q-card-section>
           <div class="text-subtitle2 q-mb-sm">我的設備</div>
           <DataTable :fetch="fetchMyDevices" :columns="deviceColumns" row-key="id">
+            <template #body-cell-label="{ value }">
+              <EllipsisCell :text="value || '（未命名）'" max-width="160px" />
+            </template>
+
             <template #body-cell-status="{ value }">
               <q-td class="text-left">
                 <q-badge :color="DEVICE_STATUS[value]?.colour ?? 'grey'" :label="DEVICE_STATUS[value]?.label ?? value" />
@@ -135,7 +140,10 @@ function formatTime(epochMs) {
 
             <template #body-cell-deviceId="{ value }">
               <q-td class="text-left">
-                <span class="text-caption">{{ value.slice(0, 16) }}…</span>
+                <span class="text-caption">
+                  {{ value.slice(0, 16) }}…
+                  <q-tooltip>{{ value }}</q-tooltip>
+                </span>
                 <q-badge v-if="value === thisDeviceId" color="primary" class="q-ml-sm" label="目前這台" />
               </q-td>
             </template>
