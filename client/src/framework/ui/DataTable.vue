@@ -1,27 +1,48 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import appConfig from "@config/app.js";
 
 /**
- * 封裝 QTable 嘅 server-side 模式：接一個 `fetch` function，統一處理分頁／
- * 排序／篩選參數嘅收集，同載入／空／錯誤狀態，令業務頁面唔使逐個自己接
- * 呢啲線。
+ * 封裝 QTable，兩種用法共用同一套分頁／欄寬／空狀態設定，等成個 app 淨係得
+ * 一個地方要調（例如「每頁筆數」揀項、有冇「全部」呢個選擇）——之前
+ * RolesPage 自己攞一份 raw `<q-table>`，冇跟呢度嘅 `rows-per-page-options`，
+ * 結果用戶揀「全部」嗰陣，用戶管理唔會出事但角色管理會（見果次修 bug 嘅
+ * 討論）。以後新表格一律經呢個組件，先唔會再有第二個地方漏咗同一個設定。
  *
- * `fetch` 嘅參數形狀跟 QTable 原生 `@request` 事件一致
- * （page/rowsPerPage/sortBy/descending/filter），回傳 `{ rows, rowsNumber }`。
- * 呢個形狀點樣對應去後端實際嘅 query schema（後端而家未有分頁慣例），係
- * service 層（例如 `services/order.js`）嘅工作——DataTable 完全唔理會
- * HTTP 細節，`fetch` 掉出嚟嘅錯誤淨係讀 `.message`。
+ *   1. **伺服器分頁**（Users／AuditLogs／DeviceApprovals／Profile 裝置清單）：
+ *      傳 `fetch`，形狀跟 QTable 原生 `@request` 事件一致
+ *      （page/rowsPerPage/sortBy/descending/filter），回傳 `{ rows, rowsNumber }`。
+ *      DataTable 統一處理分頁／排序／篩選參數嘅收集，同載入／錯誤狀態。
+ *   2. **客戶端分頁**（例如角色管理：清單本身唔大，一次過攞晒落嚟，分頁／
+ *      排序純粹喺瀏覽器度做）：唔傳 `fetch`，改傳 `rows`（已經攞好嘅完整
+ *      陣列）。無 `@request` 監聽——QTable 見到冇人接呢個 event，就會自己
+ *      喺瀏覽器度做晒分頁／排序／篩選，DataTable 唔使自己執手尾。
+ *
+ * 兩者揀一個：`fetch` 有值就用伺服器模式，冇就用客戶端模式，`rows` 由呼叫
+ * 端自己保證有傳。
  */
 const props = defineProps({
-  fetch: { type: Function, required: true },
+  fetch: { type: Function, default: null },
+  rows: { type: Array, default: () => [] },
   columns: { type: Array, required: true },
   rowKey: { type: String, default: "id" },
-  filter: { type: String, default: "" }
+  filter: { type: String, default: "" },
+  // 客戶端模式先用得著——伺服器模式嘅 loading 由 DataTable 自己喺 onRequest
+  // 期間管理，呼叫端唔使亦唔應該傳呢個。
+  loading: { type: Boolean, default: false },
+  // 窄螢幕（或欄位多）令表格要橫向捲動嗰陣，最後一欄（通常係操作按鈕）會
+  // 跟住捲走，用戶未必知道仲有嘢喺右邊——見 theme.css 嘅
+  // .q-table--sticky-actions：釘住最後一欄唔畀佢捲走。
+  stickyActions: { type: Boolean, default: false }
 });
 
-const rows = ref([]);
-const loading = ref(false);
+const isServerMode = computed(() => props.fetch !== null);
+const requestListeners = computed(() => (isServerMode.value ? { request: onRequest } : {}));
+const displayRows = computed(() => (isServerMode.value ? fetchedRows.value : props.rows));
+const displayLoading = computed(() => (isServerMode.value ? fetchLoading.value : props.loading));
+
+const fetchedRows = ref([]);
+const fetchLoading = ref(false);
 const error = ref(null);
 const pagination = ref({
   page: 1,
@@ -32,7 +53,7 @@ const pagination = ref({
 });
 
 async function onRequest({ pagination: requestedPagination, filter: requestedFilter }) {
-  loading.value = true;
+  fetchLoading.value = true;
   error.value = null;
 
   try {
@@ -44,25 +65,31 @@ async function onRequest({ pagination: requestedPagination, filter: requestedFil
       filter: requestedFilter
     });
 
-    rows.value = result.rows;
+    fetchedRows.value = result.rows;
     pagination.value = { ...requestedPagination, rowsNumber: result.rowsNumber };
   } catch (fetchError) {
     error.value = fetchError;
-    rows.value = [];
+    fetchedRows.value = [];
   } finally {
-    loading.value = false;
+    fetchLoading.value = false;
   }
 }
 
 // 俾頁面喺新增／編輯／刪除之後手動叫一次，攞返最新一頁資料——唔重設返
 // 第一頁，刪除最後一頁最後一行呢類情境先唔會無端端跳走用戶正睇緊嗰頁。
+// 淨係伺服器模式先有嘢做:客戶端模式嘅資料本身就係呼叫端傳落嚟嘅 `rows`
+// prop，改咗個來源陣列，Vue 嘅 reactivity 已經自動反映，唔使呼叫 reload()。
 function reload() {
-  return onRequest({ pagination: pagination.value, filter: props.filter });
+  return isServerMode.value ? onRequest({ pagination: pagination.value, filter: props.filter }) : undefined;
 }
 
 defineExpose({ reload });
 
-onMounted(() => onRequest({ pagination: pagination.value, filter: props.filter }));
+onMounted(() => {
+  if (isServerMode.value) {
+    onRequest({ pagination: pagination.value, filter: props.filter });
+  }
+});
 </script>
 
 <template>
@@ -76,12 +103,14 @@ onMounted(() => onRequest({ pagination: pagination.value, filter: props.filter }
 
     <q-table
       v-model:pagination="pagination"
-      :rows="rows"
+      :rows="displayRows"
       :columns="columns"
       :row-key="rowKey"
-      :loading="loading"
+      :loading="displayLoading"
       :filter="filter"
-      @request="onRequest"
+      :rows-per-page-options="appConfig.pageSizeOptions"
+      :class="{ 'q-table--sticky-actions': stickyActions }"
+      v-on="requestListeners"
     >
       <!--
         將 DataTable 收到嘅所有 slot（例如 body-cell-actions、

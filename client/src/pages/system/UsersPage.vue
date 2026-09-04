@@ -11,6 +11,7 @@ export const page = {
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import DataTable from "@/framework/ui/DataTable.vue";
+import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
 import { useCrud } from "@/framework/ui/useCrud.js";
@@ -299,7 +300,16 @@ async function toggleStatus(row) {
       :columns="columns"
       :filter="searchText"
       row-key="id"
+      sticky-actions
     >
+      <template #body-cell-username="{ value }">
+        <EllipsisCell :text="value" max-width="160px" />
+      </template>
+
+      <template #body-cell-displayName="{ value }">
+        <EllipsisCell :text="value" max-width="200px" />
+      </template>
+
       <template #body-cell-status="{ value }">
         <q-td class="text-left">
           <q-badge :color="STATUS[value]?.colour ?? 'grey'" :label="STATUS[value]?.label ?? value" />

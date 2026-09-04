@@ -36,3 +36,20 @@
   outline: 2px solid var(--q-primary);
   outline-offset: 2px;
 }
+
+/* 窄螢幕表格要橫向捲動嗰陣，釘住最後一欄（通常係操作按鈕）令佢唔會跟住
+   捲走——唔係咁嘅話用戶未必知道「拉去最右」先見到操作按鈕呢件事。
+   left box-shadow 係俾用戶睇得出呢一欄浮喺其他內容之上、右邊仲有嘢未見晒。
+   背景一定要著色（唔可以透明）：sticky 唔會自動遮住底下捲過嘅內容。 */
+.q-table--sticky-actions th:last-child,
+.q-table--sticky-actions td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: white;
+  box-shadow: -1px 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.q-table--sticky-actions thead th:last-child {
+  z-index: 2;
+}
