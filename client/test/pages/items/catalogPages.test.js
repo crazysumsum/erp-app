@@ -13,7 +13,23 @@ vi.mock("@/services/itemCatalog.js", () => ({
     deactivateCategory: vi.fn(),
     archiveCategory: vi.fn(),
     restoreCategory: vi.fn(),
-    deleteCategory: vi.fn()
+    deleteCategory: vi.fn(),
+    brandList: vi.fn(),
+    createBrand: vi.fn(),
+    updateBrand: vi.fn(),
+    activateBrand: vi.fn(),
+    deactivateBrand: vi.fn(),
+    archiveBrand: vi.fn(),
+    restoreBrand: vi.fn(),
+    deleteBrand: vi.fn(),
+    uomList: vi.fn(),
+    createUom: vi.fn(),
+    updateUom: vi.fn(),
+    activateUom: vi.fn(),
+    deactivateUom: vi.fn(),
+    archiveUom: vi.fn(),
+    restoreUom: vi.fn(),
+    deleteUom: vi.fn()
   },
   service: { name: "itemCatalog" }
 }));
@@ -34,6 +50,8 @@ import itemCatalogService from "@/services/itemCatalog.js";
 import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import CategoriesPage from "@/pages/items/CategoriesPage.vue";
+import BrandsPage from "@/pages/items/BrandsPage.vue";
+import UomsPage from "@/pages/items/UomsPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
 const TREE = [
@@ -317,5 +335,209 @@ describe("pages/items/CategoriesPage.vue", () => {
       password: "hunter2",
       version: 1
     });
+  });
+});
+
+describe("pages/items/BrandsPage.vue", () => {
+  const BRAND_ROWS = [
+    { id: 1, name: "Brand A", officialName: "Brand A Ltd.", description: "", status: "active", version: 1 },
+    { id: 2, name: "Brand B", officialName: "", description: "", status: "inactive", version: 2 }
+  ];
+
+  async function mountBrandsPage({ permissions = ["item.view", "item.mgmt"] } = {}) {
+    itemCatalogService.brandList.mockResolvedValue({ rows: BRAND_ROWS, rowsNumber: BRAND_ROWS.length });
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", name: "home", component: BrandsPage }]
+    });
+    await router.push("/");
+    await router.isReady();
+
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", displayName: "Sam Wong", permissions, roles: [] };
+
+    const wrapper = mount(BrandsPage, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+    await flushPromises();
+
+    return { wrapper, body: new DOMWrapper(document.body) };
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    document.body.innerHTML = "";
+    vi.clearAllMocks();
+  });
+
+  it("開機以分頁 fetch 載入品牌，顯示喺表入面", async () => {
+    const { wrapper } = await mountBrandsPage();
+
+    expect(itemCatalogService.brandList).toHaveBeenCalled();
+    expect(wrapper.text()).toContain("Brand A");
+    expect(wrapper.text()).toContain("Brand B");
+  });
+
+  it("只有 item.view：睇得到列表，但冇「新增品牌」按鈕同操作選單", async () => {
+    const { wrapper, body } = await mountBrandsPage({ permissions: ["item.view"] });
+
+    expect(wrapper.findAll(".q-btn").some((btn) => btn.text().includes("新增品牌"))).toBe(false);
+    expect(body.find('button[aria-label*="的操作"]').exists()).toBe(false);
+  });
+
+  it("新增品牌：提交後重新整理表格並提示成功", async () => {
+    itemCatalogService.createBrand.mockResolvedValue({ id: 9, name: "Brand C" });
+    const { wrapper, body } = await mountBrandsPage();
+
+    await wrapper.findAll(".q-btn").find((btn) => btn.text().includes("新增品牌")).trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-field").find((f) => f.text().includes("品牌名稱")).find("input").setValue("Brand C");
+    await body.findAll(".q-btn").find((btn) => btn.text() === "新增").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.createBrand).toHaveBeenCalledWith({
+      name: "Brand C",
+      officialName: "",
+      description: ""
+    });
+    expect(notifySuccess).toHaveBeenCalledWith("已新增品牌");
+  });
+
+  it("停用：promptReason 唔使密碼；封存／刪除：promptPassword 要密碼", async () => {
+    promptReason.mockResolvedValue("暫停使用");
+    itemCatalogService.deactivateBrand.mockResolvedValue({ id: 1, status: "inactive" });
+    const { body } = await mountBrandsPage();
+
+    await body.find('button[aria-label="「Brand A」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("停用")).trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.deactivateBrand).toHaveBeenCalledWith(1, { reason: "暫停使用", version: 1 });
+
+    promptPassword.mockResolvedValue({ reason: "停產", password: "hunter2" });
+    itemCatalogService.archiveBrand.mockResolvedValue({ id: 1, status: "archived" });
+
+    await body.find('button[aria-label="「Brand A」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("封存")).trigger("click");
+    await flushPromises();
+
+    expect(promptPassword).toHaveBeenCalledWith(expect.objectContaining({ requireReason: true }));
+    expect(itemCatalogService.archiveBrand).toHaveBeenCalledWith(1, {
+      reason: "停產",
+      password: "hunter2",
+      version: 1
+    });
+  });
+
+  it("刪除失敗時顯示後端訊息，唔會靜靜哋失敗", async () => {
+    promptPassword.mockResolvedValue({ reason: "嘗試刪除", password: "hunter2" });
+    const error = Object.assign(new Error("這筆資料使用中，無法刪除"), { code: "CATALOG_IN_USE" });
+    itemCatalogService.deleteBrand.mockRejectedValue(error);
+    const { body } = await mountBrandsPage();
+
+    await body.find('button[aria-label="「Brand A」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("刪除")).trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith("這筆資料使用中，無法刪除");
+  });
+});
+
+describe("pages/items/UomsPage.vue", () => {
+  const UOM_ROWS = [
+    { id: 1, code: "EA", name: "Each", symbol: "pcs", status: "active", version: 1 },
+    { id: 2, code: "BOX", name: "Box", symbol: "", status: "archived", version: 1 }
+  ];
+
+  async function mountUomsPage({ permissions = ["item.view", "item.mgmt"], uoms = UOM_ROWS } = {}) {
+    itemCatalogService.uomList.mockResolvedValue(uoms);
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", name: "home", component: UomsPage }]
+    });
+    await router.push("/");
+    await router.isReady();
+
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", displayName: "Sam Wong", permissions, roles: [] };
+
+    const wrapper = mount(UomsPage, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+    await flushPromises();
+
+    return { wrapper, body: new DOMWrapper(document.body) };
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    document.body.innerHTML = "";
+    vi.clearAllMocks();
+  });
+
+  it("開機載入不分頁嘅單位小目錄，預設帶 includeArchived: false", async () => {
+    const { wrapper } = await mountUomsPage({ uoms: UOM_ROWS.filter((u) => u.status !== "archived") });
+
+    expect(itemCatalogService.uomList).toHaveBeenCalledWith({ includeArchived: false });
+    expect(wrapper.text()).toContain("Each");
+    expect(wrapper.text()).not.toContain("Box");
+  });
+
+  it("撳「顯示已封存」會帶 includeArchived: true", async () => {
+    const { wrapper, body } = await mountUomsPage({ uoms: UOM_ROWS.filter((u) => u.status !== "archived") });
+
+    itemCatalogService.uomList.mockResolvedValue(UOM_ROWS);
+    await body.findAll(".q-btn").find((btn) => btn.text().includes("顯示已封存")).trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.uomList).toHaveBeenLastCalledWith({ includeArchived: true });
+    expect(wrapper.text()).toContain("Box");
+  });
+
+  it("新增單位：提交 code／name／symbol", async () => {
+    itemCatalogService.createUom.mockResolvedValue({ id: 9, code: "KG", name: "Kilogram" });
+    const { wrapper, body } = await mountUomsPage();
+
+    await wrapper.findAll(".q-btn").find((btn) => btn.text().includes("新增單位")).trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-field").find((f) => f.text().includes("代碼")).find("input").setValue("KG");
+    await body.findAll(".q-field").find((f) => f.text().includes("名稱")).find("input").setValue("Kilogram");
+    await body.findAll(".q-btn").find((btn) => btn.text() === "新增").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.createUom).toHaveBeenCalledWith({ code: "KG", name: "Kilogram", symbol: "" });
+  });
+
+  it("編輯單位：code 欄位 readonly，唔會送去後端", async () => {
+    itemCatalogService.updateUom.mockResolvedValue({ id: 1, code: "EA", name: "Each Piece" });
+    const { body } = await mountUomsPage();
+
+    await body.find('button[aria-label="「Each」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("編輯")).trigger("click");
+    await flushPromises();
+
+    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("代碼")).find("input");
+    expect(codeInput.attributes("readonly")).toBeDefined();
+
+    await body.findAll(".q-field").find((f) => f.text().includes("名稱")).find("input").setValue("Each Piece");
+    await body.findAll(".q-btn").find((btn) => btn.text() === "儲存").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.updateUom).toHaveBeenCalledWith(1, {
+      name: "Each Piece",
+      symbol: "pcs",
+      version: 1
+    });
+  });
+
+  it("只有 item.view：冇「新增單位」按鈕同操作選單", async () => {
+    const { wrapper, body } = await mountUomsPage({ permissions: ["item.view"] });
+
+    expect(wrapper.findAll(".q-btn").some((btn) => btn.text().includes("新增單位"))).toBe(false);
+    expect(body.find('button[aria-label*="的操作"]').exists()).toBe(false);
   });
 });

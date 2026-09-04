@@ -3,9 +3,12 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 export const service = { name: "itemCatalog" };
 
 /**
- * Category（分類）catalog 嘅 API。路徑同回應形狀集中喺呢度，見
- * docs/items_management/design_spec.md §6.4。Brand／UOM／Attribute 之後喺
- * 呢個檔案擴充（T06 起）。
+ * Category／Brand／UOM catalog 嘅 API。路徑同回應形狀集中喺呢度，見
+ * docs/items_management/design_spec.md §6.4。Attribute 之後喺呢個檔案擴充。
+ *
+ * Category／UOM 唔分頁（`categoryTree()`／`uomList()` 直接回 items 陣列）；
+ * Brand 分頁（`brandList()` 回 `{ rows, rowsNumber }`，同 services/user.js
+ * 嘅 `list()` 同一個形狀，方便直接餵畀 DataTable 嘅 `fetch` prop）。
  *
  * `archive`／`restore`／`delete` 要求 authType "jwt-password"，body 帶
  * `password` 就夠，唔使簽章——同 services/role.js 嘅 `delete` 同一個理由
@@ -62,5 +65,96 @@ export default {
     return httpClient.post(`/api/v1/catalog/categories/${id}/delete`, {
       body: { reason, version, password }
     });
+  },
+
+  // --- Brand：分頁清單（同 Category／UOM 不同，見 §6.4） -----------------------
+
+  brandList({ page, rowsPerPage, sortBy, descending, filter, status }) {
+    return httpClient
+      .get("/api/v1/catalog/brands", {
+        params: {
+          page,
+          pageSize: rowsPerPage,
+          q: filter || undefined,
+          status: status || undefined,
+          sortBy: sortBy || undefined,
+          descending
+        }
+      })
+      .then((result) => ({ rows: result.items, rowsNumber: result.total }));
+  },
+
+  createBrand({ name, officialName, description }) {
+    return httpClient.post("/api/v1/catalog/brands/create", {
+      body: { name, officialName: officialName ?? "", description: description ?? "" }
+    });
+  },
+
+  updateBrand(id, { name, officialName, description, version }) {
+    return httpClient.post(`/api/v1/catalog/brands/${id}/update`, {
+      body: { name, officialName: officialName ?? "", description: description ?? "", version }
+    });
+  },
+
+  activateBrand(id, { reason, version }) {
+    return httpClient.post(`/api/v1/catalog/brands/${id}/activate`, { body: { reason, version } });
+  },
+
+  deactivateBrand(id, { reason, version }) {
+    return httpClient.post(`/api/v1/catalog/brands/${id}/deactivate`, { body: { reason, version } });
+  },
+
+  archiveBrand(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/brands/${id}/archive`, { body: { reason, version, password } });
+  },
+
+  restoreBrand(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/brands/${id}/restore`, { body: { reason, version, password } });
+  },
+
+  deleteBrand(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/brands/${id}/delete`, { body: { reason, version, password } });
+  },
+
+  // --- UOM：不分頁小目錄（同 Category 一樣，見 §6.4） --------------------------
+
+  async uomList({ includeArchived = false } = {}) {
+    const { items } = await httpClient.get("/api/v1/catalog/uoms", {
+      params: { includeArchived: includeArchived ? "true" : undefined }
+    });
+    return items;
+  },
+
+  createUom({ code, name, symbol }) {
+    return httpClient.post("/api/v1/catalog/uoms/create", {
+      body: { code, name, symbol: symbol ?? "" }
+    });
+  },
+
+  /** 不接受修改 code——建立後即穩定，換代碼要走封存＋新建。 */
+  updateUom(id, { name, symbol, version }) {
+    return httpClient.post(`/api/v1/catalog/uoms/${id}/update`, {
+      body: { name, symbol: symbol ?? "", version }
+    });
+  },
+
+  activateUom(id, { reason, version }) {
+    return httpClient.post(`/api/v1/catalog/uoms/${id}/activate`, { body: { reason, version } });
+  },
+
+  deactivateUom(id, { reason, version }) {
+    return httpClient.post(`/api/v1/catalog/uoms/${id}/deactivate`, { body: { reason, version } });
+  },
+
+  archiveUom(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/uoms/${id}/archive`, { body: { reason, version, password } });
+  },
+
+  restoreUom(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/uoms/${id}/restore`, { body: { reason, version, password } });
+  },
+
+  deleteUom(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/uoms/${id}/delete`, { body: { reason, version, password } });
   }
 };

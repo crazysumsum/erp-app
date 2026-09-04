@@ -104,4 +104,109 @@ describe("itemCatalog service", () => {
       body: { reason: "建立錯誤", version: 5, password: "hunter2" }
     });
   });
+
+  it("brandList() 映射做 DataTable 嘅 { rows, rowsNumber } 形狀，同 services/user.js 一樣", async () => {
+    httpClient.get.mockResolvedValue({ items: [{ id: 1, name: "Brand A" }], total: 1 });
+
+    const result = await itemCatalogService.brandList({
+      page: 2,
+      rowsPerPage: 10,
+      sortBy: "name",
+      descending: true,
+      filter: "A",
+      status: "active"
+    });
+
+    expect(result).toEqual({ rows: [{ id: 1, name: "Brand A" }], rowsNumber: 1 });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/catalog/brands", {
+      params: { page: 2, pageSize: 10, q: "A", status: "active", sortBy: "name", descending: true }
+    });
+  });
+
+  it("createBrand()／updateBrand() 帶完整可編輯欄位", async () => {
+    httpClient.post.mockResolvedValue({ id: 1, name: "Brand A" });
+    await itemCatalogService.createBrand({ name: "Brand A" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/brands/create", {
+      body: { name: "Brand A", officialName: "", description: "" }
+    });
+
+    httpClient.post.mockResolvedValue({ id: 1, name: "Brand A2" });
+    await itemCatalogService.updateBrand(1, {
+      name: "Brand A2",
+      officialName: "Official",
+      description: "desc",
+      version: 2
+    });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/brands/1/update", {
+      body: { name: "Brand A2", officialName: "Official", description: "desc", version: 2 }
+    });
+  });
+
+  it("brand 狀態動作：activate／deactivate 唔帶密碼，archive／restore／delete 要密碼", async () => {
+    httpClient.post.mockResolvedValue({ id: 1, status: "active" });
+    await itemCatalogService.activateBrand(1, { reason: "重新上架", version: 1 });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/brands/1/activate", {
+      body: { reason: "重新上架", version: 1 }
+    });
+
+    httpClient.post.mockResolvedValue({ id: 1, status: "archived" });
+    await itemCatalogService.archiveBrand(1, { reason: "停產", version: 2, password: "hunter2" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/brands/1/archive", {
+      body: { reason: "停產", version: 2, password: "hunter2" }
+    });
+
+    httpClient.post.mockResolvedValue({ id: 1 });
+    await itemCatalogService.deleteBrand(1, { reason: "建立錯誤", version: 3, password: "hunter2" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/brands/1/delete", {
+      body: { reason: "建立錯誤", version: 3, password: "hunter2" }
+    });
+  });
+
+  it("uomList() 唔分頁，預設同帶 includeArchived 兩種情況", async () => {
+    httpClient.get.mockResolvedValue({ items: [{ id: 1, code: "EA" }] });
+
+    expect(await itemCatalogService.uomList()).toEqual([{ id: 1, code: "EA" }]);
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/catalog/uoms", {
+      params: { includeArchived: undefined }
+    });
+
+    await itemCatalogService.uomList({ includeArchived: true });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/catalog/uoms", {
+      params: { includeArchived: "true" }
+    });
+  });
+
+  it("createUom() 帶 code／name／symbol；updateUom() 唔接受 code", async () => {
+    httpClient.post.mockResolvedValue({ id: 1, code: "EA" });
+    await itemCatalogService.createUom({ code: "EA", name: "Each" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/uoms/create", {
+      body: { code: "EA", name: "Each", symbol: "" }
+    });
+
+    httpClient.post.mockResolvedValue({ id: 1, name: "Each Piece" });
+    await itemCatalogService.updateUom(1, { name: "Each Piece", symbol: "pc", version: 2 });
+    const [, options] = httpClient.post.mock.calls.at(-1);
+    expect(options.body).toEqual({ name: "Each Piece", symbol: "pc", version: 2 });
+    expect(options.body.code).toBeUndefined();
+  });
+
+  it("uom 狀態動作：activate／deactivate 唔帶密碼，archive／restore／delete 要密碼", async () => {
+    httpClient.post.mockResolvedValue({ id: 1, status: "inactive" });
+    await itemCatalogService.deactivateUom(1, { reason: "停用", version: 1 });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/uoms/1/deactivate", {
+      body: { reason: "停用", version: 1 }
+    });
+
+    httpClient.post.mockResolvedValue({ id: 1, status: "inactive" });
+    await itemCatalogService.restoreUom(1, { reason: "恢復", version: 2, password: "hunter2" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/uoms/1/restore", {
+      body: { reason: "恢復", version: 2, password: "hunter2" }
+    });
+
+    httpClient.post.mockResolvedValue({ id: 1 });
+    await itemCatalogService.deleteUom(1, { reason: "建立錯誤", version: 3, password: "hunter2" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/catalog/uoms/1/delete", {
+      body: { reason: "建立錯誤", version: 3, password: "hunter2" }
+    });
+  });
 });
