@@ -58,7 +58,7 @@ function cancel() {
   <div class="row justify-center q-pa-lg">
     <q-card style="width: 420px" class="q-pa-md">
       <q-card-section>
-        <div class="text-h6">{{ forced ? "首次登入必須修改密碼" : "修改密碼" }}</div>
+        <h1 class="text-h6 q-ma-none">{{ forced ? "首次登入必須修改密碼" : "修改密碼" }}</h1>
         <div v-if="forced" class="text-caption text-grey-7">
           管理員為你設定咗初始密碼，第一次登入要先換一個只有你自己知道嘅密碼。
         </div>

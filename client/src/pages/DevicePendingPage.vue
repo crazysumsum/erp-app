@@ -65,7 +65,7 @@ function backToLogin() {
   <AuthLayout>
     <q-card-section class="row items-center q-gutter-md">
       <q-icon :name="state.icon" :color="state.colour" size="42px" />
-      <div class="text-h6">{{ state.title }}</div>
+      <h1 class="text-h6 q-ma-none">{{ state.title }}</h1>
     </q-card-section>
 
     <q-card-section class="text-body2">

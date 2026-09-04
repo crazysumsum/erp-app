@@ -51,7 +51,7 @@ onMounted(loadHealth);
         <q-card-section class="row items-center justify-between">
           <div>
             <div class="text-overline text-primary">開發環境</div>
-            <div class="text-h6">系統狀態</div>
+            <h2 class="text-h6 q-ma-none">系統狀態</h2>
           </div>
           <q-btn
             color="primary"

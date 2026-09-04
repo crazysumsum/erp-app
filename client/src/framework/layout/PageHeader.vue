@@ -31,7 +31,11 @@ const resolvedTitle = computed(() => props.title ?? route.meta?.title);
   <div class="page-header row items-center justify-between q-pa-md q-mb-md">
     <div>
       <div v-if="groupLabel" class="text-caption text-grey-7">{{ groupLabel }}</div>
-      <div class="text-h6">{{ resolvedTitle }}</div>
+      <!-- h1：Quasar 嘅 text-h6 淨係管字體大細，同 tag 語意冇關係——用返
+           真正嘅 heading tag，用螢幕閱讀器嘅人先可以用「跳去下一個標題」
+           嚟導覽（之前呢度成頁都係得返 div，一個標題都搵唔到）。q-ma-none
+           係因為原生 <h1> 有瀏覽器預設 margin，唔清返會將 layout 谷開。 -->
+      <h1 class="text-h6 q-ma-none">{{ resolvedTitle }}</h1>
       <div v-if="subtitle" class="text-caption text-grey-7 q-mt-xs">{{ subtitle }}</div>
     </div>
     <div>

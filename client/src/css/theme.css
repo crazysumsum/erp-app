@@ -53,3 +53,15 @@
 .q-table--sticky-actions thead th:last-child {
   z-index: 2;
 }
+
+/* Quasar 嘅 q-badge 寫死白字（.q-badge{color:#fff}），但 positive／warning／
+   grey 呢三種語意色本身夠淺，配白字對比度遠低於 WCAG AA 要求嘅 4.5:1（實測：
+   positive #21BA45 = 2.57:1、warning #F2C037 = 1.70:1、grey #9E9E9E =
+   2.68:1，全部 fail；negative #C10015 = 6.41:1，本身已經夠深唔使改）。
+   淨係修呢三種背景嘅字色，唔動 --q-positive 等變數本身——按鈕、banner 等
+   其他用緊呢幾種顏色嘅地方唔會跟住變。 */
+.q-badge.bg-positive,
+.q-badge.bg-warning,
+.q-badge.bg-grey {
+  color: var(--q-dark);
+}

@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from "pinia";
 import { Quasar } from "quasar";
 import { createMemoryHistory, createRouter } from "vue-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import appConfig from "@config/app.js";
 import AppTopbar from "@/framework/layout/AppTopbar.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -41,6 +42,14 @@ describe("AppTopbar", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     document.body.innerHTML = "";
+  });
+
+  it("左上角有公司「M」徽章同 appConfig.title，唔會再顯示舊嘅「ERP System」", async () => {
+    const { wrapper } = await mountTopbar();
+
+    expect(wrapper.find(".app-topbar__brand-monogram").text()).toBe("M");
+    expect(wrapper.text()).toContain(appConfig.title);
+    expect(wrapper.text()).not.toContain("ERP System");
   });
 
   it("下拉選單嘅標籤係當前登入用戶嘅 displayName", async () => {

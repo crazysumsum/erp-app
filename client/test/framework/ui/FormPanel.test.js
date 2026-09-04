@@ -75,7 +75,7 @@ describe("FormPanel", () => {
     await flushPromises();
   });
 
-  it("onSubmit 拋出帶 body location details 嘅錯誤，會經 fieldError 顯示喺對應欄位", async () => {
+  it("onSubmit 拋出帶 body location details 嘅錯誤，會經 fieldError 顯示喺對應欄位，同埋喺總覽 banner 度列多次", async () => {
     const error = new Error("Request validation failed");
     error.details = [
       { location: "body", path: "/name", keyword: "minLength", message: "must NOT have fewer than 1 characters" }
@@ -87,8 +87,35 @@ describe("FormPanel", () => {
     await flushPromises();
 
     expect(wrapper.find(".name-error").text()).toBe("must NOT have fewer than 1 characters");
-    expect(wrapper.find(".q-banner").exists()).toBe(false);
+    // 呢個 banner 而家兼埋做 error summary（見 role="alert" 嗰段）：淨係得
+    // inline 錯誤嘅話，screen reader 用戶完全唔會知道個 submit 失敗咗——
+    // 冇跳頁、冇宣讀，畫面淨係靜靜哋喺原地。
+    expect(wrapper.find(".q-banner").exists()).toBe(true);
+    expect(wrapper.find(".q-banner").text()).toContain("must NOT have fewer than 1 characters");
     expect(wrapper.emitted("success")).toBeUndefined();
+  });
+
+  it("提交失敗之後，焦點會移去 error summary（role=alert），screen reader 用戶先會知道出咗事", async () => {
+    const error = new Error("Request validation failed");
+    error.details = [{ location: "body", path: "/name", keyword: "minLength", message: "太短" }];
+    const onSubmit = vi.fn().mockRejectedValue(error);
+    // document.activeElement 淨係反映真正掛喺 document 度嘅元素——mount()
+    // 預設整嘅係一棵未 attach 嘅 DOM tree，唔 attachTo 嘅話 .focus() 永遠
+    // 揸唔到 activeElement，同個功能本身有冇做啱冇關係。
+    const wrapper = mountFormPanel(onSubmit);
+    document.body.appendChild(wrapper.element);
+
+    try {
+      await wrapper.find("form").trigger("submit");
+      await flushPromises();
+
+      const summary = wrapper.find('[role="alert"]');
+      expect(summary.exists()).toBe(true);
+      expect(summary.attributes("tabindex")).toBe("-1");
+      expect(document.activeElement).toBe(summary.element);
+    } finally {
+      wrapper.element.remove();
+    }
   });
 
   it("巢狀 path（/address/city）會轉做 dot notation 嘅 field key", async () => {

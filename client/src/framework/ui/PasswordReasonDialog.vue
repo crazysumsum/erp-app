@@ -42,7 +42,7 @@ async function submit() {
   <q-dialog ref="dialogRef" persistent @hide="onDialogHide">
     <q-card style="min-width: 360px">
       <q-card-section>
-        <div class="text-h6">{{ title }}</div>
+        <h2 class="text-h6 q-ma-none">{{ title }}</h2>
       </q-card-section>
 
       <q-card-section v-if="message" class="q-pt-none">{{ message }}</q-card-section>

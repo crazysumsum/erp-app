@@ -93,7 +93,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <!-- aria-busy：揭頁/排序/篩選嗰陣 QTable 自己會顯示 loading bar，但冇
+       講低螢幕閱讀器「呢個區域而家喺度更新緊」——加喺呢個包住成個表格嘅
+       div，唔加喺 QTable 本身，係因為唔想賭 Quasar 會唔會將呢個 attr
+       原樣傳落去佢自己嘅 root 元素。 -->
+  <div :aria-busy="displayLoading">
     <q-banner v-if="error" class="bg-negative text-white q-mb-md">
       {{ error.message }}
       <template #action>
