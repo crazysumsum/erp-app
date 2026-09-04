@@ -1,6 +1,9 @@
 /**
- * Phase 1 的七支 migration（含 Item Management 的 0010 權限種子與 0011–0013
- * 的 Category／Brand／UOM catalog），對一個真的、已經 migrate 過的 MySQL 驗收。
+ * Phase 1 的八支 migration（含 Item Management 的 0010 權限種子、0011–0013
+ * 的 Category／Brand／UOM catalog，以及提前建立的 0024 item_audit_logs），
+ * 對一個真的、已經 migrate 過的 MySQL 驗收。0024 提前於 0014–0023（items／
+ * skus 等表）是刻意的：它不依賴 items／skus（target_id 不設外鍵），先建好讓
+ * Catalog 的寫入路徑從一開始就能正確寫稽核。
  *
  * 這裡要的是假連線給不了的兩件事：DDL 本身是不是合法的 MySQL（欄位型別、索引、
  * 外鍵的 ON DELETE 行為），以及**重跑會不會收斂**。後者在假連線上只是「我寫的
@@ -23,6 +26,7 @@ import { up as seedItemPermissions } from "../../database/migrations/0010_seed_i
 import { up as createItemCategories } from "../../database/migrations/0011_create_item_categories.js";
 import { up as createItemBrands } from "../../database/migrations/0012_create_item_brands.js";
 import { up as createItemUoms } from "../../database/migrations/0013_create_item_uoms.js";
+import { up as createItemAuditLogs } from "../../database/migrations/0024_create_item_audit_logs.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -309,7 +313,47 @@ test("0013 built item_uoms with a case-insensitive unique code", { skip }, async
   }
 });
 
-test("re-running all seven migrations changes nothing", { skip }, async (t) => {
+test("0024 built item_audit_logs with a non-cascading actor FK and no target FK", { skip }, async (t) => {
+  const database = await withDatabase(t);
+
+  const columns = await columnsOf(database, "item_audit_logs");
+  assert.ok(columns.size > 0, "item_audit_logs is missing; did 0024 run?");
+  assert.equal(columns.get("detail").COLUMN_TYPE, "json");
+  assert.equal(columns.get("occurred_at").COLUMN_TYPE, "bigint unsigned");
+  assert.equal(columns.get("actor_user_id").IS_NULLABLE, "YES");
+  assert.equal(columns.get("target_id").IS_NULLABLE, "YES");
+  assert.equal(columns.get("reason").COLUMN_DEFAULT, "");
+
+  const [indexes] = await database.query(
+    `SELECT DISTINCT INDEX_NAME FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'item_audit_logs'`
+  );
+  assert.deepEqual(
+    indexes.map((row) => row.INDEX_NAME).sort(),
+    [
+      "PRIMARY",
+      "idx_item_audit_logs_time",
+      "idx_item_audit_logs_target",
+      "idx_item_audit_logs_actor",
+      "idx_item_audit_logs_action"
+    ].sort()
+  );
+
+  // target_id 刻意沒有外鍵：分類／SKU 被刪掉之後，「誰在什麼時候刪的」必須
+  // 留得住。actor_user_id 是唯一一個 FK，且是 SET NULL 不是 CASCADE：帳號被
+  // 刪除不能連帶讓稽核記錄消失，那正是最需要它的情況。
+  const [constraints] = await database.query(
+    `SELECT DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS
+     WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'item_audit_logs'`
+  );
+  assert.deepEqual(
+    constraints.map((row) => row.DELETE_RULE),
+    ["SET NULL"]
+  );
+  assert.equal(constraints.length, 1, "item_audit_logs should have exactly one FK");
+});
+
+test("re-running all eight migrations changes nothing", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   const countRows = async () => {
@@ -329,7 +373,10 @@ test("re-running all seven migrations changes nothing", { skip }, async (t) => {
       "SELECT COUNT(*) AS brands FROM item_brands"
     );
     const [[{ uoms }]] = await database.query("SELECT COUNT(*) AS uoms FROM item_uoms");
-    return { permissions, links, audits, categories, brands, uoms };
+    const [[{ itemAudits }]] = await database.query(
+      "SELECT COUNT(*) AS itemAudits FROM item_audit_logs"
+    );
+    return { permissions, links, audits, categories, brands, uoms, itemAudits };
   };
 
   const before = await countRows();
@@ -343,6 +390,7 @@ test("re-running all seven migrations changes nothing", { skip }, async (t) => {
   await createItemCategories(database);
   await createItemBrands(database);
   await createItemUoms(database);
+  await createItemAuditLogs(database);
 
   assert.deepEqual(await countRows(), before);
   assert.deepEqual(
