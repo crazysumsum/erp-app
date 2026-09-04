@@ -220,6 +220,37 @@ function createFakeDatabase({
   };
 }
 
+/**
+ * 讓 `sqlSubstring` 匹配到的那句查詢，前 `failTimes` 次呼叫拋出一個
+ * `ER_LOCK_DEADLOCK`，之後恢復正常——用嚟測 UserAdminService.disable() 的
+ * 死結重試邏輯，唔使真係接真 MySQL 先整得出死結。
+ */
+function withDeadlockInjected(database, { sqlSubstring, failTimes }) {
+  let remaining = failTimes;
+
+  function wrap(run) {
+    return async (sql, params) => {
+      if (remaining > 0 && sql.includes(sqlSubstring)) {
+        remaining -= 1;
+        const error = new Error("Deadlock found when trying to get lock; try restarting transaction");
+        error.code = "ER_LOCK_DEADLOCK";
+        throw error;
+      }
+      return run(sql, params);
+    };
+  }
+
+  const wrappedQuery = wrap(database.query);
+  const wrappedExecute = wrap(database.execute);
+
+  return {
+    ...database,
+    query: wrappedQuery,
+    execute: wrappedExecute,
+    withTransaction: async (work) => work({ query: wrappedQuery, execute: wrappedExecute })
+  };
+}
+
 function collectingLogger() {
   const entries = [];
   const write = (level) => async (event, message, context) => {
@@ -536,6 +567,49 @@ test("disabling one of two admins succeeds, leaving the other untouched", async 
 
   assert.equal(database.state.users.get(11).status, "disabled");
   assert.equal(database.state.users.get(10).status, "active");
+});
+
+test("disable retries once when the protective UPDATE deadlocks, and still succeeds", async () => {
+  const database = withDeadlockInjected(
+    seedWithAdmin({
+      users: [
+        { id: 10, username: "admin", password_hash: "x", display_name: "", status: "active", created_at: 1 },
+        { id: 20, username: "bob", password_hash: "x", display_name: "", status: "active", created_at: 1 }
+      ],
+      userRoles: [[10, SYSTEM_ADMIN.id]]
+    }),
+    { sqlSubstring: "SET status = 'disabled'", failTimes: 1 }
+  );
+  const { service, tokenRevocation } = createService({ database });
+
+  await service.disable({ ...ADMIN_ACTOR, id: 20, reason: "第一次撞死結，重試後成功" });
+
+  assert.equal(database.state.users.get(20).status, "disabled");
+  // 重試代表整個交易（含撤銷 token）重跑一次：第一次因為死結被 InnoDB 整個
+  // 回滾，第二次才真的落地——見 UserAdminService.js#disable 開頭的註解，這是
+  // 已經接受的代價，不是這支測試意外發現的行為。
+  assert.equal(tokenRevocation.revoked.length, 2);
+  assert.equal(database.state.auditRows.length, 1, "只有成功那次交易寫入稽核");
+});
+
+test("disable gives up after repeated deadlocks and surfaces the error", async () => {
+  const database = withDeadlockInjected(
+    seedWithAdmin({
+      users: [
+        { id: 10, username: "admin", password_hash: "x", display_name: "", status: "active", created_at: 1 },
+        { id: 20, username: "bob", password_hash: "x", display_name: "", status: "active", created_at: 1 }
+      ],
+      userRoles: [[10, SYSTEM_ADMIN.id]]
+    }),
+    { sqlSubstring: "SET status = 'disabled'", failTimes: 10 }
+  );
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    () => service.disable({ ...ADMIN_ACTOR, id: 20, reason: "持續撞死結，重試耗盡" }),
+    { code: "ER_LOCK_DEADLOCK" }
+  );
+  assert.equal(database.state.users.get(20).status, "active", "重試耗盡後帳號狀態必須維持不變");
 });
 
 test("disable on a missing user throws USER_NOT_FOUND", async () => {
