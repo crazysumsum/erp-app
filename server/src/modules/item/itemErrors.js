@@ -209,6 +209,58 @@ export function categoryHasChildren() {
   });
 }
 
+// --- Catalog（Category／Brand／UOM）專用錯誤 -------------------------------
+//
+// 不在 §6.11 的 Item／SKU 錯誤表內，因為那張表描述的是 Item aggregate；這幾個
+// 是 Catalog 資料自己的唯一性與樹狀結構規則，錯誤代碼獨立命名避免跟未來的
+// Item 專屬衝突撞在一起。
+
+export function categoryNameTaken(name) {
+  return conflict(`Category name "${name}" is already used under the same parent`, {
+    code: "CATEGORY_NAME_TAKEN",
+    publicMessage: "同一父分類下已有相同名稱的分類",
+    details: { name }
+  });
+}
+
+export function brandNameTaken(name) {
+  return conflict(`Brand name "${name}" is already taken`, {
+    code: "BRAND_NAME_TAKEN",
+    publicMessage: "這個品牌名稱已被使用（不分大小寫）",
+    details: { name }
+  });
+}
+
+export function uomCodeTaken(code) {
+  return conflict(`UOM code "${code}" is already taken`, {
+    code: "UOM_CODE_TAKEN",
+    publicMessage: "這個單位代碼已被使用",
+    details: { code }
+  });
+}
+
+export function categoryCycle() {
+  return invalid("Moving this category under the given parent would create a cycle", {
+    code: "CATEGORY_CYCLE",
+    publicMessage: "不能把分類移動到自己或自己的子分類底下"
+  });
+}
+
+export function categoryMaxDepthExceeded(maxDepth) {
+  return invalid(`Category tree depth would exceed the configured maximum of ${maxDepth}`, {
+    code: "CATEGORY_MAX_DEPTH_EXCEEDED",
+    publicMessage: `分類層數超過系統上限（${maxDepth} 層）`,
+    details: { maxDepth }
+  });
+}
+
+export function categoryParentNotActive() {
+  return conflict("Category parent must be active", {
+    code: "CATEGORY_PARENT_NOT_ACTIVE",
+    publicMessage: "上層分類必須是啟用狀態才可指派子分類"
+  });
+}
+
 export function uomChangeBlocked() {
   return conflict("Base UOM or its conversion cannot change after transactions exist", {
     code: "UOM_CHANGE_BLOCKED",
