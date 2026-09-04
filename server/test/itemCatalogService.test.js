@@ -522,3 +522,258 @@ test("every write uses the transaction's connection for its audit row, not a sec
   // audit row 就不會出現在 state.auditRows 裡——這個斷言本身就是那個防線。
   assert.equal(database.state.auditRows.length, 1);
 });
+
+// ============================================================================
+// Brand
+// ============================================================================
+
+function brand({ id, name, officialName = "", description = "", status = "active", version = 1 }) {
+  return {
+    id,
+    name,
+    official_name: officialName,
+    description,
+    status,
+    version,
+    created_at: NOW_MS - 1000,
+    updated_at: NOW_MS - 1000,
+    created_by: 10,
+    updated_by: 10
+  };
+}
+
+test("createBrand creates an active brand and records an audit row", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  const created = await service.createBrand({ ...ADMIN_ACTOR, name: "Brand A", officialName: "Brand A Ltd." });
+
+  assert.equal(created.name, "Brand A");
+  assert.equal(created.officialName, "Brand A Ltd.");
+  assert.equal(created.status, "active");
+  assert.equal(database.state.auditRows.at(-1)[3], "brand.create");
+});
+
+test("createBrand rejects a duplicate name case-insensitively", async () => {
+  const database = createFakeItemCatalogDatabase({ brands: [brand({ id: 1, name: "Brand A" })] });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createBrand({ ...ADMIN_ACTOR, name: "brand a" }),
+    (error) => {
+      assert.equal(error.code, "BRAND_NAME_TAKEN");
+      return true;
+    }
+  );
+});
+
+test("listBrands paginates, filters by status and search term, and sorts", async () => {
+  const database = createFakeItemCatalogDatabase({
+    brands: [
+      brand({ id: 1, name: "Alpha" }),
+      brand({ id: 2, name: "Beta", status: "inactive" }),
+      brand({ id: 3, name: "Gamma" })
+    ]
+  });
+  const { service } = createService({ database });
+
+  const all = await service.listBrands({ ...ADMIN_ACTOR, page: 1, pageSize: 20 });
+  assert.equal(all.total, 3);
+  assert.deepEqual(all.items.map((b) => b.name), ["Alpha", "Beta", "Gamma"]);
+
+  const activeOnly = await service.listBrands({ ...ADMIN_ACTOR, page: 1, pageSize: 20, status: "active" });
+  assert.equal(activeOnly.total, 2);
+
+  const searched = await service.listBrands({ ...ADMIN_ACTOR, page: 1, pageSize: 20, q: "amm" });
+  assert.deepEqual(searched.items.map((b) => b.name), ["Gamma"]);
+
+  const firstPage = await service.listBrands({ ...ADMIN_ACTOR, page: 1, pageSize: 2 });
+  assert.equal(firstPage.items.length, 2);
+  const secondPage = await service.listBrands({ ...ADMIN_ACTOR, page: 2, pageSize: 2 });
+  assert.equal(secondPage.items.length, 1);
+
+  const descending = await service.listBrands({
+    ...ADMIN_ACTOR,
+    page: 1,
+    pageSize: 20,
+    sortBy: "name",
+    descending: true
+  });
+  assert.deepEqual(descending.items.map((b) => b.name), ["Gamma", "Beta", "Alpha"]);
+});
+
+test("updateBrand renames and bumps version, rejecting a stale version without writing", async () => {
+  const database = createFakeItemCatalogDatabase({ brands: [brand({ id: 1, name: "Brand A", version: 2 })] });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.updateBrand({
+      ...ADMIN_ACTOR,
+      id: 1,
+      name: "Renamed",
+      officialName: "",
+      description: "",
+      version: 1
+    }),
+    (error) => {
+      assert.equal(error.code, "VERSION_CONFLICT");
+      return true;
+    }
+  );
+
+  const updated = await service.updateBrand({
+    ...ADMIN_ACTOR,
+    id: 1,
+    name: "Renamed",
+    officialName: "",
+    description: "",
+    version: 2
+  });
+  assert.equal(updated.name, "Renamed");
+  assert.equal(updated.version, 3);
+});
+
+test("brand status transitions follow the same active/inactive/archived rules as category", async () => {
+  const database = createFakeItemCatalogDatabase({
+    brands: [brand({ id: 1, name: "Brand A", status: "inactive" })]
+  });
+  const { service } = createService({ database });
+
+  const activated = await service.activateBrand({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "重新上架" });
+  assert.equal(activated.status, "active");
+
+  const archived = await service.archiveBrand({ ...ADMIN_ACTOR, id: 1, version: 2, reason: "停產" });
+  assert.equal(archived.status, "archived");
+
+  await assert.rejects(
+    service.activateBrand({ ...ADMIN_ACTOR, id: 1, version: 3, reason: "重新上架" }),
+    (error) => {
+      assert.equal(error.code, "STATUS_TRANSITION_INVALID");
+      return true;
+    }
+  );
+
+  const restored = await service.restoreBrand({ ...ADMIN_ACTOR, id: 1, version: 3, reason: "業務要求恢復" });
+  assert.equal(restored.status, "inactive");
+});
+
+test("deleteBrand removes the row and records the reason; a stale version leaves it untouched", async () => {
+  const database = createFakeItemCatalogDatabase({ brands: [brand({ id: 1, name: "Brand A" })] });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.deleteBrand({ ...ADMIN_ACTOR, id: 1, version: 99, reason: "建立錯誤" }),
+    (error) => {
+      assert.equal(error.code, "VERSION_CONFLICT");
+      return true;
+    }
+  );
+  assert.equal(database.state.brands.has(1), true);
+
+  const result = await service.deleteBrand({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "建立錯誤" });
+  assert.equal(result.id, 1);
+  assert.equal(database.state.brands.has(1), false);
+});
+
+test("brand operations on an unknown id raise BRAND_NOT_FOUND", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.updateBrand({ ...ADMIN_ACTOR, id: 999, name: "x", officialName: "", description: "", version: 1 }),
+    (error) => {
+      assert.equal(error.code, "BRAND_NOT_FOUND");
+      return true;
+    }
+  );
+});
+
+// ============================================================================
+// UOM
+// ============================================================================
+
+function uom({ id, code, name, symbol = "", status = "active", version = 1 }) {
+  return {
+    id,
+    code,
+    name,
+    symbol,
+    status,
+    version,
+    created_at: NOW_MS - 1000,
+    updated_at: NOW_MS - 1000,
+    created_by: 10,
+    updated_by: 10
+  };
+}
+
+test("createUom creates an active unit and records an audit row", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  const created = await service.createUom({ ...ADMIN_ACTOR, code: "EA", name: "Each", symbol: "pcs" });
+
+  assert.equal(created.code, "EA");
+  assert.equal(created.status, "active");
+  assert.equal(database.state.auditRows.at(-1)[3], "uom.create");
+});
+
+test("createUom rejects a duplicate code case-insensitively", async () => {
+  const database = createFakeItemCatalogDatabase({ uoms: [uom({ id: 1, code: "EA", name: "Each" })] });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createUom({ ...ADMIN_ACTOR, code: "ea", name: "Duplicate" }),
+    (error) => {
+      assert.equal(error.code, "UOM_CODE_TAKEN");
+      return true;
+    }
+  );
+});
+
+test("listUoms is not paginated, and excludes archived by default", async () => {
+  const database = createFakeItemCatalogDatabase({
+    uoms: [uom({ id: 1, code: "EA", name: "Each" }), uom({ id: 2, code: "BOX", name: "Box", status: "archived" })]
+  });
+  const { service } = createService({ database });
+
+  const hidden = await service.listUoms(ADMIN_ACTOR);
+  assert.deepEqual(hidden.items.map((u) => u.code), ["EA"]);
+
+  const shown = await service.listUoms({ ...ADMIN_ACTOR, includeArchived: true });
+  assert.deepEqual(shown.items.map((u) => u.code).sort(), ["BOX", "EA"]);
+});
+
+test("updateUom changes name/symbol but never accepts a code parameter to change", async () => {
+  const database = createFakeItemCatalogDatabase({ uoms: [uom({ id: 1, code: "EA", name: "Each" })] });
+  const { service } = createService({ database });
+
+  const updated = await service.updateUom({
+    ...ADMIN_ACTOR,
+    id: 1,
+    name: "Each Piece",
+    symbol: "pc",
+    version: 1
+  });
+
+  assert.equal(updated.name, "Each Piece");
+  assert.equal(updated.code, "EA");
+  assert.equal(updated.symbol, "pc");
+});
+
+test("uom status transitions and controlled delete behave like category/brand", async () => {
+  const database = createFakeItemCatalogDatabase({
+    uoms: [uom({ id: 1, code: "EA", name: "Each", status: "inactive" })]
+  });
+  const { service } = createService({ database });
+
+  const activated = await service.activateUom({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "啟用" });
+  assert.equal(activated.status, "active");
+
+  const deactivated = await service.deactivateUom({ ...ADMIN_ACTOR, id: 1, version: 2, reason: "停用" });
+  assert.equal(deactivated.status, "inactive");
+
+  const deleted = await service.deleteUom({ ...ADMIN_ACTOR, id: 1, version: 3, reason: "建立錯誤" });
+  assert.equal(deleted.id, 1);
+  assert.equal(database.state.uoms.has(1), false);
+});

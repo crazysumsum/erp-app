@@ -155,3 +155,123 @@ export const CATEGORY_DELETE_RESULT_SCHEMA = Object.freeze({
     id: { type: "integer", minimum: 1 }
   }
 });
+
+/** 共用刪除結果：淨係 id，Category／Brand／UOM 都係同一個形狀。 */
+export const CATALOG_DELETE_RESULT_SCHEMA = CATEGORY_DELETE_RESULT_SCHEMA;
+
+/** `GET .../categories`／`.../brands`／`.../uoms` 分頁參數；Category／UOM 不分頁時不帶 page/pageSize。 */
+export const CATALOG_PAGE_QUERY_SCHEMA = Object.freeze({
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    page: { type: "string", pattern: "^[1-9][0-9]*$" },
+    pageSize: { type: "string", pattern: "^[1-9][0-9]*$" },
+    q: { type: "string", maxLength: 190 },
+    status: { type: "string", enum: ["active", "inactive", "archived"] },
+    sortBy: { type: "string", enum: ["name", "status", "updatedAt"] },
+    descending: { type: "string", enum: ["true", "false"] }
+  }
+});
+
+// --- Brand -----------------------------------------------------------------
+
+/** 與 item_brands.official_name 的欄寬一致。 */
+export const BRAND_OFFICIAL_NAME_SCHEMA = Object.freeze({
+  type: "string",
+  maxLength: 190
+});
+
+/** 與 item_brands.description 的欄寬一致。 */
+export const BRAND_DESCRIPTION_SCHEMA = Object.freeze({
+  type: "string",
+  maxLength: 1000
+});
+
+const BRAND_FIELDS = Object.freeze({
+  id: { type: "integer", minimum: 1 },
+  name: CATALOG_NAME_SCHEMA,
+  officialName: BRAND_OFFICIAL_NAME_SCHEMA,
+  description: BRAND_DESCRIPTION_SCHEMA,
+  status: { type: "string", enum: ["active", "inactive", "archived"] },
+  version: { type: "integer", minimum: 1 },
+  createdAt: { type: "integer", minimum: 0 },
+  updatedAt: { type: "integer", minimum: 0 }
+});
+
+export const BRAND_SUMMARY_SCHEMA = Object.freeze({
+  type: "object",
+  required: [
+    "id",
+    "name",
+    "officialName",
+    "description",
+    "status",
+    "version",
+    "createdAt",
+    "updatedAt"
+  ],
+  additionalProperties: false,
+  properties: BRAND_FIELDS
+});
+
+export const BRAND_LIST_RESPONSE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["items", "total", "page", "pageSize"],
+  additionalProperties: false,
+  properties: {
+    items: { type: "array", items: BRAND_SUMMARY_SCHEMA },
+    total: { type: "integer", minimum: 0 },
+    page: { type: "integer", minimum: 1 },
+    pageSize: { type: "integer", minimum: 1 }
+  }
+});
+
+// --- UOM ---------------------------------------------------------------------
+
+/** 與 item_uoms.code 的欄寬一致；穩定代碼，建立後不可修改。 */
+export const UOM_CODE_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 1,
+  maxLength: 50
+});
+
+/** 與 item_uoms.symbol 的欄寬一致。 */
+export const UOM_SYMBOL_SCHEMA = Object.freeze({
+  type: "string",
+  maxLength: 30
+});
+
+/** 與 item_uoms.name 的欄寬一致（比 CATALOG_NAME_SCHEMA 窄）。 */
+export const UOM_NAME_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 1,
+  maxLength: 100
+});
+
+const UOM_FIELDS = Object.freeze({
+  id: { type: "integer", minimum: 1 },
+  code: UOM_CODE_SCHEMA,
+  name: UOM_NAME_SCHEMA,
+  symbol: UOM_SYMBOL_SCHEMA,
+  status: { type: "string", enum: ["active", "inactive", "archived"] },
+  version: { type: "integer", minimum: 1 },
+  createdAt: { type: "integer", minimum: 0 },
+  updatedAt: { type: "integer", minimum: 0 }
+});
+
+export const UOM_SUMMARY_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id", "code", "name", "symbol", "status", "version", "createdAt", "updatedAt"],
+  additionalProperties: false,
+  properties: UOM_FIELDS
+});
+
+/** 不分頁的小目錄（design_spec.md §6.4）。 */
+export const UOM_LIST_RESPONSE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["items"],
+  additionalProperties: false,
+  properties: {
+    items: { type: "array", items: UOM_SUMMARY_SCHEMA }
+  }
+});

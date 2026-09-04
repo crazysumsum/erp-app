@@ -10,6 +10,26 @@ import {
   RestoreCategoryHandler,
   UpdateCategoryHandler
 } from "../src/handlers/catalog/categoryHandlers.js";
+import {
+  ActivateBrandHandler,
+  ArchiveBrandHandler,
+  CreateBrandHandler,
+  DeactivateBrandHandler,
+  DeleteBrandHandler,
+  ListBrandsHandler,
+  RestoreBrandHandler,
+  UpdateBrandHandler
+} from "../src/handlers/catalog/brandHandlers.js";
+import {
+  ActivateUomHandler,
+  ArchiveUomHandler,
+  CreateUomHandler,
+  DeactivateUomHandler,
+  DeleteUomHandler,
+  ListUomsHandler,
+  RestoreUomHandler,
+  UpdateUomHandler
+} from "../src/handlers/catalog/uomHandlers.js";
 import { createTestTime } from "../test-support/createTestTime.js";
 import { ADMIN_ACTOR, createFakeItemCatalogDatabase } from "../test-support/fakeItemCatalogDatabase.js";
 
@@ -254,6 +274,259 @@ test("deleteCategory returns just the id, and records the caller's reason", asyn
 
 test("every response schema forbids additional properties (no accidental internal-column leakage)", () => {
   for (const HandlerClass of ALL_HANDLERS) {
+    for (const schema of Object.values(HandlerClass.api.responseSchema)) {
+      assert.equal(schema.additionalProperties, false, HandlerClass.handlerName);
+    }
+  }
+});
+
+// ============================================================================
+// Brand
+// ============================================================================
+
+const BRAND_HANDLERS = [
+  ListBrandsHandler,
+  CreateBrandHandler,
+  UpdateBrandHandler,
+  ActivateBrandHandler,
+  DeactivateBrandHandler,
+  ArchiveBrandHandler,
+  RestoreBrandHandler,
+  DeleteBrandHandler
+];
+
+test("every brand route lives under /api/v1/catalog/brands, with the same permission matrix as category", () => {
+  for (const HandlerClass of BRAND_HANDLERS) {
+    assert.match(HandlerClass.api.path, /^\/api\/v1\/catalog\/brands(\/|$)/, HandlerClass.handlerName);
+  }
+
+  assert.deepEqual(ListBrandsHandler.api.authorizationPolicies, [
+    { name: "hasPermission", options: { permissions: ["item.view"] } }
+  ]);
+  for (const HandlerClass of BRAND_HANDLERS) {
+    if (HandlerClass === ListBrandsHandler) {
+      continue;
+    }
+    assert.deepEqual(
+      HandlerClass.api.authorizationPolicies,
+      [{ name: "hasPermission", options: { permissions: ["item.mgmt"] } }],
+      HandlerClass.handlerName
+    );
+  }
+
+  for (const HandlerClass of [ArchiveBrandHandler, RestoreBrandHandler, DeleteBrandHandler]) {
+    assert.equal(HandlerClass.api.authType, "jwt-password", HandlerClass.handlerName);
+  }
+  for (const HandlerClass of [
+    ListBrandsHandler,
+    CreateBrandHandler,
+    UpdateBrandHandler,
+    ActivateBrandHandler,
+    DeactivateBrandHandler
+  ]) {
+    assert.equal(HandlerClass.api.authType, undefined, HandlerClass.handlerName);
+  }
+});
+
+test("listBrands maps page/pageSize/q/status/sortBy/descending, capping pageSize at 100", async () => {
+  const database = createFakeItemCatalogDatabase({
+    brands: [
+      { id: 1, name: "Alpha", official_name: "", description: "", status: "active", version: 1, created_at: 1, updated_at: 1 },
+      { id: 2, name: "Beta", official_name: "", description: "", status: "active", version: 1, created_at: 1, updated_at: 1 }
+    ]
+  });
+  const { handler } = createHandler(ListBrandsHandler, { database });
+
+  const response = await handler.execute(
+    requestFrom({ query: { page: "1", pageSize: "500", q: "a", status: "active", sortBy: "name" } })
+  );
+
+  assert.equal(response.data.pageSize, 100);
+  assert.equal(response.data.page, 1);
+});
+
+test("createBrand returns 201; updateBrand requires the full editable set plus version", async () => {
+  const { handler: createHandlerInstance } = createHandler(CreateBrandHandler);
+  const created = await createHandlerInstance.execute(
+    requestFrom({ body: { name: "Brand A", officialName: "Brand A Ltd.", description: "" } })
+  );
+  assert.equal(created.statusCode, 201);
+  assert.equal(created.data.name, "Brand A");
+
+  const database = createFakeItemCatalogDatabase({
+    brands: [{ id: 1, name: "Brand A", official_name: "", description: "", status: "active", version: 1, created_at: 1, updated_at: 1 }]
+  });
+  const { handler: updateHandlerInstance } = createHandler(UpdateBrandHandler, { database });
+  const updated = await updateHandlerInstance.execute(
+    requestFrom({
+      params: { id: "1" },
+      body: { name: "Renamed", officialName: "New Ltd.", description: "desc", version: 1 }
+    })
+  );
+  assert.equal(updated.data.name, "Renamed");
+  assert.equal(updated.data.officialName, "New Ltd.");
+});
+
+test("brand duplicate name surfaces as 409 BRAND_NAME_TAKEN through the handler", async () => {
+  const database = createFakeItemCatalogDatabase({
+    brands: [{ id: 1, name: "Brand A", official_name: "", description: "", status: "active", version: 1, created_at: 1, updated_at: 1 }]
+  });
+  const { handler } = createHandler(CreateBrandHandler, { database });
+
+  await assert.rejects(
+    handler.execute(requestFrom({ body: { name: "brand a" } })),
+    (error) => {
+      assert.equal(error.statusCode, 409);
+      assert.equal(error.publicCode, "BRAND_NAME_TAKEN");
+      return true;
+    }
+  );
+});
+
+test("brand status/delete handlers each call their own service method", async () => {
+  const rowFor = (status) => ({
+    id: 1,
+    name: "A",
+    official_name: "",
+    description: "",
+    status,
+    version: 1,
+    created_at: 1,
+    updated_at: 1
+  });
+
+  const cases = [
+    [ActivateBrandHandler, rowFor("inactive"), "active", { reason: "測試原因說明", version: 1 }],
+    [DeactivateBrandHandler, rowFor("active"), "inactive", { reason: "測試原因說明", version: 1 }],
+    [ArchiveBrandHandler, rowFor("active"), "archived", { reason: "測試原因說明", version: 1, password: "x" }],
+    [RestoreBrandHandler, rowFor("archived"), "inactive", { reason: "測試原因說明", version: 1, password: "x" }]
+  ];
+
+  for (const [HandlerClass, seedRow, expectedStatus, body] of cases) {
+    const database = createFakeItemCatalogDatabase({ brands: [seedRow] });
+    const { handler } = createHandler(HandlerClass, { database });
+
+    const response = await handler.execute(requestFrom({ params: { id: "1" }, body }));
+
+    assert.equal(response.data.status, expectedStatus, HandlerClass.handlerName);
+  }
+
+  const database = createFakeItemCatalogDatabase({ brands: [rowFor("active")] });
+  const { handler } = createHandler(DeleteBrandHandler, { database });
+  const deleted = await handler.execute(
+    requestFrom({ params: { id: "1" }, body: { reason: "建立錯誤，未曾使用", version: 1, password: "x" } })
+  );
+  assert.deepEqual(deleted.data, { id: 1 });
+});
+
+test("every brand response schema forbids additional properties", () => {
+  for (const HandlerClass of BRAND_HANDLERS) {
+    for (const schema of Object.values(HandlerClass.api.responseSchema)) {
+      assert.equal(schema.additionalProperties, false, HandlerClass.handlerName);
+    }
+  }
+});
+
+// ============================================================================
+// UOM
+// ============================================================================
+
+const UOM_HANDLERS = [
+  ListUomsHandler,
+  CreateUomHandler,
+  UpdateUomHandler,
+  ActivateUomHandler,
+  DeactivateUomHandler,
+  ArchiveUomHandler,
+  RestoreUomHandler,
+  DeleteUomHandler
+];
+
+test("every uom route lives under /api/v1/catalog/uoms, with the same permission matrix as category", () => {
+  for (const HandlerClass of UOM_HANDLERS) {
+    assert.match(HandlerClass.api.path, /^\/api\/v1\/catalog\/uoms(\/|$)/, HandlerClass.handlerName);
+  }
+
+  assert.deepEqual(ListUomsHandler.api.authorizationPolicies, [
+    { name: "hasPermission", options: { permissions: ["item.view"] } }
+  ]);
+  for (const HandlerClass of UOM_HANDLERS) {
+    if (HandlerClass === ListUomsHandler) {
+      continue;
+    }
+    assert.deepEqual(
+      HandlerClass.api.authorizationPolicies,
+      [{ name: "hasPermission", options: { permissions: ["item.mgmt"] } }],
+      HandlerClass.handlerName
+    );
+  }
+
+  for (const HandlerClass of [ArchiveUomHandler, RestoreUomHandler, DeleteUomHandler]) {
+    assert.equal(HandlerClass.api.authType, "jwt-password", HandlerClass.handlerName);
+  }
+});
+
+test("listUoms is not paginated (no page/pageSize in its query schema)", () => {
+  const properties = Object.keys(ListUomsHandler.api.requestSchema.query.properties);
+  assert.deepEqual(properties, ["includeArchived"]);
+});
+
+test("updateUom's request schema does not accept a code field — code is immutable after creation", () => {
+  assert.equal(UpdateUomHandler.api.requestSchema.body.properties.code, undefined);
+});
+
+test("createUom returns 201; a duplicate code surfaces as 409 UOM_CODE_TAKEN", async () => {
+  const { handler: createHandlerInstance } = createHandler(CreateUomHandler);
+  const created = await createHandlerInstance.execute(
+    requestFrom({ body: { code: "EA", name: "Each", symbol: "pcs" } })
+  );
+  assert.equal(created.statusCode, 201);
+  assert.equal(created.data.code, "EA");
+
+  const database = createFakeItemCatalogDatabase({
+    uoms: [{ id: 1, code: "EA", name: "Each", symbol: "", status: "active", version: 1, created_at: 1, updated_at: 1 }]
+  });
+  const { handler: dupHandler } = createHandler(CreateUomHandler, { database });
+
+  await assert.rejects(
+    dupHandler.execute(requestFrom({ body: { code: "ea", name: "Duplicate" } })),
+    (error) => {
+      assert.equal(error.statusCode, 409);
+      assert.equal(error.publicCode, "UOM_CODE_TAKEN");
+      return true;
+    }
+  );
+});
+
+test("uom status/delete handlers each call their own service method", async () => {
+  const rowFor = (status) => ({
+    id: 1,
+    code: "EA",
+    name: "Each",
+    symbol: "",
+    status,
+    version: 1,
+    created_at: 1,
+    updated_at: 1
+  });
+
+  const database = createFakeItemCatalogDatabase({ uoms: [rowFor("inactive")] });
+  const { handler } = createHandler(ActivateUomHandler, { database });
+  const activated = await handler.execute(
+    requestFrom({ params: { id: "1" }, body: { reason: "測試原因說明", version: 1 } })
+  );
+  assert.equal(activated.data.status, "active");
+
+  const deleteDb = createFakeItemCatalogDatabase({ uoms: [rowFor("active")] });
+  const { handler: deleteHandler } = createHandler(DeleteUomHandler, { database: deleteDb });
+  const deleted = await deleteHandler.execute(
+    requestFrom({ params: { id: "1" }, body: { reason: "建立錯誤，未曾使用", version: 1, password: "x" } })
+  );
+  assert.deepEqual(deleted.data, { id: 1 });
+});
+
+test("every uom response schema forbids additional properties", () => {
+  for (const HandlerClass of UOM_HANDLERS) {
     for (const schema of Object.values(HandlerClass.api.responseSchema)) {
       assert.equal(schema.additionalProperties, false, HandlerClass.handlerName);
     }

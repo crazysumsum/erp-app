@@ -1,4 +1,6 @@
 import {
+  brandNameTaken,
+  brandNotFound,
   categoryCycle,
   categoryHasChildren,
   categoryMaxDepthExceeded,
@@ -6,20 +8,25 @@ import {
   categoryNotFound,
   categoryParentNotActive,
   statusTransitionInvalid,
+  uomCodeTaken,
+  uomNotFound,
   versionConflict
 } from "./itemErrors.js";
+import { CATALOG_LIST_SORT_FIELDS } from "./itemConstants.js";
 import { ItemAuditLogService } from "./ItemAuditLogService.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 
 /**
- * Category（本檔案，Brand／UOM／Attribute 之後在同一個 class 上擴充）的
- * 查詢、新增、修改（含移動）、狀態變更、受控刪除。設計說明見
- * docs/items_management/design_spec.md §4.1、§5.3、§8.2。
+ * Category、Brand、UOM 的查詢、新增、修改、狀態變更、受控刪除。設計說明見
+ * docs/items_management/design_spec.md §4.1、§5.3–§5.5、§8.2。
  *
  * 業務模組，不進 service container，依賴由呼叫端傳入——與 RoleAdminService
- * 同一個理由。不用一個接收 table name 的 generic CRUD：Category、Brand、UOM
- * 的規則（樹狀結構、大小寫唯一、in-use 保護）不夠像，硬共用只會把每個方法都
- * 塞滿只對某一種資料成立的分支。
+ * 同一個理由。不用一個接收 table name 的 generic CRUD：Category 的樹狀結構
+ * （移動、cycle、深度）跟 Brand／UOM 的單純列表差太多，硬共用只會把每個方法
+ * 都塞滿只對某一種資料成立的分支。Brand／UOM 之間的狀態轉換雖然幾乎一樣，
+ * 但各自維持一份直接的實作，而不是抽出第三個只為了省幾行 SQL 的參數化
+ * helper——那種 helper 需要的參數（table、欄位、summary 映射、錯誤 factory）
+ * 加起來不會比三份直接寫的實作更好懂。
  *
  * `categoryMaxDepth` 由呼叫端注入（來自 config/item.js 正規化後的值），不在
  * constructor 內部 import config——依賴清楚列在建構參數上，測試才不用真的載入
@@ -28,6 +35,25 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 
 function isDuplicateEntry(error) {
   return (error?.cause?.code || error?.code) === "ER_DUP_ENTRY";
+}
+
+/** `%`、`_`、`\` 是 LIKE 的萬用字元／跳脫字元，使用者輸入的字面值要先跳脫。
+ * 與 UserAdminService 那份是同一個三行函式——見那個檔案對「這種規模的純函式
+ * 重複一份，比為了它另開一個共用檔案划算」的說明。 */
+function escapeLikeTerm(value) {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}
+
+const CATALOG_SORT_COLUMNS = Object.freeze({
+  name: "name",
+  status: "status",
+  updatedAt: "updated_at"
+});
+
+function sortColumn(sortBy) {
+  return CATALOG_LIST_SORT_FIELDS.includes(sortBy)
+    ? CATALOG_SORT_COLUMNS[sortBy]
+    : CATALOG_SORT_COLUMNS.name;
 }
 
 export class ItemCatalogService {
@@ -531,6 +557,590 @@ export class ItemCatalogService {
       status: row.status,
       parentId: row.parent_id === null || row.parent_id === undefined ? null : Number(row.parent_id),
       sortOrder: Number(row.sort_order),
+      version: Number(row.version),
+      createdAt: Number(row.created_at),
+      updatedAt: Number(row.updated_at)
+    };
+  }
+
+  // --- Brand：查詢 ---------------------------------------------------------
+
+  /** 分頁清單（design_spec.md §6.4：「Brand／Attribute 仍分頁」，跟不分頁的 Category／UOM 不同）。 */
+  async listBrands({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    page = 1,
+    pageSize = 20,
+    q = "",
+    status,
+    sortBy = "name",
+    descending = false
+  }) {
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      conditions.push("status = ?");
+      params.push(status);
+    }
+
+    const term = String(q ?? "").trim();
+    if (term) {
+      conditions.push("name LIKE ?");
+      params.push(`%${escapeLikeTerm(term)}%`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const direction = descending ? "DESC" : "ASC";
+    const offset = (page - 1) * pageSize;
+
+    const [totalRows] = await this.database.query(
+      `SELECT COUNT(*) AS total FROM item_brands ${whereClause}`,
+      params
+    );
+    const [rows] = await this.database.query(
+      `SELECT id, name, official_name, description, status, version, created_at, updated_at
+         FROM item_brands ${whereClause}
+        ORDER BY ${sortColumn(sortBy)} ${direction}
+        LIMIT ? OFFSET ?`,
+      [...params, pageSize, offset]
+    );
+
+    return {
+      items: rows.map((row) => this.#toBrandSummary(row)),
+      total: Number(totalRows[0].total),
+      page,
+      pageSize
+    };
+  }
+
+  // --- Brand：新增／修改 -----------------------------------------------------
+
+  async createBrand({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    name,
+    officialName = "",
+    description = "",
+    requestId,
+    ip
+  }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const normalizedName = String(name ?? "").trim();
+      const nowMs = this.time.nowMs();
+
+      let brandId;
+      try {
+        const [result] = await connection.execute(
+          `INSERT INTO item_brands
+             (name, official_name, description, version, created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, 1, ?, ?, ?, ?)`,
+          [normalizedName, officialName, description, nowMs, nowMs, actorId, actorId]
+        );
+        brandId = result.insertId;
+      } catch (error) {
+        if (isDuplicateEntry(error)) {
+          throw brandNameTaken(normalizedName);
+        }
+        throw error;
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "brand.create",
+        targetType: "brand",
+        targetId: brandId,
+        targetLabel: normalizedName,
+        requestId,
+        ip
+      });
+
+      return this.#toBrandSummary({
+        id: brandId,
+        name: normalizedName,
+        official_name: officialName,
+        description,
+        status: "active",
+        version: 1,
+        created_at: nowMs,
+        updated_at: nowMs
+      });
+    });
+  }
+
+  async updateBrand({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    id,
+    name,
+    officialName,
+    description,
+    version,
+    requestId,
+    ip
+  }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireBrand(connection, id);
+      const normalizedName = String(name ?? "").trim();
+      const nowMs = this.time.nowMs();
+
+      let result;
+      try {
+        [result] = await connection.execute(
+          `UPDATE item_brands
+              SET name = ?, official_name = ?, description = ?, updated_at = ?, updated_by = ?,
+                  version = version + 1
+            WHERE id = ? AND version = ?`,
+          [normalizedName, officialName ?? "", description ?? "", nowMs, actorId, id, version]
+        );
+      } catch (error) {
+        if (isDuplicateEntry(error)) {
+          throw brandNameTaken(normalizedName);
+        }
+        throw error;
+      }
+
+      if (result.affectedRows === 0) {
+        await this.#requireBrand(connection, id);
+        throw versionConflict();
+      }
+
+      const detail = {};
+      if (normalizedName !== current.name) {
+        detail.name = { before: current.name, after: normalizedName };
+      }
+      if ((officialName ?? "") !== current.official_name) {
+        detail.officialName = { before: current.official_name, after: officialName ?? "" };
+      }
+      if ((description ?? "") !== current.description) {
+        detail.description = { before: current.description, after: description ?? "" };
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "brand.update",
+        targetType: "brand",
+        targetId: id,
+        targetLabel: normalizedName,
+        detail: Object.keys(detail).length > 0 ? detail : null,
+        requestId,
+        ip
+      });
+
+      return this.#toBrandSummary({
+        id: Number(id),
+        name: normalizedName,
+        official_name: officialName ?? "",
+        description: description ?? "",
+        status: current.status,
+        version: version + 1,
+        created_at: current.created_at,
+        updated_at: nowMs
+      });
+    });
+  }
+
+  // --- Brand：狀態變更 -------------------------------------------------------
+
+  async activateBrand(options) {
+    return this.#transitionBrandStatus(options, { fromStatuses: ["inactive"], toStatus: "active" });
+  }
+
+  async deactivateBrand(options) {
+    return this.#transitionBrandStatus(options, { fromStatuses: ["active"], toStatus: "inactive" });
+  }
+
+  async archiveBrand(options) {
+    return this.#transitionBrandStatus(options, {
+      fromStatuses: ["active", "inactive"],
+      toStatus: "archived"
+    });
+  }
+
+  /** 只恢復到 Inactive，跟 Category／Item 是同一個決策方向。 */
+  async restoreBrand(options) {
+    return this.#transitionBrandStatus(options, { fromStatuses: ["archived"], toStatus: "inactive" });
+  }
+
+  // --- Brand：受控刪除 -------------------------------------------------------
+
+  /**
+   * 永久刪除。目前沒有任何表引用 item_brands，所以這裡沒有 in-use 檢查；等
+   * 第一個真引用（items.brand_id）出現時，那張表的 FK RESTRICT 會在資料庫層
+   * 擋下，屆時再把對應的公開錯誤（`CATALOG_IN_USE`）接上，不用先為一張還不
+   * 存在的表寫檢查（design_spec.md §8.4 的 reference guard 原則）。
+   */
+  async deleteBrand({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireBrand(connection, id);
+
+      const [result] = await connection.execute(
+        "DELETE FROM item_brands WHERE id = ? AND version = ?",
+        [id, version]
+      );
+
+      if (result.affectedRows === 0) {
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "brand.delete",
+        targetType: "brand",
+        targetId: id,
+        targetLabel: current.name,
+        reason,
+        requestId,
+        ip
+      });
+
+      return { id: Number(id) };
+    });
+  }
+
+  // --- 內部：Brand ---------------------------------------------------------
+
+  async #transitionBrandStatus(
+    { actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip },
+    { fromStatuses, toStatus }
+  ) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireBrand(connection, id);
+      const nowMs = this.time.nowMs();
+
+      const placeholders = fromStatuses.map(() => "?").join(",");
+      const [result] = await connection.execute(
+        `UPDATE item_brands
+            SET status = ?, updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ? AND status IN (${placeholders})`,
+        [toStatus, nowMs, actorId, id, version, ...fromStatuses]
+      );
+
+      if (result.affectedRows === 0) {
+        if (Number(current.version) !== Number(version)) {
+          throw versionConflict();
+        }
+        throw statusTransitionInvalid(current.status, toStatus);
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "brand.status",
+        targetType: "brand",
+        targetId: id,
+        targetLabel: current.name,
+        reason,
+        detail: { status: { before: current.status, after: toStatus } },
+        requestId,
+        ip
+      });
+
+      return this.#toBrandSummary({
+        id: Number(id),
+        name: current.name,
+        official_name: current.official_name,
+        description: current.description,
+        status: toStatus,
+        version: Number(version) + 1,
+        created_at: current.created_at,
+        updated_at: nowMs
+      });
+    });
+  }
+
+  async #requireBrand(connection, id) {
+    const [rows] = await connection.query(
+      `SELECT id, name, official_name, description, status, version, created_at, updated_at
+         FROM item_brands WHERE id = ?`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      throw brandNotFound(id);
+    }
+
+    return rows[0];
+  }
+
+  #toBrandSummary(row) {
+    return {
+      id: Number(row.id),
+      name: row.name,
+      officialName: row.official_name,
+      description: row.description,
+      status: row.status,
+      version: Number(row.version),
+      createdAt: Number(row.created_at),
+      updatedAt: Number(row.updated_at)
+    };
+  }
+
+  // --- UOM：查詢 -------------------------------------------------------------
+
+  /** 不分頁的小目錄，跟 RoleAdminService.list() 同一個理由：量級是十到百位數。 */
+  async listUoms({ actorId, claimedRoles, claimedPermissions, includeArchived = false }) {
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const whereClause = includeArchived ? "" : "WHERE status != 'archived'";
+    const [rows] = await this.database.query(
+      `SELECT id, code, name, symbol, status, version, created_at, updated_at
+         FROM item_uoms ${whereClause}
+        ORDER BY name`
+    );
+
+    return { items: rows.map((row) => this.#toUomSummary(row)) };
+  }
+
+  // --- UOM：新增／修改 ---------------------------------------------------------
+
+  async createUom({ actorId, claimedRoles, claimedPermissions, code, name, symbol = "", requestId, ip }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const normalizedCode = String(code ?? "").trim();
+      const normalizedName = String(name ?? "").trim();
+      const nowMs = this.time.nowMs();
+
+      let uomId;
+      try {
+        const [result] = await connection.execute(
+          `INSERT INTO item_uoms
+             (code, name, symbol, version, created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, 1, ?, ?, ?, ?)`,
+          [normalizedCode, normalizedName, symbol, nowMs, nowMs, actorId, actorId]
+        );
+        uomId = result.insertId;
+      } catch (error) {
+        if (isDuplicateEntry(error)) {
+          throw uomCodeTaken(normalizedCode);
+        }
+        throw error;
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "uom.create",
+        targetType: "uom",
+        targetId: uomId,
+        targetLabel: normalizedCode,
+        requestId,
+        ip
+      });
+
+      return this.#toUomSummary({
+        id: uomId,
+        code: normalizedCode,
+        name: normalizedName,
+        symbol,
+        status: "active",
+        version: 1,
+        created_at: nowMs,
+        updated_at: nowMs
+      });
+    });
+  }
+
+  /**
+   * 改名稱／符號。`code` 刻意不接受修改：它是 SKU UOM／barcode 未來拿來引用
+   * 的穩定代碼，跟 SKU Code 同一個道理（識別與描述分離，design_spec.md
+   * 核心原則 3）。要換代碼就封存舊的、建一個新的。
+   */
+  async updateUom({ actorId, claimedRoles, claimedPermissions, id, name, symbol, version, requestId, ip }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireUom(connection, id);
+      const normalizedName = String(name ?? "").trim();
+      const nowMs = this.time.nowMs();
+
+      const [result] = await connection.execute(
+        `UPDATE item_uoms
+            SET name = ?, symbol = ?, updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ?`,
+        [normalizedName, symbol ?? "", nowMs, actorId, id, version]
+      );
+
+      if (result.affectedRows === 0) {
+        await this.#requireUom(connection, id);
+        throw versionConflict();
+      }
+
+      const detail = {};
+      if (normalizedName !== current.name) {
+        detail.name = { before: current.name, after: normalizedName };
+      }
+      if ((symbol ?? "") !== current.symbol) {
+        detail.symbol = { before: current.symbol, after: symbol ?? "" };
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "uom.update",
+        targetType: "uom",
+        targetId: id,
+        targetLabel: current.code,
+        detail: Object.keys(detail).length > 0 ? detail : null,
+        requestId,
+        ip
+      });
+
+      return this.#toUomSummary({
+        id: Number(id),
+        code: current.code,
+        name: normalizedName,
+        symbol: symbol ?? "",
+        status: current.status,
+        version: version + 1,
+        created_at: current.created_at,
+        updated_at: nowMs
+      });
+    });
+  }
+
+  // --- UOM：狀態變更 -----------------------------------------------------------
+
+  async activateUom(options) {
+    return this.#transitionUomStatus(options, { fromStatuses: ["inactive"], toStatus: "active" });
+  }
+
+  async deactivateUom(options) {
+    return this.#transitionUomStatus(options, { fromStatuses: ["active"], toStatus: "inactive" });
+  }
+
+  async archiveUom(options) {
+    return this.#transitionUomStatus(options, {
+      fromStatuses: ["active", "inactive"],
+      toStatus: "archived"
+    });
+  }
+
+  async restoreUom(options) {
+    return this.#transitionUomStatus(options, { fromStatuses: ["archived"], toStatus: "inactive" });
+  }
+
+  // --- UOM：受控刪除 -----------------------------------------------------------
+
+  /**
+   * 永久刪除。跟 deleteBrand 同一個理由：目前沒有 item_sku_uoms／
+   * item_sku_barcodes／net_content 等表存在，in-use 檢查等那些表出現時再
+   * 接上對應的 FK 與 `CATALOG_IN_USE` 錯誤。
+   */
+  async deleteUom({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireUom(connection, id);
+
+      const [result] = await connection.execute(
+        "DELETE FROM item_uoms WHERE id = ? AND version = ?",
+        [id, version]
+      );
+
+      if (result.affectedRows === 0) {
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "uom.delete",
+        targetType: "uom",
+        targetId: id,
+        targetLabel: current.code,
+        reason,
+        requestId,
+        ip
+      });
+
+      return { id: Number(id) };
+    });
+  }
+
+  // --- 內部：UOM ---------------------------------------------------------------
+
+  async #transitionUomStatus(
+    { actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip },
+    { fromStatuses, toStatus }
+  ) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireUom(connection, id);
+      const nowMs = this.time.nowMs();
+
+      const placeholders = fromStatuses.map(() => "?").join(",");
+      const [result] = await connection.execute(
+        `UPDATE item_uoms
+            SET status = ?, updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ? AND status IN (${placeholders})`,
+        [toStatus, nowMs, actorId, id, version, ...fromStatuses]
+      );
+
+      if (result.affectedRows === 0) {
+        if (Number(current.version) !== Number(version)) {
+          throw versionConflict();
+        }
+        throw statusTransitionInvalid(current.status, toStatus);
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "uom.status",
+        targetType: "uom",
+        targetId: id,
+        targetLabel: current.code,
+        reason,
+        detail: { status: { before: current.status, after: toStatus } },
+        requestId,
+        ip
+      });
+
+      return this.#toUomSummary({
+        id: Number(id),
+        code: current.code,
+        name: current.name,
+        symbol: current.symbol,
+        status: toStatus,
+        version: Number(version) + 1,
+        created_at: current.created_at,
+        updated_at: nowMs
+      });
+    });
+  }
+
+  async #requireUom(connection, id) {
+    const [rows] = await connection.query(
+      `SELECT id, code, name, symbol, status, version, created_at, updated_at
+         FROM item_uoms WHERE id = ?`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      throw uomNotFound(id);
+    }
+
+    return rows[0];
+  }
+
+  #toUomSummary(row) {
+    return {
+      id: Number(row.id),
+      code: row.code,
+      name: row.name,
+      symbol: row.symbol,
+      status: row.status,
       version: Number(row.version),
       createdAt: Number(row.created_at),
       updatedAt: Number(row.updated_at)
