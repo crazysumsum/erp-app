@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B（T08 起）尚未開始 |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08 已完成，T09 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -77,7 +77,7 @@ T01 migration freeze
 
 ### Phase B：核心 Item／SKU
 
-- [ ] T08 建立 Item、SKU 與 Audit schema
+- [x] T08 建立 Item、SKU 與 Audit schema
 - [ ] T09 建立 SKU UOM 與 Barcode schema
 - [ ] T10 建立核心驗證與 Barcode 規則
 - [ ] T11 建立 Item Audit service 與查詢 API
@@ -319,18 +319,18 @@ T01 migration freeze
 
 ### Task T08：建立 Item、SKU 與 Audit schema
 
-**Description:** 建立 `0014_create_items.js`、`0015_create_item_skus.js`、`0024_create_item_audit_logs.js`，鎖定主資料、價格、狀態、時間、版本與 audit projection 所需欄位。
+**Description:** 建立 `0014_create_items.js`、`0015_create_item_skus.js`，鎖定主資料、價格、狀態、時間、版本與 audit projection 所需欄位。`0024_create_item_audit_logs.js` 已在 T04 提前建立（見該檔案開頭說明：不依賴 items／skus，先建好讓 Catalog 寫入路徑從一開始就能正確寫稽核），本任務不再重覆。
 
 **Acceptance criteria:**
 
-- [ ] Item 沒有 `item_code`、tenant、cost 或 tax setting 欄位；SKU Code 全域不分大小寫唯一。
-- [ ] SKU price 用 `DECIMAL(19,4)`，tracking／shelf-life／effective fields 與索引符合 §5.7。
-- [ ] Audit target 不設 FK、actor 使用 `SET NULL`，歷史在 target 刪除後仍保留。
+- [x] Item 沒有 `item_code`、tenant、cost 或 tax setting 欄位；SKU Code 全域不分大小寫唯一。
+- [x] SKU price 用 `DECIMAL(19,4)`，tracking／shelf-life／effective fields 與索引符合 §5.7。
+- [x] Audit target 不設 FK、actor 使用 `SET NULL`，歷史在 target 刪除後仍保留（T04 已驗證，見 `0024 built item_audit_logs...` 測試）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/migrate.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemMigrations.integration.test.js`
+- [x] `npm test --workspace server -- test/migrate.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`（沿用 T04 建立嘅同一份整合測試檔案延伸，跟實際做法一致；下面「Files likely touched」同步更正）
 
 **Dependencies:** T01, T02, T04
 
@@ -338,10 +338,9 @@ T01 migration freeze
 
 - `server/database/migrations/0014_create_items.js`
 - `server/database/migrations/0015_create_item_skus.js`
-- `server/database/migrations/0024_create_item_audit_logs.js`
-- `server/test/integration/itemMigrations.integration.test.js`
+- `server/test/integration/migrations.integration.test.js`
 
-**Estimated scope:** M（4 files）
+**Estimated scope:** M（3 files）
 
 ### Task T09：建立 SKU UOM 與 Barcode schema
 
