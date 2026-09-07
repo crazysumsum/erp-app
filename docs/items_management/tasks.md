@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T09 已完成，T10 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T10 已完成，T11 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -79,7 +79,7 @@ T01 migration freeze
 
 - [x] T08 建立 Item、SKU 與 Audit schema
 - [x] T09 建立 SKU UOM 與 Barcode schema
-- [ ] T10 建立核心驗證與 Barcode 規則
+- [x] T10 建立核心驗證與 Barcode 規則
 - [ ] T11 建立 Item Audit service 與查詢 API
 - [ ] T12 建立 Item／SKU 列表與詳情後端
 - [ ] T13 建立商品導航與列表頁
@@ -379,14 +379,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] `assertSkuActivatable()` 一次回傳全部 issues，無條碼仍可啟用，Sellable Active 必須有正 RRP。
-- [ ] Base UOM factor／交易量只接受有界整數；decimal 欄不經 JavaScript floating point 計算。
-- [ ] GTIN-8／UPC-A／EAN-13／GTIN-14 及 internal barcode 的合法、非法與 Unicode 邊界均有測試。
+- [x] `assertSkuActivatable()` 一次回傳全部 issues，無條碼仍可啟用，Sellable Active 必須有正 RRP。
+- [x] Base UOM factor／交易量只接受有界整數；decimal 欄不經 JavaScript floating point 計算。
+- [x] GTIN-8／UPC-A／EAN-13／GTIN-14 及 internal barcode 的合法、非法與 Unicode 邊界均有測試。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemValidation.test.js test/barcodeValidation.test.js`
-- [ ] `npm run lint -- server/src/modules/item/itemValidation.js server/src/modules/item/barcodeValidation.js`
+- [x] `npm test --workspace server -- test/itemValidation.test.js test/barcodeValidation.test.js`
+- [x] `npm run lint -- server/src/modules/item/itemValidation.js server/src/modules/item/barcodeValidation.js`
 
 **Dependencies:** T03, T04, T08, T09
 
