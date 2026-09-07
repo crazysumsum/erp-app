@@ -38,12 +38,14 @@ export const ITEM_AUDIT_ACTIONS = Object.freeze([
   "uom.create",
   "uom.update",
   "uom.status",
-  "uom.delete"
+  "uom.delete",
+  "item.create",
+  "sku.create"
 ]);
 
 /** target_type 同樣只列現在真的會寫入的種類；§5.12 規劃的完整清單見
  * 0024_create_item_audit_logs.js 開頭的欄位註解。 */
-export const ITEM_AUDIT_TARGET_TYPES = Object.freeze(["category", "brand", "uom"]);
+export const ITEM_AUDIT_TARGET_TYPES = Object.freeze(["category", "brand", "uom", "item", "sku"]);
 
 /**
  * 查詢慣例：page／pageSize 沿用 user audit 的做法；固定照
