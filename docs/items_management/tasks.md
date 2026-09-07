@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T11 已完成，T12 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T12 已完成，T13 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -81,7 +81,7 @@ T01 migration freeze
 - [x] T09 建立 SKU UOM 與 Barcode schema
 - [x] T10 建立核心驗證與 Barcode 規則
 - [x] T11 建立 Item Audit service 與查詢 API
-- [ ] T12 建立 Item／SKU 列表與詳情後端
+- [x] T12 建立 Item／SKU 列表與詳情後端
 - [ ] T13 建立商品導航與列表頁
 - [ ] T14 建立 Item＋初始 SKU 原子建檔後端
 - [ ] T15 建立 Item／SKU 建檔頁與基本 Editor
@@ -431,33 +431,35 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] SKU exact Code／Barcode 優先，LIKE wildcard 被 escape，Item 查詢用 `EXISTS` 避免重複及錯誤 total。
-- [ ] 回應只包含設計欄位，RRP 固定組成 HKD／`tax_not_applicable`，不直接 spread DB row。
-- [ ] 所有 GET 只接受 `item.view`；只有 `item.mgmt` 而沒有 view 仍回 403。
+- [x] SKU exact Code／Barcode 優先，LIKE wildcard 被 escape，Item 查詢用 `EXISTS` 避免重複及錯誤 total。
+- [x] 回應只包含設計欄位，RRP 固定組成 HKD／`tax_not_applicable`，不直接 spread DB row（attribute values／media 兩個陣列固定回空——依賴的表要等 T23／T25 先建立，見 service 開頭註解）。
+- [x] 所有 GET 只接受 `item.view`；只有 `item.mgmt` 而沒有 view 仍回 403。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemRead.integration.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemRead.integration.test.js`（沒有建立 `itemAdminService.test.js`／`itemHandlers.test.js`：這支 service 的正確性幾乎完全在 SQL 本身——JOIN／EXISTS 子查詢、search rank 的 ORDER BY CASE——假連線只能證明「呼叫了 query()」，證明不了查詢真的做對，跟 T09／T11 對同類問題的判斷一致，全部改用真 MySQL 整合測試覆蓋。）
 
 **Dependencies:** T02, T08, T09, T10
 
 **Files likely touched:**
 
 - `server/src/modules/item/ItemAdminService.js`
+- `server/src/handlers/items/itemSchemas.js`
 - `server/src/handlers/items/listItemsHandler.js`
 - `server/src/handlers/items/getItemHandler.js`
+- `server/src/handlers/skus/skuSchemas.js`
 - `server/src/handlers/skus/listSkusHandler.js`
 - `server/src/handlers/skus/getSkuHandler.js`
+- `server/test/integration/itemRead.integration.test.js`
 
-**Estimated scope:** M（5 logical files；schemas／tests 同切片）
+**Estimated scope:** M（8 logical files）
 
 ## Checkpoint D：T10–T12 Read Model Gate
 
-- [ ] Pure rules、Audit 及 read API focused tests 通過。
-- [ ] 真 DB 查詢與 projection 不洩漏內部欄位。
-- [ ] Read permission matrix 與 response schema 通過。
-- [ ] 以 seed data 手動驗證 Code、Barcode、Name、Archived filter。
+- [x] Pure rules、Audit 及 read API focused tests 通過。
+- [x] 真 DB 查詢與 projection 不洩漏內部欄位。
+- [x] Read permission matrix 與 response schema 通過。
+- [ ] 以 seed data 手動驗證 Code、Barcode、Name、Archived filter（尚未實際喺瀏覽器手動操作過——呢個階段冇任何 UI，只有自動化整合測試覆蓋 API 本身；等 T13 商品列表頁出現先做得到真正嘅手動驗證）。
 
 ### Task T13：建立商品導航與列表頁
 
