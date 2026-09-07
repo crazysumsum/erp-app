@@ -97,6 +97,7 @@ export class ItemAdminService {
     categoryId,
     brandId,
     status,
+    includeArchived = false,
     sortBy = "updatedAt",
     descending = true
   }) {
@@ -116,6 +117,11 @@ export class ItemAdminService {
     if (status) {
       conditions.push("i.status = ?");
       params.push(status);
+    } else if (!includeArchived) {
+      // 冇指定明確 status 先套呢條預設：明確要求 status=archived 就一定要
+      // 睇得到，唔可以俾呢個預設值擋住——同 UOM／Category 嗰個 includeArchived
+      // 慣例一致（FR-DELETE-005：封存資料預設不在日常列表顯示）。
+      conditions.push("i.status != 'archived'");
     }
 
     const term = String(q ?? "").trim();
@@ -218,6 +224,7 @@ export class ItemAdminService {
     categoryId,
     brandId,
     status,
+    includeArchived = false,
     purchasable,
     sellable,
     sortBy = "updatedAt",
@@ -243,6 +250,10 @@ export class ItemAdminService {
     if (status) {
       conditions.push("s.status = ?");
       params.push(status);
+    } else if (!includeArchived) {
+      // 同 listItems()：冇指定明確 status 先套呢條預設，明確要求 archived
+      // 唔會被呢個預設值擋住。
+      conditions.push("s.status != 'archived'");
     }
     if (purchasable !== undefined) {
       conditions.push("s.purchasable = ?");

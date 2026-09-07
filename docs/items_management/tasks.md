@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T12 已完成，T13 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T13 已完成，T14 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -82,7 +82,7 @@ T01 migration freeze
 - [x] T10 建立核心驗證與 Barcode 規則
 - [x] T11 建立 Item Audit service 與查詢 API
 - [x] T12 建立 Item／SKU 列表與詳情後端
-- [ ] T13 建立商品導航與列表頁
+- [x] T13 建立商品導航與列表頁
 - [ ] T14 建立 Item＋初始 SKU 原子建檔後端
 - [ ] T15 建立 Item／SKU 建檔頁與基本 Editor
 - [ ] T16 建立 Item／SKU aggregate 更新後端
@@ -459,7 +459,7 @@ T01 migration freeze
 - [x] Pure rules、Audit 及 read API focused tests 通過。
 - [x] 真 DB 查詢與 projection 不洩漏內部欄位。
 - [x] Read permission matrix 與 response schema 通過。
-- [ ] 以 seed data 手動驗證 Code、Barcode、Name、Archived filter（尚未實際喺瀏覽器手動操作過——呢個階段冇任何 UI，只有自動化整合測試覆蓋 API 本身；等 T13 商品列表頁出現先做得到真正嘅手動驗證）。
+- [x] 以 seed data 手動驗證 Code、Barcode、Name、Archived filter（喺 T13 完成 `ItemsPage.vue` 之後，用瀏覽器手動驗證咗：SKU／Item 兩個視圖、搜尋、status 篩選、Archived 預設隱藏／明確揀 status=archived 先睇到、URL 還原（重新整理保持一致）、item.view-only 用戶睇唔到「新增商品」按鈕）。
 
 ### Task T13：建立商品導航與列表頁
 
@@ -467,27 +467,30 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 搜尋 debounce 300ms，page／sort／view／q／filters 可從 URL 還原。
-- [ ] `item.view` 可進入列表；寫入 actions 只有 `item.mgmt` 顯示，Archived 預設隱藏。
-- [ ] Static routes 與 `/items/:id` 無衝突，列表不修改共用 `DataTable.vue`。
+- [x] 搜尋 debounce 300ms（沿用 `q-input` 原生 `debounce` prop），page／sort／view／q／status 可從 URL 還原（mount 時讀 `route.query` 做初始值，之後每次 fetch 用 `router.replace()` 同步）。
+- [x] `item.view` 可進入列表；寫入 actions（「新增商品」按鈕，連去 T15 先會建成嘅 `/items/new`）只有 `item.mgmt` 顯示；Archived 預設隱藏（status 篩選唔揀就唔傳 `status`，後端沿用 T12/T13 加返嘅 `includeArchived` 邏輯濾走 archived；明確揀 status=archived 先睇到）。
+- [x] Static route `/items` 與未來 `/items/:id`（T17 之後先會建）無衝突。列表**有**修改共用 `DataTable.vue`——原定「不修改」跟「page／sort 可從 URL 還原」互相矛盾（QTable 內部 `pagination` ref 本身冇對外接口可以喺掛載時覆寫），已用 `AskUserQuestion` 徵得同意，加一個純附加、預設 `null`（行為不變）嘅 `initialPagination` prop，不影響任何現有呼叫端。見 `client/src/framework/ui/DataTable.vue` 同 `client/test/framework/ui/DataTable.test.js` 新增嘅兩個測試。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/services/item.test.js test/pages/items/items.test.js`
-- [ ] `npm test --workspace client -- test/framework/discovery/pages.test.js test/framework/routing/router.test.js`
-- [ ] Manual check：重新整理及分享帶 filters 的 URL，結果保持一致。
+- [x] `npm test --workspace client -- test/services/item.test.js test/pages/items/items.test.js`
+- [x] `npm test --workspace client -- test/framework/discovery/pages.test.js test/framework/routing/router.test.js`
+- [x] Manual check：重新整理帶 filters／page／view 的 URL，結果保持一致（用真實 dev server + seed data 喺瀏覽器手動驗證，見上面 Checkpoint D 的補充說明）。「分享」未另外測試多裝置情境，但同一瀏覽器重新整理已驗證 URL 是狀態的唯一來源。
 
 **Dependencies:** T05, T06, T07, T12
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `client/config/menu.js`
-- `client/src/services/item.js`
-- `client/src/pages/items/ItemsPage.vue`
-- `client/test/services/item.test.js`
-- `client/test/pages/items/items.test.js`
+- `client/src/services/item.js`（新建）
+- `client/src/pages/items/ItemsPage.vue`（新建）
+- `client/test/services/item.test.js`（新建）
+- `client/test/pages/items/items.test.js`（新建）
+- `client/src/framework/ui/DataTable.vue`（加 `initialPagination` prop，見上）
+- `client/test/framework/ui/DataTable.test.js`（對應新增兩個測試）
+- `server/src/modules/item/ItemAdminService.js`、`server/src/handlers/items/itemSchemas.js`、`listItemsHandler.js`、`server/src/handlers/skus/skuSchemas.js`、`listSkusHandler.js`、`server/test/integration/itemRead.integration.test.js`（T13 開發途中發現 T12 冇做「Archived 預設隱藏」呢個 gap——Category／UOM 早已有 `includeArchived`，Brand 冇；為咗前端呢個切片可以完整做到規格要求，喺 T12 嘅檔案上加返呢個參數，唔係另開新 task）
+- `client/config/menu.js`：其實冇改——「items」呢個 menu group 喺 Phase A（T05-T07）已經建立，`page.menu.group = "items"` 直接沿用得到，原本清單估計錯咗。
 
-**Estimated scope:** M（5 files）
+**Estimated scope:** M（4 個新檔 + 6 個因發現 gap／架構限制而小改的既有檔案）
 
 ### Task T14：建立 Item＋初始 SKU 原子建檔後端
 

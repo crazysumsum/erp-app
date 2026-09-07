@@ -32,7 +32,7 @@ export class ListItemsHandler extends BaseRequestHandler {
   }
 
   async execute(req) {
-    const { page, pageSize, q, categoryId, brandId, status, sortBy, descending } = req.input.query;
+    const { page, pageSize, q, categoryId, brandId, status, includeArchived, sortBy, descending } = req.input.query;
     const result = await this.itemAdmin.listItems({
       actorId: Number(req.auth.claims.sub),
       claimedRoles: req.auth.claims.roles,
@@ -43,6 +43,7 @@ export class ListItemsHandler extends BaseRequestHandler {
       categoryId,
       brandId,
       status,
+      includeArchived,
       sortBy,
       descending
     });

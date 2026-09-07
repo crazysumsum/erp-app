@@ -120,6 +120,32 @@ describe("DataTable", () => {
     expect(options).not.toContain(0);
   });
 
+  it("有傳 initialPagination 就用嚟做第一次 fetch 嘅參數，等頁面可以由 URL query 還原返之前揭緊嗰頁", async () => {
+    const fetchFn = vi.fn().mockResolvedValue({ rows: [], rowsNumber: 50 });
+    const wrapper = mountDataTable({
+      fetch: fetchFn,
+      columns,
+      initialPagination: { page: 3, rowsPerPage: 20, sortBy: "name", descending: true, rowsNumber: 0 }
+    });
+    await flushPromises();
+
+    expect(fetchFn).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 3, rowsPerPage: 20, sortBy: "name", descending: true })
+    );
+    // QTable 自己顯示嘅頁碼都要一致，唔係淨係攞第 3 頁嘅資料但畫面仲話喺第 1 頁。
+    expect(wrapper.findComponent(QTable).props("pagination")).toMatchObject({ page: 3 });
+  });
+
+  it("冇傳 initialPagination 就同之前一樣用預設值，唔影響現有頁面", async () => {
+    const fetchFn = vi.fn().mockResolvedValue({ rows: [], rowsNumber: 0 });
+    mountDataTable({ fetch: fetchFn, columns });
+    await flushPromises();
+
+    expect(fetchFn).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, sortBy: null, descending: false })
+    );
+  });
+
   describe("客戶端模式（冇傳 fetch，改傳現成嘅 rows）", () => {
     it("直接用傳落嚟嘅 rows 渲染，唔會叫 fetch", async () => {
       const wrapper = mountDataTable({ rows: [{ name: "角色 A" }], columns });

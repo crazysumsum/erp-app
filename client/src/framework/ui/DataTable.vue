@@ -33,7 +33,12 @@ const props = defineProps({
   // 窄螢幕（或欄位多）令表格要橫向捲動嗰陣，最後一欄（通常係操作按鈕）會
   // 跟住捲走，用戶未必知道仲有嘢喺右邊——見 theme.css 嘅
   // .q-table--sticky-actions：釘住最後一欄唔畀佢捲走。
-  stickyActions: { type: Boolean, default: false }
+  stickyActions: { type: Boolean, default: false },
+  // 淨係伺服器模式先有意義：等頁面可以由 URL query 還原返「用戶之前揭緊
+  // 第幾頁、點樣排序」，唔使個 QTable 顯示嘅頁碼同實際攞緊嘅資料唔一致
+  // （見 ItemsPage.vue）。冇傳嘅話行為同之前一模一樣——只係將預設值嘅來源
+  // 由呢個組件內部改做呼叫端可以覆寫，唔改動任何現有呼叫端嘅行為。
+  initialPagination: { type: Object, default: null }
 });
 
 const isServerMode = computed(() => props.fetch !== null);
@@ -44,13 +49,15 @@ const displayLoading = computed(() => (isServerMode.value ? fetchLoading.value :
 const fetchedRows = ref([]);
 const fetchLoading = ref(false);
 const error = ref(null);
-const pagination = ref({
-  page: 1,
-  rowsPerPage: appConfig.defaultPageSize,
-  rowsNumber: 0,
-  sortBy: null,
-  descending: false
-});
+const pagination = ref(
+  props.initialPagination ?? {
+    page: 1,
+    rowsPerPage: appConfig.defaultPageSize,
+    rowsNumber: 0,
+    sortBy: null,
+    descending: false
+  }
+);
 
 async function onRequest({ pagination: requestedPagination, filter: requestedFilter }) {
   fetchLoading.value = true;
