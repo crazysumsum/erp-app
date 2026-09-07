@@ -291,7 +291,12 @@ test("the application factory does not itself require the scheduler", async (t) 
         // auth.jwt 現在宣告 tokenRevocation，所以這份清單也要帶上它。
         new URL("../src/services/tokenRevocation/TokenRevocationService.js", import.meta.url).href,
         // 同理：loginHandler 現在要求 deviceBinding，少了它 handler registry 建不起來。
-        new URL("../src/services/deviceBinding/DeviceBindingService.js", import.meta.url).href
+        new URL("../src/services/deviceBinding/DeviceBindingService.js", import.meta.url).href,
+        // createItemHandler 宣告 idempotency，少了這個 service 啟動時會直接
+        // 失敗（見 apiDispatcher.js 的 validateApiConfig）——不是靜默失去
+        // idempotency 保證，是應用開不起來，同上面幾個 auth strategy 同一個
+        // 理由。
+        new URL("../src/services/idempotency/IdempotencyService.js", import.meta.url).href
       ]
     },
     serviceOptions: {

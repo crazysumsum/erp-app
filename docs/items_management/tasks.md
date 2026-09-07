@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T13 已完成，T14 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T14 已完成，T15 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -83,7 +83,7 @@ T01 migration freeze
 - [x] T11 建立 Item Audit service 與查詢 API
 - [x] T12 建立 Item／SKU 列表與詳情後端
 - [x] T13 建立商品導航與列表頁
-- [ ] T14 建立 Item＋初始 SKU 原子建檔後端
+- [x] T14 建立 Item＋初始 SKU 原子建檔後端
 - [ ] T15 建立 Item／SKU 建檔頁與基本 Editor
 - [ ] T16 建立 Item／SKU aggregate 更新後端
 - [ ] T17 建立 Item／SKU 詳情與編輯頁
@@ -494,28 +494,46 @@ T01 migration freeze
 
 ### Task T14：建立 Item＋初始 SKU 原子建檔後端
 
-**Description:** 實作 `createItem()` 與 create handler，使 Standard／Variant Item、至少一個 SKU、UOM／Barcode 集合、直接 Active 及 audit 在單一 transaction 完成。
+**Description:** 實作 `createItem()` 與 create handler，使 Standard Item、至少一個 SKU、UOM／Barcode 集合、直接 Active 及 audit 在單一 transaction 完成。
+
+**⚠️ 範圍決定（2026-09-07，已與使用者確認）：T14 只做 Standard Item，Variant 建檔延後到 T23。**
+
+原本 `design_spec.md` §6.9 嘅 create request 範例帶 `skus[].variantValues`（`{attributeId, optionId}`），但 §4.4 講嘅 variant signature（SHA-256 hash）計算邏輯，同埋佢要驗證嘅 `item_attribute_definitions`／`item_attribute_options` 表，`tasks.md` 明確歸類做 T23（見下面 T23 條目），T14 自己嘅 dependency 亦只列 T08–T11，唔包括 T23——文件內部本身就有矛盾（API 範例睇落即刻要 Variant，task 分工卻話計算邏輯要等三個 task 之後）。
+
+三個處理方式（T14 只做 Standard／T14 支援 Variant 但要求 caller 自己送已計好嘅 signature／T14 就提前寫 SHA-256 但唔驗證 attributeId／optionId 是否存在）已經同使用者討論，**採用第一種**：
+
+- `createItem()`／`createItemHandler.js` 嘅 `item.productType` 只接受 `"standard"`；送 `"variant"` 回一個清晰嘅錯誤（未支援，等 T23 attribute 基建完成後開放），唔會半桶水噴一個計得出但完全冇驗證嘅 signature。
+- Create request schema **唔**包含 `variantValues`／`variantSignature` 呢類欄位——避免 T23 嗰陣要做 breaking change（拎走一個冇人識點用嘅欄位，換一個新嘅）。
+- **T23 跟進事項**：起好 `item_attribute_definitions`／`item_attribute_options` 表之後，喺 T23 加返：(1) §4.4 嘅 variant signature 計算函式；(2) create request schema 加 `skus[].variantValues`；(3) `createItem()` 對 `productType: "variant"` 開放，連同 attributeId／optionId 存在性驗證一齊做齊，唔淨係計 hash。
 
 **Acceptance criteria:**
 
-- [ ] 任一 SKU、UOM、Barcode 或 audit 失敗時 Item aggregate 全部 rollback。
-- [ ] Standard 恰好一個 SKU；Variant 組合不可重複；SKU Code／Barcode unique race 映射為公開錯誤。
-- [ ] Create API 啟用 idempotency；建檔人可直接啟用但仍須通過完整性及 `item.mgmt` 驗證。
+- [x] 任一 SKU、UOM、Barcode 或 audit 失敗時 Item aggregate 全部 rollback（`ItemAdminService.createItem()` 全程喺 `database.withTransaction()` 入面；integration test 逐一驗證失敗個案之後查返 DB 完全冇殘留，唔淨係查返拋咗預期嘅錯誤）。
+- [x] Standard 恰好一個 SKU（`skus.length !== 1` 拋 `STANDARD_ITEM_SKU_LIMIT`）；SKU Code／Barcode unique race 映射為公開錯誤（`SKU_CODE_TAKEN`／`BARCODE_TAKEN`，兩個都係真.race 場景先會撞——sku_id／sku_uom_id 係呢個交易先建立，UOM 結構性問題唔可能同其他交易race，改用喺插入之前做結構驗證，見 `#assertUomShapeValid()`／`#assertBarcodeShapeValid()` 嘅註解）。`productType: "variant"` 明確回「未支援」錯誤（見上面範圍決定），唔嘗試計 variant signature。
+- [x] Create API 啟用 idempotency（`static api.idempotency = { enabled: true }`，TTL 沿用 `config/idempotency.js` 嘅 `defaultTtlMs`＝1 小時）；建檔人可直接啟用但仍須通過 `assertSkuActivatable()` 完整性檢查及 `item.mgmt` 驗證。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCreate.integration.test.js`
+- [x] `npm test --workspace server`（冇建 `itemAdminService.test.js`／`itemHandlers.test.js`：呢個 service 嘅正確性幾乎完全在 transaction／unique key／FK 呢啲真 DB 先驗得到嘅行為，同 T09／T11／T12 對同類問題嘅判斷一致，全部改用 `test/integration/itemCreate.integration.test.js` 嘅真 MySQL 整合測試覆蓋；純 unit 層面新增嘅兩個 error factory 冇獨立測試檔，跟 itemErrors.js 其餘 factory 冇獨立測試檔嘅既有慣例）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCreate.integration.test.js`（14 個案例：draft／activate 建檔、activationReason 缺漏、activate 時完整性唔夠 rollback、variant 拒絕、Standard 兩個 SKU、SKU Code／Barcode race、category／brand／uom not found、UOM 結構錯誤、barcode uomId 唔屬於呢個 SKU、同一包裝單位兩個 primary、權限矩陣連 PERMISSION_STALE、idempotency 重送）
+
+**過程中發現嘅額外修正（唔屬於原本範圍，但係 T14 本身依賴住嘅 bug）：**
+
+- `itemErrors.js` 嘅 `itemNotActivatable()` 之前只設 `details`，冇設 `publicDetails`——`errorHandler.js` 實際response 用嘅係 `publicDetails`（`details` 淨係入 log），即係 422 response 嘅 `error.details.issues` 一直都係 `undefined`，前端 `FormPanel.vue` 嘅逐 field 標紅功能對呢個錯誤一直冇作用（由 T10 起就係咁，一直冇被發現係因為之前嘅測試淨係直接查返個 JS Error object，冇經過真正嘅 HTTP round trip）。已經修正 `itemNotActivatable()`，並用 spawn_task 開咗一個 follow-up 追蹤 `itemErrors.js` 其餘 factory 同 `UserAdminService.js` 嘅 `unknownRoles()` 有冇同一個問題（呢個 task 冇一併修，範圍太大唔屬於 T14）。
 
 **Dependencies:** T08, T09, T10, T11
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/items/itemSchemas.js`
-- `server/src/handlers/items/createItemHandler.js`
-- `server/src/handlers/skus/createSkuHandler.js`
-- `server/test/itemAdminService.test.js`
+- `server/src/modules/item/ItemAdminService.js`（`createItem()` 連同私有 helper：category／brand／uom 存在性驗證、UOM／barcode 結構驗證、插入、audit）
+- `server/src/modules/item/itemErrors.js`（新增 `itemVariantNotSupported()`、`barcodePrimaryDuplicated()`、`activationReasonRequired()`；修正 `itemNotActivatable()` 嘅 `publicDetails` gap，見上）
+- `server/src/handlers/items/itemSchemas.js`（`ITEM_MGMT_POLICY`、`ITEM_CREATE_REQUEST_SCHEMA` 同其巢狀 schema）
+- `server/src/handlers/items/createItemHandler.js`（新建）
+- `server/src/handlers/item-audit/itemAuditSchemas.js`（`ITEM_AUDIT_ACTIONS` 加 `item.create`／`sku.create`，`ITEM_AUDIT_TARGET_TYPES` 加 `item`／`sku`）
+- `server/test/integration/itemCreate.integration.test.js`（新建，14 個案例）
+- `server/test/applicationFactory.test.js`（「唔需要 scheduler」嗰個 minimal-service 測試要補返 `idempotency` service，唔係就開唔到應用——createItemHandler 係成個 codebase 第一個宣告 idempotency 嘅 route，之前呢份清單冇需要帶埋佢）
+
+冇建 `server/src/handlers/skus/createSkuHandler.js`：`POST /api/v1/skus/create`（單獨喺一個已存在嘅 Item 底下加一個新 SKU）係 design_spec §6.3 嘅獨立端點，同 T14「Item＋初始 SKU 一齊原子建立」係兩件唔同嘅事，原本嘅檔案清單估計錯咗——呢個端點應該歸類做未來加 SKU 嘅 task（例如 T15 之後），唔喺 T14 範圍內。
 
 **Estimated scope:** M（5 logical files；integration test 同切片）
 
@@ -759,6 +777,13 @@ T01 migration freeze
 ### Task T23：建立 Attribute schema、variant signature 與 domain 規則
 
 **Description:** 以 `0018`–`0022` 建立 Attribute definition／option／category mapping／typed values，並完成 deterministic variant signature。
+
+**⚠️ 承接 T14 範圍決定（2026-09-07）：T14 建 Item 時只做 Standard，`createItem()` 對 `productType: "variant"` 回「未支援」錯誤，Create request schema 完全冇 `variantValues` 欄位。本 task 除咗下面原有嘅 acceptance criteria，仲要補做：**
+
+- [ ] `server/src/modules/item/itemValidation.js` 或新檔加返 §4.4 嘅 variant signature 計算函式（attributeId 排序、`attributeId=typedValue` 正規化、SHA-256）。
+- [ ] `server/src/handlers/items/itemSchemas.js` 嘅 create request schema 加返 `skus[].variantValues`（`{attributeId, optionId}[]`）。
+- [ ] `ItemAdminService.createItem()` 開放 `productType: "variant"`：驗證 `variantValues` 入面嘅 attributeId／optionId 真係存在於 `item_attribute_definitions`／`item_attribute_options`（唔止計 hash，仲要查表確認合法），計出 signature 後靠 `(item_id, variant_signature)` unique key 擋重複組合。
+- [ ] 對應更新 T14 嘅 integration test（`itemCreate.integration.test.js`），加返 Variant Item 建檔嘅案例。
 
 **Acceptance criteria:**
 

@@ -1,8 +1,20 @@
 /**
- * Item 查詢端點共用的 schema 片段。設計說明見
- * docs/items_management/design_spec.md §6.2、§6.10。
+ * Item 查詢／建立端點共用的 schema 片段。設計說明見
+ * docs/items_management/design_spec.md §6.2、§6.9、§6.10。
  */
-import { ITEM_LIST_SORT_FIELDS, ITEM_PRODUCT_TYPES, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS, ITEM_STATUSES } from "../../modules/item/itemConstants.js";
+import {
+  BARCODE_TYPES,
+  ITEM_LIST_SORT_FIELDS,
+  ITEM_PRODUCT_TYPES,
+  ITEM_PRICE_CURRENCY,
+  ITEM_PRICE_TAX_BASIS,
+  ITEM_STATUSES,
+  MONEY_DECIMAL,
+  TRACKING_POLICIES,
+  UOM_FACTOR_MAX,
+  UOM_FACTOR_MIN
+} from "../../modules/item/itemConstants.js";
+import { decimalStringPattern } from "../../modules/item/itemValidation.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -14,6 +26,13 @@ export const ITEM_VIEW_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
     options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+  })
+]);
+
+export const ITEM_MGMT_POLICY = Object.freeze([
+  Object.freeze({
+    name: "hasPermission",
+    options: Object.freeze({ permissions: Object.freeze(["item.mgmt"]) })
   })
 ]);
 
@@ -161,5 +180,105 @@ export const ITEM_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     version: { type: "integer", minimum: 1 },
     createdAt: { type: "integer", minimum: 0 },
     updatedAt: { type: "integer", minimum: 0 }
+  }
+});
+
+// --- POST /api/v1/items/create ---------------------------------------------
+//
+// T14 只做 Standard Item：schema 層面仍然開放 productType 兩個值（同一組
+// ITEM_PRODUCT_TYPES enum，避免 T23 開放 Variant 時要重新加一個列舉值），但
+// 唔接受 variantValues——送 "variant" 由 service 層拒絕（ITEM_VARIANT_NOT_
+// SUPPORTED，見 ItemAdminService.createItem()），比 schema 層一個泛用嘅
+// enum 錯誤更清楚。範圍決定見 docs/items_management/tasks.md 的 T14／T23
+// 條目。
+
+const MONEY_STRING_SCHEMA = Object.freeze({
+  type: "string",
+  pattern: decimalStringPattern(MONEY_DECIMAL).source
+});
+
+const ITEM_CREATE_ITEM_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["name"],
+  additionalProperties: false,
+  properties: {
+    name: { type: "string", minLength: 1, maxLength: 190 },
+    shortName: { type: "string", maxLength: 100, default: "" },
+    description: { type: ["string", "null"], maxLength: 4000 },
+    categoryId: { type: "integer", minimum: 1 },
+    brandId: { type: "integer", minimum: 1 },
+    productType: { type: "string", enum: [...ITEM_PRODUCT_TYPES], default: "standard" },
+    countryOfOrigin: { type: "string", pattern: "^[A-Z]{2}$" },
+    manufacturer: { type: "string", maxLength: 190, default: "" },
+    defaultTrackingPolicy: { type: "string", enum: [...TRACKING_POLICIES], default: "none" },
+    defaultShelfLifeDays: { type: "integer", minimum: 1 }
+  }
+});
+
+const ITEM_CREATE_SKU_UOM_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["uomId", "toBaseFactor"],
+  additionalProperties: false,
+  properties: {
+    uomId: { type: "integer", minimum: 1 },
+    toBaseFactor: { type: "integer", minimum: UOM_FACTOR_MIN, maximum: UOM_FACTOR_MAX },
+    isBase: { type: "boolean", default: false },
+    isDefaultPurchase: { type: "boolean", default: false },
+    isDefaultSale: { type: "boolean", default: false }
+  }
+});
+
+const ITEM_CREATE_SKU_BARCODE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["barcode", "barcodeType", "uomId"],
+  additionalProperties: false,
+  properties: {
+    barcode: { type: "string", minLength: 1, maxLength: 190 },
+    barcodeType: { type: "string", enum: [...BARCODE_TYPES] },
+    // 呢個係 sku.uoms 入面某一列嘅 uomId（唔係 item_sku_uoms.id——嗰個要
+    // SKU 建立咗先有），service 負責解析做真正嘅 sku_uom_id。
+    uomId: { type: "integer", minimum: 1 },
+    isPrimary: { type: "boolean", default: false }
+  }
+});
+
+const ITEM_CREATE_SKU_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["skuCode", "skuName"],
+  additionalProperties: false,
+  properties: {
+    skuCode: { type: "string", minLength: 1, maxLength: 190 },
+    skuName: { type: "string", minLength: 1, maxLength: 190 },
+    // 冇送就用 item.defaultTrackingPolicy——由 service 決定，schema 呢度唔設
+    // default，避免同「呼叫端明確送咗 none」分唔清。
+    trackingPolicy: { type: "string", enum: [...TRACKING_POLICIES] },
+    shelfLifeDays: { type: "integer", minimum: 1 },
+    minReceiptLifeDays: { type: "integer", minimum: 0 },
+    minSaleLifeDays: { type: "integer", minimum: 0 },
+    purchasable: { type: "boolean", default: true },
+    sellable: { type: "boolean", default: true },
+    inventoryTracked: { type: "boolean", default: true },
+    suggestedPriceAmount: MONEY_STRING_SCHEMA,
+    effectiveFrom: { type: "integer", minimum: 0 },
+    effectiveTo: { type: "integer", minimum: 0 },
+    uoms: { type: "array", items: ITEM_CREATE_SKU_UOM_SCHEMA, default: [] },
+    barcodes: { type: "array", items: ITEM_CREATE_SKU_BARCODE_SCHEMA, default: [] }
+  }
+});
+
+export const ITEM_CREATE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["item", "skus"],
+  additionalProperties: false,
+  properties: {
+    item: ITEM_CREATE_ITEM_SCHEMA,
+    // T14 只做 Standard：恰好一個 SKU 由 service 驗證（見上面說明），schema
+    // 呢度唔設 maxItems，等 T23 開放 Variant 時唔使改呢一段。
+    skus: { type: "array", items: ITEM_CREATE_SKU_SCHEMA, minItems: 1 },
+    activate: { type: "boolean", default: false },
+    // 淨係 activate: true 先必填，schema 冇辦法表達「條件式必填」而唔引入
+    // if/then（呢個 codebase 未用過呢個 pattern），改由 service 檢查（見
+    // ItemAdminService.createItem()）；呢度只驗證「如果有畀，長度啱唔啱」。
+    activationReason: { type: "string", minLength: 5, maxLength: 190 }
   }
 });

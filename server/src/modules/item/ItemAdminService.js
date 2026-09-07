@@ -1,10 +1,13 @@
 /**
- * Item／SKU 的唯讀查詢：分頁列表與詳情。設計說明見
+ * Item／SKU 的查詢、建立。設計說明見
  * docs/items_management/design_spec.md §6.2、§6.3、§6.10、§8.8。
  *
- * 只做「讀」——建立、修改、狀態變更、刪除等寫入路徑是 T14 之後的事，那時會在
- * 同一個類別上繼續加方法（跟 ItemCatalogService 一個類別涵蓋 Category／
- * Brand／UOM 全部操作是同一個理由）。
+ * 建立（`createItem()`）只做 Standard Item：`productType: "variant"` 直接
+ * 拒絕，request 亦不接受 variant values——原因同範圍界線見
+ * docs/items_management/tasks.md 的 T14／T23 條目。修改、狀態變更、刪除等
+ * 其餘寫入路徑是 T14 之後的事，那時會在同一個類別上繼續加方法（跟
+ * ItemCatalogService 一個類別涵蓋 Category／Brand／UOM 全部操作是同一個
+ * 理由）。
  *
  * Attribute values（variant values）同 media 未列入任何 response：兩者依賴
  * 的資料表（item_attribute_values、item_sku_attribute_values、item_media）
@@ -14,9 +17,30 @@
  * 業務模組，不進 service container，依賴由呼叫端傳入——與 ItemCatalogService
  * 同一個理由。
  */
-import { itemNotFound, skuNotFound } from "./itemErrors.js";
+import {
+  activationReasonRequired,
+  barcodePrimaryDuplicated,
+  barcodeTaken,
+  brandNotFound,
+  categoryNotFound,
+  itemNotFound,
+  itemVariantNotSupported,
+  skuChildMismatch,
+  skuCodeTaken,
+  skuNotFound,
+  standardItemSkuLimit,
+  uomConversionInvalid,
+  uomNotFound
+} from "./itemErrors.js";
 import { ITEM_LIST_SORT_FIELDS, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS } from "./itemConstants.js";
+import { assertSkuActivatable } from "./itemValidation.js";
+import { normalizeBarcode } from "./barcodeValidation.js";
+import { ItemAuditLogService } from "./ItemAuditLogService.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+
+function isDuplicateEntry(error) {
+  return (error?.cause?.code || error?.code) === "ER_DUP_ENTRY";
+}
 
 /** `%`、`_`、`\` 是 LIKE 的萬用字元／跳脫字元，使用者輸入的字面值要先跳脫。
  * 這種規模的純函式重複一份，比為了它另開一個共用檔案划算——見
@@ -77,6 +101,386 @@ export class ItemAdminService {
     this.database = database;
     this.logger = logger;
     this.time = time;
+    this.auditLog = new ItemAuditLogService({ database, logger, time });
+  }
+
+  // --- Item：建立 -----------------------------------------------------------
+
+  /**
+   * 原子建立 Item＋一個 SKU（連同其 UOM／Barcode 集合），`activate: true` 時
+   * 在同一交易內完成啟用。設計說明見 design_spec.md §4.1、§6.2、§6.9。
+   *
+   * T14 範圍只做 Standard Item：`item.productType` 送 `"variant"` 直接拒絕，
+   * request 亦不接受 `variantValues`——variant signature 計算依賴 attribute
+   * 表，那兩張表同計算邏輯本身都是 T23 的範圍，理由見
+   * docs/items_management/tasks.md T14／T23 條目的「範圍決定」說明。
+   */
+  async createItem({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    item,
+    skus,
+    activate = false,
+    activationReason,
+    requestId,
+    ip
+  }) {
+    if (activate && !String(activationReason ?? "").trim()) {
+      throw activationReasonRequired();
+    }
+
+    const itemId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+
+      if (item.productType === "variant") {
+        throw itemVariantNotSupported();
+      }
+      if (skus.length !== 1) {
+        throw standardItemSkuLimit();
+      }
+
+      if (item.categoryId !== null && item.categoryId !== undefined) {
+        await this.#assertCategoryExists(connection, item.categoryId);
+      }
+      if (item.brandId !== null && item.brandId !== undefined) {
+        await this.#assertBrandExists(connection, item.brandId);
+      }
+
+      const itemName = String(item.name ?? "").trim();
+      const defaultTrackingPolicy = item.defaultTrackingPolicy ?? "none";
+
+      const [itemResult] = await connection.execute(
+        `INSERT INTO items
+           (name, short_name, description, category_id, brand_id, product_type, country_of_origin,
+            manufacturer, default_tracking_policy, default_shelf_life_days, status, version,
+            created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)`,
+        [
+          itemName,
+          String(item.shortName ?? "").trim(),
+          item.description ?? null,
+          item.categoryId ?? null,
+          item.brandId ?? null,
+          item.productType,
+          item.countryOfOrigin ?? null,
+          String(item.manufacturer ?? "").trim(),
+          defaultTrackingPolicy,
+          item.defaultShelfLifeDays ?? null,
+          nowMs,
+          nowMs,
+          actorId,
+          actorId
+        ]
+      );
+      const newItemId = itemResult.insertId;
+
+      const sku = await this.#createSkuRow(connection, {
+        itemId: newItemId,
+        sku: skus[0],
+        defaultTrackingPolicy,
+        nowMs,
+        actorId
+      });
+
+      let activated = false;
+      if (activate) {
+        const hasActiveLeafCategory =
+          item.categoryId !== null && item.categoryId !== undefined
+            ? await this.#isActiveLeafCategory(connection, item.categoryId)
+            : false;
+
+        assertSkuActivatable({
+          item: { productType: item.productType, hasActiveLeafCategory },
+          sku: {
+            code: sku.code,
+            name: sku.name,
+            variantSignature: null,
+            uoms: sku.uoms,
+            trackingPolicy: sku.trackingPolicy,
+            shelfLifeDays: sku.shelfLifeDays,
+            minReceiptLifeDays: sku.minReceiptLifeDays,
+            minSaleLifeDays: sku.minSaleLifeDays,
+            sellable: sku.sellable,
+            suggestedPriceAmount: sku.suggestedPriceAmount,
+            effectiveFrom: sku.effectiveFrom,
+            effectiveTo: sku.effectiveTo,
+            barcodes: sku.normalizedBarcodes.map((normalizedBarcode) => ({ normalizedBarcode }))
+          }
+        });
+
+        await connection.execute(`UPDATE items SET status = 'active', version = 2, updated_at = ? WHERE id = ?`, [
+          nowMs,
+          newItemId
+        ]);
+        await connection.execute(
+          `UPDATE item_skus SET status = 'active', version = 2, updated_at = ? WHERE id = ?`,
+          [nowMs, sku.id]
+        );
+        activated = true;
+      }
+
+      const auditReason = activate ? activationReason : "";
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "item.create",
+        targetType: "item",
+        targetId: newItemId,
+        targetLabel: itemName,
+        detail: { productType: item.productType, skuCodes: [sku.code], activated },
+        reason: auditReason,
+        requestId,
+        ip
+      });
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "sku.create",
+        targetType: "sku",
+        targetId: sku.id,
+        targetLabel: sku.code,
+        detail: { itemId: newItemId, activated },
+        reason: auditReason,
+        requestId,
+        ip
+      });
+
+      return newItemId;
+    });
+
+    return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
+  }
+
+  async #assertCategoryExists(connection, categoryId) {
+    const [rows] = await connection.query("SELECT id FROM item_categories WHERE id = ?", [categoryId]);
+    if (rows.length === 0) {
+      throw categoryNotFound(categoryId);
+    }
+  }
+
+  async #assertBrandExists(connection, brandId) {
+    const [rows] = await connection.query("SELECT id FROM item_brands WHERE id = ?", [brandId]);
+    if (rows.length === 0) {
+      throw brandNotFound(brandId);
+    }
+  }
+
+  /** Active leaf category：本身 active，並且冇任何子分類（唔理子分類自己嘅狀態）。 */
+  async #isActiveLeafCategory(connection, categoryId) {
+    const [[category]] = await connection.query("SELECT status FROM item_categories WHERE id = ?", [
+      categoryId
+    ]);
+    if (!category || category.status !== "active") {
+      return false;
+    }
+    const [[{ childCount }]] = await connection.query(
+      "SELECT COUNT(*) AS childCount FROM item_categories WHERE parent_id = ?",
+      [categoryId]
+    );
+    return Number(childCount) === 0;
+  }
+
+  async #assertUomsExist(connection, uomIds) {
+    const uniqueIds = [...new Set(uomIds)];
+    if (uniqueIds.length === 0) {
+      return;
+    }
+    const [rows] = await connection.query(
+      `SELECT id FROM item_uoms WHERE id IN (${uniqueIds.map(() => "?").join(",")})`,
+      uniqueIds
+    );
+    const foundIds = new Set(rows.map((row) => Number(row.id)));
+    for (const id of uniqueIds) {
+      if (!foundIds.has(id)) {
+        throw uomNotFound(id);
+      }
+    }
+  }
+
+  /** 結構性檢查，唔管 activate 定 draft 都要成立：重複單位、多過一個
+   * base／預設採購／預設銷售，係輸入本身格式錯，唔係「未完整」。 */
+  #assertUomShapeValid(uoms) {
+    const seenUomIds = new Set();
+    let baseCount = 0;
+    let purchaseCount = 0;
+    let saleCount = 0;
+
+    for (const uom of uoms) {
+      if (seenUomIds.has(uom.uomId)) {
+        throw uomConversionInvalid("同一個 SKU 不可以重複加同一個單位");
+      }
+      seenUomIds.add(uom.uomId);
+      if (uom.isBase) baseCount += 1;
+      if (uom.isDefaultPurchase) purchaseCount += 1;
+      if (uom.isDefaultSale) saleCount += 1;
+    }
+
+    if (baseCount > 1) {
+      throw uomConversionInvalid("Base 單位最多只可以有一個");
+    }
+    if (purchaseCount > 1) {
+      throw uomConversionInvalid("預設採購單位最多只可以有一個");
+    }
+    if (saleCount > 1) {
+      throw uomConversionInvalid("預設銷售單位最多只可以有一個");
+    }
+  }
+
+  /** `barcode.uomId` 必須是同一個 SKU 提交嘅其中一個 UOM（用嚟解出
+   * sku_uom_id）；同一個包裝單位最多一個 primary。 */
+  #assertBarcodeShapeValid(barcodes, uomIdToSkuUomId) {
+    const primaryUomIds = new Set();
+    for (const barcode of barcodes) {
+      if (!uomIdToSkuUomId.has(barcode.uomId)) {
+        throw skuChildMismatch("uom", barcode.uomId);
+      }
+      if (barcode.isPrimary) {
+        if (primaryUomIds.has(barcode.uomId)) {
+          throw barcodePrimaryDuplicated();
+        }
+        primaryUomIds.add(barcode.uomId);
+      }
+    }
+  }
+
+  /**
+   * 插入一粒 SKU 連同佢嘅 UOM／Barcode 集合，回傳 assertSkuActivatable() 同
+   * audit 都用得到嘅正規化後資料。SKU Code／Barcode 呢兩個 unique key 先
+   * catch ER_DUP_ENTRY：sku_id 係呢個交易先建立，UOM／Barcode 嗰幾個
+   * generated-column unique key（base_slot 等）唔可能同其他交易race，靠
+   * `#assertUomShapeValid()` 喺插入之前擋（見嗰個方法嘅註解）。
+   */
+  async #createSkuRow(connection, { itemId, sku, defaultTrackingPolicy, nowMs, actorId }) {
+    const skuCode = String(sku.skuCode ?? "").trim();
+    const skuName = String(sku.skuName ?? "").trim();
+    const trackingPolicy = sku.trackingPolicy ?? defaultTrackingPolicy;
+    const purchasable = sku.purchasable ?? true;
+    const sellable = sku.sellable ?? true;
+    const inventoryTracked = sku.inventoryTracked ?? true;
+
+    const uomsInput = sku.uoms ?? [];
+    this.#assertUomShapeValid(uomsInput);
+    await this.#assertUomsExist(
+      connection,
+      uomsInput.map((uom) => uom.uomId)
+    );
+
+    let skuId;
+    try {
+      const [result] = await connection.execute(
+        `INSERT INTO item_skus
+           (item_id, sku_code, sku_name, variant_signature, tracking_policy, shelf_life_days,
+            min_receipt_life_days, min_sale_life_days, purchasable, sellable, inventory_tracked,
+            suggested_price_amount, effective_from, effective_to, status, version,
+            created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)`,
+        [
+          itemId,
+          skuCode,
+          skuName,
+          trackingPolicy,
+          sku.shelfLifeDays ?? null,
+          sku.minReceiptLifeDays ?? null,
+          sku.minSaleLifeDays ?? null,
+          purchasable ? 1 : 0,
+          sellable ? 1 : 0,
+          inventoryTracked ? 1 : 0,
+          sku.suggestedPriceAmount ?? null,
+          sku.effectiveFrom ?? null,
+          sku.effectiveTo ?? null,
+          nowMs,
+          nowMs,
+          actorId,
+          actorId
+        ]
+      );
+      skuId = result.insertId;
+    } catch (error) {
+      if (isDuplicateEntry(error)) {
+        throw skuCodeTaken(skuCode);
+      }
+      throw error;
+    }
+
+    const uomIdToSkuUomId = new Map();
+    for (const uom of uomsInput) {
+      const [result] = await connection.execute(
+        `INSERT INTO item_sku_uoms
+           (sku_id, uom_id, to_base_factor, is_base, is_default_purchase, is_default_sale,
+            version, created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+        [
+          skuId,
+          uom.uomId,
+          uom.toBaseFactor,
+          uom.isBase ? 1 : 0,
+          uom.isDefaultPurchase ? 1 : 0,
+          uom.isDefaultSale ? 1 : 0,
+          nowMs,
+          nowMs,
+          actorId,
+          actorId
+        ]
+      );
+      uomIdToSkuUomId.set(uom.uomId, result.insertId);
+    }
+
+    const barcodesInput = sku.barcodes ?? [];
+    this.#assertBarcodeShapeValid(barcodesInput, uomIdToSkuUomId);
+
+    const normalizedBarcodes = [];
+    for (const barcode of barcodesInput) {
+      const normalized = normalizeBarcode(barcode.barcode, barcode.barcodeType);
+      try {
+        await connection.execute(
+          `INSERT INTO item_sku_barcodes
+             (sku_id, sku_uom_id, barcode, normalized_barcode, barcode_type, is_primary,
+              version, created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+          [
+            skuId,
+            uomIdToSkuUomId.get(barcode.uomId),
+            String(barcode.barcode),
+            normalized,
+            barcode.barcodeType,
+            barcode.isPrimary ? 1 : 0,
+            nowMs,
+            nowMs,
+            actorId,
+            actorId
+          ]
+        );
+      } catch (error) {
+        if (isDuplicateEntry(error)) {
+          throw barcodeTaken(barcode.barcode);
+        }
+        throw error;
+      }
+      normalizedBarcodes.push(normalized);
+    }
+
+    return {
+      id: skuId,
+      code: skuCode,
+      name: skuName,
+      trackingPolicy,
+      shelfLifeDays: sku.shelfLifeDays ?? null,
+      minReceiptLifeDays: sku.minReceiptLifeDays ?? null,
+      minSaleLifeDays: sku.minSaleLifeDays ?? null,
+      sellable,
+      suggestedPriceAmount: sku.suggestedPriceAmount ?? null,
+      effectiveFrom: sku.effectiveFrom ?? null,
+      effectiveTo: sku.effectiveTo ?? null,
+      uoms: uomsInput.map((uom) => ({
+        isBase: Boolean(uom.isBase),
+        isDefaultPurchase: Boolean(uom.isDefaultPurchase),
+        isDefaultSale: Boolean(uom.isDefaultSale),
+        toBaseFactor: uom.toBaseFactor
+      })),
+      normalizedBarcodes
+    };
   }
 
   // --- Item：列表／詳情 ------------------------------------------------------
