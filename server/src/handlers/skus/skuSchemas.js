@@ -1,6 +1,6 @@
 /**
- * SKU 查詢端點共用的 schema 片段。設計說明見
- * docs/items_management/design_spec.md §6.3、§6.10。
+ * SKU 查詢／更新端點共用的 schema 片段。設計說明見
+ * docs/items_management/design_spec.md §6.3、§6.9、§6.10。
  */
 import {
   BARCODE_TYPES,
@@ -9,8 +9,12 @@ import {
   ITEM_PRICE_TAX_BASIS,
   ITEM_PRODUCT_TYPES,
   ITEM_STATUSES,
-  TRACKING_POLICIES
+  MONEY_DECIMAL,
+  TRACKING_POLICIES,
+  UOM_FACTOR_MAX,
+  UOM_FACTOR_MIN
 } from "../../modules/item/itemConstants.js";
+import { decimalStringPattern } from "../../modules/item/itemValidation.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -22,6 +26,13 @@ export const ITEM_VIEW_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
     options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+  })
+]);
+
+export const ITEM_MGMT_POLICY = Object.freeze([
+  Object.freeze({
+    name: "hasPermission",
+    options: Object.freeze({ permissions: Object.freeze(["item.mgmt"]) })
   })
 ]);
 
@@ -239,5 +250,75 @@ export const SKU_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     version: { type: "integer", minimum: 1 },
     createdAt: { type: "integer", minimum: 0 },
     updatedAt: { type: "integer", minimum: 0 }
+  }
+});
+
+// --- POST /api/v1/skus/:id/update -------------------------------------------
+//
+// 整組覆蓋，冚 UOM／barcode 完整集合，唔係 PATCH（design_spec §6.3 前言：
+// 「由 SKU update 將使用者讀到的完整集合連同 version 一次提交，避免多支
+// 請求只成功一半」）。冇 `skuCode`：readonly，特批修改係獨立、未建嘅高
+// 強度端點；冇 `variantValues`（T23）。
+
+const MONEY_STRING_SCHEMA = Object.freeze({
+  type: "string",
+  pattern: decimalStringPattern(MONEY_DECIMAL).source
+});
+
+const SKU_UPDATE_UOM_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["uomId", "toBaseFactor"],
+  additionalProperties: false,
+  properties: {
+    // 有 id 代表覆蓋現有嗰行（一定要屬於呢個 SKU，唔係就 SKU_CHILD_MISMATCH）；
+    // 冇 id 代表新增。id 本身唔保證跨次更新維持穩定——見
+    // ItemAdminService.updateSku() 嘅說明。
+    id: { type: "integer", minimum: 1 },
+    uomId: { type: "integer", minimum: 1 },
+    toBaseFactor: { type: "integer", minimum: UOM_FACTOR_MIN, maximum: UOM_FACTOR_MAX },
+    isBase: { type: "boolean", default: false },
+    isDefaultPurchase: { type: "boolean", default: false },
+    isDefaultSale: { type: "boolean", default: false }
+  }
+});
+
+const SKU_UPDATE_BARCODE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["barcode", "barcodeType", "uomId"],
+  additionalProperties: false,
+  properties: {
+    id: { type: "integer", minimum: 1 },
+    barcode: { type: "string", minLength: 1, maxLength: 190 },
+    barcodeType: { type: "string", enum: [...BARCODE_TYPES] },
+    // 呢個係 uoms 入面某一列嘅 uomId（唔係 item_sku_uoms.id），service 負責
+    // 解析做真正嘅 sku_uom_id——同 createItem() 同一個做法。
+    uomId: { type: "integer", minimum: 1 },
+    isPrimary: { type: "boolean", default: false }
+  }
+});
+
+export const SKU_UPDATE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["skuName", "version"],
+  additionalProperties: false,
+  properties: {
+    skuName: { type: "string", minLength: 1, maxLength: 190 },
+    trackingPolicy: { type: "string", enum: [...TRACKING_POLICIES], default: "none" },
+    shelfLifeDays: { type: "integer", minimum: 1 },
+    minReceiptLifeDays: { type: "integer", minimum: 0 },
+    minSaleLifeDays: { type: "integer", minimum: 0 },
+    purchasable: { type: "boolean", default: true },
+    sellable: { type: "boolean", default: true },
+    inventoryTracked: { type: "boolean", default: true },
+    suggestedPriceAmount: MONEY_STRING_SCHEMA,
+    effectiveFrom: { type: "integer", minimum: 0 },
+    effectiveTo: { type: "integer", minimum: 0 },
+    uoms: { type: "array", items: SKU_UPDATE_UOM_SCHEMA, default: [] },
+    barcodes: { type: "array", items: SKU_UPDATE_BARCODE_SCHEMA, default: [] },
+    // 淨係「關鍵變更」（Base UOM／換算係數／追蹤政策）先必填，schema 呢度
+    // 唔設 if/then（同 itemSchemas.js 嘅 activationReason 同一個理由），
+    // 改由 service 檢查（ItemAdminService.updateSku()）。
+    reason: { type: "string", minLength: 5, maxLength: 190 },
+    version: { type: "integer", minimum: 1 }
   }
 });

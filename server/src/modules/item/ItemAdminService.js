@@ -23,6 +23,7 @@ import {
   barcodeTaken,
   brandNotFound,
   categoryNotFound,
+  criticalChangeReasonRequired,
   itemNotFound,
   itemVariantNotSupported,
   skuChildMismatch,
@@ -30,7 +31,8 @@ import {
   skuNotFound,
   standardItemSkuLimit,
   uomConversionInvalid,
-  uomNotFound
+  uomNotFound,
+  versionConflict
 } from "./itemErrors.js";
 import { ITEM_LIST_SORT_FIELDS, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS } from "./itemConstants.js";
 import { assertSkuActivatable } from "./itemValidation.js";
@@ -251,6 +253,383 @@ export class ItemAdminService {
     });
 
     return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
+  }
+
+  // --- Item：更新 -----------------------------------------------------------
+
+  /**
+   * 整組覆蓋 Item 層欄位，compare-and-set。冇 `productType`：變返
+   * `"variant"` 依然未開放（理由同 `createItem()`），呢期亦冇「改做
+   * standard」嘅實際用途（一開始已經淨係得 standard），所以呢個 method
+   * 完全唔處理呢個欄位。SKU Code 唔喺呢度（一開始已經 readonly）。
+   */
+  async updateItem({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    id,
+    name,
+    shortName,
+    description,
+    categoryId,
+    brandId,
+    countryOfOrigin,
+    manufacturer,
+    defaultTrackingPolicy,
+    defaultShelfLifeDays,
+    version,
+    requestId,
+    ip
+  }) {
+    const itemId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+
+      const [[current]] = await connection.query("SELECT * FROM items WHERE id = ?", [id]);
+      if (!current) {
+        throw itemNotFound(id);
+      }
+
+      if (categoryId !== null && categoryId !== undefined) {
+        await this.#assertCategoryExists(connection, categoryId);
+      }
+      if (brandId !== null && brandId !== undefined) {
+        await this.#assertBrandExists(connection, brandId);
+      }
+
+      const nowMs = this.time.nowMs();
+      const normalizedName = String(name ?? "").trim();
+      const normalizedShortName = String(shortName ?? "").trim();
+      const normalizedManufacturer = String(manufacturer ?? "").trim();
+      const nextDescription = description ?? null;
+      const nextCategoryId = categoryId ?? null;
+      const nextBrandId = brandId ?? null;
+      const nextCountryOfOrigin = countryOfOrigin ?? null;
+      const nextDefaultShelfLifeDays = defaultShelfLifeDays ?? null;
+
+      const [result] = await connection.execute(
+        `UPDATE items
+            SET name = ?, short_name = ?, description = ?, category_id = ?, brand_id = ?,
+                country_of_origin = ?, manufacturer = ?, default_tracking_policy = ?,
+                default_shelf_life_days = ?, updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ?`,
+        [
+          normalizedName,
+          normalizedShortName,
+          nextDescription,
+          nextCategoryId,
+          nextBrandId,
+          nextCountryOfOrigin,
+          normalizedManufacturer,
+          defaultTrackingPolicy,
+          nextDefaultShelfLifeDays,
+          nowMs,
+          actorId,
+          id,
+          version
+        ]
+      );
+
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query("SELECT id FROM items WHERE id = ?", [id]);
+        if (!stillExists) {
+          throw itemNotFound(id);
+        }
+        throw versionConflict();
+      }
+
+      const detail = {};
+      if (normalizedName !== current.name) {
+        detail.name = { before: current.name, after: normalizedName };
+      }
+      if (normalizedShortName !== current.short_name) {
+        detail.shortName = { before: current.short_name, after: normalizedShortName };
+      }
+      if (nextDescription !== current.description) {
+        detail.description = { before: current.description, after: nextDescription };
+      }
+      if (Number(nextCategoryId ?? 0) !== Number(current.category_id ?? 0)) {
+        detail.categoryId = { before: current.category_id, after: nextCategoryId };
+      }
+      if (Number(nextBrandId ?? 0) !== Number(current.brand_id ?? 0)) {
+        detail.brandId = { before: current.brand_id, after: nextBrandId };
+      }
+      if (nextCountryOfOrigin !== current.country_of_origin) {
+        detail.countryOfOrigin = { before: current.country_of_origin, after: nextCountryOfOrigin };
+      }
+      if (normalizedManufacturer !== current.manufacturer) {
+        detail.manufacturer = { before: current.manufacturer, after: normalizedManufacturer };
+      }
+      if (defaultTrackingPolicy !== current.default_tracking_policy) {
+        detail.defaultTrackingPolicy = { before: current.default_tracking_policy, after: defaultTrackingPolicy };
+      }
+      if (Number(nextDefaultShelfLifeDays ?? 0) !== Number(current.default_shelf_life_days ?? 0)) {
+        detail.defaultShelfLifeDays = { before: current.default_shelf_life_days, after: nextDefaultShelfLifeDays };
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "item.update",
+        targetType: "item",
+        targetId: id,
+        targetLabel: normalizedName,
+        detail: Object.keys(detail).length > 0 ? detail : null,
+        requestId,
+        ip
+      });
+
+      return id;
+    });
+
+    return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
+  }
+
+  // --- SKU：更新 ------------------------------------------------------------
+
+  /**
+   * 整組覆蓋 SKU（除 `skuCode`／`variantValues` 外全部可編輯欄位＋UOM／
+   * Barcode 完整集合），compare-and-set，同一交易處理埋兩張子表。`skuCode`
+   * 唔喺呢度（readonly，特批修改留返獨立、未建嘅高強度端點）；
+   * `variantValues` 同樣未開放（T23）。
+   *
+   * UOM／Barcode 用「刪晒重插」而唔係逐行 diff：design_spec §6.3 本身就
+   * 形容呢個係「完整集合連同 version 一次提交」，子表本身冇對外承諾嘅
+   * 穩定 id——呼叫端提交嘅舊 id 只係用嚟做「呢個 id 係咪真係屬於呢個
+   * SKU」嘅擁有權檢查（`SKU_CHILD_MISMATCH`），檢查完之後點樣重建都可以，
+   * 冇任何需求要求呢啲 id 跨次更新保持穩定。呢個做法明顯比逐行
+   * update／insert／delete 三分支簡單。
+   *
+   * 「關鍵變更」（Base UOM、任何 UOM 嘅換算係數、追蹤政策）冇填 `reason`
+   * 會被拒絕；本期未有交易／庫存表可以查，所以未去到「已有交易就直接
+   * 擋」嗰層（`uomChangeBlocked()`／`trackingPolicyChangeBlocked()`，留返
+   * 第一個真引用出現先接上，見 design_spec §8.4）。
+   */
+  async updateSku({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    id,
+    skuName,
+    trackingPolicy,
+    shelfLifeDays,
+    minReceiptLifeDays,
+    minSaleLifeDays,
+    purchasable,
+    sellable,
+    inventoryTracked,
+    suggestedPriceAmount,
+    effectiveFrom,
+    effectiveTo,
+    uoms,
+    barcodes,
+    version,
+    reason,
+    requestId,
+    ip
+  }) {
+    const skuId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+
+      const [[current]] = await connection.query("SELECT * FROM item_skus WHERE id = ?", [id]);
+      if (!current) {
+        throw skuNotFound(id);
+      }
+
+      const [currentUomRows] = await connection.query(
+        "SELECT id, uom_id, to_base_factor, is_base FROM item_sku_uoms WHERE sku_id = ?",
+        [id]
+      );
+      const currentUomIds = new Set(currentUomRows.map((row) => Number(row.id)));
+      for (const row of uoms) {
+        if (row.id !== undefined && row.id !== null && !currentUomIds.has(row.id)) {
+          throw skuChildMismatch("uom", row.id);
+        }
+      }
+
+      const [currentBarcodeRows] = await connection.query("SELECT id FROM item_sku_barcodes WHERE sku_id = ?", [
+        id
+      ]);
+      const currentBarcodeIds = new Set(currentBarcodeRows.map((row) => Number(row.id)));
+      for (const row of barcodes) {
+        if (row.id !== undefined && row.id !== null && !currentBarcodeIds.has(row.id)) {
+          throw skuChildMismatch("barcode", row.id);
+        }
+      }
+
+      this.#assertUomShapeValid(uoms);
+      await this.#assertUomsExist(
+        connection,
+        uoms.map((uom) => uom.uomId)
+      );
+
+      const isCritical = this.#isCriticalSkuChange({
+        currentTrackingPolicy: current.tracking_policy,
+        nextTrackingPolicy: trackingPolicy,
+        currentUoms: currentUomRows,
+        nextUoms: uoms
+      });
+      if (isCritical && !String(reason ?? "").trim()) {
+        throw criticalChangeReasonRequired();
+      }
+
+      const nowMs = this.time.nowMs();
+      const normalizedSkuName = String(skuName ?? "").trim();
+      const nextPrice = suggestedPriceAmount ?? null;
+
+      const [result] = await connection.execute(
+        `UPDATE item_skus
+            SET sku_name = ?, tracking_policy = ?, shelf_life_days = ?, min_receipt_life_days = ?,
+                min_sale_life_days = ?, purchasable = ?, sellable = ?, inventory_tracked = ?,
+                suggested_price_amount = ?, effective_from = ?, effective_to = ?,
+                updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ?`,
+        [
+          normalizedSkuName,
+          trackingPolicy,
+          shelfLifeDays ?? null,
+          minReceiptLifeDays ?? null,
+          minSaleLifeDays ?? null,
+          purchasable ? 1 : 0,
+          sellable ? 1 : 0,
+          inventoryTracked ? 1 : 0,
+          nextPrice,
+          effectiveFrom ?? null,
+          effectiveTo ?? null,
+          nowMs,
+          actorId,
+          id,
+          version
+        ]
+      );
+
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query("SELECT id FROM item_skus WHERE id = ?", [id]);
+        if (!stillExists) {
+          throw skuNotFound(id);
+        }
+        throw versionConflict();
+      }
+
+      // 刪晒重插：barcode 先行——佢哋靠 RESTRICT FK 指住 item_sku_uoms，要喺
+      // 刪 UOM 之前先冇晒依賴。
+      await connection.execute("DELETE FROM item_sku_barcodes WHERE sku_id = ?", [id]);
+      await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [id]);
+
+      const uomIdToSkuUomId = new Map();
+      for (const uom of uoms) {
+        const [uomResult] = await connection.execute(
+          `INSERT INTO item_sku_uoms
+             (sku_id, uom_id, to_base_factor, is_base, is_default_purchase, is_default_sale,
+              version, created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+          [
+            id,
+            uom.uomId,
+            uom.toBaseFactor,
+            uom.isBase ? 1 : 0,
+            uom.isDefaultPurchase ? 1 : 0,
+            uom.isDefaultSale ? 1 : 0,
+            nowMs,
+            nowMs,
+            actorId,
+            actorId
+          ]
+        );
+        uomIdToSkuUomId.set(uom.uomId, uomResult.insertId);
+      }
+
+      this.#assertBarcodeShapeValid(barcodes, uomIdToSkuUomId);
+
+      for (const barcode of barcodes) {
+        const normalized = normalizeBarcode(barcode.barcode, barcode.barcodeType);
+        try {
+          await connection.execute(
+            `INSERT INTO item_sku_barcodes
+               (sku_id, sku_uom_id, barcode, normalized_barcode, barcode_type, is_primary,
+                version, created_at, updated_at, created_by, updated_by)
+             VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+            [
+              id,
+              uomIdToSkuUomId.get(barcode.uomId),
+              String(barcode.barcode),
+              normalized,
+              barcode.barcodeType,
+              barcode.isPrimary ? 1 : 0,
+              nowMs,
+              nowMs,
+              actorId,
+              actorId
+            ]
+          );
+        } catch (error) {
+          if (isDuplicateEntry(error)) {
+            throw barcodeTaken(barcode.barcode);
+          }
+          throw error;
+        }
+      }
+
+      const detail = {};
+      if (normalizedSkuName !== current.sku_name) {
+        detail.skuName = { before: current.sku_name, after: normalizedSkuName };
+      }
+      if (trackingPolicy !== current.tracking_policy) {
+        detail.trackingPolicy = { before: current.tracking_policy, after: trackingPolicy };
+      }
+      if (String(current.suggested_price_amount ?? "") !== String(nextPrice ?? "")) {
+        detail.suggestedRetailPrice = {
+          before:
+            current.suggested_price_amount === null
+              ? null
+              : { amount: String(current.suggested_price_amount), currency: ITEM_PRICE_CURRENCY, taxBasis: ITEM_PRICE_TAX_BASIS },
+          after:
+            nextPrice === null ? null : { amount: String(nextPrice), currency: ITEM_PRICE_CURRENCY, taxBasis: ITEM_PRICE_TAX_BASIS }
+        };
+      }
+      if (isCritical) {
+        detail.criticalUomOrTrackingChange = true;
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "sku.update",
+        targetType: "sku",
+        targetId: id,
+        targetLabel: normalizedSkuName,
+        detail: Object.keys(detail).length > 0 ? detail : null,
+        reason: reason ?? "",
+        requestId,
+        ip
+      });
+
+      return id;
+    });
+
+    return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
+  }
+
+  /** Base UOM、任一 UOM 嘅換算係數，或者追蹤政策改咗，就係關鍵變更——呢
+   * 三樣係「呢個 SKU 點樣換算、點樣追蹤」嘅根本設定，跟 design_spec 對
+   * 呢個 task 嘅 acceptance criteria 一致。 */
+  #isCriticalSkuChange({ currentTrackingPolicy, nextTrackingPolicy, currentUoms, nextUoms }) {
+    if (currentTrackingPolicy !== nextTrackingPolicy) {
+      return true;
+    }
+
+    const normalizeCurrent = (rows) =>
+      rows.map((row) => `${row.uom_id}:${row.to_base_factor}:${row.is_base ? 1 : 0}`).sort();
+    const normalizeNext = (rows) =>
+      rows.map((row) => `${row.uomId}:${row.toBaseFactor}:${row.isBase ? 1 : 0}`).sort();
+
+    const currentSet = normalizeCurrent(currentUoms);
+    const nextSet = normalizeNext(nextUoms);
+
+    if (currentSet.length !== nextSet.length) {
+      return true;
+    }
+
+    return currentSet.some((value, index) => value !== nextSet[index]);
   }
 
   async #assertCategoryExists(connection, categoryId) {
