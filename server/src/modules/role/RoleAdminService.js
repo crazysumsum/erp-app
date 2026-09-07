@@ -41,7 +41,8 @@ function unknownPermissions(permissionIds) {
     statusCode: 400,
     publicCode: "UNKNOWN_PERMISSION",
     publicMessage: "選擇的權限不存在",
-    details: { permissionIds }
+    details: { permissionIds },
+    publicDetails: { permissionIds }
   });
 }
 

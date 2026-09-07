@@ -59,7 +59,8 @@ function unknownRoles(roleIds) {
     statusCode: 400,
     publicCode: "UNKNOWN_ROLE",
     publicMessage: "選擇的角色不存在",
-    details: { roleIds }
+    details: { roleIds },
+    publicDetails: { roleIds }
   });
 }
 

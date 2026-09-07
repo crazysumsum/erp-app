@@ -24,7 +24,8 @@ function invalid(message, { code, publicMessage, details } = {}) {
     statusCode: 400,
     publicCode: code,
     publicMessage,
-    details
+    details,
+    publicDetails: details
   });
 }
 
@@ -34,7 +35,8 @@ function notFound(message, { code, publicMessage, details } = {}) {
     statusCode: 404,
     publicCode: code,
     publicMessage,
-    details
+    details,
+    publicDetails: details
   });
 }
 
@@ -44,7 +46,8 @@ function conflict(message, { code, publicMessage, details } = {}) {
     statusCode: 409,
     publicCode: code,
     publicMessage,
-    details
+    details,
+    publicDetails: details
   });
 }
 
@@ -281,7 +284,8 @@ export function itemNotActivatable(issues) {
     statusCode: 422,
     publicCode: "ITEM_NOT_ACTIVATABLE",
     publicMessage: "資料尚未符合啟用條件",
-    details: { issues }
+    details: { issues },
+    publicDetails: { issues }
   });
 }
 

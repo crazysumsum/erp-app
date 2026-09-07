@@ -83,6 +83,11 @@ test("assertNoPermissionEscalation denies a permission the actor does not hold",
   assert.equal(error.code, "PERMISSION_ESCALATION_DENIED");
   assert.equal(error.statusCode, 403);
   assert.deepEqual(error.details.permissions, ["role.mgmt"]);
+  // errorHandler.js only serializes publicDetails into the HTTP response body
+  // (see framework/middleware/errorHandler.js); .details never leaves the
+  // server. FormPanel.vue reads response.error.details to highlight the
+  // offending field, so this must be set too, not just .details.
+  assert.deepEqual(error.publicDetails, error.details);
 });
 
 test("assertNoPermissionEscalation denies self-assigning system-admin with only user.mgmt", () => {
