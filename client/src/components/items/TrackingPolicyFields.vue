@@ -4,7 +4,10 @@ import { TRACKING_POLICY_LABEL } from "./itemFieldLabels.js";
 const model = defineModel({ required: true });
 
 defineProps({
-  fieldError: { type: Function, default: () => "" }
+  fieldError: { type: Function, default: () => "" },
+  // T15 嘅 create page 唔傳，預設 false，行為不變；T17 嘅 SkuDetailPage.vue
+  // 冇 item.mgmt 或者未撳「編輯」之前用嚟顯示唔畀改嘅詳情。
+  readonly: { type: Boolean, default: false }
 });
 
 const policyOptions = Object.entries(TRACKING_POLICY_LABEL).map(([value, label]) => ({ label, value }));
@@ -21,8 +24,10 @@ const policyOptions = Object.entries(TRACKING_POLICY_LABEL).map(([value, label])
         label="追蹤政策"
         outlined
         dense
-        :error="!!fieldError('skus.0.trackingPolicy')"
-        :error-message="fieldError('skus.0.trackingPolicy')"
+        :readonly="readonly"
+        :disable="readonly"
+        :error="!!fieldError('trackingPolicy')"
+        :error-message="fieldError('trackingPolicy')"
       />
     </div>
     <template v-if="model.trackingPolicy === 'batch_expiry'">
@@ -34,8 +39,9 @@ const policyOptions = Object.entries(TRACKING_POLICY_LABEL).map(([value, label])
           label="保存期限（天）*"
           outlined
           dense
-          :error="!!fieldError('skus.0.shelfLifeDays')"
-          :error-message="fieldError('skus.0.shelfLifeDays')"
+          :readonly="readonly"
+          :error="!!fieldError('shelfLifeDays')"
+          :error-message="fieldError('shelfLifeDays')"
         />
       </div>
       <div class="col-12 col-md-4">
@@ -46,8 +52,9 @@ const policyOptions = Object.entries(TRACKING_POLICY_LABEL).map(([value, label])
           label="最短到貨可用天數"
           outlined
           dense
-          :error="!!fieldError('skus.0.minReceiptLifeDays')"
-          :error-message="fieldError('skus.0.minReceiptLifeDays')"
+          :readonly="readonly"
+          :error="!!fieldError('minReceiptLifeDays')"
+          :error-message="fieldError('minReceiptLifeDays')"
         />
       </div>
       <div class="col-12 col-md-4">
@@ -58,8 +65,9 @@ const policyOptions = Object.entries(TRACKING_POLICY_LABEL).map(([value, label])
           label="最短銷售可用天數"
           outlined
           dense
-          :error="!!fieldError('skus.0.minSaleLifeDays')"
-          :error-message="fieldError('skus.0.minSaleLifeDays')"
+          :readonly="readonly"
+          :error="!!fieldError('minSaleLifeDays')"
+          :error-message="fieldError('minSaleLifeDays')"
         />
       </div>
     </template>

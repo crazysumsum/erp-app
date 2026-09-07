@@ -11,7 +11,8 @@ import { notifyError } from "@/framework/ui/notify.js";
 const model = defineModel({ type: Array, required: true });
 
 defineProps({
-  fieldError: { type: Function, default: () => "" }
+  fieldError: { type: Function, default: () => "" },
+  readonly: { type: Boolean, default: false }
 });
 
 const uomOptions = ref([]);
@@ -64,9 +65,11 @@ function setExclusiveFlag(index, flag) {
           label="單位 *"
           outlined
           dense
+          :readonly="readonly"
+          :disable="readonly"
           :loading="loading"
-          :error="!!fieldError(`skus.0.uoms.${index}.uomId`)"
-          :error-message="fieldError(`skus.0.uoms.${index}.uomId`)"
+          :error="!!fieldError(`uoms.${index}.uomId`)"
+          :error-message="fieldError(`uoms.${index}.uomId`)"
           @update:model-value="(value) => (row.uomId = value)"
         />
       </div>
@@ -78,8 +81,9 @@ function setExclusiveFlag(index, flag) {
           label="換算係數 *"
           outlined
           dense
-          :error="!!fieldError(`skus.0.uoms.${index}.toBaseFactor`)"
-          :error-message="fieldError(`skus.0.uoms.${index}.toBaseFactor`)"
+          :readonly="readonly"
+          :error="!!fieldError(`uoms.${index}.toBaseFactor`)"
+          :error-message="fieldError(`uoms.${index}.toBaseFactor`)"
         />
       </div>
       <div class="col-6 col-md-2">
@@ -87,6 +91,7 @@ function setExclusiveFlag(index, flag) {
           :model-value="row.isBase"
           :val="true"
           label="Base"
+          :disable="readonly"
           @update:model-value="setExclusiveFlag(index, 'isBase')"
         />
       </div>
@@ -95,6 +100,7 @@ function setExclusiveFlag(index, flag) {
           :model-value="row.isDefaultPurchase"
           :val="true"
           label="預設採購"
+          :disable="readonly"
           @update:model-value="setExclusiveFlag(index, 'isDefaultPurchase')"
         />
       </div>
@@ -103,13 +109,14 @@ function setExclusiveFlag(index, flag) {
           :model-value="row.isDefaultSale"
           :val="true"
           label="預設銷售"
+          :disable="readonly"
           @update:model-value="setExclusiveFlag(index, 'isDefaultSale')"
         />
       </div>
-      <div class="col-12 col-md-1">
+      <div v-if="!readonly" class="col-12 col-md-1">
         <q-btn flat round dense icon="delete" :aria-label="`刪除第 ${index + 1} 個單位`" @click="removeRow(index)" />
       </div>
     </div>
-    <q-btn flat color="primary" icon="add" label="新增單位" @click="addRow" />
+    <q-btn v-if="!readonly" flat color="primary" icon="add" label="新增單位" @click="addRow" />
   </div>
 </template>

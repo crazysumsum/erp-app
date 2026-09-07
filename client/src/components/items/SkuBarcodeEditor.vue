@@ -11,7 +11,8 @@ const model = defineModel({ type: Array, required: true });
 
 const props = defineProps({
   uoms: { type: Array, required: true },
-  fieldError: { type: Function, default: () => "" }
+  fieldError: { type: Function, default: () => "" },
+  readonly: { type: Boolean, default: false }
 });
 
 const barcodeTypeOptions = Object.entries(BARCODE_TYPE_LABEL).map(([value, label]) => ({ label, value }));
@@ -58,8 +59,9 @@ function setPrimary(index) {
           label="條碼 *"
           outlined
           dense
-          :error="!!fieldError(`skus.0.barcodes.${index}.barcode`)"
-          :error-message="fieldError(`skus.0.barcodes.${index}.barcode`)"
+          :readonly="readonly"
+          :error="!!fieldError(`barcodes.${index}.barcode`)"
+          :error-message="fieldError(`barcodes.${index}.barcode`)"
         />
       </div>
       <div class="col-6 col-md-2">
@@ -71,8 +73,10 @@ function setPrimary(index) {
           label="種類 *"
           outlined
           dense
-          :error="!!fieldError(`skus.0.barcodes.${index}.barcodeType`)"
-          :error-message="fieldError(`skus.0.barcodes.${index}.barcodeType`)"
+          :readonly="readonly"
+          :disable="readonly"
+          :error="!!fieldError(`barcodes.${index}.barcodeType`)"
+          :error-message="fieldError(`barcodes.${index}.barcodeType`)"
         />
       </div>
       <div class="col-6 col-md-3">
@@ -84,18 +88,26 @@ function setPrimary(index) {
           label="所屬單位 *"
           outlined
           dense
-          :error="!!fieldError(`skus.0.barcodes.${index}.uomId`)"
-          :error-message="fieldError(`skus.0.barcodes.${index}.uomId`) || (uomOptions.length === 0 ? '請先喺上面新增單位' : '')"
+          :readonly="readonly"
+          :disable="readonly"
+          :error="!!fieldError(`barcodes.${index}.uomId`)"
+          :error-message="fieldError(`barcodes.${index}.uomId`) || (uomOptions.length === 0 ? '請先喺上面新增單位' : '')"
           @update:model-value="(value) => (row.uomId = value)"
         />
       </div>
       <div class="col-6 col-md-2">
-        <q-radio :model-value="row.isPrimary" :val="true" label="主要條碼" @update:model-value="setPrimary(index)" />
+        <q-radio
+          :model-value="row.isPrimary"
+          :val="true"
+          label="主要條碼"
+          :disable="readonly"
+          @update:model-value="setPrimary(index)"
+        />
       </div>
-      <div class="col-6 col-md-1">
+      <div v-if="!readonly" class="col-6 col-md-1">
         <q-btn flat round dense icon="delete" :aria-label="`刪除第 ${index + 1} 個條碼`" @click="removeRow(index)" />
       </div>
     </div>
-    <q-btn flat color="primary" icon="add" label="新增條碼" @click="addRow" />
+    <q-btn v-if="!readonly" flat color="primary" icon="add" label="新增條碼" @click="addRow" />
   </div>
 </template>
