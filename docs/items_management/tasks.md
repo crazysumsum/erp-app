@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T14 已完成，T15 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T15 已完成，T16 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -84,7 +84,7 @@ T01 migration freeze
 - [x] T12 建立 Item／SKU 列表與詳情後端
 - [x] T13 建立商品導航與列表頁
 - [x] T14 建立 Item＋初始 SKU 原子建檔後端
-- [ ] T15 建立 Item／SKU 建檔頁與基本 Editor
+- [x] T15 建立 Item／SKU 建檔頁與基本 Editor
 - [ ] T16 建立 Item／SKU aggregate 更新後端
 - [ ] T17 建立 Item／SKU 詳情與編輯頁
 - [ ] T18 建立 Item／SKU 生命週期後端
@@ -539,38 +539,54 @@ T01 migration freeze
 
 ### Task T15：建立 Item／SKU 建檔頁與基本 Editor
 
-**Description:** 建立 `ItemCreatePage`、`SkuCreatePage` 及 Item／SKU／UOM／Barcode／Tracking／Price 基本 editors，接通 Draft 與直接啟用兩條 flow。
+**Description:** 建立 `ItemCreatePage` 及 Item／SKU／UOM／Barcode／Tracking／Price 基本 editors，接通 Draft 與直接啟用兩條 flow。
+
+**⚠️ 範圍決定：跟返 T14 已經同使用者確認嘅「T14 只做 Standard Item」——呢個 task 冧唔到嘅兩件事：**
+
+- 冇建 `SkuCreatePage.vue`（`/items/:itemId/skus/new`，喺已存在嘅 Item 底下加新 SKU）：佢背後嘅 `POST /api/v1/skus/create` 係一個獨立端點，T14 冇建（見 T14 條目最尾嗰段），呢個 task 嘅 dependency 亦只列 T06、T13、T14，冇包括嗰個未來先會有嘅 task。等有 task 建咗嗰個後端先起呢個頁面。
+- Manual check 原文「建立…Variant Active」冧唔到：T14 已經拒絕 `productType: "variant"`（`ITEM_VARIANT_NOT_SUPPORTED`），Variant 建檔要等 T23 attribute 基建完成。呢度只人手驗證 Standard Draft／Standard Active／無 Barcode Active／驗證失敗保留草稿呢四項。
 
 **Acceptance criteria:**
 
-- [ ] 「儲存 Draft」與「儲存並啟用」分開；後端 issues 對應欄位並保留輸入。
-- [ ] SKU Code 接受任意合法人工格式；Barcode 選填；價格 UI 固定顯示 HKD／`tax_not_applicable`。
-- [ ] Dirty route leave／browser unload、鍵盤操作、focusable error summary 及狀態文字均可測。
+- [x] 「儲存草稿」與「儲存並啟用」分開；後端 issues 對應返欄位（`item.categoryId`、`skus.0.skuCode` 呢類 dotted path）並保留輸入（失敗唔會清空表單）。
+- [x] SKU Code 接受任意合法人工格式（純文字輸入，冇格式限制）；Barcode 選填；價格 UI 固定顯示 `HK$` 前綴同「（未稅）」後綴，request 只送 amount。
+- [x] Dirty route leave（`onBeforeRouteLeave` + `window.confirm`）／browser unload（`beforeunload` + `preventDefault`）、鍵盤操作（全部用原生 Quasar 表單元件，冇自訂純滑鼠 handler）、focusable error summary（`role="alert"` + `tabindex="-1"` + `.focus()`，即使全部錯誤都對應到個別欄位都照樣顯示同攞 focus）及狀態文字（「處理中，請稍候…」`aria-live="polite"`）均可測，見 `itemCreate.test.js`。
+
+**手動瀏覽器驗證中發現並修正嘅 bug：** `assertSkuActivatable()`（itemValidation.js）嘅 `issue.field` 用嘅係扁平名（`categoryId`、`uoms`、`suggestedPriceAmount`），唔係表單提交 body 嗰種巢狀 JSON path（`item.categoryId`、`skus.0.suggestedPriceAmount`）。冇呢層轉換嘅話，呢類錯誤永遠對應唔到個別欄位，全部跌落摘要，個別欄位唔會標紅——用真實瀏覽器手動測試「儲存並啟用」但資料唔完整先發現。已經喺 `validationIssues.js` 加咗一個對照表修正（`categoryId` 屬於 Item 層面，其餘全部屬於 SKU；`code`／`name` 對應返 `skuCode`／`skuName`）。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/pages/items/itemCreate.test.js`
-- [ ] `npm run build --workspace client`
-- [ ] Manual check：建立 Standard Draft、Variant Active、無 Barcode Active 及驗證失敗保留草稿。
+- [x] `npm test --workspace client -- test/pages/items/itemCreate.test.js`（9 個案例）
+- [x] `npm run build --workspace client`
+- [x] `npx vitest run`（全部 351 個 client 測試，run 兩次）
+- [x] Manual check：用真實 dev server＋seed data＋真實瀏覽器驗證咗：Standard Draft 建立成功、UOM／SKU Code／SKU 名稱正確送到後端並喺 `/items` 列表出現、「儲存並啟用」冇填啟用原因擋喺前端唔叫 API、資料唔完整時 `ITEM_NOT_ACTIVATABLE` 嘅 issues 正確對應返個別欄位（分類、建議零售價）同摘要（Base 單位），失敗嗰兩次都冇喺 DB 留低任何殘留。分類／品牌／UOM 嘅 q-select 下拉選單本身冇用真實滑鼠點擊驗證到（呢次瀏覽器分頁畀主控端收埋咗，Quasar 嘅 dropdown portal 喺分頁未顯示嗰陣唔會 render，`computer`／JS 事件模擬都開唔到），改為靠讀 code 確認 binding 同 CategoriesPage／BrandsPage 已經驗證過嘅同一套 `emit-value`／`map-options` pattern 一致。
 
 **Dependencies:** T06, T13, T14
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `client/src/pages/items/ItemCreatePage.vue`
-- `client/src/pages/items/SkuCreatePage.vue`
-- `client/src/components/items/ItemBasicForm.vue`
-- `client/src/components/items/SkuEditor.vue`
-- `client/src/components/items/SkuUomEditor.vue`
+- `client/src/pages/items/ItemCreatePage.vue`（新建）
+- `client/src/components/items/ItemBasicForm.vue`（新建）
+- `client/src/components/items/SkuEditor.vue`（新建）
+- `client/src/components/items/SkuUomEditor.vue`（新建）
+- `client/src/components/items/SkuBarcodeEditor.vue`（新建，原本清單漏咗）
+- `client/src/components/items/TrackingPolicyFields.vue`（新建，原本清單漏咗）
+- `client/src/components/items/SuggestedPriceField.vue`（新建，原本清單漏咗）
+- `client/src/components/items/itemFieldLabels.js`（新建，追蹤政策／條碼種類嘅中文標籤對照表）
+- `client/src/framework/ui/validationIssues.js`（新建：`error.details` 兩種形狀——schema 陣列同 `assertSkuActivatable()` 嘅 `{issues}`——共用嘅對應邏輯，供呢個同未來 T16＋嘅寫入頁面重用）
+- `client/src/services/item.js`（加 `createItem()`）
+- `client/test/pages/items/itemCreate.test.js`（新建，9 個案例）
 
-**Estimated scope:** M（5 logical files；Barcode／Tracking／Price 子元件與測試同切片）
+冇建 `client/src/pages/items/SkuCreatePage.vue`：見上面範圍決定。
+
+**Estimated scope:** M（11 個新／改檔案；Barcode／Tracking／Price 子元件與測試同切片）
 
 ## Checkpoint E：T13–T15 Create Flow
 
-- [ ] system-admin 可由 menu 進入、建立 Draft 及直接 Active Item。
-- [ ] 只有 view 的使用者看得到列表但看不到／不能呼叫 create。
-- [ ] Create idempotency、rollback、audit 與前端錯誤回填全部通過。
-- [ ] Client build、server/client coverage 通過。
+- [x] system-admin 可由 menu 進入、建立 Draft 及直接 Active Item（僅 Standard，見 T14／T15 範圍決定；Variant 留待 T23）。
+- [x] 只有 view 的使用者看得到列表但看不到／不能呼叫 create（T13 前端按鈕隱藏＋T14 `createItemHandler.js` 403 兩層都驗證咗）。
+- [x] Create idempotency、rollback、audit 與前端錯誤回填全部通過。
+- [x] Client build、server/client coverage 通過。
 
 ### Task T16：建立 Item／SKU aggregate 更新後端
 
