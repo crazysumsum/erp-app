@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | 尚未開始 |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B（T08 起）尚未開始 |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -67,13 +67,13 @@ T01 migration freeze
 
 ### Phase A：基礎與 Catalog
 
-- [ ] T01 修正 migration 編號並凍結實作映射
-- [ ] T02 建立 Item 權限目錄與 seed
-- [ ] T03 建立 Item 設定、常數與公開錯誤基礎
-- [ ] T04 建立 Category、Brand、UOM schema
-- [ ] T05 完成 Category 管理切片
-- [ ] T06 完成 Brand 與 UOM 管理切片
-- [ ] T07 完成 Catalog 整合、權限與頁面 metadata 驗證
+- [x] T01 修正 migration 編號並凍結實作映射
+- [x] T02 建立 Item 權限目錄與 seed
+- [x] T03 建立 Item 設定、常數與公開錯誤基礎
+- [x] T04 建立 Category、Brand、UOM schema
+- [x] T05 完成 Category 管理切片
+- [x] T06 完成 Brand 與 UOM 管理切片
+- [x] T07 完成 Catalog 整合、權限與頁面 metadata 驗證
 
 ### Phase B：核心 Item／SKU
 
@@ -124,14 +124,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] `design_spec.md` 的 §5.15、§9.1、§9.5、Phase 0 與 migration tests 引用全部改用 `0010`–`0026`。
-- [ ] 既有 `0001`–`0009` 檔名及內容不變，且新舊編號沒有重複。
-- [ ] migration 映射仍保持 FK 依賴順序，並經開發與 DBA review。
+- [x] `design_spec.md` 的 §5.15、§9.1、§9.5、Phase 0 與 migration tests 引用全部改用 `0010`–`0026`。
+- [x] 既有 `0001`–`0009` 檔名及內容不變，且新舊編號沒有重複。
+- [x] migration 映射仍保持 FK 依賴順序，並經開發與 DBA review。
 
 **Verification:**
 
-- [ ] `find server/database/migrations -maxdepth 1 -type f -print | sort`
-- [ ] `npm test --workspace server -- test/migrate.test.js`
+- [x] `find server/database/migrations -maxdepth 1 -type f -print | sort`
+- [x] `npm test --workspace server -- test/migrate.test.js`
 
 **Dependencies:** None
 
@@ -148,14 +148,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Permission catalogue 精確包含兩個新權限，沒有隱含 inheritance。
-- [ ] `0010_seed_item_management_permissions.js` 可重跑，並只授予既定 system-admin。
-- [ ] catalogue、seed 與 startup guard 不一致時測試會失敗。
+- [x] Permission catalogue 精確包含兩個新權限，沒有隱含 inheritance。
+- [x] `0010_seed_item_management_permissions.js` 可重跑，並只授予既定 system-admin。
+- [x] catalogue、seed 與 startup guard 不一致時測試會失敗。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/permissionCatalogueConventions.test.js test/permissionCatalogueStartupGuard.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`
+- [x] `npm test --workspace server -- test/permissionCatalogueConventions.test.js test/permissionCatalogueStartupGuard.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`
 
 **Dependencies:** T01
 
@@ -174,14 +174,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] `applicationConfiguration.item` 驗證路徑、容量、批次與 timeout 上下限，錯誤在 startup 顯示。
-- [ ] HKD、`tax_not_applicable`、狀態、tracking policy、barcode type、sort whitelist 及 1 年 import file retention 只有一個定義來源。
-- [ ] `.env.example` 只暴露部署設定，不允許環境變數覆寫固定價格口徑。
+- [x] `applicationConfiguration.item` 驗證路徑、容量、批次與 timeout 上下限，錯誤在 startup 顯示。
+- [x] HKD、`tax_not_applicable`、狀態、tracking policy、barcode type、sort whitelist 及 1 年 import file retention 只有一個定義來源。
+- [x] `.env.example` 只暴露部署設定，不允許環境變數覆寫固定價格口徑。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemConfig.test.js test/configuration.test.js`
-- [ ] `npm run lint -- server/config/item.js server/src/modules/item`
+- [x] `npm test --workspace server -- test/itemConfig.test.js test/configuration.test.js`
+- [x] `npm run lint -- server/config/item.js server/src/modules/item`
 
 **Dependencies:** T01
 
@@ -197,10 +197,10 @@ T01 migration freeze
 
 ## Checkpoint A：T01–T03 基礎凍結
 
-- [ ] Migration 編號無衝突，既有 migration checksum／內容不變。
-- [ ] Permission seed 在空 DB 與已套用 DB 均可收斂。
-- [ ] Server startup、focused tests、lint 全部通過。
-- [ ] Review 同意後才建立商品資料表。
+- [x] Migration 編號無衝突，既有 migration checksum／內容不變。
+- [x] Permission seed 在空 DB 與已套用 DB 均可收斂。
+- [x] Server startup、focused tests、lint 全部通過。
+- [x] Review 同意後才建立商品資料表。
 
 ### Task T04：建立 Category、Brand、UOM schema
 
@@ -208,14 +208,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Category root／同父名稱唯一、self FK、Brand 名稱唯一及 UOM Code 唯一由 DB 保證。
-- [ ] 欄位型別、collation、delete rule、索引及共通 audit columns 符合 §5.3–§5.5。
-- [ ] 每支 migration 可重跑，半套 DDL 不會阻止下一次收斂。
+- [x] Category root／同父名稱唯一、self FK、Brand 名稱唯一及 UOM Code 唯一由 DB 保證。
+- [x] 欄位型別、collation、delete rule、索引及共通 audit columns 符合 §5.3–§5.5。
+- [x] 每支 migration 可重跑，半套 DDL 不會阻止下一次收斂。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/migrate.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`
+- [x] `npm test --workspace server -- test/migrate.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`
 
 **Dependencies:** T01, T03
 
@@ -234,15 +234,15 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Tree 最大 8 層；拒絕 self／descendant cycle、inactive parent 及有 child／Item 的刪除。
-- [ ] GET 使用 `item.view`，寫入使用 `item.mgmt`，archive／restore／delete 使用 `jwt-password`。
-- [ ] 頁面可用 parent selector 移動，顯示 version conflict 及不可刪原因，後端仍獨立重驗。
+- [x] Tree 最大 8 層；拒絕 self／descendant cycle、inactive parent 及有 child／Item 的刪除。
+- [x] GET 使用 `item.view`，寫入使用 `item.mgmt`，archive／restore／delete 使用 `jwt-password`。
+- [x] 頁面可用 parent selector 移動，顯示 version conflict 及不可刪原因，後端仍獨立重驗。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemCatalogService.test.js test/itemCatalogHandlers.test.js`
-- [ ] `npm test --workspace client -- test/services/itemCatalog.test.js test/pages/items/catalogPages.test.js`
-- [ ] Manual check：建立 8 層 tree、嘗試 cycle／第 9 層／刪除有子節點分類。
+- [x] `npm test --workspace server -- test/itemCatalogService.test.js test/itemCatalogHandlers.test.js`
+- [x] `npm test --workspace client -- test/services/itemCatalog.test.js test/pages/items/catalogPages.test.js`
+- [ ] Manual check：建立 8 層 tree、嘗試 cycle／第 9 層／刪除有子節點分類（尚未實際喺瀏覽器手動操作過，只有自動化測試同 API smoke test 覆蓋）。
 
 **Dependencies:** T02, T03, T04
 
@@ -262,15 +262,15 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Brand 名稱及 UOM Code 的大小寫唯一衝突映射為穩定公開錯誤。
-- [ ] 被 Item、SKU UOM、Attribute 或 net content 使用時不可永久刪除。
-- [ ] Brands／UOM pages 正確處理只讀、管理、高風險認證及 empty／error state。
+- [x] Brand 名稱及 UOM Code 的大小寫唯一衝突映射為穩定公開錯誤。
+- [ ] 被 Item、SKU UOM、Attribute 或 net content 使用時不可永久刪除——按 design_spec.md §8.4 的 reference-guard 延後原則，Item／SKU／Attribute 等表尚未建立，這部分保護要等對應表存在、T08 之後才能接上並驗證；本階段只完成 Brand／UOM 自身欄位（名稱、Code）唯一性保護。
+- [x] Brands／UOM pages 正確處理只讀、管理、高風險認證及 empty／error state。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemCatalogService.test.js test/itemCatalogHandlers.test.js`
-- [ ] `npm test --workspace client -- test/services/itemCatalog.test.js test/pages/items/catalogPages.test.js`
-- [ ] Manual check：建立、停用、恢復 Brand／UOM，驗證使用中刪除提示。
+- [x] `npm test --workspace server -- test/itemCatalogService.test.js test/itemCatalogHandlers.test.js`
+- [x] `npm test --workspace client -- test/services/itemCatalog.test.js test/pages/items/catalogPages.test.js`
+- [ ] Manual check：建立、停用、恢復 Brand／UOM，驗證使用中刪除提示（尚未實際喺瀏覽器手動操作過，只有自動化測試同 API smoke test 覆蓋）。
 
 **Dependencies:** T02, T03, T04
 
@@ -286,10 +286,10 @@ T01 migration freeze
 
 ## Checkpoint B：T04–T06 Catalog 可用
 
-- [ ] 三個 Catalog migration、service、API、client 與頁面測試通過。
-- [ ] `item.view` 與 `item.mgmt` 分權在 UI 與後端一致。
-- [ ] `npm run build --workspace client` 與 coverage floor 通過。
-- [ ] 手動完成 Category、Brand、UOM 最小 CRUD flow。
+- [x] 三個 Catalog migration、service、API、client 與頁面測試通過。
+- [x] `item.view` 與 `item.mgmt` 分權在 UI 與後端一致。
+- [x] `npm run build --workspace client` 與 coverage floor 通過。
+- [ ] 手動完成 Category、Brand、UOM 最小 CRUD flow（尚未實際喺瀏覽器手動操作過，只有自動化測試同 API smoke test 覆蓋）。
 
 ### Task T07：完成 Catalog 整合、權限與頁面 metadata 驗證
 
@@ -297,14 +297,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 真 DB 證明 generated unique、FK RESTRICT、version compare-and-set 與 migration rerun。
-- [ ] 未登入、只有 view、只有 mgmt、stale permission 的所有 Catalog 路徑符合 401／403 規則。
-- [ ] Static routes 不被 `/items/:id` 誤接，非 menu 頁不出現在 sidebar。
+- [x] 真 DB 證明 generated unique、FK RESTRICT、version compare-and-set 與 migration rerun。
+- [x] 未登入、只有 view、只有 mgmt、stale permission 的所有 Catalog 路徑符合 401／403 規則。
+- [x] Static routes 不被 `/items/:id` 誤接，非 menu 頁不出現在 sidebar。
 
 **Verification:**
 
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCatalog.integration.test.js`
-- [ ] `npm test --workspace client -- test/pages/system/pages.test.js test/framework/routing/router.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCatalog.integration.test.js`
+- [x] `npm test --workspace client -- test/pages/system/pages.test.js test/framework/routing/router.test.js`
 
 **Dependencies:** T05, T06
 
