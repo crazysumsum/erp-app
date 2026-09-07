@@ -11,7 +11,7 @@ vi.mock("quasar", () => ({
 }));
 
 import { Dialog } from "quasar";
-import { confirm, confirmDelete, promptPassword } from "@/framework/ui/confirm.js";
+import { confirm, confirmDelete, promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import PasswordReasonDialog from "@/framework/ui/PasswordReasonDialog.vue";
 
 function mockDialogOutcome(outcome, value) {
@@ -143,5 +143,47 @@ describe("promptPassword", () => {
         promptPassword({ message: "test", requireReason: true })
       ).resolves.toBe(null);
     });
+  });
+});
+
+describe("promptReason", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("撳確認會 resolve 輸入咗嘅原因", async () => {
+    mockDialogOutcome("ok", "業務要求重新上架");
+
+    await expect(promptReason({ message: "確認啟用？" })).resolves.toBe("業務要求重新上架");
+  });
+
+  it("撳取消會 resolve null", async () => {
+    mockDialogOutcome("cancel");
+
+    await expect(promptReason({ message: "確認啟用？" })).resolves.toBe(null);
+  });
+
+  it("prompt 型別係 textarea，冇 password 呢個 type", async () => {
+    mockDialogOutcome("ok", "原因");
+
+    await promptReason({ message: "test" });
+
+    expect(Dialog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        persistent: true,
+        prompt: expect.objectContaining({ type: "textarea" })
+      })
+    );
+  });
+
+  it("原因少於 5 字或者多過 190 字過唔到 isValid", async () => {
+    mockDialogOutcome("ok", "原因");
+
+    await promptReason({ message: "test" });
+
+    const { isValid } = Dialog.create.mock.calls[0][0].prompt;
+    expect(isValid("短")).toBe(false);
+    expect(isValid("x".repeat(191))).toBe(false);
+    expect(isValid("這是一個合理長度的原因說明")).toBe(true);
   });
 });

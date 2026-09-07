@@ -124,7 +124,10 @@ function tokenIssuer(application) {
   };
 }
 
-const ADMIN_PERMISSIONS = ["user.mgmt", "role.mgmt", "device.mgmt"];
+// system-admin 現在持有 5 個權限（0010 migration 之後多咗 item.view／
+// item.mgmt）；claims 要同資料庫現況一致，否則會撞 PERMISSION_STALE 而唔係
+// 測試本身想驗嘅嘢——同 itemCatalog.integration.test.js 嗰份同一個理由。
+const ADMIN_PERMISSIONS = ["user.mgmt", "role.mgmt", "device.mgmt", "item.view", "item.mgmt"];
 
 function authed(token, body) {
   return {
@@ -630,8 +633,33 @@ test("only one of two concurrent requests can disable the last two active admins
     disable(adminA.userId, tokenB)
   ]);
 
-  const statuses = [responseA.status, responseB.status].sort();
-  assert.deepEqual(statuses, [200, 409], `expected one success and one conflict, got ${statuses}`);
+  const [bodyA, bodyB] = await Promise.all([responseA.json(), responseB.json()]);
+  const outcomes = [
+    { status: responseA.status, code: bodyA?.error?.code },
+    { status: responseB.status, code: bodyB?.error?.code }
+  ];
+  const successes = outcomes.filter((outcome) => outcome.status === 200);
+  const losers = outcomes.filter((outcome) => outcome.status !== 200);
+
+  assert.equal(successes.length, 1, `expected exactly one success, got ${JSON.stringify(outcomes)}`);
+  assert.equal(losers.length, 1, `expected exactly one loser, got ${JSON.stringify(outcomes)}`);
+
+  // 輸的那一邊有兩種同樣安全的結局，看它輸掉的是哪一道檢查：
+  //   - 409 LAST_ADMIN_PROTECTED：兩邊都還在跑的時候先讀到「保護中」，
+  //     assertLastActiveAdminPreserved 擋下。
+  //   - 403 PERMISSION_STALE：贏的那邊先把輸的那邊的帳號設成 disabled，
+  //     輸的那邊自己的 assertActorFresh 重讀角色時查不到這個 active 帳號
+  //     （directoryLookups.js #assertActorFresh 把「查不到」當空集合處理），
+  //     跟 claims 對不上，被第四道守衛擋下——這不是漏洞，是它正確地把一個
+  //     剛被停用的操作者當場擋下來，跟平常帳號被停用後 token 立刻失效是
+  //     同一件事，只是這裡是資料庫查詢先注意到，不是簽章。
+  // 兩者都保證了下面 activeCount === 1 這件事，這才是這個測試真正要證明的。
+  const loser = losers[0];
+  assert.ok(
+    (loser.status === 409 && loser.code === "LAST_ADMIN_PROTECTED") ||
+      (loser.status === 403 && loser.code === "PERMISSION_STALE"),
+    `expected the losing request to be LAST_ADMIN_PROTECTED (409) or PERMISSION_STALE (403), got ${JSON.stringify(loser)}`
+  );
 
   const [[refreshedA]] = await db.query("SELECT status FROM users WHERE id = ?", [adminA.userId]);
   const [[refreshedB]] = await db.query("SELECT status FROM users WHERE id = ?", [adminB.userId]);

@@ -18,6 +18,12 @@ const menuConfig = {
       icon: "people",
       order: 100
     },
+    {
+      name: "items",
+      label: "商品管理",
+      icon: "inventory_2",
+      order: 200
+    },
     // 目前沒有任何頁面掛在這個群組——buildMenu() 會濾掉沒有頁面的群組，所以
     // 它暫時不會出現在側欄。保留定義是留給日後非用戶管理的系統設定用。
     {

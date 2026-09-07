@@ -117,26 +117,62 @@ test("no route authorizes by role name", async () => {
  * 而且要拿到那個常數就得把它 export 出去——那會讓一支 migration 為了測試而
  * 多一個對外介面。
  */
-test("the seed migration and the catalogue list the same permissions", async () => {
-  const source = await readFile(
-    new URL(
-      "../database/migrations/0008_seed_user_management_permissions.js",
-      import.meta.url
-    ),
-    "utf8"
+/**
+ * 每個業務模組種自己的權限，用自己的 migration 檔——0008 種 user／role／device，
+ * 0010 種 item。這裡不再假設「未來所有權限都在 0008 裡」，而是掃描全部已知的
+ * permission seed migration 檔案，確認目錄裡每一項恰好被其中一支種到，且
+ * description 沒有漂移。新增一支 seed migration 時，把檔名加進這個清單。
+ */
+const PERMISSION_SEED_MIGRATIONS = [
+  "../database/migrations/0008_seed_user_management_permissions.js",
+  "../database/migrations/0010_seed_item_management_permissions.js"
+];
+
+test("every seed migration only lists permissions that exist in the catalogue, with a matching description", async () => {
+  for (const migrationPath of PERMISSION_SEED_MIGRATIONS) {
+    const source = await readFile(new URL(migrationPath, import.meta.url), "utf8");
+    const seededNames = [...source.matchAll(/name:\s*"([a-z][a-z.]*)"/g)].map(
+      (match) => match[1]
+    );
+
+    for (const name of seededNames) {
+      const permission = PERMISSION_CATALOGUE.find((entry) => entry.name === name);
+      assert.ok(
+        permission,
+        `${migrationPath} seeds "${name}", which is not in PERMISSION_CATALOGUE. ` +
+          "Either it is a typo, or the catalogue is missing it."
+      );
+      assert.ok(
+        source.includes(permission.description),
+        `${migrationPath} seeds "${name}" with a description that differs from the ` +
+          "catalogue; startup will warn about the drift on every boot."
+      );
+    }
+  }
+});
+
+test("every catalogue permission is seeded by exactly one migration", async () => {
+  const sources = await Promise.all(
+    PERMISSION_SEED_MIGRATIONS.map((migrationPath) =>
+      readFile(new URL(migrationPath, import.meta.url), "utf8")
+    )
   );
 
   for (const permission of PERMISSION_CATALOGUE) {
-    assert.match(
-      source,
-      new RegExp(`name:\\s*"${permission.name.replace(".", "\\.")}"`),
-      `0008 does not seed "${permission.name}". A permission in the catalogue that no ` +
-        "migration seeds will make the application refuse to start."
-    );
+    const pattern = new RegExp(`name:\\s*"${permission.name.replace(".", "\\.")}"`);
+    const seededBy = sources.filter((source) => pattern.test(source));
+
     assert.ok(
-      source.includes(permission.description),
-      `0008 seeds "${permission.name}" with a description that differs from the ` +
-        "catalogue; startup will warn about the drift on every boot."
+      seededBy.length > 0,
+      `no migration in PERMISSION_SEED_MIGRATIONS seeds "${permission.name}". A ` +
+        "permission in the catalogue that no migration seeds will make the " +
+        "application refuse to start."
+    );
+    assert.equal(
+      seededBy.length,
+      1,
+      `"${permission.name}" is seeded by ${seededBy.length} migrations; it should be ` +
+        "exactly one, or which migration owns it becomes ambiguous."
     );
   }
 });

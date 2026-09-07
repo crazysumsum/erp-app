@@ -76,6 +76,26 @@ function isDuplicateEntry(error) {
   return (error?.cause?.code || error?.code) === "ER_DUP_ENTRY";
 }
 
+/**
+ * `disable()` 最後那句 UPDATE 把「還有沒有別的 active admin」做成一個相關
+ * 子查詢直接嵌進 WHERE 子句，讓 InnoDB 在同一句 UPDATE 裡對別的使用者列也
+ * 取鎖。兩個並行的 disable() 各自鎖住對方要讀的那一列時，就是教科書式的
+ * lock-order-inversion 死結——InnoDB 會自動選一邊回滾，回滾那邊看到的就是
+ * `ER_LOCK_DEADLOCK`。這不是資料損毀，是「這次沒搶到鎖」，官方建議的處理方式
+ * 就是整個交易重來一次，所以這裡只重試 disable() 這一支，不是隨便挑一個
+ * error 分支吞掉。
+ */
+function isDeadlockError(error) {
+  const code = error?.cause?.code || error?.code;
+  return code === "ER_LOCK_DEADLOCK" || code === "ER_LOCK_WAIT_TIMEOUT";
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 /** `%`、`_`、`\` 是 LIKE 的萬用字元／跳脫字元，使用者輸入的字面值要先跳脫。
  * MySQL LIKE 預設的跳脫字元就是反斜線，所以不需要另外加 ESCAPE 子句。 */
 function escapeLikeTerm(value) {
@@ -292,6 +312,25 @@ export class UserAdminService {
    * 保證的冪等性，這裡是自己選擇讓這支端點的行為看起來像有（見 §3.1）。
    */
   async disable({ actorId, claimedRoles, claimedPermissions, id, reason, requestId, ip }) {
+    const attemptDisable = () => this.#disableOnce({ actorId, claimedRoles, claimedPermissions, id, reason, requestId, ip });
+
+    // 最多重試兩次（總共三次嘗試）：InnoDB 已經替我們挑好死結的輸家並整個
+    // 回滾了那個交易，這裡重來一次就是照它的建議做，不是繞過什麼保護。重試
+    // 次數夠低，不會把一個真正的持續衝突（例如同一秒有很多人在停用同一批
+    // 帳號）掩蓋成「反正重試會成功」。
+    for (let attempt = 1; ; attempt += 1) {
+      try {
+        return await attemptDisable();
+      } catch (error) {
+        if (!isDeadlockError(error) || attempt >= 3) {
+          throw error;
+        }
+        await sleep(10 * attempt + Math.floor(Math.random() * 20));
+      }
+    }
+  }
+
+  async #disableOnce({ actorId, claimedRoles, claimedPermissions, id, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, {
         actorId,
@@ -316,6 +355,12 @@ export class UserAdminService {
       });
 
       // 通過預檢查之後才撤銷：被擋下的停用不該先把人踢下線。
+      //
+      // 這句在 SQL 交易之外（TokenRevocationService 用自己那份 database
+      // 參考，不是這個 connection），死結重試會讓它在同一次 disable() 裡被
+      // 呼叫多過一次——見本方法開頭 disable() 的重試迴圈。這裡沒事：
+      // revoke() 只會把版本號往上加，重複呼叫最多只是多撤銷一次、把界線往
+      // 前推一點，不會漏撤銷，也不影響下面「通過預檢查才撤銷」這條規則。
       await this.tokenRevocation.revoke(String(id), { reason: "user_disabled" });
 
       const nowMs = this.time.nowMs();
