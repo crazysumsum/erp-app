@@ -34,6 +34,11 @@ async function loadTree() {
     tree.value = await itemCatalogService.categoryTree({ includeArchived: includeArchived.value });
     // 預設全展開：分類最多 8 層，量級不大，展開後一次看到完整結構比逐層點開快。
     expanded.value = flatten(tree.value).map((node) => node.id);
+  } catch (error) {
+    // 冇 catch 嘅話，讀取失敗（例如權限被收咗）會令 tree 維持 []，畫面上同
+    // 「真係冇分類資料」睇唔出分別——見 BrandsPage 用 DataTable 嘅
+    // fetch／錯誤 banner 機制,呢度冇用嗰個所以要自己補呢一步。
+    notifyError(error.message || "載入分類失敗");
   } finally {
     loading.value = false;
   }

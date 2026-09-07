@@ -550,3 +550,84 @@ test("token 宣稱的權限與資料庫現況不符時，Catalog 端點回 403 P
   assert.equal(read.status, 403);
   assert.equal((await read.json()).error.code, "PERMISSION_STALE");
 });
+
+test("兩個並行的 category move 想互相移到對方底下，只有一個成功，資料庫不會出現環", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+
+  const role = await seedItemManagerRole(db);
+  const actor = await seedUser(db, {
+    username: `it-cycle-${randomUUID().slice(0, 8)}`,
+    password: "Integration-Test-Pass-Cycle!",
+    roleId: role.roleId
+  });
+  let categoryAId = null;
+  let categoryBId = null;
+
+  t.after(async () => {
+    // 不管最後哪一邊贏，其中一顆一定被移到另一顆底下——刪除前要先確認現況，
+    // 照 FK RESTRICT（fk_item_categories_parent）的方向，子分類要先刪。
+    if (categoryAId !== null && categoryBId !== null) {
+      const [[a]] = await db.query("SELECT parent_id FROM item_categories WHERE id = ?", [categoryAId]);
+      const childFirst = a && Number(a.parent_id) === categoryBId ? [categoryAId, categoryBId] : [categoryBId, categoryAId];
+      for (const id of childFirst) {
+        await cleanupCatalogAudit(db, { targetType: "category", targetId: id });
+        await db.execute("DELETE FROM item_categories WHERE id = ?", [id]);
+      }
+    }
+    await cleanupUser(db, actor.userId);
+    await role.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, { roles: [role.roleName], permissions: ["item.view", "item.mgmt"] });
+
+  const createA = await fetch(
+    `${url}/api/v1/catalog/categories/create`,
+    authed(token, { name: `it-cycle-A-${randomUUID().slice(0, 8)}`, parentId: null, sortOrder: 0 })
+  );
+  categoryAId = (await createA.json()).data.id;
+  const createB = await fetch(
+    `${url}/api/v1/catalog/categories/create`,
+    authed(token, { name: `it-cycle-B-${randomUUID().slice(0, 8)}`, parentId: null, sortOrder: 0 })
+  );
+  categoryBId = (await createB.json()).data.id;
+
+  // A 想搬去 B 底下，B 同時想搬去 A 底下——兩顆都是根層級、都還沒有 child，
+  // 各自單獨檢查都通過，但兩個都成功的話資料庫就會出現一個真正的環。
+  const moveAUnderB = fetch(
+    `${url}/api/v1/catalog/categories/${categoryAId}/update`,
+    authed(token, { name: `it-cycle-A-renamed`, parentId: categoryBId, sortOrder: 0, version: 1 })
+  );
+  const moveBUnderA = fetch(
+    `${url}/api/v1/catalog/categories/${categoryBId}/update`,
+    authed(token, { name: `it-cycle-B-renamed`, parentId: categoryAId, sortOrder: 0, version: 1 })
+  );
+  const [responseA, responseB] = await Promise.all([moveAUnderB, moveBUnderA]);
+  const [bodyA, bodyB] = await Promise.all([responseA.json(), responseB.json()]);
+
+  const outcomes = [
+    { status: responseA.status, code: bodyA?.error?.code },
+    { status: responseB.status, code: bodyB?.error?.code }
+  ];
+  const successes = outcomes.filter((outcome) => outcome.status === 200);
+  const losers = outcomes.filter((outcome) => outcome.status !== 200);
+
+  assert.equal(successes.length, 1, `expected exactly one move to succeed, got ${JSON.stringify(outcomes)}`);
+  assert.equal(losers.length, 1, `expected exactly one move to be rejected, got ${JSON.stringify(outcomes)}`);
+  assert.equal(losers[0].status, 400);
+  assert.equal(losers[0].code, "CATEGORY_CYCLE");
+
+  const [[refreshedA]] = await db.query("SELECT parent_id FROM item_categories WHERE id = ?", [categoryAId]);
+  const [[refreshedB]] = await db.query("SELECT parent_id FROM item_categories WHERE id = ?", [categoryBId]);
+  const aUnderB = Number(refreshedA.parent_id) === categoryBId;
+  const bUnderA = Number(refreshedB.parent_id) === categoryAId;
+  assert.notEqual(aUnderB, bUnderA, "exactly one direction of the move must have actually landed, not both (that would be a cycle) or neither");
+
+  // 真正的驗收：就算上面兩句斷言漏放過一個環，這裡也會抓到——有環的話
+  // #buildTree 會做出循環物件圖，GET 就會在 JSON.stringify 炸掉。
+  const tree = await fetch(`${url}/api/v1/catalog/categories`, get(token));
+  assert.equal(tree.status, 200, await tree.text());
+});

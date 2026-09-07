@@ -179,8 +179,8 @@ export class ItemCatalogService {
   }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
-      const categoryMap = await this.#categoryMapById(connection);
-      const current = categoryMap.get(Number(id));
+      let categoryMap = await this.#categoryMapById(connection);
+      let current = categoryMap.get(Number(id));
 
       if (!current) {
         throw categoryNotFound(id);
@@ -192,7 +192,27 @@ export class ItemCatalogService {
       const normalizedName = String(name ?? "").trim();
       const nextParentId = parentId ?? null;
       const nextSortOrder = sortOrder;
-      const parentChanged = Number(nextParentId ?? 0) !== Number(current.parent_id ?? 0);
+      let parentChanged = Number(nextParentId ?? 0) !== Number(current.parent_id ?? 0);
+
+      if (parentChanged) {
+        // 「移動」才鎖整棵樹重讀一次：上面的 categoryMap 只是這次交易一開始
+        // 的快照，若兩個並行請求各自把 A 移到 B 底下、把 B 移到 A 底下，各自
+        // 憑自己那份舊快照都驗證得過（各自看到的 A、B 都還沒動），而兩句
+        // UPDATE 又是改不同列、互不衝突，兩邊都會成功——結果就是資料庫裡真的
+        // 出現一個環（A 的父層是 B，B 的父層是 A）。cycle／depth 檢查本來就要
+        // 走訪任意長的祖先鏈與子孫子樹，只鎖 target 與新 parent 這兩列擋不住
+        // 三個以上並行移動互相繞成環的情況，所以這裡鎖整棵樹——design_spec.md
+        // §6.4：「service 在同一交易鎖 target 和新 parent，檢查深度及
+        // cycle」，鎖整棵樹是達成同一個要求裡最簡單、不必再論證「哪幾列才夠」
+        // 的做法，分類的量級（百到千）撐得住偶爾一次的整表鎖定。
+        categoryMap = await this.#categoryMapByIdForUpdate(connection);
+        const relocked = categoryMap.get(Number(id));
+        if (!relocked) {
+          throw categoryNotFound(id);
+        }
+        current = relocked;
+        parentChanged = Number(nextParentId ?? 0) !== Number(current.parent_id ?? 0);
+      }
 
       if (parentChanged && nextParentId !== null) {
         this.#assertParentUsable(categoryMap, nextParentId);
@@ -340,8 +360,11 @@ export class ItemCatalogService {
       );
 
       if (result.affectedRows === 0) {
-        // 同一支交易內、DELETE 之前才剛讀過一次，這裡不會是 NOT_FOUND；
-        // 唯一站得住腳的解釋是版本已經被別人改過。
+        // 上面 #requireCategory 只是一次快照讀（沒有 FOR UPDATE），DELETE 檢查
+        // 的卻是最新已提交的資料——中間這段窄窗仍然可能被別的交易先刪掉這一
+        // 列。重新查一次，NOT_FOUND 與 VERSION_CONFLICT 才分得準，不能直接
+        // 假設一定是版本問題（同 updateCategory 的處理方式）。
+        await this.#requireCategory(connection, id);
         throw versionConflict();
       }
 
@@ -445,6 +468,20 @@ export class ItemCatalogService {
    */
   async #categoryMapById(connection) {
     const rows = await this.#allCategoryRows(connection);
+    return new Map(rows.map((row) => [Number(row.id), row]));
+  }
+
+  /**
+   * 同 `#categoryMapById`，但加 `FOR UPDATE`：只有「移動」（parentId 真的
+   * 改變）才需要，見 `updateCategory` 呼叫處的說明。
+   */
+  async #categoryMapByIdForUpdate(connection) {
+    const [rows] = await connection.query(
+      `SELECT id, parent_id, name, status, sort_order, version, created_at, updated_at
+         FROM item_categories
+        ORDER BY sort_order, name
+          FOR UPDATE`
+    );
     return new Map(rows.map((row) => [Number(row.id), row]));
   }
 
@@ -790,6 +827,10 @@ export class ItemCatalogService {
       );
 
       if (result.affectedRows === 0) {
+        // #requireBrand 只是一次快照讀，DELETE 檢查的是最新已提交的資料——
+        // 重新查一次才分得清 NOT_FOUND 與 VERSION_CONFLICT，不能直接假設一定
+        // 是版本問題（同 updateBrand 的處理方式）。
+        await this.#requireBrand(connection, id);
         throw versionConflict();
       }
 
@@ -1049,6 +1090,10 @@ export class ItemCatalogService {
       );
 
       if (result.affectedRows === 0) {
+        // #requireUom 只是一次快照讀，DELETE 檢查的是最新已提交的資料——
+        // 重新查一次才分得清 NOT_FOUND 與 VERSION_CONFLICT，不能直接假設一定
+        // 是版本問題（同 updateUom 的處理方式）。
+        await this.#requireUom(connection, id);
         throw versionConflict();
       }
 

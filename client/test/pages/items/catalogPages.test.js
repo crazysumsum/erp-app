@@ -160,6 +160,27 @@ describe("pages/items/CategoriesPage.vue", () => {
     expect(wrapper.text()).toContain("Discontinued Line");
   });
 
+  it("開機讀取失敗（例如權限被收咗）：顯示錯誤提示，唔會靜靜哋當做冇資料", async () => {
+    // 冇呢個 catch 嘅話，tree 會維持 []，畫面上同「真係冇分類資料」睇唔出
+    // 分別——見 loadTree() 對呢個 catch 分支嘅註解。
+    itemCatalogService.categoryTree.mockRejectedValue(new Error("找不到這個資源"));
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", name: "home", component: CategoriesPage }]
+    });
+    await router.push("/");
+    await router.isReady();
+
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", displayName: "Sam Wong", permissions: ["item.view", "item.mgmt"], roles: [] };
+
+    mount(CategoriesPage, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith("找不到這個資源");
+  });
+
   it("只有 item.view 冇 item.mgmt：睇得到樹，但冇「新增分類」按鈕同節點操作選單", async () => {
     const { wrapper, body } = await mountCategoriesPage({ permissions: ["item.view"] });
 
@@ -298,6 +319,22 @@ describe("pages/items/CategoriesPage.vue", () => {
       reason: "停產",
       password: "hunter2",
       version: 1
+    });
+  });
+
+  it("刪除：帶埋 version（跟 archive／restore 同一組值），唔係淨係 reason／password", async () => {
+    promptPassword.mockResolvedValue({ reason: "業務不再需要", password: "hunter2" });
+    itemCatalogService.deleteCategory.mockResolvedValue({ id: 2 });
+    const { body } = await mountCategoriesPage();
+
+    await openNodeMenu(body, "Gummies");
+    await findMenuItem(body, "刪除").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.deleteCategory).toHaveBeenCalledWith(2, {
+      reason: "業務不再需要",
+      password: "hunter2",
+      version: 3
     });
   });
 
@@ -444,6 +481,23 @@ describe("pages/items/BrandsPage.vue", () => {
 
     expect(notifyError).toHaveBeenCalledWith("這筆資料使用中，無法刪除");
   });
+
+  it("刪除：帶埋 version（跟 archive／restore 同一組值），唔係淨係 reason／password", async () => {
+    promptPassword.mockResolvedValue({ reason: "業務不再需要", password: "hunter2" });
+    itemCatalogService.deleteBrand.mockResolvedValue({ id: 1 });
+    const { body } = await mountBrandsPage();
+
+    await body.find('button[aria-label="「Brand A」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("刪除")).trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.deleteBrand).toHaveBeenCalledWith(1, {
+      reason: "業務不再需要",
+      password: "hunter2",
+      version: 1
+    });
+  });
 });
 
 describe("pages/items/UomsPage.vue", () => {
@@ -534,10 +588,60 @@ describe("pages/items/UomsPage.vue", () => {
     });
   });
 
+  it("開機讀取失敗（例如權限被收咗）：顯示錯誤提示，唔會靜靜哋當做冇資料", async () => {
+    itemCatalogService.uomList.mockRejectedValue(new Error("找不到這個資源"));
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", name: "home", component: UomsPage }]
+    });
+    await router.push("/");
+    await router.isReady();
+
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", displayName: "Sam Wong", permissions: ["item.view", "item.mgmt"], roles: [] };
+
+    mount(UomsPage, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith("找不到這個資源");
+  });
+
   it("只有 item.view：冇「新增單位」按鈕同操作選單", async () => {
     const { wrapper, body } = await mountUomsPage({ permissions: ["item.view"] });
 
     expect(wrapper.findAll(".q-btn").some((btn) => btn.text().includes("新增單位"))).toBe(false);
     expect(body.find('button[aria-label*="的操作"]').exists()).toBe(false);
+  });
+
+  it("刪除：帶埋 version（跟 update／archive 同一組值），唔係淨係 reason／password", async () => {
+    promptPassword.mockResolvedValue({ reason: "業務不再需要", password: "hunter2" });
+    itemCatalogService.deleteUom.mockResolvedValue({ id: 1 });
+    const { body } = await mountUomsPage();
+
+    await body.find('button[aria-label="「Each」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("刪除")).trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.deleteUom).toHaveBeenCalledWith(1, {
+      reason: "業務不再需要",
+      password: "hunter2",
+      version: 1
+    });
+  });
+
+  it("刪除失敗時顯示後端訊息，唔會靜靜哋失敗", async () => {
+    promptPassword.mockResolvedValue({ reason: "嘗試刪除", password: "hunter2" });
+    const error = Object.assign(new Error("這筆資料使用中，無法刪除"), { code: "CATALOG_IN_USE" });
+    itemCatalogService.deleteUom.mockRejectedValue(error);
+    const { body } = await mountUomsPage();
+
+    await body.find('button[aria-label="「Each」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("刪除")).trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith("這筆資料使用中，無法刪除");
   });
 });

@@ -190,7 +190,7 @@ async function remove(row) {
     return;
   }
   try {
-    await itemCatalogService.deleteBrand(row.id, outcome);
+    await itemCatalogService.deleteBrand(row.id, { ...outcome, version: row.version });
     notifySuccess(`品牌「${row.name}」已刪除`);
     await dataTableRef.value?.reload();
   } catch (error) {
