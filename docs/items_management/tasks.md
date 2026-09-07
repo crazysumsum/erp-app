@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T10 已完成，T11 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T11 已完成，T12 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -80,7 +80,7 @@ T01 migration freeze
 - [x] T08 建立 Item、SKU 與 Audit schema
 - [x] T09 建立 SKU UOM 與 Barcode schema
 - [x] T10 建立核心驗證與 Barcode 規則
-- [ ] T11 建立 Item Audit service 與查詢 API
+- [x] T11 建立 Item Audit service 與查詢 API
 - [ ] T12 建立 Item／SKU 列表與詳情後端
 - [ ] T13 建立商品導航與列表頁
 - [ ] T14 建立 Item＋初始 SKU 原子建檔後端
@@ -405,14 +405,14 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 寫入可接收 caller transaction connection，不能在業務 transaction 外另開 query。
-- [ ] Audit detail 不保存 password、token、device key、整份 CSV、檔案內容或未受限 body。
-- [ ] `GET /api/v1/item-audit/logs` 只允許 `item.view`，固定排序並支援規定 filters。
+- [x] 寫入可接收 caller transaction connection，不能在業務 transaction 外另開 query（`record()` 早已於 T04 完成，本任務新增的 `list()` 讀路徑另外重讀操作者現況，見下一項）。
+- [x] Audit detail 不保存 password、token、device key、整份 CSV、檔案內容或未受限 body（同上，`record()` 呼叫端規則不變；本任務未新增任何 detail 寫入呼叫點）。
+- [x] `GET /api/v1/item-audit/logs` 只允許 `item.view`，固定排序（`occurred_at DESC, id DESC`）並支援規定 filters（page、pageSize、from、to、actor、target、action、targetType）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAuditLogService.test.js test/itemAuditHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemAudit.integration.test.js`
+- [x] `npm test --workspace server -- test/itemAuditLogService.test.js`（`itemAuditHandlers.test.js` 沒有建立：對照既有 `listAuditLogsHandler.js`，同類 handler 本來就沒有獨立的假連線單元測試，行為完全由下面的真實整合測試覆蓋，跟現有慣例一致。）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemAudit.integration.test.js`
 
 **Dependencies:** T02, T03, T08
 
@@ -421,10 +421,9 @@ T01 migration freeze
 - `server/src/modules/item/ItemAuditLogService.js`
 - `server/src/handlers/item-audit/listItemAuditLogsHandler.js`
 - `server/src/handlers/item-audit/itemAuditSchemas.js`
-- `server/test/itemAuditLogService.test.js`
-- `server/test/itemAuditHandlers.test.js`
+- `server/test/integration/itemAudit.integration.test.js`
 
-**Estimated scope:** M（5 files）
+**Estimated scope:** M（4 files）
 
 ### Task T12：建立 Item／SKU 列表與詳情後端
 
