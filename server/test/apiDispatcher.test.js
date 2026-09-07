@@ -16,6 +16,7 @@ import {
   validateApiConfig
 } from "../src/framework/middleware/apiDispatcher.js";
 import { createErrorHandler } from "../src/framework/middleware/errorHandler.js";
+import { skuCodeTaken } from "../src/modules/item/itemErrors.js";
 import { IdempotencyService } from "../src/services/idempotency/IdempotencyService.js";
 import { MemoryIdempotencyStore } from "../src/services/idempotency/IdempotencyStore.js";
 import { normalizeIdempotencyConfig } from "../src/services/idempotency/normalizeIdempotencyConfig.js";
@@ -1003,4 +1004,46 @@ test("an upload budget the instance cannot afford stops startup", async (t) => {
   assert.doesNotThrow(() =>
     build({ maxConcurrentUploads: 10, maxUploadMemoryBytes: 268435456 })
   );
+});
+
+// ApplicationError 有兩個獨立的 detail 欄位：.details 只會流進伺服器端的
+// log（見 errorHandler.js 呼叫 logger.error 那一段），只有 .publicDetails 會
+// 被 sendError() 序列化進 HTTP 回應（見 errorHandler.js 最後呼叫 sendError 那
+// 一段）。之前每一個 error factory 都只設 .details、忘了設 .publicDetails，
+// 但因為既有測試都是直接呼叫 factory 檢查丟出來的 JS Error，看到的正是那個
+// 有值的 .details，完全沒測過真正的 HTTP 回應——症狀只會在瀏覽器裡出現：
+// FormPanel.vue 的 detailsToFieldErrors() 讀不到欄位資訊，本來該紅字的欄位
+// 顯示不出來，只有一個通用 toast。這裡真的架一個 Express app、真的走
+// dispatcher／errorHandler／sendError 全部三層，再用 fetch() 發一個 HTTP
+// 請求，斷言 JSON 回應本體的 error.details ——不是斷言丟出來的 Error 物件本
+// 身——才會在這個 class 的錯誤重新出現時真的紅燈。
+test("an ApplicationError's publicDetails, not just details, reaches the HTTP response body", async (t) => {
+  const dispatcher = createApiDispatcher({
+    routes: [
+      {
+        ...apiRouteDefaults,
+        method: "POST",
+        path: "/api/v1/skus",
+        description: "Create a SKU (test double for the conflict path).",
+        authType: "public",
+        requestSchema: emptyRequestSchema,
+        responseSchema: anySuccessResponseSchema,
+        handler: "createSkuHandler"
+      }
+    ],
+    handlers: {
+      createSkuHandler: new TestHandler("createSkuHandler", () => {
+        throw skuCodeTaken("VC-001");
+      })
+    },
+    logger: silentLogger
+  });
+  const baseUrl = await startTestServer(t, dispatcher);
+
+  const response = await fetch(`${baseUrl}/api/v1/skus`, { method: "POST" });
+  const body = await response.json();
+
+  assert.equal(response.status, 409);
+  assert.equal(body.error.code, "SKU_CODE_TAKEN");
+  assert.deepEqual(body.error.details, { skuCode: "VC-001" });
 });

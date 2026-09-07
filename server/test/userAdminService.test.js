@@ -372,7 +372,15 @@ test("create rejects an unknown role id", async () => {
         password: "Correct-Horse-Battery-1",
         roleIds: [999]
       }),
-    { code: "UNKNOWN_ROLE" }
+    (error) => {
+      assert.equal(error.code, "UNKNOWN_ROLE");
+      // errorHandler.js only serializes publicDetails into the HTTP response
+      // body, not .details (see framework/middleware/errorHandler.js), and
+      // FormPanel.vue reads response.error.details to highlight the roleIds
+      // field — so this must be set too, not just .details.
+      assert.deepEqual(error.publicDetails, { roleIds: [999] });
+      return true;
+    }
   );
 });
 

@@ -31,7 +31,8 @@ function forbidden(message, { code, publicMessage, details }) {
     statusCode: 403,
     publicCode: code,
     publicMessage,
-    details
+    details,
+    publicDetails: details
   });
 }
 

@@ -74,6 +74,36 @@ test("issues/details survive onto the response-facing error for the two composit
   assert.deepEqual(referenced.details, { referenceTypes: ["sku", "audit"] });
 });
 
+// errorHandler.js 只把 ApplicationError.publicDetails 序列化進 HTTP 回應（見
+// framework/middleware/errorHandler.js 的 sendError 呼叫）；.details 只會流進
+// 伺服器端的 log。FormPanel.vue 的 detailsToFieldErrors() 讀的是回應裡的
+// error.details，也就是這裡的 publicDetails——上面那個測試只驗證 .details，
+// 曾經讓每個 factory 漏設 publicDetails 這件事完全沒有測試會失敗，因為呼叫
+// factory 本身而不是真的送一個 HTTP request 是看不出差異的。
+const DETAIL_BEARING_CASES = [
+  () => itemErrors.skuChildMismatch("uom", 9),
+  () => itemErrors.skuCodeTaken("VC-001"),
+  () => itemErrors.barcodeTaken("4891234567890"),
+  () => itemErrors.statusTransitionInvalid("archived", "active"),
+  () => itemErrors.itemReferenced(["sku"]),
+  () => itemErrors.skuReferenced(["barcode"]),
+  () => itemErrors.catalogInUse(["item"]),
+  () => itemErrors.categoryNameTaken("Vitamins"),
+  () => itemErrors.brandNameTaken("Brand A"),
+  () => itemErrors.uomCodeTaken("EA"),
+  () => itemErrors.categoryMaxDepthExceeded(8),
+  () => itemErrors.itemNotActivatable([{ field: "category", code: "REQUIRED" }])
+];
+
+for (const build of DETAIL_BEARING_CASES) {
+  const probe = build();
+  test(`${probe.code}'s publicDetails matches its internal details (what the HTTP response body actually carries)`, () => {
+    const error = build();
+    assert.notEqual(error.publicDetails, undefined, "publicDetails must be set or the client never sees it");
+    assert.deepEqual(error.publicDetails, error.details);
+  });
+}
+
 test("PERMISSION_STALE is deliberately not defined here; it is reused from adminGuard", () => {
   assert.equal(Object.hasOwn(itemErrors, "permissionStale"), false);
 });
