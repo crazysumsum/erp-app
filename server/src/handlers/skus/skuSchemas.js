@@ -46,6 +46,9 @@ export const SKU_LIST_QUERY_SCHEMA = Object.freeze({
     categoryId: { type: "integer", minimum: 1 },
     brandId: { type: "integer", minimum: 1 },
     status: { type: "string", enum: [...ITEM_STATUSES] },
+    // 冇明確指定 status 先套呢個預設：Archived 預設不在日常列表顯示
+    // （FR-DELETE-005），明確 status=archived 不受這個預設影響。
+    includeArchived: { type: "boolean", default: false },
     purchasable: { type: "boolean" },
     sellable: { type: "boolean" },
     sortBy: { type: "string", enum: [...ITEM_LIST_SORT_FIELDS], default: "updatedAt" },

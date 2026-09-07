@@ -124,11 +124,11 @@ async function seedFixture(db) {
     categoryId,
     brandId,
     uomId,
-    async seedItem({ name, productType = "standard" } = {}) {
+    async seedItem({ name, productType = "standard", status = "draft" } = {}) {
       const [item] = await db.query(
-        `INSERT INTO items (name, category_id, brand_id, product_type, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [name ?? `it-item-${randomUUID().slice(0, 8)}`, categoryId, brandId, productType, nowMs, nowMs]
+        `INSERT INTO items (name, category_id, brand_id, product_type, status, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name ?? `it-item-${randomUUID().slice(0, 8)}`, categoryId, brandId, productType, status, nowMs, nowMs]
       );
       itemIds.push(item.insertId);
       return item.insertId;
@@ -297,6 +297,59 @@ test("GET /items：分類／品牌／狀態篩選，回應唔洩漏 DB 內部欄
     "updatedAt",
     "version"
   ]);
+});
+
+test("GET /items 同 /skus：Archived 預設隱藏，明確 status=archived 或 includeArchived=true 先睇得到", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withViewer(t, application);
+  const fixture = await seedFixture(db);
+  t.after(async () => {
+    await fixture.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const marker = `archived-marker-${randomUUID().slice(0, 8)}`;
+  const archivedItemId = await fixture.seedItem({ name: marker, status: "archived" });
+  const activeItemId = await fixture.seedItem({ name: `active-${marker}` });
+  const archivedSkuId = await fixture.seedSku(activeItemId, { skuCode: `ARCH-${marker}`, status: "archived" });
+  const activeSkuId = await fixture.seedSku(activeItemId, { skuCode: `ACT-${marker}`, status: "active" });
+
+  const { url } = await application.start();
+
+  const defaultItems = await get(`${url}/api/v1/items?q=${encodeURIComponent(marker)}`, token);
+  assert.equal(defaultItems.status, 200);
+  assert.ok(!defaultItems.body.data.items.some((row) => row.id === archivedItemId), "預設唔應該見到 archived item");
+  assert.ok(defaultItems.body.data.items.some((row) => row.id === activeItemId));
+
+  const explicitArchivedItems = await get(
+    `${url}/api/v1/items?q=${encodeURIComponent(marker)}&status=archived`,
+    token
+  );
+  assert.equal(explicitArchivedItems.status, 200);
+  assert.deepEqual(
+    explicitArchivedItems.body.data.items.map((row) => row.id),
+    [archivedItemId],
+    "明確要求 status=archived 一定要見到"
+  );
+
+  const includeArchivedItems = await get(
+    `${url}/api/v1/items?q=${encodeURIComponent(marker)}&includeArchived=true`,
+    token
+  );
+  assert.equal(includeArchivedItems.status, 200);
+  assert.equal(includeArchivedItems.body.data.total, 2);
+
+  const defaultSkus = await get(`${url}/api/v1/skus?q=${encodeURIComponent(marker)}`, token);
+  assert.equal(defaultSkus.status, 200);
+  assert.ok(!defaultSkus.body.data.items.some((row) => row.id === archivedSkuId), "預設唔應該見到 archived SKU");
+  assert.ok(defaultSkus.body.data.items.some((row) => row.id === activeSkuId));
+
+  const includeArchivedSkus = await get(
+    `${url}/api/v1/skus?q=${encodeURIComponent(marker)}&includeArchived=true`,
+    token
+  );
+  assert.equal(includeArchivedSkus.status, 200);
+  assert.equal(includeArchivedSkus.body.data.total, 2);
 });
 
 test("GET /items/:id：完整詳情，含全部 SKU 摘要", { skip }, async (t) => {
