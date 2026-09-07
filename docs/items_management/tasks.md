@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T15 已完成，T16 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T16 已完成，T17 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -85,7 +85,7 @@ T01 migration freeze
 - [x] T13 建立商品導航與列表頁
 - [x] T14 建立 Item＋初始 SKU 原子建檔後端
 - [x] T15 建立 Item／SKU 建檔頁與基本 Editor
-- [ ] T16 建立 Item／SKU aggregate 更新後端
+- [x] T16 建立 Item／SKU aggregate 更新後端
 - [ ] T17 建立 Item／SKU 詳情與編輯頁
 - [ ] T18 建立 Item／SKU 生命週期後端
 - [ ] T19 建立生命週期與狀態操作 UI
@@ -592,26 +592,36 @@ T01 migration freeze
 
 **Description:** 實作 Item 與 SKU 更新、整組替換 UOM／Barcode／attributes 的 transaction 及 optimistic version，區分普通 RRP 與關鍵變更 reason 規則。
 
+**⚠️ 範圍決定：**
+
+- **「有交易／庫存後不可直接改」呢層未做**：design_spec §8.4 明確講「Phase 1 尚無庫存、採購或銷售表」，「現在不為尚不存在的模組建立 plugin registry 或空 interface；待第一個真引用出現再抽取」。冇資料源可以查「呢個 SKU 而家有冇交易／庫存」，所以呢個 task 冇實作呢層阻擋（`uomChangeBlocked()`／`trackingPolicyChangeBlocked()` 呢兩個 T03 已經預先寫低嘅錯誤 factory 保持未用，留俾第一個下游模組出現先接上）。現在做到、亦已確認要做嘅係較弱嗰層：Base UOM／任一 UOM 換算係數／追蹤政策改變（「關鍵變更」）一定要帶 `reason`，新增 `CRITICAL_CHANGE_REASON_REQUIRED` 錯誤。
+- **`skuCode` 唔喺呢個更新入面**：design_spec §7.4「SKU Code 在建立後 readonly；特批修改從獨立 action 開啟高強度 dialog」，對應 §6.3 嘅 `POST /api/v1/skus/:id/code/change`（`jwt-device-password`）——嗰個係獨立、未建嘅高強度端點，唔屬於呢個 task。
+- **Item 層冇 `productType`**：跟返 T14 已確認嘅範圍（Standard-only），呢期 Item 一開始係 standard 就一直係 standard，冇實際「改做 variant」嘅用途，`updateItem()` 完全唔處理呢個欄位。
+- **UOM／Barcode 用「刪晒重插」而唔係逐行 diff**：design_spec §6.3 前言本身就形容做「完整集合連同 version 一次提交」；子表 id 冇任何需求要求佢哋跨次更新保持穩定，提交嘅舊 id 淨係用嚟做擁有權檢查（`SKU_CHILD_MISMATCH`）。呢個做法遠比逐行 update／insert／delete 三分支簡單。
+
 **Acceptance criteria:**
 
-- [ ] Stale version 回 `VERSION_CONFLICT`，不寫資料或 audit；child ID 不屬 SKU 回 `SKU_CHILD_MISMATCH`。
-- [ ] 有交易／庫存後不可直接改 SKU Code、Base UOM、factor 或 tracking policy；關鍵變更 reason 必填。
-- [ ] 純 RRP 更新可不填 reason，但 audit 保存前後 amount、HKD、tax basis、actor 及時間。
+- [x] Stale version 回 `VERSION_CONFLICT`，不寫資料或 audit（Item／SKU 兩邊都驗證，SKU 嗰邊仲驗證咗 UOM／Barcode 子表完全冇被刪重插）；child ID 不屬 SKU 回 `SKU_CHILD_MISMATCH`（UOM／Barcode 分開驗證）。
+- [x] Base UOM／任一 UOM 換算係數／追蹤政策嘅關鍵變更冇填 `reason` 一律 `CRITICAL_CHANGE_REASON_REQUIRED`（「有交易／庫存後先擋」嗰層見上面範圍決定）。
+- [x] 純 RRP 更新可不填 reason，但 audit 保存前後 amount、HKD、`tax_not_applicable`、actor 及時間（actor／時間係每一列 audit 本身固有嘅欄位，唔使額外處理）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemUpdate.integration.test.js`
+- [x] `npm test --workspace server`（冇建 `itemAdminService.test.js`／`itemHandlers.test.js`：呢個 service 嘅正確性幾乎完全在 compare-and-set UPDATE、FK RESTRICT 刪除順序、unique key race 呢啲真 DB 先驗得到嘅行為，同 T09／T11／T12／T14 對同類問題嘅判斷一致，全部改用真 MySQL 整合測試覆蓋）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemUpdate.integration.test.js`（12 個案例：Item 改名／分類、Item version 衝突、Item not found、SKU 純 RRP、SKU 關鍵變更缺 reason／連同 reason、換 Base UOM、UOM／Barcode child id 唔屬呢個 SKU、Barcode race、SKU version 衝突、權限矩陣連 PERMISSION_STALE）
 
 **Dependencies:** T10, T11, T14
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/items/updateItemHandler.js`
-- `server/src/handlers/skus/updateSkuHandler.js`
-- `server/src/handlers/skus/skuSchemas.js`
-- `server/test/itemAdminService.test.js`
+- `server/src/modules/item/ItemAdminService.js`（`updateItem()`、`updateSku()`、`#isCriticalSkuChange()` 私有 helper；重用返 `createItem()` 已有嘅 `#assertCategoryExists`／`#assertBrandExists`／`#assertUomShapeValid`／`#assertUomsExist`／`#assertBarcodeShapeValid`）
+- `server/src/modules/item/itemErrors.js`（新增 `criticalChangeReasonRequired()`）
+- `server/src/handlers/items/itemSchemas.js`（`ITEM_UPDATE_REQUEST_SCHEMA`）
+- `server/src/handlers/items/updateItemHandler.js`（新建）
+- `server/src/handlers/skus/skuSchemas.js`（`ITEM_MGMT_POLICY`、`SKU_UPDATE_REQUEST_SCHEMA`）
+- `server/src/handlers/skus/updateSkuHandler.js`（新建）
+- `server/src/handlers/item-audit/itemAuditSchemas.js`（`ITEM_AUDIT_ACTIONS` 加 `item.update`／`sku.update`）
+- `server/test/integration/itemUpdate.integration.test.js`（新建，12 個案例）
 
 **Estimated scope:** M（5 logical files；integration test 同切片）
 

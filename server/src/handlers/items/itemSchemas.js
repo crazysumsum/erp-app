@@ -282,3 +282,28 @@ export const ITEM_CREATE_REQUEST_SCHEMA = Object.freeze({
     activationReason: { type: "string", minLength: 5, maxLength: 190 }
   }
 });
+
+// --- POST /api/v1/items/:id/update ------------------------------------------
+//
+// 整組覆蓋，唔係 PATCH——同 catalogSchemas.js 嘅 update 系列同一個慣例
+// （見 ItemCatalogService.updateCategory() 開頭嘅說明）。冇 `productType`：
+// 呢期唔開放喺 Item 層面改變（理由見 ItemAdminService.updateItem()）；
+// 冇 attribute values（T23）。
+
+export const ITEM_UPDATE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["name", "version"],
+  additionalProperties: false,
+  properties: {
+    name: { type: "string", minLength: 1, maxLength: 190 },
+    shortName: { type: "string", maxLength: 100, default: "" },
+    description: { type: ["string", "null"], maxLength: 4000 },
+    categoryId: { type: "integer", minimum: 1 },
+    brandId: { type: "integer", minimum: 1 },
+    countryOfOrigin: { type: "string", pattern: "^[A-Z]{2}$" },
+    manufacturer: { type: "string", maxLength: 190, default: "" },
+    defaultTrackingPolicy: { type: "string", enum: [...TRACKING_POLICIES], default: "none" },
+    defaultShelfLifeDays: { type: "integer", minimum: 1 },
+    version: { type: "integer", minimum: 1 }
+  }
+});

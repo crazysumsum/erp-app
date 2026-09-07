@@ -299,6 +299,20 @@ export function trackingPolicyChangeBlocked() {
   });
 }
 
+/**
+ * T16 範圍：Base UOM／換算係數／追蹤政策呢類關鍵變更，本期未有庫存／交易
+ * 表可以查（見 design_spec.md §8.4），所以未去到「已有交易／庫存就直接
+ * 擋」呢層（嗰層係 `uomChangeBlocked()`／`trackingPolicyChangeBlocked()`，
+ * 留俾第一個真引用出現嗰陣先接上）。現在做得到、亦已確認要做嘅係較弱嘅
+ * 規則：呢類改動一定要帶 reason，唔可以靜靜哋改。
+ */
+export function criticalChangeReasonRequired() {
+  return invalid("A reason is required when changing Base UOM, UOM factors, or tracking policy", {
+    code: "CRITICAL_CHANGE_REASON_REQUIRED",
+    publicMessage: "修改 Base 單位、單位換算係數或追蹤政策時必須填寫原因"
+  });
+}
+
 export function itemNotActivatable(issues) {
   return new ApplicationError("Item/SKU failed activation checks", {
     code: "ITEM_NOT_ACTIVATABLE",
