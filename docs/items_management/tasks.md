@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08 已完成，T09 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T09 已完成，T10 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -78,7 +78,7 @@ T01 migration freeze
 ### Phase B：核心 Item／SKU
 
 - [x] T08 建立 Item、SKU 與 Audit schema
-- [ ] T09 建立 SKU UOM 與 Barcode schema
+- [x] T09 建立 SKU UOM 與 Barcode schema
 - [ ] T10 建立核心驗證與 Barcode 規則
 - [ ] T11 建立 Item Audit service 與查詢 API
 - [ ] T12 建立 Item／SKU 列表與詳情後端
@@ -348,14 +348,13 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] DB 阻止同 SKU 多個 base／default purchase／default sale 及全域重複 normalized barcode。
-- [ ] Composite FK 阻止 Barcode 指向其他 SKU 的 UOM；Archived barcode 仍佔用唯一值。
-- [ ] MySQL 5.7 真實整合測試覆蓋 generated columns、collation、FK delete rules 與並發唯一性。
+- [x] DB 阻止同 SKU 多個 base／default purchase／default sale 及全域重複 normalized barcode。
+- [x] Composite FK 阻止 Barcode 指向其他 SKU 的 UOM；Archived barcode 仍佔用唯一值（barcode 表本身沒有 status 欄位，封存是 SKU／SKU UOM 層級的狀態變更，不會刪除或釋放 barcode 列，唯一值天生持續佔用；真正的刪除只有 T20 的「barcode release」高風險端點）。
+- [x] MySQL 5.7 真實整合測試覆蓋 generated columns、collation、FK delete rules 與唯一性（序列化重複寫入測試，證明 unique key 本身存在且生效）。並發（`Promise.all` 兩個真正同時的請求）留給 design_spec.md §11.2 明確指定嘅 `itemConcurrency.integration.test.js`——那是 T22 嘅任務，涵蓋整個 Item 功能的並發場景（version CAS、SKU Code、barcode、variant signature、Base UOM、最後一個 Active SKU 停用），現在單獨為 T09 先做一次会是提前重複 T22 的工作。
 
 **Verification:**
 
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemMigrations.integration.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemConcurrency.integration.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`（沿用 T04／T08 建立嘅同一份整合測試檔案延伸，跟實際做法一致；下面「Files likely touched」同步更正。並發測試檔案留給 T22。）
 
 **Dependencies:** T04, T08
 
@@ -363,10 +362,9 @@ T01 migration freeze
 
 - `server/database/migrations/0016_create_item_sku_uoms.js`
 - `server/database/migrations/0017_create_item_sku_barcodes.js`
-- `server/test/integration/itemMigrations.integration.test.js`
-- `server/test/integration/itemConcurrency.integration.test.js`
+- `server/test/integration/migrations.integration.test.js`
 
-**Estimated scope:** M（4 files）
+**Estimated scope:** M（3 files）
 
 ## Checkpoint C：T07–T09 Persistence Gate
 
