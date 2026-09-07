@@ -51,6 +51,13 @@ function conflict(message, { code, publicMessage, details } = {}) {
   });
 }
 
+export function itemVariantNotSupported() {
+  return invalid("Variant item creation is not yet supported (Attribute schema lands in a later task)", {
+    code: "ITEM_VARIANT_NOT_SUPPORTED",
+    publicMessage: "多規格商品建檔功能尚未開放，請先建立一般商品"
+  });
+}
+
 export function skuCodeInvalid(reason) {
   return invalid(`SKU code is invalid: ${reason}`, {
     code: "SKU_CODE_INVALID",
@@ -149,6 +156,20 @@ export function variantCombinationTaken() {
   return conflict("Variant combination is already used by another SKU in this item", {
     code: "VARIANT_COMBINATION_TAKEN",
     publicMessage: "這個規格組合已存在於同一商品內"
+  });
+}
+
+export function barcodePrimaryDuplicated() {
+  return invalid("More than one barcode is marked primary for the same packaging UOM", {
+    code: "BARCODE_PRIMARY_DUPLICATED",
+    publicMessage: "同一個包裝單位最多只可以有一個主要條碼"
+  });
+}
+
+export function activationReasonRequired() {
+  return invalid("activationReason is required when activate is true", {
+    code: "ACTIVATION_REASON_REQUIRED",
+    publicMessage: "直接啟用時必須填寫啟用原因"
   });
 }
 
@@ -285,6 +306,10 @@ export function itemNotActivatable(issues) {
     publicCode: "ITEM_NOT_ACTIVATABLE",
     publicMessage: "資料尚未符合啟用條件",
     details: { issues },
+    // `details` 淨係入 log（見 errorHandler.js），response 實際送嘅係
+    // `publicDetails`——呢個 issues 陣列係俾前端逐個 field 標紅用（見
+    // client/src/framework/ui/FormPanel.vue），冇呢個 API 契約就得返
+    // code／message，前端做唔到逐 field 定位錯誤。
     publicDetails: { issues }
   });
 }
