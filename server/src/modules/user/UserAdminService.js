@@ -355,6 +355,12 @@ export class UserAdminService {
       });
 
       // 通過預檢查之後才撤銷：被擋下的停用不該先把人踢下線。
+      //
+      // 這句在 SQL 交易之外（TokenRevocationService 用自己那份 database
+      // 參考，不是這個 connection），死結重試會讓它在同一次 disable() 裡被
+      // 呼叫多過一次——見本方法開頭 disable() 的重試迴圈。這裡沒事：
+      // revoke() 只會把版本號往上加，重複呼叫最多只是多撤銷一次、把界線往
+      // 前推一點，不會漏撤銷，也不影響下面「通過預檢查才撤銷」這條規則。
       await this.tokenRevocation.revoke(String(id), { reason: "user_disabled" });
 
       const nowMs = this.time.nowMs();

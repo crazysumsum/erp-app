@@ -14,16 +14,15 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import FormPanel from "@/framework/ui/FormPanel.vue";
+import { can } from "@/framework/authorization/can.js";
 import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
+import { STATUS_COLOUR, STATUS_LABEL } from "@/framework/ui/catalogStatus.js";
 import itemCatalogService from "@/services/itemCatalog.js";
 import { useSessionStore } from "@/stores/session.js";
 
 const session = useSessionStore();
-const canManage = computed(() => session.permissions.includes("item.mgmt"));
-
-const STATUS_LABEL = { active: "啟用", inactive: "已停用", archived: "已封存" };
-const STATUS_COLOUR = { active: "positive", inactive: "grey", archived: "warning" };
+const canManage = computed(() => can(session, { permissions: ["item.mgmt"] }));
 
 const columns = [
   { name: "name", label: "品牌名稱", field: "name", align: "left", sortable: true },
