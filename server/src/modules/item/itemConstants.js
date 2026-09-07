@@ -37,6 +37,25 @@ export const TRACKING_POLICIES = Object.freeze(["none", "batch", "batch_expiry",
 /** 支援的條碼種類（§6.8）。GTIN 系列會驗證長度及檢查碼，internal 只做基本安全字元處理。 */
 export const BARCODE_TYPES = Object.freeze(["gtin8", "upca", "ean13", "gtin14", "internal"]);
 
+/** 各 GTIN 條碼種類的固定總長度（含 check digit），§6.8。 */
+export const GTIN_LENGTHS = Object.freeze({ gtin8: 8, upca: 12, ean13: 13, gtin14: 14 });
+
+/** Internal 條碼的長度上限，跟 item_sku_barcodes.barcode 的欄寬一致（§4.5）。 */
+export const INTERNAL_BARCODE_MAX_LENGTH = 190;
+
+/**
+ * SKU UOM 換算係數（to_base_factor）允許的整數範圍（§4.6、§5.8）：1 到
+ * 1,000,000 的正整數，不接受小數。已確認的業務決策，不是部署設定。
+ */
+export const UOM_FACTOR_MIN = 1;
+export const UOM_FACTOR_MAX = 1_000_000;
+
+/** 金額（RRP）用 DECIMAL(19,4)：19 位有效數字，其中 4 位是小數（§4.6、§5.7）。 */
+export const MONEY_DECIMAL = Object.freeze({ integerDigits: 15, decimalPlaces: 4 });
+
+/** 重量、尺寸、淨含量用 DECIMAL(20,6)（§4.6、§5.7）。 */
+export const MEASUREMENT_DECIMAL = Object.freeze({ integerDigits: 14, decimalPlaces: 6 });
+
 /**
  * 建議零售價固定使用公司基礎幣別，不讓每個 SKU 或每次請求自行選擇
  * （DEC-016、BR-025）。改動這個值必須先改 requirement，因為它是已簽核的
