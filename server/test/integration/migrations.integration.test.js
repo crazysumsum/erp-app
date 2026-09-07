@@ -1,9 +1,9 @@
 /**
- * Phase 1 的八支 migration（含 Item Management 的 0010 權限種子、0011–0013
- * 的 Category／Brand／UOM catalog，以及提前建立的 0024 item_audit_logs），
- * 對一個真的、已經 migrate 過的 MySQL 驗收。0024 提前於 0014–0023（items／
- * skus 等表）是刻意的：它不依賴 items／skus（target_id 不設外鍵），先建好讓
- * Catalog 的寫入路徑從一開始就能正確寫稽核。
+ * Phase 1 的十支 migration（含 Item Management 的 0010 權限種子、0011–0013
+ * 的 Category／Brand／UOM catalog、0014–0015 的 Item／SKU 主表，以及提前建立
+ * 的 0024 item_audit_logs），對一個真的、已經 migrate 過的 MySQL 驗收。0024
+ * 提前於 0014–0023（items／skus 等表）是刻意的：它不依賴 items／skus
+ * （target_id 不設外鍵），先建好讓 Catalog 的寫入路徑從一開始就能正確寫稽核。
  *
  * 這裡要的是假連線給不了的兩件事：DDL 本身是不是合法的 MySQL（欄位型別、索引、
  * 外鍵的 ON DELETE 行為），以及**重跑會不會收斂**。後者在假連線上只是「我寫的
@@ -26,6 +26,8 @@ import { up as seedItemPermissions } from "../../database/migrations/0010_seed_i
 import { up as createItemCategories } from "../../database/migrations/0011_create_item_categories.js";
 import { up as createItemBrands } from "../../database/migrations/0012_create_item_brands.js";
 import { up as createItemUoms } from "../../database/migrations/0013_create_item_uoms.js";
+import { up as createItems } from "../../database/migrations/0014_create_items.js";
+import { up as createItemSkus } from "../../database/migrations/0015_create_item_skus.js";
 import { up as createItemAuditLogs } from "../../database/migrations/0024_create_item_audit_logs.js";
 
 const skip =
@@ -313,6 +315,256 @@ test("0013 built item_uoms with a case-insensitive unique code", { skip }, async
   }
 });
 
+test("0014 built items with RESTRICT FKs to category and brand", { skip }, async (t) => {
+  const database = await withDatabase(t);
+
+  const columns = await columnsOf(database, "items");
+  assert.ok(columns.size > 0, "items is missing; did 0014 run?");
+  assert.equal(columns.get("status").COLUMN_DEFAULT, "draft");
+  assert.equal(columns.get("product_type").COLUMN_DEFAULT, "standard");
+  assert.equal(columns.get("category_id").IS_NULLABLE, "YES");
+  assert.equal(columns.get("brand_id").IS_NULLABLE, "YES");
+  assert.equal(columns.get("version").COLUMN_DEFAULT, "1");
+
+  const [indexes] = await database.query(
+    `SELECT DISTINCT INDEX_NAME FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'items'`
+  );
+  assert.deepEqual(
+    indexes.map((row) => row.INDEX_NAME).sort(),
+    [
+      "PRIMARY",
+      "idx_items_status_updated",
+      // category_id／brand_id 的 FK 冇獨立索引：idx_items_category_status／
+      // idx_items_brand_status 已經以它們做最左欄位，MySQL 不會為同一個 FK
+      // 再建一個多餘的索引。created_by／updated_by 冇其他索引覆蓋，所以
+      // MySQL 會用約束名替它們各自建一個——同 item_categories 的
+      // fk_item_categories_created_by／updated_by 是同一個模式。
+      "idx_items_category_status",
+      "idx_items_brand_status",
+      "idx_items_name",
+      "fk_items_created_by",
+      "fk_items_updated_by"
+    ].sort()
+  );
+
+  const [constraints] = await database.query(
+    `SELECT CONSTRAINT_NAME, DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS
+     WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'items'`
+  );
+  const rulesByName = Object.fromEntries(
+    constraints.map((row) => [row.CONSTRAINT_NAME, row.DELETE_RULE])
+  );
+  assert.equal(rulesByName.fk_items_category, "RESTRICT");
+  assert.equal(rulesByName.fk_items_brand, "RESTRICT");
+  assert.equal(rulesByName.fk_items_created_by, "SET NULL");
+  assert.equal(rulesByName.fk_items_updated_by, "SET NULL");
+
+  const nowMs = Date.now();
+  const categoryName = `it-item-cat-${randomUUID().slice(0, 8)}`;
+  const brandName = `it-item-brand-${randomUUID().slice(0, 8)}`;
+
+  let categoryId = null;
+  let brandId = null;
+  let itemId = null;
+
+  try {
+    const [category] = await database.query(
+      "INSERT INTO item_categories (name, created_at, updated_at) VALUES (?, ?, ?)",
+      [categoryName, nowMs, nowMs]
+    );
+    categoryId = category.insertId;
+
+    const [brand] = await database.query(
+      "INSERT INTO item_brands (name, created_at, updated_at) VALUES (?, ?, ?)",
+      [brandName, nowMs, nowMs]
+    );
+    brandId = brand.insertId;
+
+    const [item] = await database.query(
+      "INSERT INTO items (name, category_id, brand_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      [`it-item-${randomUUID().slice(0, 8)}`, categoryId, brandId, nowMs, nowMs]
+    );
+    itemId = item.insertId;
+
+    // 分類／品牌被 Item 引用時不可刪除——資料庫層的最後防線，不只是 service 檢查。
+    await assert.rejects(
+      database.execute("DELETE FROM item_categories WHERE id = ?", [categoryId]),
+      (error) => {
+        assert.equal(error.cause?.code ?? error.code, "ER_ROW_IS_REFERENCED_2");
+        return true;
+      }
+    );
+    await assert.rejects(
+      database.execute("DELETE FROM item_brands WHERE id = ?", [brandId]),
+      (error) => {
+        assert.equal(error.cause?.code ?? error.code, "ER_ROW_IS_REFERENCED_2");
+        return true;
+      }
+    );
+  } finally {
+    // 先刪 Item 再刪它引用的 Category／Brand——順序反過來會撞 RESTRICT。
+    if (itemId !== null) {
+      await database.execute("DELETE FROM items WHERE id = ?", [itemId]);
+    }
+    if (categoryId !== null) {
+      await database.execute("DELETE FROM item_categories WHERE id = ?", [categoryId]);
+    }
+    if (brandId !== null) {
+      await database.execute("DELETE FROM item_brands WHERE id = ?", [brandId]);
+    }
+  }
+});
+
+test("0015 built item_skus: globally unique sku_code, per-item unique variant_signature, CASCADE from items, RESTRICT to UOMs", { skip }, async (t) => {
+  const database = await withDatabase(t);
+
+  const columns = await columnsOf(database, "item_skus");
+  assert.ok(columns.size > 0, "item_skus is missing; did 0015 run?");
+  assert.equal(columns.get("status").COLUMN_DEFAULT, "draft");
+  assert.equal(columns.get("tracking_policy").COLUMN_DEFAULT, "none");
+  assert.equal(columns.get("purchasable").COLUMN_DEFAULT, "1");
+  assert.equal(columns.get("sellable").COLUMN_DEFAULT, "1");
+  assert.equal(columns.get("suggested_price_amount").COLUMN_TYPE, "decimal(19,4)");
+  assert.equal(columns.get("net_content").COLUMN_TYPE, "decimal(20,6)");
+
+  const [indexes] = await database.query(
+    `SELECT DISTINCT INDEX_NAME FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'item_skus'`
+  );
+  assert.deepEqual(
+    indexes.map((row) => row.INDEX_NAME).sort(),
+    [
+      "PRIMARY",
+      "uq_item_skus_code",
+      "uq_item_skus_item_variant",
+      "uq_item_skus_id_item",
+      "idx_item_skus_item_status",
+      "idx_item_skus_status_flags",
+      "idx_item_skus_updated",
+      // item_id 的 FK 冇獨立索引：idx_item_skus_item_status 已經以 item_id
+      // 做最左欄位，MySQL 不會再建一個多餘的索引（uq_item_skus_id_item 最左
+      // 欄位是 id，唔算，蓋唔到）。三個 UOM FK 及 created_by／updated_by 冇
+      // 其他索引覆蓋，各自獨立建一個。
+      "fk_item_skus_net_content_uom",
+      "fk_item_skus_weight_uom",
+      "fk_item_skus_dimension_uom",
+      "fk_item_skus_created_by",
+      "fk_item_skus_updated_by"
+    ].sort()
+  );
+
+  const [constraints] = await database.query(
+    `SELECT CONSTRAINT_NAME, DELETE_RULE FROM information_schema.REFERENTIAL_CONSTRAINTS
+     WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'item_skus'`
+  );
+  const rulesByName = Object.fromEntries(
+    constraints.map((row) => [row.CONSTRAINT_NAME, row.DELETE_RULE])
+  );
+  assert.equal(rulesByName.fk_item_skus_item, "CASCADE");
+  assert.equal(rulesByName.fk_item_skus_net_content_uom, "RESTRICT");
+  assert.equal(rulesByName.fk_item_skus_weight_uom, "RESTRICT");
+  assert.equal(rulesByName.fk_item_skus_dimension_uom, "RESTRICT");
+  assert.equal(rulesByName.fk_item_skus_created_by, "SET NULL");
+  assert.equal(rulesByName.fk_item_skus_updated_by, "SET NULL");
+
+  const nowMs = Date.now();
+  const itemName = `it-sku-item-${randomUUID().slice(0, 8)}`;
+  const uomCode = `IT${randomUUID().slice(0, 6)}`;
+
+  let itemId = null;
+  let uomId = null;
+  let cascadedSkuId = null;
+
+  try {
+    const [item] = await database.query(
+      "INSERT INTO items (name, created_at, updated_at) VALUES (?, ?, ?)",
+      [itemName, nowMs, nowMs]
+    );
+    itemId = item.insertId;
+
+    const [uom] = await database.query(
+      "INSERT INTO item_uoms (code, name, created_at, updated_at) VALUES (?, ?, ?, ?)",
+      [uomCode, "Integration Test Unit", nowMs, nowMs]
+    );
+    uomId = uom.insertId;
+
+    const code = `IT-SKU-${randomUUID().slice(0, 8)}`;
+    const [sku] = await database.query(
+      `INSERT INTO item_skus (item_id, sku_code, sku_name, net_content_uom_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [itemId, code, "Integration test SKU", uomId, nowMs, nowMs]
+    );
+    cascadedSkuId = sku.insertId;
+
+    // 全域不分大小寫唯一，靠資料庫預設的 utf8mb4_unicode_ci collation。
+    await assert.rejects(
+      database.query(
+        `INSERT INTO item_skus (item_id, sku_code, sku_name, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [itemId, code.toLowerCase(), "Duplicate code", nowMs, nowMs]
+      ),
+      (error) => {
+        assert.equal(error.cause?.code ?? error.code, "ER_DUP_ENTRY");
+        return true;
+      }
+    );
+
+    // 同一個 Item 底下，相同 variant_signature 不可重複。
+    const signature = "a".repeat(64);
+    const [firstVariant] = await database.query(
+      `INSERT INTO item_skus (item_id, sku_code, sku_name, variant_signature, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [itemId, `IT-SKU-${randomUUID().slice(0, 8)}`, "Variant A", signature, nowMs, nowMs]
+    );
+    try {
+      await assert.rejects(
+        database.query(
+          `INSERT INTO item_skus (item_id, sku_code, sku_name, variant_signature, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [itemId, `IT-SKU-${randomUUID().slice(0, 8)}`, "Variant A duplicate", signature, nowMs, nowMs]
+        ),
+        (error) => {
+          assert.equal(error.cause?.code ?? error.code, "ER_DUP_ENTRY");
+          return true;
+        }
+      );
+    } finally {
+      await database.execute("DELETE FROM item_skus WHERE id = ?", [firstVariant.insertId]);
+    }
+
+    // 被 SKU 引用的 UOM 不可刪除——RESTRICT 是 service 檢查之外的最後防線。
+    await assert.rejects(
+      database.execute("DELETE FROM item_uoms WHERE id = ?", [uomId]),
+      (error) => {
+        assert.equal(error.cause?.code ?? error.code, "ER_ROW_IS_REFERENCED_2");
+        return true;
+      }
+    );
+
+    // 刪除父 Item 會 CASCADE 埋底下的 SKU——「只有未被引用的 Draft Item 可以
+    // 整個刪掉」由 service 保證，這裡驗證資料庫層真的會連 SKU 一併清走。
+    await database.execute("DELETE FROM items WHERE id = ?", [itemId]);
+    const [[remaining]] = await database.query(
+      "SELECT COUNT(*) AS c FROM item_skus WHERE id = ?",
+      [cascadedSkuId]
+    );
+    assert.equal(remaining.c, 0, "deleting the parent item must cascade-delete its SKU");
+    itemId = null;
+    cascadedSkuId = null;
+  } finally {
+    if (cascadedSkuId !== null) {
+      await database.execute("DELETE FROM item_skus WHERE id = ?", [cascadedSkuId]);
+    }
+    if (itemId !== null) {
+      await database.execute("DELETE FROM items WHERE id = ?", [itemId]);
+    }
+    if (uomId !== null) {
+      await database.execute("DELETE FROM item_uoms WHERE id = ?", [uomId]);
+    }
+  }
+});
+
 test("0024 built item_audit_logs with a non-cascading actor FK and no target FK", { skip }, async (t) => {
   const database = await withDatabase(t);
 
@@ -353,7 +605,7 @@ test("0024 built item_audit_logs with a non-cascading actor FK and no target FK"
   assert.equal(constraints.length, 1, "item_audit_logs should have exactly one FK");
 });
 
-test("re-running all eight migrations changes nothing", { skip }, async (t) => {
+test("re-running all ten migrations changes nothing", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   // `links` 只數 system-admin 自己嘅 role_permissions 列，不是整張表的
@@ -362,7 +614,7 @@ test("re-running all eight migrations changes nothing", { skip }, async (t) => {
   // 等）在建立、刪除自己另外角色的權限連結——跟 0008／0010 那兩支「seeded
   // exactly the catalogue」測試上面註解的理由一樣。`permissions` 表本身沒有
   // 任何測試會寫入新列（其他檔案只用 SELECT 讀既有 id），維持整表 COUNT(*)
-  // 沒問題。0011–0013、0024 這四支純粹是 `CREATE TABLE IF NOT EXISTS`，不寫
+  // 沒問題。0011–0015、0024 這六支純粹是 `CREATE TABLE IF NOT EXISTS`，不寫
   // 任何資料列（見各檔案開頭註解），所以「重跑不變」對它們而言驗的是表結構
   // 有沒有被動到，不是列數——列數本來就會被 itemCatalog.integration.test.js
   // 等同時在跑的測試改動，跟這幾支 migration 有沒有正確重跑無關。
@@ -381,8 +633,8 @@ test("re-running all eight migrations changes nothing", { skip }, async (t) => {
   const before = await countRows();
   const columnsBefore = await columnsOf(database, "users");
   const itemTableColumnsBefore = await Promise.all(
-    ["item_categories", "item_brands", "item_uoms", "item_audit_logs"].map((table) =>
-      columnsOf(database, table)
+    ["item_categories", "item_brands", "item_uoms", "items", "item_skus", "item_audit_logs"].map(
+      (table) => columnsOf(database, table)
     )
   );
 
@@ -394,6 +646,8 @@ test("re-running all eight migrations changes nothing", { skip }, async (t) => {
   await createItemCategories(database);
   await createItemBrands(database);
   await createItemUoms(database);
+  await createItems(database);
+  await createItemSkus(database);
   await createItemAuditLogs(database);
 
   assert.deepEqual(await countRows(), before);
@@ -402,7 +656,7 @@ test("re-running all eight migrations changes nothing", { skip }, async (t) => {
     [...columnsBefore.keys()].sort()
   );
 
-  const itemTables = ["item_categories", "item_brands", "item_uoms", "item_audit_logs"];
+  const itemTables = ["item_categories", "item_brands", "item_uoms", "items", "item_skus", "item_audit_logs"];
   for (const [index, table] of itemTables.entries()) {
     assert.deepEqual(
       [...(await columnsOf(database, table)).keys()].sort(),
