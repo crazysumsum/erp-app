@@ -51,13 +51,6 @@ function conflict(message, { code, publicMessage, details } = {}) {
   });
 }
 
-export function itemVariantNotSupported() {
-  return invalid("Variant item creation is not yet supported (Attribute schema lands in a later task)", {
-    code: "ITEM_VARIANT_NOT_SUPPORTED",
-    publicMessage: "多規格商品建檔功能尚未開放，請先建立一般商品"
-  });
-}
-
 export function skuCodeInvalid(reason) {
   return invalid(`SKU code is invalid: ${reason}`, {
     code: "SKU_CODE_INVALID",
@@ -90,7 +83,27 @@ export function skuChildMismatch(childType, childId) {
 export function attributeValueInvalid(reason) {
   return invalid(`Attribute value is invalid: ${reason}`, {
     code: "ATTRIBUTE_VALUE_INVALID",
-    publicMessage: "商品屬性內容不正確"
+    publicMessage: `商品屬性內容不正確：${reason}`,
+    details: { reason }
+  });
+}
+
+/** Variant Item 嘅 SKU 冇帶任何 `variantValues`（§4.4：Variant SKU 必須有
+ * 完整嘅規格組合）。 */
+export function variantValuesRequired() {
+  return invalid("A variant item's SKU must include at least one variant value", {
+    code: "VARIANT_VALUES_REQUIRED",
+    publicMessage: "多規格商品的 SKU 必須提供至少一個規格值"
+  });
+}
+
+/** Standard Item 嘅 SKU 唔可以帶 `variantValues`（同 assertSkuActivatable()
+ * 嘅 STANDARD_SKU_HAS_VARIANT 檢查同一條規則，呢度喺 create 一開始就擋，
+ * 唔使等到 activate 先發現）。 */
+export function standardSkuHasVariantValues() {
+  return invalid("A standard item's SKU cannot include variant values", {
+    code: "STANDARD_SKU_HAS_VARIANT_VALUES",
+    publicMessage: "一般商品的 SKU 不可以有規格組合"
   });
 }
 
@@ -154,6 +167,13 @@ export function attributeNotFound(id) {
   return notFound(`Attribute ${id} not found`, {
     code: "ATTRIBUTE_NOT_FOUND",
     publicMessage: "找不到這個商品屬性"
+  });
+}
+
+export function attributeOptionNotFound(id) {
+  return notFound(`Attribute option ${id} not found`, {
+    code: "ATTRIBUTE_OPTION_NOT_FOUND",
+    publicMessage: "找不到這個屬性選項"
   });
 }
 

@@ -19,6 +19,9 @@
  */
 import {
   activationReasonRequired,
+  attributeNotFound,
+  attributeOptionNotFound,
+  attributeValueInvalid,
   barcodeNotFound,
   barcodePrimaryDuplicated,
   barcodeTaken,
@@ -28,7 +31,6 @@ import {
   itemActivationRequiresSku,
   itemDeleteRequiresDraft,
   itemNotFound,
-  itemVariantNotSupported,
   lastActiveSku,
   lastSkuInItem,
   skuChildMismatch,
@@ -36,14 +38,18 @@ import {
   skuDeleteRequiresDraft,
   skuNotFound,
   standardItemSkuLimit,
+  standardSkuHasVariantValues,
   statusTransitionInvalid,
   uomConversionInvalid,
   uomNotFound,
+  variantCombinationTaken,
+  variantValuesRequired,
   versionConflict
 } from "./itemErrors.js";
 import { ITEM_LIST_SORT_FIELDS, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS } from "./itemConstants.js";
 import { assertSkuActivatable } from "./itemValidation.js";
 import { normalizeBarcode } from "./barcodeValidation.js";
+import { computeVariantSignature, typedValueToCanonicalString } from "./variantSignature.js";
 import { ItemAuditLogService } from "./ItemAuditLogService.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 
@@ -116,13 +122,17 @@ export class ItemAdminService {
   // --- Item：建立 -----------------------------------------------------------
 
   /**
-   * 原子建立 Item＋一個 SKU（連同其 UOM／Barcode 集合），`activate: true` 時
-   * 在同一交易內完成啟用。設計說明見 design_spec.md §4.1、§6.2、§6.9。
+   * 原子建立 Item＋一個或多個 SKU（連同各自嘅 UOM／Barcode 集合），
+   * `activate: true` 時在同一交易內全部一齊完成啟用。設計說明見
+   * design_spec.md §4.1、§4.4、§6.2、§6.9。
    *
-   * T14 範圍只做 Standard Item：`item.productType` 送 `"variant"` 直接拒絕，
-   * request 亦不接受 `variantValues`——variant signature 計算依賴 attribute
-   * 表，那兩張表同計算邏輯本身都是 T23 的範圍，理由見
-   * docs/items_management/tasks.md T14／T23 條目的「範圍決定」說明。
+   * Standard：`skus` 恰好一個，唔接受 `variantValues`。Variant：每個 SKU
+   * 都要有 `variantValues`（`{attributeId, optionId}[]`，淨係 single_option
+   * 型別——理由見 itemSchemas.js 嘅 `ITEM_CREATE_SKU_VARIANT_VALUE_SCHEMA`
+   * 註解），由呢度查表驗證 attributeId／optionId 真係存在同啱用先計
+   * signature；`(item_id, variant_signature)` 呢條 DB unique key（喺
+   * `item_skus` 建表嗰陣已經有，見 0015_create_item_skus.js）負責喺並發
+   * 情況下實際擋重複組合。
    */
   async createItem({
     actorId,
@@ -143,11 +153,18 @@ export class ItemAdminService {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       const nowMs = this.time.nowMs();
 
-      if (item.productType === "variant") {
-        throw itemVariantNotSupported();
-      }
-      if (skus.length !== 1) {
+      if (item.productType === "standard" && skus.length !== 1) {
         throw standardItemSkuLimit();
+      }
+
+      const resolvedVariants = [];
+      for (const skuInput of skus) {
+        resolvedVariants.push(
+          await this.#resolveVariantSignature(connection, {
+            productType: item.productType,
+            variantValues: skuInput.variantValues ?? []
+          })
+        );
       }
 
       if (item.categoryId !== null && item.categoryId !== undefined) {
@@ -185,13 +202,19 @@ export class ItemAdminService {
       );
       const newItemId = itemResult.insertId;
 
-      const sku = await this.#createSkuRow(connection, {
-        itemId: newItemId,
-        sku: skus[0],
-        defaultTrackingPolicy,
-        nowMs,
-        actorId
-      });
+      const createdSkus = [];
+      for (const [index, skuInput] of skus.entries()) {
+        const createdSku = await this.#createSkuRow(connection, {
+          itemId: newItemId,
+          sku: skuInput,
+          defaultTrackingPolicy,
+          nowMs,
+          actorId,
+          variantSignature: resolvedVariants[index].signature,
+          variantValues: resolvedVariants[index].variantValues
+        });
+        createdSkus.push(createdSku);
+      }
 
       let activated = false;
       if (activate) {
@@ -200,33 +223,37 @@ export class ItemAdminService {
             ? await this.#isActiveLeafCategory(connection, item.categoryId)
             : false;
 
-        assertSkuActivatable({
-          item: { productType: item.productType, hasActiveLeafCategory },
-          sku: {
-            code: sku.code,
-            name: sku.name,
-            variantSignature: null,
-            uoms: sku.uoms,
-            trackingPolicy: sku.trackingPolicy,
-            shelfLifeDays: sku.shelfLifeDays,
-            minReceiptLifeDays: sku.minReceiptLifeDays,
-            minSaleLifeDays: sku.minSaleLifeDays,
-            sellable: sku.sellable,
-            suggestedPriceAmount: sku.suggestedPriceAmount,
-            effectiveFrom: sku.effectiveFrom,
-            effectiveTo: sku.effectiveTo,
-            barcodes: sku.normalizedBarcodes.map((normalizedBarcode) => ({ normalizedBarcode }))
-          }
-        });
+        for (const [index, sku] of createdSkus.entries()) {
+          assertSkuActivatable({
+            item: { productType: item.productType, hasActiveLeafCategory },
+            sku: {
+              code: sku.code,
+              name: sku.name,
+              variantSignature: resolvedVariants[index].signature,
+              uoms: sku.uoms,
+              trackingPolicy: sku.trackingPolicy,
+              shelfLifeDays: sku.shelfLifeDays,
+              minReceiptLifeDays: sku.minReceiptLifeDays,
+              minSaleLifeDays: sku.minSaleLifeDays,
+              sellable: sku.sellable,
+              suggestedPriceAmount: sku.suggestedPriceAmount,
+              effectiveFrom: sku.effectiveFrom,
+              effectiveTo: sku.effectiveTo,
+              barcodes: sku.normalizedBarcodes.map((normalizedBarcode) => ({ normalizedBarcode }))
+            }
+          });
+        }
 
         await connection.execute(`UPDATE items SET status = 'active', version = 2, updated_at = ? WHERE id = ?`, [
           nowMs,
           newItemId
         ]);
-        await connection.execute(
-          `UPDATE item_skus SET status = 'active', version = 2, updated_at = ? WHERE id = ?`,
-          [nowMs, sku.id]
-        );
+        for (const sku of createdSkus) {
+          await connection.execute(
+            `UPDATE item_skus SET status = 'active', version = 2, updated_at = ? WHERE id = ?`,
+            [nowMs, sku.id]
+          );
+        }
         activated = true;
       }
 
@@ -238,23 +265,25 @@ export class ItemAdminService {
         targetType: "item",
         targetId: newItemId,
         targetLabel: itemName,
-        detail: { productType: item.productType, skuCodes: [sku.code], activated },
+        detail: { productType: item.productType, skuCodes: createdSkus.map((sku) => sku.code), activated },
         reason: auditReason,
         requestId,
         ip
       });
-      await this.auditLog.record(connection, {
-        actorUserId: actorId,
-        actorUsername: actor.username,
-        action: "sku.create",
-        targetType: "sku",
-        targetId: sku.id,
-        targetLabel: sku.code,
-        detail: { itemId: newItemId, activated },
-        reason: auditReason,
-        requestId,
-        ip
-      });
+      for (const sku of createdSkus) {
+        await this.auditLog.record(connection, {
+          actorUserId: actorId,
+          actorUsername: actor.username,
+          action: "sku.create",
+          targetType: "sku",
+          targetId: sku.id,
+          targetLabel: sku.code,
+          detail: { itemId: newItemId, activated },
+          reason: auditReason,
+          requestId,
+          ip
+        });
+      }
 
       return newItemId;
     });
@@ -1664,6 +1693,70 @@ export class ItemAdminService {
     return Number(childCount) === 0;
   }
 
+  /** Standard：`variantValues` 一定要空，回 `{ signature: null, variantValues: [] }`。
+   * Variant：查表驗證每個 `{attributeId, optionId}` 真係存在、屬性真係
+   * `is_variant`＋`single_option`、option 真係屬於嗰個屬性，然後計出
+   * signature——只有呢度負責查表；`computeVariantSignature()`／
+   * `typedValueToCanonicalString()` 本身係純函式，唔識查資料庫（見
+   * variantSignature.js 檔頭註解）。連 `variantValues` 本身（已經驗證過）
+   * 一齊回埋，等 `#createSkuRow()` 可以寫返 `item_sku_attribute_values`——
+   * signature 淨係用嚟做唯一性判斷，唔代替實際 attribute value rows
+   * （design_spec §4.4）。 */
+  async #resolveVariantSignature(connection, { productType, variantValues }) {
+    if (productType === "standard") {
+      if (variantValues.length > 0) {
+        throw standardSkuHasVariantValues();
+      }
+      return { signature: null, variantValues: [] };
+    }
+
+    if (variantValues.length === 0) {
+      throw variantValuesRequired();
+    }
+
+    const entries = [];
+    for (const { attributeId, optionId } of variantValues) {
+      const [[attribute]] = await connection.query(
+        "SELECT id, data_type, is_variant FROM item_attribute_definitions WHERE id = ?",
+        [attributeId]
+      );
+      if (!attribute) {
+        throw attributeNotFound(attributeId);
+      }
+      if (!attribute.is_variant) {
+        throw attributeValueInvalid(`屬性 ${attributeId} 唔係 Variant 屬性`);
+      }
+      if (attribute.data_type !== "single_option") {
+        throw attributeValueInvalid(`屬性 ${attributeId} 唔係單選型別，暫時唔支援用嚟做規格`);
+      }
+
+      const [[option]] = await connection.query(
+        "SELECT id, attribute_id FROM item_attribute_options WHERE id = ?",
+        [optionId]
+      );
+      if (!option) {
+        throw attributeOptionNotFound(optionId);
+      }
+      if (Number(option.attribute_id) !== Number(attributeId)) {
+        throw attributeValueInvalid(`選項 ${optionId} 唔屬於屬性 ${attributeId}`);
+      }
+
+      entries.push({ attributeId, typedValue: typedValueToCanonicalString("single_option", optionId) });
+    }
+
+    let signature;
+    try {
+      signature = computeVariantSignature(entries);
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw attributeValueInvalid(error.message);
+      }
+      throw error;
+    }
+
+    return { signature, variantValues };
+  }
+
   async #assertUomsExist(connection, uomIds) {
     const uniqueIds = [...new Set(uomIds)];
     if (uniqueIds.length === 0) {
@@ -1734,7 +1827,10 @@ export class ItemAdminService {
    * generated-column unique key（base_slot 等）唔可能同其他交易race，靠
    * `#assertUomShapeValid()` 喺插入之前擋（見嗰個方法嘅註解）。
    */
-  async #createSkuRow(connection, { itemId, sku, defaultTrackingPolicy, nowMs, actorId }) {
+  async #createSkuRow(
+    connection,
+    { itemId, sku, defaultTrackingPolicy, nowMs, actorId, variantSignature = null, variantValues = [] }
+  ) {
     const skuCode = String(sku.skuCode ?? "").trim();
     const skuName = String(sku.skuName ?? "").trim();
     const trackingPolicy = sku.trackingPolicy ?? defaultTrackingPolicy;
@@ -1757,11 +1853,12 @@ export class ItemAdminService {
             min_receipt_life_days, min_sale_life_days, purchasable, sellable, inventory_tracked,
             suggested_price_amount, effective_from, effective_to, status, version,
             created_at, updated_at, created_by, updated_by)
-         VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)`,
         [
           itemId,
           skuCode,
           skuName,
+          variantSignature,
           trackingPolicy,
           sku.shelfLifeDays ?? null,
           sku.minReceiptLifeDays ?? null,
@@ -1781,9 +1878,31 @@ export class ItemAdminService {
       skuId = result.insertId;
     } catch (error) {
       if (isDuplicateEntry(error)) {
+        // 兩條 unique key 都可能撞：sku_code 全域唯一，同 (item_id,
+        // variant_signature) 擋同一個 Item 內重複規格組合——用錯誤訊息入面
+        // 嘅 key name 分清邊一條，唔可以一律當做 SKU_CODE_TAKEN。真正嘅
+        // mysql2 error 收埋喺 `.cause`（`MySqlDatabaseExecutor` 包裝過），
+        // 唔係呢層本身——同 `isDuplicateEntry()` 揾 `.code` 果種
+        // `error?.cause?.code || error?.code` 撈法一致。
+        const sqlMessage = error?.cause?.sqlMessage ?? error?.sqlMessage ?? "";
+        if (String(sqlMessage).includes("uq_item_skus_item_variant")) {
+          throw variantCombinationTaken();
+        }
         throw skuCodeTaken(skuCode);
       }
       throw error;
+    }
+
+    // Variant signature 淨係用嚟做唯一性判斷；可讀嘅規格組合本身要由呢啲
+    // typed value rows 組出嚟（design_spec §4.4：「這個 hash 只用於唯一性，
+    // 不代替實際 attribute rows」）。`#resolveVariantSignature()` 已經查表
+    // 驗證過每一項，呢度直接寫，唔使再驗一次。
+    for (const { attributeId, optionId } of variantValues) {
+      await connection.execute(
+        `INSERT INTO item_sku_attribute_values (sku_id, attribute_id, option_id, updated_at, updated_by)
+         VALUES (?, ?, ?, ?, ?)`,
+        [skuId, attributeId, optionId, nowMs, actorId]
+      );
     }
 
     const uomIdToSkuUomId = new Map();

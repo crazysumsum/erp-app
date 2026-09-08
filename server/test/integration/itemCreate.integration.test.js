@@ -1,12 +1,18 @@
 /**
- * T14 嘅 Item＋SKU 原子建檔端點，對一個真的、已經 migrate 過的 MySQL 驗收。
- * 設計說明見 docs/items_management/design_spec.md §4.1、§4.3、§6.2、§6.9。
+ * T14／T23 嘅 Item＋SKU 原子建檔端點，對一個真的、已經 migrate 過的 MySQL
+ * 驗收。設計說明見 docs/items_management/design_spec.md §4.1、§4.3、§4.4、
+ * §6.2、§6.9。
  *
  * 呢度要驗嘅係假連線頂唔到嘅嘢：真正嘅 transaction rollback（唔係「呼叫咗
- * ROLLBACK」，係「查返 DB 真係咩都冇存到」）、SKU Code／Barcode 嘅 unique key
- * 喺真 DB 底下真係擋到、idempotency 經真正嘅 HTTP round trip 真係得返一個
- * response。範圍決定（T14 只做 Standard Item）見
- * docs/items_management/tasks.md 嘅 T14／T23 條目。
+ * ROLLBACK」，係「查返 DB 真係咩都冇存到」）、SKU Code／Barcode／variant
+ * signature 嘅 unique key 喺真 DB 底下真係擋到、idempotency 經真正嘅 HTTP
+ * round trip 真係得返一個 response。
+ *
+ * Variant 相關測試直接種 attribute definition／option 落 DB（跳過
+ * attribute CRUD API）：Attribute 嘅新增／修改 endpoint 係 T24 先建立，呢個
+ * task（T23）淨係開放 `createItem()` 接受已經存在嘅 attribute／option 建
+ * Variant Item，同 T16／T18／T20 遇到「下一個 task 先有嘅 CRUD」嗰陣一樣，
+ * 直接用 SQL 種好啲要用嘅資料。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -133,6 +139,40 @@ async function seedCatalog(db) {
       await db.execute("DELETE FROM item_uoms WHERE id = ?", [uomId]);
       await db.execute("DELETE FROM item_brands WHERE id = ?", [brandId]);
       await db.execute("DELETE FROM item_categories WHERE id = ?", [categoryId]);
+    }
+  };
+}
+
+/** 一個 is_variant／single_option 嘅屬性連兩個選項，跳過 Attribute CRUD API
+ * （T24 先有）直接種落 DB。 */
+async function seedVariantAttribute(db, { optionLabels = ["紅", "藍"] } = {}) {
+  const nowMs = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+
+  const [attribute] = await db.query(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, is_filterable, status, created_at, updated_at)
+     VALUES (?, ?, 'single_option', 1, 0, 'active', ?, ?)`,
+    [`it-attr-${suffix}`, `Integration Test Colour ${suffix}`, nowMs, nowMs]
+  );
+  const attributeId = attribute.insertId;
+
+  const optionIds = [];
+  for (const label of optionLabels) {
+    const [option] = await db.query(
+      `INSERT INTO item_attribute_options (attribute_id, value, label, sort_order, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 'active', ?, ?)`,
+      [attributeId, label, label, optionIds.length, nowMs, nowMs]
+    );
+    optionIds.push(option.insertId);
+  }
+
+  return {
+    attributeId,
+    optionIds,
+    async cleanup() {
+      await db.execute("DELETE FROM item_attribute_options WHERE attribute_id = ?", [attributeId]);
+      await db.execute("DELETE FROM item_attribute_definitions WHERE id = ?", [attributeId]);
     }
   };
 }
@@ -308,7 +348,138 @@ test("activate:true 但唔夠完整（冇 Base UOM）：422 ITEM_NOT_ACTIVATABLE
   assert.equal(itemRows.length, 0, "assertSkuActivatable 拋出之後成個交易要 rollback，唔應該有任何殘留");
 });
 
-test("productType: variant：400 ITEM_VARIANT_NOT_SUPPORTED（T14 範圍決定，見 tasks.md）", { skip }, async (t) => {
+// --- Variant Item（T23） -----------------------------------------------------
+
+test("Variant Item：兩個 SKU 用唔同規格組合，一齊建成，各自有唔同嘅 variant_signature", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const suffix = randomUUID().slice(0, 8);
+  const payload = basePayload(catalog, {
+    item: { productType: "variant" },
+    skus: [
+      {
+        skuCode: `SKU-RED-${suffix}`,
+        skuName: "紅色",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }]
+      },
+      {
+        skuCode: `SKU-BLUE-${suffix}`,
+        skuName: "藍色",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[1] }]
+      }
+    ]
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 201, JSON.stringify(body));
+  created.itemId = body.data.id;
+  assert.equal(body.data.skus.length, 2);
+
+  const [skuRows] = await db.query(
+    "SELECT id, sku_code, variant_signature FROM item_skus WHERE item_id = ? ORDER BY id",
+    [created.itemId]
+  );
+  assert.equal(skuRows.length, 2);
+  assert.match(skuRows[0].variant_signature, /^[0-9a-f]{64}$/);
+  assert.match(skuRows[1].variant_signature, /^[0-9a-f]{64}$/);
+  assert.notEqual(skuRows[0].variant_signature, skuRows[1].variant_signature);
+
+  const [attributeValueRows] = await db.query(
+    "SELECT sku_id, attribute_id, option_id FROM item_sku_attribute_values WHERE sku_id IN (?, ?) ORDER BY sku_id",
+    [skuRows[0].id, skuRows[1].id]
+  );
+  assert.equal(attributeValueRows.length, 2);
+  assert.equal(attributeValueRows[0].attribute_id, attribute.attributeId);
+  assert.equal(attributeValueRows[0].option_id, attribute.optionIds[0]);
+  assert.equal(attributeValueRows[1].option_id, attribute.optionIds[1]);
+});
+
+test("Variant Item：兩個 SKU 用完全相同嘅規格組合：409 VARIANT_COMBINATION_TAKEN，成個交易 rollback", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  t.after(async () => {
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const suffix = randomUUID().slice(0, 8);
+  const variantValues = [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }];
+  const payload = basePayload(catalog, {
+    item: { productType: "variant" },
+    skus: [
+      {
+        skuCode: `SKU-A-${suffix}`,
+        skuName: "A",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues
+      },
+      {
+        skuCode: `SKU-B-${suffix}`,
+        skuName: "B",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues
+      }
+    ]
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 409, JSON.stringify(body));
+  assert.equal(body.error.code, "VARIANT_COMBINATION_TAKEN");
+
+  const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", [payload.item.name]);
+  assert.equal(itemRows.length, 0, "撞咗規格組合，連第一粒已經插入嘅 SKU 都要 rollback");
+});
+
+test("Standard Item 嘅 SKU 帶 variantValues：400 STANDARD_SKU_HAS_VARIANT_VALUES", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  t.after(async () => {
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const payload = basePayload(catalog, {
+    sku: { variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }] }
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 400, JSON.stringify(body));
+  assert.equal(body.error.code, "STANDARD_SKU_HAS_VARIANT_VALUES");
+
+  const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", [payload.item.name]);
+  assert.equal(itemRows.length, 0);
+});
+
+test("Variant Item 嘅 SKU 冇帶 variantValues：400 VARIANT_VALUES_REQUIRED", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
   const catalog = await seedCatalog(db);
@@ -322,10 +493,131 @@ test("productType: variant：400 ITEM_VARIANT_NOT_SUPPORTED（T14 範圍決定�
   const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
 
   assert.equal(status, 400, JSON.stringify(body));
-  assert.equal(body.error.code, "ITEM_VARIANT_NOT_SUPPORTED");
+  assert.equal(body.error.code, "VARIANT_VALUES_REQUIRED");
+});
 
-  const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", [payload.item.name]);
-  assert.equal(itemRows.length, 0);
+test("Variant Item：attributeId 唔存在：404 ATTRIBUTE_NOT_FOUND", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  t.after(async () => {
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const payload = basePayload(catalog, {
+    item: { productType: "variant" },
+    sku: { variantValues: [{ attributeId: 999999999, optionId: 1 }] }
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 404, JSON.stringify(body));
+  assert.equal(body.error.code, "ATTRIBUTE_NOT_FOUND");
+});
+
+test("Variant Item：optionId 唔存在：404 ATTRIBUTE_OPTION_NOT_FOUND", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  t.after(async () => {
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const payload = basePayload(catalog, {
+    item: { productType: "variant" },
+    sku: { variantValues: [{ attributeId: attribute.attributeId, optionId: 999999999 }] }
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 404, JSON.stringify(body));
+  assert.equal(body.error.code, "ATTRIBUTE_OPTION_NOT_FOUND");
+});
+
+test("Variant Item：attribute 唔係 is_variant：400 ATTRIBUTE_VALUE_INVALID", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const nowMs = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+  const [descriptiveAttribute] = await db.query(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, is_filterable, status, created_at, updated_at)
+     VALUES (?, ?, 'single_option', 0, 0, 'active', ?, ?)`,
+    [`it-attr-desc-${suffix}`, `Integration Test Descriptive ${suffix}`, nowMs, nowMs]
+  );
+  const attributeId = descriptiveAttribute.insertId;
+  const [option] = await db.query(
+    `INSERT INTO item_attribute_options (attribute_id, value, label, sort_order, status, created_at, updated_at)
+     VALUES (?, 'A', 'A', 0, 'active', ?, ?)`,
+    [attributeId, nowMs, nowMs]
+  );
+  t.after(async () => {
+    await db.execute("DELETE FROM item_attribute_options WHERE attribute_id = ?", [attributeId]);
+    await db.execute("DELETE FROM item_attribute_definitions WHERE id = ?", [attributeId]);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const payload = basePayload(catalog, {
+    item: { productType: "variant" },
+    sku: { variantValues: [{ attributeId, optionId: option.insertId }] }
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 400, JSON.stringify(body));
+  assert.equal(body.error.code, "ATTRIBUTE_VALUE_INVALID");
+});
+
+test("Variant Item：連同 activate:true 一齊建，Item 同全部 SKU 一次過變 active", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const suffix = randomUUID().slice(0, 8);
+  const payload = basePayload(catalog, {
+    item: { productType: "variant" },
+    activate: true,
+    activationReason: "整合測試：Variant 直接上架",
+    skus: [
+      {
+        skuCode: `SKU-RED-${suffix}`,
+        skuName: "紅色",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }]
+      },
+      {
+        skuCode: `SKU-BLUE-${suffix}`,
+        skuName: "藍色",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[1] }]
+      }
+    ]
+  });
+  const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+  assert.equal(status, 201, JSON.stringify(body));
+  created.itemId = body.data.id;
+  assert.equal(body.data.status, "active");
+  assert.ok(body.data.skus.every((sku) => sku.status === "active"));
 });
 
 test("Standard Item 送兩個 SKU：409 STANDARD_ITEM_SKU_LIMIT", { skip }, async (t) => {

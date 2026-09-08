@@ -123,3 +123,13 @@ export const CATALOG_LIST_SORT_FIELDS = Object.freeze(["name", "status", "update
 
 /** `ItemLookupService` 嘅呼叫用途（§8.3）：唔同用途套用唔同嘅可用性規則。 */
 export const ITEM_LOOKUP_PURPOSES = Object.freeze(["purchase", "sale", "inventory"]);
+
+/** 商品屬性支援嘅資料型別（§5.10、§6.6）。 */
+export const ATTRIBUTE_DATA_TYPES = Object.freeze([
+  "text",
+  "long_text",
+  "decimal",
+  "boolean",
+  "date",
+  "single_option"
+]);

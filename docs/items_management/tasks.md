@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T22 已完成，T23 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T23 已完成，T24 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -865,35 +865,61 @@ T01 migration freeze
 
 **Description:** 以 `0018`–`0022` 建立 Attribute definition／option／category mapping／typed values，並完成 deterministic variant signature。
 
-**⚠️ 承接 T14 範圍決定（2026-09-07）：T14 建 Item 時只做 Standard，`createItem()` 對 `productType: "variant"` 回「未支援」錯誤，Create request schema 完全冇 `variantValues` 欄位。本 task 除咗下面原有嘅 acceptance criteria，仲要補做：**
+**⚠️ 承接 T14 範圍決定（2026-09-07）：T14 建 Item 時只做 Standard，`createItem()` 對 `productType: "variant"` 回「未支援」錯誤，Create request schema 完全冇 `variantValues` 欄位。本 task 已完成以下補做項目：**
 
-- [ ] `server/src/modules/item/itemValidation.js` 或新檔加返 §4.4 嘅 variant signature 計算函式（attributeId 排序、`attributeId=typedValue` 正規化、SHA-256）。
-- [ ] `server/src/handlers/items/itemSchemas.js` 嘅 create request schema 加返 `skus[].variantValues`（`{attributeId, optionId}[]`）。
-- [ ] `ItemAdminService.createItem()` 開放 `productType: "variant"`：驗證 `variantValues` 入面嘅 attributeId／optionId 真係存在於 `item_attribute_definitions`／`item_attribute_options`（唔止計 hash，仲要查表確認合法），計出 signature 後靠 `(item_id, variant_signature)` unique key 擋重複組合。
-- [ ] 對應更新 T14 嘅 integration test（`itemCreate.integration.test.js`），加返 Variant Item 建檔嘅案例。
+- [x] `server/src/modules/item/variantSignature.js`（新檔）加咗 §4.4 嘅 variant signature 計算函式（attributeId 排序、`attributeId=typedValue` 正規化、SHA-256）。
+- [x] `server/src/handlers/items/itemSchemas.js` 嘅 create request schema 加咗 `skus[].variantValues`（`{attributeId, optionId}[]`，預設 `[]`）。
+- [x] `ItemAdminService.createItem()` 開放咗 `productType: "variant"`：驗證 `variantValues` 入面嘅 attributeId／optionId 真係存在於 `item_attribute_definitions`／`item_attribute_options`（唔止計 hash，仲有查表確認合法），計出 signature 後靠 `(item_id, variant_signature)` unique key 擋重複組合。
+- [x] 對應更新咗 T14 嘅 integration test（`itemCreate.integration.test.js`），加咗 8 個 Variant Item 建檔案例。
+
+**⚠️ Schema sign-off（2026-09-07，已取得使用者明確批准）：** 起 `0018`–`0022` 五個新表之前，已經喺 chat 入面解釋咗每個表嘅欄位、型別、default、每個 index／constraint 嘅用途，同對現有資料／程式碼嘅影響（全部係新表，冇對現有表做任何改動），跟 CLAUDE.md 第 8 條先解釋後批准。設計入面有兩個 spec 冇講明、而且一用落 production 就實際上冇得回頭嘅演算法決定，用 `AskUserQuestion` 問過使用者：Unicode normalization form（NFC vs NFD vs 唔做 normalize）同 canonical string 嘅 separator 字元（`&` vs `|` vs 其他）。使用者第一次冇答（dismiss），之後主動要求用中文解釋清楚問題，解釋之後回覆「按你的建議做」，即係批准咗建議嘅 **NFC** normalization 同 **`&`** separator，連同之前提出嘅完整 5-table 設計。
+
+- `item_attribute_definitions`：`id, code(UNIQUE), name, data_type, uom_id(FK item_uoms RESTRICT), is_variant, is_filterable, status, version, created_at, updated_at, created_by, updated_by` —— Attribute 本身嘅定義（例如「顏色」「容量」），`data_type` 決定用邊個 value column，`is_variant` 決定呢個 attribute 可唔可以用嚟分 SKU variant。
+- `item_attribute_options`：`id, attribute_id(FK CASCADE), value, label, sort_order, status` + 標準欄位，`UNIQUE(attribute_id, value)` —— `single_option` 類型 attribute 嘅可選值（例如「顏色」底下嘅「紅」「藍」）。
+- `item_category_attributes`：`category_id(FK CASCADE), attribute_id(FK RESTRICT), required_for_activation, sort_order` + `created_at/updated_at`，複合 PK `(category_id, attribute_id)`，刻意冇 `version`／`created_by`／`updated_by`（跟 design_spec 講明由 Category 自己嘅 `expectedAttributeIds` compare-and-set 管理，唔係逐行版本控制）—— 邊個 category 要求邊啲 attribute。
+- `item_attribute_values`：`item_id(FK CASCADE), attribute_id(FK RESTRICT), option_id(FK RESTRICT, nullable), value_text, value_decimal, value_boolean, value_date, updated_at, updated_by`，複合 PK `(item_id, attribute_id)` —— Item 層面嘅 attribute typed value（非 variant 用途，例如唔分 SKU 嘅「產地」）。
+- `item_sku_attribute_values`：形狀同上但用 `sku_id(FK CASCADE)` 代替 `item_id`，複合 PK `(sku_id, attribute_id)` —— SKU 層面嘅 attribute typed value，即係實際組成 variant signature 嘅嗰啲 rows（hash 只用嚟做唯一性檢查，呢啲 rows 先係顯示／rebuild 嘅 source of truth）。
 
 **Acceptance criteria:**
 
-- [ ] Typed value 僅有一個 value column 有值，category mapping 與 option FK delete rules 符合設計。
-- [ ] Signature 不受輸入順序影響；同 Item 相同組合由 `(item_id, variant_signature)` 擋下。
-- [ ] Active SKU 使用中的 data type／variant flag 不可破壞性修改，Unicode normalization 有固定測試向量。
+- [x] Typed value 僅有一個 value column 有值，category mapping 與 option FK delete rules 符合設計（`itemAttributeMigrations.integration.test.js` 逐表用真 SQL 驗證咗 CASCADE／RESTRICT 同 unique constraint）。
+- [x] Signature 不受輸入順序影響；同 Item 相同組合由 `(item_id, variant_signature)` 擋下（`variantSignature.test.js` 嘅 order-independence 測試；`itemCreate.integration.test.js` 嘅重複組合 409 測試連埋 rollback 驗證）。
+- [x] Unicode normalization（NFC）有固定測試向量（`variantSignature.test.js` 用 `String.fromCodePoint` 構造精確嘅 precomposed／decomposed 兩種 "café" 表示法，驗證正規化後 signature 相同）。
+- [ ] 「Active SKU 使用中的 data type／variant flag 不可破壞性修改」——**延後至 T24**：T23 範圍淨係開放 `createItem()` 消費已存在嘅 attribute／option 資料，完全冇建立 attribute／option 嘅寫入（create／update／delete）API，測試全部直接用 SQL 種 fixture（同 T16／T18／T20 已用開嘅慣例一致）。冇寫入 API 就唔存在「修改」呢件事，呢條 criteria 天然要等 T24 起咗 Attribute CRUD 先有意義去驗證。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/variantSignature.test.js test/itemValidation.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemAttributeMigrations.integration.test.js`
+- [x] `npm run lint`（repo 根）
+- [x] `npm test --workspace server -- test/variantSignature.test.js`（14 個案例，全過）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemAttributeMigrations.integration.test.js`（7 個案例），連跑 3 次穩定通過
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCreate.integration.test.js`（21 個案例，含新增 8 個 variant 案例），連跑 3 次穩定通過
+- [x] `npm test --workspace server`（1301 個案例），run 兩次穩定全過
+- [x] 測試後確認 dev DB 無殘留
+
+**過程中發現並修正嘅兩個 bug：**
+
+- **`.cause` sqlMessage 解包漏咗**：`#createSkuRow` 最初用 `error?.sqlMessage` 判斷係咪 `uq_item_skus_item_variant` 撞 key，但 `MySqlDatabaseExecutor`（`withTransaction()` 入面用嗰個）將真正嘅 mysql2 error 包咗一層 `MySqlDatabaseOperationError`，真正嘅 `sqlMessage`／`code` 喺 `error.cause` 度，唔喺 `error` 本身。結果原本應該回 `VARIANT_COMBINATION_TAKEN` 嘅案例錯回咗 `SKU_CODE_TAKEN`。用一個直連 mysql2 嘅拋棄式 script 重現咗真實錯誤格式之後確認，改用 `error?.cause?.sqlMessage ?? error?.sqlMessage` 修正。
+- **漏咗寫 `item_sku_attribute_values` rows**：初版淨係計咗 hash 存落 `item_skus.variant_signature`，冇實際插入 `item_sku_attribute_values`。重讀 design_spec §4.4 原文「呢個 hash 只用於唯一性，不代替實際 attribute rows」先發現漏咗，修正咗 `#resolveVariantSignature()` 令佢連 `variantValues` 一齊帶返出嚟，`#createSkuRow()` 插入 `item_skus` 之後即刻逐條插返 `item_sku_attribute_values`。
 
 **Dependencies:** T04, T08, T10
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/database/migrations/0018_create_item_attribute_definitions.js`
-- `server/database/migrations/0019_create_item_attribute_options.js`
-- `server/database/migrations/0020_create_item_category_attributes.js`
-- `server/database/migrations/0021_create_item_attribute_values.js`
-- `server/database/migrations/0022_create_item_sku_attribute_values.js`
+- `server/database/migrations/0018_create_item_attribute_definitions.js`（新建，已 apply）
+- `server/database/migrations/0019_create_item_attribute_options.js`（新建，已 apply）
+- `server/database/migrations/0020_create_item_category_attributes.js`（新建，已 apply）
+- `server/database/migrations/0021_create_item_attribute_values.js`（新建，已 apply）
+- `server/database/migrations/0022_create_item_sku_attribute_values.js`（新建，已 apply）
+- `server/src/modules/item/variantSignature.js`（新建：`typedValueToCanonicalString()`、`computeVariantSignature()`）
+- `server/src/modules/item/itemConstants.js`（加 `ATTRIBUTE_DATA_TYPES`）
+- `server/src/modules/item/itemErrors.js`（移除已死嘅 `itemVariantNotSupported()`；加 `variantValuesRequired()`、`standardSkuHasVariantValues()`、`attributeOptionNotFound()`；enrich `attributeValueInvalid()`）
+- `server/src/handlers/items/itemSchemas.js`（`ITEM_CREATE_SKU_VARIANT_VALUE_SCHEMA`；`ITEM_CREATE_SKU_SCHEMA` 加 `variantValues`）
+- `server/src/modules/item/ItemAdminService.js`（`createItem()` 開放多 SKU／variant；新增 `#resolveVariantSignature()`；`#createSkuRow()` 加 variant signature 綁定同 `item_sku_attribute_values` 寫入同重複 key 消歧）
+- `server/test/variantSignature.test.js`（新建，14 個案例）
+- `server/test/integration/itemCreate.integration.test.js`（加 `seedVariantAttribute()` helper 同 8 個新案例，取代舊嘅「未支援」測試）
+- `server/test/integration/itemAttributeMigrations.integration.test.js`（新建，7 個案例，驗證五個新表嘅 constraint／FK delete rule）
 
-**Estimated scope:** M（5 logical files；`variantSignature.js` 與 tests 同切片）
+**Estimated scope:** L（5 個新 migration + 1 個新 domain module + service／schema／errors 改動 + 3 個 test 檔；比原估計大，因為原「Files likely touched」淨列咗 migration 檔，冇算入 T14 補做項目嘅實際範圍）
 
 ### Task T24：完成 Attribute／Variant API 與 UI
 
