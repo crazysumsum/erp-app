@@ -195,6 +195,13 @@ export function statusTransitionInvalid(from, to) {
   });
 }
 
+export function itemActivationRequiresSku() {
+  return invalid("At least one SKU must actually activate for the Item itself to become Active", {
+    code: "ITEM_ACTIVATION_REQUIRES_SKU",
+    publicMessage: "商品由草稿／停用轉為啟用時，至少要同時啟用一個 SKU"
+  });
+}
+
 export function lastActiveSku() {
   return conflict("Cannot deactivate the item's last active SKU", {
     code: "LAST_ACTIVE_SKU",

@@ -322,3 +322,26 @@ export const SKU_UPDATE_REQUEST_SCHEMA = Object.freeze({
     version: { type: "integer", minimum: 1 }
   }
 });
+
+// --- POST /api/v1/skus/:id/{activate,deactivate,discontinue,archive,restore} ---
+//
+// 獨立定義一份，理由同 itemSchemas.js 對應的段落：SKU 與 Item 分屬不同 handler
+// 目錄，冇跨目錄共用 schema 常數嘅慣例（同 catalogSchemas.js／itemSchemas.js
+// 唔共用 REASON_SCHEMA 一樣）。
+
+export const REASON_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 5,
+  maxLength: 190
+});
+
+export const VERSION_SCHEMA = Object.freeze({
+  type: "integer",
+  minimum: 1
+});
+
+export const PASSWORD_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 1,
+  maxLength: 1024
+});

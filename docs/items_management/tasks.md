@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T17 已完成，T18 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T18 已完成，T19 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -87,7 +87,7 @@ T01 migration freeze
 - [x] T15 建立 Item／SKU 建檔頁與基本 Editor
 - [x] T16 建立 Item／SKU aggregate 更新後端
 - [x] T17 建立 Item／SKU 詳情與編輯頁
-- [ ] T18 建立 Item／SKU 生命週期後端
+- [x] T18 建立 Item／SKU 生命週期後端
 - [ ] T19 建立生命週期與狀態操作 UI
 - [ ] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
 - [ ] T21 建立下游 ItemLookupService contract
@@ -669,28 +669,35 @@ T01 migration freeze
 
 **Description:** 實作 activate、deactivate、discontinue、archive、restore 狀態機，按 DEC-024 在同一 transaction 實際同步受影響 children。
 
+**⚠️ 範圍決定：archive 未做引用檢查**。design_spec §4.2／§6.2 都提到 Item／SKU 封存前要「驗證全部無庫存／在途／未完成引用」，但 Phase 1 完全未有庫存、採購、銷售呢啲下游表存在——同 T16 對 `uomChangeBlocked()`／`trackingPolicyChangeBlocked()`「有交易後先擋」嗰個範圍決定同一個理由（design_spec §8.4 本身都明確話「現在不為尚不存在的模組建立 plugin registry 或空 interface；待第一個真引用出現再抽取」）。`archiveItem()`／`archiveSku()` 現在直接允許（前提係 from-status 啱），呢個檢查留返俾第一個真正有下游表嘅 task（庫存或採購模組）補上，屆時 `itemReferenced()`／`skuReferenced()` 呢兩個已經喺 `itemErrors.js` 定義好嘅 error factory 就有真正用得著嘅地方。
+
 **Acceptance criteria:**
 
-- [ ] Item deactivate、discontinue、archive 原子同步 SKU；任一 child 失敗時 Item、全部 SKU、flags 及 audit rollback。
-- [ ] Item restore 只到 Inactive，不自動 restore／activate SKU；Active Item 不可單獨停用最後一個 Active SKU。
-- [ ] 各 route 使用設計指定的 `jwt`／`jwt-password`、`item.mgmt`、reason 及 version。
+- [x] Item deactivate、discontinue、archive 原子同步 SKU；任一 child 失敗時 Item、全部 SKU、flags 及 audit rollback（同一個 `database.withTransaction()`，`#cascadeSkuStatus()` 私有 helper 逐粒 SKU UPDATE＋audit，任何一步拋錯都令成個交易 rollback）。
+- [x] Item restore 只到 Inactive，不自動 restore／activate SKU（`restoreItem()` 完全冇 cascade 呼叫）；Active Item 不可單獨停用最後一個 Active SKU（`deactivateSku()` 用 `lastActiveSku()` 擋，僅喺父 Item 本身仲係 active 嗰陣先檢查——Item 本身已經 inactive／discontinued 時單獨停用最後一個 SKU 唔受呢條規則限制，因為冇「Item active 但冇任何 active SKU」呢個狀態要保護）。
+- [x] 各 route 使用設計指定的 `jwt`／`jwt-password`、`item.mgmt`、reason 及 version（Item／SKU 嘅 activate／deactivate 係 `jwt`；discontinue／archive／restore 係 `jwt-password`，同 design_spec §6.2／§6.3 嘅 Auth／Permission 欄一致）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemLifecycle.integration.test.js`
+- [x] `npm run lint`（repo 根，涵蓋 server／client）
+- [x] `npm test --workspace server`（1210 個案例，含新增 16 個，run 兩次穩定全過；冇建 `itemAdminService.test.js`／`itemHandlers.test.js`：呢個 service 嘅正確性幾乎完全在 compare-and-set UPDATE、cascade 交易、真 DB 先驗得到嘅行為，同 T16 對同類問題嘅判斷一致，全部改用真 MySQL 整合測試覆蓋）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemLifecycle.integration.test.js`（16 個案例：Item 直接啟用指定 SKU、冇帶 SKU 拒絕、已 active 嘅 Item 加啟另一 SKU 唔重複記 audit、跨 Item SKU id 拒絕、已封存 Item 拒絕啟用、Item 停用 cascade 兩個 SKU、version 衝突、Item 停產強制停採購但保留 sellable、密碼錯 403、Item 封存＋恢復＋SKU 仍然 archived、SKU 啟用要求父 Item 已 active、SKU 獨立啟用、最後一個 active SKU 唔可以停用、仲有第二個 active 就可以停用、SKU 停產／封存／恢復完整走一次連 audit 次序、冇 item.mgmt 403），連跑 3 次全部穩定通過
+- [x] 測試後確認 dev DB 無殘留（`items`／`item_skus`／`item_categories`／`item_brands`／`item_uoms`／`users`／`roles`／`item_audit_logs` 全部歸零）
 
 **Dependencies:** T11, T16
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/items/itemStatusHandlers.js`
-- `server/src/handlers/skus/skuStatusHandlers.js`
-- `server/test/itemAdminService.test.js`
-- `server/test/integration/itemLifecycle.integration.test.js`
+- `server/src/modules/item/itemErrors.js`（新增 `itemActivationRequiresSku()`）
+- `server/src/modules/item/ItemAdminService.js`（新增 `activateItem()`、`deactivateItem()`、`discontinueItem()`、`archiveItem()`、`restoreItem()`、`activateSku()`、`deactivateSku()`、`discontinueSku()`、`archiveSku()`、`restoreSku()`，同私有 helper `#transitionItemStatus()`、`#transitionSkuStatus()`、`#cascadeSkuStatus()`、`#assertSkuRowActivatable()`）
+- `server/src/handlers/items/itemSchemas.js`（新增 `REASON_SCHEMA`／`VERSION_SCHEMA`／`PASSWORD_SCHEMA`／`ITEM_ACTIVATE_REQUEST_SCHEMA`）
+- `server/src/handlers/items/itemStatusHandlers.js`（新建：`ActivateItemHandler`、`DeactivateItemHandler`、`DiscontinueItemHandler`、`ArchiveItemHandler`、`RestoreItemHandler`）
+- `server/src/handlers/skus/skuSchemas.js`（新增 `REASON_SCHEMA`／`VERSION_SCHEMA`／`PASSWORD_SCHEMA`）
+- `server/src/handlers/skus/skuStatusHandlers.js`（新建：`ActivateSkuHandler`、`DeactivateSkuHandler`、`DiscontinueSkuHandler`、`ArchiveSkuHandler`、`RestoreSkuHandler`）
+- `server/src/handlers/item-audit/itemAuditSchemas.js`（`ITEM_AUDIT_ACTIONS` 加 `item.activate`／`item.deactivate`／`item.discontinue`／`item.archive`／`item.restore`／`sku.activate`／`sku.deactivate`／`sku.discontinue`／`sku.archive`／`sku.restore`）
+- `server/test/integration/itemLifecycle.integration.test.js`（新建，16 個案例）
 
-**Estimated scope:** M（5 logical files；每支 endpoint 仍各自 export handler）
+**Estimated scope:** M（8 logical files；每支 endpoint 仍各自 export handler，冇建假 mock unit test）
 
 ## Checkpoint F：T16–T18 Core Mutation Gate
 

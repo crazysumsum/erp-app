@@ -41,8 +41,18 @@ export const ITEM_AUDIT_ACTIONS = Object.freeze([
   "uom.delete",
   "item.create",
   "item.update",
+  "item.activate",
+  "item.deactivate",
+  "item.discontinue",
+  "item.archive",
+  "item.restore",
   "sku.create",
-  "sku.update"
+  "sku.update",
+  "sku.activate",
+  "sku.deactivate",
+  "sku.discontinue",
+  "sku.archive",
+  "sku.restore"
 ]);
 
 /** target_type 同樣只列現在真的會寫入的種類；§5.12 規劃的完整清單見
