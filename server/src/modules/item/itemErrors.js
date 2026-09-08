@@ -341,6 +341,50 @@ export function uomCodeTaken(code) {
   });
 }
 
+export function attributeCodeTaken(code) {
+  return conflict(`Attribute code "${code}" is already taken`, {
+    code: "ATTRIBUTE_CODE_TAKEN",
+    publicMessage: "這個屬性代碼已被使用",
+    details: { code }
+  });
+}
+
+export function attributeOptionValueTaken(value) {
+  return conflict(`Attribute option value "${value}" is already used by this attribute`, {
+    code: "ATTRIBUTE_OPTION_VALUE_TAKEN",
+    publicMessage: "同一個屬性底下已有相同的選項值",
+    details: { value }
+  });
+}
+
+/** `is_variant` 喺呢個屬性已經有 `item_sku_attribute_values` 用緊之後唔可以
+ * 再改（改咗會令現有 variant signature 失去意義）。`data_type` 同 `code`
+ * 一樣建立後永久唔可以改，唔使呢個錯誤——update schema 根本冇收呢兩個欄。 */
+export function attributeInUse() {
+  return conflict("Attribute is already used by at least one SKU and its variant flag cannot change", {
+    code: "ATTRIBUTE_IN_USE",
+    publicMessage: "這個屬性已被 SKU 使用，無法修改是否用於區分規格"
+  });
+}
+
+export function attributeOptionInUse(value) {
+  return conflict(`Attribute option "${value}" is referenced by an existing value and cannot be removed`, {
+    code: "ATTRIBUTE_OPTION_IN_USE",
+    publicMessage: "這個選項已被使用，無法移除",
+    details: { value }
+  });
+}
+
+/** Category attribute assignment 嘅 compare-and-set：呼叫端提交嘅
+ * `expectedAttributeIds` 同資料庫現況唔一致（`item_category_attributes` 冇
+ * 逐行 version，用成組 id 比對代替——理由見 0020 migration 嘅註解）。 */
+export function categoryAttributesStale() {
+  return conflict("Category attribute assignment changed since it was loaded", {
+    code: "CATEGORY_ATTRIBUTES_STALE",
+    publicMessage: "這個分類的屬性規則已被其他人更新，請重新整理後再試"
+  });
+}
+
 export function categoryCycle() {
   return invalid("Moving this category under the given parent would create a cycle", {
     code: "CATEGORY_CYCLE",

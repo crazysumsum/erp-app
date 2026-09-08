@@ -156,5 +156,77 @@ export default {
 
   deleteUom(id, { reason, version, password }) {
     return httpClient.post(`/api/v1/catalog/uoms/${id}/delete`, { body: { reason, version, password } });
+  },
+
+  // --- Attribute：分頁清單（同 Brand 一樣，見 §6.4） -----------------------------
+
+  attributeList({ page, rowsPerPage, sortBy, descending, filter, status, dataType }) {
+    return httpClient
+      .get("/api/v1/catalog/attributes", {
+        params: {
+          page,
+          pageSize: rowsPerPage,
+          q: filter || undefined,
+          status: status || undefined,
+          dataType: dataType || undefined,
+          sortBy: sortBy || undefined,
+          descending
+        }
+      })
+      .then((result) => ({ rows: result.items, rowsNumber: result.total }));
+  },
+
+  createAttribute({ code, name, dataType, uomId, isVariant, isFilterable, options }) {
+    return httpClient.post("/api/v1/catalog/attributes/create", {
+      body: {
+        code,
+        name,
+        dataType,
+        uomId: uomId ?? null,
+        isVariant: !!isVariant,
+        isFilterable: !!isFilterable,
+        options: options ?? []
+      }
+    });
+  },
+
+  /** 唔接受 code／dataType——同 UOM code 一樣建立後不可改；options 係原子
+   * 覆蓋整個集合，帶 `id` 嘅代表保留（改內容），冇 `id` 代表新增。 */
+  updateAttribute(id, { name, uomId, isVariant, isFilterable, options, version }) {
+    return httpClient.post(`/api/v1/catalog/attributes/${id}/update`, {
+      body: { name, uomId: uomId ?? null, isVariant: !!isVariant, isFilterable: !!isFilterable, options: options ?? [], version }
+    });
+  },
+
+  activateAttribute(id, { reason, version }) {
+    return httpClient.post(`/api/v1/catalog/attributes/${id}/activate`, { body: { reason, version } });
+  },
+
+  deactivateAttribute(id, { reason, version }) {
+    return httpClient.post(`/api/v1/catalog/attributes/${id}/deactivate`, { body: { reason, version } });
+  },
+
+  archiveAttribute(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/attributes/${id}/archive`, { body: { reason, version, password } });
+  },
+
+  restoreAttribute(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/attributes/${id}/restore`, { body: { reason, version, password } });
+  },
+
+  deleteAttribute(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/catalog/attributes/${id}/delete`, { body: { reason, version, password } });
+  },
+
+  // --- Category attribute assignment（獨立端點，理由見 categoryHandlers.js） ----
+
+  getCategoryAttributes(categoryId) {
+    return httpClient.get(`/api/v1/catalog/categories/${categoryId}/attributes`);
+  },
+
+  assignCategoryAttributes(categoryId, { assignments, expectedAttributeIds }) {
+    return httpClient.post(`/api/v1/catalog/categories/${categoryId}/attributes/assign`, {
+      body: { assignments, expectedAttributeIds }
+    });
   }
 };

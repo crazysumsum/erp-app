@@ -1,6 +1,15 @@
 import {
+  attributeCodeTaken,
+  attributeInUse,
+  attributeNotFound,
+  attributeOptionInUse,
+  attributeOptionNotFound,
+  attributeOptionValueTaken,
+  attributeValueInvalid,
   brandNameTaken,
   brandNotFound,
+  catalogInUse,
+  categoryAttributesStale,
   categoryCycle,
   categoryHasChildren,
   categoryMaxDepthExceeded,
@@ -35,6 +44,13 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 
 function isDuplicateEntry(error) {
   return (error?.cause?.code || error?.code) === "ER_DUP_ENTRY";
+}
+
+/** FK RESTRICT 擋落嚟嘅刪除／改動——真正嘅 mysql2 error code 喺 `.cause`
+ * 度，唔喺 error 本身（`MySqlDatabaseExecutor` 包裝，見 T23 對呢個現象嘅
+ * 說明）。 */
+function isRowReferenced(error) {
+  return (error?.cause?.code || error?.code) === "ER_ROW_IS_REFERENCED_2";
 }
 
 /** `%`、`_`、`\` 是 LIKE 的萬用字元／跳脫字元，使用者輸入的字面值要先跳脫。
@@ -1189,6 +1205,720 @@ export class ItemCatalogService {
       version: Number(row.version),
       createdAt: Number(row.created_at),
       updatedAt: Number(row.updated_at)
+    };
+  }
+
+  // --- Attribute：查詢 ---------------------------------------------------------
+
+  /** 分頁清單，同 Brand 一樣（design_spec.md §6.4）。每個 row 連同其 option 集合
+   * 一次帶出——Attribute 建立後即需要 option 才有意義（single_option 型別），
+   * 拆成逐個 attribute 再查一次 option 只會多一輪 round trip，冇實際好處。 */
+  async listAttributes({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    page = 1,
+    pageSize = 20,
+    q = "",
+    status,
+    dataType,
+    sortBy = "name",
+    descending = false
+  }) {
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const conditions = [];
+    const params = [];
+
+    if (status) {
+      conditions.push("status = ?");
+      params.push(status);
+    }
+    if (dataType) {
+      conditions.push("data_type = ?");
+      params.push(dataType);
+    }
+
+    const term = String(q ?? "").trim();
+    if (term) {
+      conditions.push("(name LIKE ? OR code LIKE ?)");
+      const escaped = `%${escapeLikeTerm(term)}%`;
+      params.push(escaped, escaped);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const direction = descending ? "DESC" : "ASC";
+    const offset = (page - 1) * pageSize;
+
+    const [totalRows] = await this.database.query(
+      `SELECT COUNT(*) AS total FROM item_attribute_definitions ${whereClause}`,
+      params
+    );
+    const [rows] = await this.database.query(
+      `SELECT id, code, name, data_type, uom_id, is_variant, is_filterable, status, version, created_at, updated_at
+         FROM item_attribute_definitions ${whereClause}
+        ORDER BY ${sortColumn(sortBy)} ${direction}
+        LIMIT ? OFFSET ?`,
+      [...params, pageSize, offset]
+    );
+
+    const attributeIds = rows.map((row) => Number(row.id));
+    const optionsByAttribute = new Map(attributeIds.map((id) => [id, []]));
+    if (attributeIds.length > 0) {
+      const placeholders = attributeIds.map(() => "?").join(",");
+      const [optionRows] = await this.database.query(
+        `SELECT id, attribute_id, value, label, sort_order, status
+           FROM item_attribute_options
+          WHERE attribute_id IN (${placeholders})
+          ORDER BY attribute_id, sort_order, id`,
+        attributeIds
+      );
+      for (const row of optionRows) {
+        optionsByAttribute.get(Number(row.attribute_id)).push(row);
+      }
+    }
+
+    return {
+      items: rows.map((row) => this.#toAttributeSummary(row, optionsByAttribute.get(Number(row.id)) ?? [])),
+      total: Number(totalRows[0].total),
+      page,
+      pageSize
+    };
+  }
+
+  // --- Attribute：新增／修改 ---------------------------------------------------
+
+  async createAttribute({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    code,
+    name,
+    dataType,
+    uomId = null,
+    isVariant = false,
+    isFilterable = false,
+    options = [],
+    requestId,
+    ip
+  }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const normalizedCode = String(code ?? "").trim();
+      const normalizedName = String(name ?? "").trim();
+
+      this.#assertOptionsShapeValid(dataType, options);
+
+      if (uomId !== null && uomId !== undefined) {
+        if (dataType !== "decimal") {
+          throw attributeValueInvalid("uomId 只適用於 decimal 型別屬性");
+        }
+        await this.#requireUom(connection, uomId);
+      }
+
+      const nowMs = this.time.nowMs();
+
+      let attributeId;
+      try {
+        const [result] = await connection.execute(
+          `INSERT INTO item_attribute_definitions
+             (code, name, data_type, uom_id, is_variant, is_filterable, status, version,
+              created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
+          [
+            normalizedCode,
+            normalizedName,
+            dataType,
+            uomId ?? null,
+            isVariant ? 1 : 0,
+            isFilterable ? 1 : 0,
+            nowMs,
+            nowMs,
+            actorId,
+            actorId
+          ]
+        );
+        attributeId = result.insertId;
+      } catch (error) {
+        if (isDuplicateEntry(error)) {
+          throw attributeCodeTaken(normalizedCode);
+        }
+        throw error;
+      }
+
+      for (const option of options) {
+        const normalizedValue = String(option.value ?? "").trim();
+        const normalizedLabel = String(option.label ?? "").trim();
+        try {
+          await connection.execute(
+            `INSERT INTO item_attribute_options
+               (attribute_id, value, label, sort_order, status, version, created_at, updated_at, created_by, updated_by)
+             VALUES (?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
+            [attributeId, normalizedValue, normalizedLabel, option.sortOrder ?? 0, nowMs, nowMs, actorId, actorId]
+          );
+        } catch (error) {
+          if (isDuplicateEntry(error)) {
+            throw attributeOptionValueTaken(normalizedValue);
+          }
+          throw error;
+        }
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "attribute.create",
+        targetType: "attribute",
+        targetId: attributeId,
+        targetLabel: normalizedCode,
+        detail: {
+          name: normalizedName,
+          dataType,
+          isVariant: !!isVariant,
+          isFilterable: !!isFilterable,
+          optionCount: options.length
+        },
+        requestId,
+        ip
+      });
+
+      const optionRows = await this.#attributeOptions(connection, attributeId);
+      return this.#toAttributeSummary(
+        {
+          id: attributeId,
+          code: normalizedCode,
+          name: normalizedName,
+          data_type: dataType,
+          uom_id: uomId ?? null,
+          is_variant: isVariant ? 1 : 0,
+          is_filterable: isFilterable ? 1 : 0,
+          status: "active",
+          version: 1,
+          created_at: nowMs,
+          updated_at: nowMs
+        },
+        optionRows
+      );
+    });
+  }
+
+  /**
+   * 原子覆蓋 option 集合（design_spec.md §6.4：「Attribute update 原子覆蓋
+   * option 集合」）。`code`／`dataType` 不接受修改（同 UOM code 一樣「建立後
+   * 不可改」）；`isVariant` 喺呢個屬性已經有 `item_sku_attribute_values` 用緊
+   * 之後鎖死，唔喺呢度先重新開放。
+   *
+   * Option 唔係刪晒重插（同 updateSku 嘅 UOM／barcode 唔一樣）：option 的 id
+   * 可能已被 `item_attribute_values`／`item_sku_attribute_values` 的
+   * `option_id` FK RESTRICT 指住，刪一個仲用緊嘅 option 會俾資料庫擋——帶
+   * `id` 嘅 option 係「保留呢一行、改佢嘅內容」，唔帶 `id` 先係新增，原本存在
+   * 但今次冇再出現嘅先刪除。
+   */
+  async updateAttribute({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    id,
+    name,
+    uomId = null,
+    isVariant,
+    isFilterable,
+    options = [],
+    version,
+    requestId,
+    ip
+  }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireAttribute(connection, id);
+      const currentOptions = await this.#attributeOptions(connection, id);
+      const normalizedName = String(name ?? "").trim();
+
+      this.#assertOptionsShapeValid(current.data_type, options);
+
+      if (uomId !== null && uomId !== undefined) {
+        if (current.data_type !== "decimal") {
+          throw attributeValueInvalid("uomId 只適用於 decimal 型別屬性");
+        }
+        await this.#requireUom(connection, uomId);
+      }
+
+      const nextIsVariant = !!isVariant;
+      if (nextIsVariant !== !!current.is_variant) {
+        const [[usage]] = await connection.query(
+          "SELECT 1 AS used FROM item_sku_attribute_values WHERE attribute_id = ? LIMIT 1",
+          [id]
+        );
+        if (usage) {
+          throw attributeInUse();
+        }
+      }
+
+      const nowMs = this.time.nowMs();
+      const [result] = await connection.execute(
+        `UPDATE item_attribute_definitions
+            SET name = ?, uom_id = ?, is_variant = ?, is_filterable = ?, updated_at = ?, updated_by = ?,
+                version = version + 1
+          WHERE id = ? AND version = ?`,
+        [normalizedName, uomId ?? null, nextIsVariant ? 1 : 0, isFilterable ? 1 : 0, nowMs, actorId, id, version]
+      );
+
+      if (result.affectedRows === 0) {
+        await this.#requireAttribute(connection, id);
+        throw versionConflict();
+      }
+
+      const currentById = new Map(currentOptions.map((row) => [Number(row.id), row]));
+      const withId = options.filter((option) => option.id !== undefined && option.id !== null);
+      const withoutId = options.filter((option) => option.id === undefined || option.id === null);
+
+      for (const option of withId) {
+        if (!currentById.has(Number(option.id))) {
+          throw attributeOptionNotFound(option.id);
+        }
+      }
+
+      const keepIds = new Set(withId.map((option) => Number(option.id)));
+      const toDelete = currentOptions.filter((row) => !keepIds.has(Number(row.id)));
+
+      for (const row of toDelete) {
+        try {
+          await connection.execute("DELETE FROM item_attribute_options WHERE id = ?", [row.id]);
+        } catch (error) {
+          if (isRowReferenced(error)) {
+            throw attributeOptionInUse(row.value);
+          }
+          throw error;
+        }
+      }
+
+      for (const option of withId) {
+        const normalizedValue = String(option.value ?? "").trim();
+        const normalizedLabel = String(option.label ?? "").trim();
+        try {
+          await connection.execute(
+            `UPDATE item_attribute_options
+                SET value = ?, label = ?, sort_order = ?, status = ?, updated_at = ?, updated_by = ?,
+                    version = version + 1
+              WHERE id = ?`,
+            [
+              normalizedValue,
+              normalizedLabel,
+              option.sortOrder ?? 0,
+              option.status ?? "active",
+              nowMs,
+              actorId,
+              option.id
+            ]
+          );
+        } catch (error) {
+          if (isDuplicateEntry(error)) {
+            throw attributeOptionValueTaken(normalizedValue);
+          }
+          throw error;
+        }
+      }
+
+      for (const option of withoutId) {
+        const normalizedValue = String(option.value ?? "").trim();
+        const normalizedLabel = String(option.label ?? "").trim();
+        try {
+          await connection.execute(
+            `INSERT INTO item_attribute_options
+               (attribute_id, value, label, sort_order, status, version, created_at, updated_at, created_by, updated_by)
+             VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+            [
+              id,
+              normalizedValue,
+              normalizedLabel,
+              option.sortOrder ?? 0,
+              option.status ?? "active",
+              nowMs,
+              nowMs,
+              actorId,
+              actorId
+            ]
+          );
+        } catch (error) {
+          if (isDuplicateEntry(error)) {
+            throw attributeOptionValueTaken(normalizedValue);
+          }
+          throw error;
+        }
+      }
+
+      const detail = { optionCount: options.length };
+      if (normalizedName !== current.name) {
+        detail.name = { before: current.name, after: normalizedName };
+      }
+      const currentUomId = current.uom_id === null || current.uom_id === undefined ? null : Number(current.uom_id);
+      if ((uomId ?? null) !== currentUomId) {
+        detail.uomId = { before: currentUomId, after: uomId ?? null };
+      }
+      if (nextIsVariant !== !!current.is_variant) {
+        detail.isVariant = { before: !!current.is_variant, after: nextIsVariant };
+      }
+      if (!!isFilterable !== !!current.is_filterable) {
+        detail.isFilterable = { before: !!current.is_filterable, after: !!isFilterable };
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "attribute.update",
+        targetType: "attribute",
+        targetId: id,
+        targetLabel: current.code,
+        detail,
+        requestId,
+        ip
+      });
+
+      const optionRows = await this.#attributeOptions(connection, id);
+      return this.#toAttributeSummary(
+        {
+          id: Number(id),
+          code: current.code,
+          name: normalizedName,
+          data_type: current.data_type,
+          uom_id: uomId ?? null,
+          is_variant: nextIsVariant ? 1 : 0,
+          is_filterable: isFilterable ? 1 : 0,
+          status: current.status,
+          version: Number(version) + 1,
+          created_at: current.created_at,
+          updated_at: nowMs
+        },
+        optionRows
+      );
+    });
+  }
+
+  // --- Attribute：狀態變更 -----------------------------------------------------
+
+  async activateAttribute(options) {
+    return this.#transitionAttributeStatus(options, { fromStatuses: ["inactive"], toStatus: "active" });
+  }
+
+  async deactivateAttribute(options) {
+    return this.#transitionAttributeStatus(options, { fromStatuses: ["active"], toStatus: "inactive" });
+  }
+
+  async archiveAttribute(options) {
+    return this.#transitionAttributeStatus(options, {
+      fromStatuses: ["active", "inactive"],
+      toStatus: "archived"
+    });
+  }
+
+  async restoreAttribute(options) {
+    return this.#transitionAttributeStatus(options, { fromStatuses: ["archived"], toStatus: "inactive" });
+  }
+
+  // --- Attribute：受控刪除 -----------------------------------------------------
+
+  /**
+   * 永久刪除。`item_category_attributes`／`item_attribute_values`／
+   * `item_sku_attribute_values` 三張表都對 `attribute_id` 設 FK RESTRICT
+   * （見 0020–0022 migration），呢三張表喺呢個 task 已經真實存在（唔似
+   * deleteBrand／deleteUom 嗰陣，被引用嗰張表仲未建立），所以呢度直接接住
+   * FK RESTRICT 轉做公開錯誤，唔留返俾之後先補。
+   */
+  async deleteAttribute({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireAttribute(connection, id);
+
+      let result;
+      try {
+        [result] = await connection.execute(
+          "DELETE FROM item_attribute_definitions WHERE id = ? AND version = ?",
+          [id, version]
+        );
+      } catch (error) {
+        if (isRowReferenced(error)) {
+          throw catalogInUse(["category_rules_or_values"]);
+        }
+        throw error;
+      }
+
+      if (result.affectedRows === 0) {
+        await this.#requireAttribute(connection, id);
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "attribute.delete",
+        targetType: "attribute",
+        targetId: id,
+        targetLabel: current.code,
+        reason,
+        requestId,
+        ip
+      });
+
+      return { id: Number(id) };
+    });
+  }
+
+  // --- Category attribute assignment ------------------------------------------
+
+  /** 目前指派俾呢個 category 嘅 attribute 規則，俾前端讀出嚟組
+   * `expectedAttributeIds`（design_spec.md §6.4）。 */
+  async getCategoryAttributes({ actorId, claimedRoles, claimedPermissions, categoryId }) {
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+    await this.#requireCategory(this.database, categoryId);
+    const rows = await this.#categoryAttributeRows(this.database, categoryId);
+
+    return {
+      categoryId: Number(categoryId),
+      assignments: rows.map((row) => this.#toCategoryAttributeAssignment(row))
+    };
+  }
+
+  /**
+   * 原子覆蓋一個 category 嘅 attribute 規則集合（design_spec.md §8.2：
+   * 「鎖現況、比較 expected IDs、原子覆蓋 mapping」）。`item_category_attributes`
+   * 冇逐行 version（0020 migration 的說明：規則透過成組覆蓋管理，唔係逐行改），
+   * 所以 compare-and-set 用嘅係成組 attribute id（`expectedAttributeIds`）
+   * 同資料庫現況比對，唔一致就拒絕覆蓋。
+   */
+  async assignAttributes({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    categoryId,
+    assignments = [],
+    expectedAttributeIds = [],
+    requestId,
+    ip
+  }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const category = await this.#requireCategory(connection, categoryId);
+
+      const currentRows = await this.#categoryAttributeRows(connection, categoryId);
+      const currentIds = new Set(currentRows.map((row) => Number(row.attribute_id)));
+      const expectedIds = new Set((expectedAttributeIds ?? []).map(Number));
+      const sameSize = currentIds.size === expectedIds.size;
+      const matches = sameSize && [...currentIds].every((attributeId) => expectedIds.has(attributeId));
+      if (!matches) {
+        throw categoryAttributesStale();
+      }
+
+      const attributeIds = assignments.map((assignment) => Number(assignment.attributeId));
+      if (new Set(attributeIds).size !== attributeIds.length) {
+        throw attributeValueInvalid("同一個屬性不可以在同一個分類重複指派");
+      }
+      for (const attributeId of new Set(attributeIds)) {
+        await this.#requireAttribute(connection, attributeId);
+      }
+
+      const nowMs = this.time.nowMs();
+      const nextById = new Map(assignments.map((assignment) => [Number(assignment.attributeId), assignment]));
+      const toDelete = [...currentIds].filter((attributeId) => !nextById.has(attributeId));
+      const toInsert = [...nextById.keys()].filter((attributeId) => !currentIds.has(attributeId));
+      const toUpdate = [...nextById.keys()].filter((attributeId) => currentIds.has(attributeId));
+
+      if (toDelete.length > 0) {
+        const placeholders = toDelete.map(() => "?").join(",");
+        await connection.execute(
+          `DELETE FROM item_category_attributes WHERE category_id = ? AND attribute_id IN (${placeholders})`,
+          [categoryId, ...toDelete]
+        );
+      }
+
+      for (const attributeId of toInsert) {
+        const assignment = nextById.get(attributeId);
+        await connection.execute(
+          `INSERT INTO item_category_attributes
+             (category_id, attribute_id, required_for_activation, sort_order, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [categoryId, attributeId, assignment.requiredForActivation ? 1 : 0, assignment.sortOrder ?? 0, nowMs, nowMs]
+        );
+      }
+
+      for (const attributeId of toUpdate) {
+        const assignment = nextById.get(attributeId);
+        await connection.execute(
+          `UPDATE item_category_attributes
+              SET required_for_activation = ?, sort_order = ?, updated_at = ?
+            WHERE category_id = ? AND attribute_id = ?`,
+          [assignment.requiredForActivation ? 1 : 0, assignment.sortOrder ?? 0, nowMs, categoryId, attributeId]
+        );
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "category.attributes.assign",
+        targetType: "category",
+        targetId: categoryId,
+        targetLabel: category.name,
+        detail: { added: toInsert, removed: toDelete, updated: toUpdate },
+        requestId,
+        ip
+      });
+
+      const rows = await this.#categoryAttributeRows(connection, categoryId);
+      return {
+        categoryId: Number(categoryId),
+        assignments: rows.map((row) => this.#toCategoryAttributeAssignment(row))
+      };
+    });
+  }
+
+  // --- 內部：Attribute -----------------------------------------------------
+
+  async #transitionAttributeStatus(
+    { actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip },
+    { fromStatuses, toStatus }
+  ) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const current = await this.#requireAttribute(connection, id);
+      const nowMs = this.time.nowMs();
+
+      const placeholders = fromStatuses.map(() => "?").join(",");
+      const [result] = await connection.execute(
+        `UPDATE item_attribute_definitions
+            SET status = ?, updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ? AND status IN (${placeholders})`,
+        [toStatus, nowMs, actorId, id, version, ...fromStatuses]
+      );
+
+      if (result.affectedRows === 0) {
+        if (Number(current.version) !== Number(version)) {
+          throw versionConflict();
+        }
+        throw statusTransitionInvalid(current.status, toStatus);
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "attribute.status",
+        targetType: "attribute",
+        targetId: id,
+        targetLabel: current.code,
+        reason,
+        detail: { status: { before: current.status, after: toStatus } },
+        requestId,
+        ip
+      });
+
+      const optionRows = await this.#attributeOptions(connection, id);
+      return this.#toAttributeSummary(
+        {
+          id: Number(id),
+          code: current.code,
+          name: current.name,
+          data_type: current.data_type,
+          uom_id: current.uom_id,
+          is_variant: current.is_variant,
+          is_filterable: current.is_filterable,
+          status: toStatus,
+          version: Number(version) + 1,
+          created_at: current.created_at,
+          updated_at: nowMs
+        },
+        optionRows
+      );
+    });
+  }
+
+  #assertOptionsShapeValid(dataType, options) {
+    if (dataType !== "single_option") {
+      if (options.length > 0) {
+        throw attributeValueInvalid("只有 single_option 型別的屬性可以有選項");
+      }
+      return;
+    }
+
+    if (options.length === 0) {
+      throw attributeValueInvalid("single_option 型別的屬性至少要有一個選項");
+    }
+
+    const seen = new Set();
+    for (const option of options) {
+      const value = String(option.value ?? "").trim();
+      if (seen.has(value)) {
+        throw attributeOptionValueTaken(value);
+      }
+      seen.add(value);
+    }
+  }
+
+  async #requireAttribute(connection, id) {
+    const [rows] = await connection.query(
+      `SELECT id, code, name, data_type, uom_id, is_variant, is_filterable, status, version, created_at, updated_at
+         FROM item_attribute_definitions WHERE id = ?`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      throw attributeNotFound(id);
+    }
+
+    return rows[0];
+  }
+
+  async #attributeOptions(connection, attributeId) {
+    const [rows] = await connection.query(
+      `SELECT id, value, label, sort_order, status
+         FROM item_attribute_options
+        WHERE attribute_id = ?
+        ORDER BY sort_order, id`,
+      [attributeId]
+    );
+    return rows;
+  }
+
+  async #categoryAttributeRows(connection, categoryId) {
+    const [rows] = await connection.query(
+      `SELECT attribute_id, required_for_activation, sort_order
+         FROM item_category_attributes
+        WHERE category_id = ?
+        ORDER BY sort_order, attribute_id`,
+      [categoryId]
+    );
+    return rows;
+  }
+
+  #toCategoryAttributeAssignment(row) {
+    return {
+      attributeId: Number(row.attribute_id),
+      requiredForActivation: !!row.required_for_activation,
+      sortOrder: Number(row.sort_order)
+    };
+  }
+
+  #toAttributeSummary(row, optionRows = []) {
+    return {
+      id: Number(row.id),
+      code: row.code,
+      name: row.name,
+      dataType: row.data_type,
+      uomId: row.uom_id === null || row.uom_id === undefined ? null : Number(row.uom_id),
+      isVariant: !!row.is_variant,
+      isFilterable: !!row.is_filterable,
+      status: row.status,
+      version: Number(row.version),
+      createdAt: Number(row.created_at),
+      updatedAt: Number(row.updated_at),
+      options: optionRows.map((option) => this.#toOptionSummary(option))
+    };
+  }
+
+  #toOptionSummary(row) {
+    return {
+      id: Number(row.id),
+      value: row.value,
+      label: row.label,
+      sortOrder: Number(row.sort_order),
+      status: row.status
     };
   }
 }

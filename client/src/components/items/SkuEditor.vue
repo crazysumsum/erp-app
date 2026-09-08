@@ -15,7 +15,12 @@ defineProps({
   // SKU Code 都仲係唔畀改，所以要分開一個 prop，唔可以淨係跟 `readonly`。
   skuCodeReadonly: { type: Boolean, default: false },
   // 轉俾 SkuBarcodeEditor：淨係 SkuDetailPage 睇緊模式先開條碼釋放掣。
-  allowRelease: { type: Boolean, default: false }
+  allowRelease: { type: Boolean, default: false },
+  // Variant Item 建檔：呢個元件用嚟編輯全部組合共用嘅欄位（UOM／barcode／
+  // 追蹤政策等），SKU Code／名稱本身每個組合各自喺 VariantMatrixEditor
+  // 入面填，唔係呢度——收埋呢兩個欄位，避免畫面出現兩組唔會實際生效嘅
+  // SKU Code／名稱輸入格令使用者誤會（見 ItemCreatePage.vue）。
+  hideIdentity: { type: Boolean, default: false }
 });
 
 defineEmits(["release"]);
@@ -23,7 +28,7 @@ defineEmits(["release"]);
 
 <template>
   <div class="q-gutter-md">
-    <div class="row q-col-gutter-md">
+    <div v-if="!hideIdentity" class="row q-col-gutter-md">
       <div class="col-12 col-md-6">
         <q-input
           v-model="model.skuCode"

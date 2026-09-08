@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T23 已完成，T24 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T24 已完成，Checkpoint H 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -96,7 +96,7 @@ T01 migration freeze
 ### Phase C：零售消耗品擴充
 
 - [ ] T23 建立 Attribute schema、variant signature 與 domain 規則
-- [ ] T24 完成 Attribute／Variant API 與 UI
+- [x] T24 完成 Attribute／Variant API 與 UI
 - [ ] T25 建立 Media schema、service、API 與孤兒檔清理
 - [ ] T26 建立 Media UI 與檔案安全整合測試
 
@@ -923,31 +923,59 @@ T01 migration freeze
 
 ### Task T24：完成 Attribute／Variant API 與 UI
 
-**Description:** 擴充 Catalog service／handlers 與 Item editors，支援 Attribute CRUD、options、category rules、typed values 及 Variant matrix。
+**Description:** 擴充 Catalog service／handlers 與 Item editors，支援 Attribute CRUD、options、category rules 及 Variant matrix。
+
+**⚠️ 範圍決定（1）：Category attribute rules 用獨立端點，不是塞入 `updateCategory()`。** design_spec §6.4 原文係「Category attribute rules 包含在 Category get／update response 及 body，以 `expectedAttributeIds` 做 compare-and-set」。`updateCategory()` 已經係一組完整覆蓋（name／parentId／sortOrder）用 `version` compare-and-set；attribute 規則係另一種集合（多對多 mapping），用嘅係另一種 compare-and-set token（`expectedAttributeIds`——`item_category_attributes` 冇逐行 version，見 0020 migration 嘅註解）。將兩種完全不同嘅 compare-and-set 塞入同一個 request body，唯一好處係「符合原文一句描述」，代價係兩個獨立關注點綁死在同一個 schema、同一次成功／失敗。實際做法：新增 `GET /api/v1/catalog/categories/:id/attributes`（讀現況，俾前端組 `expectedAttributeIds`）同 `POST /api/v1/catalog/categories/:id/attributes/assign`（原子覆蓋），對應 `ItemCatalogService.getCategoryAttributes()`／`assignAttributes()`——後者本身已經係 design_spec §8.2 點名嘅獨立方法，呢個決定只係令 HTTP 切法跟返 service 方法嘅實際形狀，行為與資料形狀同設計一致，只係端點數量唔同。
+
+**⚠️ 範圍決定（2）：`AttributeValueEditor.vue` 唔喺呢個 task 起。** design_spec §7.4 將呢個元件同 `ItemMediaPanel.vue`／`ItemAuditTimeline.vue` 等一齊列喺 Item／SKU editor 嘅共用元件清單，但佢對應嘅係 Item／SKU 層級嘅**非 variant** typed value（`item_attribute_values`／未來 SKU 側對應表），而 `ItemAdminService.createItem()`／`updateItem()` 完全未讀寫呢兩張表——冇後端 API 可以呼叫，起呢個元件只會係一個冇嘢好接嘅空殼。呢個 task 嘅 acceptance criteria 只提到「Attributes page 與 VariantMatrixEditor」，兩者都已經完成；`AttributeValueEditor.vue` 留返俾將來一個會真正打開 item-level attribute value 寫入 API 嘅 task。
+
+**⚠️ 範圍決定（3）：Variant SKU 建檔用「一個共用 SkuEditor 樣板 + VariantMatrixEditor 產生嘅組合列表」，唔係每個組合各自一份完整 SkuEditor。** UOM、barcode、追蹤政策、可採購／可銷售、建議售價呢啲欄位喺一個 Item 底下嘅所有 Variant SKU 幾乎一定共用（同一款包裝、同一種賣法，只係規格唔同），逐個組合分開編輯呢啲欄位只會令使用者要重複輸入同一組資料 N 次。`SkuEditor.vue` 加咗一個 `hideIdentity` prop（收埋 SKU Code／名稱兩個輸入格，向後相容、預設 false 唔影響現有用法），Variant 模式下渲染一次呢個共用樣板，`VariantMatrixEditor.vue` 淨係負責「呢個 Item 有邊幾個規格組合」同每個組合各自嘅 SKU Code／名稱，兩者提交時先合併成完整嘅 `skus[]`（`client/src/services/item.js` 嘅 `createItem()` 相應加咗 `skus`（複數）參數，同原本嘅 `sku`（單數）互斥並存，Standard 路徑完全冇變）。呢個設計嘅已知限制：後端回嘅 field-level validation error 若果指向第二個或以後嘅組合嘅 UOM／barcode 子集（例如 `skus.2.uoms.0.uomId`），冇一個對應嘅、屬於第 2 個組合嘅獨立輸入格可以標紅——`knownFieldPaths` 有為每個組合 index 註冊呢類 path，令呢種 error 唔會錯誤咁跌入 summary 的「無法對應」分支，但畫面上實際標紅嘅始終係嗰個共用樣板（即第 0 格）嘅輸入。SKU Code／名稱本身（每個組合唯一嘅部分）冇呢個限制，各自組合都有獨立輸入格。
 
 **Acceptance criteria:**
 
-- [ ] Attribute option 更新與 category assignment 原子執行，`expectedAttributeIds` stale 時拒絕覆蓋。
-- [ ] Variant Item 必須有完整且唯一組合；Standard Item 不接受 variant values。
-- [ ] Attributes page 與 VariantMatrixEditor 支援資料型別、選項、必填及錯誤回填。
+- [x] Attribute option 更新與 category assignment 原子執行，`expectedAttributeIds` stale 時拒絕覆蓋。
+- [x] Variant Item 必須有完整且唯一組合；Standard Item 不接受 variant values（T23 已實作，本 task 未變動；`VariantMatrixEditor.vue` 令使用者喺瀏覽器實際做得到呢件事，並且在真瀏覽器＋真 MySQL 上驗證咗重複組合會俾伺服器拒絕）。
+- [x] Attributes page 與 VariantMatrixEditor 支援資料型別、選項、必填及錯誤回填。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemCatalogService.test.js test/itemAdminService.test.js`
-- [ ] `npm test --workspace client -- test/pages/items/catalogPages.test.js test/pages/items/itemCreate.test.js`
-- [ ] Manual check：建立 Flavor options，產生兩個 Variant SKU，嘗試重複組合。
+- [x] `npm run lint`（repo 根）
+- [x] `npm test --workspace server -- test/itemCatalogService.test.js`（58 個案例，17 個新增，全過；**Verification 命令修正**：原本寫嘅 `test/itemAdminService.test.js` 喺呢個 codebase從來冇存在過——同 T22 已經記錄過嘅理由一致，`ItemAdminService` 一直用真 MySQL integration test 覆蓋，未曾有過假 DB 單元測試檔；T24 冇改動 `ItemAdminService.js`，Attribute CRUD／Category assignment 全部喺 `ItemCatalogService.js`，跟 Category／Brand／UOM 同一個歸屬）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCatalog.integration.test.js`（9 個案例，2 個新增），連跑 3 次穩定通過
+- [x] `npm test --workspace server`（1320 個案例），連跑 2 次穩定全過
+- [x] `npm test --workspace client`（397 個案例，全過，含 `catalogPages.test.js` 新增嘅 AttributesPage／Category 屬性規則測試同 `itemCreate.test.js` 新增嘅 Variant flow 測試）
+- [x] `npm run build --workspace client`（production build 成功）
+- [x] Manual check（真瀏覽器＋真 MySQL＋真後端，非 mock）：建立 `FLAVOR` 屬性（`single_option`、`is_variant`、兩個 option「甜」「酸」）→ 喺 Item 建檔頁切去「多規格（Variant）」→ 揀屬性同兩個 option → 「產生組合」自動帶出兩行（SKU Code 用 option 嘅 `value` 建議、名稱用 `label`）→ 儲存草稿成功，DB 直接驗證兩個 SKU 各自嘅 `variant_signature` 唔同、`item_sku_attribute_values` 對應正確 → 用同一個 attributeId／optionId 組合起第二個 Item 嘅兩個 SKU（經真 HTTP，唔經 UI——UI 嘅笛卡兒積產生器本身結構性做唔到重複組合，呢個係刻意嘅設計，唔係漏測），確認回 409 `VARIANT_COMBINATION_TAKEN` 且交易完全 rollback（DB 查證零殘留）→ Category 頁「屬性規則」dialog 勾選屬性、切換「啟用時必填」、儲存，DB 直接驗證 `item_category_attributes` 正確寫入。測試資料事後全部經 SQL 清走。
+- [x] 測試後確認 dev DB 無殘留
+
+**過程中發現並修正嘅兩個 bug：**
+
+- **`CategoriesPage.vue` 讀 `attributeList()` 回傳形狀錯咗**：`itemCatalogService.attributeList()`（同 `brandList()` 一樣）將後端 `{items, total, page, pageSize}` 轉做前端慣用嘅 `{rows, rowsNumber}`（餵畀 `DataTable` 嘅 `fetch` prop），但 `openAttributesDialog()` 最初寫成解構 `{items}`，實際會攞到 `undefined` 再喺 `.filter()` 炸出 `TypeError`。喺補寫 `catalogPages.test.js` 嘅「屬性規則」測試時第一次執行就發現（mock 直接用真實形狀 `{rows, rowsNumber}`），修正做解構 `{rows: attributes}`。
+- **`VariantMatrixEditor.vue` 自動建議嘅 SKU Code 用錯咗欄位**：初版用 option 嘅 `label`（顯示用，好多時係中文，例如「紅」）join 出 SKU Code 建議值，喺 `itemCreate.test.js` 新增嘅 Variant flow 測試中斷言 code 應該係 `"RED"`（用 `value`）先發現：SKU Code 呢類穩定代碼理應用 option 嘅 `value`（多數係 ASCII，例如 `"red"`），`label` 先啱用喺 SKU 名稱建議。修正後 `optionValue()`／`optionLabel()` 兩個獨立 helper 分別供應 code／name 嘅建議值。
 
 **Dependencies:** T05, T17, T23
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/ItemCatalogService.js`
-- `server/src/handlers/catalog/attributeHandlers.js`
-- `client/src/pages/items/AttributesPage.vue`
-- `client/src/components/items/AttributeValueEditor.vue`
-- `client/src/components/items/VariantMatrixEditor.vue`
+- `server/src/modules/item/itemErrors.js`（加 `attributeCodeTaken()`、`attributeOptionValueTaken()`、`attributeInUse()`、`attributeOptionInUse()`、`categoryAttributesStale()`）
+- `server/src/handlers/catalog/catalogSchemas.js`（Attribute 相關 schema 一組；`CATEGORY_ATTRIBUTE_ASSIGNMENT_SCHEMA`／`CATEGORY_ATTRIBUTES_RESPONSE_SCHEMA`）
+- `server/src/handlers/catalog/attributeHandlers.js`（新建：Attribute 分頁查詢、新增、修改、四個狀態動作、刪除，共 8 個 handler）
+- `server/src/handlers/catalog/categoryHandlers.js`（加 `GetCategoryAttributesHandler`／`AssignCategoryAttributesHandler`）
+- `server/src/modules/item/ItemCatalogService.js`（Attribute CRUD 全套：`listAttributes`／`createAttribute`／`updateAttribute`（原子覆蓋 option 集合，非刪晒重插——option id 可能已被 typed value 嘅 `option_id` FK RESTRICT 指住）／四個狀態動作／`deleteAttribute`；`getCategoryAttributes`／`assignAttributes`；新增 `isRowReferenced()` helper）
+- `server/test-support/fakeItemCatalogDatabase.js`（擴充支援 `item_attribute_definitions`／`item_attribute_options`／`item_category_attributes`／模擬 `item_sku_attribute_values` 使用中判斷）
+- `server/test/itemCatalogService.test.js`（新增 17 個案例：Attribute CRUD、option 原子覆蓋、isVariant 使用後鎖定、category attribute assignment 含 stale 拒絕）
+- `server/test/integration/itemCatalog.integration.test.js`（新增 2 個真 HTTP＋MySQL 案例：Attribute 全生命週期含 option 刪除擋／isVariant 鎖定／delete-in-use；Category attribute assignment 含 stale 拒絕）
+- `client/src/services/itemCatalog.js`（Attribute CRUD 8 個方法；`getCategoryAttributes`／`assignCategoryAttributes`）
+- `client/src/services/item.js`（`createItem()` 加 `skus`（複數）參數，同 `sku`（單數）互斥並存）
+- `client/src/pages/items/AttributesPage.vue`（新建：Attribute 分頁列表＋新增／編輯 dialog，含 option 動態編輯）
+- `client/src/pages/items/CategoriesPage.vue`（加「屬性規則」dialog：讀現況、勾選＋必填 toggle、`expectedAttributeIds` compare-and-set、stale 時重新載入）
+- `client/src/components/items/VariantMatrixEditor.vue`（新建：揀屬性／選項、笛卡兒積產生組合、每個組合獨立 SKU Code／名稱輸入）
+- `client/src/components/items/SkuEditor.vue`（加 `hideIdentity` prop，Variant 模式收埋 SKU Code／名稱）
+- `client/src/pages/items/ItemCreatePage.vue`（Standard／Variant 切換、`buildPayload()` 分支產生 `sku` 或 `skus`、`knownFieldPaths` 涵蓋多組合）
+- `client/test/pages/items/catalogPages.test.js`（新增 AttributesPage 一組測試、CategoriesPage 屬性規則兩個測試）
+- `client/test/pages/items/itemCreate.test.js`（新增 Variant flow 兩個測試）
 
-**Estimated scope:** M（5 logical files；tests 同切片）
+**Estimated scope:** L（8 個新／改動後端檔 + 7 個新／改動前端檔 + 4 個 test 檔；比原估計大，因為原「Files likely touched」冇算入 Category attribute assignment 嘅獨立端點、`item.js`／`SkuEditor.vue`／`ItemCreatePage.vue` 嘅 Variant 建檔整合）
 
 ## Checkpoint H：T22–T24 Retail Data Gate
 

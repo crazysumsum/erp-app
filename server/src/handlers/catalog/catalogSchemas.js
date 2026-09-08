@@ -275,3 +275,160 @@ export const UOM_LIST_RESPONSE_SCHEMA = Object.freeze({
     items: { type: "array", items: UOM_SUMMARY_SCHEMA }
   }
 });
+
+// --- Attribute -----------------------------------------------------------------
+
+/** 與 item_attribute_definitions.code 的欄寬一致；建立後不可修改，同 UOM code 一樣。 */
+export const ATTRIBUTE_CODE_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 1,
+  maxLength: 80
+});
+
+export const ATTRIBUTE_DATA_TYPE_SCHEMA = Object.freeze({
+  type: "string",
+  enum: ["text", "long_text", "decimal", "boolean", "date", "single_option"]
+});
+
+/** 屬性選項嘅 value／label，同 item_attribute_options 嘅欄寬一致。 */
+export const ATTRIBUTE_OPTION_VALUE_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 1,
+  maxLength: 190
+});
+
+/**
+ * 建立／更新屬性時提交嘅單一 option。`id` 唔存在代表新增；帶 `id` 代表更新
+ * 現有嗰行（`updateAttribute` 原子覆蓋整個集合時，用嚟分辨邊啲要保留、邊啲要
+ * 刪——見 ItemCatalogService.js 嘅說明）。
+ */
+export const ATTRIBUTE_OPTION_INPUT_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["value", "label"],
+  additionalProperties: false,
+  properties: {
+    id: { type: "integer", minimum: 1 },
+    value: ATTRIBUTE_OPTION_VALUE_SCHEMA,
+    label: ATTRIBUTE_OPTION_VALUE_SCHEMA,
+    sortOrder: SORT_ORDER_SCHEMA,
+    status: { type: "string", enum: ["active", "inactive", "archived"] }
+  }
+});
+
+const ATTRIBUTE_OPTION_FIELDS = Object.freeze({
+  id: { type: "integer", minimum: 1 },
+  value: ATTRIBUTE_OPTION_VALUE_SCHEMA,
+  label: ATTRIBUTE_OPTION_VALUE_SCHEMA,
+  sortOrder: SORT_ORDER_SCHEMA,
+  status: { type: "string", enum: ["active", "inactive", "archived"] }
+});
+
+export const ATTRIBUTE_OPTION_SUMMARY_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id", "value", "label", "sortOrder", "status"],
+  additionalProperties: false,
+  properties: ATTRIBUTE_OPTION_FIELDS
+});
+
+const ATTRIBUTE_FIELDS = Object.freeze({
+  id: { type: "integer", minimum: 1 },
+  code: ATTRIBUTE_CODE_SCHEMA,
+  name: CATALOG_NAME_SCHEMA,
+  dataType: ATTRIBUTE_DATA_TYPE_SCHEMA,
+  uomId: { type: ["integer", "null"], minimum: 1 },
+  isVariant: { type: "boolean" },
+  isFilterable: { type: "boolean" },
+  status: { type: "string", enum: ["active", "inactive", "archived"] },
+  version: { type: "integer", minimum: 1 },
+  createdAt: { type: "integer", minimum: 0 },
+  updatedAt: { type: "integer", minimum: 0 },
+  options: { type: "array", items: ATTRIBUTE_OPTION_SUMMARY_SCHEMA }
+});
+
+export const ATTRIBUTE_SUMMARY_SCHEMA = Object.freeze({
+  type: "object",
+  required: [
+    "id",
+    "code",
+    "name",
+    "dataType",
+    "uomId",
+    "isVariant",
+    "isFilterable",
+    "status",
+    "version",
+    "createdAt",
+    "updatedAt",
+    "options"
+  ],
+  additionalProperties: false,
+  properties: ATTRIBUTE_FIELDS
+});
+
+export const ATTRIBUTE_LIST_RESPONSE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["items", "total", "page", "pageSize"],
+  additionalProperties: false,
+  properties: {
+    items: { type: "array", items: ATTRIBUTE_SUMMARY_SCHEMA },
+    total: { type: "integer", minimum: 0 },
+    page: { type: "integer", minimum: 1 },
+    pageSize: { type: "integer", minimum: 1 }
+  }
+});
+
+/** `GET .../attributes` 分頁參數；同 CATALOG_PAGE_QUERY_SCHEMA 多一個 dataType 篩選。 */
+export const ATTRIBUTE_PAGE_QUERY_SCHEMA = Object.freeze({
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    page: { type: "string", pattern: "^[1-9][0-9]*$" },
+    pageSize: { type: "string", pattern: "^[1-9][0-9]*$" },
+    q: { type: "string", maxLength: 190 },
+    status: { type: "string", enum: ["active", "inactive", "archived"] },
+    dataType: ATTRIBUTE_DATA_TYPE_SCHEMA,
+    sortBy: { type: "string", enum: ["name", "status", "updatedAt"] },
+    descending: { type: "string", enum: ["true", "false"] }
+  }
+});
+
+// --- Category attribute assignment -----------------------------------------
+
+/**
+ * 一個 category 要求嘅單一屬性規則。design_spec §6.4：「Category attribute
+ * rules 包含在 Category get／update response 及 body，以 expectedAttributeIds
+ * 做 compare-and-set」——本實作用獨立端點承載（見 categoryHandlers.js 對呢個
+ * 決定嘅說明），但欄位形狀同語意跟設計一致。
+ */
+export const CATEGORY_ATTRIBUTE_ASSIGNMENT_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["attributeId"],
+  additionalProperties: false,
+  properties: {
+    attributeId: { type: "integer", minimum: 1 },
+    requiredForActivation: { type: "boolean" },
+    sortOrder: SORT_ORDER_SCHEMA
+  }
+});
+
+export const CATEGORY_ATTRIBUTES_RESPONSE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["categoryId", "assignments"],
+  additionalProperties: false,
+  properties: {
+    categoryId: { type: "integer", minimum: 1 },
+    assignments: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["attributeId", "requiredForActivation", "sortOrder"],
+        additionalProperties: false,
+        properties: {
+          attributeId: { type: "integer", minimum: 1 },
+          requiredForActivation: { type: "boolean" },
+          sortOrder: { type: "integer", minimum: 0 }
+        }
+      }
+    }
+  }
+});

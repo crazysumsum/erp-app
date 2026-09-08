@@ -777,3 +777,446 @@ test("uom status transitions and controlled delete behave like category/brand", 
   assert.equal(deleted.id, 1);
   assert.equal(database.state.uoms.has(1), false);
 });
+
+// --- Attribute ---------------------------------------------------------------
+
+function attribute({
+  id,
+  code,
+  name,
+  dataType = "text",
+  uomId = null,
+  isVariant = 0,
+  isFilterable = 0,
+  status = "active",
+  version = 1
+}) {
+  return {
+    id,
+    code,
+    name,
+    data_type: dataType,
+    uom_id: uomId,
+    is_variant: isVariant,
+    is_filterable: isFilterable,
+    status,
+    version,
+    created_at: NOW_MS - 1000,
+    updated_at: NOW_MS - 1000,
+    created_by: 10,
+    updated_by: 10
+  };
+}
+
+function attributeOption({ id, attributeId, value, label, sortOrder = 0, status = "active", version = 1 }) {
+  return {
+    id,
+    attribute_id: attributeId,
+    value,
+    label,
+    sort_order: sortOrder,
+    status,
+    version,
+    created_at: NOW_MS - 1000,
+    updated_at: NOW_MS - 1000,
+    created_by: 10,
+    updated_by: 10
+  };
+}
+
+test("createAttribute creates a single_option attribute with its options in one call", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  const created = await service.createAttribute({
+    ...ADMIN_ACTOR,
+    code: "COLOR",
+    name: "顏色",
+    dataType: "single_option",
+    isVariant: true,
+    options: [
+      { value: "red", label: "紅" },
+      { value: "blue", label: "藍" }
+    ]
+  });
+
+  assert.equal(created.code, "COLOR");
+  assert.equal(created.dataType, "single_option");
+  assert.equal(created.isVariant, true);
+  assert.equal(created.options.length, 2);
+  assert.deepEqual(created.options.map((o) => o.value).sort(), ["blue", "red"]);
+  assert.equal(database.state.auditRows.at(-1)[3], "attribute.create");
+});
+
+test("createAttribute rejects a duplicate code", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })],
+    attributeOptions: [attributeOption({ id: 1, attributeId: 1, value: "red", label: "紅" })]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createAttribute({
+      ...ADMIN_ACTOR,
+      code: "COLOR",
+      name: "另一個顏色",
+      dataType: "single_option",
+      options: [{ value: "green", label: "綠" }]
+    }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_CODE_TAKEN");
+      return true;
+    }
+  );
+});
+
+test("createAttribute rejects a single_option attribute with no options", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createAttribute({ ...ADMIN_ACTOR, code: "COLOR", name: "顏色", dataType: "single_option", options: [] }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_VALUE_INVALID");
+      return true;
+    }
+  );
+});
+
+test("createAttribute rejects options on a non single_option attribute", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createAttribute({
+      ...ADMIN_ACTOR,
+      code: "WEIGHT",
+      name: "重量",
+      dataType: "decimal",
+      options: [{ value: "x", label: "x" }]
+    }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_VALUE_INVALID");
+      return true;
+    }
+  );
+});
+
+test("createAttribute rejects a duplicate option value within the same request", async () => {
+  const database = createFakeItemCatalogDatabase();
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createAttribute({
+      ...ADMIN_ACTOR,
+      code: "COLOR",
+      name: "顏色",
+      dataType: "single_option",
+      options: [
+        { value: "red", label: "紅" },
+        { value: "red", label: "紅色" }
+      ]
+    }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_OPTION_VALUE_TAKEN");
+      return true;
+    }
+  );
+});
+
+test("createAttribute rejects uomId on a non-decimal attribute, and requires an existing UOM otherwise", async () => {
+  const database = createFakeItemCatalogDatabase({ uoms: [uom({ id: 1, code: "KG", name: "Kilogram" })] });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.createAttribute({ ...ADMIN_ACTOR, code: "COLOR", name: "顏色", dataType: "text", uomId: 1 }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_VALUE_INVALID");
+      return true;
+    }
+  );
+
+  await assert.rejects(
+    service.createAttribute({ ...ADMIN_ACTOR, code: "WEIGHT", name: "重量", dataType: "decimal", uomId: 999 }),
+    (error) => {
+      assert.equal(error.code, "UOM_NOT_FOUND");
+      return true;
+    }
+  );
+
+  const created = await service.createAttribute({
+    ...ADMIN_ACTOR,
+    code: "WEIGHT",
+    name: "重量",
+    dataType: "decimal",
+    uomId: 1
+  });
+  assert.equal(created.uomId, 1);
+});
+
+test("listAttributes paginates and attaches each attribute's options", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [
+      attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 }),
+      attribute({ id: 2, code: "WEIGHT", name: "重量", dataType: "decimal" })
+    ],
+    attributeOptions: [
+      attributeOption({ id: 1, attributeId: 1, value: "red", label: "紅" }),
+      attributeOption({ id: 2, attributeId: 1, value: "blue", label: "藍" })
+    ]
+  });
+  const { service } = createService({ database });
+
+  const { items, total } = await service.listAttributes(ADMIN_ACTOR);
+
+  assert.equal(total, 2);
+  const color = items.find((row) => row.code === "COLOR");
+  assert.equal(color.options.length, 2);
+  const weight = items.find((row) => row.code === "WEIGHT");
+  assert.equal(weight.options.length, 0);
+});
+
+test("updateAttribute renames and atomically overwrites the option set (add/update/remove)", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })],
+    attributeOptions: [
+      attributeOption({ id: 1, attributeId: 1, value: "red", label: "紅" }),
+      attributeOption({ id: 2, attributeId: 1, value: "blue", label: "藍" })
+    ]
+  });
+  const { service } = createService({ database });
+
+  const updated = await service.updateAttribute({
+    ...ADMIN_ACTOR,
+    id: 1,
+    name: "顏色（修訂）",
+    isVariant: true,
+    isFilterable: true,
+    options: [
+      { id: 1, value: "red", label: "大紅" },
+      { value: "green", label: "綠" }
+    ],
+    version: 1
+  });
+
+  assert.equal(updated.name, "顏色（修訂）");
+  assert.equal(updated.isFilterable, true);
+  assert.deepEqual(updated.options.map((o) => o.value).sort(), ["green", "red"]);
+  assert.equal(updated.options.find((o) => o.value === "red").label, "大紅");
+  assert.equal(database.state.attributeOptions.has(2), false, "the option dropped from the payload is deleted");
+});
+
+test("updateAttribute rejects an option id that doesn't belong to this attribute", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [
+      attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 }),
+      attribute({ id: 2, code: "SIZE", name: "尺寸", dataType: "single_option", isVariant: 1 })
+    ],
+    attributeOptions: [attributeOption({ id: 1, attributeId: 2, value: "s", label: "細" })]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.updateAttribute({
+      ...ADMIN_ACTOR,
+      id: 1,
+      name: "顏色",
+      isVariant: true,
+      isFilterable: false,
+      options: [{ id: 1, value: "s", label: "細" }],
+      version: 1
+    }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_OPTION_NOT_FOUND");
+      return true;
+    }
+  );
+});
+
+test("updateAttribute rejects a stale version without writing", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [attribute({ id: 1, code: "WEIGHT", name: "重量", dataType: "decimal" })]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.updateAttribute({
+      ...ADMIN_ACTOR,
+      id: 1,
+      name: "重量（改壞）",
+      isVariant: false,
+      isFilterable: false,
+      options: [],
+      version: 99
+    }),
+    (error) => {
+      assert.equal(error.code, "VERSION_CONFLICT");
+      return true;
+    }
+  );
+  assert.equal(database.state.attributes.get(1).name, "重量");
+});
+
+test("updateAttribute locks isVariant once the attribute is used by a SKU's variant values", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })],
+    attributeOptions: [attributeOption({ id: 1, attributeId: 1, value: "red", label: "紅" })],
+    skuAttributeValueAttributeIds: [1]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.updateAttribute({
+      ...ADMIN_ACTOR,
+      id: 1,
+      name: "顏色",
+      isVariant: false,
+      isFilterable: false,
+      options: [{ id: 1, value: "red", label: "紅" }],
+      version: 1
+    }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_IN_USE");
+      return true;
+    }
+  );
+
+  // isVariant 冇改就唔受呢個限制，即使已經被用緊。
+  const updated = await service.updateAttribute({
+    ...ADMIN_ACTOR,
+    id: 1,
+    name: "顏色（改名）",
+    isVariant: true,
+    isFilterable: false,
+    options: [{ id: 1, value: "red", label: "紅" }],
+    version: 1
+  });
+  assert.equal(updated.name, "顏色（改名）");
+});
+
+test("attribute status transitions and delete behave like category/brand/uom", async () => {
+  const database = createFakeItemCatalogDatabase({
+    attributes: [attribute({ id: 1, code: "WEIGHT", name: "重量", dataType: "decimal", status: "inactive" })]
+  });
+  const { service } = createService({ database });
+
+  const activated = await service.activateAttribute({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "啟用" });
+  assert.equal(activated.status, "active");
+
+  const deactivated = await service.deactivateAttribute({ ...ADMIN_ACTOR, id: 1, version: 2, reason: "停用" });
+  assert.equal(deactivated.status, "inactive");
+
+  const deleted = await service.deleteAttribute({ ...ADMIN_ACTOR, id: 1, version: 3, reason: "建立錯誤" });
+  assert.equal(deleted.id, 1);
+  assert.equal(database.state.attributes.has(1), false);
+});
+
+test("deleteAttribute is blocked while a category rule or SKU value still references it", async () => {
+  const database = createFakeItemCatalogDatabase({
+    categories: [category({ id: 1, name: "Vitamins" })],
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })],
+    categoryAttributes: [{ category_id: 1, attribute_id: 1, required_for_activation: 0, sort_order: 0 }]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.deleteAttribute({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "刪除" }),
+    (error) => {
+      assert.equal(error.code, "CATALOG_IN_USE");
+      return true;
+    }
+  );
+});
+
+// --- Category attribute assignment --------------------------------------------
+
+test("getCategoryAttributes returns the current assignment", async () => {
+  const database = createFakeItemCatalogDatabase({
+    categories: [category({ id: 1, name: "Vitamins" })],
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })],
+    categoryAttributes: [{ category_id: 1, attribute_id: 1, required_for_activation: 1, sort_order: 0 }]
+  });
+  const { service } = createService({ database });
+
+  const { categoryId, assignments } = await service.getCategoryAttributes({ ...ADMIN_ACTOR, categoryId: 1 });
+
+  assert.equal(categoryId, 1);
+  assert.deepEqual(assignments, [{ attributeId: 1, requiredForActivation: true, sortOrder: 0 }]);
+});
+
+test("assignAttributes atomically overwrites the mapping (add/update/remove) and records one audit row", async () => {
+  const database = createFakeItemCatalogDatabase({
+    categories: [category({ id: 1, name: "Vitamins" })],
+    attributes: [
+      attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 }),
+      attribute({ id: 2, code: "FLAVOR", name: "口味", dataType: "single_option", isVariant: 1 })
+    ],
+    categoryAttributes: [{ category_id: 1, attribute_id: 1, required_for_activation: 0, sort_order: 0 }]
+  });
+  const { service } = createService({ database });
+
+  const result = await service.assignAttributes({
+    ...ADMIN_ACTOR,
+    categoryId: 1,
+    assignments: [
+      { attributeId: 1, requiredForActivation: true, sortOrder: 0 },
+      { attributeId: 2, requiredForActivation: false, sortOrder: 1 }
+    ],
+    expectedAttributeIds: [1]
+  });
+
+  assert.deepEqual(
+    result.assignments.map((a) => a.attributeId).sort(),
+    [1, 2]
+  );
+  assert.equal(result.assignments.find((a) => a.attributeId === 1).requiredForActivation, true);
+  assert.equal(database.state.auditRows.at(-1)[3], "category.attributes.assign");
+});
+
+test("assignAttributes rejects a stale expectedAttributeIds without writing", async () => {
+  const database = createFakeItemCatalogDatabase({
+    categories: [category({ id: 1, name: "Vitamins" })],
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })],
+    categoryAttributes: [{ category_id: 1, attribute_id: 1, required_for_activation: 0, sort_order: 0 }]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.assignAttributes({
+      ...ADMIN_ACTOR,
+      categoryId: 1,
+      assignments: [{ attributeId: 1, requiredForActivation: true, sortOrder: 0 }],
+      // 呼叫端以為呢個 category 而家冇任何屬性規則（過期嘅前端快照），實際已有一個。
+      expectedAttributeIds: []
+    }),
+    (error) => {
+      assert.equal(error.code, "CATEGORY_ATTRIBUTES_STALE");
+      return true;
+    }
+  );
+  assert.equal(database.state.categoryAttributes.get("1::1").required_for_activation, 0);
+});
+
+test("assignAttributes rejects a duplicate attributeId within the same request", async () => {
+  const database = createFakeItemCatalogDatabase({
+    categories: [category({ id: 1, name: "Vitamins" })],
+    attributes: [attribute({ id: 1, code: "COLOR", name: "顏色", dataType: "single_option", isVariant: 1 })]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.assignAttributes({
+      ...ADMIN_ACTOR,
+      categoryId: 1,
+      assignments: [
+        { attributeId: 1, requiredForActivation: true, sortOrder: 0 },
+        { attributeId: 1, requiredForActivation: false, sortOrder: 1 }
+      ],
+      expectedAttributeIds: []
+    }),
+    (error) => {
+      assert.equal(error.code, "ATTRIBUTE_VALUE_INVALID");
+      return true;
+    }
+  );
+});
