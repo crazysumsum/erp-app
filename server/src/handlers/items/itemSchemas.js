@@ -185,12 +185,14 @@ export const ITEM_DETAIL_RESPONSE_SCHEMA = Object.freeze({
 
 // --- POST /api/v1/items/create ---------------------------------------------
 //
-// T14 只做 Standard Item：schema 層面仍然開放 productType 兩個值（同一組
-// ITEM_PRODUCT_TYPES enum，避免 T23 開放 Variant 時要重新加一個列舉值），但
-// 唔接受 variantValues——送 "variant" 由 service 層拒絕（ITEM_VARIANT_NOT_
-// SUPPORTED，見 ItemAdminService.createItem()），比 schema 層一個泛用嘅
-// enum 錯誤更清楚。範圍決定見 docs/items_management/tasks.md 的 T14／T23
-// 條目。
+// T14 只做 Standard Item；T23 開放 Variant——`skus[].variantValues` 淨係接受
+// `{attributeId, optionId}[]`（single_option 型別），唔係任意 data type 都
+// 可以用嚟做規格：Variant 屬性喺實務上幾乎一定要係一個封閉、可枚舉嘅選項集
+// 先砌得出「規格矩陣」（例如顏色、尺寸），自由文字／小數呢類 data type 唔
+// 適合做呢個用途。呼叫端送咗一個唔係 single_option 嘅 attributeId 落嚟，由
+// service 層拒絕（見 ItemAdminService.createItem()），唔喺呢個 schema 層
+// 做——「呢個 attribute 係咪 single_option」要查表先知，schema 做唔到。
+// 範圍決定見 docs/items_management/tasks.md 的 T14／T23 條目。
 
 const MONEY_STRING_SCHEMA = Object.freeze({
   type: "string",
@@ -242,6 +244,19 @@ const ITEM_CREATE_SKU_BARCODE_SCHEMA = Object.freeze({
   }
 });
 
+// Variant SKU 嘅規格值：`optionId` 對返 item_attribute_options.id（唔係個
+// option 嘅顯示字串），service 負責解析做真正嘅 variant signature 同查表
+// 驗證合法性（見 ItemAdminService.createItem()）。
+const ITEM_CREATE_SKU_VARIANT_VALUE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["attributeId", "optionId"],
+  additionalProperties: false,
+  properties: {
+    attributeId: { type: "integer", minimum: 1 },
+    optionId: { type: "integer", minimum: 1 }
+  }
+});
+
 const ITEM_CREATE_SKU_SCHEMA = Object.freeze({
   type: "object",
   required: ["skuCode", "skuName"],
@@ -262,7 +277,10 @@ const ITEM_CREATE_SKU_SCHEMA = Object.freeze({
     effectiveFrom: { type: "integer", minimum: 0 },
     effectiveTo: { type: "integer", minimum: 0 },
     uoms: { type: "array", items: ITEM_CREATE_SKU_UOM_SCHEMA, default: [] },
-    barcodes: { type: "array", items: ITEM_CREATE_SKU_BARCODE_SCHEMA, default: [] }
+    barcodes: { type: "array", items: ITEM_CREATE_SKU_BARCODE_SCHEMA, default: [] },
+    // Standard Item 嘅 SKU 冇呢個欄位（送咗都會俾 service 拒絕，見
+    // ItemAdminService.createItem() 嘅 standardSkuHasVariantValues()）。
+    variantValues: { type: "array", items: ITEM_CREATE_SKU_VARIANT_VALUE_SCHEMA, default: [] }
   }
 });
 
@@ -272,8 +290,8 @@ export const ITEM_CREATE_REQUEST_SCHEMA = Object.freeze({
   additionalProperties: false,
   properties: {
     item: ITEM_CREATE_ITEM_SCHEMA,
-    // T14 只做 Standard：恰好一個 SKU 由 service 驗證（見上面說明），schema
-    // 呢度唔設 maxItems，等 T23 開放 Variant 時唔使改呢一段。
+    // Standard：恰好一個 SKU；Variant：可以多個。兩者都由 service 驗證（見
+    // ItemAdminService.createItem()），schema 呢度唔設 maxItems。
     skus: { type: "array", items: ITEM_CREATE_SKU_SCHEMA, minItems: 1 },
     activate: { type: "boolean", default: false },
     // 淨係 activate: true 先必填，schema 冇辦法表達「條件式必填」而唔引入
