@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T21 已完成，T22 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T22 已完成，T23 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -91,7 +91,7 @@ T01 migration freeze
 - [x] T19 建立生命週期與狀態操作 UI
 - [x] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
 - [x] T21 建立下游 ItemLookupService contract
-- [ ] T22 完成核心端到端、並發與安全驗證
+- [x] T22 完成核心端到端、並發與安全驗證
 
 ### Phase C：零售消耗品擴充
 
@@ -825,27 +825,41 @@ T01 migration freeze
 
 **Description:** 建立 design §11.2–§11.4 的核心 HTTP＋DB、race、IDOR、input、projection 與 permission regression suite。
 
+**⚠️ 範圍決定：用「Item＋兩個 SKU」代替 design_spec §11.2 原文嘅「Variant Item＋兩個 SKU」**。Variant 支援（`productType: "variant"`、Attribute schema、variant signature）要等 T23 先建立——T14 已經因為呢個理由決定 `createItem()` 只做 Standard，呢度延續同一個決定（見 tasks.md 嘅 T14 條目）。呢個 task 想驗嘅其實係「一個 Item 底下有兩粒 SKU」呢種情況本身嘅行為（cascade、搜尋、audit trail），同「呢兩粒 SKU 係咪由 variant attribute 組合出嚟」冇關係，所以用真實 create API 起第一粒 SKU、直接種多一粒 Draft SKU 落去同一個 Item（同 itemHighRisk／itemLifecycle 兩個 test 檔已經用緊嘅做法一致）一樣測得到，唔使等 T23。
+
+**⚠️ Verification 命令修正**：原本寫嘅 `test/itemHandlers.test.js` 喺呢個 codebase從來冇存在過——Item 嘅 handler 測試一直跟 catalog 同一個慣例，逐個 resource 分開一份（`itemCatalogHandlers.test.js` 等），冇一個統一嘅 `itemHandlers.test.js`。`test/security.test.js` 就有存在，但淨係測緊框架層嘅 middleware（Helmet、CORS、trust proxy、body parser 413／400），完全冇任何模組專屬內容——error redaction（唔洩漏 SQL／stack／檔案路徑）呢一項本身就係呢個框架層嘅錯誤處理保證，套用喺每一個 handler（Item 都唔例外），唔使、亦都唔應該逐個模組各自重測一次。呢兩個 verification 命令喺下面改咗做實際做得到、亦都真係補到缺口嘅版本。
+
+**手動驗證（其實係自動化整合測試）中發現並修正嘅 race condition bug：** `deactivateSku()` 原本嘅「呢粒係咪 Item 底下最後一個 Active SKU」檢查，係一句獨立嘅 `SELECT COUNT(*)`，同真正轉狀態嘅 `UPDATE` 分開兩句做。兩個並行請求各自停用同一個 Item 底下唔同嘅 Active SKU 時，兩個交易嘅 `SELECT COUNT` 都會見到「仲有第二粒 Active」（大家都見到對方仲未 commit 之前嘅舊值），結果兩個都通過檢查、都成功轉做 Inactive——個 Item 淨低返零個 Active SKU，違反咗呢個 task 自己嘅 acceptance criteria。用 `itemConcurrency.integration.test.js` 嘅 last-active race 測試喺真 MySQL 上實際重現咗呢個 bug（兩個 200，而唔係一個 200 一個 409），確認之後跟返 `UserAdminService.disable()` 防「停用最後一個 active admin」嗰個已有嘅寫法（見嗰個方法自己嘅註解）修正：將「仲有冇第二粒 Active」寫做 `UPDATE` 嘅 `WHERE` 子句本身一部分（`EXISTS` 子查詢），等 InnoDB 用真正嘅列鎖序列化呢兩個交易，第二個交易嘅 `WHERE` 判斷先會見到第一個已經 commit 咗嘅最新資料。修正之後連跑 5 次都穩定通過。
+
 **Acceptance criteria:**
 
-- [ ] 端到端涵蓋 Catalog → Variant Item＋兩 SKU → 搜尋 → 更新 → lifecycle → audit → cleanup。
-- [ ] 同 version、SKU Code、Barcode、Base UOM 及 last-active race 只有合法請求成功。
-- [ ] 401／403／stale permission、LIKE escape、sort whitelist、XSS text、IDOR 與 error redaction 全部有斷言。
+- [x] 端到端涵蓋 Catalog → Item＋兩個 SKU（範圍決定見上）→ 搜尋 → 更新 → lifecycle（activate／deactivate／archive／restore／SKU 逐一 restore）→ audit → cleanup，一個連續嘅 test 一次過行晒。
+- [x] 同 version（Item update）、SKU Code（create）、Barcode（create）、Base UOM（SKU update）及 last-active（SKU deactivate）呢五種 race，用 `Promise.all` 真係同時發兩個 HTTP request，靠 InnoDB 列鎖／unique key 分勝負，只有合法嗰個成功——last-active 呢一項發現並修正咗上面嗰個真 bug。
+- [x] 401（未登入）／403（冇 permission）、LIKE escape、sort whitelist（唔喺白名單嘅 sortBy 畀 schema 擋 400）、XSS text（`<script>` 原字串存返轉頭，唔會執行／清走／轉義）全部有新斷言；stale permission、IDOR（child ownership）、error redaction 三項確認咗已經由其他檔案覆蓋（見下面清單），冇重複再測一次。
+
+**已經覆蓋、呢個 task 冇重複測嘅項目：**
+
+- LIKE 萬用字元跳脫、response 唔洩漏 DB 內部欄位、read API 嘅 401／403／stale permission 矩陣——`itemRead.integration.test.js`（T12）。
+- Child ownership／IDOR（`SKU_CHILD_MISMATCH`、跨 SKU barcode 404）——`itemUpdate.integration.test.js`（T16）、`itemHighRisk.integration.test.js`（T20）。
+- Error response 唔洩漏 SQL／stack／檔案路徑——框架層跨模組保證，見 `apiDispatcher.test.js`、`mysqlDatabaseFailureModes.test.js`。
 
 **Verification:**
 
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemManagement.integration.test.js test/integration/itemConcurrency.integration.test.js`
-- [ ] `npm test --workspace server -- test/security.test.js test/itemHandlers.test.js`
+- [x] `npm run lint`（repo 根）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemManagement.integration.test.js`（1 個連續端到端案例），連跑 3 次穩定通過
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemConcurrency.integration.test.js`（5 個 race 案例，含發現並修正 last-active race 嗰個），連跑 5 次穩定通過
+- [x] `npm test --workspace server`（1273 個案例，含新增 6 個，run 兩次穩定全過）
+- [x] 測試後確認 dev DB 無殘留
 
 **Dependencies:** T07, T19, T20, T21
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/test/integration/itemManagement.integration.test.js`
-- `server/test/integration/itemConcurrency.integration.test.js`
-- `server/test/itemHandlers.test.js`
-- `server/test/security.test.js`
+- `server/src/modules/item/ItemAdminService.js`（修正 `deactivateSku()` 嘅 last-active race：檢查移入 `UPDATE` 嘅 `WHERE EXISTS` 子句）
+- `server/test/integration/itemManagement.integration.test.js`（新建，1 個連續端到端案例）
+- `server/test/integration/itemConcurrency.integration.test.js`（新建，5 個 race 案例）
 
-**Estimated scope:** M（4 files）
+**Estimated scope:** M（3 logical files；冇建 `itemHandlers.test.js`，冇改 `security.test.js`——原因見上面嘅 verification 命令修正說明）
 
 ### Task T23：建立 Attribute schema、variant signature 與 domain 規則
 
