@@ -167,7 +167,7 @@ const SKU_DETAIL_UOM_SCHEMA = Object.freeze({
 
 const SKU_DETAIL_BARCODE_SCHEMA = Object.freeze({
   type: "object",
-  required: ["id", "skuUomId", "barcode", "normalizedBarcode", "barcodeType", "isPrimary"],
+  required: ["id", "skuUomId", "barcode", "normalizedBarcode", "barcodeType", "isPrimary", "version"],
   additionalProperties: false,
   properties: {
     id: { type: "integer", minimum: 1 },
@@ -175,7 +175,10 @@ const SKU_DETAIL_BARCODE_SCHEMA = Object.freeze({
     barcode: { type: "string" },
     normalizedBarcode: { type: "string" },
     barcodeType: { type: "string", enum: [...BARCODE_TYPES] },
-    isPrimary: { type: "boolean" }
+    isPrimary: { type: "boolean" },
+    // 每個條碼自己嘅 optimistic lock version（同 SKU 個 version 分開）——
+    // POST /skus/:id/barcodes/:barcodeId/release 用呢個做 compare-and-set。
+    version: { type: "integer", minimum: 1 }
   }
 });
 
@@ -344,4 +347,52 @@ export const PASSWORD_SCHEMA = Object.freeze({
   type: "string",
   minLength: 1,
   maxLength: 1024
+});
+
+// --- POST /api/v1/skus/:id/delete -------------------------------------------
+
+export const SKU_DELETE_RESULT_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id"],
+  additionalProperties: false,
+  properties: {
+    id: { type: "integer", minimum: 1 }
+  }
+});
+
+// --- POST /api/v1/skus/:id/code/change --------------------------------------
+
+export const SKU_CODE_CHANGE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["skuCode", "reason", "version", "password"],
+  additionalProperties: false,
+  properties: {
+    skuCode: { type: "string", minLength: 1, maxLength: 190 },
+    reason: REASON_SCHEMA,
+    version: VERSION_SCHEMA,
+    password: PASSWORD_SCHEMA
+  }
+});
+
+// --- POST /api/v1/skus/:id/barcodes/:barcodeId/release ----------------------
+
+export const SKU_BARCODE_PARAMS_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id", "barcodeId"],
+  additionalProperties: false,
+  properties: {
+    id: { type: "string", pattern: "^[1-9][0-9]{0,18}$" },
+    barcodeId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }
+  }
+});
+
+export const BARCODE_RELEASE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["reason", "version", "password"],
+  additionalProperties: false,
+  properties: {
+    reason: REASON_SCHEMA,
+    version: VERSION_SCHEMA,
+    password: PASSWORD_SCHEMA
+  }
 });

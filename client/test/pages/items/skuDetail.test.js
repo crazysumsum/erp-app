@@ -13,7 +13,10 @@ vi.mock("@/services/item.js", () => ({
     deactivateSku: vi.fn(),
     discontinueSku: vi.fn(),
     archiveSku: vi.fn(),
-    restoreSku: vi.fn()
+    restoreSku: vi.fn(),
+    deleteSku: vi.fn(),
+    changeSkuCode: vi.fn(),
+    releaseBarcode: vi.fn()
   },
   service: { name: "item" }
 }));
@@ -64,7 +67,7 @@ const SKU = {
   effectiveTo: null,
   status: "active",
   uoms: [{ id: 201, uomId: 5, uomCode: "EA", uomName: "Each", toBaseFactor: 1, isBase: true, isDefaultPurchase: false, isDefaultSale: true }],
-  barcodes: [{ id: 301, skuUomId: 201, barcode: "4710088412345", normalizedBarcode: "4710088412345", barcodeType: "ean13", isPrimary: true }],
+  barcodes: [{ id: 301, skuUomId: 201, barcode: "4710088412345", normalizedBarcode: "4710088412345", barcodeType: "ean13", isPrimary: true, version: 1 }],
   media: [],
   version: 1,
   createdAt: 1700000000000,
@@ -280,5 +283,78 @@ describe("pages/items/SkuDetailPage.vue", () => {
     expect(itemService.getSku).toHaveBeenCalledTimes(2);
     expect(notifyError).toHaveBeenCalled();
     expect(body.text()).toContain("版本 9");
+  });
+
+  it("Draft SKU：顯示「刪除」；Active SKU：唔顯示", async () => {
+    const draft = await mountPage({ sku: { ...SKU, status: "draft" } });
+    expect(draft.body.findAll(".q-btn").some((btn) => btn.text() === "刪除")).toBe(true);
+
+    document.body.innerHTML = "";
+    const active = await mountPage();
+    expect(active.body.findAll(".q-btn").some((btn) => btn.text() === "刪除")).toBe(false);
+  });
+
+  it("刪除 SKU：promptPassword({ requireReason: true })，成功後導返商品詳情", async () => {
+    promptPassword.mockResolvedValue({ reason: "測試刪除", password: "hunter2" });
+    itemService.deleteSku.mockResolvedValue({ id: 10 });
+    const { body, router } = await mountPage({ sku: { ...SKU, status: "draft" } });
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "刪除").trigger("click");
+    await flushPromises();
+
+    expect(itemService.deleteSku).toHaveBeenCalledWith(10, { reason: "測試刪除", password: "hunter2", version: 1 });
+    expect(router.currentRoute.value.path).toBe("/items/1");
+  });
+
+  it("特批修改 SKU Code：填新 Code／原因／密碼，成功後畫面更新新 Code", async () => {
+    itemService.changeSkuCode.mockResolvedValue({ ...SKU, skuCode: "VITC-90-NEW", version: 2 });
+    const { body } = await mountPage();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "特批修改 Code").trigger("click");
+    await flushPromises();
+
+    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("新 SKU Code")).find("input");
+    await codeInput.setValue("VITC-90-NEW");
+    const reasonInput = body.findAll(".q-field").find((f) => f.text().includes("修改原因")).find("textarea");
+    await reasonInput.setValue("特批改 code 原因");
+    const passwordInput = body.findAll(".q-field").find((f) => f.text().includes("密碼確認")).find("input");
+    await passwordInput.setValue("hunter2");
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "確認修改").trigger("click");
+    await flushPromises();
+
+    expect(itemService.changeSkuCode).toHaveBeenCalledWith(10, {
+      skuCode: "VITC-90-NEW",
+      reason: "特批改 code 原因",
+      version: 1,
+      password: "hunter2"
+    });
+    expect(body.text()).toContain("VITC-90-NEW");
+  });
+
+  it("條碼釋放：睇緊模式先顯示「釋放」掣，撳咗要求密碼確認先叫 releaseBarcode", async () => {
+    promptPassword.mockResolvedValue({ reason: "釋放測試", password: "hunter2" });
+    itemService.releaseBarcode.mockResolvedValue({ ...SKU, barcodes: [] });
+    const { body } = await mountPage();
+
+    const releaseBtn = body.findAll(".q-btn").find((btn) => btn.attributes("aria-label")?.includes("釋放條碼"));
+    expect(releaseBtn).toBeTruthy();
+    await releaseBtn.trigger("click");
+    await flushPromises();
+
+    expect(promptPassword).toHaveBeenCalledWith(expect.objectContaining({ requireReason: true }));
+    expect(itemService.releaseBarcode).toHaveBeenCalledWith(10, 301, {
+      reason: "釋放測試",
+      password: "hunter2",
+      version: 1
+    });
+  });
+
+  it("編輯模式：條碼列表冇「釋放」掣（釋放同編輯係兩個獨立流程）", async () => {
+    const { body } = await mountPage();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "編輯").trigger("click");
+    await flushPromises();
+
+    expect(body.findAll(".q-btn").some((btn) => btn.attributes("aria-label")?.includes("釋放條碼"))).toBe(false);
   });
 });

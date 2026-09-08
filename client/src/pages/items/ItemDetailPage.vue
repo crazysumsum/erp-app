@@ -390,6 +390,63 @@ async function restoreSkuRow(sku) {
   }
   await runSkuLifecycleAction(sku, () => itemService.restoreSku(sku.id, { ...outcome, version: sku.version }), "已從封存恢復");
 }
+
+// --- 永久刪除、複製（T20；design_spec §6.2） --------------------------------
+
+const showDelete = computed(() => item.value?.status === "draft");
+
+async function deleteItemFlow() {
+  const outcome = await promptPassword({
+    title: "刪除商品",
+    message: `永久刪除「${item.value.name}」？連同其 ${item.value.skus.length} 個 SKU 一併刪除，這個操作不可以復原。`,
+    okLabel: "刪除",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  try {
+    await itemService.deleteItem(itemId.value, { ...outcome, version: item.value.version });
+    notifySuccess(`商品「${item.value.name}」已刪除`);
+    router.push("/items");
+  } catch (error) {
+    notifyError(error.message || "刪除失敗");
+  }
+}
+
+const showCopyDialog = ref(false);
+const copySkuCodes = ref([]);
+const copySubmitting = ref(false);
+const copyError = ref("");
+
+const copyValid = computed(() => copySkuCodes.value.every((code) => code.trim().length > 0));
+
+function openCopyDialog() {
+  copySkuCodes.value = item.value.skus.map(() => "");
+  copyError.value = "";
+  showCopyDialog.value = true;
+}
+
+async function submitCopy() {
+  if (!copyValid.value || copySubmitting.value) {
+    return;
+  }
+  copySubmitting.value = true;
+  copyError.value = "";
+  try {
+    const copy = await itemService.copyItem(itemId.value, {
+      skus: item.value.skus.map((sku, index) => ({ sourceSkuId: sku.id, skuCode: copySkuCodes.value[index].trim() }))
+    });
+    showCopyDialog.value = false;
+    notifySuccess(`已複製做新商品「${copy.name}」（草稿）`);
+    router.push(`/items/${copy.id}`);
+  } catch (error) {
+    copyError.value = error.message || "複製失敗";
+    notifyError(error.message || "複製失敗");
+  } finally {
+    copySubmitting.value = false;
+  }
+}
 </script>
 
 <template>
@@ -411,6 +468,8 @@ async function restoreSkuRow(sku) {
             <q-btn v-if="showDiscontinue" flat color="warning" label="停產" @click="discontinueItemFlow" />
             <q-btn v-if="showArchive" flat color="warning" label="封存" @click="archiveItemFlow" />
             <q-btn v-if="showRestore" flat color="primary" label="從封存恢復" @click="restoreItemFlow" />
+            <q-btn flat color="primary" label="複製" @click="openCopyDialog" />
+            <q-btn v-if="showDelete" flat color="negative" label="刪除" @click="deleteItemFlow" />
             <q-btn flat color="primary" label="編輯" @click="startEdit" />
           </template>
         </div>
@@ -518,6 +577,40 @@ async function restoreSkuRow(sku) {
               :loading="activateSubmitting"
               :disable="!activateValid"
               @click="submitActivate"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="showCopyDialog" persistent>
+      <q-card style="min-width: 420px">
+        <q-card-section>
+          <h2 class="text-h6 q-ma-none">複製商品</h2>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <div class="text-body2 q-mb-sm">
+            複製成一個新的草稿商品；不會複製條碼，請為每個 SKU 提供一個新的 Code：
+          </div>
+          <q-input
+            v-for="(sku, index) in item.skus"
+            :key="sku.id"
+            v-model="copySkuCodes[index]"
+            :label="`${sku.skuCode} 的新 Code`"
+            outlined
+            dense
+            class="q-mb-sm"
+          />
+          <q-banner v-if="copyError" class="bg-negative text-white q-mt-sm">{{ copyError }}</q-banner>
+          <div class="row justify-end q-gutter-sm q-mt-md">
+            <q-btn flat label="取消" :disable="copySubmitting" @click="showCopyDialog = false" />
+            <q-btn
+              color="primary"
+              label="複製"
+              unelevated
+              :loading="copySubmitting"
+              :disable="!copyValid"
+              @click="submitCopy"
             />
           </div>
         </q-card-section>

@@ -9,7 +9,7 @@ export const page = {
 
 <script setup>
 import { computed, reactive, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { can } from "@/framework/authorization/can.js";
 import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
@@ -35,6 +35,7 @@ const STATUS_COLOUR = {
 };
 
 const route = useRoute();
+const router = useRouter();
 const session = useSessionStore();
 const canManage = computed(() => can(session, { permissions: ["item.mgmt"] }));
 
@@ -102,7 +103,8 @@ function loadFormFrom(data) {
     // 詳情 API 淨係回 skuUomId——用 form.uoms 已經帶埋嘅 id 對返去揾邊個
     // uomId，一定揾得到，因為條碼一定屬於呢個 SKU 現存嘅其中一個包裝單位。
     uomId: form.uoms.find((uom) => uom.id === row.skuUomId)?.uomId ?? null,
-    isPrimary: row.isPrimary
+    isPrimary: row.isPrimary,
+    version: row.version
   }));
 }
 
@@ -150,7 +152,12 @@ function buildPayload() {
     inventoryTracked: form.inventoryTracked,
     suggestedPriceAmount: form.suggestedPriceAmount || undefined,
     uoms: form.uoms.filter((row) => row.uomId !== null),
-    barcodes: form.barcodes.filter((row) => row.barcode.trim() && row.uomId !== null),
+    // `version` 淨係俾條碼釋放（releaseBarcodeFlow）攞嚟做 compare-and-set，
+    // SKU update 嘅 SKU_UPDATE_BARCODE_SCHEMA 冇呢個欄位（`additionalProperties:
+    // false`），提交前要剝走。
+    barcodes: form.barcodes
+      .filter((row) => row.barcode.trim() && row.uomId !== null)
+      .map(({ id, barcode, barcodeType, uomId, isPrimary }) => ({ id, barcode, barcodeType, uomId, isPrimary })),
     reason: reason.value.trim() || undefined,
     version: sku.value.version
   };
@@ -280,6 +287,96 @@ async function restoreFlow() {
     "已從封存恢復"
   );
 }
+
+// --- 永久刪除、Code 特批修改、條碼釋放（T20；design_spec §6.3） ------------
+
+const showDelete = computed(() => sku.value?.status === "draft");
+
+async function deleteFlow() {
+  const outcome = await promptPassword({
+    title: "刪除 SKU",
+    message: `永久刪除「${sku.value.skuCode}」？這個操作不可以復原。`,
+    okLabel: "刪除",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  try {
+    await itemService.deleteSku(skuId.value, { ...outcome, version: sku.value.version });
+    notifySuccess(`SKU「${sku.value.skuCode}」已刪除`);
+    router.push(`/items/${itemId.value}`);
+  } catch (error) {
+    notifyError(error.message || "刪除失敗");
+  }
+}
+
+const showCodeChangeDialog = ref(false);
+const newSkuCode = ref("");
+const codeChangeReason = ref("");
+const codeChangePassword = ref("");
+const codeChangeSubmitting = ref(false);
+const codeChangeError = ref("");
+
+const codeChangeValid = computed(
+  () =>
+    newSkuCode.value.trim().length > 0 &&
+    codeChangeReason.value.trim().length >= 5 &&
+    codeChangePassword.value.length > 0
+);
+
+function openCodeChangeDialog() {
+  newSkuCode.value = sku.value.skuCode;
+  codeChangeReason.value = "";
+  codeChangePassword.value = "";
+  codeChangeError.value = "";
+  showCodeChangeDialog.value = true;
+}
+
+async function submitCodeChange() {
+  if (!codeChangeValid.value || codeChangeSubmitting.value) {
+    return;
+  }
+  codeChangeSubmitting.value = true;
+  codeChangeError.value = "";
+  try {
+    const updated = await itemService.changeSkuCode(skuId.value, {
+      skuCode: newSkuCode.value.trim(),
+      reason: codeChangeReason.value.trim(),
+      version: sku.value.version,
+      password: codeChangePassword.value
+    });
+    sku.value = updated;
+    loadFormFrom(updated);
+    showCodeChangeDialog.value = false;
+    notifySuccess(`SKU Code 已改為「${updated.skuCode}」`);
+  } catch (error) {
+    codeChangeError.value = error.message || "修改失敗";
+    notifyError(error.message || "修改失敗");
+  } finally {
+    codeChangeSubmitting.value = false;
+  }
+}
+
+async function releaseBarcodeFlow({ id, barcode, version }) {
+  const outcome = await promptPassword({
+    title: "釋放條碼",
+    message: `釋放條碼「${barcode}」？釋放後這個條碼可以再被使用，這個操作不可以復原。`,
+    okLabel: "釋放",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  try {
+    const updated = await itemService.releaseBarcode(skuId.value, id, { ...outcome, version });
+    sku.value = updated;
+    loadFormFrom(updated);
+    notifySuccess(`條碼「${barcode}」已釋放`);
+  } catch (error) {
+    notifyError(error.message || "釋放失敗");
+  }
+}
 </script>
 
 <template>
@@ -302,6 +399,8 @@ async function restoreFlow() {
             <q-btn v-if="showDiscontinue" flat color="warning" label="停產" @click="discontinueFlow" />
             <q-btn v-if="showArchive" flat color="warning" label="封存" @click="archiveFlow" />
             <q-btn v-if="showRestore" flat color="primary" label="從封存恢復" @click="restoreFlow" />
+            <q-btn flat color="primary" label="特批修改 Code" @click="openCodeChangeDialog" />
+            <q-btn v-if="showDelete" flat color="negative" label="刪除" @click="deleteFlow" />
             <q-btn flat color="primary" label="編輯" @click="startEdit" />
           </template>
         </div>
@@ -315,7 +414,14 @@ async function restoreFlow() {
           </q-banner>
         </div>
 
-        <SkuEditor v-model="form" :field-error="fieldError" :readonly="!editing" sku-code-readonly />
+        <SkuEditor
+          v-model="form"
+          :field-error="fieldError"
+          :readonly="!editing"
+          sku-code-readonly
+          :allow-release="canManage && !editing"
+          @release="releaseBarcodeFlow"
+        />
 
         <q-input
           v-if="editing"
@@ -332,5 +438,30 @@ async function restoreFlow() {
         </div>
       </template>
     </div>
+
+    <q-dialog v-model="showCodeChangeDialog" persistent>
+      <q-card style="min-width: 420px">
+        <q-card-section>
+          <h2 class="text-h6 q-ma-none">特批修改 SKU Code</h2>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-input v-model="newSkuCode" label="新 SKU Code" outlined dense class="q-mb-sm" />
+          <q-input v-model="codeChangeReason" label="修改原因" type="textarea" outlined dense class="q-mb-sm" />
+          <q-input v-model="codeChangePassword" label="密碼確認" type="password" outlined dense />
+          <q-banner v-if="codeChangeError" class="bg-negative text-white q-mt-sm">{{ codeChangeError }}</q-banner>
+          <div class="row justify-end q-gutter-sm q-mt-md">
+            <q-btn flat label="取消" :disable="codeChangeSubmitting" @click="showCodeChangeDialog = false" />
+            <q-btn
+              color="primary"
+              label="確認修改"
+              unelevated
+              :loading="codeChangeSubmitting"
+              :disable="!codeChangeValid"
+              @click="submitCodeChange"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>

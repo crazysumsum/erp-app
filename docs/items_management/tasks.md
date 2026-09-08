@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T19 已完成，T20 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T20 已完成，T21 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -89,7 +89,7 @@ T01 migration freeze
 - [x] T17 建立 Item／SKU 詳情與編輯頁
 - [x] T18 建立 Item／SKU 生命週期後端
 - [x] T19 建立生命週期與狀態操作 UI
-- [ ] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
+- [x] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
 - [ ] T21 建立下游 ItemLookupService contract
 - [ ] T22 完成核心端到端、並發與安全驗證
 
@@ -743,29 +743,46 @@ T01 migration freeze
 
 **Description:** 完成 Draft delete、Item copy、SKU Code 特批修改、Barcode release 的後端與對應 UI actions，維持高強度認證及完整稽核。
 
+**⚠️ 範圍決定：「未引用」冇做真正嘅下游引用查詢**。design_spec §8.4 明確話「Phase 1 尚無庫存、採購或銷售表，永久刪除 Draft 只需檢查 Item aggregate 自身」——同 T16／T18 一致嘅範圍決定。「未引用」喺呢期即係「Item／SKU 自己仲係 draft」：Item／SKU 一旦離開 draft 就唔會再返嚟（冇任何 transition 會將已啟用過嘅 Item 變返 draft），所以呢個檢查已經足夠。`itemReferenced()`／`skuReferenced()` 呢兩個 error factory（已經喺 itemErrors.js 定義好）留返俾第一個真正有下游表嘅 task 用。
+
 **Acceptance criteria:**
 
-- [ ] 永久刪除只允許未引用 Draft，且不可令 Item 零 SKU；copy 不複製 Barcode 並要求每個新 SKU Code。
-- [ ] Code change／Barcode release 使用 `jwt-device-password`、reason、version、全域唯一與 audit before／after。
-- [ ] UI 不以一般 edit 偷改 Code／刪 Barcode；所有高風險 dialog 清楚列出 target 與後果。
+- [x] 永久刪除只允許未引用 Draft（`ITEM_DELETE_REQUIRES_DRAFT`／`SKU_DELETE_REQUIRES_DRAFT`），且不可令 Item 零 SKU（`SKU_IS_LAST_IN_ITEM`）；copy 不複製 Barcode 並要求每個來源 SKU 提供一個新 Code（`skus: [{ sourceSkuId, skuCode }]`，數量同來源一一對應）。
+- [x] Code change／Barcode release 使用 `jwt-device-password`、reason、version、全域唯一（沿用 `skuCodeTaken()`）與 audit before／after。Barcode 有自己獨立嘅 optimistic lock `version`（同 SKU 個 version 分開）——`SKU_DETAIL_RESPONSE_SCHEMA` 因此加咗呢個欄位。
+- [x] UI 不以一般 edit 偷改 Code／刪 Barcode：SKU update 表單嘅 Code 欄位維持 readonly，條碼列表淨係喺**睇緊模式**先顯示「釋放」（同編輯模式嘅刪除完全分開，唔會夾喺同一個「儲存」提交入面）；所有高風險 dialog（`promptPassword({ requireReason: true })`）清楚列出 target 名稱同「不可以復原」字眼。
+
+**手動驗證中發現並修正嘅 bug：** `changeSkuCode()`／`releaseBarcode()` 呢兩個 `jwt-device-password` 端點，client 端最初冇喺 `httpClient.post()` 帶 `signed: true`——同 `user.js` 嘅 `create()`／`assignRoles()`／`resetPassword()` 一樣，`signed: true` 先會令 HttpClient 幫個 request 加設備簽章 header，冇呢個 flag 就算密碼啱都會俾伺服器拒絕（`DEVICE_SIGNATURE_REQUIRED`）。單元測試冧唔到呢個 bug，因為 mock 直接吞咗個 body，冇真正行過 HttpClient 嘅簽章邏輯——用真實 dev server＋真設備簽章手動測先發現，已經修正。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `npm test --workspace client -- test/services/item.test.js test/pages/items/skuDetail.test.js`
-- [ ] Manual check：未核准設備、錯密碼、duplicate Code、被引用 Draft 均無資料變更。
+- [x] `npm run lint`（repo 根）
+- [x] `npx vitest run`（client，全部 48 個檔案、387 個案例，run 兩次穩定全過；新增 itemDetail.test.js 3 case、skuDetail.test.js 5 case）
+- [x] `npm run build --workspace client`
+- [x] `npm test --workspace server`（1227 個案例，含新增 17 個，run 兩次穩定全過；冇建 `itemAdminService.test.js`／`itemHandlers.test.js`：同 T16／T18 一致，correctness 幾乎全部係 compare-and-set UPDATE／DELETE、cascade 交易，只有真 DB 先驗得到）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemHighRisk.integration.test.js`（17 個案例，用 `test-support/testDevice.js` 嘅真 ECDSA 簽章驗 `jwt-device-password`：Item／SKU 刪除成功／非 draft 拒絕／version 衝突／密碼錯、Item 複製成功（UOM 複製、Barcode 唔複製）／sourceSkuId 唔啱／新 Code 撞現有 SKU、SKU 刪除唔可以刪到得返一個嘅最後一個、SKU Code 特批修改成功／撞 code／密碼錯／冇簽章、條碼釋放成功／跨 SKU／version 衝突），連跑 3 次全部穩定通過
+- [x] Manual check：用真實 dev server＋seed data（草稿商品＋草稿 SKU、啟用商品連兩個條碼、多 SKU 草稿商品），喺瀏覽器度完整行一次：刪除草稿商品（連 SKU／UOM 一齊消失）→ 複製啟用商品成新草稿（UOM 複製、Barcode 完全冇複製，audit 記低來源對應）→ 特批修改 SKU Code（真設備簽章＋密碼，發現並修正咗上面嗰個 `signed: true` bug）→ 釋放條碼（其他條碼唔受影響）→ 刪除多 SKU 商品入面其中一個 SKU（另一個保留）；每一步都對照 DB（`items`／`item_skus`／`item_sku_barcodes`／`item_audit_logs`）確認狀態同 audit 正確，完成後清空全部種落嘅資料
 
 **Dependencies:** T16, T17, T18, T19
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/items/itemHighRiskHandlers.js`
-- `server/src/handlers/skus/skuHighRiskHandlers.js`
-- `client/src/services/item.js`
-- `client/src/pages/items/SkuDetailPage.vue`
+- `server/src/modules/item/itemErrors.js`（新增 `itemDeleteRequiresDraft()`、`skuDeleteRequiresDraft()`、`lastSkuInItem()`、`barcodeNotFound()`）
+- `server/src/modules/item/ItemAdminService.js`（新增 `deleteItem()`、`copyItem()`、`deleteSku()`、`changeSkuCode()`、`releaseBarcode()`；`#toSkuDetail()` 嘅 barcode 映射加返 `version`）
+- `server/src/handlers/items/itemSchemas.js`（新增 `ITEM_DELETE_RESULT_SCHEMA`、`ITEM_COPY_REQUEST_SCHEMA`）
+- `server/src/handlers/items/itemHighRiskHandlers.js`（新建：`DeleteItemHandler`、`CopyItemHandler`）
+- `server/src/handlers/skus/skuSchemas.js`（新增 `SKU_DELETE_RESULT_SCHEMA`、`SKU_CODE_CHANGE_REQUEST_SCHEMA`、`SKU_BARCODE_PARAMS_SCHEMA`、`BARCODE_RELEASE_REQUEST_SCHEMA`；`SKU_DETAIL_BARCODE_SCHEMA` 加 `version`）
+- `server/src/handlers/skus/skuHighRiskHandlers.js`（新建：`DeleteSkuHandler`、`ChangeSkuCodeHandler`、`ReleaseBarcodeHandler`）
+- `server/src/handlers/item-audit/itemAuditSchemas.js`（`ITEM_AUDIT_ACTIONS` 加 `item.delete`／`item.copy`／`sku.delete`／`sku.code.change`／`barcode.release`）
+- `server/test/integration/itemHighRisk.integration.test.js`（新建，17 個案例）
+- `client/src/services/item.js`（新增 `deleteItem()`、`copyItem()`、`deleteSku()`、`changeSkuCode()`、`releaseBarcode()`；後兩者帶 `signed: true`）
+- `client/src/pages/items/ItemDetailPage.vue`（「刪除」／「複製」按鈕；複製 dialog 逐個來源 SKU 收新 Code）
+- `client/src/pages/items/SkuDetailPage.vue`（「刪除」／「特批修改 Code」按鈕連 dialog；`releaseBarcodeFlow()` 接住 `SkuEditor` 轉發嘅 `release` event）
+- `client/src/components/items/SkuEditor.vue`（新增 `allowRelease` prop 同 `release` emit，轉俾 `SkuBarcodeEditor`）
+- `client/src/components/items/SkuBarcodeEditor.vue`（新增 `allowRelease` prop：睇緊模式先顯示每行嘅「釋放」掣，emit `{id, barcode, version}`）
+- `client/test/pages/items/itemDetail.test.js`（加 3 個案例）
+- `client/test/pages/items/skuDetail.test.js`（加 5 個案例）
 
-**Estimated scope:** M（5 logical files；focused tests 同切片）
+**Estimated scope:** M（14 logical files；跨 server／client 兩邊，比原本估計嘅 5 個檔案多，因為 barcode release 要幫每個條碼加返獨立 `version` 先做得到 compare-and-set，連帶影響 response schema 同 `SkuBarcodeEditor.vue`／`SkuEditor.vue` 兩層轉發）
 
 ### Task T21：建立下游 ItemLookupService contract
 

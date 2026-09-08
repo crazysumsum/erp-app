@@ -19,17 +19,21 @@
  */
 import {
   activationReasonRequired,
+  barcodeNotFound,
   barcodePrimaryDuplicated,
   barcodeTaken,
   brandNotFound,
   categoryNotFound,
   criticalChangeReasonRequired,
   itemActivationRequiresSku,
+  itemDeleteRequiresDraft,
   itemNotFound,
   itemVariantNotSupported,
   lastActiveSku,
+  lastSkuInItem,
   skuChildMismatch,
   skuCodeTaken,
+  skuDeleteRequiresDraft,
   skuNotFound,
   standardItemSkuLimit,
   statusTransitionInvalid,
@@ -887,6 +891,171 @@ export class ItemAdminService {
     return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
   }
 
+  /** 永久刪除 Draft Item 連同它嘅 Draft children（UOM／Barcode／SKU）。只
+   * 檢查 Item aggregate 自身：Phase 1 未有庫存／採購／銷售表可以查真正嘅
+   * 引用，design_spec §8.4 明確話「現在不為尚不存在的模組建立 plugin
+   * registry 或空 interface；待第一個真引用出現再抽取」——同 T16／T18
+   * 對 `uomChangeBlocked()`／archive 引用檢查嘅範圍決定一致。「未引用」喺
+   * 呢期即係「仲係 draft」：Item 一旦離開 draft 就唔會再返嚟（冇任何
+   * transition 會將已啟用過嘅 Item 變返 draft），所以 draft Item 底下嘅
+   * SKU 一定全部都仲係 draft，唔使逐個 SKU 再檢查一次狀態。 */
+  async deleteItem({ actorId, claimedRoles, claimedPermissions, id, reason, version, requestId, ip }) {
+    await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+
+      const [[current]] = await connection.query("SELECT name, status FROM items WHERE id = ?", [id]);
+      if (!current) {
+        throw itemNotFound(id);
+      }
+      if (current.status !== "draft") {
+        throw itemDeleteRequiresDraft(current.status);
+      }
+
+      const [skuRows] = await connection.query("SELECT id FROM item_skus WHERE item_id = ?", [id]);
+      const skuIds = skuRows.map((row) => row.id);
+      if (skuIds.length > 0) {
+        const placeholders = skuIds.map(() => "?").join(",");
+        await connection.execute(`DELETE FROM item_sku_barcodes WHERE sku_id IN (${placeholders})`, skuIds);
+        await connection.execute(`DELETE FROM item_sku_uoms WHERE sku_id IN (${placeholders})`, skuIds);
+        await connection.execute(`DELETE FROM item_skus WHERE id IN (${placeholders})`, skuIds);
+      }
+
+      const [result] = await connection.execute("DELETE FROM items WHERE id = ? AND version = ?", [id, version]);
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query("SELECT version FROM items WHERE id = ?", [id]);
+        if (!stillExists) {
+          throw itemNotFound(id);
+        }
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "item.delete",
+        targetType: "item",
+        targetId: id,
+        targetLabel: current.name,
+        detail: { deletedSkuCount: skuIds.length },
+        reason,
+        requestId,
+        ip
+      });
+    });
+  }
+
+  /** 複製成一個新嘅 Draft Item；唔複製 Barcode，每個來源 SKU 都要呼叫端
+   * 提供一個新嘅 SKU Code（design_spec §6.2）。`skus` 要求同來源 Item 現存
+   * 嘅 SKU 一一對應（同一數量，`sourceSkuId` 覆蓋齊全冇重複）——呢個限制
+   * 反映而家嘅實際狀態：唔存在「淨係複製部分 SKU」呢個需求，亦都冇「複製
+   * 之後底下多咗／少咗未講嘅 SKU」呢種曖昧情況。 */
+  async copyItem({ actorId, claimedRoles, claimedPermissions, id, skus, requestId, ip }) {
+    const newItemId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+
+      const [[source]] = await connection.query("SELECT * FROM items WHERE id = ?", [id]);
+      if (!source) {
+        throw itemNotFound(id);
+      }
+
+      const [sourceSkuRows] = await connection.query("SELECT * FROM item_skus WHERE item_id = ?", [id]);
+      const sourceSkuById = new Map(sourceSkuRows.map((row) => [row.id, row]));
+
+      if (skus.length !== sourceSkuRows.length) {
+        throw skuChildMismatch("sku", skus[0]?.sourceSkuId ?? null);
+      }
+      const seenSourceSkuIds = new Set();
+      for (const entry of skus) {
+        if (!sourceSkuById.has(entry.sourceSkuId) || seenSourceSkuIds.has(entry.sourceSkuId)) {
+          throw skuChildMismatch("sku", entry.sourceSkuId);
+        }
+        seenSourceSkuIds.add(entry.sourceSkuId);
+      }
+
+      const [itemResult] = await connection.execute(
+        `INSERT INTO items
+           (name, short_name, description, category_id, brand_id, product_type, country_of_origin,
+            manufacturer, default_tracking_policy, default_shelf_life_days, status, version,
+            created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)`,
+        [
+          source.name,
+          source.short_name,
+          source.description,
+          source.category_id,
+          source.brand_id,
+          source.product_type,
+          source.country_of_origin,
+          source.manufacturer,
+          source.default_tracking_policy,
+          source.default_shelf_life_days,
+          nowMs,
+          nowMs,
+          actorId,
+          actorId
+        ]
+      );
+      const newItemId = itemResult.insertId;
+      const copiedSkus = [];
+
+      for (const entry of skus) {
+        const sourceSku = sourceSkuById.get(entry.sourceSkuId);
+        const [uomRows] = await connection.query(
+          "SELECT uom_id, to_base_factor, is_base, is_default_purchase, is_default_sale FROM item_sku_uoms WHERE sku_id = ?",
+          [sourceSku.id]
+        );
+
+        const created = await this.#createSkuRow(connection, {
+          itemId: newItemId,
+          sku: {
+            skuCode: entry.skuCode,
+            skuName: sourceSku.sku_name,
+            trackingPolicy: sourceSku.tracking_policy,
+            shelfLifeDays: sourceSku.shelf_life_days,
+            minReceiptLifeDays: sourceSku.min_receipt_life_days,
+            minSaleLifeDays: sourceSku.min_sale_life_days,
+            purchasable: Boolean(sourceSku.purchasable),
+            sellable: Boolean(sourceSku.sellable),
+            inventoryTracked: Boolean(sourceSku.inventory_tracked),
+            suggestedPriceAmount: sourceSku.suggested_price_amount,
+            effectiveFrom: sourceSku.effective_from,
+            effectiveTo: sourceSku.effective_to,
+            uoms: uomRows.map((row) => ({
+              uomId: row.uom_id,
+              toBaseFactor: row.to_base_factor,
+              isBase: Boolean(row.is_base),
+              isDefaultPurchase: Boolean(row.is_default_purchase),
+              isDefaultSale: Boolean(row.is_default_sale)
+            })),
+            barcodes: []
+          },
+          defaultTrackingPolicy: source.default_tracking_policy,
+          nowMs,
+          actorId
+        });
+
+        copiedSkus.push({ sourceSkuId: sourceSku.id, newSkuId: created.id, newSkuCode: created.code });
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "item.copy",
+        targetType: "item",
+        targetId: newItemId,
+        targetLabel: source.name,
+        detail: { copiedFromItemId: id, skus: copiedSkus },
+        requestId,
+        ip
+      });
+
+      return newItemId;
+    });
+
+    return this.getItem({ actorId, claimedRoles, claimedPermissions, id: newItemId });
+  }
+
   // --- SKU：生命週期 ---------------------------------------------------------
 
   /** draft／inactive → active；父 Item 必須已經係 active（唔喺呢度 cascade
@@ -1087,6 +1256,168 @@ export class ItemAdminService {
         requestId,
         ip,
         nowMs
+      });
+
+      return id;
+    });
+
+    return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
+  }
+
+  /** 永久刪除 Draft SKU；「未引用」嘅範圍決定同 `deleteItem()` 一致（Phase 1
+   * 冇下游表）。「不令 Item 零 SKU」係呢個方法獨有嘅額外檢查：Item 本身唔一
+   * 定要係 draft（Item 可以係 active，底下有一粒 draft 嘅 SKU），純粹淨係
+   * 睇緊呢粒 SKU 自己嘅狀態，同埋刪咗之後 Item 底下係咪仲有第二粒。 */
+  async deleteSku({ actorId, claimedRoles, claimedPermissions, id, reason, version, requestId, ip }) {
+    await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+
+      const [[current]] = await connection.query(
+        "SELECT item_id, sku_code, status FROM item_skus WHERE id = ?",
+        [id]
+      );
+      if (!current) {
+        throw skuNotFound(id);
+      }
+      if (current.status !== "draft") {
+        throw skuDeleteRequiresDraft(current.status);
+      }
+
+      const [[{ otherSkuCount }]] = await connection.query(
+        "SELECT COUNT(*) AS otherSkuCount FROM item_skus WHERE item_id = ? AND id != ?",
+        [current.item_id, id]
+      );
+      if (Number(otherSkuCount) === 0) {
+        throw lastSkuInItem();
+      }
+
+      await connection.execute("DELETE FROM item_sku_barcodes WHERE sku_id = ?", [id]);
+      await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [id]);
+
+      const [result] = await connection.execute("DELETE FROM item_skus WHERE id = ? AND version = ?", [id, version]);
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query("SELECT version FROM item_skus WHERE id = ?", [id]);
+        if (!stillExists) {
+          throw skuNotFound(id);
+        }
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "sku.delete",
+        targetType: "sku",
+        targetId: id,
+        targetLabel: current.sku_code,
+        reason,
+        requestId,
+        ip
+      });
+    });
+  }
+
+  /** SKU Code 特批修改：全域唯一（不分大小寫，同建立時共用一個 unique
+   * index），reason 必填，`jwt-device-password` 由 handler 嘅 `authType`
+   * 保證（見 skuHighRiskHandlers.js）。 */
+  async changeSkuCode({ actorId, claimedRoles, claimedPermissions, id, skuCode, reason, version, requestId, ip }) {
+    const skuId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+
+      const [[current]] = await connection.query("SELECT sku_code, version FROM item_skus WHERE id = ?", [id]);
+      if (!current) {
+        throw skuNotFound(id);
+      }
+
+      const newCode = String(skuCode).trim();
+      let result;
+      try {
+        [result] = await connection.execute(
+          `UPDATE item_skus SET sku_code = ?, updated_at = ?, updated_by = ?, version = version + 1
+            WHERE id = ? AND version = ?`,
+          [newCode, nowMs, actorId, id, version]
+        );
+      } catch (error) {
+        if (isDuplicateEntry(error)) {
+          throw skuCodeTaken(newCode);
+        }
+        throw error;
+      }
+
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query("SELECT version FROM item_skus WHERE id = ?", [id]);
+        if (!stillExists) {
+          throw skuNotFound(id);
+        }
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "sku.code.change",
+        targetType: "sku",
+        targetId: id,
+        targetLabel: newCode,
+        detail: { skuCode: { before: current.sku_code, after: newCode } },
+        reason,
+        requestId,
+        ip
+      });
+
+      return id;
+    });
+
+    return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
+  }
+
+  /** 移除並釋放一個條碼；`jwt-device-password` 由 handler 嘅 `authType`
+   * 保證。條碼有自己嘅 `version`（同一招每個獨立資源各自 optimistic
+   * lock），唔係借 SKU 個 version。 */
+  async releaseBarcode({ actorId, claimedRoles, claimedPermissions, id, barcodeId, reason, version, requestId, ip }) {
+    const skuId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+
+      const [[sku]] = await connection.query("SELECT sku_code FROM item_skus WHERE id = ?", [id]);
+      if (!sku) {
+        throw skuNotFound(id);
+      }
+
+      const [[barcode]] = await connection.query(
+        "SELECT barcode, normalized_barcode FROM item_sku_barcodes WHERE id = ? AND sku_id = ?",
+        [barcodeId, id]
+      );
+      if (!barcode) {
+        throw barcodeNotFound(barcodeId);
+      }
+
+      const [result] = await connection.execute(
+        "DELETE FROM item_sku_barcodes WHERE id = ? AND version = ?",
+        [barcodeId, version]
+      );
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query(
+          "SELECT version FROM item_sku_barcodes WHERE id = ?",
+          [barcodeId]
+        );
+        if (!stillExists) {
+          throw barcodeNotFound(barcodeId);
+        }
+        throw versionConflict();
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "barcode.release",
+        targetType: "sku",
+        targetId: id,
+        targetLabel: sku.sku_code,
+        detail: { barcodeId, barcode: barcode.barcode, normalizedBarcode: barcode.normalized_barcode },
+        reason,
+        requestId,
+        ip
       });
 
       return id;
@@ -1800,7 +2131,7 @@ export class ItemAdminService {
     );
 
     const [barcodeRows] = await this.database.query(
-      `SELECT id, sku_uom_id, barcode, normalized_barcode, barcode_type, is_primary
+      `SELECT id, sku_uom_id, barcode, normalized_barcode, barcode_type, is_primary, version
          FROM item_sku_barcodes
         WHERE sku_id = ?
         ORDER BY is_primary DESC, id`,
@@ -1936,7 +2267,8 @@ export class ItemAdminService {
         barcode: barcode.barcode,
         normalizedBarcode: barcode.normalized_barcode,
         barcodeType: barcode.barcode_type,
-        isPrimary: Boolean(barcode.is_primary)
+        isPrimary: Boolean(barcode.is_primary),
+        version: Number(barcode.version)
       })),
       // Media 未接上：item_media 表要等 T25 先建立。
       media: [],
