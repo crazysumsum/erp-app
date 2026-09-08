@@ -1135,21 +1135,32 @@ export class ItemAdminService {
         throw skuNotFound(id);
       }
 
-      if (sku.item_status === "active" && sku.status === "active") {
-        const [[{ otherActiveCount }]] = await connection.query(
-          "SELECT COUNT(*) AS otherActiveCount FROM item_skus WHERE item_id = ? AND status = 'active' AND id != ?",
-          [sku.item_id, id]
-        );
-        if (Number(otherActiveCount) === 0) {
-          throw lastActiveSku();
-        }
-      }
-
+      // 「呢粒仲係唔係最後一個 Active SKU」呢個檢查一定要同轉 inactive嗰句
+      // UPDATE 綁埋一齊做，唔可以分開做兩句：分開做嘅話，兩個並行請求各自
+      // 停用同一個 Item 底下唔同嘅 SKU，各自嘅交易喺呢句 SELECT COUNT 嗰陣
+      // 都會見到「仲有第二粒 Active」（見返對方未 commit 之前嗰個舊值），
+      // 兩個都通過檢查，結果個 Item 剩返零個 Active SKU——同
+      // UserAdminService.disable() 防「停用最後一個 active admin」嗰個
+      // race 一模一樣，呢度用返同一招：將「仲有冇第二粒」做成 UPDATE 嘅
+      // WHERE 子句本身嘅一部分，等 InnoDB 用真正嘅列鎖去序列化呢兩個交易，
+      // 第二個交易嘅 WHERE 判斷先會見到第一個交易已經 commit 咗嘅最新資料。
+      const requiresLastActiveGuard = sku.item_status === "active" && sku.status === "active";
       const nowMs = this.time.nowMs();
       const [result] = await connection.execute(
         `UPDATE item_skus SET status = 'inactive', updated_at = ?, updated_by = ?, version = version + 1
-          WHERE id = ? AND version = ? AND status = 'active'`,
-        [nowMs, actorId, id, version]
+          WHERE id = ? AND version = ? AND status = 'active'
+          ${
+            requiresLastActiveGuard
+              ? `AND EXISTS (
+                   SELECT 1 FROM (
+                     SELECT s2.id FROM item_skus s2 WHERE s2.item_id = ? AND s2.status = 'active' AND s2.id != ?
+                   ) AS other_active_skus
+                 )`
+              : ""
+          }`,
+        requiresLastActiveGuard
+          ? [nowMs, actorId, id, version, sku.item_id, id]
+          : [nowMs, actorId, id, version]
       );
       if (result.affectedRows === 0) {
         const [[stillExists]] = await connection.query("SELECT version, status FROM item_skus WHERE id = ?", [id]);
@@ -1159,7 +1170,12 @@ export class ItemAdminService {
         if (Number(stillExists.version) !== Number(version)) {
           throw versionConflict();
         }
-        throw statusTransitionInvalid(stillExists.status, "inactive");
+        if (stillExists.status !== "active") {
+          throw statusTransitionInvalid(stillExists.status, "inactive");
+        }
+        // Version 啱、狀態仲係 active，但 UPDATE 一列都冇改到：唯一嘅可能就
+        // 係 requiresLastActiveGuard 嘅 EXISTS 判斷唔通過。
+        throw lastActiveSku();
       }
 
       await this.auditLog.record(connection, {
