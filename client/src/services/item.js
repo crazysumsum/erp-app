@@ -166,5 +166,47 @@ export default {
     return httpClient.post(`/api/v1/skus/${id}/restore`, {
       body: { reason, version, password }
     });
+  },
+
+  // --- Item／SKU：高風險操作（T20，見 design_spec §6.2、§6.3） ---------------
+
+  deleteItem(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/items/${id}/delete`, {
+      body: { reason, version, password }
+    });
+  },
+
+  /** 複製成新 Draft；`skus` 係 `[{ sourceSkuId, skuCode }]`，唔複製條碼。呢個
+   * route 有 idempotency，`idempotent: true` 令 HttpClient 自動帶一個新
+   * `Idempotency-Key`（同 `createItem()` 一樣）。 */
+  copyItem(id, { skus }) {
+    return httpClient.post(`/api/v1/items/${id}/copy`, {
+      idempotent: true,
+      body: { skus }
+    });
+  },
+
+  deleteSku(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/skus/${id}/delete`, {
+      body: { reason, version, password }
+    });
+  },
+
+  /** 後端 authType 係 `jwt-device-password`，同 user.js 嘅 `create`／
+   * `assignRoles`／`resetPassword` 一樣要 `signed: true`——HttpClient 先會
+   * 幫個 request 加設備簽章 header，唔係就算密碼啱都會俾伺服器拒絕
+   * （DEVICE_SIGNATURE_REQUIRED）。 */
+  changeSkuCode(id, { skuCode, reason, version, password }) {
+    return httpClient.post(`/api/v1/skus/${id}/code/change`, {
+      body: { skuCode, reason, version, password },
+      signed: true
+    });
+  },
+
+  releaseBarcode(id, barcodeId, { reason, version, password }) {
+    return httpClient.post(`/api/v1/skus/${id}/barcodes/${barcodeId}/release`, {
+      body: { reason, version, password },
+      signed: true
+    });
   }
 };

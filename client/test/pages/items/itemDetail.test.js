@@ -18,7 +18,9 @@ vi.mock("@/services/item.js", () => ({
     deactivateSku: vi.fn(),
     discontinueSku: vi.fn(),
     archiveSku: vi.fn(),
-    restoreSku: vi.fn()
+    restoreSku: vi.fn(),
+    deleteItem: vi.fn(),
+    copyItem: vi.fn()
   },
   service: { name: "item" }
 }));
@@ -68,7 +70,8 @@ async function mountPage({ permissions = ["item.view", "item.mgmt"], item = ITEM
     history: createMemoryHistory(),
     routes: [
       { path: page.path, name: page.name, component: ItemDetailPage },
-      { path: "/items/:itemId/skus/:skuId", name: "skuDetail", component: { template: "<div>sku detail</div>" } }
+      { path: "/items/:itemId/skus/:skuId", name: "skuDetail", component: { template: "<div>sku detail</div>" } },
+      { path: "/items", name: "items", component: { template: "<div>items list</div>" } }
     ]
   });
   await router.push("/items/1");
@@ -259,5 +262,45 @@ describe("pages/items/ItemDetailPage.vue", () => {
     await flushPromises();
 
     expect(itemService.deactivateSku).toHaveBeenCalledWith(10, { reason: "暫停銷售", version: 1 });
+  });
+
+  it("Draft Item：顯示「刪除」；Active Item：唔顯示", async () => {
+    const draft = await mountPage({ item: { ...ITEM, status: "draft" } });
+    expect(draft.body.findAll(".q-btn").some((btn) => btn.text() === "刪除")).toBe(true);
+
+    document.body.innerHTML = "";
+    const active = await mountPage({ item: ITEM });
+    expect(active.body.findAll(".q-btn").some((btn) => btn.text() === "刪除")).toBe(false);
+  });
+
+  it("刪除商品：promptPassword({ requireReason: true })，成功後導去 /items", async () => {
+    promptPassword.mockResolvedValue({ reason: "測試刪除", password: "hunter2" });
+    itemService.deleteItem.mockResolvedValue({ id: 1 });
+    const { body, router } = await mountPage({ item: { ...ITEM, status: "draft" } });
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "刪除").trigger("click");
+    await flushPromises();
+
+    expect(promptPassword).toHaveBeenCalledWith(expect.objectContaining({ requireReason: true }));
+    expect(itemService.deleteItem).toHaveBeenCalledWith(1, { reason: "測試刪除", password: "hunter2", version: 1 });
+    expect(router.currentRoute.value.path).toBe("/items");
+  });
+
+  it("複製商品：撳「複製」開 dialog，每個 SKU 一個新 Code 輸入，成功後導去新商品", async () => {
+    itemService.copyItem.mockResolvedValue({ id: 99, name: "維他命 C 1000mg" });
+    const { body, router } = await mountPage();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "複製").trigger("click");
+    await flushPromises();
+
+    const codeInput = body.findAll(".q-field").find((f) => f.text().includes("VITC-90 的新 Code")).find("input");
+    await codeInput.setValue("VITC-90-COPY");
+
+    const confirmButtons = body.findAll(".q-btn").filter((btn) => btn.text() === "複製");
+    await confirmButtons[confirmButtons.length - 1].trigger("click");
+    await flushPromises();
+
+    expect(itemService.copyItem).toHaveBeenCalledWith(1, { skus: [{ sourceSkuId: 10, skuCode: "VITC-90-COPY" }] });
+    expect(router.currentRoute.value.path).toBe("/items/99");
   });
 });

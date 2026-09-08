@@ -209,6 +209,36 @@ export function lastActiveSku() {
   });
 }
 
+export function itemDeleteRequiresDraft(status) {
+  return conflict(`Only a draft item can be permanently deleted (current status: "${status}")`, {
+    code: "ITEM_DELETE_REQUIRES_DRAFT",
+    publicMessage: "只可以永久刪除草稿狀態嘅商品",
+    details: { status }
+  });
+}
+
+export function skuDeleteRequiresDraft(status) {
+  return conflict(`Only a draft SKU can be permanently deleted (current status: "${status}")`, {
+    code: "SKU_DELETE_REQUIRES_DRAFT",
+    publicMessage: "只可以永久刪除草稿狀態嘅 SKU",
+    details: { status }
+  });
+}
+
+export function lastSkuInItem() {
+  return conflict("Cannot delete the item's only remaining SKU", {
+    code: "SKU_IS_LAST_IN_ITEM",
+    publicMessage: "這是商品目前唯一的 SKU，刪除後商品會變成零 SKU，請改為刪除整個商品"
+  });
+}
+
+export function barcodeNotFound(id) {
+  return notFound(`Barcode ${id} was not found on this SKU`, {
+    code: "BARCODE_NOT_FOUND",
+    publicMessage: "找不到這個條碼"
+  });
+}
+
 export function itemReferenced(referenceTypes) {
   return conflict(`Item is referenced by: ${referenceTypes.join(", ")}`, {
     code: "ITEM_REFERENCED",

@@ -12,8 +12,14 @@ const model = defineModel({ type: Array, required: true });
 const props = defineProps({
   uoms: { type: Array, required: true },
   fieldError: { type: Function, default: () => "" },
-  readonly: { type: Boolean, default: false }
+  readonly: { type: Boolean, default: false },
+  // 淨係 SkuDetailPage 睇緊模式先開：條碼釋放係專用高強度 endpoint（reason＋
+  // jwt-device-password），唔係呢個 component 平時嗰種「刪一行等下次儲存
+  // 先一齊提交」——ItemCreatePage 冇已儲存嘅條碼可以釋放，唔傳呢個 prop。
+  allowRelease: { type: Boolean, default: false }
 });
+
+const emit = defineEmits(["release"]);
 
 const barcodeTypeOptions = Object.entries(BARCODE_TYPE_LABEL).map(([value, label]) => ({ label, value }));
 
@@ -106,6 +112,16 @@ function setPrimary(index) {
       </div>
       <div v-if="!readonly" class="col-6 col-md-1">
         <q-btn flat round dense icon="delete" :aria-label="`刪除第 ${index + 1} 個條碼`" @click="removeRow(index)" />
+      </div>
+      <div v-else-if="allowRelease && row.id" class="col-6 col-md-1">
+        <q-btn
+          flat
+          dense
+          color="negative"
+          label="釋放"
+          :aria-label="`釋放條碼「${row.barcode}」`"
+          @click="emit('release', { id: row.id, barcode: row.barcode, version: row.version })"
+        />
       </div>
     </div>
     <q-btn v-if="!readonly" flat color="primary" icon="add" label="新增條碼" @click="addRow" />

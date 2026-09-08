@@ -13,8 +13,12 @@ defineProps({
   // readonly；特批修改從獨立 action 開啟高強度 dialog」）——同上面成體嘅
   // `readonly`（睇緊定改緊）獨立：SkuDetailPage.vue 就算撳咗「編輯」，
   // SKU Code 都仲係唔畀改，所以要分開一個 prop，唔可以淨係跟 `readonly`。
-  skuCodeReadonly: { type: Boolean, default: false }
+  skuCodeReadonly: { type: Boolean, default: false },
+  // 轉俾 SkuBarcodeEditor：淨係 SkuDetailPage 睇緊模式先開條碼釋放掣。
+  allowRelease: { type: Boolean, default: false }
 });
+
+defineEmits(["release"]);
 </script>
 
 <template>
@@ -67,6 +71,13 @@ defineProps({
 
     <SkuUomEditor v-model="model.uoms" :field-error="fieldError" :readonly="readonly" />
 
-    <SkuBarcodeEditor v-model="model.barcodes" :uoms="model.uoms" :field-error="fieldError" :readonly="readonly" />
+    <SkuBarcodeEditor
+      v-model="model.barcodes"
+      :uoms="model.uoms"
+      :field-error="fieldError"
+      :readonly="readonly"
+      :allow-release="allowRelease"
+      @release="$emit('release', $event)"
+    />
   </div>
 </template>

@@ -342,3 +342,40 @@ export const ITEM_ACTIVATE_REQUEST_SCHEMA = Object.freeze({
     version: VERSION_SCHEMA
   }
 });
+
+// --- POST /api/v1/items/:id/delete ------------------------------------------
+
+export const ITEM_DELETE_RESULT_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id"],
+  additionalProperties: false,
+  properties: {
+    id: { type: "integer", minimum: 1 }
+  }
+});
+
+// --- POST /api/v1/items/:id/copy --------------------------------------------
+//
+// 只要求每個來源 SKU 一個新 Code，唔重複來源 Item 已有嘅其餘欄位——複製之後
+// 開返 Draft 用一般 update 改名等，唔喺呢個 endpoint 一次過做晒。
+
+export const ITEM_COPY_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["skus"],
+  additionalProperties: false,
+  properties: {
+    skus: {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        required: ["sourceSkuId", "skuCode"],
+        additionalProperties: false,
+        properties: {
+          sourceSkuId: { type: "integer", minimum: 1 },
+          skuCode: { type: "string", minLength: 1, maxLength: 190 }
+        }
+      }
+    }
+  }
+});
