@@ -9,12 +9,25 @@ vi.mock("@/services/item.js", () => ({
     listItems: vi.fn(),
     getItem: vi.fn(),
     listSkus: vi.fn(),
-    getSku: vi.fn()
+    getSku: vi.fn(),
+    deactivateSku: vi.fn(),
+    discontinueSku: vi.fn(),
+    archiveSku: vi.fn(),
+    restoreSku: vi.fn()
   },
   service: { name: "item" }
 }));
+vi.mock("@/framework/ui/confirm.js", () => ({
+  promptPassword: vi.fn(),
+  promptReason: vi.fn()
+}));
+vi.mock("@/framework/ui/notify.js", () => ({
+  notifySuccess: vi.fn(),
+  notifyError: vi.fn()
+}));
 
 import itemService from "@/services/item.js";
+import { promptReason } from "@/framework/ui/confirm.js";
 import ItemsPage, { page } from "@/pages/items/ItemsPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -36,11 +49,13 @@ const SKU_ROWS = [
     id: 10,
     skuCode: "VITC-90",
     skuName: "Vitamin C 1000mg 90s",
+    itemId: 1,
     itemName: "Vitamin C 1000mg",
     primaryBarcode: "4710088412345",
     baseUomCode: "EA",
     suggestedRetailPrice: { amount: "199.00", currency: "HKD", taxBasis: "exclusive" },
     status: "active",
+    version: 1,
     updatedAt: 1700000000000
   }
 ];
@@ -177,5 +192,54 @@ describe("pages/items/ItemsPage.vue", () => {
 
     expect(router.currentRoute.value.query.page).toBe("2");
     expect(router.currentRoute.value.query.view).toBe("sku");
+  });
+
+  it("每個 Item row 有「查看詳情」連去 ItemDetailPage", async () => {
+    const { wrapper } = await mountItemsPage();
+    await wrapper.findAll(".q-btn-toggle .q-btn").find((btn) => btn.text() === "商品").trigger("click");
+    await flushPromises();
+
+    const link = wrapper.findAll("a").find((a) => a.attributes("href") === "/items/1");
+    expect(link).toBeTruthy();
+  });
+
+  it("每個 SKU row 有「查看詳情」連去 SkuDetailPage", async () => {
+    const { wrapper } = await mountItemsPage();
+
+    const link = wrapper.findAll("a").find((a) => a.attributes("href") === "/items/1/skus/10");
+    expect(link).toBeTruthy();
+  });
+
+  it("SKU row menu：Active 只顯示「停用」「停產」，唔顯示「啟用」", async () => {
+    const { body } = await mountItemsPage();
+
+    await body.find('[aria-label="「VITC-90」的操作"]').trigger("click");
+    await flushPromises();
+
+    const menuLabels = body.findAll(".q-item__section").map((el) => el.text());
+    expect(menuLabels).toContain("停用");
+    expect(menuLabels).toContain("停產");
+    expect(menuLabels).not.toContain("啟用");
+    expect(menuLabels).not.toContain("從封存恢復");
+  });
+
+  it("SKU row menu：停用會帶 promptReason 嘅 reason／version 叫 deactivateSku，並重新整理列表", async () => {
+    promptReason.mockResolvedValue("暫停銷售");
+    itemService.deactivateSku.mockResolvedValue({ ...SKU_ROWS[0], status: "inactive", version: 2 });
+    const { body } = await mountItemsPage();
+
+    await body.find('[aria-label="「VITC-90」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text() === "停用").trigger("click");
+    await flushPromises();
+
+    expect(itemService.deactivateSku).toHaveBeenCalledWith(10, { reason: "暫停銷售", version: 1 });
+    expect(itemService.listSkus).toHaveBeenCalledTimes(2);
+  });
+
+  it("只有 item.view：SKU row 冇操作選單", async () => {
+    const { body } = await mountItemsPage({ permissions: ["item.view"] });
+
+    expect(body.find('[aria-label="「VITC-90」的操作"]').exists()).toBe(false);
   });
 });

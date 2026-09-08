@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T18 已完成，T19 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T19 已完成，T20 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -88,7 +88,7 @@ T01 migration freeze
 - [x] T16 建立 Item／SKU aggregate 更新後端
 - [x] T17 建立 Item／SKU 詳情與編輯頁
 - [x] T18 建立 Item／SKU 生命週期後端
-- [ ] T19 建立生命週期與狀態操作 UI
+- [x] T19 建立生命週期與狀態操作 UI
 - [ ] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
 - [ ] T21 建立下游 ItemLookupService contract
 - [ ] T22 完成核心端到端、並發與安全驗證
@@ -710,28 +710,34 @@ T01 migration freeze
 
 **Description:** 在列表與詳情頁加入合法 row actions、影響預覽、PasswordReasonDialog 及 restore flow，狀態以文字與 icon 呈現。
 
+**⚠️ 範圍決定：ItemsPage 嘅 SKU 平鋪列表 row menu 唔提供「啟用」**。`SKU_SUMMARY_SCHEMA`（`GET /api/v1/skus`）冇帶父 Item 現在嘅狀態，只有 `itemId`／`itemName`——但 `activateSku()` 要求父 Item 已經 Active 先做得，喺呢個列表冇資料判斷邊個 SKU 而家真係啟用得到，貿然顯示「啟用」只會俾一堆冇意義嘅後端拒絕（`STATUS_TRANSITION_INVALID`）。停用／停產／封存／恢復呢四個淨係睇 SKU 自己嘅狀態，呢個列表已經有齊資料，冇呢個限制。要啟用 SKU 請去 SkuDetailPage（已經連父 Item 狀態一齊載入）或者 ItemDetailPage 嘅 SKU 列表（已知父 Item 狀態）。Item 彙總列（`ItemsPage` 嘅「商品」view）淨係得「查看詳情」——Item 層面嘅停用／停產／封存／恢復要顯示準確嘅受影響 SKU 數，而 `ITEM_SUMMARY_SCHEMA` 只有 `skuCount`（總數，唔分狀態），要準確數字一定要去有齊 `item.skus[].status` 嘅 ItemDetailPage 先做得。
+
 **Acceptance criteria:**
 
-- [ ] UI 只顯示目前狀態合法的動作，Item 操作前顯示受影響 SKU 數及不可逆後果。
-- [ ] Discontinue／Archive／Restore 走 password reauth 並帶 reason；Deactivate 使用明確確認。
-- [ ] Restore 後不把 SKU 顯示為自動 Active，需明確逐一恢復／啟用。
+- [x] UI 只顯示目前狀態合法的動作（Item：`activate` draft／inactive；`deactivate` active；`discontinue` active／inactive；`archive` draft／inactive／discontinued；`restore` archived。SKU 同一套 from-status，`activate` 仲要父 Item 已經 active），Item 操作前顯示受影響 SKU 數及不可逆後果（由已載入嘅 `item.skus` 現狀計算，唔使額外打 API）。
+- [x] Discontinue／Archive／Restore 走 `promptPassword({ requireReason: true })`（password reauth 並帶 reason）；Activate／Deactivate 用 `promptReason()`（明確確認並帶 reason，唔使密碼）——同 catalog 頁（Category／Brand／UOM）已有嘅 `confirm.js` 慣例完全一致。
+- [x] Restore 後不把 SKU 顯示為自動 Active（`restoreItem()` 完全冇 cascade，畫面直接反映 API 回傳嘅 SKU 狀態，冇額外「假裝已啟用」嘅邏輯），需明確逐一恢復／啟用（SKU 列表 row menu／SkuDetailPage 各自提供獨立嘅「從封存恢復」）。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/pages/items/items.test.js test/pages/items/itemDetail.test.js test/pages/items/skuDetail.test.js`
-- [ ] Manual check：Item deactivate → restore → 選定 SKU activate，全程核對狀態與 audit。
+- [x] `npm run lint`（repo 根）
+- [x] `npx vitest run`（client，全部 48 個檔案、379 個案例，run 兩次穩定全過；新增 itemDetail.test.js 7 case、skuDetail.test.js 7 case、items.test.js 5 case）
+- [x] `npm run build --workspace client`
+- [x] Manual check：用真實 dev server＋seed data（草稿商品＋草稿 SKU、啟用商品＋兩個啟用 SKU），喺瀏覽器度完整行一次 Item 停用（確認訊息帶咗準確嘅「2 個啟用中的 SKU」）→ 停產（password＋reason，SKU 強制 `purchasable=false`）→ 封存（兩個 SKU 一齊轉 Archived）→ 恢復（Item 變 Inactive，SKU 維持 Archived）→ Item 詳情頁 SKU 列表逐一「從封存恢復」單一 SKU → 草稿商品「啟用」dialog（預先勾晒可啟用嘅 SKU，連同 reason 一齊提交 `activateItem`）→ ItemsPage SKU 平鋪列表 row menu（Active 只顯示停用／停產，冇啟用）；每一步都對照 DB（`items`／`item_skus`／`item_audit_logs`）確認狀態、version、cascade 同 audit 完全正確，完成後清空全部種落嘅資料。
 
 **Dependencies:** T17, T18
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `client/src/services/item.js`
-- `client/src/pages/items/ItemsPage.vue`
-- `client/src/pages/items/ItemDetailPage.vue`
-- `client/src/pages/items/SkuDetailPage.vue`
-- `client/test/pages/items/itemDetail.test.js`
+- `client/src/services/item.js`（新增 `activateItem()`、`deactivateItem()`、`discontinueItem()`、`archiveItem()`、`restoreItem()`、`activateSku()`、`deactivateSku()`、`discontinueSku()`、`archiveSku()`、`restoreSku()`）
+- `client/src/pages/items/ItemDetailPage.vue`（頂部生命週期按鈕列；獨立嘅「啟用」dialog 揀 SKU；SKU 列表每行加 row menu）
+- `client/src/pages/items/SkuDetailPage.vue`（頂部生命週期按鈕列，判斷邏輯連父 Item 狀態一齊睇）
+- `client/src/pages/items/ItemsPage.vue`（兩個 view 都加返 `actions` 欄：Item 淨係「查看詳情」；SKU 加「查看詳情」＋row menu，範圍決定見上）
+- `client/test/pages/items/itemDetail.test.js`（加 7 個案例）
+- `client/test/pages/items/skuDetail.test.js`（加 7 個案例）
+- `client/test/pages/items/items.test.js`（加 5 個案例）
 
-**Estimated scope:** M（5 files）
+**Estimated scope:** M（7 logical files；`ItemsPage.vue` 原本冇任何 row-level 導航——呢個 task 順便補埋「撳一行去邊個詳情頁」呢個之前一直冇做嘅缺口）
 
 ### Task T20：建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
 
