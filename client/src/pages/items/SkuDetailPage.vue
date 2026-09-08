@@ -12,6 +12,7 @@ import { computed, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { can } from "@/framework/authorization/can.js";
+import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import SkuEditor from "@/components/items/SkuEditor.vue";
@@ -197,6 +198,88 @@ function reloadLatest() {
   staleNotice.value = false;
   errorMessage.value = "";
 }
+
+// --- 生命週期（T18 後端；design_spec §4.2、§6.3、§7.7） ---------------------
+
+const showActivate = computed(() => sku.value?.item.status === "active" && ["draft", "inactive"].includes(sku.value.status));
+const showDeactivate = computed(() => sku.value?.status === "active");
+const showDiscontinue = computed(() => sku.value && ["active", "inactive"].includes(sku.value.status));
+const showArchive = computed(() => sku.value && ["draft", "inactive", "discontinued"].includes(sku.value.status));
+const showRestore = computed(() => sku.value?.status === "archived");
+
+async function runLifecycleAction(action, successVerb) {
+  try {
+    const updated = await action();
+    sku.value = updated;
+    notifySuccess(`SKU「${updated.skuCode}」${successVerb}`);
+  } catch (error) {
+    if (error.code === "VERSION_CONFLICT") {
+      sku.value = await itemService.getSku(skuId.value);
+    }
+    notifyError(error.message || "操作失敗");
+  }
+}
+
+async function activateFlow() {
+  const reason = await promptReason({ title: "啟用 SKU", message: `啟用「${sku.value.skuCode}」？`, okLabel: "啟用" });
+  if (reason === null) {
+    return;
+  }
+  await runLifecycleAction(() => itemService.activateSku(skuId.value, { reason, version: sku.value.version }), "已啟用");
+}
+
+async function deactivateFlow() {
+  const reason = await promptReason({ title: "停用 SKU", message: `停用「${sku.value.skuCode}」？`, okLabel: "停用" });
+  if (reason === null) {
+    return;
+  }
+  await runLifecycleAction(() => itemService.deactivateSku(skuId.value, { reason, version: sku.value.version }), "已停用");
+}
+
+async function discontinueFlow() {
+  const outcome = await promptPassword({
+    title: "停產 SKU",
+    message: `停產「${sku.value.skuCode}」？強制停止採購，這個操作不可以復原。`,
+    okLabel: "停產",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runLifecycleAction(
+    () => itemService.discontinueSku(skuId.value, { ...outcome, version: sku.value.version }),
+    "已停產"
+  );
+}
+
+async function archiveFlow() {
+  const outcome = await promptPassword({
+    title: "封存 SKU",
+    message: `封存「${sku.value.skuCode}」？這個操作不可以復原。`,
+    okLabel: "封存",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runLifecycleAction(() => itemService.archiveSku(skuId.value, { ...outcome, version: sku.value.version }), "已封存");
+}
+
+async function restoreFlow() {
+  const outcome = await promptPassword({
+    title: "恢復 SKU",
+    message: `從封存恢復「${sku.value.skuCode}」？`,
+    okLabel: "恢復",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runLifecycleAction(
+    () => itemService.restoreSku(skuId.value, { ...outcome, version: sku.value.version }),
+    "已從封存恢復"
+  );
+}
 </script>
 
 <template>
@@ -213,7 +296,14 @@ function reloadLatest() {
           <span class="text-caption text-grey-7">版本 {{ sku.version }}</span>
           <q-btn flat dense label="返回商品" :to="`/items/${itemId}`" />
           <q-space />
-          <q-btn v-if="canManage && !editing" flat color="primary" label="編輯" @click="startEdit" />
+          <template v-if="canManage && !editing">
+            <q-btn v-if="showActivate" flat color="positive" label="啟用" @click="activateFlow" />
+            <q-btn v-if="showDeactivate" flat label="停用" @click="deactivateFlow" />
+            <q-btn v-if="showDiscontinue" flat color="warning" label="停產" @click="discontinueFlow" />
+            <q-btn v-if="showArchive" flat color="warning" label="封存" @click="archiveFlow" />
+            <q-btn v-if="showRestore" flat color="primary" label="從封存恢復" @click="restoreFlow" />
+            <q-btn flat color="primary" label="編輯" @click="startEdit" />
+          </template>
         </div>
 
         <div v-if="errorMessage || Object.keys(fieldErrors).length > 0" role="alert" class="q-mb-md">

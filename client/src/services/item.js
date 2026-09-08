@@ -100,5 +100,71 @@ export default {
    * 獨立、未建嘅高強度端點；冇 `variantValues`（T23）。 */
   updateSku(id, payload) {
     return httpClient.post(`/api/v1/skus/${id}/update`, { body: payload });
+  },
+
+  // --- Item：生命週期（T18 後端，見 design_spec §6.2） -----------------------
+
+  /** 帶 `skuIds` 一齊啟用指定嘅完整 SKU；Item 因而由 Draft／Inactive 轉
+   * Active（已經 Active 嘅 Item 都可以再嚟啟用多幾個 SKU）。 */
+  activateItem(id, { skuIds, reason, version }) {
+    return httpClient.post(`/api/v1/items/${id}/activate`, {
+      body: { skuIds, reason, version }
+    });
+  },
+
+  deactivateItem(id, { reason, version }) {
+    return httpClient.post(`/api/v1/items/${id}/deactivate`, {
+      body: { reason, version }
+    });
+  },
+
+  discontinueItem(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/items/${id}/discontinue`, {
+      body: { reason, version, password }
+    });
+  },
+
+  archiveItem(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/items/${id}/archive`, {
+      body: { reason, version, password }
+    });
+  },
+
+  restoreItem(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/items/${id}/restore`, {
+      body: { reason, version, password }
+    });
+  },
+
+  // --- SKU：生命週期（T18 後端，見 design_spec §6.3） ------------------------
+
+  activateSku(id, { reason, version }) {
+    return httpClient.post(`/api/v1/skus/${id}/activate`, {
+      body: { reason, version }
+    });
+  },
+
+  deactivateSku(id, { reason, version }) {
+    return httpClient.post(`/api/v1/skus/${id}/deactivate`, {
+      body: { reason, version }
+    });
+  },
+
+  discontinueSku(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/skus/${id}/discontinue`, {
+      body: { reason, version, password }
+    });
+  },
+
+  archiveSku(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/skus/${id}/archive`, {
+      body: { reason, version, password }
+    });
+  },
+
+  restoreSku(id, { reason, version, password }) {
+    return httpClient.post(`/api/v1/skus/${id}/restore`, {
+      body: { reason, version, password }
+    });
   }
 };

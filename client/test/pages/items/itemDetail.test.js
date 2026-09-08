@@ -6,8 +6,25 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { h } from "vue";
 
 vi.mock("@/services/item.js", () => ({
-  default: { getItem: vi.fn(), updateItem: vi.fn() },
+  default: {
+    getItem: vi.fn(),
+    updateItem: vi.fn(),
+    activateItem: vi.fn(),
+    deactivateItem: vi.fn(),
+    discontinueItem: vi.fn(),
+    archiveItem: vi.fn(),
+    restoreItem: vi.fn(),
+    activateSku: vi.fn(),
+    deactivateSku: vi.fn(),
+    discontinueSku: vi.fn(),
+    archiveSku: vi.fn(),
+    restoreSku: vi.fn()
+  },
   service: { name: "item" }
+}));
+vi.mock("@/framework/ui/confirm.js", () => ({
+  promptPassword: vi.fn(),
+  promptReason: vi.fn()
 }));
 vi.mock("@/framework/ui/notify.js", () => ({
   notifySuccess: vi.fn(),
@@ -15,7 +32,8 @@ vi.mock("@/framework/ui/notify.js", () => ({
 }));
 
 import itemService from "@/services/item.js";
-import { notifySuccess } from "@/framework/ui/notify.js";
+import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
+import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import ItemDetailPage, { page } from "@/pages/items/ItemDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -126,5 +144,120 @@ describe("pages/items/ItemDetailPage.vue", () => {
     await flushPromises();
 
     expect(router.currentRoute.value.path).toBe("/items/1/skus/10");
+  });
+
+  it("Active Item：顯示「停用」，唔顯示「啟用」／「封存」／「從封存恢復」", async () => {
+    const { body } = await mountPage();
+
+    const labels = body.findAll(".q-btn").map((btn) => btn.text());
+    expect(labels).toContain("停用");
+    expect(labels).not.toContain("啟用");
+    expect(labels).not.toContain("封存");
+    expect(labels).not.toContain("從封存恢復");
+  });
+
+  it("停用商品：promptReason 文案帶啟用中 SKU 數，成功後徽章更新", async () => {
+    promptReason.mockResolvedValue("暫停銷售");
+    itemService.deactivateItem.mockResolvedValue({ ...ITEM, status: "inactive", version: 2 });
+    const { body } = await mountPage();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "停用").trigger("click");
+    await flushPromises();
+
+    expect(promptReason).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining("1 個啟用中") }));
+    expect(itemService.deactivateItem).toHaveBeenCalledWith(1, { reason: "暫停銷售", version: 1 });
+    expect(body.text()).toContain("版本 2");
+  });
+
+  it("Draft Item：顯示「啟用」，撳咗開 dialog，預先勾晒所有可啟用 SKU", async () => {
+    const draftItem = {
+      ...ITEM,
+      status: "draft",
+      skus: [{ id: 10, skuCode: "VITC-90", skuName: "維他命 C 90 粒裝", status: "draft", suggestedRetailPrice: null, version: 1 }]
+    };
+    itemService.activateItem.mockResolvedValue({ ...draftItem, status: "active", version: 2 });
+    const { body } = await mountPage({ item: draftItem });
+
+    expect(body.findAll(".q-btn").some((btn) => btn.text() === "啟用")).toBe(true);
+    await body.findAll(".q-btn").find((btn) => btn.text() === "啟用").trigger("click");
+    await flushPromises();
+
+    const checkbox = body.findAll(".q-checkbox");
+    expect(checkbox).toHaveLength(1);
+    expect(checkbox[0].attributes("aria-checked")).toBe("true");
+
+    const reasonInput = body.findAll(".q-field").find((f) => f.text().includes("啟用原因")).find("textarea");
+    await reasonInput.setValue("首次上架啟用");
+
+    const activateButtons = body.findAll(".q-btn").filter((btn) => btn.text() === "啟用");
+    await activateButtons[activateButtons.length - 1].trigger("click");
+    await flushPromises();
+
+    expect(itemService.activateItem).toHaveBeenCalledWith(1, { skuIds: [10], reason: "首次上架啟用", version: 1 });
+  });
+
+  it("停產商品：用 promptPassword({ requireReason: true })", async () => {
+    promptPassword.mockResolvedValue({ reason: "業務決定停產", password: "hunter2" });
+    itemService.discontinueItem.mockResolvedValue({ ...ITEM, status: "discontinued", version: 2 });
+    const { body } = await mountPage();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "停產").trigger("click");
+    await flushPromises();
+
+    expect(promptPassword).toHaveBeenCalledWith(expect.objectContaining({ requireReason: true }));
+    expect(itemService.discontinueItem).toHaveBeenCalledWith(1, {
+      reason: "業務決定停產",
+      password: "hunter2",
+      version: 1
+    });
+    expect(body.text()).toContain("已停產");
+  });
+
+  it("封存、恢復：完整走一次", async () => {
+    promptPassword
+      .mockResolvedValueOnce({ reason: "封存", password: "hunter2" })
+      .mockResolvedValueOnce({ reason: "恢復", password: "hunter2" });
+    itemService.archiveItem.mockResolvedValue({ ...ITEM, status: "archived", version: 2 });
+    itemService.restoreItem.mockResolvedValue({ ...ITEM, status: "inactive", version: 3 });
+    const { body } = await mountPage({ item: { ...ITEM, status: "inactive" } });
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "封存").trigger("click");
+    await flushPromises();
+    expect(itemService.archiveItem).toHaveBeenCalledWith(1, { reason: "封存", password: "hunter2", version: 1 });
+    expect(notifySuccess).toHaveBeenCalledWith(expect.stringContaining("已封存"));
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "從封存恢復").trigger("click");
+    await flushPromises();
+    expect(itemService.restoreItem).toHaveBeenCalledWith(1, { reason: "恢復", password: "hunter2", version: 2 });
+    expect(notifySuccess).toHaveBeenCalledWith(expect.stringContaining("已從封存恢復"));
+  });
+
+  it("生命週期動作撞 VERSION_CONFLICT：重新載入最新資料", async () => {
+    promptReason.mockResolvedValue("暫停銷售");
+    const conflict = Object.assign(new Error("版本衝突"), { code: "VERSION_CONFLICT" });
+    itemService.deactivateItem.mockRejectedValue(conflict);
+    itemService.getItem.mockResolvedValueOnce(ITEM).mockResolvedValueOnce({ ...ITEM, version: 9 });
+    const { body } = await mountPage();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "停用").trigger("click");
+    await flushPromises();
+
+    expect(itemService.getItem).toHaveBeenCalledTimes(2);
+    expect(notifyError).toHaveBeenCalled();
+    expect(body.text()).toContain("版本 9");
+  });
+
+  it("SKU 列表 row menu：Active SKU 顯示「停用」，撳咗叫 activateSku／deactivateSku", async () => {
+    promptReason.mockResolvedValue("暫停銷售");
+    itemService.deactivateSku.mockResolvedValue({ ...ITEM.skus[0], status: "inactive", version: 2 });
+    const { body } = await mountPage();
+
+    await body.findAll(".q-btn").find((btn) => btn.attributes("aria-label")?.includes("VITC-90")).trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-item__section").find((el) => el.text() === "停用")?.trigger("click");
+    await flushPromises();
+
+    expect(itemService.deactivateSku).toHaveBeenCalledWith(10, { reason: "暫停銷售", version: 1 });
   });
 });

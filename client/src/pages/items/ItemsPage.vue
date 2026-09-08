@@ -16,6 +16,8 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { can } from "@/framework/authorization/can.js";
+import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
+import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -123,7 +125,8 @@ const itemColumns = [
   { name: "productType", label: "類型", field: "productType", align: "left" },
   { name: "skuCount", label: "SKU 數", field: "skuCount", align: "right" },
   { name: "status", label: "狀態", field: "status", align: "left" },
-  { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true }
+  { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true },
+  { name: "actions", label: "", field: "id", align: "right" }
 ];
 
 const skuColumns = [
@@ -134,8 +137,74 @@ const skuColumns = [
   { name: "baseUomCode", label: "Base 單位", field: "baseUomCode", align: "left" },
   { name: "suggestedRetailPrice", label: "RRP", field: "suggestedRetailPrice", align: "right" },
   { name: "status", label: "狀態", field: "status", align: "left" },
-  { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true }
+  { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true },
+  { name: "actions", label: "", field: "id", align: "right" }
 ];
+
+// --- SKU row 嘅生命週期動作 -------------------------------------------------
+//
+// 呢個列表淨係得 SKU_SUMMARY_SCHEMA 嘅欄位，冇父 Item 而家嘅狀態，所以「啟用」
+// （後端要求父 Item 已經 Active）呢度唔提供——冇資料判斷邊個 SKU 而家真係
+// 啟用得到，貿然顯示個「啟用」掣只會俾一堆冇意義嘅後端拒絕。要啟用請去
+// SkuDetailPage（已經載入齊父 Item 狀態）。停用／停產／封存／恢復呢四個淨係
+// 睇 SKU 自己嘅狀態，喺呢個列表已經有齊資料，可以照做。
+
+async function skuRowAction(row, action, successVerb) {
+  try {
+    const updated = await action();
+    notifySuccess(`SKU「${updated.skuCode}」${successVerb}`);
+    dataTableRef.value?.reload();
+  } catch (error) {
+    notifyError(error.message || "操作失敗");
+  }
+}
+
+async function deactivateSkuRow(row) {
+  const reason = await promptReason({ title: "停用 SKU", message: `停用「${row.skuCode}」？`, okLabel: "停用" });
+  if (reason === null) {
+    return;
+  }
+  await skuRowAction(row, () => itemService.deactivateSku(row.id, { reason, version: row.version }), "已停用");
+}
+
+async function discontinueSkuRow(row) {
+  const outcome = await promptPassword({
+    title: "停產 SKU",
+    message: `停產「${row.skuCode}」？強制停止採購，這個操作不可以復原。`,
+    okLabel: "停產",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await skuRowAction(row, () => itemService.discontinueSku(row.id, { ...outcome, version: row.version }), "已停產");
+}
+
+async function archiveSkuRow(row) {
+  const outcome = await promptPassword({
+    title: "封存 SKU",
+    message: `封存「${row.skuCode}」？這個操作不可以復原。`,
+    okLabel: "封存",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await skuRowAction(row, () => itemService.archiveSku(row.id, { ...outcome, version: row.version }), "已封存");
+}
+
+async function restoreSkuRow(row) {
+  const outcome = await promptPassword({
+    title: "恢復 SKU",
+    message: `從封存恢復「${row.skuCode}」？`,
+    okLabel: "恢復",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await skuRowAction(row, () => itemService.restoreSku(row.id, { ...outcome, version: row.version }), "已從封存恢復");
+}
 
 const PRODUCT_TYPE_LABEL = { standard: "一般", variant: "多規格" };
 
@@ -222,6 +291,11 @@ function formatPrice(price) {
         <template #body-cell-updatedAt="{ value }">
           <q-td class="text-left">{{ formatUpdatedAt(value) }}</q-td>
         </template>
+        <template #body-cell-actions="{ row }">
+          <q-td class="text-right">
+            <q-btn flat dense icon="visibility" :aria-label="`「${row.name}」的詳情`" :to="`/items/${row.id}`" />
+          </q-td>
+        </template>
       </DataTable>
 
       <DataTable
@@ -250,6 +324,51 @@ function formatPrice(price) {
         </template>
         <template #body-cell-updatedAt="{ value }">
           <q-td class="text-left">{{ formatUpdatedAt(value) }}</q-td>
+        </template>
+        <template #body-cell-actions="{ row }">
+          <q-td class="text-right">
+            <q-btn
+              flat
+              dense
+              icon="visibility"
+              :aria-label="`「${row.skuCode}」的詳情`"
+              :to="`/items/${row.itemId}/skus/${row.id}`"
+            />
+            <q-btn
+              v-if="canManage"
+              flat
+              dense
+              icon="more_vert"
+              :aria-label="`「${row.skuCode}」的操作`"
+            >
+              <q-menu>
+                <q-list>
+                  <q-item v-if="row.status === 'active'" v-close-popup clickable @click="deactivateSkuRow(row)">
+                    <q-item-section>停用</q-item-section>
+                  </q-item>
+                  <q-item
+                    v-if="row.status === 'active' || row.status === 'inactive'"
+                    v-close-popup
+                    clickable
+                    @click="discontinueSkuRow(row)"
+                  >
+                    <q-item-section>停產</q-item-section>
+                  </q-item>
+                  <q-item
+                    v-if="['draft', 'inactive', 'discontinued'].includes(row.status)"
+                    v-close-popup
+                    clickable
+                    @click="archiveSkuRow(row)"
+                  >
+                    <q-item-section>封存</q-item-section>
+                  </q-item>
+                  <q-item v-if="row.status === 'archived'" v-close-popup clickable @click="restoreSkuRow(row)">
+                    <q-item-section>從封存恢復</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
+          </q-td>
         </template>
       </DataTable>
     </div>

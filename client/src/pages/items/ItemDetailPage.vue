@@ -12,6 +12,7 @@ import { computed, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import { can } from "@/framework/authorization/can.js";
+import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import ItemBasicForm from "@/components/items/ItemBasicForm.vue";
@@ -177,6 +178,218 @@ function reloadLatest() {
 function goToSku(skuId) {
   router.push(`/items/${itemId.value}/skus/${skuId}`);
 }
+
+// --- 生命週期（T18 後端；design_spec §4.2、§6.2、§7.7） ---------------------
+//
+// UI 只顯示目前狀態合法的動作，後端仍然重驗——row/button 呢層嘅判斷純粹係
+// 可用性，唔係防線。危險操作文案列明受影響 SKU 數（design_spec §7.7）：呢啲
+// 數字由已經載入嘅 `item.skus` 本身算，唔使額外打 API。
+
+const showActivate = computed(() => item.value && ["draft", "inactive"].includes(item.value.status));
+const showDeactivate = computed(() => item.value?.status === "active");
+const showDiscontinue = computed(() => item.value && ["active", "inactive"].includes(item.value.status));
+const showArchive = computed(() => item.value && ["draft", "inactive", "discontinued"].includes(item.value.status));
+const showRestore = computed(() => item.value?.status === "archived");
+
+const activatableSkus = computed(
+  () => item.value?.skus.filter((sku) => sku.status === "draft" || sku.status === "inactive") ?? []
+);
+const activeSkuCount = computed(() => item.value?.skus.filter((sku) => sku.status === "active").length ?? 0);
+const discontinueAffectedCount = computed(
+  () => item.value?.skus.filter((sku) => sku.status === "active" || sku.status === "inactive").length ?? 0
+);
+const archiveAffectedCount = computed(() => item.value?.skus.filter((sku) => sku.status !== "archived").length ?? 0);
+
+async function runItemLifecycleAction(action, successVerb) {
+  try {
+    const updated = await action();
+    item.value = updated;
+    notifySuccess(`商品「${updated.name}」${successVerb}`);
+  } catch (error) {
+    if (error.code === "VERSION_CONFLICT") {
+      await load();
+    }
+    notifyError(error.message || "操作失敗");
+  }
+}
+
+async function deactivateItemFlow() {
+  const reason = await promptReason({
+    title: "停用商品",
+    message: `停用「${item.value.name}」？目前有 ${activeSkuCount.value} 個啟用中的 SKU 會一併轉為已停用。`,
+    okLabel: "停用"
+  });
+  if (reason === null) {
+    return;
+  }
+  await runItemLifecycleAction(
+    () => itemService.deactivateItem(itemId.value, { reason, version: item.value.version }),
+    "已停用"
+  );
+}
+
+async function discontinueItemFlow() {
+  const outcome = await promptPassword({
+    title: "停產商品",
+    message: `停產「${item.value.name}」？目前有 ${discontinueAffectedCount.value} 個 SKU 會一併轉為已停產並強制停止採購，這個操作不可以復原。`,
+    okLabel: "停產",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runItemLifecycleAction(
+    () => itemService.discontinueItem(itemId.value, { ...outcome, version: item.value.version }),
+    "已停產"
+  );
+}
+
+async function archiveItemFlow() {
+  const outcome = await promptPassword({
+    title: "封存商品",
+    message: `封存「${item.value.name}」？目前有 ${archiveAffectedCount.value} 個 SKU 會一併轉為已封存，這個操作不可以復原。`,
+    okLabel: "封存",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runItemLifecycleAction(
+    () => itemService.archiveItem(itemId.value, { ...outcome, version: item.value.version }),
+    "已封存"
+  );
+}
+
+async function restoreItemFlow() {
+  const outcome = await promptPassword({
+    title: "恢復商品",
+    message: `從封存恢復「${item.value.name}」？恢復後狀態為「已停用」，SKU 仍然維持已封存，需要逐一恢復。`,
+    okLabel: "恢復",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runItemLifecycleAction(
+    () => itemService.restoreItem(itemId.value, { ...outcome, version: item.value.version }),
+    "已從封存恢復"
+  );
+}
+
+// --- 啟用商品：要揀同時啟用邊幾個 SKU（skuIds），所以獨立一個 dialog ------
+
+const showActivateDialog = ref(false);
+const activateSelection = ref([]);
+const activateReason = ref("");
+const activateSubmitting = ref(false);
+const activateError = ref("");
+
+const activateValid = computed(() => {
+  const trimmed = activateReason.value.trim();
+  return activateSelection.value.length > 0 && trimmed.length >= 5 && trimmed.length <= 190;
+});
+
+function openActivateDialog() {
+  activateSelection.value = activatableSkus.value.map((sku) => sku.id);
+  activateReason.value = "";
+  activateError.value = "";
+  showActivateDialog.value = true;
+}
+
+async function submitActivate() {
+  if (!activateValid.value || activateSubmitting.value) {
+    return;
+  }
+  activateSubmitting.value = true;
+  activateError.value = "";
+  try {
+    const updated = await itemService.activateItem(itemId.value, {
+      skuIds: activateSelection.value,
+      reason: activateReason.value.trim(),
+      version: item.value.version
+    });
+    item.value = updated;
+    showActivateDialog.value = false;
+    notifySuccess(`商品「${updated.name}」已啟用`);
+  } catch (error) {
+    if (error.code === "VERSION_CONFLICT") {
+      await load();
+      activateError.value = "呢個商品喺你操作期間已經被人改過，請重新確認最新狀態後再試。";
+    } else {
+      activateError.value = error.message || "啟用失敗";
+    }
+    notifyError(error.message || "啟用失敗");
+  } finally {
+    activateSubmitting.value = false;
+  }
+}
+
+// --- 個別 SKU 嘅生命週期動作（喺 Item 詳情頁嘅 SKU 列表直接操作） ----------
+
+async function runSkuLifecycleAction(sku, action, successVerb) {
+  try {
+    const updated = await action();
+    notifySuccess(`SKU「${updated.skuCode}」${successVerb}`);
+    await load();
+  } catch (error) {
+    notifyError(error.message || "操作失敗");
+  }
+}
+
+async function activateSkuRow(sku) {
+  const reason = await promptReason({ title: "啟用 SKU", message: `啟用「${sku.skuCode}」？`, okLabel: "啟用" });
+  if (reason === null) {
+    return;
+  }
+  await runSkuLifecycleAction(sku, () => itemService.activateSku(sku.id, { reason, version: sku.version }), "已啟用");
+}
+
+async function deactivateSkuRow(sku) {
+  const reason = await promptReason({ title: "停用 SKU", message: `停用「${sku.skuCode}」？`, okLabel: "停用" });
+  if (reason === null) {
+    return;
+  }
+  await runSkuLifecycleAction(sku, () => itemService.deactivateSku(sku.id, { reason, version: sku.version }), "已停用");
+}
+
+async function discontinueSkuRow(sku) {
+  const outcome = await promptPassword({
+    title: "停產 SKU",
+    message: `停產「${sku.skuCode}」？強制停止採購，這個操作不可以復原。`,
+    okLabel: "停產",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runSkuLifecycleAction(sku, () => itemService.discontinueSku(sku.id, { ...outcome, version: sku.version }), "已停產");
+}
+
+async function archiveSkuRow(sku) {
+  const outcome = await promptPassword({
+    title: "封存 SKU",
+    message: `封存「${sku.skuCode}」？這個操作不可以復原。`,
+    okLabel: "封存",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runSkuLifecycleAction(sku, () => itemService.archiveSku(sku.id, { ...outcome, version: sku.version }), "已封存");
+}
+
+async function restoreSkuRow(sku) {
+  const outcome = await promptPassword({
+    title: "恢復 SKU",
+    message: `從封存恢復「${sku.skuCode}」？`,
+    okLabel: "恢復",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+  await runSkuLifecycleAction(sku, () => itemService.restoreSku(sku.id, { ...outcome, version: sku.version }), "已從封存恢復");
+}
 </script>
 
 <template>
@@ -192,7 +405,14 @@ function goToSku(skuId) {
           <q-badge :color="STATUS_COLOUR[item.status]" :label="STATUS_LABEL[item.status] ?? item.status" />
           <span class="text-caption text-grey-7">版本 {{ item.version }}</span>
           <q-space />
-          <q-btn v-if="canManage && !editing" flat color="primary" label="編輯" @click="startEdit" />
+          <template v-if="canManage && !editing">
+            <q-btn v-if="showActivate" flat color="positive" label="啟用" @click="openActivateDialog" />
+            <q-btn v-if="showDeactivate" flat label="停用" @click="deactivateItemFlow" />
+            <q-btn v-if="showDiscontinue" flat color="warning" label="停產" @click="discontinueItemFlow" />
+            <q-btn v-if="showArchive" flat color="warning" label="封存" @click="archiveItemFlow" />
+            <q-btn v-if="showRestore" flat color="primary" label="從封存恢復" @click="restoreItemFlow" />
+            <q-btn flat color="primary" label="編輯" @click="startEdit" />
+          </template>
         </div>
 
         <div v-if="errorMessage || Object.keys(fieldErrors).length > 0" role="alert" class="q-mb-md">
@@ -223,6 +443,44 @@ function goToSku(skuId) {
             <q-item-section side>
               <q-badge :color="STATUS_COLOUR[sku.status]" :label="STATUS_LABEL[sku.status] ?? sku.status" />
             </q-item-section>
+            <q-item-section v-if="canManage" side>
+              <q-btn flat round dense icon="more_vert" :aria-label="`「${sku.skuCode}」的操作`" @click.stop>
+                <q-menu>
+                  <q-list>
+                    <q-item
+                      v-if="item.status === 'active' && (sku.status === 'draft' || sku.status === 'inactive')"
+                      v-close-popup
+                      clickable
+                      @click="activateSkuRow(sku)"
+                    >
+                      <q-item-section>啟用</q-item-section>
+                    </q-item>
+                    <q-item v-if="sku.status === 'active'" v-close-popup clickable @click="deactivateSkuRow(sku)">
+                      <q-item-section>停用</q-item-section>
+                    </q-item>
+                    <q-item
+                      v-if="sku.status === 'active' || sku.status === 'inactive'"
+                      v-close-popup
+                      clickable
+                      @click="discontinueSkuRow(sku)"
+                    >
+                      <q-item-section>停產</q-item-section>
+                    </q-item>
+                    <q-item
+                      v-if="['draft', 'inactive', 'discontinued'].includes(sku.status)"
+                      v-close-popup
+                      clickable
+                      @click="archiveSkuRow(sku)"
+                    >
+                      <q-item-section>封存</q-item-section>
+                    </q-item>
+                    <q-item v-if="sku.status === 'archived'" v-close-popup clickable @click="restoreSkuRow(sku)">
+                      <q-item-section>從封存恢復</q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-menu>
+              </q-btn>
+            </q-item-section>
           </q-item>
           <q-item v-if="item.skus.length === 0">
             <q-item-section class="text-grey-7">呢個商品未有任何 SKU。</q-item-section>
@@ -230,5 +488,40 @@ function goToSku(skuId) {
         </q-list>
       </template>
     </div>
+
+    <q-dialog v-model="showActivateDialog" persistent>
+      <q-card style="min-width: 420px">
+        <q-card-section>
+          <h2 class="text-h6 q-ma-none">啟用商品</h2>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <div class="text-body2 q-mb-sm">選擇要同時啟用的 SKU（至少一個）：</div>
+          <q-list dense bordered>
+            <q-item v-for="sku in activatableSkus" :key="sku.id" tag="label" clickable>
+              <q-item-section side>
+                <q-checkbox v-model="activateSelection" :val="sku.id" />
+              </q-item-section>
+              <q-item-section>{{ sku.skuCode }} — {{ sku.skuName }}</q-item-section>
+            </q-item>
+            <q-item v-if="activatableSkus.length === 0">
+              <q-item-section class="text-grey-7">沒有可以啟用的 SKU。</q-item-section>
+            </q-item>
+          </q-list>
+          <q-input v-model="activateReason" label="啟用原因" type="textarea" outlined dense class="q-mt-md" />
+          <q-banner v-if="activateError" class="bg-negative text-white q-mt-sm">{{ activateError }}</q-banner>
+          <div class="row justify-end q-gutter-sm q-mt-md">
+            <q-btn flat label="取消" :disable="activateSubmitting" @click="showActivateDialog = false" />
+            <q-btn
+              color="primary"
+              label="啟用"
+              unelevated
+              :loading="activateSubmitting"
+              :disable="!activateValid"
+              @click="submitActivate"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
