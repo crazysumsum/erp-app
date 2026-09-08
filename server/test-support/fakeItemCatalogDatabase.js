@@ -20,6 +20,12 @@ export function createFakeItemCatalogDatabase({
   categories = [],
   brands = [],
   uoms = [],
+  attributes = [],
+  attributeOptions = [],
+  categoryAttributes = [],
+  // 唔係真正嘅表——用嚟喺假資料庫模擬「呢個屬性已經被 SKU 用緊」，對應真
+  // MySQL 入面 item_sku_attribute_values 有冇 row 指住呢個 attribute_id。
+  skuAttributeValueAttributeIds = [],
   // 這個假資料庫不建模真正的角色／權限表；assertActorFresh 會拿使用者現在的
   // 角色／權限跟 token 的 claims 比對（見 adminGuard.assertPermissionsCurrent），
   // 兩邊要完全相等測試才通得過，所以這裡讓查詢直接照 ADMIN_ACTOR 的 claims
@@ -32,10 +38,19 @@ export function createFakeItemCatalogDatabase({
     categories: new Map(categories.map((c) => [c.id, { ...c }])),
     brands: new Map(brands.map((b) => [b.id, { ...b }])),
     uoms: new Map(uoms.map((u) => [u.id, { ...u }])),
+    attributes: new Map(attributes.map((a) => [a.id, { ...a }])),
+    attributeOptions: new Map(attributeOptions.map((o) => [o.id, { ...o }])),
+    // key: `${categoryId}::${attributeId}`
+    categoryAttributes: new Map(
+      categoryAttributes.map((row) => [`${row.category_id}::${row.attribute_id}`, { ...row }])
+    ),
+    skuAttributeValueAttributeIds: new Set(skuAttributeValueAttributeIds),
     auditRows: [],
     nextCategoryId: categories.reduce((max, c) => Math.max(max, c.id), 0) + 1,
     nextBrandId: brands.reduce((max, b) => Math.max(max, b.id), 0) + 1,
-    nextUomId: uoms.reduce((max, u) => Math.max(max, u.id), 0) + 1
+    nextUomId: uoms.reduce((max, u) => Math.max(max, u.id), 0) + 1,
+    nextAttributeId: attributes.reduce((max, a) => Math.max(max, a.id), 0) + 1,
+    nextAttributeOptionId: attributeOptions.reduce((max, o) => Math.max(max, o.id), 0) + 1
   };
 
   function likeMatches(haystack, likeParam) {
@@ -47,6 +62,18 @@ export function createFakeItemCatalogDatabase({
 
   function scopeKey(parentId, name) {
     return `${parentId ?? 0}::${String(name).toLowerCase()}`;
+  }
+
+  function duplicateEntryError() {
+    const error = new Error("Duplicate entry");
+    error.code = "ER_DUP_ENTRY";
+    return error;
+  }
+
+  function rowReferencedError() {
+    const error = new Error("Cannot delete or update a parent row: a foreign key constraint fails");
+    error.code = "ER_ROW_IS_REFERENCED_2";
+    return error;
   }
 
   function nameCollides(parentId, name, excludeId) {
@@ -365,6 +392,281 @@ export function createFakeItemCatalogDatabase({
         return [{ affectedRows: 0 }];
       }
       state.uoms.delete(id);
+      return [{ affectedRows: 1 }];
+    }
+
+    // --- Attribute ---------------------------------------------------------
+
+    if (sql.includes("SELECT COUNT(*) AS total FROM item_attribute_definitions")) {
+      let rows = [...state.attributes.values()];
+      let cursor = 0;
+      if (sql.includes("status = ?")) {
+        rows = rows.filter((row) => row.status === params[cursor++]);
+      }
+      if (sql.includes("data_type = ?")) {
+        rows = rows.filter((row) => row.data_type === params[cursor++]);
+      }
+      if (sql.includes("name LIKE ? OR code LIKE ?")) {
+        const likeParam = params[cursor];
+        rows = rows.filter((row) => likeMatches(row.name, likeParam) || likeMatches(row.code, likeParam));
+      }
+      return [[{ total: rows.length }]];
+    }
+
+    if (sql.includes("FROM item_attribute_definitions") && sql.includes("ORDER BY") && sql.includes("LIMIT")) {
+      let rows = [...state.attributes.values()];
+      let cursor = 0;
+      if (sql.includes("status = ?")) {
+        rows = rows.filter((row) => row.status === params[cursor++]);
+      }
+      if (sql.includes("data_type = ?")) {
+        rows = rows.filter((row) => row.data_type === params[cursor++]);
+      }
+      if (sql.includes("name LIKE ? OR code LIKE ?")) {
+        const likeParam = params[cursor++];
+        rows = rows.filter((row) => likeMatches(row.name, likeParam) || likeMatches(row.code, likeParam));
+      }
+      const pageSize = params[cursor];
+      const offset = params[cursor + 1];
+      const [, column, direction] = sql.match(/ORDER BY (\w+) (ASC|DESC)/);
+      const descending = direction === "DESC";
+      rows.sort((a, b) => {
+        const result = String(a[column]).localeCompare(String(b[column]));
+        return descending ? -result : result;
+      });
+      const paged = rows.slice(Number(offset), Number(offset) + Number(pageSize));
+      return [paged.map((row) => ({ ...row }))];
+    }
+
+    if (
+      sql.startsWith("SELECT") &&
+      sql.includes("FROM item_attribute_definitions WHERE id = ?") &&
+      !sql.includes("IN (")
+    ) {
+      const row = state.attributes.get(params[0]);
+      return [row ? [{ ...row }] : []];
+    }
+
+    if (sql.includes("SELECT id, attribute_id, value, label, sort_order, status") && sql.includes("attribute_id IN (")) {
+      const ids = new Set(params.map(Number));
+      const rows = [...state.attributeOptions.values()]
+        .filter((row) => ids.has(Number(row.attribute_id)))
+        .sort((a, b) => a.attribute_id - b.attribute_id || a.sort_order - b.sort_order || a.id - b.id);
+      return [rows.map((row) => ({ ...row }))];
+    }
+
+    if (sql.includes("SELECT id, value, label, sort_order, status") && sql.includes("WHERE attribute_id = ?")) {
+      const rows = [...state.attributeOptions.values()]
+        .filter((row) => row.attribute_id === params[0])
+        .sort((a, b) => a.sort_order - b.sort_order || a.id - b.id);
+      return [rows.map((row) => ({ ...row }))];
+    }
+
+    if (sql.includes("SELECT 1 AS used FROM item_sku_attribute_values WHERE attribute_id = ?")) {
+      return [state.skuAttributeValueAttributeIds.has(params[0]) ? [{ used: 1 }] : []];
+    }
+
+    if (sql.includes("INSERT INTO item_attribute_definitions")) {
+      const [code, name, dataType, uomId, isVariant, isFilterable, createdAt, updatedAt, createdBy, updatedBy] =
+        params;
+      if ([...state.attributes.values()].some((row) => row.code === code)) {
+        throw duplicateEntryError();
+      }
+      const id = state.nextAttributeId++;
+      state.attributes.set(id, {
+        id,
+        code,
+        name,
+        data_type: dataType,
+        uom_id: uomId,
+        is_variant: isVariant,
+        is_filterable: isFilterable,
+        status: "active",
+        version: 1,
+        created_at: createdAt,
+        updated_at: updatedAt,
+        created_by: createdBy,
+        updated_by: updatedBy
+      });
+      return [{ insertId: id }];
+    }
+
+    if (sql.includes("UPDATE item_attribute_definitions") && sql.includes("SET name = ?")) {
+      const [name, uomId, isVariant, isFilterable, updatedAt, updatedBy, id, version] = params;
+      const row = state.attributes.get(id);
+      if (!row || row.version !== version) {
+        return [{ affectedRows: 0 }];
+      }
+      row.name = name;
+      row.uom_id = uomId;
+      row.is_variant = isVariant;
+      row.is_filterable = isFilterable;
+      row.updated_at = updatedAt;
+      row.updated_by = updatedBy;
+      row.version += 1;
+      return [{ affectedRows: 1 }];
+    }
+
+    if (sql.includes("UPDATE item_attribute_definitions") && sql.includes("SET status = ?")) {
+      const [toStatus, updatedAt, updatedBy, id, version, ...fromStatuses] = params;
+      const row = state.attributes.get(id);
+      if (!row || row.version !== version || !fromStatuses.includes(row.status)) {
+        return [{ affectedRows: 0 }];
+      }
+      row.status = toStatus;
+      row.updated_at = updatedAt;
+      row.updated_by = updatedBy;
+      row.version += 1;
+      return [{ affectedRows: 1 }];
+    }
+
+    if (sql.includes("DELETE FROM item_attribute_definitions WHERE id = ? AND version = ?")) {
+      const [id, version] = params;
+      const row = state.attributes.get(id);
+      if (!row || row.version !== version) {
+        return [{ affectedRows: 0 }];
+      }
+      const referenced =
+        [...state.categoryAttributes.values()].some((r) => r.attribute_id === id) ||
+        state.skuAttributeValueAttributeIds.has(id);
+      if (referenced) {
+        throw rowReferencedError();
+      }
+      state.attributes.delete(id);
+      return [{ affectedRows: 1 }];
+    }
+
+    if (sql.includes("INSERT INTO item_attribute_options") && sql.includes("VALUES (?, ?, ?, ?, 'active', 1")) {
+      const [attributeId, value, label, sortOrder, createdAt, updatedAt, createdBy, updatedBy] = params;
+      if (
+        [...state.attributeOptions.values()].some((row) => row.attribute_id === attributeId && row.value === value)
+      ) {
+        throw duplicateEntryError();
+      }
+      const id = state.nextAttributeOptionId++;
+      state.attributeOptions.set(id, {
+        id,
+        attribute_id: attributeId,
+        value,
+        label,
+        sort_order: sortOrder,
+        status: "active",
+        version: 1,
+        created_at: createdAt,
+        updated_at: updatedAt,
+        created_by: createdBy,
+        updated_by: updatedBy
+      });
+      return [{ insertId: id }];
+    }
+
+    if (sql.includes("INSERT INTO item_attribute_options") && sql.includes("VALUES (?, ?, ?, ?, ?, 1")) {
+      const [attributeId, value, label, sortOrder, status, createdAt, updatedAt, createdBy, updatedBy] = params;
+      if (
+        [...state.attributeOptions.values()].some((row) => row.attribute_id === attributeId && row.value === value)
+      ) {
+        throw duplicateEntryError();
+      }
+      const id = state.nextAttributeOptionId++;
+      state.attributeOptions.set(id, {
+        id,
+        attribute_id: attributeId,
+        value,
+        label,
+        sort_order: sortOrder,
+        status,
+        version: 1,
+        created_at: createdAt,
+        updated_at: updatedAt,
+        created_by: createdBy,
+        updated_by: updatedBy
+      });
+      return [{ insertId: id }];
+    }
+
+    if (sql.includes("UPDATE item_attribute_options") && sql.includes("SET value = ?")) {
+      const [value, label, sortOrder, status, updatedAt, updatedBy, id] = params;
+      const row = state.attributeOptions.get(id);
+      if (!row) {
+        return [{ affectedRows: 0 }];
+      }
+      if (
+        [...state.attributeOptions.values()].some(
+          (other) => other.id !== id && other.attribute_id === row.attribute_id && other.value === value
+        )
+      ) {
+        throw duplicateEntryError();
+      }
+      row.value = value;
+      row.label = label;
+      row.sort_order = sortOrder;
+      row.status = status;
+      row.updated_at = updatedAt;
+      row.updated_by = updatedBy;
+      row.version += 1;
+      return [{ affectedRows: 1 }];
+    }
+
+    if (sql.includes("DELETE FROM item_attribute_options WHERE id = ?")) {
+      const [id] = params;
+      const row = state.attributeOptions.get(id);
+      if (!row) {
+        return [{ affectedRows: 0 }];
+      }
+      // 冇建模 item_attribute_values／item_sku_attribute_values 嘅
+      // option_id RESTRICT——呢個假資料庫冇需要測到嗰一層，真正嘅 FK 行為
+      // 由 itemAttributeMigrations.integration.test.js 對真 MySQL 驗證。
+      state.attributeOptions.delete(id);
+      return [{ affectedRows: 1 }];
+    }
+
+    // --- Category attribute assignment --------------------------------------
+
+    if (
+      sql.includes("SELECT attribute_id, required_for_activation, sort_order") &&
+      sql.includes("FROM item_category_attributes") &&
+      sql.includes("WHERE category_id = ?")
+    ) {
+      const rows = [...state.categoryAttributes.values()]
+        .filter((row) => row.category_id === params[0])
+        .sort((a, b) => a.sort_order - b.sort_order || a.attribute_id - b.attribute_id);
+      return [rows.map((row) => ({ ...row }))];
+    }
+
+    if (sql.includes("DELETE FROM item_category_attributes WHERE category_id = ? AND attribute_id IN (")) {
+      const [categoryId, ...attributeIds] = params;
+      const idSet = new Set(attributeIds.map(Number));
+      for (const key of [...state.categoryAttributes.keys()]) {
+        const row = state.categoryAttributes.get(key);
+        if (row.category_id === categoryId && idSet.has(Number(row.attribute_id))) {
+          state.categoryAttributes.delete(key);
+        }
+      }
+      return [{ affectedRows: attributeIds.length }];
+    }
+
+    if (sql.includes("INSERT INTO item_category_attributes")) {
+      const [categoryId, attributeId, requiredForActivation, sortOrder, createdAt, updatedAt] = params;
+      state.categoryAttributes.set(`${categoryId}::${attributeId}`, {
+        category_id: categoryId,
+        attribute_id: attributeId,
+        required_for_activation: requiredForActivation,
+        sort_order: sortOrder,
+        created_at: createdAt,
+        updated_at: updatedAt
+      });
+      return [{ insertId: 0 }];
+    }
+
+    if (sql.includes("UPDATE item_category_attributes") && sql.includes("SET required_for_activation = ?")) {
+      const [requiredForActivation, sortOrder, updatedAt, categoryId, attributeId] = params;
+      const row = state.categoryAttributes.get(`${categoryId}::${attributeId}`);
+      if (!row) {
+        return [{ affectedRows: 0 }];
+      }
+      row.required_for_activation = requiredForActivation;
+      row.sort_order = sortOrder;
+      row.updated_at = updatedAt;
       return [{ affectedRows: 1 }];
     }
 

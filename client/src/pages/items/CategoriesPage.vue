@@ -147,6 +147,75 @@ function afterFormSubmit() {
   loadTree();
 }
 
+/* ---------------- 屬性規則（design_spec.md §6.4：expectedAttributeIds compare-and-set） ---------------- */
+//
+// 獨立成一個 dialog／FormPanel，唔塞入上面「新增／編輯」嗰個：改名稱／移動
+// 用 category 自己嘅 version 做 compare-and-set，屬性規則用嘅係另一種
+// token（expectedAttributeIds）——兩個唔同語意嘅覆蓋操作塞埋一個 submit，
+// 成功／失敗、錯誤處理會綁死喺一齊，分開兩個 dialog 更貼近後端兩支獨立
+// 端點嘅形狀（見 categoryHandlers.js 對 assignAttributes 嘅說明）。
+
+const showAttributesDialog = ref(false);
+const attributesCategory = ref(null);
+const attributeOptions = ref([]); // { id, name, code }[]，唔含已封存
+const expectedAttributeIds = ref([]);
+const attributeSelections = ref({}); // { [attributeId]: { selected, requiredForActivation } }
+const attributesFormError = ref("");
+
+async function openAttributesDialog(node) {
+  attributesCategory.value = node;
+  attributesFormError.value = "";
+  showAttributesDialog.value = true;
+
+  const [{ rows: attributes }, { assignments }] = await Promise.all([
+    itemCatalogService.attributeList({ page: 1, rowsPerPage: 100, sortBy: "name", descending: false }),
+    itemCatalogService.getCategoryAttributes(node.id)
+  ]);
+
+  attributeOptions.value = attributes.filter((attribute) => attribute.status !== "archived");
+  expectedAttributeIds.value = assignments.map((assignment) => assignment.attributeId);
+
+  const byId = new Map(assignments.map((assignment) => [assignment.attributeId, assignment]));
+  attributeSelections.value = Object.fromEntries(
+    attributeOptions.value.map((attribute) => [
+      attribute.id,
+      {
+        selected: byId.has(attribute.id),
+        requiredForActivation: byId.get(attribute.id)?.requiredForActivation ?? false
+      }
+    ])
+  );
+}
+
+async function submitAttributesForm() {
+  attributesFormError.value = "";
+  const assignments = attributeOptions.value
+    .filter((attribute) => attributeSelections.value[attribute.id]?.selected)
+    .map((attribute, index) => ({
+      attributeId: attribute.id,
+      requiredForActivation: !!attributeSelections.value[attribute.id]?.requiredForActivation,
+      sortOrder: index
+    }));
+
+  try {
+    return await itemCatalogService.assignCategoryAttributes(attributesCategory.value.id, {
+      assignments,
+      expectedAttributeIds: expectedAttributeIds.value
+    });
+  } catch (error) {
+    if (error.code === "CATEGORY_ATTRIBUTES_STALE") {
+      await openAttributesDialog(attributesCategory.value);
+      attributesFormError.value = "有人在你之前已經改過這個分類的屬性規則，畫面已經更新為最新版本，請重新確認後再試。";
+    }
+    throw error;
+  }
+}
+
+function afterAttributesFormSubmit() {
+  showAttributesDialog.value = false;
+  notifySuccess(`分類「${attributesCategory.value.name}」的屬性規則已更新`);
+}
+
 /* ---------------- 狀態變更（啟用／停用：原因，唔使密碼） ---------------- */
 
 async function activate(node) {
@@ -314,6 +383,9 @@ async function remove(node) {
                       <q-item v-close-popup clickable @click="openEditDialog(prop.node)">
                         <q-item-section>編輯／移動</q-item-section>
                       </q-item>
+                      <q-item v-close-popup clickable @click="openAttributesDialog(prop.node)">
+                        <q-item-section>屬性規則</q-item-section>
+                      </q-item>
                       <q-item
                         v-if="prop.node.status === 'inactive'"
                         v-close-popup
@@ -404,6 +476,49 @@ async function remove(node) {
                   unelevated
                   :loading="submitting"
                 />
+              </div>
+            </div>
+          </FormPanel>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <!-- 屬性規則 -->
+    <q-dialog v-model="showAttributesDialog" persistent>
+      <q-card style="min-width: 420px; max-width: 90vw">
+        <q-card-section>
+          <h2 class="text-h6 q-ma-none">「{{ attributesCategory?.name }}」的屬性規則</h2>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <FormPanel
+            v-slot="{ submitting }"
+            :on-submit="submitAttributesForm"
+            @success="afterAttributesFormSubmit"
+          >
+            <div class="q-gutter-sm">
+              <q-banner v-if="attributesFormError" class="bg-warning text-dark">{{ attributesFormError }}</q-banner>
+              <div v-if="attributeOptions.length === 0" class="text-caption text-grey-7">
+                目前沒有可指派的商品屬性
+              </div>
+              <div
+                v-for="attribute in attributeOptions"
+                :key="attribute.id"
+                class="row items-center q-gutter-sm"
+              >
+                <q-checkbox
+                  v-model="attributeSelections[attribute.id].selected"
+                  :label="`${attribute.name}（${attribute.code}）`"
+                />
+                <q-checkbox
+                  v-if="attributeSelections[attribute.id].selected"
+                  v-model="attributeSelections[attribute.id].requiredForActivation"
+                  label="啟用時必填"
+                  dense
+                />
+              </div>
+              <div class="row justify-end q-gutter-sm q-mt-md">
+                <q-btn flat label="取消" :disable="submitting" @click="showAttributesDialog = false" />
+                <q-btn type="submit" color="primary" label="儲存" unelevated :loading="submitting" />
               </div>
             </div>
           </FormPanel>

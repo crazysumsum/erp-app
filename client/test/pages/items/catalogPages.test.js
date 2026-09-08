@@ -29,7 +29,17 @@ vi.mock("@/services/itemCatalog.js", () => ({
     deactivateUom: vi.fn(),
     archiveUom: vi.fn(),
     restoreUom: vi.fn(),
-    deleteUom: vi.fn()
+    deleteUom: vi.fn(),
+    attributeList: vi.fn(),
+    createAttribute: vi.fn(),
+    updateAttribute: vi.fn(),
+    activateAttribute: vi.fn(),
+    deactivateAttribute: vi.fn(),
+    archiveAttribute: vi.fn(),
+    restoreAttribute: vi.fn(),
+    deleteAttribute: vi.fn(),
+    getCategoryAttributes: vi.fn(),
+    assignCategoryAttributes: vi.fn()
   },
   service: { name: "itemCatalog" }
 }));
@@ -52,6 +62,7 @@ import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import CategoriesPage from "@/pages/items/CategoriesPage.vue";
 import BrandsPage from "@/pages/items/BrandsPage.vue";
 import UomsPage from "@/pages/items/UomsPage.vue";
+import AttributesPage from "@/pages/items/AttributesPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
 const TREE = [
@@ -373,6 +384,65 @@ describe("pages/items/CategoriesPage.vue", () => {
       version: 1
     });
   });
+
+  const ATTRIBUTE_CATALOG = [
+    { id: 1, code: "FLAVOR", name: "口味", status: "active" },
+    { id: 2, code: "WEIGHT", name: "重量", status: "active" },
+    { id: 3, code: "OLD", name: "舊屬性", status: "archived" }
+  ];
+
+  it("屬性規則：打開時讀返現有指派，勾走一個、揀多一個，帶埋 expectedAttributeIds 一次過覆蓋", async () => {
+    itemCatalogService.attributeList.mockResolvedValue({ rows: ATTRIBUTE_CATALOG, rowsNumber: ATTRIBUTE_CATALOG.length });
+    itemCatalogService.getCategoryAttributes.mockResolvedValue({
+      categoryId: 1,
+      assignments: [{ attributeId: 1, requiredForActivation: true, sortOrder: 0 }]
+    });
+    itemCatalogService.assignCategoryAttributes.mockResolvedValue({ categoryId: 1, assignments: [] });
+    const { body } = await mountCategoriesPage();
+
+    await openNodeMenu(body, "Vitamins");
+    await findMenuItem(body, "屬性規則").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.getCategoryAttributes).toHaveBeenCalledWith(1);
+    // 已封存嘅屬性唔應該出現喺可揀清單。
+    expect(body.text()).not.toContain("舊屬性");
+
+    const checkboxes = body.findAll(".q-checkbox");
+    const flavorCheckbox = checkboxes.find((el) => el.text().includes("口味"));
+    const weightCheckbox = checkboxes.find((el) => el.text().includes("重量"));
+    await flavorCheckbox.trigger("click"); // 取消勾選（原本已指派）
+    await weightCheckbox.trigger("click"); // 新增指派
+    await flushPromises();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "儲存").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.assignCategoryAttributes).toHaveBeenCalledWith(1, {
+      assignments: [{ attributeId: 2, requiredForActivation: false, sortOrder: 0 }],
+      expectedAttributeIds: [1]
+    });
+  });
+
+  it("屬性規則 CATEGORY_ATTRIBUTES_STALE：重新載入現況並顯示提示，唔會直接覆蓋", async () => {
+    itemCatalogService.attributeList.mockResolvedValue({ rows: ATTRIBUTE_CATALOG, rowsNumber: ATTRIBUTE_CATALOG.length });
+    itemCatalogService.getCategoryAttributes.mockResolvedValue({ categoryId: 1, assignments: [] });
+    const staleError = Object.assign(new Error("這個分類的屬性規則已被其他人更新，請重新整理後再試"), {
+      code: "CATEGORY_ATTRIBUTES_STALE"
+    });
+    itemCatalogService.assignCategoryAttributes.mockRejectedValueOnce(staleError);
+    const { body } = await mountCategoriesPage();
+
+    await openNodeMenu(body, "Vitamins");
+    await findMenuItem(body, "屬性規則").trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "儲存").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.getCategoryAttributes).toHaveBeenCalledTimes(2);
+    expect(body.text()).toContain("有人在你之前已經改過這個分類的屬性規則");
+  });
 });
 
 describe("pages/items/BrandsPage.vue", () => {
@@ -643,5 +713,185 @@ describe("pages/items/UomsPage.vue", () => {
     await flushPromises();
 
     expect(notifyError).toHaveBeenCalledWith("這筆資料使用中，無法刪除");
+  });
+});
+
+describe("pages/items/AttributesPage.vue", () => {
+  const ATTRIBUTE_ROWS = [
+    {
+      id: 1,
+      code: "COLOR",
+      name: "顏色",
+      dataType: "single_option",
+      uomId: null,
+      isVariant: true,
+      isFilterable: false,
+      status: "active",
+      version: 1,
+      options: [
+        { id: 10, value: "red", label: "紅", sortOrder: 0, status: "active" },
+        { id: 11, value: "blue", label: "藍", sortOrder: 1, status: "active" }
+      ]
+    },
+    {
+      id: 2,
+      code: "WEIGHT",
+      name: "重量",
+      dataType: "decimal",
+      uomId: null,
+      isVariant: false,
+      isFilterable: true,
+      status: "inactive",
+      version: 2,
+      options: []
+    }
+  ];
+
+  async function mountAttributesPage({ permissions = ["item.view", "item.mgmt"] } = {}) {
+    itemCatalogService.attributeList.mockResolvedValue({ rows: ATTRIBUTE_ROWS, rowsNumber: ATTRIBUTE_ROWS.length });
+    itemCatalogService.uomList.mockResolvedValue([]);
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: "/", name: "home", component: AttributesPage }]
+    });
+    await router.push("/");
+    await router.isReady();
+
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", displayName: "Sam Wong", permissions, roles: [] };
+
+    const wrapper = mount(AttributesPage, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+    await flushPromises();
+
+    return { wrapper, body: new DOMWrapper(document.body) };
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    document.body.innerHTML = "";
+    vi.clearAllMocks();
+  });
+
+  it("開機以分頁 fetch 載入屬性，顯示喺表入面", async () => {
+    const { wrapper } = await mountAttributesPage();
+
+    expect(itemCatalogService.attributeList).toHaveBeenCalled();
+    expect(wrapper.text()).toContain("顏色");
+    expect(wrapper.text()).toContain("重量");
+  });
+
+  it("只有 item.view：睇得到列表，但冇「新增屬性」按鈕同操作選單", async () => {
+    const { wrapper, body } = await mountAttributesPage({ permissions: ["item.view"] });
+
+    expect(wrapper.findAll(".q-btn").some((btn) => btn.text().includes("新增屬性"))).toBe(false);
+    expect(body.find('button[aria-label*="的操作"]').exists()).toBe(false);
+  });
+
+  it("新增 single_option 屬性：加兩個選項一齊提交，code／dataType 一開始就傳埋", async () => {
+    itemCatalogService.createAttribute.mockResolvedValue({ id: 9, code: "FLAVOR" });
+    const { wrapper, body } = await mountAttributesPage();
+
+    await wrapper.findAll(".q-btn").find((btn) => btn.text().includes("新增屬性")).trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-field").find((f) => f.text().includes("代碼")).find("input").setValue("FLAVOR");
+    await body.findAll(".q-field").find((f) => f.text().includes("名稱")).find("input").setValue("口味");
+
+    // dataType 預設係 text，揀返 single_option 先會顯示選項編輯區。
+    const dataTypeField = body.findAll(".q-field").find((f) => f.text().includes("資料型別"));
+    await dataTypeField.find(".q-field__native, input").trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("單選")).trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-btn").find((btn) => btn.text().includes("新增選項")).trigger("click");
+    await body.findAll(".q-btn").find((btn) => btn.text().includes("新增選項")).trigger("click");
+    await flushPromises();
+
+    const valueInputs = body.findAll(".q-field").filter((f) => f.text().includes("值 *")).map((f) => f.find("input"));
+    const labelInputs = body
+      .findAll(".q-field")
+      .filter((f) => f.text().includes("顯示名稱 *"))
+      .map((f) => f.find("input"));
+    await valueInputs[0].setValue("sweet");
+    await labelInputs[0].setValue("甜");
+    await valueInputs[1].setValue("sour");
+    await labelInputs[1].setValue("酸");
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "新增").trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.createAttribute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: "FLAVOR",
+        name: "口味",
+        dataType: "single_option",
+        options: [
+          { value: "sweet", label: "甜", sortOrder: 0 },
+          { value: "sour", label: "酸", sortOrder: 1 }
+        ]
+      })
+    );
+    expect(notifySuccess).toHaveBeenCalledWith("已新增商品屬性");
+  });
+
+  it("停用：promptReason 唔使密碼；封存：promptPassword 要密碼", async () => {
+    promptReason.mockResolvedValue("暫停使用");
+    itemCatalogService.activateAttribute.mockResolvedValue({ id: 2, status: "active" });
+    const { body } = await mountAttributesPage();
+
+    await body.find('button[aria-label="「重量」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("啟用")).trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.activateAttribute).toHaveBeenCalledWith(2, { reason: "暫停使用", version: 2 });
+
+    promptPassword.mockResolvedValue({ reason: "停用產品線", password: "hunter2" });
+    itemCatalogService.archiveAttribute.mockResolvedValue({ id: 1, status: "archived" });
+
+    await body.find('button[aria-label="「顏色」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("封存")).trigger("click");
+    await flushPromises();
+
+    expect(promptPassword).toHaveBeenCalledWith(expect.objectContaining({ requireReason: true }));
+    expect(itemCatalogService.archiveAttribute).toHaveBeenCalledWith(1, {
+      reason: "停用產品線",
+      password: "hunter2",
+      version: 1
+    });
+  });
+
+  it("刪除失敗（已被使用）時顯示後端訊息，唔會靜靜哋失敗", async () => {
+    promptPassword.mockResolvedValue({ reason: "嘗試刪除", password: "hunter2" });
+    const error = Object.assign(new Error("這筆資料使用中，無法刪除"), { code: "CATALOG_IN_USE" });
+    itemCatalogService.deleteAttribute.mockRejectedValue(error);
+    const { body } = await mountAttributesPage();
+
+    await body.find('button[aria-label="「顏色」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("刪除")).trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith("這筆資料使用中，無法刪除");
+  });
+
+  it("刪除：帶埋 version（跟 archive／restore 同一組值），唔係淨係 reason／password", async () => {
+    promptPassword.mockResolvedValue({ reason: "業務不再需要", password: "hunter2" });
+    itemCatalogService.deleteAttribute.mockResolvedValue({ id: 1 });
+    const { body } = await mountAttributesPage();
+
+    await body.find('button[aria-label="「顏色」的操作"]').trigger("click");
+    await flushPromises();
+    await body.findAll(".q-item").find((el) => el.text().includes("刪除")).trigger("click");
+    await flushPromises();
+
+    expect(itemCatalogService.deleteAttribute).toHaveBeenCalledWith(1, {
+      reason: "業務不再需要",
+      password: "hunter2",
+      version: 1
+    });
   });
 });

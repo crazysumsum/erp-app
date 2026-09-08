@@ -15,6 +15,7 @@ import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/framework/ui/validationIssues.js";
 import ItemBasicForm from "@/components/items/ItemBasicForm.vue";
 import SkuEditor from "@/components/items/SkuEditor.vue";
+import VariantMatrixEditor from "@/components/items/VariantMatrixEditor.vue";
 import itemService from "@/services/item.js";
 
 const router = useRouter();
@@ -27,6 +28,7 @@ function initialForm() {
       description: "",
       categoryId: null,
       brandId: null,
+      productType: "standard",
       countryOfOrigin: "",
       manufacturer: "",
       defaultTrackingPolicy: "none",
@@ -50,6 +52,7 @@ function initialForm() {
 }
 
 const form = reactive(initialForm());
+const variantSkus = ref([]); // VariantMatrixEditor 嘅 [{ variantValues, skuCode, skuName }]
 const activationReason = ref("");
 const dirty = ref(false);
 const submitting = ref(false);
@@ -79,7 +82,7 @@ function skuFieldError(path) {
 // dirty（佢淨係喺「儲存並啟用」先有意義），但都算落 dirty 一齊 watch，
 // 因為用戶都係打緊嘢入去，離開都應該問。
 watch(
-  [form, activationReason],
+  [form, activationReason, variantSkus],
   () => {
     dirty.value = true;
   },
@@ -127,7 +130,7 @@ function buildPayload() {
     description: form.item.description.trim() || null,
     categoryId: form.item.categoryId ?? undefined,
     brandId: form.item.brandId ?? undefined,
-    productType: "standard",
+    productType: form.item.productType,
     countryOfOrigin: form.item.countryOfOrigin.trim().toUpperCase() || undefined,
     manufacturer: form.item.manufacturer.trim(),
     defaultTrackingPolicy: form.item.defaultTrackingPolicy,
@@ -153,9 +156,10 @@ function buildPayload() {
       isPrimary: row.isPrimary
     }));
 
-  const sku = {
-    skuCode: form.sku.skuCode.trim(),
-    skuName: form.sku.skuName.trim(),
+  // 除 skuCode／skuName（Variant 每個組合各自嘅識別）之外，全部欄位喺
+  // Standard 同 Variant 兩條路徑都共用同一份——見 VariantMatrixEditor.vue
+  // 對「呢個元件淨係負責組合，共用欄位由 SkuEditor 負責」嘅說明。
+  const sharedSkuFields = {
     trackingPolicy: form.sku.trackingPolicy,
     shelfLifeDays: positiveInt(form.sku.shelfLifeDays),
     minReceiptLifeDays: positiveInt(form.sku.minReceiptLifeDays),
@@ -168,6 +172,21 @@ function buildPayload() {
     barcodes
   };
 
+  if (form.item.productType === "variant") {
+    const skus = variantSkus.value.map((row) => ({
+      ...sharedSkuFields,
+      skuCode: row.skuCode.trim(),
+      skuName: row.skuName.trim(),
+      variantValues: row.variantValues
+    }));
+    return { item, skus };
+  }
+
+  const sku = {
+    ...sharedSkuFields,
+    skuCode: form.sku.skuCode.trim(),
+    skuName: form.sku.skuName.trim()
+  };
   return { item, sku };
 }
 
@@ -181,24 +200,31 @@ const knownFieldPaths = computed(() => {
     "item.countryOfOrigin",
     "item.manufacturer",
     "item.defaultTrackingPolicy",
-    "item.defaultShelfLifeDays",
-    "skus.0.skuCode",
-    "skus.0.skuName",
-    "skus.0.trackingPolicy",
-    "skus.0.shelfLifeDays",
-    "skus.0.minReceiptLifeDays",
-    "skus.0.minSaleLifeDays",
-    "skus.0.suggestedPriceAmount"
+    "item.defaultShelfLifeDays"
   ]);
-  form.sku.uoms.forEach((_, index) => {
-    paths.add(`skus.0.uoms.${index}.uomId`);
-    paths.add(`skus.0.uoms.${index}.toBaseFactor`);
-  });
-  form.sku.barcodes.forEach((_, index) => {
-    paths.add(`skus.0.barcodes.${index}.barcode`);
-    paths.add(`skus.0.barcodes.${index}.barcodeType`);
-    paths.add(`skus.0.barcodes.${index}.uomId`);
-  });
+
+  // 每個 SKU（Standard 得一個、Variant 每個組合一個）都共用同一份 UOM／
+  // barcode／追蹤政策等欄位（見 buildPayload 的 sharedSkuFields），所以
+  // 逐個 index 都要加一份，唯一唔同嘅係 skuCode／skuName 本身。
+  const skuCount = form.item.productType === "variant" ? Math.max(variantSkus.value.length, 1) : 1;
+  for (let index = 0; index < skuCount; index += 1) {
+    paths.add(`skus.${index}.skuCode`);
+    paths.add(`skus.${index}.skuName`);
+    paths.add(`skus.${index}.trackingPolicy`);
+    paths.add(`skus.${index}.shelfLifeDays`);
+    paths.add(`skus.${index}.minReceiptLifeDays`);
+    paths.add(`skus.${index}.minSaleLifeDays`);
+    paths.add(`skus.${index}.suggestedPriceAmount`);
+    form.sku.uoms.forEach((_, uomIndex) => {
+      paths.add(`skus.${index}.uoms.${uomIndex}.uomId`);
+      paths.add(`skus.${index}.uoms.${uomIndex}.toBaseFactor`);
+    });
+    form.sku.barcodes.forEach((_, barcodeIndex) => {
+      paths.add(`skus.${index}.barcodes.${barcodeIndex}.barcode`);
+      paths.add(`skus.${index}.barcodes.${barcodeIndex}.barcodeType`);
+      paths.add(`skus.${index}.barcodes.${barcodeIndex}.uomId`);
+    });
+  }
   return paths;
 });
 
@@ -228,16 +254,24 @@ async function submit({ activate }) {
     return;
   }
 
+  if (form.item.productType === "variant" && variantSkus.value.length === 0) {
+    summaryMessage.value = "";
+    summaryIssues.value = [{ field: "skus", message: "多規格商品最少要產生一個規格組合" }];
+    fieldErrors.value = {};
+    await focusSummary();
+    return;
+  }
+
   submitting.value = true;
   fieldErrors.value = {};
   summaryMessage.value = "";
   summaryIssues.value = [];
 
   try {
-    const { item, sku } = buildPayload();
+    const { item, sku, skus } = buildPayload();
     const created = await itemService.createItem({
       item,
-      sku,
+      ...(skus ? { skus } : { sku }),
       activate,
       activationReason: activate ? activationReason.value.trim() : undefined
     });
@@ -280,12 +314,31 @@ async function submit({ activate }) {
       </div>
 
       <div class="text-h6 q-mb-md">商品基本資料</div>
+      <q-btn-toggle
+        v-model="form.item.productType"
+        class="q-mb-md"
+        no-caps
+        toggle-color="primary"
+        :options="[
+          { label: '單一規格（Standard）', value: 'standard' },
+          { label: '多規格（Variant）', value: 'variant' }
+        ]"
+      />
       <ItemBasicForm v-model="form.item" :field-error="itemFieldError" />
 
       <q-separator class="q-my-lg" />
 
-      <div class="text-h6 q-mb-md">SKU</div>
-      <SkuEditor v-model="form.sku" :field-error="skuFieldError" />
+      <div class="text-h6 q-mb-md">{{ form.item.productType === "variant" ? "SKU 共用資料" : "SKU" }}</div>
+      <div v-if="form.item.productType === 'variant'" class="text-caption text-grey-7 q-mb-md">
+        以下資料會套用到下面每一個規格組合；SKU Code／名稱在下方各自組合中填寫。
+      </div>
+      <SkuEditor v-model="form.sku" :field-error="skuFieldError" :hide-identity="form.item.productType === 'variant'" />
+
+      <template v-if="form.item.productType === 'variant'">
+        <q-separator class="q-my-lg" />
+        <div class="text-h6 q-mb-md">規格組合</div>
+        <VariantMatrixEditor v-model="variantSkus" :field-error="skuFieldError" />
+      </template>
 
       <q-separator class="q-my-lg" />
 

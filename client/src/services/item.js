@@ -12,16 +12,18 @@ export const service = { name: "item" };
  * 的 `list()` 同一個形狀，方便直接餵畀 DataTable 的 `fetch` prop。
  */
 export default {
-  /** 對應 `POST /api/v1/items/create`——T14 只做 Standard Item（一個 Item
-   * 一個 SKU），呢度嘅參數形狀跟返嗰個限制，唔接受 `variantValues`。呢個
-   * route 有 idempotency，`idempotent: true` 令 HttpClient 自動帶一個新
+  /** 對應 `POST /api/v1/items/create`。`sku`（單數）係 Standard Item 嘅
+   * 簡便寫法，包成一個元素嘅陣列；T23 開放咗 `createItem()` 接受多個
+   * SKU（Variant Item）之後，呼叫端可以直接傳 `skus`（複數，每個帶
+   * `variantValues`）代替。兩者互斥，唔會同時傳。呢個 route 有
+   * idempotency，`idempotent: true` 令 HttpClient 自動帶一個新
    * `Idempotency-Key`。 */
-  createItem({ item, sku, activate, activationReason }) {
+  createItem({ item, sku, skus, activate, activationReason }) {
     return httpClient.post("/api/v1/items/create", {
       idempotent: true,
       body: {
         item,
-        skus: [sku],
+        skus: skus ?? [sku],
         ...(activate ? { activate: true, activationReason } : {})
       }
     });

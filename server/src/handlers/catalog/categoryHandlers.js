@@ -3,6 +3,8 @@ import { ItemCatalogService } from "../../modules/item/ItemCatalogService.js";
 import {
   CATALOG_ID_PARAMS_SCHEMA,
   CATALOG_NAME_SCHEMA,
+  CATEGORY_ATTRIBUTE_ASSIGNMENT_SCHEMA,
+  CATEGORY_ATTRIBUTES_RESPONSE_SCHEMA,
   CATEGORY_DELETE_RESULT_SCHEMA,
   CATEGORY_PARENT_ID_SCHEMA,
   CATEGORY_SUMMARY_SCHEMA,
@@ -274,6 +276,93 @@ export class RestoreCategoryHandler extends CategoryStatusHandler {
 
   async transition(options) {
     return this.itemCatalog.restoreCategory(options);
+  }
+}
+
+/**
+ * Category ↔ Attribute 規則。design_spec.md §6.4 原文係「Category attribute
+ * rules 包含在 Category get／update response 及 body」，但呢度用獨立端點：
+ * `updateCategory()` 已經係一組完整覆蓋（name／parentId／sortOrder）用
+ * `version` compare-and-set；attribute 規則係另一種集合（多對多 mapping），
+ * 用嘅係另一種 compare-and-set token（`expectedAttributeIds`，見 0020
+ * migration 冇逐行 version 嘅說明）。將兩種完全不同嘅 compare-and-set 塞入
+ * 同一個 request body，唯一好處係「符合原文一句描述」，代價係兩個獨立關注點
+ * 綁死在同一個 schema、同一次成功／失敗——分開兩個端點更貼近
+ * `ItemCatalogService.assignAttributes()` 本身已經係獨立方法呢個事實
+ * （design_spec.md §8.2）。行為與資料形狀跟設計一致，只係 HTTP 切法不同。
+ */
+export class GetCategoryAttributesHandler extends BaseRequestHandler {
+  static handlerName = "getCategoryAttributes";
+
+  static api = {
+    method: "GET",
+    path: "/api/v1/catalog/categories/:id/attributes",
+    description: "目前指派俾呢個分類嘅商品屬性規則，供前端組 expectedAttributeIds。",
+    authorizationPolicies: ITEM_VIEW_POLICY,
+    requestSchema: {
+      params: CATALOG_ID_PARAMS_SCHEMA,
+      query: EMPTY_OBJECT_SCHEMA
+    },
+    responseSchema: { 200: CATEGORY_ATTRIBUTES_RESPONSE_SCHEMA }
+  };
+
+  constructor(services = {}) {
+    super(services);
+    this.itemCatalog = itemCatalogService(services);
+  }
+
+  async execute(req) {
+    const result = await this.itemCatalog.getCategoryAttributes({
+      ...actorContext(req),
+      categoryId: Number(req.input.params.id)
+    });
+
+    return this.response(result);
+  }
+}
+
+export class AssignCategoryAttributesHandler extends BaseRequestHandler {
+  static handlerName = "assignCategoryAttributes";
+
+  static api = {
+    method: "POST",
+    path: "/api/v1/catalog/categories/:id/attributes/assign",
+    description: "原子覆蓋分類的商品屬性規則集合；expectedAttributeIds 與現況不符時拒絕覆蓋。",
+    authorizationPolicies: ITEM_MGMT_POLICY,
+    requestSchema: {
+      params: CATALOG_ID_PARAMS_SCHEMA,
+      query: EMPTY_OBJECT_SCHEMA,
+      body: {
+        type: "object",
+        required: ["assignments", "expectedAttributeIds"],
+        additionalProperties: false,
+        properties: {
+          assignments: { type: "array", items: CATEGORY_ATTRIBUTE_ASSIGNMENT_SCHEMA },
+          expectedAttributeIds: {
+            type: "array",
+            items: { type: "integer", minimum: 1 }
+          }
+        }
+      }
+    },
+    responseSchema: { 200: CATEGORY_ATTRIBUTES_RESPONSE_SCHEMA }
+  };
+
+  constructor(services = {}) {
+    super(services);
+    this.itemCatalog = itemCatalogService(services);
+  }
+
+  async execute(req) {
+    const result = await this.itemCatalog.assignAttributes({
+      ...actorContext(req),
+      categoryId: Number(req.input.params.id),
+      assignments: req.input.body.assignments,
+      expectedAttributeIds: req.input.body.expectedAttributeIds,
+      ...requestMeta(req)
+    });
+
+    return this.response(result);
   }
 }
 

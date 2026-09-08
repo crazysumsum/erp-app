@@ -126,6 +126,38 @@ async function cleanupCatalogAudit(db, { targetType, targetId }) {
   ]);
 }
 
+/** Category／Brand／UOM 三張表，供 T24 Attribute 測試建立一個真正嘅 Item 用
+ * （同 itemCreate.integration.test.js 同名 helper 一致，這裡是這個檔案自己
+ * 第一次需要真的建一個 Item，之前的測試都只碰 Catalog 本身）。 */
+async function seedCatalog(db) {
+  const nowMs = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+
+  const [category] = await db.query(
+    "INSERT INTO item_categories (name, status, created_at, updated_at) VALUES (?, 'active', ?, ?)",
+    [`it-cat-${suffix}`, nowMs, nowMs]
+  );
+  const [brand] = await db.query(
+    "INSERT INTO item_brands (name, status, created_at, updated_at) VALUES (?, 'active', ?, ?)",
+    [`it-brand-${suffix}`, nowMs, nowMs]
+  );
+  const [uom] = await db.query(
+    "INSERT INTO item_uoms (code, name, status, created_at, updated_at) VALUES (?, ?, 'active', ?, ?)",
+    [`IT${suffix}`, "Integration Test Unit", nowMs, nowMs]
+  );
+
+  return {
+    categoryId: category.insertId,
+    brandId: brand.insertId,
+    uomId: uom.insertId,
+    async cleanup() {
+      await db.execute("DELETE FROM item_uoms WHERE id = ?", [uom.insertId]);
+      await db.execute("DELETE FROM item_brands WHERE id = ?", [brand.insertId]);
+      await db.execute("DELETE FROM item_categories WHERE id = ?", [category.insertId]);
+    }
+  };
+}
+
 test("Category 完整生命週期經真實 HTTP＋MySQL：建立、stale version 409、更新、啟用/停用、封存/恢復、刪除，每步都有 audit", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
@@ -630,4 +662,354 @@ test("兩個並行的 category move 想互相移到對方底下，只有一個�
   // #buildTree 會做出循環物件圖，GET 就會在 JSON.stringify 炸掉。
   const tree = await fetch(`${url}/api/v1/catalog/categories`, get(token));
   assert.equal(tree.status, 200, await tree.text());
+});
+
+// --- T24：Attribute ----------------------------------------------------------
+
+/** 一個最小嘅 Item＋Variant SKU，唯一目的係俾 item_sku_attribute_values 有一
+ * 條真嘅 row 指住指定嘅 attribute／option——用嚟驗 isVariant 鎖定同 option
+ * 刪除擋（真正嘅建檔行為已經由 itemCreate.integration.test.js 覆蓋，呢度只
+ * 係借用 createItem 產生一個「已被使用」嘅 fixture，唔重複驗 create 本身）。 */
+async function seedVariantUsage(db, token, url, { categoryId, brandId, uomId, attributeId, optionId }) {
+  const suffix = randomUUID().slice(0, 10);
+  const options = authed(token, {
+    item: { name: `it-variant-usage-${suffix}`, categoryId, brandId, productType: "variant" },
+    skus: [
+      {
+        skuCode: `SKU-VU-${suffix}`,
+        skuName: `it-variant-usage-${suffix}`,
+        sellable: true,
+        uoms: [{ uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId, optionId }]
+      }
+    ]
+  });
+  options.headers["Idempotency-Key"] = randomUUID();
+  const create = await fetch(`${url}/api/v1/items/create`, options);
+  const body = await create.json();
+  assert.equal(create.status, 201, JSON.stringify(body));
+  const itemId = body.data.id;
+  const skuId = body.data.skus[0].id;
+
+  return {
+    itemId,
+    skuId,
+    async cleanup() {
+      await db.execute("DELETE FROM item_sku_attribute_values WHERE sku_id = ?", [skuId]);
+      await db.execute("DELETE FROM item_sku_barcodes WHERE sku_id = ?", [skuId]);
+      await db.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [skuId]);
+      await db.execute("DELETE FROM item_audit_logs WHERE target_type = 'sku' AND target_id = ?", [skuId]);
+      await db.execute("DELETE FROM item_skus WHERE id = ?", [skuId]);
+      await db.execute("DELETE FROM item_audit_logs WHERE target_type = 'item' AND target_id = ?", [itemId]);
+      await db.execute("DELETE FROM items WHERE id = ?", [itemId]);
+    }
+  };
+}
+
+test("Attribute 建立（連 options）、重複 code／option value 409、原子覆蓋 option 集合、狀態變更、刪除都經真實 HTTP＋MySQL", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-Attr!";
+
+  const role = await seedItemManagerRole(db);
+  const actor = await seedUser(db, {
+    username: `it-attribute-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: role.roleId
+  });
+  let attributeId = null;
+  // usage／catalog 係之後先種嘅 fixture（見下面），喺呢度一齊宣告係為咗俾
+  // 呢一個 t.after 用同一個順序全部清埋，唔使搞多個 t.after 之間嘅執行次序
+  // ——node:test 嘅 after hook 係跟註冊順序（FIFO）行，唔係 LIFO，用多個
+  // t.after 分開註冊反而要操心邊個先執行；一個 hook、明確順序更直接。
+  let catalog = null;
+  let usage = null;
+
+  // 呢個 t.after 一定要撐到 application.shutdown()：如果中間任何一步拋錯，
+  // shutdown 冧咗都冧唔到，個 process 就會因為個 HTTP server／DB pool 仲開住
+  // 而唔會結束。清理順序要跟返 FK 方向：先 usage（釋放
+  // item_sku_attribute_values 對 attribute／option 嘅 RESTRICT）、
+  // 再 catalog、先至到 attribute 本身。
+  t.after(async () => {
+    try {
+      if (usage !== null) {
+        await usage.cleanup();
+      }
+      if (catalog !== null) {
+        await catalog.cleanup();
+      }
+      if (attributeId !== null) {
+        await cleanupCatalogAudit(db, { targetType: "attribute", targetId: attributeId });
+        await db.execute("DELETE FROM item_attribute_options WHERE attribute_id = ?", [attributeId]);
+        await db.execute("DELETE FROM item_attribute_definitions WHERE id = ?", [attributeId]);
+      }
+      await cleanupUser(db, actor.userId);
+      await role.cleanup();
+    } finally {
+      await application.shutdown("integration_test_complete");
+    }
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, { roles: [role.roleName], permissions: ["item.view", "item.mgmt"] });
+  const code = `it-attr-${randomUUID().slice(0, 8)}`;
+
+  const create = await fetch(
+    `${url}/api/v1/catalog/attributes/create`,
+    authed(token, {
+      code,
+      name: "顏色",
+      dataType: "single_option",
+      isVariant: true,
+      options: [
+        { value: "red", label: "紅" },
+        { value: "blue", label: "藍" }
+      ]
+    })
+  );
+  const created = await create.json();
+  assert.equal(create.status, 201, JSON.stringify(created));
+  attributeId = created.data.id;
+  assert.equal(created.data.options.length, 2);
+  const redOptionId = created.data.options.find((option) => option.value === "red").id;
+  const blueOptionId = created.data.options.find((option) => option.value === "blue").id;
+
+  const duplicateCode = await fetch(
+    `${url}/api/v1/catalog/attributes/create`,
+    authed(token, { code, name: "另一個顏色", dataType: "single_option", options: [{ value: "x", label: "x" }] })
+  );
+  assert.equal(duplicateCode.status, 409);
+  assert.equal((await duplicateCode.json()).error.code, "ATTRIBUTE_CODE_TAKEN");
+
+  const staleUpdate = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/update`,
+    authed(token, {
+      name: "顏色",
+      isVariant: true,
+      isFilterable: false,
+      options: [{ id: redOptionId, value: "red", label: "紅" }],
+      version: 999
+    })
+  );
+  assert.equal(staleUpdate.status, 409, JSON.stringify(await staleUpdate.clone().json()));
+  assert.equal((await staleUpdate.json()).error.code, "VERSION_CONFLICT");
+
+  // 原子覆蓋：保留 red（改 label）、刪走 blue、新增 green。
+  const update = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/update`,
+    authed(token, {
+      name: "顏色（修訂）",
+      isVariant: true,
+      isFilterable: true,
+      options: [
+        { id: redOptionId, value: "red", label: "大紅" },
+        { value: "green", label: "綠" }
+      ],
+      version: 1
+    })
+  );
+  const updated = await update.json();
+  assert.equal(update.status, 200, JSON.stringify(updated));
+  assert.deepEqual(updated.data.options.map((option) => option.value).sort(), ["green", "red"]);
+  const [[blueGone]] = await db.query("SELECT id FROM item_attribute_options WHERE id = ?", [blueOptionId]);
+  assert.equal(blueGone, undefined, "blue option 應該已經被刪走");
+
+  const duplicateOptionValue = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/update`,
+    authed(token, {
+      name: "顏色（修訂）",
+      isVariant: true,
+      isFilterable: true,
+      options: [
+        { id: redOptionId, value: "red", label: "大紅" },
+        { value: "red", label: "重複" }
+      ],
+      version: 2
+    })
+  );
+  assert.equal(duplicateOptionValue.status, 409);
+  assert.equal((await duplicateOptionValue.json()).error.code, "ATTRIBUTE_OPTION_VALUE_TAKEN");
+
+  // 建一個真正用緊呢個屬性同 red option 嘅 Variant SKU，驗 isVariant 鎖定、
+  // option 刪除擋，以及最終刪除屬性擋（design_spec.md §10.3：「Attribute
+  // data type／variant flag 被 Active SKU 使用後不可破壞性修改」）。
+  catalog = await seedCatalog(db);
+  usage = await seedVariantUsage(db, token, url, {
+    categoryId: catalog.categoryId,
+    brandId: catalog.brandId,
+    uomId: catalog.uomId,
+    attributeId,
+    optionId: redOptionId
+  });
+
+  const flipIsVariant = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/update`,
+    authed(token, {
+      name: "顏色（修訂）",
+      isVariant: false,
+      isFilterable: true,
+      options: [{ id: redOptionId, value: "red", label: "大紅" }, { value: "green", label: "綠" }],
+      version: 2
+    })
+  );
+  assert.equal(flipIsVariant.status, 409, JSON.stringify(await flipIsVariant.clone().json()));
+  assert.equal((await flipIsVariant.json()).error.code, "ATTRIBUTE_IN_USE");
+
+  const removeUsedOption = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/update`,
+    authed(token, {
+      name: "顏色（修訂）",
+      isVariant: true,
+      isFilterable: true,
+      options: [{ value: "green", label: "綠" }],
+      version: 2
+    })
+  );
+  assert.equal(removeUsedOption.status, 409, JSON.stringify(await removeUsedOption.clone().json()));
+  assert.equal((await removeUsedOption.json()).error.code, "ATTRIBUTE_OPTION_IN_USE");
+
+  const deactivate = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/deactivate`,
+    authed(token, { reason: "整合測試：停用", version: 2 })
+  );
+  assert.equal(deactivate.status, 200, await deactivate.text());
+
+  const deleteWhileUsed = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/delete`,
+    authed(token, { reason: "整合測試：刪除", version: 3, password })
+  );
+  assert.equal(deleteWhileUsed.status, 409, JSON.stringify(await deleteWhileUsed.clone().json()));
+  assert.equal((await deleteWhileUsed.json()).error.code, "CATALOG_IN_USE");
+
+  await usage.cleanup();
+  await catalog.cleanup();
+
+  const del = await fetch(
+    `${url}/api/v1/catalog/attributes/${attributeId}/delete`,
+    authed(token, { reason: "整合測試：刪除", version: 3, password })
+  );
+  assert.equal(del.status, 200, await del.text());
+
+  const [auditRows] = await db.query(
+    "SELECT action FROM item_audit_logs WHERE target_type = 'attribute' AND target_id = ? ORDER BY id",
+    [attributeId]
+  );
+  assert.deepEqual(
+    auditRows.map((row) => row.action),
+    ["attribute.create", "attribute.update", "attribute.status", "attribute.delete"]
+  );
+
+  attributeId = null;
+});
+
+// --- T24：Category attribute assignment ---------------------------------------
+
+test("Category attribute assignment：expectedAttributeIds 過期時拒絕覆蓋，一致時原子覆蓋並可經 GET 讀返", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+
+  const role = await seedItemManagerRole(db);
+  const actor = await seedUser(db, {
+    username: `it-cat-attr-${randomUUID().slice(0, 8)}`,
+    password: "Integration-Test-Pass-CatAttr!",
+    roleId: role.roleId
+  });
+  let categoryId = null;
+  let attributeAId = null;
+  let attributeBId = null;
+
+  t.after(async () => {
+    if (categoryId !== null) {
+      await db.execute("DELETE FROM item_category_attributes WHERE category_id = ?", [categoryId]);
+      await cleanupCatalogAudit(db, { targetType: "category", targetId: categoryId });
+      await db.execute("DELETE FROM item_categories WHERE id = ?", [categoryId]);
+    }
+    for (const id of [attributeAId, attributeBId]) {
+      if (id !== null) {
+        await cleanupCatalogAudit(db, { targetType: "attribute", targetId: id });
+        await db.execute("DELETE FROM item_attribute_definitions WHERE id = ?", [id]);
+      }
+    }
+    await cleanupUser(db, actor.userId);
+    await role.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, { roles: [role.roleName], permissions: ["item.view", "item.mgmt"] });
+  const suffix = randomUUID().slice(0, 8);
+
+  const createCategory = await fetch(
+    `${url}/api/v1/catalog/categories/create`,
+    authed(token, { name: `it-cat-attr-${suffix}`, parentId: null, sortOrder: 0 })
+  );
+  categoryId = (await createCategory.json()).data.id;
+
+  const createA = await fetch(
+    `${url}/api/v1/catalog/attributes/create`,
+    authed(token, { code: `it-catattr-a-${suffix}`, name: "口味", dataType: "single_option", options: [{ value: "sweet", label: "甜" }] })
+  );
+  attributeAId = (await createA.json()).data.id;
+
+  const createB = await fetch(
+    `${url}/api/v1/catalog/attributes/create`,
+    authed(token, { code: `it-catattr-b-${suffix}`, name: "容量", dataType: "decimal" })
+  );
+  attributeBId = (await createB.json()).data.id;
+
+  const emptyGet = await fetch(`${url}/api/v1/catalog/categories/${categoryId}/attributes`, get(token));
+  assert.equal(emptyGet.status, 200);
+  assert.deepEqual((await emptyGet.json()).data.assignments, []);
+
+  const staleAssign = await fetch(
+    `${url}/api/v1/catalog/categories/${categoryId}/attributes/assign`,
+    authed(token, {
+      assignments: [{ attributeId: attributeAId, requiredForActivation: true, sortOrder: 0 }],
+      expectedAttributeIds: [attributeBId]
+    })
+  );
+  assert.equal(staleAssign.status, 409);
+  assert.equal((await staleAssign.json()).error.code, "CATEGORY_ATTRIBUTES_STALE");
+
+  const assign = await fetch(
+    `${url}/api/v1/catalog/categories/${categoryId}/attributes/assign`,
+    authed(token, {
+      assignments: [
+        { attributeId: attributeAId, requiredForActivation: true, sortOrder: 0 },
+        { attributeId: attributeBId, requiredForActivation: false, sortOrder: 1 }
+      ],
+      expectedAttributeIds: []
+    })
+  );
+  const assigned = await assign.json();
+  assert.equal(assign.status, 200, JSON.stringify(assigned));
+  assert.deepEqual(
+    assigned.data.assignments.map((a) => a.attributeId).sort((x, y) => x - y),
+    [attributeAId, attributeBId].sort((x, y) => x - y)
+  );
+
+  const filledGet = await fetch(`${url}/api/v1/catalog/categories/${categoryId}/attributes`, get(token));
+  const filled = await filledGet.json();
+  assert.equal(filled.data.assignments.length, 2);
+
+  // 用返讀到嘅現況做 expectedAttributeIds，移除其中一個。
+  const remove = await fetch(
+    `${url}/api/v1/catalog/categories/${categoryId}/attributes/assign`,
+    authed(token, {
+      assignments: [{ attributeId: attributeAId, requiredForActivation: true, sortOrder: 0 }],
+      expectedAttributeIds: filled.data.assignments.map((a) => a.attributeId)
+    })
+  );
+  const removed = await remove.json();
+  assert.equal(remove.status, 200, JSON.stringify(removed));
+  assert.deepEqual(removed.data.assignments.map((a) => a.attributeId), [attributeAId]);
+
+  const [auditRows] = await db.query(
+    "SELECT action FROM item_audit_logs WHERE target_type = 'category' AND target_id = ? AND action = 'category.attributes.assign' ORDER BY id",
+    [categoryId]
+  );
+  assert.equal(auditRows.length, 2);
 });

@@ -13,7 +13,8 @@ vi.mock("@/services/itemCatalog.js", () => ({
   default: {
     categoryTree: vi.fn(),
     brandList: vi.fn(),
-    uomList: vi.fn()
+    uomList: vi.fn(),
+    attributeList: vi.fn()
   },
   service: { name: "itemCatalog" }
 }));
@@ -214,5 +215,77 @@ describe("pages/items/ItemCreatePage.vue", () => {
 
     expect(confirmSpy).not.toHaveBeenCalled();
     confirmSpy.mockRestore();
+  });
+
+  it("切去 Variant：揀屬性同選項、產生組合、提交時帶 skus[] 而唔係單一 sku", async () => {
+    itemCatalogService.attributeList.mockResolvedValue({
+      rows: [
+        {
+          id: 7,
+          code: "COLOR",
+          name: "顏色",
+          dataType: "single_option",
+          isVariant: true,
+          status: "active",
+          options: [
+            { id: 70, value: "red", label: "紅", status: "active" },
+            { id: 71, value: "blue", label: "藍", status: "active" }
+          ]
+        }
+      ],
+      rowsNumber: 1
+    });
+    itemService.createItem.mockResolvedValue({ id: 42, name: "維他命 C" });
+    const { wrapper, body } = await mountPage();
+
+    await wrapper.findAll(".q-btn-toggle .q-btn").find((btn) => btn.text().includes("多規格")).trigger("click");
+    await flushPromises();
+
+    await fieldInput(body, "商品名稱 *").setValue("維他命 C");
+
+    const colorCheckbox = body.findAll(".q-checkbox").find((el) => el.text().includes("顏色"));
+    await colorCheckbox.trigger("click");
+    await flushPromises();
+
+    const redCheckbox = body.findAll(".q-checkbox").find((el) => el.text().trim() === "紅");
+    const blueCheckbox = body.findAll(".q-checkbox").find((el) => el.text().trim() === "藍");
+    await redCheckbox.trigger("click");
+    await blueCheckbox.trigger("click");
+    await flushPromises();
+
+    await body.findAll(".q-btn").find((btn) => btn.text().includes("產生組合")).trigger("click");
+    await flushPromises();
+
+    expect(body.text()).toContain("顏色：紅");
+    expect(body.text()).toContain("顏色：藍");
+
+    await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
+    await flushPromises();
+
+    expect(itemService.createItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        item: expect.objectContaining({ productType: "variant" }),
+        skus: expect.arrayContaining([
+          expect.objectContaining({ skuCode: "RED", skuName: "紅", variantValues: [{ attributeId: 7, optionId: 70 }] }),
+          expect.objectContaining({ skuCode: "BLUE", skuName: "藍", variantValues: [{ attributeId: 7, optionId: 71 }] })
+        ])
+      })
+    );
+    expect(itemService.createItem.mock.calls[0][0].sku).toBeUndefined();
+  });
+
+  it("Variant 模式冇產生任何組合就提交：唔會叫 API，摘要顯示要求", async () => {
+    itemCatalogService.attributeList.mockResolvedValue({ rows: [], rowsNumber: 0 });
+    const { wrapper, body } = await mountPage();
+
+    await wrapper.findAll(".q-btn-toggle .q-btn").find((btn) => btn.text().includes("多規格")).trigger("click");
+    await flushPromises();
+    await fieldInput(body, "商品名稱 *").setValue("維他命 C");
+
+    await wrapper.find('button[aria-label="儲存草稿"]').trigger("click");
+    await flushPromises();
+
+    expect(itemService.createItem).not.toHaveBeenCalled();
+    expect(body.text()).toContain("多規格商品最少要產生一個規格組合");
   });
 });
