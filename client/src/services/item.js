@@ -50,6 +50,13 @@ export default {
     return httpClient.get(`/api/v1/items/${id}`);
   },
 
+  /** 整組覆蓋（compare-and-set），對應 `POST /api/v1/items/:id/update`。冇
+   * `productType`：呢期唔開放喺 Item 層面改變（同 createItem() 同一個
+   * Standard-only 範圍限制）。 */
+  updateItem(id, payload) {
+    return httpClient.post(`/api/v1/items/${id}/update`, { body: payload });
+  },
+
   listSkus({
     page,
     rowsPerPage,
@@ -86,5 +93,12 @@ export default {
 
   getSku(id) {
     return httpClient.get(`/api/v1/skus/${id}`);
+  },
+
+  /** 整組覆蓋（compare-and-set，連 UOM／Barcode 完整集合一齊），對應
+   * `POST /api/v1/skus/:id/update`。冇 `skuCode`：readonly，特批修改係
+   * 獨立、未建嘅高強度端點；冇 `variantValues`（T23）。 */
+  updateSku(id, payload) {
+    return httpClient.post(`/api/v1/skus/${id}/update`, { body: payload });
   }
 };

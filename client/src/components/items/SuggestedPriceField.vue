@@ -11,7 +11,8 @@ const model = defineModel({ type: String, default: "" });
 
 defineProps({
   errorMessage: { type: String, default: "" },
-  label: { type: String, default: "建議零售價" }
+  label: { type: String, default: "建議零售價" },
+  readonly: { type: Boolean, default: false }
 });
 </script>
 
@@ -23,6 +24,7 @@ defineProps({
     dense
     prefix="HK$"
     suffix="（未稅）"
+    :readonly="readonly"
     :error="!!errorMessage"
     :error-message="errorMessage"
   />

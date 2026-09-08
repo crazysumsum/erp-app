@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T16 已完成，T17 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T17 已完成，T18 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -86,7 +86,7 @@ T01 migration freeze
 - [x] T14 建立 Item＋初始 SKU 原子建檔後端
 - [x] T15 建立 Item／SKU 建檔頁與基本 Editor
 - [x] T16 建立 Item／SKU aggregate 更新後端
-- [ ] T17 建立 Item／SKU 詳情與編輯頁
+- [x] T17 建立 Item／SKU 詳情與編輯頁
 - [ ] T18 建立 Item／SKU 生命週期後端
 - [ ] T19 建立生命週期與狀態操作 UI
 - [ ] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
@@ -629,29 +629,41 @@ T01 migration freeze
 
 **Description:** 建立 Item／SKU detail routes、tabs 及 editor reuse，支援 version conflict、readonly Code、UOM／Barcode 集合與 RRP 編輯。
 
+**⚠️ 範圍決定：冇 attributes／media／歷史 tabs**。design_spec §7.2 嘅頁面描述提到 `ItemDetailPage.vue` 有「基本資料、SKU、attributes、media、歷史」幾個 tabs，但呢個 task 喺 tasks.md 自己嘅 acceptance criteria 冇提到呢幾樣。Attributes／Media 兩個依賴嘅表要等 T23／T25 先建立，而家做出嚟只會係一個完全冇內容嘅空 tab，屬於speculative UI；歷史（audit log）雖然 T11 backend 已經有，但都唔喺呢個 task 嘅 acceptance criteria 之內，一齊留返俾之後專門處理 audit 呈現嘅 task（未編號）。呢個 task 只做「基本資料」（連 edit）同「SKU 列表」兩個 section。
+
 **Acceptance criteria:**
 
-- [ ] `item.view` 可看完整詳情；`item.mgmt` 才顯示／執行 edit，直接 URL 仍由 API 防護。
-- [ ] Version conflict 重新載入最新資料但保留使用者草稿供比較，不自動重送。
-- [ ] UOM base/default 防呆、Barcode ownership、RRP 固定口徑及 server issues 均正確呈現。
+- [x] `item.view` 可看完整詳情；`item.mgmt` 才顯示／執行 edit（`can()` 前端判斷＋按鈕隱藏），直接 URL 仍由 API 防護（`updateItem`／`updateSku` 嘅 `authorizationPolicies` 係 `ITEM_MGMT_POLICY`，T16 已驗證）。
+- [x] Version conflict（`VERSION_CONFLICT`）重新載入最新資料但保留使用者草稿供比較，不自動重送——用真實瀏覽器開兩個請求模擬兩個分頁驗證咗（見下面 Manual check）。
+- [x] UOM base/default 防呆（單選 radio，畫面上整唔到「兩行都係 Base」）、Barcode ownership（`skuUomId` 對返 `uomId` 先俾 SkuBarcodeEditor 用）、RRP 固定口徑（`HK$` 前綴、`（未稅）` 後綴）及 server issues 均正確呈現（呢兩支 update API 嘅 body 係扁平嘅，冇 T14/T15 嗰種 `item.`／`skus.0.` 巢狀 path，靠 `validationIssues.js` T15 已經有嘅 `skuFieldPrefix` 選項傳 `""` 就啱）。
+
+**瀏覽器手動驗證中發現並修正嘅 bug：** `ItemDetailPage.vue` 最初嘅 `save()` 直接 `{...form, version}` 提交，冇好似 `ItemCreatePage.vue` 咁清理選填欄位——`countryOfOrigin`（`""`）同 `defaultShelfLifeDays`（`null`）呢類冇值嘅選填欄位一送到後端就撞 schema（`must match pattern`／`must be >= 1`），編輯任何一個冇填晒呢兩個選填欄位嘅 Item 一定會失敗。單元測試冧唔到呢個 bug，因為個 mock 直接吞咗個 body，冇真正行過 request schema 驗證——用真實 dev server 手動測先發現。已經加返 `buildPayload()` 做同 create page 一致嘅清理（`?? undefined`）。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/pages/items/itemDetail.test.js test/pages/items/skuDetail.test.js`
-- [ ] `npm run build --workspace client`
-- [ ] Manual check：兩個瀏覽器分頁製造 stale version，確認不覆蓋先完成的修改。
+- [x] `npm test --workspace client -- test/pages/items/itemDetail.test.js test/pages/items/skuDetail.test.js`（4 + 5 個案例）
+- [x] `npm run build --workspace client`
+- [x] `npx vitest run`（全部 360 個 client 測試，run 兩次）
+- [x] Manual check：用真實 dev server＋seed data，喺瀏覽器度開住 Item 編輯畫面（帶住舊 version），另外用同一個已登入 session 嘅 token 直接打 API 完成一次更新（模擬第二個分頁搶先儲存），先至喺瀏覽器嗰邊撳儲存——確認咗：畫面自動攞返新版本嘅資料顯示、清晰嘅「已經被人改過」提示、**用戶自己打緊嘅輸入完全冇被覆蓋**（用 JS 直接讀 input.value 核實）。SKU 名稱非關鍵變更（免 reason）同 Item 基本資料更新兩個 happy path 都喺真實後端驗證成功（version 正確遞增，資料正確反映）。UOM／Barcode 嘅 q-select 下拉選單（換 Base UOM 呢類關鍵變更）冇用真實滑鼠點擊驗證到——同 T15 同一個環境限制（preview 分頁畀主控端收埋咗，Quasar dropdown portal 唔 render），改為靠 T16 嘅 12 個真 DB 整合測試（已經覆蓋「換 Base UOM 要 reason」）加呢個 task 嘅 mock-based unit test 一齊佐證。
 
 **Dependencies:** T13, T15, T16
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `client/src/pages/items/ItemDetailPage.vue`
-- `client/src/pages/items/SkuDetailPage.vue`
-- `client/src/components/items/SkuBarcodeEditor.vue`
-- `client/src/components/items/TrackingPolicyFields.vue`
-- `client/src/components/items/SuggestedPriceField.vue`
+- `client/src/pages/items/ItemDetailPage.vue`（新建）
+- `client/src/pages/items/SkuDetailPage.vue`（新建）
+- `client/src/services/item.js`（加 `updateItem()`／`updateSku()`）
+- `client/src/components/items/ItemBasicForm.vue`（field-error path 由 `item.xxx` 改做相對 `xxx`；加 `readonly` prop）
+- `client/src/components/items/SkuEditor.vue`（field-error path 由 `skus.0.xxx` 改做相對 `xxx`；加 `readonly`／`skuCodeReadonly` prop）
+- `client/src/components/items/SkuUomEditor.vue`（field-error path 去咗 `skus.0.` prefix；加 `readonly` prop）
+- `client/src/components/items/SkuBarcodeEditor.vue`（field-error path 去咗 `skus.0.` prefix；加 `readonly` prop）
+- `client/src/components/items/TrackingPolicyFields.vue`（field-error path 去咗 `skus.0.` prefix；加 `readonly` prop）
+- `client/src/components/items/SuggestedPriceField.vue`（加 `readonly` prop）
+- `client/src/pages/items/ItemCreatePage.vue`（field-error path 改變之後，補返 `itemFieldError()`／`skuFieldError()` 兩個 prefix wrapper，等 T15 嘅 create page 行為完全唔變——T15 嗰 9 個測試全部照舊通過）
+- `client/test/pages/items/itemDetail.test.js`（新建，4 個案例）
+- `client/test/pages/items/skuDetail.test.js`（新建，5 個案例）
 
-**Estimated scope:** M（5 logical files；tests 同切片）
+**Estimated scope:** M（5 logical files；tests 同切片）——實際觸及檔案多過估計，因為 T15 嘅共用元件原本將 field-error path 寫死做 create page 先啱嘅 `item.`／`skus.0.` 前綴，要重構做相對 path 先真正做到「共用」（design_spec §7.4 本身就打算呢啲 component 俾 create／detail 頁一齊用）。
 
 ### Task T18：建立 Item／SKU 生命週期後端
 

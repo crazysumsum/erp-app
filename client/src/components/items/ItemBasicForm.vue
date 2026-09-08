@@ -7,7 +7,11 @@ import { notifyError } from "@/framework/ui/notify.js";
 const model = defineModel({ required: true });
 
 defineProps({
-  fieldError: { type: Function, default: () => "" }
+  fieldError: { type: Function, default: () => "" },
+  // T17：ItemDetailPage.vue 對冇 item.mgmt 嘅使用者、或者未撳「編輯」之前
+  // 用嚟顯示唔畀改嘅詳情。T15 嘅 create page 唔傳呢個 prop，預設 false，
+  // 行為完全不變。
+  readonly: { type: Boolean, default: false }
 });
 
 const categoryOptions = ref([]);
@@ -67,8 +71,9 @@ onMounted(loadOptions);
         label="商品名稱 *"
         outlined
         dense
-        :error="!!fieldError('item.name')"
-        :error-message="fieldError('item.name')"
+        :readonly="readonly"
+        :error="!!fieldError('name')"
+        :error-message="fieldError('name')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -77,8 +82,9 @@ onMounted(loadOptions);
         label="簡稱"
         outlined
         dense
-        :error="!!fieldError('item.shortName')"
-        :error-message="fieldError('item.shortName')"
+        :readonly="readonly"
+        :error="!!fieldError('shortName')"
+        :error-message="fieldError('shortName')"
       />
     </div>
     <div class="col-12">
@@ -89,8 +95,9 @@ onMounted(loadOptions);
         outlined
         dense
         autogrow
-        :error="!!fieldError('item.description')"
-        :error-message="fieldError('item.description')"
+        :readonly="readonly"
+        :error="!!fieldError('description')"
+        :error-message="fieldError('description')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -103,9 +110,11 @@ onMounted(loadOptions);
         label="分類"
         outlined
         dense
+        :readonly="readonly"
+        :disable="readonly"
         :loading="loadingOptions"
-        :error="!!fieldError('item.categoryId')"
-        :error-message="fieldError('item.categoryId')"
+        :error="!!fieldError('categoryId')"
+        :error-message="fieldError('categoryId')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -118,9 +127,11 @@ onMounted(loadOptions);
         label="品牌"
         outlined
         dense
+        :readonly="readonly"
+        :disable="readonly"
         :loading="loadingOptions"
-        :error="!!fieldError('item.brandId')"
-        :error-message="fieldError('item.brandId')"
+        :error="!!fieldError('brandId')"
+        :error-message="fieldError('brandId')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -129,8 +140,9 @@ onMounted(loadOptions);
         label="製造商"
         outlined
         dense
-        :error="!!fieldError('item.manufacturer')"
-        :error-message="fieldError('item.manufacturer')"
+        :readonly="readonly"
+        :error="!!fieldError('manufacturer')"
+        :error-message="fieldError('manufacturer')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -140,8 +152,9 @@ onMounted(loadOptions);
         outlined
         dense
         maxlength="2"
-        :error="!!fieldError('item.countryOfOrigin')"
-        :error-message="fieldError('item.countryOfOrigin')"
+        :readonly="readonly"
+        :error="!!fieldError('countryOfOrigin')"
+        :error-message="fieldError('countryOfOrigin')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -153,8 +166,10 @@ onMounted(loadOptions);
         label="預設追蹤政策"
         outlined
         dense
-        :error="!!fieldError('item.defaultTrackingPolicy')"
-        :error-message="fieldError('item.defaultTrackingPolicy')"
+        :readonly="readonly"
+        :disable="readonly"
+        :error="!!fieldError('defaultTrackingPolicy')"
+        :error-message="fieldError('defaultTrackingPolicy')"
       />
     </div>
     <div class="col-12 col-md-6">
@@ -165,8 +180,9 @@ onMounted(loadOptions);
         label="預設保存期限（天）"
         outlined
         dense
-        :error="!!fieldError('item.defaultShelfLifeDays')"
-        :error-message="fieldError('item.defaultShelfLifeDays')"
+        :readonly="readonly"
+        :error="!!fieldError('defaultShelfLifeDays')"
+        :error-message="fieldError('defaultShelfLifeDays')"
       />
     </div>
   </div>

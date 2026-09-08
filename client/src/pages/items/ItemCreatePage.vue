@@ -62,6 +62,18 @@ function fieldError(path) {
   return fieldErrors.value[path] ?? "";
 }
 
+// ItemBasicForm／SkuEditor 呢類共用元件用嘅係相對於自己嗰個 aggregate 嘅
+// field 名（例如 `name`、`skuCode`），唔識呢一頁提交 body 實際嘅巢狀 path
+// （`item.name`、`skus.0.skuCode`）——原因係呢啲元件將來要俾 SkuDetailPage
+// 呢類 body 唔巢狀嘅頁面直接重用（見 T17），加返呢個 prefix 先啱呢一頁
+// 自己嘅 request shape。
+function itemFieldError(path) {
+  return fieldError(`item.${path}`);
+}
+function skuFieldError(path) {
+  return fieldError(`skus.0.${path}`);
+}
+
 // deep watch 成個表單就夠——呢個表單一次過提交做一個 aggregate command，
 // 唔使追蹤邊個 leaf 欄位個別改變。`activationReason` 唔算入表單本身
 // dirty（佢淨係喺「儲存並啟用」先有意義），但都算落 dirty 一齊 watch，
@@ -268,12 +280,12 @@ async function submit({ activate }) {
       </div>
 
       <div class="text-h6 q-mb-md">商品基本資料</div>
-      <ItemBasicForm v-model="form.item" :field-error="fieldError" />
+      <ItemBasicForm v-model="form.item" :field-error="itemFieldError" />
 
       <q-separator class="q-my-lg" />
 
       <div class="text-h6 q-mb-md">SKU</div>
-      <SkuEditor v-model="form.sku" :field-error="fieldError" />
+      <SkuEditor v-model="form.sku" :field-error="skuFieldError" />
 
       <q-separator class="q-my-lg" />
 
