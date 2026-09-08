@@ -307,3 +307,38 @@ export const ITEM_UPDATE_REQUEST_SCHEMA = Object.freeze({
     version: { type: "integer", minimum: 1 }
   }
 });
+
+// --- POST /api/v1/items/:id/{activate,deactivate,discontinue,archive,restore} ---
+//
+// 高風險（discontinue／archive／restore）動作的原因欄，跟 catalogSchemas.js
+// 的 REASON_SCHEMA 同一條規則（5–190 字元），但獨立定義一份——理由同
+// catalogSchemas.js 頂部註解：Item 與 Category 是不相關的業務領域，共用同一個
+// schema 物件會讓其中一邊的欄寬變動意外波及另一邊。
+
+export const REASON_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 5,
+  maxLength: 190
+});
+
+export const VERSION_SCHEMA = Object.freeze({
+  type: "integer",
+  minimum: 1
+});
+
+export const PASSWORD_SCHEMA = Object.freeze({
+  type: "string",
+  minLength: 1,
+  maxLength: 1024
+});
+
+export const ITEM_ACTIVATE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["skuIds", "reason", "version"],
+  additionalProperties: false,
+  properties: {
+    skuIds: { type: "array", items: { type: "integer", minimum: 1 }, default: [] },
+    reason: REASON_SCHEMA,
+    version: VERSION_SCHEMA
+  }
+});
