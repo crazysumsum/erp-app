@@ -120,3 +120,6 @@ export const ITEM_LIST_SORT_FIELDS = Object.freeze([
 
 /** Category／Brand／UOM／Attribute 等 catalog 列表可接受的排序欄位白名單。 */
 export const CATALOG_LIST_SORT_FIELDS = Object.freeze(["name", "status", "updatedAt"]);
+
+/** `ItemLookupService` 嘅呼叫用途（§8.3）：唔同用途套用唔同嘅可用性規則。 */
+export const ITEM_LOOKUP_PURPOSES = Object.freeze(["purchase", "sale", "inventory"]);
