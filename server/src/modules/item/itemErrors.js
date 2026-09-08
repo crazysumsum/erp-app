@@ -108,6 +108,27 @@ export function skuNotFound(id) {
   });
 }
 
+/** `ItemLookupService.assertUsable()` 專用：SKU 存在，但唔啱嗰個 purpose
+ * 嘅可用性規則（§8.3）——同「搵唔到」（`skuNotFound`）分開，等下游模組分得
+ * 清「呢個 SKU 根本唔存在」同「存在但而家用唔到」。 */
+export function skuNotUsable(skuId, purpose, reasons) {
+  return conflict(`SKU ${skuId} is not usable for purpose "${purpose}": ${reasons.join(", ")}`, {
+    code: "SKU_NOT_USABLE",
+    publicMessage: "呢個 SKU 而家唔可以用喺呢個用途",
+    details: { skuId, purpose, reasons }
+  });
+}
+
+/** `ItemLookupService.findByBarcode()` 專用：`item_sku_barcodes.normalized_
+ * barcode` 有 UNIQUE key，正常唔應該撞到一個以上嘅 SKU——撞到即係資料事故，
+ * 唔可以任揀一筆當結果（design_spec §7.6、tasks.md T21）。 */
+export function barcodeLookupInconsistent(barcode) {
+  return conflict(`Barcode lookup for "${barcode}" matched more than one SKU`, {
+    code: "BARCODE_LOOKUP_INCONSISTENT",
+    publicMessage: "條碼資料不一致，請聯絡系統管理員"
+  });
+}
+
 export function categoryNotFound(id) {
   return notFound(`Category ${id} not found`, {
     code: "CATEGORY_NOT_FOUND",

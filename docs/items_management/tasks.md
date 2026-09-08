@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T20 已完成，T21 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T21 已完成，T22 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -90,7 +90,7 @@ T01 migration freeze
 - [x] T18 建立 Item／SKU 生命週期後端
 - [x] T19 建立生命週期與狀態操作 UI
 - [x] T20 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
-- [ ] T21 建立下游 ItemLookupService contract
+- [x] T21 建立下游 ItemLookupService contract
 - [ ] T22 完成核心端到端、並發與安全驗證
 
 ### Phase C：零售消耗品擴充
@@ -790,24 +790,29 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Purchase 拒絕 Discontinued；Sale 允許合資格 Discontinued 清貨；Inventory 按 tracking 與 includeInactive 規則運作。
-- [ ] Projection 包含 SKU ID、UOM factor、tracking、shelf life 及 minimum receipt／sale life，不要求 `item.view`。
-- [ ] `findManyByIds(100)` 使用固定少量 queries，不產生 N+1；重複 Barcode 視為資料事故而非任選第一筆。
+- [x] Purchase 拒絕 Discontinued（`STATUS_NOT_ACTIVE`）；Sale 允許合資格 Discontinued 清貨（`item active＋sku discontinued`，或兩者都 discontinued）；Inventory 按 `inventoryTracked` 與 `includeInactive` 規則運作（預設淨係 Active 先 usable，`includeInactive:true` 先放行 Draft／Inactive／Discontinued，Archived 點都唔放行）。
+- [x] Projection 包含 SKU ID、UOM factor（完整 `uoms[]`）、tracking、shelf life 及 `minimumReceiptLifeDays`／`minimumSaleLifeDays`（design_spec §8.3 原文用呢個命名，特登同 admin API 嘅 `minReceiptLifeDays`／`minSaleLifeDays` 分開，唔係打錯字）；service 本身完全唔讀 HTTP claims 亦都唔自行授權，方法簽名冇 `actorId`／permission 呢類參數，天生就唔要求 `item.view`。
+- [x] `findManyByIds(100)` 用固定兩條 query（一條 SKU＋Item JOIN、一條 UOM）唔會逐個 id 查；`findByBarcode()` 撞到一個以上（`normalized_barcode` 理論上唔會，但屬於明確驗收標準）會記 error log 再拋 `BARCODE_LOOKUP_INCONSISTENT`，唔會攞第一筆將貨。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemLookupService.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemLookup.integration.test.js`
+- [x] `npm run lint`（repo 根）
+- [x] `node --test --import ./test-support/testEnv.js test/itemLookupService.test.js`（29 個案例，假 database 覆蓋晒三種 purpose 嘅規則矩陣、batching、barcode 資料事故防呆）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemLookup.integration.test.js`（11 個案例，真 JOIN／真 UNIQUE key／真資料嘅 purpose 判斷），連跑 3 次全部穩定通過
+- [x] `npm test --workspace server`（1267 個案例，含新增 40 個，run 兩次穩定全過）
+- [x] 測試後確認 dev DB 無殘留
 
 **Dependencies:** T12, T18
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/ItemLookupService.js`
-- `server/test/itemLookupService.test.js`
-- `server/test/integration/itemLookup.integration.test.js`
+- `server/src/modules/item/ItemLookupService.js`（新建：`findById()`、`findByCode()`、`findByBarcode()`、`findManyByIds()`、`assertUsable()`，私有 `#toProjection()`／`#evaluateUsability()`／`#loadUomRows()`）
+- `server/src/modules/item/itemErrors.js`（新增 `skuNotUsable()`、`barcodeLookupInconsistent()`）
+- `server/src/modules/item/itemConstants.js`（新增 `ITEM_LOOKUP_PURPOSES`）
+- `server/test/itemLookupService.test.js`（新建，29 個案例）
+- `server/test/integration/itemLookup.integration.test.js`（新建，11 個案例）
 
-**Estimated scope:** M（3 files）
+**Estimated scope:** M（5 logical files；淨係後端，冇對外 HTTP endpoint、冇任何前端改動——呼叫端係之後嘅採購／庫存／銷售模組，唔係 Web UI）
 
 ## Checkpoint G：T19–T21 Core Feature Complete
 
