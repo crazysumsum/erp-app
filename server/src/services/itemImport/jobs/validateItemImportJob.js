@@ -58,6 +58,12 @@ export async function validateItemImportJob({
 
   await importService.recordValidationResult({ jobId: job.id, batchSize, ...result });
 
+  if (!result.jobLevelError) {
+    // 冇 rows 好報就唔使產生一份得返 header 嘅結果檔——`jobLevelError` 個案
+    // （CSV 解析唔到／超過列數上限）根本冇任何逐列結果。
+    await importService.writeResultFile({ jobId: job.id, importDirectory });
+  }
+
   void logger?.info?.("item.import.validated", "Import job validation completed", {
     jobId: job.id,
     outcome: result.jobLevelError ? "job_level_error" : result.counts.invalid > 0 ? "invalid" : "ready",

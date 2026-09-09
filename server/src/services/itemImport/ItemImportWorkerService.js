@@ -17,6 +17,7 @@
 import { randomUUID } from "node:crypto";
 import { BaseService } from "../../framework/services/BaseService.js";
 import { ItemImportService } from "../../modules/item/ItemImportService.js";
+import { executeItemImportJob } from "./jobs/executeItemImportJob.js";
 import { validateItemImportJob } from "./jobs/validateItemImportJob.js";
 
 export class ItemImportWorkerService extends BaseService {
@@ -37,6 +38,19 @@ export class ItemImportWorkerService extends BaseService {
       // 對齊 config.item.importTransactionTimeoutMs 嘅預設值，作為單次
       // validation run 嘅時間上限。
       timeoutMs: 120_000
+    },
+    {
+      // 獨立嘅 job 名稱／lock key，同 `itemImport.validate` 分開——acceptance
+      // criterion 要求 validation／execution／retention cleanup 唔可以共用
+      // lock key，理由係三者嘅工作內容同失敗處理完全唔同，共用一個名會令
+      // 「邊個 job 卡住咗」呢類故障排查無從入手。
+      name: "itemImport.execute",
+      method: "runExecution",
+      // Confirm 之後使用者一樣等緊結果，但 execution 本身可能要處理成千
+      // 行 SQL，冇必要好似 validate 咁密——5 秒一次已經令使用者感覺唔到分別，
+      // 但唔會無謂咁頻密掃 queued 狀態。
+      intervalMs: 5_000,
+      timeoutMs: 120_000
     }
   ]);
 
@@ -49,6 +63,7 @@ export class ItemImportWorkerService extends BaseService {
     this.importDirectory = config.item.importDirectory;
     this.importMaxRows = config.item.importMaxRows;
     this.importBatchSize = config.item.importBatchSize;
+    this.importTransactionTimeoutMs = config.item.importTransactionTimeoutMs;
     // Lease 長度用 timeoutMs 加緩衝，同 scheduler 框架自己 cluster lease 嘅
     // 算法（clusterLeaseGraceMs）同一個道理：owner 若果喺執行途中崩潰，lease
     // 要喺呢段時間之後先過期，等第二個 tick（或者第二個實例）可以接手。
@@ -73,6 +88,19 @@ export class ItemImportWorkerService extends BaseService {
       importDirectory: this.importDirectory,
       maxRows: this.importMaxRows,
       batchSize: this.importBatchSize,
+      leaseOwner: this.leaseOwner,
+      leaseDurationMs: this.leaseDurationMs
+    });
+  }
+
+  async runExecution() {
+    return executeItemImportJob({
+      importService: this.importService,
+      database: this.database,
+      logger: this.logger,
+      time: this.time,
+      importDirectory: this.importDirectory,
+      transactionTimeoutMs: this.importTransactionTimeoutMs,
       leaseOwner: this.leaseOwner,
       leaseDurationMs: this.leaseDurationMs
     });

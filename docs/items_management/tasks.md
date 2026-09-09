@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T28 已完成，T29 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T29 已完成，T30 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -104,7 +104,7 @@ T01 migration freeze
 
 - [x] T27 建立 Import persistence、dependencies 與 worker 設定
 - [x] T28 建立 CSV preflight processor
-- [ ] T29 建立 Import confirm／execution／result API
+- [x] T29 建立 Import confirm／execution／result API
 - [ ] T30 建立 Import UI
 - [ ] T31 建立 SKU Export
 - [ ] T32 建立疑似重複商品提示
@@ -1187,26 +1187,39 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Confirm 只接受 ready Job、`jwt-password`、version；重送不重複建立，cancel 只允許設計狀態。
-- [ ] Execution 重新驗證 catalog／unique／SKU version，任一 row 失敗整批商品變更 rollback；Job 最終狀態仍可靠更新。
-- [ ] Result download 使用受控 path；已到期回 `410 IMPORT_FILE_EXPIRED`，Job summary 仍可查。
+- [x] Confirm 只接受 ready Job、`jwt-password`、version；重送不重複建立，cancel 只允許設計狀態。
+- [x] Execution 重新驗證 catalog／unique／SKU version，任一 row 失敗整批商品變更 rollback；Job 最終狀態仍可靠更新。
+- [x] Result download 使用受控 path；已到期回 `410 IMPORT_FILE_EXPIRED`，Job summary 仍可查。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemImportService.test.js test/itemImportHandlers.test.js test/itemImportWorkerService.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`
+- [x] `npm test --workspace server`（unit；`ItemImportService`／upload／confirm／cancel／execution handlers 純交易＋SQL 邏輯，無 fake-DB unit test，同 `ItemAdminService`／`ItemMediaService` 一致，只用真 MySQL 整合測試覆蓋）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`（14 個測試，含 T28 preflight 6 個＋T29 HTTP／confirm／execution／cancel／權限／過期 result 8 個，穩定跑 3 次全過）
+- [x] `npm run lint`（repo root）
 
 **Dependencies:** T22, T27, T28
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/modules/item/ItemImportService.js`
-- `server/src/services/itemImport/jobs/executeItemImportJob.js`
-- `server/src/handlers/item-imports/itemImportSchemas.js`
-- `server/src/handlers/item-imports/`
-- `server/test/integration/itemImport.integration.test.js`
+- `server/src/modules/item/ItemImportService.js`（新增 createJobFromUpload／listJobs／confirmJob／cancelJob／claimNextQueuedJobForExecution／listValidRowsForExecution／recordExecutionResult／writeResultFile／resolveResultDownload）
+- `server/src/services/itemImport/jobs/executeItemImportJob.js`（新檔；execution worker：單一 transaction 逐 row 執行，失敗記 `failedRowNumber` 並整批 rollback，job 狀態用獨立短交易更新）
+- `server/src/services/itemImport/ItemImportWorkerService.js`（新增 `itemImport.execute` job 註冊、`runExecution()`）
+- `server/src/services/itemImport/jobs/validateItemImportJob.js`（小改：驗證完成後寫 result CSV）
+- `server/src/handlers/item-imports/`（新目錄：`itemImportSchemas.js`、`uploadItemImportHandler.js`、`listItemImportsHandler.js`、`getItemImportHandler.js`、`confirmItemImportHandler.js`、`cancelItemImportHandler.js`、`downloadItemImportResultHandler.js`、`downloadItemImportTemplateHandler.js`）
+- `server/src/modules/item/itemErrors.js`（新增 `importJobNotFound`；`mediaFileRequired()` 改名 `uploadFileRequired()`，因為呢個錯誤而家兩個 domain 共用）
+- `server/src/handlers/items/itemMediaUploadHandler.js`、`server/src/handlers/skus/skuMediaUploadHandler.js`（跟隨上面改名更新 import／call site）
+- `server/test/integration/itemImport.integration.test.js`（延伸 T28 既有測試，加 8 個 T29 測試）
 
-**Estimated scope:** M（5 logical files／directories；handler tests 同切片）
+**已知偏離「Files likely touched」之處及原因：**
+
+1. 冇 `test/itemImportService.test.js`／`test/itemImportHandlers.test.js`／`test/itemImportWorkerService.test.js` 呢類 fake-DB unit test——`ItemImportService`／execution worker 全部係 transaction＋SQL 邏輯，同 `ItemAdminService`／`ItemMediaService` 一樣，寫 fake-DB unit test 只會重複驗證 mock 本身，冇額外訊號，所以只用真 MySQL 整合測試覆蓋（design 決定，非遺漏）。
+2. 刻意冇改 `ItemAdminService.createItem()`／`updateSku()` 令 execution worker 可以重用——咁做要將佢哋改到接受外部傳入嘅 transaction connection，會動到有 1000+ 條測試依賴嘅既有 service。`executeItemImportJob.js` 改用刻意簡化、CSV contract 範圍內嘅 INSERT／UPDATE SQL（draft-only、無 activation、無 variants、無 barcodes，UOM 永遠得一條 base UOM row）。
+3. `templateItemImportHandler.js` 改名做 `downloadItemImportTemplateHandler.js`（class 都改埋做 `DownloadItemImportTemplateHandler`，`handlerName` 冇變）——修正一個真實 bug：`handlerRegistry.js` 按檔案路徑字母順序註冊 route，Express 5 嘅 Router 冇靜態路徑優先於 `:id` 呢種機制，`getItemImportHandler.js`（`g`）字母序排喺原本嘅 `templateItemImportHandler.js`（`t`）之前，令 `GET /api/v1/item-imports/template` 成日俾 `GET /api/v1/item-imports/:id` 攔截（400 params 驗證錯，永遠去唔到 template handler）。改名做 `download...`（同 `downloadItemImportResultHandler.js` 一致，字母序 `d` < `g`）令佢喺 `:id` 之前註冊，順便修正咗檔名同 `handlerName`（`downloadItemImportTemplate`）本身唔一致嘅命名問題。
+4. `test/integration/itemImport.integration.test.js` 入面 `uploadCsv()` 呢個測試 helper 原本冇帶 `Idempotency-Key` header，但 `uploadItemImportHandler.js` 嘅 route 有 `idempotency: { enabled: true }`，所以上傳一律 400 `IDEMPOTENCY_KEY_REQUIRED`——已經修正（helper 而家每次隨機生成一個 UUID 做 key）。
+5. 過程中修正咗一個自己引入嘅測試掛死 bug：六個新測試最初為咗過 ESLint `prefer-const`，將 `t.after()`（負責 `application.shutdown()`）搬到 HTTP 上傳呼叫之後先註冊；如果上傳嘅 assertion 拋錯，`t.after()` 就永遠冚唔到，真實 HTTP server／scheduler／DB pool 會一直開住，令 `node --test` process 永久掛死。修正方法：改用 `let jobId = null` 初始化＋喺任何可能拋錯嘅呼叫之前就註冊 `t.after()`，之後先 `jobId = ...` 重新賦值（同 `itemImportMigrations.integration.test.js` 既有 pattern 一致，`let x = null` 有初始賦值就唔會觸發 `prefer-const`）。
+6. 呢個框架嘅 `static api.requestSchema` 即使冇路徑參數都一定要有 `params` key（比照 `healthHandler.js`），三個新 handler（`uploadItemImportHandler.js`／`listItemImportsHandler.js`／`downloadItemImportTemplateHandler.js`）原本漏咗，令對應 route 一律 400——已補上 `params: EMPTY_OBJECT_SCHEMA`。
+
+**Estimated scope:** M（實際 8 個 handler 檔案＋service／worker／errors 延伸＋1 個整合測試檔）
 
 ### Task T30：建立 Import UI
 

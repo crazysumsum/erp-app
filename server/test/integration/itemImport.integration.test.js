@@ -1,12 +1,13 @@
 /**
- * T28 嘅 CSV 匯入 preflight，對一個真的、已經 migrate 過的 MySQL 驗收。
- * 設計說明見 docs/items_management/design_spec.md §5.13、§8.6。
+ * T28 嘅 CSV 匯入 preflight 同 T29 嘅 confirm／execution／result API，對
+ * 一個真的、已經 migrate 過的 MySQL 驗收。設計說明見
+ * docs/items_management/design_spec.md §5.13、§6.9、§8.6。
  *
- * 呢個 task 冇任何 HTTP handler（upload／confirm 等要等 T29），所以呢度
- * 唔經 HTTP：直接種一個 `item_import_jobs` row＋喺受控 import 目錄放一份
- * 真嘅 CSV 檔案，然後直接攞 `job.itemImportWorker` 呢個 service 嚟叫
- * `runValidation()`——同「下一個 task 先有嘅 HTTP 入口，測試直接種 DB／
- * 直接叫 service」呢個貫穿成個 session 嘅慣例一致。
+ * T28 部分（validation）淨係種 DB row＋直接叫 `job.itemImportWorker`，冇
+ * HTTP handler 可以打；T29 起 upload／list／get／confirm／cancel／result
+ * 呢幾個端點都有真正嘅 HTTP 入口，對應嘅測試直接打 HTTP（同其他 task 嘅
+ * handler 整合測試同一套風格）。execution 本身冇獨立 HTTP 端點（worker
+ * 自己 claim `queued` job），一樣直接叫 `worker.runExecution()`。
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -15,6 +16,7 @@ import path from "node:path";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { hashPassword } from "../../src/modules/user/passwordHash.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -133,6 +135,122 @@ async function withImportDirectory(t, application) {
       await writeFile(filePath, csvText, "utf8");
     }
   };
+}
+
+// --- HTTP 認證輔助（T29） ---------------------------------------------------
+
+const PASSWORD = "Integration-Test-Pass-1!";
+
+async function seedUser(db, { username, roleId }) {
+  const passwordHash = await hashPassword(PASSWORD);
+  const nowMs = Date.now();
+  const [result] = await db.execute(
+    `INSERT INTO users (username, password_hash, display_name, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [username, passwordHash, "Integration Test User", nowMs, nowMs]
+  );
+  const userId = result.insertId;
+  if (roleId) {
+    await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
+  }
+  return { userId, username };
+}
+
+async function cleanupUser(db, userId) {
+  await db.execute("DELETE FROM item_audit_logs WHERE actor_user_id = ?", [userId]);
+  await db.execute("DELETE FROM user_roles WHERE user_id = ?", [userId]);
+  await db.execute("DELETE FROM users WHERE id = ?", [userId]);
+  await db.execute("DELETE FROM fr_token_versions WHERE subject = ?", [String(userId)]);
+}
+
+async function seedRole(db, { permissionNames = [] } = {}) {
+  const nowMs = Date.now();
+  const roleName = `it-import-role-${randomUUID().slice(0, 8)}`;
+  const [roleResult] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [roleName, nowMs]);
+  const roleId = roleResult.insertId;
+  for (const name of permissionNames) {
+    const [[permission]] = await db.query("SELECT id FROM permissions WHERE name = ?", [name]);
+    await db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
+  }
+  return {
+    roleId,
+    roleName,
+    async cleanup() {
+      await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [roleId]);
+      await db.execute("DELETE FROM user_roles WHERE role_id = ?", [roleId]);
+      await db.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    }
+  };
+}
+
+function tokenIssuer(application) {
+  const jwt = application.services.require("jwt");
+  const tokenRevocation = application.services.require("tokenRevocation");
+  const time = application.services.require("time");
+  return async (userId, { roles, permissions }) => {
+    const version = await tokenRevocation.currentVersion(String(userId));
+    const authTime = Math.floor(time.nowMs() / 1000);
+    return jwt.issue({ roles, permissions }, { subject: String(userId), version, authTime });
+  };
+}
+
+async function withManager(t, application, permissionNames = ["item.mgmt"]) {
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const role = await seedRole(db, { permissionNames });
+  const actor = await seedUser(db, { username: `it-import-${randomUUID().slice(0, 8)}`, roleId: role.roleId });
+  const token = await issueToken(actor.userId, { roles: [role.roleName], permissions: permissionNames });
+
+  t.after(async () => {
+    await cleanupUser(db, actor.userId);
+    await role.cleanup();
+  });
+
+  return { db, token, actorId: actor.userId };
+}
+
+function get(url, token) {
+  return fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} }).then(async (response) => ({
+    status: response.status,
+    body: await response.json()
+  }));
+}
+
+function post(url, token, body) {
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(body)
+  }).then(async (response) => ({ status: response.status, body: await response.json() }));
+}
+
+function uploadCsv(url, token, { csvText, mode }) {
+  const data = new FormData();
+  data.append("mode", mode);
+  data.append("file", new Blob([csvText], { type: "text/csv" }), "import.csv");
+
+  const headers = { "Idempotency-Key": randomUUID(), ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  return fetch(url, { method: "POST", headers, body: data }).then(async (response) => ({
+    status: response.status,
+    body: await response.json()
+  }));
+}
+
+async function seedCatalogNames(db, catalog) {
+  const [category] = await db.query("SELECT name FROM item_categories WHERE id = ?", [catalog.categoryId]);
+  const [brand] = await db.query("SELECT name FROM item_brands WHERE id = ?", [catalog.brandId]);
+  const [uom] = await db.query("SELECT code FROM item_uoms WHERE id = ?", [catalog.uomId]);
+  return { categoryName: category[0].name, brandName: brand[0].name, baseUomCode: uom[0].code };
+}
+
+async function cleanupCreatedSku(db, skuCode) {
+  const [[sku]] = await db.query("SELECT id, item_id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  if (!sku) return;
+  await db.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [sku.id]);
+  await db.execute("DELETE FROM item_audit_logs WHERE target_type = 'sku' AND target_id = ?", [sku.id]);
+  await db.execute("DELETE FROM item_skus WHERE id = ?", [sku.id]);
+  await db.execute("DELETE FROM item_audit_logs WHERE target_type = 'item' AND target_id = ?", [sku.item_id]);
+  await db.execute("DELETE FROM items WHERE id = ?", [sku.item_id]);
 }
 
 // --- Happy path -----------------------------------------------------------------
@@ -375,4 +493,311 @@ test("來源檔案喺受控目錄搵唔到：job 轉 invalid，error_summary 記
   assert.equal(jobRow.status, "invalid");
   assert.equal(jobRow.error_summary, "找不到來源 CSV 檔案");
   assert.equal(jobRow.lease_owner, null);
+});
+
+// --- T29：Template／Upload／List/Get（HTTP） ---------------------------------
+
+test("下載 template：帶齊已知欄位嘅 header row", { skip }, async (t) => {
+  const application = await startApplication();
+  const { token } = await withManager(t, application);
+  t.after(async () => {
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const response = await fetch(`${url}/api/v1/item-imports/template`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const text = await response.text();
+
+  assert.equal(response.status, 200, text);
+  assert.match(response.headers.get("content-type") || "", /text\/csv/);
+  assert.match(text, /^skuId,expectedSkuVersion,skuCode,skuName,itemName,categoryName,brandName/);
+});
+
+test("上傳、list、get 全部經真實 HTTP：job 建立後可以查到，list 支援狀態篩選", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  let jobId = null;
+  t.after(async () => {
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const csvText = csvFrom([
+    { skuCode: `IT-HTTP-${catalog.suffix}`, skuName: "HTTP 上傳測試", itemName: "整合測試 Item", ...names }
+  ]);
+
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "create_only" });
+  assert.equal(uploaded.status, 201, JSON.stringify(uploaded.body));
+  jobId = uploaded.body.data.id;
+  assert.equal(uploaded.body.data.status, "uploaded");
+  assert.equal(uploaded.body.data.mode, "create_only");
+
+  const detail = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(detail.status, 200);
+  assert.equal(detail.body.data.job.id, jobId);
+  assert.equal(detail.body.data.rows.total, 0, "validation 未跑之前仲未有任何 row");
+
+  const list = await get(`${url}/api/v1/item-imports?status=uploaded`, token);
+  assert.equal(list.status, 200);
+  assert.ok(list.body.data.items.some((item) => item.id === jobId));
+
+  const listReady = await get(`${url}/api/v1/item-imports?status=ready`, token);
+  assert.ok(!listReady.body.data.items.some((item) => item.id === jobId));
+});
+
+// --- T29：Confirm／Execution 全流程 ------------------------------------------
+
+test("Confirm＋execution 全流程：create-only job 完成後真係建咗一個 Item＋SKU，結果 CSV 下載得到", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-EXEC-${catalog.suffix}`;
+  let jobId = null;
+  t.after(async () => {
+    await cleanupCreatedSku(db, skuCode);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const csvText = csvFrom([
+    { skuCode, skuName: "全流程測試商品", itemName: "全流程測試 Item", suggestedPriceAmount: "99.0000", ...names }
+  ]);
+
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "create_only" });
+  jobId = uploaded.body.data.id;
+
+  await worker.runValidation();
+  const afterValidation = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(afterValidation.body.data.job.status, "ready");
+  assert.equal(afterValidation.body.data.rows.items[0].status, "valid");
+
+  const confirmed = await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：確認匯入",
+    version: afterValidation.body.data.job.version,
+    password: PASSWORD
+  });
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  assert.equal(confirmed.body.data.status, "queued");
+
+  await worker.runExecution();
+  const afterExecution = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(afterExecution.body.data.job.status, "completed");
+  assert.equal(afterExecution.body.data.job.successCount, 1);
+  assert.equal(afterExecution.body.data.job.failureCount, 0);
+
+  const [[skuRow]] = await db.query(
+    "SELECT s.sku_code, s.status, s.suggested_price_amount, i.status AS item_status FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.sku_code = ?",
+    [skuCode]
+  );
+  assert.ok(skuRow, "execution 應該真係建立咗一個 SKU");
+  assert.equal(skuRow.status, "draft");
+  assert.equal(skuRow.item_status, "draft");
+  assert.equal(skuRow.suggested_price_amount, "99.0000");
+
+  const [auditRows] = await db.query(
+    "SELECT action, target_label FROM item_audit_logs WHERE target_type = 'import' AND target_id = ?",
+    [jobId]
+  );
+  assert.deepEqual(auditRows.map((row) => row.action), ["item.import"]);
+
+  const resultResponse = await fetch(`${url}/api/v1/item-imports/${jobId}/result`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  assert.equal(resultResponse.status, 200);
+  const resultText = await resultResponse.text();
+  assert.match(resultText, new RegExp(skuCode));
+  assert.match(resultText, /applied|valid/);
+});
+
+test("Upsert 更新一粒真嘅 SKU：confirm＋execution 之後 SKU 欄位同 version 都變咗", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const sku = await seedSku(db, catalog);
+  const worker = application.services.require("job.itemImportWorker");
+  let jobId = null;
+  t.after(async () => {
+    if (jobId) await cleanupImportJob(db, jobId);
+    await sku.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const csvText = csvFrom([
+    {
+      skuId: String(sku.skuId),
+      expectedSkuVersion: String(sku.version),
+      skuCode: sku.skuCode,
+      skuName: "已經改咗嘅名稱",
+      suggestedPriceAmount: "50.0000"
+    }
+  ]);
+
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "upsert" });
+  jobId = uploaded.body.data.id;
+
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：確認更新",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+  await worker.runExecution();
+
+  const [[skuRow]] = await db.query(
+    "SELECT sku_name, suggested_price_amount, version FROM item_skus WHERE id = ?",
+    [sku.skuId]
+  );
+  assert.equal(skuRow.sku_name, "已經改咗嘅名稱");
+  assert.equal(skuRow.suggested_price_amount, "50.0000");
+  assert.equal(skuRow.version, sku.version + 1);
+});
+
+// --- T29：Cancel ------------------------------------------------------------------
+
+test("Cancel：ready job 取消之後唔會被 execution 揀中", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  let jobId = null;
+  t.after(async () => {
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const csvText = csvFrom([
+    { skuCode: `IT-CANCEL-${catalog.suffix}`, skuName: "取消測試", itemName: "整合測試 Item", ...names }
+  ]);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "create_only" });
+  jobId = uploaded.body.data.id;
+
+  const cancelled = await post(`${url}/api/v1/item-imports/${jobId}/cancel`, token, {});
+  assert.equal(cancelled.status, 200, JSON.stringify(cancelled.body));
+  assert.equal(cancelled.body.data.status, "cancelled");
+
+  const executionOutcome = await worker.runExecution();
+  assert.equal(executionOutcome.claimed, false, "cancelled job 唔應該被 execution worker 揀中");
+});
+
+// --- T29：Confirm 拒絕嘅情況 -------------------------------------------------------
+
+test("Confirm：唔係 ready 狀態就 409 IMPORT_NOT_READY，version 唔啱就 409 IMPORT_STATE_CONFLICT，密碼錯就 403", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  let jobId = null;
+  t.after(async () => {
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const csvText = csvFrom([
+    { skuCode: `IT-CONFIRM-${catalog.suffix}`, skuName: "確認測試", itemName: "整合測試 Item", ...names }
+  ]);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "create_only" });
+  jobId = uploaded.body.data.id;
+
+  const stillUploaded = await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：仲未 ready",
+    version: uploaded.body.data.version,
+    password: PASSWORD
+  });
+  assert.equal(stillUploaded.status, 409);
+  assert.equal(stillUploaded.body.error.code, "IMPORT_NOT_READY");
+
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+
+  const staleVersion = await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：version 過舊",
+    version: ready.body.data.job.version - 1,
+    password: PASSWORD
+  });
+  assert.equal(staleVersion.status, 409);
+  assert.equal(staleVersion.body.error.code, "IMPORT_STATE_CONFLICT");
+
+  const wrongPassword = await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：密碼錯",
+    version: ready.body.data.job.version,
+    password: "wrong-password"
+  });
+  assert.equal(wrongPassword.status, 403);
+  assert.equal(wrongPassword.body.error.code, "PASSWORD_INVALID");
+
+  const [[stillReady]] = await db.query("SELECT status FROM item_import_jobs WHERE id = ?", [jobId]);
+  assert.equal(stillReady.status, "ready");
+});
+
+// --- T29：權限矩陣 -----------------------------------------------------------------
+
+test("冇 item.mgmt：upload／list／get／confirm／cancel／result 一律 403；完全冇 token：401", { skip }, async (t) => {
+  const application = await startApplication();
+  const { token: viewerToken } = await withManager(t, application, ["item.view"]);
+  t.after(async () => {
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+
+  const list = await get(`${url}/api/v1/item-imports`, viewerToken);
+  assert.equal(list.status, 403);
+
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, viewerToken, {
+    csvText: csvFrom([{ skuCode: "X", skuName: "x" }]),
+    mode: "create_only"
+  });
+  assert.equal(uploaded.status, 403);
+
+  const anonymous = await get(`${url}/api/v1/item-imports`, null);
+  assert.equal(anonymous.status, 401);
+});
+
+// --- T29：結果檔已過期 -------------------------------------------------------------
+
+test("結果檔已經被 retention 清理（files_purged_at 有值）：下載回 410，job summary 仍然查得到", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const jobId = await seedImportJob(db, { fileStoredName: `${randomUUID()}.csv`, status: "completed" });
+  t.after(async () => {
+    await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  await db.execute(
+    "UPDATE item_import_jobs SET result_stored_name = ?, files_purged_at = ? WHERE id = ?",
+    [`${randomUUID()}.csv`, Date.now(), jobId]
+  );
+
+  const resultResponse = await fetch(`${url}/api/v1/item-imports/${jobId}/result`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  assert.equal(resultResponse.status, 410);
+  const body = await resultResponse.json();
+  assert.equal(body.error.code, "IMPORT_FILE_EXPIRED");
+
+  const detail = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(detail.status, 200, "files_purged_at 唔應該影響 job summary 本身查得到");
 });

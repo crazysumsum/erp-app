@@ -450,6 +450,13 @@ export function itemNotActivatable(issues) {
   });
 }
 
+export function importJobNotFound(id) {
+  return notFound(`Import job ${id} not found`, {
+    code: "IMPORT_JOB_NOT_FOUND",
+    publicMessage: "找不到這個匯入工作"
+  });
+}
+
 export function importNotReady() {
   return conflict("Import job is not in a state that allows this action", {
     code: "IMPORT_NOT_READY",
@@ -475,10 +482,11 @@ export function mediaNotFound(id) {
 
 /** Upload route 冇強制要求至少一個檔案（`maxFiles` 只係上限，見
  * src/framework/upload/uploadMiddleware.js），所以合法嘅 multipart 請求可以
- * 一個檔案都冇夾就送到 handler，要喺呢度自己擋。 */
-export function mediaFileRequired() {
+ * 一個檔案都冇夾就送到 handler，要喺呢度自己擋。跨 media／import 兩種上傳
+ * 共用同一個 code——「冇揀檔案」呢件事本身唔分邊種功能。 */
+export function uploadFileRequired() {
   return invalid("Exactly one file must be uploaded", {
-    code: "MEDIA_FILE_REQUIRED",
+    code: "UPLOAD_FILE_REQUIRED",
     publicMessage: "請選擇要上傳的檔案"
   });
 }

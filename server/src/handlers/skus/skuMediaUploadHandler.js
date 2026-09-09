@@ -1,6 +1,6 @@
 import itemConfig from "../../../config/item.js";
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
-import { mediaFileRequired } from "../../modules/item/itemErrors.js";
+import { uploadFileRequired } from "../../modules/item/itemErrors.js";
 import { ItemMediaService } from "../../modules/item/ItemMediaService.js";
 import { ITEM_MEDIA_UPLOAD_BODY_SCHEMA, MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
 import { EMPTY_OBJECT_SCHEMA, ITEM_MGMT_POLICY, SKU_ID_PARAMS_SCHEMA } from "./skuSchemas.js";
@@ -62,7 +62,7 @@ export class SkuMediaUploadHandler extends BaseRequestHandler {
 
   async execute(req) {
     if (!Array.isArray(req.files) || req.files.length !== 1) {
-      throw mediaFileRequired();
+      throw uploadFileRequired();
     }
 
     const [file] = req.files;
