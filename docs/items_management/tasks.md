@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T31 已完成，T32 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T32 已完成，T33 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -107,7 +107,7 @@ T01 migration freeze
 - [x] T29 建立 Import confirm／execution／result API
 - [x] T30 建立 Import UI
 - [x] T31 建立 SKU Export
-- [ ] T32 建立疑似重複商品提示
+- [x] T32 建立疑似重複商品提示
 - [ ] T33 建立 bounded bulk status change
 - [ ] T34 建立 Import 檔案保留清理
 
@@ -1304,27 +1304,31 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 結果可解釋、順序穩定、有上限；不使用 fuzzy black box、自動合併或阻擋合法建立。
-- [ ] API 只允許 `item.mgmt`，輸入與 sort 使用白名單及 parameterized query。
-- [ ] Create UI 顯示候選並允許使用者確認繼續，idempotency 不受重複提示影響。
+- [x] 結果可解釋、順序穩定、有上限；不使用 fuzzy black box、自動合併或阻擋合法建立（`findDuplicateCandidates()` 淨係用 trim＋不分大小寫嘅名稱完全相符，加埋可選嘅 category／brand 完全相符，`ORDER BY i.id ASC LIMIT 10`；`variantSummary` 讀做「連同 SKU codes 一齊返」嘅顯示內容，唔係第四個篩選條件，理由見方法上面嘅註解）。
+- [x] API 只允許 `item.mgmt`，輸入與 sort 使用白名單及 parameterized query（冇 sort 呢個概念——固定 `i.id ASC`，唔開放使用者控制排序）。
+- [x] Create UI 顯示候選並允許使用者確認繼續，idempotency 不受重複提示影響（`checkDuplicates()` 冇用 `idempotent:true`；banner 可以自己撳「知道喇」叫走，兩個提交按鈕全程唔會因為有候選而變唔撳得）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `npm test --workspace client -- test/pages/items/itemCreate.test.js`
-- [ ] Manual check：建立相似名稱候選後仍可確認建立新 Item。
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCreate.integration.test.js`（追加 5 個「疑似重複」測試喺呢個既有檔案；`findDuplicateCandidates()` 純 SQL，冇 fake-DB unit test，同呢個 service 一路以嚟嘅慣例一致）
+- [x] `npm test --workspace client -- test/services/item.test.js test/pages/items/itemCreate.test.js`
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器）：打入一個同現有 Item 完全同名嘅商品名稱，debounce 之後見到 banner 列出候選同 SKU code，撳「知道喇」叫走，兩個提交按鈕全程可撳。
 
 **Dependencies:** T14, T15, T22, T24
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/items/checkItemDuplicatesHandler.js`
-- `client/src/services/item.js`
-- `client/src/pages/items/ItemCreatePage.vue`
-- `client/test/pages/items/itemCreate.test.js`
+- `server/src/modules/item/ItemAdminService.js`（新增 `findDuplicateCandidates()`）
+- `server/src/handlers/items/checkItemDuplicatesHandler.js`（新檔）
+- `client/src/services/item.js`（新增 `checkDuplicates()`）
+- `client/src/pages/items/ItemCreatePage.vue`（新增 debounced 疑似重複查詢＋可自行叫走嘅 warning banner）
+- `server/test/integration/itemCreate.integration.test.js`（加 5 個「疑似重複」測試）
+- `client/test/services/item.test.js`（加 1 個測試）
+- `client/test/pages/items/itemCreate.test.js`（加 3 個測試＋`afterEach` unmount，防新加嘅 debounce timer 喺下一個 test 先觸發）
 
-**Estimated scope:** M（5 files）
+**Estimated scope:** M（2 個新檔＋5 個既有檔案擴充）
 
 ### Task T33：建立 bounded bulk status change
 

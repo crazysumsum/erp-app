@@ -210,5 +210,11 @@ export default {
       body: { reason, version, password },
       signed: true
     });
+  },
+
+  /** 建立 Item 之前嘅疑似重複提示（Phase 3）。只警告，唔阻擋建立，所以呢個
+   * 唔使 idempotency——重複撳只係重新查一次，冇副作用。 */
+  checkDuplicates({ name, categoryId, brandId, signal }) {
+    return httpClient.post("/api/v1/items/duplicates/check", { body: { name, categoryId, brandId }, signal });
   }
 };

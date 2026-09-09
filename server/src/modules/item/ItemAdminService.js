@@ -2120,6 +2120,87 @@ export class ItemAdminService {
     return this.#toItemDetail(row, skuRows, mediaRows);
   }
 
+  /**
+   * 建 Item 之前嘅疑似重複提示（Phase 3，design_spec §6.2、§8.1）。故意淨係
+   * 用 deterministic 條件：名稱 trim＋不分大小寫完全相符，加埋（如果有提供）
+   * category／brand 完全相符——唔用 fuzzy／edit-distance 呢類「解釋唔到點解
+   * match 咗」嘅黑盒分數，亦唔自動合併或者阻擋建立，純粹提示。
+   *
+   * `variantSummary`（SKU codes）係俾使用者睇嘅context，唔係篩選條件本身：
+   * 「按 name／brand／category…回…及 variant summary」嘅「variant summary」
+   * 讀做「連同 variant summary 一齊回」，唔係第四個 WHERE 條件——攞埋每個
+   * candidate 底下嘅 SKU Code，等使用者一眼就睇到「呢個候選係咪其實已經
+   * 有我嗰隻規格」，唔使再撳入去先知。
+   *
+   * 名稱冇提供或者淨係空白就直接回空陣列——冇名可比對，勉強比對只會撞出一堆
+   * 冇意義嘅候選。
+   */
+  async findDuplicateCandidates({ actorId, claimedRoles, claimedPermissions, name, categoryId, brandId }) {
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const normalizedName = String(name ?? "").trim();
+    if (!normalizedName) {
+      return [];
+    }
+
+    const conditions = ["LOWER(i.name) = LOWER(?)"];
+    const params = [normalizedName];
+
+    if (categoryId !== undefined) {
+      conditions.push("i.category_id = ?");
+      params.push(categoryId);
+    }
+    if (brandId !== undefined) {
+      conditions.push("i.brand_id = ?");
+      params.push(brandId);
+    }
+
+    const [rows] = await this.database.query(
+      `SELECT i.id, i.name, i.status, i.category_id, c.name AS category_name,
+              i.brand_id, b.name AS brand_name
+         FROM items i
+         LEFT JOIN item_categories c ON c.id = i.category_id
+         LEFT JOIN item_brands b ON b.id = i.brand_id
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY i.id ASC
+        LIMIT 10`,
+      params
+    );
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const itemIds = rows.map((row) => Number(row.id));
+    const [skuRows] = await this.database.query(
+      `SELECT item_id, sku_code FROM item_skus WHERE item_id IN (?) ORDER BY item_id, sku_code`,
+      [itemIds]
+    );
+    const skuCodesByItemId = new Map();
+    for (const skuRow of skuRows) {
+      const itemId = Number(skuRow.item_id);
+      if (!skuCodesByItemId.has(itemId)) {
+        skuCodesByItemId.set(itemId, []);
+      }
+      skuCodesByItemId.get(itemId).push(skuRow.sku_code);
+    }
+
+    return rows.map((row) => {
+      const skuCodes = skuCodesByItemId.get(Number(row.id)) ?? [];
+      return {
+        id: Number(row.id),
+        name: row.name,
+        status: row.status,
+        categoryName: row.category_name ?? null,
+        brandName: row.brand_name ?? null,
+        skuCount: skuCodes.length,
+        // 最多顯示 5 個 SKU Code：呢度純粹俾使用者辨認，唔係完整清單，Variant
+        // Item 規格再多都唔使全部列晒先睇到「係咪呢個」。
+        skuCodes: skuCodes.slice(0, 5)
+      };
+    });
+  }
+
   // --- SKU：列表／詳情 ------------------------------------------------------
 
   /**

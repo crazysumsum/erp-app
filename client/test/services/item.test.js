@@ -126,4 +126,15 @@ describe("item service", () => {
     expect(sku).toEqual({ id: 5, skuCode: "SKU-1" });
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/skus/5");
   });
+
+  it("checkDuplicates() 打 POST /items/duplicates/check，唔帶 idempotent（純警告冇副作用）", async () => {
+    httpClient.post.mockResolvedValue({ candidates: [] });
+
+    await itemService.checkDuplicates({ name: "維他命 C", categoryId: 3, brandId: 8 });
+
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/items/duplicates/check", {
+      body: { name: "維他命 C", categoryId: 3, brandId: 8 },
+      signal: undefined
+    });
+  });
 });

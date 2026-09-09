@@ -241,6 +241,45 @@ async function focusSummary() {
   summaryRef.value?.focus();
 }
 
+/* ---------------- 疑似重複提示 ---------------- */
+// 只警告，唔阻擋建立（design_spec §8.1）：呢度淨係顯示一個可以自己叫走嘅
+// banner，提交按鈕唔會因為有候選就變唔撳得。Debounce 300ms 先叫 API，同
+// ItemsPage.vue 搜尋框嗰個慣例一致；用 setTimeout 自己實作而唔靠 q-input
+// 嘅 `debounce` prop，係因為 name 呢個 v-model 經 ItemBasicForm.vue 呢個
+// 共用元件轉手，冇直接嘅 q-input 可以掛呢個 prop。
+
+const duplicateCandidates = ref([]);
+let duplicateCheckTimer = null;
+
+async function runDuplicateCheck() {
+  const name = form.item.name.trim();
+  if (!name) {
+    duplicateCandidates.value = [];
+    return;
+  }
+  try {
+    const result = await itemService.checkDuplicates({
+      name,
+      categoryId: form.item.categoryId ?? undefined,
+      brandId: form.item.brandId ?? undefined
+    });
+    duplicateCandidates.value = result.candidates;
+  } catch {
+    // 純提示性質嘅背景查詢：失敗就當冇搵到候選，唔打斷使用者填緊嘅表單，
+    // 亦唔特登彈錯誤——佢隨時再打字觸發下一次查詢。
+    duplicateCandidates.value = [];
+  }
+}
+
+watch(
+  [() => form.item.name, () => form.item.categoryId, () => form.item.brandId],
+  () => {
+    clearTimeout(duplicateCheckTimer);
+    duplicateCheckTimer = setTimeout(runDuplicateCheck, 300);
+  }
+);
+onUnmounted(() => clearTimeout(duplicateCheckTimer));
+
 async function submit({ activate }) {
   if (submitting.value) {
     return;
@@ -325,6 +364,21 @@ async function submit({ activate }) {
         ]"
       />
       <ItemBasicForm v-model="form.item" :field-error="itemFieldError" />
+
+      <q-banner v-if="duplicateCandidates.length > 0" class="bg-warning text-dark q-mb-md" rounded>
+        <template #avatar><q-icon name="warning" /></template>
+        <div class="q-mb-xs">
+          找到 {{ duplicateCandidates.length }} 個名稱相同、同分類同品牌嘅疑似重複商品，確認呢個係新商品先繼續：
+        </div>
+        <ul class="q-ma-none q-pl-md">
+          <li v-for="candidate in duplicateCandidates" :key="candidate.id">
+            {{ candidate.name }}（{{ candidate.skuCount }} 個 SKU：{{ candidate.skuCodes.join("、") }}）
+          </li>
+        </ul>
+        <template #action>
+          <q-btn flat label="知道喇" @click="duplicateCandidates = []" />
+        </template>
+      </q-banner>
 
       <q-separator class="q-my-lg" />
 
