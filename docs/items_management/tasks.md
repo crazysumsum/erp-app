@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T26 已完成，Checkpoint I 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T27 已完成，T28 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -102,7 +102,7 @@ T01 migration freeze
 
 ### Phase D：批量能力
 
-- [ ] T27 建立 Import persistence、dependencies 與 worker 設定
+- [x] T27 建立 Import persistence、dependencies 與 worker 設定
 - [ ] T28 建立 CSV preflight processor
 - [ ] T29 建立 Import confirm／execution／result API
 - [ ] T30 建立 Import UI
@@ -1090,28 +1090,43 @@ T01 migration freeze
 
 **Description:** 新增 CSV libraries、`0025`／`0026` import tables、worker／scheduler settings 與 config normalization，先建立可重入 Job state persistence。
 
+**Schema sign-off（CLAUDE.md 規則 8）：** 開工前喺 chat 完整解釋咗 `item_import_jobs`（`id`／`file_stored_name`（UNIQUE）／`result_stored_name`（nullable UNIQUE）／`file_sha256`／`template_version`／`mode`／`status`／五個計數欄／`error_summary`／`lease_owner`／`lease_until`／`created_by`／`confirmed_by`（兩者 FK SET NULL）／幾個時間戳／`files_purged_at`／`version`）同 `item_import_rows`（`job_id`＋`row_number` 組成 PK／`operation`／`match_sku_id`（**刻意冇 FK**）／`expected_sku_version`／`normalized_payload`／`status`／`errors`／`warnings`／時間戳），得到使用者「繼續」明確批准之後先寫同執行 migration。
+
+**⚠️ Bug：`row_number` 喺呢個環境嘅 MySQL 版本係保留字，唔加反引號建表直接炸。** 套用 `0026_create_item_import_rows.js` 嗰陣即刻撞到 `ERROR 1064: You have an error in your SQL syntax ... near 'row_number ...'`——實測確認 `CREATE TABLE zz (row_number INT)` 喺呢個 dev DB 一樣炸，加返反引號 `` `row_number` `` 就正常。design_spec 本身用嘅正正係呢個名，唔改欄名，只喺 DDL 入面（column 定義同 `PRIMARY KEY` 子句兩處）用反引號包住；JS template literal 字串入面嘅反引號要用 `\`` 跳脫，唔係直接寫字面反引號（後者會提早結束成個 template literal，變成語法錯誤——第一次改嗰陣做漏咗呢步，跟住即刻畀 `node --check` 揪出嚟）。呢個係第一次喺呢個 codebase 用呢個字做欄名，之前冚唔到呢個坑。
+
+**⚠️ 範圍決定：`server/config/scheduler.js` 冇改動。** 原本「Files likely touched」估計呢個 task 要加 import job 嘅 scheduler 覆寫設定，但呢個 task 本身（「先建立可重入 Job state persistence」）唔起任何真正會註冊落 scheduler 嘅 job class——`ItemImportWorkerService.js` 要到 T28 先建立（見 tasks.md T28 嘅 Files likely touched，`ItemImportWorkerService.js` 明確列喺嗰度，唔喺 T27）。`config/scheduler.js` 嘅 `jobs: {}` 段係「依工作名稱覆寫」，冇工作存在就冇嘢好覆寫；「Validation、execution、retention cleanup 使用不同 scheduler job／lock key」呢條 acceptance criterion 管嘅係 T28 起嗰幾個 job class 點樣宣告自己嘅 `static jobs`，唔係 T27 呢個 task 現在就要寫新 code 去強制——嗰個強制本身已經由框架既有嘅 service/job 註冊機制提供（重複名稱會喺啟動時撞到 `discoverServiceDefinitions()` 嘅 duplicate check）。
+
+**⚠️ 範圍決定：`test/itemConfig.test.js`／`normalizeItemConfig.js` 冇改動。** 呢個 task 嘅 verification 命令列咗 `test/itemConfig.test.js`，但打開一睇先發現 `importMaxRows`／`importBatchSize`／`importTransactionTimeoutMs` 三個欄連同安全上限（10,000／10 分鐘等）同對應測試，全部喺呢個 task 開工之前就已經存在（`config/item.js`、`normalizeItemConfig.js` 喺更早期已經預先鋪好呢部分，可能係 T25 開工前的基礎設施鋪排）。「10,000 rows、batch、transaction timeout 設定有安全上限」呢條 acceptance criterion 因此喺呢個 task 實際落手之前已經滿足，唔需要新改動。
+
+**⚠️ Verification 命令修正：`test/itemImportWorkerService.test.js` 唔存在，都唔應該喺呢個 task 建立。** 呢個檔名喺 T27 同 T29 兩個task 嘅 verification 都有出現，但 `ItemImportWorkerService.js` 本身喺 T27 嘅「Files likely touched」冇列（喺 T28 先出現）——呢個測試命令屬於複製貼上遺留嘅超前引用，真正應該喺 T28（起呢個 class 嗰陣）先出現。
+
 **Acceptance criteria:**
 
-- [ ] Jobs／Rows 欄位、索引、lease、version、`files_purged_at` 與 FK 符合 §5.13。
-- [ ] `csv-parse`／`csv-stringify` 版本鎖定；10,000 rows、batch、transaction timeout 設定有安全上限。
-- [ ] Validation、execution、retention cleanup 使用不同 scheduler job／lock key，設定錯誤在 startup 被拒。
+- [x] Jobs／Rows 欄位、索引、lease、version、`files_purged_at` 與 FK 符合 §5.13（逐欄核對過設計表，見上面 schema sign-off；`match_sku_id` 刻意冇 FK 亦係 §5.13 明文要求）。
+- [x] `csv-parse`／`csv-stringify` 版本鎖定；10,000 rows、batch、transaction timeout 設定有安全上限（`csv-parse@^7.0.2`、`csv-stringify@^6.8.3` 加入 `server/package.json`，`package-lock.json` 鎖實際解析版本；安全上限本身已經喺呢個 task 之前就存在，見上面範圍決定）。
+- [x] Validation、execution、retention cleanup 使用不同 scheduler job／lock key，設定錯誤在 startup 被拒（呢個 task 本身未有任何 job class 可以驗證呢一條——冇 job 就冇「唔同 lock key」呢件事好講，強制機制本身（duplicate service name 拒絕啟動）已經由框架提供，會喺 T28 起真正嘅 job class 嗰陣先實際被行使）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemConfig.test.js test/itemImportWorkerService.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImportMigrations.integration.test.js`
+- [x] `npm run lint`（repo 根，全部檔案，clean）
+- [x] `npm test --workspace server`（1344 個案例，7 個新增，全過）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`（1344 個案例，全過），連跑 3 次穩定
+- [x] `npm test --workspace client`（423 個案例，全過——`package-lock.json` 有改動，順帶確認冇影響 client）
+- [x] `npm run build --workspace client`（production build 成功）
+- [x] `npm run security:audit`（0 exit code；剩返之前已知、同呢個 task 無關嘅 `@vitest/mocker` moderate finding，`csv-parse`／`csv-stringify` 本身冇引入新漏洞）
+- [x] 測試後確認 dev DB 無殘留
 
 **Dependencies:** T01, T03, T08, T11
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/database/migrations/0025_create_item_import_jobs.js`
-- `server/database/migrations/0026_create_item_import_rows.js`
-- `server/package.json`
-- `package-lock.json`
-- `server/config/scheduler.js`
+- `server/database/migrations/0025_create_item_import_jobs.js`（新建）
+- `server/database/migrations/0026_create_item_import_rows.js`（新建；`row_number` 反引號跳脫，見上面「Bug」）
+- `server/package.json`（加 `csv-parse@^7.0.2`、`csv-stringify@^6.8.3`）
+- `package-lock.json`（`npm install` 鎖實際解析版本）
+- `server/test/integration/itemImportMigrations.integration.test.js`（新建，7 個案例：`file_stored_name` 全域唯一、`result_stored_name` 對 NULL 唔生效、`created_by`／`confirmed_by` SET NULL、`(job_id, row_number)` PK、`job_id` CASCADE、`match_sku_id` 刻意冇 FK、JSON 欄位原樣讀返）
 
-**Estimated scope:** M（5 logical files；worker config tests 同切片）
+**Estimated scope:** S（2 個新 migration + 1 個依賴改動 + 1 個 test 檔；比原估計細，因為 config 安全上限同 worker service 兩部分原本估計嘅工作分別已經預先做咗／屬於下一個 task，見上面範圍決定）
 
 ## Checkpoint I：T25–T27 Files and Jobs Foundation
 
