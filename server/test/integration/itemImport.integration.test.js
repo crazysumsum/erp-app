@@ -610,13 +610,99 @@ test("Confirm＋execution 全流程：create-only job 完成後真係建咗一�
   );
   assert.deepEqual(auditRows.map((row) => row.action), ["item.import"]);
 
+  const [[rowAfterExecution]] = await db.query(
+    "SELECT status FROM item_import_rows WHERE job_id = ? AND `row_number` = 1",
+    [jobId]
+  );
+  assert.equal(
+    rowAfterExecution.status,
+    "applied",
+    "執行成功之後，row 狀態要覆寫做 applied，唔可以停留喺 preflight 嘅 valid"
+  );
+
   const resultResponse = await fetch(`${url}/api/v1/item-imports/${jobId}/result`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   assert.equal(resultResponse.status, 200);
   const resultText = await resultResponse.text();
   assert.match(resultText, new RegExp(skuCode));
-  assert.match(resultText, /applied|valid/);
+  assert.match(resultText, /applied/);
+});
+
+test("執行中 SKU Code race：preflight 之後、execution 之前俾第三者搶咗個 code，整批 rollback，該 row 標 failed", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-RACE-${catalog.suffix}`;
+  let jobId = null;
+  let racingSkuId = null;
+  let racingItemId = null;
+  t.after(async () => {
+    if (racingSkuId) await db.execute("DELETE FROM item_skus WHERE id = ?", [racingSkuId]);
+    if (racingItemId) await db.execute("DELETE FROM items WHERE id = ?", [racingItemId]);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const csvText = csvFrom([
+    { skuCode, skuName: "Race 測試商品", itemName: "Race 測試 Item", ...names }
+  ]);
+
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "create_only" });
+  jobId = uploaded.body.data.id;
+
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(ready.body.data.job.status, "ready");
+
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：確認匯入（之後模擬 race）",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+
+  // 喺 confirm 之後、execution 之前，模擬第三者用同一個 skuCode 搶先建咗
+  // 一個 SKU——execution 重新驗證時應該偵測到並令成批 rollback。
+  const nowMs = Date.now();
+  const [racingItem] = await db.query(
+    `INSERT INTO items (name, category_id, brand_id, product_type, status, created_at, updated_at)
+     VALUES (?, ?, ?, 'standard', 'draft', ?, ?)`,
+    [`race-item-${catalog.suffix}`, catalog.categoryId, catalog.brandId, nowMs, nowMs]
+  );
+  racingItemId = racingItem.insertId;
+  const [racingSku] = await db.query(
+    `INSERT INTO item_skus
+       (item_id, sku_code, sku_name, tracking_policy, purchasable, sellable, inventory_tracked, status,
+        created_at, updated_at)
+     VALUES (?, ?, 'Race 搶先建立', 'none', 1, 1, 1, 'draft', ?, ?)`,
+    [racingItemId, skuCode, nowMs, nowMs]
+  );
+  racingSkuId = racingSku.insertId;
+
+  await worker.runExecution();
+
+  const afterExecution = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(afterExecution.body.data.job.status, "failed");
+  assert.equal(afterExecution.body.data.job.successCount, 0);
+  assert.equal(afterExecution.body.data.job.failureCount, 1);
+  assert.match(afterExecution.body.data.job.errorSummary, /第 1 列/);
+
+  const [[rowAfterExecution]] = await db.query(
+    "SELECT status, errors FROM item_import_rows WHERE job_id = ? AND `row_number` = 1",
+    [jobId]
+  );
+  assert.equal(rowAfterExecution.status, "failed");
+  assert.ok(
+    rowAfterExecution.errors.some((issue) => issue.code === "EXECUTION_FAILED" && /SKU Code 已被使用/.test(issue.message)),
+    "row 嘅 errors 要記低 execution 失敗嘅原因"
+  );
+
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  assert.equal(skuRows.length, 1, "全批 rollback：唔應該多咗第二個用呢個 skuCode 嘅 SKU");
 });
 
 test("Upsert 更新一粒真嘅 SKU：confirm＋execution 之後 SKU 欄位同 version 都變咗", { skip }, async (t) => {

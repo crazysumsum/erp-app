@@ -245,7 +245,16 @@ export class ItemImportService {
    * 兩件事唔會綁死喺同一個 all-or-nothing 單位入面（design_spec §5.13：
    * 「Worker 捕捉失敗後，另開短交易把 Job 記為 failed，確保狀態更新不會跟
    * 商品交易一起 rollback」）。 */
-  async recordExecutionResult({ jobId, status, successCount, failureCount, errorSummary }) {
+  /**
+   * `appliedRowNumbers`／`failedRow` 同 job 狀態一齊喺呢個短交易更新
+   * `item_import_rows.status`：preflight 得出嘅 valid／warning 只代表「執行
+   * 之前睇落冇問題」，執行完成之後一定要覆寫做 applied／failed，等 row 逐列
+   * 結果（詳情頁、結果 CSV）反映返真正套用咗嘅結果，唔係停留喺過時嘅
+   * preflight 判斷（design_spec §5.13 row status 定義含 applied／failed）。
+   * 全有全無：失敗淨係嗰一 row 標 failed 並帶失敗原因，其餘 row 保持原本
+   * preflight 狀態——佢哋本身冇問題，令成批 rollback 嘅係另一 row。
+   */
+  async recordExecutionResult({ jobId, status, successCount, failureCount, errorSummary, appliedRowNumbers = [], failedRow = null }) {
     return this.database.withTransaction(async (connection) => {
       const nowMs = this.time.nowMs();
       await connection.execute(
@@ -255,6 +264,25 @@ export class ItemImportService {
           WHERE id = ?`,
         [status, successCount, failureCount, errorSummary ? String(errorSummary).slice(0, 1000) : null, nowMs, nowMs, jobId]
       );
+
+      if (appliedRowNumbers.length > 0) {
+        await connection.query(
+          "UPDATE item_import_rows SET status = 'applied', updated_at = ? WHERE job_id = ? AND `row_number` IN (?)",
+          [nowMs, jobId, appliedRowNumbers]
+        );
+      }
+
+      if (failedRow) {
+        const [[current]] = await connection.query(
+          "SELECT errors FROM item_import_rows WHERE job_id = ? AND `row_number` = ?",
+          [jobId, failedRow.rowNumber]
+        );
+        const errors = [...(current?.errors ?? []), { field: null, code: "EXECUTION_FAILED", message: failedRow.message }];
+        await connection.execute(
+          "UPDATE item_import_rows SET status = 'failed', errors = ?, updated_at = ? WHERE job_id = ? AND `row_number` = ?",
+          [JSON.stringify(errors), nowMs, jobId, failedRow.rowNumber]
+        );
+      }
     });
   }
 

@@ -193,8 +193,18 @@ export async function executeItemImportJob({
     : null;
 
   // 獨立嘅短交易——見檔案開頭說明，唔可以同上面套用商品變更嗰個交易共用，
-  // 否則 rollback 會連呢個狀態更新一齊撤銷。
-  await importService.recordExecutionResult({ jobId: job.id, status, successCount, failureCount, errorSummary });
+  // 否則 rollback 會連呢個狀態更新一齊撤銷。呢度亦一併將 row 逐列狀態由
+  // preflight 嘅 valid／warning 覆寫做 applied／failed（見
+  // recordExecutionResult() 的說明）。
+  await importService.recordExecutionResult({
+    jobId: job.id,
+    status,
+    successCount,
+    failureCount,
+    errorSummary,
+    appliedRowNumbers: executionError ? [] : rows.map((row) => row.rowNumber),
+    failedRow: executionError ? { rowNumber: failedRowNumber, message: sanitizeExecutionError(executionError) } : null
+  });
   await importService.writeResultFile({ jobId: job.id, importDirectory });
 
   void logger?.[executionError ? "error" : "info"]?.(

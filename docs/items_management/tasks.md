@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T29 已完成，T30 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T30 已完成，T31 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -105,7 +105,7 @@ T01 migration freeze
 - [x] T27 建立 Import persistence、dependencies 與 worker 設定
 - [x] T28 建立 CSV preflight processor
 - [x] T29 建立 Import confirm／execution／result API
-- [ ] T30 建立 Import UI
+- [x] T30 建立 Import UI
 - [ ] T31 建立 SKU Export
 - [ ] T32 建立疑似重複商品提示
 - [ ] T33 建立 bounded bulk status change
@@ -1227,26 +1227,35 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] UI 明確區分 preflight 與 execution；有任何 invalid row 時不能確認且不誤顯示已寫入。
-- [ ] Poll 支援 abort／route leave，不建立重複 timer；confirm 使用 password signing。
-- [ ] 檔案過期顯示不可下載但保留 Job summary／audit，不以一般 500 呈現。
+- [x] UI 明確區分 preflight 與 execution；有任何 invalid row 時不能確認且不誤顯示已寫入（`ready` 先顯示「確認匯入」，狀態文案同 job 狀態機一一對應，唔會用「成功」呢類字眼講 preflight-only 嘅狀態）。
+- [x] Poll 支援 abort／route leave，不建立重複 timer；confirm 使用 password signing（`promptPassword({ requireReason: true })`，冇用簽名 device-key 嗰種 `signed:true`——`jwt-password` 淨係要求 body 帶明文 password，同 SKU code 特批嗰種 device-signed 高風險操作唔同）。
+- [x] 檔案過期顯示不可下載但保留 Job summary／audit，不以一般 500 呈現（`filesPurgedAt` 有值時顯示灰色「結果檔已過期」徽章，唔畀撳，唔靠撳咗先接 410）。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`
-- [ ] `npm run build --workspace client`
-- [ ] Manual check：valid／invalid CSV、重複 confirm、執行失敗與 410 expired result。
+- [x] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`（8＋13 個測試）
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器，經 `.claude/launch.json` 起 server＋client dev server）：下載 template、valid／invalid CSV 上傳、預檢錯誤逐列顯示、confirm＋password＋reason、執行完成後 row 狀態變 applied、410 expired result 徽章。過程中發現並修正兩個真實 bug（見下）。
 
 **Dependencies:** T13, T29
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `client/src/services/itemImport.js`
-- `client/src/pages/items/ItemImportsPage.vue`
-- `client/test/services/itemImport.test.js`
-- `client/test/pages/items/itemImports.test.js`
+- `client/src/services/itemImport.js`（新檔）
+- `client/src/pages/items/ItemImportsPage.vue`（新檔）
+- `client/test/services/itemImport.test.js`（新檔，8 個測試）
+- `client/test/pages/items/itemImports.test.js`（新檔，13 個測試）
+- `server/src/modules/item/ItemImportService.js`（`recordExecutionResult()` 擴充：同時更新 row 逐列狀態）
+- `server/src/services/itemImport/jobs/executeItemImportJob.js`（傳 `appliedRowNumbers`／`failedRow` 落 `recordExecutionResult()`）
+- `server/test/integration/itemImport.integration.test.js`（收緊一個過於寬鬆嘅斷言＋新增一個 execution-time race／rollback 測試）
 
-**Estimated scope:** M（4 files）
+**手動瀏覽器驗證中發現並修正嘅真實 bug（唔喺原本 T29 範圍，但直接影響呢個 task 嘅 UI 正確性）：**
+
+1. **`item_import_rows.status` 喺 execution 完成之後從來冇被更新過**——`ItemImportService.js` 嘅 `recordExecutionResult()` 原本淨係更新 `item_import_jobs`，`executeItemImportJob.js` 完全冇改過任何一 row 嘅 `status`。結果：無論 job 成功定失敗，detail 頁同結果 CSV 永遠顯示 preflight 嗰陣嘅 `valid`／`warning`，唔會變做 design_spec §5.13 定義嘅 `applied`／`failed`，令使用者睇唔到邊一 row 真係套用咗。修正：`recordExecutionResult()` 而家喺同一個短交易入面，成功時將全部套用咗嘅 row 標 `applied`，失敗時將導致 rollback 嗰一 row 標 `failed` 並喺 `errors` 記低原因；其餘 row 保持原本 preflight 狀態（佢哋本身冇問題，令成批 rollback 嘅係另一 row）。新增咗一個「execution 中 SKU Code race」整合測試覆蓋呢個路徑，亦收緊咗一個原本寫得過於寬鬆嘅 `/applied|valid/` 斷言做返 `/applied/`。
+2. **`templateItemImportHandler.js` 嘅 route 因為檔名字母序排喺 `getItemImportHandler.js` 之後，令 `GET /api/v1/item-imports/template` 成日俾 `GET /api/v1/item-imports/:id` 攔截**——呢個係喺實作呢個 task 期間、透過真實瀏覽器點擊「下載範本」先發現（詳細分析同修正已記喺 T29 段落，因為改動嘅係 T29 嘅 handler 檔案，但係喺 T30 做手動驗證時先浮現）。
+
+**Estimated scope:** M（4 個新檔＋2 個因為上面 bug fix 而改嘅 T29 既有檔案＋1 個整合測試檔）
 
 ## Checkpoint J：T28–T30 Import End-to-End
 
