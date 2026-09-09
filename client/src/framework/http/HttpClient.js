@@ -81,7 +81,12 @@ export class HttpClient {
     }
 
     let payload;
-    if (body !== undefined) {
+    if (body instanceof FormData) {
+      // Multipart 上傳：唔手動設 Content-Type。瀏覽器需要自己生成一個
+      // 唯一嘅 boundary 並寫入呢個 header，人手夾一個字串必然同 fetch
+      // 實際產生嘅 body 對唔上，令後端 uploadMiddleware.js 解唔到請求。
+      payload = body;
+    } else if (body !== undefined) {
       headers["Content-Type"] = "application/json";
       payload = JSON.stringify(body);
     }
@@ -159,6 +164,71 @@ export class HttpClient {
     }
 
     return envelope?.data ?? null;
+  }
+
+  /**
+   * 下載一個二進位檔案（media 預覽／下載用）。唔可以借用 request()：成功
+   * 回應本身就係檔案內容，唔係 `{success,data}` 信封，套用 parseJsonBody()
+   * 只會炸開。認證同逾時處理跟 request() 一致，失敗回應（框架仍然回 JSON
+   * envelope）盡量解出 code／message，解唔到就退回 HTTP 狀態本身。
+   *
+   * 呢個方法存在嘅原因：認證用 Authorization header 帶 Bearer token（唔係
+   * cookie），瀏覽器嘅 `<img src>`／`<a href>` 冇辦法夾帶自訂 header，所以
+   * 唔可以直接指向下載端點嘅 URL——一定要用 fetch 先攞到 blob，先再用
+   * `URL.createObjectURL()` 俾 `<img>` 顯示或者觸發下載。
+   */
+  async getBlob(path, { signal } = {}) {
+    const url = buildUrl(this.baseUrl, path);
+    const headers = {};
+    const token = this.getToken();
+    if (token) {
+      headers[this.authHeaderName] = `${this.authScheme} ${token}`;
+    }
+
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => timeoutController.abort(), this.timeoutMs);
+    const requestSignal = signal
+      ? AbortSignal.any([signal, timeoutController.signal])
+      : timeoutController.signal;
+
+    let response;
+    try {
+      response = await this.fetchImpl(url, { method: "GET", headers, signal: requestSignal });
+    } catch (error) {
+      if (timeoutController.signal.aborted) {
+        throw new ApiError({ code: "TIMEOUT", message: "請求逾時，請稍後再試", cause: error });
+      }
+      if (signal?.aborted) {
+        throw error;
+      }
+      throw new ApiError({ code: "NETWORK_ERROR", message: "網路錯誤，請檢查連線", cause: error });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    if (!response.ok) {
+      const envelope = await parseJsonBody(response);
+      const errorBody = envelope?.error || {};
+      const code = errorBody.code || `HTTP_${response.status}`;
+      const apiError = new ApiError({
+        status: response.status,
+        code,
+        message: ERROR_CODE_MESSAGES[code] || errorBody.message || response.statusText || "請求失敗",
+        details: errorBody.details,
+        requestId: envelope?.meta?.requestId || response.headers.get("x-request-id")
+      });
+
+      if (response.status === 401) {
+        this.onUnauthorized();
+      }
+
+      throw apiError;
+    }
+
+    return {
+      blob: await response.blob(),
+      contentType: response.headers.get("content-type") || "application/octet-stream"
+    };
   }
 }
 

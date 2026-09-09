@@ -16,6 +16,7 @@ import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import SkuEditor from "@/components/items/SkuEditor.vue";
+import ItemMediaPanel from "@/components/items/ItemMediaPanel.vue";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -436,6 +437,17 @@ async function releaseBarcodeFlow({ id, barcode, version }) {
           <q-btn color="primary" label="儲存" :loading="submitting" @click="save" />
           <q-btn flat label="取消" :disable="submitting" @click="cancelEdit" />
         </div>
+
+        <q-separator class="q-my-lg" />
+
+        <ItemMediaPanel
+          target-type="sku"
+          :target-id="sku.id"
+          :version="sku.version"
+          :media-list="sku.media"
+          :can-manage="canManage"
+          @refresh="load"
+        />
       </template>
     </div>
 

@@ -15,6 +15,7 @@ import {
   UOM_FACTOR_MIN
 } from "../../modules/item/itemConstants.js";
 import { decimalStringPattern } from "../../modules/item/itemValidation.js";
+import { MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -248,8 +249,8 @@ export const SKU_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     status: { type: "string", enum: [...ITEM_STATUSES] },
     uoms: { type: "array", items: SKU_DETAIL_UOM_SCHEMA },
     barcodes: { type: "array", items: SKU_DETAIL_BARCODE_SCHEMA },
-    // Media：item_media 表要等 T25 先建立，現在固定回空陣列。
-    media: { type: "array", items: {}, maxItems: 0 },
+    // SKU 專屬 media（唔包括 Item 層級共用 media，嗰啲喺 Item detail 出現）。
+    media: { type: "array", items: MEDIA_SUMMARY_SCHEMA },
     version: { type: "integer", minimum: 1 },
     createdAt: { type: "integer", minimum: 0 },
     updatedAt: { type: "integer", minimum: 0 }

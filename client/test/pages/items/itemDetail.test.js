@@ -56,6 +56,7 @@ const ITEM = {
   status: "active",
   attributeValues: [],
   skus: [{ id: 10, skuCode: "VITC-90", skuName: "維他命 C 90 粒裝", status: "active", suggestedRetailPrice: null, version: 1 }],
+  media: [],
   version: 1,
   createdAt: 1700000000000,
   updatedAt: 1700000000000

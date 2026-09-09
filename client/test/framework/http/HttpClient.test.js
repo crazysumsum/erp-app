@@ -12,6 +12,19 @@ function jsonResponse(body, { status = 200, headers = {} } = {}) {
   };
 }
 
+function blobResponse(blob, { status = 200, headers = {} } = {}) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    statusText: "",
+    headers: { get: (name) => headers[name.toLowerCase()] ?? null },
+    blob: async () => blob,
+    json: async () => {
+      throw new SyntaxError("Unexpected token");
+    }
+  };
+}
+
 describe("HttpClient", () => {
   let fetchImpl;
 
@@ -199,6 +212,74 @@ describe("HttpClient", () => {
     const client = new HttpClient({ fetchImpl, getToken: () => null });
 
     await expect(client.get("/api/v1/widgets")).rejects.toMatchObject({ code: "NETWORK_ERROR" });
+  });
+
+  describe("FormData（multipart 上傳）", () => {
+    it("body 係 FormData 就原樣傳俾 fetch，唔會 JSON.stringify 或者手動設 Content-Type", async () => {
+      fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: { id: 1 }, meta: {} }));
+      const client = new HttpClient({ fetchImpl, getToken: () => null });
+      const formData = new FormData();
+      formData.append("kind", "image");
+
+      await client.post("/api/v1/items/1/media/upload", { body: formData });
+
+      const [, init] = fetchImpl.mock.calls[0];
+      expect(init.body).toBe(formData);
+      // 冇設 Content-Type：留返俾瀏覽器自己生成正確嘅 boundary。人手設一個
+      // 唔會同 fetch 實際產生嘅 body 對得上。
+      expect(init.headers["Content-Type"]).toBeUndefined();
+    });
+
+    it("普通物件 body 一樣照舊 JSON.stringify＋設 Content-Type（FormData 支援唔影響現有行為）", async () => {
+      fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: null, meta: {} }));
+      const client = new HttpClient({ fetchImpl, getToken: () => null });
+
+      await client.post("/api/v1/widgets", { body: { name: "x" } });
+
+      const [, init] = fetchImpl.mock.calls[0];
+      expect(init.headers["Content-Type"]).toBe("application/json");
+      expect(init.body).toBe(JSON.stringify({ name: "x" }));
+    });
+  });
+
+  describe("getBlob()（二進位下載）", () => {
+    it("成功回應回 { blob, contentType }，唔套用 JSON envelope 解析", async () => {
+      const fakeBlob = new Blob(["fake-image-bytes"], { type: "image/png" });
+      fetchImpl.mockResolvedValue(blobResponse(fakeBlob, { headers: { "content-type": "image/png" } }));
+      const client = new HttpClient({ fetchImpl, getToken: () => "tok" });
+
+      const result = await client.getBlob("/api/v1/item-media/1/download");
+
+      expect(result.blob).toBe(fakeBlob);
+      expect(result.contentType).toBe("image/png");
+      const [, init] = fetchImpl.mock.calls[0];
+      expect(init.headers.Authorization).toBe("Bearer tok");
+      expect(init.method).toBe("GET");
+    });
+
+    it("失敗回應解返 JSON envelope 嘅 code／message，拋 ApiError", async () => {
+      fetchImpl.mockResolvedValue(
+        jsonResponse({ success: false, error: { code: "MEDIA_NOT_FOUND", message: "找不到這個檔案" }, meta: {} }, { status: 404 })
+      );
+      const client = new HttpClient({ fetchImpl, getToken: () => null });
+
+      await expect(client.getBlob("/api/v1/item-media/999/download")).rejects.toMatchObject({
+        status: 404,
+        code: "MEDIA_NOT_FOUND",
+        message: "找不到這個檔案"
+      });
+    });
+
+    it("401 會叫 onUnauthorized", async () => {
+      fetchImpl.mockResolvedValue(
+        jsonResponse({ success: false, error: { code: "UNAUTHENTICATED", message: "未登入" }, meta: {} }, { status: 401 })
+      );
+      const onUnauthorized = vi.fn();
+      const client = new HttpClient({ fetchImpl, getToken: () => null, onUnauthorized });
+
+      await expect(client.getBlob("/api/v1/item-media/1/download")).rejects.toThrow(ApiError);
+      expect(onUnauthorized).toHaveBeenCalledOnce();
+    });
   });
 
   describe("設備簽章", () => {

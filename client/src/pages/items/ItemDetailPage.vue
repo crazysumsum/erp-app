@@ -16,6 +16,7 @@ import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import ItemBasicForm from "@/components/items/ItemBasicForm.vue";
+import ItemMediaPanel from "@/components/items/ItemMediaPanel.vue";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -545,6 +546,17 @@ async function submitCopy() {
             <q-item-section class="text-grey-7">呢個商品未有任何 SKU。</q-item-section>
           </q-item>
         </q-list>
+
+        <q-separator class="q-my-lg" />
+
+        <ItemMediaPanel
+          target-type="item"
+          :target-id="item.id"
+          :version="item.version"
+          :media-list="item.media"
+          :can-manage="canManage"
+          @refresh="load"
+        />
       </template>
     </div>
 
