@@ -345,6 +345,50 @@ export class ItemImportService {
   }
 
   /**
+   * 俾 `ItemImportFileCleanupJob` 用：終結狀態、仲未清理過檔案嘅 job。
+   * `LIMIT` 幫每一輪執行設個上限（同呢個系統嘅預期規模——三年內少於
+   * 20,000 SKU——相比，一次過攞幾千筆已經足夠一輪處理晒，唔使分頁）；「未滿
+   * 一年」呢個判斷交返俾呼叫端用 `completedAt`／`updatedAt` 自己計 UTC
+   * 周年日，唔喺呢度用 SQL 日期運算，等閏年等邊界情況嘅邏輯集中喺一處、
+   * 用普通 JS `Date` 就testa得到。
+   */
+  async listRetentionCandidateJobs({ statuses, limit = 5000 }) {
+    const placeholders = statuses.map(() => "?").join(",");
+    const [rows] = await this.database.query(
+      `SELECT id, file_stored_name, result_stored_name, status, completed_at, updated_at
+         FROM item_import_jobs
+        WHERE status IN (${placeholders}) AND files_purged_at IS NULL
+        ORDER BY id ASC
+        LIMIT ?`,
+      [...statuses, limit]
+    );
+
+    return rows.map((row) => ({
+      id: Number(row.id),
+      fileStoredName: row.file_stored_name,
+      resultStoredName: row.result_stored_name,
+      status: row.status,
+      completedAt: row.completed_at === null ? null : Number(row.completed_at),
+      updatedAt: Number(row.updated_at)
+    }));
+  }
+
+  /**
+   * Compare-and-set：`files_purged_at IS NULL` 做嗰條件本身，等兩個 cluster
+   * instance 同一輪撞正揀中同一個 job 都只會有一個真係寫入成功——回
+   * `affectedRows > 0`，等呼叫端分得清「我啱啱先真係標記咗」定「已經俾第
+   * 二個 instance 搶先標記咗」。唔碰 `version`：呢個唔係使用者觸發嘅寫入，
+   * 冧唔會同任何 optimistic lock 嘅使用場景相撞。
+   */
+  async markImportFilesPurged({ jobId, purgedAtMs }) {
+    const [result] = await this.database.execute(
+      "UPDATE item_import_jobs SET files_purged_at = ? WHERE id = ? AND files_purged_at IS NULL",
+      [purgedAtMs, jobId]
+    );
+    return result.affectedRows > 0;
+  }
+
+  /**
    * 原子攞一個 `uploaded` job 嚟做 validation：用 compare-and-set 一次過轉
    * 做 `validating` 並寫 lease，防止兩個 worker instance 同時揀中同一個
    * job（§8.6：「同 Job 只有一個 owner」）。冇合資格嘅 job 就回 null。

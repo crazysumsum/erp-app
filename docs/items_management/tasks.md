@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T33 已完成，T34 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T34 已完成，T35 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -109,7 +109,7 @@ T01 migration freeze
 - [x] T31 建立 SKU Export
 - [x] T32 建立疑似重複商品提示
 - [x] T33 建立 bounded bulk status change
-- [ ] T34 建立 Import 檔案保留清理
+- [x] T34 建立 Import 檔案保留清理
 
 ### Phase E：非功能與交付
 
@@ -1387,25 +1387,36 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 未滿 1 年、非 terminal、root 外、symlink 或已被其他 Job 引用的檔案不刪除。
-- [ ] 部分 unlink 失敗可安全重跑；只有全部應刪檔案成功後標記 `files_purged_at`，並留下結構化 log。
-- [ ] Job summary／rows／audit 至少保留 7 年且詳情仍可查；result download 回 410。
+- [x] 未滿 1 年、非 terminal、root 外、symlink 或已被其他 Job 引用的檔案不刪除。
+- [x] 部分 unlink 失敗可安全重跑；只有全部應刪檔案成功後標記 `files_purged_at`，並留下結構化 log。
+- [x] Job summary／rows／audit 至少保留 7 年且詳情仍可查；result download 回 410（呢個行為喺 T29 已經有 handler／整合測試覆蓋，T34 冧新增測試佢冇變過）。
 
-**Verification:**
+**Verification（實際執行）:**
 
-- [ ] `npm test --workspace server -- test/itemImportFileCleanupJob.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`
+- [x] `npx eslint` 對所有新增／改動嘅檔案（`ItemImportFileCleanupJob.js`、`ItemImportService.js`、`itemConstants.js`、`fileResponse.js`、`serviceContainer.test.js`、兩個新測試檔）
+- [x] `npm test`（server 單元套件，含新嘅 `test/itemImportFileCleanupJob.test.js` 13 個測試同 `test/serviceContainer.test.js` 嘅白名單更新）：1206 pass／0 fail
+- [x] `DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js test/integration/itemImportFileCleanup.integration.test.js test/integration/itemImport.integration.test.js`：20 pass／0 fail
+- [x] `DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js 'test/integration/**/*.test.js'`：跑咗兩次，第一次 `itemConcurrency.integration.test.js` 嘅 last-active race 測試因為另一個並行 session 共用 `erp_dev` 撞鎖而回 500（同呢個 session 一路以嚟觀察到嘅已知、非本身代碼問題嘅共享 DB flakiness 一致），單獨重跑即刻通過；第二次全套 219/219 pass。
+- [x] `npm run lint`（repo root）：clean
+- [x] 確認 dev DB 冇殘留測試資料（`item_import_jobs` 剩低第 263 行係另一個 session 嘅遺留、非本次觸碰）；`storage/imports/` 冇任何本次測試建立嘅新檔案（`find storage/imports -newermt "10 minutes ago"` 回 0）。
 
 **Dependencies:** T27, T29
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/services/itemImport/ItemImportFileCleanupJob.js`
-- `server/config/scheduler.js`
-- `server/src/modules/item/ItemImportService.js`
-- `server/test/itemImportFileCleanupJob.test.js`
+- `server/src/services/itemImport/ItemImportFileCleanupJob.js`（新增）：`BaseService` 子類別，`scope: "cluster"`（同 `job.itemMediaCleanup` 共用嘅理由：import 根目錄係跨實例共用嘅儲存磁碟區），`cleanup()` 掃 terminal candidates、以本地 `addUtcYears()` 純函式判斷 UTC 週年到期、逐個刪檔、全部成功先 compare-and-set 標記 `files_purged_at`。
+- `server/src/modules/item/ItemImportService.js`：新增 `listRetentionCandidateJobs({statuses, limit})`、`markImportFilesPurged({jobId, purgedAtMs})` 兩個純 SQL 方法。
+- `server/src/modules/item/itemConstants.js`：新增 `IMPORT_JOB_TERMINAL_STATUSES`、`IMPORT_FILE_RETENTION_YEARS` 常數。
+- `server/src/framework/http/fileResponse.js`：把原本 private 嘅 `isWithinDirectory()` 改做 `export`，俾 cleanup job 重用同一個「路徑冇逃出受控目錄」判斷，唔使抄一份——純新增 export，行為完全冇變。
+- `server/test/serviceContainer.test.js`：喺白名單加返 `job.itemImportFileCleanup` 一項（同 `job.itemImportWorker`／`job.itemMediaCleanup` 同一組 dependencies），順住 service discovery 實際嘅字母順序（`ItemImportFileCleanupJob.js` 排喺 `ItemImportWorkerService.js` 之前）擺位置。
+- `server/test/itemImportFileCleanupJob.test.js`（新增，13 個測試）：跟 `test/itemMediaCleanupJob.test.js` 一樣嘅風格，用假 `ItemImportService`（直接控制 `listRetentionCandidateJobs`／`markImportFilesPurged` 嘅回傳值）＋真實臨時目錄，只驗檔案系統呢一半（UTC 週年計算、symlink 拒絕跟蹤、path 逃逸、部分刪除失敗、`markImportFilesPurged` 回 false 時嘅 racedAway、`signal.aborted` 中途停低、重跑 idempotency）。
+- `server/test/integration/itemImportFileCleanup.integration.test.js`（新增，4 個測試）：對真 MySQL 驗 `listRetentionCandidateJobs`（狀態篩選、`files_purged_at IS NULL` 篩選、id 排序、limit）同 `markImportFilesPurged`（compare-and-set，第二次呼叫回 false 且唔覆蓋原本嘅時間戳，唔存在嘅 jobId 回 false）。
 
-**Estimated scope:** M（4 files）
+**冇改 `server/config/scheduler.js` 嘅原因：** 原本估計要改，但 `ItemImportFileCleanupJob` 自己嘅 `static jobs` 陣列已經提供獨立嘅 job 名稱（`itemImport.fileCleanup`）、`intervalMs`、`timeoutMs`——同 `job.itemMediaCleanup`／`job.itemImportWorker` 一樣，唔需要喺 `config/scheduler.js` 加任何 per-job override 先跑得到。
+
+**測試分工（跟返呢個 session 一路以嚟嘅慣例）：** 檔案系統行為（symlink、path 逃逸、部分失敗、UTC 週年計算）用假 database 做單元測試，唔起真 MySQL；`listRetentionCandidateJobs`／`markImportFilesPurged` 呢兩個直接掂 SQL 嘅方法用真 MySQL 整合測試驗（compare-and-set 呢種行為假 mock 驗唔到真係咪原子）。
+
+**Estimated scope:** M（4 files likely touched → 實際 7 個檔案：3 個新測試／實作檔加埋兩個新測試檔案）
 
 ### Task T35：完成效能、容量及營運可觀測性驗證
 

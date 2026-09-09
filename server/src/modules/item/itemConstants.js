@@ -91,6 +91,17 @@ export const IMPORT_JOB_STATUSES = Object.freeze([
   "cancelled"
 ]);
 
+/** 唔會再自動推進嘅 Job 終結狀態——`uploaded`／`validating`／`ready`／
+ * `queued`／`running` 仲係進行中或者等緊使用者決定，唔會進入檔案保留清理
+ * （見 ItemImportFileCleanupJob.js）。 */
+export const IMPORT_JOB_TERMINAL_STATUSES = Object.freeze(["invalid", "completed", "failed", "cancelled"]);
+
+/** Import 原始檔／結果檔嘅保留年期（design_spec §12.1，已確認嘅 domain
+ * policy）：由 terminal Job 嘅 `completed_at`（冇就用 `updated_at`）計起，
+ * 滿呢個 UTC 周年日先清理實體檔——Job summary／audit 本身唔受呢個保留期
+ * 影響，永久保留。 */
+export const IMPORT_FILE_RETENTION_YEARS = 1;
+
 /** Import Job 的匯入模式：只新增，或新增與更新並存（§5.13）。 */
 export const IMPORT_JOB_MODES = Object.freeze(["create_only", "upsert"]);
 
