@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T32 已完成，T33 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T33 已完成，T34 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -108,7 +108,7 @@ T01 migration freeze
 - [x] T30 建立 Import UI
 - [x] T31 建立 SKU Export
 - [x] T32 建立疑似重複商品提示
-- [ ] T33 建立 bounded bulk status change
+- [x] T33 建立 bounded bulk status change
 - [ ] T34 建立 Import 檔案保留清理
 
 ### Phase E：非功能與交付
@@ -1336,34 +1336,50 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 只接受 1–100 IDs、expected versions、合法 action、reason、password；不支援永久刪除。
-- [ ] 先按 ID 排序鎖 rows，再驗證全部 targets；任一失敗時零狀態／flag／audit 變更。
-- [ ] UI 顯示 target 數、預檢阻擋、全有全無語意及每個 target 結果。
+- [x] 只接受 1–100 IDs、expected versions、合法 action、reason、password；不支援永久刪除（schema `action` enum 冇 `delete`，`targets` `minItems:1 maxItems:100`）。
+- [x] 先按 ID 排序鎖 rows，再驗證全部 targets；任一失敗時零狀態／flag／audit 變更（單一 transaction 入面逐個真係嘗試套用，收齊晒全部 issue 先一次過 throw，rollback 埋之前「成功」嗰幾個——見 `ItemAdminService.bulkChangeStatus()` 的說明）。
+- [x] UI 顯示 target 數、預檢阻擋、全有全無語意及每個 target 結果（dialog 顯示已選筆數；action 下拉只列出對成個已選集合都合法嘅操作，混合狀態時客戶端先擋住唔畀送出；失敗時逐筆列出 `issues` 嘅原因）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemBulkHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemManagement.integration.test.js`
-- [ ] `npm test --workspace client -- test/services/item.test.js test/pages/items/items.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemBulkStatus.integration.test.js`（8 個測試，含 100 筆成功、101 筆俾 schema 擋、中間一筆失敗全 rollback；`bulkChangeStatus()` 純 SQL＋交易，冇 fake-DB unit test，同呢個 service 一路以嚟嘅慣例一致）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemLifecycle.integration.test.js`（確認為咗俾 bulk 重用而做嘅 3 個 extract-method 重構冇改到任何單筆行為，16 個既有測試原封不動全過）
+- [x] `npm test --workspace client -- test/services/item.test.js test/pages/items/items.test.js`
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器）：勾選 3 筆 draft SKU，批量封存，password＋reason 確認，全部成功、各自有 audit，清單自動排走（預設唔顯示 archived）。
 
 **Dependencies:** T18, T19, T22
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/item-bulk/changeItemStatusBulkHandler.js`
-- `client/src/services/item.js`
-- `client/src/pages/items/ItemsPage.vue`
-- `server/test/itemBulkHandlers.test.js`
+- `server/src/modules/item/ItemAdminService.js`（新增 `bulkChangeStatus()`／`#applyBulkStatusTarget()`；抽出 `#activateItemCore()`／`#activateSkuCore()`／`#deactivateSkuCore()` 呢三個原本冇獨立 helper 嘅單筆核心邏輯，等 bulk 可以喺同一個 transaction 入面重用——其餘 7 個 action／target-type 組合本來就已經有 `#transitionItemStatus()`／`#transitionSkuStatus()`／`#cascadeSkuStatus()` 呢啲 connection-accepting private helper，直接重用，冇改）
+- `server/src/modules/item/itemErrors.js`（新增 `bulkStatusChangeRejected(issues)`）
+- `server/src/handlers/item-bulk/changeItemStatusBulkHandler.js`（新檔）
+- `server/test/integration/itemBulkStatus.integration.test.js`（新檔，8 個測試）
+- `client/src/framework/ui/DataTable.vue`（新增 `selection`／`selected` prop，原樣轉發俾 QTable——預設 `selection:'none'`，唔用嘅現有頁面行為完全唔變）
+- `client/src/services/item.js`（新增 `bulkChangeStatus()`）
+- `client/src/pages/items/ItemsPage.vue`（新增勾選＋批量狀態操作 dialog，Item／SKU 兩個 view 都支援）
+- `client/test/services/item.test.js`（加 1 個測試）
+- `client/test/pages/items/items.test.js`（加 7 個測試）
 
-**Estimated scope:** M（5 files）
+**額外（Checkpoint K 覆查先發現，見上面 checkpoint 條目嘅完整說明）：**
+
+- `server/src/modules/item/csvSafety.js`（新檔，`sanitizeCsvCell()`）
+- `server/src/modules/item/ItemAdminService.js`（`exportSkus()` 套用 sanitizeCsvCell()）
+- `server/src/modules/item/ItemImportService.js`（`writeResultFile()` 套用 sanitizeCsvCell()）
+- `server/test/csvSafety.test.js`（新檔，4 個單元測試）
+- `server/test/integration/itemExport.integration.test.js`（加 1 個測試）
+- `server/test/integration/itemImport.integration.test.js`（加 1 個測試）
+
+**Estimated scope:** M（3 個新檔＋6 個既有檔案擴充，包括一個刻意做到「純 extract-method、行為不變」嘅小重構；另加 4 個因為 Checkpoint K security review 而起嘅檔案）
 
 ## Checkpoint K：T31–T33 Bulk Operations
 
-- [ ] Export、duplicate warning、bulk status 的 API／UI／audit 全部完成。
-- [ ] Bulk 100 成功、101 拒絕及中間一筆失敗全 rollback 通過。
-- [ ] Export 資料白名單與 CSV injection／formula handling 經 security review。
-- [ ] Full server/client tests 與 build 通過。
+- [x] Export、duplicate warning、bulk status 的 API／UI／audit 全部完成。
+- [x] Bulk 100 成功、101 拒絕及中間一筆失敗全 rollback 通過（見 T33 嘅 `itemBulkStatus.integration.test.js`）。
+- [x] Export 資料白名單與 CSV injection／formula handling 經 security review——複查呢個 checkpoint 先發現 T31 交付嗰陣冇做呢一項：SKU 匯出同匯入結果 CSV 都會原樣寫出使用者輸入嘅字串（SKU Code／名稱／分類／品牌），開頭係 `=`／`+`／`-`／`@` 會被 Excel／Google Sheets 當公式執行（CSV／formula injection，OWASP 已知手法）。修正方式：新增 `server/src/modules/item/csvSafety.js` 嘅 `sanitizeCsvCell()`，開頭係呢幾隻觸發字元就前面加一個單引號，套用喺 `ItemAdminService.exportSkus()`（skuCode／skuName／itemName／categoryName／brandName／primaryBarcode／baseUomCode）同 `ItemImportService.writeResultFile()`（skuCode）；`errors`／`warnings` 欄位本身開頭固定係白名單 `field` 名稱（例如 `skuCode:REQUIRED_FIELD:...`），唔會被使用者輸入蓋過第一個字元，唔使額外處理。已加單元測試（`test/csvSafety.test.js`）同兩個整合測試（export／import 各一個，直接斷言下載返嘅 CSV 內容）。
+- [x] Full server/client tests 與 build 通過。
 
 ### Task T34：建立 Import 檔案保留清理
 

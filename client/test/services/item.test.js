@@ -137,4 +137,26 @@ describe("item service", () => {
       signal: undefined
     });
   });
+
+  it("bulkChangeStatus() 打 POST /item-bulk/status/change，帶 targetType／action／targets／reason／password", async () => {
+    httpClient.post.mockResolvedValue({ results: [] });
+
+    await itemService.bulkChangeStatus({
+      targetType: "sku",
+      action: "archive",
+      targets: [{ id: 1, version: 1 }, { id: 2, version: 3 }],
+      reason: "批量封存",
+      password: "hunter2"
+    });
+
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/item-bulk/status/change", {
+      body: {
+        targetType: "sku",
+        action: "archive",
+        targets: [{ id: 1, version: 1 }, { id: 2, version: 3 }],
+        reason: "批量封存",
+        password: "hunter2"
+      }
+    });
+  });
 });

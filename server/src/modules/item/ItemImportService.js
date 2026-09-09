@@ -16,6 +16,7 @@ import {
   importNotReady,
   importStateConflict
 } from "./itemErrors.js";
+import { sanitizeCsvCell } from "./csvSafety.js";
 import { ItemAuditLogService } from "./ItemAuditLogService.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 
@@ -299,9 +300,11 @@ export class ItemImportService {
       [jobId]
     );
 
+    // skuCode 係使用者上傳嗰份 CSV 入面嘅原始內容，寫返出去之前一定要用
+    // sanitizeCsvCell()——理由見 csvSafety.js（CSV／formula injection）。
     const records = rows.map((row) => ({
       rowNumber: row.row_number,
-      skuCode: row.normalized_payload?.skuCode ?? "",
+      skuCode: sanitizeCsvCell(row.normalized_payload?.skuCode ?? ""),
       operation: row.operation,
       status: row.status,
       errors: issuesToText(row.errors ?? []),

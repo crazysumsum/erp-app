@@ -258,6 +258,16 @@ export function itemDeleteRequiresDraft(status) {
   });
 }
 
+/** 批量狀態變更全有全無：`issues` 列低邊個 target id 因為咩原因唔通過，
+ * 交易已經 rollback，一個 target 都冇改。 */
+export function bulkStatusChangeRejected(issues) {
+  return conflict("Bulk status change rejected: one or more targets failed validation", {
+    code: "BULK_STATUS_CHANGE_REJECTED",
+    publicMessage: "批量操作未能全部通過驗證，沒有任何資料被更改",
+    details: { issues }
+  });
+}
+
 export function skuDeleteRequiresDraft(status) {
   return conflict(`Only a draft SKU can be permanently deleted (current status: "${status}")`, {
     code: "SKU_DELETE_REQUIRES_DRAFT",

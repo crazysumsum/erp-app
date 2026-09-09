@@ -216,5 +216,14 @@ export default {
    * 唔使 idempotency——重複撳只係重新查一次，冇副作用。 */
   checkDuplicates({ name, categoryId, brandId, signal }) {
     return httpClient.post("/api/v1/items/duplicates/check", { body: { name, categoryId, brandId }, signal });
+  },
+
+  /** 最多 100 筆 Item／SKU 的全有全無批量狀態變更（Phase 3）。`targets` 係
+   * `[{ id, version }]`；高風險操作，用 password signing，唔係一般
+   * request——同單筆 discontinue／archive／restore 一致。 */
+  bulkChangeStatus({ targetType, action, targets, reason, password }) {
+    return httpClient.post("/api/v1/item-bulk/status/change", {
+      body: { targetType, action, targets, reason, password }
+    });
   }
 };

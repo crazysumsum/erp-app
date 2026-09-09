@@ -126,12 +126,15 @@ async function seedFixture(db) {
       itemIds.push(item.insertId);
       return item.insertId;
     },
-    async seedSku(itemId, { skuCode, suggestedPriceAmount = "88.0000", status = "active" } = {}) {
+    async seedSku(
+      itemId,
+      { skuCode, skuName = `Export 測試 SKU ${skuCode}`, suggestedPriceAmount = "88.0000", status = "active" } = {}
+    ) {
       const [sku] = await db.query(
         `INSERT INTO item_skus
            (item_id, sku_code, sku_name, suggested_price_amount, purchasable, sellable, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, 1, 1, ?, ?, ?)`,
-        [itemId, skuCode, `Export 測試 SKU ${skuCode}`, suggestedPriceAmount, status, nowMs, nowMs]
+        [itemId, skuCode, skuName, suggestedPriceAmount, status, nowMs, nowMs]
       );
       skuIds.push(sku.insertId);
       return sku.insertId;
@@ -183,6 +186,29 @@ test("GET /item-exports/skus：按 categoryId 篩選匯出，固定 HKD／tax_no
   assert.equal(record.taxBasis, "tax_not_applicable");
   assert.equal(record.status, "active");
   assert.match(record.updatedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/, "updatedAt 要係無歧義 ISO 8601＋offset");
+});
+
+test("GET /item-exports/skus：SKU 名稱開頭係 =／+／-／@ 會加單引號，防試算表當公式執行（CSV injection）", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withActor(t, application, ["item.mgmt"]);
+  const fixture = await seedFixture(db);
+  t.after(async () => {
+    await fixture.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const itemId = await fixture.seedItem();
+  const skuCode = `IT-EXPORT-CSVI-${fixture.suffix}`;
+  await fixture.seedSku(itemId, { skuCode, skuName: '=cmd|"/c calc"!A1' });
+
+  const result = await getCsv(`${url}/api/v1/item-exports/skus?categoryId=${fixture.categoryId}`, token);
+  assert.equal(result.status, 200, result.text);
+
+  const records = parse(result.text, { bom: true, columns: true });
+  const record = records.find((row) => row.skuCode === skuCode);
+  assert.ok(record);
+  assert.equal(record.skuName, '\'=cmd|"/c calc"!A1', "開頭嘅 = 前面要加咗單引號，試算表先會當純文字");
 });
 
 test("GET /item-exports/skus：預設唔包含 archived，明確 status=archived 先見到", { skip }, async (t) => {

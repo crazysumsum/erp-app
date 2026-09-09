@@ -12,6 +12,7 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
+import { parse } from "csv-parse/sync";
 import path from "node:path";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
@@ -549,6 +550,39 @@ test("上傳、list、get 全部經真實 HTTP：job 建立後可以查到，lis
 
   const listReady = await get(`${url}/api/v1/item-imports?status=ready`, token);
   assert.ok(!listReady.body.data.items.some((item) => item.id === jobId));
+});
+
+test("結果 CSV：skuCode 開頭係 =／+／-／@ 會加單引號，防試算表當公式執行（CSV injection）", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  let jobId = null;
+  t.after(async () => {
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const maliciousSkuCode = '=cmd|"/c calc"!A1';
+  const csvText = csvFrom([
+    { skuCode: maliciousSkuCode, skuName: "CSV injection 測試", itemName: "整合測試 Item", ...names }
+  ]);
+
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, { csvText, mode: "create_only" });
+  jobId = uploaded.body.data.id;
+
+  await worker.runValidation();
+
+  const resultResponse = await fetch(`${url}/api/v1/item-imports/${jobId}/result`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  assert.equal(resultResponse.status, 200);
+  const resultText = await resultResponse.text();
+  const [record] = parse(resultText, { bom: true, columns: true });
+  assert.equal(record.skuCode, `'${maliciousSkuCode}`, "skuCode 開頭嘅 = 前面要加咗單引號，試算表先會當純文字");
 });
 
 // --- T29：Confirm／Execution 全流程 ------------------------------------------
