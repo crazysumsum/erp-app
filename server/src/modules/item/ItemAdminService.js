@@ -2105,7 +2105,19 @@ export class ItemAdminService {
       [id]
     );
 
-    return this.#toItemDetail(row, skuRows);
+    // Item 層級共用 media：sku_id 為 NULL。SKU 專屬 media 喺 getSku() 另外查，
+    // 唔喺呢度一併攞——理由同 uoms／barcodes 分開喺 SKU detail 一樣，Item
+    // detail 只負責它自己 aggregate 範圍內嘅資料。
+    const [mediaRows] = await this.database.query(
+      `SELECT id, item_id, sku_id, media_kind, original_name, mime_type, byte_size,
+              is_primary, sort_order, created_at
+         FROM item_media
+        WHERE item_id = ? AND sku_id IS NULL
+        ORDER BY sort_order, id`,
+      [id]
+    );
+
+    return this.#toItemDetail(row, skuRows, mediaRows);
   }
 
   // --- SKU：列表／詳情 ------------------------------------------------------
@@ -2273,7 +2285,18 @@ export class ItemAdminService {
       [id]
     );
 
-    return this.#toSkuDetail(row, uomRows, barcodeRows);
+    // SKU 專屬 media；Item 層級共用 media（sku_id NULL）喺 getItem() 出現，
+    // 唔喺呢度重複。
+    const [mediaRows] = await this.database.query(
+      `SELECT id, item_id, sku_id, media_kind, original_name, mime_type, byte_size,
+              is_primary, sort_order, created_at
+         FROM item_media
+        WHERE sku_id = ?
+        ORDER BY sort_order, id`,
+      [id]
+    );
+
+    return this.#toSkuDetail(row, uomRows, barcodeRows, mediaRows);
   }
 
   // --- 內部：response 白名單映射 ---------------------------------------------
@@ -2295,7 +2318,7 @@ export class ItemAdminService {
     };
   }
 
-  #toItemDetail(row, skuRows) {
+  #toItemDetail(row, skuRows, mediaRows) {
     return {
       id: Number(row.id),
       name: row.name,
@@ -2321,6 +2344,7 @@ export class ItemAdminService {
         suggestedRetailPrice: priceResponse(sku.suggested_price_amount),
         version: Number(sku.version)
       })),
+      media: mediaRows.map((media) => this.#toMediaSummary(media)),
       version: Number(row.version),
       createdAt: Number(row.created_at),
       updatedAt: Number(row.updated_at)
@@ -2349,7 +2373,7 @@ export class ItemAdminService {
     };
   }
 
-  #toSkuDetail(row, uomRows, barcodeRows) {
+  #toSkuDetail(row, uomRows, barcodeRows, mediaRows) {
     return {
       id: Number(row.id),
       skuCode: row.sku_code,
@@ -2405,11 +2429,29 @@ export class ItemAdminService {
         isPrimary: Boolean(barcode.is_primary),
         version: Number(barcode.version)
       })),
-      // Media 未接上：item_media 表要等 T25 先建立。
-      media: [],
+      media: mediaRows.map((media) => this.#toMediaSummary(media)),
       version: Number(row.version),
       createdAt: Number(row.created_at),
       updatedAt: Number(row.updated_at)
+    };
+  }
+
+  /** `item_media` 一列的白名單映射，Item／SKU detail 共用——形狀同
+   * `ItemMediaService#toSummary()` 一致（兩者故意各自維護一份：Media 寫入路徑
+   * 同 Item／SKU 讀取路徑係兩個獨立 service，理由同呢個檔案其他 helper 一樣，
+   * 唔為咗共用三四行映射邏輯而扯埋一條跨 service 依賴）。 */
+  #toMediaSummary(row) {
+    return {
+      id: Number(row.id),
+      itemId: Number(row.item_id),
+      skuId: row.sku_id === null || row.sku_id === undefined ? null : Number(row.sku_id),
+      mediaKind: row.media_kind,
+      originalName: row.original_name,
+      mimeType: row.mime_type,
+      byteSize: Number(row.byte_size),
+      isPrimary: Boolean(row.is_primary),
+      sortOrder: Number(row.sort_order),
+      createdAt: Number(row.created_at)
     };
   }
 }

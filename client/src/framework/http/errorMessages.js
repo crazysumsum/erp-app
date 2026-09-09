@@ -32,5 +32,21 @@ export const ERROR_CODE_MESSAGES = Object.freeze({
   INTERNAL_SERVER_ERROR: "系統發生錯誤，請稍後再試",
   NOT_FOUND: "找不到請求的內容",
   REQUEST_BODY_TOO_LARGE: "請求內容過大",
-  INVALID_JSON: "請求內容格式錯誤"
+  INVALID_JSON: "請求內容格式錯誤",
+  // 上傳中間件（src/framework/upload/uploadMiddleware.js）嘅錯誤，同上面
+  // 一樣一直未跟中文 publicMessage 慣例——T25／T26 之前冇任何功能用到
+  // 上傳，而家先第一次由 media 上傳觸發呢幾個 code。
+  UPLOAD_CONTENT_TYPE_INVALID: "請求格式不正確",
+  UPLOAD_REQUEST_TOO_LARGE: "上傳內容超過大小上限",
+  UPLOAD_CAPACITY_EXCEEDED: "伺服器目前處理太多上傳，請稍後再試",
+  UPLOAD_MALFORMED: "上傳請求格式錯誤",
+  UPLOAD_ABORTED: "上傳中斷，請重試",
+  UPLOAD_FIELD_TOO_LARGE: "表單欄位內容過大",
+  UPLOAD_FILE_TOO_LARGE: "檔案超過大小上限",
+  UPLOAD_TYPE_NOT_ALLOWED: "不允許上傳這種檔案類型",
+  UPLOAD_TYPE_MISMATCH: "檔案內容與宣告的類型不符，已拒絕上傳",
+  UPLOAD_TOTAL_TOO_LARGE: "檔案總大小超過上限",
+  UPLOAD_TOO_MANY_FILES: "上傳檔案數量過多",
+  UPLOAD_TOO_MANY_FIELDS: "表單欄位數量過多",
+  UPLOAD_FAILED: "上傳失敗，請重試"
 });

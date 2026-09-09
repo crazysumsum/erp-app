@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T25 已完成，T26 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T26 已完成，Checkpoint I 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -98,7 +98,7 @@ T01 migration freeze
 - [ ] T23 建立 Attribute schema、variant signature 與 domain 規則
 - [x] T24 完成 Attribute／Variant API 與 UI
 - [x] T25 建立 Media schema、service、API 與孤兒檔清理
-- [ ] T26 建立 Media UI 與檔案安全整合測試
+- [x] T26 建立 Media UI 與檔案安全整合測試
 
 ### Phase D：批量能力
 
@@ -1038,29 +1038,53 @@ T01 migration freeze
 
 **Description:** 建立 client media service、ItemMediaPanel、上傳進度、preview、primary、排序與刪除操作，補齊 browser-facing security regression。
 
+**⚠️ 範圍決定：接通 Item／SKU GET response 嘅 `media` 陣列，唔留返俾未編號嘅 task。** T25 完成時將呢個開放問題明確記低（見 T25 段落）：design_spec §6.6 冇列一支「list media by item/sku」端點，`ItemMediaPanel.vue` 要顯示現有清單，唯一合理來源就係 Item／SKU 自己嘅 detail response。開工先發現 `#toItemDetail()` 連 `media` 呢個欄都未有（唔淨係「固定回空陣列」，係response schema 完全冇呢個欄），同 §6.2 端點表講嘅「回 Item、全部 SKU 摘要、attributes、media 及 version」對唔上——呢個係 T14／T17 遺留低嘅缺口，唔關 T25 事。修正咗：`ItemAdminService.getItem()`／`getSku()` 各自加一句查 `item_media`（Item 層級查 `sku_id IS NULL`，SKU 層級查 `sku_id = ?`，兩者唔會互相洩漏），`itemSchemas.js`／`skuSchemas.js` 嘅 response schema 引入 `item-media/itemMediaSchemas.js` 已有嘅 `MEDIA_SUMMARY_SCHEMA`（跨 handler 目錄共用呢一份而唔係各自定義——理由同 upload body schema 嗰個決定一致，見 T25 段落）。
+
+**⚠️ 範圍決定：`HttpClient.js` 加 FormData passthrough 同 `getBlob()`，唔另開一條唔行 HttpClient 嘅路徑。** 兩個原因驅動呢個框架層改動：(1) 現有 `request()` 一律 `JSON.stringify(body)` 並手動設 `Content-Type: application/json`，直接餵一個 `FormData` 落去只會將佢字串化成 `"[object FormData]"`——上傳一定會壞；(2) 認證用 Authorization header（Bearer token）唔係 cookie，`<img src>`／`<a href>` 冚唔到自訂 header，一定要用 `fetch()` 先攞到 blob 先可以顯示或者觸發下載，而 `request()` 全程假設回應係 `{success,data}` JSON 信封，直接攞嚟用會喺 `response.json()` 嗰步炸開。兩個改動都刻意保持細：前者係 `body instanceof FormData` 嘅一個分支判斷（原有 JSON 路徑完全唔變），後者係新增一個獨立方法，重用 `buildUrl()`／`parseJsonBody()`，唔改動 `request()` 本身。
+
+**⚠️ 範圍決定：上傳進度用「不確定進度」（indeterminate）唔係真正嘅百分比。** `fetch()`（`HttpClient` 用嘅底層 API）唔提供上傳位元組級別嘅進度事件，要攞到真正百分比需要換成 `XMLHttpRequest`，屬於對 `HttpClient` 更大嘅改動（成個 class 依賴嘅 abort／timeout／簽章邏輯都要重寫一次），唔喺呢個 task 嘅範圍。用忙碌指示（progress bar）＋取消按鈕滿足「使用者睇得到上傳緊、隨時可以中止」呢個核心需求。
+
+**⚠️ 範圍決定：面板本身唔做「無 view 權限就隱藏」嘅判斷。** `ItemDetailPage.vue`／`SkuDetailPage.vue` 兩個宿主頁面本身喺 route 層已經要求 `item.view`（`page.requires.permissions`），冇呢個權限連個 detail page 都進唔到，`ItemMediaPanel.vue` 根本冇機會喺冇 view 權限嘅情況下被 render——所以面板內部淨係用 `canManage` 一個 prop 決定顯示唔顯示上傳／primary／排序／刪除呢幾個管理動作，冇對「view」再做多一層判斷，避免一個永遠唔會被觸發嘅分支。
+
 **Acceptance criteria:**
 
-- [ ] FormData 不手動設定 multipart boundary；boolean／integer／version 以後端明確可解析格式提交。
-- [ ] 圖片安全 inline preview，PDF 只下載；無 view／mgmt 權限時分別隱藏或拒絕。
-- [ ] Upload abort、超限、錯 signature、DB failure、delete unlink failure 均有可理解 UI／log 結果。
+- [x] FormData 不手動設定 multipart boundary；boolean／integer／version 以後端明確可解析格式提交（`itemMedia.js` 嘅 `mediaFormData()` 將 `isPrimary` 序列化做完全等於 `"true"`／`"false"` 嘅字串，`sortOrder`／`version` 轉做十進位數字字串，對應 T25 嘅 multipart body schema）。
+- [x] 圖片安全 inline preview，PDF 只下載；無 view／mgmt 權限時分別隱藏或拒絕（圖片經 `HttpClient.getBlob()` 攞 blob 再用 `URL.createObjectURL()` 顯示；PDF 一律觸發瀏覽器下載，唔會 inline；`canManage=false` 時上傳／primary／排序／刪除全部唔顯示，但下載／預覽仍然可用——同後端 `item.view` 已經可以下載嘅權限矩陣一致）。
+- [x] Upload abort、超限、錯 signature、DB failure、delete unlink failure 均有可理解 UI／log 結果（`AbortController` 支援取消；`errorMessages.js` 新增成套 `UPLOAD_*` code 嘅中文翻譯——呢啲 code 一直未跟「英文 publicMessage 要喺呢個表覆蓋」嘅慣例，因為之前完全冇功能用到上傳；`MEDIA_KIND_MISMATCH`／`MEDIA_FILE_TOO_LARGE` 等 T25 自己嘅 code 本身已經係中文 publicMessage，唔使再覆蓋；delete unlink 失敗屬於後端 `item.media_delete_failed` 結構化 log 嘅範圍，前端睇到嘅始終係 200 成功——呢個係已知、刻意嘅設計，見 T25 段落）。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/services/itemMedia.test.js test/pages/items/itemMedia.test.js`
-- [ ] `npm run build --workspace client`
-- [ ] Manual check：上傳四種 allowlist 檔案、拒絕 SVG、切換 primary、刪除後重新整理。
+- [x] `npm run lint`（repo 根，全部檔案，clean）
+- [x] `npm test --workspace client`（423 個案例，26 個新增，全過；**Verification 命令修正**：原本寫嘅命令淨係列 `test/services/itemMedia.test.js`／`test/pages/items/itemMedia.test.js`，實際仲改咗 `test/framework/http/HttpClient.test.js`（新增 FormData／getBlob 測試）同 `test/pages/items/itemDetail.test.js`（修正 fixture 缺咗 `media` 欄嘅問題——見下面「發現嘅 bug」）
+- [x] `npm run build --workspace client`（production build 成功）
+- [x] `npm test --workspace server`（1337 個案例，全過，含改動咗嘅 `ItemAdminService.js`／`itemSchemas.js`／`skuSchemas.js`）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`（1337 個案例，全過，`itemMedia.integration.test.js` 新增咗兩個 GET response 斷言——upload 之後 `GET /items/:id`／`GET /skus/:id` 真係見到 media，Item／SKU 兩層唔會互相洩漏）
+- [x] Manual check（真瀏覽器＋真 MySQL＋真後端，非 mock）：登入、建立測試 Item＋SKU（經真 HTTP，UI 冇再手動行一次建檔流程——上一個 task 已經喺瀏覽器驗證過建檔本身）、上入 Item detail page，見到「媒體檔案」panel；上傳一張真 PNG，畫面即時顯示 inline 預覽（`blob:` URL，唔係下載端點嘅 URL）；上傳一個宣告 PNG、內容其實係 SVG 嘅檔案，畫面顯示「檔案內容與宣告的類型不符，已拒絕上傳」；設為主要圖片，badge 即時變「主要圖片」；上傳一個真 PDF，顯示 PDF icon＋下載按鈕；刪除 PDF（reason／password dialog），確認之後 PDF 由清單消失。事後直接查 DB／磁碟：`item_media` 得返 PNG 一行、`is_primary=1`；`storage/items/` 得返 PNG 對應嘅檔案，PDF 嗰個已經冇咗；`item_audit_logs` 依次序有 `media.upload`（logo）→`media.update`（設 primary）→`media.upload`（spec.pdf）→`media.delete`（spec.pdf）。測試資料事後全部經 SQL 清走。
+
+**過程中發現並修正嘅一個 bug：**
+
+- **`client/test/pages/items/itemDetail.test.js` 嘅 `ITEM` fixture 冇 `media` 欄**：`ItemMediaPanel.vue` 嘅 `mediaList` prop 收到 `undefined`（fixture 冧咗呢個新欄），`.filter()` 直接拋 `TypeError`，令呢個檔案 5 個 test unhandled rejection。呢個唔係 production bug（真後端response 一定有 `media`），純粹係 fixture 冧咗新加嘅欄——加返 `media: []` 就修正。
 
 **Dependencies:** T17, T25
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `client/src/services/itemMedia.js`
-- `client/src/components/items/ItemMediaPanel.vue`
-- `client/src/pages/items/ItemDetailPage.vue`
-- `client/src/pages/items/SkuDetailPage.vue`
-- `client/test/pages/items/itemMedia.test.js`
+- `server/src/modules/item/ItemAdminService.js`（`getItem()`／`getSku()` 各加一句查 `item_media`；`#toItemDetail()`／`#toSkuDetail()` 帶埋 media 陣列；新增 `#toMediaSummary()` 私有 helper）
+- `server/src/handlers/items/itemSchemas.js`（`ITEM_DETAIL_RESPONSE_SCHEMA` 加 `media` 欄，引入 `MEDIA_SUMMARY_SCHEMA`）
+- `server/src/handlers/skus/skuSchemas.js`（`media` 欄由 `maxItems: 0` 改做真正嘅 `MEDIA_SUMMARY_SCHEMA` 陣列）
+- `server/test/integration/itemMedia.integration.test.js`（兩個既有 test 加 GET response 斷言，證明 media 真係接通）
+- `client/src/framework/http/HttpClient.js`（`request()` 加 `body instanceof FormData` 分支；新增 `getBlob()` 方法）
+- `client/src/framework/http/errorMessages.js`（新增成套 `UPLOAD_*` code 嘅中文翻譯）
+- `client/src/services/itemMedia.js`（新建：`uploadItemMedia`／`uploadSkuMedia`／`downloadMedia`／`updateMedia`／`deleteMedia`）
+- `client/src/components/items/ItemMediaPanel.vue`（新建：上傳、inline 預覽、primary、排序、刪除、下載）
+- `client/src/pages/items/ItemDetailPage.vue`（加 `ItemMediaPanel` 區塊）
+- `client/src/pages/items/SkuDetailPage.vue`（加 `ItemMediaPanel` 區塊）
+- `client/test/framework/http/HttpClient.test.js`（新增 FormData passthrough／`getBlob()` 測試）
+- `client/test/services/itemMedia.test.js`（新建）
+- `client/test/pages/items/itemMedia.test.js`（新建，13 個案例：empty state、canManage 隱藏控制項、圖片預覽經 blob、上傳成功／失敗、SKU 層級打對端點、primary 切換、刪除確認／取消、排序、下載）
+- `client/test/pages/items/itemDetail.test.js`（fixture 補返 `media: []`，見上面「發現嘅 bug」）
 
-**Estimated scope:** M（5 files）
+**Estimated scope:** L（2 個 client 新檔 + 4 個 client 改動檔 + 3 個 server 改動檔 + 4 個 test 檔；比原估計大，因為原「Files likely touched」冇算入接通 Item／SKU GET response 嘅 server 端改動，同 `HttpClient.js` 本身要加 FormData／blob 支援）
 
 ### Task T27：建立 Import persistence、dependencies 與 worker 設定
 

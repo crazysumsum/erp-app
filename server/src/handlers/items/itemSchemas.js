@@ -15,6 +15,7 @@ import {
   UOM_FACTOR_MIN
 } from "../../modules/item/itemConstants.js";
 import { decimalStringPattern } from "../../modules/item/itemValidation.js";
+import { MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -153,6 +154,7 @@ export const ITEM_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     "status",
     "attributeValues",
     "skus",
+    "media",
     "version",
     "createdAt",
     "updatedAt"
@@ -177,6 +179,8 @@ export const ITEM_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     // 固定回空陣列。
     attributeValues: { type: "array", items: {}, maxItems: 0 },
     skus: { type: "array", items: ITEM_DETAIL_SKU_SCHEMA },
+    // Item 層級共用 media（sku_id 為 NULL）；SKU 專屬 media 喺 SKU detail 出現。
+    media: { type: "array", items: MEDIA_SUMMARY_SCHEMA },
     version: { type: "integer", minimum: 1 },
     createdAt: { type: "integer", minimum: 0 },
     updatedAt: { type: "integer", minimum: 0 }

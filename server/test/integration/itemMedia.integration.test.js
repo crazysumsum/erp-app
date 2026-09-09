@@ -218,6 +218,10 @@ function get(url, token) {
   return fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
 }
 
+function getJson(url, token) {
+  return get(url, token).then(async (response) => ({ status: response.status, body: await response.json() }));
+}
+
 function post(url, token, body) {
   return fetch(url, {
     method: "POST",
@@ -287,6 +291,23 @@ test(
     assert.equal(updated.body.data.sortOrder, 5);
     assert.equal(updated.body.data.isPrimary, true, "isPrimary omitted from the update body must stay unchanged");
 
+    const itemDetail = await getJson(`${url}/api/v1/items/${fixture.itemId}`, token);
+    assert.equal(itemDetail.status, 200, JSON.stringify(itemDetail.body));
+    assert.deepEqual(itemDetail.body.data.media, [
+      {
+        id: media.id,
+        itemId: fixture.itemId,
+        skuId: null,
+        mediaKind: "image",
+        originalName: "更新後的名稱.png",
+        mimeType: "image/png",
+        byteSize: PNG.length,
+        isPrimary: true,
+        sortOrder: 5,
+        createdAt: updated.body.data.createdAt
+      }
+    ]);
+
     const deleted = await post(`${url}/api/v1/item-media/${media.id}/delete`, token, {
       reason: "整合測試：刪除已上傳嘅 media",
       password: PASSWORD
@@ -330,6 +351,17 @@ test("SKU 層級 media：item_id 由目標 SKU 現在嘅 item_id 解析，唔接
   assert.equal(uploaded.status, 201, JSON.stringify(uploaded.body));
   assert.equal(uploaded.body.data.itemId, fixture.itemId);
   assert.equal(uploaded.body.data.skuId, fixture.skuId);
+
+  // SKU 專屬 media 喺 SKU detail 出現，唔喺 Item detail 出現（Item 層級共用
+  // media 先出現喺嗰邊，見上一個 test）。
+  const skuDetail = await getJson(`${url}/api/v1/skus/${fixture.skuId}`, token);
+  assert.equal(skuDetail.status, 200, JSON.stringify(skuDetail.body));
+  assert.deepEqual(skuDetail.body.data.media.map((m) => m.id), [uploaded.body.data.id]);
+  assert.equal(skuDetail.body.data.media[0].mediaKind, "attachment");
+
+  const itemDetail = await getJson(`${url}/api/v1/items/${fixture.itemId}`, token);
+  assert.equal(itemDetail.status, 200, JSON.stringify(itemDetail.body));
+  assert.deepEqual(itemDetail.body.data.media, [], "SKU-level media must not leak into the Item's own media array");
 });
 
 // --- Primary 唯一性：真 generated column 保證 -------------------------------
