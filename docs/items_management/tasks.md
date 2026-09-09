@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T24 已完成，Checkpoint H 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T25 已完成，T26 起尚未開始） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -97,7 +97,7 @@ T01 migration freeze
 
 - [ ] T23 建立 Attribute schema、variant signature 與 domain 規則
 - [x] T24 完成 Attribute／Variant API 與 UI
-- [ ] T25 建立 Media schema、service、API 與孤兒檔清理
+- [x] T25 建立 Media schema、service、API 與孤兒檔清理
 - [ ] T26 建立 Media UI 與檔案安全整合測試
 
 ### Phase D：批量能力
@@ -988,28 +988,51 @@ T01 migration freeze
 
 **Description:** 建立 `0023_create_item_media.js`、ItemMediaService、upload／download／update／delete handlers 及 `ItemMediaCleanupJob`，處理 DB 與檔案系統非原子一致性。
 
+**Schema sign-off（CLAUDE.md 規則 8）：** 開工前喺 chat 完整解釋咗 `item_media` 呢張新表（`id`／`item_id`（FK CASCADE）／`sku_id`（nullable，composite FK 到 `item_skus(id, item_id)`，複用 T09 已經建好、專門留俾呢種用途嘅 `uq_item_skus_id_item`）／`media_kind`／`stored_name`（伺服器生成、UNIQUE）／`original_name`／`mime_type`／`byte_size`／`sha256`／`is_primary`／`sort_order`／`primary_scope`（generated column 做 primary image 唯一性）／`created_at`／`created_by`），並用中文覆述一次，得到使用者「OK，繼續」明確批准之後先寫同執行 migration。
+
+**⚠️ 範圍決定：`primary_scope` 用 `VIRTUAL` 唔係 `STORED`。** 原本嘅提案（同批准嗰刻嘅設計）係跟 `item_sku_uoms.base_slot`／`item_sku_barcodes.primary_scope` 嗰套慣例用 `STORED`。實際喺真 MySQL 建表時炸咗 `ERROR 1215 (HY000): Cannot add foreign key constraint`——診斷後確認：InnoDB 唔准喺「一個 indexed STORED generated column 嘅運算式引用住嘅欄位」上面加 `ON DELETE CASCADE`／`SET NULL` 嘅 FK（`RESTRICT` 冇問題，已經逐一實測驗證：STORED+CASCADE 失敗、STORED+RESTRICT 成功、VIRTUAL+CASCADE 成功）。`item_media.item_id`／`sku_id` 兩者都要 CASCADE（media 係 Item／SKU 嘅從屬資料，Item 或 SKU 刪除時理應一齊消失），改用 `RESTRICT` 會令刪除 Draft Item／SKU 呢個既有操作在有 media 掛住時失敗，屬於功能倒退；改用 `VIRTUAL` 則完全冇呢個限制（MySQL 5.7 起 InnoDB 支援喺 VIRTUAL generated column 上面起 UNIQUE secondary index，且行為與 `STORED` 對呢個 unique 約束嚟講完全等價），所以改用 `VIRTUAL`，欄位語意、唯一性保證、命名全部不變，唯一改動係 migration 裡面嗰一個關鍵字，已喺 migration 檔加詳細註解記低呢個實測結論，避免下一個抄呢個 pattern 嘅表重踏同一個坑。
+
+**⚠️ 範圍決定：Item／SKU GET response 嘅 `media` 陣列繼續回空，唔喺呢個 task 接上。** `server/src/handlers/items/itemSchemas.js`／`skus/skuSchemas.js` 現時分別用 `attributeValues: { maxItems: 0 }`／`media: { maxItems: 0 }` 頂住呢兩個尚未接通嘅陣列——呢個 task 嘅 acceptance criteria 冇要求接通（同 T24 對 `attributeValues` 嘅範圍決定一致：`item_attribute_values` 表喺 T23 已經建好，但 T24 都冇接上 GET response，一路留空到而家）。T25 嘅 Files likely touched 亦冇列 `ItemAdminService.js`／`itemSchemas.js`／`skuSchemas.js`。接通呢兩個陣列（連同對應嘅 response schema `maxItems` 上限）留返俾之後一個專門處理 Item／SKU 完整 read model 嘅 task；T26（Media UI）要顯示現有 media 列表時，需要一併決定係接通呢條路徑定係加一個獨立嘅「list media by target」端點——design_spec §6.6 嘅 Media APIs 表本身冇列呢種端點，屬於 T26 開工時要面對嘅開放問題。
+
+**⚠️ 範圍決定：`ItemMediaService` 冇獨立嘅假 DB 單元測試檔。** 跟 `ItemAdminService` 一路以嚟嘅慣例一致（`test/itemAdminService.test.js` 喺呢個 codebase 從未存在過，T18／T22／T24 都記錄過同一件事）：呢個模組嘅方法（`attach`／`update`／`resolveDownload`／`delete`／`findStoredNames`）幾乎全部係「交易＋SQL」，冇 `ItemCatalogService` 嗰種值得獨立驗證嘅純 diff 邏輯。真正純邏輯嘅部分（kind／mimeType／size 校驗、symlink／grace period 判斷）分別喺兩個地方蓋到：前者由 `test/integration/itemMedia.integration.test.js` 對住真實檔案簽章驗證；後者由新增嘅 `test/itemMediaCleanupJob.test.js` 用假 DB＋真臨時目錄蓋到。`server/config/scheduler.js` 亦未改動——`ItemMediaCleanupJob` 自己喺 `static jobs` 宣告咗合理嘅預設值（每日一次、cluster scope），同其他既有 job 一樣，config 檔只喺需要*覆寫*部署層設定時先加一行，冇覆寫需求就唔加。
+
 **Acceptance criteria:**
 
-- [ ] 只接受 PNG／JPEG／WebP／PDF 的合法 extension、MIME、signature 及大小；拒絕 SVG、polyglot、traversal、symlink 越界。
-- [ ] DB commit 前失敗清 orphan；delete 先提交 metadata／audit 再 unlink，失敗記 log 並由 cleanup 重試。
-- [ ] Primary image unique、SKU／Item ownership composite FK、download headers 及 stored path 白名單正確。
+- [x] 只接受 PNG／JPEG／WebP／PDF 的合法 extension、MIME、signature 及大小；拒絕 SVG、polyglot、traversal、symlink 越界（四種型別全部已喺框架 `FileTypeService.BUILT_IN_FILE_TYPES` 內建、含內容簽章比對；SVG 唔喺 route allowlist 之內，415 拒絕；kind／實際 mimeType 唔對版由 `ItemMediaService.attach()` 額外核，400 `MEDIA_KIND_MISMATCH`；圖片／附件各自嘅大小上限亦由 service 分開核，400 `MEDIA_FILE_TOO_LARGE`；下載路徑嘅 traversal／symlink 由框架既有嘅 `openFileWithinDirectory()` 擋，另加 `resolveDownload()` 對 `stored_name` 本身嘅路徑分隔符防線）。
+- [x] DB commit 前失敗清 orphan；delete 先提交 metadata／audit 再 unlink，失敗記 log 並由 cleanup 重試（前者完全由框架既有嘅 `apiDispatcher.js` → `cleanupUploadedFiles()` 處理，唔使呢個 task 自己寫——已喺整合測試用兩條失敗路徑「MEDIA_KIND_MISMATCH」同「MEDIA_FILE_TOO_LARGE」證明落盤咗嘅檔案會自動清走；後者由 `deleteItemMediaHandler.js` 喺 service 交易 commit 之後先 unlink，失敗時記 `item.media_delete_failed` 結構化 log，由新增嘅 `ItemMediaCleanupJob` 定期重試）。
+- [x] Primary image unique、SKU／Item ownership composite FK、download headers 及 stored path 白名單正確（真 MySQL 驗證：上傳第二張 primary image 令舊嗰張自動變返 0；composite FK `(sku_id, item_id) REFERENCES item_skus (id, item_id)`；下載回應 `Content-Type` 對應實際 MIME、`Content-Disposition: attachment`（`<img>` 標籤載入子資源時瀏覽器唔理呢個 header，圖片一樣內嵌顯示，PDF 則强制落地——符合 design_spec 要求，唔需要框架另外支援 inline 分支）、`X-Content-Type-Options: nosniff` 由全域 `helmet()` 提供；stored path 白名單由 `download.root` 固定死喺 `itemConfig.mediaDirectory`，handler 唔能夠自己組任何其他路徑）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemMediaService.test.js test/itemMediaCleanupJob.test.js test/itemFileHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemMedia.integration.test.js`
+- [x] `npm run lint`（repo 根，全部檔案，clean）
+- [x] `npm test --workspace server`（1337 個案例，17 個新增，全過；**Verification 命令修正**：原本寫嘅 `test/itemMediaService.test.js`／`test/itemFileHandlers.test.js` 從未建立——理由見上面「範圍決定」段落，改為 `test/itemMediaCleanupJob.test.js`（8 個新案例）＋既有嘅 `test/serviceContainer.test.js` 白名單更新）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemMedia.integration.test.js`（新建，9 個案例），連跑 3 次穩定全過
+- [x] 測試後確認 dev DB／`storage/items/` 目錄均無殘留
+
+**過程中發現並修正嘅一個嚴重 bug（DDL 層面，發生喺真正套用 migration 嗰刻，唔係 code review 揪出嚟）：**
+
+- **`primary_scope` 用 `STORED` generated column 加 `ON DELETE CASCADE` 嘅 FK 喺真 MySQL 底下完全建唔到表**：詳情見上面「範圍決定」段落。呢個唔係 code 邏輯錯，係對 InnoDB 一個冷門限制嘅錯誤假設——`item_sku_uoms`／`item_sku_barcodes` 兩個先例用 `STORED` 冇出事，係因為佢哋嘅 FK 全部係 `RESTRICT`，冇一個係 `CASCADE`。修正方式係逐步二分：由完整表定義開始，拆到得返三隻欄＋一個 FK 仲原樣重現、再逐一換走變數（`STORED`→`VIRTUAL`、`CASCADE`→`RESTRICT`）確認邊個組合先係真正嘅成因，避免瞎猜就大改設計。
 
 **Dependencies:** T03, T08, T11, T16
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/database/migrations/0023_create_item_media.js`
-- `server/src/modules/item/ItemMediaService.js`
-- `server/src/handlers/item-media/`
-- `server/src/services/itemMedia/ItemMediaCleanupJob.js`
-- `server/config/scheduler.js`
+- `server/database/migrations/0023_create_item_media.js`（新建）
+- `server/src/modules/item/itemConstants.js`（加 `MEDIA_KINDS`、`MEDIA_KIND_MIME_TYPES`）
+- `server/src/modules/item/itemErrors.js`（加 `mediaNotFound()`、`mediaKindMismatch()`、`mediaFileTooLarge()`、`mediaPrimaryRequiresImage()`、`mediaFileRequired()`）
+- `server/src/modules/item/ItemMediaService.js`（新建：`attach`／`update`／`resolveDownload`／`delete`／`findStoredNames`）
+- `server/src/handlers/item-media/itemMediaSchemas.js`（新建：三個 handler 目錄共用嘅 schema，含 multipart 欄位嘅字串樣式白名單）
+- `server/src/handlers/item-media/downloadItemMediaHandler.js`（新建）
+- `server/src/handlers/item-media/updateItemMediaHandler.js`（新建）
+- `server/src/handlers/item-media/deleteItemMediaHandler.js`（新建：交易外 unlink＋失敗 log）
+- `server/src/handlers/items/itemMediaUploadHandler.js`（新建）
+- `server/src/handlers/skus/skuMediaUploadHandler.js`（新建）
+- `server/src/services/itemMedia/ItemMediaCleanupJob.js`（新建：cluster scope，掃受控 media root 清 orphan）
+- `server/test/itemMediaCleanupJob.test.js`（新建，8 個案例：cluster scope 宣告、service 自發現、缺目錄無害、引用檔保留、grace period 前後、symlink 不跟隨、unlink 失敗記 log）
+- `server/test/serviceContainer.test.js`（白名單加 `job.itemMediaCleanup`）
+- `server/test/integration/itemMedia.integration.test.js`（新建，9 個案例：Item／SKU 兩層完整生命週期、primary 唯一性、型別／大小校驗、version 對版、權限矩陣、密碼錯）
 
-**Estimated scope:** M（5 logical files／directories；focused tests 同切片）
+**Estimated scope:** L（1 個新 migration + 1 個新 domain module + 6 個新 handler／schema 檔 + 1 個新 job + 3 個 test 檔；比原估計大，因為原「Files likely touched」淨列咗 5 項，冇算入 upload handler 要分掛喺 `items/`／`skus/` 兩個目錄、以及 item-media 專屬嘅 schema 檔）
 
 ### Task T26：建立 Media UI 與檔案安全整合測試
 
