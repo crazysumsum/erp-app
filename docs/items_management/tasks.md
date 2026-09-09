@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T30 已完成，T31 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T31 已完成，T32 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -106,7 +106,7 @@ T01 migration freeze
 - [x] T28 建立 CSV preflight processor
 - [x] T29 建立 Import confirm／execution／result API
 - [x] T30 建立 Import UI
-- [ ] T31 建立 SKU Export
+- [x] T31 建立 SKU Export
 - [ ] T32 建立疑似重複商品提示
 - [ ] T33 建立 bounded bulk status change
 - [ ] T34 建立 Import 檔案保留清理
@@ -1270,27 +1270,33 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Export filters 與列表語意一致，輸出 HKD／`tax_not_applicable`、ISO 8601＋offset 及穩定欄位順序。
-- [ ] 不輸出 stored path、audit IP、internal hash、成本或未授權欄位。
-- [ ] 只有 `item.mgmt` 可匯出，每次成功／失敗均有合適 audit／log，不保存整份 CSV 到 audit。
+- [x] Export filters 與列表語意一致，輸出 HKD／`tax_not_applicable`、ISO 8601＋offset 及穩定欄位順序（見下方「匯出篩選範圍」說明——只做咗 `q`／`status` 兩個篩選，因為 `ItemsPage.vue` 目前實際上都淨係得呢兩個 SKU 篩選）。
+- [x] 不輸出 stored path、audit IP、internal hash、成本或未授權欄位（`exportSkus()` 用獨立白名單 SELECT，唔靠過濾一個更大嘅物件）。
+- [x] 只有 `item.mgmt` 可匯出，每次成功／失敗均有合適 audit／log，不保存整份 CSV 到 audit（`item.export` audit 只記 filters＋rowCount；非預期失敗由框架既有嘅 structured error log 覆蓋，冇額外加失敗專用 audit——同 import 嘅 `item.import` action 唯一記錄「成功決定性動作」呢個慣例一致）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemExportHandlers.test.js`
-- [ ] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`
-- [ ] Manual check：用相同 filters 比較列表 total 與 CSV records。
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemExport.integration.test.js`（4 個測試；`exportSkus()` 純 SQL＋audit 寫入，冇 fake-DB unit test，同 `ItemAdminService` 一路以嚟嘅慣例一致）
+- [x] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器）：搜尋＋狀態篩選匯出，比對 CSV 內容同資料庫真實資料，確認 audit 記錄正確、唔保存逐 SKU 資料。
 
 **Dependencies:** T11, T12, T30
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/handlers/item-exports/exportSkusHandler.js`
-- `server/src/modules/item/ItemAdminService.js`
-- `client/src/services/itemImport.js`
-- `client/src/pages/items/ItemImportsPage.vue`
-- `server/test/itemExportHandlers.test.js`
+- `server/src/handlers/item-exports/exportSkusHandler.js`（新檔）
+- `server/src/modules/item/ItemAdminService.js`（新增 `exportSkus()`；刻意冇重用 `listSkus()`，理由見方法上面嘅註解）
+- `client/src/services/itemImport.js`（新增 `exportSkus()`）
+- `client/src/pages/items/ItemImportsPage.vue`（新增「匯出商品 SKU」區塊）
+- `server/test/integration/itemExport.integration.test.js`（新檔，4 個測試）
+- `client/test/services/itemImport.test.js`（加 2 個測試）
+- `client/test/pages/items/itemImports.test.js`（加 3 個測試）
 
-**Estimated scope:** M（5 files）
+**匯出篩選範圍（唔係「Files likely touched」提到嘅偏離，但值得記低）：** design_spec §7.3 提過 `ItemsPage.vue` 應該有 category／brand／purchasable／sellable 篩選，但現時 `ItemsPage.vue` 實際上只做咗 `q`／`status`。「Export filters 與列表語意一致」嘅最直接做法就係只做返列表現時真係有嘅篩選，唔搶先幫列表未做嘅篩選補齊（嗰個屬於 `ItemsPage.vue` 本身嘅缺口，唔係呢個 task 嘅範圍）。伺服器端 `exportSkus()`／`exportSkusHandler.js` 已經接受咗 `itemId`／`categoryId`／`brandId`／`purchasable`／`sellable` 呢幾個 query 參數（同 `listSkus()` 一致），淨係前端 UI 未接；`ItemsPage.vue` 之後補齊呢幾個篩選時，可以直接畀返個 query 落呢個現成嘅 endpoint，唔使再改 API。
+
+**Estimated scope:** M（4 個新檔＋3 個既有檔案擴充）
 
 ### Task T32：建立疑似重複商品提示
 

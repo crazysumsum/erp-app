@@ -92,4 +92,23 @@ describe("itemImport service", () => {
     expect(result).toBe(fakeResult);
     expect(httpClient.getBlob).toHaveBeenCalledWith("/api/v1/item-imports/5/result", { signal: undefined });
   });
+
+  it("exportSkus() 淨係送有提供嘅篩選欄位做 query string", async () => {
+    const fakeResult = { blob: new Blob(["x"]), contentType: "text/csv" };
+    httpClient.getBlob.mockResolvedValue(fakeResult);
+
+    await itemImportService.exportSkus({ q: "牌子", status: "active" });
+
+    expect(httpClient.getBlob).toHaveBeenCalledWith("/api/v1/item-exports/skus?q=%E7%89%8C%E5%AD%90&status=active", {
+      signal: undefined
+    });
+  });
+
+  it("exportSkus() 冇任何篩選就打冇 query string 嘅路徑", async () => {
+    httpClient.getBlob.mockResolvedValue({ blob: new Blob(["x"]), contentType: "text/csv" });
+
+    await itemImportService.exportSkus();
+
+    expect(httpClient.getBlob).toHaveBeenCalledWith("/api/v1/item-exports/skus", { signal: undefined });
+  });
 });

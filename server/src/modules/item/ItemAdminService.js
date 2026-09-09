@@ -2247,6 +2247,129 @@ export class ItemAdminService {
     };
   }
 
+  /**
+   * 按目前 SKU 篩選匯出全部符合嘅 SKU（唔分頁）。故意唔重用
+   * `listSkus()`——嗰個方法仲夾埋 relevance rank／分頁邏輯，抽出一個共用
+   * private helper要動一個已經有大量測試依賴住嘅既有方法，風險同呢個
+   * task 本身唔成比例；呢度篩選條件同 `listSkus()` 呼應但獨立一份（設計
+   * 說明見 docs/items_management/design_spec.md §6.8）。
+   *
+   * 排序用 `sku_code ASC`：匯出唔需要 relevance rank，一個穩定、與使用者
+   * 篩選語意無關嘅排序已經足夠，亦令同一組 filter 每次匯出行順序一致。
+   */
+  async exportSkus({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    q = "",
+    itemId,
+    categoryId,
+    brandId,
+    status,
+    includeArchived = false,
+    purchasable,
+    sellable,
+    requestId = "",
+    ip = ""
+  }) {
+    const actor = await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const conditions = [];
+    const params = [];
+
+    if (itemId !== undefined) {
+      conditions.push("s.item_id = ?");
+      params.push(itemId);
+    }
+    if (categoryId !== undefined) {
+      conditions.push("i.category_id = ?");
+      params.push(categoryId);
+    }
+    if (brandId !== undefined) {
+      conditions.push("i.brand_id = ?");
+      params.push(brandId);
+    }
+    if (status) {
+      conditions.push("s.status = ?");
+      params.push(status);
+    } else if (!includeArchived) {
+      conditions.push("s.status != 'archived'");
+    }
+    if (purchasable !== undefined) {
+      conditions.push("s.purchasable = ?");
+      params.push(purchasable ? 1 : 0);
+    }
+    if (sellable !== undefined) {
+      conditions.push("s.sellable = ?");
+      params.push(sellable ? 1 : 0);
+    }
+
+    const term = String(q ?? "").trim();
+    if (term) {
+      const escaped = escapeLikeTerm(term);
+      const barcodeDigits = stripBarcodeSeparators(term);
+      conditions.push(
+        `(s.sku_code = ? OR EXISTS (
+           SELECT 1 FROM item_sku_barcodes eb WHERE eb.sku_id = s.id AND eb.normalized_barcode = ?
+         ) OR s.sku_code LIKE ? OR s.sku_name LIKE ? OR i.name LIKE ?)`
+      );
+      params.push(term, barcodeDigits, `${escaped}%`, `%${escaped}%`, `%${escaped}%`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    const [rows] = await this.database.query(
+      `SELECT s.sku_code, s.sku_name, i.name AS item_name,
+              c.name AS category_name, b.name AS brand_name,
+              s.status, s.suggested_price_amount, s.purchasable, s.sellable, s.updated_at,
+              (SELECT b2.barcode FROM item_sku_barcodes b2
+                WHERE b2.sku_id = s.id AND b2.is_primary = 1 LIMIT 1) AS primary_barcode,
+              (SELECT u.code FROM item_sku_uoms su
+                 JOIN item_uoms u ON u.id = su.uom_id
+                WHERE su.sku_id = s.id AND su.is_base = 1 LIMIT 1) AS base_uom_code
+         FROM item_skus s
+         JOIN items i ON i.id = s.item_id
+         LEFT JOIN item_categories c ON c.id = i.category_id
+         LEFT JOIN item_brands b ON b.id = i.brand_id
+         ${whereClause}
+        ORDER BY s.sku_code ASC`,
+      params
+    );
+
+    const items = rows.map((row) => ({
+      skuCode: row.sku_code,
+      skuName: row.sku_name,
+      itemName: row.item_name,
+      categoryName: row.category_name ?? "",
+      brandName: row.brand_name ?? "",
+      status: row.status,
+      primaryBarcode: row.primary_barcode ?? "",
+      baseUomCode: row.base_uom_code ?? "",
+      suggestedPriceAmount: row.suggested_price_amount,
+      currency: "HKD",
+      taxBasis: "tax_not_applicable",
+      purchasable: Boolean(row.purchasable),
+      sellable: Boolean(row.sellable),
+      updatedAt: new Date(Number(row.updated_at)).toISOString()
+    }));
+
+    // Audit 只記篩選條件同筆數，唔保存整份 CSV 內容（見 handler 的說明）；
+    // 冇聚合寫入要一齊 rollback，直接用 `this.database`，唔開額外交易。
+    await this.auditLog.record(this.database, {
+      actorUserId: actor.id,
+      actorUsername: actor.username,
+      action: "item.export",
+      targetType: "export",
+      targetId: null,
+      targetLabel: `SKU 匯出：${items.length} 筆`,
+      detail: { filters: { q, itemId, categoryId, brandId, status, includeArchived, purchasable, sellable }, rowCount: items.length },
+      requestId,
+      ip
+    });
+
+    return items;
+  }
+
   /** SKU 詳情：SKU 本身欄位＋Item 摘要＋UOM 集合＋條碼集合＋價格口徑＋version。 */
   async getSku({ actorId, claimedRoles, claimedPermissions, id }) {
     await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });

@@ -41,5 +41,20 @@ export default {
 
   downloadResult(id, { signal } = {}) {
     return httpClient.getBlob(`/api/v1/item-imports/${id}/result`, { signal });
+  },
+
+  /** 按目前 SKU 篩選匯出 CSV。`getBlob()` 唔接受 `params`（同 downloadTemplate／
+   * downloadResult 一樣淨係一個固定路徑），所以呢度自己砌 query string——
+   * 只送有提供嘅欄位，等後端嘅 schema default（例如 includeArchived）生效。 */
+  exportSkus({ q, itemId, categoryId, brandId, status, includeArchived, purchasable, sellable, signal } = {}) {
+    const params = new URLSearchParams();
+    const entries = { q, itemId, categoryId, brandId, status, includeArchived, purchasable, sellable };
+    for (const [key, value] of Object.entries(entries)) {
+      if (value !== undefined && value !== null && value !== "") {
+        params.set(key, String(value));
+      }
+    }
+    const query = params.toString();
+    return httpClient.getBlob(`/api/v1/item-exports/skus${query ? `?${query}` : ""}`, { signal });
   }
 };

@@ -66,6 +66,18 @@ const ROW_STATUS_LABEL = {
   failed: "執行失敗"
 };
 
+const SKU_STATUS_LABEL = {
+  draft: "草稿",
+  active: "啟用",
+  inactive: "已停用",
+  discontinued: "已停產",
+  archived: "已封存"
+};
+const SKU_STATUS_FILTER_OPTIONS = [
+  { label: "全部狀態", value: null },
+  ...Object.entries(SKU_STATUS_LABEL).map(([value, label]) => ({ label, value }))
+];
+
 const session = useSessionStore();
 const canManage = computed(() => can(session, { permissions: ["item.mgmt"] }));
 const requestSignal = useRequestAbort();
@@ -125,6 +137,32 @@ async function downloadTemplate() {
     notifyError(error.message || "下載範本失敗");
   } finally {
     downloadingTemplate.value = false;
+  }
+}
+
+/* ---------------- 匯出 ---------------- */
+// 匯出篩選淨係 q／status：同 ItemsPage.vue 目前實際有嘅 SKU 篩選一致（
+// category／brand／purchasable／sellable 呢幾個 design_spec §7.3 提過但
+// ItemsPage.vue 未實作嘅篩選，呢度都未加——保持「匯出篩選與列表語意一致」，
+// 唔搶先加列表本身都仲未有嘅篩選）。
+
+const exportQuery = ref("");
+const exportStatusFilter = ref(null);
+const exportingSkus = ref(false);
+
+async function exportSkus() {
+  exportingSkus.value = true;
+  try {
+    const { blob } = await itemImportService.exportSkus({
+      q: exportQuery.value,
+      status: exportStatusFilter.value,
+      signal: requestSignal
+    });
+    triggerBlobDownload(blob, `sku-export-${Date.now()}.csv`);
+  } catch (error) {
+    notifyError(error.message || "匯出失敗");
+  } finally {
+    exportingSkus.value = false;
   }
 }
 
@@ -335,6 +373,37 @@ onUnmounted(stopPolling);
         <q-btn v-if="canManage" color="primary" unelevated label="上傳 CSV" icon="upload" @click="openUploadDialog" />
       </template>
     </PageHeader>
+
+    <div v-if="canManage" class="q-px-md q-pb-md">
+      <h2 class="text-subtitle1 q-mb-sm">匯出商品 SKU</h2>
+      <div class="row q-gutter-sm items-center">
+        <q-input v-model="exportQuery" dense outlined placeholder="搜尋 SKU Code／名稱／條碼" style="width: 240px">
+          <template #prepend><q-icon name="search" /></template>
+        </q-input>
+        <q-select
+          v-model="exportStatusFilter"
+          dense
+          outlined
+          emit-value
+          map-options
+          :options="SKU_STATUS_FILTER_OPTIONS"
+          style="width: 160px"
+          label="狀態"
+        />
+        <q-btn
+          color="primary"
+          unelevated
+          label="匯出 CSV"
+          icon="download"
+          :loading="exportingSkus"
+          @click="exportSkus"
+        />
+      </div>
+    </div>
+
+    <q-separator class="q-my-md" />
+
+    <h2 class="text-subtitle1 q-px-md">匯入紀錄</h2>
 
     <div class="q-px-md q-pb-md row q-gutter-sm items-center">
       <q-select

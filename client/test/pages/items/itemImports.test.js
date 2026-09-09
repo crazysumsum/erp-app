@@ -12,7 +12,8 @@ vi.mock("@/services/itemImport.js", () => ({
     getJob: vi.fn(),
     confirmJob: vi.fn(),
     cancelJob: vi.fn(),
-    downloadResult: vi.fn()
+    downloadResult: vi.fn(),
+    exportSkus: vi.fn()
   },
   service: { name: "itemImport" }
 }));
@@ -133,6 +134,36 @@ describe("pages/items/ItemImportsPage.vue", () => {
 
     expect(itemImportService.downloadTemplate).toHaveBeenCalled();
     expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it("匯出：打 exportSkus() 帶目前嘅 q／status，觸發 blob 下載", async () => {
+    itemImportService.exportSkus.mockResolvedValue({ blob: new Blob(["x"]), contentType: "text/csv" });
+    const { wrapper } = await mountImportsPage();
+
+    await wrapper.find("input[placeholder='搜尋 SKU Code／名稱／條碼']").setValue("ABC");
+    await wrapper.findAll(".q-btn").find((btn) => btn.text().includes("匯出 CSV")).trigger("click");
+    await flushPromises();
+
+    expect(itemImportService.exportSkus).toHaveBeenCalledWith(
+      expect.objectContaining({ q: "ABC", status: null })
+    );
+    expect(globalThis.URL.createObjectURL).toHaveBeenCalled();
+  });
+
+  it("匯出失敗顯示後端訊息", async () => {
+    itemImportService.exportSkus.mockRejectedValue(new Error("匯出失敗，請稍後再試"));
+    const { wrapper } = await mountImportsPage();
+
+    await wrapper.findAll(".q-btn").find((btn) => btn.text().includes("匯出 CSV")).trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith("匯出失敗，請稍後再試");
+  });
+
+  it("冇 item.mgmt：睇唔到「匯出商品 SKU」區塊", async () => {
+    const { wrapper } = await mountImportsPage({ permissions: [] });
+
+    expect(wrapper.text()).not.toContain("匯出商品 SKU");
   });
 
   it("上傳：未揀檔案就提交唔會打 API，會顯示錯誤", async () => {
