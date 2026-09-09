@@ -133,3 +133,15 @@ export const ATTRIBUTE_DATA_TYPES = Object.freeze([
   "date",
   "single_option"
 ]);
+
+/** Item／SKU media 嘅種類（§5.11、§6.6）。 */
+export const MEDIA_KINDS = Object.freeze(["image", "attachment"]);
+
+/** 每種 media kind 允許嘅實際 MIME type（已經過內容簽章驗證那一份，不是
+ * client 宣告值）。用嚟擋「宣告 kind=image，實際上傳 PDF」呢類不一致——四種
+ * 型別本身嘅合法性由上傳中間件經 FileTypeService 校驗，這裡只負責「kind 同
+ * 實際型別要對得上」。 */
+export const MEDIA_KIND_MIME_TYPES = Object.freeze({
+  image: Object.freeze(["image/png", "image/jpeg", "image/webp"]),
+  attachment: Object.freeze(["application/pdf"])
+});

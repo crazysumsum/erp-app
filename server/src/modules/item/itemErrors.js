@@ -464,6 +464,53 @@ export function importStateConflict() {
   });
 }
 
+// --- Media 專用錯誤 ---------------------------------------------------------
+
+export function mediaNotFound(id) {
+  return notFound(`Media ${id} not found`, {
+    code: "MEDIA_NOT_FOUND",
+    publicMessage: "找不到這個檔案"
+  });
+}
+
+/** Upload route 冇強制要求至少一個檔案（`maxFiles` 只係上限，見
+ * src/framework/upload/uploadMiddleware.js），所以合法嘅 multipart 請求可以
+ * 一個檔案都冇夾就送到 handler，要喺呢度自己擋。 */
+export function mediaFileRequired() {
+  return invalid("Exactly one file must be uploaded", {
+    code: "MEDIA_FILE_REQUIRED",
+    publicMessage: "請選擇要上傳的檔案"
+  });
+}
+
+/** 宣告嘅 `kind`（image／attachment）同上傳檔案經內容簽章驗證後嘅實際 MIME
+ * type 對唔上，例如宣告 image 但實際上傳 PDF。 */
+export function mediaKindMismatch(kind, mimeType) {
+  return invalid(`Uploaded file type "${mimeType}" does not match declared kind "${kind}"`, {
+    code: "MEDIA_KIND_MISMATCH",
+    publicMessage: "上傳的檔案類型與宣告的種類不符",
+    details: { kind, mimeType }
+  });
+}
+
+/** Route 層嘅上傳大小上限係圖片／附件兩者當中較寬鬆嗰個（見
+ * itemMediaSchemas.js），所以圖片超過本身較細嘅上限呢件事，中間件擋唔到，
+ * 要喺 service 呢層再核一次。 */
+export function mediaFileTooLarge(kind, maxBytes) {
+  return invalid(`File exceeds the ${maxBytes} byte limit for kind "${kind}"`, {
+    code: "MEDIA_FILE_TOO_LARGE",
+    publicMessage: "檔案超過大小上限",
+    details: { kind, maxBytes }
+  });
+}
+
+export function mediaPrimaryRequiresImage() {
+  return invalid("Only image media can be marked as primary", {
+    code: "MEDIA_PRIMARY_REQUIRES_IMAGE",
+    publicMessage: "只有圖片可以設為主要圖片"
+  });
+}
+
 export function importFileExpired() {
   return new ApplicationError("Import source/result file has been purged by retention cleanup", {
     code: "IMPORT_FILE_EXPIRED",

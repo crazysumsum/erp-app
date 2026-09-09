@@ -233,6 +233,14 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "idempotency"]
     },
     {
+      // 掃受控 Item media 根目錄，清走 DB 已經沒有引用、超過 grace period 的
+      // 檔案。cluster scope：media 根目錄是所有實例共用的儲存磁碟區，每個
+      // 實例各掃一次只是重複讀同一個目錄同同一張表。
+      name: "job.itemMediaCleanup",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
+    },
+    {
       name: "logging",
       lifecycle: "singleton",
       dependencies: ["time"]
