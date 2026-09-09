@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T27 已完成，T28 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T28 已完成，T29 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -103,7 +103,7 @@ T01 migration freeze
 ### Phase D：批量能力
 
 - [x] T27 建立 Import persistence、dependencies 與 worker 設定
-- [ ] T28 建立 CSV preflight processor
+- [x] T28 建立 CSV preflight processor
 - [ ] T29 建立 Import confirm／execution／result API
 - [ ] T30 建立 Import UI
 - [ ] T31 建立 SKU Export
@@ -1139,28 +1139,47 @@ T01 migration freeze
 
 **Description:** 建立 versioned CSV template、RFC 4180 parsing、mapping、normalization、逐列 validation 與 all-or-nothing preflight；預檢不得改商品表。
 
+**⚠️ CSV 欄位契約需要事先核對：design_spec 冇釘死實際欄位名。** design_spec 只描述行為（RFC 4180 parser、BOM／版本／`create_only`／`upsert`／SKU ID＋version 配對），完全冇列 CSV 實際有咩欄位。呢個係一份用戶會直接接觸嘅對外契約（下載範本、用 Excel 填），開工前喺 chat 完整列出建議欄位（`skuId`／`expectedSkuVersion`／`skuCode`／`skuName`／`itemName`／`categoryName`／`brandName`／`defaultTrackingPolicy`／`suggestedPriceAmount`／`purchasable`／`sellable`／`baseUomCode`，範圍淨係 Standard 商品），得到使用者明確「yes」批准之後先開工，唔係好似 schema 咁使用 CLAUDE.md 規則 8（呢個唔係 DB table），但性質類似——一個影響外部使用者嘅契約，唔應該淨係內部實作決定就靜靜定咗。定案見 `itemCsvSchema.js`。
+
+**⚠️ 範圍決定：`categoryName` 對應多過一個分類就當 ambiguous，唔隨便揀一筆。** 開工先發現 `item_categories.name` 淨係保證同一父分類底下唯一（`categoryNameTaken()` 嘅訊息係「同一父分類下已有相同名稱」），唔係全域唯一；CSV 冇提供 parent 資訊，如果撞到多過一筆用嗰個名，冇辦法安全揀一筆當結果。加咗 `CATEGORY_NAME_AMBIGUOUS`（連同 brand／UOM 對應嘅 ambiguous code，雖然嗰兩個表全域唯一，理論上唔會撞到，但驗證邏輯保持一致、唔假設）令呢種情況變成一個明確嘅 row-level error，唔係隱藏 bug。
+
+**⚠️ 範圍決定：`success_count`／`failure_count` 呢兩個欄喺 preflight 階段借用嚟表達「valid／invalid 列數」。** design_spec §5.13 對呢兩個欄嘅字面描述（「已套用及失敗數」）聽落係 execution 階段先有意義嘅統計，但依家（T28）淨係做 preflight，冇「已套用」呢件事。暫時借嚟表達 preflight 通過／唔通過嘅列數；T29 執行完成之後會用真正嘅套用結果覆寫呢兩個數字（skipped_count 喺呢個 task 固定 0，冇 skip operation 嘅 CSV 觸發方式）。
+
+**⚠️ 範圍決定：`config/item.js` 加 `importDirectory`，獨立於 `mediaDirectory`。** CSV 匯入檔案要有一個受控落盤目錄先做得到 preflight——design_spec §12.1 冇明文列一個獨立嘅 import root，但佢哋嘅保留規則本來就唔同（media 冇到期日；import 檔 1 年後清），混用 `mediaDirectory` 會令 cleanup job 難以分辨邊啲檔案受邊條規則管，所以加一個獨立設定，同 `normalizeItemConfig.js`／`itemConfig.test.js` 一併更新。
+
+**⚠️ Bug：`row_number` 保留字喺 SQL 入面要反引號跳脫，呢個 task 嘅新 SQL（`ItemImportService.js`）都要記得跟。** T27 已經記錄過 migration 入面嘅呢個坑；`ItemImportService.js` 嘅 INSERT／SELECT／ORDER BY 涉及呢個欄嘅地方都要一致用 `` \`row_number\` ``，寫呢個檔案嗰陣一開始就跟咗呢個慣例，冇再撞到。
+
 **Acceptance criteria:**
 
-- [ ] 正確處理 BOM、quoted comma／newline、Unicode、未知欄、欄位上限及 10,000 rows。
-- [ ] 任一 invalid row 令 Job 不能 confirm；errors／warnings 有界且可下載，不含 stack／SQL。
-- [ ] Upsert 使用 SKU ID＋expected version 配對，不能藉 CSV 繞過 SKU Code 特批流程。
+- [x] 正確處理 BOM、quoted comma／newline、Unicode、未知欄、欄位上限及 10,000 rows（`csv-parse/sync` 負責 RFC 4180／BOM；未知欄位由 `columns:true` 自然唔映射到已知屬性，唔會令解析或驗證失敗；`skuCode`／`skuName`／`itemName`／`categoryName`／`brandName` 有 190 字上限對齊實際 DB 欄寬；`maxRows` 由 `config.item.importMaxRows` 注入，超過即 job-level error，唔會逐列處理）。
+- [x] 任一 invalid row 令 Job 不能 confirm；errors／warnings 有界且可下載，不含 stack／SQL（`recordValidationResult()`：`counts.invalid > 0` 就令 job 轉 `invalid`；`errors`／`warnings` 都係已經正規化嘅 `{field,code,message}` 陣列，冇任何原始 SQL／stack 內容；「可下載」呢部分（result CSV 產生）留俾 T29 嘅 `GET .../result` 端點）。
+- [x] Upsert 使用 SKU ID＋expected version 配對，不能藉 CSV 繞過 SKU Code 特批流程（update 列一律用 `skuId` 配對，`skuCode` 淨係做 cross-check，唔一致得返 warning 唔會改任何嘢；`expectedSkuVersion` 必填，執行階段嘅 compare-and-set 由 T29 接上）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemImportService.test.js test/itemImportProcessor.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`
+- [x] `npm run lint`（repo 根，全部檔案，clean）
+- [x] `npm test --workspace server`（1376 個案例，32 個新增，全過；**Verification 命令修正**：原本寫嘅 `test/itemImportService.test.js` 冇建立——`ItemImportService.js` 同 `ItemAdminService`／`ItemMediaService` 一路以嚟嘅慣例一致，純交易＋SQL，冇獨立假 DB 單元測試，改為真 MySQL integration test 覆蓋；`test/itemImportProcessor.test.js`（22 個案例，假 queryable，唔開真 DB）新增）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`（1376 個案例，全過），連跑 3 次穩定
+- [x] 啟動期 smoke test：`node src/index.js` 成功起服務，`job.itemImportWorker` 註冊冇撞名／冇缺依賴
+- [x] 測試後確認 dev DB 及 `storage/imports/` 目錄均無殘留
 
 **Dependencies:** T10, T14, T16, T23, T27
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/import/itemCsvSchema.js`
-- `server/src/modules/item/import/ItemImportProcessor.js`
-- `server/src/modules/item/ItemImportService.js`
-- `server/src/services/itemImport/ItemImportWorkerService.js`
-- `server/src/services/itemImport/jobs/validateItemImportJob.js`
+- `server/config/item.js`（加 `importDirectory`）
+- `server/src/modules/item/normalizeItemConfig.js`（`importDirectory` 正規化＋驗證，同 `mediaDirectory` 同一套慣例）
+- `server/src/modules/item/import/itemCsvSchema.js`（新建：CSV 欄位契約、template version、header row 產生）
+- `server/src/modules/item/import/ItemImportProcessor.js`（新建：parse＋逐列 domain validation，`parseAndValidateCsv()`）
+- `server/src/modules/item/ItemImportService.js`（新建：`claimNextUploadedJobForValidation()`／`recordValidationResult()`／`getJob()`／`listRows()`）
+- `server/src/services/itemImport/ItemImportWorkerService.js`（新建：scheduler adapter，註冊 `itemImport.validate`）
+- `server/src/services/itemImport/jobs/validateItemImportJob.js`（新建：claim＋讀檔＋parse＋寫結果嘅獨立函式）
+- `server/test/itemConfig.test.js`（`importDirectory` 一組新測試，仿 `mediaDirectory`）
+- `server/test/serviceContainer.test.js`（白名單加 `job.itemImportWorker`）
+- `server/test/itemImportProcessor.test.js`（新建，22 個案例）
+- `server/test/integration/itemImport.integration.test.js`（新建，6 個案例：create-only 全部合法、含 invalid 列、upsert 配對真 SKU、冇合資格 job、已驗證 job 唔重複揀、來源檔缺失）
 
-**Estimated scope:** M（5 logical files；tests 同切片）
+**Estimated scope:** L（2 個 config 改動檔 + 4 個新 business／worker 檔 + 4 個 test 檔；比原估計大，因為原「Files likely touched」冇算入 CSV 欄位契約需要事先核對、`config/item.js` 要加新目錄設定，同 `itemConfig.test.js` 嘅對應測試）
 
 ### Task T29：建立 Import confirm／execution／result API
 
