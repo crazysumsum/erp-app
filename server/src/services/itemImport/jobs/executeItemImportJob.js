@@ -153,7 +153,13 @@ export async function executeItemImportJob({
     return { claimed: false };
   }
 
-  void logger?.info?.("item.import.claimed", "Import job claimed for execution", { jobId: job.id, leaseOwner });
+  void logger?.info?.("item.import.claimed", "Import job claimed for execution", {
+    jobId: job.id,
+    leaseOwner,
+    // Job 由 `queued` 轉 `running`（呢一刻）距離入 `queued` 隊（confirmed_at）
+    // 等咗幾耐——design_spec §12.3 要求嘅 import queue age 觀測指標。
+    queueAgeMs: job.confirmedAt === null ? null : time.nowMs() - job.confirmedAt
+  });
 
   const rows = await importService.listValidRowsForExecution({ jobId: job.id });
   const nowMs = time.nowMs();

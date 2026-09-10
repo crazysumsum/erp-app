@@ -190,7 +190,7 @@ export class ItemImportService {
   async claimNextQueuedJobForExecution({ leaseOwner, leaseDurationMs }) {
     return this.database.withTransaction(async (connection) => {
       const [[job]] = await connection.query(
-        `SELECT id, mode, created_by, version
+        `SELECT id, mode, created_by, version, confirmed_at
            FROM item_import_jobs
           WHERE status = 'queued'
           ORDER BY confirmed_at ASC
@@ -215,7 +215,8 @@ export class ItemImportService {
       return {
         id: job.id,
         mode: job.mode,
-        createdBy: job.created_by === null ? null : Number(job.created_by)
+        createdBy: job.created_by === null ? null : Number(job.created_by),
+        confirmedAt: job.confirmed_at === null ? null : Number(job.confirmed_at)
       };
     });
   }

@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T34 已完成，T35 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T35 已完成，T36 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -113,7 +113,7 @@ T01 migration freeze
 
 ### Phase E：非功能與交付
 
-- [ ] T35 完成效能、容量及營運可觀測性驗證
+- [x] T35 完成效能、容量及營運可觀測性驗證
 - [ ] T36 完成部署文件、Smoke、回歸及 Release Gate
 
 ## 3. 詳細任務
@@ -1424,27 +1424,42 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Exact Code／Barcode、首頁與常用 filters 在混合負載下 p95 < 2 秒，`EXPLAIN` 無不合理 full scan。
-- [ ] Preflight＋execution 系統處理時間合計 ≤ 10 分鐘，期間一般 lookup 仍 p95 < 2 秒。
-- [ ] Metrics／logs 可觀察 API latency、error rate、constraint conflict、queue age、running duration、lease recovery、media cleanup failure，且不含敏感 payload。
+- [x] Exact Code／Barcode、首頁與常用 filters 在混合負載下 p95 < 2 秒，`EXPLAIN` 無不合理 full scan。
+- [x] Preflight＋execution 系統處理時間合計 ≤ 10 分鐘，期間一般 lookup 仍 p95 < 2 秒。
+- [x] Metrics／logs 可觀察 API latency、error rate、constraint conflict、queue age、running duration、lease recovery、media cleanup failure，且不含敏感 payload（見下面「可觀測性」段落——絕大部分由既有機制覆蓋，只新增咗 import queue age 一個欄位）。
 
-**Verification:**
+**Verification（實際執行，對真實共用嘅 `erp_dev` MySQL）:**
 
-- [ ] 執行並保存 `server/test/performance/itemManagement.performance.test.js` 的環境、資料量與結果摘要。
-- [ ] `npm test --workspace server -- test/databasePoolPressure.test.js test/logQueueBudget.test.js`
-- [ ] Review `EXPLAIN`、pool queue、deadlock／retry、error rate，未達標時只做有證據的索引／query 修正。
+- [x] `ITEM_PERFORMANCE_TESTS=1 node --test --import ./test-support/testEnv.js test/performance/itemManagement.performance.test.js`：4 個測試全部 pass（EXPLAIN、50 併發混合負載、10,000-row import KPI、外層測試本身），總耗時約 181 秒（含分批清理）。實測結果：
+  - exact SKU code lookup p95 = 327.0ms；exact barcode lookup p95 = 384.2ms（500 次取樣）。
+  - 首頁列表（冇 filter）p95 = 813.2ms；常用 status＋category filter p95 = 1520.7ms（500 次取樣）。
+  - `EXPLAIN` 對兩條 exact lookup 查詢嘅每一個 table 都唔係 `type: ALL`。
+  - 10,000-row CSV：preflight（`runValidation`）256ms＋execution（`runExecution`）5226ms，合計 5.48 秒，遠低於 10 分鐘預算；執行期間同時抽樣嘅一般 lookup p95 = 0.5ms（260 次取樣）。
+  - 呢組數字喺 4 次獨立執行（100k SKU 規模 3 次＋之前嘅細規模 dry run）都高度一致（exact code p95 一直喺 327–391ms、exact barcode 384–575ms、首頁 813–978ms、filter 1521–1691ms、import 合計 5.5–6.4 秒），確認唔係單次僥倖。
+- [x] `npm test`（server 單元套件）：1206 pass／0 fail（220 skipped，包含呢個 performance test 本身喺冇設 `ITEM_PERFORMANCE_TESTS` 時嘅 skip）。
+- [x] `DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js 'test/integration/**/*.test.js'`：219 pass／0 fail。
+- [x] `npm run lint`（repo root）：clean。
+- [x] 確認 dev DB 冇殘留：`perf-item-%`／`perf-cat-%`／`perf-brand-%`／`PERF%` UOM／`PERFBC%` barcode／`perf-user-%` 全部歸零；`storage/imports/` 冇任何呢次測試新增嘅檔案殘留。
+
+**⚠️ 過程中發現嘅重要限制（值得記錄，唔係呢個 task 要解決嘅 bug）：** 對超過百萬列規模嘅資料一次過執行大範圍 `DELETE`（試過 `WHERE id IN (SELECT ...)` 子查詢同純 JOIN 兩種寫法），透過呢個專案嘅 mysql2 connection pool（`MySqlDatabaseService`）執行時，會喺嗰句 DELETE 完成之後、下一句都未發出之前完全卡死——Node event loop 完全 idle、MySQL 端所有連線都係 `Sleep`、冇任何錯誤或逾時被觸發，只可以外部強制終止進程先擺脫到（用 `--report-signal` 產生嘅 diagnostic report 確認：9 條 TCP 連線全部 idle、JS call stack 為空、`loopIdleTimeSeconds` 逾 1700 秒）。用 plain `mysql` client 執行完全同一句 SQL 每次都正常完成（慢，約 1–2 分鐘，但唔會卡死），可見唔係 SQL 本身或者資料量嘅問題，而係呢個規模下 mysql2／連線池某個邊界情況嘅 bug。過程中亦曾懷疑同一直背景執行緊嘅 scheduler job 爭 connection pool 有關（已經喺清理前加 `scheduler.stop()`），但排除咗呢個因素之後（獨立、乾淨環境下）問題依然重現，證實同 scheduler 無關。已經喺 `itemPerformanceFixtures.js` 用分批（每批 5,000 個 Item，連帶約 50,000 條 barcode／sku_uom）迴避呢個問題——分批之後清理 100,000 筆殘留資料只需 77.7 秒，順利完成。呢個發現值得未來如果要再擴大壓測規模，或者要喺其他地方寫類似嘅大量資料清理邏輯時留意，但修復 `MySqlDatabaseService`／mysql2 本身呢個邊界情況唔喺 T35（效能驗證）呢個 task 嘅範圍之內。
 
 **Dependencies:** T21, T22, T24, T26, T30, T31, T33, T34
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/test/performance/itemManagement.performance.test.js`
-- `server/test-support/itemPerformanceFixtures.js`
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/modules/item/ItemLookupService.js`
-- `server/src/services/logging/`
+- `server/test-support/itemPerformanceFixtures.js`（新增）：`seedItemPerformanceFixtures()` 純 bulk INSERT 產生 100,000 Item／SKU、1,000,000 barcode、1,000,000 UOM rows（唔經過 `ItemAdminService`，靠 `insertId + offset` 喺單一 multi-row INSERT statement 入面計返每列自己嘅 id，依賴 `innodb_autoinc_lock_mode=2`）；`cleanupItemPerformanceFixtures()` 分批（`batchSize` 預設 5,000 個 Item 一批）刪除，避開上面講嘅連線池邊界問題。
+- `server/test/performance/itemManagement.performance.test.js`（新增）：`ITEM_PERFORMANCE_TESTS=1` 先跑（唔入 CI、唔喺日常 `npm test`），三個子測試對應 design_spec §11.5 嘅驗收點；規模、併發數、匯入列數全部可以用環境變數覆寫，方便本機用細規模 dry run。
+- `server/src/modules/item/ItemImportService.js`：`claimNextQueuedJobForExecution()` 加 `confirmed_at` 落 SELECT，回傳多咗 `confirmedAt`。
+- `server/src/services/itemImport/jobs/executeItemImportJob.js`：`item.import.claimed` 呢個既有 log event 加多一個 `queueAgeMs` 欄位（`confirmedAt` 到而家嘅時間差）——design_spec §12.3 明確要求嘅 import queue age 觀測指標，之前完全冇對應嘅量測。
 
-**Estimated scope:** M（5 logical files／directories）
+**可觀測性（design_spec §12.3 七項）：** 除咗 import queue age 之外，其餘六項全部由呢個 repo 已經存在嘅結構化 log／機制覆蓋，冇再新增額外 instrumentation：
+
+- **API latency／error rate**（按 list／lookup／write／upload／import 分類）：`requestLogger.js` 每個請求都寫一筆 `http.request.completed`／`http.request.client_disconnected`，帶 `durationMs`、`method`、`url`、`output.statusCode`——可以直接按 URL pattern／method 切出 list／lookup／write／upload／import 各自嘅 latency 分佈同錯誤率，唔使逐個 endpoint 各自另開一個 event。
+- **Duplicate constraint conflict**：寫入路徑嘅 409（`VERSION_CONFLICT`／`DUPLICATE_SKU_CODE` 等）本身就係上面嗰個 `http.request.completed` 嘅一部分（`output.statusCode=409`），而且 `requestLogger` 對錯誤狀態碼會強制完整記低 response body（含 `error.code`），所以邊一種 conflict 都睇得到，唔使額外一個計數器。
+- **Import queue age／running duration／lease recovery**：`item.import.claimed`（見上面新增嘅 `queueAgeMs`）；`scheduler.job.completed`／`scheduler.job.failed` 帶 `durationMs`（running duration）；`scheduler.lease.failed`／`scheduler.job.not_leader`／`JobStatsFlushJob` 嘅 `scheduler.stats`彙總（含 `lastOutcome`、`consecutiveFailures`）覆蓋 lease recovery——呢啲全部係 T27 起已經存在嘅既有機制，冇為咗 T35 特登加嘢。
+- **Media orphan／delete failure**：`item.media_orphan_cleaned`／`item.media_delete_failed`（T-earlier 已經存在，`ItemMediaCleanupJob.js`）。
+
+**Estimated scope:** M（5 logical files／directories likely touched → 實際 4 個檔案：2 個新增、2 個小改動）
 
 ### Task T36：完成部署文件、Smoke、回歸及 Release Gate
 
