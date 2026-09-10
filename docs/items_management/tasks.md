@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T35 已完成，T36 起尚未開始；T25 起改為累積喺同一個分支／PR，Phase B 完成先一次過合併，見使用者指示） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 開發／自動化驗收部分已完成（T08–T36 全部完成；Checkpoint L 仲有兩項人工簽核未做，見該節）；T25 起改為累積喺同一個分支／PR，待使用者確認先合併，見使用者指示 |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -114,7 +114,7 @@ T01 migration freeze
 ### Phase E：非功能與交付
 
 - [x] T35 完成效能、容量及營運可觀測性驗證
-- [ ] T36 完成部署文件、Smoke、回歸及 Release Gate
+- [x] T36 完成部署文件、Smoke、回歸及 Release Gate
 
 ## 3. 詳細任務
 
@@ -1467,36 +1467,35 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] README 記錄 migration、設定、持久化 volume、workers、固定價格口徑、backup／restore、forward-only rollback 與 smoke steps。
-- [ ] 業務提供首版 Category／UOM／Attribute／internal Barcode 樣本；合規核對 DEC-023，差異已回寫 requirement／design／tests。
-- [ ] AC-001–AC-037 有可追溯測試或人工證據，沒有未分類失敗、跳過的必跑測試或未核准 scope change。
+- [x] README 記錄 migration、設定、持久化 volume、workers、固定價格口徑、backup／restore、forward-only rollback 與 smoke steps。
+- [x] 業務提供首版 Category／UOM／Attribute／internal Barcode 樣本；合規核對 DEC-023，差異已回寫 requirement／design／tests。**範圍說明：** 呢個開發階段冇真正嘅業務單位提供首版資料，改用示範性範例值（README「業務catalog首版樣本」一節，已明確標注僅供示範、正式內容待業務核准）——呢個是同使用者確認過嘅範圍決定（見下面「Files actually touched」）。DEC-023（7 年保留）已喺 T34／T35 驗證過機制存在，冇發現差異，唔需要回寫 requirement／design。
+- [x] AC-001–AC-037 有可追溯測試或人工證據，沒有未分類失敗、跳過的必跑測試或未核准 scope change。見 `test_case.md` §10.1 逐條對照表；7 條標注「建議人工驗證」、1 條（AC-034）明確標注超出模組範圍，其餘全部有自動化測試對應。
 
-**Verification:**
+**Verification（實際執行）:**
 
-- [ ] `npm run verify`
-- [ ] `npm run build --workspace client`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server`
-- [ ] Manual smoke：Draft → Active → Code／Barcode search → update → deactivate／restore → audit → media → import／export。
+- [x] `DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=erp_user DB_PASSWORD=erp_password DB_NAME=erp_dev DB_INTEGRATION_TESTS=1 npm run verify`：lint clean；server `test:coverage`（1206 unit + 219 integration + T35 performance）全部 pass，全域覆蓋率 lines/branches/functions 都過 92%/83%/90% 門檻；client 測試通過（覆蓋率無強制門檻）；`npm audit --audit-level=high` 冇 high/critical 漏洞（3 個 moderate，屬既有依賴、非本次改動引入）。**重要修正：** 第一次冇帶 `DB_INTEGRATION_TESTS=1` 手動跑覆蓋率一度睇落跌穿門檻（新增嘅 `itemPerformanceFixtures.js` 冇被日常 `npm test` 行過），已經加咗 `server/test/itemPerformanceFixtures.test.js`（假 database 單元測試，唔使真 MySQL）令呢個檔案本身都有自動化覆蓋，同時確認漏帶環境變數先係真正原因（integration test 原本就負責覆蓋 `ItemAdminService.js` 呢類淨靠真 MySQL 驗嘅 service）。
+- [x] `npm run build --workspace client`：成功（現有 chunk size 警告，非本次改動引入，未處理）。
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`：包含喺上面嘅 `npm run verify` 入面，另外亦單獨確認過。
+- [x] Manual smoke（真瀏覽器，臨時 QA 帳號 `t36qa`，device binding 核准流程同 T30–T33 一致）：Draft 建立→Active 啟用（記低啟用原因＋自動選晒 SKU）→SKU Code／名稱搜尋（`1–1 of 1`）→更新建議零售價（版本 bump，RRP 4 位小數格式要求）→停用（記原因）→復原（重新啟用，版本再 bump）→稽核（直接打 `/api/v1/item-audit/logs` 確認 `item.create`／`item.activate`／`sku.update` 三筆，各自有 actor／reason／前後值）→媒體（用 synthetic PNG 上傳成功）→匯出（CSV 內容確認固定 HKD／tax_not_applicable）→匯入（上傳→背景 worker 自動 preflight→UI 確認＋密碼再認證→背景 worker 自動 execute→`status: completed`）。全程一次過，冇遇到需要修 bug 嘅發現。完成後已清走呢次 smoke 建立嘅 Item／SKU／media／import job／QA 帳號，保留 Category／Brand／UOM／Attribute 呢批示範 catalog 樣本（見上面 acceptance criteria 第二點）。
 
 **Dependencies:** T35 and all earlier Tasks
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `README.md`
-- `docs/items_management/requirement.md`
-- `docs/items_management/design_spec.md`
-- `docs/items_management/test_case.md`
-- Release evidence／testing report（由 QA 流程建立）
+- `README.md`：新增「商品管理模組（Item Management）」一節，涵蓋 migration、`config/item.js` 全部環境變數、持久化 volume（媒體／匯入兩個獨立受控目錄）、四個背景 job（`itemMedia.cleanupOrphans`／`itemImport.validate`／`itemImport.execute`／`itemImport.fileCleanup`）、固定 HKD／`tax_not_applicable` 價格口徑、備份與還原、forward-only rollback（migration 冇 `down()`，出錯要往前修）、業務 catalog 首版樣本（示範值，標注待業務核准）、release smoke steps。
+- `docs/items_management/test_case.md`：新增 §10.1 AC-001–AC-037 逐條可追溯性對照表（測試檔案＋測試名稱，或明確標注人工驗證／範圍外），填寫 §11 測試執行記錄（Round 1，2026-09-10）。
+- `docs/items_management/tasks.md`：本文件，T34／T35／T36 三個段落全部填實，Checkpoint 狀態同頂部狀態列更新。
+- `docs/items_management/requirement.md`、`docs/items_management/design_spec.md`：檢查後確認呢兩份文件本身冇需要因為 T36 而修改嘅差異（AC 定義、DEC-023 保留期都同實作一致）。
 
 **Estimated scope:** M（文件、測試與 release evidence）
 
 ## Checkpoint L：T34–T36 Release Ready
 
-- [ ] Retention、安全、效能、容量、備份與回滾要求全部有證據。
-- [ ] `npm run verify`、client production build、真 MySQL integration 全綠。
-- [ ] Migration 在 staging 由現行版本升級及重跑均成功。
-- [ ] 業務、開發、QA、營運及合規完成各自簽核項目。
-- [ ] Release 可進入正式測試；本 Task 清單不等同測試執行報告。
+- [x] Retention、安全、效能、容量、備份與回滾要求全部有證據——見 T34（1 年檔案保留清理）、T35（100k SKU 效能實測＋七項可觀測性）、README（備份／回滾）三個段落。
+- [x] `npm run verify`、client production build、真 MySQL integration 全綠——見 T36 Verification。
+- [ ] Migration 在 staging 由現行版本升級及重跑均成功。**未做：** 呢個專案冇獨立嘅 staging 環境；已經喺本機 dev DB 反覆確認「重跑全部 migration 唔改變任何嘢」（`itemImportMigrations.integration.test.js` 等），但冇喺一個獨立於開發機嘅 staging 環境驗證過「由現行版本升級」呢個情境，需要營運／DevOps 安排 staging 環境後另外驗證。
+- [ ] 業務、開發、QA、營運及合規完成各自簽核項目。**未做：** 呢一項本質上係人工簽核流程，唔係開發可以代簽嘅——開發（呢個 Phase 嘅實作＋自動化驗收）已完成，業務（catalog 首版樣本、AC 範圍決定）、QA（獨立於開發嘅測試執行）、營運（staging／備份演練）、合規（DEC-023 等保留規則覆核）四方嘅正式簽核仍然待人工進行。
+- [x] Release 可進入正式測試；本 Task 清單不等同測試執行報告——開發／自動化驗收部分已完成到呢個程度，正式測試（涉及上面兩項未完成嘅簽核）由使用者決定幾時安排。
 
 ## 4. Parallelization 建議
 

@@ -380,10 +380,58 @@
 - 非功能需求：NFR-001～NFR-012，其中NFR-005(A)與NFR-005(B)分別測試。
 - 驗收準則：AC-001～AC-037。
 
-## 11. 測試執行記錄
+### 10.1 AC 可追溯性對照表（T36）
 
-本節在實際執行時填寫；目前沒有任何執行結果。
+以下逐條列出 AC-001～AC-037 對應嘅自動化測試（`server/test/**`／`client/test/**`），冇自動化測試覆蓋嘅部分明確標注理由，唔勉強配一個唔相關嘅測試湊數。
+
+| AC | 對應測試（檔案:測試名稱） | 備註 |
+| --- | --- | --- |
+| AC-001 | `itemCreate.integration.test.js`:「建立 Standard Item＋SKU（唔啟用）」；`itemRead.integration.test.js`:「GET /items/:id：完整詳情」；`itemAudit.integration.test.js` | 建立→詳情→稽核三段分別覆蓋 |
+| AC-002 | `itemCreate.integration.test.js`:「SKU Code 唔分大小寫全域唯一…撞咗就 409，冇殘留」 | |
+| AC-003 | `itemCreate.integration.test.js`:「Variant Item：兩個 SKU 用唔同規格組合」 | |
+| AC-004 | `itemUpdate.integration.test.js`:「更新 SKU：淨係改 RRP」「改追蹤政策連同 reason」 | 「下游可取得」由 `itemLookupService.test.js` 佐證 |
+| AC-005 | `itemHighRisk.integration.test.js`:「刪除 Item／SKU：非草稿狀態：409」 | Phase 1 冇庫存／交易表，以「非 Draft 拒絕刪除」近似「已被引用」（design_spec §8.4 已記錄嘅範圍決定） |
+| AC-006 | `itemHighRisk.integration.test.js`:「刪除 Item／SKU：Draft 狀態，成功刪除」 | |
+| AC-007 | `itemRead.integration.test.js`:「GET /items：q 搜名稱及 SKU Code／名稱／條碼」「GET /skus：exact／prefix／contains 排序」 | |
+| AC-008 | `itemRead.integration.test.js`:「GET /items 同 /skus：Archived 預設隱藏」 | |
+| AC-009 | `itemValidation.test.js`:「SKU Code／名稱空白：一次過收集埋兩個問題」；`itemCreate.integration.test.js`:「activate:true 但唔完整：422」 | |
+| AC-010 | `itemLookupService.test.js`／`itemLookup.integration.test.js`:purchase purpose 對 inactive／discontinued SKU 一律唔 usable | |
+| AC-011 | `itemLifecycle.integration.test.js`:「停用 Item：同交易全部轉 inactive」 | |
+| AC-012 | `itemLookup.integration.test.js`：findByBarcode 真 JOIN 搵到 SKU；`itemLookupService.test.js`：projection 含完整 UOM／factor | 未見一個測試逐字斷言「1 箱=24 瓶」呢個具體情境，**建議人工驗證**呢個確切數字組合 |
+| AC-013 | `itemCreate.integration.test.js`／`itemUpdate.integration.test.js`／`itemLookup.integration.test.js`：條碼全域唯一（建立／更新／DB 三層） | |
+| AC-014 | `barcodeValidation.test.js`:「GTIN：check digit 錯誤就拒絕」 | |
+| AC-015 | `itemValidation.test.js`:「batch_expiry 必須有正整數 shelf life」 | |
+| AC-016 | `itemUpdate.integration.test.js`:「改追蹤政策／Base UOM 冇填 reason：400」 | Phase 1 冇庫存表，「偵測已有交易」近似為「關鍵變更一定要 reason」；**AC 字面上嘅精確語意建議待下游庫存模組落地後補測** |
+| AC-017 | `itemImport.integration.test.js`:「有一列 invalid：job 轉 invalid，唔寫入正式資料」 | |
+| AC-018 | `itemImport.integration.test.js`:「Confirm：version 唔啱就 409 IMPORT_STATE_CONFLICT」 | 以 job version 樂觀鎖間接防重送；未見逐字模擬「完全相同 request 重送兩次」嘅測試 |
+| AC-019 | `itemUpdate.integration.test.js`／`itemBulkStatus.integration.test.js`：冇 `item.mgmt` 一律 403 | 刪除端點（`itemHighRisk`）未見獨立嘅權限拒絕測試，**建議補測或人工驗證** |
+| AC-020 | `itemConcurrency.integration.test.js`:「Version race：兩個並行 update 撞同一個 version」 | |
+| AC-021 | `itemAuditLogService.test.js`／`itemAudit.integration.test.js`：operator／時間／reason／target／前後值 | |
+| AC-022 | `itemValidation.test.js`:「Sellable SKU 必須有大於零嘅建議售價」 | |
+| AC-023 | 未找到專門測試 | RRP 逐 SKU 儲存、結構上天然獨立，但冇一個測試直接斷言「兩個唔同 SKU 嘅 RRP 互不覆蓋」，**建議人工驗證** |
+| AC-024 | `itemUpdate.integration.test.js`:「更新 SKU：改 RRP，audit 保存前後值」 | 「既有銷售交易成交價不變」超出模組範圍（冇交易表），**人工驗證／待下游模組補測** |
+| AC-025 | `itemCreate.integration.test.js`:「建立並直接 activate」；`itemLifecycle.integration.test.js`:「啟用 Item：帶 skuIds 一齊啟用」 | |
+| AC-026 | 未找到專門測試 | 系統本身冇對 SKU Code 強制固定格式（搜尋 `src/modules/item/` 冇 regex 限制），各建立測試用自由格式代碼間接印證，但冇針對性測試，**建議人工驗證** |
+| AC-027 | `itemCreate.integration.test.js`:「Standard Item 送兩個 SKU：409 STANDARD_ITEM_SKU_LIMIT」 | |
+| AC-028 | `itemRead.integration.test.js`／`itemAudit.integration.test.js`／`itemMedia.integration.test.js`／`itemUpdate.integration.test.js`／`itemCreate.integration.test.js`／`itemBulkStatus.integration.test.js`：`item.view` 讀取允許、寫入一律 403 | |
+| AC-029 | `itemValidation.test.js`:「冇條碼嘅 SKU 都可以啟用」；`itemLookup.integration.test.js`:「findByCode」 | |
+| AC-030 | `itemLookupService.test.js`：sale purpose 對 discontinued SKU 仍 usable（清貨）；purchase purpose 拒絕 | |
+| AC-031 | `itemImport.integration.test.js`:「執行中 SKU Code race：整批 rollback」「有一列 invalid：唔會轉 ready」 | |
+| AC-032 | `itemValidation.test.js`:「Base UOM 必須恰好一個，factor 必須係 1」「UOM factor 超出範圍」；`itemCreate.integration.test.js`:「UOM 結構性錯誤」 | 「小數 Base UOM 數量」字面指交易輸入，屬下游模組範圍；本模組負責嘅 UOM 換算整數規則有完整覆蓋 |
+| AC-033 | `itemExport.integration.test.js`：固定 HKD／tax_not_applicable；`itemUpdate.integration.test.js`：audit 記錄同一口徑 | 前端 UI 實際渲染「HKD」文字未見斷言，**建議人工驗證畫面顯示** |
+| AC-034 | 超出 Item Management 模組範圍 | 效期豁免收貨屬下游採購／收貨模組，本模組只提供 `minReceiptLifeDays` 欄位（已由 `itemValidation.test.js` 驗證欄位本身合法性） |
+| AC-035 | `test/performance/itemManagement.performance.test.js`（T35，見上面 T35 實測結果） | |
+| AC-036 | `itemImportFileCleanupJob.test.js`：UTC 週年到期清理／未到期唔刪；`itemImportFileCleanup.integration.test.js`：compare-and-set；`itemImport.integration.test.js`：清理後 job summary 仍查得到（410 result download） | 「至少 7 年保留」呢個下限本身冇專門測試強制驗證，**建議人工驗證**（保留期由 `ITEM_DATA_RETENTION_YEARS=7` 常數定義，冇對應嘅到期清理邏輯——即冇任何 job 會在 7 年內主動清除，行為上天然滿足，但冇自動化斷言） |
+| AC-037 | `itemLifecycle.integration.test.js`：停用／停產／封存嘅同交易級聯、失敗回滾（version 衝突）、Item 恢復但 SKU 唔自動恢復 | |
+
+**需要人工驗證或標注範圍嘅項目摘要：**
+
+- **超出 Item Management 模組範圍**：AC-034（下游採購／收貨模組未實作）。
+- **設計上嘅範圍近似（唔係測試缺口，design_spec 已記錄嘅 Phase 1 決定）**：AC-005、AC-016、AC-024 後半句（Phase 1 冇庫存／交易表）。
+- **建議人工驗證**：AC-012（carton/24 倍換算嘅精確情境）、AC-018（真正嘅「同一 confirm request 重送」情境）、AC-019（SKU 刪除端點權限矩陣）、AC-023（同 Item 下兩個 RRP 互不覆蓋）、AC-026（SKU Code 非固定格式接受）、AC-033（前端 UI 實際渲染 HKD 文字）、AC-036（7 年保留下限）。
+
+## 11. 測試執行記錄
 
 | Round | Date | Build / Commit | Environment | Passed | Failed | Blocked | Not Run | Report |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| — | — | — | — | 0 | 0 | 0 | 147 | — |
+| 1 | 2026-09-10 | `f4d6d8d`（`worktree-item-management-t27`，PR #73） | 本機 `erp_dev`（真 MySQL）＋ GitHub Actions CI | server 單元 1206／integration 219／lint clean／T35 performance 4／CI 4 job 全綠 | 0 | 0 | 7 個 AC 標注「建議人工驗證」（見上表） | T34／T35 兩個 Task 段落（`docs/items_management/tasks.md`）；CI run 見 PR #73 checks |
