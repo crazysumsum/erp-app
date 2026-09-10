@@ -6,7 +6,7 @@
 | --- | --- |
 | 模組 | Invoicing & Accounts Receivable Management |
 | 文件類型 | Business Requirement Document（BRD） |
-| 版本 | 0.1 Draft |
+| 版本 | 0.2 Draft |
 | 日期 | 2026-09-10 |
 | 適用系統 | ERP App |
 | 適用組織 | 單一公司 |
@@ -52,6 +52,7 @@ Sales Order預計支援人工、CSV及未來電商渠道，每日約10,000張訂
 | 版本 | 日期 | 說明 |
 | --- | --- | --- |
 | 0.1 Draft | 2026-09-10 | 根據業務訪談建立Shipment-based／Manual Invoice、Credit Note、Receipt、核銷、AR查詢、信用暴露、期初匯入、設定及獨立歸檔需求。 |
+| 0.2 Draft | 2026-09-10 | 確認災難復原目標RTO不超過4小時、RPO不超過15分鐘；財務記錄至少保留7年，Import source／result檔90日、Export result及可重建PDF檔7日。 |
 
 ---
 
@@ -930,12 +931,13 @@ Confirmed Receipt可為`UNALLOCATED`、`PARTIALLY_ALLOCATED`或`FULLY_ALLOCATED`
 - Background Job重啟後可安全續跑；卡住操作、Queue積壓及結果不明須可查及告警。
 - Active／Archive、Permanent Source Index、私有檔案及正式財務資料納入備份、還原及完整性演練。
 - 使用者可分辨業務驗證錯誤、權限錯誤、版本衝突、暫時依賴故障及結果不明，並取得具體下一步。
+- `NFR-DR-001`：正式生產災難復原目標為RTO不超過4小時、RPO不超過15分鐘；須以隔離環境的定時Backup／Restore演練及完整性對賬證明。
 
 ### 13.4 安全、私隱及保留
 
 - 傳輸及靜態資料使用專案批准的保護措施；銀行帳戶、下載檔及備份按敏感財務資料處理。
 - 正式文件、Audit及來源索引至少保留7年；最終銷毀須另有法規、備份及管理政策後才可啟用。
-- Import source／result及Export檔案使用明確保留期並安全刪除；結構化Batch／Audit摘要仍按正式保留政策保存。
+- Import source／result檔保留90日；Export result及可由正式Snapshot重建的PDF檔保留7日。到期後安全刪除檔案，但結構化Batch／Audit／Snapshot仍按至少7年政策保存；Legal Hold或較長適用法規優先。
 - 日誌、追蹤、Metrics及錯誤不得包含完整銀行帳號、CSV內容、Token、Cookie或非必要個人資料。
 - 任何輸入、匯出及文件均須對SQL、CSV Formula、XSS、HTML、路徑穿越及不安全檔案內容採一致防護。
 
