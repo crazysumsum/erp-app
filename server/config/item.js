@@ -34,6 +34,13 @@ const itemConfig = {
   // 中的檔案。預設 1 天。
   mediaOrphanGraceMs: Number(process.env.ITEM_MEDIA_ORPHAN_GRACE_MS || 86_400_000),
 
+  // Phase 3：CSV 匯入來源／結果檔的受控儲存根目錄，同 mediaDirectory 一樣
+  // 相對路徑以 server 目錄為基準。獨立於 mediaDirectory：兩者內容性質
+  // （使用者上傳嘅商品圖片／附件 vs 系統產生嘅 CSV 匯入檔）同保留規則
+  // （media 冇到期日；import 檔 1 年後由 retention job 清）都唔同，混用同一個
+  // 目錄會令清理 job 難以分辨邊啲檔案受邊條規則管。
+  importDirectory: process.env.ITEM_IMPORT_DIRECTORY || "storage/imports",
+
   // Phase 3：CSV 匯入單一 Job 允許的最大資料列數，對齊 NFR-004 的 10,000 列
   // 基準。
   importMaxRows: Number(process.env.ITEM_IMPORT_MAX_ROWS || 10_000),

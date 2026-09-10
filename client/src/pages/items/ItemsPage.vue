@@ -118,6 +118,99 @@ watch(statusFilter, () => {
   dataTableRef.value?.reload();
 });
 
+// --- 批量狀態操作（Phase 3） -------------------------------------------------
+//
+// 勾選 1–100 筆進入批量狀態操作（design_spec §7.3）。targetType 跟住 view
+// 走：Item 同 SKU 各自嘅批量請求唔會混埋。切 view 或者重新整理列表都要清空
+// 選取，避免帶住上一個 view 揀落嘅 row 送去後端。
+
+const selectedRows = ref([]);
+watch(view, () => {
+  selectedRows.value = [];
+});
+
+const BULK_ACTION_LABEL = { activate: "啟用", deactivate: "停用", discontinue: "停產", archive: "封存", restore: "恢復" };
+// 同伺服器端 `ItemAdminService.#applyBulkStatusTarget()` 用緊嗰組
+// fromStatuses 對應（見 bulkChangeStatus() 的說明）——呢度純粹用嚟預先
+// 喺客戶端過濾「呢個 action 係咪對成個已選集合都合法」，唔係最終判斷；
+// 真正嘅驗證同以前一樣喺伺服器做，呢度得個「唔使白行一round」嘅作用。
+const BULK_FROM_STATUSES = {
+  item: {
+    activate: ["draft", "inactive", "active"],
+    deactivate: ["active"],
+    discontinue: ["active", "inactive"],
+    archive: ["draft", "inactive", "discontinued"],
+    restore: ["archived"]
+  },
+  sku: {
+    activate: ["draft", "inactive"],
+    deactivate: ["active"],
+    discontinue: ["active", "inactive"],
+    archive: ["draft", "inactive", "discontinued"],
+    restore: ["archived"]
+  }
+};
+
+const availableBulkActions = computed(() => {
+  if (selectedRows.value.length === 0) {
+    return [];
+  }
+  const fromStatuses = BULK_FROM_STATUSES[view.value];
+  return Object.keys(BULK_ACTION_LABEL).filter((action) =>
+    selectedRows.value.every((row) => fromStatuses[action].includes(row.status))
+  );
+});
+
+const showBulkDialog = ref(false);
+const bulkAction = ref(null);
+const bulkSubmitting = ref(false);
+
+function openBulkDialog() {
+  bulkAction.value = availableBulkActions.value[0] ?? null;
+  showBulkDialog.value = true;
+}
+
+async function submitBulkAction() {
+  if (!bulkAction.value) {
+    return;
+  }
+
+  const outcome = await promptPassword({
+    title: "批量狀態操作",
+    message: `對 ${selectedRows.value.length} 筆${view.value === "item" ? "商品" : "SKU"}執行「${
+      BULK_ACTION_LABEL[bulkAction.value]
+    }」？全部成功先會套用，任何一筆失敗都唔會有任何改動。`,
+    okLabel: "確認執行",
+    requireReason: true
+  });
+  if (outcome === null) {
+    return;
+  }
+
+  bulkSubmitting.value = true;
+  try {
+    await itemService.bulkChangeStatus({
+      targetType: view.value,
+      action: bulkAction.value,
+      targets: selectedRows.value.map((row) => ({ id: row.id, version: row.version })),
+      ...outcome
+    });
+    notifySuccess(`已完成批量${BULK_ACTION_LABEL[bulkAction.value]}（${selectedRows.value.length} 筆）`);
+    showBulkDialog.value = false;
+    selectedRows.value = [];
+    dataTableRef.value?.reload();
+  } catch (error) {
+    const issues = error.details?.issues;
+    if (Array.isArray(issues) && issues.length > 0) {
+      notifyError(`${issues.length} 筆未能通過驗證，沒有任何資料被更改：${issues.map((issue) => issue.message).join("；")}`);
+    } else {
+      notifyError(error.message || "批量操作失敗");
+    }
+  } finally {
+    bulkSubmitting.value = false;
+  }
+}
+
 const itemColumns = [
   { name: "name", label: "商品名稱", field: "name", align: "left", sortable: true },
   { name: "categoryName", label: "分類", field: "categoryName", align: "left" },
@@ -266,6 +359,12 @@ function formatPrice(price) {
       />
     </div>
 
+    <div v-if="canManage && selectedRows.length > 0" class="q-px-md q-pb-md row items-center q-gutter-sm">
+      <div>已選取 {{ selectedRows.length }} 筆</div>
+      <q-btn flat label="批量狀態操作" @click="openBulkDialog" />
+      <q-btn flat label="清除選取" @click="selectedRows = []" />
+    </div>
+
     <div class="q-px-md q-pb-md">
       <DataTable
         v-if="view === 'item'"
@@ -276,6 +375,9 @@ function formatPrice(price) {
         :filter="searchText"
         :initial-pagination="initialPagination"
         row-key="id"
+        :selection="canManage ? 'multiple' : 'none'"
+        :selected="selectedRows"
+        @update:selected="(value) => (selectedRows = value)"
       >
         <template #body-cell-categoryName="{ value }">
           <EllipsisCell :text="value ?? '—'" max-width="160px" />
@@ -307,6 +409,9 @@ function formatPrice(price) {
         :filter="searchText"
         :initial-pagination="initialPagination"
         row-key="id"
+        :selection="canManage ? 'multiple' : 'none'"
+        :selected="selectedRows"
+        @update:selected="(value) => (selectedRows = value)"
       >
         <template #body-cell-itemName="{ value }">
           <EllipsisCell :text="value" max-width="160px" />
@@ -372,5 +477,43 @@ function formatPrice(price) {
         </template>
       </DataTable>
     </div>
+
+    <!-- 批量狀態操作 -->
+    <q-dialog v-model="showBulkDialog" persistent>
+      <q-card style="min-width: 420px">
+        <q-card-section>
+          <h2 class="text-h6 q-ma-none">批量狀態操作</h2>
+        </q-card-section>
+        <q-card-section class="q-pt-none q-gutter-md">
+          <div>已選取 {{ selectedRows.length }} 筆{{ view === "item" ? "商品" : "SKU" }}。</div>
+
+          <q-banner v-if="availableBulkActions.length === 0" class="bg-warning text-dark">
+            所選項目目前狀態不一致，沒有任何操作可以一次套用到全部——全有全無：任何一筆失敗都不會有任何改動。請縮窄選取範圍。
+          </q-banner>
+
+          <q-select
+            v-else
+            v-model="bulkAction"
+            outlined
+            emit-value
+            map-options
+            label="操作"
+            :options="availableBulkActions.map((action) => ({ label: BULK_ACTION_LABEL[action], value: action }))"
+          />
+
+          <div class="row justify-end q-gutter-sm">
+            <q-btn flat label="取消" :disable="bulkSubmitting" @click="showBulkDialog = false" />
+            <q-btn
+              v-if="availableBulkActions.length > 0"
+              color="primary"
+              unelevated
+              label="確認執行"
+              :loading="bulkSubmitting"
+              @click="submitBulkAction"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>

@@ -20,7 +20,10 @@ function contentDisposition(fileName) {
   return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(safe)}`;
 }
 
-function isWithinDirectory(directory, target) {
+// Export 俾其他要做「呢個路徑係咪冇逃出受控目錄」呢個判斷嘅模組重用（例如
+// ItemImportFileCleanupJob.js 刪除受控 import root 內嘅檔案之前嘅防線）——
+// 純函式、行為冧咗都好易睇得出，好過每個要呢個判斷嘅模組各自抄一份。
+export function isWithinDirectory(directory, target) {
   return target === directory || target.startsWith(directory + path.sep);
 }
 

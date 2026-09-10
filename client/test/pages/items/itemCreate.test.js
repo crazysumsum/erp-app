@@ -2,11 +2,11 @@ import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
 import { Quasar } from "quasar";
 import { RouterView, createMemoryHistory, createRouter } from "vue-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { h } from "vue";
 
 vi.mock("@/services/item.js", () => ({
-  default: { createItem: vi.fn() },
+  default: { createItem: vi.fn(), checkDuplicates: vi.fn() },
   service: { name: "item" }
 }));
 vi.mock("@/services/itemCatalog.js", () => ({
@@ -40,10 +40,20 @@ const UOMS = [{ id: 5, code: "EA", name: "Each", status: "active" }];
 // 由路由解析出嚟先掛得上。
 const RouterViewHost = { render: () => h(RouterView) };
 
+// 追蹤最近一次 mount 出嚟嘅 wrapper，等 afterEach 可以 unmount 佢。
+// ItemCreatePage 而家有一個打字後 300ms debounce 先觸發嘅疑似重複查詢
+// （見 runDuplicateCheck()），用嘅係真正嘅 `setTimeout`，唔係 vitest fake
+// timer——如果個 component 冇喺呢個 test 完咗之前 unmount，個 timer 會
+// 喺下一個 test 執行緊嗰陣先喺背景觸發，打亂嗰個 test 對 `checkDuplicates`
+// mock 嘅呼叫次數斷言。`onUnmounted` 會 clear 呢個 timer，所以 unmount
+// 就足夠防呢個 leak。
+let currentWrapper = null;
+
 async function mountPage({ initialRoute = "/items/new" } = {}) {
   itemCatalogService.categoryTree.mockResolvedValue(CATEGORY_TREE);
   itemCatalogService.brandList.mockResolvedValue(BRANDS);
   itemCatalogService.uomList.mockResolvedValue(UOMS);
+  itemService.checkDuplicates.mockResolvedValue({ candidates: [] });
 
   const router = createRouter({
     history: createMemoryHistory(),
@@ -59,6 +69,7 @@ async function mountPage({ initialRoute = "/items/new" } = {}) {
   session.user = { id: 1, username: "sam", displayName: "Sam Wong", permissions: ["item.view", "item.mgmt"], roles: [] };
 
   const wrapper = mount(RouterViewHost, { global: { plugins: [Quasar, router] }, attachTo: document.body });
+  currentWrapper = wrapper;
   await flushPromises();
 
   return { wrapper, router, body: new DOMWrapper(document.body) };
@@ -73,6 +84,11 @@ describe("pages/items/ItemCreatePage.vue", () => {
     setActivePinia(createPinia());
     document.body.innerHTML = "";
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    currentWrapper?.unmount();
+    currentWrapper = null;
   });
 
   it("撳「儲存草稿」：帶 activate:false，最少要 item.name／skuCode／skuName", async () => {
@@ -139,6 +155,64 @@ describe("pages/items/ItemCreatePage.vue", () => {
     await flushPromises();
 
     expect(router.currentRoute.value.path).toBe("/items");
+  });
+
+  it("疑似重複：打完名之後 debounce 300ms 先查，搵到就顯示 banner", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { body } = await mountPage();
+    // 喺 mountPage() 之後先設定：mountPage() 本身會將呢個 mock 設做預設
+    // 「冇候選」，喺呢度之後覆寫先確保呢個 test 專用嘅回應唔會被蓋走。
+    itemService.checkDuplicates.mockResolvedValue({
+      candidates: [{ id: 7, name: "維他命 C", status: "active", categoryName: null, brandName: null, skuCount: 2, skuCodes: ["VITC-90", "VITC-180"] }]
+    });
+
+    await fieldInput(body, "商品名稱 *").setValue("維他命 C");
+    expect(itemService.checkDuplicates).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+
+    expect(itemService.checkDuplicates).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "維他命 C" })
+    );
+    expect(body.text()).toContain("找到 1 個名稱相同");
+    expect(body.text()).toContain("VITC-90、VITC-180");
+
+    vi.useRealTimers();
+  });
+
+  it("疑似重複：撳「知道喇」清走 banner；提交按鈕全程冇因為有候選而變唔撳得", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { wrapper, body } = await mountPage();
+    itemService.checkDuplicates.mockResolvedValue({
+      candidates: [{ id: 7, name: "維他命 C", status: "active", categoryName: null, brandName: null, skuCount: 1, skuCodes: ["VITC-90"] }]
+    });
+
+    await fieldInput(body, "商品名稱 *").setValue("維他命 C");
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+    expect(body.text()).toContain("找到 1 個名稱相同");
+    expect(wrapper.find('button[aria-label="儲存草稿"]').attributes("disabled")).toBeUndefined();
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "知道喇").trigger("click");
+    await flushPromises();
+    expect(body.text()).not.toContain("找到 1 個名稱相同");
+
+    vi.useRealTimers();
+  });
+
+  it("疑似重複：查詢失敗唔會打斷表單，靜靜哋當冇搵到", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { body } = await mountPage();
+    itemService.checkDuplicates.mockRejectedValue(new Error("network error"));
+
+    await fieldInput(body, "商品名稱 *").setValue("維他命 C");
+    await vi.advanceTimersByTimeAsync(300);
+    await flushPromises();
+
+    expect(body.text()).not.toContain("疑似重複");
+
+    vi.useRealTimers();
   });
 
   it("後端回 request schema 錯誤（陣列形狀）：對應返欄位顯示，唔淨係彈 toast", async () => {

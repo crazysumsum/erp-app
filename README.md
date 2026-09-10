@@ -11,6 +11,90 @@
 
 （TODO：補充 erp-app 本身的專案簡介、業務範圍與進度）
 
+目前已完成的業務模組：
+
+- **商品管理（Item Management）**：見下方「商品管理模組」一節，以及 [需求文件](docs/items_management/requirement.md)、[設計文件](docs/items_management/design_spec.md)、[任務清單](docs/items_management/tasks.md)。
+
+## 商品管理模組（Item Management）
+
+Item／SKU 主資料、Category／Brand／UOM／Attribute catalog、CSV 批次匯入匯出、媒體附件。設計細節見 [design_spec.md](docs/items_management/design_spec.md)，這裡只記運維會用到的事：資料庫遷移、部署設定、持久化 volume、背景 worker、固定價格口徑、備份還原與 rollback 策略、release smoke steps。
+
+### Migration
+
+跟 Step 3 用同一個指令，`npm run migrate` 已經涵蓋 Item Management 的所有資料表（`database/migrations/0013_*` 到 `0026_*`：`item_categories`、`item_brands`、`item_uoms`、`items`、`item_skus`、`item_sku_uoms`、`item_sku_barcodes`、`item_attributes` 系列、`item_media`、`item_audit_logs`、`item_import_jobs`、`item_import_rows`）。每支 migration 都是 `CREATE TABLE IF NOT EXISTS`，重跑是安全的、可以跟主要 framework migration 一起執行，不需要分開跑。
+
+### 設定（`server/config/item.js`）
+
+只放會隨部署環境變動的數字與路徑；狀態機、追蹤政策、條碼種類等已確認的 domain constants 定義在 `server/src/modules/item/itemConstants.js`，**不吃環境變數**（見下面「固定價格口徑」）。
+
+| 環境變數 | 預設值 | 用途 |
+| --- | --- | --- |
+| `ITEM_CATEGORY_MAX_DEPTH` | `8` | Category tree 最大層數 |
+| `ITEM_MEDIA_DIRECTORY` | `storage/items` | Item／SKU 媒體受控儲存根目錄（見下面「持久化 volume」） |
+| `ITEM_IMAGE_MAX_BYTES` | `5242880`（5MB） | 單張圖片上限 |
+| `ITEM_ATTACHMENT_MAX_BYTES` | `10485760`（10MB） | 單個附件上限 |
+| `ITEM_MEDIA_ORPHAN_GRACE_MS` | `86400000`（1 天） | Media metadata 已刪、實體檔案還保留多久才會被清理 job 動 |
+| `ITEM_IMPORT_DIRECTORY` | `storage/imports` | CSV 匯入來源／結果檔受控儲存根目錄（見下面「持久化 volume」） |
+| `ITEM_IMPORT_MAX_ROWS` | `10000` | 單一匯入 Job 允許的最大資料列數 |
+| `ITEM_IMPORT_BATCH_SIZE` | `200` | 匯入執行階段每個 transaction batch 的列數 |
+| `ITEM_IMPORT_TRANSACTION_TIMEOUT_MS` | `120000` | 匯入執行 transaction 最長時間 |
+
+### 持久化 volume
+
+`ITEM_MEDIA_DIRECTORY`（媒體）與 `ITEM_IMPORT_DIRECTORY`（CSV）是兩個獨立的受控目錄，部署時都必須掛到持久化儲存（不能是容器的臨時檔案系統）——重啟／重新部署遺失這兩個目錄，會令 DB 裡的 `item_media`／`item_import_jobs` 記錄指向不存在的檔案。兩者刻意分開（不合併成一個目錄），因為保留規則不同：media 沒有到期日，import 檔 1 年後由 retention job 清（見下面 worker 一節）。
+
+### 背景 Worker
+
+Item Management 的排程工作跟框架其餘 job 一樣由 `server/config/scheduler.js` 統一開關，各自用獨立的 job 名稱（不共用 lock key）：
+
+| Job 名稱 | Scope | 預設週期 | 做什麼 |
+| --- | --- | --- | --- |
+| `itemMedia.cleanupOrphans` | cluster | 每日 | 掃 `ITEM_MEDIA_DIRECTORY`，清走 DB 已經沒有引用、超過 `ITEM_MEDIA_ORPHAN_GRACE_MS` 的檔案 |
+| `itemImport.validate` | instance | 每 5 秒輪詢一次 | Claim 一個 `uploaded` 匯入 Job，做 preflight 驗證 |
+| `itemImport.execute` | instance | 每 5 秒輪詢一次 | Claim 一個 `queued` 匯入 Job，套用到 Item／SKU |
+| `itemImport.fileCleanup` | cluster | 每日 | 掃已終結（`invalid`／`completed`／`failed`／`cancelled`）、滿 1 年保留期的匯入 Job，刪走 `ITEM_IMPORT_DIRECTORY` 底下的原始檔／結果檔，Job summary／audit 不受影響（見 DEC-023） |
+
+`itemMedia.cleanupOrphans` 同 `itemImport.fileCleanup` 是 `cluster` scope——因為持久化 volume 是所有實例共用的儲存，只需要一個實例真正執行清理；`itemImport.validate`／`execute` 是 `instance` scope，靠 `item_import_jobs` 自己的 `lease_owner`／`lease_until` compare-and-set 互斥，多個實例可以各自並行處理不同的 Job。
+
+### 固定價格口徑
+
+建議零售價（`suggestedRetailPrice`）固定用公司基礎幣別 **HKD**、稅務口徑固定 `tax_not_applicable`，定義在 `server/src/modules/item/itemConstants.js`，**不接受環境變數或 API request 覆寫**。這是已確認的業務決策（design_spec DEC-016、BR-025），不是部署設定——要換幣別或稅務口徑必須先改 requirement 文件再改程式碼，不能用環境變數繞過。
+
+### 備份與還原
+
+Item／SKU／Catalog／稽核（`item_audit_logs`）／匯入 metadata（`item_import_jobs`／`item_import_rows`）全部是一般 MySQL 資料表，納入既有的 MySQL backup／restore／災難復原演練即可，不需要另外一套機制。`ITEM_MEDIA_DIRECTORY`／`ITEM_IMPORT_DIRECTORY` 兩個持久化 volume 必須以**同一個 recovery point** 跟資料庫一起備份——還原資料庫但沒有同步還原媒體檔案，會出現指向不存在檔案的孤兒記錄。
+
+### Forward-only rollback
+
+`server/database/migrations/` 底下沒有 `down()`：每支 migration 都是 `CREATE TABLE IF NOT EXISTS`，只新增、不動既有表。這代表 schema 變更**沒有自動 rollback**——一旦某個版本的 migration 在 production 套用過，回退程式碼版本並不會撤銷 schema 變更。出錯時的做法是往前修（寫一支新 migration 修正問題），不是往後退版本；這也是為什麼 Checkpoint L 要求「Migration 在 staging 由現行版本升級及重跑均成功」而不是「驗證 rollback」。
+
+### 業務 catalog 首版樣本
+
+以下係開發階段建立嘅**示範性範例資料**，唔係正式業務資料，僅供本機開發／smoke test 用嚟驗證 Category／UOM／Attribute／internal Barcode 呢幾類 catalog 資料嘅建立同使用流程——**正式環境嘅首版 catalog 內容需要業務正式核准，唔可以直接沿用呢份範例**：
+
+| 類型 | 範例值 |
+| --- | --- |
+| Category（3 級） | 食品 › 飲品 › 樽裝飲品 |
+| Brand | 示範品牌 A |
+| UOM | `EA`（件，base）、`BOX`（箱，to_base_factor=24） |
+| Attribute | 容量（decimal）、口味（single_option：原味／檸檬味） |
+| Internal Barcode | `INT-DEMO-000001` |
+
+用 `npm run create-user` 建立管理員帳號後，透過前端「商品管理 → Category／Brand／UOM／Attribute」頁面手動建立即可；沒有另外的 seed script（catalog 資料量小、由使用者手動維護，寫一個一次性 seed script 換不到什麼）。
+
+### Release smoke steps
+
+手動走一次完整生命週期，確認 UI 同 API 都正常：
+
+1. 建立一個 Draft Item（含至少一個 SKU）。
+2. 轉做 Active。
+3. 用 SKU Code／條碼／名稱搜尋，確認查得到。
+4. 更新一個欄位，確認新值可查見、稽核記錄有前後值。
+5. 停用（Inactive）再復原（Active），確認狀態轉換同稽核都正確。
+6. 查看稽核紀錄（Audit）。
+7. 上傳一張圖片／附件（Media），確認顯示同下載正常。
+8. 匯出 SKU（CSV），匯入一個小 CSV（Import），確認結果正確。
+
 ## 程式碼放哪裡
 
 後端的 `server/src/` 底下分三種角色，界線由**目錄**維持，而不是靠命名習慣或口頭約定：

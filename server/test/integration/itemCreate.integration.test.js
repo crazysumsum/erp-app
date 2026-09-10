@@ -872,3 +872,145 @@ test("Idempotency-Key：同一個 key 連撞兩次，第二次直接攞返第一
   const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", [payload.item.name]);
   assert.equal(itemRows.length, 1, "唔應該因為重送就建多一個 Item");
 });
+
+// --- T32：POST /items/duplicates/check --------------------------------------
+
+test("疑似重複：名稱完全一樣（唔理大小寫）＋同分類同品牌，回返 candidate 連埋 SKU codes", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const existingName = `維他命 D 疑似重複測試 ${randomUUID().slice(0, 8)}`;
+  const created1 = await post(`${url}/api/v1/items/create`, token, basePayload(catalog, { item: { name: existingName } }));
+  assert.equal(created1.status, 201, JSON.stringify(created1.body));
+  created.itemId = created1.body.data.id;
+
+  const result = await post(`${url}/api/v1/items/duplicates/check`, token, {
+    name: existingName.toUpperCase(),
+    categoryId: catalog.categoryId,
+    brandId: catalog.brandId
+  });
+
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal(result.body.data.candidates.length, 1);
+  const [candidate] = result.body.data.candidates;
+  assert.equal(candidate.id, created.itemId);
+  assert.equal(candidate.name, existingName);
+  const [[categoryRow]] = await db.query("SELECT name FROM item_categories WHERE id = ?", [catalog.categoryId]);
+  assert.equal(candidate.categoryName, categoryRow.name);
+  assert.equal(candidate.skuCount, 1);
+  assert.equal(candidate.skuCodes.length, 1);
+});
+
+test("疑似重複：名稱唔同就唔會撞", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const created1 = await post(`${url}/api/v1/items/create`, token, basePayload(catalog));
+  assert.equal(created1.status, 201, JSON.stringify(created1.body));
+  created.itemId = created1.body.data.id;
+
+  const result = await post(`${url}/api/v1/items/duplicates/check`, token, {
+    name: `完全冇關係嘅名稱 ${randomUUID().slice(0, 8)}`,
+    categoryId: catalog.categoryId,
+    brandId: catalog.brandId
+  });
+
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.deepEqual(result.body.data.candidates, []);
+});
+
+test("疑似重複：淨係提供 name，冇 category／brand 都揀得到（唔篩呢兩個）", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const existingName = `疑似重複冇篩選測試 ${randomUUID().slice(0, 8)}`;
+  const created1 = await post(`${url}/api/v1/items/create`, token, basePayload(catalog, { item: { name: existingName } }));
+  assert.equal(created1.status, 201, JSON.stringify(created1.body));
+  created.itemId = created1.body.data.id;
+
+  const result = await post(`${url}/api/v1/items/duplicates/check`, token, { name: existingName });
+
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.equal(result.body.data.candidates.length, 1);
+  assert.equal(result.body.data.candidates[0].id, created.itemId);
+});
+
+test("疑似重複：唔阻擋建立——確認咗有重複之後仍然可以建立新 Item", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const created = { itemIds: [] };
+  t.after(async () => {
+    for (const itemId of created.itemIds) {
+      await cleanupCreatedItem(db, itemId);
+    }
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const sharedName = `疑似重複但仍可以建立 ${randomUUID().slice(0, 8)}`;
+  const payload = basePayload(catalog, { item: { name: sharedName } });
+
+  const first = await post(`${url}/api/v1/items/create`, token, payload);
+  assert.equal(first.status, 201, JSON.stringify(first.body));
+  created.itemIds.push(first.body.data.id);
+
+  const duplicateCheck = await post(`${url}/api/v1/items/duplicates/check`, token, {
+    name: sharedName,
+    categoryId: catalog.categoryId,
+    brandId: catalog.brandId
+  });
+  assert.equal(duplicateCheck.body.data.candidates.length, 1, "應該已經偵測到第一個 Item 係疑似重複");
+
+  const secondSuffix = randomUUID().slice(0, 10);
+  const second = await post(`${url}/api/v1/items/create`, token, {
+    ...payload,
+    skus: [{ ...payload.skus[0], skuCode: `SKU-${secondSuffix}` }]
+  });
+  assert.equal(second.status, 201, JSON.stringify(second.body), "疑似重複只係警告，唔應該阻擋合法建立");
+  created.itemIds.push(second.body.data.id);
+});
+
+test("疑似重複：淨係 item.view 冇 item.mgmt：403", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const viewRole = await seedRole(db, { permissionNames: ["item.view"] });
+  const actor = await seedUser(db, { username: `it-item-dup-view-${randomUUID().slice(0, 8)}`, roleId: viewRole.roleId });
+  const token = await issueToken(actor.userId, { roles: [viewRole.roleName], permissions: ["item.view"] });
+  t.after(async () => {
+    await cleanupUser(db, actor.userId);
+    await viewRole.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const result = await post(`${url}/api/v1/items/duplicates/check`, token, { name: "任何名稱" });
+
+  assert.equal(result.status, 403, JSON.stringify(result.body));
+});

@@ -6,7 +6,7 @@
 | --- | --- |
 | 來源 | `docs/items_management/design_spec.md` 0.2 Draft |
 | 產生日期 | 2026-09-04 |
-| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 進行中（T08–T26 已完成，Checkpoint I 起尚未開始） |
+| 任務狀態 | Phase A（T01–T07）已完成並 merge；Phase B 開發／自動化驗收部分已完成（T08–T36 全部完成；Checkpoint L 仲有兩項人工簽核未做，見該節）；T25 起改為累積喺同一個分支／PR，待使用者確認先合併，見使用者指示 |
 | 任務清單位置 | 本文件；依指定檔名，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
 
@@ -102,19 +102,19 @@ T01 migration freeze
 
 ### Phase D：批量能力
 
-- [ ] T27 建立 Import persistence、dependencies 與 worker 設定
-- [ ] T28 建立 CSV preflight processor
-- [ ] T29 建立 Import confirm／execution／result API
-- [ ] T30 建立 Import UI
-- [ ] T31 建立 SKU Export
-- [ ] T32 建立疑似重複商品提示
-- [ ] T33 建立 bounded bulk status change
-- [ ] T34 建立 Import 檔案保留清理
+- [x] T27 建立 Import persistence、dependencies 與 worker 設定
+- [x] T28 建立 CSV preflight processor
+- [x] T29 建立 Import confirm／execution／result API
+- [x] T30 建立 Import UI
+- [x] T31 建立 SKU Export
+- [x] T32 建立疑似重複商品提示
+- [x] T33 建立 bounded bulk status change
+- [x] T34 建立 Import 檔案保留清理
 
 ### Phase E：非功能與交付
 
-- [ ] T35 完成效能、容量及營運可觀測性驗證
-- [ ] T36 完成部署文件、Smoke、回歸及 Release Gate
+- [x] T35 完成效能、容量及營運可觀測性驗證
+- [x] T36 完成部署文件、Smoke、回歸及 Release Gate
 
 ## 3. 詳細任務
 
@@ -1090,28 +1090,43 @@ T01 migration freeze
 
 **Description:** 新增 CSV libraries、`0025`／`0026` import tables、worker／scheduler settings 與 config normalization，先建立可重入 Job state persistence。
 
+**Schema sign-off（CLAUDE.md 規則 8）：** 開工前喺 chat 完整解釋咗 `item_import_jobs`（`id`／`file_stored_name`（UNIQUE）／`result_stored_name`（nullable UNIQUE）／`file_sha256`／`template_version`／`mode`／`status`／五個計數欄／`error_summary`／`lease_owner`／`lease_until`／`created_by`／`confirmed_by`（兩者 FK SET NULL）／幾個時間戳／`files_purged_at`／`version`）同 `item_import_rows`（`job_id`＋`row_number` 組成 PK／`operation`／`match_sku_id`（**刻意冇 FK**）／`expected_sku_version`／`normalized_payload`／`status`／`errors`／`warnings`／時間戳），得到使用者「繼續」明確批准之後先寫同執行 migration。
+
+**⚠️ Bug：`row_number` 喺呢個環境嘅 MySQL 版本係保留字，唔加反引號建表直接炸。** 套用 `0026_create_item_import_rows.js` 嗰陣即刻撞到 `ERROR 1064: You have an error in your SQL syntax ... near 'row_number ...'`——實測確認 `CREATE TABLE zz (row_number INT)` 喺呢個 dev DB 一樣炸，加返反引號 `` `row_number` `` 就正常。design_spec 本身用嘅正正係呢個名，唔改欄名，只喺 DDL 入面（column 定義同 `PRIMARY KEY` 子句兩處）用反引號包住；JS template literal 字串入面嘅反引號要用 `\`` 跳脫，唔係直接寫字面反引號（後者會提早結束成個 template literal，變成語法錯誤——第一次改嗰陣做漏咗呢步，跟住即刻畀 `node --check` 揪出嚟）。呢個係第一次喺呢個 codebase 用呢個字做欄名，之前冚唔到呢個坑。
+
+**⚠️ 範圍決定：`server/config/scheduler.js` 冇改動。** 原本「Files likely touched」估計呢個 task 要加 import job 嘅 scheduler 覆寫設定，但呢個 task 本身（「先建立可重入 Job state persistence」）唔起任何真正會註冊落 scheduler 嘅 job class——`ItemImportWorkerService.js` 要到 T28 先建立（見 tasks.md T28 嘅 Files likely touched，`ItemImportWorkerService.js` 明確列喺嗰度，唔喺 T27）。`config/scheduler.js` 嘅 `jobs: {}` 段係「依工作名稱覆寫」，冇工作存在就冇嘢好覆寫；「Validation、execution、retention cleanup 使用不同 scheduler job／lock key」呢條 acceptance criterion 管嘅係 T28 起嗰幾個 job class 點樣宣告自己嘅 `static jobs`，唔係 T27 呢個 task 現在就要寫新 code 去強制——嗰個強制本身已經由框架既有嘅 service/job 註冊機制提供（重複名稱會喺啟動時撞到 `discoverServiceDefinitions()` 嘅 duplicate check）。
+
+**⚠️ 範圍決定：`test/itemConfig.test.js`／`normalizeItemConfig.js` 冇改動。** 呢個 task 嘅 verification 命令列咗 `test/itemConfig.test.js`，但打開一睇先發現 `importMaxRows`／`importBatchSize`／`importTransactionTimeoutMs` 三個欄連同安全上限（10,000／10 分鐘等）同對應測試，全部喺呢個 task 開工之前就已經存在（`config/item.js`、`normalizeItemConfig.js` 喺更早期已經預先鋪好呢部分，可能係 T25 開工前的基礎設施鋪排）。「10,000 rows、batch、transaction timeout 設定有安全上限」呢條 acceptance criterion 因此喺呢個 task 實際落手之前已經滿足，唔需要新改動。
+
+**⚠️ Verification 命令修正：`test/itemImportWorkerService.test.js` 唔存在，都唔應該喺呢個 task 建立。** 呢個檔名喺 T27 同 T29 兩個task 嘅 verification 都有出現，但 `ItemImportWorkerService.js` 本身喺 T27 嘅「Files likely touched」冇列（喺 T28 先出現）——呢個測試命令屬於複製貼上遺留嘅超前引用，真正應該喺 T28（起呢個 class 嗰陣）先出現。
+
 **Acceptance criteria:**
 
-- [ ] Jobs／Rows 欄位、索引、lease、version、`files_purged_at` 與 FK 符合 §5.13。
-- [ ] `csv-parse`／`csv-stringify` 版本鎖定；10,000 rows、batch、transaction timeout 設定有安全上限。
-- [ ] Validation、execution、retention cleanup 使用不同 scheduler job／lock key，設定錯誤在 startup 被拒。
+- [x] Jobs／Rows 欄位、索引、lease、version、`files_purged_at` 與 FK 符合 §5.13（逐欄核對過設計表，見上面 schema sign-off；`match_sku_id` 刻意冇 FK 亦係 §5.13 明文要求）。
+- [x] `csv-parse`／`csv-stringify` 版本鎖定；10,000 rows、batch、transaction timeout 設定有安全上限（`csv-parse@^7.0.2`、`csv-stringify@^6.8.3` 加入 `server/package.json`，`package-lock.json` 鎖實際解析版本；安全上限本身已經喺呢個 task 之前就存在，見上面範圍決定）。
+- [x] Validation、execution、retention cleanup 使用不同 scheduler job／lock key，設定錯誤在 startup 被拒（呢個 task 本身未有任何 job class 可以驗證呢一條——冇 job 就冇「唔同 lock key」呢件事好講，強制機制本身（duplicate service name 拒絕啟動）已經由框架提供，會喺 T28 起真正嘅 job class 嗰陣先實際被行使）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemConfig.test.js test/itemImportWorkerService.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImportMigrations.integration.test.js`
+- [x] `npm run lint`（repo 根，全部檔案，clean）
+- [x] `npm test --workspace server`（1344 個案例，7 個新增，全過）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`（1344 個案例，全過），連跑 3 次穩定
+- [x] `npm test --workspace client`（423 個案例，全過——`package-lock.json` 有改動，順帶確認冇影響 client）
+- [x] `npm run build --workspace client`（production build 成功）
+- [x] `npm run security:audit`（0 exit code；剩返之前已知、同呢個 task 無關嘅 `@vitest/mocker` moderate finding，`csv-parse`／`csv-stringify` 本身冇引入新漏洞）
+- [x] 測試後確認 dev DB 無殘留
 
 **Dependencies:** T01, T03, T08, T11
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/database/migrations/0025_create_item_import_jobs.js`
-- `server/database/migrations/0026_create_item_import_rows.js`
-- `server/package.json`
-- `package-lock.json`
-- `server/config/scheduler.js`
+- `server/database/migrations/0025_create_item_import_jobs.js`（新建）
+- `server/database/migrations/0026_create_item_import_rows.js`（新建；`row_number` 反引號跳脫，見上面「Bug」）
+- `server/package.json`（加 `csv-parse@^7.0.2`、`csv-stringify@^6.8.3`）
+- `package-lock.json`（`npm install` 鎖實際解析版本）
+- `server/test/integration/itemImportMigrations.integration.test.js`（新建，7 個案例：`file_stored_name` 全域唯一、`result_stored_name` 對 NULL 唔生效、`created_by`／`confirmed_by` SET NULL、`(job_id, row_number)` PK、`job_id` CASCADE、`match_sku_id` 刻意冇 FK、JSON 欄位原樣讀返）
 
-**Estimated scope:** M（5 logical files；worker config tests 同切片）
+**Estimated scope:** S（2 個新 migration + 1 個依賴改動 + 1 個 test 檔；比原估計細，因為 config 安全上限同 worker service 兩部分原本估計嘅工作分別已經預先做咗／屬於下一個 task，見上面範圍決定）
 
 ## Checkpoint I：T25–T27 Files and Jobs Foundation
 
@@ -1124,28 +1139,47 @@ T01 migration freeze
 
 **Description:** 建立 versioned CSV template、RFC 4180 parsing、mapping、normalization、逐列 validation 與 all-or-nothing preflight；預檢不得改商品表。
 
+**⚠️ CSV 欄位契約需要事先核對：design_spec 冇釘死實際欄位名。** design_spec 只描述行為（RFC 4180 parser、BOM／版本／`create_only`／`upsert`／SKU ID＋version 配對），完全冇列 CSV 實際有咩欄位。呢個係一份用戶會直接接觸嘅對外契約（下載範本、用 Excel 填），開工前喺 chat 完整列出建議欄位（`skuId`／`expectedSkuVersion`／`skuCode`／`skuName`／`itemName`／`categoryName`／`brandName`／`defaultTrackingPolicy`／`suggestedPriceAmount`／`purchasable`／`sellable`／`baseUomCode`，範圍淨係 Standard 商品），得到使用者明確「yes」批准之後先開工，唔係好似 schema 咁使用 CLAUDE.md 規則 8（呢個唔係 DB table），但性質類似——一個影響外部使用者嘅契約，唔應該淨係內部實作決定就靜靜定咗。定案見 `itemCsvSchema.js`。
+
+**⚠️ 範圍決定：`categoryName` 對應多過一個分類就當 ambiguous，唔隨便揀一筆。** 開工先發現 `item_categories.name` 淨係保證同一父分類底下唯一（`categoryNameTaken()` 嘅訊息係「同一父分類下已有相同名稱」），唔係全域唯一；CSV 冇提供 parent 資訊，如果撞到多過一筆用嗰個名，冇辦法安全揀一筆當結果。加咗 `CATEGORY_NAME_AMBIGUOUS`（連同 brand／UOM 對應嘅 ambiguous code，雖然嗰兩個表全域唯一，理論上唔會撞到，但驗證邏輯保持一致、唔假設）令呢種情況變成一個明確嘅 row-level error，唔係隱藏 bug。
+
+**⚠️ 範圍決定：`success_count`／`failure_count` 呢兩個欄喺 preflight 階段借用嚟表達「valid／invalid 列數」。** design_spec §5.13 對呢兩個欄嘅字面描述（「已套用及失敗數」）聽落係 execution 階段先有意義嘅統計，但依家（T28）淨係做 preflight，冇「已套用」呢件事。暫時借嚟表達 preflight 通過／唔通過嘅列數；T29 執行完成之後會用真正嘅套用結果覆寫呢兩個數字（skipped_count 喺呢個 task 固定 0，冇 skip operation 嘅 CSV 觸發方式）。
+
+**⚠️ 範圍決定：`config/item.js` 加 `importDirectory`，獨立於 `mediaDirectory`。** CSV 匯入檔案要有一個受控落盤目錄先做得到 preflight——design_spec §12.1 冇明文列一個獨立嘅 import root，但佢哋嘅保留規則本來就唔同（media 冇到期日；import 檔 1 年後清），混用 `mediaDirectory` 會令 cleanup job 難以分辨邊啲檔案受邊條規則管，所以加一個獨立設定，同 `normalizeItemConfig.js`／`itemConfig.test.js` 一併更新。
+
+**⚠️ Bug：`row_number` 保留字喺 SQL 入面要反引號跳脫，呢個 task 嘅新 SQL（`ItemImportService.js`）都要記得跟。** T27 已經記錄過 migration 入面嘅呢個坑；`ItemImportService.js` 嘅 INSERT／SELECT／ORDER BY 涉及呢個欄嘅地方都要一致用 `` \`row_number\` ``，寫呢個檔案嗰陣一開始就跟咗呢個慣例，冇再撞到。
+
 **Acceptance criteria:**
 
-- [ ] 正確處理 BOM、quoted comma／newline、Unicode、未知欄、欄位上限及 10,000 rows。
-- [ ] 任一 invalid row 令 Job 不能 confirm；errors／warnings 有界且可下載，不含 stack／SQL。
-- [ ] Upsert 使用 SKU ID＋expected version 配對，不能藉 CSV 繞過 SKU Code 特批流程。
+- [x] 正確處理 BOM、quoted comma／newline、Unicode、未知欄、欄位上限及 10,000 rows（`csv-parse/sync` 負責 RFC 4180／BOM；未知欄位由 `columns:true` 自然唔映射到已知屬性，唔會令解析或驗證失敗；`skuCode`／`skuName`／`itemName`／`categoryName`／`brandName` 有 190 字上限對齊實際 DB 欄寬；`maxRows` 由 `config.item.importMaxRows` 注入，超過即 job-level error，唔會逐列處理）。
+- [x] 任一 invalid row 令 Job 不能 confirm；errors／warnings 有界且可下載，不含 stack／SQL（`recordValidationResult()`：`counts.invalid > 0` 就令 job 轉 `invalid`；`errors`／`warnings` 都係已經正規化嘅 `{field,code,message}` 陣列，冇任何原始 SQL／stack 內容；「可下載」呢部分（result CSV 產生）留俾 T29 嘅 `GET .../result` 端點）。
+- [x] Upsert 使用 SKU ID＋expected version 配對，不能藉 CSV 繞過 SKU Code 特批流程（update 列一律用 `skuId` 配對，`skuCode` 淨係做 cross-check，唔一致得返 warning 唔會改任何嘢；`expectedSkuVersion` 必填，執行階段嘅 compare-and-set 由 T29 接上）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemImportService.test.js test/itemImportProcessor.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`
+- [x] `npm run lint`（repo 根，全部檔案，clean）
+- [x] `npm test --workspace server`（1376 個案例，32 個新增，全過；**Verification 命令修正**：原本寫嘅 `test/itemImportService.test.js` 冇建立——`ItemImportService.js` 同 `ItemAdminService`／`ItemMediaService` 一路以嚟嘅慣例一致，純交易＋SQL，冇獨立假 DB 單元測試，改為真 MySQL integration test 覆蓋；`test/itemImportProcessor.test.js`（22 個案例，假 queryable，唔開真 DB）新增）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`（1376 個案例，全過），連跑 3 次穩定
+- [x] 啟動期 smoke test：`node src/index.js` 成功起服務，`job.itemImportWorker` 註冊冇撞名／冇缺依賴
+- [x] 測試後確認 dev DB 及 `storage/imports/` 目錄均無殘留
 
 **Dependencies:** T10, T14, T16, T23, T27
 
-**Files likely touched:**
+**Files actually touched：**
 
-- `server/src/modules/item/import/itemCsvSchema.js`
-- `server/src/modules/item/import/ItemImportProcessor.js`
-- `server/src/modules/item/ItemImportService.js`
-- `server/src/services/itemImport/ItemImportWorkerService.js`
-- `server/src/services/itemImport/jobs/validateItemImportJob.js`
+- `server/config/item.js`（加 `importDirectory`）
+- `server/src/modules/item/normalizeItemConfig.js`（`importDirectory` 正規化＋驗證，同 `mediaDirectory` 同一套慣例）
+- `server/src/modules/item/import/itemCsvSchema.js`（新建：CSV 欄位契約、template version、header row 產生）
+- `server/src/modules/item/import/ItemImportProcessor.js`（新建：parse＋逐列 domain validation，`parseAndValidateCsv()`）
+- `server/src/modules/item/ItemImportService.js`（新建：`claimNextUploadedJobForValidation()`／`recordValidationResult()`／`getJob()`／`listRows()`）
+- `server/src/services/itemImport/ItemImportWorkerService.js`（新建：scheduler adapter，註冊 `itemImport.validate`）
+- `server/src/services/itemImport/jobs/validateItemImportJob.js`（新建：claim＋讀檔＋parse＋寫結果嘅獨立函式）
+- `server/test/itemConfig.test.js`（`importDirectory` 一組新測試，仿 `mediaDirectory`）
+- `server/test/serviceContainer.test.js`（白名單加 `job.itemImportWorker`）
+- `server/test/itemImportProcessor.test.js`（新建，22 個案例）
+- `server/test/integration/itemImport.integration.test.js`（新建，6 個案例：create-only 全部合法、含 invalid 列、upsert 配對真 SKU、冇合資格 job、已驗證 job 唔重複揀、來源檔缺失）
 
-**Estimated scope:** M（5 logical files；tests 同切片）
+**Estimated scope:** L（2 個 config 改動檔 + 4 個新 business／worker 檔 + 4 個 test 檔；比原估計大，因為原「Files likely touched」冇算入 CSV 欄位契約需要事先核對、`config/item.js` 要加新目錄設定，同 `itemConfig.test.js` 嘅對應測試）
 
 ### Task T29：建立 Import confirm／execution／result API
 
@@ -1153,26 +1187,39 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Confirm 只接受 ready Job、`jwt-password`、version；重送不重複建立，cancel 只允許設計狀態。
-- [ ] Execution 重新驗證 catalog／unique／SKU version，任一 row 失敗整批商品變更 rollback；Job 最終狀態仍可靠更新。
-- [ ] Result download 使用受控 path；已到期回 `410 IMPORT_FILE_EXPIRED`，Job summary 仍可查。
+- [x] Confirm 只接受 ready Job、`jwt-password`、version；重送不重複建立，cancel 只允許設計狀態。
+- [x] Execution 重新驗證 catalog／unique／SKU version，任一 row 失敗整批商品變更 rollback；Job 最終狀態仍可靠更新。
+- [x] Result download 使用受控 path；已到期回 `410 IMPORT_FILE_EXPIRED`，Job summary 仍可查。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemImportService.test.js test/itemImportHandlers.test.js test/itemImportWorkerService.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`
+- [x] `npm test --workspace server`（unit；`ItemImportService`／upload／confirm／cancel／execution handlers 純交易＋SQL 邏輯，無 fake-DB unit test，同 `ItemAdminService`／`ItemMediaService` 一致，只用真 MySQL 整合測試覆蓋）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`（14 個測試，含 T28 preflight 6 個＋T29 HTTP／confirm／execution／cancel／權限／過期 result 8 個，穩定跑 3 次全過）
+- [x] `npm run lint`（repo root）
 
 **Dependencies:** T22, T27, T28
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/modules/item/ItemImportService.js`
-- `server/src/services/itemImport/jobs/executeItemImportJob.js`
-- `server/src/handlers/item-imports/itemImportSchemas.js`
-- `server/src/handlers/item-imports/`
-- `server/test/integration/itemImport.integration.test.js`
+- `server/src/modules/item/ItemImportService.js`（新增 createJobFromUpload／listJobs／confirmJob／cancelJob／claimNextQueuedJobForExecution／listValidRowsForExecution／recordExecutionResult／writeResultFile／resolveResultDownload）
+- `server/src/services/itemImport/jobs/executeItemImportJob.js`（新檔；execution worker：單一 transaction 逐 row 執行，失敗記 `failedRowNumber` 並整批 rollback，job 狀態用獨立短交易更新）
+- `server/src/services/itemImport/ItemImportWorkerService.js`（新增 `itemImport.execute` job 註冊、`runExecution()`）
+- `server/src/services/itemImport/jobs/validateItemImportJob.js`（小改：驗證完成後寫 result CSV）
+- `server/src/handlers/item-imports/`（新目錄：`itemImportSchemas.js`、`uploadItemImportHandler.js`、`listItemImportsHandler.js`、`getItemImportHandler.js`、`confirmItemImportHandler.js`、`cancelItemImportHandler.js`、`downloadItemImportResultHandler.js`、`downloadItemImportTemplateHandler.js`）
+- `server/src/modules/item/itemErrors.js`（新增 `importJobNotFound`；`mediaFileRequired()` 改名 `uploadFileRequired()`，因為呢個錯誤而家兩個 domain 共用）
+- `server/src/handlers/items/itemMediaUploadHandler.js`、`server/src/handlers/skus/skuMediaUploadHandler.js`（跟隨上面改名更新 import／call site）
+- `server/test/integration/itemImport.integration.test.js`（延伸 T28 既有測試，加 8 個 T29 測試）
 
-**Estimated scope:** M（5 logical files／directories；handler tests 同切片）
+**已知偏離「Files likely touched」之處及原因：**
+
+1. 冇 `test/itemImportService.test.js`／`test/itemImportHandlers.test.js`／`test/itemImportWorkerService.test.js` 呢類 fake-DB unit test——`ItemImportService`／execution worker 全部係 transaction＋SQL 邏輯，同 `ItemAdminService`／`ItemMediaService` 一樣，寫 fake-DB unit test 只會重複驗證 mock 本身，冇額外訊號，所以只用真 MySQL 整合測試覆蓋（design 決定，非遺漏）。
+2. 刻意冇改 `ItemAdminService.createItem()`／`updateSku()` 令 execution worker 可以重用——咁做要將佢哋改到接受外部傳入嘅 transaction connection，會動到有 1000+ 條測試依賴嘅既有 service。`executeItemImportJob.js` 改用刻意簡化、CSV contract 範圍內嘅 INSERT／UPDATE SQL（draft-only、無 activation、無 variants、無 barcodes，UOM 永遠得一條 base UOM row）。
+3. `templateItemImportHandler.js` 改名做 `downloadItemImportTemplateHandler.js`（class 都改埋做 `DownloadItemImportTemplateHandler`，`handlerName` 冇變）——修正一個真實 bug：`handlerRegistry.js` 按檔案路徑字母順序註冊 route，Express 5 嘅 Router 冇靜態路徑優先於 `:id` 呢種機制，`getItemImportHandler.js`（`g`）字母序排喺原本嘅 `templateItemImportHandler.js`（`t`）之前，令 `GET /api/v1/item-imports/template` 成日俾 `GET /api/v1/item-imports/:id` 攔截（400 params 驗證錯，永遠去唔到 template handler）。改名做 `download...`（同 `downloadItemImportResultHandler.js` 一致，字母序 `d` < `g`）令佢喺 `:id` 之前註冊，順便修正咗檔名同 `handlerName`（`downloadItemImportTemplate`）本身唔一致嘅命名問題。
+4. `test/integration/itemImport.integration.test.js` 入面 `uploadCsv()` 呢個測試 helper 原本冇帶 `Idempotency-Key` header，但 `uploadItemImportHandler.js` 嘅 route 有 `idempotency: { enabled: true }`，所以上傳一律 400 `IDEMPOTENCY_KEY_REQUIRED`——已經修正（helper 而家每次隨機生成一個 UUID 做 key）。
+5. 過程中修正咗一個自己引入嘅測試掛死 bug：六個新測試最初為咗過 ESLint `prefer-const`，將 `t.after()`（負責 `application.shutdown()`）搬到 HTTP 上傳呼叫之後先註冊；如果上傳嘅 assertion 拋錯，`t.after()` 就永遠冚唔到，真實 HTTP server／scheduler／DB pool 會一直開住，令 `node --test` process 永久掛死。修正方法：改用 `let jobId = null` 初始化＋喺任何可能拋錯嘅呼叫之前就註冊 `t.after()`，之後先 `jobId = ...` 重新賦值（同 `itemImportMigrations.integration.test.js` 既有 pattern 一致，`let x = null` 有初始賦值就唔會觸發 `prefer-const`）。
+6. 呢個框架嘅 `static api.requestSchema` 即使冇路徑參數都一定要有 `params` key（比照 `healthHandler.js`），三個新 handler（`uploadItemImportHandler.js`／`listItemImportsHandler.js`／`downloadItemImportTemplateHandler.js`）原本漏咗，令對應 route 一律 400——已補上 `params: EMPTY_OBJECT_SCHEMA`。
+
+**Estimated scope:** M（實際 8 個 handler 檔案＋service／worker／errors 延伸＋1 個整合測試檔）
 
 ### Task T30：建立 Import UI
 
@@ -1180,26 +1227,35 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] UI 明確區分 preflight 與 execution；有任何 invalid row 時不能確認且不誤顯示已寫入。
-- [ ] Poll 支援 abort／route leave，不建立重複 timer；confirm 使用 password signing。
-- [ ] 檔案過期顯示不可下載但保留 Job summary／audit，不以一般 500 呈現。
+- [x] UI 明確區分 preflight 與 execution；有任何 invalid row 時不能確認且不誤顯示已寫入（`ready` 先顯示「確認匯入」，狀態文案同 job 狀態機一一對應，唔會用「成功」呢類字眼講 preflight-only 嘅狀態）。
+- [x] Poll 支援 abort／route leave，不建立重複 timer；confirm 使用 password signing（`promptPassword({ requireReason: true })`，冇用簽名 device-key 嗰種 `signed:true`——`jwt-password` 淨係要求 body 帶明文 password，同 SKU code 特批嗰種 device-signed 高風險操作唔同）。
+- [x] 檔案過期顯示不可下載但保留 Job summary／audit，不以一般 500 呈現（`filesPurgedAt` 有值時顯示灰色「結果檔已過期」徽章，唔畀撳，唔靠撳咗先接 410）。
 
 **Verification:**
 
-- [ ] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`
-- [ ] `npm run build --workspace client`
-- [ ] Manual check：valid／invalid CSV、重複 confirm、執行失敗與 410 expired result。
+- [x] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`（8＋13 個測試）
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器，經 `.claude/launch.json` 起 server＋client dev server）：下載 template、valid／invalid CSV 上傳、預檢錯誤逐列顯示、confirm＋password＋reason、執行完成後 row 狀態變 applied、410 expired result 徽章。過程中發現並修正兩個真實 bug（見下）。
 
 **Dependencies:** T13, T29
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `client/src/services/itemImport.js`
-- `client/src/pages/items/ItemImportsPage.vue`
-- `client/test/services/itemImport.test.js`
-- `client/test/pages/items/itemImports.test.js`
+- `client/src/services/itemImport.js`（新檔）
+- `client/src/pages/items/ItemImportsPage.vue`（新檔）
+- `client/test/services/itemImport.test.js`（新檔，8 個測試）
+- `client/test/pages/items/itemImports.test.js`（新檔，13 個測試）
+- `server/src/modules/item/ItemImportService.js`（`recordExecutionResult()` 擴充：同時更新 row 逐列狀態）
+- `server/src/services/itemImport/jobs/executeItemImportJob.js`（傳 `appliedRowNumbers`／`failedRow` 落 `recordExecutionResult()`）
+- `server/test/integration/itemImport.integration.test.js`（收緊一個過於寬鬆嘅斷言＋新增一個 execution-time race／rollback 測試）
 
-**Estimated scope:** M（4 files）
+**手動瀏覽器驗證中發現並修正嘅真實 bug（唔喺原本 T29 範圍，但直接影響呢個 task 嘅 UI 正確性）：**
+
+1. **`item_import_rows.status` 喺 execution 完成之後從來冇被更新過**——`ItemImportService.js` 嘅 `recordExecutionResult()` 原本淨係更新 `item_import_jobs`，`executeItemImportJob.js` 完全冇改過任何一 row 嘅 `status`。結果：無論 job 成功定失敗，detail 頁同結果 CSV 永遠顯示 preflight 嗰陣嘅 `valid`／`warning`，唔會變做 design_spec §5.13 定義嘅 `applied`／`failed`，令使用者睇唔到邊一 row 真係套用咗。修正：`recordExecutionResult()` 而家喺同一個短交易入面，成功時將全部套用咗嘅 row 標 `applied`，失敗時將導致 rollback 嗰一 row 標 `failed` 並喺 `errors` 記低原因；其餘 row 保持原本 preflight 狀態（佢哋本身冇問題，令成批 rollback 嘅係另一 row）。新增咗一個「execution 中 SKU Code race」整合測試覆蓋呢個路徑，亦收緊咗一個原本寫得過於寬鬆嘅 `/applied|valid/` 斷言做返 `/applied/`。
+2. **`templateItemImportHandler.js` 嘅 route 因為檔名字母序排喺 `getItemImportHandler.js` 之後，令 `GET /api/v1/item-imports/template` 成日俾 `GET /api/v1/item-imports/:id` 攔截**——呢個係喺實作呢個 task 期間、透過真實瀏覽器點擊「下載範本」先發現（詳細分析同修正已記喺 T29 段落，因為改動嘅係 T29 嘅 handler 檔案，但係喺 T30 做手動驗證時先浮現）。
+
+**Estimated scope:** M（4 個新檔＋2 個因為上面 bug fix 而改嘅 T29 既有檔案＋1 個整合測試檔）
 
 ## Checkpoint J：T28–T30 Import End-to-End
 
@@ -1214,27 +1270,33 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Export filters 與列表語意一致，輸出 HKD／`tax_not_applicable`、ISO 8601＋offset 及穩定欄位順序。
-- [ ] 不輸出 stored path、audit IP、internal hash、成本或未授權欄位。
-- [ ] 只有 `item.mgmt` 可匯出，每次成功／失敗均有合適 audit／log，不保存整份 CSV 到 audit。
+- [x] Export filters 與列表語意一致，輸出 HKD／`tax_not_applicable`、ISO 8601＋offset 及穩定欄位順序（見下方「匯出篩選範圍」說明——只做咗 `q`／`status` 兩個篩選，因為 `ItemsPage.vue` 目前實際上都淨係得呢兩個 SKU 篩選）。
+- [x] 不輸出 stored path、audit IP、internal hash、成本或未授權欄位（`exportSkus()` 用獨立白名單 SELECT，唔靠過濾一個更大嘅物件）。
+- [x] 只有 `item.mgmt` 可匯出，每次成功／失敗均有合適 audit／log，不保存整份 CSV 到 audit（`item.export` audit 只記 filters＋rowCount；非預期失敗由框架既有嘅 structured error log 覆蓋，冇額外加失敗專用 audit——同 import 嘅 `item.import` action 唯一記錄「成功決定性動作」呢個慣例一致）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemExportHandlers.test.js`
-- [ ] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`
-- [ ] Manual check：用相同 filters 比較列表 total 與 CSV records。
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemExport.integration.test.js`（4 個測試；`exportSkus()` 純 SQL＋audit 寫入，冇 fake-DB unit test，同 `ItemAdminService` 一路以嚟嘅慣例一致）
+- [x] `npm test --workspace client -- test/services/itemImport.test.js test/pages/items/itemImports.test.js`
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器）：搜尋＋狀態篩選匯出，比對 CSV 內容同資料庫真實資料，確認 audit 記錄正確、唔保存逐 SKU 資料。
 
 **Dependencies:** T11, T12, T30
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/handlers/item-exports/exportSkusHandler.js`
-- `server/src/modules/item/ItemAdminService.js`
-- `client/src/services/itemImport.js`
-- `client/src/pages/items/ItemImportsPage.vue`
-- `server/test/itemExportHandlers.test.js`
+- `server/src/handlers/item-exports/exportSkusHandler.js`（新檔）
+- `server/src/modules/item/ItemAdminService.js`（新增 `exportSkus()`；刻意冇重用 `listSkus()`，理由見方法上面嘅註解）
+- `client/src/services/itemImport.js`（新增 `exportSkus()`）
+- `client/src/pages/items/ItemImportsPage.vue`（新增「匯出商品 SKU」區塊）
+- `server/test/integration/itemExport.integration.test.js`（新檔，4 個測試）
+- `client/test/services/itemImport.test.js`（加 2 個測試）
+- `client/test/pages/items/itemImports.test.js`（加 3 個測試）
 
-**Estimated scope:** M（5 files）
+**匯出篩選範圍（唔係「Files likely touched」提到嘅偏離，但值得記低）：** design_spec §7.3 提過 `ItemsPage.vue` 應該有 category／brand／purchasable／sellable 篩選，但現時 `ItemsPage.vue` 實際上只做咗 `q`／`status`。「Export filters 與列表語意一致」嘅最直接做法就係只做返列表現時真係有嘅篩選，唔搶先幫列表未做嘅篩選補齊（嗰個屬於 `ItemsPage.vue` 本身嘅缺口，唔係呢個 task 嘅範圍）。伺服器端 `exportSkus()`／`exportSkusHandler.js` 已經接受咗 `itemId`／`categoryId`／`brandId`／`purchasable`／`sellable` 呢幾個 query 參數（同 `listSkus()` 一致），淨係前端 UI 未接；`ItemsPage.vue` 之後補齊呢幾個篩選時，可以直接畀返個 query 落呢個現成嘅 endpoint，唔使再改 API。
+
+**Estimated scope:** M（4 個新檔＋3 個既有檔案擴充）
 
 ### Task T32：建立疑似重複商品提示
 
@@ -1242,27 +1304,31 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 結果可解釋、順序穩定、有上限；不使用 fuzzy black box、自動合併或阻擋合法建立。
-- [ ] API 只允許 `item.mgmt`，輸入與 sort 使用白名單及 parameterized query。
-- [ ] Create UI 顯示候選並允許使用者確認繼續，idempotency 不受重複提示影響。
+- [x] 結果可解釋、順序穩定、有上限；不使用 fuzzy black box、自動合併或阻擋合法建立（`findDuplicateCandidates()` 淨係用 trim＋不分大小寫嘅名稱完全相符，加埋可選嘅 category／brand 完全相符，`ORDER BY i.id ASC LIMIT 10`；`variantSummary` 讀做「連同 SKU codes 一齊返」嘅顯示內容，唔係第四個篩選條件，理由見方法上面嘅註解）。
+- [x] API 只允許 `item.mgmt`，輸入與 sort 使用白名單及 parameterized query（冇 sort 呢個概念——固定 `i.id ASC`，唔開放使用者控制排序）。
+- [x] Create UI 顯示候選並允許使用者確認繼續，idempotency 不受重複提示影響（`checkDuplicates()` 冇用 `idempotent:true`；banner 可以自己撳「知道喇」叫走，兩個提交按鈕全程唔會因為有候選而變唔撳得）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemHandlers.test.js`
-- [ ] `npm test --workspace client -- test/pages/items/itemCreate.test.js`
-- [ ] Manual check：建立相似名稱候選後仍可確認建立新 Item。
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemCreate.integration.test.js`（追加 5 個「疑似重複」測試喺呢個既有檔案；`findDuplicateCandidates()` 純 SQL，冇 fake-DB unit test，同呢個 service 一路以嚟嘅慣例一致）
+- [x] `npm test --workspace client -- test/services/item.test.js test/pages/items/itemCreate.test.js`
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器）：打入一個同現有 Item 完全同名嘅商品名稱，debounce 之後見到 banner 列出候選同 SKU code，撳「知道喇」叫走，兩個提交按鈕全程可撳。
 
 **Dependencies:** T14, T15, T22, T24
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/items/checkItemDuplicatesHandler.js`
-- `client/src/services/item.js`
-- `client/src/pages/items/ItemCreatePage.vue`
-- `client/test/pages/items/itemCreate.test.js`
+- `server/src/modules/item/ItemAdminService.js`（新增 `findDuplicateCandidates()`）
+- `server/src/handlers/items/checkItemDuplicatesHandler.js`（新檔）
+- `client/src/services/item.js`（新增 `checkDuplicates()`）
+- `client/src/pages/items/ItemCreatePage.vue`（新增 debounced 疑似重複查詢＋可自行叫走嘅 warning banner）
+- `server/test/integration/itemCreate.integration.test.js`（加 5 個「疑似重複」測試）
+- `client/test/services/item.test.js`（加 1 個測試）
+- `client/test/pages/items/itemCreate.test.js`（加 3 個測試＋`afterEach` unmount，防新加嘅 debounce timer 喺下一個 test 先觸發）
 
-**Estimated scope:** M（5 files）
+**Estimated scope:** M（2 個新檔＋5 個既有檔案擴充）
 
 ### Task T33：建立 bounded bulk status change
 
@@ -1270,34 +1336,50 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 只接受 1–100 IDs、expected versions、合法 action、reason、password；不支援永久刪除。
-- [ ] 先按 ID 排序鎖 rows，再驗證全部 targets；任一失敗時零狀態／flag／audit 變更。
-- [ ] UI 顯示 target 數、預檢阻擋、全有全無語意及每個 target 結果。
+- [x] 只接受 1–100 IDs、expected versions、合法 action、reason、password；不支援永久刪除（schema `action` enum 冇 `delete`，`targets` `minItems:1 maxItems:100`）。
+- [x] 先按 ID 排序鎖 rows，再驗證全部 targets；任一失敗時零狀態／flag／audit 變更（單一 transaction 入面逐個真係嘗試套用，收齊晒全部 issue 先一次過 throw，rollback 埋之前「成功」嗰幾個——見 `ItemAdminService.bulkChangeStatus()` 的說明）。
+- [x] UI 顯示 target 數、預檢阻擋、全有全無語意及每個 target 結果（dialog 顯示已選筆數；action 下拉只列出對成個已選集合都合法嘅操作，混合狀態時客戶端先擋住唔畀送出；失敗時逐筆列出 `issues` 嘅原因）。
 
 **Verification:**
 
-- [ ] `npm test --workspace server -- test/itemAdminService.test.js test/itemBulkHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemManagement.integration.test.js`
-- [ ] `npm test --workspace client -- test/services/item.test.js test/pages/items/items.test.js`
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemBulkStatus.integration.test.js`（8 個測試，含 100 筆成功、101 筆俾 schema 擋、中間一筆失敗全 rollback；`bulkChangeStatus()` 純 SQL＋交易，冇 fake-DB unit test，同呢個 service 一路以嚟嘅慣例一致）
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemLifecycle.integration.test.js`（確認為咗俾 bulk 重用而做嘅 3 個 extract-method 重構冇改到任何單筆行為，16 個既有測試原封不動全過）
+- [x] `npm test --workspace client -- test/services/item.test.js test/pages/items/items.test.js`
+- [x] `npm run build --workspace client`
+- [x] `npm run lint`（repo root）
+- [x] Manual check（真實瀏覽器）：勾選 3 筆 draft SKU，批量封存，password＋reason 確認，全部成功、各自有 audit，清單自動排走（預設唔顯示 archived）。
 
 **Dependencies:** T18, T19, T22
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/handlers/item-bulk/changeItemStatusBulkHandler.js`
-- `client/src/services/item.js`
-- `client/src/pages/items/ItemsPage.vue`
-- `server/test/itemBulkHandlers.test.js`
+- `server/src/modules/item/ItemAdminService.js`（新增 `bulkChangeStatus()`／`#applyBulkStatusTarget()`；抽出 `#activateItemCore()`／`#activateSkuCore()`／`#deactivateSkuCore()` 呢三個原本冇獨立 helper 嘅單筆核心邏輯，等 bulk 可以喺同一個 transaction 入面重用——其餘 7 個 action／target-type 組合本來就已經有 `#transitionItemStatus()`／`#transitionSkuStatus()`／`#cascadeSkuStatus()` 呢啲 connection-accepting private helper，直接重用，冇改）
+- `server/src/modules/item/itemErrors.js`（新增 `bulkStatusChangeRejected(issues)`）
+- `server/src/handlers/item-bulk/changeItemStatusBulkHandler.js`（新檔）
+- `server/test/integration/itemBulkStatus.integration.test.js`（新檔，8 個測試）
+- `client/src/framework/ui/DataTable.vue`（新增 `selection`／`selected` prop，原樣轉發俾 QTable——預設 `selection:'none'`，唔用嘅現有頁面行為完全唔變）
+- `client/src/services/item.js`（新增 `bulkChangeStatus()`）
+- `client/src/pages/items/ItemsPage.vue`（新增勾選＋批量狀態操作 dialog，Item／SKU 兩個 view 都支援）
+- `client/test/services/item.test.js`（加 1 個測試）
+- `client/test/pages/items/items.test.js`（加 7 個測試）
 
-**Estimated scope:** M（5 files）
+**額外（Checkpoint K 覆查先發現，見上面 checkpoint 條目嘅完整說明）：**
+
+- `server/src/modules/item/csvSafety.js`（新檔，`sanitizeCsvCell()`）
+- `server/src/modules/item/ItemAdminService.js`（`exportSkus()` 套用 sanitizeCsvCell()）
+- `server/src/modules/item/ItemImportService.js`（`writeResultFile()` 套用 sanitizeCsvCell()）
+- `server/test/csvSafety.test.js`（新檔，4 個單元測試）
+- `server/test/integration/itemExport.integration.test.js`（加 1 個測試）
+- `server/test/integration/itemImport.integration.test.js`（加 1 個測試）
+
+**Estimated scope:** M（3 個新檔＋6 個既有檔案擴充，包括一個刻意做到「純 extract-method、行為不變」嘅小重構；另加 4 個因為 Checkpoint K security review 而起嘅檔案）
 
 ## Checkpoint K：T31–T33 Bulk Operations
 
-- [ ] Export、duplicate warning、bulk status 的 API／UI／audit 全部完成。
-- [ ] Bulk 100 成功、101 拒絕及中間一筆失敗全 rollback 通過。
-- [ ] Export 資料白名單與 CSV injection／formula handling 經 security review。
-- [ ] Full server/client tests 與 build 通過。
+- [x] Export、duplicate warning、bulk status 的 API／UI／audit 全部完成。
+- [x] Bulk 100 成功、101 拒絕及中間一筆失敗全 rollback 通過（見 T33 嘅 `itemBulkStatus.integration.test.js`）。
+- [x] Export 資料白名單與 CSV injection／formula handling 經 security review——複查呢個 checkpoint 先發現 T31 交付嗰陣冇做呢一項：SKU 匯出同匯入結果 CSV 都會原樣寫出使用者輸入嘅字串（SKU Code／名稱／分類／品牌），開頭係 `=`／`+`／`-`／`@` 會被 Excel／Google Sheets 當公式執行（CSV／formula injection，OWASP 已知手法）。修正方式：新增 `server/src/modules/item/csvSafety.js` 嘅 `sanitizeCsvCell()`，開頭係呢幾隻觸發字元就前面加一個單引號，套用喺 `ItemAdminService.exportSkus()`（skuCode／skuName／itemName／categoryName／brandName／primaryBarcode／baseUomCode）同 `ItemImportService.writeResultFile()`（skuCode）；`errors`／`warnings` 欄位本身開頭固定係白名單 `field` 名稱（例如 `skuCode:REQUIRED_FIELD:...`），唔會被使用者輸入蓋過第一個字元，唔使額外處理。已加單元測試（`test/csvSafety.test.js`）同兩個整合測試（export／import 各一個，直接斷言下載返嘅 CSV 內容）。
+- [x] Full server/client tests 與 build 通過。
 
 ### Task T34：建立 Import 檔案保留清理
 
@@ -1305,25 +1387,36 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] 未滿 1 年、非 terminal、root 外、symlink 或已被其他 Job 引用的檔案不刪除。
-- [ ] 部分 unlink 失敗可安全重跑；只有全部應刪檔案成功後標記 `files_purged_at`，並留下結構化 log。
-- [ ] Job summary／rows／audit 至少保留 7 年且詳情仍可查；result download 回 410。
+- [x] 未滿 1 年、非 terminal、root 外、symlink 或已被其他 Job 引用的檔案不刪除。
+- [x] 部分 unlink 失敗可安全重跑；只有全部應刪檔案成功後標記 `files_purged_at`，並留下結構化 log。
+- [x] Job summary／rows／audit 至少保留 7 年且詳情仍可查；result download 回 410（呢個行為喺 T29 已經有 handler／整合測試覆蓋，T34 冧新增測試佢冇變過）。
 
-**Verification:**
+**Verification（實際執行）:**
 
-- [ ] `npm test --workspace server -- test/itemImportFileCleanupJob.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/itemImport.integration.test.js`
+- [x] `npx eslint` 對所有新增／改動嘅檔案（`ItemImportFileCleanupJob.js`、`ItemImportService.js`、`itemConstants.js`、`fileResponse.js`、`serviceContainer.test.js`、兩個新測試檔）
+- [x] `npm test`（server 單元套件，含新嘅 `test/itemImportFileCleanupJob.test.js` 13 個測試同 `test/serviceContainer.test.js` 嘅白名單更新）：1206 pass／0 fail
+- [x] `DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js test/integration/itemImportFileCleanup.integration.test.js test/integration/itemImport.integration.test.js`：20 pass／0 fail
+- [x] `DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js 'test/integration/**/*.test.js'`：跑咗兩次，第一次 `itemConcurrency.integration.test.js` 嘅 last-active race 測試因為另一個並行 session 共用 `erp_dev` 撞鎖而回 500（同呢個 session 一路以嚟觀察到嘅已知、非本身代碼問題嘅共享 DB flakiness 一致），單獨重跑即刻通過；第二次全套 219/219 pass。
+- [x] `npm run lint`（repo root）：clean
+- [x] 確認 dev DB 冇殘留測試資料（`item_import_jobs` 剩低第 263 行係另一個 session 嘅遺留、非本次觸碰）；`storage/imports/` 冇任何本次測試建立嘅新檔案（`find storage/imports -newermt "10 minutes ago"` 回 0）。
 
 **Dependencies:** T27, T29
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/src/services/itemImport/ItemImportFileCleanupJob.js`
-- `server/config/scheduler.js`
-- `server/src/modules/item/ItemImportService.js`
-- `server/test/itemImportFileCleanupJob.test.js`
+- `server/src/services/itemImport/ItemImportFileCleanupJob.js`（新增）：`BaseService` 子類別，`scope: "cluster"`（同 `job.itemMediaCleanup` 共用嘅理由：import 根目錄係跨實例共用嘅儲存磁碟區），`cleanup()` 掃 terminal candidates、以本地 `addUtcYears()` 純函式判斷 UTC 週年到期、逐個刪檔、全部成功先 compare-and-set 標記 `files_purged_at`。
+- `server/src/modules/item/ItemImportService.js`：新增 `listRetentionCandidateJobs({statuses, limit})`、`markImportFilesPurged({jobId, purgedAtMs})` 兩個純 SQL 方法。
+- `server/src/modules/item/itemConstants.js`：新增 `IMPORT_JOB_TERMINAL_STATUSES`、`IMPORT_FILE_RETENTION_YEARS` 常數。
+- `server/src/framework/http/fileResponse.js`：把原本 private 嘅 `isWithinDirectory()` 改做 `export`，俾 cleanup job 重用同一個「路徑冇逃出受控目錄」判斷，唔使抄一份——純新增 export，行為完全冇變。
+- `server/test/serviceContainer.test.js`：喺白名單加返 `job.itemImportFileCleanup` 一項（同 `job.itemImportWorker`／`job.itemMediaCleanup` 同一組 dependencies），順住 service discovery 實際嘅字母順序（`ItemImportFileCleanupJob.js` 排喺 `ItemImportWorkerService.js` 之前）擺位置。
+- `server/test/itemImportFileCleanupJob.test.js`（新增，13 個測試）：跟 `test/itemMediaCleanupJob.test.js` 一樣嘅風格，用假 `ItemImportService`（直接控制 `listRetentionCandidateJobs`／`markImportFilesPurged` 嘅回傳值）＋真實臨時目錄，只驗檔案系統呢一半（UTC 週年計算、symlink 拒絕跟蹤、path 逃逸、部分刪除失敗、`markImportFilesPurged` 回 false 時嘅 racedAway、`signal.aborted` 中途停低、重跑 idempotency）。
+- `server/test/integration/itemImportFileCleanup.integration.test.js`（新增，4 個測試）：對真 MySQL 驗 `listRetentionCandidateJobs`（狀態篩選、`files_purged_at IS NULL` 篩選、id 排序、limit）同 `markImportFilesPurged`（compare-and-set，第二次呼叫回 false 且唔覆蓋原本嘅時間戳，唔存在嘅 jobId 回 false）。
 
-**Estimated scope:** M（4 files）
+**冇改 `server/config/scheduler.js` 嘅原因：** 原本估計要改，但 `ItemImportFileCleanupJob` 自己嘅 `static jobs` 陣列已經提供獨立嘅 job 名稱（`itemImport.fileCleanup`）、`intervalMs`、`timeoutMs`——同 `job.itemMediaCleanup`／`job.itemImportWorker` 一樣，唔需要喺 `config/scheduler.js` 加任何 per-job override 先跑得到。
+
+**測試分工（跟返呢個 session 一路以嚟嘅慣例）：** 檔案系統行為（symlink、path 逃逸、部分失敗、UTC 週年計算）用假 database 做單元測試，唔起真 MySQL；`listRetentionCandidateJobs`／`markImportFilesPurged` 呢兩個直接掂 SQL 嘅方法用真 MySQL 整合測試驗（compare-and-set 呢種行為假 mock 驗唔到真係咪原子）。
+
+**Estimated scope:** M（4 files likely touched → 實際 7 個檔案：3 個新測試／實作檔加埋兩個新測試檔案）
 
 ### Task T35：完成效能、容量及營運可觀測性驗證
 
@@ -1331,27 +1424,42 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] Exact Code／Barcode、首頁與常用 filters 在混合負載下 p95 < 2 秒，`EXPLAIN` 無不合理 full scan。
-- [ ] Preflight＋execution 系統處理時間合計 ≤ 10 分鐘，期間一般 lookup 仍 p95 < 2 秒。
-- [ ] Metrics／logs 可觀察 API latency、error rate、constraint conflict、queue age、running duration、lease recovery、media cleanup failure，且不含敏感 payload。
+- [x] Exact Code／Barcode、首頁與常用 filters 在混合負載下 p95 < 2 秒，`EXPLAIN` 無不合理 full scan。
+- [x] Preflight＋execution 系統處理時間合計 ≤ 10 分鐘，期間一般 lookup 仍 p95 < 2 秒。
+- [x] Metrics／logs 可觀察 API latency、error rate、constraint conflict、queue age、running duration、lease recovery、media cleanup failure，且不含敏感 payload（見下面「可觀測性」段落——絕大部分由既有機制覆蓋，只新增咗 import queue age 一個欄位）。
 
-**Verification:**
+**Verification（實際執行，對真實共用嘅 `erp_dev` MySQL）:**
 
-- [ ] 執行並保存 `server/test/performance/itemManagement.performance.test.js` 的環境、資料量與結果摘要。
-- [ ] `npm test --workspace server -- test/databasePoolPressure.test.js test/logQueueBudget.test.js`
-- [ ] Review `EXPLAIN`、pool queue、deadlock／retry、error rate，未達標時只做有證據的索引／query 修正。
+- [x] `ITEM_PERFORMANCE_TESTS=1 node --test --import ./test-support/testEnv.js test/performance/itemManagement.performance.test.js`：4 個測試全部 pass（EXPLAIN、50 併發混合負載、10,000-row import KPI、外層測試本身），總耗時約 181 秒（含分批清理）。實測結果：
+  - exact SKU code lookup p95 = 327.0ms；exact barcode lookup p95 = 384.2ms（500 次取樣）。
+  - 首頁列表（冇 filter）p95 = 813.2ms；常用 status＋category filter p95 = 1520.7ms（500 次取樣）。
+  - `EXPLAIN` 對兩條 exact lookup 查詢嘅每一個 table 都唔係 `type: ALL`。
+  - 10,000-row CSV：preflight（`runValidation`）256ms＋execution（`runExecution`）5226ms，合計 5.48 秒，遠低於 10 分鐘預算；執行期間同時抽樣嘅一般 lookup p95 = 0.5ms（260 次取樣）。
+  - 呢組數字喺 4 次獨立執行（100k SKU 規模 3 次＋之前嘅細規模 dry run）都高度一致（exact code p95 一直喺 327–391ms、exact barcode 384–575ms、首頁 813–978ms、filter 1521–1691ms、import 合計 5.5–6.4 秒），確認唔係單次僥倖。
+- [x] `npm test`（server 單元套件）：1206 pass／0 fail（220 skipped，包含呢個 performance test 本身喺冇設 `ITEM_PERFORMANCE_TESTS` 時嘅 skip）。
+- [x] `DB_INTEGRATION_TESTS=1 node --test --import ./test-support/testEnv.js 'test/integration/**/*.test.js'`：219 pass／0 fail。
+- [x] `npm run lint`（repo root）：clean。
+- [x] 確認 dev DB 冇殘留：`perf-item-%`／`perf-cat-%`／`perf-brand-%`／`PERF%` UOM／`PERFBC%` barcode／`perf-user-%` 全部歸零；`storage/imports/` 冇任何呢次測試新增嘅檔案殘留。
+
+**⚠️ 過程中發現嘅重要限制（值得記錄，唔係呢個 task 要解決嘅 bug）：** 對超過百萬列規模嘅資料一次過執行大範圍 `DELETE`（試過 `WHERE id IN (SELECT ...)` 子查詢同純 JOIN 兩種寫法），透過呢個專案嘅 mysql2 connection pool（`MySqlDatabaseService`）執行時，會喺嗰句 DELETE 完成之後、下一句都未發出之前完全卡死——Node event loop 完全 idle、MySQL 端所有連線都係 `Sleep`、冇任何錯誤或逾時被觸發，只可以外部強制終止進程先擺脫到（用 `--report-signal` 產生嘅 diagnostic report 確認：9 條 TCP 連線全部 idle、JS call stack 為空、`loopIdleTimeSeconds` 逾 1700 秒）。用 plain `mysql` client 執行完全同一句 SQL 每次都正常完成（慢，約 1–2 分鐘，但唔會卡死），可見唔係 SQL 本身或者資料量嘅問題，而係呢個規模下 mysql2／連線池某個邊界情況嘅 bug。過程中亦曾懷疑同一直背景執行緊嘅 scheduler job 爭 connection pool 有關（已經喺清理前加 `scheduler.stop()`），但排除咗呢個因素之後（獨立、乾淨環境下）問題依然重現，證實同 scheduler 無關。已經喺 `itemPerformanceFixtures.js` 用分批（每批 5,000 個 Item，連帶約 50,000 條 barcode／sku_uom）迴避呢個問題——分批之後清理 100,000 筆殘留資料只需 77.7 秒，順利完成。呢個發現值得未來如果要再擴大壓測規模，或者要喺其他地方寫類似嘅大量資料清理邏輯時留意，但修復 `MySqlDatabaseService`／mysql2 本身呢個邊界情況唔喺 T35（效能驗證）呢個 task 嘅範圍之內。
 
 **Dependencies:** T21, T22, T24, T26, T30, T31, T33, T34
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `server/test/performance/itemManagement.performance.test.js`
-- `server/test-support/itemPerformanceFixtures.js`
-- `server/src/modules/item/ItemAdminService.js`
-- `server/src/modules/item/ItemLookupService.js`
-- `server/src/services/logging/`
+- `server/test-support/itemPerformanceFixtures.js`（新增）：`seedItemPerformanceFixtures()` 純 bulk INSERT 產生 100,000 Item／SKU、1,000,000 barcode、1,000,000 UOM rows（唔經過 `ItemAdminService`，靠 `insertId + offset` 喺單一 multi-row INSERT statement 入面計返每列自己嘅 id，依賴 `innodb_autoinc_lock_mode=2`）；`cleanupItemPerformanceFixtures()` 分批（`batchSize` 預設 5,000 個 Item 一批）刪除，避開上面講嘅連線池邊界問題。
+- `server/test/performance/itemManagement.performance.test.js`（新增）：`ITEM_PERFORMANCE_TESTS=1` 先跑（唔入 CI、唔喺日常 `npm test`），三個子測試對應 design_spec §11.5 嘅驗收點；規模、併發數、匯入列數全部可以用環境變數覆寫，方便本機用細規模 dry run。
+- `server/src/modules/item/ItemImportService.js`：`claimNextQueuedJobForExecution()` 加 `confirmed_at` 落 SELECT，回傳多咗 `confirmedAt`。
+- `server/src/services/itemImport/jobs/executeItemImportJob.js`：`item.import.claimed` 呢個既有 log event 加多一個 `queueAgeMs` 欄位（`confirmedAt` 到而家嘅時間差）——design_spec §12.3 明確要求嘅 import queue age 觀測指標，之前完全冇對應嘅量測。
 
-**Estimated scope:** M（5 logical files／directories）
+**可觀測性（design_spec §12.3 七項）：** 除咗 import queue age 之外，其餘六項全部由呢個 repo 已經存在嘅結構化 log／機制覆蓋，冇再新增額外 instrumentation：
+
+- **API latency／error rate**（按 list／lookup／write／upload／import 分類）：`requestLogger.js` 每個請求都寫一筆 `http.request.completed`／`http.request.client_disconnected`，帶 `durationMs`、`method`、`url`、`output.statusCode`——可以直接按 URL pattern／method 切出 list／lookup／write／upload／import 各自嘅 latency 分佈同錯誤率，唔使逐個 endpoint 各自另開一個 event。
+- **Duplicate constraint conflict**：寫入路徑嘅 409（`VERSION_CONFLICT`／`DUPLICATE_SKU_CODE` 等）本身就係上面嗰個 `http.request.completed` 嘅一部分（`output.statusCode=409`），而且 `requestLogger` 對錯誤狀態碼會強制完整記低 response body（含 `error.code`），所以邊一種 conflict 都睇得到，唔使額外一個計數器。
+- **Import queue age／running duration／lease recovery**：`item.import.claimed`（見上面新增嘅 `queueAgeMs`）；`scheduler.job.completed`／`scheduler.job.failed` 帶 `durationMs`（running duration）；`scheduler.lease.failed`／`scheduler.job.not_leader`／`JobStatsFlushJob` 嘅 `scheduler.stats`彙總（含 `lastOutcome`、`consecutiveFailures`）覆蓋 lease recovery——呢啲全部係 T27 起已經存在嘅既有機制，冇為咗 T35 特登加嘢。
+- **Media orphan／delete failure**：`item.media_orphan_cleaned`／`item.media_delete_failed`（T-earlier 已經存在，`ItemMediaCleanupJob.js`）。
+
+**Estimated scope:** M（5 logical files／directories likely touched → 實際 4 個檔案：2 個新增、2 個小改動）
 
 ### Task T36：完成部署文件、Smoke、回歸及 Release Gate
 
@@ -1359,36 +1467,35 @@ T01 migration freeze
 
 **Acceptance criteria:**
 
-- [ ] README 記錄 migration、設定、持久化 volume、workers、固定價格口徑、backup／restore、forward-only rollback 與 smoke steps。
-- [ ] 業務提供首版 Category／UOM／Attribute／internal Barcode 樣本；合規核對 DEC-023，差異已回寫 requirement／design／tests。
-- [ ] AC-001–AC-037 有可追溯測試或人工證據，沒有未分類失敗、跳過的必跑測試或未核准 scope change。
+- [x] README 記錄 migration、設定、持久化 volume、workers、固定價格口徑、backup／restore、forward-only rollback 與 smoke steps。
+- [x] 業務提供首版 Category／UOM／Attribute／internal Barcode 樣本；合規核對 DEC-023，差異已回寫 requirement／design／tests。**範圍說明：** 呢個開發階段冇真正嘅業務單位提供首版資料，改用示範性範例值（README「業務catalog首版樣本」一節，已明確標注僅供示範、正式內容待業務核准）——呢個是同使用者確認過嘅範圍決定（見下面「Files actually touched」）。DEC-023（7 年保留）已喺 T34／T35 驗證過機制存在，冇發現差異，唔需要回寫 requirement／design。
+- [x] AC-001–AC-037 有可追溯測試或人工證據，沒有未分類失敗、跳過的必跑測試或未核准 scope change。見 `test_case.md` §10.1 逐條對照表；7 條標注「建議人工驗證」、1 條（AC-034）明確標注超出模組範圍，其餘全部有自動化測試對應。
 
-**Verification:**
+**Verification（實際執行）:**
 
-- [ ] `npm run verify`
-- [ ] `npm run build --workspace client`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server`
-- [ ] Manual smoke：Draft → Active → Code／Barcode search → update → deactivate／restore → audit → media → import／export。
+- [x] `DB_HOST=127.0.0.1 DB_PORT=3306 DB_USER=erp_user DB_PASSWORD=erp_password DB_NAME=erp_dev DB_INTEGRATION_TESTS=1 npm run verify`：lint clean；server `test:coverage`（1206 unit + 219 integration + T35 performance）全部 pass，全域覆蓋率 lines/branches/functions 都過 92%/83%/90% 門檻；client 測試通過（覆蓋率無強制門檻）；`npm audit --audit-level=high` 冇 high/critical 漏洞（3 個 moderate，屬既有依賴、非本次改動引入）。**重要修正：** 第一次冇帶 `DB_INTEGRATION_TESTS=1` 手動跑覆蓋率一度睇落跌穿門檻（新增嘅 `itemPerformanceFixtures.js` 冇被日常 `npm test` 行過），已經加咗 `server/test/itemPerformanceFixtures.test.js`（假 database 單元測試，唔使真 MySQL）令呢個檔案本身都有自動化覆蓋，同時確認漏帶環境變數先係真正原因（integration test 原本就負責覆蓋 `ItemAdminService.js` 呢類淨靠真 MySQL 驗嘅 service）。
+- [x] `npm run build --workspace client`：成功（現有 chunk size 警告，非本次改動引入，未處理）。
+- [x] `DB_INTEGRATION_TESTS=1 npm test --workspace server`：包含喺上面嘅 `npm run verify` 入面，另外亦單獨確認過。
+- [x] Manual smoke（真瀏覽器，臨時 QA 帳號 `t36qa`，device binding 核准流程同 T30–T33 一致）：Draft 建立→Active 啟用（記低啟用原因＋自動選晒 SKU）→SKU Code／名稱搜尋（`1–1 of 1`）→更新建議零售價（版本 bump，RRP 4 位小數格式要求）→停用（記原因）→復原（重新啟用，版本再 bump）→稽核（直接打 `/api/v1/item-audit/logs` 確認 `item.create`／`item.activate`／`sku.update` 三筆，各自有 actor／reason／前後值）→媒體（用 synthetic PNG 上傳成功）→匯出（CSV 內容確認固定 HKD／tax_not_applicable）→匯入（上傳→背景 worker 自動 preflight→UI 確認＋密碼再認證→背景 worker 自動 execute→`status: completed`）。全程一次過，冇遇到需要修 bug 嘅發現。完成後已清走呢次 smoke 建立嘅 Item／SKU／media／import job／QA 帳號，保留 Category／Brand／UOM／Attribute 呢批示範 catalog 樣本（見上面 acceptance criteria 第二點）。
 
 **Dependencies:** T35 and all earlier Tasks
 
-**Files likely touched:**
+**Files actually touched:**
 
-- `README.md`
-- `docs/items_management/requirement.md`
-- `docs/items_management/design_spec.md`
-- `docs/items_management/test_case.md`
-- Release evidence／testing report（由 QA 流程建立）
+- `README.md`：新增「商品管理模組（Item Management）」一節，涵蓋 migration、`config/item.js` 全部環境變數、持久化 volume（媒體／匯入兩個獨立受控目錄）、四個背景 job（`itemMedia.cleanupOrphans`／`itemImport.validate`／`itemImport.execute`／`itemImport.fileCleanup`）、固定 HKD／`tax_not_applicable` 價格口徑、備份與還原、forward-only rollback（migration 冇 `down()`，出錯要往前修）、業務 catalog 首版樣本（示範值，標注待業務核准）、release smoke steps。
+- `docs/items_management/test_case.md`：新增 §10.1 AC-001–AC-037 逐條可追溯性對照表（測試檔案＋測試名稱，或明確標注人工驗證／範圍外），填寫 §11 測試執行記錄（Round 1，2026-09-10）。
+- `docs/items_management/tasks.md`：本文件，T34／T35／T36 三個段落全部填實，Checkpoint 狀態同頂部狀態列更新。
+- `docs/items_management/requirement.md`、`docs/items_management/design_spec.md`：檢查後確認呢兩份文件本身冇需要因為 T36 而修改嘅差異（AC 定義、DEC-023 保留期都同實作一致）。
 
 **Estimated scope:** M（文件、測試與 release evidence）
 
 ## Checkpoint L：T34–T36 Release Ready
 
-- [ ] Retention、安全、效能、容量、備份與回滾要求全部有證據。
-- [ ] `npm run verify`、client production build、真 MySQL integration 全綠。
-- [ ] Migration 在 staging 由現行版本升級及重跑均成功。
-- [ ] 業務、開發、QA、營運及合規完成各自簽核項目。
-- [ ] Release 可進入正式測試；本 Task 清單不等同測試執行報告。
+- [x] Retention、安全、效能、容量、備份與回滾要求全部有證據——見 T34（1 年檔案保留清理）、T35（100k SKU 效能實測＋七項可觀測性）、README（備份／回滾）三個段落。
+- [x] `npm run verify`、client production build、真 MySQL integration 全綠——見 T36 Verification。
+- [ ] Migration 在 staging 由現行版本升級及重跑均成功。**未做：** 呢個專案冇獨立嘅 staging 環境；已經喺本機 dev DB 反覆確認「重跑全部 migration 唔改變任何嘢」（`itemImportMigrations.integration.test.js` 等），但冇喺一個獨立於開發機嘅 staging 環境驗證過「由現行版本升級」呢個情境，需要營運／DevOps 安排 staging 環境後另外驗證。
+- [ ] 業務、開發、QA、營運及合規完成各自簽核項目。**未做：** 呢一項本質上係人工簽核流程，唔係開發可以代簽嘅——開發（呢個 Phase 嘅實作＋自動化驗收）已完成，業務（catalog 首版樣本、AC 範圍決定）、QA（獨立於開發嘅測試執行）、營運（staging／備份演練）、合規（DEC-023 等保留規則覆核）四方嘅正式簽核仍然待人工進行。
+- [x] Release 可進入正式測試；本 Task 清單不等同測試執行報告——開發／自動化驗收部分已完成到呢個程度，正式測試（涉及上面兩項未完成嘅簽核）由使用者決定幾時安排。
 
 ## 4. Parallelization 建議
 
