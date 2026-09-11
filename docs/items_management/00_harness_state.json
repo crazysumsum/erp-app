@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 4,
+  "revision": 5,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "018bea0802000f1d991645c0a36fe0c8f98f96c2d591a784c8f2017f86c811ef",
     "plan": "4123de335d328645819e7dda7f427b2b28af01d2f081387106cdfa028e99bada",
-    "code_commit": "b0254dd643c817648a558f1e5f636b1273a70ab2",
-    "source_fingerprint": "0064a46bfe02a2683dd3a42e654c7c37b3b93c9e7de4a25bfdfe5bb974933263",
+    "code_commit": "36c9ee748bfb7948c21b2fcbf17a25eadd25684c",
+    "source_fingerprint": "a6553c39ffa3c5c2962784e9c38140b1abc230f73cb1a7763fc1d613c9bd15e8",
     "worktree": "/private/tmp/erp-item-management-harness-v2-alignment",
     "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
     "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
