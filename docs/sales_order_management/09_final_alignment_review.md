@@ -30,7 +30,7 @@
 
 ## 3. Provenance and Legacy Alignment
 
-- Preserved: the full semantics of all four legacy files are embedded in the corresponding canonical files; only obsolete document paths were normalized. Exact original bytes and their recorded SHA-256 values remain in the temporary recovery backup. The legacy filenames were replaced as explicitly authorized.
+- Preserved: the full semantics of all four legacy files are embedded in the corresponding canonical files; only obsolete document paths were normalized. Git commit `97d50e2` preserves the pre-reconciliation workspace copies; its Requirement、Tasks及UAT match the recorded SHA-256 values, while its Design also contains the later Fulfillment contract amendments now merged into the canonical design. The legacy filenames were replaced as explicitly authorized.
 - Enhanced: numeric Harness aliases, separately numbered NFR/SEC controls, Technical-vs-UAT separation, Phase gates, traceability and provenance.
 - New: only `NFR-014` RTO <=4h and `NFR-015` RPO <=15m, explicitly approved by the user on 2026-09-10.
 - Assumed/open: legacy `ASM-001–009` remain assumptions; actual workload, provider ownership, first Adapter security/address handoff and legal retention start remain open.
@@ -93,7 +93,7 @@ The absence of Sales migrations/modules/handlers/pages/tests is an `IMPLEMENTATI
 - Harness validator: observed exit 0; 171/171 Design, Task and Technical Test coverage; no mechanical gaps.
 - Identifier completeness: FR 140/140, NFR 16/16, SEC 15/15, DES 20/20, PHASE 5/5, TASK 63/63, TC 60/60, UAT 129/129.
 - Obsolete legacy filenames/path references were removed; canonical document references resolve within the top-level package.
-- Exact original source files in the temporary recovery backup match the initial SHA-256 inventory; embedded bodies differ only by the documented obsolete-path substitutions.
+- Git commit `97d50e2` preserves all four pre-reconciliation workspace files. Requirement、Tasks及UAT match the initial SHA-256 inventory; the Design difference is the documented Fulfillment contract alignment now present in `03_system_design_spec.md`.
 - Markdown trailing-whitespace scan is clean; final whitespace check is recorded in the handoff.
 - Application lint/unit/integration/build/security/browser/performance/restore/UAT were **NOT RUN** because REVIEW_AND_ALIGN forbids claiming execution acceptance.
 

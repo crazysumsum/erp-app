@@ -10,7 +10,7 @@
 | Source worktree | `codex/sales-order-requirements` at `62b4d7f41d204238be652ebb4b7787209d463910` |
 | Current project baseline inspected | local `main` at `5d39d486f1ca9eb8805b24504edec4062ff46c6f` |
 | Source state | Canonical package is untracked; source branch is 13 commits behind inspected `main`; legacy bodies are embedded in canonical artifacts |
-| Temporary recovery backup | `/private/tmp/sales-harness-replace.Wa9zWQ/` (OS-temporary; commit the canonical package for durable preservation) |
+| Durable recovery source | Git commit `97d50e2` preserves the four workspace source files before canonical reconciliation |
 | Application-code change | None |
 | Formal test execution | None |
 
@@ -37,7 +37,7 @@
 
 ## 4. Preservation Rules
 
-- The user explicitly authorized in-place replacement. The four legacy filenames were removed only after their full bodies were embedded; obsolete self-reference paths were normalized to canonical filenames. Exact original bytes remain in the recorded temporary backup and match the recorded hashes.
+- The user explicitly authorized in-place replacement. The four legacy filenames were removed only after their full bodies were embedded; obsolete self-reference paths were normalized to canonical filenames. Git commit `97d50e2` preserves the workspace copies before reconciliation: Requirement、Tasks及UAT match the recorded hashes, while Design also contains the later Fulfillment contract amendments now merged into the canonical design.
 - Aligned files add aliases, findings, missing acceptance layers and provenance; embedded bodies are still identified as legacy and are not claimed to have been created under the Harness.
 - Any conflict affecting business semantics routes back to the requirement gate before implementation.
 - `PLANNED` and `NOT_RUN` are specifications, not execution evidence.

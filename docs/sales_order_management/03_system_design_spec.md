@@ -386,16 +386,24 @@ InventoryLookupService.getSalesReservationStates(transaction, query)
 
 #### Fulfillment consumer boundary
 
-本期只定義 contract，不實作 Fulfillment：
+Sales 只擁有 SO 與 Reservation mapping；Fulfillment 上線後沿用以下正式 contract，不能直接寫 Sales tables：
 
 ```js
 SalesFulfillmentService.getOrderForFulfillment(orderId, { atMs })
 SalesFulfillmentService.lockLinesForFulfillmentInTransaction(transaction, command)
 SalesFulfillmentService.applyFulfillmentResultInTransaction(transaction, command)
-SalesOpenMatterService.hasOpenFulfillment(orderId)
+FulfillmentOpenMatterService.assertSalesLifecycleAllowedInTransaction(transaction, command)
+FulfillmentOpenMatterService.getOrderArchiveStatus(orderId, { atMs })
+FulfillmentArchiveParticipant.archiveOrderInTransaction(transaction, command)
 ```
 
-Fulfillment transaction 必須先鎖 Sales Order／Lines，再呼叫 Inventory batch Issue，最後以同一 transaction 更新 Sales `fulfilled_base_quantity` 及 Reservation mapping。不得先持有 Inventory lock 再反向鎖 Sales。
+`applyFulfillmentResultInTransaction()` 只接受 `SHIPMENT_CONFIRMED`／`SHIPMENT_REVERSED`。Confirm 把 Reserved 移至 Fulfilled；Reversal 必須引用原 Shipment Issue 及已恢復的 Reservation，把 Fulfilled 移回 Reserved。Sales 信任已驗證的 provider result，不接受 caller 自報的 Inventory balance。
+
+固定 lock order 是 Sales Order／Lines／Reservation mappings → Fulfillment aggregate → Inventory batch Issue／Reversal，並在同一 transaction 更新 Sales。不得先持有 Inventory lock 再反向鎖 Sales。
+
+`getOrderArchiveStatus()` 只回 `CLOSED`／`OPEN`／`UNKNOWN`；provider unavailable 必須回 `UNKNOWN`。Sales Archive Job 是 coordinator，並在同一 transaction 呼叫 Fulfillment Archive Participant 搬移相關 aggregate。
+
+Withdraw／Cancel／Close Remaining 必須先呼叫 lifecycle guard；存在 `DRAFT`／`PICKING`／`PICKED`／`SHIPPING`／`REVERSING` Fulfillment 或 active claim 時回 `OPEN_FULFILLMENT_EXISTS`。Provider 只可在已鎖定 Sales owner 後依相同 lock order加鎖，不可反向鎖 Sales。
 
 #### Channel Adapter boundary
 
@@ -544,12 +552,15 @@ CONFIRMED ──first fulfillment──────> PARTIALLY_FULFILLED
 CONFIRMED ──all fulfilled──────────> COMPLETED
 PARTIALLY_FULFILLED ──all fulfilled──> COMPLETED
 PARTIALLY_FULFILLED ──close remaining──> CLOSED
+COMPLETED ──shipment reversal──> PARTIALLY_FULFILLED / CONFIRMED
+PARTIALLY_FULFILLED ──shipment reversal──> PARTIALLY_FULFILLED / CONFIRMED
+CLOSED ──shipment reversal──> PARTIALLY_FULFILLED / CONFIRMED
 ```
 
 - `CONFIRMING` 不接受 edit／cancel／second confirm；只接受 original event recovery。
 - 撤回必須輸入原因，釋放全部 outstanding Reservation 後才回 Draft；確認快照及數量 projection 清除，但 History／Audit 保留。
 - 已 Fulfilled Quantity 大於 0 後不允許撤回或整張取消。
-- `COMPLETED`、`CLOSED`、`CANCELLED` 是 finalized states；只讀，待 Archive。
+- `COMPLETED`、`CLOSED`、`CANCELLED` 一般是 finalized states；未歸檔且沒有不可逆下游事項時，前兩者可由已授權 Fulfillment Shipment Reversal 原子重開。`CANCELLED` 不可重開。
 
 ### 3.4 Intake／Job states
 
@@ -594,7 +605,9 @@ ordered_base_quantity
 - `releasedBaseQuantity` 是 Reservation mapping 的歷史累計顯示值，不加入 current demand equation。
 - 初次確認時 Fulfilled／Cancelled 為 0，故 `Ordered = Reserved + Backorder`。
 - Backorder allocation 只把 Backordered 移到 Reserved，不改 Ordered。
-- Fulfillment 只把 Reserved 移到 Fulfilled；Close／Cancel 把 Reserved／Backorder 移到 Cancelled。
+- Shipment Confirm 把 Reserved 移到 Fulfilled；Shipment Reversal 把該 Shipment 的 Fulfilled 移回原 Reservation 的 Reserved；Close／Cancel 把 Reserved／Backorder 移到 Cancelled。
+- Reversal 不改動 `cancelled_base_quantity`。若 Reversal 後仍有 Fulfilled，SO 重算為 `PARTIALLY_FULFILLED`；否則重算為 `CONFIRMED`。
+- 已恢復的 Reserved 重新進入 Fulfillment Queue；歷史 Close／Complete status history 不可修改或刪除。
 - SO `has_backorder = 1` 當且僅當至少一行 `backordered_base_quantity > 0`。
 - `COMPLETED` 要求所有行 Reserved／Backorder 為 0 且 Cancelled 為 0；`CLOSED` 可有 Fulfilled＋Cancelled。
 - Quotation 及 Draft SO 的庫存 projection 全為 0。
@@ -609,10 +622,10 @@ AND last_business_updated_at < cutoff(24 months)
 AND has_backorder = 0
 AND no outstanding sales reservation mapping
 AND no in-progress sales operation
-AND every configured downstream open-matter provider returns false
+AND every required downstream open-matter provider returns CLOSED
 ```
 
-Provider unavailable 回 `UNKNOWN`，不得當作 false。Archive Service 在候選掃描及搬移 transaction 內各檢查一次。
+Provider unavailable 回 `UNKNOWN`，不得當作 `CLOSED`。Fulfillment 是 required open-matter provider及同一 transaction 的 Archive Participant；Archive Service 在候選掃描及搬移 transaction 內各檢查一次。
 
 ---
 
@@ -1092,6 +1105,23 @@ sales_orders_archive 1 ── * archive child tables
 
 `UNIQUE(batch_number)`、`UNIQUE(period_key)`、`INDEX(status,started_at,id)`。Global lease 防同時開兩個月度 batch；period unique 處理多 instance race，Batch row 支援 process crash resume。
 
+#### 4.19.1 `sales_archive_order_manifests`
+
+| Column | Type | Null／Default | 說明 |
+|---|---|---|---|
+| `id` | BIGINT UNSIGNED | PK／AI | Manifest ID。 |
+| `archive_batch_id` | BIGINT UNSIGNED | NOT NULL | FK `sales_archive_batches.id`，ON DELETE RESTRICT。 |
+| `sales_order_id` | BIGINT UNSIGNED | NOT NULL | 原 SO ID；不對 Active／Archive 任一側建立單邊 FK。 |
+| `sales_order_number` | VARCHAR(20) ASCII | NOT NULL | 永久文件路由鍵。 |
+| `sales_table_counts` | JSON | NOT NULL | Sales 各表列數。 |
+| `sales_hash_summary` | JSON | NOT NULL | Sales canonical hash 摘要。 |
+| `fulfillment_table_counts` | JSON | NOT NULL | Fulfillment 各表列數；Fulfillment 部署前固定 `{}`。 |
+| `fulfillment_hash_summary` | JSON | NOT NULL | Fulfillment canonical hash 摘要；Fulfillment 部署前固定 `{}`。 |
+| `participant_versions` | JSON | NOT NULL | 各 Archive Participant contract／schema version。 |
+| `archived_at` | BIGINT UNSIGNED | NOT NULL | 原子搬移完成時間。 |
+
+約束及索引：`UNIQUE(sales_order_id)`、`UNIQUE(sales_order_number)`、`INDEX(archive_batch_id,sales_order_id,id)`。Manifest、Sales Archive rows及Fulfillment Archive rows必須在同一 transaction建立；沒有 Update／Delete API，重跑發現hash差異時不得覆寫。
+
 ### 4.20 Archive Tables
 
 Archive Tables 使用 Active 表的原始 ID 作 PK，另加 `archive_batch_id`、`archived_at` 及 `row_hash`。不 `AUTO_INCREMENT`、不對 active master 建 FK、所有 enum／decimal／snapshot 欄位型別與 Active 相同。
@@ -1141,12 +1171,14 @@ BEGIN
   1. SELECT sales_order FOR UPDATE
   2. 重驗 finalized/cutoff/no backorder/no outstanding reservation/no operation
   3. 重驗 downstream providers 均為 CLOSED（provider unavailable -> rollback/skip）
-  4. SELECT children + audit；計 row counts、money totals、canonical hashes
-  5. INSERT archive header/children/history/audit
-  6. 從 archive tables 讀回 counts/hashes；不一致立即 rollback
-  7. 更新 external key/conversion is_order_archived = 1
-  8. DELETE active audit/history/backorder/mappings/lines/header
-  9. 更新 batch counters
+  4. Fulfillment participant鎖該SO的Fulfillment/Shipment roots並重驗CLOSED
+  5. SELECT Sales children + audit；計 row counts、money totals、canonical hashes
+  6. INSERT Sales archive header/children/history/audit
+  7. Fulfillment participant INSERT Fulfillment archive rows並驗證
+  8. 從兩邊archive tables讀回counts/hashes；不一致立即rollback
+  9. 更新external key/conversion及Fulfillment routing hints
+ 10. Fulfillment participant先刪其active children/roots，再刪Sales active rows
+ 11. 更新batch counters及跨模組order manifest
 COMMIT
 ```
 
@@ -1161,7 +1193,7 @@ Migration 實作時按 main 下一個可用序號依次建立：
 3. External keys、Sales Order header／lines。
 4. Reservation mapping、Backorder、History、Audit。
 5. Import／Intake／Error tables，之後補 `sales_orders.source_intake_order_id` FK。
-6. Export jobs、Archive batch 及所有 Archive Tables。
+6. Export jobs、Archive batch、`sales_archive_order_manifests` 及所有 Archive Tables；Fulfillment 上線時以 additive migration 擴充 participant hash欄位／contract version。
 7. Immutable／quantity guard triggers、indexes 及 scheduler config seed（如專案使用 DB seed）。
 
 Migration 每片可向前執行且有真 MySQL test；不要在同一 migration 建全部 tables。部署前用 production-like row count 驗證 index 建立時間。Rollback 只在未有正式資料時允許 drop；有資料後以 forward migration 修正，不能刪 Active／Archive tables 回退。
@@ -1660,14 +1692,22 @@ return results in sourceLineId order
 `withdrawConfirmation()`：
 
 - 鎖 Order／Lines，狀態必須 Confirmed、Fulfilled 全 0、event/version 符合。
+- 在任何 Reservation release 前呼叫 Fulfillment lifecycle guard；`OPEN`／`UNKNOWN` 均 fail closed。
 - 呼叫 `releaseSalesBatchInTransaction()` 釋放所有 outstanding reservations；驗證每個 mapping result。
 - Lines 回到 Draft semantics：Reserved／Backorder／Fulfilled／Cancelled 全 0；刪除 terminal Backorder queue rows及 mappings之前先保留 History／Audit summary。
 - 清 confirmation snapshots中只在 confirm產生的 credit／warehouse display結果；Customer／SKU current Draft display重新取 provider。
 - status `DRAFT`，confirmation_event_id 清空，version++，保存 reason／history。原 Inventory rows retained by Inventory Audit。
 
-`cancel()`：Draft 直接 terminal；Confirmed 零 fulfilled 時 release outstanding reservations、把 Reserved＋Backorder 移到 Cancelled，Backorder entry `CANCELLED`，status `CANCELLED`。
+`cancel()`：Draft 直接 terminal；Confirmed 零 fulfilled 時先通過 Fulfillment lifecycle guard，再 release outstanding reservations、把 Reserved＋Backorder 移到 Cancelled，Backorder entry `CANCELLED`，status `CANCELLED`。
 
-`closeRemaining()`：只限 `PARTIALLY_FULFILLED`；釋放所有 outstanding reservations，把 Reserved＋Backorder 移到 Cancelled，保留 Fulfilled，status `CLOSED`。所有操作全有或全無；Inventory result 缺一筆便 rollback。
+`closeRemaining()`：只限 `PARTIALLY_FULFILLED`；先通過 Fulfillment lifecycle guard，再釋放所有 outstanding reservations，把 Reserved＋Backorder 移到 Cancelled，保留 Fulfilled，status `CLOSED`。所有操作全有或全無；Inventory result 缺一筆便 rollback。
+
+`applyFulfillmentResultInTransaction(transaction, { action: "SHIPMENT_REVERSED", ... })`：
+
+- 只接受已驗證、未歸檔 Shipment、原 Issue references及Inventory Reservation restore results；Line／Reservation／Quantity集合必須完全匹配。
+- 在同一 transaction減少 Fulfilled、減少Reservation mapping consumed並增加outstanding；不改 Ordered／Backorder／Cancelled。
+- 重算 `COMPLETED`／`PARTIALLY_FULFILLED`／`CLOSED`：仍有Fulfilled則為 `PARTIALLY_FULFILLED`，否則為 `CONFIRMED`。
+- Append-only寫入 `FULFILLMENT_REVERSE` history／audit及遞增version；相同event replay必須冪等。
 
 ### 7.7 `SalesBackorderService`
 
@@ -1715,7 +1755,9 @@ Channel `submit()` 先做 boundary schema／identity validation，durably insert
 - Candidate scan使用 `(status,last_business_updated_at,id)` keyset，不以 OFFSET。
 - 每月 Batch cutoff 在開始時固定；重跑不隨時間漂移。
 - 下游 provider registry 必須列出已部署 providers及版本；required provider absent/unavailable使該 order skip `OPEN_MATTER_UNKNOWN`。
+- Fulfillment 是 required provider及Archive Participant；Fulfillment已部署但participant缺失屬配置錯誤，該Order必須skip並告警。
 - 每張 Order transaction按 §4.21 搬移；Batch只是總控，不把 500 張放同一 transaction。
+- 使用共同 `archive_batch_id`及order manifest；任何copy、hash驗證或delete失敗均完整rollback，不得把父SO與Shipment分拆在Active／Archive兩側。
 - Archive row hash使用固定 column order、normalized decimal strings、UTF-8 bytes；不包含 archive metadata。
 - Job尊重 AbortSignal／timeout，在當前 order transaction結束後停止並保存 cursor。
 - Archive完成後 Active search可透過 External Key／Conversion routing hint提示 Archive；routing更新與搬移同 transaction。
@@ -2043,9 +2085,12 @@ client/src/composables/sales/
 
 - Draft cancel不呼叫 Inventory。
 - Confirmed zero fulfilled withdraw／cancel batch release成功。
+- Fulfillment lifecycle guard回 `OPEN`／`UNKNOWN` 時不呼叫release並拒絕操作。
 - Release任一缺漏／失敗完整 rollback。
 - Partially fulfilled不能withdraw／cancel，只可close remaining。
 - Close保留 fulfilled、其餘轉 cancelled、queue terminal、數量守恆。
+- Shipment Reversal重算 `COMPLETED`／`PARTIALLY_FULFILLED`／`CLOSED`，保留Cancelled並append history。
+- Provider回傳Line／Reservation／Quantity集合不一致時整筆transaction rollback。
 - 所有 command version／event／reason及replay。
 
 #### `salesBackorderService.test.js`
@@ -2121,7 +2166,7 @@ client/src/composables/sales/
 
 - 20–100個 concurrent SO競爭同 Warehouse＋SKU，總 Reserved不超 ATP。
 - 同一 event、同一 external key、同一 Quotation conversion多連線競爭只有一個 winner。
-- Confirm與Withdraw、Fulfillment placeholder、Archive candidate同時執行，lock order不死鎖；可重試衝突不丟資料。
+- Confirm與Withdraw、Fulfillment Confirm／Reversal、Archive candidate同時執行，lock order不死鎖；可重試衝突不丟資料。
 - 在 Phase A後、Inventory effect中、Phase B commit前、commit response後注入 crash，Recovery只完成一次。
 - Backorder job與新確認、Inventory Receipt、manual run並行仍保持 FIFO及quantity invariant。
 - Archive搬移中斷、connection drop、commit outcome unknown後安全重跑。
@@ -2294,6 +2339,7 @@ Alerts：
 - Import source／result files 90日；Intake normalized payload 90日；結構化 source result及External Key至少7年。
 - Export file 7日，Job／Audit至少7年。
 - Active finalized SO滿24月且合資格才Archive；Archive第一階段無 purge。
+- Sales Archive與Fulfillment participant在同一transaction copy／hash／delete；任一provider `UNKNOWN`、count／hash差異或中斷均不分拆父子資料。
 - Runbooks：Confirmation Recovery、Stuck Import、Backorder Reconciliation、Archive Failure、Archive Hash Conflict、External Duplicate Dispute、Restore Validation。
 - 所有修復先執行 read-only reconciliation；禁止直接 SQL修改數量或刪 source key。
 
