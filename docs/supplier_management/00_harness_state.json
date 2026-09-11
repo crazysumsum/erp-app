@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 9,
+  "revision": 10,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "DESIGNING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "2b715d5634a5c611af4ba8faecbfe83fa2111202ec03a05a25ca9e756267faa2",
     "plan": "df43d9254f913788cde911a8731fe6587a8a63f3d81e684b001fbb4d8c016005",
-    "code_commit": "2140184e10af90eef7085c64979309c0d2575da9",
+    "code_commit": "6a430d3d30e91af4c2abeb607c4cce5e04742b2f",
     "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-management-harness-v2-realignment",
     "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
@@ -295,9 +295,17 @@
       "idempotency_key": "mode-change-4",
       "status": "CONFIRMED",
       "source_ref": "User requested a fresh Software Engineering Harness 2.0 Supplier REVIEW_AND_ALIGN on 2026-09-11"
+    },
+    {
+      "id": "MERGE-002",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-management-harness-v2-realignment via PR #81",
+      "idempotency_key": "supplier-management-harness-v2-realignment-pr-81-merge",
+      "status": "STARTED",
+      "source_ref": "User explicitly authorized merge to main without waiting for CI in the current Codex task on 2026-09-11; PR #81 observed OPEN and MERGEABLE; origin/main unchanged at fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "PR #81 is open. Await review and explicit user authorization before merge; before any merge, fetch and reconcile latest origin/main and verify the actual PR candidate. Product Owner Design/Plan approval remains required before implementation, and PHASE-004 remains blocked by two external contract-alignment gates."
+  "next_safe_action": "Commit and push this pre-merge checkpoint, re-observe PR #81 and origin/main, then merge PR #81 as explicitly authorized without waiting for CI. After the response, verify the merge commit before cleanup; do not repeat the merge if the result is unknown."
 }
