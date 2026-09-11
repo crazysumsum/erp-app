@@ -1,3 +1,89 @@
+# Item Management Requirement Specification (Harness Aligned)
+
+## Harness alignment record
+
+| Item | Value |
+| --- | --- |
+| Execution mode | `REVIEW_AND_ALIGN` |
+| Alignment date | 2026-09-11 |
+| Baseline | `main` / `origin/main` at `6cb50f50c1aa4db37e0f32ce41073df331d6c034` |
+| Legacy source | `requirement.md`, SHA-256 `ecf0dc0b4a76ea53c5596e4e4940b69bb5c6dbbae981303ec0f2f9950b1c2041` |
+| Provenance | Existing business baseline, enhanced with canonical aliases and approved DR objectives |
+| Product-code change | None |
+
+The complete pre-alignment requirement body is retained below. Its domain IDs remain authoritative for business meaning. Numeric `FR-*` aliases make the package mechanically traceable without silently rewriting established IDs.
+
+## Canonical functional-requirement aliases
+
+| Canonical | Legacy | Canonical | Legacy |
+| --- | --- | --- | --- |
+| FR-001 | FR-LIST-001 | FR-033 | FR-DELETE-002 |
+| FR-002 | FR-LIST-002 | FR-034 | FR-DELETE-003 |
+| FR-003 | FR-LIST-003 | FR-035 | FR-DELETE-004 |
+| FR-004 | FR-LIST-004 | FR-036 | FR-DELETE-005 |
+| FR-005 | FR-LIST-005 | FR-037 | FR-DELETE-006 |
+| FR-006 | FR-LIST-006 | FR-038 | FR-DELETE-007 |
+| FR-007 | FR-LIST-007 | FR-039 | FR-UOM-001 |
+| FR-008 | FR-LIST-008 | FR-040 | FR-UOM-002 |
+| FR-009 | FR-LIST-009 | FR-041 | FR-UOM-003 |
+| FR-010 | FR-LIST-010 | FR-042 | FR-UOM-004 |
+| FR-011 | FR-VIEW-001 | FR-043 | FR-UOM-005 |
+| FR-012 | FR-VIEW-002 | FR-044 | FR-PRICE-001 |
+| FR-013 | FR-VIEW-003 | FR-045 | FR-PRICE-002 |
+| FR-014 | FR-VIEW-004 | FR-046 | FR-PRICE-003 |
+| FR-015 | FR-VIEW-005 | FR-047 | FR-PRICE-004 |
+| FR-016 | FR-CREATE-001 | FR-048 | FR-PRICE-005 |
+| FR-017 | FR-CREATE-002 | FR-049 | FR-PRICE-006 |
+| FR-018 | FR-CREATE-003 | FR-050 | FR-IMPORT-001 |
+| FR-019 | FR-CREATE-004 | FR-051 | FR-IMPORT-002 |
+| FR-020 | FR-CREATE-005 | FR-052 | FR-IMPORT-003 |
+| FR-021 | FR-CREATE-006 | FR-053 | FR-IMPORT-004 |
+| FR-022 | FR-CREATE-007 | FR-054 | FR-IMPORT-005 |
+| FR-023 | FR-CREATE-008 | FR-055 | FR-IMPORT-006 |
+| FR-024 | FR-CREATE-009 | FR-056 | FR-IMPORT-007 |
+| FR-025 | FR-EDIT-001 | FR-057 | FR-IMPORT-008 |
+| FR-026 | FR-EDIT-002 | FR-058 | FR-IMPORT-009 |
+| FR-027 | FR-EDIT-003 | FR-059 | FR-AUDIT-001 |
+| FR-028 | FR-EDIT-004 | FR-060 | FR-AUDIT-002 |
+| FR-029 | FR-EDIT-005 | FR-061 | FR-AUDIT-003 |
+| FR-030 | FR-EDIT-006 | FR-062 | FR-AUDIT-004 |
+| FR-031 | FR-EDIT-007 | FR-063 | FR-AUDIT-005 |
+| FR-032 | FR-DELETE-001 | FR-064 | FR-AUDIT-006 |
+
+## Canonical non-functional crosswalk and approved additions
+
+The legacy body contains two different requirements both numbered `NFR-005`. The first (capacity/change volume) retains `NFR-005`; the second (business change and audit transaction consistency) maps to canonical `NFR-006`. Legacy `NFR-006` through `NFR-012` consequently map to canonical `NFR-007` through `NFR-013`.
+
+| Canonical | Source / requirement |
+| --- | --- |
+| NFR-001 | Legacy NFR-001 |
+| NFR-002 | Legacy NFR-002 |
+| NFR-003 | Legacy NFR-003 |
+| NFR-004 | Legacy NFR-004 |
+| NFR-005 | First legacy NFR-005: capacity and daily change volume |
+| NFR-006 | Second legacy NFR-005: atomic business change and audit |
+| NFR-007 | Legacy NFR-006 |
+| NFR-008 | Legacy NFR-007 |
+| NFR-009 | Legacy NFR-008 |
+| NFR-010 | Legacy NFR-009 |
+| NFR-011 | Legacy NFR-010 |
+| NFR-012 | Legacy NFR-011 |
+| NFR-013 | Legacy NFR-012 |
+| NFR-014 | Production recovery time objective: restore Item Management service within 4 hours (`RTO <= 4h`). Approved by user on 2026-09-11. |
+| NFR-015 | Production recovery point objective: lose no more than 15 minutes of committed Item Management data (`RPO <= 15m`). Approved by user on 2026-09-11. |
+
+Security requirements retain `SEC-001` through `SEC-009`. Business rules retain `BR-001` through `BR-032`, and acceptance criteria retain `AC-001` through `AC-037`.
+
+## Alignment status
+
+- Requirement gate: **CONDITIONAL**. Core intent is detailed and implementation already exists, but business, QA, operations and compliance sign-off remains outstanding.
+- The new DR objectives are approved requirements, not execution evidence. Restore/failover proof remains `NOT_RUN` under this documentation-only review.
+- Implementation discrepancies discovered by review are recorded in `00_gap_analysis.md` and `04_design_review.md`; they do not retroactively alter this requirement baseline.
+
+---
+
+# Preserved legacy body (verbatim)
+
 # Item Management 業務需求書
 
 ## 0. 文件資訊

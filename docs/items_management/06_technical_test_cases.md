@@ -1,3 +1,49 @@
+# Item Management Technical Test Specification (Harness Aligned)
+
+## Harness alignment record
+
+| Item | Value |
+| --- | --- |
+| Execution mode | `REVIEW_AND_ALIGN` |
+| Legacy source | `test_case.md`, SHA-256 `6404877088ee5d723337424b57b9e69b0ba5016092c99ac8694bfeaa42137d9f` |
+| Formal independent execution | `NOT_RUN` |
+| Existing evidence | Developer Round 1 evidence retained in the legacy body; not reclassified as independent acceptance |
+
+The existing catalogue already contains detailed P0/P1 cases with preconditions, data, steps, expected results and evidence requirements. The canonical `TC-*` suites below map those cases to the Harness hierarchy and add explicit cases for alignment gaps and the user-approved DR objectives.
+
+## Canonical Technical Acceptance suites
+
+| ID | Type / priority | Requirements and design | Tasks | Preconditions / trigger | Expected acceptance result | Cleanup / evidence | Automation | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-001 | Migration/DB / P0 | NFR-007, NFR-008, NFR-009, NFR-010; SEC-002, SEC-008; DES-007, DES-019 | TASK-001, TASK-002, TASK-004, TASK-008, TASK-009, TASK-027, TASK-044 | Fresh and upgrade MySQL; execute legacy MIG-001–MIG-008 | Ordered/idempotent migrations, constraints and permission seeds are correct; upgrade rerun is safe | disposable DB, schema/ledger/log evidence | YES | PLANNED |
+| TC-002 | API/DB/UI / P1 | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015; NFR-002, NFR-003, NFR-004; DES-012, DES-014, DES-015 | TASK-012, TASK-013, TASK-017, TASK-037, TASK-039 | 100k-SKU fixture and authorized/unauthorized actors; legacy LIST-001–LIST-010 | Stable search/filter/page/detail/audit behavior; full projections; correct empty/error/403 states | fixture teardown; response, SQL, screenshot, console/network evidence | PARTIAL | PLANNED |
+| TC-003 | API/transaction / P0 | FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024; SEC-001, SEC-006, SEC-008; NFR-006; DES-003, DES-004, DES-008 | TASK-014, TASK-015, TASK-023, TASK-024, TASK-037, TASK-038 | Standard/Variant fixtures; duplicate/race/failure injection; legacy CREATE-001–CREATE-014 | Atomic, idempotent, authorized creation with valid variants and no orphan/audit gap | transaction/DB/audit diff and UI evidence; remove fixtures | PARTIAL | PLANNED |
+| TC-004 | API/concurrency / P0 | FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031; SEC-001, SEC-006, SEC-008; NFR-006; DES-003, DES-008, DES-020 | TASK-016, TASK-017, TASK-043 | stale versions, cross-owned children, referenced/unreferenced SKU; legacy EDIT-001–EDIT-009 | Optimistic locking, strong auth, full validation, reference guards and audit atomicity hold | DB/audit snapshots and race logs; reset fixtures | PARTIAL | PLANNED |
+| TC-005 | Lifecycle/DB / P0 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038; SEC-001, SEC-006, SEC-008; DES-003, DES-009, DES-020 | TASK-018, TASK-019, TASK-020, TASK-040, TASK-043 | all statuses, child mixes, references and races; legacy LIFE-001–LIFE-013 | Legal transitions are atomic; destructive actions preserve references/history and stable public errors | DB/audit/reference evidence and cleanup | PARTIAL | PLANNED |
+| TC-006 | Validation/DB/integration / P0 | FR-039, FR-040, FR-041, FR-042, FR-043; SEC-008; DES-005, DES-010 | TASK-009, TASK-010, TASK-021 | UOM/barcode boundaries, duplicate and concurrency fixtures; legacy UOM-001–UOM-012 | Integer conversion, ownership, primary/default rules, GTIN normalization and lookup are correct | SQL/API/lookup evidence; remove fixtures | YES | PLANNED |
+| TC-007 | Domain/API / P0 | FR-044, FR-045, FR-046, FR-047, FR-048, FR-049; SEC-007, SEC-008; DES-004, DES-006, DES-009 | TASK-005, TASK-006, TASK-010, TASK-023, TASK-024 | price/tracking/catalog/attribute boundaries; legacy PRICE/TRACK/CAT cases | HKD precision, tracking invariants, typed attributes and Catalog guards behave consistently | request/DB/audit evidence; reset Catalog fixtures | YES | PLANNED |
+| TC-008 | File/security/integration / P0 | FR-011, FR-012, FR-015; SEC-001, SEC-007, SEC-008, SEC-009; NFR-011; DES-011 | TASK-025, TASK-026 | valid/invalid files, traversal/symlink, auth and failure injection; legacy MEDIA-001–MEDIA-012 | allowlist/signature/size/path/ownership/primary/cleanup controls hold without orphan state | redacted file inventory/hash, API/DB/audit; purge test files | PARTIAL | PLANNED |
+| TC-009 | Batch/file/transaction / P0 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-001, SEC-006, SEC-007, SEC-008, SEC-009; NFR-005, NFR-006, NFR-011; DES-013 | TASK-027, TASK-028, TASK-029, TASK-030, TASK-031, TASK-032, TASK-033, TASK-034, TASK-041 | mixed/duplicate/10k CSV, retry/lease/failure fixtures; legacy IMP-001–IMP-017 | preflight is non-mutating; execution is all-or-nothing/idempotent; exports are safe; files retain/purge correctly | file hashes, job/row/item/SKU/audit DB evidence; purge fixtures | PARTIAL | PLANNED |
+| TC-010 | Security/audit / P0 | FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009; NFR-006; DES-002, DES-012 | TASK-002, TASK-011, TASK-020, TASK-039, TASK-041 | actor revocation, role matrix, IDOR/input/audit failure; legacy AUD-001–AUD-006 and AUTH-001–AUTH-010 | every critical change is authorized and transactionally auditable; logs redact secrets and audit is immutable/queryable | auth matrix, request/DB/audit/log evidence; revoke fixtures | PARTIAL | PLANNED |
+| TC-011 | Browser/accessibility / P1 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013; DES-015 | TASK-013, TASK-015, TASK-017, TASK-019, TASK-024, TASK-026, TASK-030, TASK-037, TASK-038, TASK-039 | running application and role fixtures; legacy UI-001–UI-008 | happy/negative flows, dirty-state handling, keyboard/focus, refresh/navigation and error states work with no relevant console/network failures | Playwright screenshots/trace; remove fixtures | PARTIAL | PLANNED |
+| TC-012 | Performance/observability / P1 | NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-011, NFR-013; SEC-007, SEC-009; DES-017 | TASK-035, TASK-044 | representative 100k-SKU/10k-row workload; legacy OPS-001–OPS-006/OPS-009 | p95/error/resource thresholds and alerts/log correlation meet defined limits | performance report, metrics/log evidence, fixture cleanup | PARTIAL | PLANNED |
+| TC-013 | API/DB regression / P0 | FR-011, FR-012, FR-015, FR-018, FR-025; SEC-008; DES-004, DES-014 | TASK-037 | persist item_attribute_values and item_sku_attribute_values, then read detail/API/UI | typed values and canonical variant combination are returned; no empty-array placeholder or cross-owner disclosure | response/schema/SQL/Playwright evidence; cleanup | YES | PLANNED |
+| TC-014 | API/DB negative / P0 | FR-034, FR-035, FR-037, FR-038; SEC-008; DES-009 | TASK-040 | referenced and unreferenced Brand/UOM with expected versions | referenced delete returns `CATALOG_IN_USE` and no audit/data mutation; unreferenced delete succeeds with audit | true-MySQL response/DB/audit diff; cleanup | YES | PLANNED |
+| TC-015 | Batch/transaction/audit / P0 | FR-050, FR-052, FR-053, FR-055, FR-059, FR-060, FR-061, FR-062; NFR-006; SEC-007, SEC-008; DES-012, DES-013 | TASK-041 | create/update import, reason, injected row/audit/commit failures and retry | each aggregate change uses the same validation and has per-item audit in the same transaction; failure leaves neither change nor audit | job/item/SKU/audit before/after and transaction logs; cleanup | YES | PLANNED |
+| TC-016 | Backup/restore/DR / P0 | NFR-010, NFR-011, NFR-014, NFR-015; SEC-008, SEC-009; DES-018, DES-019 | TASK-036, TASK-044 | approved staging-like environment, backups, media/import storage and timestamped writes | restore returns usable service in <=4h and no more than 15 minutes of committed data is lost; integrity/reconciliation passes | timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove exercise data | PARTIAL | PLANNED |
+
+All canonical requirement IDs are covered above or by the retained detailed catalogue: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009.
+
+## Evidence interpretation
+
+- The legacy Round 1 record is developer self-test/CI evidence for an earlier commit. It remains valuable provenance but is not an observed result of this independent review.
+- Current implementation findings are classified as static-review findings until the corresponding `TC-*` is executed.
+- Formal Technical Acceptance, including true-browser and DR execution, requires a later `TEST_AND_VERIFY` authorization.
+
+---
+
+# Preserved legacy body (verbatim)
+
 # Items Management 測試案例
 
 ## 0. 文件資訊
