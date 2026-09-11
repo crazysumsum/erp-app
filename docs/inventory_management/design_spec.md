@@ -45,7 +45,7 @@
 - 每次On Hand變化均可由Stock Bucket追溯至不可變Movement、domain operation、source reference及Audit。
 - 合法Receipt／Issue／Move／Transfer／Adjustment／Stocktake在單一transaction全有或全無；注入任一步失敗後無半套資料。
 - 並發Reservation、Allocation及Issue不會令Reserved、Allocated、On Hand或ATP出現非法負數或超額。
-- SKU／Barcode精確查找、常用庫存列表及FEFO候選在需求容量基線下p95少於2秒。
+- SKU／Barcode精確查找、常用庫存列表及FEFO／FIFO候選在需求容量基線下p95少於2秒。
 - 同一業務事件安全重送；同key同payload回原結果，同key不同payload回穩定衝突。
 - Stocktake Counting期間所有會改變目標Bin On Hand的入口均被同一個guard阻擋。
 - 50項AC均有明確測試層與驗證方法；125項FR、45項BR、14項SEC及14項NFR均可追溯至設計章節。
@@ -59,7 +59,7 @@ Capability ID沿用已確認需求書，不另改名：
 | `INV-CAP-01` | Warehouse／Bin master、狀態、版本及引用guard | User／Authorization |
 | `INV-CAP-02` | Lot、Stock Control、Stock Balance、Expiry及數量投影 | Item、CAP-01 |
 | `INV-CAP-03` | Operation claim、Movement ledger、Audit、Reversal | CAP-01、CAP-02 |
-| `INV-CAP-04` | Reservation、Allocation、ATP及FEFO | CAP-02、CAP-03、Sales／Fulfillment |
+| `INV-CAP-04` | Reservation、Allocation、ATP及FEFO／FIFO | CAP-02、CAP-03、Sales／Fulfillment |
 | `INV-CAP-05` | Bin Move、Transfer及In Transit | CAP-02、CAP-03、CAP-04 |
 | `INV-CAP-06` | Adjustment、Status Transfer、Stocktake及Bin lock | CAP-02、CAP-03、CAP-04 |
 | `INV-CAP-07` | Inquiry、CSV、Opening、internal contracts及營運對賬 | CAP-01～06、上下游模組 |
@@ -181,7 +181,7 @@ Inventory是同一個domain module，不拆成七個deployable services。Servic
 | `InventoryInquiryService` | Stock、Lot、Movement、Reservation、Transfer、Stocktake分頁查詢及CSV projection。 |
 | `InventoryPostingService` | Receipt、Issue、Bin Move、Status Transfer、Adjustment及Reversal的原子過帳。 |
 | `InventoryReservationService` | ATP檢查、Reservation state、release／cancel／consume及Allocation。 |
-| `InventoryFefoService` | 合資格bucket查詢、FEFO穩定排序及override判定；保持純規則以利unit test。 |
+| `InventoryPickSequenceService` | 合資格bucket查詢、FEFO／FIFO穩定排序及override判定；保持純規則以利unit test。 |
 | `InventoryTransferService` | Draft、Dispatch、In Transit及Receive狀態機與成對Movement。 |
 | `InventoryStocktakeService` | Draft、snapshot、semantic Bin lock、count、ready、post及cancel。 |
 | `InventoryOpeningService` | CSV template、job、precheck、confirm、worker及Go-Live guard。 |
@@ -206,7 +206,7 @@ client/src/pages/inventory/*.vue
 
 - server-side table狀態保存在URL query，支援重新整理與分享。
 - 表單只提交使用者輸入及resource version，不在browser計算可信ATP或balance。
-- 任何前端FEFO提示只是輔助；最終資格、權限、版本及數量一律由server提交時重驗。
+- 任何前端FEFO／FIFO提示只是輔助；最終資格、權限、版本及數量一律由server提交時重驗。
 - 不新增全域Inventory store。跨頁需要的資料由URL及API重新載入，避免長期保存過時庫存。
 
 ### 2.4 交易邊界
@@ -323,15 +323,17 @@ ACTIVE ──consume部分──> PARTIALLY_CONSUMED
 - `CANCELLED`表示來源取消並已釋放全部未耗用；已耗用數量不復活。
 - 對已完成Reservation重送原事件回原結果，新的狀態變更回`RESERVATION_STATE_CONFLICT`。
 
-### 3.5 Allocation狀態及FEFO
+### 3.5 Allocation狀態、FEFO及FIFO
 
-Allocation保存`allocated_quantity`、`consumed_quantity`、`released_quantity`，同樣維持總和不變。候選排序：
+Allocation保存`allocated_quantity`、`consumed_quantity`、`released_quantity`，同樣維持總和不變。候選先分為有Expiry及無Expiry兩組；同一SKU混合兩組時，有Expiry組全部排在無Expiry組之前：
 
-1. 有Expiry：`expiry_date ASC, normalized_lot_number ASC, bin_code ASC, balance_id ASC`。
-2. 無Expiry有Lot：`first_receipt_date ASC, normalized_lot_number ASC, bin_code ASC, balance_id ASC`。
-3. 無Lot：`bin_code ASC, balance_id ASC`。
+1. 有Expiry（FEFO）：`expiry_date ASC, normalized_lot_number ASC, first_receipt_date ASC, bin_code ASC, balance_id ASC`。
+2. 無Expiry有Lot（FIFO）：`first_receipt_date ASC, normalized_lot_number ASC, bin_code ASC, balance_id ASC`。
+3. 無Lot（FIFO）：`fifo_anchor_date ASC, bin_code ASC, balance_id ASC`。
 
-一般提交所選bucket必須等於按上述規則可滿足該數量的最前候選集合。偏離時需要`inventory.fefo.override`及5～500字元原因，Audit同時保存建議與實選摘要；override仍不可繞過expiry、minimum life、status、warehouse、bin lock或quantity。
+`fifo_anchor_date`代表該無Lot balance目前連續持有正數庫存的起點：On Hand由0變正時設為本次入庫／移入的APP_TIME_ZONE日期，保持正數時不改，降至0時清空。它提供可重現的Bin級FIFO，不假裝追蹤不存在的單件receipt layer。
+
+一般提交所選bucket必須等於按上述規則可滿足該數量的最前候選集合。偏離FIFO須由來源模組已授權的operation actor提供5～500字元原因；偏離FEFO除原因外另須`inventory.fefo.override`。Inventory仍須在提交點重驗actor及專門權限，並在Audit保存`selectionStrategy`、建議與實選摘要；任何override都不可繞過expiry、minimum life、status、warehouse、bin lock或quantity。越過仍合資格的有Expirybucket而選無Expirybucket屬FEFO偏離。
 
 ### 3.6 Transfer狀態
 
@@ -365,7 +367,7 @@ DRAFT ──start──> COUNTING ──complete counts──> READY_TO_POST ─
 - 成對操作共用`movement_group_id`：Bin Move、Status Transfer、Transfer Dispatch／Receive各有兩個legs。
 - Movement不提供update／delete API；Reversal建立新的相反legs並以`reversal_of_movement_id`連回原記錄。
 - Generic Reversal只允許完整`RECEIPT`、`ISSUE`、`BIN_MOVE`、`STATUS_TRANSFER`及`ADJUSTMENT` movement group；所有legs須一次反向。`TRANSFER_DISPATCH/RECEIVE`、`STOCKTAKE_VARIANCE`、`OPENING`、`IN_TRANSIT`及既有`REVERSAL`不可使用generic endpoint，依需求以完成原workflow後的關聯Adjustment／Status Transfer處理，保持terminal workflow不可變。
-- Reverse Receipt／Adjustment Increase會產生OUT，須通過free quantity、Allocation及Reserved保障；Reverse Issue只把相同SKU／Lot／Bin／Status數量IN回，不復活已Consumed Reservation／Allocation，來源模組如要重新出貨須建立新Reservation／Allocation事件。
+- Reverse Receipt／Adjustment Increase會產生OUT，須通過free quantity、Allocation及Reserved保障；Generic Reverse Issue只把相同SKU／Lot／Bin／Status數量IN回，不復活已Consumed Reservation／Allocation，來源模組如要重新出貨須建立新Reservation／Allocation事件。唯一例外是§5.11的Fulfillment專用受限命令：它必須引用同一Shipment的原Issue及原Reservation，在同一transaction減少Reservation consumed、增加outstanding並回補原bucket；原Allocation保持Consumed且不可重開。
 - Reverse Bin Move／Status Transfer反向完整paired legs；不改Warehouse、SKU、Lot或其他workflow state。
 - 同一原Movement group只可被完整Reversal一次；任何leg已reversed、group不完整或當下反向效果違反不變量時，整組拒絕。
 - Movement保存Code／Name／Lot／Bin／Status的必要快照，主資料後續改名不回寫歷史。
@@ -499,6 +501,7 @@ Constraints／indexes：`UNIQUE uq_inventory_stock_controls_scope(warehouse_id, 
 | `stock_status` | VARCHAR(20) | NOT NULL | `AVAILABLE`、`QUARANTINED`、`DAMAGED`。 |
 | `on_hand_quantity` | BIGINT UNSIGNED | NOT NULL／0 | Current實體數量。 |
 | `allocated_quantity` | BIGINT UNSIGNED | NOT NULL／0 | Active Allocation尚未consume／release數量。 |
+| `fifo_anchor_date` | DATE | NULL | 無Lot bucket目前連續正數On Hand的FIFO起點；零庫存必須為NULL。 |
 | `version` | INT UNSIGNED | NOT NULL／1 | Bucket optimistic version及查詢etag來源。 |
 | `created_at`,`updated_at` | BIGINT UNSIGNED | NOT NULL | Epoch ms。 |
 
@@ -507,7 +510,8 @@ Indexes／constraints：
 - `UNIQUE uq_inventory_stock_bucket(warehouse_id, bin_id, sku_id, lot_scope, stock_status)`。
 - `FOREIGN KEY (bin_id,warehouse_id) REFERENCES inventory_bins(id,warehouse_id)`。
 - `FOREIGN KEY (lot_id,sku_id) REFERENCES inventory_lots(id,sku_id)`；NULL lot合法。
-- `INDEX idx_inventory_stock_sku(warehouse_id,sku_id,stock_status,lot_id,bin_id,id)`支援ATP／FEFO。
+- `INDEX idx_inventory_stock_sku(warehouse_id,sku_id,stock_status,lot_id,bin_id,id)`支援ATP。
+- `INDEX idx_inventory_stock_fifo(warehouse_id,sku_id,stock_status,fifo_anchor_date,bin_id,id)`支援無Lot FIFO候選。
 - `INDEX idx_inventory_stock_bin(bin_id,sku_id,lot_id,stock_status,id)`支援Bin inquiry／Stocktake snapshot。
 - `INDEX idx_inventory_stock_nonzero(sku_id,on_hand_quantity,id)`只作一般篩選；MySQL 5.7無partial index，query必須同時限制scope。
 - `allocated_quantity <= on_hand_quantity`由service在持鎖transaction內驗證；禁止依賴MySQL 5.7忽略的CHECK。
@@ -608,10 +612,11 @@ Indexes：`idx_inventory_reservations_scope(warehouse_id,sku_id,status,id)`、`i
 | `consumed_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 已Issue數量。 |
 | `released_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 已釋放數量。 |
 | `outstanding_quantity` | BIGINT UNSIGNED | NOT NULL | Current仍占用bucket數量。 |
-| `is_fefo_override` | TINYINT(1) | NOT NULL／0 | 是否偏離建議。 |
-| `fefo_rank_snapshot` | INT UNSIGNED | NULL | 所選bucket提交時排名。 |
+| `selection_strategy` | VARCHAR(20) | NOT NULL | `FEFO`或`FIFO`；由server按候選資料決定。 |
+| `is_sequence_override` | TINYINT(1) | NOT NULL／0 | 是否偏離server建議序列。 |
+| `recommended_rank_snapshot` | INT UNSIGNED | NULL | 所選bucket提交時在完整建議序列的排名。 |
 | `recommended_summary` | JSON | NULL | Override時保存最小建議bucket／expiry摘要。 |
-| `override_reason` | VARCHAR(500) | NOT NULL／`''` | Override必填；其他空字串。 |
+| `override_reason` | VARCHAR(500) | NOT NULL／`''` | 任何序列偏離必填；一般分配為空字串。 |
 | `status` | VARCHAR(30) | NOT NULL | `ACTIVE`、`PARTIALLY_CONSUMED`、`CONSUMED`、`RELEASED`。 |
 | `version` | INT UNSIGNED | NOT NULL／1 | Reallocate／release compare-and-set。 |
 | `created_at`,`updated_at`,`created_by`,`updated_by` | BIGINT UNSIGNED | actor可NULL | 稽核欄位。 |
@@ -949,12 +954,12 @@ Receipt request核心範例：
 | `POST /api/v1/inventory/reservations/create` | jwt／view＋operation | 全有或全無；source、sku、warehouse、quantity、purpose、minimumRemainingDays。 |
 | `POST /api/v1/inventory/reservations/:id/release` | jwt／view＋operation | release正整數、source event、version；可部分。 |
 | `POST /api/v1/inventory/reservations/:id/cancel` | jwt／view＋operation | 釋放全部outstanding；來源取消事件、version。 |
-| `GET /api/v1/inventory/reservations/:id/allocation-candidates` | jwt／view＋operation | FEFO排序候選、requestedQuantity、asOf及balance versions。 |
-| `POST /api/v1/inventory/reservations/:id/allocations/create` | jwt／view＋operation | 一或多bucket；一般FEFO或override permission＋reason。 |
+| `GET /api/v1/inventory/reservations/:id/allocation-candidates` | jwt／view＋operation | FEFO／FIFO排序候選、requestedQuantity、asOf及balance versions。 |
+| `POST /api/v1/inventory/reservations/:id/allocations/create` | jwt／view＋operation | 一或多bucket；依FEFO／FIFO建議，偏離時按策略驗權及要求原因。 |
 | `POST /api/v1/inventory/reservations/:id/allocations/release` | jwt／view＋operation | 指定allocation IDs／quantities，全有或全無。 |
 | `POST /api/v1/inventory/reservations/:id/allocations/reallocate` | jwt／view＋operation | 在一個transaction release舊＋建立新，避免中途失去一致性。 |
 
-Allocation create request必須帶Reservation version及每個Balance version；server重新產生候選，不信任client提供的FEFO rank。Response回新的Reservation、Allocation及Balance versions，方便下一個Issue提交。
+Allocation create request必須帶Reservation version及每個Balance version；server重新產生候選，不信任client提供的策略或推薦rank。Response回新的Reservation、Allocation及Balance versions，方便下一個Issue提交。
 
 ### 5.6 Transfer APIs
 
@@ -1032,7 +1037,7 @@ Precheck只寫job／row validation資料，不寫Lot、Balance、Movement或Audi
 | 409 | `RESERVATION_STATE_CONFLICT`、`ALLOCATION_STATE_CONFLICT` | 狀態／數量不再符合。 |
 | 409 | `VERSION_CONFLICT`、`CONCURRENT_OPERATION` | stale或DB lock競爭。 |
 | 409 | `INVENTORY_SOURCE_CONFLICT`、`IDEMPOTENCY_CONFLICT` | 同identity不同payload。 |
-| 409 | `FEFO_OVERRIDE_REQUIRED` | 一般使用者偏離FEFO。 |
+| 409 | `PICK_SEQUENCE_REASON_REQUIRED`、`FEFO_OVERRIDE_REQUIRED` | 偏離FIFO缺原因，或偏離FEFO缺專門權限／原因。 |
 | 403 | `FEFO_OVERRIDE_DENIED`、`PERMISSION_STALE` | 無權或actor已失效。 |
 | 409 | `LOT_EXPIRED`、`LOT_MINIMUM_LIFE_FAILED`、`STOCK_STATUS_INELIGIBLE` | 不合資格bucket。 |
 | 409 | `BIN_LOCKED_BY_STOCKTAKE` | Counting semantic lock；details只回可見Stocktake number。 |
@@ -1058,6 +1063,10 @@ InventoryReservationService.createInTransaction(transaction, command)
 InventoryReservationService.releaseInTransaction(transaction, command)
 InventoryReservationService.cancelInTransaction(transaction, command)
 InventoryReservationService.allocateInTransaction(transaction, command)
+InventoryReservationService.allocateForFulfillmentBatchInTransaction(transaction, command)
+InventoryReservationService.releaseFulfillmentAllocationsInTransaction(transaction, command)
+InventoryPostingService.postFulfillmentIssueBatchInTransaction(transaction, command)
+InventoryPostingService.reverseFulfillmentIssueAndRestoreReservationBatchInTransaction(transaction, command)
 InventoryTransferService.dispatchInTransaction(transaction, command)
 InventoryTransferService.receiveInTransaction(transaction, command)
 InventoryLookupService.getStockSummary(transaction, query)
@@ -1080,6 +1089,8 @@ Internal `command`必須包括：
 - Service要求已傳入transaction；若沒有則立即拋TypeError，避免上下游以為共用transaction但Inventory偷偷另開transaction。
 - Inventory在提交點重讀actor、SKU及位置狀態。若必要依賴不可用，整個來源transaction rollback。
 - Query contract可用database service非transaction執行；任何數量寫入只能走command contract。
+- Fulfillment batch allocation由Inventory計算完整推薦序列及`FEFO／FIFO`偏離類型；caller不可自報`selectionStrategy`以降低權限。
+- `reverseFulfillmentIssueAndRestoreReservationBatchInTransaction()`只接受已成功且未沖銷的Fulfillment Shipment Issue references，整批回補原bucket及原Reservation；它不修改或重開原Allocation，generic HTTP reversal endpoint亦不可呼叫此能力。
 
 ---
 
@@ -1093,7 +1104,7 @@ Internal `command`必須包括：
 | `inventory.operation` | Receipt／Issue、Reservation／Allocation、Bin Move、Transfer及Stocktake count | Master、Adjustment、FEFO override。 |
 | `inventory.mgmt` | Warehouse／Bin、Opening及Go-Live | Adjustment、FEFO override。 |
 | `inventory.adjust` | Adjustment、Status Transfer、Reversal、Stocktake Posting | Master、一般operation自動授權。 |
-| `inventory.fefo.override` | 偏離FEFO但仍合資格 | 過期／低效期／非AVAILABLE／不足繞過。 |
+| `inventory.fefo.override` | 偏離FEFO但仍合資格；FIFO偏離由來源模組自身operation permission＋原因控制 | 過期／低效期／非AVAILABLE／不足繞過。 |
 
 五項權限互不繼承。頁面若要讀後寫，route requirement可要求view，按鈕再依額外permission顯示；後端仍完整驗證。System administrator角色名稱不自動取得任何Inventory權限。
 
@@ -1172,8 +1183,8 @@ Sidebar group「庫存管理」只顯示使用者可進入的頁面。無權限�
 ### 7.4 Reservation與Allocation
 
 - Reservation detail同時顯示Original、Consumed、Released、Outstanding及source link。
-- Allocation drawer顯示Server FEFO候選、Expiry、remaining days、Bin、free quantity及建議順序。
-- 一般使用者選非FEFO時submit立即被server拒絕；具override權限者顯示原因欄及「仍不可選過期／低效期／非AVAILABLE」說明。
+- Allocation drawer顯示Server FEFO／FIFO候選、Expiry、remaining days、First Receipt、Bin、free quantity及建議順序。
+- 偏離任何建議序列都顯示原因欄；偏離FEFO另驗`inventory.fefo.override`，偏離FIFO使用來源模組operation權限。畫面固定說明「仍不可選過期／低效期／非AVAILABLE」。
 - 資料載入後若bucket改變，409時保留使用者輸入但強制重新載入候選；不可自動改選另一Lot。
 
 ### 7.5 Transfer
@@ -1242,7 +1253,7 @@ server/src/modules/inventory/
   InventoryInquiryService.js
   InventoryPostingService.js
   InventoryReservationService.js
-  InventoryFefoService.js
+  InventoryPickSequenceService.js
   InventoryTransferService.js
   InventoryStocktakeService.js
   InventoryOpeningService.js
@@ -1340,7 +1351,7 @@ server/test-support/inventoryFixtures.js
 | `inventoryValidation.test.js` | code trim/case/control chars、quantity正整數／safe max、source tuple、reason、IDs、status allowlist、unknown fields。 |
 | `inventoryExpiry.test.js` | APP_TIME_ZONE local date、expiry=今日仍可用、次日Expired、minimum remaining days、DST無關date-only語意。 |
 | `inventoryQuantity.test.js` | Base UOM整數、Pack factor整數、overflow、ATP／uncovered公式、不使用float。 |
-| `inventoryFefo.test.js` | expiry／lot／bin／id穩定排序、跨Bin同Lot、無expiry oldest receipt、部分跨bucket建議。 |
+| `inventoryPickSequence.test.js` | 有Expiry先FEFO、其後FIFO、fifo anchor／lot／bin／id穩定排序、跨Bin同Lot、部分跨bucket建議。 |
 | `inventoryStateMachines.test.js` | Reservation、Allocation、Transfer、Stocktake所有合法／非法transition。 |
 | `inventoryOperationHash.test.js` | canonical key order、同payload同hash、欄位／quantity變更不同hash、password排除但business fields保留。 |
 | `inventoryCsv.test.js` | RFC4180 quotes/newlines/BOM、header exactness、duplicate rows、formula、10k cap、row/field errors。 |
@@ -1365,11 +1376,12 @@ server/test-support/inventoryFixtures.js
 #### `inventoryPostingService.test.js`
 
 - Receipt依none／batch／batch_expiry建立或取得Lot、更新正確bucket、movement、audit。
+- 無Lotbucket由0變正時設定`fifo_anchor_date`、保持正數時不改、歸零時清空；所有IN／OUT／Move／Reversal路徑一致。
 - Serial、不追蹤、Inactive SKU／Warehouse／Bin、Lot conflict、low receipt life無有效override均拒絕。
 - Issue扣On Hand、Allocated、Reservation outstanding及Control reserved；任一步失敗全rollback。
 - Bin Move及Status Transfer成對legs、總On Hand不變；已Allocation部分不可移走；不足、跨Warehouse、Counting lock拒絕。
 - Adjustment正負、Reserved保障、Reversal唯一性及當下規則重驗；只允許Receipt／Issue／Bin Move／Status Transfer／Adjustment group。
-- Reverse Issue不復活Reservation／Allocation；Transfer／Stocktake／Opening／Reversal group回`MOVEMENT_TYPE_NOT_REVERSIBLE`。
+- Generic Reverse Issue不復活Reservation／Allocation；Fulfillment專用反向命令只恢復原Reservation、不重開Allocation；Transfer／Stocktake／Opening／Reversal group回`MOVEMENT_TYPE_NOT_REVERSIBLE`。
 
 #### `inventoryReservationService.test.js`
 
@@ -1377,7 +1389,7 @@ server/test-support/inventoryFixtures.js
 - Consume／release／cancel quantity等式及terminal state。
 - Allocation不扣On Hand但更新bucket allocated；不得超Reservation或bucket。
 - Reallocate在同transaction release＋create；中途失敗保留原allocation。
-- FEFO一般／override／無權／缺reason／仍不合資格各分支。
+- FEFO／FIFO一般排序、混合Expiry順序、兩類override、無權／缺reason／仍不合資格各分支。
 
 #### `inventoryTransferService.test.js`
 
@@ -1434,7 +1446,7 @@ server/test-support/inventoryFixtures.js
 | `inventoryMaster.integration.test.js` | AC-001～003、006；CRUD、status、history guard、permissions。 |
 | `inventoryStock.integration.test.js` | AC-004～012；跨Bin／混放、數量摘要、Lot／Expiry／Status／Serial。 |
 | `inventoryPosting.integration.test.js` | AC-013～018；Receipt／Issue、replay、payload conflict、rollback、Reversal。 |
-| `inventoryReservation.integration.test.js` | AC-019～027；真並發Reservation、consume/release、Allocation及FEFO。 |
+| `inventoryReservation.integration.test.js` | AC-019～027；真並發Reservation、consume/release、Allocation及FEFO／FIFO。 |
 | `inventoryMovement.integration.test.js` | AC-028～029、035～039；Move、Adjustment、Status及stale version。 |
 | `inventoryTransfer.integration.test.js` | AC-030～034；Draft、Dispatch、Receive、replay及partial rejection。 |
 | `inventoryStocktake.integration.test.js` | AC-040～043；persistent lock、所有入口阻擋、atomic post／cancel。 |
@@ -1459,7 +1471,7 @@ Transaction failure injection至少覆蓋：operation後、Balance後、Movement
 | --- | --- |
 | `inventoryStocks.test.js` | URL filters、server pagination、聚合／bucket數量不混淆、badge文字、permission。 |
 | `inventoryWarehouses.test.js` | Master／Bin CRUD、FormPanel errors、deactivate blocker及version conflict。 |
-| `inventoryReservations.test.js` | source、quantity breakdown、FEFO候選、override UI、409 reload。 |
+| `inventoryReservations.test.js` | source、quantity breakdown、FEFO／FIFO候選、兩類override UI、409 reload。 |
 | `inventoryTransfers.test.js` | Draft editor、完整line集合、In Transit read-only、Receive bins。 |
 | `inventoryStocktakes.test.js` | count 0 vs empty、notFound、progress、lock banner、post permission。 |
 | `inventoryOpening.test.js` | PRE_GO_LIVE／LIVE、upload/precheck/poll/cancel、row errors、confirm。 |
@@ -1486,7 +1498,7 @@ Transaction failure injection至少覆蓋：operation後、Balance後、Movement
 | --- | --- |
 | SKU Code／Barcode exact search | p95 < 2s；query plan使用exact index，不full scan Movement。 |
 | SKU stock summary及Bin drill-down | p95 < 2s；分頁total正確。 |
-| FEFO candidates | p95 < 2s；使用warehouse/sku/status/lot indexes及bounded result。 |
+| FEFO／FIFO candidates | p95 < 2s；使用warehouse/sku/status/expiry/fifo anchor indexes及bounded result。 |
 | Movement list常用filters | p95 < 2s；固定sort，無filesort over full table。 |
 | 20-user mixed Receipt／Issue／Reservation | 無不合法quantity；lock wait及error rate在驗收環境記錄。 |
 | 10,000-row Opening precheck＋posting | 系統處理合計 <= 10分鐘；記錄parse、validate、lock、write各階段。 |
@@ -1615,7 +1627,7 @@ Gate：AC-001～018、禁止負數、同source replay及Audit failure rollback�
 
 ### 12.3 Phase 2：Order and warehouse operations
 
-- Reservation／Allocation／FEFO。
+- Reservation／Allocation／FEFO／FIFO。
 - Bin Move、Transfer、Adjustment、Status Transfer及Reversal。
 - Stocktake semantic lock、count及Posting。
 
@@ -1650,7 +1662,7 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 
 ### 12.7 Smoke及release evidence
 
-- Permission route matrix、Warehouse/Bin query、Receipt replay、Reservation競爭、FEFO、Issue、Bin Move、Transfer Dispatch/Receive、Stocktake lock/Post各一條。
+- Permission route matrix、Warehouse/Bin query、Receipt replay、Reservation競爭、FEFO／FIFO、Issue、Bin Move、Transfer Dispatch/Receive、Stocktake lock/Post各一條。
 - `SHOW TRIGGERS`及app account嘗試修改Movement/Audit均證明被拒絕。
 - Reconciliation六項invariants全部差異0。
 - 保存migration output、commit SHA、測試報告、capacity結果、backup ID、restore證據及Go-Live actor/time，不保存密碼或CSV原文。

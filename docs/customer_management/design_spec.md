@@ -771,11 +771,13 @@ CustomerLookupService.listActive({ q, page, pageSize, purpose, atMs })
 CustomerLookupService.getCreditPolicy(customerId, { atMs })
 CustomerLookupService.listAddresses(customerId, { purpose: "shipping", atMs })
 CustomerLookupService.assertAddressUsable(customerId, addressId, { purpose, atMs })
+CustomerLookupService.assertAddressUsableInTransaction(transaction, customerId, addressId, { purpose, expectedVersion, atMs })
 CustomerLookupService.listContacts(customerId, { purpose, atMs })
 CustomerLookupService.assertContactUsable(customerId, contactId, { purpose, atMs })
+CustomerLookupService.assertContactUsableInTransaction(transaction, customerId, contactId, { purpose, expectedVersion, atMs })
 ```
 
-`purpose:new_sale`只接受Active；`history`接受所有未物理刪除狀態；`shipment`地址只回active shipping。下游submit必須在自己的transaction邊界附近重新呼叫assert，然後把code／name／address／contact／currency／term／credit policy version的必要值存入下游snapshot。Customer模組不寫Sales／Shipment tables。
+`purpose:new_sale`只接受Active；`history`接受所有未物理刪除狀態；`shipment`地址只回active shipping。一般assert供非transaction read／precheck；會在同一MySQL schema完成跨模組寫入的Shipment等流程，必須使用`*InTransaction`版本，傳入現有executor及畫面選擇時的expected version。它在同一觀察點重驗Customer ownership、child active、purpose及version並回必要snapshot；沒有transaction立即throw `TypeError`。下游把code／name／address／contact／currency／term／credit policy version的必要值存入自己的snapshot，Customer模組不寫Sales／Shipment tables。
 
 Payment／Refund未落地前不提供明文bank resolver。其實作時加入目的限定的`CustomerBankService.resolveForRefund()`，要求payment workflow context、active bank、Customer ownership及獨立audit；不得讓任意module直接呼叫crypto.decrypt。
 
@@ -908,7 +910,7 @@ Sidebar group「客戶管理」按頁面permission顯示。無權限直接URL由
 
 ### 8.7 `CustomerLookupService`
 
-Lookup只回purpose-specific immutable plain objects。它不檢查所有Sales/Fulfillment permission，而由consumer handler授權；但一定執行status、ownership、active child及time rules。Consumer contract tests須證明UI先選後Customer／Address停用時submit被拒絕。
+Lookup只回purpose-specific immutable plain objects。它不檢查所有Sales/Fulfillment permission，而由consumer handler授權；但一定執行status、ownership、active child及time rules。Transaction-aware assert只使用caller現有executor，不另開connection／transaction；Customer update不取得Sales或Fulfillment lock，避免反向lock cycle。Consumer contract tests須證明UI先選後Customer／Address停用、改用途、改owner或version改變時submit被拒絕。
 
 ### 8.8 Audit action allowlist
 
