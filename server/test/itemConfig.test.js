@@ -14,6 +14,7 @@ const VALID = Object.freeze({
   imageMaxBytes: 5_242_880,
   attachmentMaxBytes: 10_485_760,
   mediaOrphanGraceMs: 86_400_000,
+  importDirectory: "storage/imports",
   importMaxRows: 10_000,
   importBatchSize: 200,
   importTransactionTimeoutMs: 120_000
@@ -61,6 +62,38 @@ test("rejects an empty or blank mediaDirectory", () => {
     () => normalizeItemConfig({ ...VALID, mediaDirectory: "   " }),
     /mediaDirectory/
   );
+});
+
+test("resolves a relative importDirectory to a controlled absolute path under the server root", () => {
+  const config = normalizeItemConfig(VALID);
+
+  assert.ok(path.isAbsolute(config.importDirectory));
+  assert.match(config.importDirectory, /[/\\]storage[/\\]imports$/);
+});
+
+test("keeps an already-absolute importDirectory as-is", () => {
+  const absolute = path.resolve("/var/lib/erp-item-imports");
+  const config = normalizeItemConfig({ ...VALID, importDirectory: absolute });
+
+  assert.equal(config.importDirectory, absolute);
+});
+
+test("rejects an empty or blank importDirectory", () => {
+  assert.throws(
+    () => normalizeItemConfig({ ...VALID, importDirectory: "" }),
+    /importDirectory/
+  );
+  assert.throws(
+    () => normalizeItemConfig({ ...VALID, importDirectory: "   " }),
+    /importDirectory/
+  );
+});
+
+test("importDirectory and mediaDirectory stay independent even when one is overridden", () => {
+  const config = normalizeItemConfig({ ...VALID, importDirectory: "custom/imports" });
+
+  assert.match(config.mediaDirectory, /[/\\]storage[/\\]items$/);
+  assert.match(config.importDirectory, /[/\\]custom[/\\]imports$/);
 });
 
 const POSITIVE_INTEGER_FIELDS = [

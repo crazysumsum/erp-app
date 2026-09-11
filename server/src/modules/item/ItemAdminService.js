@@ -26,6 +26,7 @@ import {
   barcodePrimaryDuplicated,
   barcodeTaken,
   brandNotFound,
+  bulkStatusChangeRejected,
   categoryNotFound,
   criticalChangeReasonRequired,
   itemActivationRequiresSku,
@@ -49,6 +50,7 @@ import {
 import { ITEM_LIST_SORT_FIELDS, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS } from "./itemConstants.js";
 import { assertSkuActivatable } from "./itemValidation.js";
 import { normalizeBarcode } from "./barcodeValidation.js";
+import { sanitizeCsvCell } from "./csvSafety.js";
 import { computeVariantSignature, typedValueToCanonicalString } from "./variantSignature.js";
 import { ItemAuditLogService } from "./ItemAuditLogService.js";
 import { assertActorFresh } from "../authorization/directoryLookups.js";
@@ -657,109 +659,123 @@ export class ItemAdminService {
   async activateItem({ actorId, claimedRoles, claimedPermissions, id, skuIds, reason, version, requestId, ip }) {
     const itemId = await this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
-
-      const [[current]] = await connection.query("SELECT * FROM items WHERE id = ?", [id]);
-      if (!current) {
-        throw itemNotFound(id);
-      }
-      if (!["draft", "inactive", "active"].includes(current.status)) {
-        throw statusTransitionInvalid(current.status, "active");
-      }
-
-      const uniqueSkuIds = [...new Set(skuIds ?? [])];
-      let skuRows = [];
-      if (uniqueSkuIds.length > 0) {
-        const placeholders = uniqueSkuIds.map(() => "?").join(",");
-        [skuRows] = await connection.query(
-          `SELECT * FROM item_skus WHERE id IN (${placeholders}) AND item_id = ?`,
-          [...uniqueSkuIds, id]
-        );
-        const foundIds = new Set(skuRows.map((row) => Number(row.id)));
-        for (const skuId of uniqueSkuIds) {
-          if (!foundIds.has(skuId)) {
-            throw skuNotFound(skuId);
-          }
-        }
-      }
-
-      const toActivate = [];
-      for (const sku of skuRows) {
-        if (sku.status === "active") {
-          continue;
-        }
-        if (!["draft", "inactive"].includes(sku.status)) {
-          throw statusTransitionInvalid(sku.status, "active");
-        }
-        await this.#assertSkuRowActivatable(connection, sku, {
-          productType: current.product_type,
-          categoryId: current.category_id
-        });
-        toActivate.push(sku);
-      }
-
-      const itemNeedsActivation = current.status !== "active";
-      if (itemNeedsActivation && toActivate.length === 0) {
-        throw itemActivationRequiresSku();
-      }
-
-      const nowMs = this.time.nowMs();
-
-      if (itemNeedsActivation) {
-        const [result] = await connection.execute(
-          `UPDATE items SET status = 'active', updated_at = ?, updated_by = ?, version = version + 1
-            WHERE id = ? AND version = ? AND status IN ('draft', 'inactive')`,
-          [nowMs, actorId, id, version]
-        );
-        if (result.affectedRows === 0) {
-          const [[stillExists]] = await connection.query("SELECT version, status FROM items WHERE id = ?", [id]);
-          if (!stillExists) {
-            throw itemNotFound(id);
-          }
-          if (Number(stillExists.version) !== Number(version)) {
-            throw versionConflict();
-          }
-          throw statusTransitionInvalid(stillExists.status, "active");
-        }
-
-        await this.auditLog.record(connection, {
-          actorUserId: actorId,
-          actorUsername: actor.username,
-          action: "item.activate",
-          targetType: "item",
-          targetId: id,
-          targetLabel: current.name,
-          detail: { status: { before: current.status, after: "active" } },
-          reason,
-          requestId,
-          ip
-        });
-      } else if (Number(current.version) !== Number(version)) {
-        throw versionConflict();
-      }
-
-      for (const sku of toActivate) {
-        await connection.execute(
-          "UPDATE item_skus SET status = 'active', updated_at = ?, updated_by = ?, version = version + 1 WHERE id = ?",
-          [nowMs, actorId, sku.id]
-        );
-        await this.auditLog.record(connection, {
-          actorUserId: actorId,
-          actorUsername: actor.username,
-          action: "sku.activate",
-          targetType: "sku",
-          targetId: sku.id,
-          targetLabel: sku.sku_code,
-          detail: { status: { before: sku.status, after: "active" } },
-          reason,
-          requestId,
-          ip
-        });
-      }
-
+      await this.#activateItemCore(connection, {
+        id,
+        skuIds,
+        version,
+        actorId,
+        actor,
+        reason,
+        requestId,
+        ip,
+        nowMs: this.time.nowMs()
+      });
       return id;
     });
 
     return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
+  }
+
+  /** `activateItem()` 嘅核心邏輯，抽出嚟俾 `bulkChangeStatus()` 喺同一個
+   * transaction 入面逐個 target 重用——同 `#transitionItemStatus()` 等
+   * 既有 private helper 同一個技巧，唔開自己嘅 transaction，淨係用傳入嘅
+   * `connection`。 */
+  async #activateItemCore(connection, { id, skuIds, version, actorId, actor, reason, requestId, ip, nowMs }) {
+    const [[current]] = await connection.query("SELECT * FROM items WHERE id = ?", [id]);
+    if (!current) {
+      throw itemNotFound(id);
+    }
+    if (!["draft", "inactive", "active"].includes(current.status)) {
+      throw statusTransitionInvalid(current.status, "active");
+    }
+
+    const uniqueSkuIds = [...new Set(skuIds ?? [])];
+    let skuRows = [];
+    if (uniqueSkuIds.length > 0) {
+      const placeholders = uniqueSkuIds.map(() => "?").join(",");
+      [skuRows] = await connection.query(
+        `SELECT * FROM item_skus WHERE id IN (${placeholders}) AND item_id = ?`,
+        [...uniqueSkuIds, id]
+      );
+      const foundIds = new Set(skuRows.map((row) => Number(row.id)));
+      for (const skuId of uniqueSkuIds) {
+        if (!foundIds.has(skuId)) {
+          throw skuNotFound(skuId);
+        }
+      }
+    }
+
+    const toActivate = [];
+    for (const sku of skuRows) {
+      if (sku.status === "active") {
+        continue;
+      }
+      if (!["draft", "inactive"].includes(sku.status)) {
+        throw statusTransitionInvalid(sku.status, "active");
+      }
+      await this.#assertSkuRowActivatable(connection, sku, {
+        productType: current.product_type,
+        categoryId: current.category_id
+      });
+      toActivate.push(sku);
+    }
+
+    const itemNeedsActivation = current.status !== "active";
+    if (itemNeedsActivation && toActivate.length === 0) {
+      throw itemActivationRequiresSku();
+    }
+
+    if (itemNeedsActivation) {
+      const [result] = await connection.execute(
+        `UPDATE items SET status = 'active', updated_at = ?, updated_by = ?, version = version + 1
+          WHERE id = ? AND version = ? AND status IN ('draft', 'inactive')`,
+        [nowMs, actorId, id, version]
+      );
+      if (result.affectedRows === 0) {
+        const [[stillExists]] = await connection.query("SELECT version, status FROM items WHERE id = ?", [id]);
+        if (!stillExists) {
+          throw itemNotFound(id);
+        }
+        if (Number(stillExists.version) !== Number(version)) {
+          throw versionConflict();
+        }
+        throw statusTransitionInvalid(stillExists.status, "active");
+      }
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "item.activate",
+        targetType: "item",
+        targetId: id,
+        targetLabel: current.name,
+        detail: { status: { before: current.status, after: "active" } },
+        reason,
+        requestId,
+        ip
+      });
+    } else if (Number(current.version) !== Number(version)) {
+      throw versionConflict();
+    }
+
+    for (const sku of toActivate) {
+      await connection.execute(
+        "UPDATE item_skus SET status = 'active', updated_at = ?, updated_by = ?, version = version + 1 WHERE id = ?",
+        [nowMs, actorId, sku.id]
+      );
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "sku.activate",
+        targetType: "sku",
+        targetId: sku.id,
+        targetLabel: sku.sku_code,
+        detail: { status: { before: sku.status, after: "active" } },
+        reason,
+        requestId,
+        ip
+      });
+    }
   }
 
   /** active → inactive；同一交易將全部 Active SKU 轉 Inactive（DEC-024）。 */
@@ -1092,62 +1108,74 @@ export class ItemAdminService {
   async activateSku({ actorId, claimedRoles, claimedPermissions, id, reason, version, requestId, ip }) {
     const skuId = await this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
-
-      const [[sku]] = await connection.query(
-        `SELECT s.*, i.status AS item_status, i.product_type AS item_product_type,
-                i.category_id AS item_category_id
-           FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
-        [id]
-      );
-      if (!sku) {
-        throw skuNotFound(id);
-      }
-      if (sku.item_status !== "active") {
-        throw statusTransitionInvalid(sku.status, "active");
-      }
-      if (!["draft", "inactive"].includes(sku.status)) {
-        throw statusTransitionInvalid(sku.status, "active");
-      }
-
-      await this.#assertSkuRowActivatable(connection, sku, {
-        productType: sku.item_product_type,
-        categoryId: sku.item_category_id
-      });
-
-      const nowMs = this.time.nowMs();
-      const [result] = await connection.execute(
-        `UPDATE item_skus SET status = 'active', updated_at = ?, updated_by = ?, version = version + 1
-          WHERE id = ? AND version = ? AND status IN ('draft', 'inactive')`,
-        [nowMs, actorId, id, version]
-      );
-      if (result.affectedRows === 0) {
-        const [[stillExists]] = await connection.query("SELECT version, status FROM item_skus WHERE id = ?", [id]);
-        if (!stillExists) {
-          throw skuNotFound(id);
-        }
-        if (Number(stillExists.version) !== Number(version)) {
-          throw versionConflict();
-        }
-        throw statusTransitionInvalid(stillExists.status, "active");
-      }
-
-      await this.auditLog.record(connection, {
-        actorUserId: actorId,
-        actorUsername: actor.username,
-        action: "sku.activate",
-        targetType: "sku",
-        targetId: id,
-        targetLabel: sku.sku_code,
-        detail: { status: { before: sku.status, after: "active" } },
+      await this.#activateSkuCore(connection, {
+        id,
+        version,
+        actorId,
+        actor,
         reason,
         requestId,
-        ip
+        ip,
+        nowMs: this.time.nowMs()
       });
-
       return id;
     });
 
     return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
+  }
+
+  /** `activateSku()` 嘅核心邏輯，抽出嚟俾 `bulkChangeStatus()` 重用，同
+   * `#activateItemCore()` 同一個理由。 */
+  async #activateSkuCore(connection, { id, version, actorId, actor, reason, requestId, ip, nowMs }) {
+    const [[sku]] = await connection.query(
+      `SELECT s.*, i.status AS item_status, i.product_type AS item_product_type,
+              i.category_id AS item_category_id
+         FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
+      [id]
+    );
+    if (!sku) {
+      throw skuNotFound(id);
+    }
+    if (sku.item_status !== "active") {
+      throw statusTransitionInvalid(sku.status, "active");
+    }
+    if (!["draft", "inactive"].includes(sku.status)) {
+      throw statusTransitionInvalid(sku.status, "active");
+    }
+
+    await this.#assertSkuRowActivatable(connection, sku, {
+      productType: sku.item_product_type,
+      categoryId: sku.item_category_id
+    });
+
+    const [result] = await connection.execute(
+      `UPDATE item_skus SET status = 'active', updated_at = ?, updated_by = ?, version = version + 1
+        WHERE id = ? AND version = ? AND status IN ('draft', 'inactive')`,
+      [nowMs, actorId, id, version]
+    );
+    if (result.affectedRows === 0) {
+      const [[stillExists]] = await connection.query("SELECT version, status FROM item_skus WHERE id = ?", [id]);
+      if (!stillExists) {
+        throw skuNotFound(id);
+      }
+      if (Number(stillExists.version) !== Number(version)) {
+        throw versionConflict();
+      }
+      throw statusTransitionInvalid(stillExists.status, "active");
+    }
+
+    await this.auditLog.record(connection, {
+      actorUserId: actorId,
+      actorUsername: actor.username,
+      action: "sku.activate",
+      targetType: "sku",
+      targetId: id,
+      targetLabel: sku.sku_code,
+      detail: { status: { before: sku.status, after: "active" } },
+      reason,
+      requestId,
+      ip
+    });
   }
 
   /** active → inactive；唔可以停用父 Item（本身仍然 active 嗰陣）最後一個
@@ -1155,75 +1183,87 @@ export class ItemAdminService {
   async deactivateSku({ actorId, claimedRoles, claimedPermissions, id, reason, version, requestId, ip }) {
     const skuId = await this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
-
-      const [[sku]] = await connection.query(
-        `SELECT s.*, i.status AS item_status FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
-        [id]
-      );
-      if (!sku) {
-        throw skuNotFound(id);
-      }
-
-      // 「呢粒仲係唔係最後一個 Active SKU」呢個檢查一定要同轉 inactive嗰句
-      // UPDATE 綁埋一齊做，唔可以分開做兩句：分開做嘅話，兩個並行請求各自
-      // 停用同一個 Item 底下唔同嘅 SKU，各自嘅交易喺呢句 SELECT COUNT 嗰陣
-      // 都會見到「仲有第二粒 Active」（見返對方未 commit 之前嗰個舊值），
-      // 兩個都通過檢查，結果個 Item 剩返零個 Active SKU——同
-      // UserAdminService.disable() 防「停用最後一個 active admin」嗰個
-      // race 一模一樣，呢度用返同一招：將「仲有冇第二粒」做成 UPDATE 嘅
-      // WHERE 子句本身嘅一部分，等 InnoDB 用真正嘅列鎖去序列化呢兩個交易，
-      // 第二個交易嘅 WHERE 判斷先會見到第一個交易已經 commit 咗嘅最新資料。
-      const requiresLastActiveGuard = sku.item_status === "active" && sku.status === "active";
-      const nowMs = this.time.nowMs();
-      const [result] = await connection.execute(
-        `UPDATE item_skus SET status = 'inactive', updated_at = ?, updated_by = ?, version = version + 1
-          WHERE id = ? AND version = ? AND status = 'active'
-          ${
-            requiresLastActiveGuard
-              ? `AND EXISTS (
-                   SELECT 1 FROM (
-                     SELECT s2.id FROM item_skus s2 WHERE s2.item_id = ? AND s2.status = 'active' AND s2.id != ?
-                   ) AS other_active_skus
-                 )`
-              : ""
-          }`,
-        requiresLastActiveGuard
-          ? [nowMs, actorId, id, version, sku.item_id, id]
-          : [nowMs, actorId, id, version]
-      );
-      if (result.affectedRows === 0) {
-        const [[stillExists]] = await connection.query("SELECT version, status FROM item_skus WHERE id = ?", [id]);
-        if (!stillExists) {
-          throw skuNotFound(id);
-        }
-        if (Number(stillExists.version) !== Number(version)) {
-          throw versionConflict();
-        }
-        if (stillExists.status !== "active") {
-          throw statusTransitionInvalid(stillExists.status, "inactive");
-        }
-        // Version 啱、狀態仲係 active，但 UPDATE 一列都冇改到：唯一嘅可能就
-        // 係 requiresLastActiveGuard 嘅 EXISTS 判斷唔通過。
-        throw lastActiveSku();
-      }
-
-      await this.auditLog.record(connection, {
-        actorUserId: actorId,
-        actorUsername: actor.username,
-        action: "sku.deactivate",
-        targetType: "sku",
-        targetId: id,
-        targetLabel: sku.sku_code,
-        detail: { status: { before: sku.status, after: "inactive" } },
+      await this.#deactivateSkuCore(connection, {
+        id,
+        version,
+        actorId,
+        actor,
         reason,
         requestId,
-        ip
+        ip,
+        nowMs: this.time.nowMs()
       });
-
       return id;
     });
 
     return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
+  }
+
+  /** `deactivateSku()` 嘅核心邏輯，抽出嚟俾 `bulkChangeStatus()` 重用，同
+   * `#activateItemCore()` 同一個理由。 */
+  async #deactivateSkuCore(connection, { id, version, actorId, actor, reason, requestId, ip, nowMs }) {
+    const [[sku]] = await connection.query(
+      `SELECT s.*, i.status AS item_status FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.id = ?`,
+      [id]
+    );
+    if (!sku) {
+      throw skuNotFound(id);
+    }
+
+    // 「呢粒仲係唔係最後一個 Active SKU」呢個檢查一定要同轉 inactive嗰句
+    // UPDATE 綁埋一齊做，唔可以分開做兩句：分開做嘅話，兩個並行請求各自
+    // 停用同一個 Item 底下唔同嘅 SKU，各自嘅交易喺呢句 SELECT COUNT 嗰陣
+    // 都會見到「仲有第二粒 Active」（見返對方未 commit 之前嗰個舊值），
+    // 兩個都通過檢查，結果個 Item 剩返零個 Active SKU——同
+    // UserAdminService.disable() 防「停用最後一個 active admin」嗰個
+    // race 一模一樣，呢度用返同一招：將「仲有冇第二粒」做成 UPDATE 嘅
+    // WHERE 子句本身嘅一部分，等 InnoDB 用真正嘅列鎖去序列化呢兩個交易，
+    // 第二個交易嘅 WHERE 判斷先會見到第一個交易已經 commit 咗嘅最新資料。
+    const requiresLastActiveGuard = sku.item_status === "active" && sku.status === "active";
+    const [result] = await connection.execute(
+      `UPDATE item_skus SET status = 'inactive', updated_at = ?, updated_by = ?, version = version + 1
+        WHERE id = ? AND version = ? AND status = 'active'
+        ${
+          requiresLastActiveGuard
+            ? `AND EXISTS (
+                 SELECT 1 FROM (
+                   SELECT s2.id FROM item_skus s2 WHERE s2.item_id = ? AND s2.status = 'active' AND s2.id != ?
+                 ) AS other_active_skus
+               )`
+            : ""
+        }`,
+      requiresLastActiveGuard
+        ? [nowMs, actorId, id, version, sku.item_id, id]
+        : [nowMs, actorId, id, version]
+    );
+    if (result.affectedRows === 0) {
+      const [[stillExists]] = await connection.query("SELECT version, status FROM item_skus WHERE id = ?", [id]);
+      if (!stillExists) {
+        throw skuNotFound(id);
+      }
+      if (Number(stillExists.version) !== Number(version)) {
+        throw versionConflict();
+      }
+      if (stillExists.status !== "active") {
+        throw statusTransitionInvalid(stillExists.status, "inactive");
+      }
+      // Version 啱、狀態仲係 active，但 UPDATE 一列都冇改到：唯一嘅可能就
+      // 係 requiresLastActiveGuard 嘅 EXISTS 判斷唔通過。
+      throw lastActiveSku();
+    }
+
+    await this.auditLog.record(connection, {
+      actorUserId: actorId,
+      actorUsername: actor.username,
+      action: "sku.deactivate",
+      targetType: "sku",
+      targetId: id,
+      targetLabel: sku.sku_code,
+      detail: { status: { before: sku.status, after: "inactive" } },
+      reason,
+      requestId,
+      ip
+    });
   }
 
   /** active／inactive → discontinued；強制 purchasable=false，sellable 保留
@@ -2120,6 +2160,280 @@ export class ItemAdminService {
     return this.#toItemDetail(row, skuRows, mediaRows);
   }
 
+  /**
+   * 建 Item 之前嘅疑似重複提示（Phase 3，design_spec §6.2、§8.1）。故意淨係
+   * 用 deterministic 條件：名稱 trim＋不分大小寫完全相符，加埋（如果有提供）
+   * category／brand 完全相符——唔用 fuzzy／edit-distance 呢類「解釋唔到點解
+   * match 咗」嘅黑盒分數，亦唔自動合併或者阻擋建立，純粹提示。
+   *
+   * `variantSummary`（SKU codes）係俾使用者睇嘅context，唔係篩選條件本身：
+   * 「按 name／brand／category…回…及 variant summary」嘅「variant summary」
+   * 讀做「連同 variant summary 一齊回」，唔係第四個 WHERE 條件——攞埋每個
+   * candidate 底下嘅 SKU Code，等使用者一眼就睇到「呢個候選係咪其實已經
+   * 有我嗰隻規格」，唔使再撳入去先知。
+   *
+   * 名稱冇提供或者淨係空白就直接回空陣列——冇名可比對，勉強比對只會撞出一堆
+   * 冇意義嘅候選。
+   */
+  async findDuplicateCandidates({ actorId, claimedRoles, claimedPermissions, name, categoryId, brandId }) {
+    await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const normalizedName = String(name ?? "").trim();
+    if (!normalizedName) {
+      return [];
+    }
+
+    const conditions = ["LOWER(i.name) = LOWER(?)"];
+    const params = [normalizedName];
+
+    if (categoryId !== undefined) {
+      conditions.push("i.category_id = ?");
+      params.push(categoryId);
+    }
+    if (brandId !== undefined) {
+      conditions.push("i.brand_id = ?");
+      params.push(brandId);
+    }
+
+    const [rows] = await this.database.query(
+      `SELECT i.id, i.name, i.status, i.category_id, c.name AS category_name,
+              i.brand_id, b.name AS brand_name
+         FROM items i
+         LEFT JOIN item_categories c ON c.id = i.category_id
+         LEFT JOIN item_brands b ON b.id = i.brand_id
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY i.id ASC
+        LIMIT 10`,
+      params
+    );
+
+    if (rows.length === 0) {
+      return [];
+    }
+
+    const itemIds = rows.map((row) => Number(row.id));
+    const [skuRows] = await this.database.query(
+      `SELECT item_id, sku_code FROM item_skus WHERE item_id IN (?) ORDER BY item_id, sku_code`,
+      [itemIds]
+    );
+    const skuCodesByItemId = new Map();
+    for (const skuRow of skuRows) {
+      const itemId = Number(skuRow.item_id);
+      if (!skuCodesByItemId.has(itemId)) {
+        skuCodesByItemId.set(itemId, []);
+      }
+      skuCodesByItemId.get(itemId).push(skuRow.sku_code);
+    }
+
+    return rows.map((row) => {
+      const skuCodes = skuCodesByItemId.get(Number(row.id)) ?? [];
+      return {
+        id: Number(row.id),
+        name: row.name,
+        status: row.status,
+        categoryName: row.category_name ?? null,
+        brandName: row.brand_name ?? null,
+        skuCount: skuCodes.length,
+        // 最多顯示 5 個 SKU Code：呢度純粹俾使用者辨認，唔係完整清單，Variant
+        // Item 規格再多都唔使全部列晒先睇到「係咪呢個」。
+        skuCodes: skuCodes.slice(0, 5)
+      };
+    });
+  }
+
+  /**
+   * 最多 100 筆 Item／SKU 的全有全無批量狀態變更（Phase 3，design_spec
+   * §6.4、§8.1）。唔支援永久刪除，唔繞過單筆狀態規則——每個 target 實際
+   * 套用嘅邏輯同單筆 `activateItem()`／`deactivateSku()` 等一模一樣，直接
+   * 重用返嗰啲方法抽出嚟嘅 private helper（`#activateItemCore()`、
+   * `#transitionSkuStatus()` 等），唔係重新寫一套較寬鬆嘅規則。
+   *
+   * 全有全無嘅做法：全部 target 都喺同一個 transaction 入面逐個真係嘗試
+   * 套用（唔係分開「驗證一次、套用一次」兩round）——任何一個失敗就集齊晒
+   * 全部 target 嘅結果之後先一次過 throw，等 transaction rollback 埋之前
+   * 已經「成功」嗰幾個。response 嘅 issues 會指出邊個 target id、乜嘢原因，
+   * 唔使使用者一次改一個先知邊度錯。
+   *
+   * 鎖 row 用返 `targets` 已經排咗序嘅 id 順序（design_spec §8.1：「依排序
+   * 後的 ID 鎖 rows，避免不同請求以不同順序取鎖造成 deadlock」）。
+   */
+  async bulkChangeStatus({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    targetType,
+    action,
+    targets,
+    reason,
+    requestId,
+    ip
+  }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+      const sortedTargets = [...targets].sort((a, b) => a.id - b.id);
+
+      const table = targetType === "item" ? "items" : "item_skus";
+      const ids = sortedTargets.map((target) => target.id);
+      const placeholders = ids.map(() => "?").join(",");
+      // 淨係鎖 row，唔用呢句嘅結果做任何驗證——存唔存在、狀態啱唔啱由下面
+      // 逐個 target 嗰句沿用單筆邏輯嘅 UPDATE／SELECT 自己判斷，呢度純粹
+      // 確保鎖嘅順序係排咗序嘅 id，避免同另一個 bulk 請求 deadlock。
+      await connection.query(`SELECT id FROM ${table} WHERE id IN (${placeholders}) ORDER BY id FOR UPDATE`, ids);
+
+      const issues = [];
+      const results = [];
+      for (const target of sortedTargets) {
+        try {
+          await this.#applyBulkStatusTarget(connection, {
+            targetType,
+            action,
+            target,
+            actorId,
+            actor,
+            reason,
+            requestId,
+            ip,
+            nowMs
+          });
+          results.push({ id: target.id, status: "ok" });
+        } catch (error) {
+          issues.push({
+            id: target.id,
+            code: error.publicCode ?? error.code ?? "UNKNOWN_ERROR",
+            message: error.publicMessage ?? error.message
+          });
+        }
+      }
+
+      if (issues.length > 0) {
+        throw bulkStatusChangeRejected(issues);
+      }
+
+      return results;
+    });
+  }
+
+  /** `bulkChangeStatus()` 逐個 target 嘅 dispatch：對應返單筆 `activateItem()`
+   * 等方法用緊嗰組 `fromStatuses`／`toStatus`／cascade 設定，一字不改咁
+   * 重用。`skuIds` 喺 bulk 入面固定係空陣列：bulk 冇位俾使用者為每個
+   * target 各自揀「連埋邊幾粒 SKU 一齊啟用」，所以 bulk 啟用一個仲未有
+   * active SKU 嘅 Item 會如常俾 `itemActivationRequiresSku()` 拒絕——呢個
+   * 唔係漏洞，係單筆規則本身喺冇指定 SKU 之下嘅正常行為；bulk activate
+   * 主要用喺 targetType=sku（逐粒啟用已經配置好嘅 SKU）。 */
+  async #applyBulkStatusTarget(connection, { targetType, action, target, actorId, actor, reason, requestId, ip, nowMs }) {
+    const { id, version } = target;
+    const common = { actorId, actor, reason, requestId, ip, nowMs };
+
+    if (targetType === "item") {
+      switch (action) {
+        case "activate":
+          return this.#activateItemCore(connection, { id, skuIds: [], version, ...common });
+        case "deactivate":
+          await this.#transitionItemStatus(connection, {
+            id,
+            version,
+            fromStatuses: ["active"],
+            toStatus: "inactive",
+            action: "item.deactivate",
+            ...common
+          });
+          return this.#cascadeSkuStatus(connection, {
+            itemId: id,
+            fromStatuses: ["active"],
+            toStatus: "inactive",
+            forcePurchasableFalse: false,
+            action: "sku.deactivate",
+            ...common
+          });
+        case "discontinue":
+          await this.#transitionItemStatus(connection, {
+            id,
+            version,
+            fromStatuses: ["active", "inactive"],
+            toStatus: "discontinued",
+            action: "item.discontinue",
+            ...common
+          });
+          return this.#cascadeSkuStatus(connection, {
+            itemId: id,
+            fromStatuses: ["active", "inactive"],
+            toStatus: "discontinued",
+            forcePurchasableFalse: true,
+            action: "sku.discontinue",
+            ...common
+          });
+        case "archive":
+          await this.#transitionItemStatus(connection, {
+            id,
+            version,
+            fromStatuses: ["draft", "inactive", "discontinued"],
+            toStatus: "archived",
+            action: "item.archive",
+            ...common
+          });
+          return this.#cascadeSkuStatus(connection, {
+            itemId: id,
+            fromStatuses: ["draft", "active", "inactive", "discontinued"],
+            toStatus: "archived",
+            forcePurchasableFalse: false,
+            action: "sku.archive",
+            ...common
+          });
+        case "restore":
+          return this.#transitionItemStatus(connection, {
+            id,
+            version,
+            fromStatuses: ["archived"],
+            toStatus: "inactive",
+            action: "item.restore",
+            ...common
+          });
+        default:
+          throw new TypeError(`Unsupported bulk action for item: ${action}`);
+      }
+    }
+
+    switch (action) {
+      case "activate":
+        return this.#activateSkuCore(connection, { id, version, ...common });
+      case "deactivate":
+        return this.#deactivateSkuCore(connection, { id, version, ...common });
+      case "discontinue":
+        return this.#transitionSkuStatus(connection, {
+          id,
+          version,
+          fromStatuses: ["active", "inactive"],
+          toStatus: "discontinued",
+          forcePurchasableFalse: true,
+          action: "sku.discontinue",
+          ...common
+        });
+      case "archive":
+        return this.#transitionSkuStatus(connection, {
+          id,
+          version,
+          fromStatuses: ["draft", "inactive", "discontinued"],
+          toStatus: "archived",
+          forcePurchasableFalse: false,
+          action: "sku.archive",
+          ...common
+        });
+      case "restore":
+        return this.#transitionSkuStatus(connection, {
+          id,
+          version,
+          fromStatuses: ["archived"],
+          toStatus: "inactive",
+          forcePurchasableFalse: false,
+          action: "sku.restore",
+          ...common
+        });
+      default:
+        throw new TypeError(`Unsupported bulk action for sku: ${action}`);
+    }
+  }
+
   // --- SKU：列表／詳情 ------------------------------------------------------
 
   /**
@@ -2245,6 +2559,132 @@ export class ItemAdminService {
       page,
       pageSize
     };
+  }
+
+  /**
+   * 按目前 SKU 篩選匯出全部符合嘅 SKU（唔分頁）。故意唔重用
+   * `listSkus()`——嗰個方法仲夾埋 relevance rank／分頁邏輯，抽出一個共用
+   * private helper要動一個已經有大量測試依賴住嘅既有方法，風險同呢個
+   * task 本身唔成比例；呢度篩選條件同 `listSkus()` 呼應但獨立一份（設計
+   * 說明見 docs/items_management/design_spec.md §6.8）。
+   *
+   * 排序用 `sku_code ASC`：匯出唔需要 relevance rank，一個穩定、與使用者
+   * 篩選語意無關嘅排序已經足夠，亦令同一組 filter 每次匯出行順序一致。
+   */
+  async exportSkus({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    q = "",
+    itemId,
+    categoryId,
+    brandId,
+    status,
+    includeArchived = false,
+    purchasable,
+    sellable,
+    requestId = "",
+    ip = ""
+  }) {
+    const actor = await assertActorFresh(this.database, { actorId, claimedRoles, claimedPermissions });
+
+    const conditions = [];
+    const params = [];
+
+    if (itemId !== undefined) {
+      conditions.push("s.item_id = ?");
+      params.push(itemId);
+    }
+    if (categoryId !== undefined) {
+      conditions.push("i.category_id = ?");
+      params.push(categoryId);
+    }
+    if (brandId !== undefined) {
+      conditions.push("i.brand_id = ?");
+      params.push(brandId);
+    }
+    if (status) {
+      conditions.push("s.status = ?");
+      params.push(status);
+    } else if (!includeArchived) {
+      conditions.push("s.status != 'archived'");
+    }
+    if (purchasable !== undefined) {
+      conditions.push("s.purchasable = ?");
+      params.push(purchasable ? 1 : 0);
+    }
+    if (sellable !== undefined) {
+      conditions.push("s.sellable = ?");
+      params.push(sellable ? 1 : 0);
+    }
+
+    const term = String(q ?? "").trim();
+    if (term) {
+      const escaped = escapeLikeTerm(term);
+      const barcodeDigits = stripBarcodeSeparators(term);
+      conditions.push(
+        `(s.sku_code = ? OR EXISTS (
+           SELECT 1 FROM item_sku_barcodes eb WHERE eb.sku_id = s.id AND eb.normalized_barcode = ?
+         ) OR s.sku_code LIKE ? OR s.sku_name LIKE ? OR i.name LIKE ?)`
+      );
+      params.push(term, barcodeDigits, `${escaped}%`, `%${escaped}%`, `%${escaped}%`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    const [rows] = await this.database.query(
+      `SELECT s.sku_code, s.sku_name, i.name AS item_name,
+              c.name AS category_name, b.name AS brand_name,
+              s.status, s.suggested_price_amount, s.purchasable, s.sellable, s.updated_at,
+              (SELECT b2.barcode FROM item_sku_barcodes b2
+                WHERE b2.sku_id = s.id AND b2.is_primary = 1 LIMIT 1) AS primary_barcode,
+              (SELECT u.code FROM item_sku_uoms su
+                 JOIN item_uoms u ON u.id = su.uom_id
+                WHERE su.sku_id = s.id AND su.is_base = 1 LIMIT 1) AS base_uom_code
+         FROM item_skus s
+         JOIN items i ON i.id = s.item_id
+         LEFT JOIN item_categories c ON c.id = i.category_id
+         LEFT JOIN item_brands b ON b.id = i.brand_id
+         ${whereClause}
+        ORDER BY s.sku_code ASC`,
+      params
+    );
+
+    // 呢幾個字串欄位全部係使用者可以自己打嘅內容（SKU Code、名稱、分類、
+    // 品牌、條碼、UOM 代碼），一定要用 sanitizeCsvCell() 先寫入 CSV——理由
+    // 見 csvSafety.js 頂部說明（CSV／formula injection）。
+    const items = rows.map((row) => ({
+      skuCode: sanitizeCsvCell(row.sku_code),
+      skuName: sanitizeCsvCell(row.sku_name),
+      itemName: sanitizeCsvCell(row.item_name),
+      categoryName: sanitizeCsvCell(row.category_name ?? ""),
+      brandName: sanitizeCsvCell(row.brand_name ?? ""),
+      status: row.status,
+      primaryBarcode: sanitizeCsvCell(row.primary_barcode ?? ""),
+      baseUomCode: sanitizeCsvCell(row.base_uom_code ?? ""),
+      suggestedPriceAmount: row.suggested_price_amount,
+      currency: "HKD",
+      taxBasis: "tax_not_applicable",
+      purchasable: Boolean(row.purchasable),
+      sellable: Boolean(row.sellable),
+      updatedAt: new Date(Number(row.updated_at)).toISOString()
+    }));
+
+    // Audit 只記篩選條件同筆數，唔保存整份 CSV 內容（見 handler 的說明）；
+    // 冇聚合寫入要一齊 rollback，直接用 `this.database`，唔開額外交易。
+    await this.auditLog.record(this.database, {
+      actorUserId: actor.id,
+      actorUsername: actor.username,
+      action: "item.export",
+      targetType: "export",
+      targetId: null,
+      targetLabel: `SKU 匯出：${items.length} 筆`,
+      detail: { filters: { q, itemId, categoryId, brandId, status, includeArchived, purchasable, sellable }, rowCount: items.length },
+      requestId,
+      ip
+    });
+
+    return items;
   }
 
   /** SKU 詳情：SKU 本身欄位＋Item 摘要＋UOM 集合＋條碼集合＋價格口徑＋version。 */

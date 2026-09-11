@@ -5,9 +5,9 @@
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Customer Management 業務需求書 |
-| 文件版本 | 0.1 Draft |
-| 文件日期 | 2026-09-07 |
-| 文件狀態 | 核心業務意圖已訪談確認；待正式簽核及技術設計 |
+| 文件版本 | 0.2 Harness Aligned |
+| 文件日期 | 2026-09-10 |
+| 文件狀態 | Harness Review已對齊；核心業務意圖完整，待正式簽核及實作 |
 | 適用系統 | ERP App |
 | 適用組織 | 單一公司 |
 | 主要業務模式 | 以公司客戶為主的批發業務 |
@@ -32,6 +32,14 @@ Customer Management 將建立單一客戶主資料來源。銷售下單時只選
 | 版本 | 日期 | 摘要 |
 | --- | --- | --- |
 | 0.1 Draft | 2026-09-07 | 根據業務訪談建立以批發公司客戶為核心的主資料、地址、聯絡、信用、銀行、附件、審批、匯入匯出、生命週期及下游整合需求。 |
+| 0.2 Harness Aligned | 2026-09-10 | 納入Harness獨立評審結論、目的限定的下游狀態資格、可量測災難復原目標及正式追溯入口；不改變已確認業務範圍。 |
+
+### 0.4 Harness對齊基線
+
+- 本文件是Customer Management完整且正式的業務需求基線。
+- [`01_requirement_spec.md`](01_requirement_spec.md)提供`FR-001`～`FR-100`標準別名、來源標記及跨文件追溯；別名不取代或削弱本文件原有`FR-*`家族、`BR-*`、`SEC-*`及`AC-*`語意。
+- [`02_requirement_review.md`](02_requirement_review.md)記錄獨立需求評審與已處理差異；未經批准的建議不會自動成為業務需求。
+- 如正式需求與其他下游文件不一致，以本文件及已批准決策為準，差異必須回到需求評審處理，不得由開發者自行選擇語意。
 
 ---
 
@@ -575,8 +583,8 @@ Archived ── restore ──> Suspended
 | BR-022 | 啟用審批參數預設關閉；關閉時customer.mgmt可直接啟用完整Customer。 |
 | BR-023 | 審批參數開啟時，建檔人與審批人必須不同，審批人須為有效customer.approval使用者。 |
 | BR-024 | Pending Approval的Code、Legal Name、Default Currency或其他關鍵資料被修改後，原申請不得繼續批准。 |
-| BR-025 | 只有Active Customer可加入新的銷售或信用交易；下游提交時必須重新驗證。 |
-| BR-026 | Suspended、Blocked及Archived不影響既有交易、善後流程及歷史查詢。 |
+| BR-025 | 只有Active Customer可建立新的銷售或新的信用交易；下游提交時必須重新驗證。人工新增Invoice亦視為新交易。 |
+| BR-026 | Suspended、Blocked及Archived不應只因Customer狀態而阻止既有已確認訂單的履約、已出貨交易開票、既有應收的收款／貸項、合法歷史退貨及歷史查詢；下游仍須驗證來源單據、Customer／子資料ownership、子資料有效狀態及操作者權限。 |
 | BR-027 | Blocked的封鎖及解除須由customer.approval執行並填原因；解除後先進入Suspended。 |
 | BR-028 | Archived還原後先進入Suspended，不自動恢復新交易資格。 |
 | BR-029 | 只有從未被任何資料引用的Draft Customer可永久刪除。 |
@@ -754,6 +762,7 @@ Archived ── restore ──> Suspended
 | NFR-012 | Customer Settings可在不改變既有參數語意下加入經批准的新參數，但不得預先實作未確認規則。 |
 | NFR-013 | 幣別、付款條件、國家／地區、用途及分類目錄應引用系統共用或集中定義，避免各模組自行解讀。 |
 | NFR-014 | 日期、時間、數字、金額及地址顯示須符合系統語系及APP_TIME_ZONE設定；交換格式不得有時區或小數歧義。 |
+| NFR-015 | 生產環境災難復原目標為RTO不超過4小時、RPO不超過15分鐘；宣告復原前須在隔離環境核對資料庫、金鑰環、一般附件、Bank Sensitive附件及稽核記錄為同一可用且一致的恢復集合。 |
 
 ## 14. 錯誤與例外處理
 

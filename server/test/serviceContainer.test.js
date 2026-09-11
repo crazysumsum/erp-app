@@ -233,6 +233,23 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "idempotency"]
     },
     {
+      // 清理已終結（invalid／completed／failed／cancelled）、滿 1 年保留期
+      // 嘅 Import 原始檔／結果檔。cluster scope：import 根目錄同樣是所有
+      // 實例共用的儲存磁碟區，理由跟 job.itemMediaCleanup 一致。
+      name: "job.itemImportFileCleanup",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
+    },
+    {
+      // CSV 匯入嘅 preflight validation。冇 cluster scope：job 之間嘅互斥由
+      // item_import_jobs 自己嘅 lease_owner／lease_until compare-and-set 做到
+      // （同一個 job 只有一個 owner），唔靠 scheduler 嘅 cluster lease，多個
+      // 實例各自 tick 反而可以並行處理唔同嘅 job。
+      name: "job.itemImportWorker",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
+    },
+    {
       // 掃受控 Item media 根目錄，清走 DB 已經沒有引用、超過 grace period 的
       // 檔案。cluster scope：media 根目錄是所有實例共用的儲存磁碟區，每個
       // 實例各掃一次只是重複讀同一個目錄同同一張表。

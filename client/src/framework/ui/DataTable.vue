@@ -38,8 +38,15 @@ const props = defineProps({
   // 第幾頁、點樣排序」，唔使個 QTable 顯示嘅頁碼同實際攞緊嘅資料唔一致
   // （見 ItemsPage.vue）。冇傳嘅話行為同之前一模一樣——只係將預設值嘅來源
   // 由呢個組件內部改做呼叫端可以覆寫，唔改動任何現有呼叫端嘅行為。
-  initialPagination: { type: Object, default: null }
+  initialPagination: { type: Object, default: null },
+  // 'none'（預設）／'single'／'multiple'：原樣轉發俾 QTable 自己嘅
+  // selection／v-model:selected（見 ItemsPage.vue 嘅批量狀態操作）。
+  // 預設 'none' 令冇用到呢個 prop 嘅現有頁面行為完全唔變。
+  selection: { type: String, default: "none" },
+  selected: { type: Array, default: () => [] }
 });
+
+const emit = defineEmits(["update:selected"]);
 
 const isServerMode = computed(() => props.fetch !== null);
 const requestListeners = computed(() => (isServerMode.value ? { request: onRequest } : {}));
@@ -121,6 +128,9 @@ onMounted(() => {
       :filter="filter"
       :rows-per-page-options="appConfig.pageSizeOptions"
       :class="{ 'q-table--sticky-actions': stickyActions }"
+      :selection="selection"
+      :selected="selected"
+      @update:selected="(value) => emit('update:selected', value)"
       v-on="requestListeners"
     >
       <!--

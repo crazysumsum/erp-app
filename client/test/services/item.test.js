@@ -126,4 +126,37 @@ describe("item service", () => {
     expect(sku).toEqual({ id: 5, skuCode: "SKU-1" });
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/skus/5");
   });
+
+  it("checkDuplicates() 打 POST /items/duplicates/check，唔帶 idempotent（純警告冇副作用）", async () => {
+    httpClient.post.mockResolvedValue({ candidates: [] });
+
+    await itemService.checkDuplicates({ name: "維他命 C", categoryId: 3, brandId: 8 });
+
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/items/duplicates/check", {
+      body: { name: "維他命 C", categoryId: 3, brandId: 8 },
+      signal: undefined
+    });
+  });
+
+  it("bulkChangeStatus() 打 POST /item-bulk/status/change，帶 targetType／action／targets／reason／password", async () => {
+    httpClient.post.mockResolvedValue({ results: [] });
+
+    await itemService.bulkChangeStatus({
+      targetType: "sku",
+      action: "archive",
+      targets: [{ id: 1, version: 1 }, { id: 2, version: 3 }],
+      reason: "批量封存",
+      password: "hunter2"
+    });
+
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/item-bulk/status/change", {
+      body: {
+        targetType: "sku",
+        action: "archive",
+        targets: [{ id: 1, version: 1 }, { id: 2, version: 3 }],
+        reason: "批量封存",
+        password: "hunter2"
+      }
+    });
+  });
 });

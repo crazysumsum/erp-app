@@ -5,11 +5,11 @@
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Customer Management 系統設計規格 |
-| 文件版本 | 0.1 Draft |
-| 文件日期 | 2026-09-07 |
-| 需求基線 | `docs/customer_management/requirement.md` 0.1 Draft |
+| 文件版本 | 0.2 Harness Aligned |
+| 文件日期 | 2026-09-10 |
+| 需求基線 | `docs/customer_management/requirement.md` 0.2 Harness Aligned |
 | 適用系統 | ERP App；單一公司；批發客戶 |
-| 設計狀態 | 核心架構及資料設計已完成；待 Product Owner、Technical Lead、Security、QA、Sales、Fulfillment 及 Finance 評審 |
+| 設計狀態 | Harness Review已對齊；設計門檻為Conditional，DR-004須在敏感權限實作前批准 |
 
 ### 0.1 文件目的
 
@@ -37,6 +37,13 @@
 - 不提供 generic decrypt API、generic attachment download API 或 generic Customer write API。
 - 不讓 UI、CSV worker 或下游模組直接寫 Customer tables。
 - 不修改已套用 migration；不以預留但尚未存在的檔號覆蓋目前 main。
+
+### 0.4 Harness對齊與設計權威
+
+- 本文件是Customer Management完整且正式的詳細系統設計基線。
+- [`03_system_design_spec.md`](03_system_design_spec.md)定義`DES-001`～`DES-025`標準設計決策及本次Harness修正；其修正內容已納入本文件，並作為跨需求、任務及測試的追溯入口。
+- [`04_design_review.md`](04_design_review.md)記錄獨立架構、安全、資料庫、SRE、工程與QA評審。
+- 權威順序為：已確認業務需求與批准決策、本文件及`DES-*`修正、其他輔助評審記錄。出現衝突時須回到設計評審，不得在程式中靜默選擇。
 
 ---
 
@@ -253,7 +260,7 @@ CSV使用 RFC 4180 parser；formula-leading cells在所有下載CSV前加安全�
 
 ### 5.1 共通資料庫規則
 
-- Engine `InnoDB`；charset／collation 沿用專案的 `utf8mb4_unicode_ci`。不能只靠 collation 定義業務 normalization，仍保存明確 `*_key`。
+- Engine `InnoDB`。使用者顯示及一般搜尋文字沿用`utf8mb4_unicode_ci`；所有已正規化並參與相等判斷或唯一約束的`*_key`欄位明確使用`CHARACTER SET utf8mb4 COLLATE utf8mb4_bin`。業務相等性只由版本化的應用正規化規則產生，不交由語言collation推斷。
 - 一般 ID 是 `BIGINT UNSIGNED AUTO_INCREMENT`；Currency 以 ISO code 作 PK。金額 `DECIMAL(19,4)`，API／JSON 以 decimal string 傳遞，禁止轉 JavaScript float 後再寫 DB。
 - Boolean 是 `TINYINT(1)`；日期時間是 `BIGINT UNSIGNED` epoch ms；狀態用 `VARCHAR` 並由 constants／service 驗證，因 MySQL 5.7 不依賴 CHECK。
 - 可編輯 entity 使用 `version INT UNSIGNED NOT NULL DEFAULT 1`。Create version=1；每次成功 command +1；`updated_at/updated_by` 同 transaction 更新。
@@ -364,7 +371,7 @@ Customer FK 使用 `ON DELETE RESTRICT`。目錄只可停用，不提供永久�
 - `KEY idx_customers_legal_name(legal_name_key,id)`、`idx_customers_trading_name(trading_name_key,id)`。
 - `KEY idx_customers_currency_status(default_currency_code,status)`、`idx_customers_term_status(default_payment_term_id,status)`。
 - `KEY idx_customers_manager_status(account_manager_user_id,status)`、Category／Industry／Territory各建 `(foreign_id,status)`。
-- 一般 email／phone不 unique。Search 的 partial match使用 escaped LIKE及 bounded page；精確 code／legal name先走 key index。
+- 一般 email／phone不 unique。標準Search採正規化後的exact或token-prefix，使用索引及bounded page；精確code／legal name優先。任意leading-wildcard infix查找不屬標準路徑，若日後需要須另作有索引且符合NFR的設計。
 
 `default_currency_code` 刻意容許 Draft NULL；activate service lock row後檢查 active Currency。DB不能用跨表 CHECK保證，因此 migration integration＋service tests是必要證據。
 
@@ -494,7 +501,8 @@ Rotation期間service用所有read lookup keys查同一Customer duplicate；跨C
 | `document_type` | VARCHAR(50) | NOT NULL | business_certificate／credit_application／contract／bank_proof／other。 |
 | `sensitivity` | VARCHAR(30) | NOT NULL | general／bank_sensitive；bank_proof必須bank_sensitive。 |
 | `original_filename` | VARCHAR(255) | NOT NULL | 僅顯示；移除路徑，無bank.view不回敏感filename。 |
-| `stored_name` | CHAR(36) | NOT NULL | server UUID，unique；相對storage key。 |
+| `operation_id` | CHAR(36) ASCII | NOT NULL | FK至`customer_operation_requests.id`；同一操作只能產生一個附件結果。 |
+| `stored_name` | CHAR(64) | NOT NULL | 由operation決定的不可猜測、可重算相對storage key；unique。 |
 | `mime_type` | VARCHAR(100) | NOT NULL | signature核對後的實際類型。 |
 | `extension` | VARCHAR(10) | NOT NULL | allowlist。 |
 | `size_bytes` | BIGINT UNSIGNED | NOT NULL | 受config limit。 |
@@ -506,7 +514,7 @@ Rotation期間service用所有read lookup keys查同一Customer duplicate；跨C
 | `notes` | VARCHAR(500) | NOT NULL DEFAULT '' | 不含敏感內容。 |
 | `version`、時間、操作者 | 共通欄位 | — | — |
 
-約束／索引：`UNIQUE(stored_name)`、`KEY(customer_id,sensitivity,status,sort_order,id)`、`KEY(status,updated_at)`、`KEY(sha256,customer_id)`。DB不保存絕對路徑；storage root來自config。Future consumer以自己的 FK `ON DELETE RESTRICT` 指向 attachment；`CustomerAttachmentReferenceGuard` 查所有已註冊consumer。Bank Sensitive download response禁止cache並記audit。
+約束／索引：`UNIQUE(operation_id)`、`UNIQUE(stored_name)`、`KEY(customer_id,sensitivity,status,sort_order,id)`、`KEY(status,updated_at,id)`、`KEY(sha256,customer_id)`。DB不保存絕對路徑；storage root來自config。`processing` row與temp／final object均可由operation、hash及size對賬；finalizer或bounded recovery job只可啟用已掃描且校驗一致的檔案，否則轉`storage_error`並告警，不建立第二份附件。Future consumer以自己的 FK `ON DELETE RESTRICT` 指向 attachment；`CustomerAttachmentReferenceGuard` 查所有已註冊consumer。Bank Sensitive download response禁止cache並記audit。
 
 ### 5.14 `customer_activation_requests`
 
@@ -572,7 +580,7 @@ Migration只在id=1不存在時insert default OFF；service明確拒絕id≠1、
 | 欄位群 | 詳細欄位／型別 |
 | --- | --- |
 | Identity | `id BIGINT PK AUTO_INCREMENT`、`idempotency_key VARCHAR(128) NOT NULL`、`template_version VARCHAR(20) NOT NULL`。 |
-| Files | `source_stored_name CHAR(36) NOT NULL UNIQUE`、`source_sha256 BINARY(32) NOT NULL`、`result_stored_name CHAR(36) NULL UNIQUE`、`files_purged_at BIGINT NULL`。 |
+| Files | `operation_id CHAR(36) ASCII NOT NULL UNIQUE`，FK至`customer_operation_requests.id`；`source_stored_name CHAR(64) NOT NULL UNIQUE`、`source_sha256 BINARY(32) NOT NULL`、`source_storage_status VARCHAR(30) NOT NULL`、`result_stored_name CHAR(64) NULL UNIQUE`、`result_sha256 BINARY(32) NULL`、`result_storage_status VARCHAR(30) NULL`、`files_purged_at BIGINT NULL`。Stored name由operation決定且可重算；storage status為processing／active／storage_error／purged。 |
 | Modes | `mode VARCHAR(20)` create_only／upsert；`activation_mode VARCHAR(20)` draft／activate；`approver_user_id BIGINT NULL FK users SET NULL`。 |
 | Snapshot | `approval_setting_value TINYINT NULL`、`approval_setting_version INT NULL`，confirm時保存。 |
 | State | `status VARCHAR(30)` uploaded／validating／ready／ready_with_errors／queued／running／completed／completed_with_errors／failed／cancelled。 |
@@ -580,7 +588,7 @@ Migration只在id=1不存在時insert default OFF；service明確拒絕id≠1、
 | Worker | `lease_owner VARCHAR(100) NOT NULL DEFAULT ''`、`lease_until BIGINT NULL`、`last_error_code VARCHAR(80) NOT NULL DEFAULT ''`、`error_summary VARCHAR(500) NOT NULL DEFAULT ''`。 |
 | Actors/time | `created_by BIGINT NULL FK users SET NULL`、`confirmed_by BIGINT NULL FK users SET NULL`、`created_at`,`updated_at`,`confirmed_at`,`completed_at`；nullable按state；`version INT DEFAULT 1`。 |
 
-`UNIQUE(created_by,idempotency_key)`；indexes `(status,created_at,id)`、`(lease_until,status)`、`(created_by,created_at,id)`。Idempotency key只在同actor scope；source hash相同仍可有不同合法job。
+`UNIQUE(created_by,idempotency_key)`；indexes `(status,created_at,id)`、`(lease_until,status)`、`(created_by,created_at,id)`、`(source_storage_status,updated_at,id)`、`(result_storage_status,updated_at,id)`。Idempotency key只在同actor scope；source hash相同仍可有不同合法job。API或worker不得在必要source/result object尚未完成hash／size驗證時宣告相應DB狀態成功；逾時processing由file finalize recovery job收斂。
 
 #### 5.17.2 `customer_import_rows`
 
@@ -599,29 +607,52 @@ Migration只在id=1不存在時insert default OFF；service明確拒絕id≠1、
 
 Index `(job_id,status,row_number)`。Worker先 `SELECT ... FOR UPDATE` row；terminal row不重做。成功transaction內依次寫Customer aggregate、audit、row applied。失敗rollback aggregate，再用另一短transaction把仍非terminal row標failed，確保合法列可繼續。
 
-### 5.18 Provisional migration allocation
+### 5.18 `customer_operation_requests`
 
-截至2026-09-07，Item實作已占`0010–0013`及`0024`，其設計仍分配`0014–0026`。Customer暫定從`0027`開始；**建立第一支實作migration前必須fetch最新main並重新掃描實際檔案及已批准設計配額**。如有碰撞，整組Customer migration順延並同步本節／tasks；不插隊、不改舊migration。
+這是Customer domain的持久化結果索引，不取代短期HTTP `fr_idempotency_keys`。所有可能在response遺失、process crash或跨storage finalize後仍需確認結果的命令，在產生業務效果前先建立／鎖定此記錄；同一operation及payload只允許一個可觀察結果。
 
-| Provisional file | Logical ID | 內容／依賴 |
+| 欄位 | 型別 | Null／預設 | 說明 |
+| --- | --- | --- | --- |
+| `id` | CHAR(36) ASCII | NOT NULL | UUID PK；API的`operationId`。 |
+| `actor_user_id` | BIGINT UNSIGNED | NOT NULL | 發起者；FK users RESTRICT。 |
+| `route_key` | VARCHAR(100) | NOT NULL | allowlisted command名稱，不保存自由輸入URL。 |
+| `idempotency_key` | VARCHAR(128) | NOT NULL | 呼叫方key；不得出現在一般log。 |
+| `payload_hash` | BINARY(32) | NOT NULL | canonical allowlisted payload SHA-256；排除password／token／file bytes。 |
+| `status` | VARCHAR(20) | NOT NULL | processing／succeeded／failed／unknown。 |
+| `resource_type` | VARCHAR(40) | NOT NULL DEFAULT '' | customer／attachment／import等allowlisted結果類型。 |
+| `resource_id` | BIGINT UNSIGNED | NULL | polymorphic logical ID；由service按resource_type owner-safe查詢，不設跨表FK。 |
+| `result_version` | INT UNSIGNED | NULL | 成功後資源版本；不保存敏感response body。 |
+| `error_code` | VARCHAR(80) | NOT NULL DEFAULT '' | 失敗時穩定公開碼。 |
+| `lease_owner` | CHAR(36) ASCII | NOT NULL DEFAULT '' | recovery worker claim。 |
+| `lease_until` | BIGINT UNSIGNED | NULL | epoch ms；逾期可安全接手核對。 |
+| `created_at`,`updated_at`,`completed_at` | BIGINT UNSIGNED | completed nullable | 共通時間。 |
+
+約束／索引：`UNIQUE(actor_user_id,route_key,idempotency_key)`、`KEY(status,lease_until,id)`、`KEY(resource_type,resource_id,id)`、`KEY(actor_user_id,created_at,id)`。同key不同payload回`IDEMPOTENCY_CONFLICT`；terminal row不可重開或改成另一結果。Operation至少保留至其業務資源及audit不再需要恢復／追溯，不能跟隨短期framework idempotency TTL自動清除。
+
+### 5.19 Logical migration allocation
+
+本設計只固定下列logical ID及依賴，不預留或宣稱任何實體migration序號。每個Phase開始實作前必須取得最新main、掃描實際migration檔及已批准的並行變更，再從當時下一個可用序號連續配置；如main移動，須在feature branch重新整合並重跑migration gate。不插隊、不改已套用migration。
+
+| Logical ID | 建議名稱 | 內容／依賴 |
 | --- | --- | --- |
-| `0027_seed_customer_management_permissions.js` | CUST-M01 | 六權限；system-admin只seed四項非銀行Customer權限。 |
-| `0028_create_business_master_catalogs.js` | CUST-M02 | currencies＋HKD、payment_terms；shape compatibility guard。 |
-| `0029_create_customer_classification_catalogs.js` | CUST-M03 | categories／industries／territories。 |
-| `0030_create_customers.js` | CUST-M04 | root及FK。 |
-| `0031_create_customer_addresses.js` | CUST-M05 | addresses＋purpose mapping。 |
-| `0032_create_customer_contacts.js` | CUST-M06 | contacts＋purpose mapping。 |
-| `0033_create_customer_identifiers.js` | CUST-M07 | identifiers。 |
-| `0034_create_customer_credit_profiles.js` | CUST-M08 | optional credit。 |
-| `0035_create_customer_settings.js` | CUST-M09 | singleton＋OFF seed。 |
-| `0036_create_customer_activation_requests.js` | CUST-M10 | approval history。 |
-| `0037_create_customer_bank_accounts.js` | CUST-M11 | encrypted bank metadata。 |
-| `0038_create_customer_attachments.js` | CUST-M12 | file metadata。 |
-| `0039_create_customer_audit_logs.js` | CUST-M13 | append-only audit。 |
-| `0040_create_customer_import_jobs.js` | CUST-M14 | import jobs。 |
-| `0041_create_customer_import_rows.js` | CUST-M15 | per-row result／atomic marker。 |
+| CUST-M01 | `seed_customer_management_permissions` | 六權限；system-admin只seed四項非銀行Customer權限。 |
+| CUST-M02 | `create_business_master_catalogs` | currencies＋HKD、payment_terms；shape compatibility guard。 |
+| CUST-M03 | `create_customer_classification_catalogs` | categories／industries／territories。 |
+| CUST-M04 | `create_customers` | root及FK。 |
+| CUST-M05 | `create_customer_operation_requests` | durable domain outcome、payload hash、lease及resource reference。 |
+| CUST-M06 | `create_customer_addresses` | addresses＋purpose mapping。 |
+| CUST-M07 | `create_customer_contacts` | contacts＋purpose mapping。 |
+| CUST-M08 | `create_customer_identifiers` | identifiers。 |
+| CUST-M09 | `create_customer_credit_profiles` | optional credit。 |
+| CUST-M10 | `create_customer_settings` | singleton＋OFF seed。 |
+| CUST-M11 | `create_customer_activation_requests` | approval history。 |
+| CUST-M12 | `create_customer_bank_accounts` | encrypted bank metadata。 |
+| CUST-M13 | `create_customer_attachments` | file metadata及durable finalize/recovery correlation。 |
+| CUST-M14 | `create_customer_audit_logs` | append-only audit。 |
+| CUST-M15 | `create_customer_import_jobs` | import jobs及source/result durable finalize/recovery state。 |
+| CUST-M16 | `create_customer_import_rows` | per-row result／atomic marker。 |
 
-M13雖在table依賴末段建立，部署server前全部migrations先完成，因此所有初次business write已有audit。若按Phase分PR，M13須隨CAP-01第一批一同落地並可在實際編號中提前；logical dependencies比表格展示次序優先。
+M14雖在table依賴末段建立，部署server前全部migrations先完成，因此所有初次business write已有audit。若按Phase分PR，M14須隨CAP-01第一批一同落地並可在實際編號中提前；logical dependencies比表格展示次序優先。
 
 ---
 
@@ -632,6 +663,7 @@ M13雖在table依賴末段建立，部署server前全部migrations先完成，�
 - Base path `/api/v1`；查詢GET、command POST。成功沿用 `BaseRequestHandler.response()` envelope；錯誤沿用 `ApplicationError` public code。
 - ID params轉成positive safe integer；page預設20、上限100；sortBy／direction採allowlist。所有query/body schema `additionalProperties:false`。
 - Create、activation、approval decision、bank write、attachment upload、import upload／confirm接受 `Idempotency-Key` header並使用既有 Idempotency service；同key不同payload回409。
+- Framework idempotency之外，服務須以actor、route、canonical payload hash保存domain operation結果或resource reference。遇到timeout或commit結果不明時不得盲目重做；呼叫方使用`GET /api/v1/customer-operations/:operationId`或返回的resource GET查詢確定結果。
 - Update command帶resource `version`；stale回409 `VERSION_CONFLICT`及currentVersion，不回current敏感內容。
 - 金額以string，例如`"0.0000"`；日期交換ISO 8601＋offset，DB內epoch ms。
 - Child route同時帶customerId＋childId，SQL以二者查找。錯owner回404，不暴露另一Customer是否存在。
@@ -655,7 +687,7 @@ M13雖在table依賴末段建立，部署server前全部migrations先完成，�
 | `POST /api/v1/customers/:id/delete` | `deleteCustomerHandler.js` | jwt-device-password／view＋mgmt | 只限never-active、unreferenced Draft；reason＋version。 |
 | `GET /api/v1/customers/:id/completeness` | `getCustomerCompletenessHandler.js` | jwt／customer.view | blocking issues與non-blocking warnings。 |
 
-List query：`q,page,pageSize,sortBy,sortDirection,status[],currencyCode,paymentTermId,accountManagerUserId,categoryId,industryId,territoryId,creditStatus,missing[],createdFrom,createdTo,updatedFrom,updatedTo,includeArchived`。Search query用EXISTS查child，避免join倍增count；exact code排第一，再legal exact，再partial。`missing`只接受shippingDefault、billingDefault、contactDefault、paymentTerm、credit、bank、attachment。
+List query：`q,page,pageSize,sortBy,sortDirection,status[],currencyCode,paymentTermId,accountManagerUserId,categoryId,industryId,territoryId,creditStatus,missing[],createdFrom,createdTo,updatedFrom,updatedTo,includeArchived`。Search query用EXISTS查child，避免join倍增count；exact code排第一，再legal exact，最後是indexed normalized token-prefix。標準路徑不使用`%term%` leading-wildcard scan。`missing`只接受shippingDefault、billingDefault、contactDefault、paymentTerm、credit、bank、attachment。
 
 Create request可包含root及各一組optional初始address/contact/identifier/credit；整個aggregate同transaction。`activate=true`且setting ON要求`approverUserId`，OFF時帶approver回`APPROVER_NOT_REQUIRED`。
 
@@ -777,7 +809,9 @@ CustomerLookupService.assertContactUsable(customerId, contactId, { purpose, atMs
 CustomerLookupService.assertContactUsableInTransaction(transaction, customerId, contactId, { purpose, expectedVersion, atMs })
 ```
 
-`purpose:new_sale`只接受Active；`history`接受所有未物理刪除狀態；`shipment`地址只回active shipping。一般assert供非transaction read／precheck；會在同一MySQL schema完成跨模組寫入的Shipment等流程，必須使用`*InTransaction`版本，傳入現有executor及畫面選擇時的expected version。它在同一觀察點重驗Customer ownership、child active、purpose及version並回必要snapshot；沒有transaction立即throw `TypeError`。下游把code／name／address／contact／currency／term／credit policy version的必要值存入自己的snapshot，Customer模組不寫Sales／Shipment tables。
+Purpose必須使用已註冊值，未知purpose fail closed：`new_sale`及`manual_invoice`只接受Active；`existing_order_fulfillment`、`invoice_existing_shipment`、`ar_existing_document`、`historical_return`、`refund_existing_transaction`及`history`不會只因Customer後來變成Suspended／Blocked／Archived而拒絕既有合法流程。Fulfillment地址仍只回active＋shipping，Refund銀行仍須active、owned且目的授權。
+
+一般assert只供非transaction read／precheck。會在同一MySQL schema完成跨模組寫入的Shipment等流程，必須使用`*InTransaction`版本，傳入caller現有executor及畫面選擇時的expected version；方法在同一觀察點重驗Customer status、child ownership、active、purpose及version並回必要snapshot，沒有transaction立即throw `TypeError`。下游把code／name／address／contact／currency／term／credit policy version的必要值存入自己的snapshot，Customer模組不寫Sales／Shipment tables。
 
 Payment／Refund未落地前不提供明文bank resolver。其實作時加入目的限定的`CustomerBankService.resolveForRefund()`，要求payment workflow context、active bank、Customer ownership及獨立audit；不得讓任意module直接呼叫crypto.decrypt。
 
@@ -987,7 +1021,7 @@ Shared crypto只提供typed primitive，不提供HTTP handler／generic row decr
 
 ### 9.5 新增 migrations及tests
 
-新增§5.18 logical migrations，實際號碼在實作首日通過allocation gate後固定。新增server unit／handler／integration／security tests與client component/page tests；詳細清單見§10～11。
+新增§5.19 logical migrations，實際號碼在實作首日通過allocation gate後固定。新增server unit／handler／integration／security tests與client component/page tests；詳細清單見§10～11。
 
 ---
 
@@ -1138,7 +1172,7 @@ Shared crypto只提供typed primitive，不提供HTTP handler／generic row decr
 | 測試 | 門檻 |
 | --- | --- |
 | exact code／legal name、一般list、shipping/contact lookup | p95 <2s；error rate <1%；DB pool無無界queue。 |
-| partial search＋filters＋completeness | p95 <2s；query plan使用指定index，無全child cartesian join。 |
+| token-prefix search＋filters＋completeness | p95 <2s；query plan使用指定index，無leading-wildcard scan或全child cartesian join。 |
 | 10,000-row precheck＋execute | 系統處理合計<10分鐘；heap維持config budget；worker可resume。 |
 | 100 concurrent default/approval races | invariant零違反；deadlock轉safe retryable error。 |
 | sensitive download | 不佔滿normal request pool；upload/download concurrency gate生效。 |
@@ -1202,15 +1236,17 @@ Alerts：bank integrity failure或unknown key立即P1；敏感access denied spik
 | `customer.import.worker` | 每5秒；distributed lease | claim jobs/rows，bounded batches，resume。 |
 | `customer.import.filePurge` | 每日；single lease | 過retention刪source/result，標files_purged_at。 |
 | `customer.attachment.orphanCleanup` | 每小時；single lease | 只刪超grace、無active metadata的temp/orphan。 |
+| `customer.file.finalizeRecovery` | 每5分鐘；single lease | 對賬逾時的attachment及import source/result `processing`操作；驗證hash/size後完成finalize，或標`storage_error`並告警。 |
 
 沿用既有SchedulerService／JobLeaseStore；job有timeout、abort signal及stats。Rotation/reindex是受控operator command，不排程自動跑。
 
 ### 12.5 Backup、retention及runbooks
 
-- DB、encryption keys與private files必須是同一恢復點或有可證明的版本對應；備份密文與Bank Sensitive storage均加密、最小權限。
+- DB、encryption keys與private files必須是同一恢復點或有可證明的版本對應；備份密文與Bank Sensitive storage均加密、最小權限。生產RPO不得超過15分鐘，RTO不得超過4小時；計時涵蓋隔離還原、金鑰／檔案／audit核對及成功smoke，而非只計資料庫可連線時間。
 - Customer主資料、銀行、附件metadata及audit至少保留7年，正式期限由法務上線前簽核；本期不寫自動purge這些資料。
 - 必備runbook：migration failure、unknown bank key、integrity failure、key rotation/reindex、attachment orphan/delete failure、import stuck lease、backup restore、unauthorized sensitive access investigation。
 - 每季restore drill至少驗證一個一般Customer、一個encrypted bank、一個General及一個Bank Sensitive file與audit鏈。
+- Application runtime資料庫角色只取得所需DML權限，不得更新／刪除append-only audit或執行DDL；migration與受控營運帳號分離，所有緊急存取須記錄及覆核。
 
 ---
 
@@ -1333,7 +1369,8 @@ Alerts：bank integrity failure或unknown key立即P1；敏感access denied spik
 - Module boundary、shared foundation、無Party aggregate、三階段及六permissions已確認。
 - Table schema、欄位型別、nullable/default、PK/FK、unique/index、delete rule、version、sensitive fields及transactions已在§5定義。
 - API／auth、UI／UX、service flows、code files、tests、deploy／rollback及traceability已定義。
-- Migration實際號碼以§5.18 allocation gate為準；這是避免分支碰撞的執行步驟，不是未決schema。
+- Migration實際號碼以§5.19 allocation gate為準；這是避免分支碰撞的執行步驟，不是未決schema。
+- 整體設計評審結論為`CONDITIONAL`：Customer Core可進入開發；DR-004涉及受保護system-admin授予敏感權限的共用Authorization boundary，必須由Security及Backend負責人在TASK-020／Phase 3前批准，不得以Customer模組內捷徑或production fake繞過。
 
 ### 15.2 上線前由業務／營運提供的資料，不阻擋開發
 

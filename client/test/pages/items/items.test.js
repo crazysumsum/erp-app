@@ -13,7 +13,8 @@ vi.mock("@/services/item.js", () => ({
     deactivateSku: vi.fn(),
     discontinueSku: vi.fn(),
     archiveSku: vi.fn(),
-    restoreSku: vi.fn()
+    restoreSku: vi.fn(),
+    bulkChangeStatus: vi.fn()
   },
   service: { name: "item" }
 }));
@@ -27,7 +28,8 @@ vi.mock("@/framework/ui/notify.js", () => ({
 }));
 
 import itemService from "@/services/item.js";
-import { promptReason } from "@/framework/ui/confirm.js";
+import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
+import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import ItemsPage, { page } from "@/pages/items/ItemsPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -241,5 +243,100 @@ describe("pages/items/ItemsPage.vue", () => {
     const { body } = await mountItemsPage({ permissions: ["item.view"] });
 
     expect(body.find('[aria-label="「VITC-90」的操作"]').exists()).toBe(false);
+  });
+
+  it("勾選 SKU row：顯示「已選取 N 筆」toolbar；清除選取會清空返", async () => {
+    const { body } = await mountItemsPage();
+
+    const checkboxes = body.findAll(".q-checkbox");
+    await checkboxes[1].trigger("click");
+    await flushPromises();
+
+    expect(body.text()).toContain("已選取 1 筆");
+
+    await body.findAll(".q-btn").find((btn) => btn.text() === "清除選取").trigger("click");
+    await flushPromises();
+    expect(body.text()).not.toContain("已選取");
+  });
+
+  it("批量操作 dialog：所選 SKU 狀態一致（全部 active），顯示 deactivate／discontinue 呢兩個合法操作", async () => {
+    const { body } = await mountItemsPage();
+
+    const checkboxes = body.findAll(".q-checkbox");
+    await checkboxes[1].trigger("click");
+    await flushPromises();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "批量狀態操作").trigger("click");
+    await flushPromises();
+
+    expect(body.text()).toContain("已選取 1 筆SKU");
+    expect(body.text()).not.toContain("狀態不一致");
+  });
+
+  it("批量操作 dialog：所選 row 狀態不一致，冇任何操作可以套用，顯示警告，冇確認按鈕", async () => {
+    const mixedRows = [
+      { ...SKU_ROWS[0], id: 10, status: "active" },
+      { ...SKU_ROWS[0], id: 11, skuCode: "VITC-30", status: "archived" }
+    ];
+    const { body } = await mountItemsPage({ skuRows: mixedRows });
+
+    const checkboxes = body.findAll(".q-checkbox");
+    await checkboxes[1].trigger("click");
+    await checkboxes[2].trigger("click");
+    await flushPromises();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "批量狀態操作").trigger("click");
+    await flushPromises();
+
+    expect(body.text()).toContain("狀態不一致");
+    expect(body.findAll(".q-btn").some((btn) => btn.text() === "確認執行")).toBe(false);
+  });
+
+  it("批量操作：確認執行打 bulkChangeStatus() 帶正確 targetType／targets／reason／password，成功後清空選取並重新整理", async () => {
+    promptPassword.mockResolvedValue({ reason: "批量停用", password: "hunter2" });
+    itemService.bulkChangeStatus.mockResolvedValue({ results: [{ id: 10, status: "ok" }] });
+    const { body } = await mountItemsPage();
+
+    const checkboxes = body.findAll(".q-checkbox");
+    await checkboxes[1].trigger("click");
+    await flushPromises();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "批量狀態操作").trigger("click");
+    await flushPromises();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "確認執行").trigger("click");
+    await flushPromises();
+
+    expect(itemService.bulkChangeStatus).toHaveBeenCalledWith({
+      targetType: "sku",
+      action: "deactivate",
+      targets: [{ id: 10, version: 1 }],
+      reason: "批量停用",
+      password: "hunter2"
+    });
+    expect(notifySuccess).toHaveBeenCalled();
+    expect(body.text()).not.toContain("已選取");
+    expect(itemService.listSkus).toHaveBeenCalledTimes(2);
+  });
+
+  it("批量操作失敗：error.details.issues 有值就逐筆顯示原因，唔會靜靜哋失敗", async () => {
+    promptPassword.mockResolvedValue({ reason: "批量停用", password: "hunter2" });
+    const error = Object.assign(new Error("Bulk status change rejected"), {
+      details: { issues: [{ id: 10, code: "VERSION_CONFLICT", message: "畫面上的資料已過期，請重新整理後再試" }] }
+    });
+    itemService.bulkChangeStatus.mockRejectedValue(error);
+    const { body } = await mountItemsPage();
+
+    const checkboxes = body.findAll(".q-checkbox");
+    await checkboxes[1].trigger("click");
+    await flushPromises();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "批量狀態操作").trigger("click");
+    await flushPromises();
+    await body.findAll(".q-btn").find((btn) => btn.text() === "確認執行").trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith(expect.stringContaining("畫面上的資料已過期，請重新整理後再試"));
+  });
+
+  it("只有 item.view：睇唔到 checkbox 選取欄（冇 item.mgmt 就冇批量操作）", async () => {
+    const { body } = await mountItemsPage({ permissions: ["item.view"] });
+
+    expect(body.findAll(".q-checkbox").length).toBe(0);
   });
 });

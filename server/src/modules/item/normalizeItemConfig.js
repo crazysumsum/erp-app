@@ -76,6 +76,18 @@ export function normalizeItemConfig(source) {
     { maximum: MEDIA_ORPHAN_GRACE_CEILING_MS }
   );
 
+  const importDirectorySource = String(source.importDirectory || "").trim();
+
+  if (!importDirectorySource) {
+    throw new Error('Item config "importDirectory" must be a non-empty string');
+  }
+
+  // 同 mediaDirectory 一樣正規化成受控 absolute path；獨立於
+  // mediaDirectory，理由見 config/item.js 的說明。
+  const importDirectory = path.isAbsolute(importDirectorySource)
+    ? importDirectorySource
+    : path.resolve(serverRoot, importDirectorySource);
+
   const importMaxRows = positiveInteger(
     source.importMaxRows ?? 10_000,
     "importMaxRows",
@@ -105,6 +117,7 @@ export function normalizeItemConfig(source) {
     imageMaxBytes,
     attachmentMaxBytes,
     mediaOrphanGraceMs,
+    importDirectory,
     importMaxRows,
     importBatchSize,
     importTransactionTimeoutMs
