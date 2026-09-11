@@ -1,0 +1,190 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/supplier_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/src/modules/supplier/**",
+      "server/src/handlers/suppliers/**",
+      "server/src/handlers/supplier-approvals/**",
+      "server/src/handlers/supplier-approvers/**",
+      "server/src/handlers/supplier-settings/**",
+      "server/src/handlers/supplier-lookups/**",
+      "server/src/handlers/supplier-imports/**",
+      "server/src/handlers/supplier-exports/**",
+      "server/src/handlers/supplier-audit/**",
+      "server/src/services/supplierImport/**",
+      "client/src/pages/suppliers/**",
+      "client/src/components/suppliers/**"
+    ],
+    "test_paths": [
+      "server/test/**",
+      "client/test/**",
+      "client/e2e/**"
+    ],
+    "allowed_write_paths": [
+      "docs/supplier_management/**",
+      "server/src/modules/supplier/**",
+      "server/src/handlers/suppliers/**",
+      "server/src/handlers/supplier-approvals/**",
+      "server/src/handlers/supplier-approvers/**",
+      "server/src/handlers/supplier-settings/**",
+      "server/src/handlers/supplier-lookups/**",
+      "server/src/handlers/supplier-imports/**",
+      "server/src/handlers/supplier-exports/**",
+      "server/src/handlers/supplier-audit/**",
+      "server/src/services/supplierImport/**",
+      "client/src/pages/suppliers/**",
+      "client/src/components/suppliers/**",
+      "client/src/services/supplier*.js",
+      "server/test/**",
+      "client/test/**",
+      "client/e2e/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/config/**",
+      "server/package.json",
+      "package-lock.json",
+      "client/config/menu.js",
+      "client/src/framework/http/errorMessages.js",
+      "docs/items_management/**",
+      "docs/customer_management/**",
+      "docs/purchasing_receiving_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "secrets/**",
+      "docs/user_management/**"
+    ],
+    "schema_paths": [
+      "server/database/migrations/**"
+    ],
+    "shared_resources": [
+      "global-migration-sequence",
+      "business-master-currency-payment-term-provider",
+      "item-sku-uom-provider",
+      "local-mysql-instance",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "supplier-public-provider-contracts",
+        "version": "design-1.0",
+        "source": "docs/supplier_management/03_design_spec.md",
+        "sha256": "716ea21ecee2196c7e0d5d530ea0002404b0d54767d463c8a65d652464f25d4d",
+        "consumers": [
+          "purchasing-receiving",
+          "item-management",
+          "accounts-payable",
+          "receiving-returns"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "item-management",
+        "id": "sku-uom-provider",
+        "version": "aligned-design",
+        "source": "docs/items_management/03_system_design_spec.md",
+        "sha256": "47082f6b4381994b253ced7ef8e27098f10abec16860483939d25ac25072ee87",
+        "regression_suites": [
+          "supplier-server-integration"
+        ]
+      },
+      {
+        "module_id": "purchasing-receiving-management",
+        "id": "supplier-consumer-contract",
+        "version": "design-spec",
+        "source": "docs/purchasing_receiving_management/design_spec.md",
+        "sha256": "b09f5726d4b119e1e7775157f42eb37fd9aa4542ea0299a99d4aae9703157c95",
+        "regression_suites": [
+          "supplier-server-integration"
+        ]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Supplier aggregate",
+        "Supplier addresses",
+        "Supplier contacts",
+        "Supplier identifiers",
+        "Supplier activation requests",
+        "Supplier settings",
+        "Supplier bank accounts",
+        "Supplier-SKU soft relations",
+        "Supplier import jobs and rows",
+        "Supplier audit logs",
+        "Supplier supply events"
+      ],
+      "read_only": [
+        "Business Master currencies",
+        "Business Master payment terms",
+        "Item SKUs",
+        "Item UOMs",
+        "Downstream purchase/receiving/return/AP reference summaries"
+      ],
+      "forbidden_direct_writes": [
+        "Business Master currencies",
+        "Business Master payment terms",
+        "Item SKUs and UOMs",
+        "Purchasing and receiving transactions",
+        "Accounts Payable and payment records"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "supplier-server-integration",
+      "supplier-bank-security",
+      "supplier-security",
+      "supplier-client-ui"
+    ],
+    "technical": [
+      "supplier-server-integration",
+      "supplier-bank-security",
+      "supplier-security",
+      "supplier-client-ui",
+      "supplier-performance",
+      "supplier-resilience",
+      "supplier-recovery",
+      "supplier-release-operations"
+    ],
+    "regression": [
+      "supplier-server-integration",
+      "supplier-bank-security",
+      "supplier-security",
+      "supplier-client-ui",
+      "supplier-performance",
+      "supplier-resilience",
+      "supplier-recovery",
+      "supplier-release-operations"
+    ],
+    "uat": [
+      "supplier-uat-browser"
+    ]
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

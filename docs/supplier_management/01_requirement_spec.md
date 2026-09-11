@@ -1,13 +1,42 @@
-# Supplier Management 業務需求書
+# Supplier Management Aligned Requirement Specification
+
+## Harness Control
+
+| Field | Value |
+| --- | --- |
+| Mode | `REVIEW_AND_ALIGN` |
+| Canonical path | `docs/supplier_management/01_requirement_spec.md` |
+| Alignment baseline | `origin/main` at `ab13881`（initial recovery point：`6cb50f5`） |
+| Alignment date | 2026-09-11 |
+| Provenance | Existing business baseline plus explicitly approved decisions `HD-001` and `HD-002` |
+
+This file is the single normative Supplier Management requirement baseline. Existing category IDs remain stable for business history; the following one-to-one aliases provide Harness-compatible functional IDs without changing priority or meaning.
+
+| Canonical IDs | Existing IDs | Source family |
+| --- | --- | --- |
+| FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010 | FR-LIST-001～010 | §8.1 |
+| FR-011, FR-012, FR-013, FR-014, FR-015 | FR-VIEW-001～005 | §8.2 |
+| FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023 | FR-CREATE-001～008 | §8.3 |
+| FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030 | FR-EDIT-001～007 | §8.4 |
+| FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | FR-STATUS-001～008 | §8.5 |
+| FR-039, FR-040, FR-041, FR-042, FR-043, FR-044 | FR-PARTY-001～006 | §8.6 |
+| FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051 | FR-BANK-001～007 | §8.7 |
+| FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058 | FR-APPROVAL-001～007 | §8.8 |
+| FR-059, FR-060, FR-061, FR-062, FR-063, FR-064 | FR-SET-001～006 | §8.9 |
+| FR-065, FR-066, FR-067, FR-068, FR-069, FR-070 | FR-SKU-001～006 | §8.10 |
+| FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080 | FR-IMPORT-001～010 | §8.11 |
+| FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087 | FR-AUDIT-001～007 | §8.12 |
+
+`BR-001..BR-032`、`AC-001..AC-040`、`NFR-001..NFR-010`及`SEC-001..SEC-013` retain their original identifiers. `NFR-011` adopts the already-approved ERP-wide recovery objective. `SEC-014` records the system-admin decision approved on 2026-09-11.
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Supplier Management 業務需求書 |
-| 文件版本 | 0.1 Draft |
-| 文件日期 | 2026-09-04 |
-| 文件狀態 | 核心業務需求已確認；待正式簽核及技術設計 |
+| 文件版本 | 1.0 Aligned |
+| 文件日期 | 2026-09-11 |
+| 文件狀態 | Harness對標完成；尚未實作或驗收 |
 | 適用系統 | ERP App |
 | 適用組織 | 單一公司 |
 | 主要範圍 | 供應商主資料、聯絡及付款預設、銀行資料、狀態、審批配置、匯入匯出及稽核 |
@@ -29,6 +58,7 @@ Supplier Management 將建立單一供應商主資料來源，同時保持採購
 | 版本 | 日期 | 摘要 |
 | --- | --- | --- |
 | 0.1 Draft | 2026-09-04 | 根據業務訪談建立供應商主資料、權限、審批配置、軟性 SKU 關聯、匯入匯出及生命週期需求。 |
+| 1.0 Aligned | 2026-09-11 | 加入Harness追溯ID；確認system-admin最高權限；Currency／Payment Term改由共用Business Master擁有；採用ERP統一RTO／RPO。 |
 
 ---
 
@@ -139,7 +169,7 @@ KPI 數值屬建議基線，正式上線前須由業務負責人、資訊安全�
 | 供應商設定管理員 | 維護 Supplier Management 參數。 | `supplier.view`＋`supplier.settings` |
 | 採購人員 | 在採購流程內查找有效供應商及查看必要的供貨資訊。 | 採購模組權限；不因此取得供應商維護權限 |
 | 財務人員 | 在應付／付款流程使用付款條件及經授權的銀行資料。 | 財務模組權限及相應銀行資料權限 |
-| 系統管理員 | 配置角色權限及處理系統管理；不得僅因系統管理身份自動取得完整銀行資料。 | 按職責明確授予 |
+| 系統管理員 | 系統最高權限及break-glass管理；可查看及維護完整銀行資料，但仍須重新認證、稽核及告警。 | 受保護的`system-admin`角色，自動取得全部Supplier權限 |
 
 權限必須由後端執行，不可只依賴前端隱藏按鈕。`supplier.mgmt` 不自動包含 `supplier.approval`、`supplier.bank.view`、`supplier.bank.mgmt` 或 `supplier.settings`。
 
@@ -153,7 +183,7 @@ KPI 數值屬建議基線，正式上線前須由業務負責人、資訊安全�
 4. **最低資料即可啟用。** Supplier Code、供應商名稱及預設交易幣別完整時即可啟用；地址、聯絡人、付款條件、識別資料及銀行資料均可後補。
 5. **審批由參數控制。** 新供應商啟用審批預設關閉；開啟後必須由建檔人指定另一名具有 `supplier.approval` 權限的人員批准。
 6. **供應關係不作強制白名單。** 有效供應商即具備被採購選擇的資格；Supplier－SKU 關係只用於提示、排序及保存對照。
-7. **敏感資料最小權限。** 完整銀行資料只向具獨立銀行權限的使用者顯示或開放修改。
+7. **敏感資料最小權限。** 完整銀行資料只向具獨立銀行權限的使用者及最高權限`system-admin`顯示或開放修改；`system-admin`不繞過重新認證、遮罩、稽核或告警。
 8. **停用不破壞歷史。** 暫停、封鎖及封存只限制新的業務使用，既有交易和稽核仍須正常顯示。
 9. **已引用資料不可永久刪除。** 只有從未被任何資料引用的 Draft Supplier 才可永久刪除。
 10. **所有渠道規則一致。** UI、CSV 匯入及整合介面須使用相同的唯一性、狀態、權限及審批規則。
@@ -176,7 +206,7 @@ Supplier
   └──< Audit History
 
 Supplier Settings ── controls ──> Activation Approval Flow
-Payment Terms / Currency Catalog ── referenced by ──> Supplier
+Business Master Currency／Payment Term ── referenced by ──> Supplier
 ```
 
 ### 6.2 Supplier 主資料
@@ -575,6 +605,7 @@ Archived ── restore ──> Suspended
 | SEC-011 | 一般稽核、錯誤追蹤及應用日誌不得保存完整銀行帳號。 |
 | SEC-012 | 批量匯出及大量敏感資料存取必須記錄操作者、條件、時間及結果。 |
 | SEC-013 | 永久刪除、封鎖、解除封鎖、銀行修改及設定修改須使用重新確認或等效高風險操作控制。 |
+| SEC-014 | 受保護的`system-admin`是系統最高權限角色，自動取得全部Supplier權限，包括銀行查看及維護；敏感操作仍須使用相同重新認證、稽核、遮罩、禁止記錄明文及告警控制。 |
 
 ---
 
@@ -641,6 +672,7 @@ Archived ── restore ──> Suspended
 | NFR-008 | 重複提交建立、匯入、審批及狀態請求不得造成重複或矛盾結果。 |
 | NFR-009 | Supplier 主資料及設定須納入既有備份、還原及災難復原程序。 |
 | NFR-010 | 下游查找不可因銀行資料服務或非必要摘要暫時不可用而暴露敏感資料或錯誤地開放無效 Supplier。 |
+| NFR-011 | Supplier正式資料採用ERP統一災難復原目標：生產環境RTO不超過4小時、RPO不超過15分鐘，並以隔離還原及資料核對演練驗證。 |
 
 ### 13.3 隱私、安全與保留
 
@@ -828,7 +860,7 @@ Archived ── restore ──> Suspended
 | DEC-005 | Supplier Code 人工輸入、沒有指定格式。 | 系統只執行基本安全、長度及全域唯一性驗證。 |
 | DEC-006 | Supplier 發生交易後不可修改 Supplier Code。 | 保持下游單據及稽核識別穩定。 |
 | DEC-007 | 銀行資料選填，可有多個帳戶及一個預設帳戶。 | 缺少銀行資料不阻止啟用或採購。 |
-| DEC-008 | 銀行查看及維護使用獨立權限。 | 一般管理員及系統管理員不自動取得完整銀行資料。 |
+| DEC-008 | 銀行查看及維護使用獨立權限；受保護的`system-admin`作為系統最高權限自動取得這些權限。 | 一般Supplier管理員不自動取得完整銀行資料；system-admin仍須通過相同高強度認證、稽核及告警。 |
 | DEC-009 | Supplier 需要預設交易幣別並支援外幣。 | 匯率及實際結算由 Purchasing／Finance 負責。 |
 | DEC-010 | 預設付款條件選填。 | 未設定不阻止啟用，但採購流程應提示。 |
 | DEC-011 | 狀態區分 Suspended 與 Blocked。 | 暫停可恢復；封鎖及解除需較高權限及原因。 |
@@ -841,6 +873,7 @@ Archived ── restore ──> Suspended
 | DEC-018 | 只有從未被引用的 Draft Supplier 可永久刪除。 | 其他 Supplier 以狀態及封存保留歷史。 |
 | DEC-019 | 一般 Supplier 主資料支援 CSV 匯入及匯出。 | 銀行資料不包含在一般 CSV；匯入可按列部分成功。 |
 | DEC-020 | 本期不提供供應商評分或績效管理。 | 日後待採購、收貨、退貨及品質資料成熟再設計。 |
+| DEC-021 | Currency及Payment Term由共用Business Master foundation擁有；Supplier Management只讀取、驗證及引用。 | Supplier Settings不提供Currency／Payment Term新增、修改或停用，避免跨模組多重資料擁有者。 |
 
 ### 18.2 待技術設計及上線前確認
 
@@ -868,3 +901,1578 @@ Archived ── restore ──> Suspended
 - 技術及 QA 負責人：確認需求可實作、可測試，並將所有 Must 項轉為設計與測試覆蓋。
 
 本文件簽核後，任何新增的強制採購限制、銀行變更審批、資格文件、績效評分或多公司能力均應視為範圍變更，需更新需求、影響分析及驗收準則後再實作。
+
+
+---
+
+# Appendix A — Harness 2.0 Formal Requirement Definitions
+
+本附錄只把上文既有需求轉成Harness可機械辨識的正式定義；Statement的legacy ID是一對一權威來源，沒有改變其業務語意。
+
+## FR-001 — FR-LIST-001
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-002 — FR-LIST-002
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-003 — FR-LIST-003
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-004 — FR-LIST-004
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-005 — FR-LIST-005
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-006 — FR-LIST-006
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-007 — FR-LIST-007
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-008 — FR-LIST-008
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-008`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-009 — FR-LIST-009
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-009`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-010 — FR-LIST-010
+
+### Statement
+
+完整規範為上文表格中的`FR-LIST-010`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-011 — FR-VIEW-001
+
+### Statement
+
+完整規範為上文表格中的`FR-VIEW-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-012 — FR-VIEW-002
+
+### Statement
+
+完整規範為上文表格中的`FR-VIEW-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-013 — FR-VIEW-003
+
+### Statement
+
+完整規範為上文表格中的`FR-VIEW-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-014 — FR-VIEW-004
+
+### Statement
+
+完整規範為上文表格中的`FR-VIEW-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-015 — FR-VIEW-005
+
+### Statement
+
+完整規範為上文表格中的`FR-VIEW-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-016 — FR-CREATE-001
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-017 — FR-CREATE-002
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-018 — FR-CREATE-003
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-019 — FR-CREATE-004
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-020 — FR-CREATE-005
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-021 — FR-CREATE-006
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-022 — FR-CREATE-007
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-023 — FR-CREATE-008
+
+### Statement
+
+完整規範為上文表格中的`FR-CREATE-008`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-024 — FR-EDIT-001
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-025 — FR-EDIT-002
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-026 — FR-EDIT-003
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-027 — FR-EDIT-004
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-028 — FR-EDIT-005
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-029 — FR-EDIT-006
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-030 — FR-EDIT-007
+
+### Statement
+
+完整規範為上文表格中的`FR-EDIT-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-031 — FR-STATUS-001
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-032 — FR-STATUS-002
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-033 — FR-STATUS-003
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-034 — FR-STATUS-004
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-035 — FR-STATUS-005
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-036 — FR-STATUS-006
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-037 — FR-STATUS-007
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-038 — FR-STATUS-008
+
+### Statement
+
+完整規範為上文表格中的`FR-STATUS-008`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-039 — FR-PARTY-001
+
+### Statement
+
+完整規範為上文表格中的`FR-PARTY-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-040 — FR-PARTY-002
+
+### Statement
+
+完整規範為上文表格中的`FR-PARTY-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-041 — FR-PARTY-003
+
+### Statement
+
+完整規範為上文表格中的`FR-PARTY-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-042 — FR-PARTY-004
+
+### Statement
+
+完整規範為上文表格中的`FR-PARTY-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-043 — FR-PARTY-005
+
+### Statement
+
+完整規範為上文表格中的`FR-PARTY-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-044 — FR-PARTY-006
+
+### Statement
+
+完整規範為上文表格中的`FR-PARTY-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-045 — FR-BANK-001
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-046 — FR-BANK-002
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-047 — FR-BANK-003
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-048 — FR-BANK-004
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-049 — FR-BANK-005
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-050 — FR-BANK-006
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-051 — FR-BANK-007
+
+### Statement
+
+完整規範為上文表格中的`FR-BANK-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-052 — FR-APPROVAL-001
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-053 — FR-APPROVAL-002
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-054 — FR-APPROVAL-003
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-055 — FR-APPROVAL-004
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-056 — FR-APPROVAL-005
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-057 — FR-APPROVAL-006
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-058 — FR-APPROVAL-007
+
+### Statement
+
+完整規範為上文表格中的`FR-APPROVAL-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-059 — FR-SET-001
+
+### Statement
+
+完整規範為上文表格中的`FR-SET-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-060 — FR-SET-002
+
+### Statement
+
+完整規範為上文表格中的`FR-SET-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-061 — FR-SET-003
+
+### Statement
+
+完整規範為上文表格中的`FR-SET-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-062 — FR-SET-004
+
+### Statement
+
+完整規範為上文表格中的`FR-SET-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-063 — FR-SET-005
+
+### Statement
+
+完整規範為上文表格中的`FR-SET-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-064 — FR-SET-006
+
+### Statement
+
+完整規範為上文表格中的`FR-SET-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-065 — FR-SKU-001
+
+### Statement
+
+完整規範為上文表格中的`FR-SKU-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-066 — FR-SKU-002
+
+### Statement
+
+完整規範為上文表格中的`FR-SKU-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-067 — FR-SKU-003
+
+### Statement
+
+完整規範為上文表格中的`FR-SKU-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-068 — FR-SKU-004
+
+### Statement
+
+完整規範為上文表格中的`FR-SKU-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-069 — FR-SKU-005
+
+### Statement
+
+完整規範為上文表格中的`FR-SKU-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-070 — FR-SKU-006
+
+### Statement
+
+完整規範為上文表格中的`FR-SKU-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-071 — FR-IMPORT-001
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-072 — FR-IMPORT-002
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-073 — FR-IMPORT-003
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-074 — FR-IMPORT-004
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-075 — FR-IMPORT-005
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-076 — FR-IMPORT-006
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-077 — FR-IMPORT-007
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-078 — FR-IMPORT-008
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-008`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-079 — FR-IMPORT-009
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-009`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-080 — FR-IMPORT-010
+
+### Statement
+
+完整規範為上文表格中的`FR-IMPORT-010`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-081 — FR-AUDIT-001
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-001`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-082 — FR-AUDIT-002
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-002`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-083 — FR-AUDIT-003
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-003`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-084 — FR-AUDIT-004
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-004`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-085 — FR-AUDIT-005
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-005`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-086 — FR-AUDIT-006
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-006`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## FR-087 — FR-AUDIT-007
+
+### Statement
+
+完整規範為上文表格中的`FR-AUDIT-007`；本ID是其一對一canonical alias。
+
+### Acceptance criteria
+
+須滿足上文對應業務規則、AC-001～AC-040中適用條目，以及`07_uat_test_cases.md`的映射案例。
+
+### Failure behavior
+
+違反授權、唯一性、狀態、輸入或依賴條件時必須拒絕且不得留下部分業務資料；使用上文定義的穩定錯誤與稽核規則。
+
+## NFR-001 — Existing non-functional requirement NFR-001
+
+### Statement
+
+完整且可量測的規範為上文`NFR-001`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-002 — Existing non-functional requirement NFR-002
+
+### Statement
+
+完整且可量測的規範為上文`NFR-002`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-003 — Existing non-functional requirement NFR-003
+
+### Statement
+
+完整且可量測的規範為上文`NFR-003`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-004 — Existing non-functional requirement NFR-004
+
+### Statement
+
+完整且可量測的規範為上文`NFR-004`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-005 — Existing non-functional requirement NFR-005
+
+### Statement
+
+完整且可量測的規範為上文`NFR-005`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-006 — Existing non-functional requirement NFR-006
+
+### Statement
+
+完整且可量測的規範為上文`NFR-006`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-007 — Existing non-functional requirement NFR-007
+
+### Statement
+
+完整且可量測的規範為上文`NFR-007`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-008 — Existing non-functional requirement NFR-008
+
+### Statement
+
+完整且可量測的規範為上文`NFR-008`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-009 — Existing non-functional requirement NFR-009
+
+### Statement
+
+完整且可量測的規範為上文`NFR-009`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-010 — Existing non-functional requirement NFR-010
+
+### Statement
+
+完整且可量測的規範為上文`NFR-010`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## NFR-011 — Existing non-functional requirement NFR-011
+
+### Statement
+
+完整且可量測的規範為上文`NFR-011`表格列及其相應小節。
+
+### Acceptance criteria
+
+由`06_technical_test_cases.md`對應mandatory case取得實測證據；有使用者可觀察影響時亦須完成UAT。
+
+### Failure behavior
+
+門檻未量測、未通過或證據與候選baseline不一致時，該Phase不得宣告完成或可發布。
+
+## SEC-001 — Existing security requirement SEC-001
+
+### Statement
+
+完整安全規範為上文`SEC-001`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-002 — Existing security requirement SEC-002
+
+### Statement
+
+完整安全規範為上文`SEC-002`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-003 — Existing security requirement SEC-003
+
+### Statement
+
+完整安全規範為上文`SEC-003`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-004 — Existing security requirement SEC-004
+
+### Statement
+
+完整安全規範為上文`SEC-004`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-005 — Existing security requirement SEC-005
+
+### Statement
+
+完整安全規範為上文`SEC-005`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-006 — Existing security requirement SEC-006
+
+### Statement
+
+完整安全規範為上文`SEC-006`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-007 — Existing security requirement SEC-007
+
+### Statement
+
+完整安全規範為上文`SEC-007`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-008 — Existing security requirement SEC-008
+
+### Statement
+
+完整安全規範為上文`SEC-008`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-009 — Existing security requirement SEC-009
+
+### Statement
+
+完整安全規範為上文`SEC-009`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-010 — Existing security requirement SEC-010
+
+### Statement
+
+完整安全規範為上文`SEC-010`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-011 — Existing security requirement SEC-011
+
+### Statement
+
+完整安全規範為上文`SEC-011`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-012 — Existing security requirement SEC-012
+
+### Statement
+
+完整安全規範為上文`SEC-012`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-013 — Existing security requirement SEC-013
+
+### Statement
+
+完整安全規範為上文`SEC-013`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
+
+## SEC-014 — Existing security requirement SEC-014
+
+### Statement
+
+完整安全規範為上文`SEC-014`表格列；任何角色名稱都不會隱式取消該控制。
+
+### Acceptance criteria
+
+對應權限、資料保護、audit、redaction及負面案例必須在Technical Test通過；使用者可觀察的授權結果須通過UAT。
+
+### Failure behavior
+
+安全控制缺失、依賴未知或敏感資料可能外洩時fail closed，停止受影響流程並保留低敏告警／調查證據。
