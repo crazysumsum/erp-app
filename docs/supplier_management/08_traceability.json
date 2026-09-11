@@ -1,0 +1,8563 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-002",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-003",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-004",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-005",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-006",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-007",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-008",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-009",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-010",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-011",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-012",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-013",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-014",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-015",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-016",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-017",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-018",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-019",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-020",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-021",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-022",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-023",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-024",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-025",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-026",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-027",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-028",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-029",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-030",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-031",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-032",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-033",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-034",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-035",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-036",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-037",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-038",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-039",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-040",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-041",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-042",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-043",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-044",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-045",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-046",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-047",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-048",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-049",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-050",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-051",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-052",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-053",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-054",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-055",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-056",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-057",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-058",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-059",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-060",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-061",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-062",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-063",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-064",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-065",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-066",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-067",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-068",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-069",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-070",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-071",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-072",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-073",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-074",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-075",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-076",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-077",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-078",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-079",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-080",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-081",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-082",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-083",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-084",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-085",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-086",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "FR-087",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-001",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-002",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-003",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-004",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-005",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-006",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-007",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-008",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-009",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-010",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "NFR-011",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-001",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-002",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-003",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-004",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-005",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-006",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-007",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-008",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-009",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-010",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-011",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-012",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-013",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    },
+    {
+      "id": "SEC-014",
+      "uat": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      }
+    }
+  ],
+  "designs": [
+    {
+      "id": "DES-001",
+      "requirement_ids": [
+        "FR-011",
+        "FR-014",
+        "FR-020",
+        "FR-024",
+        "FR-030",
+        "FR-065",
+        "FR-066",
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070",
+        "NFR-010"
+      ]
+    },
+    {
+      "id": "DES-002",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-007",
+        "NFR-010"
+      ]
+    },
+    {
+      "id": "DES-003",
+      "requirement_ids": [
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-017",
+        "FR-018",
+        "FR-019",
+        "FR-026"
+      ]
+    },
+    {
+      "id": "DES-004",
+      "requirement_ids": [
+        "FR-012",
+        "FR-013",
+        "FR-016",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-043",
+        "FR-044",
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049"
+      ]
+    },
+    {
+      "id": "DES-005",
+      "requirement_ids": [
+        "FR-015",
+        "FR-021",
+        "FR-023",
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038"
+      ]
+    },
+    {
+      "id": "DES-006",
+      "requirement_ids": [
+        "FR-027",
+        "FR-028",
+        "NFR-006",
+        "NFR-007"
+      ]
+    },
+    {
+      "id": "DES-007",
+      "requirement_ids": [
+        "FR-058",
+        "FR-077",
+        "NFR-008"
+      ]
+    },
+    {
+      "id": "DES-008",
+      "requirement_ids": [
+        "FR-052",
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058",
+        "FR-059",
+        "FR-060",
+        "FR-061",
+        "FR-062",
+        "FR-063",
+        "FR-064"
+      ]
+    },
+    {
+      "id": "DES-009",
+      "requirement_ids": [
+        "FR-045",
+        "FR-046",
+        "FR-050",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-013",
+        "SEC-014"
+      ]
+    },
+    {
+      "id": "DES-010",
+      "requirement_ids": [
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "SEC-005",
+        "SEC-006",
+        "SEC-010",
+        "SEC-011"
+      ]
+    },
+    {
+      "id": "DES-011",
+      "requirement_ids": [
+        "FR-007",
+        "FR-012",
+        "FR-046",
+        "FR-050",
+        "FR-051",
+        "FR-080",
+        "FR-083",
+        "FR-084",
+        "FR-087",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012"
+      ]
+    },
+    {
+      "id": "DES-012",
+      "requirement_ids": [
+        "FR-001",
+        "FR-005",
+        "FR-006",
+        "FR-008",
+        "FR-009",
+        "FR-010",
+        "FR-022",
+        "FR-025",
+        "FR-029"
+      ]
+    },
+    {
+      "id": "DES-013",
+      "requirement_ids": [
+        "FR-009",
+        "FR-010",
+        "FR-013",
+        "FR-015",
+        "FR-023",
+        "FR-029",
+        "FR-062"
+      ]
+    },
+    {
+      "id": "DES-014",
+      "requirement_ids": [
+        "FR-014",
+        "FR-030",
+        "FR-031",
+        "FR-037",
+        "FR-065",
+        "FR-066",
+        "FR-069",
+        "NFR-010",
+        "SEC-008",
+        "SEC-009"
+      ]
+    },
+    {
+      "id": "DES-015",
+      "requirement_ids": [
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "NFR-001",
+        "NFR-003",
+        "NFR-005"
+      ]
+    },
+    {
+      "id": "DES-016",
+      "requirement_ids": [
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079",
+        "FR-080",
+        "NFR-004",
+        "NFR-008",
+        "SEC-012"
+      ]
+    },
+    {
+      "id": "DES-017",
+      "requirement_ids": [
+        "FR-028",
+        "FR-050",
+        "FR-057",
+        "FR-062",
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087",
+        "SEC-011",
+        "SEC-012"
+      ]
+    },
+    {
+      "id": "DES-018",
+      "requirement_ids": [
+        "FR-025",
+        "FR-030",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-042",
+        "FR-049",
+        "NFR-010"
+      ]
+    },
+    {
+      "id": "DES-019",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-009",
+        "NFR-010"
+      ]
+    },
+    {
+      "id": "DES-020",
+      "requirement_ids": [
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005"
+      ]
+    },
+    {
+      "id": "DES-021",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-010",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012"
+      ]
+    },
+    {
+      "id": "DES-022",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-011",
+        "SEC-010",
+        "SEC-011"
+      ]
+    },
+    {
+      "id": "DES-023",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-008",
+        "NFR-010"
+      ]
+    },
+    {
+      "id": "DES-024",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-008",
+        "FR-009",
+        "FR-010",
+        "FR-011",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015",
+        "FR-016",
+        "FR-017",
+        "FR-018",
+        "FR-019",
+        "FR-020",
+        "FR-021",
+        "FR-022",
+        "FR-023",
+        "FR-024",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-043",
+        "FR-044",
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "FR-052",
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058",
+        "FR-059",
+        "FR-060",
+        "FR-061",
+        "FR-062",
+        "FR-063",
+        "FR-064",
+        "FR-065",
+        "FR-066",
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070",
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079",
+        "FR-080",
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014"
+      ]
+    },
+    {
+      "id": "DES-025",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-008",
+        "FR-009",
+        "FR-010",
+        "FR-011",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015",
+        "FR-016",
+        "FR-017",
+        "FR-018",
+        "FR-019",
+        "FR-020",
+        "FR-021",
+        "FR-022",
+        "FR-023",
+        "FR-024",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-043",
+        "FR-044",
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "FR-052",
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058",
+        "FR-059",
+        "FR-060",
+        "FR-061",
+        "FR-062",
+        "FR-063",
+        "FR-064",
+        "FR-065",
+        "FR-066",
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070",
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079",
+        "FR-080",
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "PHASE-001",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-008",
+        "FR-009",
+        "FR-010",
+        "FR-011",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015",
+        "FR-016",
+        "FR-017",
+        "FR-018",
+        "FR-019",
+        "FR-020",
+        "FR-021",
+        "FR-023",
+        "FR-024",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-043",
+        "FR-044",
+        "FR-051",
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-006",
+        "NFR-007",
+        "NFR-009",
+        "NFR-010",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-006",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024"
+      ],
+      "depends_on": [],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "supplier-phase-1",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "supplier-server-integration"
+      ]
+    },
+    {
+      "id": "PHASE-002",
+      "requirement_ids": [
+        "FR-015",
+        "FR-022",
+        "FR-023",
+        "FR-052",
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058",
+        "FR-059",
+        "FR-060",
+        "FR-061",
+        "FR-062",
+        "FR-063",
+        "FR-064",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "SEC-004",
+        "SEC-007",
+        "SEC-009",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-005",
+        "DES-006",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-016",
+        "DES-017",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-025",
+        "TASK-026",
+        "TASK-027",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031"
+      ],
+      "depends_on": [
+        "PHASE-001"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "supplier-phase-2",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "supplier-server-integration"
+      ]
+    },
+    {
+      "id": "PHASE-003",
+      "requirement_ids": [
+        "FR-012",
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "NFR-009",
+        "NFR-010",
+        "SEC-002",
+        "SEC-005",
+        "SEC-006",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-032",
+        "TASK-033",
+        "TASK-034",
+        "TASK-035",
+        "TASK-036",
+        "TASK-037"
+      ],
+      "depends_on": [
+        "PHASE-001"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "supplier-phase-3",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "supplier-server-integration"
+      ]
+    },
+    {
+      "id": "PHASE-004",
+      "requirement_ids": [
+        "FR-008",
+        "FR-014",
+        "FR-065",
+        "FR-066",
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070",
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079",
+        "FR-080",
+        "FR-081",
+        "FR-082",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010",
+        "NFR-011",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-012",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-038",
+        "TASK-039",
+        "TASK-040",
+        "TASK-041",
+        "TASK-042",
+        "TASK-043",
+        "TASK-044",
+        "TASK-045",
+        "TASK-046",
+        "TASK-047",
+        "TASK-048",
+        "TASK-049",
+        "TASK-050",
+        "TASK-051"
+      ],
+      "depends_on": [
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003"
+      ],
+      "branch_strategy": "DEFAULT",
+      "parent_commit": null,
+      "exception_approval_id": null,
+      "merge_group": "supplier-phase-4",
+      "developer_suites": [
+        "lint",
+        "client-build",
+        "supplier-server-integration"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "NFR-009",
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-014",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [],
+      "technical_test_ids": [
+        "TC-001",
+        "TC-002",
+        "TC-006"
+      ]
+    },
+    {
+      "id": "TASK-002",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001"
+      ],
+      "technical_test_ids": [
+        "TC-004",
+        "TC-111",
+        "TC-113",
+        "TC-114",
+        "TC-115",
+        "TC-116",
+        "TC-117",
+        "TC-119",
+        "TC-120"
+      ]
+    },
+    {
+      "id": "TASK-003",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-051",
+        "FR-083",
+        "FR-084",
+        "NFR-010",
+        "SEC-010",
+        "SEC-011",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001"
+      ],
+      "technical_test_ids": [
+        "TC-003",
+        "TC-005",
+        "TC-007"
+      ]
+    },
+    {
+      "id": "TASK-004",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-004",
+        "FR-011",
+        "FR-020",
+        "FR-024",
+        "FR-026"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-015",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "technical_test_ids": [
+        "TC-010"
+      ]
+    },
+    {
+      "id": "TASK-005",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-007",
+        "NFR-009"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001",
+        "TASK-004"
+      ],
+      "technical_test_ids": [
+        "TC-003",
+        "TC-007"
+      ]
+    },
+    {
+      "id": "TASK-006",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-017",
+        "FR-018",
+        "FR-020",
+        "FR-026",
+        "FR-027"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-004"
+      ],
+      "technical_test_ids": [
+        "TC-020",
+        "TC-022",
+        "TC-023",
+        "TC-027"
+      ]
+    },
+    {
+      "id": "TASK-007",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-019",
+        "NFR-001",
+        "NFR-003"
+      ],
+      "design_ids": [
+        "DES-003",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-005",
+        "TASK-006"
+      ],
+      "technical_test_ids": [
+        "TC-021"
+      ]
+    },
+    {
+      "id": "TASK-008",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-031",
+        "FR-035",
+        "FR-036",
+        "FR-038"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-005",
+        "TASK-006"
+      ],
+      "technical_test_ids": [
+        "TC-030",
+        "TC-031",
+        "TC-035",
+        "TC-036",
+        "TC-037",
+        "TC-039"
+      ]
+    },
+    {
+      "id": "TASK-009",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-013",
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087",
+        "SEC-011",
+        "SEC-012"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-002",
+        "TASK-005",
+        "TASK-008"
+      ],
+      "technical_test_ids": [
+        "TC-028",
+        "TC-103",
+        "TC-104",
+        "TC-105",
+        "TC-106",
+        "TC-107",
+        "TC-108",
+        "TC-109",
+        "TC-110"
+      ]
+    },
+    {
+      "id": "TASK-010",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-016",
+        "FR-018",
+        "FR-020",
+        "FR-021"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009"
+      ],
+      "technical_test_ids": [
+        "TC-017",
+        "TC-018",
+        "TC-024"
+      ]
+    },
+    {
+      "id": "TASK-011",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-016",
+        "FR-017",
+        "FR-019",
+        "FR-020",
+        "FR-023",
+        "FR-029"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-010"
+      ],
+      "technical_test_ids": [
+        "TC-019",
+        "TC-029",
+        "TC-121",
+        "TC-122",
+        "TC-123",
+        "TC-124",
+        "TC-125",
+        "TC-126",
+        "TC-127"
+      ]
+    },
+    {
+      "id": "TASK-012",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-008",
+        "FR-010",
+        "FR-011",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015",
+        "NFR-001",
+        "NFR-002"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-010"
+      ],
+      "technical_test_ids": [
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-011",
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-016"
+      ]
+    },
+    {
+      "id": "TASK-013",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-009",
+        "FR-010",
+        "FR-011",
+        "FR-013",
+        "FR-015"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-015",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-009",
+        "TASK-011",
+        "TASK-012"
+      ],
+      "technical_test_ids": [
+        "TC-015"
+      ]
+    },
+    {
+      "id": "TASK-014",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-024",
+        "FR-026",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-010",
+        "TASK-012"
+      ],
+      "technical_test_ids": [
+        "TC-040",
+        "TC-041",
+        "TC-042",
+        "TC-043",
+        "TC-045",
+        "TC-047",
+        "TC-048"
+      ]
+    },
+    {
+      "id": "TASK-015",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-024",
+        "FR-027",
+        "FR-029",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-004",
+        "DES-006",
+        "DES-012",
+        "DES-013",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-014"
+      ],
+      "technical_test_ids": [
+        "TC-025"
+      ]
+    },
+    {
+      "id": "TASK-016",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-024",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-044"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-010",
+        "TASK-012"
+      ],
+      "technical_test_ids": [
+        "TC-046"
+      ]
+    },
+    {
+      "id": "TASK-017",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-006",
+        "FR-024",
+        "FR-029",
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-044"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-004",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-016"
+      ],
+      "technical_test_ids": [
+        "TC-013"
+      ]
+    },
+    {
+      "id": "TASK-018",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-018",
+        "FR-024",
+        "FR-026",
+        "FR-042",
+        "FR-043"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-006",
+        "TASK-010",
+        "TASK-012"
+      ],
+      "technical_test_ids": [
+        "TC-044"
+      ]
+    },
+    {
+      "id": "TASK-019",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-024",
+        "FR-028",
+        "FR-029",
+        "FR-042",
+        "FR-043"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-004",
+        "DES-006",
+        "DES-012",
+        "DES-013",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-018"
+      ],
+      "technical_test_ids": [
+        "TC-025"
+      ]
+    },
+    {
+      "id": "TASK-020",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-024",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-030"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-012",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-014",
+        "TASK-016",
+        "TASK-018"
+      ],
+      "technical_test_ids": [
+        "TC-025",
+        "TC-026",
+        "TC-029"
+      ]
+    },
+    {
+      "id": "TASK-021",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-015",
+        "FR-024",
+        "FR-025",
+        "FR-027",
+        "FR-028",
+        "FR-029"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-005",
+        "DES-006",
+        "DES-012",
+        "DES-013",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-020"
+      ],
+      "technical_test_ids": [
+        "TC-014"
+      ]
+    },
+    {
+      "id": "TASK-022",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-031",
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-008",
+        "TASK-020"
+      ],
+      "technical_test_ids": [
+        "TC-032",
+        "TC-033",
+        "TC-034"
+      ]
+    },
+    {
+      "id": "TASK-023",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "FR-023",
+        "FR-032",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-013",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-022"
+      ],
+      "technical_test_ids": [
+        "TC-019"
+      ]
+    },
+    {
+      "id": "TASK-024",
+      "phase_id": "PHASE-001",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-007",
+        "NFR-010",
+        "SEC-008",
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-009",
+        "DES-014",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-009",
+        "TASK-012",
+        "TASK-014",
+        "TASK-016",
+        "TASK-018",
+        "TASK-020",
+        "TASK-022",
+        "TASK-023"
+      ],
+      "technical_test_ids": [
+        "TC-038"
+      ]
+    },
+    {
+      "id": "TASK-025",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-052",
+        "FR-061",
+        "NFR-006"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-008",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001",
+        "TASK-002",
+        "TASK-018"
+      ],
+      "technical_test_ids": [
+        "TC-049",
+        "TC-057"
+      ]
+    },
+    {
+      "id": "TASK-026",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-060",
+        "FR-061",
+        "FR-062",
+        "FR-063",
+        "SEC-007",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-008",
+        "DES-009",
+        "DES-013",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-009",
+        "TASK-025"
+      ],
+      "technical_test_ids": [
+        "TC-050",
+        "TC-058"
+      ]
+    },
+    {
+      "id": "TASK-027",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-059",
+        "FR-060",
+        "FR-062",
+        "FR-063",
+        "FR-064"
+      ],
+      "design_ids": [
+        "DES-008",
+        "DES-013",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-004",
+        "TASK-026"
+      ],
+      "technical_test_ids": [
+        "TC-049",
+        "TC-051"
+      ]
+    },
+    {
+      "id": "TASK-028",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-022",
+        "FR-052",
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-022",
+        "TASK-026"
+      ],
+      "technical_test_ids": [
+        "TC-049",
+        "TC-052",
+        "TC-053",
+        "TC-054",
+        "TC-055",
+        "TC-056",
+        "TC-059"
+      ]
+    },
+    {
+      "id": "TASK-029",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058",
+        "SEC-004",
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-014",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-028"
+      ],
+      "technical_test_ids": [
+        "TC-052"
+      ]
+    },
+    {
+      "id": "TASK-030",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-015",
+        "FR-022",
+        "FR-023",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-008",
+        "DES-012",
+        "DES-013",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-011",
+        "TASK-013",
+        "TASK-027",
+        "TASK-029"
+      ],
+      "technical_test_ids": [
+        "TC-049"
+      ]
+    },
+    {
+      "id": "TASK-031",
+      "phase_id": "PHASE-002",
+      "requirement_ids": [
+        "FR-052",
+        "FR-055",
+        "FR-056",
+        "FR-058",
+        "FR-063",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "SEC-004",
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-014",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-027",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030"
+      ],
+      "technical_test_ids": [
+        "TC-060",
+        "TC-061"
+      ]
+    },
+    {
+      "id": "TASK-032",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "FR-046",
+        "FR-047",
+        "FR-051",
+        "NFR-010",
+        "SEC-010",
+        "SEC-011"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-018",
+        "TASK-024"
+      ],
+      "technical_test_ids": [
+        "TC-062",
+        "TC-068",
+        "TC-069",
+        "TC-074",
+        "TC-076"
+      ]
+    },
+    {
+      "id": "TASK-033",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-009",
+        "TASK-024",
+        "TASK-032"
+      ],
+      "technical_test_ids": [
+        "TC-062",
+        "TC-071",
+        "TC-072",
+        "TC-073"
+      ]
+    },
+    {
+      "id": "TASK-034",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "FR-012",
+        "FR-045",
+        "FR-046",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "SEC-002",
+        "SEC-005",
+        "SEC-006",
+        "SEC-009",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-033"
+      ],
+      "technical_test_ids": [
+        "TC-063",
+        "TC-064",
+        "TC-065",
+        "TC-067",
+        "TC-070",
+        "TC-075"
+      ]
+    },
+    {
+      "id": "TASK-035",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "FR-012",
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-050",
+        "FR-051"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-034"
+      ],
+      "technical_test_ids": [
+        "TC-062"
+      ]
+    },
+    {
+      "id": "TASK-036",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-010",
+        "SEC-010",
+        "SEC-011"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-032",
+        "TASK-033"
+      ],
+      "technical_test_ids": [
+        "TC-077"
+      ]
+    },
+    {
+      "id": "TASK-037",
+      "phase_id": "PHASE-003",
+      "requirement_ids": [
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "NFR-009",
+        "NFR-010",
+        "SEC-005",
+        "SEC-006",
+        "SEC-010",
+        "SEC-011",
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-034",
+        "TASK-035",
+        "TASK-036"
+      ],
+      "technical_test_ids": [
+        "TC-066"
+      ]
+    },
+    {
+      "id": "TASK-038",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-001",
+        "TASK-024",
+        "TASK-042"
+      ],
+      "technical_test_ids": [
+        "TC-080",
+        "TC-081",
+        "TC-083",
+        "TC-084"
+      ]
+    },
+    {
+      "id": "TASK-039",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-014",
+        "FR-067",
+        "FR-069",
+        "FR-070"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-013",
+        "TASK-038"
+      ],
+      "technical_test_ids": [
+        "TC-080"
+      ]
+    },
+    {
+      "id": "TASK-040",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-008",
+        "FR-065",
+        "FR-066",
+        "FR-068",
+        "FR-069",
+        "NFR-005"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-012",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-024",
+        "TASK-038"
+      ],
+      "technical_test_ids": [
+        "TC-078",
+        "TC-079",
+        "TC-082",
+        "TC-085"
+      ]
+    },
+    {
+      "id": "TASK-041",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-071",
+        "FR-080",
+        "NFR-004",
+        "NFR-009"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-003",
+        "TASK-024"
+      ],
+      "technical_test_ids": [
+        "TC-086",
+        "TC-087",
+        "TC-088",
+        "TC-092",
+        "TC-094",
+        "TC-095",
+        "TC-097",
+        "TC-098",
+        "TC-101"
+      ]
+    },
+    {
+      "id": "TASK-042",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-072",
+        "FR-074",
+        "FR-075",
+        "FR-077",
+        "FR-080",
+        "NFR-006",
+        "NFR-008"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-025",
+        "TASK-041"
+      ],
+      "technical_test_ids": [
+        "TC-089",
+        "TC-091",
+        "TC-093",
+        "TC-100"
+      ]
+    },
+    {
+      "id": "TASK-043",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-076",
+        "FR-078"
+      ],
+      "design_ids": [
+        "DES-016",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-006",
+        "TASK-007",
+        "TASK-042"
+      ],
+      "technical_test_ids": [
+        "TC-090",
+        "TC-096",
+        "TC-099"
+      ]
+    },
+    {
+      "id": "TASK-044",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-072",
+        "FR-073",
+        "FR-075",
+        "FR-077",
+        "FR-080"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-042",
+        "TASK-043"
+      ],
+      "technical_test_ids": [
+        "TC-089"
+      ]
+    },
+    {
+      "id": "TASK-045",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-074",
+        "FR-076",
+        "FR-077",
+        "NFR-006",
+        "NFR-008"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-028",
+        "TASK-031",
+        "TASK-042",
+        "TASK-044"
+      ],
+      "technical_test_ids": [
+        "TC-105"
+      ]
+    },
+    {
+      "id": "TASK-046",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-072",
+        "FR-073",
+        "FR-075",
+        "FR-077",
+        "FR-079",
+        "FR-080",
+        "NFR-004"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-044",
+        "TASK-045"
+      ],
+      "technical_test_ids": [
+        "TC-089"
+      ]
+    },
+    {
+      "id": "TASK-047",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-078",
+        "FR-079",
+        "FR-081",
+        "FR-082",
+        "SEC-012"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-012",
+        "TASK-041",
+        "TASK-043"
+      ],
+      "technical_test_ids": [
+        "TC-102"
+      ]
+    },
+    {
+      "id": "TASK-048",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-075",
+        "FR-080",
+        "NFR-008",
+        "NFR-009",
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-009",
+        "DES-011",
+        "DES-014",
+        "DES-016",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-041",
+        "TASK-042",
+        "TASK-044"
+      ],
+      "technical_test_ids": [
+        "TC-091"
+      ]
+    },
+    {
+      "id": "TASK-049",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079",
+        "FR-080",
+        "NFR-004",
+        "NFR-006",
+        "NFR-008"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-045",
+        "TASK-046",
+        "TASK-047",
+        "TASK-048"
+      ],
+      "technical_test_ids": [
+        "TC-086"
+      ]
+    },
+    {
+      "id": "TASK-050",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-024",
+        "TASK-031",
+        "TASK-037",
+        "TASK-040",
+        "TASK-049"
+      ],
+      "technical_test_ids": [
+        "TC-128",
+        "TC-129",
+        "TC-130",
+        "TC-131",
+        "TC-132",
+        "TC-134",
+        "TC-135",
+        "TC-136"
+      ]
+    },
+    {
+      "id": "TASK-051",
+      "phase_id": "PHASE-004",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-011",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-016",
+        "DES-017",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "depends_on": [
+        "TASK-024",
+        "TASK-031",
+        "TASK-037",
+        "TASK-040",
+        "TASK-049",
+        "TASK-050"
+      ],
+      "technical_test_ids": [
+        "TC-112",
+        "TC-118",
+        "TC-133"
+      ]
+    }
+  ],
+  "technical_tests": [
+    {
+      "id": "TC-001",
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-014",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-001"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-002",
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-014",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-001"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-003",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-009",
+        "NFR-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-003",
+        "TASK-005"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-004",
+      "requirement_ids": [
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-005",
+      "requirement_ids": [
+        "NFR-010",
+        "SEC-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-003"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-006",
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-014",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-001"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-007",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-009",
+        "NFR-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-003",
+        "TASK-005"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-008",
+      "requirement_ids": [
+        "FR-001",
+        "FR-008",
+        "FR-012",
+        "FR-014",
+        "NFR-002"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-009",
+      "requirement_ids": [
+        "FR-002",
+        "FR-003"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-010",
+      "requirement_ids": [
+        "FR-004"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-004",
+        "TASK-012"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-011",
+      "requirement_ids": [
+        "FR-005"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-012",
+      "requirement_ids": [
+        "FR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-013",
+      "requirement_ids": [
+        "FR-006",
+        "FR-007",
+        "FR-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012",
+        "TASK-017"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-014",
+      "requirement_ids": [
+        "FR-011",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-006",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-017",
+        "DES-018",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012",
+        "TASK-021"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-015",
+      "requirement_ids": [
+        "FR-009"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-015",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-013"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-016",
+      "requirement_ids": [
+        "FR-008"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-011",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-012"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-017",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-010"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-018",
+      "requirement_ids": [
+        "FR-021"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-010"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-019",
+      "requirement_ids": [
+        "FR-023"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011",
+        "TASK-023"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-020",
+      "requirement_ids": [
+        "FR-017",
+        "FR-018"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-006"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-021",
+      "requirement_ids": [
+        "FR-019"
+      ],
+      "design_ids": [
+        "DES-003",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-007"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-022",
+      "requirement_ids": [
+        "FR-020"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-006"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-023",
+      "requirement_ids": [
+        "FR-026"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-006"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-024",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-010"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-025",
+      "requirement_ids": [
+        "FR-024",
+        "FR-028"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-006",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-015",
+        "TASK-019",
+        "TASK-020"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-026",
+      "requirement_ids": [
+        "FR-025"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-012",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-020"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-027",
+      "requirement_ids": [
+        "FR-027"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-006",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-006"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-028",
+      "requirement_ids": [
+        "FR-085"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-029",
+      "requirement_ids": [
+        "FR-029",
+        "FR-030"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-006",
+        "DES-012",
+        "DES-013",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011",
+        "TASK-020"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-030",
+      "requirement_ids": [
+        "FR-031"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-008"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-031",
+      "requirement_ids": [
+        "FR-031"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-008"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-032",
+      "requirement_ids": [
+        "FR-032",
+        "FR-033"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-022"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-033",
+      "requirement_ids": [
+        "FR-034"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-022"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-034",
+      "requirement_ids": [
+        "FR-037",
+        "FR-038"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-022"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-035",
+      "requirement_ids": [
+        "FR-035",
+        "FR-036"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-008"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-036",
+      "requirement_ids": [
+        "FR-031"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-008"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-037",
+      "requirement_ids": [
+        "FR-031"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-008"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-038",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-007"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-009",
+        "DES-014",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-024"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-039",
+      "requirement_ids": [
+        "FR-031"
+      ],
+      "design_ids": [
+        "DES-005",
+        "DES-014",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-008"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-040",
+      "requirement_ids": [
+        "FR-039"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-041",
+      "requirement_ids": [
+        "FR-039"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-042",
+      "requirement_ids": [
+        "FR-040",
+        "FR-041"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-043",
+      "requirement_ids": [
+        "FR-042"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-044",
+      "requirement_ids": [
+        "FR-043"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-018"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-045",
+      "requirement_ids": [
+        "FR-039"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-046",
+      "requirement_ids": [
+        "FR-044"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-016"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-047",
+      "requirement_ids": [
+        "FR-039"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-048",
+      "requirement_ids": [
+        "FR-039"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-014"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-049",
+      "requirement_ids": [
+        "FR-022",
+        "FR-059",
+        "FR-061"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-005",
+        "DES-006",
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-013",
+        "DES-017",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-025",
+        "TASK-027",
+        "TASK-028",
+        "TASK-030"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-050",
+      "requirement_ids": [
+        "FR-060",
+        "SEC-007"
+      ],
+      "design_ids": [
+        "DES-008",
+        "DES-009",
+        "DES-013",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-026"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-051",
+      "requirement_ids": [
+        "FR-062",
+        "FR-063",
+        "FR-064"
+      ],
+      "design_ids": [
+        "DES-008",
+        "DES-013",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-027"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-052",
+      "requirement_ids": [
+        "FR-052",
+        "FR-053"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-012",
+        "DES-014",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-028",
+        "TASK-029"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-053",
+      "requirement_ids": [
+        "FR-054"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-028"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-054",
+      "requirement_ids": [
+        "FR-055"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-028"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-055",
+      "requirement_ids": [
+        "FR-055"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-028"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-056",
+      "requirement_ids": [
+        "FR-056",
+        "FR-057"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-028"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-057",
+      "requirement_ids": [
+        "FR-052"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-008",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-025"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-058",
+      "requirement_ids": [
+        "FR-063"
+      ],
+      "design_ids": [
+        "DES-008",
+        "DES-009",
+        "DES-013",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-026"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-059",
+      "requirement_ids": [
+        "FR-057"
+      ],
+      "design_ids": [
+        "DES-007",
+        "DES-008",
+        "DES-012",
+        "DES-017",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-028"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-060",
+      "requirement_ids": [
+        "FR-058",
+        "NFR-008"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-014",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-031"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-061",
+      "requirement_ids": [
+        "NFR-006",
+        "SEC-004"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-008",
+        "DES-009",
+        "DES-014",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-031"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-062",
+      "requirement_ids": [
+        "FR-046",
+        "FR-048"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-032",
+        "TASK-033",
+        "TASK-035"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-063",
+      "requirement_ids": [
+        "FR-046",
+        "SEC-005"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-064",
+      "requirement_ids": [
+        "FR-045",
+        "SEC-006"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-065",
+      "requirement_ids": [
+        "SEC-013"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-066",
+      "requirement_ids": [
+        "FR-045",
+        "SEC-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-037"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-067",
+      "requirement_ids": [
+        "FR-045",
+        "SEC-005"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-068",
+      "requirement_ids": [
+        "FR-051"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-032"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-069",
+      "requirement_ids": [
+        "FR-047"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-032"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-070",
+      "requirement_ids": [
+        "FR-045",
+        "SEC-005"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-071",
+      "requirement_ids": [
+        "FR-045"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-033"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-072",
+      "requirement_ids": [
+        "FR-049",
+        "FR-050"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-033"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-073",
+      "requirement_ids": [
+        "FR-050"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-033"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-074",
+      "requirement_ids": [
+        "FR-051",
+        "SEC-010",
+        "SEC-011"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-032"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-075",
+      "requirement_ids": [
+        "FR-045",
+        "SEC-005"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-076",
+      "requirement_ids": [
+        "SEC-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-004",
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-032"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-077",
+      "requirement_ids": [
+        "NFR-009"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-017",
+        "DES-018",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-036"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-bank-security"
+    },
+    {
+      "id": "TC-078",
+      "requirement_ids": [
+        "FR-065"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-012",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-040"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-079",
+      "requirement_ids": [
+        "FR-066"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-012",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-040"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-080",
+      "requirement_ids": [
+        "FR-069"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-038",
+        "TASK-039"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-081",
+      "requirement_ids": [
+        "FR-067"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-038"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-082",
+      "requirement_ids": [
+        "FR-065"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-012",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-040"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-083",
+      "requirement_ids": [
+        "FR-068"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-038"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-084",
+      "requirement_ids": [
+        "FR-070"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-038"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-085",
+      "requirement_ids": [
+        "NFR-005"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-012",
+        "DES-014",
+        "DES-015",
+        "DES-020",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-040"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-086",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041",
+        "TASK-049"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-087",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-088",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-089",
+      "requirement_ids": [
+        "FR-072"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-042",
+        "TASK-044",
+        "TASK-046"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-090",
+      "requirement_ids": [
+        "FR-073"
+      ],
+      "design_ids": [
+        "DES-016",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-043"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-091",
+      "requirement_ids": [
+        "FR-074",
+        "FR-075"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-009",
+        "DES-011",
+        "DES-014",
+        "DES-016",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-042",
+        "TASK-048"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-092",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-093",
+      "requirement_ids": [
+        "FR-077",
+        "NFR-008"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-042"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-094",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-095",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-096",
+      "requirement_ids": [
+        "FR-076"
+      ],
+      "design_ids": [
+        "DES-016",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-043"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-097",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-098",
+      "requirement_ids": [
+        "FR-071"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-099",
+      "requirement_ids": [
+        "FR-078"
+      ],
+      "design_ids": [
+        "DES-016",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-043"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-100",
+      "requirement_ids": [
+        "FR-075",
+        "FR-080"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-042"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-101",
+      "requirement_ids": [
+        "NFR-004"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-041"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-102",
+      "requirement_ids": [
+        "FR-079",
+        "SEC-012"
+      ],
+      "design_ids": [
+        "DES-011",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-047"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-103",
+      "requirement_ids": [
+        "FR-081",
+        "FR-082"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-104",
+      "requirement_ids": [
+        "FR-083",
+        "FR-084",
+        "SEC-011"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-105",
+      "requirement_ids": [
+        "FR-085",
+        "NFR-006"
+      ],
+      "design_ids": [
+        "DES-002",
+        "DES-004",
+        "DES-006",
+        "DES-007",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009",
+        "TASK-045"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-106",
+      "requirement_ids": [
+        "FR-081"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-107",
+      "requirement_ids": [
+        "FR-087"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-108",
+      "requirement_ids": [
+        "FR-086"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-109",
+      "requirement_ids": [
+        "FR-081"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-110",
+      "requirement_ids": [
+        "FR-081"
+      ],
+      "design_ids": [
+        "DES-004",
+        "DES-010",
+        "DES-011",
+        "DES-013",
+        "DES-016",
+        "DES-017",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-009"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-server-integration"
+    },
+    {
+      "id": "TC-111",
+      "requirement_ids": [
+        "SEC-001"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-112",
+      "requirement_ids": [
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-014"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-016",
+        "DES-017",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-051"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-113",
+      "requirement_ids": [
+        "SEC-008"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-114",
+      "requirement_ids": [
+        "SEC-009"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-115",
+      "requirement_ids": [
+        "SEC-001"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-116",
+      "requirement_ids": [
+        "SEC-001"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-117",
+      "requirement_ids": [
+        "SEC-001"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-118",
+      "requirement_ids": [
+        "SEC-010",
+        "SEC-011",
+        "SEC-012"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-016",
+        "DES-017",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-051"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-119",
+      "requirement_ids": [
+        "SEC-001"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-120",
+      "requirement_ids": [
+        "SEC-001"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-014",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-002"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-security"
+    },
+    {
+      "id": "TC-121",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-122",
+      "requirement_ids": [
+        "FR-023"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-123",
+      "requirement_ids": [
+        "FR-029"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-124",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-125",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-126",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-127",
+      "requirement_ids": [
+        "FR-016"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-003",
+        "DES-004",
+        "DES-005",
+        "DES-012",
+        "DES-013",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-011"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-client-ui"
+    },
+    {
+      "id": "TC-128",
+      "requirement_ids": [
+        "NFR-001",
+        "NFR-002",
+        "NFR-003"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-performance"
+    },
+    {
+      "id": "TC-129",
+      "requirement_ids": [
+        "NFR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-performance"
+    },
+    {
+      "id": "TC-130",
+      "requirement_ids": [
+        "NFR-010"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-resilience"
+    },
+    {
+      "id": "TC-131",
+      "requirement_ids": [
+        "NFR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-resilience"
+    },
+    {
+      "id": "TC-132",
+      "requirement_ids": [
+        "NFR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-resilience"
+    },
+    {
+      "id": "TC-133",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-011"
+      ],
+      "design_ids": [
+        "DES-009",
+        "DES-010",
+        "DES-011",
+        "DES-014",
+        "DES-016",
+        "DES-017",
+        "DES-019",
+        "DES-021",
+        "DES-022",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-051"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-recovery"
+    },
+    {
+      "id": "TC-134",
+      "requirement_ids": [
+        "NFR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-release-operations"
+    },
+    {
+      "id": "TC-135",
+      "requirement_ids": [
+        "NFR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-release-operations"
+    },
+    {
+      "id": "TC-136",
+      "requirement_ids": [
+        "NFR-001"
+      ],
+      "design_ids": [
+        "DES-001",
+        "DES-002",
+        "DES-006",
+        "DES-007",
+        "DES-014",
+        "DES-015",
+        "DES-016",
+        "DES-018",
+        "DES-019",
+        "DES-020",
+        "DES-021",
+        "DES-023",
+        "DES-024",
+        "DES-025"
+      ],
+      "task_ids": [
+        "TASK-050"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "suite_id": "supplier-release-operations"
+    }
+  ],
+  "uat_tests": [
+    {
+      "id": "UAT-001",
+      "requirement_ids": [
+        "FR-016",
+        "FR-017",
+        "FR-018",
+        "FR-019",
+        "FR-020",
+        "FR-021",
+        "FR-022",
+        "FR-023"
+      ],
+      "technical_test_ids": [
+        "TC-017",
+        "TC-018",
+        "TC-019",
+        "TC-020",
+        "TC-021",
+        "TC-022",
+        "TC-049"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-002",
+      "requirement_ids": [
+        "FR-017"
+      ],
+      "technical_test_ids": [
+        "TC-020"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-003",
+      "requirement_ids": [
+        "FR-018"
+      ],
+      "technical_test_ids": [
+        "TC-020"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-004",
+      "requirement_ids": [
+        "FR-043"
+      ],
+      "technical_test_ids": [
+        "TC-044"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-005",
+      "requirement_ids": [
+        "FR-025"
+      ],
+      "technical_test_ids": [
+        "TC-026"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-006",
+      "requirement_ids": [
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028"
+      ],
+      "technical_test_ids": [
+        "TC-023",
+        "TC-025",
+        "TC-026",
+        "TC-027"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-007",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-008",
+        "FR-009",
+        "FR-010",
+        "FR-011",
+        "FR-012",
+        "FR-013",
+        "FR-014",
+        "FR-015"
+      ],
+      "technical_test_ids": [
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-011",
+        "TC-013",
+        "TC-014",
+        "TC-015"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-008",
+      "requirement_ids": [
+        "FR-024",
+        "FR-025",
+        "FR-026",
+        "FR-027",
+        "FR-028",
+        "FR-029",
+        "FR-030",
+        "NFR-007"
+      ],
+      "technical_test_ids": [
+        "TC-023",
+        "TC-025",
+        "TC-026",
+        "TC-027",
+        "TC-029",
+        "TC-038"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-009",
+      "requirement_ids": [
+        "FR-023"
+      ],
+      "technical_test_ids": [
+        "TC-019"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-010",
+      "requirement_ids": [
+        "FR-052",
+        "FR-053",
+        "FR-054",
+        "FR-055",
+        "FR-056",
+        "FR-057",
+        "FR-058"
+      ],
+      "technical_test_ids": [
+        "TC-052",
+        "TC-053",
+        "TC-054",
+        "TC-056",
+        "TC-060"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-011",
+      "requirement_ids": [
+        "FR-052"
+      ],
+      "technical_test_ids": [
+        "TC-052"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-012",
+      "requirement_ids": [
+        "FR-055"
+      ],
+      "technical_test_ids": [
+        "TC-054"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-013",
+      "requirement_ids": [
+        "FR-055"
+      ],
+      "technical_test_ids": [
+        "TC-054"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-014",
+      "requirement_ids": [
+        "FR-057"
+      ],
+      "technical_test_ids": [
+        "TC-056"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-015",
+      "requirement_ids": [
+        "FR-063"
+      ],
+      "technical_test_ids": [
+        "TC-051"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-016",
+      "requirement_ids": [
+        "FR-031"
+      ],
+      "technical_test_ids": [
+        "TC-030"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-017",
+      "requirement_ids": [
+        "FR-034",
+        "FR-035"
+      ],
+      "technical_test_ids": [
+        "TC-033",
+        "TC-035"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-018",
+      "requirement_ids": [
+        "FR-035"
+      ],
+      "technical_test_ids": [
+        "TC-035"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-019",
+      "requirement_ids": [
+        "FR-036",
+        "FR-037"
+      ],
+      "technical_test_ids": [
+        "TC-034",
+        "TC-035"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-020",
+      "requirement_ids": [
+        "FR-038"
+      ],
+      "technical_test_ids": [
+        "TC-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-021",
+      "requirement_ids": [
+        "FR-038"
+      ],
+      "technical_test_ids": [
+        "TC-034"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-022",
+      "requirement_ids": [
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-043",
+        "FR-044"
+      ],
+      "technical_test_ids": [
+        "TC-040",
+        "TC-042",
+        "TC-043",
+        "TC-044",
+        "TC-046"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-023",
+      "requirement_ids": [
+        "FR-040"
+      ],
+      "technical_test_ids": [
+        "TC-042"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-024",
+      "requirement_ids": [
+        "FR-020"
+      ],
+      "technical_test_ids": [
+        "TC-022"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-025",
+      "requirement_ids": [
+        "FR-046"
+      ],
+      "technical_test_ids": [
+        "TC-062"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-026",
+      "requirement_ids": [
+        "FR-046",
+        "FR-050"
+      ],
+      "technical_test_ids": [
+        "TC-062",
+        "TC-072"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-027",
+      "requirement_ids": [
+        "FR-045"
+      ],
+      "technical_test_ids": [
+        "TC-064"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-028",
+      "requirement_ids": [
+        "FR-048"
+      ],
+      "technical_test_ids": [
+        "TC-062"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-029",
+      "requirement_ids": [
+        "FR-051"
+      ],
+      "technical_test_ids": [
+        "TC-068"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-030",
+      "requirement_ids": [
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013",
+        "SEC-014"
+      ],
+      "technical_test_ids": [
+        "TC-065",
+        "TC-112",
+        "TC-113",
+        "TC-114",
+        "TC-118"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-031",
+      "requirement_ids": [
+        "FR-020",
+        "FR-024"
+      ],
+      "technical_test_ids": [
+        "TC-022",
+        "TC-025"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-032",
+      "requirement_ids": [
+        "FR-065",
+        "FR-066",
+        "FR-067",
+        "FR-068",
+        "FR-069",
+        "FR-070"
+      ],
+      "technical_test_ids": [
+        "TC-078",
+        "TC-079",
+        "TC-080",
+        "TC-081",
+        "TC-083",
+        "TC-084"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-033",
+      "requirement_ids": [
+        "FR-067",
+        "FR-068"
+      ],
+      "technical_test_ids": [
+        "TC-081",
+        "TC-083"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-034",
+      "requirement_ids": [
+        "FR-069"
+      ],
+      "technical_test_ids": [
+        "TC-080"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-035",
+      "requirement_ids": [
+        "FR-066"
+      ],
+      "technical_test_ids": [
+        "TC-079"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-036",
+      "requirement_ids": [
+        "FR-030"
+      ],
+      "technical_test_ids": [
+        "TC-029"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-037",
+      "requirement_ids": [
+        "FR-071",
+        "FR-072",
+        "FR-073",
+        "FR-074",
+        "FR-075",
+        "FR-076",
+        "FR-077",
+        "FR-078",
+        "FR-079"
+      ],
+      "technical_test_ids": [
+        "TC-086",
+        "TC-089",
+        "TC-090",
+        "TC-091",
+        "TC-093",
+        "TC-096",
+        "TC-099",
+        "TC-102"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-038",
+      "requirement_ids": [
+        "FR-073"
+      ],
+      "technical_test_ids": [
+        "TC-090"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-039",
+      "requirement_ids": [
+        "FR-077"
+      ],
+      "technical_test_ids": [
+        "TC-093"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-040",
+      "requirement_ids": [
+        "FR-059"
+      ],
+      "technical_test_ids": [
+        "TC-049"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-041",
+      "requirement_ids": [
+        "FR-060",
+        "FR-061",
+        "FR-062",
+        "FR-063",
+        "FR-064"
+      ],
+      "technical_test_ids": [
+        "TC-049",
+        "TC-050",
+        "TC-051"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-042",
+      "requirement_ids": [
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009"
+      ],
+      "technical_test_ids": [
+        "TC-004",
+        "TC-113",
+        "TC-114"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-043",
+      "requirement_ids": [
+        "FR-007",
+        "FR-080",
+        "FR-087"
+      ],
+      "technical_test_ids": [
+        "TC-013",
+        "TC-100",
+        "TC-107"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-044",
+      "requirement_ids": [
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005"
+      ],
+      "technical_test_ids": [
+        "TC-085",
+        "TC-101",
+        "TC-128"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "MANUAL_BUSINESS",
+      "automation_suitability": "MANUAL_REQUIRED",
+      "suite_id": null
+    },
+    {
+      "id": "UAT-045",
+      "requirement_ids": [
+        "NFR-009",
+        "NFR-011"
+      ],
+      "technical_test_ids": [
+        "TC-133"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "MANUAL_BUSINESS",
+      "automation_suitability": "MANUAL_REQUIRED",
+      "suite_id": null
+    },
+    {
+      "id": "UAT-046",
+      "requirement_ids": [
+        "NFR-006",
+        "NFR-007",
+        "NFR-008",
+        "NFR-009",
+        "NFR-010"
+      ],
+      "technical_test_ids": [
+        "TC-003",
+        "TC-038",
+        "TC-060"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "MANUAL_BUSINESS",
+      "automation_suitability": "MANUAL_REQUIRED",
+      "suite_id": null
+    },
+    {
+      "id": "UAT-047",
+      "requirement_ids": [
+        "NFR-006"
+      ],
+      "technical_test_ids": [
+        "TC-003"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-048",
+      "requirement_ids": [
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042"
+      ],
+      "technical_test_ids": [
+        "TC-040",
+        "TC-042",
+        "TC-043"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-049",
+      "requirement_ids": [
+        "FR-039",
+        "FR-040",
+        "FR-041",
+        "FR-042",
+        "FR-044"
+      ],
+      "technical_test_ids": [
+        "TC-040",
+        "TC-042",
+        "TC-043",
+        "TC-046"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-050",
+      "requirement_ids": [
+        "FR-043",
+        "FR-044"
+      ],
+      "technical_test_ids": [
+        "TC-044",
+        "TC-046"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-051",
+      "requirement_ids": [
+        "FR-032",
+        "FR-033",
+        "FR-034",
+        "FR-035",
+        "FR-036",
+        "FR-037",
+        "FR-038"
+      ],
+      "technical_test_ids": [
+        "TC-032",
+        "TC-033",
+        "TC-034",
+        "TC-035"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-052",
+      "requirement_ids": [
+        "FR-056",
+        "FR-057"
+      ],
+      "technical_test_ids": [
+        "TC-056"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-053",
+      "requirement_ids": [
+        "FR-045",
+        "FR-046",
+        "FR-047",
+        "FR-048",
+        "FR-049",
+        "FR-050",
+        "FR-051",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-008",
+        "SEC-009",
+        "SEC-010",
+        "SEC-011",
+        "SEC-012",
+        "SEC-013"
+      ],
+      "technical_test_ids": [
+        "TC-004",
+        "TC-062",
+        "TC-064",
+        "TC-065",
+        "TC-069",
+        "TC-072",
+        "TC-074",
+        "TC-102",
+        "TC-113",
+        "TC-114"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-054",
+      "requirement_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-003",
+        "FR-004",
+        "FR-005",
+        "FR-006",
+        "FR-007",
+        "FR-008",
+        "FR-009",
+        "FR-010"
+      ],
+      "technical_test_ids": [
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-011",
+        "TC-013",
+        "TC-015"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    },
+    {
+      "id": "UAT-055",
+      "requirement_ids": [
+        "FR-081",
+        "FR-082",
+        "FR-083",
+        "FR-084",
+        "FR-085",
+        "FR-086",
+        "FR-087"
+      ],
+      "technical_test_ids": [
+        "TC-028",
+        "TC-103",
+        "TC-104",
+        "TC-107",
+        "TC-108"
+      ],
+      "mandatory": true,
+      "blocking": true,
+      "applicability": {
+        "status": "APPLICABLE",
+        "reason": "",
+        "approval_id": null
+      },
+      "execution_surface": "UI_BROWSER",
+      "automation_suitability": "PLAYWRIGHT_PREFERRED",
+      "suite_id": "supplier-uat-browser"
+    }
+  ]
+}

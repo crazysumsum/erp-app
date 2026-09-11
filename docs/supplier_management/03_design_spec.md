@@ -1,15 +1,55 @@
-# Supplier Management 詳細設計規格
+# Supplier Management Aligned System Design Specification
+
+## Harness Design Control
+
+The detailed design below remains normative except where an explicit alignment correction in this section says otherwise. These stable Design IDs provide the required Requirement → Design → Phase → Task → Test chain.
+
+| Design ID | Decision / responsibility | Requirement rationale |
+| --- | --- | --- |
+| DES-001 | Supplier owns its aggregate; Business Master owns Currency and Payment Term; downstream modules consume purpose-specific contracts. | FR-011, FR-014, FR-020, FR-024, FR-030, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, NFR-010 |
+| DES-002 | Use the existing Node.js ES-module modular monolith, Express handlers, MySQL transactions, Vue 3, Quasar, Pinia and discovery conventions. | NFR-006, NFR-007, NFR-010 |
+| DES-003 | Normalize code/identifier equality explicitly and use binary-collated canonical keys; names remain warning-only. | FR-002, FR-003, FR-004, FR-017, FR-018, FR-019, FR-026 |
+| DES-004 | Model Supplier root, addresses, contacts, identifiers, approvals, settings, bank accounts, SKU relations, import and audit with ownership FKs and concurrency constraints. | FR-012, FR-013, FR-016, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-047, FR-048, FR-049 |
+| DES-005 | Enforce the Draft/Pending/Active/Suspended/Blocked/Archived state machine and fail-closed reference guard. | FR-015, FR-021, FR-023, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 |
+| DES-006 | Use optimistic versions, fixed lock order and atomic audit-coupled transactions. | FR-027, FR-028, NFR-006, NFR-007 |
+| DES-007 | Use framework plus durable domain idempotency for create, approval, status and import outcomes. | FR-058, FR-077, NFR-008 |
+| DES-008 | Keep activation approval as one typed Supplier setting, default OFF, snapshotted at submission. | FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064 |
+| DES-009 | Seed all six Supplier permissions to protected system-admin while retaining explicit route permissions and strong re-auth. | FR-045, FR-046, FR-050, SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-013, SEC-014 |
+| DES-010 | Encrypt bank account data with independent encryption/lookup key rings, AAD binding and rotation evidence. | FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, SEC-005, SEC-006, SEC-010, SEC-011 |
+| DES-011 | Expose masked projections by default and an audited no-store reveal path; never include bank data in general export. | FR-007, FR-012, FR-046, FR-050, FR-051, FR-080, FR-083, FR-084, FR-087, SEC-010, SEC-011, SEC-012 |
+| DES-012 | Define versioned, paginated HTTP schemas, stable errors and boundary validation for all APIs. | FR-001, FR-005, FR-006, FR-008, FR-009, FR-010, FR-022, FR-025, FR-029 |
+| DES-013 | Implement accessible, responsive pages using the shared frontend design system and permission-aware actions. | FR-009, FR-010, FR-013, FR-015, FR-023, FR-029, FR-062 |
+| DES-014 | Provide transaction-aware Supplier eligibility/default/history/bank provider contracts with minimal projections. | FR-014, FR-030, FR-031, FR-037, FR-065, FR-066, FR-069, NFR-010, SEC-008, SEC-009 |
+| DES-015 | Use indexed exact/token/gram candidate search with bounded deterministic ranking; never scan all Suppliers in memory. | FR-002, FR-003, FR-004, NFR-001, NFR-003, NFR-005 |
+| DES-016 | Process RFC 4180 import through precheck, durable jobs, per-row atomicity, recovery and safe result/export files. | FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, NFR-004, NFR-008, SEC-012 |
+| DES-017 | Maintain append-only, redacted Supplier audit records in the same business transaction. | FR-028, FR-050, FR-057, FR-062, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, SEC-011, SEC-012 |
+| DES-018 | Register downstream reference/open-matter providers and treat missing/unavailable required providers as UNKNOWN/fail closed. | FR-025, FR-030, FR-034, FR-035, FR-036, FR-042, FR-049, NFR-010 |
+| DES-019 | Allocate only logical migration slices from latest main; Business Master tables are external prerequisites and applied migrations are immutable. | NFR-006, NFR-010 |
+| DES-020 | Meet bounded paging, 100k Supplier, 10k-row import and 50-user measurable performance targets. | NFR-001, NFR-002, NFR-003, NFR-004, NFR-005 |
+| DES-021 | Emit low-cardinality logs, metrics and alerts for approvals, bank failures, import leases, conflicts and provider degradation. | NFR-009, NFR-010, SEC-010, SEC-011, SEC-012 |
+| DES-022 | Retain auditable records, safely purge bounded import files, and meet ERP RTO≤4h/RPO≤15m through isolated restore exercises. | NFR-009, NFR-011, SEC-010, SEC-011 |
+| DES-023 | Define failure, retry, commit-unknown, dependency-outage and recovery behavior without silent fallback. | NFR-006, NFR-008, NFR-010 |
+| DES-024 | Deliver four dependency-safe, independently tested Phase checkpoints with one implementation PR per Phase. | All FR/NFR/SEC |
+| DES-025 | Separate technical acceptance from UAT and preserve executable evidence/status boundaries. | All FR/NFR/SEC |
+
+### Canonical requirement coverage manifest
+
+下列canonical IDs透過`01_requirement_spec.md`的一對一alias映射至本文件各節所引用的legacy FR family ID。此manifest只解決ID標準化，不能取代下文的schema、API、transaction及security設計：
+
+- FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087.
+- NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011.
+- SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014.
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 0.2 Draft |
-| 文件日期 | 2026-09-04 |
-| 需求來源 | `docs/supplier_management/requirement.md` 0.1 Draft |
+| 文件版本 | 1.0 Aligned |
+| 文件日期 | 2026-09-11 |
+| 需求來源 | `docs/supplier_management/01_requirement_spec.md` 1.0 Aligned |
 | 適用系統 | ERP App |
 | 技術基線 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar、Pinia |
-| 狀態 | Capability Map 已確認；待技術／安全評審及任務拆分 |
+| 狀態 | Harness對標完成；依賴及上線門檻仍須在各Phase確認 |
 
 本文件將 Supplier Management 業務需求轉換為可實作的程式架構、資料庫、API、頁面、權限、安全、交易、錯誤及測試設計。若本文件與已簽核的業務需求衝突，以業務需求為準；技術設計不得自行擴大業務範圍。
 
@@ -30,12 +70,14 @@
 | 發生引用後 Code 不可修改 | Code change 使用獨立高強度 endpoint；service 先執行 reference guard，任何引用存在即拒絕。 |
 | 銀行資料選填、多帳戶、一個預設 | `supplier_bank_accounts` 與 Supplier 分表；generated unique slot 保證最多一個有效預設，沒有帳戶亦可 Active。 |
 | 銀行權限獨立 | 一般 Supplier response 永遠只回遮罩；完整值只由 password＋device re-auth 的 reveal endpoint 短暫回傳。 |
-| 支援外幣 | 新增共用 `currencies` 目錄並由 Supplier 引用；匯率及結算不在本模組。 |
-| 預設付款條件選填 | 新增 `payment_terms` 目錄；Supplier 以 nullable FK 引用，停用條件不回寫歷史交易。 |
+| 支援外幣 | 使用Business Master提供的共用`currencies`目錄並由Supplier引用；匯率及結算不在本模組。 |
+| 預設付款條件選填 | 使用Business Master提供的`payment_terms`目錄；Supplier以nullable FK引用，停用條件不回寫歷史交易。 |
 | Suspended 與 Blocked 分開 | 狀態機分別實作；Blocked 的建立／解除要求 `supplier.approval`，解除後只回 Suspended。 |
 | 識別資料選填、有值才唯一 | `supplier_identifiers` 以 type＋issuer country＋normalized value 建全域 unique key。 |
 | 最低啟用欄位只有三項 | `assertSupplierActivatable()` 只強制 Code、Name、Active Currency；其他缺項以 completeness warnings 回傳。 |
 | 六組權限 | 種入 `supplier.view`、`supplier.mgmt`、`supplier.approval`、`supplier.bank.view`、`supplier.bank.mgmt`、`supplier.settings`。 |
+| system-admin為最高權限 | 六組Supplier權限均冪等授予受保護的`system-admin`；Bank操作仍使用相同強認證、遮罩、稽核及告警。 |
+| Currency／Payment Term共用 | Supplier只透過Business Master讀取、驗證及保存FK／快照，不建立catalog schema、不提供write API。 |
 | 不管理資格文件及績效 | 不建 contract／certificate／attachment／score tables、API 或頁面。 |
 | 只有未引用 Draft 可永久刪除 | `SupplierReferenceService` 加上 FK RESTRICT 作雙重防線；approval／SKU ref／下游交易均算引用。 |
 | CSV 可按列部分成功 | Import worker 逐 Supplier transaction 套用；一列失敗不回滾已成功列，但單一 Supplier 及其子資料全有全無。 |
@@ -48,7 +90,7 @@
 - 管理操作必須在 service 內使用 `assertActorFresh()` 重讀當前角色及權限，避免只信任舊 JWT claims。
 - Vue 頁面由 `client/src/framework/discovery/pages.js` 自動發現；menu 由 page metadata 及 `client/config/menu.js` 組成。
 - Migration runner 按四位數檔名前綴排序，套用後不再修改既有 migration。
-- 現有真正最新 migration 是 `0009_add_user_email.js`；Item 設計文件仍保留一個同名序號規劃，因此 Supplier 實作不得預先寫死會碰撞的編號，須在開始實作時以當時主分支下一個可用序號編排。
+- 對標基線的最新migration是`0026_create_item_import_rows.js`；Supplier實作不得預留固定編號，必須在每個Phase開始時從當時最新main分配下一個可用序號。
 
 ### 1.3 明確不做
 
@@ -67,7 +109,7 @@ Supplier Management 包含可獨立建置及驗收的能力，不能以一個籠
 
 | Module ID | Capability | Included | Depends on | 獨立驗收出口 |
 | --- | --- | --- | --- | --- |
-| `SUP-CAP-01` | Supplier Core | Currency read、Payment Terms、Supplier root、Address、Contact、Identifier、一般 lifecycle、lookup、audit | User／Role／Permission 基線 | 不含 Bank／Approval／Import 亦可完成 CRUD、直接啟用、狀態及一般稽核 |
+| `SUP-CAP-01` | Supplier Core | Business Master Currency／Payment Term read、Supplier root、Address、Contact、Identifier、一般 lifecycle、lookup、audit | User／Role／Permission及Business Master基線 | 不含 Bank／Approval／Import 亦可完成 CRUD、直接啟用、狀態及一般稽核 |
 | `SUP-CAP-02` | Approval & Settings | Approval toggle、eligible approver、submit／approve／reject／withdraw／reassign、approval audit | `SUP-CAP-01` | Approval OFF／ON、snapshot、競態及重新指派情境全部通過 |
 | `SUP-CAP-03` | Bank Security | 加密 Bank Account、masked projection、reveal、default、key operations | `SUP-CAP-01`、secret provisioning | 無明文落盤／日誌、分權、輪替與還原演練通過 |
 | `SUP-CAP-04` | Supplier–SKU Sourcing | 軟性關係、preferred／history ranking、for-SKU lookup | `SUP-CAP-01`、已落地的 Item SKU／UOM tables | 沒有 relation 的 Active Supplier 仍可選，無效 Supplier 一律不可新用 |
@@ -81,7 +123,7 @@ SUP-CAP-01 Supplier Core
 └── SUP-CAP-05 Bulk Import & Export ─── activate mode requires SUP-CAP-02
 ```
 
-建置順序固定為 `SUP-CAP-01` → `SUP-CAP-02`／`SUP-CAP-03`；`SUP-CAP-04` 等 Item schema 可用後才開始；`SUP-CAP-05` 的 Draft import 可在 Core 後開始，但 activate mode 不可先於 Approval policy。Capability Map 必須由 Product Owner 與 Technical Lead 確認後才產出正式 `tasks.md`。
+建置順序固定為 `SUP-CAP-01` → `SUP-CAP-02`／`SUP-CAP-03`；`SUP-CAP-04` 等 Item schema 可用後才開始；`SUP-CAP-05` 的 Draft import 可在 Core 後開始，但 activate mode 不可先於 Approval policy。Capability Map是`05_development_tasks.md`的正式輸入。
 
 確認紀錄：2026-09-04，使用者已確認上述五個capability邊界、依賴及可獨立驗收方式，可據此進入正式task breakdown；技術、安全及上線資料事項仍按§16分別評審。
 
@@ -133,7 +175,7 @@ Vue Supplier Pages
                  ├─ SupplierApprovalService
                  ├─ SupplierBankService
                  ├─ SupplierSettingsService
-                 ├─ SupplierCatalogService
+                 ├─ BusinessMasterLookupService（shared provider）
                  ├─ SupplierRelationService
                  ├─ SupplierImportService
                  └─ SupplierAuditLogService
@@ -172,7 +214,6 @@ server/src/modules/supplier/
 ├── SupplierApprovalService.js
 ├── SupplierBankService.js
 ├── SupplierSettingsService.js
-├── SupplierCatalogService.js
 ├── SupplierRelationService.js
 ├── SupplierLookupService.js
 ├── SupplierReferenceService.js
@@ -309,7 +350,7 @@ return this.database.withTransaction(async (connection) => {
 { name: "supplier.approval", description: "審批供應商啟用及管理封鎖狀態" }
 { name: "supplier.bank.view", description: "查看供應商完整銀行資料" }
 { name: "supplier.bank.mgmt", description: "管理供應商銀行資料" }
-{ name: "supplier.settings", description: "管理供應商參數及付款條件" }
+{ name: "supplier.settings", description: "管理供應商模組參數" }
 ```
 
 Permission migration 冪等種入六項並授予受保護的 `system-admin` role。這是明確的 break-glass superuser 決策：現有系統禁止修改該角色且禁止一般管理員授出自己沒有的權限，因此不能把「部署後再移除 bank permissions」當成可執行方案。日常操作必須建立分離的一般 Supplier、Approval、Bank及Settings角色，不把`system-admin`分配給日常使用者；所有`system-admin` Bank reveal／write仍走相同re-auth、audit及alert，不因role name繞過permission或資料保護。
@@ -331,7 +372,7 @@ Bank write route policy 要求同時持有 `supplier.view`、`supplier.bank.view
 | 封鎖／解除封鎖 | `jwt-device-password` | `supplier.view`＋`supplier.approval` |
 | 銀行完整 reveal | `jwt-password` | `supplier.view`＋`supplier.bank.view` |
 | 銀行新增／修改／停用／default | `jwt-device-password` | `supplier.view`＋bank view＋bank mgmt |
-| Supplier Settings／付款條件寫入 | `jwt-device-password` | `supplier.settings` |
+| Supplier Settings寫入 | `jwt-device-password` | `supplier.settings` |
 | 一般 CSV 匯入確認／匯出 | `jwt-password` | `supplier.mgmt` |
 
 高強度 route 必須在 static metadata 固定 authType，不在 handler 內按 payload 動態降低。Password 由既有 re-auth strategy 讀取；device signature 沿用現有 approved-device 機制。
@@ -364,7 +405,7 @@ Bank write route policy 要求同時持有 `supplier.view`、`supplier.bank.view
 | My Approvals | — | — | 決定／重新指派 | 仍須 bank.view 才 reveal | — | — |
 | Import／Export | — | 執行一般資料 | — | 不增加銀行欄位 | — | — |
 | Supplier Audit | R（敏感值遮罩） | R | R | 不直接 reveal歷史明文 | — | — |
-| Supplier Settings／Payment Terms | — | — | — | — | — | R／U |
+| Supplier Settings | — | — | — | — | — | R／U |
 
 R／C／U 表示 read／create／update。前端權限只控制操作呈現，所有 API 仍由後端 authorization policy 及 `assertActorFresh()` 驗證。
 
@@ -504,7 +545,7 @@ erDiagram
     SUPPLIER_IMPORT_JOBS ||--o{ SUPPLIER_IMPORT_ROWS : contains
 ```
 
-### 5.2 `currencies`
+### 5.2 `currencies`（Business Master-owned contract）
 
 | 欄位 | 型別 | Null／預設 | 說明 |
 | --- | --- | --- | --- |
@@ -516,9 +557,9 @@ erDiagram
 | `created_at`／`updated_at` | BIGINT UNSIGNED | 必填 | Epoch ms。 |
 | `created_by`／`updated_by` | BIGINT UNSIGNED | NULL | FK users SET NULL。 |
 
-索引：`INDEX(status,name)`。`0011_create_currencies.js`在建表後冪等種入`HKD / Hong Kong Dollar / decimal_places=2 / active`，保證乾淨環境可建立及啟用Supplier；其他外幣清單由Finance在上線資料表確認後，以另支forward seed migration加入。Supplier模組只提供read API；新增／停用currency應由日後共用Finance Settings負責，不在Supplier Settings隨意建立非ISO code。
+索引契約：`INDEX(status,name)`。本表、HKD seed及其他幣別均由共用Business Master foundation建立及維護。Supplier migration不得建立、alter或seed此表；Supplier只透過正式lookup provider驗證Active Currency並保存FK／交易快照。
 
-### 5.3 `payment_terms`
+### 5.3 `payment_terms`（Business Master-owned contract）
 
 | 欄位 | 型別 | Null／預設 | 說明 |
 | --- | --- | --- | --- |
@@ -531,7 +572,7 @@ erDiagram
 | `status` | VARCHAR(20) | `active` | `active`／`inactive`。 |
 | `version`、時間、操作者 | 共通欄位 | — | 同 §5.1。 |
 
-約束／索引：`UNIQUE(code_key)`、`INDEX(status,name)`。被 Supplier 引用時不可永久刪除；停用後保留 FK 並阻止新指派。Custom label 只代表顯示預設，實際 due-date calculation 由 Finance 模組明確定義。
+約束／索引契約：`UNIQUE(code_key)`、`INDEX(status,name)`。Business Master負責新增、修改、停用及相容性；Supplier只讀取和驗證。被Supplier引用時不可永久刪除；停用後保留FK並阻止新指派。Custom label只代表顯示預設，實際due-date calculation由Finance模組明確定義。
 
 ### 5.4 `suppliers`
 
@@ -693,6 +734,22 @@ Migration 以「不存在才 insert」種 `id=1`，不得用 `INSERT IGNORE` 吞
 
 Item design spec §5.14 曾暫名為 `item_supplier_refs`；本文件以 `supplier_sku_refs` 作唯一正式名稱。實作時只建立一張表並同步更新 Item 文件／程式引用，不得建立兩張語意重複的 relation tables。
 
+### 5.11.1 `supplier_supply_events`（Purchasing projection idempotency）
+
+| 欄位 | 型別 | Null／預設 | 說明 |
+| --- | --- | --- | --- |
+| `id` | BIGINT UNSIGNED PK | auto | 內部ID。 |
+| `event_id` | VARCHAR(64) | 必填 | Purchasing穩定idempotency key；unique。 |
+| `source_type` | VARCHAR(30) | 必填 | 本期固定`goods_receipt`。 |
+| `source_id`／`source_line_id` | BIGINT UNSIGNED | 必填 | 永久來源索引；不對下游交易建跨aggregate cascade FK。 |
+| `supplier_id`／`sku_id` | BIGINT UNSIGNED | 必填 | 分別FK Supplier／Item RESTRICT。 |
+| `relation_id` | BIGINT UNSIGNED | 必填 | FK `supplier_sku_refs` RESTRICT。 |
+| `supplied_at` | BIGINT UNSIGNED | 必填 | GR確認時間epoch ms。 |
+| `payload_hash` | CHAR(64) | 必填 | Canonical command hash；同event不同payload拒絕。 |
+| `created_at` | BIGINT UNSIGNED | 必填 | 寫入時間。 |
+
+約束：`UNIQUE(event_id)`及`UNIQUE(source_type,source_id,source_line_id)`；同event同payload回既有結果，不同payload回`IDEMPOTENCY_CONFLICT`。Event insert、relation upsert、first／last supplied更新及低敏audit在同一Supplier transaction；表為append-only，不提供一般update/delete API。
+
 ### 5.12 `supplier_audit_logs`
 
 Supplier audit 與 `user_audit_logs` 分表，避免擴大現有 User domain service；銀行 reveal 亦記在此表，但不保存明文。
@@ -704,7 +761,7 @@ Supplier audit 與 `user_audit_logs` 分表，避免擴大現有 User domain ser
 | `actor_user_id` | BIGINT UNSIGNED NULL | FK users SET NULL。 |
 | `actor_username` | VARCHAR(190) | 操作者快照。 |
 | `action` | VARCHAR(80) | 具名 action。 |
-| `target_type` | VARCHAR(30) | supplier／address／contact／identifier／bank／approval／setting／payment_term／import。 |
+| `target_type` | VARCHAR(30) | supplier／address／contact／identifier／bank／approval／setting／supplier_sku／import。 |
 | `target_id` | BIGINT UNSIGNED NULL | 邏輯 ID，不設 target FK。 |
 | `supplier_id` | BIGINT UNSIGNED NULL | 查詢 scope；不設 FK以保留 delete history。 |
 | `target_label` | VARCHAR(190) | Code／遮罩後 label。 |
@@ -725,27 +782,19 @@ Supplier audit 與 `user_audit_logs` 分表，避免擴大現有 User domain ser
 
 ### 5.14 Migration 拆分
 
-本設計以2026-09-04主分支實際最新`0009_add_user_email.js`為基線，先為不依賴Item的Supplier migrations配置`0010`～`0023`。Item設計文件中尚未落地且與`0009`碰撞的預留號不具優先權，開始Item實作前必須另行重編。`supplier_sku_refs`只有在Item tables實際存在後才取當時下一個可用序號，現在不虛構固定號碼。
+對標基線已使用`0001`～`0026`。以下只定義不可拆錯依賴的邏輯migration slices，不預留實體號碼；實作者在每個Phase從最新`origin/main`配置下一個連續可用序號。Currency及Payment Term由Business Master提供，不屬Supplier migration。
 
-| Migration | 內容 |
+| Logical migration | 內容 |
 | --- | --- |
-| `0010_seed_supplier_management_permissions.js` | 六項permissions及system-admin break-glass初始授權。 |
-| `0011_create_currencies.js` | Currency catalog及最低HKD active seed。 |
-| `0012_create_payment_terms.js` | Payment terms。 |
-| `0013_create_suppliers.js` | Supplier root。 |
-| `0014_create_supplier_name_grams.js` | Indexed duplicate-name candidate grams。 |
-| `0015_create_supplier_addresses.js` | Address＋purpose mapping。 |
-| `0016_create_supplier_contacts.js` | Contact＋purpose mapping。 |
-| `0017_create_supplier_identifiers.js` | Identifier。 |
-| `0018_create_supplier_bank_accounts.js` | Encrypted bank metadata。 |
-| `0019_create_supplier_activation_requests.js` | Approval history。 |
-| `0020_create_supplier_settings.js` | Singleton setting＋default row。 |
-| `0021_create_supplier_audit_logs.js` | Supplier audit。 |
-| `0022_create_supplier_import_jobs.js` | Import jobs。 |
-| `0023_create_supplier_import_rows.js` | Import rows及atomic applied marker。 |
-| `<next>_create_supplier_sku_refs.js` | Item tables存在後按當時主分支下一號建立。 |
+| `SUP-M01 permissions` | 六項permissions及system-admin最高權限初始授權。 |
+| `SUP-M02 core` | Supplier root、name grams及必要constraints／indexes。 |
+| `SUP-M03 parties` | Address＋purpose、Contact＋purpose及Identifier。 |
+| `SUP-M04 control` | Supplier audit、singleton settings及activation requests。 |
+| `SUP-M05 bank` | Encrypted bank metadata、default／duplicate constraints。 |
+| `SUP-M06 import` | Import jobs、rows及atomic applied marker。 |
+| `SUP-M07 sku relation` | Item tables存在後建立Supplier－SKU relation及`supplier_supply_events` durable idempotency fence。 |
 
-每支 migration 使用 existence guard／`CREATE TABLE IF NOT EXISTS` 使半套用後可收斂；DML seed 先查後 insert。MySQL DDL 會 implicit commit，不能假設整支 migration transaction rollback。
+每支 migration 使用 existence guard／`CREATE TABLE IF NOT EXISTS` 使半套用後可收斂；但「table已存在」不能直接視為成功，migration必須以`information_schema`或`SHOW CREATE TABLE`核對欄位、型別、NULL/default、FK、unique/index及trigger等契約，任何不相容即fail closed並停止部署。DML seed先查後insert。MySQL DDL會implicit commit，不能假設整支migration transaction rollback。
 
 ---
 
@@ -877,16 +926,14 @@ Reveal response：
 }
 ```
 
-### 6.7 Settings 與 catalog APIs
+### 6.7 Settings 與 Business Master lookup APIs
 
 | Method／Path | Auth／Permission | 行為 |
 | --- | --- | --- |
 | `GET /api/v1/supplier-settings` | jwt／supplier.settings | 回 singleton typed settings＋version。 |
 | `POST /api/v1/supplier-settings/update` | jwt-device-password／supplier.settings | 只接受已知欄位、version、reason、password。 |
-| `GET /api/v1/supplier-catalog/currencies` | jwt／supplier.view | 回 Active currency；settings 頁可 `includeInactive=true`。 |
-| `GET /api/v1/supplier-catalog/payment-terms` | jwt／supplier.view | 一般選單只回 Active；settings 可看全部。 |
-| `POST /api/v1/supplier-catalog/payment-terms/create` | jwt-device-password／supplier.settings | 建立 typed term。 |
-| `POST /api/v1/supplier-catalog/payment-terms/:id/update` | jwt-device-password／supplier.settings | 帶 version；更新／停用，引用存在不刪除。 |
+| `GET /api/v1/business-master/currencies` | jwt／supplier.view或相應consumer權限 | 共用Provider回Active Currency；不由Supplier handler擁有。 |
+| `GET /api/v1/business-master/payment-terms` | jwt／supplier.view或相應consumer權限 | 共用Provider回Active Payment Term；不由Supplier handler擁有。 |
 
 Settings update request：
 
@@ -918,9 +965,24 @@ Unknown property 一律 400，不保存成動態 setting。Response 顯示設定
 - `findByCode(supplierCode, { purpose, atMs })`
 - `findManyByIds(ids, { purpose, atMs })`
 - `listForSku(skuId, { q, page, pageSize, atMs })`
-- `assertUsable(supplierId, { purpose, atMs })`
+- `assertUsable(supplierId, { purpose, atMs })`（preflight相容wrapper）
+- `assertUsableInTransaction(connection, supplierId, { purpose, atMs })`（提交時原子重驗）
+- `getPurchaseDefaults(supplierId, { atMs })`（preflight相容wrapper）
+- `getPurchaseDefaultsInTransaction(connection, supplierId, { atMs })`（提交時原子讀取）
 
-`purpose: purchase` 只接受 Active；`history` 接受所有未物理刪除狀態。Lookup service 不自行認識所有 Purchasing roles，呼叫方 handler 先以自己的 permission 授權。
+`purpose: purchase`只接受Active；`history`接受所有未物理刪除狀態。無connection的wrapper只供selector／draft preflight，內部開bounded read transaction；PO提交／批准必須把自己的connection傳給`*InTransaction`版本，避免check與write之間的狀態競態。兩種版本使用同一domain helper及相同projection；`getPurchaseDefaults*`只回Supplier基本資料、ordering address、default Currency及Payment Term，絕不回Bank資料。Lookup service不自行認識所有Purchasing roles，呼叫方handler先以自己的permission授權。
+
+`SupplierRelationService.recordSupply(command)`是Purchasing Confirmed GR後的idempotent post-commit projection contract：
+
+```js
+{
+  eventId, sourceType: 'goods_receipt', sourceId, sourceLineId,
+  supplierId, skuId, purchaseSkuUomId, supplierItemCode,
+  suppliedAt
+}
+```
+
+`eventId`由Purchasing穩定產生，同一來源行重送沿用同值；`(source_type,source_id,source_line_id)`亦唯一。Service先以`supplier_supply_events.event_id`作durable fence，再upsert soft relation及以最大值更新`first_supplied_at`／`last_supplied_at`；重送回既有outcome，不重複audit，也不得把relation自動改成preferred。Projection失敗不回滾已提交GR，必須發低敏告警並由reconciliation按來源事件補回。
 
 ### 6.9 Import／Export APIs
 
@@ -1072,7 +1134,7 @@ SupplierCompletenessBanner.vue
 
 - Approval toggle 顯示預設值、目前值、影響與「不追溯處理 Pending」說明。
 - 儲存設定要求 reason、password 及 approved device；version conflict 時重載並要求重新確認。
-- Payment Terms 在同頁獨立區塊管理；被引用 term 只能停用，不提供 delete。
+- Supplier Settings只顯示啟用審批參數；Currency／Payment Term提供唯讀連結或狀態提示，管理入口由Business Master擁有。
 - 不顯示空白的「未來設定」或 generic JSON editor。
 
 ### 7.8 Import UX
@@ -1104,7 +1166,7 @@ SupplierCompletenessBanner.vue
 1. 開 transaction。
 2. `assertActorFresh(connection, claims)`。
 3. `SELECT supplier ... FOR UPDATE` 及 version check。
-4. 驗證 normalizations、catalog、unique、status 及 reference。
+4. 驗證normalizations、Business Master reference、unique、status及reference guard。
 5. 若 Pending 且 approval-significant change，invalidate request並回 Draft。
 6. Compare-and-set 寫 root／child。
 7. 同一 connection 寫 `supplier_audit_logs`。
@@ -1154,9 +1216,9 @@ Constructor接收已正規化的兩組secret key rings；AES-GCM decrypt authent
 - Setting update 不掃描／批量修改 Suppliers 或 pending requests。
 - `getActivationPolicy(connection)` 供 Approval／Import 在既有 transaction 內呼叫；需要 deterministic ordering 時以 FOR UPDATE 鎖定。
 
-### 8.6 `SupplierCatalogService`
+### 8.6 `BusinessMasterLookupService` dependency
 
-Currency 只讀；Payment Term 提供 list／create／update／deactivate。Term code normalization與 Supplier code一致但有獨立長度。被引用 Term 不刪除；`calculation_type=net_days` 才允許／要求 dueDays，其他 type必須為 null。
+由`BusinessMasterLookupService`取代Supplier-owned catalog service。Supplier只呼叫`listCurrencies()`、`listPaymentTerms()`、`assertCurrencyUsableInTransaction()`及`assertPaymentTermUsableInTransaction()`；所有write、normalization、deactivation及catalog authorization由Business Master負責。Supplier update／activate／import必須在caller transaction內重驗所選值，並保存ID/code/name/version的必要snapshot或audit before/after。
 
 ### 8.7 `SupplierRelationService`／`SupplierLookupService`
 
@@ -1170,7 +1232,17 @@ Relation service 驗證 Supplier、SKU、SKU UOM及 relationship status。建立
 4. 有 `last_supplied_at` 的 relation，時間新者優先。
 5. 其他 Active Supplier 依名稱、ID穩定排序。
 
-使用 LEFT JOIN relation而不是 INNER JOIN，確保沒有 relation 的 Active Supplier仍出現。Count 查 Supplier root，不因 join重複。Purchasing提交時再次呼叫 `assertUsable()`。
+使用 LEFT JOIN relation而不是 INNER JOIN，確保沒有 relation 的 Active Supplier仍出現。Count 查 Supplier root，不因 join重複。Purchasing提交時必須在自己的transaction內再次呼叫`assertUsableInTransaction(connection, supplierId, { purpose: 'purchase', atMs })`，不能信任先前selector結果。
+
+Supplier對下游公開的最小contract固定為：
+
+- `findById(supplierId, { purpose: 'history' })`：可回歷史所需Code、Name及狀態，不把inactive視為不存在。
+- `assertUsableInTransaction(connection, supplierId, { purpose, atMs })`：鎖定／重驗新交易資格；required provider未知或不可用時fail closed。
+- `listForSku(skuId, { q, page, pageSize })`：只回Active候選及排序理由，不回Bank資料。
+- `getPurchaseDefaultsInTransaction(connection, supplierId)`：回Currency／Payment Term reference及必要snapshot；不存在Payment Term時明確回`null`。
+- `getOpenMatterStatusInTransaction(connection, supplierId)`：聚合已註冊下游providers，結果為`OPEN`、`CLEAR`或`UNKNOWN`；永久刪除／封存等安全操作不得把`UNKNOWN`當`CLEAR`。
+
+所有provider在startup registry宣告name、purpose、required capability及health/readiness；不允許Fulfillment、Purchasing、Receiving、Returns、AP或Payment自行複製Supplier狀態判斷。一般lookup永不包含Bank欄；未來Payment Bank contract按§8.4的高信任流程另行增加。
 
 ### 8.8 `SupplierImportService`／Processor
 
@@ -1195,7 +1267,7 @@ identifier.create identifier.update identifier.delete
 bank.create bank.update bank.default bank.deactivate bank.reveal
 approval.submit approval.approve approval.reject approval.withdraw
 approval.reassign approval.invalidate
-supplier.settings.update payment_term.create payment_term.update payment_term.deactivate
+supplier.settings.update
 supplier_sku_ref.create supplier_sku_ref.update
 supplier.import supplier.export
 ```
@@ -1250,7 +1322,7 @@ Bank audit detail只保存 changed field names、masked last four、status及 de
 | `server/src/handlers/supplier-approvals/` | list／get／approve／reject／reassign。 |
 | `server/src/handlers/supplier-approvers/` | eligible approver最小化lookup。 |
 | `server/src/handlers/supplier-settings/` | settings get／update。 |
-| `server/src/handlers/supplier-catalog/` | currencies及payment terms read；payment term writes亦保持此URL prefix。 |
+| `server/src/handlers/business-master/` | 不由Supplier Phase建立；Supplier只等待共用Currency／Payment Term read contract達到READY。 |
 | `server/src/handlers/supplier-lookups/` | for-SKU lookup。 |
 | `server/src/handlers/supplier-imports/` | template／upload／list／get／confirm／cancel／result。 |
 | `server/src/handlers/supplier-exports/` | filtered一般資料export。 |
@@ -1270,7 +1342,7 @@ Bank audit detail只保存 changed field names、masked last four、status及 de
 
 ### 9.5 新增 migrations
 
-新增§5.14的`0010`～`0023` Supplier migration files。實作開始前仍須fetch／核對目標主分支：若任何號碼已被占用，在建立第一支migration前整組順延並同步§5.14及tasks；不可修改已套用`0001`～`0009`。Supplier－SKU migration等Item tables真實落地後才配置當時下一號。
+按§5.14邏輯切片建立Supplier migrations。實作開始前須fetch／核對目標主分支並從最新已用序號後配置；不可修改任何已套用migration。Business Master schema／seed是硬性Provider依賴，不在Supplier branch複製。Supplier－SKU migration待Item tables真實落地後才配置當時下一號。
 
 ---
 
@@ -1621,7 +1693,7 @@ export default {
 
 Normalizer要求：兩組activeKeyId均非空；兩組keyRing parse後均為`{id:base64Key}`且每key decode為32 bytes；各自active ID存在；threshold介於0.5–1；limits為有界正整數。Secrets使用`SecretValue`，任何inspect／JSON只顯示`[REDACTED]`。
 
-開發／測試不得提交固定production key。Test直接inject固定fake key；本機由`server/.env`提供但不納入git。`SUP-CAP-03`及`0018_create_supplier_bank_accounts.js`部署後，兩組有效key ring是無條件startup requirement，不以「目前沒有Bank rows」放寬。缺key時應用startup fail closed，不允許只關閉bank endpoint後照常啟動，否則付款流程會在更晚時才失敗。
+開發／測試不得提交固定production key。Test直接inject固定fake key；本機由`server/.env`提供但不納入git。`SUP-CAP-03`／PHASE-003的Bank logical migration部署且Bank capability註冊後，兩組有效key ring是無條件startup requirement，不以「目前沒有Bank rows」放寬。PHASE-001／002沒有Bank table時不得因缺Bank keys阻止非Bank能力啟動。Bank capability已部署但缺key時應用startup fail closed，不允許只關閉bank endpoint後照常啟動，否則付款流程會在更晚時才失敗。
 
 Encryption rotation可在線執行：先把new key加入ring並切為active，command只鎖定／處理仍引用old ID的rows，以ID升序小批transaction解密及重加密，並可從last processed ID續跑。完成report確認old encryption key ID count=0後才從secret store移除。
 
@@ -1670,40 +1742,39 @@ Bank reveal的業務audit記錄「誰查看」，system log只記技術結果及
 
 ## 13. 分階段實作與驗收關卡
 
-### Phase 0：基線修正及安全前置
+### PHASE-001：Supplier Core、安全與實作基線
 
-- 確認`0010`～`0023`仍未被主分支占用；若已占用，整組Supplier migration在任何檔案建立前重新順延並同步本文件。解決Item設計的舊序號預留衝突。
-- 完成currency／payment term初始資料決策。
-- 建Supplier config normalizer、secret validation、permissions及audit table。
-- 實作並驗證bank encryption／lookup key provisioning、rotation commands、report、backup及restore runbook。
+- 從最新main配置Supplier migration序號；驗證Business Master Currency／Payment Term provider、schema及初始資料達到READY，未完成時標記BLOCKED且不建立影子catalog。
+- 建立Supplier permissions、一般config、root、Address、Contact、Identifier、audit、List／Detail／Create／Update、completeness及一般生命週期。
+- 完成Supplier Lookup、transaction-aware downstream guard及reference guard。
+- 本Phase不建立Bank table、不註冊Bank capability，也不要求Bank encryption／lookup keys；Bank資料不得暫存於Supplier root或其他欄位。
 
-Gate：configuration tests、permission catalogue startup guard、migration integration及secret leakage tests通過。
+Gate：configuration、permission catalogue、migration compatibility、核心unit／HTTP＋真MySQL／Vue、最低三欄啟用、unique、history及provider fail-closed tests通過。
 
-### Phase 1：核心 Supplier 主資料
+### PHASE-002：Approval & Settings
 
-- Currency read、Payment Terms、Supplier root、Address、Contact、Identifier。
-- List／detail／create／update及completeness。
-- Direct activation、Suspended、Blocked、Archived、delete及reference guard。
-- Supplier Lookup及一般audit。
+- 建立singleton settings及activation request persistence、獨立Settings page及Pending approval完整流程。
+- Currency／Payment Term只顯示Business Master readiness與唯讀導向，不提供Supplier-owned catalog write。
+- 本Phase仍不建立Bank table、不註冊Bank capability，也不要求Bank keys。
 
-Gate：核心unit／HTTP＋DB／Vue tests通過；最低三欄啟用、狀態限制、unique及history完整。
+Gate：approval concurrency、settings race、SoD、撤回／重新指派、permission撤銷及audit tests通過。
 
-### Phase 2：Approval、Settings及Bank
+### PHASE-003：Bank Security
 
-- Singleton settings及獨立settings page。
-- Pending approval完整流程。
-- Encrypted Bank Accounts、masked list、reveal及獨立permissions。
+- 建立Bank schema、crypto primitives、encrypted Bank Accounts、masked list、reveal及獨立permissions。
+- Bank logical migration與capability註冊後，encryption及lookup key rings成為無條件startup requirement。
+- 完成key rotation、no-plaintext、tamper、backup／restore及system-admin受控最高權限驗收。
 
-Gate：approval concurrency、settings race、bank encryption／no-plaintext／authorization tests及security review通過。
+Gate：bank encryption、authorization、rotation、recovery及獨立security review通過。
 
-### Phase 3：Supplier－SKU及Import／Export
+### PHASE-004：Supplier－SKU、Bulk與Release
 
-- Item tables存在後建立soft relation及for-SKU lookup。
-- CSV precheck、partial execution、result、export、worker及file cleanup。
+- Item tables存在後建立soft relation、append-only supply events、`recordSupply`及for-SKU lookup。
+- 完成CSV precheck、partial execution、result、export、worker、file cleanup、效能及release evidence。
 
-Gate：無relation仍可選Active Supplier；10k-row partial success、resume、no-bank-export及效能測試通過。
+Gate：無relation仍可選Active Supplier；10k-row partial success、resume、no-bank-export、recordSupply idempotency及效能／復原測試通過。
 
-不可為趕進度把unique、permission、encryption、audit或transaction從對應feature延後；若Phase 2未完成，Bank fields就不應以明文臨時放入Supplier table。
+不可為趕進度把unique、permission、encryption、audit或transaction從對應feature延後；PHASE-003前不得建立Bank table、要求Bank keys或以明文臨時存放Bank fields。
 
 ---
 
@@ -1712,8 +1783,8 @@ Gate：無relation仍可選Active Supplier；10k-row partial success、resume、
 ### 14.1 部署順序
 
 1. 備份DB並驗證restore；準備Bank encryption／lookup secrets但不記錄值。
-2. 部署migrations：permissions、catalog、Supplier core、children、audit、settings、approval、bank、import；SKU ref只在Item tables存在後。
-3. 套用currency及payment term初始資料。
+2. 先部署／驗證共用Business Master Currency及Payment Term，再部署Supplier permissions、core、children、audit、settings、approval、bank、import migrations；SKU ref只在Item tables存在後。
+3. 由Business Master owner核對currency及payment term初始資料；Supplier deployment只驗證readiness，不寫入catalog。
 4. 部署server config及code；startup self-check驗證schema、permissions、settings singleton及key ring。
 5. 部署client pages／services／menu。
 6. 配置一般、approval、bank及settings日常角色；確認只有批准的break-glass帳號持有system-admin，並完成使用監控。
@@ -1755,7 +1826,7 @@ Gate：無relation仍可選Active Supplier；10k-row partial success、resume、
 | OBJ-01～OBJ-08 | §2、§5、§8、§13 | Unit＋integration＋phase gates |
 | Supplier主資料／最低欄位 | §4.1～§4.3、§5.4、§6.2 | AC-001～AC-006、AC-020對應tests |
 | Address／Contact／Identifier | §5.5～§5.7、§6.3 | Child ownership、primary slot、identifier unique integration |
-| Currency／Payment Terms | §5.2～§5.3、§6.7、§8.6 | Catalog unit＋FK／inactive integration |
+| Currency／Payment Terms | §5.2～§5.3、§6.7、§8.6 | Business Master provider contract＋FK／inactive integration |
 | Lifecycle／Delete | §4.4、§4.7、§6.2、§6.5 | State matrix、reference guard、AC-014～AC-019 |
 | Configurable approval | §4.5、§5.9～§5.10、§6.4／§6.7 | Approval unit、race integration、AC-007～AC-013 |
 | Bank選填／分權／遮罩 | §3、§5.8、§6.6、§8.3～§8.4 | Crypto、projection、no-plaintext、AC-023～AC-027 |
@@ -1959,7 +2030,7 @@ Gate：無relation仍可選Active Supplier；10k-row partial success、resume、
 | AC-039 | SUP-CAP-01 | §2.6、§3、§8.1 | TC-SUP-AC-039：version／authorization integration |
 | AC-040 | SUP-CAP-05 | §6.9、§8.8、§11.4 | TC-SUP-AC-040：supplier export security |
 
-tasks.md產出時須以本表為輸入，並補上每個ID的task owner、實際test file及執行命令。若需求ID新增、刪除或改意義，先更新requirement及本表，再修改task或code；不得只改測試讓未追溯的行為通過。
+`05_development_tasks.md`須以本表為輸入，並補上每個ID的task owner、實際test file及執行命令。若需求ID新增、刪除或改意義，先更新`01_requirement_spec.md`及本表，再修改task或code；不得只改測試讓未追溯的行為通過。
 
 ---
 
@@ -1968,12 +2039,369 @@ tasks.md產出時須以本表為輸入，並補上每個ID的task owner、實際
 以下項目在開發前須由相應負責人確認，但不需要重新開啟已完成的核心業務訪談：
 
 1. **已確認（2026-09-04）**：§1.4 Capability Map的module boundary、依賴及獨立驗收方式，可據此建立tasks。
-2. 技術Lead確認`0010`～`0023`仍可用、Item tables落地順序及`currencies`共享ownership。
+2. 技術Lead從最新main配置Supplier migration序號，並確認Item tables及Business Master Currency／Payment Term providers已READY。
 3. Security／Operations確認Bank兩組key rings、secret store、rotation commands／reports及backup restore方案。
-4. Finance確認HKD seed及其他初始currency／payment term資料；至少一個Active currency必須在Supplier啟用前存在。
+4. Business Master／Finance owner確認HKD及其他初始currency／payment term資料；至少一個Active currency必須在Supplier啟用前存在。
 5. Product Owner確認duplicate name threshold只是warning、名稱recall fixtures及CSV按列部分成功／upsert child限制的UI文案。
 6. QA以§15.1 planned IDs建立實際test case／file mapping，並覆核security、concurrency及crash-window cases。
 7. Frontend Lead確認Bank明文只存component-local memory且30秒清除的實作方式。
 8. Purchasing／Item Lead確認soft relation migration及lookup contract，不引入inner join白名單。
 
 上述前置事項未完成時，可先開發不依賴該項的核心Supplier CRUD；Bank、SKU relation或正式資料導入不得在其安全／依賴條件未成立時上線。
+
+
+---
+
+# Appendix A — Harness 2.0 Formal Design Definitions
+
+每個DES definition的完整Decision內容以文件開首Harness Design Control表及正文相應章節為準。
+
+## DES-001 — Supplier design decision 001
+
+### Decision
+
+採用開首`DES-001`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-002 — Supplier design decision 002
+
+### Decision
+
+採用開首`DES-002`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-003 — Supplier design decision 003
+
+### Decision
+
+採用開首`DES-003`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-004 — Supplier design decision 004
+
+### Decision
+
+採用開首`DES-004`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-005 — Supplier design decision 005
+
+### Decision
+
+採用開首`DES-005`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-006 — Supplier design decision 006
+
+### Decision
+
+採用開首`DES-006`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-007 — Supplier design decision 007
+
+### Decision
+
+採用開首`DES-007`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-008 — Supplier design decision 008
+
+### Decision
+
+採用開首`DES-008`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-009 — Supplier design decision 009
+
+### Decision
+
+採用開首`DES-009`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-010 — Supplier design decision 010
+
+### Decision
+
+採用開首`DES-010`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-011 — Supplier design decision 011
+
+### Decision
+
+採用開首`DES-011`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-012 — Supplier design decision 012
+
+### Decision
+
+採用開首`DES-012`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-013 — Supplier design decision 013
+
+### Decision
+
+採用開首`DES-013`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-014 — Supplier design decision 014
+
+### Decision
+
+採用開首`DES-014`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-015 — Supplier design decision 015
+
+### Decision
+
+採用開首`DES-015`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-016 — Supplier design decision 016
+
+### Decision
+
+採用開首`DES-016`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-017 — Supplier design decision 017
+
+### Decision
+
+採用開首`DES-017`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-018 — Supplier design decision 018
+
+### Decision
+
+採用開首`DES-018`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-019 — Supplier design decision 019
+
+### Decision
+
+採用開首`DES-019`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-020 — Supplier design decision 020
+
+### Decision
+
+採用開首`DES-020`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-021 — Supplier design decision 021
+
+### Decision
+
+採用開首`DES-021`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-022 — Supplier design decision 022
+
+### Decision
+
+採用開首`DES-022`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-023 — Supplier design decision 023
+
+### Decision
+
+採用開首`DES-023`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-024 — Supplier design decision 024
+
+### Decision
+
+採用開首`DES-024`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。
+
+## DES-025 — Supplier design decision 025
+
+### Decision
+
+採用開首`DES-025`列所定義的架構、資料、安全或交付決定，並以正文相應章節作可實作細節。
+
+### Rationale
+
+該列的Requirement rationale及正文trade-off是本決定的理由；不得以局部task另建衝突contract。
+
+### Failure behavior
+
+若依賴、schema、transaction、安全或驗證前提不成立，受影響capability保持BLOCKED／fail closed，不建立影子資料或靜默fallback。

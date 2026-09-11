@@ -1,15 +1,15 @@
-# Supplier Management 開發任務分解
+# Supplier Management Aligned Development Plan
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 0.1 Draft |
-| 文件日期 | 2026-09-04 |
-| Requirement | `docs/supplier_management/requirement.md` 0.1 Draft |
-| Design | `docs/supplier_management/design_spec.md` 0.2 Draft |
-| Task list target | 本文件；依使用者指定，不另建`tasks/plan.md`或`tasks/todo.md` |
-| 狀態 | 待人工review／批准後執行；本文件不代表已開始開發 |
+| 文件版本 | 1.0 Aligned |
+| 文件日期 | 2026-09-11 |
+| Requirement | `docs/supplier_management/01_requirement_spec.md` 1.0 Aligned |
+| Design | `docs/supplier_management/03_design_spec.md` 1.0 Aligned |
+| Task list target | 本文件；不另建平行task source of truth |
+| 狀態 | `PLANNED`；本次Harness review不代表已開始開發 |
 
 本文件依已確認的`SUP-CAP-01`～`SUP-CAP-05`拆成單一focused session可完成的XS／S／M任務。每個task同時列出需求ID、驗收、驗證命令、依賴及最多五個主要檔案；實作不得跳過Checkpoint或把多個task合成無法review的XL change。
 
@@ -19,7 +19,7 @@
 
 - 以垂直切片交付；必要schema／pure rule foundation完成後，逐一交付API、UI及runtime verification。
 - `SUP-CAP-01`先完成；`SUP-CAP-02`與`SUP-CAP-03`可在Core contract穩定後平行；`SUP-CAP-04`等待Item tables；`SUP-CAP-05`的Draft流程依賴Core，activate mode另依賴Approval。
-- T01是硬性前置：目前repository只有`0001`～`0009`，但Item未完成task與Supplier design均提議由`0010`開始。若最新main仍相同，Supplier按task依賴配置`0010`permission、`0011`currencies、`0012`payment terms、`0013`suppliers、`0014`name grams、`0015`audit、`0016`addresses、`0017`contacts、`0018`identifiers、`0019`bank、`0020`approval、`0021`settings、`0022`～`0023`import；T42須在Item第一支migration前完成，Item再由下一可用號開始，`supplier_sku_refs`最後取Item之後的下一號。任何新migration建立前必須同步兩份design／tasks。
+- T01是硬性前置：對標基線已使用`0001`～`0026`。每個Phase只可在取得最新`origin/main`後，按`DES-019`的邏輯migration slices配置當時下一個連續可用序號；不得預留、回填或修改已套用序號。Currency／Payment Term由Business Master提供，Supplier不建立相關migration；`supplier_sku_refs`必須等待Item正式tables及service READY。
 - Bank keys不得進repository或task evidence；銀行明文不得出現在log、audit、CSV、URL、notification、test snapshot或錯誤內容。
 - 每個task完成時套用§1.4 Definition of Done；只有acceptance criteria與verification均完成才勾選index。
 
@@ -60,7 +60,7 @@ T24/T31/T37/T40/T49 ────────────────────
 | Checkpoint | Tasks | Gate |
 | --- | --- | --- |
 | A | T01–T03 | Migration、permission、config與secret baseline |
-| B | T04–T06 | Catalog、core schema及pure rules |
+| B | T04–T06 | Business Master contract、core schema及pure rules |
 | C | T07–T09 | Duplicate、state／projection及audit |
 | D | T10–T12 | Create、list、detail後端可用 |
 | E | T13–T15 | Core pages及Address切片 |
@@ -79,7 +79,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 ## 2. 任務索引
 
-### Phase 0：安全與實作基線
+### PHASE-001：Supplier Core、安全與實作基線
 
 - [ ] T01 凍結 Migration 編號與跨模組依賴
 - [ ] T02 建立 Supplier 權限目錄與 seed
@@ -112,26 +112,26 @@ T24/T31/T37/T40/T49 ────────────────────
 - [ ] T23 完成生命週期操作 UI
 - [ ] T24 完成 Core lookup、整合契約與安全驗收
 
-### SUP-CAP-02：Approval & Settings
+### PHASE-002：Approval & Settings
 
-- [ ] T25 建立 Bank／Approval／Settings persistence gate
+- [ ] T25 建立 Approval／Settings persistence gate
 - [ ] T26 完成 Supplier Settings 後端
-- [ ] T27 完成 Settings 與 Payment Terms UI
+- [ ] T27 完成Settings UI及Business Master唯讀狀態提示
 - [ ] T28 建立啟用審批 domain
 - [ ] T29 完成 Approval API 與 queue
 - [ ] T30 完成 Approval UI
 - [ ] T31 完成 Approval 並發、安全與端到端驗收
 
-### SUP-CAP-03：Bank Security
+### PHASE-003：Bank Security
 
-- [ ] T32 建立 Bank crypto primitives
+- [ ] T32 建立 Bank persistence與crypto primitives
 - [ ] T33 完成 Bank domain service
 - [ ] T34 完成 Bank API 與敏感資料邊界
 - [ ] T35 完成 Bank UI
 - [ ] T36 完成 Encryption／Lookup key 輪替工具
 - [ ] T37 完成 Bank 安全與復原驗收
 
-### SUP-CAP-04：Supplier–SKU Sourcing
+### PHASE-004：Supplier–SKU、Bulk與Release
 
 - [ ] T38 建立 Item 依賴與 Supplier–SKU relation 後端
 - [ ] T39 完成 Supplier–SKU relation UI
@@ -154,33 +154,110 @@ T24/T31/T37/T40/T49 ────────────────────
 - [ ] T50 完成整體效能、容量與可觀測性驗證
 - [ ] T51 完成部署、Smoke、回歸與 Release Gate
 
+### 2.1 Harness canonical task registry
+
+舊有`Txx`是原計畫的穩定顯示編號；以下`TASK-xxx`是Harness canonical ID。每個canonical task完整繼承同一`Txx`詳細段落的Description、Acceptance Criteria、Verification、Dependencies、Files likely touched、Traceability及Estimated scope。所有任務初始狀態均為`PLANNED`。
+
+| Canonical task | Existing detail | Parent phase | Canonical design coverage |
+| --- | --- | --- | --- |
+| TASK-001 | T01 | PHASE-001 | DES-018, DES-019 |
+| TASK-002 | T02 | PHASE-001 | DES-009, DES-019 |
+| TASK-003 | T03 | PHASE-001 | DES-010, DES-021 |
+| TASK-004 | T04 | PHASE-001 | DES-001, DES-014, DES-018 |
+| TASK-005 | T05 | PHASE-001 | DES-003, DES-004, DES-019 |
+| TASK-006 | T06 | PHASE-001 | DES-003, DES-005 |
+| TASK-007 | T07 | PHASE-001 | DES-003, DES-015 |
+| TASK-008 | T08 | PHASE-001 | DES-005, DES-006, DES-014 |
+| TASK-009 | T09 | PHASE-001 | DES-011, DES-017 |
+| TASK-010 | T10 | PHASE-001 | DES-006, DES-007, DES-012 |
+| TASK-011 | T11 | PHASE-001 | DES-013 |
+| TASK-012 | T12 | PHASE-001 | DES-012, DES-015 |
+| TASK-013 | T13 | PHASE-001 | DES-013, DES-015 |
+| TASK-014 | T14 | PHASE-001 | DES-004, DES-006, DES-012 |
+| TASK-015 | T15 | PHASE-001 | DES-013 |
+| TASK-016 | T16 | PHASE-001 | DES-004, DES-006, DES-012 |
+| TASK-017 | T17 | PHASE-001 | DES-013 |
+| TASK-018 | T18 | PHASE-001 | DES-004, DES-006, DES-012 |
+| TASK-019 | T19 | PHASE-001 | DES-013 |
+| TASK-020 | T20 | PHASE-001 | DES-005, DES-006, DES-012 |
+| TASK-021 | T21 | PHASE-001 | DES-013 |
+| TASK-022 | T22 | PHASE-001 | DES-005, DES-006, DES-014 |
+| TASK-023 | T23 | PHASE-001 | DES-013 |
+| TASK-024 | T24 | PHASE-001 | DES-014, DES-018 |
+| TASK-025 | T25 | PHASE-002 | DES-004, DES-008, DES-019 |
+| TASK-026 | T26 | PHASE-002 | DES-008, DES-012, DES-017 |
+| TASK-027 | T27 | PHASE-002 | DES-001, DES-008, DES-013 |
+| TASK-028 | T28 | PHASE-002 | DES-005, DES-006, DES-008 |
+| TASK-029 | T29 | PHASE-002 | DES-008, DES-012 |
+| TASK-030 | T30 | PHASE-002 | DES-008, DES-013 |
+| TASK-031 | T31 | PHASE-002 | DES-006, DES-020, DES-023 |
+| TASK-032 | T32 | PHASE-003 | DES-010 |
+| TASK-033 | T33 | PHASE-003 | DES-006, DES-010, DES-017 |
+| TASK-034 | T34 | PHASE-003 | DES-009, DES-010, DES-012 |
+| TASK-035 | T35 | PHASE-003 | DES-009, DES-010, DES-013 |
+| TASK-036 | T36 | PHASE-003 | DES-010, DES-022, DES-023 |
+| TASK-037 | T37 | PHASE-003 | DES-010, DES-022, DES-023 |
+| TASK-038 | T38 | PHASE-004 | DES-004, DES-014, DES-018 |
+| TASK-039 | T39 | PHASE-004 | DES-013 |
+| TASK-040 | T40 | PHASE-004 | DES-014, DES-015, DES-020 |
+| TASK-041 | T41 | PHASE-004 | DES-016, DES-019 |
+| TASK-042 | T42 | PHASE-004 | DES-004, DES-016, DES-019 |
+| TASK-043 | T43 | PHASE-004 | DES-012, DES-016 |
+| TASK-044 | T44 | PHASE-004 | DES-012, DES-016 |
+| TASK-045 | T45 | PHASE-004 | DES-006, DES-007, DES-016 |
+| TASK-046 | T46 | PHASE-004 | DES-013, DES-016 |
+| TASK-047 | T47 | PHASE-004 | DES-011, DES-016 |
+| TASK-048 | T48 | PHASE-004 | DES-016, DES-022 |
+| TASK-049 | T49 | PHASE-004 | DES-016, DES-020, DES-023 |
+| TASK-050 | T50 | PHASE-004 | DES-020, DES-021, DES-022 |
+| TASK-051 | T51 | PHASE-004 | DES-018, DES-023, DES-024, DES-025 |
+
+### 2.2 Phase PR gates
+
+每個Phase必須從執行當日最新`origin/main`建立獨立worktree及`codex/`分支，只對應一個implementation PR。Phase內tasks可按依賴並行；Phase Gate必須在完整自測、獨立CI、獨立review及缺陷修正後才可合併。若main已移動，先在Phase分支整合最新main並重跑完整Gate；合併後清理worktree及分支。
+
+| Phase | Scope | Independent outcome and gate |
+| --- | --- | --- |
+| PHASE-001 | TASK-001～TASK-024 | Supplier Core、主檔children、生命周期、Business Master及downstream provider contracts可獨立驗收。 |
+| PHASE-002 | TASK-025～TASK-031 | 可配置啟用審批及Supplier-owned settings可獨立驗收。 |
+| PHASE-003 | TASK-032～TASK-037 | Bank資料受控寫入、查看、輪替及復原可獨立安全驗收。 |
+| PHASE-004 | TASK-038～TASK-051 | Supplier–SKU、Import／Export、容量及發布證據完成；全模組回歸通過。 |
+
+### 2.3 Canonical requirement coverage manifest
+
+以下manifest透過`01_requirement_spec.md`的一對一alias，對應各詳細task中的legacy FR family ID；不能用manifest取代task段落的實際Acceptance Criteria或Verification：
+
+- FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087.
+- NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011.
+- SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014.
+
 ## 3. 詳細任務
 
 ## T01：凍結 Migration 編號與跨模組依賴
 
-**Description：** 在任何DDL檔建立前取得最新main的migration inventory，決定Supplier與尚未實作Item的全域編號所有權，並一次同步設計及兩份task文件，消除`0010`起的重複預留。
+**Description：** 在任何DDL檔建立前取得最新`origin/main`的migration inventory，按`DES-019`配置當前Phase所需的下一個連續可用序號並驗證Business Master readiness；Item provider readiness延至PHASE-004／T38，不預留或回填全域編號。
 
 **Capability：** Cross-cutting foundation
 
 **Traceability：** BR-001、NFR-009、SEC-009
 
 **Acceptance criteria：**
-- [ ] 列出main現有migration並證明每個四位前綴唯一；既有`0001`～`0009`名稱與內容不變。
-- [ ] 若`0010`～`0023`仍空閒，依已確認Supplier-first方案配置給Supplier；Item由下一可用號開始，否則Supplier整組順延。
-- [ ] Supplier／Item design及tasks的migration表完全一致，FK順序與Item-dependent `supplier_sku_refs`延後規則保留。
+- [ ] 列出最新main現有migration並證明每個四位前綴唯一；任何已套用migration名稱與內容不變。
+- [ ] 只為當前Phase內即將實作的Supplier邏輯slice分配連續可用序號；Business Master及Item-owned schema不由Supplier分配。
+- [ ] Business Master Currency／Payment Term provider readiness有正式evidence；未READY時PHASE-001標記`BLOCKED`，不得建立影子table或production fake。Item provider只記錄為PHASE-004前置，不阻擋PHASE-001。
 
 **Verification：**
 - [ ] `find server/database/migrations -maxdepth 1 -type f -print | sort`
 - [ ] `rg -n '00[0-9]{2}.*migration|Migration' docs/items_management docs/supplier_management`
-- [ ] Manual review：Technical Lead確認全域編號表後才開始T02／T04／T05。
+- [ ] Manual review：Technical Lead確認全域編號表及Business Master readiness後才開始T02／T04／T05；不要求Item readiness。
 
 **Dependencies：** None
 
 **Files likely touched：**
-- `docs/supplier_management/design_spec.md`
-- `docs/supplier_management/tasks.md`
-- `docs/items_management/design_spec.md`
-- `docs/items_management/tasks.md`
+- `docs/supplier_management/03_design_spec.md`
+- `docs/supplier_management/05_development_tasks.md`
+- `server/database/migrations/`
+- 對應Business Master provider readiness evidence
 
 **Estimated scope：** S（4 files）
 
@@ -206,7 +283,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Files likely touched：**
 - `server/src/modules/authorization/permissionCatalogue.js`
-- `server/database/migrations/0010_seed_supplier_management_permissions.js`
+- `server/database/migrations/<next>_seed_supplier_management_permissions.js`
 - `server/test/permissionCatalogueConventions.test.js`
 - `server/test/permissionCatalogueStartupGuard.test.js`
 - `server/test/integration/migrations.integration.test.js`
@@ -244,36 +321,35 @@ T24/T31/T37/T40/T49 ────────────────────
 
 ## Checkpoint A：T01–T03
 
-- [ ] Migration編號及Item依賴由Technical Lead確認，沒有重複預留。
+- [ ] Migration編號及Business Master依賴由Technical Lead確認，沒有重複預留；Item依賴明確留待T38。
 - [ ] Permission seed、config startup及logging redaction focused tests全綠。
 - [ ] 人工Security review接受system-admin break-glass及兩組key ring基線。
 
-## T04：完成 Currency／Payment Term 後端切片
+## T04：完成Business Master Currency／Payment Term依賴切片
 
-**Description：** 以共享catalog形式建立Currency與Payment Term schema、HKD seed、read／management service及API，支援Supplier最低幣別與選填付款條件。
+**Description：** 接入Business Master的Currency與Payment Term read／validation provider，支援Supplier必填幣別與選填付款條件；Supplier不得建立schema、seed、write service或管理API。
 
 **Capability：** SUP-CAP-01 Supplier Core
 
 **Traceability：** FR-LIST-004、FR-VIEW-001、FR-CREATE-005、FR-EDIT-001、FR-EDIT-003、BR-007、BR-008、BR-025、AC-020、AC-022
 
 **Acceptance criteria：**
-- [ ] Currency migration冪等建立catalog並種一筆Active HKD；一般selector只回Active，inactive歷史值仍可顯示。
-- [ ] Payment Term code唯一，`net_days`與dueDays規則受service及DB引用保護；被引用後只可停用。
-- [ ] Read使用`supplier.view`，Payment Term寫入使用`supplier.settings`＋`jwt-device-password`，未知欄位拒絕。
+- [ ] Startup/readiness證明Business Master provider、schema及至少一個Active Currency可用；未就緒時Supplier Core保持`BLOCKED`。
+- [ ] Selector只回可供新指派的Active值；歷史Supplier的inactive Currency／Payment Term仍能以保存的reference／snapshot顯示。
+- [ ] Supplier create／update／activate／import在caller transaction內重驗選值，不提供任何Supplier-owned catalog write route。
 
 **Verification：**
-- [ ] `npm test --workspace server -- test/supplierCatalogService.test.js test/supplierCatalogHandlers.test.js`
-- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`
+- [ ] `npm test --workspace server -- test/businessMasterSupplierContract.test.js`
+- [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/supplierBusinessMaster.integration.test.js`
 - [ ] `npm run lint`
 
 **Dependencies：** T01、T02
 
 **Files likely touched：**
-- `server/database/migrations/0011_create_currencies.js`
-- `server/database/migrations/0012_create_payment_terms.js`
-- `server/src/modules/supplier/SupplierCatalogService.js`
-- `server/src/handlers/supplier-catalog/catalogHandlers.js`
-- `server/test/supplierCatalogService.test.js`
+- `server/src/modules/supplier/providers/BusinessMasterLookupProvider.js`
+- `server/src/modules/supplier/SupplierAdminService.js`
+- `server/test/businessMasterSupplierContract.test.js`
+- `server/test/integration/supplierBusinessMaster.integration.test.js`
 
 **Estimated scope：** M（5 files）
 
@@ -298,8 +374,8 @@ T24/T31/T37/T40/T49 ────────────────────
 **Dependencies：** T01、T04
 
 **Files likely touched：**
-- `server/database/migrations/0013_create_suppliers.js`
-- `server/database/migrations/0014_create_supplier_name_grams.js`
+- `server/database/migrations/<next>_create_suppliers.js`
+- `server/database/migrations/<next+1>_create_supplier_name_grams.js`
 - `server/test/integration/migrations.integration.test.js`
 
 **Estimated scope：** M（3 files）
@@ -406,7 +482,7 @@ T24/T31/T37/T40/T49 ────────────────────
 **Acceptance criteria：**
 - [ ] Audit writer要求既有connection，action-specific allowlist及8192-byte策略；audit失敗令業務transaction rollback。
 - [ ] Audit API支援Supplier、actor、action、target及time filters，固定分頁／排序且只有INSERT／SELECT能力。
-- [ ] `0015` migration在`0014`後套用且可重跑；Bank及personal details在service、response及failure log均遮罩。
+- [ ] Audit migration按T01分配的序號緊隨其依賴schema並可重跑；Bank及personal details在service、response及failure log均遮罩。
 
 **Verification：**
 - [ ] `npm test --workspace server -- test/supplierAuditLogService.test.js test/supplierAuditHandlers.test.js`
@@ -417,7 +493,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Files likely touched：**
 - `server/src/modules/supplier/SupplierAuditLogService.js`
-- `server/database/migrations/0015_create_supplier_audit_logs.js`
+- `server/database/migrations/<next>_create_supplier_audit_logs.js`
 - `server/src/handlers/supplier-audit/auditHandlers.js`
 - `server/test/supplierAuditLogService.test.js`
 - `server/test/integration/supplierAudit.integration.test.js`
@@ -494,7 +570,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Capability：** SUP-CAP-01 Supplier Core
 
-**Traceability：** FR-LIST-001、FR-LIST-002、FR-LIST-003、FR-LIST-004、FR-LIST-005、FR-LIST-006、FR-LIST-007、FR-LIST-010、FR-VIEW-001、FR-VIEW-003、FR-VIEW-005、NFR-001、NFR-002
+**Traceability：** FR-LIST-001、FR-LIST-002、FR-LIST-003、FR-LIST-004、FR-LIST-005、FR-LIST-006、FR-LIST-007、FR-LIST-008、FR-LIST-010、FR-VIEW-001、FR-VIEW-002、FR-VIEW-003、FR-VIEW-004、FR-VIEW-005、NFR-001、NFR-002
 
 **Acceptance criteria：**
 - [ ] List預設20、上限100、排除Archived，支援design指定搜尋／filter／allowlist sort並穩定分頁。
@@ -573,7 +649,7 @@ T24/T31/T37/T40/T49 ────────────────────
 **Dependencies：** T10、T12
 
 **Files likely touched：**
-- `server/database/migrations/0016_create_supplier_addresses.js`
+- `server/database/migrations/<next>_create_supplier_addresses.js`
 - `server/src/modules/supplier/SupplierAdminService.js`
 - `server/src/handlers/suppliers/supplierAddressHandlers.js`
 - `server/test/supplierAddressService.test.js`
@@ -636,7 +712,7 @@ T24/T31/T37/T40/T49 ────────────────────
 **Dependencies：** T10、T12
 
 **Files likely touched：**
-- `server/database/migrations/0017_create_supplier_contacts.js`
+- `server/database/migrations/<next>_create_supplier_contacts.js`
 - `server/src/modules/supplier/SupplierAdminService.js`
 - `server/src/handlers/suppliers/supplierContactHandlers.js`
 - `server/test/supplierContactService.test.js`
@@ -693,7 +769,7 @@ T24/T31/T37/T40/T49 ────────────────────
 **Dependencies：** T06、T10、T12
 
 **Files likely touched：**
-- `server/database/migrations/0018_create_supplier_identifiers.js`
+- `server/database/migrations/<next>_create_supplier_identifiers.js`
 - `server/src/modules/supplier/SupplierAdminService.js`
 - `server/src/handlers/suppliers/supplierIdentifierHandlers.js`
 - `server/test/supplierIdentifierService.test.js`
@@ -891,30 +967,29 @@ T24/T31/T37/T40/T49 ────────────────────
 - [ ] Lifecycle、lookup、IDOR、concurrency及audit rollback evidence完整。
 - [ ] 人工review批准Core contract後才開始依賴它的Approval／Bank／Import工作。
 
-## T25：建立 Bank／Approval／Settings persistence gate
+## T25：建立 Approval／Settings persistence gate
 
-**Description：** 依已凍結的全域序號一次建立`0019`～`0021`控制類tables，避免日後先套用較高編號再回補較低編號；本task只建立schema與default setting，不實作業務API。
+**Description：** 依T01從最新main分配連續可用序號，建立Activation Request與Settings控制類tables；本task不建立Bank table、不註冊Bank capability、不要求Bank keys，也不實作業務API。
 
-**Capability：** SUP-CAP-02／SUP-CAP-03 persistence foundation
+**Capability：** SUP-CAP-02 Approval & Settings persistence foundation
 
-**Traceability：** FR-BANK-003、FR-APPROVAL-001、FR-SET-003、BR-011、BR-019、NFR-006、NFR-009
+**Traceability：** FR-APPROVAL-001、FR-SET-003、BR-011、NFR-006
 
 **Acceptance criteria：**
-- [ ] Bank table沒有plaintext欄位，具encryption／blind-index key IDs、唯一default及duplicate indexes。
 - [ ] Approval table保證每Supplier最多一個pending；Settings singleton冪等種`id=1`且approval預設OFF。
-- [ ] 三支migration按`0019`、`0020`、`0021`順序在空DB、重跑及半套用情境收斂。
+- [ ] 兩支migration按Approval→Settings依賴順序，在空DB、重跑及半套用情境收斂，並核對既存schema契約；實體序號由實作當日最新main決定。
+- [ ] PHASE-002在沒有Bank table及Bank keys時仍可啟動與驗收，且任何一般欄位都不能暫存Bank明文。
 
 **Verification：**
 - [ ] `npm test --workspace server -- test/migrate.test.js`
 - [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/migrations.integration.test.js`
-- [ ] Manual schema check：Bank無明文column，generated／unique／FK符合design。
+- [ ] Manual schema check：Approval pending unique、Settings singleton及schema compatibility assertion符合design；確認沒有Bank table。
 
 **Dependencies：** T01、T02、T18
 
 **Files likely touched：**
-- `server/database/migrations/0019_create_supplier_bank_accounts.js`
-- `server/database/migrations/0020_create_supplier_activation_requests.js`
-- `server/database/migrations/0021_create_supplier_settings.js`
+- `server/database/migrations/<next>_create_supplier_activation_requests.js`
+- `server/database/migrations/<next+1>_create_supplier_settings.js`
 - `server/test/integration/migrations.integration.test.js`
 
 **Estimated scope：** M（4 files）
@@ -948,9 +1023,9 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Estimated scope：** M（5 files）
 
-## T27：完成 Settings 與 Payment Terms UI
+## T27：完成Settings UI及Business Master唯讀狀態提示
 
-**Description：** 建立獨立Supplier Settings頁，交付approval toggle與Payment Terms管理，顯示影響、預設、目前值、最後修改及不追溯Pending的說明。
+**Description：** 建立獨立Supplier Settings頁，交付approval toggle，並以唯讀方式顯示Business Master Currency／Payment Term依賴狀態及其正式管理入口；Supplier UI不提供catalog寫入。
 
 **Capability：** SUP-CAP-02 Approval & Settings
 
@@ -959,14 +1034,14 @@ T24/T31/T37/T40/T49 ────────────────────
 **Acceptance criteria：**
 - [ ] 只有`supplier.settings`可看到／進入頁面；直接URL與API仍分別由guard／server拒絕。
 - [ ] Toggle保存要求reason、password、approved device及version；conflict重載後要求重新確認。
-- [ ] Payment Terms可create／update／deactivate，沒有generic future setting或未確認規則。
+- [ ] Currency／Payment Term只顯示provider readiness及導向Business Master的唯讀連結；頁面沒有create／update／deactivate控制或Supplier write request。
 
 **Verification：**
 - [ ] `npm test --workspace client -- test/pages/suppliers/settings.test.js test/services/supplierSettings.test.js`
 - [ ] `npm run build --workspace client`
-- [ ] Manual check：toggle ON／OFF、Pending不追溯文案及Payment Term被引用停用。
+- [ ] 依AGENTS.md使用Playwright驗證toggle ON／OFF、Pending不追溯文案、唯讀依賴狀態、鍵盤操作、console及network。
 
-**Dependencies：** T04、T26
+**Dependencies：** T04、T26及Business Master管理入口READY
 
 **Files likely touched：**
 - `client/src/services/supplierSettings.js`
@@ -1101,9 +1176,9 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Estimated scope：** M（4 files）
 
-## T32：建立 Bank crypto primitives
+## T32：建立 Bank persistence與crypto primitives
 
-**Description：** 實作AES-256-GCM payload、AAD、masking及多lookup-key blind indexes，保持pure／injectable並讓任何integrity或key錯誤安全失敗。
+**Description：** 在PHASE-003按最新main序號建立Bank logical migration並註冊Bank capability，再實作AES-256-GCM payload、AAD、masking及多lookup-key blind indexes；Bank capability部署後兩組key ring為無條件startup requirement。
 
 **Capability：** SUP-CAP-03 Bank Security
 
@@ -1113,20 +1188,22 @@ T24/T31/T37/T40/T49 ────────────────────
 - [ ] Encrypt每列random 96-bit IV、128-bit tag，AAD綁supplierId＋cryptoContext；tamper／搬row驗證失敗。
 - [ ] Lookup ring可計算全部candidate indexes，write只用active key並回key ID；一般SHA-256不處理帳號。
 - [ ] Mask短帳號不洩漏完整值；所有error／inspect／test output不含明文、key或ciphertext。
+- [ ] Bank table沒有plaintext欄位，具有encryption／blind-index key IDs、唯一default及duplicate constraints；既存table必須通過完整schema compatibility assertion。
 
 **Verification：**
 - [ ] `npm test --workspace server -- test/supplierBankCrypto.test.js test/supplierConfig.test.js`
 - [ ] `npm run lint -- server/src/modules/supplier/SupplierBankCrypto.js`
 - [ ] Manual review：crypto使用Node標準primitive且沒有自行設計cipher format之外的演算法。
 
-**Dependencies：** T03、T25
+**Dependencies：** T01、T02、T03、T18、T24
 
 **Files likely touched：**
+- `server/database/migrations/<next>_create_supplier_bank_accounts.js`
 - `server/src/modules/supplier/SupplierBankCrypto.js`
 - `server/test/supplierBankCrypto.test.js`
-- `server/src/modules/supplier/supplierNormalization.js`
+- `server/test/integration/migrations.integration.test.js`
 
-**Estimated scope：** M（3 files）
+**Estimated scope：** M（4 files）
 
 ## T33：完成 Bank domain service
 
@@ -1283,7 +1360,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 ## T38：建立 Item 依賴與 Supplier–SKU relation 後端
 
-**Description：** 在Item正式SKU／UOM schema存在後建立soft relation migration、domain service及CRUD API；未滿足依賴時不建立無FK自由ID或runtime缺表fallback。
+**Description：** 在Item正式SKU／UOM schema存在後建立soft relation與append-only`supplier_supply_events` migration、domain service、CRUD API及Purchasing `recordSupply` command；未滿足依賴時不建立無FK自由ID或runtime缺表fallback。
 
 **Capability：** SUP-CAP-04 Supplier–SKU Sourcing
 
@@ -1292,10 +1369,11 @@ T24/T31/T37/T40/T49 ────────────────────
 **Acceptance criteria：**
 - [ ] Migration取得當時main下一個序號，FK精確引用Item SKU／UOM並按design保留歷史及Supplier Item Code unique。
 - [ ] Relation create／update驗證Supplier、SKU、UOM ownership、MOQ、lead time及preferred／alternative／stopped，絕不保存價格。
-- [ ] Purchasing callback可idempotent create／update供貨紀錄，不能改Supplier／SKU狀態或建立白名單。
+- [ ] Purchasing `recordSupply`以source document／line唯一鍵及payload hash提供domain idempotency，先寫append-only event再更新推薦摘要；重送不得重複累計。
+- [ ] Supply event／relation更新不能改Supplier／SKU狀態或建立白名單；失敗時同一transaction整體rollback並由reconciliation可追溯重試。
 
 **Verification：**
-- [ ] `npm test --workspace server -- test/supplierRelationService.test.js test/supplierRelationHandlers.test.js`
+- [ ] `npm test --workspace server -- test/supplierRelationService.test.js test/supplierRelationHandlers.test.js test/supplierRecordSupply.test.js`
 - [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/supplierSkuLookup.integration.test.js`
 - [ ] Manual dependency check：移除Item schema時migration明確拒絕，不建立弱化table。
 
@@ -1305,8 +1383,9 @@ T24/T31/T37/T40/T49 ────────────────────
 - `server/database/migrations/<next>_create_supplier_sku_refs.js`
 - `server/src/modules/supplier/SupplierRelationService.js`
 - `server/src/handlers/suppliers/supplierSkuRelationHandlers.js`
+- `server/src/modules/supplier/SupplierSupplyEventService.js`
 - `server/test/supplierRelationService.test.js`
-- `server/test/integration/supplierSkuLookup.integration.test.js`
+- `server/test/supplierRecordSupply.test.js`
 
 **Estimated scope：** M（5 files）
 
@@ -1411,7 +1490,7 @@ T24/T31/T37/T40/T49 ────────────────────
 **Traceability：** FR-IMPORT-002、FR-IMPORT-004、FR-IMPORT-005、FR-IMPORT-007、FR-IMPORT-010、BR-026、BR-027、NFR-006、NFR-008
 
 **Acceptance criteria：**
-- [ ] `0022`／`0023`依序建立jobs／rows、indexes、counts、lease及`applied_supplier_id`，可重跑且不早於`0021`。
+- [ ] 依T01於實作當時分配的連續migration序號，依序建立jobs／rows、indexes、counts、lease及`applied_supplier_id`；可重跑且位於當時Supplier Settings schema之後。
 - [ ] Worker只claim queued／expired lease job，按row number處理並在shutdown停止claim新job。
 - [ ] Row terminal狀態與job counts可重建；success contract明定Supplier＋audit＋applied marker同一transaction。
 
@@ -1423,8 +1502,8 @@ T24/T31/T37/T40/T49 ────────────────────
 **Dependencies：** T25、T41
 
 **Files likely touched：**
-- `server/database/migrations/0022_create_supplier_import_jobs.js`
-- `server/database/migrations/0023_create_supplier_import_rows.js`
+- `server/database/migrations/<next>_create_supplier_import_jobs.js`
+- `server/database/migrations/<next+1>_create_supplier_import_rows.js`
 - `server/src/modules/supplier/SupplierImportService.js`
 - `server/src/services/supplierImport/SupplierImportWorkerService.js`
 - `server/test/supplierImportService.test.js`
@@ -1686,17 +1765,18 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Capability：** SUP-CAP-01～SUP-CAP-05 Release
 
-**Traceability：** NFR-009、SEC-001、SEC-002、SEC-003、SEC-004、SEC-005、SEC-006、SEC-007、SEC-008、SEC-009、SEC-010、SEC-011、SEC-012、SEC-013
+**Traceability：** NFR-009、NFR-011、SEC-001、SEC-002、SEC-003、SEC-004、SEC-005、SEC-006、SEC-007、SEC-008、SEC-009、SEC-010、SEC-011、SEC-012、SEC-013、SEC-014
 
 **Acceptance criteria：**
 - [ ] Fresh DB與upgrade DB migration、backup／restore、application restart及config fail-fast均通過；runbook列明rollback邊界與Bank key依賴。
+- [ ] 實作`00_project_profile.json`所列各分拆suite adapter／Playwright config；每個runner輸出canonical case ID，缺ID、重複ID、skip或以無關測試湊足`min_tests`均令Gate失敗。
 - [ ] `npm run verify`、全部Supplier unit／integration／client tests、build、audit及五個capability smoke pass，無P0／P1與未批准P2。
 - [ ] BA／Product Owner、Technical Lead、QA、Security及Operations對traceability、evidence與known limitations完成簽核後才標記release-ready。
 
 **Verification：**
 - [ ] `npm run verify`
 - [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration`及`npm test --workspace client`
-- [ ] Manual production-like smoke：各角色、approval ON／OFF、Bank reveal、for-SKU、Import／Export、backup／restore及rollback rehearsal。
+- [ ] 依AGENTS.md用Playwright執行production-like UI smoke，並檢查console／network；另驗證各角色、approval ON／OFF、Bank reveal、for-SKU、Import／Export、backup／restore及rollback rehearsal。
 
 **Dependencies：** T24、T31、T37、T40、T49、T50
 
@@ -1705,7 +1785,7 @@ T24/T31/T37/T40/T49 ────────────────────
 - `server/package.json`
 - `docs/supplier_management/operations.md`
 - `docs/supplier_management/release_evidence.md`
-- `docs/supplier_management/tasks.md`
+- `docs/supplier_management/00_project_profile.json`
 
 **Estimated scope：** M（5 files）
 
@@ -1719,7 +1799,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 | 風險 | 影響 | 對應控制／Task |
 | --- | --- | --- |
-| Supplier與Item Migration序號衝突 | Migration排序、FK及部署可能失敗 | T01先凍結全域編號；任何DDL前人工批准 |
+| Supplier與其他模組Migration序號衝突 | Migration排序、FK及部署可能失敗 | T01從最新main按Phase動態分配；任何DDL前核對ledger |
 | Bank keys或明文外洩 | 高風險資料事故 | T03、T32–T37；Security與Operations雙重gate |
 | Item contract未落地 | 產生無FK relation或錯誤UOM語意 | T38 blocked至正式SKU／UOM schema及service存在 |
 | Import worker crash／雙重執行 | Supplier重複或row狀態失真 | T42、T45、T49 transaction marker與fault injection |
@@ -1740,3 +1820,1050 @@ T24/T31/T37/T40/T49 ────────────────────
 - 每次只把真正完成且驗證通過的task由`[ ]`改為`[x]`；進行中狀態寫在該task下，不以預先勾選表示承諾。
 - 若實作發現design或requirement缺口，先記錄問題並取得決策，再更新受影響的traceability、acceptance與verification；不得靜默擴充scope。
 - Checkpoint failure須保留命令、環境及低敏evidence，修復後重跑；Final Checkpoint通過前文件狀態保持Draft。
+
+
+---
+
+# Appendix A — Harness 2.0 Formal Phase Definitions
+
+## PHASE-001 — Supplier delivery checkpoint 1
+
+### Outcome
+
+交付§2.2中`PHASE-001`的獨立業務結果，包含TASK-001至TASK-024。
+
+### Entry criteria
+
+從當時最新`origin/main`建立獨立worktree；所有前置Phase及本Phase provider／migration／security gates已有實際evidence。
+
+### Acceptance criteria
+
+本Phase tasks的Acceptance Criteria全部完成，對應mandatory Technical Tests及使用者流程具候選baseline證據。
+
+### Integration and regression
+
+執行本Phasefocused tests、受影響上下游contract regression、server/client regression及適用的Playwright browser validation。
+
+### Git and merge plan
+
+一個獨立`codex/`分支、一個PR；developer self-test PASS後commit/push，再由required CI及實際review核對同一候選才可按批准時機合併。
+
+### Rollback
+
+停止新能力入口，保留forward-only schema及正式資料；依runbook回復相容server/client，不刪除已套用migration或audit。
+
+### Exit criteria
+
+Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未達成時狀態保持BLOCKED／NOT_READY。
+
+## PHASE-002 — Supplier delivery checkpoint 2
+
+### Outcome
+
+交付§2.2中`PHASE-002`的獨立業務結果，包含TASK-025至TASK-031。
+
+### Entry criteria
+
+從當時最新`origin/main`建立獨立worktree；所有前置Phase及本Phase provider／migration／security gates已有實際evidence。
+
+### Acceptance criteria
+
+本Phase tasks的Acceptance Criteria全部完成，對應mandatory Technical Tests及使用者流程具候選baseline證據。
+
+### Integration and regression
+
+執行本Phasefocused tests、受影響上下游contract regression、server/client regression及適用的Playwright browser validation。
+
+### Git and merge plan
+
+一個獨立`codex/`分支、一個PR；developer self-test PASS後commit/push，再由required CI及實際review核對同一候選才可按批准時機合併。
+
+### Rollback
+
+停止新能力入口，保留forward-only schema及正式資料；依runbook回復相容server/client，不刪除已套用migration或audit。
+
+### Exit criteria
+
+Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未達成時狀態保持BLOCKED／NOT_READY。
+
+## PHASE-003 — Supplier delivery checkpoint 3
+
+### Outcome
+
+交付§2.2中`PHASE-003`的獨立業務結果，包含TASK-032至TASK-037。
+
+### Entry criteria
+
+從當時最新`origin/main`建立獨立worktree；所有前置Phase及本Phase provider／migration／security gates已有實際evidence。
+
+### Acceptance criteria
+
+本Phase tasks的Acceptance Criteria全部完成，對應mandatory Technical Tests及使用者流程具候選baseline證據。
+
+### Integration and regression
+
+執行本Phasefocused tests、受影響上下游contract regression、server/client regression及適用的Playwright browser validation。
+
+### Git and merge plan
+
+一個獨立`codex/`分支、一個PR；developer self-test PASS後commit/push，再由required CI及實際review核對同一候選才可按批准時機合併。
+
+### Rollback
+
+停止新能力入口，保留forward-only schema及正式資料；依runbook回復相容server/client，不刪除已套用migration或audit。
+
+### Exit criteria
+
+Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未達成時狀態保持BLOCKED／NOT_READY。
+
+## PHASE-004 — Supplier delivery checkpoint 4
+
+### Outcome
+
+交付§2.2中`PHASE-004`的獨立業務結果，包含TASK-038至TASK-051。
+
+### Entry criteria
+
+從當時最新`origin/main`建立獨立worktree；所有前置Phase及本Phase provider／migration／security gates已有實際evidence。
+
+### Acceptance criteria
+
+本Phase tasks的Acceptance Criteria全部完成，對應mandatory Technical Tests及使用者流程具候選baseline證據。
+
+### Integration and regression
+
+執行本Phasefocused tests、受影響上下游contract regression、server/client regression及適用的Playwright browser validation。
+
+### Git and merge plan
+
+一個獨立`codex/`分支、一個PR；developer self-test PASS後commit/push，再由required CI及實際review核對同一候選才可按批准時機合併。
+
+### Rollback
+
+停止新能力入口，保留forward-only schema及正式資料；依runbook回復相容server/client，不刪除已套用migration或audit。
+
+### Exit criteria
+
+Phase Gate無未處理P0/P1、依賴對賬一致、PR候選與證據一致；未達成時狀態保持BLOCKED／NOT_READY。
+
+# Appendix B — Harness 2.0 Formal Task Definitions
+
+每個TASK一對一引用上文完整Txx詳細段落；Acceptance Criteria、Verification、Dependencies及Files likely touched以該段落為準。
+
+## TASK-001 — Implement detailed task T01
+
+### Goal
+
+完成上文`T01`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T01`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T01`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-002 — Implement detailed task T02
+
+### Goal
+
+完成上文`T02`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T02`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T02`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-003 — Implement detailed task T03
+
+### Goal
+
+完成上文`T03`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T03`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T03`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-004 — Implement detailed task T04
+
+### Goal
+
+完成上文`T04`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T04`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T04`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-005 — Implement detailed task T05
+
+### Goal
+
+完成上文`T05`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T05`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T05`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-006 — Implement detailed task T06
+
+### Goal
+
+完成上文`T06`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T06`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T06`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-007 — Implement detailed task T07
+
+### Goal
+
+完成上文`T07`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T07`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T07`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-008 — Implement detailed task T08
+
+### Goal
+
+完成上文`T08`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T08`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T08`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-009 — Implement detailed task T09
+
+### Goal
+
+完成上文`T09`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T09`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T09`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-010 — Implement detailed task T10
+
+### Goal
+
+完成上文`T10`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T10`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T10`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-011 — Implement detailed task T11
+
+### Goal
+
+完成上文`T11`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T11`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T11`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-012 — Implement detailed task T12
+
+### Goal
+
+完成上文`T12`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T12`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T12`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-013 — Implement detailed task T13
+
+### Goal
+
+完成上文`T13`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T13`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T13`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-014 — Implement detailed task T14
+
+### Goal
+
+完成上文`T14`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T14`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T14`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-015 — Implement detailed task T15
+
+### Goal
+
+完成上文`T15`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T15`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T15`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-016 — Implement detailed task T16
+
+### Goal
+
+完成上文`T16`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T16`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T16`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-017 — Implement detailed task T17
+
+### Goal
+
+完成上文`T17`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T17`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T17`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-018 — Implement detailed task T18
+
+### Goal
+
+完成上文`T18`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T18`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T18`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-019 — Implement detailed task T19
+
+### Goal
+
+完成上文`T19`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T19`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T19`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-020 — Implement detailed task T20
+
+### Goal
+
+完成上文`T20`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T20`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T20`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-021 — Implement detailed task T21
+
+### Goal
+
+完成上文`T21`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T21`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T21`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-022 — Implement detailed task T22
+
+### Goal
+
+完成上文`T22`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T22`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T22`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-023 — Implement detailed task T23
+
+### Goal
+
+完成上文`T23`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T23`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T23`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-024 — Implement detailed task T24
+
+### Goal
+
+完成上文`T24`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T24`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T24`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-025 — Implement detailed task T25
+
+### Goal
+
+完成上文`T25`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T25`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T25`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-026 — Implement detailed task T26
+
+### Goal
+
+完成上文`T26`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T26`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T26`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-027 — Implement detailed task T27
+
+### Goal
+
+完成上文`T27`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T27`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T27`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-028 — Implement detailed task T28
+
+### Goal
+
+完成上文`T28`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T28`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T28`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-029 — Implement detailed task T29
+
+### Goal
+
+完成上文`T29`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T29`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T29`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-030 — Implement detailed task T30
+
+### Goal
+
+完成上文`T30`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T30`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T30`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-031 — Implement detailed task T31
+
+### Goal
+
+完成上文`T31`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T31`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T31`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-032 — Implement detailed task T32
+
+### Goal
+
+完成上文`T32`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T32`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T32`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-033 — Implement detailed task T33
+
+### Goal
+
+完成上文`T33`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T33`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T33`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-034 — Implement detailed task T34
+
+### Goal
+
+完成上文`T34`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T34`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T34`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-035 — Implement detailed task T35
+
+### Goal
+
+完成上文`T35`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T35`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T35`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-036 — Implement detailed task T36
+
+### Goal
+
+完成上文`T36`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T36`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T36`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-037 — Implement detailed task T37
+
+### Goal
+
+完成上文`T37`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T37`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T37`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-038 — Implement detailed task T38
+
+### Goal
+
+完成上文`T38`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T38`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T38`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-039 — Implement detailed task T39
+
+### Goal
+
+完成上文`T39`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T39`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T39`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-040 — Implement detailed task T40
+
+### Goal
+
+完成上文`T40`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T40`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T40`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-041 — Implement detailed task T41
+
+### Goal
+
+完成上文`T41`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T41`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T41`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-042 — Implement detailed task T42
+
+### Goal
+
+完成上文`T42`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T42`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T42`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-043 — Implement detailed task T43
+
+### Goal
+
+完成上文`T43`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T43`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T43`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-044 — Implement detailed task T44
+
+### Goal
+
+完成上文`T44`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T44`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T44`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-045 — Implement detailed task T45
+
+### Goal
+
+完成上文`T45`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T45`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T45`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-046 — Implement detailed task T46
+
+### Goal
+
+完成上文`T46`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T46`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T46`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-047 — Implement detailed task T47
+
+### Goal
+
+完成上文`T47`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T47`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T47`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-048 — Implement detailed task T48
+
+### Goal
+
+完成上文`T48`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T48`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T48`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-049 — Implement detailed task T49
+
+### Goal
+
+完成上文`T49`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T49`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T49`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-050 — Implement detailed task T50
+
+### Goal
+
+完成上文`T50`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T50`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T50`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。
+
+## TASK-051 — Implement detailed task T51
+
+### Goal
+
+完成上文`T51`段落定義的最小可執行成果，不擴大其scope。
+
+### Approach
+
+依`T51`的Description、Dependencies及Files likely touched實作；沿用DES與repository conventions，先寫失敗測試再完成行為。
+
+### Acceptance criteria
+
+逐項滿足`T51`的Acceptance criteria，並取得其Verification所要求的實際、同baseline證據。
+
+### Definition of Done
+
+符合§1.4 Definition of Done及parent Phase Gate；code review、測試、文件和traceability一致，未完成不得勾選。

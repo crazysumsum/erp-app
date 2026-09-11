@@ -1,0 +1,149 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "revision": 2,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "DESIGNING",
+  "resume_status": null,
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "9d9866b87206edad9dd0bda592480398d2233fb26409d237124f549c741086fb",
+    "plan": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
+    "code_commit": "ab1388101cdfb480cdd74860efc71fc2c350d014",
+    "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-management-harness-alignment",
+    "default_commit": "ab1388101cdfb480cdd74860efc71fc2c350d014",
+    "mode_entry_commit": "6cb50f50c1aa4db37e0f32ce41073df331d6c034"
+  },
+  "runtime": {
+    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "owner": "Primary Harness agent",
+    "resources": {
+      "workspace": "supplier-management-harness-alignment"
+    },
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING",
+    "TASK-017": "PENDING",
+    "TASK-018": "PENDING",
+    "TASK-019": "PENDING",
+    "TASK-020": "PENDING",
+    "TASK-021": "PENDING",
+    "TASK-022": "PENDING",
+    "TASK-023": "PENDING",
+    "TASK-024": "PENDING",
+    "TASK-025": "PENDING",
+    "TASK-026": "PENDING",
+    "TASK-027": "PENDING",
+    "TASK-028": "PENDING",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING",
+    "TASK-037": "PENDING",
+    "TASK-038": "PENDING",
+    "TASK-039": "PENDING",
+    "TASK-040": "PENDING",
+    "TASK-041": "PENDING",
+    "TASK-042": "PENDING",
+    "TASK-043": "PENDING",
+    "TASK-044": "PENDING",
+    "TASK-045": "PENDING",
+    "TASK-046": "PENDING",
+    "TASK-047": "PENDING",
+    "TASK-048": "PENDING",
+    "TASK-049": "PENDING",
+    "TASK-050": "PENDING",
+    "TASK-051": "PENDING"
+  },
+  "approvals": [],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/supplier_independent_review",
+      "reviewed_baseline": "9d9866b87206edad9dd0bda592480398d2233fb26409d237124f549c741086fb",
+      "source_ref": "docs/supplier_management/04_design_review.md#independent-reviewer-provenance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "Does protected system-admin receive Supplier bank permissions while retaining all sensitive controls?",
+      "affected_ids": [
+        "SEC-014",
+        "DES-009",
+        "TASK-034",
+        "TC-112",
+        "UAT-030"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User response in current Codex task on 2026-09-11: modify requirement; system-admin has highest authority and can see bank data."
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "Which module owns Currency and Payment Term?",
+      "affected_ids": [
+        "FR-020",
+        "FR-024",
+        "DES-001",
+        "TASK-004",
+        "TC-004",
+        "UAT-031"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User response in current Codex task on 2026-09-11: agreed that shared Business Master owns Currency and Payment Term."
+    }
+  ],
+  "external_actions": [
+    {
+      "id": "PUSH-001",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/supplier-management-harness-alignment",
+      "idempotency_key": "supplier-management-harness-alignment-push",
+      "status": "PLANNED",
+      "source_ref": "Software Engineering Harness REVIEW_AND_ALIGN workflow authorized in current Codex task"
+    },
+    {
+      "id": "PR-001",
+      "kind": "CREATE_PR",
+      "target": "base=main head=codex/supplier-management-harness-alignment",
+      "idempotency_key": "supplier-management-harness-alignment-pr",
+      "status": "PLANNED",
+      "source_ref": "Software Engineering Harness REVIEW_AND_ALIGN workflow authorized in current Codex task"
+    }
+  ],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Commit the validated documentation alignment, push the isolated branch, create a PR without auto-merge, then record the observed remote references."
+}
