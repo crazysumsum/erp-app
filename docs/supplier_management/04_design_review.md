@@ -2,7 +2,7 @@
 
 ## Decision
 
-**CONDITIONALLY APPROVED FOR PHASED IMPLEMENTATION.** The aligned design is internally consistent and compatible with the repository architecture. No open specification defect requires redesign. Implementation may begin only after the relevant provider readiness gates are satisfied; production enablement additionally requires Bank security and recovery evidence.
+**CONDITIONALLY APPROVED FOR PRODUCT OWNER DESIGN／PLAN REVIEW.** The aligned design is internally consistent and compatible with the repository architecture. No open specification defect requires redesign. This reviewer decision does not authorize implementation: the Product Owner must approve the Design／Plan baseline first, and implementation may then begin only after the relevant provider readiness gates are satisfied. Production enablement additionally requires Bank security and recovery evidence.
 
 ## Review baseline
 
@@ -12,7 +12,7 @@
 - Cross-module contracts inspected: Item, Purchasing & Receiving, Customer and current User/permission conventions.
 - No Supplier implementation exists; all code-level observations are design readiness findings, not runtime defect claims.
 
-## Independent reviewer provenance
+## Original independent reviewer provenance
 
 | Field | Value |
 | --- | --- |
@@ -26,7 +26,25 @@
 | Final disposition | `APPROVE` |
 | Open Critical／High | `0／0` |
 
-The reviewer first returned changes requested, then re-reviewed the remediated artifacts. The final approval covers the canonical requirement, design, plan, technical test, UAT, structured profile and generated traceability content at the hashes recorded in `09_final_alignment_review.md`.
+The original reviewer first returned changes requested, then re-reviewed the first-alignment artifacts. That historical approval remains bound to its recorded Design／Plan hashes; it is not rewritten to cover the repeat-alignment baseline.
+
+## Harness 2.0 repeat-review provenance
+
+| Field | Value |
+| --- | --- |
+| Method | `SEPARATE_AGENT` |
+| Reviewer | `/root/supplier_independent_review` |
+| Context | Independent Codex collaboration agent; read-only re-review; no artifact edits |
+| Reviewed at | `2026-09-11T06:15:45Z` |
+| Reviewed commit／default baseline | `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a` |
+| Harness Design baseline | `2b715d5634a5c611af4ba8faecbfe83fa2111202ec03a05a25ca9e756267faa2` |
+| Harness Plan baseline | `df43d9254f913788cde911a8731fe6587a8a63f3d81e684b001fbb4d8c016005` |
+| Source fingerprint | `b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6` |
+| Review chronology | `REV-002 CHANGES_REQUESTED` → remediation → `REV-003 APPROVED` |
+| Supplier-owned open Critical／High | `0／0` |
+| External High dependency gates | `2`：Item relation-name alignment；Purchasing `recordSupply` contract alignment |
+
+The repeat reviewer approved the Supplier-owned Requirement, Design, Tasks, Technical Tests, UAT and Traceability baseline. The approval confirms document quality only: the Product Owner has not approved the current Design／Plan baseline for implementation, and the two external High gates continue to block PHASE-004.
 
 ## Architecture review
 
@@ -49,7 +67,7 @@ The reviewer first returned changes requested, then re-reviewed the remediated a
 | Business Master | PASS AFTER ALIGNMENT | Supplier has read/validate methods only; schema, seeds, lifecycle and write authorization remain external. |
 | Purchasing | PASS | `listForSku`, transaction-aware usability/default lookup and history projection meet Purchasing needs without bank exposure. |
 | Lifecycle references | PASS WITH PROVIDER GATE | `OPEN/CLEAR/UNKNOWN` and fail-closed behavior prevent unsafe deletion/archive when required providers are absent. |
-| Item | PASS WITH PROVIDER GATE | Supplier–SKU uses official SKU/UOM identity and cannot deploy against free-form fake IDs. |
+| Item | PASS WITH PROVIDER／DOC ALIGNMENT GATE | Supplier–SKU uses official SKU/UOM identity and cannot deploy against free-form fake IDs. Item §5.14's provisional `item_supplier_refs` name must be aligned to Supplier-owned `supplier_sku_refs` before PHASE-004; the consumed `sku-uom-provider` contract itself is unaffected. |
 | Payment | PASS AS DEFERRED | Generic Bank decrypt API is rejected; a purpose-specific high-trust payment contract is added only when Payment exists. |
 | Backward compatibility | PASS | Supplier adds new capability; no existing API or applied migration is altered. Capability registration is gated by schema/provider readiness. |
 
@@ -101,4 +119,4 @@ The reviewer first returned changes requested, then re-reviewed the remediated a
 
 ## Reviewer recommendation
 
-Proceed with `PHASE-001` only after provider readiness proof. Do not create shadow Business Master tables, fixed migration reservations, production fakes or Supplier-local copies of downstream eligibility logic. “Conditionally approved” does not authorize release and does not mark any test PASS.
+Submit the Design／Plan baseline to the Product Owner before starting any Phase. After that approval, proceed with `PHASE-001` only after provider readiness proof. Do not create shadow Business Master tables, fixed migration reservations, production fakes or Supplier-local copies of downstream eligibility logic. “Conditionally approved” does not authorize implementation or release and does not mark any test PASS.
