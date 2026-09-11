@@ -1,25 +1,18 @@
-# Traceability Validation Report
+# Item Management Harness v2 Traceability Validation
 
-- Root: `docs/items_management`
-- Markdown files scanned: 12
-- Requirements discovered: 88
-- Design coverage: 88/88 (100.0%)
-- Task coverage: 88/88 (100.0%)
-- Technical-test coverage: 88/88 (100.0%)
-- UAT coverage (all requirement types, informational): 68/88 (77.3%)
+## Current result
 
-## Requirement counts
+`STRUCTURE_PASS` — owner confirmation `HD-002` is recorded as `ERP Product Owner (Sam)`, `08_traceability_matrix.md` was regenerated deterministically from `08_traceability.json`, and the Harness reported no formal graph or template consistency issues.
 
-- FR: 64
-- NFR: 15
-- SEC: 9
+## Prepared registry
 
-## Likely gaps
+| Entity | Count |
+| --- | ---: |
+| Requirements | 88 (64 FR, 15 NFR, 9 SEC) |
+| Designs | 20 |
+| Phases | 6 |
+| Tasks | 44 |
+| Technical tests | 16 |
+| UAT tests | 16 |
 
-- No mechanical coverage gaps detected.
-
-The 68/88 informational UAT coverage is expected: technical-only NFR/SEC controls use explicit UAT `N/A`/partial applicability and objective Technical Acceptance instead of fabricated business cases.
-
-## Status
-
-**PASS (mechanical only).** The Harness validator exited 0 on 2026-09-11. Semantic findings remain governed by `04_design_review.md` and `09_final_alignment_review.md`.
+Observed commands: `render_traceability.py --write` followed by `validate_traceability.py` over the exact module root. `STRUCTURE_PASS` means graph/template consistency only; it does not prove semantic correctness, implementation, test execution, human approval or release readiness.

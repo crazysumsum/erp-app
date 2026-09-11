@@ -6,7 +6,7 @@
 | --- | --- |
 | Execution mode | `REVIEW_AND_ALIGN` |
 | Alignment date | 2026-09-11 |
-| Inspected baseline | `6cb50f50c1aa4db37e0f32ce41073df331d6c034` |
+| Inspected baseline | `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a` |
 | Legacy source | `design_spec.md`, SHA-256 `58a9e82e14285a8eca95671f5a8cd1cdc1e67a4bc0e361bf0131132c55550805` |
 | Provenance | Existing proposed design plus current-code alignment evidence |
 | Product-code change | None |
@@ -24,14 +24,14 @@ The complete legacy design is retained below. Canonical `DES-*` items provide st
 | DES-005 | Barcode normalization and uniqueness | §4.5, §5.9 | FR-002, FR-003, FR-041, FR-042, FR-043 | ALIGNED |
 | DES-006 | Fixed HKD price and numeric rules | §4.6, §5.2, §6.5 | FR-044, FR-045, FR-046, FR-047, FR-048, FR-049 | ALIGNED |
 | DES-007 | Relational schema, constraints and migrations | §5 | FR-011, FR-012, FR-015, FR-039, FR-040; SEC-008; NFR-006, NFR-008, NFR-009, NFR-010 | PARTIAL; operational upgrade proof pending |
-| DES-008 | Item/SKU API contracts, error semantics and idempotency | §6.1–6.3, §6.9–6.11 | FR-011, FR-012, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031 | PARTIAL; standalone SKU create absent |
+| DES-008 | Item/SKU API contracts, error semantics and idempotency | §6.1–6.3, §6.9–6.11 | FR-011, FR-012, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031 | PARTIAL; standalone SKU create retained by HD-001 and pending TASK-038 |
 | DES-009 | Catalog API and reference protection | §6.4, §8.2, §8.4 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | IMPLEMENTATION_GAP for referenced Brand/UOM error mapping |
 | DES-010 | UOM conversion and lookup contract | §5.8, §8.3 | FR-039, FR-040, FR-041, FR-042, FR-043 | ALIGNED for current consumers |
 | DES-011 | Media storage, API and consistency | §2.6, §5.11, §6.6, §8.5 | FR-011, FR-012, FR-015; SEC-007, SEC-008, SEC-009; NFR-011 | ALIGNED with filesystem compensation risk |
 | DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTATION_GAP: backend exists, user-facing history view absent |
 | DES-013 | CSV import/export, job lifecycle and retention | §5.13, §6.8, §8.6 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-007, SEC-008, SEC-009; NFR-005, NFR-011 | HIGH gap: direct SQL bypasses aggregate audit contract |
 | DES-014 | Query, pagination, search, filters and response projections | §6.10, §8.8 | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-014, FR-015; NFR-002, NFR-003, NFR-004 | PARTIAL; attribute/variant arrays forced empty |
-| DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit and standalone SKU-create pages absent |
+| DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit page absent; standalone SKU-create page retained by HD-001 and pending TASK-038 |
 | DES-016 | Validation and automated-test architecture | §10, §11 | All FR/NFR/SEC through the canonical test crosswalk | PARTIAL; developer evidence exists, independent acceptance not executed |
 | DES-017 | Configuration, logs, metrics and alerts | §12.1–12.3 | SEC-007, SEC-009; NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-013 | IMPLEMENTED with developer evidence |
 | DES-018 | Retention, backup, restore and DR objectives | §12.4, §14 | FR-063; SEC-008, SEC-009; NFR-010, NFR-011, NFR-014, NFR-015 | DESIGN ENHANCED; RTO/RPO verification pending |
@@ -48,7 +48,7 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 
 - Implemented tables and services broadly follow the legacy design; migrations currently reach `0026` for Item scope.
 - `ItemAdminService` still projects `attributeValues: []` and `variantValues: []`, while response schemas cap both arrays at zero. The Attribute/Variant persistence therefore is not observable through the promised detail contract.
-- Variant creation exists inside Item aggregate creation, but the designed `POST /api/v1/skus/create` / standalone SKU-create flow is absent.
+- Variant creation exists inside Item aggregate creation, but the designed `POST /api/v1/skus/create` / standalone SKU-create flow is absent. Human decision `HD-001` on 2026-09-11 retains this contract for existing Variant Items and places its implementation under `TASK-038`.
 - Audit query API exists at `GET /api/v1/item-audit/logs`, but the designed user-facing audit page/timeline and frontend client are absent.
 - Brand and UOM permanent deletion still contain stale assumptions that no reference tables exist. Current foreign keys reject referenced deletion, but the service does not translate those failures to the documented `CATALOG_IN_USE` public error as Attribute deletion does.
 - Import execution writes Item/SKU/UOM rows directly. The earlier confirm transaction writes one job-level `item.import` audit record, but item.create/item.update audit is not transactionally coupled to the imported aggregate changes.
@@ -1558,3 +1558,228 @@ Log context 只放 ID、Code、Job ID、count、duration、requestId；不放整
 2. 初始 Category、UOM、Attribute 及內部 Barcode 規則樣本由業務提供。
 
 上述前置工作不得被示例值或開發者臨場決定取代；若改變已確認決策，先同步更新 requirement、design、migration 計劃及測試。
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Design Definitions
+
+The design index above is preserved for review readability. These definitions establish the canonical DES registry without replacing the detailed design body.
+
+## DES-001 — Scope, decisions, actors and module boundaries
+
+### Decision
+Apply the detailed design in preserved sections `§1, §2` for scope, decisions, actors and module boundaries. Current alignment classification: `ALIGNED`.
+
+### Rationale
+This design is required by FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, SEC-001, NFR-001; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-002 — Permissions, fresh authorization and strong re-authentication
+
+### Decision
+Apply the detailed design in preserved sections `§3` for permissions, fresh authorization and strong re-authentication. Current alignment classification: `PARTIAL; verify every asynchronous effect`.
+
+### Rationale
+This design is required by FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-003 — Item/SKU aggregate and lifecycle state model
+
+### Decision
+Apply the detailed design in preserved sections `§4.1–4.3, §8.1` for item/sku aggregate and lifecycle state model. Current alignment classification: `PARTIAL; downstream reference checks await real consumers`.
+
+### Rationale
+This design is required by FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-004 — Variant signature and typed attributes
+
+### Decision
+Apply the detailed design in preserved sections `§4.4, §5.10, §6.4` for variant signature and typed attributes. Current alignment classification: `IMPLEMENTATION_GAP in read projection/UI`.
+
+### Rationale
+This design is required by FR-018, FR-025, SEC-007, SEC-008; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-005 — Barcode normalization and uniqueness
+
+### Decision
+Apply the detailed design in preserved sections `§4.5, §5.9` for barcode normalization and uniqueness. Current alignment classification: `ALIGNED`.
+
+### Rationale
+This design is required by FR-002, FR-003, FR-041, FR-042, FR-043; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-006 — Fixed HKD price and numeric rules
+
+### Decision
+Apply the detailed design in preserved sections `§4.6, §5.2, §6.5` for fixed hkd price and numeric rules. Current alignment classification: `ALIGNED`.
+
+### Rationale
+This design is required by FR-044, FR-045, FR-046, FR-047, FR-048, FR-049; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-007 — Relational schema, constraints and migrations
+
+### Decision
+Apply the detailed design in preserved sections `§5` for relational schema, constraints and migrations. Current alignment classification: `PARTIAL; operational upgrade proof pending`.
+
+### Rationale
+This design is required by FR-011, FR-012, FR-015, FR-039, FR-040, SEC-008, NFR-006, NFR-008, NFR-009, NFR-010; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-008 — Item/SKU API contracts, error semantics and idempotency
+
+### Decision
+Apply the detailed design in preserved sections `§6.1–6.3, §6.9–6.11` for item/sku api contracts, error semantics and idempotency. Current alignment classification: `PARTIAL; standalone SKU create retained by HD-001 and pending TASK-038`.
+
+### Rationale
+This design is required by FR-011, FR-012, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-009 — Catalog API and reference protection
+
+### Decision
+Apply the detailed design in preserved sections `§6.4, §8.2, §8.4` for catalog api and reference protection. Current alignment classification: `IMPLEMENTATION_GAP for referenced Brand/UOM error mapping`.
+
+### Rationale
+This design is required by FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-010 — UOM conversion and lookup contract
+
+### Decision
+Apply the detailed design in preserved sections `§5.8, §8.3` for uom conversion and lookup contract. Current alignment classification: `ALIGNED for current consumers`.
+
+### Rationale
+This design is required by FR-039, FR-040, FR-041, FR-042, FR-043; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-011 — Media storage, API and consistency
+
+### Decision
+Apply the detailed design in preserved sections `§2.6, §5.11, §6.6, §8.5` for media storage, api and consistency. Current alignment classification: `ALIGNED with filesystem compensation risk`.
+
+### Rationale
+This design is required by FR-011, FR-012, FR-015, SEC-007, SEC-008, SEC-009, NFR-011; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-012 — Audit persistence, query and presentation
+
+### Decision
+Apply the detailed design in preserved sections `§5.12, §6.7, §8.7` for audit persistence, query and presentation. Current alignment classification: `IMPLEMENTATION_GAP: backend exists, user-facing history view absent`.
+
+### Rationale
+This design is required by FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, NFR-006; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-013 — CSV import/export, job lifecycle and retention
+
+### Decision
+Apply the detailed design in preserved sections `§5.13, §6.8, §8.6` for csv import/export, job lifecycle and retention. Current alignment classification: `HIGH gap: direct SQL bypasses aggregate audit contract`.
+
+### Rationale
+This design is required by FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, SEC-007, SEC-008, SEC-009, NFR-005, NFR-011; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-014 — Query, pagination, search, filters and response projections
+
+### Decision
+Apply the detailed design in preserved sections `§6.10, §8.8` for query, pagination, search, filters and response projections. Current alignment classification: `PARTIAL; attribute/variant arrays forced empty`.
+
+### Rationale
+This design is required by FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-014, FR-015, NFR-002, NFR-003, NFR-004; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-015 — Page routes, editors, scanner UX and accessibility
+
+### Decision
+Apply the detailed design in preserved sections `§7` for page routes, editors, scanner ux and accessibility. Current alignment classification: `PARTIAL; Audit page absent; standalone SKU-create page retained by HD-001 and pending TASK-038`.
+
+### Rationale
+This design is required by FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025, SEC-009, NFR-012, NFR-013; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-016 — Validation and automated-test architecture
+
+### Decision
+Apply the detailed design in preserved sections `§10, §11` for validation and automated-test architecture. Current alignment classification: `PARTIAL; developer evidence exists, independent acceptance not executed`.
+
+### Rationale
+This design is required by FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015, SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-017 — Configuration, logs, metrics and alerts
+
+### Decision
+Apply the detailed design in preserved sections `§12.1–12.3` for configuration, logs, metrics and alerts. Current alignment classification: `IMPLEMENTED with developer evidence`.
+
+### Rationale
+This design is required by SEC-007, SEC-009, NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-013; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-018 — Retention, backup, restore and DR objectives
+
+### Decision
+Apply the detailed design in preserved sections `§12.4, §14` for retention, backup, restore and dr objectives. Current alignment classification: `DESIGN ENHANCED; RTO/RPO verification pending`.
+
+### Rationale
+This design is required by FR-063, SEC-008, SEC-009, NFR-010, NFR-011, NFR-014, NFR-015; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-019 — Delivery phases, deployment and forward-only rollback
+
+### Decision
+Apply the detailed design in preserved sections `§13, §14` for delivery phases, deployment and forward-only rollback. Current alignment classification: `PARTIAL; staging exercise pending`.
+
+### Rationale
+This design is required by NFR-007, NFR-008, NFR-009, NFR-010, NFR-014, NFR-015; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
+
+## DES-020 — Cross-module reference integration and transaction snapshot boundary
+
+### Decision
+Apply the detailed design in preserved sections `§1.2, §8.3–8.4` for cross-module reference integration and transaction snapshot boundary. Current alignment classification: `DEFERRED until first real Purchasing/Inventory/Sales FK`.
+
+### Rationale
+This design is required by FR-014, FR-030, FR-031, FR-034, FR-037, FR-038, SEC-008; exact typed relationships are maintained in `08_traceability.json`.
+
+### Failure behavior
+Boundary validation, authorization, optimistic concurrency, transaction/audit coupling and dependency readiness fail closed as applicable. Partial or unknown outcomes remain explicit and block acceptance until reconciled.
