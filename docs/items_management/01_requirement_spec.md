@@ -6,7 +6,7 @@
 | --- | --- |
 | Execution mode | `REVIEW_AND_ALIGN` |
 | Alignment date | 2026-09-11 |
-| Baseline | `main` / `origin/main` at `6cb50f50c1aa4db37e0f32ce41073df331d6c034` |
+| Baseline | `main` / `origin/main` at `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a` |
 | Legacy source | `requirement.md`, SHA-256 `ecf0dc0b4a76ea53c5596e4e4940b69bb5c6dbbae981303ec0f2f9950b1c2041` |
 | Provenance | Existing business baseline, enhanced with canonical aliases and approved DR objectives |
 | Product-code change | None |
@@ -892,3 +892,978 @@ Draft ──> Active ──> Inactive ──> Active
 6. 由 BA、業務 Owner、開發及 QA 共同檢視需求編號、業務規則與驗收準則。
 
 簽核後的新增或改動需求應保留版本、提出人、原因、影響範圍及批准結果，避免商品主資料與下游模組產生不一致定義。
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Requirement Definitions
+
+The level-two definitions below are the Harness registry entry points. Their statements preserve the exact established requirement meaning; the earlier narrative, business rules and AC catalogue remain normative detail.
+
+## FR-001 — FR-LIST-001
+
+### Statement
+系統須提供 server-side 分頁的 Item／SKU 列表，預設不顯示 Archived。 Provenance: `FR-LIST-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-002 — FR-LIST-002
+
+### Statement
+使用者可用完整或部分 SKU Code、條碼、Item Name、SKU Name 搜尋。 Provenance: `FR-LIST-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-003 — FR-LIST-003
+
+### Statement
+搜尋應不區分英文字母大小寫，並忽略輸入首尾空白。 Provenance: `FR-LIST-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-004 — FR-LIST-004
+
+### Statement
+可依狀態、分類、品牌、追蹤政策、Purchasable、Sellable、建立／更新日期篩選。 Provenance: `FR-LIST-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-005 — FR-LIST-005
+
+### Statement
+可依 SKU Code、名稱、分類、品牌、狀態及更新時間排序。 Provenance: `FR-LIST-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-006 — FR-LIST-006
+
+### Statement
+列表須顯示 SKU Code、主要條碼、名稱、規格、Base UOM、分類、品牌及狀態。 Provenance: `FR-LIST-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-007 — FR-LIST-007
+
+### Statement
+使用者可切換 Item 彙總視圖與 SKU 平鋪視圖；交易查找預設使用 SKU 視圖。 Provenance: `FR-LIST-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-008 — FR-LIST-008
+
+### Statement
+搜尋結果可匯出 CSV，並保留當前篩選條件及權限範圍。 Provenance: `FR-LIST-008` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-008` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-009 — FR-LIST-009
+
+### Statement
+可儲存常用篩選或由 URL 保留查詢狀態。 Provenance: `FR-LIST-009` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-009` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-010 — FR-LIST-010
+
+### Statement
+空結果、載入中、錯誤及無權限狀態必須清晰區分。 Provenance: `FR-LIST-010` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-LIST-010` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-011 — FR-VIEW-001
+
+### Statement
+Item 詳情須顯示共用資料及其全部 SKU，包括非 Active SKU。 Provenance: `FR-VIEW-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-VIEW-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-012 — FR-VIEW-002
+
+### Statement
+SKU 詳情須顯示識別資料、規格、條碼、UOM 換算、追蹤政策、狀態及時間資訊。 Provenance: `FR-VIEW-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-VIEW-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-013 — FR-VIEW-003
+
+### Statement
+有權限者可查看完整變更歷史，包括變更前後值、操作者、時間及原因。 Provenance: `FR-VIEW-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-VIEW-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-014 — FR-VIEW-004
+
+### Statement
+如庫存模組存在，可顯示庫存摘要連結，但不可在本模組自行計算庫存。 Provenance: `FR-VIEW-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-VIEW-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-015 — FR-VIEW-005
+
+### Statement
+已停用、停產或封存資料須有明顯狀態標示，避免被誤認為可交易。 Provenance: `FR-VIEW-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-VIEW-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-016 — FR-CREATE-001
+
+### Statement
+商品管理員可建立 Draft Item，並在同一流程建立至少一個 SKU。 Provenance: `FR-CREATE-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-017 — FR-CREATE-002
+
+### Statement
+系統須支援單規格商品及多規格商品。 Provenance: `FR-CREATE-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+Human decision `HD-001` (2026-09-11) confirms that Variant support includes adding a new, unique SKU to an existing Variant Item after initial creation. This capability remains required and is pending implementation under `TASK-038`; absence in the current product is not approval to remove or weaken the requirement.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-018 — FR-CREATE-003
+
+### Statement
+SKU Code 由使用者人工輸入，系統不自動產生，亦不強制前綴、分段或字元組成格式。 Provenance: `FR-CREATE-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-019 — FR-CREATE-004
+
+### Statement
+儲存前須驗證 SKU Code、條碼及 Variant 組合唯一性。 Provenance: `FR-CREATE-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-020 — FR-CREATE-005
+
+### Statement
+建立多規格商品時，可由選定的 Variant 值產生組合草稿，使用者確認後才建立 SKU。 Provenance: `FR-CREATE-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-021 — FR-CREATE-006
+
+### Statement
+系統不得因其中一個 SKU 驗證失敗而留下未向使用者說明的部分資料。 Provenance: `FR-CREATE-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-022 — FR-CREATE-007
+
+### Statement
+使用者可從既有 Item 或 SKU 複製建立草稿；SKU Code、條碼及外部唯一代碼不得被複製。 Provenance: `FR-CREATE-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-023 — FR-CREATE-008
+
+### Statement
+新建資料預設為 Draft，不得在資料未完整時直接流入交易。 Provenance: `FR-CREATE-008` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-008` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-024 — FR-CREATE-009
+
+### Statement
+建檔人具有商品管理權限且資料通過完整性驗證時，可在同一工作流程直接啟用商品及 SKU，不需另一人覆核。 Provenance: `FR-CREATE-009` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-CREATE-009` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-025 — FR-EDIT-001
+
+### Statement
+有權限者可修改名稱、描述、分類、品牌、屬性、圖片及允許修改的 SKU 欄位。 Provenance: `FR-EDIT-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-026 — FR-EDIT-002
+
+### Statement
+SKU Code 建立後不可由一般介面修改；如業務確需更正，應走具理由及高權限的受控流程。 Provenance: `FR-EDIT-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-027 — FR-EDIT-003
+
+### Statement
+Active SKU 的 Base UOM、Tracking Policy 或關鍵換算若已被交易引用，不得直接修改。 Provenance: `FR-EDIT-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-028 — FR-EDIT-004
+
+### Statement
+系統須使用資料版本或等效機制避免兩人同時編輯時後儲存者無聲覆蓋前者。 Provenance: `FR-EDIT-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-029 — FR-EDIT-005
+
+### Statement
+儲存修改時重新執行唯一性、條件必填及跨欄位規則驗證。 Provenance: `FR-EDIT-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-030 — FR-EDIT-006
+
+### Statement
+關鍵變更須填寫原因，包括 SKU Code 特批修改、Base UOM、追蹤政策、停用、停產、封存及條碼釋放。 Provenance: `FR-EDIT-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-031 — FR-EDIT-007
+
+### Statement
+使用者離開有未儲存變更的表單前，系統應提示確認。 Provenance: `FR-EDIT-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-EDIT-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-032 — FR-DELETE-001
+
+### Statement
+已發生引用的 SKU 不可永久刪除，只可 Inactive、Discontinued 或 Archived。 Provenance: `FR-DELETE-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-033 — FR-DELETE-002
+
+### Statement
+只有 Draft 且完全未被引用的 Item／SKU 可永久刪除。 Provenance: `FR-DELETE-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-034 — FR-DELETE-003
+
+### Statement
+刪除或狀態變更前須顯示受影響 SKU 數及阻擋原因。 Provenance: `FR-DELETE-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-035 — FR-DELETE-004
+
+### Statement
+停用 SKU 後，不得加入新的採購、銷售、價格或庫存交易；既有未完成單據如何處理須由下游模組明確提示。 Provenance: `FR-DELETE-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-036 — FR-DELETE-005
+
+### Statement
+封存資料預設不在日常列表和選擇器顯示，但可透過篩選查回。 Provenance: `FR-DELETE-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-037 — FR-DELETE-006
+
+### Statement
+還原封存資料時須再次驗證 SKU Code、條碼及依賴主檔是否仍有效。 Provenance: `FR-DELETE-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-038 — FR-DELETE-007
+
+### Statement
+永久刪除、停用、停產、封存及還原均須記錄原因及稽核事件。 Provenance: `FR-DELETE-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-DELETE-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-039 — FR-UOM-001
+
+### Statement
+使用者可為每個 SKU 維護 Base UOM 及多個 Pack UOM 換算。 Provenance: `FR-UOM-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-UOM-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-040 — FR-UOM-002
+
+### Statement
+系統須禁止零、負數、循環或同一 UOM 重複換算。 Provenance: `FR-UOM-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-UOM-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-041 — FR-UOM-003
+
+### Statement
+每個條碼須綁定一個 SKU 及該 SKU 的有效 UOM。 Provenance: `FR-UOM-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-UOM-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-042 — FR-UOM-004
+
+### Statement
+條碼掃描須回傳 SKU 及數量換算語意，例如掃描箱碼代表 24 個 Base UOM。 Provenance: `FR-UOM-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-UOM-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-043 — FR-UOM-005
+
+### Statement
+刪除仍被條碼、供應商對照或交易使用的 UOM 換算時，系統須拒絕並列出依賴類型。 Provenance: `FR-UOM-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-UOM-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-044 — FR-PRICE-001
+
+### Statement
+每個 SKU 均可保存自己的建議零售價；不可只在 Item 層保存一個價格。 Provenance: `FR-PRICE-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-PRICE-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-045 — FR-PRICE-002
+
+### Statement
+Active 且 Sellable 的 SKU 必須具有大於 0 的建議零售價及明確幣別。Draft 或不可銷售 SKU 可暫時留空。 Provenance: `FR-PRICE-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-PRICE-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-046 — FR-PRICE-003
+
+### Statement
+建議零售價固定使用 HKD，稅務口徑固定為 `tax_not_applicable`；畫面、匯入及匯出須顯示該口徑。 Provenance: `FR-PRICE-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-PRICE-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-047 — FR-PRICE-004
+
+### Statement
+修改建議零售價須記錄舊值、新值、幣別、操作者及時間；是否強制填寫原因待業務確認。 Provenance: `FR-PRICE-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-PRICE-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-048 — FR-PRICE-005
+
+### Statement
+建議零售價只作參考或正式售價的預設來源；門店價、渠道價、會員價、促銷價及價格生效期間由定價模組管理。 Provenance: `FR-PRICE-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-PRICE-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-049 — FR-PRICE-006
+
+### Statement
+建立多個 SKU 時，可從 Item 層輸入一個建議值批量帶入，但儲存後每個 SKU 的價格均可獨立維護。 Provenance: `FR-PRICE-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-PRICE-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-050 — FR-IMPORT-001
+
+### Statement
+系統須提供帶欄位說明、版本號及範例的 CSV 匯入範本。 Provenance: `FR-IMPORT-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-051 — FR-IMPORT-002
+
+### Statement
+匯入分為上傳、預檢、確認執行及結果下載四步；預檢不得寫入正式資料。 Provenance: `FR-IMPORT-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-052 — FR-IMPORT-003
+
+### Statement
+預檢須逐列指出欄位、錯誤碼及可理解的修正訊息。 Provenance: `FR-IMPORT-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-053 — FR-IMPORT-004
+
+### Statement
+匯入採全有全無；任何一列錯誤時整批不得寫入，使用者須修正後重新預檢及確認。 Provenance: `FR-IMPORT-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-054 — FR-IMPORT-005
+
+### Statement
+匯入更新既有 SKU 時必須以穩定識別碼匹配，並明確區分新增、更新、略過及失敗。 Provenance: `FR-IMPORT-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-055 — FR-IMPORT-006
+
+### Statement
+匯入任務須防止同一檔案或同一請求被重複提交而建立重複資料。 Provenance: `FR-IMPORT-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-056 — FR-IMPORT-007
+
+### Statement
+匯入完成後提供總筆數、成功、失敗、略過及警告數，並可下載結果檔。 Provenance: `FR-IMPORT-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-057 — FR-IMPORT-008
+
+### Statement
+匯入及匯出須套用相同權限與敏感欄位遮蔽規則。 Provenance: `FR-IMPORT-008` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-008` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-058 — FR-IMPORT-009
+
+### Statement
+大型匯入可在背景執行，使用者可查看進度及完成通知。 Provenance: `FR-IMPORT-009` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-IMPORT-009` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-059 — FR-AUDIT-001
+
+### Statement
+系統須記錄 Item、SKU、條碼、UOM 換算、屬性、狀態及附件的建立、修改及刪除事件。 Provenance: `FR-AUDIT-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-AUDIT-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-060 — FR-AUDIT-002
+
+### Statement
+稽核資料至少包含事件時間、操作者、動作、對象 ID／Code、變更前後值、原因及 request ID。 Provenance: `FR-AUDIT-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-AUDIT-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-061 — FR-AUDIT-003
+
+### Statement
+稽核記錄不得包含認證憑證、Token 或不必要的敏感資料。 Provenance: `FR-AUDIT-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-AUDIT-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-062 — FR-AUDIT-004
+
+### Statement
+稽核寫入與業務修改須具有一致結果，不可資料已改但稽核遺失。 Provenance: `FR-AUDIT-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-AUDIT-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-063 — FR-AUDIT-005
+
+### Statement
+一般商品管理員不可修改或刪除稽核歷史。 Provenance: `FR-AUDIT-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-AUDIT-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## FR-064 — FR-AUDIT-006
+
+### Statement
+可依 SKU Code、操作者、動作及時間範圍查詢變更歷史。 Provenance: `FR-AUDIT-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `FR-AUDIT-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown requests return an actionable stable result and must not leave unexplained partial data; audit requirements continue to apply.
+
+## NFR-001 — NFR-001
+
+### Statement
+Legacy NFR-001 Provenance: `NFR-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-002 — NFR-002
+
+### Statement
+Legacy NFR-002 Provenance: `NFR-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-003 — NFR-003
+
+### Statement
+Legacy NFR-003 Provenance: `NFR-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-004 — NFR-004
+
+### Statement
+Legacy NFR-004 Provenance: `NFR-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-005 — NFR-005
+
+### Statement
+First legacy NFR-005: capacity and daily change volume Provenance: `NFR-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-006 — NFR-006 (second occurrence)
+
+### Statement
+Second legacy NFR-005: atomic business change and audit Provenance: `NFR-006 (second occurrence)` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-006 (second occurrence)` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-007 — NFR-007
+
+### Statement
+Legacy NFR-006 Provenance: `NFR-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-008 — NFR-008
+
+### Statement
+Legacy NFR-007 Provenance: `NFR-008` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-008` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-009 — NFR-009
+
+### Statement
+Legacy NFR-008 Provenance: `NFR-009` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-009` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-010 — NFR-010
+
+### Statement
+Legacy NFR-009 Provenance: `NFR-010` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-010` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-011 — NFR-011
+
+### Statement
+Legacy NFR-010 Provenance: `NFR-011` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-011` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-012 — NFR-012
+
+### Statement
+Legacy NFR-011 Provenance: `NFR-012` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-012` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-013 — NFR-013
+
+### Statement
+Legacy NFR-012 Provenance: `NFR-013` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `NFR-013` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-014 — User-approved recovery objective retained from the 2026-09-11 alignment record
+
+### Statement
+Production recovery time objective: restore Item Management service within 4 hours (RTO <= 4h). Provenance: `User-approved recovery objective retained from the 2026-09-11 alignment record` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `User-approved recovery objective retained from the 2026-09-11 alignment record` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## NFR-015 — User-approved recovery objective retained from the 2026-09-11 alignment record
+
+### Statement
+Production recovery point objective: lose no more than 15 minutes of committed Item Management data (RPO <= 15m). Provenance: `User-approved recovery objective retained from the 2026-09-11 alignment record` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `User-approved recovery objective retained from the 2026-09-11 alignment record` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-001 — SEC-001
+
+### Statement
+未登入使用者不可存取任何商品管理端點或頁面。 Provenance: `SEC-001` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-001` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-002 — SEC-002
+
+### Statement
+`item.view` 允許查看商品列表、詳情、附件及稽核；只有同時具有 `item.mgmt` 的角色可建立、修改、停用、封存、刪除及匯入商品。 Provenance: `SEC-002` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-003 — SEC-003
+
+### Statement
+下游業務角色可在其獲授權流程中搜尋可用 SKU，但不可藉此取得商品維護能力。 Provenance: `SEC-003` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-003` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-004 — SEC-004
+
+### Statement
+前端隱藏或停用按鈕不能取代後端授權檢查。 Provenance: `SEC-004` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-004` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-005 — SEC-005
+
+### Statement
+本期不保存成本或供應商條件；日後如納入敏感欄位，必須另行定義獨立查看及匯出權限。 Provenance: `SEC-005` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-005` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-006 — SEC-006
+
+### Statement
+永久刪除、SKU Code 特批修改、條碼釋放及批量狀態更新應要求較高權限或再確認。 Provenance: `SEC-006` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-006` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-007 — SEC-007
+
+### Statement
+商品資料輸入、CSV 及附件必須進行格式、內容及大小驗證，避免注入及惡意檔案。 Provenance: `SEC-007` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-007` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-008 — SEC-008
+
+### Statement
+系統須防止水平越權；使用者不可透過更換 ID 操作無權限對象。 Provenance: `SEC-008` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-008` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.
+
+## SEC-009 — SEC-009
+
+### Statement
+大量匯出及敏感資料存取應留下稽核記錄。 Provenance: `SEC-009` in the preserved requirement baseline.
+
+### Acceptance criteria
+The behavior and threshold stated for `SEC-009` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.
+
+### Failure behavior
+Invalid, unauthorized, conflicting or dependency-unknown operations fail closed without partial mutation or sensitive-data disclosure; threshold breaches block acceptance and require evidence.

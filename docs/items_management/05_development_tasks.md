@@ -126,15 +126,15 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Dependencies: TASK-023 (PHASE-003), TASK-024 (PHASE-003). Risk: high data-visibility gap. Rollback: revert compatible projection/UI changes.
 - Definition of Done/status: tests and CI pass, review approved; `PLANNED`.
 
-### TASK-038 — Decide and implement standalone SKU creation contract
+### TASK-038 — Implement retained standalone SKU creation contract
 
 - Parent Phase: PHASE-006.
-- Goal: either implement the designed add-SKU flow for existing Variant Items or approve a requirement/design change removing it.
+- Goal: implement the add-SKU flow for existing Variant Items retained by human decision `HD-001` on 2026-09-11.
 - Requirement/design: FR-017, FR-018, FR-019, FR-021; DES-003, DES-008, DES-015.
 - Components: API schema/handler/service/client/page only after decision.
-- Acceptance: approved contract is documented; if retained, duplicate combination, Standard limit, atomicity, auth, audit and UI flows pass.
+- Acceptance: a manager can add a complete, unique SKU to an existing Variant Item; duplicate combinations and additions to Standard Items are rejected; atomicity, authorization, audit, idempotency and UI flows pass.
 - Verification: API/database tests and Playwright happy/negative flows; lint/build/CI.
-- Dependencies: TASK-037 (PHASE-006) and owner decision. Risk: high functional incompleteness. Rollback: route removal/revert if backward compatible.
+- Dependencies: TASK-037 (PHASE-006); `HD-001` scope decision is answered. Risk: high functional incompleteness. Rollback: disable/revert the incomplete route without deleting the retained requirement.
 - Definition of Done/status: decision and implementation evidence linked; `PLANNED`.
 
 ### TASK-039 — Deliver user-facing audit history
@@ -1744,3 +1744,762 @@ T01 migration freeze
 - [ ] 合規人員在正式上線前核對 DEC-023；如要求更長期限，更新 requirement、design、cleanup 與 tests。
 - [ ] 未來 Receiving 模組實作 `receiving.override_shelf_life`、必填原因及完整 audit；本模組只交付 shelf-life policy lookup contract。
 - [ ] 第一個 Purchasing／Inventory／Sales 真實 SKU FK 出現時，再建立 `ItemReferenceService`；本期不建立空 interface。
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Phase and Task Definitions
+
+The historical task body and checkbox evidence remain unchanged. The ledger owns membership and relationships; these formal definitions provide executable intent without rewriting historical completion claims.
+
+## PHASE-001 — Foundation and Catalog
+
+### Outcome
+Deliver the coherent `Foundation and Catalog` increment represented by TASK-001, TASK-002, TASK-003, TASK-004, TASK-005, TASK-006, TASK-007.
+
+### Entry criteria
+Use the approved requirement/design/plan baseline, a refreshed default branch and isolated worktree; required dependencies and decisions must be observed before execution.
+
+### Acceptance criteria
+Every mandatory linked technical case passes against the current immutable candidate; historical checkboxes remain provenance rather than current formal evidence.
+
+### Integration and regression
+Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
+
+### Git and merge plan
+Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+
+### Rollback
+Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
+
+### Exit criteria
+The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## PHASE-002 — Core Item/SKU
+
+### Outcome
+Deliver the coherent `Core Item/SKU` increment represented by TASK-008, TASK-009, TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016, TASK-017, TASK-018, TASK-019, TASK-020, TASK-021, TASK-022.
+
+### Entry criteria
+Use the approved requirement/design/plan baseline, a refreshed default branch and isolated worktree; required dependencies and decisions must be observed before execution.
+
+### Acceptance criteria
+Every mandatory linked technical case passes against the current immutable candidate; historical checkboxes remain provenance rather than current formal evidence.
+
+### Integration and regression
+Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
+
+### Git and merge plan
+Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+
+### Rollback
+Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
+
+### Exit criteria
+The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## PHASE-003 — Retail extensions
+
+### Outcome
+Deliver the coherent `Retail extensions` increment represented by TASK-023, TASK-024, TASK-025, TASK-026.
+
+### Entry criteria
+Use the approved requirement/design/plan baseline, a refreshed default branch and isolated worktree; required dependencies and decisions must be observed before execution.
+
+### Acceptance criteria
+Every mandatory linked technical case passes against the current immutable candidate; historical checkboxes remain provenance rather than current formal evidence.
+
+### Integration and regression
+Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
+
+### Git and merge plan
+Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+
+### Rollback
+Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
+
+### Exit criteria
+The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## PHASE-004 — Bulk capabilities
+
+### Outcome
+Deliver the coherent `Bulk capabilities` increment represented by TASK-027, TASK-028, TASK-029, TASK-030, TASK-031, TASK-032, TASK-033, TASK-034.
+
+### Entry criteria
+Use the approved requirement/design/plan baseline, a refreshed default branch and isolated worktree; required dependencies and decisions must be observed before execution.
+
+### Acceptance criteria
+Every mandatory linked technical case passes against the current immutable candidate; historical checkboxes remain provenance rather than current formal evidence.
+
+### Integration and regression
+Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
+
+### Git and merge plan
+Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+
+### Rollback
+Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
+
+### Exit criteria
+The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## PHASE-005 — Non-functional and delivery
+
+### Outcome
+Deliver the coherent `Non-functional and delivery` increment represented by TASK-035, TASK-036.
+
+### Entry criteria
+Use the approved requirement/design/plan baseline, a refreshed default branch and isolated worktree; required dependencies and decisions must be observed before execution.
+
+### Acceptance criteria
+Every mandatory linked technical case passes against the current immutable candidate; historical checkboxes remain provenance rather than current formal evidence.
+
+### Integration and regression
+Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
+
+### Git and merge plan
+Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+
+### Rollback
+Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
+
+### Exit criteria
+The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## PHASE-006 — Alignment remediation
+
+### Outcome
+Deliver the coherent `Alignment remediation` increment represented by TASK-037, TASK-038, TASK-039, TASK-040, TASK-041, TASK-042, TASK-043, TASK-044.
+
+### Entry criteria
+Use the approved requirement/design/plan baseline, a refreshed default branch and isolated worktree; required dependencies and decisions must be observed before execution.
+
+### Acceptance criteria
+Every mandatory linked technical case passes against the current immutable candidate; historical checkboxes remain provenance rather than current formal evidence.
+
+### Integration and regression
+Run the profile-declared developer and affected contract/UI/database suites, including downstream consumers when their real contracts exist.
+
+### Git and merge plan
+Use DEFAULT branch strategy from freshly observed main, one reviewable merge group, developer self-test, current CI and actual review before merge; clean up only after PR resolution.
+
+### Rollback
+Prefer reversible code/config rollback; database changes use reviewed forward fixes and never destructive reset. Documentation history remains recoverable from Git.
+
+### Exit criteria
+The Phase merge group is complete, required evidence is baseline-bound, no unresolved blocking finding remains, and the integrated baseline is observed.
+
+## TASK-001 — 修正 migration 編號並凍結實作映射
+
+### Goal
+Complete 修正 migration 編號並凍結實作映射 as defined by the `legacy T01` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T01`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-002 — 建立 Item 權限目錄與 seed
+
+### Goal
+Complete 建立 item 權限目錄與 seed as defined by the `legacy T02` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T02`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001, TC-010 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-003 — 建立 Item 設定、常數與公開錯誤基礎
+
+### Goal
+Complete 建立 item 設定、常數與公開錯誤基礎 as defined by the `legacy T03` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T03`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-012 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-004 — 建立 Category、Brand、UOM schema
+
+### Goal
+Complete 建立 category、brand、uom schema as defined by the `legacy T04` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T04`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-005 — 完成 Category 管理切片
+
+### Goal
+Complete 完成 category 管理切片 as defined by the `legacy T05` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T05`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-007 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-006 — 完成 Brand 與 UOM 管理切片
+
+### Goal
+Complete 完成 brand 與 uom 管理切片 as defined by the `legacy T06` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T06`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-007 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-007 — 完成 Catalog 整合、權限與頁面 metadata 驗證
+
+### Goal
+Complete 完成 catalog 整合、權限與頁面 metadata 驗證 as defined by the `legacy T07` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T07`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-007 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-008 — 建立 Item、SKU 與 Audit schema
+
+### Goal
+Complete 建立 item、sku 與 audit schema as defined by the `legacy T08` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T08`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-009 — 建立 SKU UOM 與 Barcode schema
+
+### Goal
+Complete 建立 sku uom 與 barcode schema as defined by the `legacy T09` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T09`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001, TC-006 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-010 — 建立核心驗證與 Barcode 規則
+
+### Goal
+Complete 建立核心驗證與 barcode 規則 as defined by the `legacy T10` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T10`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-006, TC-007 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-011 — 建立 Item Audit service 與查詢 API
+
+### Goal
+Complete 建立 item audit service 與查詢 api as defined by the `legacy T11` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T11`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-010 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-012 — 建立 Item／SKU 列表與詳情後端
+
+### Goal
+Complete 建立 item／sku 列表與詳情後端 as defined by the `legacy T12` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T12`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-002 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-013 — 建立商品導航與列表頁
+
+### Goal
+Complete 建立商品導航與列表頁 as defined by the `legacy T13` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T13`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-002, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-014 — 建立 Item＋初始 SKU 原子建檔後端
+
+### Goal
+Complete 建立 item＋初始 sku 原子建檔後端 as defined by the `legacy T14` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T14`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-003 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-015 — 建立 Item／SKU 建檔頁與基本 Editor
+
+### Goal
+Complete 建立 item／sku 建檔頁與基本 editor as defined by the `legacy T15` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T15`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-003, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-016 — 建立 Item／SKU aggregate 更新後端
+
+### Goal
+Complete 建立 item／sku aggregate 更新後端 as defined by the `legacy T16` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T16`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-004 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-017 — 建立 Item／SKU 詳情與編輯頁
+
+### Goal
+Complete 建立 item／sku 詳情與編輯頁 as defined by the `legacy T17` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T17`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-002, TC-004, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-018 — 建立 Item／SKU 生命週期後端
+
+### Goal
+Complete 建立 item／sku 生命週期後端 as defined by the `legacy T18` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T18`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-005 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-019 — 建立生命週期與狀態操作 UI
+
+### Goal
+Complete 建立生命週期與狀態操作 ui as defined by the `legacy T19` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T19`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-005, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-020 — 建立受控刪除、複製、SKU Code 修改與 Barcode 釋放
+
+### Goal
+Complete 建立受控刪除、複製、sku code 修改與 barcode 釋放 as defined by the `legacy T20` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T20`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-005, TC-010 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-021 — 建立下游 ItemLookupService contract
+
+### Goal
+Complete 建立下游 itemlookupservice contract as defined by the `legacy T21` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T21`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-006 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-022 — 完成核心端到端、並發與安全驗證
+
+### Goal
+Complete 完成核心端到端、並發與安全驗證 as defined by the `legacy T22` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T22`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-002 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-023 — 建立 Attribute schema、variant signature 與 domain 規則
+
+### Goal
+Complete 建立 attribute schema、variant signature 與 domain 規則 as defined by the `legacy T23` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T23`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-003, TC-007 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-024 — 完成 Attribute／Variant API 與 UI
+
+### Goal
+Complete 完成 attribute／variant api 與 ui as defined by the `legacy T24` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T24`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-003, TC-007, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-025 — 建立 Media schema、service、API 與孤兒檔清理
+
+### Goal
+Complete 建立 media schema、service、api 與孤兒檔清理 as defined by the `legacy T25` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T25`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-008 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-026 — 建立 Media UI 與檔案安全整合測試
+
+### Goal
+Complete 建立 media ui 與檔案安全整合測試 as defined by the `legacy T26` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T26`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-008, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-027 — 建立 Import persistence、dependencies 與 worker 設定
+
+### Goal
+Complete 建立 import persistence、dependencies 與 worker 設定 as defined by the `legacy T27` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T27`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001, TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-028 — 建立 CSV preflight processor
+
+### Goal
+Complete 建立 csv preflight processor as defined by the `legacy T28` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T28`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-029 — 建立 Import confirm／execution／result API
+
+### Goal
+Complete 建立 import confirm／execution／result api as defined by the `legacy T29` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T29`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-030 — 建立 Import UI
+
+### Goal
+Complete 建立 import ui as defined by the `legacy T30` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T30`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-009, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-031 — 建立 SKU Export
+
+### Goal
+Complete 建立 sku export as defined by the `legacy T31` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T31`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-032 — 建立疑似重複商品提示
+
+### Goal
+Complete 建立疑似重複商品提示 as defined by the `legacy T32` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T32`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-003, TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-033 — 建立 bounded bulk status change
+
+### Goal
+Complete 建立 bounded bulk status change as defined by the `legacy T33` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T33`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-005, TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-034 — 建立 Import 檔案保留清理
+
+### Goal
+Complete 建立 import 檔案保留清理 as defined by the `legacy T34` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T34`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-009 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-035 — 完成效能、容量及營運可觀測性驗證
+
+### Goal
+Complete 完成效能、容量及營運可觀測性驗證 as defined by the `legacy T35` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T35`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-012 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-036 — 完成部署文件、Smoke、回歸及 Release Gate
+
+### Goal
+Complete 完成部署文件、smoke、回歸及 release gate as defined by the `legacy T36` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `legacy T36`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-016 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-037 — Complete Attribute/Variant detail projections
+
+### Goal
+Complete complete attribute/variant detail projections as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-002, TC-003, TC-011, TC-013 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-038 — Implement retained standalone SKU creation contract
+
+### Goal
+Implement the standalone SKU creation contract for an existing Variant Item, retained by human decision `HD-001`, as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-003, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-039 — Deliver user-facing audit history
+
+### Goal
+Complete deliver user-facing audit history as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-002, TC-010, TC-011 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-040 — Normalize referenced Brand/UOM deletion errors
+
+### Goal
+Complete normalize referenced brand/uom deletion errors as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-005, TC-014 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-041 — Align CSV import with aggregate validation and transactional audit
+
+### Goal
+Complete align csv import with aggregate validation and transactional audit as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-009, TC-010, TC-015 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-042 — Reconcile historical T23/checkpoint status
+
+### Goal
+Complete reconcile historical t23/checkpoint status as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-013 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-043 — Integrate first real downstream reference guard
+
+### Goal
+Complete integrate first real downstream reference guard as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-004, TC-005 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.
+
+## TASK-044 — Complete independent acceptance and DR/sign-off evidence
+
+### Goal
+Complete complete independent acceptance and dr/sign-off evidence as defined by the `alignment remediation section` narrative and linked requirement/design scope.
+
+### Approach
+Follow the components, dependencies, implementation notes and preserved decisions in `alignment remediation section`; typed membership and test links are in `08_traceability.json`.
+
+### Acceptance criteria
+The task-specific checklist above is satisfied and linked cases TC-001, TC-012, TC-016 provide current-candidate evidence without skipped mandatory behavior.
+
+### Definition of Done
+Scoped changes, review, developer tests, required CI, traceability and safe cleanup are complete. Historical recorded completion is not upgraded to formal acceptance without a current observed run.

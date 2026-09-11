@@ -2,79 +2,72 @@
 
 ## Outcome
 
-**ALIGNED — CONDITIONAL; design documentation is ready for owner review, but the implementation is not release-approved by this review.** No product code was changed and no formal Technical Acceptance/UAT was executed.
+**STRUCTURALLY PREPARED; BLOCKED, NOT APPROVED.** The v2 canonical set exists in place, the standalone SKU scope decision is resolved and the accountable owner is confirmed. Actual independent review remains outstanding. Product implementation and formal acceptance are outside this run.
 
-## Scope and baseline
+## Mode, module and baselines
 
-| Item | Result |
+| Item | Observed value |
 | --- | --- |
-| Execution mode | `REVIEW_AND_ALIGN` |
-| Output | `docs/items_management/`, canonical in-place replacement |
-| Review branch | `codex/items-management-harness-alignment` |
-| Baseline | `main` / `origin/main` at `6cb50f50c1aa4db37e0f32ce41073df331d6c034` |
-| Product-code change | None |
-| Formal tests/UAT | NOT_RUN |
-| Approved decision | `RTO <= 4h`, `RPO <= 15m` |
+| Mode | `REVIEW_AND_ALIGN` |
+| Module / output | `item-management` / `docs/items_management` |
+| Latest default and mode-entry commit | `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a` |
+| V1 alignment recovery commit | `ceb33b9` |
+| Topic branch / worktree | `codex/item-management-harness-v2-alignment` / isolated worktree recorded in state |
+| Product-code changes | None |
+| Formal tests / CI / UAT | `NOT_RUN`; no acceptance result claimed |
 
-## Aligned artifacts
+## Canonical artifacts
 
-| Artifact | Result |
+- Added `00_module_manifest.json`, `00_project_profile.json`, `00_harness_state.json` and typed `08_traceability.json`.
+- Preserved and formalized 88 requirements (64 FR, 15 NFR, 9 SEC), 20 designs, 6 phases, 44 tasks, 16 technical cases and 16 UAT cases.
+- Renamed the complete design narrative from `03_system_design_spec.md` to canonical `03_design_spec.md`; the legacy body is byte-identical before its v2 appendix.
+- Regenerated `08_traceability_matrix.md` deterministically from the typed ledger after owner confirmation `HD-002`; structural validation passes.
+- Kept inventory, gap, requirement/design review and historical developer evidence distinct from current specification and execution evidence.
+
+## Recovery and no-loss result
+
+The requirement (808-line legacy body), design (1,500), task (1,533) and technical-test (437) bodies compare byte-for-byte with `fd8a4dd`. Their preserved legacy SHA-256 values remain recorded in `00_artifact_inventory.md`. No migration, request schema, source diagram, executable test or other machine authority was deleted. One accidental duplicate TASK-012 alias row was removed; T23's conflicting index/detail status remains visible and blocked for maintainer reconciliation.
+
+## Review and findings
+
+Review method is `SELF_REVIEW` by `/root`; the prior “Independent” label had no observable reviewer provenance and cannot satisfy the independent-review policy. Static source comparison reconfirmed DR-001–DR-005: missing Attribute/Variant read projection, absent standalone add-SKU flow, missing user-facing audit history, unstable referenced Brand/UOM deletion errors and import mutation/audit divergence. No executable defect was fabricated from static evidence.
+
+Additional v2 HIGH gaps are missing canonical TC result mapping, missing recovery acceptance adapter, missing Playwright Item UAT configuration and missing independent review. Product-source comments still reference the already-absent pre-canonical `design_spec.md`; changing them needs separately authorized source scope.
+
+## Decisions and readiness
+
+- `HD-001` (`ANSWERED`): retain standalone SKU creation for an existing Variant Item and list it as pending implementation under `TASK-038`.
+- `HD-002` (`ANSWERED`): accountable Item Management module owner is `ERP Product Owner (Sam)`.
+- Design/review result: `CHANGES_REQUESTED`; 0 observed CRITICAL findings, open HIGH findings remain.
+- Implementation readiness: `BLOCKED`; no current plan approval or independent review.
+- Business/release status: not accepted and not approved.
+
+## Next safe action
+
+Obtain an actual independent review of the current DESIGN baseline. Any product remediation, including TASK-038, requires explicit `IMPLEMENT`; Technical Acceptance/UAT requires `TEST_AND_VERIFY` against an immutable baseline and the missing execution adapters.
+
+## HD-001 — Standalone SKU creation for an existing Variant Item
+
+| Field | Recorded decision |
 | --- | --- |
-| `00_artifact_inventory.md` | Source authority, hashes, baseline and preservation contract |
-| `00_gap_analysis.md` | 14 requirement/design/implementation/task/evidence gaps |
-| `01_requirement_spec.md` | 64 canonical FR aliases, 15 NFR, 9 SEC; full legacy requirement retained |
-| `02_requirement_review.md` | Conditional requirement gate and owner decisions |
-| `03_system_design_spec.md` | 20 canonical design items plus implementation alignment notes; full legacy design retained |
-| `04_design_review.md` | Independent architecture/API/DB/security/SRE/QA review |
-| `05_development_tasks.md` | 6 Phases, 36 historical aliases and 8 new remediation Tasks; full progress body retained |
-| `06_technical_test_cases.md` | 16 canonical suites plus complete legacy detailed catalogue/evidence |
-| `07_uat_test_cases.md` | 15 business acceptance cases, all NOT_RUN |
-| `08_traceability_matrix.md` | Requirement → Design → Phase/Task → TC/UAT with provenance/status |
-| `09_traceability_validation.md` | Deterministic validator PASS report |
+| Mode | `REVIEW_AND_ALIGN` |
+| Issue | Design and UAT require an add-SKU flow for an existing Variant Item, but the route, client and page are absent. |
+| Impact | Removing it would change business scope, API/UI design, TASK-038, TC-003 and UAT-004. |
+| Options considered | Retain as pending implementation; or remove and realign the requirement/design/UAT. |
+| Human decision | **保留並列為待實作** |
+| Authority / time | User response in the active Codex task, 2026-09-11 (Asia/Hong_Kong). |
+| Binding result | Retain the contract; keep `TASK-038` pending; keep TC-003/UAT-004 mandatory and `NOT_RUN`; do not claim implementation. |
+| Affected IDs | FR-017, FR-018, FR-019, FR-021; DES-003, DES-008, DES-015; TASK-038; TC-003; UAT-004. |
 
-## No-loss verification
+## HD-002 — Accountable Item Management module owner
 
-The four preserved legacy bodies were compared byte-for-byte with the pre-edit backup:
-
-| Body | Result | Preserved SHA-256 |
-| --- | --- | --- |
-| Requirement, 808 lines | MATCH | `ecf0dc0b4a76ea53c5596e4e4940b69bb5c6dbbae981303ec0f2f9950b1c2041` |
-| Design, 1,500 lines | MATCH | `58a9e82e14285a8eca95671f5a8cd1cdc1e67a4bc0e361bf0131132c55550805` |
-| Tasks, 1,533 lines | MATCH | `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9` |
-| Technical tests, 437 lines | MATCH | `6404877088ee5d723337424b57b9e69b0ba5016092c99ac8694bfeaa42137d9f` |
-
-The preserved task body still contains exactly 303 checked and 42 unchecked boxes. T23 remains unchecked in the index while its detailed evidence states completion; both facts are intentionally retained. Checkpoint L's staging and multi-party sign-off items remain unchecked.
-
-## Provenance
-
-- `EXISTING`: all legacy business/design/task/test semantics and developer evidence.
-- `ENHANCED`: numeric FR aliases, duplicate-NFR crosswalk, `DES/PHASE/TASK/TC/UAT` IDs, evidence classification and traceability.
-- `NEW`: only the user-approved RTO/RPO requirements and remediation/acceptance planning needed to align observed gaps.
-- `ASSUMED/OPEN`: production workload representativeness, owner decision on standalone SKU creation, initial business Catalog approval, first downstream reference owner and formal compliance sign-off.
-
-## Design gate
-
-| Measure | Result |
+| Field | Recorded decision |
 | --- | --- |
-| Open CRITICAL | 0 |
-| Open HIGH | 5: DR-001–DR-005 |
-| Open MEDIUM | 4: DR-006–DR-009 |
-| Gate | CONDITIONAL |
-
-The five HIGH findings are: missing Attribute/Variant read projection, absent standalone add-SKU flow, absent user-facing audit history, inconsistent referenced Brand/UOM delete errors, and import changes not using per-aggregate same-transaction audit/domain behavior.
-
-## Progress and acceptance interpretation
-
-- Development progress: T01–T22 and T24–T36 are checked in the legacy index; T23 is status-inconsistent. This review does not reopen or rewrite those historical Tasks.
-- New work: TASK-037–TASK-044 is a separate planned remediation/acceptance Phase.
-- Developer evidence: retained as evidence tied to its recorded commit/PR and environment.
-- Independent acceptance: all canonical TC and UAT remain PLANNED/NOT_RUN.
-- Release evidence still required: staging upgrade/re-run, formal QA/UAT, approved Catalog samples, compliance review, business/Ops sign-off, and timed restore/RPO proof.
-
-## Traceability result
-
-The deterministic validator reported 88 requirements: 64 FR, 15 NFR and 9 SEC. Design, Task and Technical Test coverage are 88/88; every FR has UAT coverage. Technical-only controls correctly use UAT N/A/partial applicability. Semantic audit found no orphan Phase, Task, Technical Test or UAT case.
-
-## Recommended next gate
-
-Owner review should first decide whether standalone add-SKU remains required. Then authorize an `IMPLEMENT` phase for TASK-037–TASK-041 as small vertical PRs. TASK-043 waits for a real downstream consumer. After remediation, run TASK-044 under `TEST_AND_VERIFY`, including Playwright for UI flows and a controlled DR exercise. Application code remains untouched in this alignment PR.
+| Mode | `REVIEW_AND_ALIGN` |
+| Issue | Harness approvals and residual-risk decisions require an accountable module owner. |
+| Impact | Without an owner, traceability generation and authenticated business/release decisions remain blocked. |
+| Options considered | Confirm the proposed owner; or name a different accountable person/role. |
+| Human decision | **確認為 ERP Product Owner（Sam）** |
+| Authority / time | User response in the active Codex task, 2026-09-11 (Asia/Hong_Kong). |
+| Binding result | Record `ERP Product Owner (Sam)` as module owner; this does not itself approve implementation, tests, UAT or release. |
+| Affected scope | All Item Management requirements, designs, tasks, tests, approvals and residual-risk decisions. |

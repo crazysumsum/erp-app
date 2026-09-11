@@ -1,0 +1,178 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/items_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/src/modules/item/**",
+      "server/src/handlers/items/**",
+      "server/src/handlers/skus/**",
+      "server/src/handlers/catalog/**",
+      "server/src/handlers/item-audit/**",
+      "server/src/handlers/item-bulk/**",
+      "server/src/handlers/item-exports/**",
+      "server/src/handlers/item-imports/**",
+      "server/src/handlers/item-media/**",
+      "server/src/services/itemImport/**",
+      "server/src/services/itemMedia/**",
+      "client/src/pages/items/**",
+      "client/src/components/items/**",
+      "client/src/services/item*.js",
+      "server/config/item.js"
+    ],
+    "test_paths": [
+      "server/test/**",
+      "client/test/pages/items/**",
+      "client/test/services/item*.test.js",
+      "client/e2e/item-management/**"
+    ],
+    "allowed_write_paths": [
+      "docs/items_management/**",
+      "server/src/modules/item/**",
+      "server/src/handlers/items/**",
+      "server/src/handlers/skus/**",
+      "server/src/handlers/catalog/**",
+      "server/src/handlers/item-audit/**",
+      "server/src/handlers/item-bulk/**",
+      "server/src/handlers/item-exports/**",
+      "server/src/handlers/item-imports/**",
+      "server/src/handlers/item-media/**",
+      "server/src/services/itemImport/**",
+      "server/src/services/itemMedia/**",
+      "client/src/pages/items/**",
+      "client/src/components/items/**",
+      "client/src/services/item*.js",
+      "server/test/**",
+      "client/test/**",
+      "client/e2e/item-management/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/modules/audit/**",
+      "server/config/**",
+      "server/package.json",
+      "client/package.json",
+      "package-lock.json",
+      "client/config/menu.js",
+      "client/src/framework/http/**",
+      "docs/supplier_management/**",
+      "docs/purchasing_receiving_management/**",
+      "docs/inventory_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "secrets/**",
+      "docs/user_management/**"
+    ],
+    "schema_paths": [
+      "server/database/migrations/0010_seed_item_management_permissions.js",
+      "server/database/migrations/0011_create_item_categories.js",
+      "server/database/migrations/0012_create_item_brands.js",
+      "server/database/migrations/0013_create_item_uoms.js",
+      "server/database/migrations/0014_create_items.js",
+      "server/database/migrations/0015_create_item_skus.js",
+      "server/database/migrations/0016_create_item_sku_uoms.js",
+      "server/database/migrations/0017_create_item_sku_barcodes.js",
+      "server/database/migrations/0018_create_item_attribute_definitions.js",
+      "server/database/migrations/0019_create_item_attribute_options.js",
+      "server/database/migrations/0020_create_item_category_attributes.js",
+      "server/database/migrations/0021_create_item_attribute_values.js",
+      "server/database/migrations/0022_create_item_sku_attribute_values.js",
+      "server/database/migrations/0023_create_item_media.js",
+      "server/database/migrations/0024_create_item_audit_logs.js",
+      "server/database/migrations/0025_create_item_import_jobs.js",
+      "server/database/migrations/0026_create_item_import_rows.js"
+    ],
+    "shared_resources": [
+      "global-migration-sequence",
+      "authorization-permission-catalogue",
+      "shared-audit",
+      "local-mysql-instance",
+      "item-media-root",
+      "item-import-root",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "item-sku-uom-provider",
+        "version": "aligned-design-v2",
+        "source": "docs/items_management/03_design_spec.md",
+        "sha256": "6a01476bc89437946dcc635fc21a66d932609d2609a07f0bdee64465a016dd6a",
+        "consumers": [
+          "supplier-management",
+          "purchasing-receiving",
+          "inventory",
+          "sales-order"
+        ]
+      }
+    ],
+    "consumed": [],
+    "data_ownership": {
+      "owned": [
+        "Item aggregate",
+        "Item SKU",
+        "Item Category",
+        "Item Brand",
+        "Item UOM and SKU conversions",
+        "Item Barcode",
+        "Item Attribute definitions/options/values",
+        "Item Media metadata",
+        "Item import jobs/rows",
+        "Item audit logs"
+      ],
+      "read_only": [
+        "User/role authorization state",
+        "Downstream purchasing/inventory/sales reference summaries"
+      ],
+      "forbidden_direct_writes": [
+        "User and role records",
+        "Supplier master data",
+        "Purchasing, receiving, inventory, pricing and sales transactions"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "item-server-technical",
+      "item-client-technical"
+    ],
+    "technical": [
+      "item-server-technical",
+      "item-client-technical",
+      "item-performance",
+      "item-recovery"
+    ],
+    "regression": [
+      "item-server-technical",
+      "item-client-technical",
+      "item-performance",
+      "item-recovery"
+    ],
+    "uat": [
+      "item-uat-browser"
+    ]
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

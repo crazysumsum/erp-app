@@ -481,3 +481,280 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 | Round | Date | Build / Commit | Environment | Passed | Failed | Blocked | Not Run | Report |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
 | 1 | 2026-09-10 | `f4d6d8d`（`worktree-item-management-t27`，PR #73） | 本機 `erp_dev`（真 MySQL）＋ GitHub Actions CI | server 單元 1206／integration 219／lint clean／T35 performance 4／CI 4 job 全綠 | 0 | 0 | 7 個 AC 標注「建議人工驗證」（見上表） | T34／T35 兩個 Task 段落（`docs/items_management/tasks.md`）；CI run 見 PR #73 checks |
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Technical Test Definitions
+
+The canonical suite table and preserved detailed catalogue remain the scenario source. These definitions establish the required v2 test entities; every result remains `PLANNED/NOT_RUN` until executed against an immutable candidate.
+
+## TC-001 — Migration/DB / P0
+
+### Preconditions and data
+Fresh and upgrade MySQL; execute legacy MIG-001–MIG-008
+
+### Steps
+Execute the detailed source cases referenced by the `TC-001` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+Ordered/idempotent migrations, constraints and permission seeds are correct; upgrade rerun is safe
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+disposable DB, schema/ledger/log evidence
+
+## TC-002 — API/DB/UI / P1
+
+### Preconditions and data
+100k-SKU fixture and authorized/unauthorized actors; legacy LIST-001–LIST-010
+
+### Steps
+Execute the detailed source cases referenced by the `TC-002` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+Stable search/filter/page/detail/audit behavior; full projections; correct empty/error/403 states
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+fixture teardown; response, SQL, screenshot, console/network evidence
+
+## TC-003 — API/transaction / P0
+
+### Preconditions and data
+Standard/Variant fixtures; duplicate/race/failure injection; legacy CREATE-001–CREATE-014
+
+### Steps
+Execute the detailed source cases referenced by the `TC-003` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+Atomic, idempotent, authorized creation with valid variants and no orphan/audit gap
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+transaction/DB/audit diff and UI evidence; remove fixtures
+
+## TC-004 — API/concurrency / P0
+
+### Preconditions and data
+stale versions, cross-owned children, referenced/unreferenced SKU; legacy EDIT-001–EDIT-009
+
+### Steps
+Execute the detailed source cases referenced by the `TC-004` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+Optimistic locking, strong auth, full validation, reference guards and audit atomicity hold
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+DB/audit snapshots and race logs; reset fixtures
+
+## TC-005 — Lifecycle/DB / P0
+
+### Preconditions and data
+all statuses, child mixes, references and races; legacy LIFE-001–LIFE-013
+
+### Steps
+Execute the detailed source cases referenced by the `TC-005` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+Legal transitions are atomic; destructive actions preserve references/history and stable public errors
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+DB/audit/reference evidence and cleanup
+
+## TC-006 — Validation/DB/integration / P0
+
+### Preconditions and data
+UOM/barcode boundaries, duplicate and concurrency fixtures; legacy UOM-001–UOM-012
+
+### Steps
+Execute the detailed source cases referenced by the `TC-006` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+Integer conversion, ownership, primary/default rules, GTIN normalization and lookup are correct
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+SQL/API/lookup evidence; remove fixtures
+
+## TC-007 — Domain/API / P0
+
+### Preconditions and data
+price/tracking/catalog/attribute boundaries; legacy PRICE/TRACK/CAT cases
+
+### Steps
+Execute the detailed source cases referenced by the `TC-007` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+HKD precision, tracking invariants, typed attributes and Catalog guards behave consistently
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+request/DB/audit evidence; reset Catalog fixtures
+
+## TC-008 — File/security/integration / P0
+
+### Preconditions and data
+valid/invalid files, traversal/symlink, auth and failure injection; legacy MEDIA-001–MEDIA-012
+
+### Steps
+Execute the detailed source cases referenced by the `TC-008` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+allowlist/signature/size/path/ownership/primary/cleanup controls hold without orphan state
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+redacted file inventory/hash, API/DB/audit; purge test files
+
+## TC-009 — Batch/file/transaction / P0
+
+### Preconditions and data
+mixed/duplicate/10k CSV, retry/lease/failure fixtures; legacy IMP-001–IMP-017
+
+### Steps
+Execute the detailed source cases referenced by the `TC-009` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+preflight is non-mutating; execution is all-or-nothing/idempotent; exports are safe; files retain/purge correctly
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+file hashes, job/row/item/SKU/audit DB evidence; purge fixtures
+
+## TC-010 — Security/audit / P0
+
+### Preconditions and data
+actor revocation, role matrix, IDOR/input/audit failure; legacy AUD-001–AUD-006 and AUTH-001–AUTH-010
+
+### Steps
+Execute the detailed source cases referenced by the `TC-010` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+every critical change is authorized and transactionally auditable; logs redact secrets and audit is immutable/queryable
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+auth matrix, request/DB/audit/log evidence; revoke fixtures
+
+## TC-011 — Browser/accessibility / P1
+
+### Preconditions and data
+running application and role fixtures; legacy UI-001–UI-008
+
+### Steps
+Execute the detailed source cases referenced by the `TC-011` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+happy/negative flows, dirty-state handling, keyboard/focus, refresh/navigation and error states work with no relevant console/network failures
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+Playwright screenshots/trace; remove fixtures
+
+## TC-012 — Performance/observability / P1
+
+### Preconditions and data
+representative 100k-SKU/10k-row workload; legacy OPS-001–OPS-006/OPS-009
+
+### Steps
+Execute the detailed source cases referenced by the `TC-012` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+p95/error/resource thresholds and alerts/log correlation meet defined limits
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+performance report, metrics/log evidence, fixture cleanup
+
+## TC-013 — API/DB regression / P0
+
+### Preconditions and data
+persist item_attribute_values and item_sku_attribute_values, then read detail/API/UI
+
+### Steps
+Execute the detailed source cases referenced by the `TC-013` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+typed values and canonical variant combination are returned; no empty-array placeholder or cross-owner disclosure
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+response/schema/SQL/Playwright evidence; cleanup
+
+## TC-014 — API/DB negative / P0
+
+### Preconditions and data
+referenced and unreferenced Brand/UOM with expected versions
+
+### Steps
+Execute the detailed source cases referenced by the `TC-014` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+referenced delete returns `CATALOG_IN_USE` and no audit/data mutation; unreferenced delete succeeds with audit
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+true-MySQL response/DB/audit diff; cleanup
+
+## TC-015 — Batch/transaction/audit / P0
+
+### Preconditions and data
+create/update import, reason, injected row/audit/commit failures and retry
+
+### Steps
+Execute the detailed source cases referenced by the `TC-015` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+each aggregate change uses the same validation and has per-item audit in the same transaction; failure leaves neither change nor audit
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+job/item/SKU/audit before/after and transaction logs; cleanup
+
+## TC-016 — Backup/restore/DR / P0
+
+### Preconditions and data
+approved staging-like environment, backups, media/import storage and timestamped writes
+
+### Steps
+Execute the detailed source cases referenced by the `TC-016` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+
+### Expected result
+restore returns usable service in <=4h and no more than 15 minutes of committed data is lost; integrity/reconciliation passes
+
+### Acceptance criteria
+Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
+
+### Cleanup
+timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove exercise data
