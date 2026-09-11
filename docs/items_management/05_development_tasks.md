@@ -1,3 +1,216 @@
+# Item Management Development Tasks (Harness Aligned)
+
+## Harness alignment and no-loss rule
+
+| Item | Value |
+| --- | --- |
+| Execution mode | `REVIEW_AND_ALIGN` |
+| Legacy source | `tasks.md`, SHA-256 `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9` |
+| Original size | 1,533 lines; 303 checked boxes; 42 unchecked boxes |
+| Preservation | Full legacy body and every checkbox state retained verbatim below |
+| Product-code change | None |
+
+The legacy body is the authoritative development-progress record. Alignment adds aliases and remediation work but does not reinterpret an unchecked historical box as checked. In particular, the Task Index has T23 unchecked while its detailed section contains completed implementation evidence; this is recorded as `STATUS_INCONSISTENT`, not silently corrected.
+
+## Phase alignment
+
+### PHASE-001 — Foundation and Catalog (legacy Phase A)
+
+- Objective/checkpoint: permissions, configuration, schema and Catalog slices are usable.
+- Included: TASK-001 (PHASE-001) through TASK-007 (PHASE-001).
+- Requirements/design: FR-032 through FR-043; SEC-001, SEC-002, SEC-008; DES-002, DES-007, DES-009, DES-010.
+- Verification/evidence: developer records in legacy Checkpoints A–B; formal independent acceptance `NOT_RUN`.
+- Branch/PR/merge: already merged historically. No new merge action is implied by this review.
+- Exit/status: `COMPLETE_RECORDED`, subject to current-code findings.
+
+### PHASE-002 — Core Item/SKU (legacy Phase B)
+
+- Objective/checkpoint: read/create/update/lifecycle/lookup vertical flows.
+- Included: TASK-008 (PHASE-002) through TASK-022 (PHASE-002).
+- Requirements/design: FR-001 through FR-031, FR-039 through FR-049, FR-059 through FR-064; SEC-001 through SEC-009; DES-003, DES-005, DES-006, DES-007, DES-008, DES-010, DES-012, DES-014, DES-015.
+- Verification/evidence: developer records in legacy Checkpoints C–G; formal independent acceptance `NOT_RUN`.
+- Branch/PR/merge: already merged historically.
+- Exit/status: `COMPLETE_RECORDED`, with deferred downstream reference guard.
+
+### PHASE-003 — Retail extensions (legacy Phase C)
+
+- Objective/checkpoint: Attributes/Variants and Media.
+- Included: TASK-023 (PHASE-003) through TASK-026 (PHASE-003).
+- Requirements/design: FR-011, FR-012, FR-015, FR-018, FR-025; SEC-007, SEC-008, SEC-009; NFR-011, NFR-012; DES-004, DES-011, DES-014, DES-015.
+- Verification/evidence: developer records in legacy Checkpoint H and T25/T26. T23 status remains inconsistent.
+- Branch/PR/merge: already merged historically.
+- Exit/status: `COMPLETE_RECORDED_WITH_STATUS_INCONSISTENCY`.
+
+### PHASE-004 — Bulk capabilities (legacy Phase D)
+
+- Objective/checkpoint: Import/Export, duplicate hints and bounded bulk status.
+- Included: TASK-027 (PHASE-004) through TASK-034 (PHASE-004).
+- Requirements/design: FR-050 through FR-058; FR-059 through FR-064; SEC-001 through SEC-009; NFR-005, NFR-006, NFR-011; DES-002, DES-012, DES-013.
+- Verification/evidence: developer records in legacy Checkpoints I–K; independent acceptance `NOT_RUN`.
+- Branch/PR/merge: already merged historically.
+- Exit/status: `COMPLETE_RECORDED`, but import transactional-audit alignment is open.
+
+### PHASE-005 — Non-functional and delivery (legacy Phase E)
+
+- Objective/checkpoint: capacity, operations, deployment evidence and release readiness.
+- Included: TASK-035 (PHASE-005) and TASK-036 (PHASE-005).
+- Requirements/design: NFR-001 through NFR-015; SEC-001 through SEC-009; DES-016, DES-017, DES-018, DES-019.
+- Verification/evidence: developer Round 1 evidence exists. Staging upgrade, independent QA/UAT, business/Ops/compliance sign-off and RTO/RPO exercise remain pending.
+- Branch/PR/merge: implementation already merged; acceptance sign-off is not complete.
+- Exit/status: `CONDITIONAL`.
+
+### PHASE-006 — Alignment remediation (new)
+
+- Objective/checkpoint: close current design/implementation gaps without rewriting historical progress.
+- Included: TASK-037 (PHASE-006) through TASK-044 (PHASE-006).
+- Requirements/design: all canonical FR/NFR/SEC through DES-004, DES-008, DES-009, DES-012, DES-013, DES-014, DES-015, DES-018, DES-020.
+- Entry: owner approves remediation scope; branch from refreshed `main` in a dedicated worktree.
+- Integration impact: Item API projections, frontend routes/components, Catalog delete errors, import transaction/audit behavior and operational evidence.
+- Acceptance: targeted technical cases pass, regression suite/build pass, browser flows pass where UI changes exist, required CI passes, reviewers approve.
+- PR/merge trigger: developer self-tests PASS → commit/push → required CI PASS → review/approval → merge. Split into small vertical PRs in dependency order; do not combine operational sign-off with code changes.
+- Rollback: safe revert for code; forward-only corrective migration if schema changes become necessary.
+- Cleanup: remove merged worktree and local/remote topic branch.
+- Exit/status: `PLANNED`; no remediation was implemented in this review.
+
+## Canonical task aliases and preserved status
+
+| Canonical task | Parent | Legacy task | Status |
+| --- | --- | --- | --- |
+| TASK-001 | PHASE-001 | T01 | COMPLETE_RECORDED |
+| TASK-002 | PHASE-001 | T02 | COMPLETE_RECORDED |
+| TASK-003 | PHASE-001 | T03 | COMPLETE_RECORDED |
+| TASK-004 | PHASE-001 | T04 | COMPLETE_RECORDED |
+| TASK-005 | PHASE-001 | T05 | COMPLETE_RECORDED |
+| TASK-006 | PHASE-001 | T06 | COMPLETE_RECORDED |
+| TASK-007 | PHASE-001 | T07 | COMPLETE_RECORDED |
+| TASK-008 | PHASE-002 | T08 | COMPLETE_RECORDED |
+| TASK-009 | PHASE-002 | T09 | COMPLETE_RECORDED |
+| TASK-010 | PHASE-002 | T10 | COMPLETE_RECORDED |
+| TASK-011 | PHASE-002 | T11 | COMPLETE_RECORDED |
+| TASK-012 | PHASE-002 | T12 | COMPLETE_RECORDED |
+| TASK-013 | PHASE-002 | T13 | COMPLETE_RECORDED |
+| TASK-014 | PHASE-002 | T14 | COMPLETE_RECORDED |
+| TASK-015 | PHASE-002 | T15 | COMPLETE_RECORDED |
+| TASK-016 | PHASE-002 | T16 | COMPLETE_RECORDED |
+| TASK-017 | PHASE-002 | T17 | COMPLETE_RECORDED |
+| TASK-018 | PHASE-002 | T18 | COMPLETE_RECORDED |
+| TASK-019 | PHASE-002 | T19 | COMPLETE_RECORDED |
+| TASK-020 | PHASE-002 | T20 | COMPLETE_RECORDED |
+| TASK-021 | PHASE-002 | T21 | COMPLETE_RECORDED |
+| TASK-022 | PHASE-002 | T22 | COMPLETE_RECORDED |
+| TASK-023 | PHASE-003 | T23 | STATUS_INCONSISTENT: index unchecked; detailed evidence says completed |
+| TASK-024 | PHASE-003 | T24 | COMPLETE_RECORDED |
+| TASK-025 | PHASE-003 | T25 | COMPLETE_RECORDED |
+| TASK-026 | PHASE-003 | T26 | COMPLETE_RECORDED |
+| TASK-027 | PHASE-004 | T27 | COMPLETE_RECORDED |
+| TASK-028 | PHASE-004 | T28 | COMPLETE_RECORDED |
+| TASK-029 | PHASE-004 | T29 | COMPLETE_RECORDED |
+| TASK-030 | PHASE-004 | T30 | COMPLETE_RECORDED |
+| TASK-031 | PHASE-004 | T31 | COMPLETE_RECORDED |
+| TASK-032 | PHASE-004 | T32 | COMPLETE_RECORDED |
+| TASK-033 | PHASE-004 | T33 | COMPLETE_RECORDED |
+| TASK-034 | PHASE-004 | T34 | COMPLETE_RECORDED |
+| TASK-035 | PHASE-005 | T35 | COMPLETE_RECORDED |
+| TASK-036 | PHASE-005 | T36 | COMPLETE_RECORDED; release checkpoint conditional |
+
+## New remediation tasks
+
+### TASK-037 — Complete Attribute/Variant detail projections
+
+- Parent Phase: PHASE-006.
+- Goal: return persisted Item attribute and SKU variant values through API/client/UI.
+- Requirement/design: FR-011, FR-012, FR-015, FR-018, FR-025; DES-004, DES-014, DES-015.
+- Components: ItemAdminService, item/sku response schemas, client services/pages and focused tests.
+- Acceptance: stored typed values are readable; schema no longer caps arrays at zero; Standard/Variant rules and ownership checks remain enforced.
+- Verification: unit/integration contract tests plus Playwright Item/SKU detail flow; lint and client build.
+- Dependencies: TASK-023 (PHASE-003), TASK-024 (PHASE-003). Risk: high data-visibility gap. Rollback: revert compatible projection/UI changes.
+- Definition of Done/status: tests and CI pass, review approved; `PLANNED`.
+
+### TASK-038 — Decide and implement standalone SKU creation contract
+
+- Parent Phase: PHASE-006.
+- Goal: either implement the designed add-SKU flow for existing Variant Items or approve a requirement/design change removing it.
+- Requirement/design: FR-017, FR-018, FR-019, FR-021; DES-003, DES-008, DES-015.
+- Components: API schema/handler/service/client/page only after decision.
+- Acceptance: approved contract is documented; if retained, duplicate combination, Standard limit, atomicity, auth, audit and UI flows pass.
+- Verification: API/database tests and Playwright happy/negative flows; lint/build/CI.
+- Dependencies: TASK-037 (PHASE-006) and owner decision. Risk: high functional incompleteness. Rollback: route removal/revert if backward compatible.
+- Definition of Done/status: decision and implementation evidence linked; `PLANNED`.
+
+### TASK-039 — Deliver user-facing audit history
+
+- Parent Phase: PHASE-006.
+- Goal: expose the existing authorized audit query through Item/SKU user flows.
+- Requirement/design: FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; DES-012, DES-015.
+- Components: audit client, route/page or embedded timeline, permission-aware UI tests.
+- Acceptance: authorized users can filter/read complete before/after/reason context; unauthorized users cannot infer records.
+- Verification: API regression and Playwright audit/403/empty/error flows; console/network clean; build/CI.
+- Dependencies: existing audit API. Risk: high compliance visibility gap. Rollback: revert UI route/client.
+- Definition of Done/status: acceptance evidence attached; `PLANNED`.
+
+### TASK-040 — Normalize referenced Brand/UOM deletion errors
+
+- Parent Phase: PHASE-006.
+- Goal: translate current FK-reference failures to stable `CATALOG_IN_USE` semantics.
+- Requirement/design: FR-034, FR-035, FR-037, FR-038; SEC-008; DES-009.
+- Components: ItemCatalogService and focused true-MySQL tests.
+- Acceptance: referenced Brand/UOM delete returns documented conflict without partial delete/audit; unreferenced deletion still succeeds atomically.
+- Verification: service/integration race and rollback tests; full Item regression and CI.
+- Dependencies: current Item/SKU schema. Risk: high API correctness. Rollback: revert service error mapping.
+- Definition of Done/status: deterministic tests pass; `PLANNED`.
+
+### TASK-041 — Align CSV import with aggregate validation and transactional audit
+
+- Parent Phase: PHASE-006.
+- Goal: apply create/update rows through a shared domain contract and write per-aggregate audit in the same execution transaction.
+- Requirement/design: FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062; NFR-006; SEC-007, SEC-008; DES-002, DES-012, DES-013.
+- Components: import processor/worker, Item domain service, audit payload and integration tests.
+- Acceptance: UI/API/import validation is equivalent; reason propagates; every imported create/update is auditable; injected failure rolls back data and audit together; 10,000-row bound remains measurable.
+- Verification: true-MySQL transaction, race, retry, failure-injection, audit and performance regression; required CI.
+- Dependencies: contract design before code. Risk: high data integrity/compliance. Rollback: disable import execution and revert code; no partial schema downgrade.
+- Definition of Done/status: independent P0/P1 cases pass; `PLANNED`.
+
+### TASK-042 — Reconcile historical T23/checkpoint status
+
+- Parent Phase: PHASE-006.
+- Goal: obtain maintainer confirmation for the contradictory T23 index and detailed record without altering history during this alignment.
+- Requirement/design: documentation integrity for DES-016.
+- Components: this document only in a later authorized reconciliation.
+- Acceptance: maintainer-approved status note explains whether the index was an omission; original commit evidence remains linked.
+- Verification: before/after checkbox count and Git history audit.
+- Dependencies: human maintainer decision. Risk: medium traceability ambiguity. Rollback: restore this preserved baseline.
+- Definition of Done/status: `PLANNED`.
+
+### TASK-043 — Integrate first real downstream reference guard
+
+- Parent Phase: PHASE-006.
+- Goal: when Purchasing/Inventory/Sales introduces a real SKU reference, add FK/provider guards for destructive and critical lifecycle changes.
+- Requirement/design: FR-030, FR-031, FR-034, FR-037, FR-038; SEC-008; DES-003, DES-020.
+- Components: owning downstream module contract, ItemReferenceService only when the variation exists, transaction/contract tests.
+- Acceptance: referenced data cannot be deleted/archived or incompatibly changed; historical snapshots remain readable; no speculative registry.
+- Verification: true-DB integration/concurrency tests and downstream regression/CI.
+- Dependencies: first production downstream reference. Risk: high once dependency exists. Rollback: forward-compatible provider/FK correction.
+- Definition of Done/status: `DEFERRED_PLANNED`.
+
+### TASK-044 — Complete independent acceptance and DR/sign-off evidence
+
+- Parent Phase: PHASE-006.
+- Goal: execute the already-defined acceptance programme in a controlled environment.
+- Requirement/design: all requirements; especially NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015 and SEC-001 through SEC-009; DES-016, DES-017, DES-018, DES-019.
+- Components: staging, data fixtures, Playwright/API/DB/performance/security/backup-restore evidence and human sign-offs.
+- Acceptance: staging upgrade/re-run succeeds; formal QA/UAT is recorded; restore demonstrates RTO <= 4h and RPO <= 15m; business/Ops/compliance approve or residual risk is explicitly accepted.
+- Verification: `06_technical_test_cases.md` and `07_uat_test_cases.md` executed under `TEST_AND_VERIFY`, not this review.
+- Dependencies: remediation code merged and target environment available. Risk: release-critical evidence gap. Rollback: no production mutation without an approved exercise plan.
+- Definition of Done/status: signed evidence and traceability; `PLANNED`.
+
+## Full canonical requirement coverage
+
+FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009.
+
+---
+
+# Preserved legacy body (verbatim; checkbox states are evidence)
+
 # Item Management 開發任務分解
 
 ## 0. 文件資訊
