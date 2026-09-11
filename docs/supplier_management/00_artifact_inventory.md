@@ -6,8 +6,9 @@
 | --- | --- |
 | Harness mode | `REVIEW_AND_ALIGN` |
 | Output directory | `docs/supplier_management/` |
-| Alignment baseline | `origin/main` at `ab1388101cdfb480cdd74860efc71fc2c350d014` |
-| Initial recovery point | Work began from `6cb50f50c1aa4db37e0f32ce41073df331d6c034`; the isolated branch was then fast-forwarded to the alignment baseline before final review. |
+| Current repeat-alignment baseline | `origin/main` at `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a` (merged PR #80) |
+| Original alignment recovery point | The first alignment began from `6cb50f50c1aa4db37e0f32ce41073df331d6c034`, was reviewed at `ab1388101cdfb480cdd74860efc71fc2c350d014`, and was preserved by PR #80／merge commit `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a`. |
+| Current isolated worktree | `/Users/sam/Documents/workspace/erp-app-worktrees/supplier-management-harness-v2-realignment` |
 | Review date | 2026-09-11 |
 | Implementation inspection | Supplier application module not present; existing User／Item implementation and upstream/downstream documents inspected for conventions and contracts |
 
@@ -43,7 +44,7 @@ Git history preserves the original artifacts. The canonical set is the only live
 
 - Purchasing & Receiving requires purpose-specific Supplier usability, history, SKU ranking and purchase-default contracts; it must never receive bank data.
 - `HD-002` establishes Business Master ownership of Currency／Payment Term. Customer Management is inspected only as an aligned usage precedent, not treated as the authoritative Business Master provider contract.
-- Item Management owns SKU／UOM identity; Supplier may add soft sourcing relationships only after Item providers are READY.
+- Item Management owns SKU／UOM identity; Supplier owns the soft sourcing relationship under the sole formal name `supplier_sku_refs`. Item §5.14's provisional name must be aligned by its owner before Supplier PHASE-004; the currently pinned Item dependency is limited to the `sku-uom-provider` contract.
 - User Management protects `system-admin` as the highest privileged role. Supplier therefore seeds all six Supplier permissions to that role while preserving explicit route policy and high-strength bank controls.
 - Repository migration inventory has advanced through `0026`; fixed Supplier reservations from the legacy plan are stale and are replaced by latest-main allocation.
 

@@ -1360,7 +1360,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 ## T38：建立 Item 依賴與 Supplier–SKU relation 後端
 
-**Description：** 在Item正式SKU／UOM schema存在後建立soft relation與append-only`supplier_supply_events` migration、domain service、CRUD API及Purchasing `recordSupply` command；未滿足依賴時不建立無FK自由ID或runtime缺表fallback。
+**Description：** 先以經批准的跨模組文件變更把Item §5.14的暫名`item_supplier_refs`對齊為Supplier-owned `supplier_sku_refs`並刷新pinned contract hash；其後在Item正式SKU／UOM schema存在時建立soft relation與append-only`supplier_supply_events` migration、domain service、CRUD API及Purchasing `recordSupply` command。未滿足任一依賴時不建立無FK自由ID或runtime缺表fallback。
 
 **Capability：** SUP-CAP-04 Supplier–SKU Sourcing
 
@@ -1368,6 +1368,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Acceptance criteria：**
 - [ ] Migration取得當時main下一個序號，FK精確引用Item SKU／UOM並按design保留歷史及Supplier Item Code unique。
+- [ ] Item §5.14與Supplier／Purchasing契約只保留`Supplier-owned supplier_sku_refs`一個正式名稱；Item文件變更已獲跨模組owner批准，manifest pinned hash已刷新，沒有建立或保留`item_supplier_refs`實體表。
 - [ ] Relation create／update驗證Supplier、SKU、UOM ownership、MOQ、lead time及preferred／alternative／stopped，絕不保存價格。
 - [ ] Purchasing `recordSupply`以source document／line唯一鍵及payload hash提供domain idempotency，先寫append-only event再更新推薦摘要；重送不得重複累計。
 - [ ] Supply event／relation更新不能改Supplier／SKU狀態或建立白名單；失敗時同一transaction整體rollback並由reconciliation可追溯重試。
@@ -1377,7 +1378,7 @@ T24/T31/T37/T40/T49 ────────────────────
 - [ ] `DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/supplierSkuLookup.integration.test.js`
 - [ ] Manual dependency check：移除Item schema時migration明確拒絕，不建立弱化table。
 
-**Dependencies：** T01、T24、T42；Blocked until Item SKU／UOM tables and service contract exist
+**Dependencies：** T01、T24、T42；Blocked until Item SKU／UOM tables and service contract exist, and the provisional Item §5.14 relation name has been aligned through an approved cross-module documentation change
 
 **Files likely touched：**
 - `server/database/migrations/<next>_create_supplier_sku_refs.js`
@@ -1386,8 +1387,10 @@ T24/T31/T37/T40/T49 ────────────────────
 - `server/src/modules/supplier/SupplierSupplyEventService.js`
 - `server/test/supplierRelationService.test.js`
 - `server/test/supplierRecordSupply.test.js`
+- `docs/items_management/03_system_design_spec.md`（cross-module owner approval required）
+- `docs/supplier_management/00_module_manifest.json`
 
-**Estimated scope：** M（5 files）
+**Estimated scope：** M（5 implementation files＋2 contract documents）
 
 ## T39：完成 Supplier–SKU relation UI
 

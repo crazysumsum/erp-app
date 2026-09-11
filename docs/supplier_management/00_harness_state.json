@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 3,
+  "revision": 6,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "DESIGNING",
@@ -9,19 +9,19 @@
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "9d9866b87206edad9dd0bda592480398d2233fb26409d237124f549c741086fb",
-    "plan": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
-    "code_commit": "ab1388101cdfb480cdd74860efc71fc2c350d014",
+    "design": "2b715d5634a5c611af4ba8faecbfe83fa2111202ec03a05a25ca9e756267faa2",
+    "plan": "df43d9254f913788cde911a8731fe6587a8a63f3d81e684b001fbb4d8c016005",
+    "code_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
     "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-management-harness-alignment",
-    "default_commit": "ab1388101cdfb480cdd74860efc71fc2c350d014",
-    "mode_entry_commit": "6cb50f50c1aa4db37e0f32ce41073df331d6c034"
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-management-harness-v2-realignment",
+    "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
+    "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
   },
   "runtime": {
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "supplier-management-harness-alignment"
+      "workspace": "supplier-management-harness-v2-realignment"
     },
     "lease_ref": null
   },
@@ -78,7 +78,49 @@
     "TASK-050": "PENDING",
     "TASK-051": "PENDING"
   },
-  "approvals": [],
+  "approvals": [
+    {
+      "id": "APPROVAL-HD-001",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-11: 修改需求書，system-admin有系統最高權限，可以看到銀行資料",
+      "recorded_at": "2026-09-11T14:11:09+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9d9866b87206edad9dd0bda592480398d2233fb26409d237124f549c741086fb",
+      "code_commit": null,
+      "scope": [
+        "SEC-014",
+        "DES-009",
+        "TASK-034",
+        "TC-112",
+        "UAT-030"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-11: 同意 (shared Business Master owns Currency and Payment Term)",
+      "recorded_at": "2026-09-11T14:11:09+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9d9866b87206edad9dd0bda592480398d2233fb26409d237124f549c741086fb",
+      "code_commit": null,
+      "scope": [
+        "FR-020",
+        "FR-024",
+        "DES-001",
+        "TASK-004",
+        "TC-004",
+        "UAT-031"
+      ],
+      "expires_at": null
+    }
+  ],
   "reviews": [
     {
       "id": "REV-001",
@@ -91,9 +133,89 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/supplier_independent_review",
+      "reviewed_baseline": "9d9866b87206edad9dd0bda592480398d2233fb26409d237124f549c741086fb",
+      "source_ref": "docs/supplier_management/04_design_review.md#harness-20-repeat-review-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-003",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/supplier_independent_review",
+      "reviewed_baseline": "2b715d5634a5c611af4ba8faecbfe83fa2111202ec03a05a25ca9e756267faa2",
+      "source_ref": "docs/supplier_management/04_design_review.md#harness-20-repeat-review-provenance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "CI",
+      "subject": "PR #80 / Dependency audit",
+      "code_commit": "ce5a537b3d1f030742a115bfaea5c117e5eb6e7b",
+      "spec_baseline": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
+      "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34567225221/job/103161721619",
+      "actor": "GitHub Actions (observed by /root via gh CLI)",
+      "observed_at": "2026-09-11T05:46:33Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #80 / Lint",
+      "code_commit": "ce5a537b3d1f030742a115bfaea5c117e5eb6e7b",
+      "spec_baseline": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
+      "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34567225221/job/103161721784",
+      "actor": "GitHub Actions (observed by /root via gh CLI)",
+      "observed_at": "2026-09-11T05:46:37Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #80 / Test (server + client, MySQL integration)",
+      "code_commit": "ce5a537b3d1f030742a115bfaea5c117e5eb6e7b",
+      "spec_baseline": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
+      "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34567225221/job/103161721799",
+      "actor": "GitHub Actions (observed by /root via gh CLI)",
+      "observed_at": "2026-09-11T05:52:28Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #80 / Build frontend",
+      "code_commit": "ce5a537b3d1f030742a115bfaea5c117e5eb6e7b",
+      "spec_baseline": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
+      "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34567225221/job/103161721822",
+      "actor": "GitHub Actions (observed by /root via gh CLI)",
+      "observed_at": "2026-09-11T05:46:29Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #80 merged to main",
+      "code_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
+      "spec_baseline": "45674879c52b057013634325840cc08d20e30d5514116ec67078dee4e9112cde",
+      "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/80",
+      "actor": "GitHub (observed by /root via gh CLI)",
+      "observed_at": "2026-09-11T05:50:20Z"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -107,7 +229,7 @@
         "UAT-030"
       ],
       "status": "ANSWERED",
-      "answer_ref": "User response in current Codex task on 2026-09-11: modify requirement; system-admin has highest authority and can see bank data."
+      "answer_ref": "User message on 2026-09-11: 修改需求書，system-admin有系統最高權限，可以看到銀行資料"
     },
     {
       "id": "HD-002",
@@ -122,7 +244,7 @@
         "UAT-031"
       ],
       "status": "ANSWERED",
-      "answer_ref": "User response in current Codex task on 2026-09-11: agreed that shared Business Master owns Currency and Payment Term."
+      "answer_ref": "User message on 2026-09-11: 同意 (shared Business Master owns Currency and Payment Term)"
     }
   ],
   "external_actions": [
@@ -131,27 +253,51 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/supplier-management-harness-alignment",
       "idempotency_key": "supplier-management-harness-alignment-push",
-      "status": "PLANNED",
-      "source_ref": "Software Engineering Harness REVIEW_AND_ALIGN workflow authorized in current Codex task"
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #80 head codex/supplier-management-harness-alignment at ce5a537b3d1f030742a115bfaea5c117e5eb6e7b"
     },
     {
       "id": "PR-001",
       "kind": "CREATE_PR",
       "target": "base=main head=codex/supplier-management-harness-alignment",
       "idempotency_key": "supplier-management-harness-alignment-pr",
-      "status": "PLANNED",
-      "source_ref": "Software Engineering Harness REVIEW_AND_ALIGN workflow authorized in current Codex task"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/80"
     },
     {
       "id": "MERGE-001",
       "kind": "MERGE_PR",
       "target": "main from codex/supplier-management-harness-alignment",
       "idempotency_key": "supplier-management-harness-alignment-merge",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/80; merge commit fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
+    },
+    {
+      "id": "PUSH-002",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/supplier-management-harness-v2-realignment",
+      "idempotency_key": "supplier-management-harness-v2-realignment-push",
       "status": "PLANNED",
-      "source_ref": "User explicitly approved merge in current Codex task"
+      "source_ref": "Software Engineering Harness 2.0 REVIEW_AND_ALIGN workflow requested by user on 2026-09-11"
+    },
+    {
+      "id": "PR-002",
+      "kind": "CREATE_PR",
+      "target": "base=main head=codex/supplier-management-harness-v2-realignment",
+      "idempotency_key": "supplier-management-harness-v2-realignment-pr",
+      "status": "PLANNED",
+      "source_ref": "Software Engineering Harness 2.0 REVIEW_AND_ALIGN workflow requested by user on 2026-09-11"
+    },
+    {
+      "id": "MODE-CHANGE-4",
+      "kind": "MODE_CHANGE",
+      "target": "REVIEW_AND_ALIGN",
+      "idempotency_key": "mode-change-4",
+      "status": "CONFIRMED",
+      "source_ref": "User requested a fresh Software Engineering Harness 2.0 Supplier REVIEW_AND_ALIGN on 2026-09-11"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Push the committed branch, create and independently review the PR, verify latest origin/main, then merge the documentation-only PR as explicitly authorized."
+  "next_safe_action": "Run final Harness structural, approval, state, boundary and diff validation; commit, push and create the documentation PR. Do not merge without explicit user authorization. Product Owner Design/Plan approval remains required before implementation, and PHASE-004 remains blocked by two external contract-alignment gates."
 }
