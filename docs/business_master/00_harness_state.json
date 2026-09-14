@@ -1,0 +1,226 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "revision": 5,
+  "mode": "DESIGN_AND_PLAN",
+  "active_mode": "DESIGN_AND_PLAN",
+  "status": "PLANNED",
+  "resume_status": null,
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87",
+    "plan": "edd6ca008e4ca76ecf281c2b2451733c143e261c89dda28f8af20ea3a1c359c9",
+    "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+    "source_fingerprint": "c709b2c2ab6ab293a75857281db464454e291ce4a74155b92dc95ec9fac32569",
+    "worktree": "/private/tmp/erp-business-master-design-plan",
+    "default_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+    "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
+  },
+  "runtime": {
+    "instance_id": "design-only-no-runtime",
+    "owner": "/root Codex context",
+    "resources": {},
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING"
+  },
+  "approvals": [
+    {
+      "id": "APPROVAL-DESIGN-001",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user '同意' responding to exact DESIGN/PLAN hashes and independent HUMAN reviewer statement",
+      "recorded_at": "2026-09-14T00:45:55Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87",
+      "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-001",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user '同意' responding to exact DESIGN/PLAN hashes and independent HUMAN reviewer statement",
+      "recorded_at": "2026-09-14T00:45:55Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "edd6ca008e4ca76ecf281c2b2451733c143e261c89dda28f8af20ea3a1c359c9",
+      "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REVIEW-SELF-001",
+      "method": "SELF_REVIEW",
+      "author": "/root Codex context",
+      "reviewer": "/root same Codex context (not independent)",
+      "reviewed_baseline": "9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87",
+      "source_ref": "docs/business_master/04_design_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-001",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87",
+      "source_ref": "2026-09-14 Codex task user '同意' responding to exact DESIGN/PLAN hashes and independent HUMAN reviewer statement",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "Confirm output directory and DESIGN_AND_PLAN mode",
+      "affected_ids": [],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user agreement"
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "Confirm full admin UI/API and sole ownership",
+      "affected_ids": [
+        "FR-001",
+        "FR-002",
+        "FR-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user agreement"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "Confirm deterministic due-date provider or explicit MANUAL",
+      "affected_ids": [
+        "FR-006"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user yes"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Confirm four Payment Term calculation types",
+      "affected_ids": [
+        "FR-006"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user agreement"
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "Confirm ISO-only Currency, immutable code and HKD-only production seed",
+      "affected_ids": [
+        "FR-002",
+        "FR-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user agreement"
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "Confirm view/mgmt permissions and consumer-owned authorization",
+      "affected_ids": [
+        "FR-009",
+        "FR-010",
+        "SEC-001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user yes"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "Confirm deactivation with impact confirmation, retained history and no delete",
+      "affected_ids": [
+        "FR-007",
+        "FR-008",
+        "SEC-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user yes"
+    },
+    {
+      "id": "HD-008",
+      "impact": "MAJOR",
+      "question": "Confirm no production Payment Term seed",
+      "affected_ids": [
+        "FR-005",
+        "FR-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user yes"
+    },
+    {
+      "id": "HD-009",
+      "impact": "MAJOR",
+      "question": "Confirm complete intent and exclusions",
+      "affected_ids": [],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user yes"
+    },
+    {
+      "id": "HD-010",
+      "impact": "MAJOR",
+      "question": "Confirm precision/rule edits use the same impact/reason/confirmation guard as deactivation",
+      "affected_ids": [
+        "FR-002",
+        "FR-005",
+        "FR-007",
+        "SEC-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-11 user yes"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "Approve exact DESIGN and PLAN baselines and complete independent review",
+      "affected_ids": [],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-14 user agreement to exact hashes and independent HUMAN reviewer statement"
+    }
+  ],
+  "external_actions": [],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Commit, push and open the design PR. Implementation requires separate mode authorization."
+}

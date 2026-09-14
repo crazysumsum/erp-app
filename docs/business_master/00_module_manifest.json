@@ -1,0 +1,134 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/business_master",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/src/modules/businessMaster/**",
+      "server/src/handlers/business-master/**",
+      "client/src/pages/business-master/**",
+      "client/src/components/business-master/**",
+      "client/src/services/businessMaster.js"
+    ],
+    "test_paths": [
+      "server/test/business-master/**",
+      "server/test/integration/businessMaster*.test.js",
+      "server/test/performance/businessMaster*.test.js",
+      "client/test/business-master/**",
+      "client/e2e/business-master/**"
+    ],
+    "allowed_write_paths": [
+      "docs/business_master/**",
+      "server/src/modules/businessMaster/**",
+      "server/src/handlers/business-master/**",
+      "client/src/pages/business-master/**",
+      "client/src/components/business-master/**",
+      "client/src/services/businessMaster.js",
+      "server/test/business-master/**",
+      "server/test/integration/businessMaster*.test.js",
+      "server/test/performance/businessMaster*.test.js",
+      "server/scripts/runBusinessMaster*.js",
+      "client/test/business-master/**",
+      "client/e2e/business-master/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "client/config/menu.js",
+      "client/src/framework/http/errorMessages.js",
+      "client/package.json",
+      "package-lock.json",
+      "docs/customer_management/**",
+      "docs/supplier_management/**",
+      "docs/sales_order_management/**",
+      "docs/purchasing_receiving_management/**",
+      "docs/invoicing_accounts_receivable_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "client/.env",
+      "secrets/**",
+      "docs/user_management/**"
+    ],
+    "schema_paths": ["server/database/migrations/**"],
+    "shared_resources": [
+      "global-migration-sequence",
+      "permission-catalogue",
+      "system-menu",
+      "client-error-map",
+      "business-master-currency-payment-term-provider",
+      "customer-supplier-sales-purchasing-ar-consumer-contracts",
+      "local-mysql-instance",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "business-master-currency-payment-term-provider",
+        "version": "v1-design",
+        "source": "docs/business_master/03_design_spec.md",
+        "sha256": "a9b3a1a99fd65b65732ed00f3b6e02f80d825a0f94bb21a58a88053de132c2b4",
+        "consumers": [
+          "customer-management",
+          "supplier-management",
+          "sales-order-management",
+          "purchasing-receiving-management",
+          "invoicing-accounts-receivable-management",
+          "accounts-payable"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "user-management",
+        "id": "jwt-role-permission-contract",
+        "version": "main-0996cb7",
+        "source": "server/src/modules/authorization/permissionCatalogue.js",
+        "sha256": "54a87230aceea9180500af79f143d9bca4b4d8068ff7c5a0716d6790b69b8dcc",
+        "regression_suites": ["business-master-server"]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Currency catalog",
+        "Payment Term catalog and deterministic calculation rules",
+        "Business Master audit records",
+        "ISO 4217 validation snapshot",
+        "Business Master provider/readiness contract"
+      ],
+      "read_only": [
+        "Users, roles and permissions",
+        "Customer/Supplier defaults and reference counts",
+        "Sales/Purchasing/AR/AP transaction reference counts and snapshots"
+      ],
+      "forbidden_direct_writes": [
+        "Users, roles and authentication records except approved permission seeds",
+        "Customer and Supplier master data",
+        "Sales, Purchasing, Fulfillment, AR, AP and payment transactions",
+        "Historical consumer snapshots"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": ["lint","client-build","business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
+    "technical": ["business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
+    "regression": ["business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
+    "uat": ["business-master-uat-browser"]
+  },
+  "review_policy": {"independent_required":true,"self_review_exception_approval":null}
+}
