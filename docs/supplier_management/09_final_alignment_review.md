@@ -2,7 +2,15 @@
 
 ## Final disposition
 
-`CONDITIONALLY ALIGNED` for the Supplier-owned documentation baseline. There are no open Critical or High defects within the Supplier canonical documents, but the Item table-name alignment and Purchasing `recordSupply` contract remain explicit High cross-module dependency gates that block PHASE-004. Product Owner Design／Plan approval is required before any implementation Phase starts. This confirms document quality only; it does not mean the Supplier module is implemented, technically verified, accepted by business users or approved for production.
+`CONDITIONALLY ALIGNED` for the current Supplier-owned documentation candidate, as approved by independent `REV-004`. Product Owner approved `HD-003` on 2026-09-14 to refresh Supplier's consumed Item SKU／UOM identity-contract pin. The Item relation-name alignment and Purchasing `recordSupply` contract remain explicit High cross-module dependency gates that block PHASE-004. Product Owner Design／Plan approval is required before any implementation Phase starts. This confirms document quality only; it does not mean the Supplier module is implemented, technically verified, accepted by business users or approved for production. The reviewer-observed `origin/main` advancement was integrated without conflict and the document checks were rerun before PR preparation.
+
+## 2026-09-14 current alignment entry
+
+This repeat alignment began in isolated worktree `/private/tmp/erp-supplier-management-harness-v2-review` from verified `origin/main` commit `c1ed49225524e60d7dcf28ef8941ea2c14a8f04f`. The Harness state reconciled the previously unknown `MERGE-002`: [PR #81](https://github.com/crazysumsum/erp-app/pull/81) merged at `729772520fb101c329f334207159a78b2d198006` on 2026-09-11. It also found that Supplier's consumed Item source no longer existed. `HD-003` records the Product Owner's 2026-09-14 approval to use Item's currently published `item-sku-uom-provider`／`aligned-design-v2` contract at `docs/items_management/03_design_spec.md`.
+
+The contract-pin refresh does not change Item §5.14's deferred relationship ownership. `supplier_sku_refs` remains the Supplier-owned formal relation; `item_supplier_refs` remains an external Phase-004 documentation-alignment gate. No Supplier application code, Migration, application CI or test execution was performed.
+
+After `REV-004`, current `origin/main` commit `c3972422d20c56e9656aef9f894b91d7162c79c7` was integrated without Supplier-document conflict by merge commit `3c6b7b3a7e33372703d04e4e8529c1aee1cd3ab0`. This preserved the reviewed Design `be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210` and Plan `94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4` hashes; the file-level validators were rerun after integration.
 
 ## Harness 2.0 repeat-alignment reconciliation
 
@@ -16,6 +24,7 @@ The repeat review corrected the stale worktree/commit checkpoint and changed the
 
 - `HD-001`: protected `system-admin` is the system's highest-privilege role and receives Supplier Bank permissions. Bank masking, explicit Reveal, approved-device／password reauthentication, short-lived plaintext, audit, redaction and alert controls still apply without bypass.
 - `HD-002`: shared Business Master is the sole owner of Currency and Payment Term. Supplier is a read／validate／reference consumer and must not create shadow schema, seeds or write APIs.
+- `HD-003`: Supplier may replace the stale `sku-uom-provider`／`aligned-design` pin with Item's currently published `item-sku-uom-provider`／`aligned-design-v2` contract. This approval does not authorize a change to Item §5.14's provisional relationship table name, Supplier’s Phase boundary or Purchasing’s `recordSupply` contract.
 
 ## Original independent review provenance
 
@@ -61,7 +70,30 @@ The separate reviewer first recorded `REV-002` as `CHANGES_REQUESTED` with 0 Cri
 }
 ```
 
-## Reviewed artifact hashes
+## 2026-09-14 current review provenance
+
+```json
+{
+  "id": "REV-004",
+  "method": "SEPARATE_AGENT",
+  "author": "/root",
+  "reviewer": "/root/supplier_independent_review",
+  "reviewed_at": "2026-09-14T08:42:01Z",
+  "reviewed_worktree": "/private/tmp/erp-supplier-management-harness-v2-review",
+  "reviewed_commit": "c1ed49225524e60d7dcf28ef8941ea2c14a8f04f",
+  "observed_default_baseline": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+  "design_hash": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
+  "plan_hash": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+  "source_fingerprint": "8a54ee4c94173a6cef5a430d9704fa78867b30f35d3f3b1c35e4b48eeb330453",
+  "status": "APPROVED",
+  "open_critical": 0,
+  "open_high": 0,
+  "external_high_dependency_gates": 2,
+  "risk_approval_id": null
+}
+```
+
+## 2026-09-11 historical reviewed artifact hashes
 
 | Artifact | SHA-256 |
 | --- | --- |
@@ -83,9 +115,28 @@ The separate reviewer first recorded `REV-002` as `CHANGES_REQUESTED` with 0 Cri
 - UAT cases: 52 browser cases mapped to the Playwright-preferred UAT suite; three operational cases remain explicit manual business acceptance.
 - `git diff --check`: clean at reviewer handoff.
 
+## 2026-09-14 current candidate hashes and verification
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `00_module_manifest.json` | `078cf5e95af5de501e2bf58d6f009ef86e5c7537516de07d35996c76f929941c` |
+| `01_requirement_spec.md` | `7d16774b4e63143ba9e3fdaac82e06c66665150713c91e2d3e349816635c3543` |
+| `03_design_spec.md` | `16031c0f63ce28baf333f02e65f68107a42d4d711baf2e9f55c77d60625859db` |
+| `05_development_tasks.md` | `da62cad6cdebb0fd46afdec7c495859252ae9909beab5ac50375f8da9919c9a7` |
+| `06_technical_test_cases.md` | `1224b3933323e676a86c923f9ddc92208d2142959e167766f9f49d01def7a64f` |
+| `07_uat_test_cases.md` | `d1fa1ad92b5b56286a4681adf0f75c8f30ea675bdcddd17338fce742776ce666` |
+| `08_traceability.json` | `16f92ffd4b9e52b94bb6604d9c7761fa782c0721237dbafb4d370fd8a59d5769` |
+| `08_traceability_matrix.md` | `deb7e1263e9c6e495b020cb5714e6315ee8570eaf93b9b7e6198bc356c73290e` |
+
+- `state_tool inspect`: `LOCAL_CHECKS_PASS`.
+- Traceability `--check-approvals`: `STRUCTURE_PASS`.
+- Module-boundary validation against candidate `HEAD`: `LOCAL_CHECKS_PASS`.
+- `git diff --check`: clean.
+- `PLAN_READY`: intentionally `BLOCKED` only by missing baseline-bound Product Owner `DESIGN` and `PLAN` approvals. `HD-003` is scoped to the Item contract pin and is not a substitute for those approvals.
+
 ## Open implementation and release gates
 
-- Business Master Currency／Payment Term provider must be READY before PHASE-001.
+- A fresh isolated Business Master Currency／Payment Term provider readiness result must be observed before PHASE-001; code/CI inspection alone is insufficient.
 - Item SKU／UOM provider and final Purchasing `recordSupply` consumer contract must be READY before PHASE-004／T38.
 - Item §5.14's provisional `item_supplier_refs` name must be aligned to Supplier-owned `supplier_sku_refs` in an approved cross-module documentation change, and the manifest pin refreshed, before PHASE-004／T38.
 - Split suite adapters and canonical case-ID reporters in `00_project_profile.json` are planned implementation deliverables; no execution result exists yet.

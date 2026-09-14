@@ -732,7 +732,7 @@ Migration 以「不存在才 insert」種 `id=1`，不得用 `INSERT IGNORE` 吞
 
 若 Item migrations 尚未落地，Supplier core migrations 不建立此表，API 回 feature unavailable；待 `item_skus` 及 `item_sku_uoms` 存在後以獨立 forward migration 加入，不能先保存無 FK 的自由輸入 SKU ID。
 
-Item design spec §5.14 在 Supplier master 尚未確定時曾以 `item_supplier_refs` 作延後建立的暫名；該段不是本模組 manifest 所消費的 `sku-uom-provider` 契約。現按 Supplier requirement §12.2、本文資料擁有權及 Purchasing design 的 `supplier_sku_ref_id`，以 Supplier-owned `supplier_sku_refs` 作唯一正式名稱。PHASE-004 建立 Migration 前，必須先在經批准的跨模組文件變更中把 Item 的暫名對齊並刷新 pinned contract hash；未完成時 T38 保持 `BLOCKED`。實作只可建立一張表，不得建立兩張語意重複的 relation tables。
+Item design spec §5.14 在 Supplier master 尚未確定時曾以 `item_supplier_refs` 作延後建立的暫名；該段不是本模組 manifest 所消費的 `item-sku-uom-provider`（`aligned-design-v2`）SKU／UOM identity 契約。現按 Supplier requirement §12.2、本文資料擁有權及 Purchasing design 的 `supplier_sku_ref_id`，以 Supplier-owned `supplier_sku_refs` 作唯一正式名稱。Product Owner 已於 2026-09-14 批准刷新 Supplier 對 Item 現行 identity contract 的 pin；這不等於批准修改 Item §5.14 的關係表語意。PHASE-004 建立 Migration 前，仍必須先在經批准的跨模組文件變更中把 Item 的暫名對齊並刷新相關 contract hash；未完成時 T38 保持 `BLOCKED`。實作只可建立一張表，不得建立兩張語意重複的 relation tables。
 
 ### 5.11.1 `supplier_supply_events`（Purchasing projection idempotency）
 
