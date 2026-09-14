@@ -1,0 +1,76 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T065454-f6afffed3b2f",
+  "suite_id": "business-master-client-ui",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+  "source_fingerprint": "5ce70e4bcc3d52d1b758c395485d002eaf65857c34f6c859311a839c9b2f272b",
+  "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+  "started_at": "2026-09-14T06:54:54.794178Z",
+  "ended_at": "2026-09-14T06:54:56.038931Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-2-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "--config",
+    "test/business-master.vitest.config.js",
+    "--reporter=junit",
+    "--outputFile=/private/tmp/erp-business-master-phase-2/docs/business_master/evidence/20260914T065454-f6afffed3b2f/business-master-client-ui.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "22c854ae5bfc390e55f8abe60302c8bfb1f9fb9d759330f1f0562163e1862054",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T065454-f6afffed3b2f/stdout.log",
+      "sha256": "117ff5a9aeb94810c68ccbb7a59a84824b594a11f68895d099bd1ceafa7d6655",
+      "bytes": 401
+    },
+    {
+      "path": "evidence/20260914T065454-f6afffed3b2f/stderr.log",
+      "sha256": "5be38b7e5b69dcbdba013b04b74b9adec41d1c71072faa36b38ef61cb90995fc",
+      "bytes": 270
+    },
+    {
+      "path": "evidence/20260914T065454-f6afffed3b2f/business-master-client-ui.xml",
+      "sha256": "2a111428e307b6e02bcf79f4bbe61a842ed2642facced053c279a26ebf737319",
+      "bytes": 6492
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -1,0 +1,19 @@
+
+Running 15 tests using 1 worker
+
+[1/15] [technical] › client/e2e/business-master/business-master.spec.js:162:1 › TC-017 @technical 管理員可查看目錄並完成具 impact token 的停用
+[2/15] [technical] › client/e2e/business-master/business-master.spec.js:183:1 › TC-017 @technical 未知網路結果以相同 idempotency key 安全重試
+[3/15] [technical] › client/e2e/business-master/business-master.spec.js:202:1 › TC-017 @technical 雙擊確認只送出一個高影響命令
+[4/15] [technical] › client/e2e/business-master/business-master.spec.js:219:1 › TC-017 @technical 清單 503 顯示中文錯誤並可重試
+[5/15] [technical] › client/e2e/business-master/business-master.spec.js:227:1 › TC-017 @technical 空清單有明確狀態
+[6/15] [technical] › client/e2e/business-master/business-master.spec.js:233:1 › TC-017 @technical 未登入使用者會導向登入頁
+[7/15] [uat] › client/e2e/business-master/business-master.spec.js:239:1 › UAT-001 @uat 可按 URL-backed search 查閱 Currency
+[8/15] [uat] › client/e2e/business-master/business-master.spec.js:246:1 › UAT-002 @uat 管理員可建立 ISO Currency，代碼建立後編輯時唯讀
+[9/15] [uat] › client/e2e/business-master/business-master.spec.js:259:1 › UAT-003 @uat 可建立 NET_DAYS Payment Term 並看到 deterministic preview
+[10/15] [uat] › client/e2e/business-master/business-master.spec.js:274:1 › UAT-004 @uat END_OF_MONTH 與 MANUAL preview 顯示正確語意
+[11/15] [uat] › client/e2e/business-master/business-master.spec.js:287:1 › UAT-005 @uat 停用前顯示 entity、語意差異及 consumer 計數
+[12/15] [uat] › client/e2e/business-master/business-master.spec.js:298:1 › UAT-006 @uat consumer impact 未知時 fail closed
+[13/15] [uat] › client/e2e/business-master/business-master.spec.js:307:1 › UAT-007 @uat view-only 使用者可看頁面但沒有管理操作
+[14/15] [uat] › client/e2e/business-master/business-master.spec.js:314:1 › UAT-008 @uat 409 重新載入列表並保留未提交文字
+[15/15] [uat] › client/e2e/business-master/business-master.spec.js:325:1 › UAT-009 @uat 375px 回應式流程無 console 或 request failure
+  15 passed (11.1s)

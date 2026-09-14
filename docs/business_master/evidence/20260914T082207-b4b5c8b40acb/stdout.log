@@ -1,0 +1,5 @@
+
+> @erp/client@0.1.0 test
+> vitest run --config test/business-master/vitest.config.js --reporter=junit --outputFile=/private/tmp/erp-business-master-phase-2/docs/business_master/evidence/20260914T082207-b4b5c8b40acb/business-master-client-ui.xml
+
+JUNIT report written to /private/tmp/erp-business-master-phase-2/docs/business_master/evidence/20260914T082207-b4b5c8b40acb/business-master-client-ui.xml

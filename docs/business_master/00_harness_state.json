@@ -1,31 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 18,
+  "revision": 40,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": null,
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-016",
   "baseline": {
-    "design": "7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565",
-    "plan": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
-    "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
-    "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
-    "worktree": "/private/tmp/erp-business-master-phase-1",
-    "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
-    "mode_entry_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d"
+    "design": "615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8",
+    "plan": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+    "code_commit": "ba7bdc260dbde05e168187d07d59cb4065aac1c2",
+    "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+    "worktree": "/private/tmp/erp-business-master-phase-2",
+    "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+    "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
   },
   "runtime": {
-    "instance_id": "business-master-phase-1-20260914",
+    "instance_id": "business-master-phase-2-20260914",
     "owner": "/root Codex context",
     "resources": {
-      "workspace": "/private/tmp/erp-business-master-phase-1",
-      "mysql-schema": "erp_business_master_phase1",
-      "server-port": "3101",
-      "client-port": "5201",
-      "playwright-profile": "/private/tmp/erp-business-master-phase1-playwright"
+      "workspace": "/private/tmp/erp-business-master-phase-2",
+      "mysql-schema": "erp_business_master_phase2",
+      "server-port": "3102",
+      "client-port": "5202",
+      "playwright-profile": "/private/tmp/erp-business-master-phase2-playwright"
     },
     "lease_ref": null
   },
@@ -39,13 +39,13 @@
     "TASK-007": "DONE",
     "TASK-008": "DONE",
     "TASK-009": "DONE",
-    "TASK-010": "PENDING",
-    "TASK-011": "PENDING",
-    "TASK-012": "PENDING",
-    "TASK-013": "PENDING",
-    "TASK-014": "PENDING",
-    "TASK-015": "PENDING",
-    "TASK-016": "PENDING"
+    "TASK-010": "DONE",
+    "TASK-011": "DONE",
+    "TASK-012": "DONE",
+    "TASK-013": "DONE",
+    "TASK-014": "DONE",
+    "TASK-015": "DONE",
+    "TASK-016": "DONE"
   },
   "approvals": [
     {
@@ -294,6 +294,74 @@
         "server/src/index.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-006",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 同意, responding to explicit shared-path authorization request",
+      "recorded_at": "2026-09-14T06:38:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "scope": [
+        "client/src/framework/http/errorMessages.js",
+        "package.json",
+        "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Design 615321ed、Plan 0426c5ab，以及上述三個共享路徑授權",
+      "recorded_at": "2026-09-14T07:03:39Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8",
+      "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-007",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Design 615321ed、Plan 0426c5ab，以及上述三個共享路徑授權",
+      "recorded_at": "2026-09-14T07:03:39Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-007",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Design 615321ed、Plan 0426c5ab，以及上述三個共享路徑授權",
+      "recorded_at": "2026-09-14T07:03:39Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "scope": [
+        "client/src/framework/http/errorMessages.js",
+        "package.json",
+        "package-lock.json"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -356,9 +424,89 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-005",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8",
+      "source_ref": "2026-09-14 Codex task user: 本人作為獨立人類 reviewer，批准 Design 615321ed，0 Critical、0 High。",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-006",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "4da07da6f4dd5820539ddc94cff37b460f83b892cafbd466fb011f7f201b8315",
+      "source_ref": "2026-09-14 Codex task user: 本人作為獨立人類 reviewer，批准 PR #93 的 code review（commit 413ba3db2519341f75db8ce82cb9871fa5336118），0 Critical、0 High。合併到main",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "4a779d6d0263830e0ef69186269c563e2a1d9dfc",
+      "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34811314860/job/103873067018",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T06:01:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "4a779d6d0263830e0ef69186269c563e2a1d9dfc",
+      "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34811314860/job/103873066994",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T06:01:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "4a779d6d0263830e0ef69186269c563e2a1d9dfc",
+      "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34811314860/job/103873066886",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T06:01:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "4a779d6d0263830e0ef69186269c563e2a1d9dfc",
+      "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34811314860/job/103873066988",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T06:01:18Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PHASE-001",
+      "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/89 merge commit a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "actor": "ERP Product Owner (Sam)",
+      "observed_at": "2026-09-14T06:07:35Z"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -540,6 +688,94 @@
       "idempotency_key": "mode-change-7",
       "status": "CONFIRMED",
       "source_ref": "2026-09-14 user request: 進入 FULL_LIFECYCLE"
+    },
+    {
+      "id": "ACTION-PUSH-002",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-1",
+      "idempotency_key": "business-master-phase1-push-4a779d6d0263830e0ef69186269c563e2a1d9dfc",
+      "status": "CONFIRMED",
+      "source_ref": "origin/codex/business-master-phase-1@4a779d6d0263830e0ef69186269c563e2a1d9dfc"
+    },
+    {
+      "id": "ACTION-PR-089",
+      "kind": "GITHUB_PR",
+      "target": "https://github.com/crazysumsum/erp-app/pull/89",
+      "idempotency_key": "business-master-phase1-pr-89",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/89 head 4a779d6d0263830e0ef69186269c563e2a1d9dfc"
+    },
+    {
+      "id": "ACTION-MERGE-089",
+      "kind": "GITHUB_MERGE",
+      "target": "github.com/crazysumsum/erp-app:main",
+      "idempotency_key": "business-master-phase1-merge-a3040c96e1aa92902df964d44a1ad0b83f37f844",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/89 merge commit a3040c96e1aa92902df964d44a1ad0b83f37f844"
+    },
+    {
+      "id": "MODE-CHANGE-19",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-19",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 user: 清理已合併分支及worktree, 開始下一步工作"
+    },
+    {
+      "id": "ACTION-PUSH-003",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2",
+      "idempotency_key": "business-master-phase2-push-2c88ed01f4b19a0a4d3457331689ce4af54eeb28",
+      "status": "FAILED",
+      "source_ref": "Not executed: origin/main advanced from a3040c96 to bd97e1cc before push"
+    },
+    {
+      "id": "ACTION-PR-PHASE2-001",
+      "kind": "GITHUB_PR",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2-to-main",
+      "idempotency_key": "business-master-phase2-pr-2c88ed01f4b19a0a4d3457331689ce4af54eeb28",
+      "status": "FAILED",
+      "source_ref": "Not executed: candidate required integration with origin/main bd97e1cc"
+    },
+    {
+      "id": "ACTION-PUSH-004",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2",
+      "idempotency_key": "business-master-phase2-push-13388d95f1121941dd46d58c8b26e4c9d26960a7",
+      "status": "FAILED",
+      "source_ref": "Not executed: origin/main advanced from bd97e1cc to b6f03219 before authorization"
+    },
+    {
+      "id": "ACTION-PR-PHASE2-002",
+      "kind": "GITHUB_PR",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2-to-main",
+      "idempotency_key": "business-master-phase2-pr-13388d95f1121941dd46d58c8b26e4c9d26960a7",
+      "status": "FAILED",
+      "source_ref": "Not executed: candidate required integration with origin/main b6f03219"
+    },
+    {
+      "id": "ACTION-PUSH-005",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2",
+      "idempotency_key": "business-master-phase2-push-413ba3db2519341f75db8ce82cb9871fa5336118",
+      "status": "CONFIRMED",
+      "source_ref": "origin/codex/business-master-phase-2@413ba3db2519341f75db8ce82cb9871fa5336118"
+    },
+    {
+      "id": "ACTION-PR-PHASE2-003",
+      "kind": "GITHUB_PR",
+      "target": "https://github.com/crazysumsum/erp-app/pull/93",
+      "idempotency_key": "business-master-phase2-pr-413ba3db2519341f75db8ce82cb9871fa5336118",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/93 head 413ba3db2519341f75db8ce82cb9871fa5336118"
+    },
+    {
+      "id": "ACTION-MERGE-093",
+      "kind": "GITHUB_MERGE",
+      "target": "github.com/crazysumsum/erp-app:main",
+      "idempotency_key": "business-master-phase2-merge-413ba3db2519341f75db8ce82cb9871fa5336118",
+      "status": "FAILED",
+      "source_ref": "Not executed: origin/main advanced from b6f03219 to c1ed4922 before merge"
     }
   ],
   "evidence_files": [
@@ -565,8 +801,54 @@
     "evidence/20260914T054939-621d948338cb/run.json",
     "evidence/20260914T055101-1f710e2d7d9b/run.json",
     "evidence/20260914T055110-1e48198f2a5b/run.json",
-    "evidence/20260914T055118-6e08b49064b1/run.json"
+    "evidence/20260914T055118-6e08b49064b1/run.json",
+    "evidence/20260914T065354-16cc4898c1f8/run.json",
+    "evidence/20260914T065451-94c5fbcdb507/run.json",
+    "evidence/20260914T065453-554ccce0e243/run.json",
+    "evidence/20260914T065454-f6afffed3b2f/run.json",
+    "evidence/20260914T065456-46550c5dd9d8/run.json",
+    "evidence/20260914T065505-16c7c781d72e/run.json",
+    "evidence/20260914T065643-b17417796095/run.json",
+    "evidence/20260914T065646-d421c0ad7fef/run.json",
+    "evidence/20260914T065647-613fd0736702/run.json",
+    "evidence/20260914T065649-796a08af6f2c/run.json",
+    "evidence/20260914T065658-7597e216c87a/run.json",
+    "evidence/20260914T065723-07c4071ffe8e/run.json",
+    "evidence/20260914T065840-583451a01ff0/run.json",
+    "evidence/20260914T065845-973a5d43847a/run.json",
+    "evidence/20260914T070619-f02afd381520/run.json",
+    "evidence/20260914T070621-dd514a9fef43/run.json",
+    "evidence/20260914T070622-21be309d827f/run.json",
+    "evidence/20260914T070623-31baa79e9b42/run.json",
+    "evidence/20260914T070640-062b23a998fc/run.json",
+    "evidence/20260914T070654-1b961b2e1625/run.json",
+    "evidence/20260914T070657-6bf4c312efa2/run.json",
+    "evidence/20260914T070701-412f54069a5c/run.json",
+    "evidence/20260914T071556-913f8950c0e7/run.json",
+    "evidence/20260914T071559-4ccf75dc806f/run.json",
+    "evidence/20260914T071600-e8077619b2fa/run.json",
+    "evidence/20260914T071601-d5a297346bfa/run.json",
+    "evidence/20260914T071617-1c85f978122d/run.json",
+    "evidence/20260914T071632-94ffd150aee7/run.json",
+    "evidence/20260914T071636-4ce5b11c6f3e/run.json",
+    "evidence/20260914T071639-912a5d1ef246/run.json",
+    "evidence/20260914T072346-42a5efec2745/run.json",
+    "evidence/20260914T072346-9396ad054d55/run.json",
+    "evidence/20260914T072346-ede95b0d1710/run.json",
+    "evidence/20260914T072401-e996c1d26dfd/run.json",
+    "evidence/20260914T072413-c9d062b6c17a/run.json",
+    "evidence/20260914T072425-381cfc3b1782/run.json",
+    "evidence/20260914T072436-141f50056806/run.json",
+    "evidence/20260914T072446-defd806ab5f0/run.json",
+    "evidence/20260914T082207-347255b099da/run.json",
+    "evidence/20260914T082207-150f4a945e4b/run.json",
+    "evidence/20260914T082207-b4b5c8b40acb/run.json",
+    "evidence/20260914T082219-4adb46836693/run.json",
+    "evidence/20260914T082229-cadbac232ea9/run.json",
+    "evidence/20260914T082238-61deb9f98d77/run.json",
+    "evidence/20260914T082248-83ed4b32a5b8/run.json",
+    "evidence/20260914T082258-9d4a4100d82b/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Freeze the exact Phase 1 candidate commit, push it, and obtain current-candidate CI plus independent PR review before merge."
+  "next_safe_action": "Commit latest-main integration evidence and reconciled harness state, then push the exact resulting PR #93 head and obtain current-candidate CI and independent code review before merge."
 }
