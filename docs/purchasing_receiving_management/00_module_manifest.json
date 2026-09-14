@@ -1,0 +1,221 @@
+{
+  "schema_version": "2.0",
+  "module_id": "purchasing-receiving-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/purchasing_receiving_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/config/purchasing.js",
+      "server/src/modules/purchasing/**",
+      "server/src/handlers/purchasing/**",
+      "server/src/handlers/receiving/**",
+      "client/src/services/purchasing.js",
+      "client/src/pages/purchasing/**",
+      "client/src/pages/receiving/**",
+      "client/src/components/purchasing/**",
+      "client/src/components/receiving/**",
+      "client/src/composables/purchasing/**"
+    ],
+    "test_paths": [
+      "server/test/purchasing/**",
+      "server/test/receiving/**",
+      "server/test/integration/purchasing*.integration.test.js",
+      "server/test/integration/receiving*.integration.test.js",
+      "server/test-support/fakePurchasingDatabase.js",
+      "client/test/**/purchasing*.test.js",
+      "client/test/**/receiving*.test.js",
+      "client/e2e/purchasing-receiving-management/**"
+    ],
+    "allowed_write_paths": [
+      "docs/purchasing_receiving_management/**",
+      "server/config/purchasing.js",
+      "server/src/modules/purchasing/**",
+      "server/src/handlers/purchasing/**",
+      "server/src/handlers/receiving/**",
+      "client/src/services/purchasing.js",
+      "client/src/pages/purchasing/**",
+      "client/src/pages/receiving/**",
+      "client/src/components/purchasing/**",
+      "client/src/components/receiving/**",
+      "client/src/composables/purchasing/**",
+      "server/test/purchasing/**",
+      "server/test/receiving/**",
+      "server/test/integration/purchasing*.integration.test.js",
+      "server/test/integration/receiving*.integration.test.js",
+      "server/test-support/fakePurchasingDatabase.js",
+      "client/test/**/purchasing*.test.js",
+      "client/test/**/receiving*.test.js",
+      "client/e2e/purchasing-receiving-management/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/modules/item/ItemLookupService.js",
+      "server/src/modules/item/itemConstants.js",
+      "client/config/menu.js",
+      "client/src/framework/http/errorMessages.js",
+      "package.json",
+      "server/package.json",
+      "client/package.json",
+      "package-lock.json",
+      ".github/workflows/**",
+      "docs/inventory_management/**",
+      "docs/supplier_management/**",
+      "docs/items_management/**",
+      "docs/business_master/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "secrets/**",
+      "docs/user_management/**",
+      "docs/customer_management/**",
+      "docs/sales_order_management/**"
+    ],
+    "schema_paths": [],
+    "shared_resources": [
+      "global-migration-sequence",
+      "authorization-permission-catalogue",
+      "framework-idempotency-identity-scope",
+      "item-lookup-contract",
+      "client-menu-registry",
+      "local-mysql-instance",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "purchasing-receiving-document-contract",
+        "version": "approved-planning-v1-SPECIFIED_NOT_IMPLEMENTED",
+        "source": "docs/purchasing_receiving_management/03_design_spec.md",
+        "sha256": "a29fb66d0e5ad10c638e5c556e40cf16c534cfce7c7283077a8f922a8fd0ee70",
+        "consumers": [
+          "accounts-payable",
+          "reporting"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "item-management",
+        "id": "item-lookup-service",
+        "version": "observed-origin-main-a3040c9-PARTIAL",
+        "source": "server/src/modules/item/ItemLookupService.js",
+        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "regression_suites": [
+          "purchasing-technical"
+        ]
+      },
+      {
+        "module_id": "authorization",
+        "id": "permission-catalogue",
+        "version": "observed-origin-main-a3040c9",
+        "source": "server/src/modules/authorization/permissionCatalogue.js",
+        "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
+        "regression_suites": [
+          "purchasing-technical"
+        ]
+      },
+      {
+        "module_id": "framework",
+        "id": "idempotency-service",
+        "version": "observed-origin-main-a3040c9",
+        "source": "server/src/services/idempotency/IdempotencyService.js",
+        "sha256": "6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925",
+        "regression_suites": [
+          "purchasing-technical"
+        ]
+      },
+      {
+        "module_id": "supplier-management",
+        "id": "supplier-purchasing-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/supplier_management/03_design_spec.md",
+        "sha256": "983f351f027732516cb126722bf97db85d4c5548dd572ccd6f00badfbad5cbbb",
+        "regression_suites": [
+          "purchasing-technical"
+        ]
+      },
+      {
+        "module_id": "inventory-management",
+        "id": "inventory-purchase-receipt-batch-and-partial-reversal",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/inventory_management/03_design_spec.md",
+        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "regression_suites": [
+          "purchasing-technical"
+        ]
+      },
+      {
+        "module_id": "business-master",
+        "id": "currency-and-payment-terms-catalogue",
+        "version": "observed-origin-main-a3040c9-PARTIAL",
+        "source": "server/src/modules/businessMaster/BusinessMasterService.js",
+        "sha256": "d1b672a32d398e3c431850628a2769ead1f4aaa0ad01374eb816b93b53cce8c8",
+        "regression_suites": [
+          "purchasing-technical"
+        ]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Purchasing settings",
+        "Purchasing document sequence",
+        "Purchase order header and lines",
+        "Purchase order approval request and snapshot",
+        "Purchase order status history",
+        "Goods receipt header, lines and details",
+        "Goods receipt reversal and reversal details",
+        "Purchasing operation request",
+        "Purchasing audit log"
+      ],
+      "read_only": [
+        "Supplier master data, default currency, payment term and ordering address",
+        "Item/SKU eligibility, UOM, tracking policy, shelf life and minimum receipt life",
+        "Warehouse, Bin, Lot, stock status and inventory balance",
+        "User, role and authorization state",
+        "Currency and payment term catalogue"
+      ],
+      "forbidden_direct_writes": [
+        "inventory_stock_balances and any inventory movement row",
+        "Item/SKU master data",
+        "Supplier master data and supplier status",
+        "User and role records",
+        "Confirmed receipt details, approval snapshots and audit rows once written"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "security-audit",
+      "purchasing-technical"
+    ],
+    "technical": [
+      "purchasing-technical"
+    ],
+    "regression": [
+      "purchasing-technical"
+    ],
+    "uat": []
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

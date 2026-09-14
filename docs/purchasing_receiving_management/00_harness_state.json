@@ -1,0 +1,270 @@
+{
+  "schema_version": "2.0",
+  "module_id": "purchasing-receiving-management",
+  "revision": 3,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "BLOCKED",
+  "resume_status": "PLANNED",
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
+    "plan": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
+    "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+    "source_fingerprint": "76c9851b4916df526e986d89cead282d1a8afab0d1c4f6e3c332ed3a0752d78e",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/purchasing-receiving-harness-v2-alignment",
+    "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+    "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
+  },
+  "runtime": {
+    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "owner": "Primary Harness agent",
+    "resources": {
+      "workspace": "purchasing-receiving-harness-v2-alignment"
+    },
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING",
+    "TASK-017": "PENDING",
+    "TASK-018": "PENDING",
+    "TASK-019": "PENDING",
+    "TASK-020": "PENDING",
+    "TASK-021": "PENDING",
+    "TASK-022": "PENDING",
+    "TASK-023": "PENDING",
+    "TASK-024": "PENDING",
+    "TASK-025": "PENDING",
+    "TASK-026": "PENDING",
+    "TASK-027": "PENDING",
+    "TASK-028": "PENDING",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING",
+    "TASK-037": "PENDING",
+    "TASK-038": "PENDING",
+    "TASK-039": "PENDING",
+    "TASK-040": "PENDING",
+    "TASK-041": "PENDING",
+    "TASK-042": "PENDING",
+    "TASK-043": "PENDING",
+    "TASK-044": "PENDING"
+  },
+  "approvals": [
+    {
+      "id": "APR-001",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/02_requirement_review.md#review-result",
+      "recorded_at": "2026-09-14T14:30:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
+      "code_commit": null,
+      "scope": [
+        "purchasing-receiving-management requirement baseline, file 01_requirement_spec.md sha256 75ad45897c6b835712a1b9e84faa0e8822a626d9dd8ec55539da9998dbce4f35; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
+        "FR-001 through FR-132",
+        "SEC-001 through SEC-016",
+        "NFR-001 through NFR-016",
+        "BR-001 through BR-052",
+        "AC-001 through AC-055",
+        "DEC-001 through DEC-013",
+        "OPEN-001 through OPEN-005 closed as DECIDED"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/04_design_review.md#decision",
+      "recorded_at": "2026-09-14T14:30:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
+      "code_commit": null,
+      "scope": [
+        "purchasing-receiving-management",
+        "DES-001 through DES-012",
+        "MySQL 8.0 compatibility baseline"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-003",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/purchasing_receiving_management/09_final_alignment_review.md#independent-review-and-baseline-approval",
+      "recorded_at": "2026-09-14T14:30:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
+      "code_commit": null,
+      "scope": [
+        "purchasing-receiving-management",
+        "PHASE-001 through PHASE-005",
+        "TASK-001 through TASK-044",
+        "TC-001 through TC-012",
+        "UAT-001 through UAT-106"
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Legacy Purchasing & Receiving authorship not authenticated in repository metadata",
+      "reviewer": "Alignment agent in this session",
+      "reviewed_baseline": "b09f5726d4b119e1e7775157f42eb37fd9aa4542ea0299a99d4aae9703157c95",
+      "source_ref": "docs/purchasing_receiving_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 5,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "Alignment agent; legacy authorship not authenticated in repository metadata",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd",
+      "source_ref": "docs/purchasing_receiving_management/04_design_review.md#decision",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "Who is the accountable Purchasing & Receiving module owner for design, risk and business-acceptance decisions?",
+      "affected_ids": [
+        "purchasing-receiving-management"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/09_final_alignment_review.md#human-decisions"
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "requirement.md 18.3 listed OPEN-001 through OPEN-005 as unconfirmed while design_spec.md 0.2 had already closed them with concrete business rules. Adopt the design resolutions as the approved business baseline, or keep them open pending per-item approval?",
+      "affected_ids": [
+        "FR-019",
+        "FR-023",
+        "FR-024",
+        "FR-027",
+        "FR-028",
+        "FR-080",
+        "FR-084",
+        "FR-085",
+        "FR-120",
+        "FR-121",
+        "DES-003",
+        "DES-008",
+        "NFR-016"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/09_final_alignment_review.md#hd-002--open-001-through-open-005"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "design_spec.md targets MySQL 5.7 while CI runs mysql:8.0 and the Inventory module baseline is MySQL 8.0. Which is the compatibility baseline for Purchasing & Receiving?",
+      "affected_ids": [
+        "DES-005",
+        "TC-009",
+        "NFR-006",
+        "NFR-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/09_final_alignment_review.md#hd-003--mysql-80-baseline"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Should the aligned requirement, design and plan be recorded as DRAFT pending a later human review, or approved in this run as a planning baseline?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "PHASE-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/09_final_alignment_review.md#independent-review-and-baseline-approval"
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "docs/supplier_management/00_module_manifest.json pins the deleted docs/purchasing_receiving_management/design_spec.md (sha256 b09f5726...) as a consumed contract source. Should it be repointed to 03_design_spec.md (sha256 a29fb66d...)? That file is an approval-required path outside this module's write scope.",
+      "affected_ids": [
+        "DES-001",
+        "DES-006"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "OPEN-006: which open POs are migrated, on what cutover date, with what legacy previously-received quantities, and who owns the Inventory Opening reconciliation and Go-Live sign-off?",
+      "affected_ids": [
+        "TASK-044",
+        "PHASE-005",
+        "NFR-011",
+        "NFR-013"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    }
+  ],
+  "external_actions": [
+    {
+      "id": "EXT-001",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/purchasing-receiving-harness-v2-alignment",
+      "idempotency_key": "purchasing-receiving-align-push-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new-branch push output on 2026-09-14; branch tracks origin"
+    },
+    {
+      "id": "EXT-002",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/purchasing-receiving-harness-v2-alignment",
+      "idempotency_key": "purchasing-receiving-align-pr-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/90"
+    }
+  ],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Review and merge PR #90 after CI passes, then stop. Status stays BLOCKED until HD-005 (Supplier manifest contract pointer) and HD-006 (OPEN-006 cutover data and owner) are answered. Do not enter IMPLEMENT without explicit authorization: PHASE-001 additionally requires the Supplier and Inventory provider implementations (GAP-IMP-001, GAP-IMP-002), which do not exist at the observed baseline."
+}
