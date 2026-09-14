@@ -11,7 +11,7 @@
 | `review_method` | `SELF_REVIEW` |
 | `author` | Existing Inventory design authorship is not authenticated in repository metadata |
 | `reviewer` | `/root` in the same active Codex context |
-| `reviewed_baseline` | `5b229dbdc7e7870e3de1e28352906f17277806d04cd75a4ffc5d853c3b4f8007` |
+| `reviewed_baseline` | `3ded66aa8bbbac4b264eb20a64eb65718358a40d30e234847e45fe7290414358` |
 | Independent review | Required by manifest; not observed |
 | Product implementation / tests | Not performed |
 

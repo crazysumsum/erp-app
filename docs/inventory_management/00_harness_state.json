@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 1,
+  "revision": 2,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -9,12 +9,12 @@
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "5b229dbdc7e7870e3de1e28352906f17277806d04cd75a4ffc5d853c3b4f8007",
-    "plan": "5cc1bce136fbacec24dfbc0c06206d6e80693cc0f91ec1621d11329a2981cc20",
-    "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
-    "source_fingerprint": "2353ce4e1b7e1c08bc16b10152a3cd99c50df1c0a089272070dd5eda0edebf9f",
+    "design": "3ded66aa8bbbac4b264eb20a64eb65718358a40d30e234847e45fe7290414358",
+    "plan": "9d5742620d2ed9758b8531a1cea40d3ceabb1369b44c5b283b4f7ecce199ad9f",
+    "code_commit": "818c69c8227e8fdb1d1d7695f88dfbaed9e8978d",
+    "source_fingerprint": "db59b68f5d75d0f927f20a5e4f82bd7c03d858863fe1154148a0fc53711c988c",
     "worktree": "/private/tmp/erp-inventory-management-docs-align",
-    "default_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+    "default_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
     "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
   },
   "runtime": {
@@ -85,7 +85,7 @@
       "method": "SELF_REVIEW",
       "author": "Legacy Inventory design authorship not authenticated in repository metadata",
       "reviewer": "/root in the same active Codex context",
-      "reviewed_baseline": "5b229dbdc7e7870e3de1e28352906f17277806d04cd75a4ffc5d853c3b4f8007",
+      "reviewed_baseline": "3ded66aa8bbbac4b264eb20a64eb65718358a40d30e234847e45fe7290414358",
       "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,

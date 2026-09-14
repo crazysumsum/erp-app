@@ -10,8 +10,8 @@
 | --- | --- |
 | Mode | `REVIEW_AND_ALIGN` |
 | Module / output | `inventory-management` / `docs/inventory_management` |
-| Refreshed default and mode-entry commit | `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7` |
-| Recovery point | Same tracked Git commit; all four legacy inputs were clean at entry |
+| Mode-entry commit / recovery point | `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`; all four legacy inputs were clean at entry |
+| Refreshed default before delivery | `46c1235dfd169e15da38e0de1b5ce1818dbabb0d`; no relevant Inventory document/dependency-source changes since mode entry |
 | Topic branch / worktree | `codex/inventory-management-docs-align` / `/private/tmp/erp-inventory-management-docs-align` |
 | Product-code changes | None |
 | Formal tests / CI / UAT | `NOT_RUN`; no acceptance result claimed |

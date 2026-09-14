@@ -82,7 +82,7 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-0996cb7",
+        "version": "observed-main-46c1235",
         "source": "server/src/modules/item/ItemLookupService.js",
         "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
         "regression_suites": [

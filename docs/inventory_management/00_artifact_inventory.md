@@ -4,7 +4,8 @@
 
 - Module: `inventory-management`
 - Selected directory: `docs/inventory_management`
-- Recovery point: Git commit `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7` on refreshed `main` / `origin/main`
+- Mode-entry recovery point: Git commit `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`, which was the refreshed `main` / `origin/main` at entry.
+- Latest refreshed default baseline before delivery: `46c1235dfd169e15da38e0de1b5ce1818dbabb0d`; no changes to the Inventory module documents or inspected Inventory dependency sources were observed between these commits.
 - Topic branch: `codex/inventory-management-docs-align`
 - Pre-alignment module state: all four narrative inputs are tracked and clean at the recovery point.
 - Product source is verification evidence only in `REVIEW_AND_ALIGN`; no product-code write is authorized.
