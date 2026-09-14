@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 15,
+  "revision": 16,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
     "plan": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
-    "code_commit": "3c6b7b3a7e33372703d04e4e8529c1aee1cd3ab0",
+    "code_commit": "3aa5ce21c935564cca53d20d7f99505fca020e1e",
     "source_fingerprint": "ce72d7ffbd42b5b19356b776659c3b3fb5f5a5e2695fb0cd97cb722d0d2e8519",
     "worktree": "/private/tmp/erp-supplier-management-harness-v2-review",
     "default_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
@@ -363,8 +363,8 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/supplier-management-harness-v2-review",
       "idempotency_key": "supplier-management-harness-v2-review-push",
-      "status": "PLANNED",
-      "source_ref": "User message on 2026-09-14: commit and create PR merge to main without CI"
+      "status": "CONFIRMED",
+      "source_ref": "GitHub remote branch codex/supplier-management-harness-v2-review observed after successful git push on 2026-09-14"
     },
     {
       "id": "PR-003",
@@ -385,5 +385,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit the post-integration Supplier documentation checkpoint, push codex/supplier-management-harness-v2-review, create its main-targeting PR, record the observed PR URL and started merge, then merge without waiting for CI as explicitly authorized."
+  "next_safe_action": "Create the already-planned PR-003 from codex/supplier-management-harness-v2-review to main; then record the PR URL and MERGE-003 STARTED before merging without waiting for CI as explicitly authorized."
 }
