@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 9,
+  "revision": 10,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
     "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "dfa12527c25d3c6206ac6895b5d35cd8f945e05c",
+    "code_commit": "4eb8a998ff1068554b89415c4fe225edbc4aa845",
     "source_fingerprint": "2c859c5ecd673817af2e4b1a4a57f342fb57ac8bf44a50adbf67695cbc0ddcc3",
     "worktree": "/private/tmp/erp-customer-hd001-risk-acceptance",
     "default_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
@@ -107,6 +107,22 @@
         "UAT-059"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-001",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 所有需要批準的設計都紀錄由我直接批準",
+      "recorded_at": "2026-09-14T03:22:30Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "code_commit": "4eb8a998ff1068554b89415c4fe225edbc4aa845",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -178,5 +194,5 @@
   "external_actions": [],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain a real independent review and current design/plan approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate."
+  "next_safe_action": "Obtain a real independent review and current PLAN approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate."
 }

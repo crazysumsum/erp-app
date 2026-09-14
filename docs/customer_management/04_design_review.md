@@ -84,6 +84,7 @@ This decision resolves the current-release ambiguity without purporting to suppl
 | Implementation dependencies | Customer not implemented; downstream Provider contracts must be verified at Phase entry |
 | Retention/purge policy | HD-002 answered by excluding destructive purge from this release; written Legal/Compliance policy is required before any future purge design or enablement |
 | Major trade-off | Keep modular monolith and separate Customer aggregate; prioritize explicit purpose/security contracts over generic abstractions |
+| Product Owner DESIGN approval | `APPROVED` by ERP Product Owner (Sam) on 2026-09-14 for exact DESIGN baseline `484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd` |
 | Gate status | `CONDITIONAL` |
 
-Proposed disposition: approve the documentation for development planning, but do not start TASK-020 or PHASE-003 until Security and Backend owners provide technical assurance for DR-004. All sensitive and downstream capabilities retain fail-closed Phase gates.
+Product Owner disposition: the exact DESIGN baseline is approved. This approval does not satisfy the separate independent-review requirement, does not approve the PLAN baseline and does not permit TASK-020 or PHASE-003 before Security and Backend owners provide technical assurance for DR-004. All sensitive and downstream capabilities retain fail-closed Phase gates.

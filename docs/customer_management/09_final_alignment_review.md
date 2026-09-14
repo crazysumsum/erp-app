@@ -39,9 +39,9 @@ These blockers do not prevent canonical documentation alignment; they do prevent
 ## Readiness decision
 
 - Single consistent documentation source of truth: `YES`, subject to final structural validator result.
-- Ready for implementation authorization: `NO`; real independent review and current design/plan human approval are absent.
+- Ready for implementation authorization: `NO`; Product Owner DESIGN approval is recorded, but real independent review and current PLAN approval are absent.
 - Ready for TASK-020 / PHASE-003 sensitive delegation: `NO`; HD-001 has Product Owner risk acceptance, but HD-003 Security/Backend technical assurance remains open.
 - Ready for destructive retention automation: `NO`; HD-002 is answered by explicitly excluding it from this release, and future purge requires written Legal/Compliance policy.
 - Ready for formal Technical Acceptance/UAT/release: `NO`; Customer implementation and execution evidence do not exist.
 
-Next safe action: obtain a real independent review and current design/plan approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate.
+Next safe action: obtain a real independent review and current PLAN approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate.

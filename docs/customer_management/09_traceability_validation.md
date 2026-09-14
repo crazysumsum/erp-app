@@ -63,3 +63,9 @@ Post-decision local results:
 On 2026-09-14, Sam accepted the conservative HD-002 disposition as Product Owner: this release excludes automatic destructive purge and crypto-shredding for Customer master data, bank data, attachments and audit records. The existing seven-year minimum remains, while any future purge requires written Legal/Compliance policy and a reopened design gate.
 
 The checkpoint records `APPROVAL-RISK-002` and marks HD-002 answered. It does not represent Legal/Compliance approval or authorize deletion. `PLAN_READY` remains blocked by HD-003, missing current DESIGN approval, missing current PLAN approval and missing independent review.
+
+## Product Owner DESIGN approval checkpoint (state revision 10)
+
+On 2026-09-14, Sam directly approved all Product Owner design approvals for exact DESIGN baseline `484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd`. The checkpoint records `APPROVAL-DESIGN-001` and does not claim PLAN approval, independent review or Security/Backend technical assurance.
+
+After this checkpoint, `PLAN_READY` remains blocked only by HD-003, missing current PLAN approval and missing independent review.
