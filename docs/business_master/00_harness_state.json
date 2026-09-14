@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 26,
+  "revision": 30,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8",
     "plan": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
-    "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
-    "source_fingerprint": "fc53923c2f62a8c8e99d02aab7ecb2dfb3989b5390b3bc4aa25fa79117eb16fc",
+    "code_commit": "67682b449486360ccd6b547d3ff43d0a26e829d7",
+    "source_fingerprint": "e26c623123b5286bdbab0f7dbafd4672b1d5e52ea147bb0600b6adc19c75617c",
     "worktree": "/private/tmp/erp-business-master-phase-2",
     "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
@@ -708,6 +708,22 @@
       "idempotency_key": "mode-change-19",
       "status": "CONFIRMED",
       "source_ref": "2026-09-14 user: 清理已合併分支及worktree, 開始下一步工作"
+    },
+    {
+      "id": "ACTION-PUSH-003",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2",
+      "idempotency_key": "business-master-phase2-push-2c88ed01f4b19a0a4d3457331689ce4af54eeb28",
+      "status": "FAILED",
+      "source_ref": "Not executed: origin/main advanced from a3040c96 to bd97e1cc before push"
+    },
+    {
+      "id": "ACTION-PR-PHASE2-001",
+      "kind": "GITHUB_PR",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2-to-main",
+      "idempotency_key": "business-master-phase2-pr-2c88ed01f4b19a0a4d3457331689ce4af54eeb28",
+      "status": "FAILED",
+      "source_ref": "Not executed: candidate required integration with origin/main bd97e1cc"
     }
   ],
   "evidence_files": [
@@ -755,8 +771,16 @@
     "evidence/20260914T070640-062b23a998fc/run.json",
     "evidence/20260914T070654-1b961b2e1625/run.json",
     "evidence/20260914T070657-6bf4c312efa2/run.json",
-    "evidence/20260914T070701-412f54069a5c/run.json"
+    "evidence/20260914T070701-412f54069a5c/run.json",
+    "evidence/20260914T071556-913f8950c0e7/run.json",
+    "evidence/20260914T071559-4ccf75dc806f/run.json",
+    "evidence/20260914T071600-e8077619b2fa/run.json",
+    "evidence/20260914T071601-d5a297346bfa/run.json",
+    "evidence/20260914T071617-1c85f978122d/run.json",
+    "evidence/20260914T071632-94ffd150aee7/run.json",
+    "evidence/20260914T071636-4ce5b11c6f3e/run.json",
+    "evidence/20260914T071639-912a5d1ef246/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Create the immutable Phase 2 candidate commit, rebind evidence to that commit, then record planned push/PR actions before any external effect."
+  "next_safe_action": "Commit reconciled harness state and latest-main evidence, then record a new planned push/PR action for the exact final branch head and request authorization."
 }

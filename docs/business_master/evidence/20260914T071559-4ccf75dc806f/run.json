@@ -1,0 +1,62 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T071559-4ccf75dc806f",
+  "suite_id": "client-build",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+  "source_fingerprint": "e26c623123b5286bdbab0f7dbafd4672b1d5e52ea147bb0600b6adc19c75617c",
+  "code_commit": "67682b449486360ccd6b547d3ff43d0a26e829d7",
+  "started_at": "2026-09-14T07:15:59.531963Z",
+  "ended_at": "2026-09-14T07:16:00.174517Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-2-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "build",
+    "--workspace",
+    "client"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "6c93f2b0ad4edee06fbef51a3028f476695c6716f11bdd4a85edeae6b1a4fb09",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T071559-4ccf75dc806f/stdout.log",
+      "sha256": "afa2684f6cee6d1e0f81dbe17a5457c35c0d2ff1380c990a0dd3d671e718c360",
+      "bytes": 636
+    },
+    {
+      "path": "evidence/20260914T071559-4ccf75dc806f/stderr.log",
+      "sha256": "351b524197fb492920789369e7f1a271420c757633fbb553b280a181ac4c31a4",
+      "bytes": 360
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
