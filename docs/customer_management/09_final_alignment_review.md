@@ -25,7 +25,7 @@ No product source, migration, executable test or runtime data was changed. No bu
 Current review method is `SELF_REVIEW`, not an independent review. The previous “Independent” title had no separate reviewer provenance and has been corrected. The local review has zero open CRITICAL findings and one open HIGH finding:
 
 - `HD-001` / DR-004: Sam accepted the delegation risk as Product Owner on 2026-09-14. This answers the business-risk decision but is not Security/Backend technical approval; HD-003 keeps TASK-020 / PHASE-003 blocked pending that assurance.
-- `HD-002`: destructive retention/purge remains blocked until Legal/Compliance confirms legal hold and final retention policy.
+- `HD-002`: Sam approved the conservative Product Owner disposition on 2026-09-14: no automatic destructive purge or crypto-shredding in this release. Future purge remains blocked until Legal/Compliance confirms legal hold and the final retention policy.
 
 These blockers do not prevent canonical documentation alignment; they do prevent unrestricted implementation/release approval.
 
@@ -41,7 +41,7 @@ These blockers do not prevent canonical documentation alignment; they do prevent
 - Single consistent documentation source of truth: `YES`, subject to final structural validator result.
 - Ready for implementation authorization: `NO`; real independent review and current design/plan human approval are absent.
 - Ready for TASK-020 / PHASE-003 sensitive delegation: `NO`; HD-001 has Product Owner risk acceptance, but HD-003 Security/Backend technical assurance remains open.
-- Ready for destructive retention automation: `NO`; HD-002 is open.
+- Ready for destructive retention automation: `NO`; HD-002 is answered by explicitly excluding it from this release, and future purge requires written Legal/Compliance policy.
 - Ready for formal Technical Acceptance/UAT/release: `NO`; Customer implementation and execution evidence do not exist.
 
-Next safe action: obtain a real independent review and current design/plan approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003, and keep destructive purge blocked pending HD-002.
+Next safe action: obtain a real independent review and current design/plan approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate.

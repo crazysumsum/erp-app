@@ -35,7 +35,7 @@ This is proportionate for a single-company SME ERP and avoids premature microser
 | DR-008 Reference checker registry has no readiness contract | `HIGH` | FR-037..041; DES-020 | Fail-closed behavior exists, but mandatory providers/version readiness were implicit. | Missing checker can either block forever or permit unsafe delete if misconfigured. | Versioned registry, startup readiness and tri-state results; delete requires all mandatory providers ready. | `RESOLVED` in design; provider implementation remains planned. |
 | DR-009 Bank-sensitive file encryption at rest was implicit | `MEDIUM` | SEC-010; DES-012 | Private directory and encrypted backup do not necessarily encrypt live objects/temp files. | Storage/admin compromise could expose documents. | Require encrypted volume/object-store or application envelope encryption and protected temp storage; verify no plaintext artifacts. | `RESOLVED` in aligned design. |
 | DR-010 Audit immutability relies primarily on application API absence | `MEDIUM` | FR-094..100; DES-021 | No update/delete route is good, but runtime/migration DB privileges are not separated in the source design. | Compromised runtime credentials could alter audit history. | Runtime least-privilege DB role; migration/emergency role separation; monitor privileged access and backup reconciliation. | `RESOLVED` in aligned design/tasks. |
-| DR-011 Legal-hold and final retention policy are not approved | `MEDIUM` | NFR-009, NFR-015; OI-002 | Seven years is minimum; lawful purge/hold process is pending. | Premature deletion could violate obligations. | Ship no destructive purge; obtain Legal/Compliance decision before any retention automation. | `OPEN`; non-blocking for core, blocking for purge. |
+| DR-011 Legal-hold and final retention policy are not approved | `MEDIUM` | NFR-009, NFR-015; OI-002 | Seven years is minimum; lawful purge/hold process is pending. | Premature deletion could violate obligations. | Ship no destructive purge; obtain Legal/Compliance decision before any retention automation. | `DEFERRED_BY_PRODUCT_OWNER`; under HD-002 Sam approved no destructive purge or crypto-shredding in this release. Core work may proceed; future purge remains blocked pending written Legal/Compliance policy. |
 | DR-012 Customer providers/consumers are not implemented on main | `HIGH` | DES-017, DES-020, DES-025 | Repository has User/Item frameworks but no Customer implementation; several consumers are also not authoritative. | Integration cannot be verified; production stubs risk duplicating rules. | Hard Phase entry gates; implement real contracts or leave dependent task blocked. | `RESOLVED IN PLAN`; implementation status `PLANNED`. |
 | DR-013 Existing mixed test suite can be mistaken for executed acceptance | `HIGH` | All | Legacy test file has 157 `NOT RUN` cases plus QA recommendation. | Readers may conflate detailed design with evidence or business sign-off. | Separate `TC-*` planned specs and `UAT-*` not-run specs; keep execution reports separate. | `RESOLVED` in aligned package. |
 | DR-014 No committed real-browser Customer acceptance baseline | `MEDIUM` | DES-016 | Current client has Vitest but Customer/Playwright suite is absent. | UI issues, console errors and network failures may escape static/unit review. | Add Playwright setup/journeys in implementation and enforce Phase UI gates. | `RESOLVED IN PLAN`; execution pending. |
@@ -68,7 +68,13 @@ On 2026-09-14, Sam explicitly confirmed that HD-001 is accepted in the capacity 
 
 This decision does not claim that Sam acted as an independent Security or Backend reviewer. The fail-closed controls remain mandatory, and HD-003 keeps TASK-020 / PHASE-003 blocked until named Security and Backend owners provide technical assurance.
 
-## 6. Human Design Gate
+## 6. HD-002 retention and legal-hold disposition
+
+On 2026-09-14, Sam explicitly accepted the conservative HD-002 disposition as Product Owner: this release must not implement or enable automatic destructive purge or crypto-shredding for Customer master data, bank data, attachments or audit records. Those records retain the existing minimum seven-year baseline, and any longer period, retention clock, legal-hold workflow or lawful deletion procedure requires later written Legal/Compliance confirmation.
+
+This decision resolves the current-release ambiguity without purporting to supply legal advice or a final retention schedule. Archive, suspension, fail-closed reference checks and backup/restore may proceed; no future purge capability is authorized by this decision.
+
+## 7. Human Design Gate
 
 | Gate item | Result |
 | --- | --- |
@@ -76,6 +82,7 @@ This decision does not claim that Sam acted as an independent Security or Backen
 | Unresolved HIGH findings | DR-004 business risk is accepted under HD-001; HD-003 still requires Security/Backend technical assurance before TASK-020 / PHASE-003 implementation |
 | Requirement ambiguity changing core architecture | None |
 | Implementation dependencies | Customer not implemented; downstream Provider contracts must be verified at Phase entry |
+| Retention/purge policy | HD-002 answered by excluding destructive purge from this release; written Legal/Compliance policy is required before any future purge design or enablement |
 | Major trade-off | Keep modular monolith and separate Customer aggregate; prioritize explicit purpose/security contracts over generic abstractions |
 | Gate status | `CONDITIONAL` |
 

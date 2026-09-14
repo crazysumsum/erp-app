@@ -57,3 +57,9 @@ Post-decision local results:
 - `validate_traceability.py ... --check-approvals --json`: `STRUCTURE_PASS`; zero issues.
 - `verify_gate.py ... --gate PLAN_READY --json`: remains `BLOCKED`; after HD-003 is recorded, the open decisions are HD-002 and HD-003 in addition to missing current DESIGN approval, missing current PLAN approval and missing independent review.
 - TASK-020 / PHASE-003 remain blocked by HD-003 pending named Security/Backend technical assurance, independently of Product Owner risk acceptance.
+
+## HD-002 no-purge checkpoint (state revision 9)
+
+On 2026-09-14, Sam accepted the conservative HD-002 disposition as Product Owner: this release excludes automatic destructive purge and crypto-shredding for Customer master data, bank data, attachments and audit records. The existing seven-year minimum remains, while any future purge requires written Legal/Compliance policy and a reopened design gate.
+
+The checkpoint records `APPROVAL-RISK-002` and marks HD-002 answered. It does not represent Legal/Compliance approval or authorize deletion. `PLAN_READY` remains blocked by HD-003, missing current DESIGN approval, missing current PLAN approval and missing independent review.
