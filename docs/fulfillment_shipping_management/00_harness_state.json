@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 1,
+  "revision": 2,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -239,8 +239,25 @@
       "answer_ref": null
     }
   ],
-  "external_actions": [],
+  "external_actions": [
+    {
+      "id": "EXT-001",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/fulfillment-shipping-harness-v2-alignment",
+      "idempotency_key": "fulfillment-shipping-align-push-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new-branch push output on 2026-09-14; local branch now tracks origin at commit e7fa46b"
+    },
+    {
+      "id": "EXT-002",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/fulfillment-shipping-harness-v2-alignment",
+      "idempotency_key": "fulfillment-shipping-align-pr-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/94"
+    }
+  ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Alignment content is complete in the worktree /Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment on branch codex/fulfillment-shipping-harness-v2-alignment. Next safe step is to commit the canonical set together with the four legacy deletions, push the branch and open a documentation PR; record each as an external action before performing it. Do not enter IMPLEMENT: PHASE-001 requires the Sales, Inventory and Customer provider implementations and the three Fulfillment permissions, none of which exist at b6f0321 (GAP-IMP-001 through GAP-IMP-005). GAP-TC-001 (no Playwright tool chain) must be closed before PHASE-002 opens any UI route, and GAP-TR-002 belongs to the Customer module owner."
+  "next_safe_action": "Alignment is committed (e7fa46b), pushed and published as documentation PR https://github.com/crazysumsum/erp-app/pull/94. Do not re-run the push or PR creation. Next safe step is human review of that PR; per harness git policy this documentation PR does not wait on CI as a design-stage gate, but do not merge with checks failing. Retain the branch and the worktree /Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment until the PR is resolved, then clean both up. Status stays BLOCKED: HD-004 (no Playwright tool chain, GAP-TC-001) must be answered before PHASE-002 opens any UI route, and HD-005 (GAP-TR-002, the dangling Customer manifest pointer) belongs to the Customer module owner. Do not enter IMPLEMENT without an explicit authorization: PHASE-001 also requires the Sales, Inventory and Customer provider implementations and the three Fulfillment permissions (GAP-IMP-001 through GAP-IMP-005), none of which exist at b6f0321."
 }
