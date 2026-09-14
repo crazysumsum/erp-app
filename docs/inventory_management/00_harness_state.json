@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 9,
+  "revision": 10,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "PLANNED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273",
     "plan": "8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf",
-    "code_commit": "f2665e19491db0765be531ab24fe1aba0e9279a6",
+    "code_commit": "522e0b9b225b267e48239de73edcd0e2ad119515",
     "source_fingerprint": "185b554793d0f0fb74aa8753a893e7e34ad98c86f0fe06f9f6fe9c6b0b610e25",
     "worktree": "/private/tmp/erp-inventory-decision-alignment",
     "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
@@ -418,21 +418,21 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/inventory-decision-alignment",
       "idempotency_key": "inventory-management-decision-doc-push-20260914",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task user authorization: commit all document changes, create PR and merge to main without waiting for CI"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/tree/codex/inventory-decision-alignment"
     },
     {
       "id": "EXT-008",
       "kind": "PR_CREATE",
-      "target": "main<-codex/inventory-decision-alignment",
+      "target": "https://github.com/crazysumsum/erp-app/pull/88 (main<-codex/inventory-decision-alignment)",
       "idempotency_key": "inventory-management-decision-doc-pr-20260914",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task user authorization: create PR and merge to main without waiting for CI"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/88"
     },
     {
       "id": "EXT-009",
       "kind": "PR_MERGE",
-      "target": "decision-alignment PR -> main",
+      "target": "https://github.com/crazysumsum/erp-app/pull/88 -> main",
       "idempotency_key": "inventory-management-decision-doc-merge-20260914",
       "status": "PLANNED",
       "source_ref": "Active Codex task user authorization: merge to main without waiting for CI"
