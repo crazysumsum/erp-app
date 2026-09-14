@@ -98,6 +98,16 @@
     ],
     "consumed": [
       {
+        "module_id": "business-master",
+        "id": "business-master-currency-payment-term-provider",
+        "version": "v1-design",
+        "source": "docs/business_master/03_design_spec.md",
+        "sha256": "a9b3a1a99fd65b65732ed00f3b6e02f80d825a0f94bb21a58a88053de132c2b4",
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      },
+      {
         "module_id": "sales-order-management",
         "id": "customer-consumer-contract",
         "version": "observed-main-design",

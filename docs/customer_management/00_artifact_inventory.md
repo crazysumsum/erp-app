@@ -23,7 +23,7 @@
 | Existing `07_uat_test_cases.md` | UAT specification | Git baseline | Same file + UAT-059/formal definitions | 58 business cases plus control-owner acceptance | `KEEP_CANONICAL + FORMALIZE` | PASS | No business acceptance claimed |
 | `test_case.md` | Superseded test entry narrative | `a379b1440d72228eaf33fa5ad32f1e8c7015538d0f88ddc0b483ad1c6acd80f7` / Git baseline | `06_technical_test_cases.md`, `07_uat_test_cases.md`, generated matrix | Split/evidence boundary only; no unique case body | `DELETE_AFTER_MERGE` | References updated | None |
 | Existing `08_traceability_matrix.md` | Hand-maintained generated-like view | Git baseline | `08_traceability.json` → generated `08_traceability_matrix.md` | Group mappings migrated into typed per-entity relations | `REGENERATE` | Pending validator | None |
-| Adjacent module designs / `.github/workflows/ci.yml` | Machine/project authority | Current Git baseline | `00_module_manifest.json` / `00_project_profile.json` | Consumer hashes, CI names and command contracts | `VERIFY + KEEP` | Hash checked | Provider readiness stays a Phase gate |
+| Business Master and adjacent module designs / `.github/workflows/ci.yml` | Machine/project authority | Latest integrated `origin/main` at `46c1235dfd169e15da38e0de1b5ce1818dbabb0d` | `00_module_manifest.json` / `00_project_profile.json` | Currency/Payment Term provider, consumer hashes, CI names and command contracts | `VERIFY + KEEP` | Hash checked | Provider readiness stays a Phase gate |
 
 ## Source-to-destination content verification
 
@@ -38,4 +38,4 @@ After content and link validation, the superseded narrative files `requirement.m
 
 ## Protected machine authorities
 
-No Customer OpenAPI, JSON Schema, migration or diagram-source authority exists in the selected directory. Repository CI and adjacent-module design contracts remain in place and are referenced by exact path/hash in the v2 metadata.
+No Customer OpenAPI, JSON Schema, migration or diagram-source authority exists in the selected directory. Repository CI, the newly merged Business Master contract, and adjacent-module design contracts remain in place and are referenced by exact path/hash in the v2 metadata.

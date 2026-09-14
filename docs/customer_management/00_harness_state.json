@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 3,
+  "revision": 4,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -9,12 +9,12 @@
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "a06571e1529575f836eab2a6202be6142c145f10668426c904d3a505f3e5f289",
-    "plan": "e8f4d9da87005bf8a5a10765731ac0359002d4bdc063cafb288400ae91b82350",
-    "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
-    "source_fingerprint": "cd7b2dc4f6fd58268c774bb4a9565414e467e5bbdb5f6286754241c56d65295f",
+    "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+    "plan": "a28e53c88032002d515df23802db2d126960e9c7acd983c587a9bae0e8dbd03c",
+    "code_commit": "247b632bde9e3e827e37f9dd31e6dcb64ac3f064",
+    "source_fingerprint": "62ef02ad56115eef399dedb2e8d40c955544eaae1a8bce325fe65a2aab0727e1",
     "worktree": "/private/tmp/erp-customer-management-harness-v2-alignment",
-    "default_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+    "default_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
     "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
   },
   "runtime": {
@@ -70,7 +70,7 @@
       "method": "SELF_REVIEW",
       "author": "Historical Customer design authors and prior alignment",
       "reviewer": "/root in the current active context",
-      "reviewed_baseline": "a06571e1529575f836eab2a6202be6142c145f10668426c904d3a505f3e5f289",
+      "reviewed_baseline": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
       "source_ref": "docs/customer_management/04_design_review.md#reviewer-provenance",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,

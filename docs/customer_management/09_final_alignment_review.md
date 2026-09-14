@@ -2,7 +2,7 @@
 
 ## Outcome
 
-The Customer Management design package is now aligned in place to Software Engineering Harness 2.0 at recovery baseline `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`. One canonical document set preserves all unique requirement/design narrative, formalizes 129 requirements, 25 designs, four Phases, 36 Tasks, 90 technical cases and 59 UAT cases, and moves typed relationships to `08_traceability.json`.
+The Customer Management design package is now aligned in place to Software Engineering Harness 2.0 from recovery/mode-entry baseline `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`, then reconciled with latest `origin/main` at `46c1235dfd169e15da38e0de1b5ce1818dbabb0d`. One canonical document set preserves all unique requirement/design narrative, formalizes 129 requirements, 25 designs, four Phases, 36 Tasks, 90 technical cases and 59 UAT cases, and moves typed relationships to `08_traceability.json`.
 
 No product source, migration, executable test, runtime data or external system was changed. No build, Technical Acceptance, browser execution, UAT, business acceptance, merge or release approval was performed.
 
@@ -12,7 +12,7 @@ No product source, migration, executable test, runtime data or external system w
 - Consolidated the complete `requirement.md` and `design_spec.md` bodies into `01_requirement_spec.md` and `03_design_spec.md` before deleting the superseded copies.
 - Renamed/formalized `tasks.md` as `05_development_tasks.md`; split-entry rules from `test_case.md` remain in canonical 06/07 specifications and generated matrix.
 - Renamed `03_system_design_spec.md` to the v2 canonical `03_design_spec.md` and regenerated `08_traceability_matrix.md` from the ledger.
-- Preserved adjacent module/CI authorities; no OpenAPI, JSON Schema, migration or diagram source was deleted.
+- Preserved adjacent module/CI authorities and pinned the newly merged Business Master Currency/Payment Term provider contract; no OpenAPI, JSON Schema, migration or diagram source was deleted.
 
 ## Specialist review influence
 
