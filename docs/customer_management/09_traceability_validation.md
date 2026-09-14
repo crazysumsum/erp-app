@@ -81,3 +81,5 @@ This completes the planning governance gate for the exact recorded baselines. It
 ## Publication authorization (state revision 13)
 
 On 2026-09-14, the user explicitly authorized pushing `codex/customer-hd001-risk-acceptance`, creating a PR to `main` and merging it. State records separate `PLANNED` push, PR and merge actions with idempotency keys. This authorization publishes planning-governance documents only and does not start `IMPLEMENT`.
+
+The branch push was confirmed and PR #87 was created against `main`; GitHub reported the PR `OPEN` and `MERGEABLE` before the authorized merge attempt.

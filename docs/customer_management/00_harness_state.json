@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 15,
+  "revision": 16,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "PLANNED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
     "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "786d4eb7a5366eb321a542e31ef82640a830a86a",
+    "code_commit": "c89c03615c6a0d9265f927a6eaa2aed3ae1a6e0b",
     "source_fingerprint": "2c859c5ecd673817af2e4b1a4a57f342fb57ac8bf44a50adbf67695cbc0ddcc3",
     "worktree": "/private/tmp/erp-customer-hd001-risk-acceptance",
     "default_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
@@ -256,19 +256,19 @@
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-hd001-risk-acceptance",
       "idempotency_key": "customer-hd001-risk-acceptance-pr-v1",
-      "status": "STARTED",
-      "source_ref": "2026-09-14 Codex task user: 推送目前決策分支、建立 PR 並合併。"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/87"
     },
     {
       "id": "EXT-MERGE-001",
       "kind": "MERGE",
       "target": "github:crazysumsum/erp-app:main",
       "idempotency_key": "customer-hd001-risk-acceptance-merge-v1",
-      "status": "PLANNED",
-      "source_ref": "2026-09-14 Codex task user: 推送目前決策分支、建立 PR 並合併。"
+      "status": "STARTED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/87"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Push the authorized decision branch, create its planning-governance PR, confirm source/base and mergeability, then merge to main and observe the resulting commit without starting IMPLEMENT."
+  "next_safe_action": "Merge confirmed-open and mergeable PR #87 to main, observe the merge commit, synchronize local main, and clean the merged branch/worktree without entering IMPLEMENT."
 }
