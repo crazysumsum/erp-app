@@ -1,0 +1,274 @@
+{
+  "schema_version": "2.0",
+  "module_id": "customer-management",
+  "revision": 16,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "PLANNED",
+  "resume_status": null,
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+    "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
+    "code_commit": "c89c03615c6a0d9265f927a6eaa2aed3ae1a6e0b",
+    "source_fingerprint": "2c859c5ecd673817af2e4b1a4a57f342fb57ac8bf44a50adbf67695cbc0ddcc3",
+    "worktree": "/private/tmp/erp-customer-hd001-risk-acceptance",
+    "default_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
+    "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
+  },
+  "runtime": {
+    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "owner": "Primary harness agent",
+    "resources": {
+      "workspace": "erp-customer-management-harness-v2-alignment"
+    },
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING",
+    "TASK-017": "PENDING",
+    "TASK-018": "PENDING",
+    "TASK-019": "PENDING",
+    "TASK-020": "PENDING",
+    "TASK-021": "PENDING",
+    "TASK-022": "PENDING",
+    "TASK-023": "PENDING",
+    "TASK-024": "PENDING",
+    "TASK-025": "PENDING",
+    "TASK-026": "PENDING",
+    "TASK-027": "PENDING",
+    "TASK-028": "PENDING",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING"
+  },
+  "approvals": [
+    {
+      "id": "APPROVAL-RISK-001",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user clarification: Product Owner 身分接受風險",
+      "recorded_at": "2026-09-14T03:08:35Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "code_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
+      "scope": [
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-012",
+        "DES-015",
+        "TASK-020",
+        "TC-045"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-002",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user agreement after detailed no-purge and legal-hold explanation",
+      "recorded_at": "2026-09-14T03:16:29Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "code_commit": "dfa12527c25d3c6206ac6895b5d35cd8f945e05c",
+      "scope": [
+        "NFR-009",
+        "NFR-015",
+        "DES-024",
+        "TASK-035",
+        "TC-085",
+        "UAT-059"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-001",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 所有需要批準的設計都紀錄由我直接批準",
+      "recorded_at": "2026-09-14T03:22:30Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "code_commit": "4eb8a998ff1068554b89415c4fe225edbc4aa845",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-001",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: PLAN baseline 批准, 獨立設計審查批準，HD-003 Security／Backend 技術保證批準",
+      "recorded_at": "2026-09-14T03:25:52Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
+      "code_commit": "20317e0ae9786730bba6f01fec4496517e219de4",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-003",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (explicit HD-003 Security/Backend technical-assurance approver)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: PLAN baseline 批准, 獨立設計審查批準，HD-003 Security／Backend 技術保證批準",
+      "recorded_at": "2026-09-14T03:25:52Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "code_commit": "20317e0ae9786730bba6f01fec4496517e219de4",
+      "scope": [
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-012",
+        "DES-015",
+        "TASK-020",
+        "TC-045"
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Historical Customer design authors and prior alignment",
+      "reviewer": "/root in the current active context",
+      "reviewed_baseline": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "source_ref": "docs/customer_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": "APPROVAL-RISK-001"
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "Historical Customer design authors and /root alignment context",
+      "reviewer": "ERP Product Owner (Sam), actual human reviewer and explicit HD-003 approving authority",
+      "reviewed_baseline": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
+      "source_ref": "docs/customer_management/04_design_review.md#7-independent-human-review-and-final-design-gate",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APPROVAL-RISK-003"
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "Approve the protected system-admin exception for delegating Customer bank-sensitive permissions under the proposed fresh-authentication and audit controls?",
+      "affected_ids": [
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-012",
+        "DES-015",
+        "TASK-020",
+        "TC-045"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/customer_management/04_design_review.md#5-hd-001-product-owner-risk-acceptance"
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "Confirm the final legal-hold and retention policy before any destructive Customer-data purge is designed or enabled.",
+      "affected_ids": [
+        "NFR-009",
+        "NFR-015",
+        "DES-024",
+        "TASK-035",
+        "TC-085",
+        "UAT-059"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/customer_management/04_design_review.md#6-hd-002-retention-and-legal-hold-disposition"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "Do named Security and Backend reviewers provide technical assurance that the protected system-admin delegation controls in DES-015 are sufficient before TASK-020 / PHASE-003 implementation?",
+      "affected_ids": [
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-012",
+        "DES-015",
+        "TASK-020",
+        "TC-045"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/customer_management/04_design_review.md#7-independent-human-review-and-final-design-gate"
+    }
+  ],
+  "external_actions": [
+    {
+      "id": "EXT-PUSH-001",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-hd001-risk-acceptance",
+      "idempotency_key": "customer-hd001-risk-acceptance-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "git push confirmed origin/codex/customer-hd001-risk-acceptance at 786d4eb7a5366eb321a542e31ef82640a830a86a"
+    },
+    {
+      "id": "EXT-PR-001",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-hd001-risk-acceptance",
+      "idempotency_key": "customer-hd001-risk-acceptance-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/87"
+    },
+    {
+      "id": "EXT-MERGE-001",
+      "kind": "MERGE",
+      "target": "github:crazysumsum/erp-app:main",
+      "idempotency_key": "customer-hd001-risk-acceptance-merge-v1",
+      "status": "STARTED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/87"
+    }
+  ],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Merge confirmed-open and mergeable PR #87 to main, observe the merge commit, synchronize local main, and clean the merged branch/worktree without entering IMPLEMENT."
+}

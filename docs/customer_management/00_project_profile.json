@@ -1,0 +1,413 @@
+{
+  "schema_version": "2.0",
+  "module_id": "customer-management",
+  "environment": {
+    "id": "customer-isolated-test",
+    "kind": "LOCAL_ISOLATED",
+    "data_reference": "Synthetic Customer/PII/bank/file/import fixtures defined in 06_technical_test_cases.md; no production data",
+    "authorization_ref": null
+  },
+  "permissions": {
+    "product_write": [
+      "IMPLEMENT"
+    ],
+    "test_script_write": [
+      "IMPLEMENT",
+      "TEST_AND_VERIFY"
+    ],
+    "docs_write": [
+      "DESIGN_AND_PLAN",
+      "IMPLEMENT",
+      "TEST_AND_VERIFY",
+      "REVIEW_AND_ALIGN"
+    ],
+    "isolated_data_write": [
+      "IMPLEMENT",
+      "TEST_AND_VERIFY"
+    ],
+    "schema_execute": [
+      "IMPLEMENT"
+    ],
+    "deployment": [],
+    "external_effects": [],
+    "evidence_export": []
+  },
+  "runtime_policy": {
+    "strategy": "ISOLATED",
+    "required_resources": [
+      "workspace",
+      "mysql-schema",
+      "customer-file-root",
+      "customer-import-root",
+      "web-port"
+    ],
+    "cleanup_owner": "Executing Phase owner"
+  },
+  "suites": [
+    {
+      "id": "lint",
+      "kind": "LINT",
+      "argv": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "lint-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "client-build",
+      "kind": "BUILD",
+      "argv": [
+        "npm",
+        "run",
+        "build",
+        "--workspace",
+        "client"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "client-build-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "customer-server-technical",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/customer-server-technical.xml",
+        "server/test"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "customer-server-technical.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "TECHNICAL",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-011",
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-015",
+        "TC-016",
+        "TC-017",
+        "TC-018",
+        "TC-019",
+        "TC-020",
+        "TC-021",
+        "TC-022",
+        "TC-023",
+        "TC-024",
+        "TC-025",
+        "TC-026",
+        "TC-027",
+        "TC-028",
+        "TC-029",
+        "TC-030",
+        "TC-031",
+        "TC-032",
+        "TC-033",
+        "TC-034",
+        "TC-035",
+        "TC-036",
+        "TC-037",
+        "TC-038",
+        "TC-039",
+        "TC-045",
+        "TC-046",
+        "TC-047",
+        "TC-048",
+        "TC-050",
+        "TC-051",
+        "TC-052",
+        "TC-053",
+        "TC-054",
+        "TC-055",
+        "TC-056",
+        "TC-057",
+        "TC-059",
+        "TC-060",
+        "TC-061",
+        "TC-062",
+        "TC-063",
+        "TC-064",
+        "TC-067",
+        "TC-069",
+        "TC-070",
+        "TC-071",
+        "TC-072",
+        "TC-073",
+        "TC-074",
+        "TC-075",
+        "TC-076",
+        "TC-077",
+        "TC-078",
+        "TC-079",
+        "TC-080",
+        "TC-081",
+        "TC-082",
+        "TC-083",
+        "TC-084",
+        "TC-085",
+        "TC-086",
+        "TC-087",
+        "TC-088",
+        "TC-089",
+        "TC-090"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "customer-browser-technical",
+      "kind": "ACCEPTANCE",
+      "argv": [
+        "npx",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/customer-management/playwright.config.js",
+        "--reporter",
+        "junit"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "customer-browser-technical.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "TECHNICAL",
+        "REGRESSION"
+      ],
+      "required_case_ids": [
+        "TC-040",
+        "TC-041",
+        "TC-042",
+        "TC-043",
+        "TC-044",
+        "TC-049",
+        "TC-058",
+        "TC-065",
+        "TC-066",
+        "TC-068"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "customer-uat-browser",
+      "kind": "UAT",
+      "argv": [
+        "npx",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/customer-management/playwright.config.js",
+        "--grep",
+        "@uat",
+        "--reporter",
+        "junit"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "customer-uat-browser.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "UAT"
+      ],
+      "required_case_ids": [
+        "UAT-001",
+        "UAT-002",
+        "UAT-003",
+        "UAT-004",
+        "UAT-005",
+        "UAT-006",
+        "UAT-007",
+        "UAT-008",
+        "UAT-009",
+        "UAT-010",
+        "UAT-011",
+        "UAT-012",
+        "UAT-013",
+        "UAT-014",
+        "UAT-015",
+        "UAT-016",
+        "UAT-017",
+        "UAT-018",
+        "UAT-019",
+        "UAT-020",
+        "UAT-021",
+        "UAT-022",
+        "UAT-023",
+        "UAT-024",
+        "UAT-025",
+        "UAT-026",
+        "UAT-027",
+        "UAT-028",
+        "UAT-029",
+        "UAT-030",
+        "UAT-031",
+        "UAT-032",
+        "UAT-033",
+        "UAT-034",
+        "UAT-035",
+        "UAT-036",
+        "UAT-037",
+        "UAT-038",
+        "UAT-039",
+        "UAT-040",
+        "UAT-041",
+        "UAT-042",
+        "UAT-043",
+        "UAT-044",
+        "UAT-045",
+        "UAT-046",
+        "UAT-047",
+        "UAT-048",
+        "UAT-049",
+        "UAT-050",
+        "UAT-051",
+        "UAT-052",
+        "UAT-053",
+        "UAT-054",
+        "UAT-055",
+        "UAT-056",
+        "UAT-057",
+        "UAT-058"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    }
+  ],
+  "ci": {
+    "provider": "GitHub Actions (.github/workflows/ci.yml)",
+    "required_checks": [
+      "Dependency audit",
+      "Lint",
+      "Test (server + client, MySQL integration)",
+      "Build frontend"
+    ]
+  },
+  "acceptance": {
+    "business_required": true,
+    "release_approval_required": true,
+    "require_clean_candidate": true
+  },
+  "evidence": {
+    "directory": "evidence",
+    "max_report_bytes": 2097152,
+    "allow_export": false
+  }
+}

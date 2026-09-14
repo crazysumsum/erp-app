@@ -1,17 +1,17 @@
-# Inventory Management 開發任務分解
+# Inventory Management 開發任務分解（Harness Aligned）
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 0.1 Draft |
+| 文件版本 | 0.3 Approved Planning Baseline |
 | 文件日期 | 2026-09-08 |
-| Requirement | `docs/inventory_management/requirement.md` 0.1 Draft |
-| Design | `docs/inventory_management/design_spec.md` 0.1 Draft |
-| 任務狀態 | 尚未開始；待人工 review／批准後執行 |
+| Requirement | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
+| Design | `docs/inventory_management/03_design_spec.md` 0.3 Approved Planning Baseline |
+| 任務狀態 | 設計及P0～P5計畫已由Sam獨立人工評審並批准；所有Task仍為PENDING，且尚未授權進入IMPLEMENT |
 | Task list target | 本文件；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模型 | 6 個獨立 Phase；每個 Phase 使用一個 worktree、分支、PR 及一次完整 Phase 測試 |
-| 技術基線 | Node.js 26、Express 5、MySQL 5.7、Vue 3、Quasar 2 |
+| 技術基線 | Node.js 26、Express 5、MySQL 8.0、Vue 3、Quasar 2 |
 
 本文件同時承載 implementation plan 與可執行 task checklist。每個 Task 是一個單一成果的 focused work unit；Task 內須同步建立相應測試，但正式測試證據在該 Phase 全部 Tasks 完成後，以一次完整 Phase verification cycle 產出。不得把未通過 Phase Gate 的 PR 合併至 `main`。
 
@@ -72,16 +72,16 @@ Phase P0 開始前：
 
 - [ ] Item Management T18～T22 已合併；`ItemLookupService` 已提供 `purchase`、`sale`、`inventory` purpose，且 Item／SKU lifecycle 語意已有 contract tests。
 - [ ] 已 fetch 最新 main 並重新盤點所有 migration 檔；不得沿用文件中的假設號碼，也不得修改任何已套用 migration。
-- [ ] `design_spec.md` §14.2 第 1 項 Serial 衝突已有處置：Inventory 對 `serial` fail closed，且上線資料不含 Active inventory-tracked Serial SKU。
-- [ ] Phase 測試使用明確標記的專用 MySQL 5.7 DB；不得對開發者日常資料或正式資料執行 destructive integration tests。
+- [x] `03_design_spec.md` §14.2 第 1 項 Serial衝突處置已批准：本期不實作Serial Tracking，Inventory對`serial` fail closed；P5另須以實際掃描證明上線資料沒有Active inventory-tracked Serial SKU。
+- [ ] Phase 測試使用明確標記、與CI及production相同major版本的專用 MySQL 8.0 DB；不得對開發者日常資料或正式資料執行 destructive integration tests。
 
 只阻擋相關整合／P5 Go-Live、不阻擋 P0～P4 核心開發的輸入：
 
-- [ ] Receiving 提供低於 Minimum Receipt Life 的正式專門 permission 及 evidence 格式。
-- [ ] Returns 確認 Customer Return 的預設 Stock Status。
-- [ ] 業務確認 Adjustment Reason Category allowlist。
-- [ ] 首批 Warehouse／Bin、Opening CSV、資料凍結時間、舊系統對賬 owner 與 Go-Live 簽核人已準備。
-- [ ] Production app DB account 與 migration account 可分離，且 backup／restore rehearsal 已完成。
+- [x] Receiving低於Minimum Receipt Life的專門permission固定為`receiving.expiry.override`，使用逐筆reason及完整threshold／actor／source／request／movement evidence；Expired不可Override。
+- [x] Customer Return預設`QUARANTINED`，品質檢查後才可轉為`AVAILABLE`或`DAMAGED`。
+- [x] Adjustment Reason Category固定為`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；`OTHER`須詳細說明。
+- [ ] P5準備首批Warehouse／Bin、Opening CSV及實際Data Freeze時間；Warehouse／Operations Lead已指定為對賬owner，Sam已指定為Go-Live簽核人。
+- [ ] Production app DB account與migration account按已批准政策分離，且P5完成backup／restore rehearsal並保存證據。
 
 ### 1.5 Phase 工作流程
 
@@ -216,7 +216,7 @@ Phase P0 開始前：
 
 **Dependencies：** Item T18～T22、最新 `origin/main`。
 
-**Files likely touched：** `docs/inventory_management/design_spec.md`、`docs/inventory_management/tasks.md`，以及只有實際碰撞時才需同步的其他模組設計文件。
+**Files likely touched：** `docs/inventory_management/03_design_spec.md`、`docs/inventory_management/05_development_tasks.md`，以及只有實際碰撞時才需同步的其他模組設計文件。
 
 **Estimated scope：** S。
 
@@ -602,7 +602,7 @@ Phase P0 開始前：
 
 - [ ] Reservation 保存 original/consumed/released/outstanding；Allocation保存 allocated/consumed/released/outstanding，所有欄位使用 unsigned Base UOM integer。
 - [ ] Create operation、Warehouse、SKU、Reservation、Balance及 actor FK delete rules符合歷史保留要求。
-- [ ] Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；schema不嘗試以不可靠 CHECK 取代 service invariant。
+- [ ] Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；MySQL 8.0 CHECK只作row-local第二層保護，不取代service的跨row invariant。
 
 **Verification（納入 P2-GATE）：** 真 MySQL migration、FK、index、rerun及直接非法資料寫入測試。
 
@@ -862,7 +862,7 @@ Phase P0 開始前：
 
 **Verification（納入 P3-GATE）：** Adjustment/Status unit+integration、version race、auth strength、Audit failure及 reason allowlist tests。
 
-**Dependencies：** P3-T05；Adjustment reason allowlist未確認時可用 design初稿但 P5前須業務簽核。
+**Dependencies：** P3-T05；Adjustment reason固定使用已批准的七項allowlist，任何新增／改名須先走需求變更。
 
 **Files likely touched：** `InventoryPostingService.js`、`postingHandlers.js`、posting tests、`client/src/framework/http/errorMessages.js`。
 
@@ -1230,11 +1230,11 @@ Phase P0 開始前：
 
 - [ ] Receiving Receipt、Fulfillment Reservation/Allocation/Issue及 Returns Receipt/Issue使用固定 purpose/permission/source mapping。
 - [ ] 來源寫入與 Inventory效果共用同一 MySQL transaction；任一側失敗另一側完整 rollback。
-- [ ] 撤權/停用 actor、dependency unavailable、low receipt life evidence及 Returns Status未確認時全部 fail closed。
+- [ ] 撤權／停用actor、dependency unavailable、low receipt life evidence不完整或Customer Return未使用`QUARANTINED`時全部fail closed。
 
 **Verification（納入 P5-GATE）：** consumer contract、same-transaction rollback、permission revocation、retry/source conflict及 unavailable dependency tests。
 
-**Dependencies：** P2-GATE、P3-GATE；Receiving override permission與 Returns Status確認。
+**Dependencies：** P2-GATE、P3-GATE；已批准的`receiving.expiry.override` evidence與Customer Return `QUARANTINED` contract。
 
 **Files likely touched：** `InventoryLookupService.js`、既有 consumer service（若已存在）、`inventoryContracts.integration.test.js`、consumer fixtures。
 
@@ -1344,7 +1344,7 @@ Phase 內每完成2～3項 Tasks做一次只讀 code review checkpoint。Checkpo
 
 ## 5. 每個 Phase 的一次完整測試
 
-所有命令均在該 Phase獨立 worktree執行。Integration tests只可使用專用 MySQL 5.7測試 DB及專案既有安全 guard。命令若因實作後 test file名稱調整，可更新精確路徑，但不可縮小覆蓋範圍。
+所有命令均在該 Phase獨立 worktree執行。Integration tests只可使用與CI及production相同major版本的專用 MySQL 8.0測試 DB及專案既有安全 guard。命令若因實作後 test file名稱調整，可更新精確路徑，但不可縮小覆蓋範圍。
 
 ### 5.1 P0 Foundation test cycle
 
@@ -1474,21 +1474,981 @@ P5另須執行非一般 unit command可取代的受控驗證：
 
 以下不是讓實作者自行猜測的 open-ended工作；各項已有明確最晚決策點：
 
-| 輸入 | 最晚確認點 | 未確認時行為 |
+| 輸入 | 最晚確認／證據點 | 決策／未備妥時行為 |
 | --- | --- | --- |
-| Receiving low-life override permission/evidence | P1-T07整合前 | Override fail closed；正常合資格 Receipt仍可做 |
-| Returns預設 Stock Status | P5-T07前 | Returns consumer contract不合併；Inventory不猜 Available/Quarantined |
-| Adjustment Reason Categories | P3-T06 review前 | 只能使用 design初稿做開發，P3 PR不得合併至正式 release branch |
-| Active Serial SKU處置 | P0-T01及 P5 Go-Live | Posting fail closed；存在 Active serial資料時禁止 Go-Live |
-| Production DB帳號分離 | P5-T09 | Release blocked；不可只依賴應用層約定 |
-| Warehouse/Bin/Opening資料與簽核人 | P5-T10 | 不執行正式 Opening/Go-Live |
+| Receiving low-life override permission/evidence | 已確認；P1-T07實作 | 固定`receiving.expiry.override`及逐筆evidence；Expired不可Override |
+| Returns預設 Stock Status | 已確認；P5-T07實作 | 固定`QUARANTINED`；品質檢查後才可Status Transfer |
+| Adjustment Reason Categories | 已確認；P3-T06實作／review | 固定七項allowlist；`OTHER`須詳細說明 |
+| Active Serial SKU處置 | 已確認；P0-T01實作，P5提供資料證據 | Posting fail closed；存在Active serial資料時禁止Go-Live |
+| Production DB帳號分離 | 政策已確認；P5-T09提供配置／演練證據 | 未分離或未完成backup／restore rehearsal時Release blocked |
+| Warehouse/Bin/Opening資料與簽核人 | 責任已確認；P5-T10提供實際資料／時間 | Warehouse／Operations Lead對賬、Sam簽核；資料未齊不執行Opening／Go-Live |
 
 ---
 
-## 9. 計劃批准
+## 9. 計劃批准與模式邊界
 
-- [ ] Product Owner確認6個 Phase的業務結果與順序。
-- [ ] Technical Lead確認 transaction、lock、migration及 PR邊界。
-- [ ] QA確認每個 Phase一次完整測試的範圍與 evidence格式。
-- [ ] Security/DB Reviewer確認 high-risk auth、immutable ledger、least privilege、Opening fencing及 backup/restore gates。
-- [ ] 批准後才建立 P0 worktree並開始實作；本文件建立本身不代表任何開發 Task已開始。
+- [x] Product Owner Sam確認6個Phase的業務結果與P0→P5順序。
+- [x] 獨立人工評審人Sam批准目前transaction、lock、migration、PR邊界、Phase測試／evidence範圍，以及high-risk auth、immutable ledger、least privilege、Opening fencing與backup／restore gates。
+- [x] Sam批准目前Design及Plan baseline；批准記錄須綁定當次重新計算的hash。
+- [ ] 明確`IMPLEMENT`模式授權；Sam已指示本輪只提交文件，先不要進入IMPLEMENT。
+- [ ] 收到後續`IMPLEMENT`授權並刷新`origin/main`後，才建立P0 worktree並開始實作；目前所有Task保持`PENDING`。
+
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Phase and Task Definitions
+
+Legacy `P*` and `P*-T*` identities are retained as aliases. Every item remains planned and unstarted.
+
+## PHASE-001 — Integration Foundation (legacy P0)
+
+### Outcome
+Deliver the reviewed `P0` outcome described in the legacy plan without weakening Inventory quantity, audit, authorization or recovery invariants.
+
+### Entry criteria
+The preceding Phase gate (if any), current design/plan approval, fresh default baseline, isolated worktree and required human decisions for this scope are confirmed.
+
+### Acceptance criteria
+All included Tasks meet their acceptance criteria and the complete Phase test cycle has current evidence with no unaccepted critical/high finding.
+
+### Integration and regression
+Run the observed project lint, build and technical suites plus affected Item, authorization, database and downstream contract regression.
+
+### Git and merge plan
+Use the default-baseline strategy and merge group `inventory-p0`; dependencies: none.
+
+### Rollback
+Revert the Phase change set while preserving immutable production history; schema/data rollback requires a separately reviewed migration and recovery plan.
+
+### Exit criteria
+The Phase PR has current mandatory CI and actual required review, and merge occurs only under the approved plan.
+
+## PHASE-002 — Core Stock (legacy P1)
+
+### Outcome
+Deliver the reviewed `P1` outcome described in the legacy plan without weakening Inventory quantity, audit, authorization or recovery invariants.
+
+### Entry criteria
+The preceding Phase gate (if any), current design/plan approval, fresh default baseline, isolated worktree and required human decisions for this scope are confirmed.
+
+### Acceptance criteria
+All included Tasks meet their acceptance criteria and the complete Phase test cycle has current evidence with no unaccepted critical/high finding.
+
+### Integration and regression
+Run the observed project lint, build and technical suites plus affected Item, authorization, database and downstream contract regression.
+
+### Git and merge plan
+Use the default-baseline strategy and merge group `inventory-p1`; dependencies: PHASE-001.
+
+### Rollback
+Revert the Phase change set while preserving immutable production history; schema/data rollback requires a separately reviewed migration and recovery plan.
+
+### Exit criteria
+The Phase PR has current mandatory CI and actual required review, and merge occurs only under the approved plan.
+
+## PHASE-003 — Reservation and Allocation (legacy P2)
+
+### Outcome
+Deliver the reviewed `P2` outcome described in the legacy plan without weakening Inventory quantity, audit, authorization or recovery invariants.
+
+### Entry criteria
+The preceding Phase gate (if any), current design/plan approval, fresh default baseline, isolated worktree and required human decisions for this scope are confirmed.
+
+### Acceptance criteria
+All included Tasks meet their acceptance criteria and the complete Phase test cycle has current evidence with no unaccepted critical/high finding.
+
+### Integration and regression
+Run the observed project lint, build and technical suites plus affected Item, authorization, database and downstream contract regression.
+
+### Git and merge plan
+Use the default-baseline strategy and merge group `inventory-p2`; dependencies: PHASE-002.
+
+### Rollback
+Revert the Phase change set while preserving immutable production history; schema/data rollback requires a separately reviewed migration and recovery plan.
+
+### Exit criteria
+The Phase PR has current mandatory CI and actual required review, and merge occurs only under the approved plan.
+
+## PHASE-004 — Warehouse Operations (legacy P3)
+
+### Outcome
+Deliver the reviewed `P3` outcome described in the legacy plan without weakening Inventory quantity, audit, authorization or recovery invariants.
+
+### Entry criteria
+The preceding Phase gate (if any), current design/plan approval, fresh default baseline, isolated worktree and required human decisions for this scope are confirmed.
+
+### Acceptance criteria
+All included Tasks meet their acceptance criteria and the complete Phase test cycle has current evidence with no unaccepted critical/high finding.
+
+### Integration and regression
+Run the observed project lint, build and technical suites plus affected Item, authorization, database and downstream contract regression.
+
+### Git and merge plan
+Use the default-baseline strategy and merge group `inventory-p3`; dependencies: PHASE-003.
+
+### Rollback
+Revert the Phase change set while preserving immutable production history; schema/data rollback requires a separately reviewed migration and recovery plan.
+
+### Exit criteria
+The Phase PR has current mandatory CI and actual required review, and merge occurs only under the approved plan.
+
+## PHASE-005 — Stocktake (legacy P4)
+
+### Outcome
+Deliver the reviewed `P4` outcome described in the legacy plan without weakening Inventory quantity, audit, authorization or recovery invariants.
+
+### Entry criteria
+The preceding Phase gate (if any), current design/plan approval, fresh default baseline, isolated worktree and required human decisions for this scope are confirmed.
+
+### Acceptance criteria
+All included Tasks meet their acceptance criteria and the complete Phase test cycle has current evidence with no unaccepted critical/high finding.
+
+### Integration and regression
+Run the observed project lint, build and technical suites plus affected Item, authorization, database and downstream contract regression.
+
+### Git and merge plan
+Use the default-baseline strategy and merge group `inventory-p4`; dependencies: PHASE-004.
+
+### Rollback
+Revert the Phase change set while preserving immutable production history; schema/data rollback requires a separately reviewed migration and recovery plan.
+
+### Exit criteria
+The Phase PR has current mandatory CI and actual required review, and merge occurs only under the approved plan.
+
+## PHASE-006 — Opening, Reporting and Release (legacy P5)
+
+### Outcome
+Deliver the reviewed `P5` outcome described in the legacy plan without weakening Inventory quantity, audit, authorization or recovery invariants.
+
+### Entry criteria
+The preceding Phase gate (if any), current design/plan approval, fresh default baseline, isolated worktree and required human decisions for this scope are confirmed.
+
+### Acceptance criteria
+All included Tasks meet their acceptance criteria and the complete Phase test cycle has current evidence with no unaccepted critical/high finding.
+
+### Integration and regression
+Run the observed project lint, build and technical suites plus affected Item, authorization, database and downstream contract regression.
+
+### Git and merge plan
+Use the default-baseline strategy and merge group `inventory-p5`; dependencies: PHASE-005.
+
+### Rollback
+Revert the Phase change set while preserving immutable production history; schema/data rollback requires a separately reviewed migration and recovery plan.
+
+### Exit criteria
+The Phase PR has current mandatory CI and actual required review, and merge occurs only under the approved plan.
+
+## TASK-001 — 凍結 migration 編號與前置 contract (legacy P0-T01)
+
+### Goal
+Fetch 最新 main，盤點實際 migration 與 Item/Supplier/Customer 尚未合併的配額；確認 Item T18～T22 及 Inventory serial fail-closed 前置，產出本 Phase 使用的實際 migration allocation，不修改既有檔案
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T01` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
+- Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
+- Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-002 — 修正強認證 Idempotency actor scope (legacy P0-T02)
+
+### Goal
+修正 framework idempotency identity，使 jwt、jwt-password、jwt-device-password 及其他具有可信 claims.sub 的 authenticated request 以 actor scope 隔離；只有 public request 使用 IP scope
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T02` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 同 IP 的不同 authenticated actors 使用相同 key 不會互相 replay。
+- 同 actor 的強認證 route 仍可同 payload replay，異 payload 回固定 conflict。
+- Public route 行為及既有 idempotency tests 無回歸，identity 不以未驗證 body/header 決定。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-003 — 建立 Inventory 權限、設定、常數與公開錯誤 (legacy P0-T03)
+
+### Goal
+建立五項 Inventory permissions、冪等 seed、typed config normalizer、固定狀態／數量／source／reason allowlists及 stable public errors；不得把負庫存、部分 Transfer 或自訂 Stock Status 變成可切換 flag
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T03` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Catalogue 與 seed 精確包含 `inventory.view`、`inventory.operation`、`inventory.mgmt`、`inventory.adjust`、`inventory.fefo.override`，互不繼承。
+- Config 對 page/quantity/export/opening/lease/retention 範圍 fail closed，lease renew interval 必須小於 lease 一半。
+- 所有錯誤、status、command type、Audit action 只取 server allowlist；client 有繁中安全訊息。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-004 — 驗證並完成 ItemLookup transaction contract (legacy P0-T04)
+
+### Goal
+沿用 Item Management 的唯一 ItemLookupService，補足 Inventory 在現有 transaction 中讀取 SKU eligibility、Base UOM conversion、Tracking Policy、Shelf Life 與 minimum life 的方法；不要求下游 actor 持有 item.view，也不在 Inventory 重寫 Item 狀態矩陣
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T04` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- `purchase`、`sale`、`inventory` purpose 與 Item design 一致；Inactive／Discontinued／Archived／Serial 分支有 contract tests。
+- Lookup 接受 caller 提供的 transaction executor，查詢 Base UOM 及有效整數 factor，不暗中另開 transaction。
+- Lookup 只回白名單 projection，不讀 HTTP claims、不洩漏 Item 管理資料；批量方法避免 N+1。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-005 — 建立 Domain Operation 與 Audit persistence (legacy P0-T05)
+
+### Goal
+建立 domain operation request 及 Inventory Audit tables、source tuple unique key、必要 indexes、actor/source snapshots與 immutable triggers；domain operation history 不使用短期 HTTP idempotency TTL 清除
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T05` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Source unique key 精確為 module＋document type＋document ID＋line ID＋event ID，不含 command type，空 line 使用 `''`。
+- Audit 支援 `SUCCEEDED`、`REJECTED`、`FAILED`，只保存白名單摘要；Movement/Audit retention 至少 7 年。
+- 一般 app account 或 application SQL 無法 UPDATE／DELETE Audit；FK、indexes、SET NULL／RESTRICT 行為符合設計。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-006 — 完成 Operation／Audit services 與不可變保護 (legacy P0-T06)
+
+### Goal
+實作 canonical payload hash、atomic domain claim、result replay／source lookup、safe success/reject/failure Audit，並確保必要 Audit 失敗會令 business transaction rollback
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T06` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 同 tuple＋同 hash 回原結果；同 tuple＋不同 hash 回 `INVENTORY_SOURCE_CONFLICT`；並發只有一個 winner。
+- Password／token 不進 hash、result、log 或 Audit；business fields 變化必定改變 hash。
+- Success Audit 與效果同 transaction；rollback 後的 reject/failure Audit 不會冒充已完成數量效果。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-007 — 建立固定鎖協議、internal command context 與 test support (legacy P0-T07)
+
+### Goal
+建立所有後續寫入必須共用的 Warehouse → Stock Control → Bin/semantic lock → Lot → Balance → workflow root 固定鎖 helper、transaction-required internal command context，以及可注入故障與並發 barrier 的測試支援
+
+### Approach
+Implement only the scope and dependencies of legacy task `P0-T07` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Helper 對輸入 IDs 先去重排序，禁止逆序取鎖；不存在的 control/balance 使用 upsert 後 `FOR UPDATE`。
+- Internal write 沒有 transaction executor 時立即失敗，不會私取 pool connection或 nested transaction。
+- Test support 可在 operation、current state、Movement、Audit 與 commit 邊界注入失敗，並可用兩條真 connection 同步競爭。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-008 — 建立 Warehouse／Bin persistence (legacy P1-T01)
+
+### Goal
+建立 Warehouse、Bin tables、normalized unique keys、ownership candidate key、version、status、actor FK與查詢 indexes
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T01` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Warehouse Code 全公司 case-insensitive unique；Bin Code 只在 Warehouse 內 unique。
+- `(bin_id,warehouse_id)` ownership 可由後續 composite FK 強制；actor delete 使用 SET NULL，業務引用使用 RESTRICT。
+- Migration 可在 fresh／existing DB 安全套用及 rerun，不依賴 DDL transaction rollback。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-009 — 完成 Warehouse／Bin domain service (legacy P1-T02)
+
+### Goal
+實作列表、詳情、建立、更新、停用、恢復與受控刪除，所有狀態變更使用 version、fresh permission、Warehouse row lock、reference guard及 Audit
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T02` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Inactive Warehouse 不可新增／恢復 Bin；停用在 transaction 內重驗所有 current blockers。
+- Current blockers 清除後可停用；只有歷史 Movement 阻擋永久刪除，不錯誤阻擋停用。
+- Warehouse deactivate 與同時 posting 共用 Warehouse row lock，兩種先後都不留下 Inactive＋新庫存競態。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-010 — 完成 Warehouse／Bin API 與 client contract (legacy P1-T03)
+
+### Goal
+建立 §5.2 全部 strict handlers及 client methods，固定 auth strength、permissions、idempotency、version、reason與安全公開錯誤
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T03` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- GET／create／update／deactivate／reactivate／delete route metadata與 design 完全一致。
+- Child Bin 以 Warehouse＋Bin 一起查找；跨 owner 與不存在回相同安全 404。
+- Client 不自動重送 version conflict，所有 POST 傳遞 Idempotency-Key，錯誤有繁中映射。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-011 — 完成 Warehouse／Bin 管理頁 (legacy P1-T04)
+
+### Goal
+依 frontend design 建立主從式 Warehouse／Bin 管理頁，支援列表、表單、版本衝突、阻擋摘要及高風險確認；mobile 使用逐頁選擇
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T04` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 使用 `PageHeader`、`DataTable`、`FormPanel` 與既有 confirm helpers，不新增平行 UI framework。
+- Action 依 permission 顯示，但後端仍獨立驗證；409 保留輸入並提示 reload。
+- Loading、empty、forbidden、blocked及 375px keyboard flow均可驗收。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-012 — 建立 Lot、Stock Control、Balance 與 Movement persistence (legacy P1-T05)
+
+### Goal
+建立 current quantity tables與 immutable Movement ledger，包含 no-lot unique scope、SKU/Lot/Bin ownership composite FK、query indexes及 UPDATE/DELETE triggers
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T05` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Balance 唯一表示 Warehouse＋Bin＋SKU＋Lot/No Lot＋Status；MySQL NULL 不可繞過 no-lot unique。
+- Lot 必屬 SKU、Bin 必屬 Warehouse；Movement 保存 source、actor及必要 master snapshots。
+- Movement 的 warehouse／SKU／Bin／Lot／actor／type/date及 group/source 查詢均有相符 index，且一般 app 無法修改或刪除。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-013 — 完成 quantity、expiry、lot 與 projection 純規則 (legacy P1-T06)
+
+### Goal
+建立 Base UOM safe integer、UOM conversion、Tracking Policy、Lot consistency、APPTIMEZONE expiry／minimum life、Stock Status及 response projection規則
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T06` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Decimal、0、負數、overflow及非整數 factor全部拒絕；Pack 轉換不產生小數 Base UOM。
+- Expiry 等於今日仍有效，翌日才 Expired；`none`／`batch`／`batch_expiry`／`serial`規則準確。
+- Projection 明確分開 On Hand、free、Reserved、ATP、Quarantined、Damaged與 In Transit，不 spread DB row。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-014 — 完成 Receipt 原子過帳 (legacy P1-T07)
+
+### Goal
+實作 HTTP／internal Receipt，共用 operation claim、SKU purpose、Warehouse/Bin/Stock Control/Lot/Balance固定鎖、current update、Movement與 Audit transaction
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T07` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 正確處理 Base／Pack UOM、三種人工 Status、Lot/Expiry與 minimum receipt life evidence。
+- 相同 source replay 不重複；同 source 異內容衝突；任何注入失敗均無半套 Lot／Balance／Movement／Audit。
+- Inactive/Archived/not tracked/Serial SKU、Inactive Warehouse/Bin、Lot conflict及無效 override皆 fail closed。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-015 — 完成 Receipt 下游同步入口與故障邊界 (legacy P1-T08)
+
+### Goal
+把 Receipt 以 transaction-required internal contract提供給 Receiving／Returns，驗證 caller source write與 Inventory效果共用同一 MySQL transaction；Issue route及成功路徑明確保持未註冊，直到 P2具備 Reservation／Allocation
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T08` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Internal Receipt沒有 transaction executor時立即失敗；caller source write失敗會連同 Inventory rollback，反向亦然。
+- Provider固定 Receiving／Returns purpose與 caller permission mapping，不接受 caller自由傳入 permission名稱。
+- `/inventory/issues`不註冊或固定 fail closed；不得提供不消耗 Reservation／Allocation的臨時 Issue捷徑。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-016 — 完成 Stock／Lot／Movement 查詢 API (legacy P1-T09)
+
+### Goal
+實作 server-side paginated inquiry、SKU aggregate、bucket drill-down、Lot/expiry及 Movement/source/group detail；所有 filters/sorts使用 allowlist及相符 index
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T09` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- SKU Code／Barcode exact搜尋優先，name partial安全 escape；列表以 `id` stable tie-breaker。
+- 查詢即時使用 current Balance/Control及 expiry規則，不依賴人工重建 cache。
+- Movement可按日期/type/source/SKU/Warehouse/Bin/Lot/actor查詢，結果只回白名單快照與安全 source link。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-017 — 完成 Stock／Lot／Movement UI (legacy P1-T10)
+
+### Goal
+建立庫存總覽、批次與效期、Movement頁面，提供 URL filters、server pagination、aggregate到bucket drill-down及source/reversal關聯顯示
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T10` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 數量欄不可混成單一 quantity；Expired／low-life／Status具文字及 icon，不只靠顏色。
+- URL可還原 filters/page/sort且不含敏感資料；stale request可取消。
+- 375/768/1024/1440px、keyboard、loading/empty/error/retry及 `inventory.view` route guard通過。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-018 — 完成 Core Stock 整合、並發與效能驗收 (legacy P1-T11)
+
+### Goal
+收斂 AC-001～015及 AC-016的 Receipt路徑，補足 Warehouse deactivate/posting、Receipt source duplicate、rollback、權限與核心查詢容量測試，不新增業務功能
+
+### Approach
+Implement only the scope and dependencies of legacy task `P1-T11` inside `PHASE-002` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 兩條 connection 競爭同 Receipt source/bucket時不重複 Movement；deadlock/timeout轉 stable conflict且零半套資料。
+- 每個 Core endpoint通過 401/403/stale actor/owner mismatch/strict schema及敏感資料檢查。
+- 需求容量下 exact SKU/Barcode、stock summary、bucket drill-down及 Movement common filters p95 < 2 秒並保存 EXPLAIN。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-019 — 建立 Reservation／Allocation persistence (legacy P2-T01)
+
+### Goal
+建立 Reservation、Allocation tables、quantity breakdown、purpose/minimum-life snapshot、status/version、operation/source及 Balance關聯 indexes/FKs
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T01` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Reservation 保存 original/consumed/released/outstanding；Allocation保存 allocated/consumed/released/outstanding，所有欄位使用 unsigned Base UOM integer。
+- Create operation、Warehouse、SKU、Reservation、Balance及 actor FK delete rules符合歷史保留要求。
+- Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；MySQL 8.0 CHECK只作row-local第二層保護，不取代service的跨row invariant。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-020 — 完成 ATP 與 Reservation state service (legacy P2-T02)
+
+### Goal
+實作 purpose-aware eligible On Hand、Reserved、raw ATP、ATP/uncovered計算，以及 create、partial release、cancel與 state/version transition；所有改量先鎖 Warehouse＋Stock Control
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T02` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 建立 Reservation 全有或全無，只有 raw ATP 足夠才成功；Expired／low-life／Quarantined／Damaged不合資格。
+- 每次 state change保持 `original = consumed + released + outstanding`，terminal state不可被 stale event復活。
+- 日期跨日造成 uncovered時不自動刪除 Reservation，但禁止新超額 Reservation並回明確數量。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-021 — 完成 FEFO candidate 與 Allocation service (legacy P2-T03)
+
+### Goal
+實作有 expiry／無 expiry／無 lot的穩定 FEFO排序、跨多 Bucket candidate selection、Allocation create及受權限控制的 FEFO override
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T03` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Candidate排序精確依 expiry/first receipt、lot、bin、balance ID，並只回 eligible free quantity與 version。
+- Allocation不扣 On Hand；總 outstanding不超過 Reservation，單 Bucket outstanding不超過 On Hand。
+- 偏離建議只有 `inventory.fefo.override`＋5～500字原因可通過，仍不可選過期、低效期、非 AVAILABLE、Inactive/locked Bin或不足 Bucket。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-022 — 完成 Release／Cancel／Reallocate 與 Issue consume 整合 (legacy P2-T04)
+
+### Goal
+補齊 Allocation release/reallocate，並首次啟用只可消耗匹配 Allocation的 Issue，同步扣 On Hand/allocated/reserved與 Reservation/Allocation outstanding的單一 transaction
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T04` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Reallocate在同一 transaction釋放舊分配並建立新分配，中途失敗保留原狀態。
+- Issue逐行鎖定並只消耗相同 Reservation/Allocation/Balance；任何 mismatch、不合資格或不足令整批 rollback。
+- Issue完成後四組 current quantities、Movement、operation及 Audit一致；Reverse Issue不復活已耗用 Reservation/Allocation。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-023 — 完成 Reservation／Allocation API 與 internal contracts (legacy P2-T05)
+
+### Goal
+建立 §5.5 全部查詢／command handlers、client methods及 Sales/Fulfillment transaction-aware service entry points；provider固定 caller permission/purpose mapping，不接受 caller自報權限名稱
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T05` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Create/release/cancel/candidates/allocate/release allocation/reallocate route具有 strict schema、version、source及 idempotency。
+- FEFO candidates query不改資料；所有 command共用既有 caller transaction且提交點重讀 actor permission。
+- 下游角色不因呼叫 Inventory capability取得 `inventory.view`或管理頁權限。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-024 — 完成 Reservation／Allocation UI (legacy P2-T06)
+
+### Goal
+建立 Reservation列表／詳情、quantity breakdown、Allocation drawer、FEFO候選、override提示與 conflict reload flow；前端不重算可信 ATP或 FEFO rank
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T06` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Original/Consumed/Released/Outstanding及 source清楚分列；uncovered有文字下一步。
+- 具 override權限才顯示原因操作；無論 UI顯示與否，後端拒絕仍能安全呈現。
+- 409時保留使用者輸入但強制重載 candidates，不自動改選另一 Lot；keyboard/mobile flow可完成。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-025 — 完成真並發、FEFO、安全及端到端驗收 (legacy P2-T07)
+
+### Goal
+補足 Reservation/Allocation/Issue在真 MySQL的並發、時間流逝、權限撤銷、FEFO override及多 Bucket端到端驗證，不增加新功能；需要 Bin Move的 AC-022留待 P3
+
+### Approach
+Implement only the scope and dependencies of legacy task `P2-T07` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- ATP 10並發 Reservation 7＋7最多一個成功；Reserved及 Reservation SUM一致。
+- 同 Bucket Allocation／Issue／release競爭不超額、不負數、不 lost update；失敗方回 stable conflict。
+- Normal、override、expired、low-life、status、Inactive Bin、跨 owner及撤權情境均有真 API＋DB證據。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-026 — 建立 Transfer persistence 與 state rules (legacy P3-T01)
+
+### Goal
+建立 Transfer header/line tables、operation IDs、source/destination ownership、In Transit current quantity、versions及 state machine純規則
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T01` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Draft/In Transit/Received/Cancelled狀態與合法 transition固定；source與 destination Warehouse不同。
+- Line保存 SKU/Lot/source Bin、完整 quantity及 dispatch snapshots；header/line/source/destination indexes完整。
+- Partial dispatch/receive、In Transit edit/cancel在純規則層明確拒絕。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-027 — 完成 Draft Transfer domain 與查詢 (legacy P3-T02)
+
+### Goal
+實作 Draft建立、完整 replace lines、取消、列表及詳情；Draft不改 On Hand、Reserved或 In Transit
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T02` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 建立／更新驗證兩個 Active Warehouses、SKU/Lot/source Bin ownership、positive quantity及 version。
+- Replace lines全有或全無；cancel只限 Draft且保存 actor/time/reason/Audit。
+- 查詢明確顯示 header/line versions與四種狀態，跨 owner child ID安全拒絕。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-028 — 完成 Transfer Dispatch／Receive 原子過帳 (legacy P3-T03)
+
+### Goal
+實作整張 Dispatch及整張 Receive；Dispatch扣來源 Bin並增加目的 Warehouse In Transit，Receive清除 In Transit並增加逐行指定的目的 Active Bin
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T03` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Dispatch按兩 Warehouse ID及所有 Stock Control/Balance固定排序鎖定，任一行失敗整張零效果。
+- Receive line ID集合exact；每行 quantity不可修改，目的 Bin屬目的 Warehouse，Status只可保持或改 Quarantined＋reason。
+- Dispatch/Receive各自冪等；Movement paired legs、In Transit與 Transfer state在同一 transaction一致。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-029 — 完成 Transfer API 與 UI (legacy P3-T04)
+
+### Goal
+建立 Transfer handlers/client及 Draft editor、Dispatch確認、In Transit read-only、逐行 Receive Bin/Status畫面
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T04` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- API route/auth/permission/idempotency/version與 design一致；Receive schema拒絕少行、重複行、多行或部分 quantity。
+- UI在 Dispatch後不顯示可編輯／取消；清楚分開來源、目的及 In Transit。
+- Quarantined收貨強制原因；同名 Bin不會誤用來源 ID；responsive/keyboard/conflict states通過。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-030 — 完成 Bin Move 原子過帳 (legacy P3-T05)
+
+### Goal
+實作同 Warehouse兩 Active Bins之間指定 SKU/Lot/Status的原子 Move，產生成對 OUT/IN legs且不改總 On Hand
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T05` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 來源/目的不同且同 Warehouse；SKU/Lot/Status保持不變；quantity使用 Base UOM正整數。
+- 不可移走 allocated quantity或令 eligible stock低於 Reserved；任一 Bin locked時拒絕。
+- paired legs共用 group，任何失敗零 Balance/Movement/Audit半套；version/source重送語意正確。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-031 — 完成 Adjustment 與 Status Transfer (legacy P3-T06)
+
+### Goal
+實作只有 inventory.adjust＋device/password reauth可執行的正／負 Adjustment及三種人工 Status間的原子轉換，強制 reason category/text及當下規則
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T06` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 負 Adjustment只可扣 free quantity且不破壞 Reserved/Allocation；正 Adjustment遵守 Tracking/Lot/Bin/Expiry。
+- Status Transfer保持 Warehouse/Bin/SKU/Lot不變，paired legs令 Total On Hand不變；轉出 AVAILABLE重驗 Reservation保障。
+- High-risk route不能用普通 JWT；permission、reauth actor/device/action/time及原因在提交點重驗並 Audit。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-032 — 完成 Movement Reversal (legacy P3-T07)
+
+### Goal
+實作完整 Movement group反向，僅允許 Receipt、Issue、Bin Move、Status Transfer及 Adjustment；Transfer、Stocktake、Opening、In Transit與 Reversal本身走關聯 Adjustment/Status流程
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T07` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 一個原 group只能完整 reverse一次，每個 leg以 unique `reversal_of_movement_id`連結，原 row不修改。
+- Reverse Receipt／increase再次檢查 free/Reserved/Allocation；Reverse Issue只回庫存，不復活已耗用 Reservation/Allocation。
+- 不支援 group回固定 `MOVEMENT_TYPE_NOT_REVERSIBLE`；任何當下 invariant失敗整組零效果。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-033 — 完成 Adjustments／Movements 操作 UI (legacy P3-T08)
+
+### Goal
+建立 Adjustment/Status/Reversal入口與 Movement group/reversal顯示；高風險確認須顯示位置、Lot、Status、數量、預期效果及原因
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T08` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 只有 view＋adjust顯示頁/按鈕；FEFO override或 operation權限不被誤當 adjust。
+- device-password不進 client state、URL或重送 payload cache；timeout後先查 source結果。
+- 原 Movement與 reversal group雙向連結，非可 reverse類型不顯示誤導操作。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-034 — 完成倉務操作整合、並發及安全驗收 (legacy P3-T09)
+
+### Goal
+收斂 Bin Move、Transfer、Adjustment、Status、Reversal的真 DB原子性、並發、權限、source replay及 Movement reconciliation，並完成 AC-018與 AC-022的跨 Phase依賴
+
+### Approach
+Implement only the scope and dependencies of legacy task `P3-T09` inside `PHASE-004` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- On Hand 10並發 Issue 7與 Dispatch 7最多一個成功；同 version Adjustments只有一個成功。
+- 所有 paired/reversal groups可對賬且任一 failure injection差異為0；未 Allocation的 Reserved庫存可同倉移 Bin並保持 Reserved，Issue錯誤只能以 Reversal更正。
+- Cross-owner IDs、普通 JWT high-risk、撤權 actor、stored XSS/source tampering及 direct ledger update皆被阻擋。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-035 — 建立 Stocktake、scope、line 與 persistent Bin lock persistence (legacy P4-T01)
+
+### Goal
+建立 Stocktake header、scope bins、semantic locks及 count lines，使用 active generated slot與 composite owner FK保證同 Bin只有一個 active lock且 lock/line不會交叉指向另一 Stocktake/Bin
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T01` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Stocktake狀態、各 command operation、versions及 actor/time欄位完整；posted/cancelled歷史保留。
+- `(stocktake_bin_id,stocktake_id,bin_id)` composite FK在 DB層拒絕錯 owner組合。
+- `UNIQUE(bin_id,active_scope)`只允許一個 active lock，released history可多筆；count dimension的 no-lot unique不可被 NULL繞過。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-036 — 完成 Draft／Start、snapshot 與 lock acquisition (legacy P4-T02)
+
+### Goal
+實作 Draft建立／scope replace／取消及 Start；Start先驗證所有 scope Bins，再以固定順序原子建立所有 locks及 snapshot現存 buckets
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T02` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Draft不鎖也不改庫存；同一 Warehouse的一或多 Bins scope完整 replace且使用 version。
+- Start任一 Bin inactive/locked/owner mismatch時不留下部分 lock或 snapshot。
+- Start成功後 snapshot包含開始前已提交效果；與同時 Receipt競爭只有「Receipt先完成被納入」或「Start先鎖定並阻擋 Receipt」兩種結果。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-037 — 完成 Count save 與現場新增 Bucket (legacy P4-T03)
+
+### Goal
+實作逐批1～100 lines保存非負整數 counted quantity、明確 notFound、progress及新增 snapshot=0的現場 Bucket；不得把空值與0混淆
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T03` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 每行使用 version防兩人覆蓋；counted=0有效，未填為 NULL，notFound明確代表 actual=0。
+- 新 Bucket重驗 SKU/Tracking/Lot/Bin/Status並遵守相同 dimension unique；不可提交 client snapshot/variance。
+- READY後 save/add全部拒絕；progress分頁不一次載入所有 lines。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-038 — 完成 Ready／Post／Cancel state flow (legacy P4-T04)
+
+### Goal
+實作 completeness檢查、READYTOPOST、device-password＋adjust原子 Posting及 owner-safe Cancel；不提供 reopen或部分差異過帳
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T04` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 所有 lines counted或 notFound才可 Ready；Ready後修正只能 cancel後重建。
+- Post一次處理全部 variance，逐行更新 Balance/Movement/Audit後才 owner-safe release locks；任一失敗狀態仍 READY且 locks保持。
+- Cancel只釋放該 Stocktake持有的 locks，不產生 Movement；Posted/Cancelled重送回原結果或 stable state conflict。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-039 — 完成 Stocktake API、查詢與 CSV (legacy P4-T05)
+
+### Goal
+完成 §5.7 handlers/client、header/scope/progress/variance查詢及安全 CSV export，固定各 route auth strength、permission、schema、version與 idempotency
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T05` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Create/update/start/save/add/ready/post/cancel及 GET endpoints與 design contract一致。
+- Post固定 `jwt-device-password`＋adjust；Cancel固定 `jwt-password`＋operation；密碼不進 domain/hash/log。
+- CSV包含 scope/snapshot/actual/variance/movement IDs，沿用相同 filters/Base UOM並 neutralize公式。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-040 — 完成 Stocktake UI (legacy P4-T06)
+
+### Goal
+建立四步 Stocktake wizard、lock banner、server-paginated Counting、Barcode/SKU定位、progress、Ready summary、高風險 Post及取消流程
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T06` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 選 Warehouse/Bins→Start→Count→Review/Post流程清晰；0、未輸入及未發現有不同控制與文字。
+- Counting持續顯示 locked Bins、Stocktake number及完成率；READY不顯示 edit/reopen。
+- Post失敗明確顯示 locks仍有效；permission、responsive、keyboard、loading/conflict/retry通過。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-041 — 完成鎖覆蓋、原子過帳、並發及安全驗收 (legacy P4-T07)
+
+### Goal
+以 P3 所有 Bin mutation入口清單建立 parameterized lock coverage，驗證服務重啟、並發 Start/post/cancel、owner mismatch、partial failure及 persistent lock復原
+
+### Approach
+Implement only the scope and dependencies of legacy task `P4-T07` inside `PHASE-005` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Receipt、Issue、Bin Move來源/目的、Transfer Dispatch/Receive、Adjustment、Status、Reversal及 Opening對 locked Bin全部拒絕。
+- 服務 restart不遺失 active locks；同 Bin並發 Start最多一個成功；非 owner不能 release。
+- Post任一步失敗無部分 Balance/Movement/Audit，state/locks保持可重試；成功後 reconciliation為0差異。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-042 — 建立 Inventory Control、Opening Job／Row persistence (legacy P5-T01)
+
+### Goal
+建立單列 Go-Live control、Opening jobs/rows、validation/result metadata、lease owner/generation fencing、operation/movement links及 queue/list indexes
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T01` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Control只允許 PRE_GO_LIVE→LIVE；migration冪等建立 id=1，不提供一般回復或 delete。
+- Job保存 file hash/size、row counts、precheck snapshot、lease owner/generation/expiry/attempts及 safe error；不保存 Audit中的完整 CSV。
+- Row number在 job內唯一；duplicate dimension以 group validation保留所有錯誤 rows，不用 DB unique吞掉第二列。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-043 — 完成 Opening CSV parser 與 Precheck (legacy P5-T02)
+
+### Goal
+建立 UTF-8 RFC4180 streaming parser、固定 v1 template、10,000 row/size/header/formula限制及不改庫存的 async Precheck；解析後重用 Item/Warehouse/Bin/Lot/Status規則
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T02` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Template只有 Warehouse/Bin/SKU/Lot/Expiry/Status/Base Quantity；quantity必須為正整數，任何錯誤整份不可 confirm。
+- 錯 MIME/signature/encoding/header/extra field/formula/oversize/too many rows/path traversal全部安全拒絕。
+- Precheck只寫 job/normalized rows/errors/version hash，不建立 Lot/Balance/Movement或成功 Audit；錯誤可定位 row/field。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-044 — 完成 fenced Opening worker 與失敗復原 (legacy P5-T03)
+
+### Goal
+使用現有 Scheduler/DB lease完成 claim、20秒 heartbeat續60秒 lease、generation fencing、stale precheck重驗及全部 valid rows單一 business transaction過帳
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T03` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Claim/takeover原子遞增 generation；所有 progress/final writes帶 owner＋generation，lost ownership立即停止。
+- Heartbeat使用獨立短 connection；final COMPLETED update在 business transaction內，stale worker affected rows=0令整個 posting rollback。
+- 任一 row/lock/Audit/commit前失敗不留下部分 Lot/Balance/Movement；commit indeterminate先查 source結果再決定重試。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-045 — 完成 Opening／Go-Live API (legacy P5-T04)
+
+### Goal
+建立 template/upload/jobs/detail/confirm/cancel/result及不可逆 Go-Live handlers/client，固定 management permission、auth strength、idempotency、polling projection及 no-store下載
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T04` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Upload、confirm、cancel在 LIVE後拒絕；Confirm固定 device-password＋mgmt＋reason＋version，Cancel固定 password。
+- Confirm對 stale precheck回 READY＋明確錯誤，不使用舊 snapshot；Go-Live只有對賬 gate後可執行且不可逆。
+- Job/result response不暴露 server path/raw CSV；已清理 result回410但 job/Audit/Movement仍可查。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-046 — 完成 Opening UI (legacy P5-T05)
+
+### Goal
+建立 PREGOLIVE/LIVE頁、template、upload、bounded polling、row errors、Confirm摘要、result及 reconciliation指引；LIVE後移除寫入入口
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T05` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Upload不等於入帳；流程清楚分為 template→upload→precheck→errors→confirm→reconciliation。
+- Confirm顯示 rows、quantity summary、短 hash及全有或全無警告；device password不保存在 component/global state。
+- Polling有上限並在離頁取消；FAILED/STALE/410/LIVE均有可執行下一步，responsive/keyboard通過。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-047 — 完成 Stock／Movement／Expiry／Reservation／Transfer 匯出 (legacy P5-T06)
+
+### Goal
+建立與畫面 filters一致的 keyset-streaming CSV exports、100k row/time上限、截斷標示、Base UOM/公司時區及 export Audit
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T06` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 五類 export使用同一 inquiry語意及 stable columns，不載入全部2M Movement至記憶體。
+- 所有危險公式前綴 neutralize；headers含 attachment/nosniff/no-store/private，無成本/路徑/認證/未定義預測值。
+- 超 row/time上限明確標示截斷；每次 export Audit只保存 filter hash及 row count。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-048 — 完成 Receiving／Fulfillment／Returns contracts (legacy P5-T07)
+
+### Goal
+以已存在的下游模組接上同 transaction Inventory methods；尚未存在的模組只交付 provider contract fixtures/tests，不建立虛構業務 tables或讓下游直接寫 Balance
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T07` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Receiving Receipt、Fulfillment Reservation/Allocation/Issue及 Returns Receipt/Issue使用固定 purpose/permission/source mapping。
+- 來源寫入與 Inventory效果共用同一 MySQL transaction；任一側失敗另一側完整 rollback。
+- 撤權／停用actor、dependency unavailable、low receipt life evidence不完整或Customer Return未使用`QUARANTINED`時全部fail closed。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-049 — 完成 structured logs、營運查詢與 reconciliation runbook (legacy P5-T08)
+
+### Goal
+加入 design指定 command/idempotency/lock/stocktake/opening/reconciliation事件與安全 context，實作只讀 reconciliation queries/runbook及異常告警輸入，不引入新監控產品或自動修數
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T08` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Logs包含 request/correlation/operation/actor/auth/permission/outcome/duration等 allowlist欄位，source ID必要時 hash；無自由 payload/secret。
+- 六項 reconciliation invariants均有 bounded read-only query及差異輸出；任何 mismatch不直接 UPDATE Balance。
+- Transaction indeterminate、Opening failed/lease recovered、長時間 Bin lock及 reconciliation mismatch有明確營運訊號。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-050 — 完成容量、效能、backup／restore 及安全驗證 (legacy P5-T09)
+
+### Goal
+以設計容量資料集驗證常用查詢、混合寫入、10k Opening及2M Movement；對完整資料執行隔離 backup/restore/reconciliation及全 endpoint安全測試
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T09` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- 5 Warehouses、1,000 Bins、100k SKUs、500k buckets、2M Movements、20 users下指定查詢 p95 <2秒；保存 p50/p95/p99與 EXPLAIN。
+- 10k Opening precheck＋posting合計≤10分鐘；20-user mixed commands無非法 quantity，lock wait/error有記錄。
+- 隔離 restore後六項 reconciliation為0差異；所有 endpoint通過 auth/owner/input/XSS/CSV/upload/redaction/ledger tamper安全矩陣。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
+
+## TASK-051 — 完成部署、Smoke、文件與 Release Gate (legacy P5-T10)
+
+### Goal
+凍結部署順序、permission assignment、Opening data freeze/confirm/Go-Live、rollback/forward-fix、app/migration DB account、smoke及 evidence清單；不在未簽核時執行正式 Go-Live
+
+### Approach
+Implement only the scope and dependencies of legacy task `P5-T10` inside `PHASE-006` using the design decisions mapped in `08_traceability.json`.
+
+### Acceptance criteria
+- Deployment runbook涵蓋 backup→migrations→backend→frontend→permissions→smoke→Opening→reconciliation→人工 sign-off→Go-Live。
+- 已有 Movement後只允許 read-only/forward-fix，不以 drop/reset/直接 SQL改 ledger回滾；Go-Live不可一般回復。
+- 保存 migration output、commit SHA、Phase test report、capacity、backup/restore、reconciliation、smoke及 sign-off，不保存 password或 CSV原文。
+
+### Definition of Done
+The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.

@@ -125,7 +125,7 @@ This review compares the four preserved Customer Management documents with the s
 - Evidence: source uses `CUS-CAP-*`, `T01..T49` and informal checkpoints.
 - Impact: parentage, merge checkpoints and test traceability are not mechanically provable.
 - Action: map work into four independently mergeable `PHASE-001..004` checkpoints with minimum executable `TASK-001..036` units.
-- Disposition: `RESOLVED` by `tasks.md`.
+- Disposition: `RESOLVED` by `05_development_tasks.md`.
 
 ### GAP-TASK-002 — PR guidance is task-centric rather than checkpoint-centric
 
@@ -196,3 +196,23 @@ This review compares the four preserved Customer Management documents with the s
 - Material `HIGH` gaps: resolved in aligned documentation or converted to explicit implementation gates.
 - Open business issue: no unresolved core business behavior; legal confirmation may only lengthen retention.
 - Readiness: documentation package can be made `READY_FOR_PLANNING`; application implementation and all formal tests remain unexecuted.
+
+## 7. Harness 2.0 Migration Gaps
+
+### GAP-DOC-001 — Parallel narrative authorities remained active
+
+- Severity: `HIGH`; classification: `DOCUMENTATION_GAP`.
+- Evidence: canonical entry files still linked to `requirement.md`, `design_spec.md`, `tasks.md` and `test_case.md` as active parallel sources.
+- Disposition: `RESOLVED`; complete unique bodies/rules were merged into canonical 01/03/05/06/07 files, then superseded duplicates were removed from the same recoverable Git change.
+
+### GAP-TRACE-001 — Typed module/traceability records were absent
+
+- Severity: `HIGH`; classification: `DOCUMENTATION_GAP`.
+- Evidence: no `00_module_manifest.json`, `00_project_profile.json`, `00_harness_state.json` or `08_traceability.json`; the matrix was hand maintained.
+- Disposition: `RESOLVED STRUCTURALLY`; v2 typed records and generated matrix now own identity, relations, suite policy and state. Semantic approval remains blocked as recorded below.
+
+### GAP-REV-001 — Review provenance was overstated
+
+- Severity: `HIGH`; classification: `GOVERNANCE_GAP`.
+- Evidence: the existing title said “Independent Design Review” but no separate reviewer identity/evidence was present.
+- Disposition: `OPEN`; corrected to `SELF_REVIEW`. A real independent reviewer is required before implementation authorization, and DR-004 still requires named Security/Backend disposition.

@@ -1,0 +1,199 @@
+{
+  "schema_version": "2.0",
+  "module_id": "customer-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/customer_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/src/modules/customer/**",
+      "server/src/handlers/customers/**",
+      "server/src/handlers/customer-approvals/**",
+      "server/src/handlers/customer-settings/**",
+      "server/src/handlers/customer-lookups/**",
+      "server/src/handlers/customer-imports/**",
+      "server/src/handlers/customer-exports/**",
+      "server/src/handlers/customer-audit/**",
+      "server/src/services/customerImport/**",
+      "server/src/services/customerFile/**",
+      "client/src/pages/customers/**",
+      "client/src/components/customers/**",
+      "client/src/services/customer*.js"
+    ],
+    "test_paths": [
+      "server/test/**",
+      "client/test/**",
+      "client/e2e/customer-management/**"
+    ],
+    "allowed_write_paths": [
+      "docs/customer_management/**",
+      "server/src/modules/customer/**",
+      "server/src/handlers/customers/**",
+      "server/src/handlers/customer-approvals/**",
+      "server/src/handlers/customer-settings/**",
+      "server/src/handlers/customer-lookups/**",
+      "server/src/handlers/customer-imports/**",
+      "server/src/handlers/customer-exports/**",
+      "server/src/handlers/customer-audit/**",
+      "server/src/services/customerImport/**",
+      "server/src/services/customerFile/**",
+      "client/src/pages/customers/**",
+      "client/src/components/customers/**",
+      "client/src/services/customer*.js",
+      "server/test/**",
+      "client/test/**",
+      "client/e2e/customer-management/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/modules/authorization/adminGuard.js",
+      "server/config/**",
+      "server/package.json",
+      "client/package.json",
+      "package-lock.json",
+      "client/config/menu.js",
+      "client/src/framework/http/errorMessages.js",
+      "docs/sales_order_management/**",
+      "docs/fulfillment_shipping_management/**",
+      "docs/invoicing_accounts_receivable_management/**",
+      "docs/inventory_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "client/.env",
+      "secrets/**",
+      "docs/user_management/**"
+    ],
+    "schema_paths": [
+      "server/database/migrations/**"
+    ],
+    "shared_resources": [
+      "global-migration-sequence",
+      "authorization-permission-catalogue",
+      "business-master-currency-payment-term-provider",
+      "customer-sensitive-key-rings",
+      "customer-private-file-storage",
+      "local-mysql-instance",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "customer-purpose-provider-contracts",
+        "version": "aligned-design-2.0",
+        "source": "docs/customer_management/03_design_spec.md",
+        "sha256": "f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776",
+        "consumers": [
+          "sales-order-management",
+          "fulfillment-shipping-management",
+          "invoicing-accounts-receivable-management",
+          "returns-management",
+          "payment-refund-reconciliation"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "business-master",
+        "id": "business-master-currency-payment-term-provider",
+        "version": "v1-design",
+        "source": "docs/business_master/03_design_spec.md",
+        "sha256": "a9b3a1a99fd65b65732ed00f3b6e02f80d825a0f94bb21a58a88053de132c2b4",
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      },
+      {
+        "module_id": "sales-order-management",
+        "id": "customer-consumer-contract",
+        "version": "observed-main-design",
+        "source": "docs/sales_order_management/03_system_design_spec.md",
+        "sha256": "668b8b2ae6d0ecf8beabb52b7d97672a929b364e7de4b689e15ac400ff73b061",
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      },
+      {
+        "module_id": "fulfillment-shipping-management",
+        "id": "customer-consumer-contract",
+        "version": "observed-main-design",
+        "source": "docs/fulfillment_shipping_management/design_spec.md",
+        "sha256": "89ea6e33a4f1707fbc01a6cac73e408310f589f295284353964665b7665bee1a",
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      },
+      {
+        "module_id": "invoicing-accounts-receivable-management",
+        "id": "customer-consumer-contract",
+        "version": "observed-main-design",
+        "source": "docs/invoicing_accounts_receivable_management/03_system_design_spec.md",
+        "sha256": "7f992059b26d3ed96f14868c056073a88247a6073e92c7eddf5605048faf799b",
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Customer aggregate",
+        "Customer addresses and contacts",
+        "Customer identifiers",
+        "Customer credit policy",
+        "Customer activation requests and settings",
+        "Customer bank accounts",
+        "Customer attachments",
+        "Customer import jobs and rows",
+        "Customer audit logs"
+      ],
+      "read_only": [
+        "Business Master currencies",
+        "Business Master payment terms",
+        "Downstream order/shipment/invoice/AR/return/refund reference summaries"
+      ],
+      "forbidden_direct_writes": [
+        "Business Master currencies and payment terms",
+        "Sales orders and shipments",
+        "Invoices and accounts receivable",
+        "Returns, payments and refunds"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "customer-server-technical",
+      "customer-browser-technical"
+    ],
+    "technical": [
+      "customer-server-technical",
+      "customer-browser-technical"
+    ],
+    "regression": [
+      "customer-server-technical",
+      "customer-browser-technical"
+    ],
+    "uat": [
+      "customer-uat-browser"
+    ]
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

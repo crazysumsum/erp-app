@@ -1,0 +1,149 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/inventory_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/src/modules/inventory/**",
+      "server/src/handlers/inventory/**",
+      "server/config/inventory.js",
+      "client/src/pages/inventory/**",
+      "client/src/components/inventory/**",
+      "client/src/services/inventory.js"
+    ],
+    "test_paths": [
+      "server/test/**/inventory*.test.js",
+      "client/test/**/inventory*.test.js",
+      "client/e2e/inventory-management/**"
+    ],
+    "allowed_write_paths": [
+      "docs/inventory_management/**",
+      "server/src/modules/inventory/**",
+      "server/src/handlers/inventory/**",
+      "server/config/inventory.js",
+      "client/src/pages/inventory/**",
+      "client/src/components/inventory/**",
+      "client/src/services/inventory.js",
+      "server/test/**/inventory*.test.js",
+      "client/test/**/inventory*.test.js",
+      "client/e2e/inventory-management/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/services/idempotency/**",
+      "server/src/modules/item/ItemLookupService.js",
+      "client/config/menu.js",
+      "package.json",
+      "server/package.json",
+      "client/package.json",
+      "package-lock.json",
+      ".github/workflows/**",
+      "docs/items_management/**",
+      "docs/purchasing_receiving_management/**",
+      "docs/sales_order_management/**",
+      "docs/fulfillment_shipping_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "secrets/**",
+      "docs/user_management/**"
+    ],
+    "schema_paths": [],
+    "shared_resources": [
+      "global-migration-sequence",
+      "authorization-permission-catalogue",
+      "item-lookup-contract",
+      "local-mysql-instance",
+      "local-web-port",
+      "opening-file-root"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "inventory-domain-contract",
+        "version": "approved-planning-v3",
+        "source": "docs/inventory_management/03_design_spec.md",
+        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "consumers": [
+          "purchasing-receiving",
+          "sales-order",
+          "fulfillment-shipping",
+          "returns"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "item-management",
+        "id": "item-lookup-service",
+        "version": "observed-main-b948c92",
+        "source": "server/src/modules/item/ItemLookupService.js",
+        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "regression_suites": [
+          "inventory-technical"
+        ]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Warehouse",
+        "Bin",
+        "Inventory operation",
+        "Stock control",
+        "Stock balance",
+        "Lot",
+        "Movement",
+        "Reservation",
+        "Allocation",
+        "Transfer",
+        "Stocktake",
+        "Opening job",
+        "Inventory audit"
+      ],
+      "read_only": [
+        "Item/SKU eligibility and tracking policy",
+        "User/role authorization state",
+        "Purchasing/Receiving, Sales/Fulfillment and Returns source documents"
+      ],
+      "forbidden_direct_writes": [
+        "Item/SKU master data",
+        "User and role records",
+        "Purchasing, receiving, sales, fulfillment, returns and financial documents"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "inventory-technical"
+    ],
+    "technical": [
+      "inventory-technical"
+    ],
+    "regression": [
+      "inventory-technical"
+    ],
+    "uat": []
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

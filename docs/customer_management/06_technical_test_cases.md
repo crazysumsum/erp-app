@@ -131,3 +131,1987 @@ The complete requirement set under test is:
 - FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100.
 - NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015.
 - SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014.
+
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Technical Test Definitions
+
+## TC-001 — Migration allocation and rerun
+
+### Preconditions and data
+
+Fresh and upgrade DB; latest main
+
+### Steps
+
+Allocate, migrate, rerun
+
+### Expected result
+
+Unique sequence; complete schema; rerun no-op
+
+### Acceptance criteria
+
+Schema/index/seed manifest exact; no partial incompatible table Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Drop test DB
+
+## TC-002 — Permission catalogue/seed
+
+### Preconditions and data
+
+Fresh roles/users
+
+### Steps
+
+Migrate and compare catalogue/DB
+
+### Expected result
+
+Six permissions exact; no implicit inheritance/bank grant
+
+### Acceptance criteria
+
+Role matrix equals design Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-003 — Shared catalog ownership
+
+### Preconditions and data
+
+Existing/absent compatible tables
+
+### Steps
+
+Install both paths; read/inactivate values
+
+### Expected result
+
+One owner; HKD valid; inactive values preserved/not assignable
+
+### Acceptance criteria
+
+No duplicate table/service semantics Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-004 — Customer Code normalization
+
+### Preconditions and data
+
+Unicode/case/space/control vectors
+
+### Steps
+
+Normalize/validate
+
+### Expected result
+
+Display trim only; canonical key deterministic; invalid rejected
+
+### Acceptance criteria
+
+Expected vector equality exact Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-005 — Legal Name normalization
+
+### Preconditions and data
+
+NFKC, accent, punctuation, suffix vectors
+
+### Steps
+
+Normalize and compare
+
+### Expected result
+
+Only defined transformations collapse values
+
+### Acceptance criteria
+
+Distinct legal entities not over-collapsed Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-006 — Identifier normalization
+
+### Preconditions and data
+
+Types/countries/format variants
+
+### Steps
+
+Normalize/validate
+
+### Expected result
+
+Type-aware key, no invented national rule
+
+### Acceptance criteria
+
+Stable key/error for each vector Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-007 — Concurrent canonical uniqueness
+
+### Preconditions and data
+
+Two connections, same canonical key
+
+### Steps
+
+Barrier inserts/updates
+
+### Expected result
+
+Exactly one commit; safe conflict for loser
+
+### Acceptance criteria
+
+DB count=1, no orphan/audit mismatch Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Rollback fixture
+
+## TC-008 — Binary-key collation proof
+
+### Preconditions and data
+
+Accent/case/punctuation pairs
+
+### Steps
+
+Insert normalized keys
+
+### Expected result
+
+DB equality matches application bytes exactly
+
+### Acceptance criteria
+
+Service and DB result matrices identical Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-009 — Audit atomic rollback
+
+### Preconditions and data
+
+Force audit insert failure
+
+### Steps
+
+Execute each mutation family
+
+### Expected result
+
+Domain write rolls back; safe error/correlation
+
+### Acceptance criteria
+
+No successful mutation without audit Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Remove fault
+
+## TC-010 — Create Draft aggregate
+
+### Preconditions and data
+
+manager with unique root/optional children
+
+### Steps
+
+POST create, GET detail/audit
+
+### Expected result
+
+Whole aggregate created version1 Draft
+
+### Acceptance criteria
+
+Fields/children/audit exact or nothing Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Delete qualified Draft
+
+## TC-011 — Direct activation minimum
+
+### Preconditions and data
+
+approval OFF; active/inactive currency
+
+### Steps
+
+Create/activate combinations
+
+### Expected result
+
+Only code/name/active currency block; warnings remain non-blocking
+
+### Acceptance criteria
+
+State/audit/minimum exact Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Archive fixture
+
+## TC-012 — List/search/filter/page
+
+### Preconditions and data
+
+Representative root/child data
+
+### Steps
+
+Exact/token-prefix/filter/sort/page
+
+### Expected result
+
+Stable order, exact priority, archived default excluded, safe states
+
+### Acceptance criteria
+
+No missing/duplicate rows; bounded query Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset data
+
+## TC-013 — Detail projection/large children
+
+### Preconditions and data
+
+>100 children; mixed sensitivity
+
+### Steps
+
+GET detail/child pages by roles
+
+### Expected result
+
+Allowlisted data, masked bank, pagination
+
+### Acceptance criteria
+
+Zero restricted/internal fields Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset data
+
+## TC-014 — Root CAS conflict
+
+### Preconditions and data
+
+Two editors version N
+
+### Steps
+
+Save A then B
+
+### Expected result
+
+A succeeds N+1; B 409; no lost update
+
+### Acceptance criteria
+
+DB/audit only A Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore fixture
+
+## TC-015 — Mass assignment and validation
+
+### Preconditions and data
+
+Extra/protected fields and malformed IDs
+
+### Steps
+
+Submit create/update
+
+### Expected result
+
+400/403 safe error; no side effect
+
+### Acceptance criteria
+
+`additionalProperties:false`; Code not updateable Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-016 — Create idempotency
+
+### Preconditions and data
+
+Same/different key/payload
+
+### Steps
+
+Repeat concurrent requests
+
+### Expected result
+
+Same outcome for same pair; conflict for changed payload; one Customer
+
+### Acceptance criteria
+
+One resource/audit effect Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Delete Draft
+
+## TC-017 — Commit-unknown reconciliation
+
+### Preconditions and data
+
+Disconnect at commit
+
+### Steps
+
+Create/update then query operation/resource
+
+### Expected result
+
+Client can determine one outcome without new-key duplicate
+
+### Acceptance criteria
+
+One or zero effect consistent with outcome Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Clear fault
+
+## TC-018 — Child ownership/IDOR
+
+### Preconditions and data
+
+Customer A/B and child A
+
+### Steps
+
+Use child A under B
+
+### Expected result
+
+Safe absent/denial; no metadata/state leak
+
+### Acceptance criteria
+
+A unchanged; equivalent absent response Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-019 — Address default race
+
+### Preconditions and data
+
+Two active shipping addresses
+
+### Steps
+
+Barrier set both default
+
+### Expected result
+
+At most one default; one safe conflict/reload
+
+### Acceptance criteria
+
+Unique slot and service invariant hold Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore default
+
+## TC-020 — Contact default/purpose
+
+### Preconditions and data
+
+Multi-contact/multi-purpose
+
+### Steps
+
+Replace purposes/default/deactivate
+
+### Expected result
+
+Multiple contacts allowed; one default per purpose; inactive not default
+
+### Acceptance criteria
+
+Mapping/root versions/audit exact Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-021 — Identifier CRUD/race
+
+### Preconditions and data
+
+Cross-customer duplicate vectors
+
+### Steps
+
+Create/update/deactivate/concurrent create
+
+### Expected result
+
+Global key cannot be reused; safe conflict
+
+### Acceptance criteria
+
+One owner, history retained Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-022 — Credit null/zero/hold
+
+### Preconditions and data
+
+No row, null, zero, positive, hold
+
+### Steps
+
+Save/get/clear
+
+### Expected result
+
+Three semantics remain distinct in API/DB/provider
+
+### Acceptance criteria
+
+Decimal string exact; no exposure calculation Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Clear policy
+
+## TC-023 — Credit invalid combinations
+
+### Preconditions and data
+
+Negative, bad precision, inactive/missing currency
+
+### Steps
+
+Save
+
+### Expected result
+
+Stable validation; no write/audit
+
+### Acceptance criteria
+
+All invalid vectors rejected atomically Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-024 — Credit create/clear CAS
+
+### Preconditions and data
+
+Two first creates/two clears
+
+### Steps
+
+Barrier commands
+
+### Expected result
+
+One winner; no lost update/double audit
+
+### Acceptance criteria
+
+State/version/audit consistent Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Clear fixture
+
+## TC-025 — Credit audit redaction
+
+### Preconditions and data
+
+Notes/reason with sensitive markers
+
+### Steps
+
+Save/query logs/audit
+
+### Expected result
+
+Required before/after/reason; forbidden data absent
+
+### Acceptance criteria
+
+Controlled search count=0 Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Delete fixture
+
+## TC-026 — Provider registry readiness
+
+### Preconditions and data
+
+READY/UNKNOWN/missing providers
+
+### Steps
+
+Delete/archive/read health
+
+### Expected result
+
+Destructive command only on all READY/NO_REFERENCE
+
+### Acceptance criteria
+
+Unknown never treated as clear Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore provider
+
+## TC-027 — Purpose lookup matrix
+
+### Preconditions and data
+
+All statuses/purposes
+
+### Steps
+
+Call named lookup/assert
+
+### Expected result
+
+Matrix exact; unknown purpose rejected; minimal projection
+
+### Acceptance criteria
+
+No status or data overreach Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-028 — Query plan/deep data
+
+### Preconditions and data
+
+100k distribution
+
+### Steps
+
+EXPLAIN and representative queries
+
+### Expected result
+
+Indexed exact/prefix/EXISTS; stable paging
+
+### Acceptance criteria
+
+No leading-wildcard standard path/cartesian count Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Drop dataset
+
+## TC-029 — Public error/log redaction
+
+### Preconditions and data
+
+SQL/file/bank/secret markers
+
+### Steps
+
+Trigger validation/DB/internal errors
+
+### Expected result
+
+Stable public codes; no stack/path/index/plaintext
+
+### Acceptance criteria
+
+Controlled response/log scan zero hits Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Remove fixtures
+
+## TC-030 — Lifecycle state matrix
+
+### Preconditions and data
+
+Every state/action pair
+
+### Steps
+
+Invoke commands
+
+### Expected result
+
+Only listed transitions; reason/auth/version enforced
+
+### Acceptance criteria
+
+State/audit exactly match matrix Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset data
+
+## TC-031 — Suspend/reactivate downstream
+
+### Preconditions and data
+
+Active with existing/new transactions
+
+### Steps
+
+Suspend then consumer calls
+
+### Expected result
+
+New sale rejected; existing obligation purpose still valid
+
+### Acceptance criteria
+
+No historical snapshot rewrite Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reactivate
+
+## TC-032 — Archive/delete guards
+
+### Preconditions and data
+
+Referenced/unreferenced/ever-active/provider-down
+
+### Steps
+
+Archive/delete
+
+### Expected result
+
+Safe blockers/UNKNOWN; only pristine Draft deletes
+
+### Acceptance criteria
+
+No cascade loss/audit absence Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-033 — Settings CAS/non-retroactivity
+
+### Preconditions and data
+
+OFF/ON and pending request
+
+### Steps
+
+Concurrent setting update
+
+### Expected result
+
+One winner; pending unchanged; audit exact
+
+### Acceptance criteria
+
+Effective/version value correct Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore OFF
+
+## TC-034 — Approval submit eligibility
+
+### Preconditions and data
+
+self/disabled/no-permission/valid approver
+
+### Steps
+
+Submit
+
+### Expected result
+
+Only different active authorized approver accepted
+
+### Acceptance criteria
+
+Customer/request states atomic Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Withdraw valid
+
+## TC-035 — Approval snapshot invalidation
+
+### Preconditions and data
+
+Pending version/hash
+
+### Steps
+
+Critical/noncritical edits
+
+### Expected result
+
+Critical edit invalidates and returns Draft in same tx; safe snapshot
+
+### Acceptance criteria
+
+No bank/restricted data in snapshot Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-036 — Approval decision race
+
+### Preconditions and data
+
+One pending request
+
+### Steps
+
+Barrier approve/reject/double click
+
+### Expected result
+
+One terminal decision; replay reports existing result
+
+### Acceptance criteria
+
+One state/audit/effect Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-037 — Withdraw/reassign authorization
+
+### Preconditions and data
+
+requester/other/approvers
+
+### Steps
+
+Withdraw/reassign
+
+### Expected result
+
+Actor/state restrictions exact; safe denial
+
+### Acceptance criteria
+
+Queue/assignment/history consistent Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-038 — Block/unblock authorization
+
+### Preconditions and data
+
+roles/high-auth states
+
+### Steps
+
+Block/unblock
+
+### Expected result
+
+Approval+device/password/reason required; unblock->Suspended
+
+### Acceptance criteria
+
+Fresh revoked permission denied Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore state
+
+## TC-039 — Client contract/error mapping
+
+### Preconditions and data
+
+All stable error fixtures
+
+### Steps
+
+Service calls/abort/version responses
+
+### Expected result
+
+Typed mapping and Chinese safe message; no stale request overwrite
+
+### Acceptance criteria
+
+No server detail leakage Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-040 — Customer browser happy path
+
+### Preconditions and data
+
+Running app; manager actor
+
+### Steps
+
+Create/search/edit/address/contact/credit
+
+### Expected result
+
+Observable state/audit and URL refresh correct
+
+### Acceptance criteria
+
+No relevant console/network failures Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Archive fixture
+
+## TC-041 — Browser permission and direct URL
+
+### Preconditions and data
+
+Viewer/manager/approver/no-access
+
+### Steps
+
+Navigate and invoke controls/direct routes
+
+### Expected result
+
+UI only exposes legal actions; server rejects bypass
+
+### Acceptance criteria
+
+No data/metadata leak Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-042 — Browser validation/conflict
+
+### Preconditions and data
+
+Invalid fields/two sessions
+
+### Steps
+
+Submit errors and stale version
+
+### Expected result
+
+Focusable summary/field errors; input recoverable; no overwrite
+
+### Acceptance criteria
+
+Keyboard-only flow succeeds Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-043 — Approval/settings browser flow
+
+### Preconditions and data
+
+Manager/approver/settings actors
+
+### Steps
+
+Toggle, submit, decide, stale case
+
+### Expected result
+
+Scope/diff/impact/reason/re-auth visible and correct
+
+### Acceptance criteria
+
+Refresh/back states accurate; no console/network errors Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore OFF
+
+## TC-044 — Responsive/accessibility core
+
+### Preconditions and data
+
+375/768/1024/1440; keyboard/screen reader checks
+
+### Steps
+
+Core journeys
+
+### Expected result
+
+No inaccessible action/overflow blocker; headings/labels/status/focus/contrast valid
+
+### Acceptance criteria
+
+Automated scan plus manual keyboard checklist Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-045 — Sensitive delegation boundary
+
+### Preconditions and data
+
+protected admin/ordinary admin/roles
+
+### Steps
+
+Delegate and access routes
+
+### Expected result
+
+Only approved flow delegates; delegator lacks route access unless separately assigned
+
+### Acceptance criteria
+
+No privilege escalation/replay; full audit Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Remove test roles
+
+## TC-046 — Bank crypto vectors/AAD
+
+### Preconditions and data
+
+Keys, tamper, cross-owner ciphertext
+
+### Steps
+
+Encrypt/decrypt/move/tamper
+
+### Expected result
+
+Valid round-trip; tamper/cross-owner/unknown key fail closed
+
+### Acceptance criteria
+
+No plaintext in error/log Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Zero buffers/fixtures
+
+## TC-047 — Bank schema/default/duplicate race
+
+### Preconditions and data
+
+Two banks/connections/rotating keys
+
+### Steps
+
+Create/default/duplicate barriers
+
+### Expected result
+
+One same-owner account/default; cross-owner warning only
+
+### Acceptance criteria
+
+Constraints and safe error exact Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-048 — Bank permission matrix
+
+### Preconditions and data
+
+All permission combinations
+
+### Steps
+
+list/create/update/default/deactivate/reveal
+
+### Expected result
+
+Masked list broadly safe; full/rewrite only exact permission+auth
+
+### Acceptance criteria
+
+Unauthorized side effects=0 Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-049 — Bank reveal memory/cache/audit
+
+### Preconditions and data
+
+Authorized actor/browser
+
+### Steps
+
+Reveal, timeout, unmount, back/cache
+
+### Expected result
+
+Audit precedes value; no-store; DOM/state cleared
+
+### Acceptance criteria
+
+Plaintext absent from logs/storage/history/snapshots Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Close browser/clear data
+
+## TC-050 — Cross-customer bank warning token
+
+### Preconditions and data
+
+Same canonical bank under A/B
+
+### Steps
+
+Precheck/confirm tampered/replayed token
+
+### Expected result
+
+Valid actor+payload+target+expiry only; no other data leak
+
+### Acceptance criteria
+
+One controlled result/audit Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Deactivate fixture
+
+## TC-051 — Bank rotation/reindex recovery
+
+### Preconditions and data
+
+old/new key rings; interrupted batches
+
+### Steps
+
+Rotate/reindex/resume/retire
+
+### Expected result
+
+New writes new key; all reads; idempotent resume; zero-old proof
+
+### Acceptance criteria
+
+Counts reconcile; no plaintext report Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore keys/test DB
+
+## TC-052 — Bank config/backup failure
+
+### Preconditions and data
+
+missing/wrong keys and restored DB
+
+### Steps
+
+Start/reveal/restore
+
+### Expected result
+
+Capability/readiness fails closed; correct set restores
+
+### Acceptance criteria
+
+No silent data loss or plaintext workaround Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Destroy test restore
+
+## TC-053 — File type/path/scan validation
+
+### Preconditions and data
+
+Valid, polyglot, SVG, traversal, infected/error files
+
+### Steps
+
+Upload
+
+### Expected result
+
+Only allowlisted clean signature accepted; temp cleaned safely
+
+### Acceptance criteria
+
+No metadata/orphan for rejected input Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Purge fixtures
+
+## TC-054 — File finalize crash recovery
+
+### Preconditions and data
+
+Fault at stream/metadata/move/finalize
+
+### Steps
+
+Upload then restart recovery
+
+### Expected result
+
+Deterministic operation becomes one active or storage_error; no duplicate/orphan
+
+### Acceptance criteria
+
+Hash/size/DB/object counts reconcile Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Purge fixtures
+
+## TC-055 — File permission/IDOR matrix
+
+### Preconditions and data
+
+General/sensitive files, all roles
+
+### Steps
+
+list/preview/download/update/deactivate/delete
+
+### Expected result
+
+Exact projection/access; safe cross-owner/absent behavior
+
+### Acceptance criteria
+
+Restricted filename/path never leaked Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-056 — Download headers/range/session
+
+### Preconditions and data
+
+Image/PDF/sensitive large file
+
+### Steps
+
+Download/preview/range/replay
+
+### Expected result
+
+no-store/nosniff/sandbox/disposition; bounded session bound to actor/file
+
+### Acceptance criteria
+
+Audit once per authorized session; expired replay denied Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Remove files
+
+## TC-057 — File delete/orphan cleanup
+
+### Preconditions and data
+
+referenced/unreferenced/stale/deleting files
+
+### Steps
+
+Delete with injected failures; run cleanup
+
+### Expected result
+
+Referenced retained; only proven orphans removed; delete resumes
+
+### Acceptance criteria
+
+DB/object/audit invariant exact Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset storage
+
+## TC-058 — Sensitive file browser lifecycle
+
+### Preconditions and data
+
+Bank viewer/non-viewer
+
+### Steps
+
+list/upload/re-auth/preview/back
+
+### Expected result
+
+Restricted metadata hidden; authorized flow clears state and has no failures
+
+### Acceptance criteria
+
+No plaintext/path in DOM/cache/network logs Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Clear browser
+
+## TC-059 — CSV parser/header safety
+
+### Preconditions and data
+
+RFC4180/BOM/UTF8/duplicate/unknown/sensitive headers
+
+### Steps
+
+Precheck
+
+### Expected result
+
+Deterministic safe row errors; reserved fields rejected
+
+### Acceptance criteria
+
+Precheck changes no Customer data Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Purge source
+
+## TC-060 — Import row aggregate atomicity
+
+### Preconditions and data
+
+Mixed valid/invalid with children
+
+### Steps
+
+Confirm/execute
+
+### Expected result
+
+Valid rows all-or-none with audit+applied marker; invalid no write
+
+### Acceptance criteria
+
+Counts and row evidence exact Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Delete Draft rows
+
+## TC-061 — Import lease/crash/idempotency
+
+### Preconditions and data
+
+Two workers/crash/commit unknown
+
+### Steps
+
+Claim/kill/restart/replay confirm
+
+### Expected result
+
+Terminal rows never replay; one effect; outcome reconcilable
+
+### Acceptance criteria
+
+Job summary recomputed from rows Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset jobs
+
+## TC-062 — Import activation/approval snapshot
+
+### Preconditions and data
+
+setting OFF/ON changed after confirm
+
+### Steps
+
+Import activate rows
+
+### Expected result
+
+Confirm snapshot governs; eligible approver; no self approval
+
+### Acceptance criteria
+
+UI/API/import parity Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Withdraw pending
+
+## TC-063 — Import file/result recovery
+
+### Preconditions and data
+
+Crash during source/result finalize
+
+### Steps
+
+Restart/recover/download
+
+### Expected result
+
+One source/result object or explicit error; no false completed state
+
+### Acceptance criteria
+
+Hash/row counts reconcile Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Purge test files
+
+## TC-064 — Import 10k performance
+
+### Preconditions and data
+
+10k representative rows
+
+### Steps
+
+Precheck+execute
+
+### Expected result
+
+<10m excluding user delay; bounded heap/locks; responsive core API
+
+### Acceptance criteria
+
+Reproducible p50/p95/resources recorded Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Drop dataset
+
+## TC-065 — Import UI/recovery
+
+### Preconditions and data
+
+Valid/error/partial/failed/expired jobs
+
+### Steps
+
+Template-upload-precheck-confirm-poll-result
+
+### Expected result
+
+States/counts/errors/expiry visible; invalid cannot force
+
+### Acceptance criteria
+
+No console/network failures; refresh resumes Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Cancel/purge job
+
+## TC-066 — Export filter/security/ownership
+
+### Preconditions and data
+
+Filters, two owners, dangerous cells, sensitive data
+
+### Steps
+
+Create/poll/download/replay
+
+### Expected result
+
+Exact allowed rows/columns; formula neutralized; owner/expiry enforced
+
+### Acceptance criteria
+
+Bank/file/creditNotes absent; audit exists Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Expire result
+
+## TC-067 — Audit query/immutability/privilege
+
+### Preconditions and data
+
+All action families/runtime DB role
+
+### Steps
+
+Query and attempt update/delete
+
+### Expected result
+
+Cursor/filter works; app/runtime cannot mutate history
+
+### Acceptance criteria
+
+Required actions correlated; forbidden data zero Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-068 — Sensitive UI responsive/a11y
+
+### Preconditions and data
+
+Four viewports/keyboard
+
+### Steps
+
+Bank/file/import/export journeys
+
+### Expected result
+
+Accessible controls/status/focus and no blocking overflow
+
+### Acceptance criteria
+
+Scan+manual checklist passes Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Clear browser
+
+## TC-069 — Phase-3 regression/no-secret scan
+
+### Preconditions and data
+
+Candidate build and synthetic secrets
+
+### Steps
+
+Full Phase suite plus scans
+
+### Expected result
+
+All gates pass; no secret fixture in outputs
+
+### Acceptance criteria
+
+No skipped/deleted coverage; report complete Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Remove artifacts
+
+## TC-070 — Sales new-customer contract
+
+### Preconditions and data
+
+Real Sales consumer; all statuses/policies
+
+### Steps
+
+Create/submit SO around status/policy change
+
+### Expected result
+
+Active-only new sale; no address at order; current policy/default snapshot
+
+### Acceptance criteria
+
+Real consumer/provider versions and errors match Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Cancel fixture SO
+
+## TC-071 — Fulfillment existing-order contract
+
+### Preconditions and data
+
+Confirmed SO; customer later non-Active
+
+### Steps
+
+Select/submit shipment with address races
+
+### Expected result
+
+Customer status alone does not block existing order; child invalidity does
+
+### Acceptance criteria
+
+Exact immutable snapshot Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reverse fixture shipment
+
+## TC-072 — Invoice existing-shipment/manual split
+
+### Preconditions and data
+
+Real Invoicing consumer
+
+### Steps
+
+Invoice shipped source/manual for all statuses
+
+### Expected result
+
+Existing source allowed per contract; manual Active-only
+
+### Acceptance criteria
+
+No generic eligibility bypass Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Void Draft fixture
+
+## TC-073 — AR existing-document contract
+
+### Preconditions and data
+
+Existing invoice/credit/receipt
+
+### Steps
+
+Suspend/block customer then settle/query
+
+### Expected result
+
+Existing AR continues; credit policy null/zero/hold exact
+
+### Acceptance criteria
+
+Customer update does not rewrite finance snapshot Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reverse test receipt
+
+## TC-074 — Returns/refund purpose contract
+
+### Preconditions and data
+
+Real consumer where implemented
+
+### Steps
+
+Historical return/refund bank select then change
+
+### Expected result
+
+Historical return status-tolerant; bank active/owned/audited
+
+### Acceptance criteria
+
+Absent consumer marked BLOCKED, never faked PASS Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset fixture
+
+## TC-075 — Consumer provider version/readiness
+
+### Preconditions and data
+
+Compatible/incompatible/unavailable provider
+
+### Steps
+
+Start/health/call
+
+### Expected result
+
+Incompatible fails readiness; optional failure isolated; no fallback rule copy
+
+### Acceptance criteria
+
+Health identifies safe dependency without sensitive detail Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore provider
+
+## TC-076 — IDOR across every resource
+
+### Preconditions and data
+
+Two Customers/all child IDs/jobs/files
+
+### Steps
+
+Substitute IDs on all endpoints
+
+### Expected result
+
+Safe same-shape denial/absence; no timing/metadata leak
+
+### Acceptance criteria
+
+Zero cross-owner data/effects Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
+
+## TC-077 — Auth revocation during operation
+
+### Preconditions and data
+
+Token before user/role revoke
+
+### Steps
+
+Write/reveal/approve/worker submit after revoke
+
+### Expected result
+
+Fresh checks deny high-risk/commit point; safe worker actor policy
+
+### Acceptance criteria
+
+No stale privilege effect Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Re-enable actor
+
+## TC-078 — Injection/output security suite
+
+### Preconditions and data
+
+SQL/XSS/CSV/path/header payloads
+
+### Steps
+
+Submit/search/render/export/download
+
+### Expected result
+
+No execution/query manipulation/path escape/content sniff
+
+### Acceptance criteria
+
+Stable safe behavior and zero secret leak Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Remove payloads
+
+## TC-079 — Resource exhaustion/backpressure
+
+### Preconditions and data
+
+Pool/upload/worker/query limits
+
+### Steps
+
+Saturate bounded resources
+
+### Expected result
+
+Bounded 429/503/queue; core health remains meaningful
+
+### Acceptance criteria
+
+No unbounded memory/queue/lock Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Stop load
+
+## TC-080 — Structured logs/metrics/alerts
+
+### Preconditions and data
+
+Trigger success/conflict/denial/integrity/stuck cases
+
+### Steps
+
+Inspect telemetry/alerts
+
+### Expected result
+
+Correlation works; low-cardinality labels; alerts fire/reset
+
+### Acceptance criteria
+
+Sensitive marker scan zero; runbook actionable Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset alerts
+
+## TC-081 — Runtime DB privilege separation
+
+### Preconditions and data
+
+Runtime/migration/emergency DB roles
+
+### Steps
+
+Attempt DDL/audit mutation with runtime
+
+### Expected result
+
+Runtime denied; migration path controlled and logged
+
+### Acceptance criteria
+
+App functions normally with least privilege Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Revoke test session
+
+## TC-082 — 100k/50-user latency
+
+### Preconditions and data
+
+Declared dataset/mix/environment
+
+### Steps
+
+Warm and fixed-window load
+
+### Expected result
+
+p95<2s target/error<1%; invariant zero; metrics complete
+
+### Acceptance criteria
+
+Reproducible report with plans/resources Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Drop dataset
+
+## TC-083 — Default/approval contention load
+
+### Preconditions and data
+
+100 concurrent conflicting commands
+
+### Steps
+
+Barrier load
+
+### Expected result
+
+No double default/decision/lost update; bounded conflict
+
+### Acceptance criteria
+
+DB invariants and audit reconcile Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset DB
+
+## TC-084 — Dependency outage degradation
+
+### Preconditions and data
+
+Scanner/key/storage/provider outage
+
+### Steps
+
+Operate core/sensitive/destructive paths
+
+### Expected result
+
+Core safe reads continue where designed; sensitive/delete fail closed
+
+### Acceptance criteria
+
+No eligibility relaxation/data exposure Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Restore dependency
+
+## TC-085 — Backup restore completeness
+
+### Preconditions and data
+
+Backup with DB/keys/files/audit/import
+
+### Steps
+
+Isolated restore and smoke
+
+### Expected result
+
+Every sampled resource decrypts/downloads/traces; bad/missing key fails closed
+
+### Acceptance criteria
+
+Counts/hashes/references reconcile Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Destroy restore
+
+## TC-086 — RPO measurement
+
+### Preconditions and data
+
+Timed writes before simulated loss
+
+### Steps
+
+Restore latest permitted point
+
+### Expected result
+
+Maximum confirmed data loss <=15m
+
+### Acceptance criteria
+
+Timeline and reconciliation prove bound Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Destroy restore
+
+## TC-087 — RTO measurement
+
+### Preconditions and data
+
+Declared incident start/runbook/team
+
+### Steps
+
+Restore, reconcile, readiness, smoke
+
+### Expected result
+
+Safe service recovered <=4h
+
+### Acceptance criteria
+
+Timer includes keys/files/provider reconciliation Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Destroy restore
+
+## TC-088 — Compatible deployment/rollback
+
+### Preconditions and data
+
+Previous/new app and upgrade DB
+
+### Steps
+
+Deploy mixed window then rollback app
+
+### Expected result
+
+No corrupt writes/unknown states; disabled capabilities safe
+
+### Acceptance criteria
+
+Forward schema and old app compatibility proven Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset environment
+
+## TC-089 — Full regression and coverage
+
+### Preconditions and data
+
+Candidate build
+
+### Steps
+
+Run lint, coverage, server/client, MySQL, Playwright, security
+
+### Expected result
+
+Required suites pass with no skips/lowered floors
+
+### Acceptance criteria
+
+Evidence tied to build; defects triaged Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+Reset test env
+
+## TC-090 — Formal testing handoff integrity
+
+### Preconditions and data
+
+Complete implementation evidence
+
+### Steps
+
+Audit traceability/baseline/runbooks
+
+### Expected result
+
+Test team can execute independently; blockers explicit
+
+### Acceptance criteria
+
+Status only READY_FOR_TESTING, never accepted Required evidence must be baseline-bound, low-sensitive and show every mandatory assertion with no unexplained skip.
+
+### Cleanup
+
+No mutable fixture cleanup; preserve redacted evidence and never delete audit/failure evidence.
