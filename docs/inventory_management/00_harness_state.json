@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 8,
+  "revision": 9,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "PLANNED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273",
     "plan": "8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf",
-    "code_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
-    "source_fingerprint": "4fc10a31e2c7d208a6b86fbe0367f106ab7dbb6c64fdbbe24201854b8d3a8089",
+    "code_commit": "f2665e19491db0765be531ab24fe1aba0e9279a6",
+    "source_fingerprint": "185b554793d0f0fb74aa8753a893e7e34ad98c86f0fe06f9f6fe9c6b0b610e25",
     "worktree": "/private/tmp/erp-inventory-decision-alignment",
-    "default_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
+    "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
     "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
   },
   "runtime": {

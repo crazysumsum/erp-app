@@ -12,7 +12,7 @@
 | Module / output | `inventory-management` / `docs/inventory_management` |
 | Mode-entry commit / recovery point | `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`; all four legacy inputs were clean at entry |
 | First alignment PR / merge | [PR #85](https://github.com/crazysumsum/erp-app/pull/85) / `87601a08e6f6d2d51a853f86f76f5bfa0cc1d268` |
-| Refreshed default for decision alignment | `b948c92fecc31555bdc4043feea26f8c72ddf7a2` |
+| Default for decision alignment / pre-delivery refresh | `b948c92fecc31555bdc4043feea26f8c72ddf7a2` / `134c2722f92eae298da7ad1a1b01b6a75522550e`; intervening changes were limited to out-of-scope `customer_management` documents |
 | Current topic branch / worktree | `codex/inventory-decision-alignment` / `/private/tmp/erp-inventory-decision-alignment` |
 | Product-code changes | None |
 | Formal tests / CI / UAT | `NOT_RUN`; no acceptance result claimed |

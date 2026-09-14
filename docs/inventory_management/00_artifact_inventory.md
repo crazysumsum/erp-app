@@ -6,7 +6,7 @@
 - Selected directory: `docs/inventory_management`
 - Mode-entry recovery point: Git commit `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`, which was the refreshed `main` / `origin/main` at entry.
 - First alignment delivery baseline: `46c1235dfd169e15da38e0de1b5ce1818dbabb0d`; first alignment branch `codex/inventory-management-docs-align` was merged by PR #85 and subsequently cleaned up.
-- Refreshed default baseline for the approved decision alignment: `b948c92fecc31555bdc4043feea26f8c72ddf7a2`.
+- Default baseline for the approved decision alignment: `b948c92fecc31555bdc4043feea26f8c72ddf7a2`; pre-delivery refresh found `origin/main` at `134c2722f92eae298da7ad1a1b01b6a75522550e`, with only out-of-scope `customer_management` document changes since that baseline.
 - Current topic branch: `codex/inventory-decision-alignment`.
 - Pre-alignment module state: all four narrative inputs are tracked and clean at the recovery point.
 - Product source is verification evidence only in `REVIEW_AND_ALIGN`; no product-code write is authorized.
