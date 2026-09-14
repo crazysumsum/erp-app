@@ -86,7 +86,7 @@
 - Type: IMPLEMENTATION_GAP
 - Evidence: no Inventory module/handlers/pages/migrations/tests are present; only upstream Item lookup support exists, and the permission catalogue contains only user/device/item permissions.
 - Impact: all inventory capabilities remain planned and unverified.
-- Proposed action: retain the six planned phases; enter `IMPLEMENT` only after design/plan approval and independent review.
+- Proposed action: retain the six approved planned phases; wait for separate explicit `IMPLEMENT` authorization before product changes.
 - Human clarification required: NO
 - Status: OPEN.
 
@@ -100,15 +100,25 @@
 - Human clarification required: NO
 - Status: OPEN.
 
-### GAP-UAT-002 — Independent reviewer and business acceptance are missing
+### GAP-DES-005 — Integration and Go-Live decisions required human disposition
+- Area: DESIGN
+- Severity: HIGH
+- Type: UNKNOWN
+- Evidence: Serial handling, Receiving low-life override, Returns default Status, Adjustment reasons, Data Freeze/Go-Live ownership and production DB-account separation were previously open in design §14.2 and plan §1.4.
+- Impact: unresolved inputs could produce incompatible permissions, unsafe return availability, ambiguous adjustments or an unsafe irreversible cutover.
+- Proposed action: bind the six decisions to the canonical requirement, design, plan and tests while leaving actual implementation and Go-Live evidence to their Phase gates.
+- Human clarification required: YES
+- Status: RESOLVED by `HD-004` / `DEC-021`–`DEC-026` on 2026-09-14.
+
+### GAP-UAT-002 — Independent planning review was missing; business acceptance remains future work
 - Area: UAT
 - Severity: HIGH
 - Type: DOCUMENTATION_GAP
-- Evidence: the accountable owner was confirmed as `ERP Product Owner (Sam)` on 2026-09-14, but sign-off fields remain blank and no independent reviewer provenance is observable.
-- Impact: local files cannot establish approval, implementation readiness, business acceptance or release permission.
-- Proposed action: obtain a real independent review, then bind later whole-design, plan and business approvals to the current design/plan hashes.
+- Evidence: Sam identified himself as the independent human reviewer and approved the current requirement/design baseline and P0→P5 plan in the active Codex task on 2026-09-14; UAT sign-off remains blank because no implementation or UAT execution occurred.
+- Impact: planning approval is now observable, but it does not establish implementation authorization, business acceptance or release permission.
+- Proposed action: retain the baseline-bound planning approval; obtain separate `IMPLEMENT`, Technical Acceptance, UAT, business and release decisions only at their proper stages.
 - Human clarification required: YES
-- Status: OPEN / BLOCKING.
+- Status: RESOLVED for planning review; business acceptance remains `NOT_RUN` and is not claimed.
 
 ### GAP-UAT-003 — Playwright Inventory UAT is not configured
 - Area: UAT

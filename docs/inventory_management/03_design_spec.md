@@ -5,12 +5,12 @@
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Inventory Management 系統設計規格 |
-| 文件版本 | 0.2 Draft |
+| 文件版本 | 0.3 Approved Planning Baseline |
 | 文件日期 | 2026-09-07 |
-| 上游文件 | `docs/inventory_management/01_requirement_spec.md` 0.2 Draft |
+| 上游文件 | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
 | 適用系統 | ERP App；單一公司；中小企業；主要營運規模為5個以內Warehouse |
 | 技術基線 | Node.js 26＋Express 5＋MySQL 8.0＋Vue 3＋Quasar 2 |
-| 文件狀態 | 設計初稿；可供Technical Lead、QA及各上下游模組評審，核准後可拆分Tasks |
+| 文件狀態 | Sam以獨立人工評審人身分批准目前設計及P0～P5計畫；尚未授權進入IMPLEMENT |
 
 ### 0.1 文件目的
 
@@ -939,11 +939,21 @@ Receipt request核心範例：
   "expiryDate": "2027-09-01",
   "manufactureDate": "2026-09-01",
   "stockStatus": "AVAILABLE",
-  "minimumLifeOverride": null
+  "minimumLifeOverride": {
+    "permission": "receiving.expiry.override",
+    "reason": "Approved short-dated receipt",
+    "minimumLifeDaysApplied": 60,
+    "actualRemainingLifeDays": 45,
+    "actorId": 42,
+    "receiptId": "GR-2026-000123",
+    "requestId": "req-7f8c"
+  }
 }
 ```
 
-`quantity`如以Pack UOM提交，Inventory在transaction內讀有效`toBaseFactor`並換算，response同時回`inputQuantity,inputUom,baseQuantity,baseUom`。若caller已提交Base UOM，仍須帶base UOM ID或明確`quantityUnit:"BASE"`，不可猜測。
+`quantity`如以Pack UOM提交，Inventory在transaction內讀有效`toBaseFactor`並換算，response同時回`inputQuantity,inputUom,baseQuantity,baseUom`。若caller已提交Base UOM，仍須帶base UOM ID或明確`quantityUnit:"BASE"`，不可猜測。`minimumLifeOverride`只接受固定permission `receiving.expiry.override`，並須保存逐筆reason、actor、SKU／Lot／Expiry、適用門檻、實際剩餘日數、Receipt／GR、request／operation及Movement trace；已過期Lot永遠拒絕。一般Receipt不傳此物件。
+
+Adjustment `reasonCategory`只接受`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；所有類別均須reason text，`OTHER`須提供足以人工理解的更詳細說明。
 
 ### 5.5 Reservation／Allocation APIs
 
@@ -1086,6 +1096,7 @@ Internal `command`必須包括：
 ```
 
 - `requiredCallerPermission`由provider contract針對Receiving／Fulfillment等固定映射，不接受caller傳入任意permission name再自稱通過。
+- Receiving低效期例外固定映射`receiving.expiry.override`並驗證逐筆evidence；Customer Return Receipt固定預設`QUARANTINED`，品質檢查完成後才可另走Status Transfer轉為`AVAILABLE`或`DAMAGED`。
 - Service要求已傳入transaction；若沒有則立即拋TypeError，避免上下游以為共用transaction但Inventory偷偷另開transaction。
 - Inventory在提交點重讀actor、SKU及位置狀態。若必要依賴不可用，整個來源transaction rollback。
 - Query contract可用database service非transaction執行；任何數量寫入只能走command contract。
@@ -1140,7 +1151,7 @@ Abuse cases必須納入測試：替換Bin／Lot／Reservation ID跨owner、以�
 - Request logging對`password,token,authorization,csv,file,rawRows`及可配置敏感欄位redact。
 - Error response不含SQL、stack、file path、其他Warehouse未授權資料或完整source payload。
 - Movement、Stocktake、Opening及Audit保存至少7年；job source／result檔案可依營運政策較早清理，但hash、normalized result、movement links及audit仍須保留7年。
-- App DB account不得有`DROP`、`ALTER`、`TRIGGER`或對Movement／Audit的UPDATE／DELETE權限；migration account獨立。若現有部署暫時共用帳號，immutable trigger仍提供保護，帳號分離列為上線gate。
+- App DB account不得有`DROP`、`ALTER`、`TRIGGER`或對Movement／Audit的UPDATE／DELETE權限；migration account必須獨立且只在受控部署使用。帳號分離及一次成功的backup／restore rehearsal是Go-Live硬性gate，不接受正式環境共用帳號例外。
 
 ---
 
@@ -1759,16 +1770,16 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 - Unit、Integration、Frontend、Security、Concurrency、Performance及Recovery測試均有可執行範圍。
 - 所有OBJ、KPI、FR、BR、SEC、NFR、AC及DEC範圍均納入traceability。
 
-### 14.2 不阻擋核心開發、但阻擋相關整合／Go-Live的輸入
+### 14.2 已確認、但仍須在對應Phase提供實際輸入的整合／Go-Live約束
 
-1. Item Management正式停用／移除`serial` policy，或提供上線檢查證明沒有Active Serial SKU。
-2. Receiving定義「低於Minimum Receipt Life」的正式caller permission名稱及override evidence格式。
-3. Returns確認Customer Return預設進`QUARANTINED`或其他明確Status；Inventory不猜測。
-4. 業務確認Adjustment reason category固定清單；初稿建議`COUNT_GAIN,COUNT_LOSS,DAMAGE,EXPIRY,DATA_CORRECTION,TRANSFER_VARIANCE,OTHER`。
-5. 提供首批Warehouse／Bin master、Opening CSV、資料凍結時間、舊系統對賬owner及正式Go-Live簽核人。
-6. 確認production app DB account與migration account可分離，並完成backup／restore rehearsal。
+1. 本期不實作Serial Tracking；Inventory對Serial SKU過帳fail closed，Go-Live檢查須證明沒有Active inventory-tracked Serial SKU。
+2. Receiving低效期例外固定使用`receiving.expiry.override`及§5.4的逐筆evidence；已過期Lot不可Override。
+3. Customer Return固定預設進`QUARANTINED`；品質檢查後才可轉為`AVAILABLE`或`DAMAGED`。
+4. Adjustment reason category固定為`COUNT_GAIN,COUNT_LOSS,DAMAGE,EXPIRY,DATA_CORRECTION,TRANSFER_VARIANCE,OTHER`，其中`OTHER`須有更詳細說明。
+5. P5提供首批Warehouse／Bin master、Opening CSV及實際Data Freeze時間；凍結後舊系統不得再寫庫存。Warehouse／Operations Lead負責對賬，Sam負責不可逆Go-Live最終簽核。
+6. Production app DB account與migration account分離，並在Go-Live前完成backup／restore rehearsal。
 
-以上資料不應促使開發建立通用設定平台。對應整合在輸入未確認時fail closed；核心Master、Stock、Ledger及測試仍可按本文開始拆Tasks。
+以上決策已由Sam逐項確認；實際資料、時間及rehearsal evidence仍在相應Phase gate提供。這些約束不應促使開發建立通用設定平台。Sam已批准目前設計及P0～P5計畫基線，但明確暫不授權進入`IMPLEMENT`。
 
 ### 14.3 規格變更控制
 

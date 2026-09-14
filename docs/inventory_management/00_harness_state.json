@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 5,
+  "revision": 8,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
-  "resume_status": "DESIGNING",
+  "status": "PLANNED",
+  "resume_status": null,
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "3ded66aa8bbbac4b264eb20a64eb65718358a40d30e234847e45fe7290414358",
-    "plan": "9d5742620d2ed9758b8531a1cea40d3ceabb1369b44c5b283b4f7ecce199ad9f",
-    "code_commit": "f27d5d3d8cf90a97b19612eca8aa3b5c1287be68",
-    "source_fingerprint": "db59b68f5d75d0f927f20a5e4f82bd7c03d858863fe1154148a0fc53711c988c",
-    "worktree": "/private/tmp/erp-inventory-management-docs-align",
-    "default_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+    "design": "fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273",
+    "plan": "8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf",
+    "code_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
+    "source_fingerprint": "4fc10a31e2c7d208a6b86fbe0367f106ab7dbb6c64fdbbe24201854b8d3a8089",
+    "worktree": "/private/tmp/erp-inventory-decision-alignment",
+    "default_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
     "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
   },
   "runtime": {
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-inventory-management-docs-align"
+      "workspace": "erp-inventory-decision-alignment"
     },
     "lease_ref": null
   },
@@ -78,7 +78,49 @@
     "TASK-050": "PENDING",
     "TASK-051": "PENDING"
   },
-  "approvals": [],
+  "approvals": [
+    {
+      "id": "APR-001",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/inventory_management/09_final_alignment_review.md#independent-review-and-baseline-approval",
+      "recorded_at": "2026-09-14T11:43:27+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-026"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/inventory_management/09_final_alignment_review.md#independent-review-and-baseline-approval",
+      "recorded_at": "2026-09-14T11:43:27+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
+    }
+  ],
   "reviews": [
     {
       "id": "REV-001",
@@ -90,6 +132,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 5,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "/root alignment author; legacy authorship not authenticated in repository metadata",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -306,8 +360,8 @@
         "PHASE-004",
         "PHASE-006"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/inventory_management/09_final_alignment_review.md#hd-004--integration-and-go-live-constraints"
     }
   ],
   "external_actions": [
@@ -340,11 +394,51 @@
       "kind": "PR_MERGE",
       "target": "https://github.com/crazysumsum/erp-app/pull/85 -> main",
       "idempotency_key": "inventory-management-doc-align-pr85-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/85"
+    },
+    {
+      "id": "EXT-005",
+      "kind": "REMOTE_BRANCH_DELETE",
+      "target": "origin/codex/inventory-management-docs-align",
+      "idempotency_key": "inventory-management-doc-align-remote-cleanup-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful git push --delete and empty ls-remote on 2026-09-14"
+    },
+    {
+      "id": "EXT-006",
+      "kind": "LOCAL_WORKTREE_BRANCH_CLEANUP",
+      "target": "/private/tmp/erp-inventory-management-docs-align and codex/inventory-management-docs-align",
+      "idempotency_key": "inventory-management-doc-align-local-cleanup-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed clean worktree removal and non-force local branch deletion on 2026-09-14"
+    },
+    {
+      "id": "EXT-007",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-decision-alignment",
+      "idempotency_key": "inventory-management-decision-doc-push-20260914",
       "status": "PLANNED",
-      "source_ref": "Active Codex task user authorization on 2026-09-14: merge to main without manually running or waiting for CI"
+      "source_ref": "Active Codex task user authorization: commit all document changes, create PR and merge to main without waiting for CI"
+    },
+    {
+      "id": "EXT-008",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/inventory-decision-alignment",
+      "idempotency_key": "inventory-management-decision-doc-pr-20260914",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task user authorization: create PR and merge to main without waiting for CI"
+    },
+    {
+      "id": "EXT-009",
+      "kind": "PR_MERGE",
+      "target": "decision-alignment PR -> main",
+      "idempotency_key": "inventory-management-decision-doc-merge-20260914",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task user authorization: merge to main without waiting for CI"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Merge PR #85 to main under explicit owner authorization without manually triggering or waiting for CI; after merge, resolve HD-004 and obtain an independent design review before any IMPLEMENT authorization."
+  "next_safe_action": "Validate and merge the decision-alignment documentation PR without manually triggering or waiting for CI, then stop in PLANNED/REVIEW_AND_ALIGN until a future explicit IMPLEMENT authorization."
 }

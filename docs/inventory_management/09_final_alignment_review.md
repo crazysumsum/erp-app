@@ -2,7 +2,7 @@
 
 ## Outcome
 
-**CANONICAL CONTENT ALIGNED; BLOCKED, NOT APPROVED.** The legacy narratives have been consolidated in place and typed traceability has been built. The accountable owner, `DEC-014`–`DEC-019` and MySQL 8.0 compatibility baseline are confirmed; remaining integration/Go-Live decisions and independent review are still open. Product implementation, test execution, UAT, whole-design/plan approval, business acceptance and release approval did not occur.
+**CANONICAL CONTENT ALIGNED; DESIGN/PLAN APPROVED; IMPLEMENT DEFERRED.** Sam completed the required independent human review, approved the current requirement/design baseline and P0→P5 plan, and answered all recorded material planning decisions. Product implementation, test execution, UAT, business acceptance, Go-Live and release approval did not occur. The user explicitly directed this run to remain in `REVIEW_AND_ALIGN` and not enter `IMPLEMENT`.
 
 ## Mode, module and baselines
 
@@ -11,8 +11,9 @@
 | Mode | `REVIEW_AND_ALIGN` |
 | Module / output | `inventory-management` / `docs/inventory_management` |
 | Mode-entry commit / recovery point | `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`; all four legacy inputs were clean at entry |
-| Refreshed default before delivery | `46c1235dfd169e15da38e0de1b5ce1818dbabb0d`; no relevant Inventory document/dependency-source changes since mode entry |
-| Topic branch / worktree | `codex/inventory-management-docs-align` / `/private/tmp/erp-inventory-management-docs-align` |
+| First alignment PR / merge | [PR #85](https://github.com/crazysumsum/erp-app/pull/85) / `87601a08e6f6d2d51a853f86f76f5bfa0cc1d268` |
+| Refreshed default for decision alignment | `b948c92fecc31555bdc4043feea26f8c72ddf7a2` |
+| Current topic branch / worktree | `codex/inventory-decision-alignment` / `/private/tmp/erp-inventory-decision-alignment` |
 | Product-code changes | None |
 | Formal tests / CI / UAT | `NOT_RUN`; no acceptance result claimed |
 
@@ -30,23 +31,23 @@ The pre-alignment files are recoverable at commit `0996cb7e85e377981121d2d9b0fd7
 
 ## Review and findings
 
-Review method is `SELF_REVIEW` by `/root`; it does not satisfy the required independent-review policy. The design is internally detailed. Five open HIGH findings cover integration/Go-Live decisions, absent Inventory implementation, idempotency/permission prerequisites, missing independent review and missing Playwright coverage. The owner, six named decisions and MySQL compatibility finding are resolved without being misrepresented as whole-design approval.
+The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`. Sam subsequently identified himself as the independent human reviewer, reviewed the planning baseline, approved the current requirement/design and P0→P5 plan, and accepted the explicitly planned implementation prerequisites. This satisfies the manifest's independent-review policy for planning; it does not create implementation, test, UAT, business or release evidence.
 
 ## Traceability and command profile
 
 - Typed path: Requirement → Design → Phase → Task → mandatory Technical Test; UAT is grounded in requirements and linked to technical readiness.
 - `08_traceability_matrix.md` is generated deterministically from `08_traceability.json` after the confirmed-owner gate.
 - Observed local commands are recorded in `00_project_profile.json`: root lint, client build and a Node test/JUnit contract using the repository test environment.
-- Observed GitHub Actions checks are Dependency audit, Lint, Test (server + client, MySQL integration) and Build frontend. Their existence is not a PASS observation for this Draft baseline.
+- Observed GitHub Actions checks are Dependency audit, Lint, Test (server + client, MySQL integration) and Build frontend. Their existence is not a PASS observation for this approved planning baseline.
 
-## Open human decisions
+## Human decisions
 
 | ID | Status | Disposition |
 | --- | --- | --- |
 | HD-001 | ANSWERED | Accountable owner: `ERP Product Owner (Sam)`. |
 | HD-002 | ANSWERED | `DEC-014` through `DEC-019` approved as written. |
 | HD-003 | ANSWERED | MySQL 8.0 selected as the supported production and CI compatibility baseline. |
-| HD-004 | OPEN | Resolve active Serial SKU, Receiving low-life override, Returns default Status, Adjustment reasons and Go-Live/Opening ownership before their blocking Phase gates. |
+| HD-004 | ANSWERED | Serial fail-closed/Go-Live guard; `receiving.expiry.override`; Customer Return→`QUARANTINED`; fixed Adjustment reasons; Data Freeze and Go-Live responsibilities; DB-account separation and backup/restore rehearsal. |
 
 ## HD-001 — Accountable owner
 
@@ -69,9 +70,26 @@ Review method is `SELF_REVIEW` by `/root`; it does not satisfy the required inde
 - Scope: DDL, constraints, locking, migrations and technical verification for this module.
 - Boundary: selecting a compatibility baseline does not authorize schema execution or product-code changes.
 
+## HD-004 — Integration and Go-Live constraints
+
+- Answer source: Sam's逐題回答 in the active Codex task on 2026-09-14 (Asia/Hong_Kong).
+- Serial:本期不實作Serial Tracking；所有Serial SKU過帳fail closed，存在Active inventory-tracked Serial SKU時禁止Go-Live。
+- Receiving low-life:固定使用`receiving.expiry.override`；只允許尚未過期的Lot，並要求一般收貨權限、專門權限、逐筆原因及完整threshold／actor／source／request／movement evidence。
+- Returns: Customer Return固定預設`QUARANTINED`；品質檢查後才可轉`AVAILABLE`或`DAMAGED`。
+- Adjustment:固定allowlist為`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；`OTHER`須有更詳細說明。
+- Cutover:採明確Data Freeze，凍結後舊系統不得再寫庫存；Warehouse／Operations Lead負責對賬，Sam負責最終Go-Live簽核；實際時間及Opening資料在P5提供。
+- Database: Production application與migration DB accounts分離；Go-Live前完成backup／restore rehearsal。
+
+## Independent review and baseline approval
+
+- Reviewer / method: Sam / `HUMAN`.
+- Decision: approved the current requirement/design baseline and P0→P5 plan/order after the above decisions were propagated.
+- Binding: design `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`; plan `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`. Later requirement/design/plan changes invalidate the affected approval and require re-review.
+- Mode boundary: Sam explicitly instructed “先不要進入implement”; approval is a planning gate only.
+
 ## Readiness and next safe action
 
-- Design/review: `CHANGES_REQUESTED`; 0 observed CRITICAL and 5 open HIGH findings.
-- Implementation readiness: `BLOCKED`; no design/plan approval or independent review.
+- Design/review: `APPROVED` planning baseline; 0 open CRITICAL/HIGH review findings after human disposition.
+- Implementation readiness: `PLANNED`, but execution is not authorized; every Task remains `PENDING`.
 - Business/release: not accepted and not approved.
-- Next safe action: resolve `HD-004` before its affected Phase gates and obtain an actual independent design review. Any product remediation requires explicit `IMPLEMENT`; Technical Acceptance/UAT requires `TEST_AND_VERIFY` against an immutable implemented baseline.
+- Next safe action: merge this decision-alignment documentation PR, then stop. On a future explicit `IMPLEMENT` request, refresh `origin/main`, reconcile state/baselines and create the approved P0 worktree; Technical Acceptance/UAT still requires `TEST_AND_VERIFY` against an immutable implemented baseline.

@@ -4,11 +4,11 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 0.2 Draft |
+| 文件版本 | 0.3 Approved Planning Baseline |
 | 文件日期 | 2026-09-08 |
-| Requirement | `docs/inventory_management/01_requirement_spec.md` 0.2 Draft |
-| Design | `docs/inventory_management/03_design_spec.md` 0.2 Draft |
-| 任務狀態 | 尚未開始；待人工 review／批准後執行 |
+| Requirement | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
+| Design | `docs/inventory_management/03_design_spec.md` 0.3 Approved Planning Baseline |
+| 任務狀態 | 設計及P0～P5計畫已由Sam獨立人工評審並批准；所有Task仍為PENDING，且尚未授權進入IMPLEMENT |
 | Task list target | 本文件；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模型 | 6 個獨立 Phase；每個 Phase 使用一個 worktree、分支、PR 及一次完整 Phase 測試 |
 | 技術基線 | Node.js 26、Express 5、MySQL 8.0、Vue 3、Quasar 2 |
@@ -72,16 +72,16 @@ Phase P0 開始前：
 
 - [ ] Item Management T18～T22 已合併；`ItemLookupService` 已提供 `purchase`、`sale`、`inventory` purpose，且 Item／SKU lifecycle 語意已有 contract tests。
 - [ ] 已 fetch 最新 main 並重新盤點所有 migration 檔；不得沿用文件中的假設號碼，也不得修改任何已套用 migration。
-- [ ] `03_design_spec.md` §14.2 第 1 項 Serial 衝突已有處置：Inventory 對 `serial` fail closed，且上線資料不含 Active inventory-tracked Serial SKU。
+- [x] `03_design_spec.md` §14.2 第 1 項 Serial衝突處置已批准：本期不實作Serial Tracking，Inventory對`serial` fail closed；P5另須以實際掃描證明上線資料沒有Active inventory-tracked Serial SKU。
 - [ ] Phase 測試使用明確標記、與CI及production相同major版本的專用 MySQL 8.0 DB；不得對開發者日常資料或正式資料執行 destructive integration tests。
 
 只阻擋相關整合／P5 Go-Live、不阻擋 P0～P4 核心開發的輸入：
 
-- [ ] Receiving 提供低於 Minimum Receipt Life 的正式專門 permission 及 evidence 格式。
-- [ ] Returns 確認 Customer Return 的預設 Stock Status。
-- [ ] 業務確認 Adjustment Reason Category allowlist。
-- [ ] 首批 Warehouse／Bin、Opening CSV、資料凍結時間、舊系統對賬 owner 與 Go-Live 簽核人已準備。
-- [ ] Production app DB account 與 migration account 可分離，且 backup／restore rehearsal 已完成。
+- [x] Receiving低於Minimum Receipt Life的專門permission固定為`receiving.expiry.override`，使用逐筆reason及完整threshold／actor／source／request／movement evidence；Expired不可Override。
+- [x] Customer Return預設`QUARANTINED`，品質檢查後才可轉為`AVAILABLE`或`DAMAGED`。
+- [x] Adjustment Reason Category固定為`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；`OTHER`須詳細說明。
+- [ ] P5準備首批Warehouse／Bin、Opening CSV及實際Data Freeze時間；Warehouse／Operations Lead已指定為對賬owner，Sam已指定為Go-Live簽核人。
+- [ ] Production app DB account與migration account按已批准政策分離，且P5完成backup／restore rehearsal並保存證據。
 
 ### 1.5 Phase 工作流程
 
@@ -862,7 +862,7 @@ Phase P0 開始前：
 
 **Verification（納入 P3-GATE）：** Adjustment/Status unit+integration、version race、auth strength、Audit failure及 reason allowlist tests。
 
-**Dependencies：** P3-T05；Adjustment reason allowlist未確認時可用 design初稿但 P5前須業務簽核。
+**Dependencies：** P3-T05；Adjustment reason固定使用已批准的七項allowlist，任何新增／改名須先走需求變更。
 
 **Files likely touched：** `InventoryPostingService.js`、`postingHandlers.js`、posting tests、`client/src/framework/http/errorMessages.js`。
 
@@ -1230,11 +1230,11 @@ Phase P0 開始前：
 
 - [ ] Receiving Receipt、Fulfillment Reservation/Allocation/Issue及 Returns Receipt/Issue使用固定 purpose/permission/source mapping。
 - [ ] 來源寫入與 Inventory效果共用同一 MySQL transaction；任一側失敗另一側完整 rollback。
-- [ ] 撤權/停用 actor、dependency unavailable、low receipt life evidence及 Returns Status未確認時全部 fail closed。
+- [ ] 撤權／停用actor、dependency unavailable、low receipt life evidence不完整或Customer Return未使用`QUARANTINED`時全部fail closed。
 
 **Verification（納入 P5-GATE）：** consumer contract、same-transaction rollback、permission revocation、retry/source conflict及 unavailable dependency tests。
 
-**Dependencies：** P2-GATE、P3-GATE；Receiving override permission與 Returns Status確認。
+**Dependencies：** P2-GATE、P3-GATE；已批准的`receiving.expiry.override` evidence與Customer Return `QUARANTINED` contract。
 
 **Files likely touched：** `InventoryLookupService.js`、既有 consumer service（若已存在）、`inventoryContracts.integration.test.js`、consumer fixtures。
 
@@ -1474,24 +1474,24 @@ P5另須執行非一般 unit command可取代的受控驗證：
 
 以下不是讓實作者自行猜測的 open-ended工作；各項已有明確最晚決策點：
 
-| 輸入 | 最晚確認點 | 未確認時行為 |
+| 輸入 | 最晚確認／證據點 | 決策／未備妥時行為 |
 | --- | --- | --- |
-| Receiving low-life override permission/evidence | P1-T07整合前 | Override fail closed；正常合資格 Receipt仍可做 |
-| Returns預設 Stock Status | P5-T07前 | Returns consumer contract不合併；Inventory不猜 Available/Quarantined |
-| Adjustment Reason Categories | P3-T06 review前 | 只能使用 design初稿做開發，P3 PR不得合併至正式 release branch |
-| Active Serial SKU處置 | P0-T01及 P5 Go-Live | Posting fail closed；存在 Active serial資料時禁止 Go-Live |
-| Production DB帳號分離 | P5-T09 | Release blocked；不可只依賴應用層約定 |
-| Warehouse/Bin/Opening資料與簽核人 | P5-T10 | 不執行正式 Opening/Go-Live |
+| Receiving low-life override permission/evidence | 已確認；P1-T07實作 | 固定`receiving.expiry.override`及逐筆evidence；Expired不可Override |
+| Returns預設 Stock Status | 已確認；P5-T07實作 | 固定`QUARANTINED`；品質檢查後才可Status Transfer |
+| Adjustment Reason Categories | 已確認；P3-T06實作／review | 固定七項allowlist；`OTHER`須詳細說明 |
+| Active Serial SKU處置 | 已確認；P0-T01實作，P5提供資料證據 | Posting fail closed；存在Active serial資料時禁止Go-Live |
+| Production DB帳號分離 | 政策已確認；P5-T09提供配置／演練證據 | 未分離或未完成backup／restore rehearsal時Release blocked |
+| Warehouse/Bin/Opening資料與簽核人 | 責任已確認；P5-T10提供實際資料／時間 | Warehouse／Operations Lead對賬、Sam簽核；資料未齊不執行Opening／Go-Live |
 
 ---
 
-## 9. 計劃批准
+## 9. 計劃批准與模式邊界
 
-- [ ] Product Owner確認6個 Phase的業務結果與順序。
-- [ ] Technical Lead確認 transaction、lock、migration及 PR邊界。
-- [ ] QA確認每個 Phase一次完整測試的範圍與 evidence格式。
-- [ ] Security/DB Reviewer確認 high-risk auth、immutable ledger、least privilege、Opening fencing及 backup/restore gates。
-- [ ] 批准後才建立 P0 worktree並開始實作；本文件建立本身不代表任何開發 Task已開始。
+- [x] Product Owner Sam確認6個Phase的業務結果與P0→P5順序。
+- [x] 獨立人工評審人Sam批准目前transaction、lock、migration、PR邊界、Phase測試／evidence範圍，以及high-risk auth、immutable ledger、least privilege、Opening fencing與backup／restore gates。
+- [x] Sam批准目前Design及Plan baseline；批准記錄須綁定當次重新計算的hash。
+- [ ] 明確`IMPLEMENT`模式授權；Sam已指示本輪只提交文件，先不要進入IMPLEMENT。
+- [ ] 收到後續`IMPLEMENT`授權並刷新`origin/main`後，才建立P0 worktree並開始實作；目前所有Task保持`PENDING`。
 
 <!-- HARNESS_V2_FORMAL_DEFINITIONS -->
 
@@ -2400,7 +2400,7 @@ Implement only the scope and dependencies of legacy task `P5-T07` inside `PHASE-
 ### Acceptance criteria
 - Receiving Receipt、Fulfillment Reservation/Allocation/Issue及 Returns Receipt/Issue使用固定 purpose/permission/source mapping。
 - 來源寫入與 Inventory效果共用同一 MySQL transaction；任一側失敗另一側完整 rollback。
-- 撤權/停用 actor、dependency unavailable、low receipt life evidence及 Returns Status未確認時全部 fail closed。
+- 撤權／停用actor、dependency unavailable、low receipt life evidence不完整或Customer Return未使用`QUARANTINED`時全部fail closed。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
