@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 10,
+  "revision": 14,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
-  "status": "DESIGNING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "DESIGNING",
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "2b715d5634a5c611af4ba8faecbfe83fa2111202ec03a05a25ca9e756267faa2",
-    "plan": "df43d9254f913788cde911a8731fe6587a8a63f3d81e684b001fbb4d8c016005",
-    "code_commit": "6a430d3d30e91af4c2abeb607c4cce5e04742b2f",
-    "source_fingerprint": "b8f7118725d5ed2c0ec658cf975903aaa6146ec609997d4d8697d90bc6b285f6",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-management-harness-v2-realignment",
+    "design": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
+    "plan": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+    "code_commit": "c1ed49225524e60d7dcf28ef8941ea2c14a8f04f",
+    "source_fingerprint": "8a54ee4c94173a6cef5a430d9704fa78867b30f35d3f3b1c35e4b48eeb330453",
+    "worktree": "/private/tmp/erp-supplier-management-harness-v2-review",
     "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
     "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
   },
@@ -21,7 +21,7 @@
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "supplier-management-harness-v2-realignment"
+      "workspace": "erp-supplier-management-harness-v2-review"
     },
     "lease_ref": null
   },
@@ -119,6 +119,25 @@
         "UAT-031"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-003",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-14: 同意",
+      "recorded_at": "2026-09-14T00:00:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
+      "code_commit": null,
+      "scope": [
+        "Supplier consumed Item contract pin",
+        "DES-017",
+        "TASK-038",
+        "GAP-DEP-004"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -153,6 +172,18 @@
       "reviewer": "/root/supplier_independent_review",
       "reviewed_baseline": "2b715d5634a5c611af4ba8faecbfe83fa2111202ec03a05a25ca9e756267faa2",
       "source_ref": "docs/supplier_management/04_design_review.md#harness-20-repeat-review-provenance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-004",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/supplier_independent_review",
+      "reviewed_baseline": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
+      "source_ref": "docs/supplier_management/04_design_review.md#2026-09-14-current-independent-re-review-rev-004",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -214,6 +245,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/80",
       "actor": "GitHub (observed by /root via gh CLI)",
       "observed_at": "2026-09-11T05:50:20Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #81 merged to main",
+      "code_commit": "729772520fb101c329f334207159a78b2d198006",
+      "spec_baseline": "2df8f75e160680e838a8501c38afc9658d817fc65b86aafc6375c170a0cadee5",
+      "source_fingerprint": "8a54ee4c94173a6cef5a430d9704fa78867b30f35d3f3b1c35e4b48eeb330453",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/81",
+      "actor": "GitHub (observed by /root via gh CLI)",
+      "observed_at": "2026-09-14T00:00:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -245,6 +287,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-11: 同意 (shared Business Master owns Currency and Payment Term)"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "May Supplier replace its stale consumed Item contract identity sku-uom-provider/aligned-design (source 03_system_design_spec.md) with Item’s currently published item-sku-uom-provider/aligned-design-v2 contract (source 03_design_spec.md), while preserving the existing Phase-004 relation-name and Purchasing contract gates?",
+      "affected_ids": [
+        "DES-017",
+        "TASK-038",
+        "GAP-DEP-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-14: 同意"
     }
   ],
   "external_actions": [
@@ -301,11 +355,11 @@
       "kind": "MERGE_PR",
       "target": "main from codex/supplier-management-harness-v2-realignment via PR #81",
       "idempotency_key": "supplier-management-harness-v2-realignment-pr-81-merge",
-      "status": "STARTED",
-      "source_ref": "User explicitly authorized merge to main without waiting for CI in the current Codex task on 2026-09-11; PR #81 observed OPEN and MERGEABLE; origin/main unchanged at fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/81; merged at 729772520fb101c329f334207159a78b2d198006 on 2026-09-11T08:41:07Z (observed via gh CLI on 2026-09-14)"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit and push this pre-merge checkpoint, re-observe PR #81 and origin/main, then merge PR #81 as explicitly authorized without waiting for CI. After the response, verify the merge commit before cleanup; do not repeat the merge if the result is unknown."
+  "next_safe_action": "Obtain a baseline-bound Product Owner approval for the full current Supplier Design and Plan. Before committing or opening a PR, integrate the then-current origin/main into this worktree and rerun state inspection, traceability validation, module-boundary validation and git diff --check. Do not begin implementation until approval and the applicable phase readiness gates are satisfied."
 }

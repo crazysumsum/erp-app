@@ -1360,7 +1360,7 @@ T24/T31/T37/T40/T49 ────────────────────
 
 ## T38：建立 Item 依賴與 Supplier–SKU relation 後端
 
-**Description：** 先以經批准的跨模組文件變更把Item §5.14的暫名`item_supplier_refs`對齊為Supplier-owned `supplier_sku_refs`並刷新pinned contract hash；其後在Item正式SKU／UOM schema存在時建立soft relation與append-only`supplier_supply_events` migration、domain service、CRUD API及Purchasing `recordSupply` command。未滿足任一依賴時不建立無FK自由ID或runtime缺表fallback。
+**Description：** Supplier 已消費現行`item-sku-uom-provider`（`aligned-design-v2`）SKU／UOM identity contract。Phase-004 開始前，仍須以經批准的跨模組文件變更把Item §5.14的暫名`item_supplier_refs`對齊為Supplier-owned `supplier_sku_refs`並刷新相關 contract hash；其後在Item正式SKU／UOM schema存在時建立soft relation與append-only`supplier_supply_events` migration、domain service、CRUD API及Purchasing `recordSupply` command。未滿足任一依賴時不建立無FK自由ID或runtime缺表fallback。
 
 **Capability：** SUP-CAP-04 Supplier–SKU Sourcing
 
@@ -1387,7 +1387,7 @@ T24/T31/T37/T40/T49 ────────────────────
 - `server/src/modules/supplier/SupplierSupplyEventService.js`
 - `server/test/supplierRelationService.test.js`
 - `server/test/supplierRecordSupply.test.js`
-- `docs/items_management/03_system_design_spec.md`（cross-module owner approval required）
+- `docs/items_management/03_design_spec.md`（relation-name alignment requires cross-module owner approval）
 - `docs/supplier_management/00_module_manifest.json`
 
 **Estimated scope：** M（5 implementation files＋2 contract documents）
