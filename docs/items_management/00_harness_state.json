@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 16,
+  "revision": 20,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
-  "current_task": "TASK-041",
+  "current_task": "TASK-042",
   "baseline": {
-    "design": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
-    "plan": "ea0c5d49ee0408d46b78e3b2bc25fab877c046bee14cde23d48f72ebdaf7372c",
-    "code_commit": "ae5be61ed7c64a7adeecfedeb35cca6e32def7d2",
-    "source_fingerprint": "6e9e1b0d8cb5cef2d842f15d3287885ad4ae7338490124715b2b6d4d16cbc4c4",
+    "design": "eb18a55339463ef8928f75b679bd2d57cb3fc770378c31dc1d3b8b503fc56ce4",
+    "plan": "b51cf8d55d3167b524a3daef03958ebb1baae00b30e82b6a9affa5f5356916f3",
+    "code_commit": "41b72dabd5fe59cc0d25edc3e021ec12a878e816",
+    "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
@@ -66,7 +66,7 @@
     "TASK-038": "IN_PROGRESS",
     "TASK-039": "DONE",
     "TASK-040": "DONE",
-    "TASK-041": "PENDING",
+    "TASK-041": "DONE",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING"
@@ -288,6 +288,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-008",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
+      "source_ref": "docs/items_management/04_design_review.md#rev-008--separate-task-041-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -435,5 +447,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Begin TASK-041 by characterizing current CSV import validation and audit transaction boundaries with failing tests before changing production code."
+  "next_safe_action": "Obtain maintainer confirmation for TASK-042's contradictory historical T23/checkpoint status before changing the preserved record; CI and formal TASK-041 acceptance remain separate future gates."
 }

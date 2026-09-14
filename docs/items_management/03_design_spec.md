@@ -29,7 +29,7 @@ The complete legacy design is retained below. Canonical `DES-*` items provide st
 | DES-010 | UOM conversion and lookup contract | §5.8, §8.3 | FR-039, FR-040, FR-041, FR-042, FR-043 | ALIGNED for current consumers |
 | DES-011 | Media storage, API and consistency | §2.6, §5.11, §6.6, §8.5 | FR-011, FR-012, FR-015; SEC-007, SEC-008, SEC-009; NFR-011 | ALIGNED with filesystem compensation risk |
 | DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTED with current developer evidence; formal acceptance pending |
-| DES-013 | CSV import/export, job lifecycle and retention | §5.13, §6.8, §8.6 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-007, SEC-008, SEC-009; NFR-005, NFR-011 | HIGH gap: direct SQL bypasses aggregate audit contract |
+| DES-013 | CSV import/export, job lifecycle and retention | §5.13, §6.8, §8.6 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-007, SEC-008, SEC-009; NFR-005, NFR-011 | IMPLEMENTED with current developer evidence; formal acceptance pending |
 | DES-014 | Query, pagination, search, filters and response projections | §6.10, §8.8 | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-014, FR-015; NFR-002, NFR-003, NFR-004 | PARTIAL; attribute/variant arrays forced empty |
 | DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit and standalone SKU-create pages are implemented, while formal acceptance remains pending |
 | DES-016 | Validation and automated-test architecture | §10, §11 | All FR/NFR/SEC through the canonical test crosswalk | PARTIAL; developer evidence exists, independent acceptance not executed |
@@ -51,7 +51,7 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 - The retained `POST /api/v1/skus/create` standalone SKU-create flow for existing Variant Items is implemented under `TASK-038` after human decision `HD-001` on 2026-09-11.
 - The `GET /api/v1/item-audit/logs` query is presented by `ItemAuditPage.vue` at `/items/audit`, with date, actor, target, action and target-type filters plus before/after/reason context (`TASK-039`).
 - Brand and UOM permanent deletion maps current MySQL FK-reference failures to the documented `CATALOG_IN_USE` public error. `referenceTypes` is stable and actionable: Brand reports `items`; UOM reports the actual ordered subset of `sku_uoms`, `sku_measurements` and `attributes` (or `unknown` if a raced dependency disappears before description). Focused service tests cover direct and wrapped driver errors; TC-014 has current local-MySQL evidence for rollback and no audit on failure (`TASK-040`).
-- Import execution writes Item/SKU/UOM rows directly. The earlier confirm transaction writes one job-level `item.import` audit record, but item.create/item.update audit is not transactionally coupled to the imported aggregate changes.
+- Import execution now routes each row through `ItemImportAggregateService` inside one caller-owned transaction. It re-authorizes the confirming actor, applies shared SKU validation, writes per-aggregate Item/SKU audit with the confirmed reason, commits successful job/row state atomically with the aggregate, and fences recovered leases so a stale worker cannot overwrite a newer owner. Failure injection, owner revocation, lease recovery/fencing and the 10,000-row bound have current developer evidence under `TASK-041`; CI and formal acceptance remain pending.
 - No production downstream Purchasing/Inventory/Sales FK currently exists; the future reference-guard integration remains a declared dependency, not an implementation failure against an available provider.
 
 ## HD-003 — Attribute and Variant detail projection contract
@@ -1720,7 +1720,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-013 — CSV import/export, job lifecycle and retention
 
 ### Decision
-Apply the detailed design in preserved sections `§5.13, §6.8, §8.6` for csv import/export, job lifecycle and retention. Current alignment classification: `HIGH gap: direct SQL bypasses aggregate audit contract`.
+Apply the detailed design in preserved sections `§5.13, §6.8, §8.6` for csv import/export, job lifecycle and retention. Current alignment classification: `IMPLEMENTED with current developer evidence; formal acceptance pending`.
 
 ### Rationale
 This design is required by FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, SEC-007, SEC-008, SEC-009, NFR-005, NFR-011; exact typed relationships are maintained in `08_traceability.json`.

@@ -35,7 +35,6 @@ import {
   lastActiveSku,
   lastSkuInItem,
   skuChildMismatch,
-  skuCodeInvalid,
   skuCodeTaken,
   skuDeleteRequiresDraft,
   skuNotFound,
@@ -49,7 +48,7 @@ import {
   versionConflict
 } from "./itemErrors.js";
 import { ITEM_LIST_SORT_FIELDS, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS } from "./itemConstants.js";
-import { assertSkuActivatable } from "./itemValidation.js";
+import { assertSkuActivatable, normalizeAndValidateSkuCode } from "./itemValidation.js";
 import { normalizeBarcode } from "./barcodeValidation.js";
 import { sanitizeCsvCell } from "./csvSafety.js";
 import { computeVariantSignature, typedValueToCanonicalString } from "./variantSignature.js";
@@ -72,21 +71,6 @@ function escapeLikeTerm(value) {
  * 本來就該對錯字寬容，不是在重新驗證條碼合不合法。 */
 function stripBarcodeSeparators(value) {
   return value.replace(/[ -]/g, "");
-}
-
-function containsAsciiControlCharacter(value) {
-  return [...value].some((character) => {
-    const codePoint = character.codePointAt(0);
-    return codePoint <= 0x1f || codePoint === 0x7f;
-  });
-}
-
-function normalizeAndValidateSkuCode(value) {
-  const skuCode = String(value ?? "").trim();
-  if (!skuCode || containsAsciiControlCharacter(skuCode) || [...skuCode].length > 190) {
-    throw skuCodeInvalid("blank, contains control characters, or exceeds 190 characters");
-  }
-  return skuCode;
 }
 
 const ITEM_SORT_COLUMNS = Object.freeze({

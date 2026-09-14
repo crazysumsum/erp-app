@@ -37,7 +37,8 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 ## Evidence interpretation
 
 - The legacy Round 1 record is developer self-test/CI evidence for an earlier commit. It remains valuable provenance but is not an observed result of this independent review.
-- Current implementation findings are classified as static-review findings until the corresponding `TC-*` is executed.
+- TASK-041 developer evidence on 2026-09-14: shared SKU validation checks passed; 21 true-MySQL import integration cases passed, including create/update audit and reason propagation, audit/commit rollback, post-confirm permission revocation, expired-lease recovery and a two-owner stale-worker fencing race; the full server regression passed 1,447/1,448 with one explicit performance-suite skip; the bounded 10,000-row run completed preflight plus execution in 7.096 seconds with lookup p95 0.5 ms. These are developer checks, not formal `TC-015` acceptance, so the canonical status remains `PLANNED`.
+- Current implementation findings without an observed developer run remain classified as static-review findings until the corresponding `TC-*` is executed.
 - Formal Technical Acceptance, including true-browser and DR execution, requires a later `TEST_AND_VERIFY` authorization.
 
 ---

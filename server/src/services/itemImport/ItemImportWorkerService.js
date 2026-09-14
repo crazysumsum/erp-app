@@ -17,6 +17,7 @@
 import { randomUUID } from "node:crypto";
 import { BaseService } from "../../framework/services/BaseService.js";
 import { ItemImportService } from "../../modules/item/ItemImportService.js";
+import { ItemImportAggregateService } from "../../modules/item/import/ItemImportAggregateService.js";
 import { executeItemImportJob } from "./jobs/executeItemImportJob.js";
 import { validateItemImportJob } from "./jobs/validateItemImportJob.js";
 
@@ -74,6 +75,11 @@ export class ItemImportWorkerService extends BaseService {
       logger: this.logger,
       time: this.time
     });
+    this.importAggregate = new ItemImportAggregateService({
+      database: this.database,
+      logger: this.logger,
+      time: this.time
+    });
   }
 
   async initialize() {
@@ -96,6 +102,7 @@ export class ItemImportWorkerService extends BaseService {
   async runExecution() {
     return executeItemImportJob({
       importService: this.importService,
+      importAggregate: this.importAggregate,
       database: this.database,
       logger: this.logger,
       time: this.time,

@@ -120,3 +120,13 @@ The earlier “Independent” title is historical wording without sufficient pro
 - finding resolved: the first candidate returned one coarse UOM reference type and omitted existing SKU measurement FKs. The implementation now performs same-transaction `FOR UPDATE` current reads after the FK conflict and returns the actual ordered subset of `sku_uoms`, `sku_measurements` and `attributes`, with an explicit `unknown` race fallback.
 - evidence reviewed: unit 61/61 and focused local-MySQL 1/1. Additional developer evidence records the final full server regression at 1,214 pass with 228 explicit DB skips, the full owner-authorized Item Catalog local-MySQL suite at 10/10 and lint clean. The reviewer did not execute commands.
 - disposition: no remaining P0/P1/P2 implementation finding. CI, formal acceptance and merge gates remain separate.
+
+## REV-008 — Separate TASK-041 implementation review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- reviewed baseline: source fingerprint `905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073`; TASK-041 code, tests, DES-013 alignment, readiness and Harness state were reviewed read-only
+- finding resolved: the first candidate allowed a stale worker whose lease had expired to overwrite a newer owner's completed job with failure state. Success and failure finalization now require `jobId + status='running' + lease_owner`; the two-owner true-MySQL race proves the stale owner returns `lost_lease`, cannot change job/row/aggregate/audit state and cannot rewrite the result file.
+- evidence reviewed: focused true-MySQL Item Import 21/21, full server 1,447 pass / 0 fail / 1 explicit skip out of 1,448, bounded 10,000-row performance evidence, lint and `state_tool inspect` at `LOCAL_CHECKS_PASS`. The reviewer did not execute commands.
+- documentation follow-up resolved: DES-013 no longer reports the closed direct-SQL gap; TASK-041 is `DONE`, TASK-042 is current, and the exact pass/skip counts agree across readiness and technical-test evidence.
+- disposition: final re-review found no remaining P0/P1/P2 implementation finding. CI, formal acceptance and merge gates remain separate.

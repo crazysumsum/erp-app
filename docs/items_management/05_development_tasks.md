@@ -169,7 +169,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: UI/API/import validation is equivalent; reason propagates; every imported create/update is auditable; injected failure rolls back data and audit together; 10,000-row bound remains measurable.
 - Verification: true-MySQL transaction, race, retry, failure-injection, audit and performance regression; required CI.
 - Dependencies: contract design before code. Risk: high data integrity/compliance. Rollback: disable import execution and revert code; no partial schema downgrade.
-- Definition of Done/status: independent P0/P1 cases pass; `PLANNED`.
+- Definition of Done/status: import execution uses a connection-aware Item domain contract with fresh `item.mgmt` authorization, shared SKU validation and same-transaction per-aggregate audit/reason propagation; success state commits with aggregate writes, failures roll back data and audit, and lease-owner fencing prevents stale workers from overwriting a recovered job. Focused unit, 21-case true-MySQL integration, full server regression and 10,000-row performance checks pass; independent implementation review is recorded in `REV-008`. `IMPLEMENTATION_COMPLETE`, with CI and formal acceptance still pending.
 
 ### TASK-042 — Reconcile historical T23/checkpoint status
 
