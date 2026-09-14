@@ -2145,6 +2145,19 @@ export class ItemAdminService {
       [id]
     );
 
+    const [attributeRows] = await this.database.query(
+      `SELECT av.attribute_id, ad.code AS attribute_code, ad.name AS attribute_name, ad.data_type,
+              av.option_id, ao.value AS option_value, ao.label AS option_label,
+              av.value_text, av.value_decimal, av.value_boolean, av.value_date
+         FROM item_attribute_values av
+         JOIN item_attribute_definitions ad ON ad.id = av.attribute_id
+        LEFT JOIN item_attribute_options ao ON ao.id = av.option_id AND ao.attribute_id = av.attribute_id
+        LEFT JOIN item_category_attributes ca ON ca.category_id = ? AND ca.attribute_id = av.attribute_id
+        WHERE av.item_id = ? AND (av.option_id IS NULL OR ao.id IS NOT NULL)
+        ORDER BY COALESCE(ca.sort_order, 2147483647), av.attribute_id`,
+      [row.category_id, id]
+    );
+
     // Item 層級共用 media：sku_id 為 NULL。SKU 專屬 media 喺 getSku() 另外查，
     // 唔喺呢度一併攞——理由同 uoms／barcodes 分開喺 SKU detail 一樣，Item
     // detail 只負責它自己 aggregate 範圍內嘅資料。
@@ -2157,7 +2170,7 @@ export class ItemAdminService {
       [id]
     );
 
-    return this.#toItemDetail(row, skuRows, mediaRows);
+    return this.#toItemDetail(row, skuRows, attributeRows, mediaRows);
   }
 
   /**
@@ -2725,6 +2738,19 @@ export class ItemAdminService {
       [id]
     );
 
+    const [variantRows] = await this.database.query(
+      `SELECT av.attribute_id, ad.code AS attribute_code, ad.name AS attribute_name, ad.data_type,
+              av.option_id, ao.value AS option_value, ao.label AS option_label,
+              av.value_text, av.value_decimal, av.value_boolean, av.value_date
+         FROM item_sku_attribute_values av
+         JOIN item_attribute_definitions ad ON ad.id = av.attribute_id
+         JOIN item_attribute_options ao ON ao.id = av.option_id AND ao.attribute_id = av.attribute_id
+         LEFT JOIN item_category_attributes ca ON ca.category_id = ? AND ca.attribute_id = av.attribute_id
+        WHERE av.sku_id = ?
+        ORDER BY COALESCE(ca.sort_order, 2147483647), av.attribute_id`,
+      [row.item_category_id, id]
+    );
+
     // SKU 專屬 media；Item 層級共用 media（sku_id NULL）喺 getItem() 出現，
     // 唔喺呢度重複。
     const [mediaRows] = await this.database.query(
@@ -2736,7 +2762,7 @@ export class ItemAdminService {
       [id]
     );
 
-    return this.#toSkuDetail(row, uomRows, barcodeRows, mediaRows);
+    return this.#toSkuDetail(row, uomRows, barcodeRows, variantRows, mediaRows);
   }
 
   // --- 內部：response 白名單映射 ---------------------------------------------
@@ -2758,7 +2784,7 @@ export class ItemAdminService {
     };
   }
 
-  #toItemDetail(row, skuRows, mediaRows) {
+  #toItemDetail(row, skuRows, attributeRows, mediaRows) {
     return {
       id: Number(row.id),
       name: row.name,
@@ -2774,8 +2800,7 @@ export class ItemAdminService {
       defaultTrackingPolicy: row.default_tracking_policy,
       defaultShelfLifeDays: row.default_shelf_life_days === null ? null : Number(row.default_shelf_life_days),
       status: row.status,
-      // Attribute values 未接上：item_attribute_values 表要等 T23 先建立。
-      attributeValues: [],
+      attributeValues: attributeRows.map((attribute) => this.#toAttributeValueProjection(attribute)),
       skus: skuRows.map((sku) => ({
         id: Number(sku.id),
         skuCode: sku.sku_code,
@@ -2813,7 +2838,47 @@ export class ItemAdminService {
     };
   }
 
-  #toSkuDetail(row, uomRows, barcodeRows, mediaRows) {
+  #toAttributeValueProjection(row) {
+    let value;
+
+    switch (row.data_type) {
+      case "text":
+      case "long_text":
+        value = row.value_text;
+        break;
+      case "decimal":
+        value = row.value_decimal === null ? null : String(row.value_decimal);
+        break;
+      case "boolean":
+        value = Number(row.value_boolean) === 1;
+        break;
+      case "date":
+        value = row.value_date === null ? null : Number(row.value_date);
+        break;
+      case "single_option":
+        value = row.option_value;
+        break;
+      default:
+        throw new TypeError(`Unsupported attribute data type: ${row.data_type}`);
+    }
+
+    return {
+      attributeId: Number(row.attribute_id),
+      code: row.attribute_code,
+      name: row.attribute_name,
+      dataType: row.data_type,
+      value,
+      option: row.option_id === null
+        ? null
+        : {
+          id: Number(row.option_id),
+          value: row.option_value,
+          label: row.option_label,
+        },
+    };
+  }
+
+  #toSkuDetail(row, uomRows, barcodeRows, variantRows, mediaRows) {
     return {
       id: Number(row.id),
       skuCode: row.sku_code,
@@ -2829,8 +2894,7 @@ export class ItemAdminService {
         brandName: row.item_brand_name ?? null
       },
       variantSignature: row.variant_signature,
-      // Variant values 未接上：item_sku_attribute_values 表要等 T23 先建立。
-      variantValues: [],
+      variantValues: variantRows.map((attribute) => this.#toAttributeValueProjection(attribute)),
       netContent: row.net_content,
       netContentUomId: row.net_content_uom_id === null ? null : Number(row.net_content_uom_id),
       weight: row.weight,

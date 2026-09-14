@@ -16,6 +16,7 @@ import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import ItemBasicForm from "@/components/items/ItemBasicForm.vue";
+import AttributeValueList from "@/components/items/AttributeValueList.vue";
 import ItemMediaPanel from "@/components/items/ItemMediaPanel.vue";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
@@ -485,6 +486,8 @@ async function submitCopy() {
         </div>
 
         <ItemBasicForm v-model="form" :field-error="fieldError" :readonly="!editing" />
+
+        <AttributeValueList title="商品屬性" :values="item.attributeValues" />
 
         <div v-if="editing" class="row q-gutter-sm q-mt-md">
           <q-btn color="primary" label="儲存" :loading="submitting" @click="save" />

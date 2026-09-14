@@ -16,6 +16,7 @@ import { promptPassword, promptReason } from "@/framework/ui/confirm.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors } from "@/framework/ui/validationIssues.js";
 import SkuEditor from "@/components/items/SkuEditor.vue";
+import AttributeValueList from "@/components/items/AttributeValueList.vue";
 import ItemMediaPanel from "@/components/items/ItemMediaPanel.vue";
 import itemService from "@/services/item.js";
 import { useSessionStore } from "@/stores/session.js";
@@ -423,6 +424,8 @@ async function releaseBarcodeFlow({ id, barcode, version }) {
           :allow-release="canManage && !editing"
           @release="releaseBarcodeFlow"
         />
+
+        <AttributeValueList title="變體規格" :values="sku.variantValues" />
 
         <q-input
           v-if="editing"

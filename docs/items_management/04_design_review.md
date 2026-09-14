@@ -66,3 +66,30 @@ Close DR-001 through DR-005 with targeted implementation and acceptance evidence
 - read-only review constraints: no product code, tests, migrations, deployment or formal acceptance executed
 
 The earlier “Independent” title is historical wording without sufficient provenance. The valid v2 disposition is `CHANGES_REQUESTED`: five product/design HIGH findings remain, plus missing Playwright/recovery adapters and an actual independent review. Decisions `HD-001` and `HD-002` are answered and recorded in `09_final_alignment_review.md`.
+
+## REV-002 — Separate TASK-037 implementation-readiness review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- reviewed baseline: `134c2722f92eae298da7ad1a1b01b6a75522550e` (`origin/main` and local `HEAD` observed equal on 2026-09-14)
+- scope: `TASK-037`, DES-004/DES-014/DES-015 and TC-013; read-only static source/spec review, no test or deployment execution
+- finding: the non-empty `attributeValues`/`variantValues` wire shape and order were not specified, which blocks a stable public API/UI implementation
+- disposition: Owner decision `HD-003` on 2026-09-14 accepted the contract now recorded in `03_design_spec.md#hd-003--attribute-and-variant-detail-projection-contract`; no remaining design ambiguity blocks the read-projection task. This is not code-review or acceptance evidence.
+- follow-up: the separate reviewer reconfirmed the approved `HD-003` content against the current Harness design baseline `6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc`; the raw file SHA-256 is deliberately distinct from the Harness baseline hash.
+
+## REV-003 — Separate TASK-037 implementation review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- scope: uncommitted `TASK-037` implementation in `codex/item-management-task-037`; read-only code and test review
+- resolved findings: `ATTRIBUTE_VALUE_PROJECTION_SCHEMA` now binds each `dataType` to the exact value and option shape defined by HD-003; mapper tests cover `long_text`, `decimal`, `boolean`, `date` and `single_option`.
+- remaining evidence gap: TC-013 still needs an isolated, migrated MySQL run with multiple rows to prove SQL `sort_order, attributeId` ordering and cross-owner option behavior. This is a formal acceptance evidence blocker, not an identified product-code defect.
+- disposition: no open Critical or High implementation defect. TASK-037 may proceed as implementation-complete but must not be marked formally accepted until the MySQL evidence exists.
+
+## REV-004 — TC-013 local MySQL evidence review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- executed evidence: owner-authorized local MySQL run on 2026-09-14 using `DB_INTEGRATION_TESTS=1`, the existing local server environment, and the focused `itemRead.integration.test.js` projection case; result `PASS`.
+- coverage confirmed: multiple Item and SKU values return in category `sort_order → attributeId` order; an intentionally cross-owner Item option row is excluded by the query and does not disclose the other attribute's option.
+- disposition: TC-013's former MySQL evidence blocker is closed. This is developer/integration evidence only; merge, CI, and business acceptance remain separate gates.

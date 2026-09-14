@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 5,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
-  "resume_status": "DESIGNING",
-  "current_phase": null,
-  "current_task": null,
+  "revision": 9,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
+  "current_phase": "PHASE-006",
+  "current_task": "TASK-037",
   "baseline": {
-    "design": "018bea0802000f1d991645c0a36fe0c8f98f96c2d591a784c8f2017f86c811ef",
-    "plan": "4123de335d328645819e7dda7f427b2b28af01d2f081387106cdfa028e99bada",
-    "code_commit": "36c9ee748bfb7948c21b2fcbf17a25eadd25684c",
-    "source_fingerprint": "a6553c39ffa3c5c2962784e9c38140b1abc230f73cb1a7763fc1d613c9bd15e8",
-    "worktree": "/private/tmp/erp-item-management-harness-v2-alignment",
-    "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
-    "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
+    "design": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
+    "plan": "4cf9e1b4d6d29c42ef69a351865d867e86b1317f48462459d2e29540b30c1ffc",
+    "code_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
+    "source_fingerprint": "272ef7548b97efe132985fc3c16466f5da574cf2ed112a3395d8ca95d615bfe2",
+    "worktree": "/private/tmp/erp-item-management-task-037",
+    "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
+    "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "instance_id": "ITEM-TASK037-LOCAL",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-item-management-harness-v2-alignment"
+      "workspace": "erp-item-management-task-037"
     },
     "lease_ref": null
   },
@@ -62,7 +62,7 @@
     "TASK-034": "DONE",
     "TASK-035": "DONE",
     "TASK-036": "DONE",
-    "TASK-037": "PENDING",
+    "TASK-037": "IN_PROGRESS",
     "TASK-038": "PENDING",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
@@ -71,7 +71,42 @@
     "TASK-043": "PENDING",
     "TASK-044": "PENDING"
   },
-  "approvals": [],
+  "approvals": [
+    {
+      "id": "APR-003",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: owner approved HD-003 detail-projection contract on 2026-09-14",
+      "recorded_at": "2026-09-14T03:47:11.768Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-037"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-004",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: owner authorized remaining Item Management implementation on 2026-09-14",
+      "recorded_at": "2026-09-14T03:47:11.768Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4cf9e1b4d6d29c42ef69a351865d867e86b1317f48462459d2e29540b30c1ffc",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-037"
+      ],
+      "expires_at": null
+    }
+  ],
   "reviews": [
     {
       "id": "REV-001",
@@ -83,6 +118,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 5,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
+      "source_ref": "docs/items_management/04_design_review.md#rev-002--separate-task-037-implementation-readiness-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -203,10 +250,33 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/items_management/09_final_alignment_review.md#hd-002--accountable-item-management-module-owner"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "Freeze the Attribute and Variant detail projection wire shape, ordering and scope for TASK-037.",
+      "affected_ids": [
+        "DES-004",
+        "DES-014",
+        "DES-015",
+        "TASK-037",
+        "TC-013"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/items_management/03_design_spec.md#hd-003--attribute-and-variant-detail-projection-contract"
     }
   ],
-  "external_actions": [],
+  "external_actions": [
+    {
+      "id": "MODE-CHANGE-6",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-6",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized implementation on 2026-09-14"
+    }
+  ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain a real independent review of the current DESIGN baseline before implementation authorization. TASK-038 remains pending under the retained HD-001 scope."
+  "next_safe_action": "Transition to IMPLEMENTING and complete TASK-037 with test-first server/client detail projections; do not execute formal acceptance or release actions."
 }

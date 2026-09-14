@@ -101,6 +101,29 @@ describe("pages/items/ItemDetailPage.vue", () => {
     expect(body.findAll(".q-btn").some((btn) => btn.text() === "編輯")).toBe(false);
   });
 
+  it("顯示已保存的商品屬性值", async () => {
+    const { body } = await mountPage({
+      item: {
+        ...ITEM,
+        attributeValues: [
+          {
+            attributeId: 101,
+            code: "MATERIAL",
+            name: "材質",
+            dataType: "single_option",
+            value: "cotton",
+            option: { id: 301, value: "cotton", label: "棉" }
+          }
+        ]
+      }
+    });
+
+    const attributes = body.find('[data-testid="attribute-value-list"]');
+    expect(attributes.text()).toContain("商品屬性");
+    expect(attributes.text()).toContain("材質");
+    expect(attributes.text()).toContain("棉");
+  });
+
   it("item.mgmt：撳「編輯」先可以改欄位；儲存成功帶返 version", async () => {
     itemService.updateItem.mockResolvedValue({ ...ITEM, name: "改咗個名", version: 2 });
     const { body } = await mountPage();

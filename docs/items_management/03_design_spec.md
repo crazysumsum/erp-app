@@ -54,6 +54,27 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 - Import execution writes Item/SKU/UOM rows directly. The earlier confirm transaction writes one job-level `item.import` audit record, but item.create/item.update audit is not transactionally coupled to the imported aggregate changes.
 - No production downstream Purchasing/Inventory/Sales FK currently exists; the future reference-guard integration remains a declared dependency, not an implementation failure against an available provider.
 
+## HD-003 — Attribute and Variant detail projection contract
+
+`ERP Product Owner (Sam)` approved this contract in the active Codex task on 2026-09-14 for `TASK-037`. It resolves the previously unspecified non-empty response shape without expanding the task into Attribute write support or arbitrary typed SKU Variant values.
+
+`GET /api/v1/items/:id` returns `attributeValues`, ordered by the assigned Category Attribute `sort_order` and then `attributeId`. Each row is a whitelist projection:
+
+```json
+{
+  "attributeId": 4,
+  "code": "MATERIAL",
+  "name": "材質",
+  "dataType": "single_option",
+  "value": "cotton",
+  "option": { "id": 17, "value": "cotton", "label": "棉" }
+}
+```
+
+`value` is the typed display value: `string` for text, long text and decimal; `boolean` for boolean; epoch milliseconds for date; and the option `value` for `single_option`. `option` is `null` for every non-option data type and otherwise contains only `id`, `value` and `label`.
+
+`GET /api/v1/skus/:id` returns `variantValues` in the same stable order. This task projects the existing Variant domain only: every row has `dataType: "single_option"` and a non-null option object. The response does not add a write API, and Item-detail SKU summaries remain summaries rather than duplicating each SKU's variant values.
+
 ---
 
 # Preserved legacy body (verbatim)

@@ -16,6 +16,7 @@ import {
 } from "../../modules/item/itemConstants.js";
 import { decimalStringPattern } from "../../modules/item/itemValidation.js";
 import { MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
+import { VARIANT_VALUE_PROJECTION_SCHEMA } from "../items/itemAttributeResponseSchemas.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -225,9 +226,7 @@ export const SKU_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     skuName: { type: "string" },
     item: SKU_DETAIL_ITEM_SCHEMA,
     variantSignature: { type: ["string", "null"] },
-    // SKU attribute values：item_sku_attribute_values 表要等 T23 先建立，
-    // 現在固定回空陣列。
-    variantValues: { type: "array", items: {}, maxItems: 0 },
+    variantValues: { type: "array", items: VARIANT_VALUE_PROJECTION_SCHEMA },
     netContent: { type: ["string", "null"] },
     netContentUomId: { type: ["integer", "null"] },
     weight: { type: ["string", "null"] },

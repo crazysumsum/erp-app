@@ -122,6 +122,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Requirement/design: FR-011, FR-012, FR-015, FR-018, FR-025; DES-004, DES-014, DES-015.
 - Components: ItemAdminService, item/sku response schemas, client services/pages and focused tests.
 - Acceptance: stored typed values are readable; schema no longer caps arrays at zero; Standard/Variant rules and ownership checks remain enforced.
+- Approved response contract (`HD-003`, 2026-09-14): Item values return `attributeId`, definition `code`/`name`, `dataType`, typed `value`, and nullable option `{ id, value, label }`; SKU Variant values use the same fields but remain the existing `single_option` domain with a required option. Both are stably ordered by Category Attribute `sort_order`, then attribute ID. Attribute writes and arbitrary typed SKU Variant values are out of scope.
 - Verification: unit/integration contract tests plus Playwright Item/SKU detail flow; lint and client build.
 - Dependencies: TASK-023 (PHASE-003), TASK-024 (PHASE-003). Risk: high data-visibility gap. Rollback: revert compatible projection/UI changes.
 - Definition of Done/status: tests and CI pass, review approved; `PLANNED`.

@@ -16,6 +16,7 @@ import {
 } from "../../modules/item/itemConstants.js";
 import { decimalStringPattern } from "../../modules/item/itemValidation.js";
 import { MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
+import { ATTRIBUTE_VALUE_PROJECTION_SCHEMA } from "./itemAttributeResponseSchemas.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -175,9 +176,7 @@ export const ITEM_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     defaultTrackingPolicy: { type: "string" },
     defaultShelfLifeDays: { type: ["integer", "null"] },
     status: { type: "string", enum: [...ITEM_STATUSES] },
-    // Item attribute values：item_attribute_values 表要等 T23 先建立，現在
-    // 固定回空陣列。
-    attributeValues: { type: "array", items: {}, maxItems: 0 },
+    attributeValues: { type: "array", items: ATTRIBUTE_VALUE_PROJECTION_SCHEMA },
     skus: { type: "array", items: ITEM_DETAIL_SKU_SCHEMA },
     // Item 層級共用 media（sku_id 為 NULL）；SKU 專屬 media 喺 SKU detail 出現。
     media: { type: "array", items: MEDIA_SUMMARY_SCHEMA },
