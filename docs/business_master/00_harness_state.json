@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 30,
+  "revision": 34,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8",
     "plan": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
-    "code_commit": "67682b449486360ccd6b547d3ff43d0a26e829d7",
-    "source_fingerprint": "e26c623123b5286bdbab0f7dbafd4672b1d5e52ea147bb0600b6adc19c75617c",
+    "code_commit": "8d4612545bba262ac76d1dd2488f7f3103f5a9db",
+    "source_fingerprint": "4da07da6f4dd5820539ddc94cff37b460f83b892cafbd466fb011f7f201b8315",
     "worktree": "/private/tmp/erp-business-master-phase-2",
     "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
@@ -724,6 +724,22 @@
       "idempotency_key": "business-master-phase2-pr-2c88ed01f4b19a0a4d3457331689ce4af54eeb28",
       "status": "FAILED",
       "source_ref": "Not executed: candidate required integration with origin/main bd97e1cc"
+    },
+    {
+      "id": "ACTION-PUSH-004",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2",
+      "idempotency_key": "business-master-phase2-push-13388d95f1121941dd46d58c8b26e4c9d26960a7",
+      "status": "FAILED",
+      "source_ref": "Not executed: origin/main advanced from bd97e1cc to b6f03219 before authorization"
+    },
+    {
+      "id": "ACTION-PR-PHASE2-002",
+      "kind": "GITHUB_PR",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2-to-main",
+      "idempotency_key": "business-master-phase2-pr-13388d95f1121941dd46d58c8b26e4c9d26960a7",
+      "status": "FAILED",
+      "source_ref": "Not executed: candidate required integration with origin/main b6f03219"
     }
   ],
   "evidence_files": [
@@ -779,8 +795,16 @@
     "evidence/20260914T071617-1c85f978122d/run.json",
     "evidence/20260914T071632-94ffd150aee7/run.json",
     "evidence/20260914T071636-4ce5b11c6f3e/run.json",
-    "evidence/20260914T071639-912a5d1ef246/run.json"
+    "evidence/20260914T071639-912a5d1ef246/run.json",
+    "evidence/20260914T072346-42a5efec2745/run.json",
+    "evidence/20260914T072346-9396ad054d55/run.json",
+    "evidence/20260914T072346-ede95b0d1710/run.json",
+    "evidence/20260914T072401-e996c1d26dfd/run.json",
+    "evidence/20260914T072413-c9d062b6c17a/run.json",
+    "evidence/20260914T072425-381cfc3b1782/run.json",
+    "evidence/20260914T072436-141f50056806/run.json",
+    "evidence/20260914T072446-defd806ab5f0/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit reconciled harness state and latest-main evidence, then record a new planned push/PR action for the exact final branch head and request authorization."
+  "next_safe_action": "Commit the latest-main integration evidence and reconciled revision 34 state, then record a new planned push/PR action for the exact resulting branch head and request authorization."
 }
