@@ -12,6 +12,7 @@
 | Module / output | `purchasing-receiving-management` / `docs/purchasing_receiving_management` |
 | Mode-entry commit / recovery point | `a3040c96e1aa92902df964d44a1ad0b83f37f844` (`origin/main` after `git fetch origin --prune`) |
 | Default baseline | `a3040c96e1aa92902df964d44a1ad0b83f37f844`. Local `main` was 4 commits behind at entry, so the worktree was branched from `origin/main`. |
+| Alignment PR | [PR #90](https://github.com/crazysumsum/erp-app/pull/90) |
 | Topic branch / worktree | `codex/purchasing-receiving-harness-v2-alignment` / `/Users/sam/Documents/workspace/erp-app-worktrees/purchasing-receiving-harness-v2-alignment` |
 | Requirement / design / plan file hashes | `75ad4589…` / `a29fb66d…` / `acd1d883…` |
 | Harness composite baselines | design `5db990ab6967fbfaf1813dbf17382802f1362c77fde2c9e51b57e6ac2cbbe9fd`; plan `54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7`. These are what `00_harness_state.json` binds approvals to and what gate checks compare; the file hashes above identify individual documents. |
@@ -97,4 +98,4 @@ The first batch of open POs, the cutover date, legacy previously-received quanti
 - Implementation readiness: `PLANNED` but **not executable**. `PHASE-001` is blocked on two hard provider dependencies that do not exist at the baseline: no `server/src/modules/supplier` (`GAP-IMP-001`, `TASK-004`) and no `server/src/modules/inventory` (`GAP-IMP-002`, `TASK-006`, `TASK-007`). Approving the plan does not make Phase 0 startable today.
 - Business / release: not accepted and not approved.
 - Lifecycle status is `BLOCKED` rather than `PLANNED`, because `HD-005` and `HD-006` are open MAJOR decisions. Under the harness rule, only work that cannot prejudge those answers may continue. This is not a defect in the alignment; it is the accurate state of the module.
-- Next safe action: merge this documentation PR, then stop. Resolve `HD-005` with the Supplier module owner. On a future explicit `IMPLEMENT` request, refresh `origin/main`, reconcile state and baselines, and re-check the Supplier and Inventory provider status before creating a `PHASE-001` worktree. Technical Acceptance and UAT still require `TEST_AND_VERIFY` against an immutable implemented baseline.
+- Next safe action: merge [PR #90](https://github.com/crazysumsum/erp-app/pull/90) once CI passes, then stop. Resolve `HD-005` with the Supplier module owner. On a future explicit `IMPLEMENT` request, refresh `origin/main`, reconcile state and baselines, and re-check the Supplier and Inventory provider status before creating a `PHASE-001` worktree. Technical Acceptance and UAT still require `TEST_AND_VERIFY` against an immutable implemented baseline.
