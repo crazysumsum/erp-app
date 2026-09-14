@@ -102,3 +102,12 @@ The earlier “Independent” title is historical wording without sufficient pro
 - findings: no open P0/P1. `item.mgmt` can read and write Item, SKU, Catalog, Media and Audit APIs while `item.view` remains read-only. SKU Code create, copy and special change all use the same domain validation and return `SKU_CODE_INVALID` for blank, control-character and over-190-character values.
 - evidence reviewed: owner-authorized local MySQL Item create/high-risk suite reported 49 passing tests; this reviewer did not execute tests.
 - disposition: implementation review is clear for a merge candidate after the remaining Harness state reconciliation, CI and merge gates; it is not formal acceptance or release approval.
+
+## REV-006 — Separate TASK-039 implementation review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- scope: uncommitted `TASK-039` Item Audit client/page, query allowlist, Category Attribute audit detail, tests and aligned documentation; read-only code review
+- findings resolved: all actual Item Audit producer actions and target types are filterable; Category Attribute assignment records express added/removed assignments and updated before/after values; legacy numeric-array records render safely with an explicit missing-detail notice.
+- evidence reviewed: current client/server regression and owner-authorized local MySQL Item Audit integration run; reviewer did not execute commands.
+- disposition: no open P0/P1 implementation defect. CI, formal acceptance and merge gates remain separate.

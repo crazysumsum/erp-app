@@ -243,7 +243,11 @@ test("pageSize、action 與 targetType 篩選會收窄結果", { skip }, async (
   const marker = `filter-marker-${randomUUID().slice(0, 8)}`;
   const rows = [
     ["category.create", "category"],
-    ["brand.create", "brand"]
+    ["brand.create", "brand"],
+    ["attribute.create", "attribute"],
+    ["media.upload", "media"],
+    ["item.import", "import"],
+    ["item.export", "export"]
   ];
   for (const [action, targetType] of rows) {
     await db.execute(
@@ -280,7 +284,13 @@ test("pageSize、action 與 targetType 篩選會收窄結果", { skip }, async (
 
   const both = await listItemAuditLogs(url, token, { target: marker });
   assert.equal(both.status, 200);
-  assert.equal(both.body.data.total, 2);
+  assert.equal(both.body.data.total, rows.length);
+
+  for (const [action, targetType] of rows.slice(2)) {
+    const filtered = await listItemAuditLogs(url, token, { target: marker, action, targetType });
+    assert.equal(filtered.status, 200, `${action}/${targetType} should be a valid filter`);
+    assert.equal(filtered.body.data.total, 1);
+  }
 });
 
 test("from／to 依時間範圍篩選，actor 依 actor_username 篩選", { skip }, async (t) => {

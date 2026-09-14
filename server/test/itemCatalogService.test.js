@@ -1171,6 +1171,16 @@ test("assignAttributes atomically overwrites the mapping (add/update/remove) and
   );
   assert.equal(result.assignments.find((a) => a.attributeId === 1).requiredForActivation, true);
   assert.equal(database.state.auditRows.at(-1)[3], "category.attributes.assign");
+  assert.deepEqual(JSON.parse(database.state.auditRows.at(-1)[8]), {
+    added: [{ attributeId: 2, requiredForActivation: false, sortOrder: 1 }],
+    removed: [],
+    updated: [
+      {
+        before: { attributeId: 1, requiredForActivation: false, sortOrder: 0 },
+        after: { attributeId: 1, requiredForActivation: true, sortOrder: 0 }
+      }
+    ]
+  });
 });
 
 test("assignAttributes rejects a stale expectedAttributeIds without writing", async () => {

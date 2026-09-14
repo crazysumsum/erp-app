@@ -1712,15 +1712,34 @@ export class ItemCatalogService {
       if (new Set(attributeIds).size !== attributeIds.length) {
         throw attributeValueInvalid("同一個屬性不可以在同一個分類重複指派");
       }
+      const nextById = new Map(
+        assignments.map((assignment) => [
+          Number(assignment.attributeId),
+          {
+            attributeId: Number(assignment.attributeId),
+            requiredForActivation: !!assignment.requiredForActivation,
+            sortOrder: Number(assignment.sortOrder ?? 0)
+          }
+        ])
+      );
       for (const attributeId of new Set(attributeIds)) {
         await this.#requireAttribute(connection, attributeId);
       }
 
+      const currentById = new Map(
+        currentRows.map((row) => {
+          const assignment = this.#toCategoryAttributeAssignment(row);
+          return [assignment.attributeId, assignment];
+        })
+      );
       const nowMs = this.time.nowMs();
-      const nextById = new Map(assignments.map((assignment) => [Number(assignment.attributeId), assignment]));
       const toDelete = [...currentIds].filter((attributeId) => !nextById.has(attributeId));
       const toInsert = [...nextById.keys()].filter((attributeId) => !currentIds.has(attributeId));
-      const toUpdate = [...nextById.keys()].filter((attributeId) => currentIds.has(attributeId));
+      const toUpdate = [...nextById.keys()].filter((attributeId) => {
+        const current = currentById.get(attributeId);
+        const next = nextById.get(attributeId);
+        return current && (current.requiredForActivation !== next.requiredForActivation || current.sortOrder !== next.sortOrder);
+      });
 
       if (toDelete.length > 0) {
         const placeholders = toDelete.map(() => "?").join(",");
@@ -1757,7 +1776,14 @@ export class ItemCatalogService {
         targetType: "category",
         targetId: categoryId,
         targetLabel: category.name,
-        detail: { added: toInsert, removed: toDelete, updated: toUpdate },
+        detail: {
+          added: toInsert.map((attributeId) => nextById.get(attributeId)),
+          removed: toDelete.map((attributeId) => currentById.get(attributeId)),
+          updated: toUpdate.map((attributeId) => ({
+            before: currentById.get(attributeId),
+            after: nextById.get(attributeId)
+          }))
+        },
         requestId,
         ip
       });

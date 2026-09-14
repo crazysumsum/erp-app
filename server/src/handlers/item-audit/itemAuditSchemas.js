@@ -18,12 +18,8 @@ export const ITEM_AUDIT_LOG_POLICY = Object.freeze([
 ]);
 
 /**
- * `ItemAuditLogService.record()` 呼叫端目前用到的全部 action 字串（見
- * ItemCatalogService.js）。design_spec.md §8.7 列出這個模組完整開發完成後的
- * 規劃清單（item.*／sku.*／attribute.*／media.*／import.* 等），但那些呼叫端
- * 現在都還不存在——寫一個沒有任何程式碼會用到的 enum 值，只會在真正實作那些
- * action 時才發現字串對不上。每個 Phase 加新的寫入路徑時，在這裡加對應的
- * action 字串（跟 user 那邊 AUDIT_ACTIONS 的慣例一致）。
+ * `ItemAuditLogService.record()` 目前實際寫入的所有 action 字串。查詢 allowlist
+ * 必須與 producer 同步，否則使用者可以看見事件卻無法以該事件篩選。
  */
 export const ITEM_AUDIT_ACTIONS = Object.freeze([
   "category.create",
@@ -38,6 +34,11 @@ export const ITEM_AUDIT_ACTIONS = Object.freeze([
   "uom.update",
   "uom.status",
   "uom.delete",
+  "attribute.create",
+  "attribute.update",
+  "attribute.status",
+  "attribute.delete",
+  "category.attributes.assign",
   "item.create",
   "item.update",
   "item.activate",
@@ -56,12 +57,26 @@ export const ITEM_AUDIT_ACTIONS = Object.freeze([
   "sku.restore",
   "sku.delete",
   "sku.code.change",
-  "barcode.release"
+  "barcode.release",
+  "media.upload",
+  "media.update",
+  "media.delete",
+  "item.import",
+  "item.export"
 ]);
 
-/** target_type 同樣只列現在真的會寫入的種類；§5.12 規劃的完整清單見
- * 0024_create_item_audit_logs.js 開頭的欄位註解。 */
-export const ITEM_AUDIT_TARGET_TYPES = Object.freeze(["category", "brand", "uom", "item", "sku"]);
+/** target_type 同樣只列目前 producer 真的會寫入的種類。 */
+export const ITEM_AUDIT_TARGET_TYPES = Object.freeze([
+  "category",
+  "brand",
+  "uom",
+  "attribute",
+  "item",
+  "sku",
+  "media",
+  "import",
+  "export"
+]);
 
 /**
  * 查詢慣例：page／pageSize 沿用 user audit 的做法；固定照

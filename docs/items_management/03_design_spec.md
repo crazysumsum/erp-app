@@ -28,10 +28,10 @@ The complete legacy design is retained below. Canonical `DES-*` items provide st
 | DES-009 | Catalog API and reference protection | §6.4, §8.2, §8.4 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | IMPLEMENTATION_GAP for referenced Brand/UOM error mapping |
 | DES-010 | UOM conversion and lookup contract | §5.8, §8.3 | FR-039, FR-040, FR-041, FR-042, FR-043 | ALIGNED for current consumers |
 | DES-011 | Media storage, API and consistency | §2.6, §5.11, §6.6, §8.5 | FR-011, FR-012, FR-015; SEC-007, SEC-008, SEC-009; NFR-011 | ALIGNED with filesystem compensation risk |
-| DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTATION_GAP: backend exists, user-facing history view absent |
+| DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTED with current developer evidence; formal acceptance pending |
 | DES-013 | CSV import/export, job lifecycle and retention | §5.13, §6.8, §8.6 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-007, SEC-008, SEC-009; NFR-005, NFR-011 | HIGH gap: direct SQL bypasses aggregate audit contract |
 | DES-014 | Query, pagination, search, filters and response projections | §6.10, §8.8 | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-014, FR-015; NFR-002, NFR-003, NFR-004 | PARTIAL; attribute/variant arrays forced empty |
-| DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit page absent; standalone SKU-create page retained by HD-001 and pending TASK-038 |
+| DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit and standalone SKU-create pages are implemented, while formal acceptance remains pending |
 | DES-016 | Validation and automated-test architecture | §10, §11 | All FR/NFR/SEC through the canonical test crosswalk | PARTIAL; developer evidence exists, independent acceptance not executed |
 | DES-017 | Configuration, logs, metrics and alerts | §12.1–12.3 | SEC-007, SEC-009; NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-013 | IMPLEMENTED with developer evidence |
 | DES-018 | Retention, backup, restore and DR objectives | §12.4, §14 | FR-063; SEC-008, SEC-009; NFR-010, NFR-011, NFR-014, NFR-015 | DESIGN ENHANCED; RTO/RPO verification pending |
@@ -48,8 +48,8 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 
 - Implemented tables and services broadly follow the legacy design; migrations currently reach `0026` for Item scope.
 - `ItemAdminService` still projects `attributeValues: []` and `variantValues: []`, while response schemas cap both arrays at zero. The Attribute/Variant persistence therefore is not observable through the promised detail contract.
-- Variant creation exists inside Item aggregate creation, but the designed `POST /api/v1/skus/create` / standalone SKU-create flow is absent. Human decision `HD-001` on 2026-09-11 retains this contract for existing Variant Items and places its implementation under `TASK-038`.
-- Audit query API exists at `GET /api/v1/item-audit/logs`, but the designed user-facing audit page/timeline and frontend client are absent.
+- The retained `POST /api/v1/skus/create` standalone SKU-create flow for existing Variant Items is implemented under `TASK-038` after human decision `HD-001` on 2026-09-11.
+- The `GET /api/v1/item-audit/logs` query is presented by `ItemAuditPage.vue` at `/items/audit`, with date, actor, target, action and target-type filters plus before/after/reason context (`TASK-039`).
 - Brand and UOM permanent deletion still contain stale assumptions that no reference tables exist. Current foreign keys reject referenced deletion, but the service does not translate those failures to the documented `CATALOG_IN_USE` public error as Attribute deletion does.
 - Import execution writes Item/SKU/UOM rows directly. The earlier confirm transaction writes one job-level `item.import` audit record, but item.create/item.update audit is not transactionally coupled to the imported aggregate changes.
 - No production downstream Purchasing/Inventory/Sales FK currently exists; the future reference-guard integration remains a declared dependency, not an implementation failure against an available provider.
@@ -1709,7 +1709,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-012 — Audit persistence, query and presentation
 
 ### Decision
-Apply the detailed design in preserved sections `§5.12, §6.7, §8.7` for audit persistence, query and presentation. Current alignment classification: `IMPLEMENTATION_GAP: backend exists, user-facing history view absent`.
+Apply the detailed design in preserved sections `§5.12, §6.7, §8.7` for audit persistence, query and presentation. Current alignment classification: `IMPLEMENTED with current developer evidence; formal acceptance pending`.
 
 ### Rationale
 This design is required by FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, NFR-006; exact typed relationships are maintained in `08_traceability.json`.
@@ -1742,7 +1742,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-015 — Page routes, editors, scanner UX and accessibility
 
 ### Decision
-Apply the detailed design in preserved sections `§7` for page routes, editors, scanner ux and accessibility. Current alignment classification: `PARTIAL; Audit page absent; standalone SKU-create page retained by HD-001 and pending TASK-038`.
+Apply the detailed design in preserved sections `§7` for page routes, editors, scanner ux and accessibility. Current alignment classification: `PARTIAL; Audit and standalone SKU-create pages are implemented, while formal acceptance remains pending`.
 
 ### Rationale
 This design is required by FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025, SEC-009, NFR-012, NFR-013; exact typed relationships are maintained in `08_traceability.json`.

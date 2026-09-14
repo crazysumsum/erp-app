@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 10,
+  "revision": 13,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
-  "current_task": "TASK-038",
+  "current_task": "TASK-039",
   "baseline": {
-    "design": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
-    "plan": "bca0252148ccbf97de76efbf825fbf2c8e6ea658c9925a8642bec4fc4e00a616",
-    "code_commit": "03f70112448b38ec5fe4f6782e87c3e69ace71cc",
-    "source_fingerprint": "5cb2dad480e2d6dc86df8e5ce9301e0dd817879bdb54d1694c0511e9926c1e51",
+    "design": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
+    "plan": "f3fb4aebb9cb367b748ae3067eecc3f1b4a1dd946b7399cc9cd68e878a5a03e9",
+    "code_commit": "8b0a5e703a9e6a779590bd61cf40048932f0959c",
+    "source_fingerprint": "3f661ab94bb451b7b1c9cce498d8b6c291ebdba8f0abac2ad365db6d71ba38f4",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
@@ -64,7 +64,7 @@
     "TASK-036": "DONE",
     "TASK-037": "IN_PROGRESS",
     "TASK-038": "IN_PROGRESS",
-    "TASK-039": "PENDING",
+    "TASK-039": "IN_PROGRESS",
     "TASK-040": "PENDING",
     "TASK-041": "PENDING",
     "TASK-042": "PENDING",
@@ -140,6 +140,40 @@
         "TASK-038"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-007",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed continuing the remaining Item Management work on 2026-09-14, including existing TASK-039 design.",
+      "recorded_at": "2026-09-14T07:12:30Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-039"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-008",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed continuing the remaining Item Management work on 2026-09-14, including TASK-039.",
+      "recorded_at": "2026-09-14T07:12:30Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f3fb4aebb9cb367b748ae3067eecc3f1b4a1dd946b7399cc9cd68e878a5a03e9",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-039"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -174,6 +208,18 @@
       "reviewer": "/root/item_design_review",
       "reviewed_baseline": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
       "source_ref": "docs/items_management/04_design_review.md#rev-005--separate-task-038-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
+      "source_ref": "docs/items_management/04_design_review.md#rev-006--separate-task-039-implementation-review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -325,5 +371,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit the reviewed TASK-038 implementation, then select the next non-deferred PHASE-006 task with no unresolved human decision."
+  "next_safe_action": "Commit the verified TASK-039 vertical slice; do not push, create a PR, or merge without a new explicit request."
 }

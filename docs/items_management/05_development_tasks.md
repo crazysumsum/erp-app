@@ -147,7 +147,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: authorized users can filter/read complete before/after/reason context; unauthorized users cannot infer records.
 - Verification: API regression and Playwright audit/403/empty/error flows; console/network clean; build/CI.
 - Dependencies: existing audit API. Risk: high compliance visibility gap. Rollback: revert UI route/client.
-- Definition of Done/status: acceptance evidence attached; `PLANNED`.
+- Definition of Done/status: implementation evidence attached (client unit/router tests, browser happy/empty/error flows, lint and build); `IMPLEMENTATION_COMPLETE`, with CI and formal acceptance still pending.
 
 ### TASK-040 — Normalize referenced Brand/UOM deletion errors
 
