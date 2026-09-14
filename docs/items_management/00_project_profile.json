@@ -5,7 +5,7 @@
     "id": "item-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
-    "authorization_ref": null
+    "authorization_ref": "Active Codex task: ERP Product Owner (Sam) authorized TEST_AND_VERIFY on 2026-09-14 and previously directed use of the local MySQL environment"
   },
   "permissions": {
     "product_write": [

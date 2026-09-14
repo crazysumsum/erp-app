@@ -1,27 +1,31 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 24,
+  "revision": 27,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
-  "current_task": "TASK-043",
+  "current_task": "TASK-044",
   "baseline": {
-    "design": "eb18a55339463ef8928f75b679bd2d57cb3fc770378c31dc1d3b8b503fc56ce4",
-    "plan": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
-    "code_commit": "9f9c7464d3636cba73e0e976ef0c20ee9e47ef06",
+    "design": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+    "plan": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+    "code_commit": "89ae37faf19b9cd36b8979a28e8ec219deaafe9c",
     "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
   },
   "runtime": {
-    "instance_id": "ITEM-TASK038-LOCAL",
-    "owner": "Primary Harness agent",
+    "instance_id": "ITEM-TASK044-LOCAL-20260914",
+    "owner": "Primary TEST_AND_VERIFY agent",
     "resources": {
-      "workspace": "erp-item-management-task-038"
+      "workspace": "/private/tmp/erp-item-management-task-038",
+      "mysql-schema": "erp_dev@127.0.0.1:3306; user-authorized local synthetic-data test database; serialized by ITEM-TASK044-LOCAL-20260914",
+      "media-root": "/private/tmp/erp-item-management-task-038/server/storage/items",
+      "import-root": "/private/tmp/erp-item-management-task-038/server/storage/imports",
+      "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
     "lease_ref": null
   },
@@ -69,7 +73,7 @@
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "PENDING",
-    "TASK-044": "PENDING"
+    "TASK-044": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -242,6 +246,42 @@
         "item-management",
         "TASK-023",
         "TASK-042"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-013",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed entry into TEST_AND_VERIFY against the current Item Management baseline on 2026-09-14.",
+      "recorded_at": "2026-09-14T09:10:34Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "code_commit": "89ae37faf19b9cd36b8979a28e8ec219deaafe9c",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-014",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed entry into TEST_AND_VERIFY and expansion of the remaining verification work on 2026-09-14.",
+      "recorded_at": "2026-09-14T09:10:34Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+      "code_commit": "89ae37faf19b9cd36b8979a28e8ec219deaafe9c",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
       ],
       "expires_at": null
     }
@@ -490,5 +530,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Keep TASK-043 deferred until a real downstream Purchasing/Inventory/Sales SKU reference exists; the next actionable gate is explicit TEST_AND_VERIFY authorization and an approved environment for TASK-044."
+  "next_safe_action": "Commit the reviewed manifest/profile/runtime metadata, reconcile the exact candidate commit, then complete the revision-checked TEST_AND_VERIFY mode-entry checkpoint before executing formal suites."
 }
