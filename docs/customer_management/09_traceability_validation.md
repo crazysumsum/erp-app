@@ -77,3 +77,7 @@ On 2026-09-14, Sam explicitly approved the exact PLAN baseline `a3d723db8ca0438f
 The state machine first recovered `BLOCKED -> DESIGNING` at revision 11. With all decisions answered, current DESIGN/PLAN approvals and REV-002 recorded, `verify_gate.py ... --gate PLAN_READY --json` returned `LOCAL_CHECKS_PASS` with zero issues. Revision 12 then transitioned to `PLANNED`.
 
 This completes the planning governance gate for the exact recorded baselines. It is not implementation, test, CI, UAT, release or deployment evidence; entering `IMPLEMENT` remains a separate explicit mode authorization.
+
+## Publication authorization (state revision 13)
+
+On 2026-09-14, the user explicitly authorized pushing `codex/customer-hd001-risk-acceptance`, creating a PR to `main` and merging it. State records separate `PLANNED` push, PR and merge actions with idempotency keys. This authorization publishes planning-governance documents only and does not start `IMPLEMENT`.
