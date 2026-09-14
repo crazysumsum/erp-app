@@ -35,3 +35,31 @@ validated. The next candidate is TASK-002 only after Sam records a scoped approv
 for the permission-catalogue and migration paths, plus explicit authorization for an
 isolated schema-migration execution. This record does not claim a migration run,
 developer test result, Technical Acceptance, UAT, CI, PR or merge.
+
+## TASK-003 scope decision
+
+On 2026-09-14, ERP Product Owner Sam explicitly approved bringing the minimal
+`customers` equality-key foundation forward into TASK-003. The foundation is limited
+to the Customer identity display values, their canonical binary-collated equality
+keys, a stable numeric identifier and timestamps needed to prove the constraints.
+It deliberately excludes Customer APIs, lifecycle behavior, audit persistence,
+shared-catalog foreign keys and Business Master integration; those remain owned by
+their approved later tasks. TASK-005 will extend this additive table rather than
+recreate it.
+
+## TASK-003 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Focused normalization, migration-shape and migration-order tests: 15 passed.
+- Fresh isolated MySQL schema `erp_customer_phase001_task003_20260914`: migrations
+  through `0028_create_customer_equality_key_foundation.js` applied; a full rerun
+  skipped every migration.
+- Real MySQL tests proved both key columns are `utf8mb4_bin`, normalized duplicate
+  inserts fail with `ER_DUP_ENTRY`, accent-distinct normalized keys coexist, and two
+  concurrent same-key inserts produce exactly one winner.
+- Full local server regression: 1,221 passed, 222 environment-gated existing
+  integration tests skipped, 0 failed; lint passed.
+- The isolated schema was verified empty of Customer test fixtures and dropped after
+  the checks.

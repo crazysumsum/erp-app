@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 24,
+  "revision": 27,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": null,
+  "current_task": "TASK-003",
   "baseline": {
     "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
     "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "42117ddade8d07393fb51239dfc8113b5a21d98f",
-    "source_fingerprint": "4cfad57151ae34c7cdd2bd6ff5d3b4689756c9daf30bb404f4abe60c3d31d84c",
+    "code_commit": "748fc38dd1cfd17dc6daa80e62b3560eb415e61b",
+    "source_fingerprint": "416505a804af3018c76348c99404926bccab29f44a80f792412d0dc382b56fa7",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
@@ -28,7 +28,7 @@
   "tasks": {
     "TASK-001": "DONE",
     "TASK-002": "DONE",
-    "TASK-003": "PENDING",
+    "TASK-003": "IN_PROGRESS",
     "TASK-004": "PENDING",
     "TASK-005": "PENDING",
     "TASK-006": "PENDING",
@@ -181,6 +181,25 @@
         "server/test/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-003",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 提前在 TASK-003 建立 customers equality-key 基礎 schema。",
+      "recorded_at": "2026-09-14T04:00:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
+      "code_commit": "748fc38dd1cfd17dc6daa80e62b3560eb415e61b",
+      "scope": [
+        "docs/customer_management/implementation/00_implementation_readiness.md",
+        "server/src/modules/customer/**",
+        "server/database/migrations/**",
+        "server/test/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -301,9 +320,17 @@
       "idempotency_key": "customer-phase001-permission-migration-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-14: fresh isolated schema migration through 0027, full rerun no-op, six permission rows and system-admin matrix verified; erp_customer_phase001_20260914 dropped after verification"
+    },
+    {
+      "id": "EXT-MIGRATION-003",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task003_20260914",
+      "idempotency_key": "customer-phase001-task003-equality-key-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14: isolated schema erp_customer_phase001_task003_20260914 migrated through 0028; full rerun no-op; real MySQL binary-collation and concurrent uniqueness tests passed; Customer fixtures were empty before the schema was dropped."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Before TASK-003, refresh origin/main and allocate a new migration number only after an isolated MySQL schema is again available; TASK-004 remains blocked on the Business Master Currency/Payment Term provider."
+  "next_safe_action": "Review and commit the completed TASK-003 normalization and equality-key foundation slice; TASK-004 remains blocked on the Business Master Currency/Payment Term provider."
 }
