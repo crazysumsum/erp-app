@@ -6,10 +6,10 @@
 - Tasks: `TASK-010` through `TASK-016`
 - Approved Design: `615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8`
 - Approved Plan: `0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b`
-- Developer source fingerprint: `4da07da6f4dd5820539ddc94cff37b460f83b892cafbd466fb011f7f201b8315`
+- Developer source fingerprint: `4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377`
 - Entry commit: `a3040c96e1aa92902df964d44a1ad0b83f37f844`
 - Implementation commit: `2c88ed01f4b19a0a4d3457331689ce4af54eeb28`
-- Latest-main integration commit: `8d4612545bba262ac76d1dd2488f7f3103f5a9db` (includes `origin/main` `b6f03219`)
+- Latest-main integration commit: `ba7bdc260dbde05e168187d07d59cb4065aac1c2` (includes `origin/main` `c1ed4922`)
 - Runtime: local isolated schema `erp_business_master_phase2`; no production data or deployment.
 
 ## Delivered behavior
@@ -27,14 +27,14 @@
 
 | Suite | Result | Count | Evidence |
 |---|---:|---:|---|
-| lint | PASS | exit 0 | `evidence/20260914T072346-42a5efec2745/run.json` |
-| client-build | PASS | exit 0 | `evidence/20260914T072346-9396ad054d55/run.json` |
-| business-master-client-ui | PASS | 16/16 | `evidence/20260914T072346-ede95b0d1710/run.json` |
-| business-master-consumer-contract | PASS | 6/6 | `evidence/20260914T072401-e996c1d26dfd/run.json` |
-| business-master-browser | PASS | 15/15 | `evidence/20260914T072446-defd806ab5f0/run.json` |
-| business-master-server | PASS | 31/31, 0 skipped | `evidence/20260914T072413-c9d062b6c17a/run.json` |
-| business-master-performance | PASS | 1/1 | `evidence/20260914T072425-381cfc3b1782/run.json` |
-| business-master-recovery | PASS | 1/1 | `evidence/20260914T072436-141f50056806/run.json` |
+| lint | PASS | exit 0 | `evidence/20260914T082207-347255b099da/run.json` |
+| client-build | PASS | exit 0 | `evidence/20260914T082207-150f4a945e4b/run.json` |
+| business-master-client-ui | PASS | 16/16 | `evidence/20260914T082207-b4b5c8b40acb/run.json` |
+| business-master-consumer-contract | PASS | 6/6 | `evidence/20260914T082219-4adb46836693/run.json` |
+| business-master-browser | PASS | 15/15 | `evidence/20260914T082258-9d4a4100d82b/run.json` |
+| business-master-server | PASS | 31/31, 0 skipped | `evidence/20260914T082229-cadbac232ea9/run.json` |
+| business-master-performance | PASS | 1/1 | `evidence/20260914T082238-61deb9f98d77/run.json` |
+| business-master-recovery | PASS | 1/1 | `evidence/20260914T082248-83ed4b32a5b8/run.json` |
 
 The browser run includes automated scenarios named `UAT-001` through `UAT-009`, but at IMPLEMENT stage they are
 developer verification only. They are not formal UAT execution or business acceptance.

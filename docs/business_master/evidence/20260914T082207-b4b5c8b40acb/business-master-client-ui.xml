@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="16" failures="0" errors="0" time="0.098647375">
+    <testsuite name="test/business-master/pages.test.js" timestamp="2026-09-14T08:22:08.843Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.094515208">
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 兩頁掛在 system menu，查閱與管理權限分離" time="0.002100625">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; Currency server table 顯示 code、精度及文字狀態，view-only 不顯示管理動作" time="0.04198175">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; Payment Term 顯示規則；due date preview 不受本機時區影響" time="0.014638292">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 高影響對話框顯示每個 consumer 計數，unknown 時禁止確認" time="0.011150375">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 高影響摘要缺少 required consumer 時 fail closed" time="0.005572">
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 模組稽核頁不出現在 menu，並沿用 URL entity filter" time="0.008831667">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/business-master/pages.test.js" name="TC-016 Business Master pages &gt; 稽核頁忽略無效日期 query，不因 URL 被竄改而崩潰" time="0.009432292">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/currencies&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+[VUE_ROUTER_R0004] No match found for location with path &quot;/system/business-master/payment-terms&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/business-master/service.test.js" timestamp="2026-09-14T08:22:08.845Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.004132167">
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; 宣告 registry name，並把 Currency 清單映射為 DataTable 形狀" time="0.001576291">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Currency create/update 只傳契約允許欄位，寫入一律啟用 idempotency" time="0.000290875">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Currency 高影響操作先 preview，再以 token、reason、version 執行" time="0.000168708">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; 高影響命令可沿用 caller-supplied idempotency key 查回未知結果" time="0.000421958">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Payment Term 清單映射為 DataTable 形狀" time="0.00037225">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Payment Term create/update 與規則變更符合契約" time="0.000225791">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Payment Term due date preview 傳 baseDate 與 expectedVersion" time="0.000088834">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; activate/deactivate 與 audit filter 使用明確端點" time="0.000164834">
+        </testcase>
+        <testcase classname="test/business-master/service.test.js" name="TC-016 Business Master frontend service &gt; Business Master 的穩定錯誤碼都有中文訊息" time="0.000201375">
+        </testcase>
+    </testsuite>
+</testsuites>
