@@ -1,20 +1,20 @@
-# Inventory Management 系統設計規格
+# Inventory Management 系統設計規格（Harness Aligned）
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Inventory Management 系統設計規格 |
-| 文件版本 | 0.1 Draft |
+| 文件版本 | 0.2 Draft |
 | 文件日期 | 2026-09-07 |
-| 上游文件 | `docs/inventory_management/requirement.md` 0.1 Draft |
+| 上游文件 | `docs/inventory_management/01_requirement_spec.md` 0.2 Draft |
 | 適用系統 | ERP App；單一公司；中小企業；主要營運規模為5個以內Warehouse |
-| 技術基線 | Node.js 26＋Express 5＋MySQL 5.7＋Vue 3＋Quasar 2 |
+| 技術基線 | Node.js 26＋Express 5＋MySQL 8.0＋Vue 3＋Quasar 2 |
 | 文件狀態 | 設計初稿；可供Technical Lead、QA及各上下游模組評審，核准後可拆分Tasks |
 
 ### 0.1 文件目的
 
-本文件把Inventory Management業務需求轉成可執行的系統設計，定義模組邊界、交易與並發模型、資料庫表、API契約、頁面、權限、程式碼變更、測試、部署及營運要求。若本文與`requirement.md`的業務語意衝突，以需求書為準並先走變更控制，不可由實作者自行改變需求。
+本文件把Inventory Management業務需求轉成可執行的系統設計，定義模組邊界、交易與並發模型、資料庫表、API契約、頁面、權限、程式碼變更、測試、部署及營運要求。若本文與`01_requirement_spec.md`的業務語意衝突，以需求書為準並先走變更控制，不可由實作者自行改變需求。
 
 ### 0.2 已確認的架構決策
 
@@ -383,7 +383,7 @@ DRAFT ──start──> COUNTING ──complete counts──> READY_TO_POST ─
 - 時間點使用epoch milliseconds的`BIGINT UNSIGNED`，由Time Service提供；Expiry／Manufacture／First Receipt使用`DATE`，沒有時區轉換。
 - Quantity使用`BIGINT UNSIGNED`正整數；Movement方向分欄保存，不使用負unsigned或JavaScript浮點數。
 - Mutable aggregate使用`version INT UNSIGNED NOT NULL DEFAULT 1`及`UPDATE ... WHERE id=? AND version=?`。
-- MySQL 5.7不可靠執行`CHECK` constraints；enum、不變量、字串長度與跨row規則由service驗證，DB以UNSIGNED、FK、UNIQUE、NOT NULL及generated column作第二層保護。
+- MySQL 8.0須執行可安全表達的row-local `CHECK` constraints；enum、字串長度與所有跨row／跨aggregate規則仍由service在持鎖transaction內驗證，DB另以UNSIGNED、FK、UNIQUE、NOT NULL、CHECK及generated column作第二層保護。
 - Foreign key預設`ON DELETE RESTRICT`。Actor FK可`SET NULL`，同時保存username snapshot；歷史、Movement、Audit及operation不可cascade刪除。
 - 代碼另存normalized欄位並以binary/case-stable值作唯一索引；service執行trim、case fold及控制字元檢查。
 - 所有大量列表以覆蓋主要filter及穩定tie-breaker `id`的index支援；不得允許任意client sort column。
@@ -513,8 +513,8 @@ Indexes／constraints：
 - `INDEX idx_inventory_stock_sku(warehouse_id,sku_id,stock_status,lot_id,bin_id,id)`支援ATP。
 - `INDEX idx_inventory_stock_fifo(warehouse_id,sku_id,stock_status,fifo_anchor_date,bin_id,id)`支援無Lot FIFO候選。
 - `INDEX idx_inventory_stock_bin(bin_id,sku_id,lot_id,stock_status,id)`支援Bin inquiry／Stocktake snapshot。
-- `INDEX idx_inventory_stock_nonzero(sku_id,on_hand_quantity,id)`只作一般篩選；MySQL 5.7無partial index，query必須同時限制scope。
-- `allocated_quantity <= on_hand_quantity`由service在持鎖transaction內驗證；禁止依賴MySQL 5.7忽略的CHECK。
+- `INDEX idx_inventory_stock_nonzero(sku_id,on_hand_quantity,id)`只作一般篩選；MySQL 8.0沒有partial index，query必須同時限制scope。
+- `CHECK (allocated_quantity <= on_hand_quantity)`提供row-local第二層保護；service仍須在持鎖transaction內驗證同一條件及所有跨row Reservation／Allocation不變量。
 
 ### 4.8 `inventory_operation_requests`
 
@@ -638,7 +638,7 @@ Indexes：`idx_inventory_allocations_reservation(reservation_id,status,id)`、`i
 | `created_at`,`updated_at`,`dispatched_at`,`received_at`,`cancelled_at` | BIGINT UNSIGNED | state times可NULL | Epoch ms。 |
 | `created_by`,`updated_by`,`dispatched_by`,`received_by`,`cancelled_by` | BIGINT UNSIGNED | NULL／FK users | Actor。 |
 
-Indexes：`idx_inventory_transfers_status(status,updated_at,id)`、`idx_inventory_transfers_source(source_warehouse_id,status,id)`、`idx_inventory_transfers_destination(destination_warehouse_id,status,id)`。來源與目的不同由service驗證；MySQL 5.7不依賴CHECK。
+Indexes：`idx_inventory_transfers_status(status,updated_at,id)`、`idx_inventory_transfers_source(source_warehouse_id,status,id)`、`idx_inventory_transfers_destination(destination_warehouse_id,status,id)`。`CHECK (source_warehouse_id <> destination_warehouse_id)`提供row-local第二層保護；service仍須提交時重驗兩端狀態、權限及ownership。
 
 ### 4.13 `inventory_transfer_lines`
 
@@ -1427,7 +1427,7 @@ server/test-support/inventoryFixtures.js
 
 ### 10.1 真MySQL Migration／Constraint Integration
 
-`server/test/integration/inventoryMigrations.integration.test.js`使用專用MySQL 5.7驗證：
+`server/test/integration/inventoryMigrations.integration.test.js`使用與CI及production相同major版本的專用MySQL 8.0驗證：
 
 - 全新DB及既有schema兩種路徑均可apply；重跑skip安全。
 - 所有FK、unique、generated columns及indexes實際存在。
@@ -1772,4 +1772,120 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 
 ### 14.3 規格變更控制
 
-下列改變視為需求變更，必須先更新`requirement.md`、本文件及測試案例：支援Serial、成本／會計、負庫存、部分Transfer、更多人工Stock Status、Reservation綁定Lot於下單時、自動釋放Reservation、Bin容量／固定SKU、自動通知、多公司、雙人審批或外部分散式Inventory service。
+下列改變視為需求變更，必須先更新`01_requirement_spec.md`、本文件及測試案例：支援Serial、成本／會計、負庫存、部分Transfer、更多人工Stock Status、Reservation綁定Lot於下單時、自動釋放Reservation、Bin容量／固定SKU、自動通知、多公司、雙人審批或外部分散式Inventory service。
+
+<!-- HARNESS_V2_FORMAL_DEFINITIONS -->
+
+# Appendix A — Harness 2.0 Formal Design Definitions
+
+These definitions index the detailed design above. They preserve its Draft status and unresolved human decisions.
+
+## DES-001 — Warehouse and Bin master boundary
+
+### Decision
+Warehouse and Bin are Inventory-owned masters with versioned lifecycle, ownership-safe lookup and shared Warehouse-row serialization.
+
+### Rationale
+Keeps location ownership and state transitions explicit while preserving the modular-monolith boundary.
+
+### Failure behavior
+Invalid ownership, stale versions or active references fail closed without changing stock.
+
+## DES-002 — Stock, Lot and quantity model
+
+### Decision
+Immutable movements are the quantity fact; stock controls and balance buckets are transactional read models using Base-UOM integers.
+
+### Rationale
+This preserves auditability and supports Lot, expiry and Stock Status rules without a second inventory store.
+
+### Failure behavior
+Any invariant, tracking-policy, expiry, status or ownership violation rolls back the full command.
+
+## DES-003 — Atomic posting, operation identity and audit
+
+### Decision
+Every state-changing command uses a durable source identity, canonical payload hash, one MySQL transaction, immutable movement and required audit.
+
+### Rationale
+A shared operation claim makes HTTP, internal-service and worker retries converge on one business effect.
+
+### Failure behavior
+Conflicting payloads return a stable conflict; indeterminate outcomes are queried by source and never blindly replayed.
+
+## DES-004 — Reservation, allocation and FEFO
+
+### Decision
+Reservations are Warehouse/SKU commitments; allocations bind eligible Lot/Bin buckets at pick time under the shared stock-control lock.
+
+### Rationale
+Separating commitment from physical selection supports ATP, FEFO and expiry changes without premature Lot binding.
+
+### Failure behavior
+Insufficient ATP, stale state, ineligible buckets or unauthorized FEFO deviation fail atomically.
+
+## DES-005 — Bin movement and whole-document transfer
+
+### Decision
+Same-Warehouse moves are atomic paired movements; cross-Warehouse transfers use whole-document Draft, Dispatch/In-Transit and Receive states.
+
+### Rationale
+This matches the stated no-partial-transfer policy and provides explicit custody and reconciliation.
+
+### Failure behavior
+Any invalid line, lock, quantity or destination rejects the whole transition with no partial movement.
+
+## DES-006 — Adjustment, status transfer and reversal
+
+### Decision
+Corrections create authorized new movements with reason and audit; posted movements are never edited or deleted.
+
+### Rationale
+Compensating entries preserve history and keep Stock Status changes separate from quantity corrections.
+
+### Failure behavior
+Commands that would violate quantity, reservation, expiry, permission or idempotency rules fail closed.
+
+## DES-007 — Persistent Stocktake scope and lock
+
+### Decision
+Stocktake uses persistent Bin ownership locks, immutable snapshots and one all-or-nothing variance posting.
+
+### Rationale
+A business-duration lock lock must survive process restarts and cannot rely on a long database transaction.
+
+### Failure behavior
+Concurrent scope claims, non-owner unlocks, incomplete counts or invalid variance lines are rejected without partial posting.
+
+## DES-008 — Fenced Opening and irreversible Go-Live
+
+### Decision
+Opening is a pre-Go-Live-only, prechecked, fenced worker flow; Go-Live permanently disables new Opening commands.
+
+### Rationale
+This isolates high-volume initial loading from daily corrections while retaining deterministic recovery and audit.
+
+### Failure behavior
+Stale prechecks, lost leases, invalid rows or unauthorized confirmation cause zero inventory effect.
+
+## DES-009 — Inquiry, export and operator UI
+
+### Decision
+Server-side paginated projections expose stock, movement, reservation, transfer, expiry and audit information; the UI keeps filters in the URL.
+
+### Rationale
+Thin clients and stable projections prevent browser-calculated stock facts and unbounded result loading.
+
+### Failure behavior
+Unauthorized fields, CSV formulas, unstable ordering and dependency errors are rejected or shown safely.
+
+## DES-010 — Security, reliability and operational controls
+
+### Decision
+All boundaries validate input, re-check actor authorization for writes, apply fixed lock ordering, expose safe errors and emit operational reconciliation signals.
+
+### Rationale
+Inventory quantity and audit are high-risk shared data requiring least privilege, recoverability and observable failure semantics.
+
+### Failure behavior
+Authentication, authorization, concurrency, performance, retention or recovery failures block the affected command or release gate.
