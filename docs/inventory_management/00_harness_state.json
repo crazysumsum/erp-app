@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 3,
+  "revision": 4,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "3ded66aa8bbbac4b264eb20a64eb65718358a40d30e234847e45fe7290414358",
     "plan": "9d5742620d2ed9758b8531a1cea40d3ceabb1369b44c5b283b4f7ecce199ad9f",
-    "code_commit": "83de3cc475db8b3c931f73db5615b35084be1579",
+    "code_commit": "ad96f142104a4921f73c46d9a6615979701fbba2",
     "source_fingerprint": "db59b68f5d75d0f927f20a5e4f82bd7c03d858863fe1154148a0fc53711c988c",
     "worktree": "/private/tmp/erp-inventory-management-docs-align",
     "default_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
@@ -326,9 +326,17 @@
       "idempotency_key": "inventory-management-doc-align-pr-20260914",
       "status": "PLANNED",
       "source_ref": null
+    },
+    {
+      "id": "EXT-003",
+      "kind": "GIT_PUSH_RETRY",
+      "target": "origin/codex/inventory-management-docs-align",
+      "idempotency_key": "inventory-management-doc-align-push-authorized-20260914",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task user authorization on 2026-09-14: approve push, create PR, merge to main, do not run CI"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain explicit user authorization before publishing the documentation branch or creating a PR; separately resolve HD-004 before affected Phase gates and obtain an actual independent review before any IMPLEMENT authorization."
+  "next_safe_action": "Execute explicitly authorized branch push and PR creation; record observed remote references before the authorized merge. Do not manually trigger or wait for CI."
 }
