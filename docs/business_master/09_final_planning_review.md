@@ -50,10 +50,12 @@ Typed authority 覆蓋 20 requirements → 12 designs → 2 phases → 16 tasks 
 - Default branch / baseline: `main` / `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`（與建立時 `origin/main` 一致）
 - Design worktree / topic branch: `/private/tmp/erp-business-master-design-plan` / `codex/business-master-design-plan`
 - Local/deterministic validation: traceability `STRUCTURE_PASS`；module boundary `LOCAL_CHECKS_PASS`
-- Design commit: 本次封存時建立，PR provenance 會在建立後補記
-- Design PR: 待 commit/push 後建立
-- CI intentionally not used as design-stage gate: YES；本階段只改 docs，CI 不能替代人類 design/plan approval 或 reviewer identity
-- Cleanup status / pending PR resolution: worktree/branch 保留供審閱；沒有 PR/remote side effect 可清理
+- Design commit: `9a46e385744b89b2aa15c69a871b8f0c4ba12383`
+- Design PR: [#83](https://github.com/crazysumsum/erp-app/pull/83)，已 merge；merge commit
+  `cc2e3264d2f4caefbef97045b717cf29d0710da0`
+- CI intentionally not used as design-stage gate: YES；Product Owner 明確授權不等待 CI。本階段只改 docs，GitHub
+  workflow 雖自動觸發，但不是 design/merge gate，也不能替代人類 design/plan approval 或 reviewer identity。
+- Cleanup status / pending PR resolution: PR #83 已 merge；provenance checkpoint 完成後清理 local/remote branch 與 worktree
 
 ## CRITICAL / HIGH Findings
 
@@ -94,5 +96,5 @@ Typed authority 覆蓋 20 requirements → 12 designs → 2 phases → 16 tasks 
   不證明語意正確、測試通過、授權、CI 或 runtime isolation。
 - Recovery/provenance map for alignment: source baseline、worktree、task states、decisions、review 與 next action 記錄於 state；
   consumer 文件只作 evidence/approval-required alignment，不反向成為 owner。
-- State revision / pending external actions / next safe action: revision 5、status `PLANNED`；下一步是封存
-  commit/push/PR，implementation 必須另有 mode authorization。
+- State revision / pending external actions / next safe action: provenance checkpoint 後為 revision 6、status `PLANNED`；
+  push、PR #83 與 merge 均記錄為 CONFIRMED；下一步清理 merged branch/worktree。Implementation 必須另有 mode authorization。
