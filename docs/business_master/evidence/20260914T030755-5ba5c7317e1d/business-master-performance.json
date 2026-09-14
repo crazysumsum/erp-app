@@ -1,0 +1,9 @@
+{
+  "tests": [
+    {
+      "name": "10k Payment Terms / 100 concurrent bounded list queries",
+      "id": "TC-018",
+      "status": "PASS"
+    }
+  ]
+}

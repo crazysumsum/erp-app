@@ -47,7 +47,7 @@ synthetic roles及 DB schema已隔離；exact plan仍有效。
 
 ### Acceptance criteria
 view/mgmt/system-admin/consumer permission UX正確；Currency/Payment Term CRUD（不含 delete）、calculation preview、impact confirm、
-409/422/503 recovery、audit link、loading/empty/error狀態在375–1440px可完成；console/network無相關 unexpected failure。
+400/409/503 recovery、audit link、loading/empty/error狀態在375–1440px可完成；console/network無相關 unexpected failure。
 
 ### Integration and regression
 執行 lint、client build、component/UI、server/consumer contract及 Playwright developer suites；完整 `npm run verify` 與 GitHub CI mandatory jobs。
@@ -176,7 +176,7 @@ Provider/transaction/consumer fixture tests pass；contract version與minimal pr
 依URL前綴放 handler；每endpoint strict request/response schema；handler只做auth/boundary/orchestration，不重複domain rule。
 
 ### Acceptance criteria
-401/403/404/409/422/503與success shape一致；不同payload key reuse拒絕；state commands不能被PATCH繞過。
+400/401/403/404/409/503與success shape一致；不同payload key reuse拒絕；state commands不能被PATCH繞過。
 
 ### Definition of Done
 Handler convention、contract/security/integration tests pass；OpenAPI-equivalent tables/examples與implementation一致。

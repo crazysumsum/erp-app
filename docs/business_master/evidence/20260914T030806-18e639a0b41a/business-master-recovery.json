@@ -1,0 +1,9 @@
+{
+  "tests": [
+    {
+      "name": "Business Master logical backup/restore shape and row-count rehearsal",
+      "id": "TC-019",
+      "status": "PASS"
+    }
+  ]
+}

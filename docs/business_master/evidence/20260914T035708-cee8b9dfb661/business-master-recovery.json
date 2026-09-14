@@ -1,0 +1,9 @@
+{
+  "tests": [
+    {
+      "name": "Business Master logical restore, migration rerun and provider restart rehearsal",
+      "id": "TC-019",
+      "status": "PASS"
+    }
+  ]
+}
