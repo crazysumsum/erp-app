@@ -4,7 +4,7 @@
 
 所有案例均為規格，狀態一律 `NOT_RUN`。`REVIEW_AND_ALIGN` 不授權任何產品實作、測試執行、Technical Acceptance 或 UAT 簽核。本規格由 `03_design_spec.md` §11（測試設計）及 `05_development_tasks.md` §7（Phase 完整測試週期）整理而成，作為 `08_traceability.json` 的 `TC` 節點；§11 與 §7 的逐項測試清單仍是細節來源。實際執行必須綁定不可變基線，並在 `TEST_AND_VERIFY` 模式下進行。
 
-所有案例的 suite 為 `fulfillment-technical`，在專案的隔離測試環境及專用測試 MySQL 8.0 執行。`TC-010` 的瀏覽器層驗證目前沒有可用的 Playwright 工具鏈，該缺口記錄於 `00_gap_analysis.md` `GAP-TC-001`，必須在 `PHASE-002` 開放前解決，不得以程式碼檢視或 jsdom 結果偽裝瀏覽器證據。
+所有案例的 suite 為 `fulfillment-technical`，在專案的隔離測試環境及專用測試 MySQL 8.0 執行。`TC-010` 的瀏覽器層驗證可使用本機已安裝並實測可用的 Playwright CLI（1.63.0＋chromium-1243），但該工具尚未固定進 repo 依賴、設定檔、`client/e2e` 或 CI，因此其結果目前只是本機觀察，不構成 Phase Gate 可consume 的執行契約證據；缺口記錄於 `00_gap_analysis.md` `GAP-TC-001`，必須在 `PHASE-002` 開放前補齊，且任何情況下不得以程式碼檢視或 jsdom 結果偽裝瀏覽器證據。
 
 
 ## 案例索引

@@ -477,7 +477,7 @@
 
 本節把 §7 的 120 條業務驗收案例整理成穩定的 `UAT` 實體，作為 `08_traceability.json` 的 UAT 節點。§7 的表格仍然是案例細節、`Required Evidence`、`Actual Evidence` 及 `Status` 欄位的來源，執行結果只在該表回填。`mandatory`、`blocking`、`applicability`、`execution_surface`、`automation_suitability`、`suite_id` 及需求／技術就緒連結由 `08_traceability.json` 擁有，本節不重複這些可編輯值。
 
-全部 120 條案例的 `execution_surface` 為 `UI_BROWSER`、`automation_suitability` 為 `MANUAL_REQUIRED`、`suite_id` 為 `null`：§1.2 明確規定 UAT 不得以直接 SQL、修改資料庫、取得 DB lock、檢查程式碼或直接呼叫 internal service 作為步驟，案例是由業務使用者在隔離 UAT 環境以可觀察業務頁完成的人工驗收。瀏覽器層的自動化驗證屬技術測試責任，由 `06_technical_test_cases.md` `TC-010` 承載；本專案目前未安裝 Playwright，該缺口記錄於 `00_gap_analysis.md` `GAP-TC-001`。自動化 PASS 從不等同業務驗收。
+全部 120 條案例的 `execution_surface` 為 `UI_BROWSER`、`automation_suitability` 為 `MANUAL_REQUIRED`、`suite_id` 為 `null`：§1.2 明確規定 UAT 不得以直接 SQL、修改資料庫、取得 DB lock、檢查程式碼或直接呼叫 internal service 作為步驟，案例是由業務使用者在隔離 UAT 環境以可觀察業務頁完成的人工驗收。瀏覽器層的自動化驗證屬技術測試責任，由 `06_technical_test_cases.md` `TC-010` 承載；Playwright CLI 已在開發機安裝並實測可用，但尚未固定進 repo 與 CI，缺口記錄於 `00_gap_analysis.md` `GAP-TC-001`。自動化 PASS 從不等同業務驗收。
 
 
 ### 13.1 UAT ID 對照
