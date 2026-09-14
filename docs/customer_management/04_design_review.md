@@ -1,8 +1,19 @@
-# Customer Management Independent Design Review
+# Customer Management Design Review
+
+## Reviewer provenance
+
+| Field | Value |
+| --- | --- |
+| Review method | `SELF_REVIEW` |
+| Author | Historical Customer design authors and prior alignment |
+| Reviewer | `/root` in the same active context |
+| Reviewed baseline | Current `03_design_spec.md`; exact hash recorded in `00_harness_state.json` |
+| Independence | Not independent; a role/perspective list does not create a separate reviewer |
+| Result | `CHANGES_REQUESTED`: DR-004 and independent review remain open |
 
 ## 1. Review Method
 
-This review treats the design as an external proposal rather than defending its original choices. Perspectives used: Principal/Solution Architect, Security Architect, Database Architect, SRE/Operations, Senior Software Engineer and QA/Test Architect. Evidence comes from the preserved artifacts, aligned requirements/design, current main source structure and merged adjacent-module documents.
+This self-review treats the design as an external proposal rather than defending its original choices. Perspectives used: Principal/Solution Architect, Security Architect, Database Architect, SRE/Operations, Senior Software Engineer and QA/Test Architect. Evidence comes from the preserved artifacts, aligned requirements/design, current main source structure and merged adjacent-module documents.
 
 ## 2. Architecture Summary
 
@@ -56,7 +67,7 @@ Four vertical Phases can be delivered without knowingly broken intermediate stat
 | Gate item | Result |
 | --- | --- |
 | Unresolved CRITICAL findings | 0 |
-| Unresolved HIGH findings | DR-004 requires Security/Backend disposition before PHASE-001 implementation |
+| Unresolved HIGH findings | DR-004 requires Security/Backend disposition before TASK-020 / PHASE-003 implementation |
 | Requirement ambiguity changing core architecture | None |
 | Implementation dependencies | Customer not implemented; downstream Provider contracts must be verified at Phase entry |
 | Major trade-off | Keep modular monolith and separate Customer aggregate; prioritize explicit purpose/security contracts over generic abstractions |

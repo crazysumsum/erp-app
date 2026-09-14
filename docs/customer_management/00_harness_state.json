@@ -1,0 +1,120 @@
+{
+  "schema_version": "2.0",
+  "module_id": "customer-management",
+  "revision": 3,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "BLOCKED",
+  "resume_status": "DESIGNING",
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "a06571e1529575f836eab2a6202be6142c145f10668426c904d3a505f3e5f289",
+    "plan": "e8f4d9da87005bf8a5a10765731ac0359002d4bdc063cafb288400ae91b82350",
+    "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+    "source_fingerprint": "cd7b2dc4f6fd58268c774bb4a9565414e467e5bbdb5f6286754241c56d65295f",
+    "worktree": "/private/tmp/erp-customer-management-harness-v2-alignment",
+    "default_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
+    "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
+  },
+  "runtime": {
+    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "owner": "Primary harness agent",
+    "resources": {
+      "workspace": "erp-customer-management-harness-v2-alignment"
+    },
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING",
+    "TASK-017": "PENDING",
+    "TASK-018": "PENDING",
+    "TASK-019": "PENDING",
+    "TASK-020": "PENDING",
+    "TASK-021": "PENDING",
+    "TASK-022": "PENDING",
+    "TASK-023": "PENDING",
+    "TASK-024": "PENDING",
+    "TASK-025": "PENDING",
+    "TASK-026": "PENDING",
+    "TASK-027": "PENDING",
+    "TASK-028": "PENDING",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING"
+  },
+  "approvals": [],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Historical Customer design authors and prior alignment",
+      "reviewer": "/root in the current active context",
+      "reviewed_baseline": "a06571e1529575f836eab2a6202be6142c145f10668426c904d3a505f3e5f289",
+      "source_ref": "docs/customer_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "Approve the protected system-admin exception for delegating Customer bank-sensitive permissions under the proposed fresh-authentication and audit controls?",
+      "affected_ids": [
+        "SEC-004",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-012",
+        "DES-015",
+        "TASK-020",
+        "TC-045"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "Confirm the final legal-hold and retention policy before any destructive Customer-data purge is designed or enabled.",
+      "affected_ids": [
+        "NFR-009",
+        "NFR-015",
+        "DES-024",
+        "TASK-035",
+        "TC-085",
+        "UAT-059"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    }
+  ],
+  "external_actions": [],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Obtain a real independent review of the current design/plan baseline and human disposition of HD-001 before implementation authorization; keep retention purge blocked pending HD-002."
+}

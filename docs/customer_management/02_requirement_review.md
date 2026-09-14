@@ -4,7 +4,7 @@
 
 Status: `READY_FOR_DESIGN_ALIGNMENT`.
 
-The aligned full requirement is unusually complete for an existing artifact: it states business goals, in/out scope, roles, lifecycle, functional requirements, 42 business rules, 14 security requirements, measurable capacity targets, exception handling and 52 Given/When/Then acceptance criteria. No core capability needs to be invented.
+The canonical requirement, including the preserved full legacy body is unusually complete for an existing artifact: it states business goals, in/out scope, roles, lifecycle, functional requirements, 42 business rules, 14 security requirements, measurable capacity targets, exception handling and 52 Given/When/Then acceptance criteria. No core capability needs to be invented.
 
 ## 2. Preserved Intent
 
