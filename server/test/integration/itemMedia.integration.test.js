@@ -526,10 +526,11 @@ test("目標 Item 嘅 version 唔對版：409 VERSION_CONFLICT", { skip }, async
 
 // --- 權限矩陣 -----------------------------------------------------------------
 
-test("只有 item.view 冇 item.mgmt：可以下載，但上傳／update／delete 一律 403；完全冇 token：401", { skip }, async (t) => {
+test("item.view 可下載但不可寫；item.mgmt 可下載及寫入；完全冇 token 回 401", { skip }, async (t) => {
   const application = await startApplication();
   const mediaDirectory = application.services.config.item.mediaDirectory;
   const { db, token: mgmtToken } = await withRole(t, application, ["item.view", "item.mgmt"]);
+  const { token: mgmtOnlyToken } = await withRole(t, application, ["item.mgmt"]);
   const { token: viewToken } = await withRole(t, application, ["item.view"]);
   const catalog = await seedCatalog(db);
   const fixture = await seedItemWithSku(db, catalog, mediaDirectory);
@@ -567,6 +568,9 @@ test("只有 item.view 冇 item.mgmt：可以下載，但上傳／update／delet
 
   const viewerDownload = await get(`${url}/api/v1/item-media/${mediaId}/download`, viewToken);
   assert.equal(viewerDownload.status, 200);
+
+  const managerDownload = await get(`${url}/api/v1/item-media/${mediaId}/download`, mgmtOnlyToken);
+  assert.equal(managerDownload.status, 200);
 
   const anonymousDownload = await get(`${url}/api/v1/item-media/${mediaId}/download`, null);
   assert.equal(anonymousDownload.status, 401);

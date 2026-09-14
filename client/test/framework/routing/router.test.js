@@ -60,6 +60,18 @@ describe("createAppRouter", () => {
     expect(appRouterWithoutPermission.currentRoute.value.name).toBe("forbidden");
   });
 
+  it("只有 item.mgmt 亦可進入 Item 列表與詳情", async () => {
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", roles: [], permissions: ["item.mgmt"] };
+    const appRouter = router(session);
+
+    await appRouter.push("/items");
+    expect(appRouter.currentRoute.value.name).toBe("items");
+
+    await appRouter.push("/items/1");
+    expect(appRouter.currentRoute.value.name).toBe("itemDetail");
+  });
+
   it("/items/categories、/items/brands、/items/uoms 都係各自獨立嘅 static route，唔會撞名", async () => {
     const session = useSessionStore();
     session.user = { id: 1, username: "sam", roles: [], permissions: ["item.mgmt"] };

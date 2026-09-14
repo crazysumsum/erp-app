@@ -675,6 +675,27 @@ test("SKU Code 唔分大小寫全域唯一：撞咗已存在嘅 code 就 409 SKU
   assert.equal(itemRows.length, 0, "第二次撞 SKU Code 失敗嗰個 Item 唔應該有任何殘留");
 });
 
+test("建立 Item：SKU Code 空白、控制字元或超過 190 字元一律 400 SKU_CODE_INVALID，唔留殘資料", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  t.after(async () => {
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  for (const skuCode of [" \t ", "SKU\u0000CONTROL", "X".repeat(191)]) {
+    const payload = basePayload(catalog, { sku: { skuCode } });
+    const { status, body } = await post(`${url}/api/v1/items/create`, token, payload);
+
+    assert.equal(status, 400, JSON.stringify(body));
+    assert.equal(body.error.code, "SKU_CODE_INVALID");
+    const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", [payload.item.name]);
+    assert.equal(itemRows.length, 0, "無效 SKU Code 不可留下 Item");
+  }
+});
+
 test("Barcode 全域唯一：撞咗已存在嘅條碼就 409 BARCODE_TAKEN", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
@@ -871,6 +892,191 @@ test("Idempotency-Key：同一個 key 連撞兩次，第二次直接攞返第一
 
   const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", [payload.item.name]);
   assert.equal(itemRows.length, 1, "唔應該因為重送就建多一個 Item");
+});
+
+// --- TASK-038：POST /skus/create ------------------------------------------
+
+test("既有 Variant Item 可以新增唯一 SKU；審計與 idempotency 同一交易生效", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const suffix = randomUUID().slice(0, 8);
+  const itemPayload = basePayload(catalog, {
+    item: { productType: "variant" },
+    sku: {
+      skuCode: `SKU-RED-${suffix}`,
+      skuName: "紅色",
+      suggestedPriceAmount: "128.0000",
+      uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+      barcodes: [],
+      variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }]
+    }
+  });
+  const itemResult = await post(`${url}/api/v1/items/create`, token, itemPayload);
+  assert.equal(itemResult.status, 201, JSON.stringify(itemResult.body));
+  created.itemId = itemResult.body.data.id;
+
+  const skuPayload = {
+    itemId: created.itemId,
+    skuCode: `SKU-BLUE-${suffix}`,
+    skuName: "藍色",
+    sellable: true,
+    suggestedPriceAmount: "128.0000",
+    uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+    barcodes: [],
+    variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[1] }]
+  };
+  const key = randomUUID();
+  const first = await post(`${url}/api/v1/skus/create`, token, skuPayload, { "Idempotency-Key": key });
+  assert.equal(first.status, 201, JSON.stringify(first.body));
+  assert.equal(first.body.data.skuCode, skuPayload.skuCode);
+  assert.equal(first.body.data.status, "draft");
+
+  const second = await post(`${url}/api/v1/skus/create`, token, skuPayload, { "Idempotency-Key": key });
+  assert.equal(second.status, 201, JSON.stringify(second.body));
+  assert.equal(second.body.data.id, first.body.data.id);
+
+  const [[createdSku]] = await db.query(
+    "SELECT variant_signature FROM item_skus WHERE id = ? AND item_id = ?",
+    [first.body.data.id, created.itemId]
+  );
+  assert.match(createdSku.variant_signature, /^[0-9a-f]{64}$/);
+  const [auditRows] = await db.query(
+    "SELECT action FROM item_audit_logs WHERE target_type = 'sku' AND target_id = ?",
+    [first.body.data.id]
+  );
+  assert.deepEqual(auditRows.map((row) => row.action), ["sku.create"]);
+});
+
+test("新增既有 Variant SKU 時拒絕空白或控制字元 SKU Code，且不寫入資料", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  const created = { itemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.itemId);
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const suffix = randomUUID().slice(0, 8);
+  const itemResult = await post(
+    `${url}/api/v1/items/create`,
+    token,
+    basePayload(catalog, {
+      item: { productType: "variant" },
+      sku: {
+        skuCode: `SKU-RED-${suffix}`,
+        skuName: "紅色",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }]
+      }
+    })
+  );
+  assert.equal(itemResult.status, 201, JSON.stringify(itemResult.body));
+  created.itemId = itemResult.body.data.id;
+
+  for (const skuCode of [" \t ", "SKU\u0000CONTROL", "X".repeat(191)]) {
+    const result = await post(`${url}/api/v1/skus/create`, token, {
+      itemId: created.itemId,
+      skuCode,
+      skuName: "不合法 SKU",
+      variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[1] }]
+    });
+    assert.equal(result.status, 400, JSON.stringify(result.body));
+    assert.equal(result.body.error.code, "SKU_CODE_INVALID");
+  }
+
+  const blankNameResult = await post(`${url}/api/v1/skus/create`, token, {
+    itemId: created.itemId,
+    skuCode: `SKU-BLANK-NAME-${suffix}`,
+    skuName: " \t ",
+    variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[1] }]
+  });
+  assert.equal(blankNameResult.status, 400, JSON.stringify(blankNameResult.body));
+
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE item_id = ?", [created.itemId]);
+  assert.equal(skuRows.length, 1, "無效 SKU Code 不可留下 SKU 或 audit");
+});
+
+test("既有 Variant Item 拒絕重複規格組合，既有 Standard Item 不可新增 SKU", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const attribute = await seedVariantAttribute(db);
+  const created = { variantItemId: null, standardItemId: null };
+  t.after(async () => {
+    await cleanupCreatedItem(db, created.variantItemId);
+    await cleanupCreatedItem(db, created.standardItemId);
+    await attribute.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const suffix = randomUUID().slice(0, 8);
+  const variantResult = await post(
+    `${url}/api/v1/items/create`,
+    token,
+    basePayload(catalog, {
+      item: { productType: "variant" },
+      sku: {
+        skuCode: `SKU-RED-${suffix}`,
+        skuName: "紅色",
+        suggestedPriceAmount: "128.0000",
+        uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+        barcodes: [],
+        variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }]
+      }
+    })
+  );
+  assert.equal(variantResult.status, 201, JSON.stringify(variantResult.body));
+  created.variantItemId = variantResult.body.data.id;
+
+  const duplicateResult = await post(`${url}/api/v1/skus/create`, token, {
+    itemId: created.variantItemId,
+    skuCode: `SKU-DUPLICATE-${suffix}`,
+    skuName: "重複紅色",
+    sellable: true,
+    suggestedPriceAmount: "128.0000",
+    uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+    barcodes: [],
+    variantValues: [{ attributeId: attribute.attributeId, optionId: attribute.optionIds[0] }]
+  });
+  assert.equal(duplicateResult.status, 409, JSON.stringify(duplicateResult.body));
+  assert.equal(duplicateResult.body.error.code, "VARIANT_COMBINATION_TAKEN");
+
+  const standardResult = await post(`${url}/api/v1/items/create`, token, basePayload(catalog));
+  assert.equal(standardResult.status, 201, JSON.stringify(standardResult.body));
+  created.standardItemId = standardResult.body.data.id;
+
+  const standardAddResult = await post(`${url}/api/v1/skus/create`, token, {
+    itemId: created.standardItemId,
+    skuCode: `SKU-STANDARD-EXTRA-${suffix}`,
+    skuName: "額外 SKU",
+    sellable: true,
+    suggestedPriceAmount: "128.0000",
+    uoms: [{ uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultSale: true }],
+    barcodes: [],
+    variantValues: []
+  });
+  assert.equal(standardAddResult.status, 409, JSON.stringify(standardAddResult.body));
+  assert.equal(standardAddResult.body.error.code, "STANDARD_ITEM_SKU_LIMIT");
 });
 
 // --- T32：POST /items/duplicates/check --------------------------------------

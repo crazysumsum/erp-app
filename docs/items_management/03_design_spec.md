@@ -243,13 +243,13 @@ server/src/modules/item/
 { name: "item.mgmt", description: "管理商品、SKU 與商品主資料" }
 ```
 
-Migration 將兩者種入 `permissions` 並授予 `system-admin`。商品管理員角色必須同時獲授 `item.view` 與 `item.mgmt`；現有 authorization 沒有 permission inheritance，不假設持有 `item.mgmt` 會自動得到 `item.view`。Permission 仍是程式碼目錄的一部分，不提供新增／修改 permission API。
+Migration 將兩者種入 `permissions` 並授予 `system-admin`。`item.view` 保持純讀取權限；`item.mgmt` 是 Item Management 的完整讀寫權限，對 Item 相關讀取 API 明確以 `item.view` **或** `item.mgmt` 授權，毋須另加 `item.view`。這是 Item 模組明確的 policy，不是跨模組的 permission inheritance。Permission 仍是程式碼目錄的一部分，不提供新增／修改 permission API。
 
 ### 3.2 認證強度
 
 | 操作 | authType | permission | 理由 |
 | --- | --- | --- | --- |
-| Item／SKU 列表、詳情、catalog 查詢、media download、audit 查詢 | `jwt` | `item.view` | 只讀商品查閱。 |
+| Item／SKU 列表、詳情、catalog 查詢、media download、audit 查詢 | `jwt` | `item.view` 或 `item.mgmt` | 純讀使用者以 view 查閱；管理者以 mgmt 完整讀寫。 |
 | 建立、一般修改、直接啟用、圖片上傳 | `jwt` | `item.mgmt` | 日常商品維護；啟用仍需完整驗證及 audit。 |
 | Inactive／Active 切換 | `jwt` | `item.mgmt` | 可逆且有 audit。 |
 | Discontinued／Archived／Restore | `jwt-password` | `item.mgmt` | 會中止新交易或重新開放資料，要求密碼再確認及原因。 |
@@ -265,7 +265,7 @@ Migration 將兩者種入 `permissions` 並授予 `system-admin`。商品管理�
 列表、Item／SKU 詳情及 audit 頁宣告：
 
 ```js
-requires: { permissions: ["item.view"] }
+requires: { permissions: ["item.view", "item.mgmt"], match: "any" }
 ```
 
 Create、Catalog 維護及 Import 頁宣告 `item.mgmt`；詳情頁內所有寫入按鈕另以 `v-can="item.mgmt"` 控制。前端 route guard、menu visibility 及 `v-can` 只是體驗層；所有 API 仍獨立驗證 permission。
@@ -275,7 +275,7 @@ Create、Catalog 維護及 Import 頁宣告 `item.mgmt`；詳情頁內所有寫�
 | 使用者類型 | Permission | 可用範圍 |
 | --- | --- | --- |
 | `system-admin` | Migration 預設授予兩者 | 全部 Item 頁及 API，包括稽核、匯入與高風險操作。 |
-| 商品管理員自訂角色 | `item.view`＋`item.mgmt` | 完整 Item 業務能力；高風險操作仍須相應再認證。 |
+| 商品管理員自訂角色 | `item.mgmt` | 完整 Item 業務能力（包括讀取）；高風險操作仍須相應再認證。 |
 | 只讀／一般後台角色 | `item.view` | 列表、詳情、附件下載及 audit；所有寫入 API 403。 |
 | 採購／庫存角色 | 按需要另授 `item.view` | 可進管理端只讀查閱；交易內查找仍依各模組自己的權限。 |
 | 銷售／POS 角色 | 通常不授 Item permission | 只在自己的已授權流程，由後端呼叫 `ItemLookupService` 取得用途相符的 SKU。 |
@@ -737,7 +737,7 @@ Primary key `(job_id,row_number)`，另有 `(job_id,status)`。
 
 ### 6.4 Catalog APIs
 
-Catalog GET 要求 jwt＋`item.view`；create／update／activate／deactivate 要求 jwt＋`item.mgmt`；archive／restore／delete 要求 jwt-password＋`item.mgmt`。列表不分頁的唯一例外是 UOM 小目錄；Category 回整棵樹。Brand／Attribute 仍分頁。
+Catalog GET 要求 jwt＋`item.view` 或 `item.mgmt`；create／update／activate／deactivate 要求 jwt＋`item.mgmt`；archive／restore／delete 要求 jwt-password＋`item.mgmt`。列表不分頁的唯一例外是 UOM 小目錄；Category 回整棵樹。Brand／Attribute 仍分頁。
 
 | Resource | APIs |
 | --- | --- |
@@ -761,7 +761,7 @@ Category move 的 update body 帶 `parentId` 及 version；service 在同一交�
 | --- | --- | --- |
 | `POST /api/v1/items/:id/media/upload` | jwt＋item.mgmt | multipart，一次一檔；body fields kind、isPrimary、sortOrder、version。 |
 | `POST /api/v1/skus/:id/media/upload` | jwt＋item.mgmt | SKU 專屬 media；驗證 SKU 屬 Item。 |
-| `GET /api/v1/item-media/:id/download` | jwt＋item.view | 以 `this.file()` attachment／受控 inline image 回傳；不得接受使用者 path。 |
+| `GET /api/v1/item-media/:id/download` | jwt＋item.view 或 item.mgmt | 以 `this.file()` attachment／受控 inline image 回傳；不得接受使用者 path。 |
 | `POST /api/v1/item-media/:id/update` | jwt＋item.mgmt | 改 primary／sort／display name。 |
 | `POST /api/v1/item-media/:id/delete` | jwt-password＋item.mgmt | DB delete＋audit 後刪檔。 |
 
@@ -771,7 +771,7 @@ Multipart middleware 提供的非檔案欄位一律先視為字串；Handler sch
 
 ### 6.7 Audit API
 
-`GET /api/v1/item-audit/logs`，jwt＋`item.view`。Query：page、pageSize、from、to、actor、target、action、targetType；固定 `occurred_at DESC, id DESC`，不接受任意 sort。回 item audit，不混入 user audit。
+`GET /api/v1/item-audit/logs`，jwt＋`item.view` 或 `item.mgmt`。Query：page、pageSize、from、to、actor、target、action、targetType；固定 `occurred_at DESC, id DESC`，不接受任意 sort。回 item audit，不混入 user audit。
 
 ### 6.8 Import／Export APIs（Phase 3）
 
@@ -930,17 +930,17 @@ MySQL `ER_DUP_ENTRY` 必須依 constraint 名轉成對應公開 code；不得把
 
 | Page／Route | Menu | Permission | 主要功能 |
 | --- | --- | --- | --- |
-| `ItemsPage.vue` `/items` | 商品與 SKU | item.view | Item／SKU view toggle、搜尋、篩選、分頁；item.mgmt 才顯示操作。 |
+| `ItemsPage.vue` `/items` | 商品與 SKU | item.view 或 item.mgmt | Item／SKU view toggle、搜尋、篩選、分頁；item.mgmt 顯示操作。 |
 | `ItemCreatePage.vue` `/items/new` | 無，從列表進入 | item.mgmt | 分步建立 Item＋初始 SKU，可直接啟用。 |
-| `ItemDetailPage.vue` `/items/:id` | 無 | item.view | 基本資料、SKU、attributes、media、歷史 tabs；編輯需 item.mgmt。 |
+| `ItemDetailPage.vue` `/items/:id` | 無 | item.view 或 item.mgmt | 基本資料、SKU、attributes、media、歷史 tabs；編輯需 item.mgmt。 |
 | `SkuCreatePage.vue` `/items/:itemId/skus/new` | 無 | item.mgmt | 在既有 Item 新增 SKU。 |
-| `SkuDetailPage.vue` `/items/:itemId/skus/:skuId` | 無 | item.view | SKU 資料、variant、UOM、barcode、追蹤政策、價格及 media；編輯需 item.mgmt。 |
+| `SkuDetailPage.vue` `/items/:itemId/skus/:skuId` | 無 | item.view 或 item.mgmt | SKU 資料、variant、UOM、barcode、追蹤政策、價格及 media；編輯需 item.mgmt。 |
 | `CategoriesPage.vue` `/items/categories` | 分類 | item.mgmt | Tree 維護、移動、停用、封存。 |
 | `BrandsPage.vue` `/items/brands` | 品牌 | item.mgmt | 分頁 CRUD。 |
 | `UomsPage.vue` `/items/uoms` | 單位 | item.mgmt | UOM catalog 及使用中保護；本期不設小數精度。 |
 | `AttributesPage.vue` `/items/attributes` | 商品屬性 | item.mgmt | Definition、option、variant flag、category rules。 |
 | `ItemImportsPage.vue` `/items/imports` | 匯入／匯出 | item.mgmt | Template、上傳、預檢、確認、進度、錯誤下載。 |
-| `ItemAuditPage.vue` `/items/audit` | 變更紀錄 | item.view | Audit filter、detail diff。 |
+| `ItemAuditPage.vue` `/items/audit` | 變更紀錄 | item.view 或 item.mgmt | Audit filter、detail diff。 |
 
 Create／detail 頁沒有 menu metadata，但有 page metadata 供 router guard 保護。所有 menu order 在 `items` group 內唯一。
 
@@ -1351,7 +1351,7 @@ Item 列表搜尋 SKU Code／name／barcode 時使用相關 `EXISTS`，避免 JO
 5. stale version update 回 409 且 DB／audit 無變更。
 6. Item deactivate 使 children Inactive；restore 後 children 不自動 Active。
 7. SKU Code 特批 endpoint 驗證 device signature＋password＋audit。
-8. 只有 `item.view` 可讀 list／detail／media／audit，但所有 write 403；只有 `item.mgmt` 而沒有 view 時不能誤讀 GET。
+8. `item.view` 可讀 list／detail／media／audit、所有 write 403；`item.mgmt` 可讀寫所有 Item Management API，無任一 Item 權限時全部拒絕。
 9. 無相應 permission token 對每類 API 都 403。
 10. 無條碼 SKU 可啟用；小數 Base quantity／UOM factor 被拒；RRP response 固定 HKD／`tax_not_applicable`。
 11. Phase 3 duplicate warning 不阻擋建立；100 筆 bulk status 成功及中間一筆失敗全 rollback。
@@ -1407,7 +1407,7 @@ Vue component tests 另驗 route leave dirty prompt、鍵盤操作、狀態不�
 ### 11.4 Security tests
 
 - 每支寫入 API：未登入 401、無 permission 403、stale permission 403。
-- 每支只讀 API：只有 `item.view` 可存取；只有 `item.mgmt` 且未獲 `item.view` 仍拒絕，證明沒有隱含 permission hierarchy。
+- 每支只讀 API：`item.view` 或 `item.mgmt` 均可存取；管理讀取是 Item 模組明確 policy，不延伸為其他模組的 permission hierarchy。
 - 前端按鈕隱藏後直接呼叫 API 仍被拒。
 - SKU Code／names／description／CSV 內的 HTML／script 只當文字，不執行。
 - SQL LIKE wildcard 已 escape，所有值使用 parameterized query；sort column 只走 whitelist。

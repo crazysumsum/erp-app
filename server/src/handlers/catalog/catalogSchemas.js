@@ -12,7 +12,7 @@ export const EMPTY_OBJECT_SCHEMA = Object.freeze({
 export const ITEM_VIEW_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
-    options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+    options: Object.freeze({ permissions: Object.freeze(["item.view", "item.mgmt"]), match: "any" })
   })
 ]);
 

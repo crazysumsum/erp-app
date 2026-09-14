@@ -449,7 +449,7 @@ T01 migration freeze
 **Acceptance criteria:**
 
 - [x] Tree 最大 8 層；拒絕 self／descendant cycle、inactive parent 及有 child／Item 的刪除。
-- [x] GET 使用 `item.view`，寫入使用 `item.mgmt`，archive／restore／delete 使用 `jwt-password`。
+- [x] GET 接受 `item.view` 或 `item.mgmt`，寫入使用 `item.mgmt`，archive／restore／delete 使用 `jwt-password`。
 - [x] 頁面可用 parent selector 移動，顯示 version conflict 及不可刪原因，後端仍獨立重驗。
 
 **Verification:**
@@ -621,7 +621,7 @@ T01 migration freeze
 
 - [x] 寫入可接收 caller transaction connection，不能在業務 transaction 外另開 query（`record()` 早已於 T04 完成，本任務新增的 `list()` 讀路徑另外重讀操作者現況，見下一項）。
 - [x] Audit detail 不保存 password、token、device key、整份 CSV、檔案內容或未受限 body（同上，`record()` 呼叫端規則不變；本任務未新增任何 detail 寫入呼叫點）。
-- [x] `GET /api/v1/item-audit/logs` 只允許 `item.view`，固定排序（`occurred_at DESC, id DESC`）並支援規定 filters（page、pageSize、from、to、actor、target、action、targetType）。
+- [x] `GET /api/v1/item-audit/logs` 接受 `item.view` 或 `item.mgmt`，固定排序（`occurred_at DESC, id DESC`）並支援規定 filters（page、pageSize、from、to、actor、target、action、targetType）。
 
 **Verification:**
 
@@ -647,7 +647,7 @@ T01 migration freeze
 
 - [x] SKU exact Code／Barcode 優先，LIKE wildcard 被 escape，Item 查詢用 `EXISTS` 避免重複及錯誤 total。
 - [x] 回應只包含設計欄位，RRP 固定組成 HKD／`tax_not_applicable`，不直接 spread DB row（attribute values／media 兩個陣列固定回空——依賴的表要等 T23／T25 先建立，見 service 開頭註解）。
-- [x] 所有 GET 只接受 `item.view`；只有 `item.mgmt` 而沒有 view 仍回 403。
+- [x] 所有 Item Management GET 接受 `item.view` 或 `item.mgmt`；無兩者者仍回 403。
 
 **Verification:**
 
@@ -1258,12 +1258,12 @@ T01 migration freeze
 
 **⚠️ 範圍決定：上傳進度用「不確定進度」（indeterminate）唔係真正嘅百分比。** `fetch()`（`HttpClient` 用嘅底層 API）唔提供上傳位元組級別嘅進度事件，要攞到真正百分比需要換成 `XMLHttpRequest`，屬於對 `HttpClient` 更大嘅改動（成個 class 依賴嘅 abort／timeout／簽章邏輯都要重寫一次），唔喺呢個 task 嘅範圍。用忙碌指示（progress bar）＋取消按鈕滿足「使用者睇得到上傳緊、隨時可以中止」呢個核心需求。
 
-**⚠️ 範圍決定：面板本身唔做「無 view 權限就隱藏」嘅判斷。** `ItemDetailPage.vue`／`SkuDetailPage.vue` 兩個宿主頁面本身喺 route 層已經要求 `item.view`（`page.requires.permissions`），冇呢個權限連個 detail page 都進唔到，`ItemMediaPanel.vue` 根本冇機會喺冇 view 權限嘅情況下被 render——所以面板內部淨係用 `canManage` 一個 prop 決定顯示唔顯示上傳／primary／排序／刪除呢幾個管理動作，冇對「view」再做多一層判斷，避免一個永遠唔會被觸發嘅分支。
+**⚠️ 範圍決定：面板本身唔做「無 read 權限就隱藏」嘅判斷。** `ItemDetailPage.vue`／`SkuDetailPage.vue` 宿主頁面 route 層要求 `item.view` 或 `item.mgmt`，冇兩者連 detail page 都進唔到；`ItemMediaPanel.vue` 只用 `canManage` 決定顯示上傳／primary／排序／刪除，避免重複授權邏輯。
 
 **Acceptance criteria:**
 
 - [x] FormData 不手動設定 multipart boundary；boolean／integer／version 以後端明確可解析格式提交（`itemMedia.js` 嘅 `mediaFormData()` 將 `isPrimary` 序列化做完全等於 `"true"`／`"false"` 嘅字串，`sortOrder`／`version` 轉做十進位數字字串，對應 T25 嘅 multipart body schema）。
-- [x] 圖片安全 inline preview，PDF 只下載；無 view／mgmt 權限時分別隱藏或拒絕（圖片經 `HttpClient.getBlob()` 攞 blob 再用 `URL.createObjectURL()` 顯示；PDF 一律觸發瀏覽器下載，唔會 inline；`canManage=false` 時上傳／primary／排序／刪除全部唔顯示，但下載／預覽仍然可用——同後端 `item.view` 已經可以下載嘅權限矩陣一致）。
+- [x] 圖片安全 inline preview，PDF 只下載；`item.view` 或 `item.mgmt` 均可下載／預覽，無兩者則拒絕；`canManage=false` 時上傳／primary／排序／刪除全部唔顯示。
 - [x] Upload abort、超限、錯 signature、DB failure、delete unlink failure 均有可理解 UI／log 結果（`AbortController` 支援取消；`errorMessages.js` 新增成套 `UPLOAD_*` code 嘅中文翻譯——呢啲 code 一直未跟「英文 publicMessage 要喺呢個表覆蓋」嘅慣例，因為之前完全冇功能用到上傳；`MEDIA_KIND_MISMATCH`／`MEDIA_FILE_TOO_LARGE` 等 T25 自己嘅 code 本身已經係中文 publicMessage，唔使再覆蓋；delete unlink 失敗屬於後端 `item.media_delete_failed` 結構化 log 嘅範圍，前端睇到嘅始終係 200 成功——呢個係已知、刻意嘅設計，見 T25 段落）。
 
 **Verification:**

@@ -3,7 +3,7 @@ export const page = {
   name: "skuDetail",
   path: "/items/:itemId/skus/:skuId",
   title: "SKU 詳情",
-  requires: { permissions: ["item.view"] }
+  requires: { permissions: ["item.view", "item.mgmt"], match: "any" }
 };
 </script>
 

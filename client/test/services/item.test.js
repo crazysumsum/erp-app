@@ -127,6 +127,15 @@ describe("item service", () => {
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/skus/5");
   });
 
+  it("createSku() 打新增 SKU route，並開啟 idempotency", async () => {
+    httpClient.post.mockResolvedValue({ id: 5, skuCode: "BLUE" });
+    const payload = { itemId: 1, skuCode: "BLUE", skuName: "藍色", variantValues: [{ attributeId: 7, optionId: 71 }] };
+
+    await itemService.createSku(payload);
+
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/skus/create", { idempotent: true, body: payload });
+  });
+
   it("checkDuplicates() 打 POST /items/duplicates/check，唔帶 idempotent（純警告冇副作用）", async () => {
     httpClient.post.mockResolvedValue({ candidates: [] });
 

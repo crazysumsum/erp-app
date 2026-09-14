@@ -35,6 +35,7 @@ import {
   lastActiveSku,
   lastSkuInItem,
   skuChildMismatch,
+  skuCodeInvalid,
   skuCodeTaken,
   skuDeleteRequiresDraft,
   skuNotFound,
@@ -71,6 +72,21 @@ function escapeLikeTerm(value) {
  * 本來就該對錯字寬容，不是在重新驗證條碼合不合法。 */
 function stripBarcodeSeparators(value) {
   return value.replace(/[ -]/g, "");
+}
+
+function containsAsciiControlCharacter(value) {
+  return [...value].some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint <= 0x1f || codePoint === 0x7f;
+  });
+}
+
+function normalizeAndValidateSkuCode(value) {
+  const skuCode = String(value ?? "").trim();
+  if (!skuCode || containsAsciiControlCharacter(skuCode) || [...skuCode].length > 190) {
+    throw skuCodeInvalid("blank, contains control characters, or exceeds 190 characters");
+  }
+  return skuCode;
 }
 
 const ITEM_SORT_COLUMNS = Object.freeze({
@@ -291,6 +307,60 @@ export class ItemAdminService {
     });
 
     return this.getItem({ actorId, claimedRoles, claimedPermissions, id: itemId });
+  }
+
+  // --- SKU：為既有 Variant Item 新增 --------------------------------------
+
+  /**
+   * 為既有 Variant Item 建立一個新的 Draft SKU。SKU 的完整組合、UOM、條碼與
+   * audit 同一交易完成；`item_skus` 的 unique key 仍是競態下的最後防線。
+   */
+  async createSku({ actorId, claimedRoles, claimedPermissions, itemId, requestId, ip, ...sku }) {
+    const skuId = await this.database.withTransaction(async (connection) => {
+      const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
+      const [[item]] = await connection.query(
+        "SELECT id, product_type, default_tracking_policy FROM items WHERE id = ?",
+        [itemId]
+      );
+      if (!item) {
+        throw itemNotFound(itemId);
+      }
+      if (item.product_type === "standard") {
+        throw standardItemSkuLimit();
+      }
+
+      const resolvedVariant = await this.#resolveVariantSignature(connection, {
+        productType: item.product_type,
+        variantValues: sku.variantValues ?? []
+      });
+      const nowMs = this.time.nowMs();
+      const created = await this.#createSkuRow(connection, {
+        itemId,
+        sku,
+        defaultTrackingPolicy: item.default_tracking_policy,
+        nowMs,
+        actorId,
+        variantSignature: resolvedVariant.signature,
+        variantValues: resolvedVariant.variantValues
+      });
+
+      await this.auditLog.record(connection, {
+        actorUserId: actorId,
+        actorUsername: actor.username,
+        action: "sku.create",
+        targetType: "sku",
+        targetId: created.id,
+        targetLabel: created.code,
+        detail: { itemId, activated: false },
+        reason: "",
+        requestId,
+        ip
+      });
+
+      return created.id;
+    });
+
+    return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
   }
 
   // --- Item：更新 -----------------------------------------------------------
@@ -1415,7 +1485,7 @@ export class ItemAdminService {
         throw skuNotFound(id);
       }
 
-      const newCode = String(skuCode).trim();
+      const newCode = normalizeAndValidateSkuCode(skuCode);
       let result;
       try {
         [result] = await connection.execute(
@@ -1871,7 +1941,7 @@ export class ItemAdminService {
     connection,
     { itemId, sku, defaultTrackingPolicy, nowMs, actorId, variantSignature = null, variantValues = [] }
   ) {
-    const skuCode = String(sku.skuCode ?? "").trim();
+    const skuCode = normalizeAndValidateSkuCode(sku.skuCode);
     const skuName = String(sku.skuName ?? "").trim();
     const trackingPolicy = sku.trackingPolicy ?? defaultTrackingPolicy;
     const purchasable = sku.purchasable ?? true;

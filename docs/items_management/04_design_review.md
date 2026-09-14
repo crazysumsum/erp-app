@@ -93,3 +93,12 @@ The earlier “Independent” title is historical wording without sufficient pro
 - executed evidence: owner-authorized local MySQL run on 2026-09-14 using `DB_INTEGRATION_TESTS=1`, the existing local server environment, and the focused `itemRead.integration.test.js` projection case; result `PASS`.
 - coverage confirmed: multiple Item and SKU values return in category `sort_order → attributeId` order; an intentionally cross-owner Item option row is excluded by the query and does not disclose the other attribute's option.
 - disposition: TC-013's former MySQL evidence blocker is closed. This is developer/integration evidence only; merge, CI, and business acceptance remain separate gates.
+
+## REV-005 — Separate TASK-038 implementation review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- scope: uncommitted `TASK-038` implementation, including DEC-025 read authorization and SKU Code validation paths; read-only source/spec/test review
+- findings: no open P0/P1. `item.mgmt` can read and write Item, SKU, Catalog, Media and Audit APIs while `item.view` remains read-only. SKU Code create, copy and special change all use the same domain validation and return `SKU_CODE_INVALID` for blank, control-character and over-190-character values.
+- evidence reviewed: owner-authorized local MySQL Item create/high-risk suite reported 49 passing tests; this reviewer did not execute tests.
+- disposition: implementation review is clear for a merge candidate after the remaining Harness state reconciliation, CI and merge gates; it is not formal acceptance or release approval.

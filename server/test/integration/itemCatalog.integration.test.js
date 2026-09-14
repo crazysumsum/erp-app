@@ -437,7 +437,7 @@ test("UOM 建立（code 建立後不可修改）、stale version 409、更新、
   );
 });
 
-test("只有 item.view 可讀 Catalog GET；只有 item.mgmt 而沒有 item.view 一律 403（沒有 permission inheritance）", { skip }, async (t) => {
+test("item.view 可唯讀 Catalog；item.mgmt 可讀寫所有 Catalog API", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -475,6 +475,9 @@ test("只有 item.view 可讀 Catalog GET；只有 item.mgmt 而沒有 item.view
   for (const path of ["/api/v1/catalog/categories", "/api/v1/catalog/brands", "/api/v1/catalog/uoms"]) {
     const response = await fetch(`${url}${path}`, get(viewToken));
     assert.equal(response.status, 200, `item.view 應該讀得到 ${path}`);
+
+    const managerResponse = await fetch(`${url}${path}`, get(mgmtToken));
+    assert.equal(managerResponse.status, 200, `item.mgmt 應該讀得到 ${path}`);
   }
 
   const viewCreate = await fetch(
@@ -482,9 +485,6 @@ test("只有 item.view 可讀 Catalog GET；只有 item.mgmt 而沒有 item.view
     authed(viewToken, { name: `it-blocked-${randomUUID().slice(0, 8)}`, parentId: null, sortOrder: 0 })
   );
   assert.equal(viewCreate.status, 403, "item.view 不可以寫入");
-
-  const mgmtRead = await fetch(`${url}/api/v1/catalog/categories`, get(mgmtToken));
-  assert.equal(mgmtRead.status, 403, "只有 item.mgmt 而沒有 item.view 不可以讀 GET");
 
   const mgmtCreate = await fetch(
     `${url}/api/v1/catalog/categories/create`,

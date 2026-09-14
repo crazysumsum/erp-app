@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 9,
+  "revision": 10,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
-  "current_task": "TASK-037",
+  "current_task": "TASK-038",
   "baseline": {
-    "design": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
-    "plan": "4cf9e1b4d6d29c42ef69a351865d867e86b1317f48462459d2e29540b30c1ffc",
-    "code_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
-    "source_fingerprint": "272ef7548b97efe132985fc3c16466f5da574cf2ed112a3395d8ca95d615bfe2",
-    "worktree": "/private/tmp/erp-item-management-task-037",
-    "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
+    "design": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
+    "plan": "bca0252148ccbf97de76efbf825fbf2c8e6ea658c9925a8642bec4fc4e00a616",
+    "code_commit": "03f70112448b38ec5fe4f6782e87c3e69ace71cc",
+    "source_fingerprint": "5cb2dad480e2d6dc86df8e5ce9301e0dd817879bdb54d1694c0511e9926c1e51",
+    "worktree": "/private/tmp/erp-item-management-task-038",
+    "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
   },
   "runtime": {
-    "instance_id": "ITEM-TASK037-LOCAL",
+    "instance_id": "ITEM-TASK038-LOCAL",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-item-management-task-037"
+      "workspace": "erp-item-management-task-038"
     },
     "lease_ref": null
   },
@@ -63,7 +63,7 @@
     "TASK-035": "DONE",
     "TASK-036": "DONE",
     "TASK-037": "IN_PROGRESS",
-    "TASK-038": "PENDING",
+    "TASK-038": "IN_PROGRESS",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
     "TASK-041": "PENDING",
@@ -105,6 +105,41 @@
         "TASK-037"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner specified DEC-025, item.mgmt may fully read/write all Item Management APIs, on 2026-09-14",
+      "recorded_at": "2026-09-14T07:03:00Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-038",
+        "DEC-025"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed continuing the remaining Item Management work on 2026-09-14",
+      "recorded_at": "2026-09-14T07:03:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "bca0252148ccbf97de76efbf825fbf2c8e6ea658c9925a8642bec4fc4e00a616",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-038"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -127,6 +162,18 @@
       "reviewer": "/root/item_design_review",
       "reviewed_baseline": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
       "source_ref": "docs/items_management/04_design_review.md#rev-002--separate-task-037-implementation-readiness-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
+      "source_ref": "docs/items_management/04_design_review.md#rev-005--separate-task-038-implementation-review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -278,5 +325,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Transition to IMPLEMENTING and complete TASK-037 with test-first server/client detail projections; do not execute formal acceptance or release actions."
+  "next_safe_action": "Commit the reviewed TASK-038 implementation, then select the next non-deferred PHASE-006 task with no unresolved human decision."
 }

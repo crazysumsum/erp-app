@@ -3,7 +3,7 @@ export const page = {
   name: "itemDetail",
   path: "/items/:id",
   title: "商品詳情",
-  requires: { permissions: ["item.view"] }
+  requires: { permissions: ["item.view", "item.mgmt"], match: "any" }
 };
 </script>
 
@@ -179,6 +179,10 @@ function reloadLatest() {
 
 function goToSku(skuId) {
   router.push(`/items/${itemId.value}/skus/${skuId}`);
+}
+
+function createSku() {
+  router.push(`/items/${itemId.value}/skus/new`);
 }
 
 // --- 生命週期（T18 後端；design_spec §4.2、§6.2、§7.7） ---------------------
@@ -471,6 +475,7 @@ async function submitCopy() {
             <q-btn v-if="showArchive" flat color="warning" label="封存" @click="archiveItemFlow" />
             <q-btn v-if="showRestore" flat color="primary" label="從封存恢復" @click="restoreItemFlow" />
             <q-btn flat color="primary" label="複製" @click="openCopyDialog" />
+            <q-btn v-if="item.productType === 'variant'" flat color="primary" label="新增 SKU" @click="createSku" />
             <q-btn v-if="showDelete" flat color="negative" label="刪除" @click="deleteItemFlow" />
             <q-btn flat color="primary" label="編輯" @click="startEdit" />
           </template>

@@ -9,12 +9,11 @@ export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   additionalProperties: false
 });
 
-/** 只要 item.view，不像 user 那邊的 audit 有兩個權限任一都通——Item 稽核目前
- * 只有一種「看」的權限，沒有第二個管理權限可以替代它。 */
+/** Item 稽核可由純讀取或管理權限查閱；管理者不必額外取得 item.view。 */
 export const ITEM_AUDIT_LOG_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
-    options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+    options: Object.freeze({ permissions: Object.freeze(["item.view", "item.mgmt"]), match: "any" })
   })
 ]);
 

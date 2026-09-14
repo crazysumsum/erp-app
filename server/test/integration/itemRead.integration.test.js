@@ -693,7 +693,7 @@ test("GET /skus/:id：唔存在嘅 id 回 404 SKU_NOT_FOUND", { skip }, async (t
 
 // --- 權限矩陣（Item／SKU 讀 API 共用同一組規則） ---------------------------
 
-test("未登入、只有 item.mgmt 冇 item.view、stale permission：Item／SKU 讀 API 一律符合 401／403 規則", { skip }, async (t) => {
+test("未登入、只有 item.mgmt、stale permission：Item／SKU 讀 API 一律符合 401／200／403 規則", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -721,8 +721,8 @@ test("未登入、只有 item.mgmt 冇 item.view、stale permission：Item／SKU
 
   const { url } = await application.start();
   const mgmtToken = await issueToken(mgmtActor.userId, { roles: [mgmtRole.roleName], permissions: ["item.mgmt"] });
-  // Claims 宣稱多過資料庫現況（多咗 item.mgmt），滿足 authorizationPolicies
-  // 嘅靜態檢查（要有 item.view）之後，先喺 service 入面撞 PERMISSION_STALE。
+  // Claims 宣稱多過資料庫現況（多咗 item.mgmt），滿足 read policy（view 或
+  // mgmt）後，先喺 service 入面撞 PERMISSION_STALE。
   const staleToken = await issueToken(staleActor.userId, {
     roles: [viewRole.roleName],
     permissions: ["item.view", "item.mgmt"]
@@ -733,7 +733,7 @@ test("未登入、只有 item.mgmt 冇 item.view、stale permission：Item／SKU
     assert.equal(anonymous.status, 401, path);
 
     const mgmtOnly = await get(`${url}${path}`, mgmtToken);
-    assert.equal(mgmtOnly.status, 403, path);
+    assert.equal(mgmtOnly.status, 200, path);
 
     const stale = await get(`${url}${path}`, staleToken);
     assert.equal(stale.status, 403, path);

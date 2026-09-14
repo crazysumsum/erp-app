@@ -164,7 +164,7 @@ test("持有 item.view 可以讀 item audit，手動種的一列會出現在結�
   assert.deepEqual(entry.detail, { note: "seeded" });
 });
 
-test("只有 item.mgmt 而沒有 item.view 一律 403（跟 Catalog 讀 API 同一條規則，沒有 permission inheritance）", { skip }, async (t) => {
+test("只有 item.mgmt 亦可以讀取 Item audit", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -190,7 +190,7 @@ test("只有 item.mgmt 而沒有 item.view 一律 403（跟 Catalog 讀 API 同�
   });
 
   const { status } = await listItemAuditLogs(url, token);
-  assert.equal(status, 403);
+  assert.equal(status, 200);
 });
 
 test("token 宣稱的權限與資料庫現況不符時回 403 PERMISSION_STALE", { skip }, async (t) => {
