@@ -69,3 +69,11 @@ The checkpoint records `APPROVAL-RISK-002` and marks HD-002 answered. It does no
 On 2026-09-14, Sam directly approved all Product Owner design approvals for exact DESIGN baseline `484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd`. The checkpoint records `APPROVAL-DESIGN-001` and does not claim PLAN approval, independent review or Security/Backend technical assurance.
 
 After this checkpoint, `PLAN_READY` remains blocked only by HD-003, missing current PLAN approval and missing independent review.
+
+## Final human approval and planning gate (state revision 12)
+
+On 2026-09-14, Sam explicitly approved the exact PLAN baseline `a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1`, the independent HUMAN design review and HD-003 Security/Backend technical assurance. State history preserves REV-001 `SELF_REVIEW` and adds REV-002 `HUMAN`; it does not rewrite reviewer provenance.
+
+The state machine first recovered `BLOCKED -> DESIGNING` at revision 11. With all decisions answered, current DESIGN/PLAN approvals and REV-002 recorded, `verify_gate.py ... --gate PLAN_READY --json` returned `LOCAL_CHECKS_PASS` with zero issues. Revision 12 then transitioned to `PLANNED`.
+
+This completes the planning governance gate for the exact recorded baselines. It is not implementation, test, CI, UAT, release or deployment evidence; entering `IMPLEMENT` remains a separate explicit mode authorization.

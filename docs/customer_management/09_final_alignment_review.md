@@ -22,12 +22,12 @@ No product source, migration, executable test or runtime data was changed. No bu
 
 ## Review provenance and decisions
 
-Current review method is `SELF_REVIEW`, not an independent review. The previous “Independent” title had no separate reviewer provenance and has been corrected. The local review has zero open CRITICAL findings and one open HIGH finding:
+Current review method is `HUMAN`: ERP Product Owner (Sam) explicitly approved the independent review for the exact DESIGN/PLAN baselines on 2026-09-14. The preceding `SELF_REVIEW` remains in state history as REV-001. The current human review has zero open CRITICAL or HIGH findings:
 
-- `HD-001` / DR-004: Sam accepted the delegation risk as Product Owner on 2026-09-14. This answers the business-risk decision but is not Security/Backend technical approval; HD-003 keeps TASK-020 / PHASE-003 blocked pending that assurance.
+- `HD-001` / DR-004: Sam accepted the delegation risk as Product Owner and subsequently gave explicit HD-003 Security/Backend technical assurance. DES-015 controls remain mandatory.
 - `HD-002`: Sam approved the conservative Product Owner disposition on 2026-09-14: no automatic destructive purge or crypto-shredding in this release. Future purge remains blocked until Legal/Compliance confirms legal hold and the final retention policy.
 
-These blockers do not prevent canonical documentation alignment; they do prevent unrestricted implementation/release approval.
+These decisions complete the planning governance gate; they do not waive implementation Phase gates, tests, CI, business acceptance or release approval.
 
 ## Traceability and execution status
 
@@ -39,9 +39,9 @@ These blockers do not prevent canonical documentation alignment; they do prevent
 ## Readiness decision
 
 - Single consistent documentation source of truth: `YES`, subject to final structural validator result.
-- Ready for implementation authorization: `NO`; Product Owner DESIGN approval is recorded, but real independent review and current PLAN approval are absent.
-- Ready for TASK-020 / PHASE-003 sensitive delegation: `NO`; HD-001 has Product Owner risk acceptance, but HD-003 Security/Backend technical assurance remains open.
+- Ready for implementation authorization: `YES` for the exact recorded DESIGN/PLAN baselines, after local `PLAN_READY` validation and integration of this decision branch.
+- Ready for TASK-020 / PHASE-003 sensitive delegation: `CONDITIONAL`; HD-003 is approved, while DES-015 controls and Phase-entry dependency readiness remain mandatory.
 - Ready for destructive retention automation: `NO`; HD-002 is answered by explicitly excluding it from this release, and future purge requires written Legal/Compliance policy.
 - Ready for formal Technical Acceptance/UAT/release: `NO`; Customer implementation and execution evidence do not exist.
 
-Next safe action: obtain a real independent review and current PLAN approval before entering IMPLEMENT; answer HD-003 with named Security/Backend technical assurance before TASK-020 / PHASE-003. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate.
+Next safe action: validate and integrate this decision branch, then enter `IMPLEMENT` only through an explicit mode authorization and start with the dependency-safe first Phase. Keep destructive purge out of scope unless a later written Legal/Compliance policy reopens the design gate.
