@@ -1,0 +1,245 @@
+{
+  "schema_version": "2.0",
+  "module_id": "fulfillment-shipping-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/fulfillment_shipping_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/config/fulfillment.js",
+      "server/src/modules/fulfillment/**",
+      "server/src/handlers/fulfillments/**",
+      "server/src/handlers/shipments/**",
+      "server/src/handlers/fulfillment-lookups/**",
+      "server/src/handlers/fulfillment-operations/**",
+      "server/src/handlers/fulfillment-exports/**",
+      "server/src/handlers/archived-fulfillments/**",
+      "server/src/handlers/archived-shipments/**",
+      "server/src/services/scheduler/jobs/Shipment*.js",
+      "server/src/services/scheduler/jobs/Fulfillment*.js",
+      "client/src/services/fulfillment.js",
+      "client/src/services/shipment.js",
+      "client/src/pages/fulfillment/**",
+      "client/src/components/fulfillment/**"
+    ],
+    "test_paths": [
+      "server/test/fulfillment/**",
+      "server/test/shipment/**",
+      "server/test/integration/fulfillment*.integration.test.js",
+      "server/test/integration/shipment*.integration.test.js",
+      "server/test-support/fakeFulfillmentDatabase.js",
+      "client/test/**/fulfillment*.test.js",
+      "client/test/**/shipment*.test.js",
+      "client/e2e/fulfillment-shipping-management/**"
+    ],
+    "allowed_write_paths": [
+      "docs/fulfillment_shipping_management/**",
+      "server/config/fulfillment.js",
+      "server/src/modules/fulfillment/**",
+      "server/src/handlers/fulfillments/**",
+      "server/src/handlers/shipments/**",
+      "server/src/handlers/fulfillment-lookups/**",
+      "server/src/handlers/fulfillment-operations/**",
+      "server/src/handlers/fulfillment-exports/**",
+      "server/src/handlers/archived-fulfillments/**",
+      "server/src/handlers/archived-shipments/**",
+      "server/src/services/scheduler/jobs/Shipment*.js",
+      "server/src/services/scheduler/jobs/Fulfillment*.js",
+      "client/src/services/fulfillment.js",
+      "client/src/services/shipment.js",
+      "client/src/pages/fulfillment/**",
+      "client/src/components/fulfillment/**",
+      "server/test/fulfillment/**",
+      "server/test/shipment/**",
+      "server/test/integration/fulfillment*.integration.test.js",
+      "server/test/integration/shipment*.integration.test.js",
+      "server/test-support/fakeFulfillmentDatabase.js",
+      "client/test/**/fulfillment*.test.js",
+      "client/test/**/shipment*.test.js",
+      "client/e2e/fulfillment-shipping-management/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/services/scheduler/**",
+      "server/src/modules/item/ItemLookupService.js",
+      "server/src/modules/sales/**",
+      "server/src/modules/inventory/**",
+      "server/src/modules/customer/**",
+      "client/config/menu.js",
+      "client/src/framework/http/errorMessages.js",
+      "package.json",
+      "server/package.json",
+      "client/package.json",
+      "package-lock.json",
+      ".github/workflows/**",
+      "docs/sales_order_management/**",
+      "docs/inventory_management/**",
+      "docs/customer_management/**",
+      "docs/items_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "secrets/**",
+      "docs/user_management/**",
+      "docs/purchasing_receiving_management/**",
+      "docs/supplier_management/**",
+      "docs/business_master/**"
+    ],
+    "schema_paths": [],
+    "shared_resources": [
+      "global-migration-sequence",
+      "authorization-permission-catalogue",
+      "framework-idempotency-identity-scope",
+      "scheduler-job-registry",
+      "client-menu-registry",
+      "sales-archive-job-coordination",
+      "inventory-reservation-and-posting-contracts",
+      "local-mysql-instance",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "fulfillment-shipment-and-reversal-contract",
+        "version": "approved-planning-v1-SPECIFIED_NOT_IMPLEMENTED",
+        "source": "docs/fulfillment_shipping_management/03_design_spec.md",
+        "sha256": "7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec",
+        "consumers": [
+          "sales-order-management",
+          "inventory-management",
+          "invoicing-accounts-receivable-management"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "sales-order-management",
+        "id": "sales-fulfillment-projection-and-lifecycle-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/sales_order_management/03_system_design_spec.md",
+        "sha256": "668b8b2ae6d0ecf8beabb52b7d97672a929b364e7de4b689e15ac400ff73b061",
+        "regression_suites": [
+          "fulfillment-technical"
+        ]
+      },
+      {
+        "module_id": "inventory-management",
+        "id": "inventory-allocation-issue-and-dedicated-reversal-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/inventory_management/03_design_spec.md",
+        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "regression_suites": [
+          "fulfillment-technical"
+        ]
+      },
+      {
+        "module_id": "customer-management",
+        "id": "customer-shipping-address-and-contact-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/customer_management/03_design_spec.md",
+        "sha256": "f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776",
+        "regression_suites": [
+          "fulfillment-technical"
+        ]
+      },
+      {
+        "module_id": "item-management",
+        "id": "item-lookup-service",
+        "version": "observed-origin-main-b6f0321-PARTIAL",
+        "source": "server/src/modules/item/ItemLookupService.js",
+        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "regression_suites": [
+          "fulfillment-technical"
+        ]
+      },
+      {
+        "module_id": "authorization",
+        "id": "permission-catalogue",
+        "version": "observed-origin-main-b6f0321",
+        "source": "server/src/modules/authorization/permissionCatalogue.js",
+        "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
+        "regression_suites": [
+          "fulfillment-technical"
+        ]
+      },
+      {
+        "module_id": "framework",
+        "id": "idempotency-service",
+        "version": "observed-origin-main-b6f0321",
+        "source": "server/src/services/idempotency/IdempotencyService.js",
+        "sha256": "6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925",
+        "regression_suites": [
+          "fulfillment-technical"
+        ]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Fulfillment document sequences",
+        "Fulfillment header and lines",
+        "Fulfillment line reservation claims",
+        "Fulfillment allocation projections",
+        "Fulfillment status history",
+        "Shipment header and lines",
+        "Shipment issue details",
+        "Shipment status history",
+        "Shipment reversal header and details",
+        "Fulfillment operation requests",
+        "Fulfillment audit logs",
+        "Fulfillment export jobs",
+        "Fulfillment and Shipment archive mirrors"
+      ],
+      "read_only": [
+        "Sales Order, lines, reservation mappings and order state",
+        "Inventory balances, lots, reservations, allocations and movements",
+        "Customer master data, shipping addresses and shipping contacts",
+        "Item/SKU eligibility, Base UOM, tracking policy and minimum sale life",
+        "Warehouse, Bin and stock status master data",
+        "User, role and authorization state"
+      ],
+      "forbidden_direct_writes": [
+        "inventory_stock_balances, lots, reservations, allocations and any inventory movement row",
+        "Sales Order header, line or reservation mapping rows outside the Sales provider contract",
+        "Customer master data, shipping addresses and contacts",
+        "Item/SKU master data",
+        "User and role records",
+        "Confirmed shipment snapshots, issue details, reversal details, status history and audit rows once written",
+        "Archive mirror rows once written and verified"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "security-audit",
+      "fulfillment-technical"
+    ],
+    "technical": [
+      "fulfillment-technical"
+    ],
+    "regression": [
+      "fulfillment-technical"
+    ],
+    "uat": []
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

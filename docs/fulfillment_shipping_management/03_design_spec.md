@@ -1,15 +1,16 @@
-# Fulfillment & Shipping Management 系統設計規格
+# Fulfillment & Shipping Management 系統設計規格（Harness Aligned）
 
 ## 0. 文件資訊、決策及設計門檻
 
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Fulfillment & Shipping Management 系統設計規格 |
-| 對應需求 | `docs/fulfillment_shipping_management/requirement.md` |
+| 對應需求 | `docs/fulfillment_shipping_management/01_requirement_spec.md` 0.2 Approved Planning Baseline |
 | 目標版本 | Phase 1（中小企核心履約及出貨） |
-| 技術棧 | Node.js ES Modules、Express 5、AJV、MySQL 5.7、Vue 3、Quasar 2、Pinia、Vitest／Node Test Runner |
+| 技術棧 | Node.js ES Modules、Express 5、AJV、MySQL 8.0、Vue 3、Quasar 2、Pinia、Vitest／Node Test Runner |
 | 容量基線 | 每日約10,000張SO、最多5個Warehouse、24個月最少730萬張Active Fulfillment及Shipment |
-| 文件狀態 | Implementation-ready；實作前仍須按最新main分配Migration序號 |
+| 文件狀態 | ERP Product Owner（Sam）已於 2026-09-14 批准為 planning baseline；尚未授權進入 IMPLEMENT，實作前仍須按最新main分配Migration序號 |
+| 版本 | 0.2 Approved Planning Baseline |
 
 ### 0.1 已鎖定架構決策
 
@@ -26,7 +27,7 @@
 | FSD-009 | Sales Archive Job是唯一歸檔協調者，同transaction搬移Sales＋Fulfillment aggregate。 | 防止父SO與Shipment分處Active／Archive。 |
 | FSD-010 | 一張Fulfillment只屬一張SO及一個Warehouse；一張Shipment只屬一張Fulfillment。 | 本期不加入多SO、跨倉或wave picking。 |
 | FSD-011 | 不強制Packing Confirm；Carrier及包裝欄位選填。 | 中小企簡單實用優先。 |
-| FSD-012 | Active及Archive使用同一MySQL instance內的獨立relational tables。 | 保留FK／transaction能力，避免MySQL 5.7 partition限制及第二套storage。 |
+| FSD-012 | Active及Archive使用同一MySQL instance內的獨立relational tables。 | 保留FK／transaction能力，避免partition維運限制及第二套storage。（2026-09-14 對齊更正：原文引用MySQL 5.7 partition限制；相容基線已更正為MySQL 8.0，理由改述為與版本無關的維運限制，決策 HD-001。） |
 
 ### 0.2 設計門檻關閉結果
 
@@ -365,7 +366,7 @@ Shipment Reversal後保持Ordered、Backorder及Cancelled不變，把該Shipment
 - Quantity使用`BIGINT UNSIGNED` Base UOM；不可用JavaScript浮點運算。
 - Current aggregate使用`version INT UNSIGNED NOT NULL DEFAULT 1`作CAS。
 - Active master FK採`ON DELETE RESTRICT`；aggregate children可在受控archive transaction使用CASCADE。
-- MySQL 5.7不可靠執行`CHECK`，核心數量／狀態由service＋BEFORE trigger＋integration test三層保護。
+- MySQL 8.0可強制執行`CHECK`，單行數量／狀態守衛可使用CHECK；跨行、跨aggregate及狀態機規則仍由service＋BEFORE trigger＋integration test三層保護。（2026-09-14 對齊更正：原文為「MySQL 5.7不可靠執行CHECK」；專案CI實際執行`mysql:8.0`，且Inventory與Purchasing已批准基線同為MySQL 8.0，決策 HD-001。）
 - History、Issue details、Reversal details及Archive tables無一般update／delete repository；trigger拒絕非archive maintenance變更。
 - Migration不在本文件硬編序號；依§9.3切片並於實作時使用main下一個可用值。
 
@@ -1614,7 +1615,7 @@ Alert：processing超過lease＋grace、recovery連續失敗、source conflict�
 | BR-001～036 | §§2～8的number、ownership、quantity、state、snapshot及archive invariants。 |
 | SEC-001～012 | §7及§11.3～11.6。 |
 | NFR-PERF-001～007 | §§4 indexes、8 bounded algorithms、11.7、12 metrics。 |
-| AC-001～056 | §11所有測試層及Phase驗證；每個AC在後續`test_case.md`建立一對一case ID。 |
+| AC-001～056 | §11所有測試層及Phase驗證；每個AC在`07_uat_test_cases.md` §8建立一對一case ID。 |
 
 ### 14.2 Implementation Readiness Checklist
 
@@ -1630,3 +1631,186 @@ Alert：processing超過lease＋grace、recovery連續失敗、source conflict�
 - [ ] Migration實作時按最新main分配序號，不使用設計階段預留號。
 
 本文件沒有未決設計問題；如未來加入Returns、Invoicing、Carrier、Serial或多SO Shipment，必須先更新Requirement、provider contracts、state machine、Archive eligibility及驗收案例。
+
+---
+
+## 15. Harness 2.0 正式設計定義
+
+本節把 §1～§14 的設計敘述整理成 14 個穩定的設計實體，作為 `08_traceability.json` 的 `DES` 節點。每個實體指向其權威章節；章節內容本身仍然是設計細節的來源，本節不重複也不取代它們。`FSD-001`～`FSD-012` 維持為已鎖定架構決策，由下列設計實體承載，不另設為追溯節點。
+
+
+### 15.1 設計實體與權威章節
+
+| Design ID | 名稱 | 權威章節 |
+| --- | --- | --- |
+| DES-001 | 架構、模組邊界與Provider契約 | §1、§2.1～§2.2、§6 |
+| DES-002 | Queue、Reservation Claim 及數量佔用 | §2.3、§3.4、§8.1～§8.2 |
+| DES-003 | Allocation、FEFO／FIFO 序列與 Pick Confirm | §2.4、§3.5、§8.3～§8.4 |
+| DES-004 | Shipment Draft、地址與 Contact 快照 | §2.5、§3.7、§8.5 |
+| DES-005 | Shipment Confirm 兩階段原子交易及恢復 | §2.6、§8.6 |
+| DES-006 | Shipment Reversal 與 Sales 狀態重算 | §2.7、§3.2、§3.6、§8.7 |
+| DES-007 | 全域 Lock Order 與三層冪等 | §2.8、§2.9、§8.8 |
+| DES-008 | Domain 狀態機與數量不變量 | §3.1、§3.3 |
+| DES-009 | Database table、約束、trigger 及 Migration 切片 | §4、§9.1～§9.3 |
+| DES-010 | HTTP API 契約與 Stable Error Catalogue | §5 |
+| DES-011 | 權限、安全與資料保護 | §7 |
+| DES-012 | Inquiry、Print、Export、Archive 與 Reconciliation | §4.15～§4.17、§5.5、§6.5、§8.9～§8.11 |
+| DES-013 | 前端頁面、互動、Responsive 及 Accessibility | §9.4、§10 |
+| DES-014 | 測試設計、Configuration、Observability、部署及 Rollback | §11～§13 |
+
+### 15.2 正式定義
+
+
+## DES-001 — 架構、模組邊界與Provider契約
+
+### Decision
+Fulfillment 與 Sales、Inventory 維持同一應用、同一 MySQL schema 內的 domain modules（FSD-001）；Inventory 是 Balance、Reservation、Allocation 及 Movement 的唯一事實來源（FSD-004），Fulfillment 只保存 owner-safe projection 及不可變快照。對 Sales、Customer、Item、Inventory 一律經 §6 的具名 provider／consumer 契約讀寫，所有 write contract 接收現有 MySQL transaction executor；沒有 transaction 立即 throw。
+
+### Rationale
+設計規格 §1、§2.1～§2.2、§6。同一交易邊界令 Shipment Confirm 可與 Inventory Issue、Sales Fulfilled 共用真正 ACID 原子性，不引入不必要的 eventual consistency；具名契約令跨模組語意可被 consumer contract test 靜態驗證，避免以自由文字 reference、影子資料表或本地複製主檔規則取代 provider。
+
+### Failure behavior
+Provider 不可用、回傳缺 line、重複、數量不符、owner 不符或未知欄位時一律 fail closed 並回 `FULFILLMENT_DEPENDENCY_UNAVAILABLE` 或 `INVENTORY_CONTRACT_MISMATCH`，不得使用過時資料假裝成功；繞過交易邊界、以 generic CRUD 取代具名 service 或在 Fulfillment 內複製 Inventory 資格／FEFO／FIFO 算法，必須在 review 或測試被攔截，相關 Gate 記為 BLOCKED。
+
+## DES-002 — Queue、Reservation Claim 及數量佔用
+
+### Decision
+Queue GET 只是提示，Create transaction 才是權威：`fulfillable = inventory reservation outstanding - active claim sum`。DRAFT Fulfillment 以 `fulfillment_line_reservation_claims` 在 DB 層及 transaction lock 下防止可履約量被多張工作重複佔用（FSD-003），Claim 不改 Inventory Reservation outstanding、SO Reserved 或 On Hand。Claim 不變量為 `original = active + released + consumed`、`reversed <= consumed`。
+
+### Rationale
+設計規格 §2.3、§3.4、§8.1～§8.2，實現需求 §5 原則 3～4 及 BR-006。Allocation 尚未建立前必須已能保護數量，否則兩名使用者可同時把同一 Reservation 規劃進兩張工作；以 Sales mapping lock ＋ active claim aggregation 取得唯一贏家，並令短揀／取消釋放的數量即時返回 Queue。
+
+### Failure behavior
+任何負值 fulfillable 是 critical reconciliation error，必須報告而不得以 0 掩蓋；過時 version 或競爭佔用回 `FULFILLABLE_QUANTITY_CHANGED`／`RESERVATION_CLAIM_CONFLICT`，不建立部分工作或部分 Claim。
+
+## DES-003 — Allocation、FEFO／FIFO 序列與 Pick Confirm
+
+### Decision
+Allocation 整批按 `fulfillment_line_id, reservation_id, inventory_balance_id` 排序執行，由 Inventory 決定 eligibility、完整推薦序列及偏離類型；有 Expiry bucket 全部先於無 Expiry bucket，前者 FEFO、後者 FIFO（FSD-005）。FIFO 偏離需 `fulfillment.operation` ＋原因，FEFO 偏離另需 `inventory.fefo.override`（FSD-006）。Pick Confirm 接受每個 Allocation `0..allocated`，整張至少一個正數，`picked < allocated` 逐行必填 5～500 字原因，差額在同 transaction release 並令 Claim active 減少。
+
+### Rationale
+設計規格 §2.4、§3.5、§8.3～§8.4，實現需求 DEC-004、FR-PICK 及 FR-PICKCONF 系列。把資格與排序留在 Inventory 可避免兩套算法漂移；整批全有或全無可避免部分 Allocation 令現場與帳面不一致；短揀只釋放 Allocation 而不釋放 Reservation，令差額自然回到待履約而不是變成庫存差異。
+
+### Failure behavior
+任一行 Allocation 不足或不合資格時整批 rollback，Fulfillment 留在 DRAFT；候選在提交前失效回 `ALLOCATION_CANDIDATE_CHANGED`，不得靜默改選另一 Bin／Lot。缺原因或缺權限回 `PICK_SEQUENCE_REASON_REQUIRED`／`FEFO_OVERRIDE_REQUIRED`；Pick Confirm 遺漏 Allocation ID 視為 input invalid，不當作 0；全 0 回 `PICK_RESULT_INVALID` 並提示取消，不自動取消。
+
+## DES-004 — Shipment Draft、地址與 Contact 快照
+
+### Decision
+Shipment 只可由 `PICKED` 且 `active_shipment_id IS NULL` 的 Fulfillment 建立；`shipments.effective_fulfillment_id` generated column 在 DB 層保證一張 Fulfillment 最多一張非 `CANCELLED` Shipment（關閉 GATE-001）。Draft 只保存 Customer child IDs 及載入時 versions，地址／Contact 文字快照只在成功 Confirm 的 Phase B 保存。Draft 可改地址、Contact 及選填物流欄位，不可改 Lines、SKU、Bin、Lot 或 quantity；Cancel Draft 清空 active pointer 並令 Fulfillment 回 `PICKED`。
+
+### Rationale
+設計規格 §2.5、§3.7、§8.5，實現 DEC-006 及 FR-SHIP 系列。把唯一性放在 generated column ＋ unique index 而非只靠 service 判斷，可在並發下仍然成立；延後快照到 Confirm 成功，可避免 Draft 期間主檔變更造成歷史與事實不符。
+
+### Failure behavior
+沒有有效 Shipping Address 時可保留 `PICKED` 但不可確認出貨，回 `SHIPPING_ADDRESS_UNAVAILABLE` 並提供 Customer 維護入口，不建立臨時或自由文字地址；重複 create 事件 replay 原結果或回既有 Shipment，不建立第二張有效 Shipment。
+
+## DES-005 — Shipment Confirm 兩階段原子交易及恢復
+
+### Decision
+Confirm 採 Phase A durable intent ＋ Phase B 原子執行（FSD-002）。Phase A 原子 claim `fulfillment_operation_requests(eventId, payloadHash)`、令 Shipment `DRAFT → SHIPPING` 並建立 lease／correlation；Phase B 在單一 transaction 內按全域鎖序完成 provider 重驗、`postFulfillmentIssueBatchInTransaction()`、`applyFulfillmentResultInTransaction(SHIPMENT_CONFIRMED)`、快照與 Issue details 保存、`SHIPPED` 狀態及 operation `SUCCEEDED`。Issue line 集合必須與全部 picked Allocation 集合完全相等（關閉 GATE-002）。
+
+### Rationale
+設計規格 §2.6、§8.6，實現需求 §5 原則 11～12、FR-CONF 系列及 AC-032～038。永久業務失敗與技術不明必須可區分：前者可安全回到可修正的 `DRAFT`，後者只能保留 `SHIPPING` 由原 event 收斂，否則會出現 Shipment 顯示成功而 Inventory 未 Issue 的假成功。
+
+### Failure behavior
+Phase B 業務驗證失敗在同 transaction 令 Shipment 回 `DRAFT`、operation `FAILED` 並保存 stable public error，零 Inventory／Sales 效果；deadlock／lock timeout 回可重試狀態；COMMIT connection lost 或逾時保持 `SHIPPING`，API 回 202 或 `DATABASE_TRANSACTION_INDETERMINATE` 並附 status URL 及 correlation ID，不得以新 event 重做。Recovery Job 只接管 lease 過期 operation，且不得改 payload／actor。
+
+## DES-006 — Shipment Reversal 與 Sales 狀態重算
+
+### Decision
+Reversal 使用同樣 Phase A／B：Phase A 令 `SHIPPED → REVERSING` 並建立 Reversal intent，Phase B 在單一 transaction 重驗權限、原因、兩項 goods 確認、未歸檔及 Downstream Matter `CLOSED`，再以 Inventory 專用 batch command 按原 Warehouse／Bin／Lot／Status 回補、`consumed -= q, outstanding += q` 恢復原 Reservation，原 Allocation 保持 `CONSUMED` 不重開（FSD-007，關閉 GATE-003）。Sales 依 §3.6 把同量 Fulfilled 移回 Reserved 並重算 SO 狀態；未歸檔 `CLOSED` SO 可重開（FSD-008，關閉 GATE-004）。
+
+### Rationale
+設計規格 §2.7、§3.2、§3.6、§8.7，實現 DEC-008、DEC-009 及 FR-REV 系列。使用只按原 Issue reference 回補的專用 internal command，可保留完整追溯鏈，並避免放寬 generic Inventory movement reversal；不重開原 Allocation 可令恢復數量以乾淨的新 Fulfillment 重新履約。
+
+### Failure behavior
+原 bucket 不能合法回補（Bin 停用、Counting、Lot／Status 不符）或原 Movement 已反向時整批 rollback 並回 `ORIGINAL_BUCKET_UNAVAILABLE`，不得改存另一位置或部分成功；永久業務失敗令 Shipment 回 `SHIPPED`、Reversal attempt `FAILED` 並保存 safe reason；技術不明保留 `REVERSING` 供原 event 恢復。已 Reversed 的 Shipment 重送返回既有結果，不重複回補。
+
+## DES-007 — 全域 Lock Order 與三層冪等
+
+### Decision
+所有跨模組 write 依固定順序取鎖：operation／lease → Sales → Fulfillment → Shipment／Reversal → Customer 驗證鎖 → Inventory（Operation → Warehouse → Stock Controls → Bins → Lots → Balances → Reservations → Allocations）→ projections／History／Audit；同類 ID 升序，不依畫面行順序。冪等分三層：HTTP framework（actor＋method＋route＋`Idempotency-Key`，TTL 至少 7 日）、Fulfillment domain（global `eventId`＋operationType＋canonical payload hash，與 Phase A intent 原子 claim）、provider source（module＋documentType＋documentId＋lineId＋eventId）。
+
+### Rationale
+設計規格 §2.8、§2.9、§8.8，實現需求 §5 原則 17、BR-024～BR-026 及 KPI-02。固定鎖序避免 Sales／Fulfillment／Inventory 交叉 deadlock；雙層 claim 令 HTTP idempotency TTL 過後的重送仍不會重複建單或重複入庫；provider 端第三層可擋住繞過 HTTP 的重複來源事件。
+
+### Failure behavior
+Deadlock 及 lock timeout 映射 `409 CONCURRENT_OPERATION`，原 event 必須先查 operation outcome 再決定下一步；相同 event 相同 hash 於 `IN_PROGRESS` 回 202、`SUCCEEDED`／`FAILED` replay 原結果；相同 event 不同 hash 回 `FULFILLMENT_SOURCE_CONFLICT`，不得建立第二份效果。Recovery 的 lease compare-and-set 需 existing event、已過期 lease 及 matching target。
+
+## DES-008 — Domain 狀態機與數量不變量
+
+### Decision
+Fulfillment 狀態為 `DRAFT/PICKING/PICKED/SHIPPED/CANCELLED/REVERSED`，Shipment 為 `DRAFT/SHIPPING/SHIPPED/CANCELLED/REVERSING/REVERSED`，Reversal attempt 為 `REVERSING/REVERSED/FAILED`。逐 Line 不變量：`planned = picked + short`、`allocated = picked + allocation_released`、`shipped ∈ (0, picked)`、`reversed ∈ (0, shipped)`，並按狀態固定各欄位應有值。`SHIPPING／REVERSING` 禁止 update、cancel 或另一個新 event。
+
+### Rationale
+設計規格 §3.1、§3.3，實現需求 §7 狀態表、BR-004～BR-005 及 BR-022。狀態由事實推導而非人工設定，令 SO、Reservation、Allocation、Fulfillment、Shipment 及 Reversal 數量在任一時點可完整解釋（BR-011、KPI-04）。
+
+### Failure behavior
+非法轉換、過時 version 或前端自報狀態一律回 `FULFILLMENT_STATE_CONFLICT`／`SHIPMENT_STATE_CONFLICT`／`VERSION_CONFLICT` 並零業務變更；數量不變量由 service ＋ BEFORE trigger ＋ 真 MySQL integration test 三層保護，違反時整筆 rollback 而不是以警告放行。
+
+## DES-009 — Database table、約束、trigger 及 Migration 切片
+
+### Decision
+§4 定義 17 組 Active table 及 12 張 Archive mirror：文件序號、Fulfillment header／lines／reservation claims／allocations／status history、Shipment header／lines／issue details／status history、Reversal header／details、operation requests、audit logs、export jobs 及 archive mirrors。共通規則為 InnoDB／utf8mb4、`BIGINT UNSIGNED` PK 與 Base UOM 數量、`version` CAS、Active master FK `RESTRICT`、append-only 歷史與 trigger 不可變保護。Migration 依 §9.3 的 8 個邏輯切片交付，序號於實作當日按最新 `main` 分配，不沿用文件示例號。
+
+### Rationale
+設計規格 §4、§9.1～§9.3，實現 BR-001～BR-003、BR-012 及 NFR 效能索引需求。把唯一性、ownership 與不可變性放進 schema，可在 service 判斷失效時仍構成第二層防護；circular composite FK 以 ALTER 後補可避免建表次序死結。
+
+### Failure behavior
+正式資料存在後不以 down migration drop table，rollback 採 application rollback ＋ forward corrective migration；跨模組 FK 在依賴 table 未存在時不得以「無 FK 的 service guard」假裝完成，必須由相依 Phase 先落地，否則該 Task 記為 BLOCKED。
+
+## DES-010 — HTTP API 契約與 Stable Error Catalogue
+
+### Decision
+Base path `/api/v1`，GET 查詢、POST 命令；JSON camelCase、enum UPPER_SNAKE、quantity 為 decimal string。State-changing route 需 JWT、fresh actor、business permission、AJV strict schema 及 framework `Idempotency-Key`；domain command 另帶 `eventId`，update／transition 另帶 `version`。Client 不可提交 status、snapshot、calculated quantity 或 provider result。§5.6 定義覆蓋 400／403／404／409／410／503／202 的穩定公開錯誤碼。
+
+### Rationale
+設計規格 §5，實現需求 §14 例外處理及 SEC-007～SEC-009。穩定錯誤碼令前端可以給出具體下一步而不是通用「操作失敗」；strict schema ＋ server allowlist 令未知欄位與竄改的 projection 在入口即被拒絕。
+
+### Failure behavior
+Public message 使用繁體中文並提供下一步，不回 SQL、constraint 名稱、stack、完整路徑或其他 Customer 資料；not found 與 not visible 對外統一 404，不透露記錄存在性；literal lookup／archive／operation route 不得被 `/:id` 影子覆蓋，並以 discovery order test 保護。
+
+## DES-011 — 權限、安全與資料保護
+
+### Decision
+三項不互相包含的業務權限 `fulfillment.view`／`fulfillment.operation`／`fulfillment.reverse`，FEFO 偏離另需 `inventory.fefo.override`；§7.1 permission matrix 定義每項能力的組合。每次 write／job 開始時由 DB 重讀 Active actor 及 permission，JWT claims 只作初步拒絕。§7.3 要求所有 child query 以 `child_id + parent_id` 或 composite FK 執行；§7.4 定義 XSS、CSV formula、log redaction 及 download header 規則；§7.5 列出必測 abuse cases。
+
+### Rationale
+設計規格 §7，實現 SEC-001～SEC-012 及需求 §4.3 權限原則。權限不隨角色名稱取得且提交時重驗，可擋住已載入頁面在撤權後仍能提交；owner-safe child lookup 令替換 ID 無法跨 aggregate、Customer 或 Warehouse。
+
+### Failure behavior
+授權失敗 fail closed 回 401／403／404 或 `PERMISSION_STALE`，零業務變更；Reversal 只以 JWT ＋ fresh `fulfillment.reverse` ＋ 原因 ＋ 兩個 server-required boolean 授權，不把 checkbox 當授權替代品，API schema 亦不接受 password 欄位；專用 Inventory Reversal command 沒有 HTTP 入口，直接調用被拒絕。
+
+## DES-012 — Inquiry、Print、Export、Archive 與 Reconciliation
+
+### Decision
+Detail 分批查詢避免笛卡兒積，`allowedActions` 由 server 按 fresh status ＋ permission 計算。Print projection 使用快照及當前文件狀態，`REVERSED` 固定顯眼標示且不顯示售價、稅、成本或銀行資料。Export 為 bounded background job，使用 keyset cursor、stream writer、atomic temp rename、owner ＋ fresh permission 下載及有限期檔案。Archive 由 Sales Archive Job 唯一協調（FSD-009），每張 SO 一個 transaction 搬移 Sales ＋ Fulfillment aggregate，逐 table count／row hash 校驗後才刪 Active（關閉 GATE-005）。`FulfillmentReconciliationService` 只提供唯讀差異報告。
+
+### Rationale
+設計規格 §4.15～§4.17、§5.5、§6.5、§8.9～§8.11，實現 FR-INQ／FR-DOC／FR-EXPORT／FR-AUDIT／FR-ARC 系列及 BR-034～BR-036。由 Sales 單一協調者搬移可防止父 SO 與 Shipment 分處 Active／Archive；read-back hash 校驗令中斷重跑可安全收斂。
+
+### Failure behavior
+Archive 相同 ID 且 hash 相同視為 unknown-outcome recovery，hash 不同回 `ARCHIVE_DATA_CONFLICT` 並保留 Active，不得 `INSERT IGNORE`；Archive 暫時不可用時 Active 操作繼續，Archive 頁顯示不可用而非 0 筆；Reconciliation 只報告差異，修復須另行批准的 forward script 及前後證據。
+
+## DES-013 — 前端頁面、互動、Responsive 及 Accessibility
+
+### Decision
+9 條 route 對應 Queue、Work List、Detail、Shipment List／Detail、Archive Search／Detail 及兩個 A4 列印頁；共用現有 `PageHeader`、`DataTable`、`FormPanel`、`EllipsisCell`、notify／confirm 及 `can()`，不新增第二套框架。Allocation Panel 以 Bin／Lot 為主要視覺並顯示建議與實選差異；Shipment 確認前顯示不可逆庫存影響摘要；`SHIPPING／REVERSING` 顯示 processing banner、Correlation ID 及「查詢原結果」而非再次提交。每頁一個 `h1`、完整 label／error association、`aria-busy`、文字狀態 badge 及 375／768／1024／1440 px 行為。
+
+### Rationale
+設計規格 §9.4、§10，實現需求 §10 頁面與使用者體驗及 NFR-026（遵循 `docs/frontend-design.md`）。把「查詢原結果」而非「再送一次」設為預設操作，是避免使用者在逾時後製造第二個 event 的主要前端防線。
+
+### Failure behavior
+版本衝突保留使用者輸入並顯示最新數量及「重新載入」，不自動改成較小數量提交；Inventory candidate changed 時整批 reload，不靜默換 bucket；前端 `allowedActions` 只作顯示，不取代 route authorization；狀態不可只以顏色表示。
+
+## DES-014 — 測試設計、Configuration、Observability、部署及 Rollback
+
+### Decision
+§11 定義 unit、真 MySQL integration、API contract、provider consumer contract、frontend、security、效能容量（730 萬 Active Fulfillments 及 Shipments、50 名互動使用者）及 backup／restore／reconciliation 八層測試設計（關閉 GATE-006）。§12 定義 bounded configuration、四個 cluster-lease scheduler jobs、structured events／metrics／alerts 及六份 runbook。§13 定義 P0～P3 交付、部署次序及 rollback 規則。
+
+### Rationale
+設計規格 §11～§13，實現 NFR-001～NFR-026 及需求 §16.3 上線與回復要求。把容量、恢復與對賬證據列為設計的一部分，可避免以縮小資料集或只跑 happy path 通過 Gate。
+
+### Failure behavior
+業務驗證失敗不無限 retry，暫時失敗採 exponential backoff ＋ jitter，commit 不明先 lookup source outcome；效能結果必須附 EXPLAIN、rows examined、lock wait、pool usage 及 heap 證據，不得以縮小資料集通過；有正式資料後只用 forward migration 修正，不 drop 或改寫 ledger／history。
