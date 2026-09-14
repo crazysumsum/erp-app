@@ -61,7 +61,7 @@ Both legacy sign-off tables were empty, so no separate reviewer existed. Sam ide
 | ID | Status | Effect |
 | --- | --- | --- |
 | `GAP-TC-001` | OPEN | No Playwright tool chain exists. `TC-010`'s browser assertions are `BLOCKED`, not PASS. Must be closed before `PHASE-002` opens any UI route. |
-| `GAP-TR-002` | ASSIGNED | `docs/customer_management/00_module_manifest.json` pins the deleted `design_spec.md`. Owned by the Customer module owner; the exact replacement path and hash are recorded. |
+| `GAP-TR-002` | CLOSED | Repointed by PR #97 (merge commit `34563b6`), scoped to the Customer module because `validate_module_boundary.py` refuses cross-module writes in `REVIEW_AND_ALIGN`. The pointer now verifies as `MATCH`. |
 | `GAP-RQ-002` | OPEN BY DESIGN | Both business sign-off tables are empty. Blocks Go-Live and release sign-off only. |
 | `GAP-IMP-001`–`005` | PLANNED | Sales, Inventory and Customer modules do not exist; Item lookup is partial; none of the module permissions exist. `TASK-001` must report `BLOCKED` if any hard dependency is still absent at `PHASE-001` start. |
 | `GAP-ENV-001` | RECORDED | Local MySQL client version differs from the approved 8.0 baseline; local runs are not baseline evidence. |
