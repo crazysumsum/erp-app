@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 14,
+  "revision": 15,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
     "plan": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
-    "code_commit": "c1ed49225524e60d7dcf28ef8941ea2c14a8f04f",
-    "source_fingerprint": "8a54ee4c94173a6cef5a430d9704fa78867b30f35d3f3b1c35e4b48eeb330453",
+    "code_commit": "3c6b7b3a7e33372703d04e4e8529c1aee1cd3ab0",
+    "source_fingerprint": "ce72d7ffbd42b5b19356b776659c3b3fb5f5a5e2695fb0cd97cb722d0d2e8519",
     "worktree": "/private/tmp/erp-supplier-management-harness-v2-review",
-    "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
+    "default_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
     "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
   },
   "runtime": {
@@ -357,9 +357,33 @@
       "idempotency_key": "supplier-management-harness-v2-realignment-pr-81-merge",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/81; merged at 729772520fb101c329f334207159a78b2d198006 on 2026-09-11T08:41:07Z (observed via gh CLI on 2026-09-14)"
+    },
+    {
+      "id": "PUSH-003",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/supplier-management-harness-v2-review",
+      "idempotency_key": "supplier-management-harness-v2-review-push",
+      "status": "PLANNED",
+      "source_ref": "User message on 2026-09-14: commit and create PR merge to main without CI"
+    },
+    {
+      "id": "PR-003",
+      "kind": "CREATE_PR",
+      "target": "base=main head=codex/supplier-management-harness-v2-review",
+      "idempotency_key": "supplier-management-harness-v2-review-pr",
+      "status": "PLANNED",
+      "source_ref": "User message on 2026-09-14: commit and create PR merge to main without CI"
+    },
+    {
+      "id": "MERGE-003",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-management-harness-v2-review",
+      "idempotency_key": "supplier-management-harness-v2-review-merge",
+      "status": "PLANNED",
+      "source_ref": "User message on 2026-09-14: commit and create PR merge to main without CI"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain a baseline-bound Product Owner approval for the full current Supplier Design and Plan. Before committing or opening a PR, integrate the then-current origin/main into this worktree and rerun state inspection, traceability validation, module-boundary validation and git diff --check. Do not begin implementation until approval and the applicable phase readiness gates are satisfied."
+  "next_safe_action": "Commit the post-integration Supplier documentation checkpoint, push codex/supplier-management-harness-v2-review, create its main-targeting PR, record the observed PR URL and started merge, then merge without waiting for CI as explicitly authorized."
 }

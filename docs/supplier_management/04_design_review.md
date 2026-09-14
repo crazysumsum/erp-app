@@ -2,7 +2,7 @@
 
 ## Decision
 
-**CONDITIONALLY APPROVED FOR PRODUCT OWNER DESIGN／PLAN REVIEW (REV-004).** The historical approvals below remain valid only for their recorded baselines. Product Owner approved `HD-003` on 2026-09-14, allowing Supplier to consume Item's currently published SKU／UOM identity contract; `REV-004` independently approved the updated candidate. This decision does not authorize implementation: the Product Owner must still approve the full Design／Plan baseline and the relevant provider readiness gates must be satisfied. Production enablement additionally requires Bank security and recovery evidence. Before any commit／PR, integrate the then-current `origin/main` and rerun the documented validators.
+**CONDITIONALLY APPROVED FOR PRODUCT OWNER DESIGN／PLAN REVIEW (REV-004).** The historical approvals below remain valid only for their recorded baselines. Product Owner approved `HD-003` on 2026-09-14, allowing Supplier to consume Item's currently published SKU／UOM identity contract; `REV-004` independently approved the updated candidate. This decision does not authorize implementation: the Product Owner must still approve the full Design／Plan baseline and the relevant provider readiness gates must be satisfied. Production enablement additionally requires Bank security and recovery evidence. Current `origin/main` was subsequently integrated without changing Supplier-owned specification content, and the document validators were rerun.
 
 ## Review baseline
 
@@ -63,7 +63,7 @@ The repeat reviewer approved the Supplier-owned Requirement, Design, Tasks, Tech
 | Supplier-owned open Critical／High | `0／0` |
 | External High dependency gates | `2`：Item relation-name alignment；Purchasing `recordSupply` contract alignment |
 
-`REV-004` verified that Supplier's manifest and Item's manifest name the same `item-sku-uom-provider`／`aligned-design-v2` contract and exactly pin the current Item design hash. It also verified that `HD-003` does not remove the Item §5.14 relation-name or Purchasing payload gates. State inspection, traceability approval check, module-boundary validation and `git diff --check` passed at review time. No application test was executed. Since the reviewer observed `origin/main` ahead of the candidate, the candidate must be refreshed and the document validators rerun before commit／PR; this does not invalidate the review's documented findings.
+`REV-004` verified that Supplier's manifest and Item's manifest name the same `item-sku-uom-provider`／`aligned-design-v2` contract and exactly pin the current Item design hash. It also verified that `HD-003` does not remove the Item §5.14 relation-name or Purchasing payload gates. State inspection, traceability approval check, module-boundary validation and `git diff --check` passed at review time. No application test was executed. The reviewer-observed `origin/main` advancement was subsequently integrated without Supplier-document conflict; the same document validators were rerun before PR preparation.
 
 ## Architecture review
 

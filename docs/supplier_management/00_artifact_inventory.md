@@ -6,7 +6,7 @@
 | --- | --- |
 | Harness mode | `REVIEW_AND_ALIGN` |
 | Output directory | `docs/supplier_management/` |
-| Current repeat-alignment candidate baseline | `c1ed49225524e60d7dcf28ef8941ea2c14a8f04f`; PR #81 was independently reconciled as merged at `729772520fb101c329f334207159a78b2d198006`. Reviewer observed `origin/main` later advanced to `c3972422d20c56e9656aef9f894b91d7162c79c7`; integrate it and rerun the document checks before any commit／PR. |
+| Current repeat-alignment candidate baseline | Supplier changes were reviewed from `c1ed49225524e60d7dcf28ef8941ea2c14a8f04f`; current `origin/main` `c3972422d20c56e9656aef9f894b91d7162c79c7` was integrated without conflict by merge commit `3c6b7b3a7e33372703d04e4e8529c1aee1cd3ab0`. PR #81 was independently reconciled as merged at `729772520fb101c329f334207159a78b2d198006`. |
 | Original alignment recovery point | The first alignment began from `6cb50f50c1aa4db37e0f32ce41073df331d6c034`, was reviewed at `ab1388101cdfb480cdd74860efc71fc2c350d014`, and was preserved by PR #80／merge commit `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a`. |
 | Current isolated worktree | `/private/tmp/erp-supplier-management-harness-v2-review` |
 | Review date | 2026-09-14 |

@@ -2,13 +2,15 @@
 
 ## Final disposition
 
-`CONDITIONALLY ALIGNED` for the current Supplier-owned documentation candidate, as approved by independent `REV-004`. Product Owner approved `HD-003` on 2026-09-14 to refresh Supplier's consumed Item SKU／UOM identity-contract pin. The Item relation-name alignment and Purchasing `recordSupply` contract remain explicit High cross-module dependency gates that block PHASE-004. Product Owner Design／Plan approval is required before any implementation Phase starts. This confirms document quality only; it does not mean the Supplier module is implemented, technically verified, accepted by business users or approved for production. Since `origin/main` advanced during review, its then-current contents must be integrated and document checks rerun before commit／PR.
+`CONDITIONALLY ALIGNED` for the current Supplier-owned documentation candidate, as approved by independent `REV-004`. Product Owner approved `HD-003` on 2026-09-14 to refresh Supplier's consumed Item SKU／UOM identity-contract pin. The Item relation-name alignment and Purchasing `recordSupply` contract remain explicit High cross-module dependency gates that block PHASE-004. Product Owner Design／Plan approval is required before any implementation Phase starts. This confirms document quality only; it does not mean the Supplier module is implemented, technically verified, accepted by business users or approved for production. The reviewer-observed `origin/main` advancement was integrated without conflict and the document checks were rerun before PR preparation.
 
 ## 2026-09-14 current alignment entry
 
 This repeat alignment began in isolated worktree `/private/tmp/erp-supplier-management-harness-v2-review` from verified `origin/main` commit `c1ed49225524e60d7dcf28ef8941ea2c14a8f04f`. The Harness state reconciled the previously unknown `MERGE-002`: [PR #81](https://github.com/crazysumsum/erp-app/pull/81) merged at `729772520fb101c329f334207159a78b2d198006` on 2026-09-11. It also found that Supplier's consumed Item source no longer existed. `HD-003` records the Product Owner's 2026-09-14 approval to use Item's currently published `item-sku-uom-provider`／`aligned-design-v2` contract at `docs/items_management/03_design_spec.md`.
 
 The contract-pin refresh does not change Item §5.14's deferred relationship ownership. `supplier_sku_refs` remains the Supplier-owned formal relation; `item_supplier_refs` remains an external Phase-004 documentation-alignment gate. No Supplier application code, Migration, application CI or test execution was performed.
+
+After `REV-004`, current `origin/main` commit `c3972422d20c56e9656aef9f894b91d7162c79c7` was integrated without Supplier-document conflict by merge commit `3c6b7b3a7e33372703d04e4e8529c1aee1cd3ab0`. This preserved the reviewed Design `be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210` and Plan `94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4` hashes; the file-level validators were rerun after integration.
 
 ## Harness 2.0 repeat-alignment reconciliation
 
