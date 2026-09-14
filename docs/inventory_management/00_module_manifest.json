@@ -67,9 +67,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "aligned-design-v2-draft",
+        "version": "approved-planning-v3",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "62693d4a4958a454f4e8fc4a55b0629b0883c57586d6e0b30767a60739af70af",
+        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
@@ -82,7 +82,7 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-46c1235",
+        "version": "observed-main-b948c92",
         "source": "server/src/modules/item/ItemLookupService.js",
         "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
         "regression_suites": [

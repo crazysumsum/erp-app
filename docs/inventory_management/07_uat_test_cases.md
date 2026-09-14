@@ -4,8 +4,8 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 需求來源 | `docs/inventory_management/01_requirement_spec.md` 0.2 Draft |
-| 設計來源 | `docs/inventory_management/03_design_spec.md` 0.2 Draft |
+| 需求來源 | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
+| 設計來源 | `docs/inventory_management/03_design_spec.md` 0.3 Approved Planning Baseline |
 | UI／UX基準 | `docs/frontend-design.md` |
 | 文件日期 | 2026-09-08 |
 | 測試類型 | User Acceptance Testing（UAT）測試設計 |
@@ -192,8 +192,8 @@
 | POST-002 | P0 | P1 | U-DOWN | FR-LOT-002～004、AC-007；Tracking欄位 | 正式Receiving單據 | SKU-BATCH及SKU-EXP | 收SKU-BATCH有Lot無Expiry；收SKU-EXP有Lot及Expiry；再分別省略必填欄 | 合法組合成功；batch缺Lot、batch_expiry缺Lot或Expiry均field-level拒絕且零庫存效果 | 各輸入、成功／錯誤、前後查詢 | — | NOT RUN |
 | POST-003 | P0 | P1 | U-DOWN | FR-LOT-005、AC-008；Lot一致性 | SKU-EXP／同Lot已於W-A入庫 | 相同Lot不同Expiry或Manufacture Date至W-B | 提交Receipt | 被拒絕並指出Lot資料衝突；W-B無新Bucket；既有Lot未被改寫 | 錯誤、兩倉Lot／庫存、Movement | — | NOT RUN |
 | POST-004 | P1 | P1 | U-DOWN | FR-POST-002、BR-005／006；Pack換算 | PACK-24有效 | 2 BOX，目的BIN-A1 | 在Receiving輸入Pack並確認換算後收貨 | 提交前顯示48 EA；成功後只增加48 EA；來源與Movement保留清楚UOM／數量語意 | 換算確認、前後數量、Movement | — | NOT RUN |
-| POST-005 | P0 | P1 | Receiving一般／例外角色 | FR-LOT-007；Minimum Receipt Life | SKU-EXP及LOT-LOW低於收貨門檻 | 無例外、缺原因、合法專門權限＋原因 | 逐一確認Receipt | 一般／缺原因均拒絕；只有專門權限及原因有效時成功；Inventory重新驗證門檻並可追溯例外 | 三次結果、庫存、Movement／Audit | — | NOT RUN |
-| POST-006 | P1 | P1 | U-DOWN | FR-POST-005；收貨品質狀態 | Returns／Receiving已決定狀態 | 同SKU分別收Available、Quarantined、Damaged | 完成三筆正式Receipt | 各自進入來源指定Bucket；Inventory不猜測或自動轉狀態；Total及ATP語意正確 | 來源選擇、Bucket明細、Movement | — | NOT RUN |
+| POST-005 | P0 | P1 | Receiving一般／例外角色 | FR-LOT-007；Minimum Receipt Life | SKU-EXP及LOT-LOW低於收貨門檻，另備Expired Lot | 無例外、缺原因、`receiving.expiry.override`＋逐筆完整evidence | 逐一確認Receipt | 一般／缺原因／evidence不完整均拒絕；只有專門權限、原因及完整證據有效時成功；Expired永遠拒絕；Inventory重新驗證門檻並可追溯例外 | 各次結果、庫存、Movement／Audit | — | NOT RUN |
+| POST-006 | P1 | P1 | U-DOWN | FR-POST-005；收貨品質狀態 | Customer Return及一般Receiving來源 | Customer Return、Available Receipt、Damaged Receipt | 完成三筆正式Receipt，再對退貨完成品質檢查及Status Transfer | Customer Return固定先進Quarantined；一般來源進指定Bucket；退貨只有品質檢查後才可轉Available或Damaged；Total及ATP語意正確 | 來源選擇、Bucket明細、Status Transfer、Movement | — | NOT RUN |
 | POST-007 | P0 | P1 | U-DOWN | FR-POST-009；提交重驗 | 畫面載入後資料改變 | SKU停用／非追蹤、Warehouse／Bin停用、跨倉Bin、SKU-SERIAL | 載入Receiving後改變基礎資料，再提交 | 每種均依提交時事實拒絕，顯示可理解原因；零Balance／Movement成功效果 | 狀態時間線、錯誤、前後查詢 | — | NOT RUN |
 | POST-008 | P0 | P1 | U-DOWN | FR-POST-007、AC-014；Receipt冪等 | 一筆Receipt已成功 | SRC-A同event及完全相同內容 | 重按確認／刷新重送／模擬網路重試 | 回原成功或等效已處理結果；On Hand只增加一次；只有一組業務效果 | 兩次回應、前後Bucket、Movement／來源 | — | NOT RUN |
 | POST-009 | P0 | P1 | U-DOWN | FR-POST-008、AC-015；來源衝突 | SRC-A已成功 | 相同event但改SKU、數量、位置或Lot | 逐種重新提交 | 均顯示來源／冪等衝突；不接受新版亦不重做舊版；數量無新增 | 衝突訊息、Bucket／Movement | — | NOT RUN |
@@ -243,7 +243,7 @@
 | ID | Priority | Phase | Role | Requirement／Risk | Preconditions | Test Data | User Steps | Expected Result | Required Evidence | Actual Evidence | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | ADJ-001 | P0 | P3 | U-OP／U-ADJ | FR-ADJUST-001、AC-035；權限 | 同一bucket可調整 | 合法Adjustment／Status／Reversal | U-OP及U-ADJ分別提交 | U-OP全部拒絕且零變更；U-ADJ仍須完成對應重新認證及原因才可提交 | 角色、拒絕／確認、前後Stock | — | NOT RUN |
-| ADJ-002 | P1 | P3 | U-ADJ | FR-ADJUST-002／004；正Adjustment | Active SKU／Bin | 正整數、Lot規則、reason category＋文字 | 由Adjustment頁提交正調整 | 高風險確認顯示完整維度及結果；成功增加指定Bucket並建立Adjustment Movement／Audit；畫面提醒不可代替正常Receipt | 確認、前後Bucket、Movement／Audit | — | NOT RUN |
+| ADJ-002 | P1 | P3 | U-ADJ | FR-ADJUST-002／004；正Adjustment | Active SKU／Bin | 七項批准的reason category、文字；另測未知category及`OTHER`缺詳細說明 | 由Adjustment頁逐一提交 | 固定allowlist及有詳細說明的`OTHER`可進入高風險確認；未知category或`OTHER`說明不足被拒絕；成功操作建立Adjustment Movement／Audit且不可代替正常Receipt | 確認、拒絕、前後Bucket、Movement／Audit | — | NOT RUN |
 | ADJ-003 | P0 | P3 | U-ADJ | FR-ADJUST-003、AC-036；負數保障 | Bucket有5 EA | 減5、減6、0、負輸入、小數 | 逐一提交負Adjustment | 減5可至0；其餘拒絕；不得負數或部分扣除；Reservation保障亦重新驗證 | 各結果、前後Bucket、Movement | — | NOT RUN |
 | ADJ-004 | P0 | P3 | U-ADJ | FR-ADJUST-005、AC-037；Status Transfer | Available 10 | 4轉Quarantined | 提交並查三種狀態 | Available 6、Quarantined 4、Total仍10；Warehouse／Bin／SKU／Lot不變；成對Movement及原因完整 | 確認、狀態前後、Movement | — | NOT RUN |
 | ADJ-005 | P0 | P3 | U-ADJ | FR-ADJUST-006、AC-038；Reservation保障 | Available 10且Reserved 10 | 轉4至Damaged | 提交Status Transfer | 被拒絕並提示先釋放／重新安排Reservation；所有Bucket及Reserved不變 | 錯誤、Stock／Reservation前後 | — | NOT RUN |
@@ -284,7 +284,7 @@
 | OPEN-008 | P0 | P5 | U-MGMT | OPENING_PRECHECK_STALE；提交重驗 | READY後SKU／Bin／Lot規則或Inventory control版本改變 | 原CSV-VALID | Confirm舊Precheck | 不硬用舊結果；Job回READY或明確stale狀態並要求重新Precheck；零Opening數量效果 | 狀態時間線、錯誤、前後Stock | — | NOT RUN |
 | OPEN-009 | P0 | P5 | U-MGMT | NFR-009；worker逾時／重啟 | 可模擬畫面逾時或worker重啟 | READY job／同Confirm request | Confirm後遇逾時；離頁再回job，以同ID查詢／重試 | 可安全判定最終狀態；已完成不重複Movement；未完成可恢復或顯示可行動錯誤；沒有半份Opening | 逾時、job歷程、重試、對賬 | — | NOT RUN |
 | OPEN-010 | P1 | P5 | U-MGMT | Opening cancel | UPLOADED／READY／FAILED job | Password＋REASON | 取消可取消狀態；對VALIDATING／POSTING／COMPLETED嘗試取消 | 合法狀態變Cancelled且不入帳；處理中／已完成不可取消或改寫結果 | 各job狀態、取消／拒絕、Stock | — | NOT RUN |
-| OPEN-011 | P0 | P5 | U-MGMT | FR-OPEN-006、AC-046；Go-Live不可逆 | PRE_GO_LIVE且Opening已對賬 | Device-password＋REASON | 確認Go-Live，再刷新、重新登入及嘗試Upload／Confirm | 狀態永久LIVE；upload／confirm入口隱藏；直接嘗試亦拒絕；提示後續用Adjustment／Stocktake；沒有返回PRE_GO_LIVE操作 | Go-Live確認、LIVE頁、拒絕結果 | — | NOT RUN |
+| OPEN-011 | P0 | P5 | U-MGMT | FR-OPEN-006、AC-046；Go-Live不可逆 | Data Freeze後舊系統無新異動；Warehouse／Operations Lead已對賬；DB帳號已分離且backup／restore rehearsal通過 | Sam的Device-password＋REASON | 由Sam確認Go-Live，再刷新、重新登入及嘗試Upload／Confirm | 只有完整gate及Sam簽核才進LIVE；狀態永久LIVE，upload／confirm入口隱藏且直接嘗試亦拒絕；提示後續用Adjustment／Stocktake；沒有返回PRE_GO_LIVE操作 | Data Freeze、對賬、DB／rehearsal證據、Sam簽核、LIVE頁、拒絕結果 | — | NOT RUN |
 | OPEN-012 | P1 | P5 | U-MGMT／U-VIEW | FR-OPEN-007；結果保留與最小資料 | 有成功／失敗／已清理檔案job | job result、row errors、Audit | 查job、結果、Movement、Audit；於result file過期後再開 | 操作者、hash、reason、結果、來源及Movement可追；不保存／顯示整份原CSV、密碼或token；檔案清理後job／audit仍可查並明確說明 | Job／result／Audit及過期畫面 | — | NOT RUN |
 
 ### 7.10 報表、Audit、UX與營運復原（REPORT）
@@ -1041,16 +1041,16 @@ Required evidence: 換算確認、前後數量、Movement Status remains `NOT_RU
 Actor: Receiving一般／例外角色. Validate the business outcome of legacy case `POST-005` at priority `P0`.
 
 ### Preconditions and data
-Preconditions: SKU-EXP及LOT-LOW低於收貨門檻 Test data: 無例外、缺原因、合法專門權限＋原因
+Preconditions: SKU-EXP及LOT-LOW低於收貨門檻，另備Expired Lot Test data: 無例外、缺原因、`receiving.expiry.override`＋逐筆完整evidence
 
 ### Steps
 逐一確認Receipt
 
 ### Expected business result
-一般／缺原因均拒絕；只有專門權限及原因有效時成功；Inventory重新驗證門檻並可追溯例外
+一般／缺原因／evidence不完整均拒絕；只有專門權限、原因及完整證據有效時成功；Expired永遠拒絕；Inventory重新驗證門檻並可追溯例外
 
 ### Acceptance criteria
-Required evidence: 三次結果、庫存、Movement／Audit Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+Required evidence: 各次結果、庫存、Movement／Audit Status remains `NOT_RUN`; mandatory and blocking. Automation PASS never substitutes for human acceptance.
 
 ## UAT-036 — POST-006 — FR-POST-005；收貨品質狀態
 
@@ -1058,16 +1058,16 @@ Required evidence: 三次結果、庫存、Movement／Audit Status remains `NOT_
 Actor: U-DOWN. Validate the business outcome of legacy case `POST-006` at priority `P1`.
 
 ### Preconditions and data
-Preconditions: Returns／Receiving已決定狀態 Test data: 同SKU分別收Available、Quarantined、Damaged
+Preconditions: Customer Return及一般Receiving來源 Test data: Customer Return、Available Receipt、Damaged Receipt
 
 ### Steps
-完成三筆正式Receipt
+完成三筆正式Receipt，再對退貨完成品質檢查及Status Transfer
 
 ### Expected business result
-各自進入來源指定Bucket；Inventory不猜測或自動轉狀態；Total及ATP語意正確
+Customer Return固定先進Quarantined；一般來源進指定Bucket；退貨只有品質檢查後才可轉Available或Damaged；Total及ATP語意正確
 
 ### Acceptance criteria
-Required evidence: 來源選擇、Bucket明細、Movement Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+Required evidence: 來源選擇、Bucket明細、Status Transfer、Movement Status remains `NOT_RUN`; mandatory and blocking. Automation PASS never substitutes for human acceptance.
 
 ## UAT-037 — POST-007 — FR-POST-009；提交重驗
 
@@ -1653,16 +1653,16 @@ Required evidence: 角色、拒絕／確認、前後Stock Status remains `NOT_RU
 Actor: U-ADJ. Validate the business outcome of legacy case `ADJ-002` at priority `P1`.
 
 ### Preconditions and data
-Preconditions: Active SKU／Bin Test data: 正整數、Lot規則、reason category＋文字
+Preconditions: Active SKU／Bin Test data: 七項批准的reason category、文字；另測未知category及`OTHER`缺詳細說明
 
 ### Steps
-由Adjustment頁提交正調整
+由Adjustment頁逐一提交
 
 ### Expected business result
-高風險確認顯示完整維度及結果；成功增加指定Bucket並建立Adjustment Movement／Audit；畫面提醒不可代替正常Receipt
+固定allowlist及有詳細說明的`OTHER`可進入高風險確認；未知category或`OTHER`說明不足被拒絕；成功操作建立Adjustment Movement／Audit且不可代替正常Receipt
 
 ### Acceptance criteria
-Required evidence: 確認、前後Bucket、Movement／Audit Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+Required evidence: 確認、拒絕、前後Bucket、Movement／Audit Status remains `NOT_RUN`; mandatory and blocking. Automation PASS never substitutes for human acceptance.
 
 ## UAT-072 — ADJ-003 — FR-ADJUST-003、AC-036；負數保障
 
@@ -2180,16 +2180,16 @@ Required evidence: 各job狀態、取消／拒絕、Stock Status remains `NOT_RU
 Actor: U-MGMT. Validate the business outcome of legacy case `OPEN-011` at priority `P0`.
 
 ### Preconditions and data
-Preconditions: PRE_GO_LIVE且Opening已對賬 Test data: Device-password＋REASON
+Preconditions: Data Freeze後舊系統無新異動；Warehouse／Operations Lead已對賬；DB帳號已分離且backup／restore rehearsal通過 Test data: Sam的Device-password＋REASON
 
 ### Steps
-確認Go-Live，再刷新、重新登入及嘗試Upload／Confirm
+由Sam確認Go-Live，再刷新、重新登入及嘗試Upload／Confirm
 
 ### Expected business result
-狀態永久LIVE；upload／confirm入口隱藏；直接嘗試亦拒絕；提示後續用Adjustment／Stocktake；沒有返回PRE_GO_LIVE操作
+只有完整gate及Sam簽核才進LIVE；狀態永久LIVE，upload／confirm入口隱藏且直接嘗試亦拒絕；提示後續用Adjustment／Stocktake；沒有返回PRE_GO_LIVE操作
 
 ### Acceptance criteria
-Required evidence: Go-Live確認、LIVE頁、拒絕結果 Status remains `NOT_RUN`; mandatory and blocking. A baseline-bound business decision is required, and automation PASS never substitutes for human acceptance.
+Required evidence: Data Freeze、對賬、DB／rehearsal證據、Sam簽核、LIVE頁、拒絕結果 Status remains `NOT_RUN`; mandatory and blocking. Automation PASS never substitutes for human acceptance.
 
 ## UAT-103 — OPEN-012 — FR-OPEN-007；結果保留與最小資料
 
