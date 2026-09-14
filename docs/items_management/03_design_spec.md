@@ -25,7 +25,7 @@ The complete legacy design is retained below. Canonical `DES-*` items provide st
 | DES-006 | Fixed HKD price and numeric rules | §4.6, §5.2, §6.5 | FR-044, FR-045, FR-046, FR-047, FR-048, FR-049 | ALIGNED |
 | DES-007 | Relational schema, constraints and migrations | §5 | FR-011, FR-012, FR-015, FR-039, FR-040; SEC-008; NFR-006, NFR-008, NFR-009, NFR-010 | PARTIAL; operational upgrade proof pending |
 | DES-008 | Item/SKU API contracts, error semantics and idempotency | §6.1–6.3, §6.9–6.11 | FR-011, FR-012, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031 | PARTIAL; standalone SKU create retained by HD-001 and pending TASK-038 |
-| DES-009 | Catalog API and reference protection | §6.4, §8.2, §8.4 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | IMPLEMENTATION_GAP for referenced Brand/UOM error mapping |
+| DES-009 | Catalog API and reference protection | §6.4, §8.2, §8.4 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | IMPLEMENTED with current developer evidence; formal acceptance pending |
 | DES-010 | UOM conversion and lookup contract | §5.8, §8.3 | FR-039, FR-040, FR-041, FR-042, FR-043 | ALIGNED for current consumers |
 | DES-011 | Media storage, API and consistency | §2.6, §5.11, §6.6, §8.5 | FR-011, FR-012, FR-015; SEC-007, SEC-008, SEC-009; NFR-011 | ALIGNED with filesystem compensation risk |
 | DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTED with current developer evidence; formal acceptance pending |
@@ -50,7 +50,7 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 - `ItemAdminService` still projects `attributeValues: []` and `variantValues: []`, while response schemas cap both arrays at zero. The Attribute/Variant persistence therefore is not observable through the promised detail contract.
 - The retained `POST /api/v1/skus/create` standalone SKU-create flow for existing Variant Items is implemented under `TASK-038` after human decision `HD-001` on 2026-09-11.
 - The `GET /api/v1/item-audit/logs` query is presented by `ItemAuditPage.vue` at `/items/audit`, with date, actor, target, action and target-type filters plus before/after/reason context (`TASK-039`).
-- Brand and UOM permanent deletion still contain stale assumptions that no reference tables exist. Current foreign keys reject referenced deletion, but the service does not translate those failures to the documented `CATALOG_IN_USE` public error as Attribute deletion does.
+- Brand and UOM permanent deletion maps current MySQL FK-reference failures to the documented `CATALOG_IN_USE` public error. `referenceTypes` is stable and actionable: Brand reports `items`; UOM reports the actual ordered subset of `sku_uoms`, `sku_measurements` and `attributes` (or `unknown` if a raced dependency disappears before description). Focused service tests cover direct and wrapped driver errors; TC-014 has current local-MySQL evidence for rollback and no audit on failure (`TASK-040`).
 - Import execution writes Item/SKU/UOM rows directly. The earlier confirm transaction writes one job-level `item.import` audit record, but item.create/item.update audit is not transactionally coupled to the imported aggregate changes.
 - No production downstream Purchasing/Inventory/Sales FK currently exists; the future reference-guard integration remains a declared dependency, not an implementation failure against an available provider.
 
@@ -431,7 +431,7 @@ erDiagram
 | `status` | VARCHAR(20) | `active` | `active`／`inactive`／`archived`。 |
 | `version`、時間、操作者 | 共通欄位 | — | 同 §5.1。 |
 
-索引／約束：`UNIQUE(code)`、`INDEX(status, name)`。被 SKU UOM、attribute 或 net content 引用時不可刪。
+索引／約束：`UNIQUE(code)`、`INDEX(status, name)`。被 SKU UOM、attribute，或 SKU 的 net content／weight／dimension 引用時不可刪；`CATALOG_IN_USE.details.referenceTypes` 分別以 `sku_uoms`、`attributes`、`sku_measurements` 回報實際依賴類型。
 
 ### 5.6 `items`
 
@@ -1676,7 +1676,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-009 — Catalog API and reference protection
 
 ### Decision
-Apply the detailed design in preserved sections `§6.4, §8.2, §8.4` for catalog api and reference protection. Current alignment classification: `IMPLEMENTATION_GAP for referenced Brand/UOM error mapping`.
+Apply the detailed design in preserved sections `§6.4, §8.2, §8.4` for catalog api and reference protection. Current alignment classification: `IMPLEMENTED with current developer evidence; formal acceptance pending`.
 
 ### Rationale
 This design is required by FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038; exact typed relationships are maintained in `08_traceability.json`.

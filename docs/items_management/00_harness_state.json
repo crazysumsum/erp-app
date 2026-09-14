@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 13,
+  "revision": 16,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
-  "current_task": "TASK-039",
+  "current_task": "TASK-041",
   "baseline": {
-    "design": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
-    "plan": "f3fb4aebb9cb367b748ae3067eecc3f1b4a1dd946b7399cc9cd68e878a5a03e9",
-    "code_commit": "8b0a5e703a9e6a779590bd61cf40048932f0959c",
-    "source_fingerprint": "3f661ab94bb451b7b1c9cce498d8b6c291ebdba8f0abac2ad365db6d71ba38f4",
+    "design": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
+    "plan": "ea0c5d49ee0408d46b78e3b2bc25fab877c046bee14cde23d48f72ebdaf7372c",
+    "code_commit": "ae5be61ed7c64a7adeecfedeb35cca6e32def7d2",
+    "source_fingerprint": "6e9e1b0d8cb5cef2d842f15d3287885ad4ae7338490124715b2b6d4d16cbc4c4",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
@@ -64,8 +64,8 @@
     "TASK-036": "DONE",
     "TASK-037": "IN_PROGRESS",
     "TASK-038": "IN_PROGRESS",
-    "TASK-039": "IN_PROGRESS",
-    "TASK-040": "PENDING",
+    "TASK-039": "DONE",
+    "TASK-040": "DONE",
     "TASK-041": "PENDING",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
@@ -174,6 +174,58 @@
         "TASK-039"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-009",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed starting TASK-040 development on 2026-09-14.",
+      "recorded_at": "2026-09-14T07:28:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f3fb4aebb9cb367b748ae3067eecc3f1b4a1dd946b7399cc9cd68e878a5a03e9",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-040"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-010",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed starting TASK-040 development on 2026-09-14 against the existing CATALOG_IN_USE design; the refreshed baseline records its completed alignment and actionable dependency details.",
+      "recorded_at": "2026-09-14T07:44:24Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-040",
+        "DES-009"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-011",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed starting TASK-040 development on 2026-09-14; the refreshed plan baseline records actual implementation evidence without granting CI or formal acceptance.",
+      "recorded_at": "2026-09-14T07:44:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ea0c5d49ee0408d46b78e3b2bc25fab877c046bee14cde23d48f72ebdaf7372c",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-040"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -220,6 +272,18 @@
       "reviewer": "/root/item_design_review",
       "reviewed_baseline": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
       "source_ref": "docs/items_management/04_design_review.md#rev-006--separate-task-039-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-007",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
+      "source_ref": "docs/items_management/04_design_review.md#rev-007--separate-task-040-implementation-review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -371,5 +435,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit the verified TASK-039 vertical slice; do not push, create a PR, or merge without a new explicit request."
+  "next_safe_action": "Begin TASK-041 by characterizing current CSV import validation and audit transaction boundaries with failing tests before changing production code."
 }

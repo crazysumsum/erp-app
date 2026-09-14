@@ -158,7 +158,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: referenced Brand/UOM delete returns documented conflict without partial delete/audit; unreferenced deletion still succeeds atomically.
 - Verification: service/integration race and rollback tests; full Item regression and CI.
 - Dependencies: current Item/SKU schema. Risk: high API correctness. Rollback: revert service error mapping.
-- Definition of Done/status: deterministic tests pass; `PLANNED`.
+- Definition of Done/status: direct and wrapped MySQL FK errors are mapped with actionable actual reference types; focused service tests, full server regression and true-MySQL rollback/no-audit verification pass; `IMPLEMENTATION_COMPLETE`, with CI and formal acceptance still pending.
 
 ### TASK-041 — Align CSV import with aggregate validation and transactional audit
 
@@ -477,7 +477,7 @@ T01 migration freeze
 **Acceptance criteria:**
 
 - [x] Brand 名稱及 UOM Code 的大小寫唯一衝突映射為穩定公開錯誤。
-- [ ] 被 Item、SKU UOM、Attribute 或 net content 使用時不可永久刪除——按 design_spec.md §8.4 的 reference-guard 延後原則，Item／SKU／Attribute 等表尚未建立，這部分保護要等對應表存在、T08 之後才能接上並驗證；本階段只完成 Brand／UOM 自身欄位（名稱、Code）唯一性保護。
+- [x] 被現有 Item、SKU UOM、Attribute，或 SKU 的 net content／weight／dimension UOM 外鍵引用時不可永久刪除；`TASK-040` 已把直接或 wrapped MySQL FK 錯誤映射為穩定 `CATALOG_IN_USE`，列出實際依賴類型，並以真 MySQL 驗證失敗時資料與 audit 均不變。尚未存在的跨模塊引用仍按 §8.4 在實際 consumer 出現時接入。
 - [x] Brands／UOM pages 正確處理只讀、管理、高風險認證及 empty／error state。
 
 **Verification:**

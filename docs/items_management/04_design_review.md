@@ -111,3 +111,12 @@ The earlier “Independent” title is historical wording without sufficient pro
 - findings resolved: all actual Item Audit producer actions and target types are filterable; Category Attribute assignment records express added/removed assignments and updated before/after values; legacy numeric-array records render safely with an explicit missing-detail notice.
 - evidence reviewed: current client/server regression and owner-authorized local MySQL Item Audit integration run; reviewer did not execute commands.
 - disposition: no open P0/P1 implementation defect. CI, formal acceptance and merge gates remain separate.
+
+## REV-007 — Separate TASK-040 implementation review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- scope: uncommitted `TASK-040` Brand/UOM referenced-delete error mapping, public dependency details, rollback/no-audit behavior, focused unit/MySQL tests and aligned documentation; read-only code review
+- finding resolved: the first candidate returned one coarse UOM reference type and omitted existing SKU measurement FKs. The implementation now performs same-transaction `FOR UPDATE` current reads after the FK conflict and returns the actual ordered subset of `sku_uoms`, `sku_measurements` and `attributes`, with an explicit `unknown` race fallback.
+- evidence reviewed: unit 61/61 and focused local-MySQL 1/1. Additional developer evidence records the final full server regression at 1,214 pass with 228 explicit DB skips, the full owner-authorized Item Catalog local-MySQL suite at 10/10 and lint clean. The reviewer did not execute commands.
+- disposition: no remaining P0/P1/P2 implementation finding. CI, formal acceptance and merge gates remain separate.

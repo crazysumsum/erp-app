@@ -104,7 +104,7 @@
         "id": "item-sku-uom-provider",
         "version": "aligned-design-v2",
         "source": "docs/items_management/03_design_spec.md",
-        "sha256": "f35f447e1a8ad6a243f47500214bbfd32af349db1b10b519e860e0bf0be9c3a5",
+        "sha256": "d8fcb8ad651ca46aae8d961feb75ff6f81bbe21f7b5fedc72d79fea979bfedbe",
         "consumers": [
           "supplier-management",
           "purchasing-receiving",
