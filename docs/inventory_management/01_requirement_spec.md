@@ -5,9 +5,9 @@
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Inventory Management 業務需求書 |
-| 文件版本 | 0.2 Draft |
+| 文件版本 | 0.3 Approved Planning Baseline |
 | 文件日期 | 2026-09-07 |
-| 文件狀態 | 核心業務意圖及DEC-014～019已確認；待完整需求簽核及獨立設計評審 |
+| 文件狀態 | Product Owner／獨立評審人Sam已批准目前需求、設計及P0～P5計畫基線；尚未授權進入IMPLEMENT |
 | 適用系統 | ERP App |
 | 適用組織 | 單一公司；中小企業 |
 | 營運規模 | 5個以內倉庫；不設硬性系統上限 |
@@ -48,6 +48,7 @@ Inventory Management 將成為所有實際庫存數量及位置的唯一事實�
 
 | 版本 | 日期 | 摘要 |
 | --- | --- | --- |
+| 0.3 Approved Planning Baseline | 2026-09-14 | Sam完成獨立人工評審並批准設計／計畫；確認Serial、低效期Override、Returns、Adjustment、Data Freeze、Go-Live責任及DB帳號分離決策；明確暫不進入IMPLEMENT。 |
 | 0.2 Draft | 2026-09-14 | Harness 2.0原位對齊；Product Owner批准DEC-014～019，技術基線另採MySQL 8.0。 |
 | 0.1 Draft | 2026-09-07 | 根據訪談建立面向中小企業、以Warehouse／Bin／SKU／Lot為核心的精簡庫存需求。 |
 
@@ -394,7 +395,7 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 | FR-LOT-004 | Must | Tracking Policy為`batch_expiry`時，Lot Number及Expiry Date均必填。 |
 | FR-LOT-005 | Must | 同一SKU的Lot Number經trim後唯一；相同SKU／Lot的Expiry Date及Manufacture Date不得互相矛盾。 |
 | FR-LOT-006 | Must | Expiry Date早於當日的Lot自當日開始不可預留、分配或正常出庫；判定使用系統統一時區。 |
-| FR-LOT-007 | Must | 如SKU有Minimum Receipt Life，收貨不足效期時須由Receiving模組提供有效專門權限及原因，Inventory才可過帳。 |
+| FR-LOT-007 | Must | 如SKU有Minimum Receipt Life，收貨不足效期但尚未過期時須由Receiving模組提供`receiving.expiry.override`、逐筆原因及門檻證據，Inventory才可過帳；已過期Lot永遠不可Override。 |
 | FR-LOT-008 | Must | 如SKU有Minimum Sale Life，低於門檻的Lot不得被正常銷售分配或出庫。 |
 | FR-LOT-009 | Must | `serial` Tracking Policy在本期須被明確拒絕並回傳可理解錯誤，不得降級為`none`或`batch`。 |
 | FR-LOT-010 | Should | 使用者可按指定天數區間查看即將到期Lot，但本期不提供自動電郵或短訊提醒。 |
@@ -675,7 +676,7 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 
 - Purchasing只建立採購意圖；Receiving確認實際SKU、數量、Lot、Expiry及目的Bin後才呼叫Inventory Receipt。
 - Inventory不保存採購價或計算成本，只保存必要來源ID及數量／批次快照。
-- Remaining Receipt Life不足時，Receiving須提供有效例外權限、原因及門檻證據；Inventory重新驗證後才可過帳。
+- Remaining Receipt Life不足但尚未過期時，Receiving須提供`receiving.expiry.override`、逐筆原因、操作者、SKU／Lot／Expiry、適用門檻、實際剩餘日數、Receipt／GR及request／operation證據；Inventory重新驗證後才可過帳。已過期Lot永遠不可Override。
 - Receipt重送不得重複入庫；Purchase Order或Receipt修改不得回寫已過帳Movement。
 - 採購退回由相應流程建立正式Issue來源，不可直接刪除Receipt或改Balance。
 
@@ -690,7 +691,7 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 ### 12.5 Returns整合
 
 - Returns流程判定實際退回SKU、數量、Lot、Expiry、目的Bin及Stock Status後才過帳Receipt。
-- Customer Return建議預設進Quarantined，但正式預設及檢查流程由Returns需求確認，Inventory不自行把退貨當成Available。
+- Customer Return一律預設進`QUARANTINED`；完成授權品質檢查後，才可透過Status Transfer轉為`AVAILABLE`或`DAMAGED`，Inventory不得把退貨直接當成可售庫存。
 - Supplier Return使用正式Issue並保存來源；不得以負Adjustment代替。
 - 退貨退款、供應商貸項及會計處理由相應模組負責。
 
@@ -891,7 +892,7 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 
 ### 18.1 決策紀錄及來源
 
-`DEC-001～012`及`DEC-020`來自原需求訪談的明確確認；`DEC-013`沿用已核准的Item Management數量政策；`DEC-014～019`原為保持簡單與資料一致而提出的BA基線，已由Product Owner（Sam）於2026-09-14在Inventory原位對齊決策中逐項批准。這項批准確認六項決策語意，不等於批准整份需求、設計、實作、測試或發佈。
+`DEC-001～012`及`DEC-020`來自原需求訪談的明確確認；`DEC-013`沿用已核准的Item Management數量政策；`DEC-014～019`原為保持簡單與資料一致而提出的BA基線，已由Product Owner（Sam）於2026-09-14逐項批准。`DEC-021～026`來自同日的逐題解釋與人工確認。Sam其後以獨立人工評審人身分批准目前設計及P0～P5計畫基線，但明確暫不授權進入`IMPLEMENT`。
 
 | 編號 | 決策 | 需求影響 |
 | --- | --- | --- |
@@ -915,15 +916,22 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 | DEC-018 | Opening Balance只在Go-Live前使用。 | 上線後永久關閉並改用Adjustment／Stocktake。 |
 | DEC-019 | 本期沒有Inventory雙人審批。 | 依權限、重新認證、原因及Audit控制高風險操作。 |
 | DEC-020 | Inventory不自行建立上下游業務單據。 | 只接受正式來源並保存Source Reference。 |
+| DEC-021 | 本期不實作Serial Tracking；所有Serial SKU過帳fail closed，存在Active inventory-tracked Serial SKU時禁止Go-Live。 | 不把Serial SKU降級為一般數量庫存；未來支援Serial須另行變更需求及設計。 |
+| DEC-022 | Receiving低效期例外統一使用`receiving.expiry.override`；只適用於尚未過期的Lot，須有逐筆原因及完整Audit evidence。 | 同時要求一般收貨權限與專門Override權限；淘汰文件中的`receiving.override_shelf_life`別名。 |
+| DEC-023 | Customer Return一律預設進`QUARANTINED`。 | 品質檢查後才可透過Status Transfer轉為`AVAILABLE`或`DAMAGED`。 |
+| DEC-024 | Adjustment reason固定為`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`。 | `OTHER`必須附更詳細說明；分類不取代`inventory.adjust`、強認證及Audit。 |
+| DEC-025 | Warehouse／Operations Lead負責舊系統對賬，Sam負責最終Go-Live簽核；切換採明確Data Freeze，凍結後舊系統不得再寫庫存。 | P5填寫實際凍結時間、Opening資料並完成對賬後，才可執行不可逆Go-Live。 |
+| DEC-026 | Production application DB account與migration account分離，Go-Live前必須完成backup／restore rehearsal。 | App帳號維持最小日常DML權限，不得執行schema migration；migration帳號只在受控部署使用。 |
 
-### 18.2 待技術設計及上線前確認
+### 18.2 已確認實作與上線約束
 
-- 更新Item Management的`serial` Tracking Policy，或定義資料Migration／啟動檢查確保沒有Active Serial SKU。
+- 本期不實作Serial Tracking；Inventory對Serial SKU過帳fail closed，Go-Live檢查須證明沒有Active inventory-tracked Serial SKU。
 - 確認Expiry Date代表「最後可使用日期」，以APP_TIME_ZONE當日結束後才成為Expired；所有UI、CSV及API須一致。
-- 確認首批Warehouse／Bin代碼及是否需要舊系統對照碼；不因此建立通用自訂欄位平台。
-- 確認Opening Balance Go-Live時間、資料凍結、舊系統對賬owner及簽核人。
-- 確認簡單Adjustment Reason Categories，例如盤盈、盤虧、損壞、過期、資料修正及調撥差異。
-- 由各下游規格確認Returns預設Stock Status，以及Receiving低效期例外的正式權限名稱及證據格式。
+- P5準備首批Warehouse／Bin代碼、Opening CSV及所需舊系統對照；不因此建立通用自訂欄位平台。
+- P5填寫實際Data Freeze／Go-Live時間；Warehouse／Operations Lead負責舊系統對賬，Sam負責最終Go-Live簽核。
+- Adjustment reason allowlist固定為`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`；`OTHER`必須有詳細說明。
+- Customer Return預設`QUARANTINED`；Receiving低效期例外固定使用`receiving.expiry.override`及DEC-022的證據格式。
+- Production application DB account與migration account分離，並在Go-Live前完成backup／restore rehearsal。
 - 由技術設計確認容量基線的索引、查詢、鎖定、冪等保存及備份還原方案，不改變本文件語意。
 
 ## 19. 需求追溯摘要及簽核
@@ -1385,7 +1393,7 @@ Invalid, unauthorized, stale, conflicting or incomplete input must not create a 
 ## FR-027 — 如SKU有Minimum Receipt Life，收貨不足效期時須由Receiving模組提供有效專門權限及原因，Inventory才可過帳
 
 ### Statement
-如SKU有Minimum Receipt Life，收貨不足效期時須由Receiving模組提供有效專門權限及原因，Inventory才可過帳。 (Legacy identity: `FR-LOT-007`; priority: `Must`.)
+如SKU有Minimum Receipt Life，收貨不足效期但尚未過期時須由Receiving模組提供`receiving.expiry.override`、逐筆原因及門檻證據，Inventory才可過帳；已過期Lot永遠不可Override。 (Legacy identity: `FR-LOT-007`; priority: `Must`.)
 
 ### Acceptance criteria
 The observable outcome stated by `FR-LOT-007` is met and is verified by every mandatory mapped technical and UAT case on the approved baseline.
@@ -1473,7 +1481,7 @@ Invalid, unauthorized, stale, conflicting or incomplete input must not create a 
 ## FR-035 — Receipt只能進入來源指定的Available、Quarantined或Damaged狀態；Returns等模組不得讓Inventory猜…
 
 ### Statement
-Receipt只能進入來源指定的Available、Quarantined或Damaged狀態；Returns等模組不得讓Inventory猜測品質結果。 (Legacy identity: `FR-POST-005`; priority: `Must`.)
+Receipt只能進入來源指定的Available、Quarantined或Damaged狀態；Customer Return固定預設`QUARANTINED`，品質檢查後才可轉為`AVAILABLE`或`DAMAGED`。 (Legacy identity: `FR-POST-005`; priority: `Must`.)
 
 ### Acceptance criteria
 The observable outcome stated by `FR-POST-005` is met and is verified by every mandatory mapped technical and UAT case on the approved baseline.
