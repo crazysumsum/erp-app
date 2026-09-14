@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 13,
+  "revision": 18,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,11 +10,11 @@
   "current_task": null,
   "baseline": {
     "design": "7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565",
-    "plan": "6b612e19d29d6655f295f9c27e858bccf570dffdcb97915061df964c44ce2532",
-    "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
-    "source_fingerprint": "44024269fa48eb478e70c5890d61ef82613b4580e81e15b4ca8e414c4d7b0678",
+    "plan": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+    "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+    "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
     "worktree": "/private/tmp/erp-business-master-phase-1",
-    "default_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+    "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
     "mode_entry_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d"
   },
   "runtime": {
@@ -254,6 +254,40 @@
       "baseline_kind": "PLAN",
       "baseline_sha256": "6b612e19d29d6655f295f9c27e858bccf570dffdcb97915061df964c44ce2532",
       "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "server/database/migrations/0027_create_business_master.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/index.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Plan 52e5d476 及原有三個共享路徑授權",
+      "recorded_at": "2026-09-14T05:48:50Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-005",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Plan 52e5d476 及原有三個共享路徑授權",
+      "recorded_at": "2026-09-14T05:48:50Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
       "scope": [
         "server/database/migrations/0027_create_business_master.js",
         "server/src/modules/authorization/permissionCatalogue.js",
@@ -520,7 +554,18 @@
     "evidence/20260914T035632-9e7c2e6acaae/run.json",
     "evidence/20260914T035645-978d9930394c/run.json",
     "evidence/20260914T035657-8fa495c6affc/run.json",
-    "evidence/20260914T035708-cee8b9dfb661/run.json"
+    "evidence/20260914T035708-cee8b9dfb661/run.json",
+    "evidence/20260914T040223-da9ece0fd946/run.json",
+    "evidence/20260914T040223-df1f8069064f/run.json",
+    "evidence/20260914T040237-ab3a07a86039/run.json",
+    "evidence/20260914T040251-77ebdaf655e1/run.json",
+    "evidence/20260914T040302-60b85cede684/run.json",
+    "evidence/20260914T054926-5ce277e4c6ad/run.json",
+    "evidence/20260914T054926-f62615d692d9/run.json",
+    "evidence/20260914T054939-621d948338cb/run.json",
+    "evidence/20260914T055101-1f710e2d7d9b/run.json",
+    "evidence/20260914T055110-1e48198f2a5b/run.json",
+    "evidence/20260914T055118-6e08b49064b1/run.json"
   ],
   "defects": [],
   "next_safe_action": "Freeze the exact Phase 1 candidate commit, push it, and obtain current-candidate CI plus independent PR review before merge."

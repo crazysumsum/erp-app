@@ -24,6 +24,9 @@
    separate transaction after the catalog transaction rolls back, satisfying FR-011 / TC-014 without storing tokens.
 8. Make startup readiness execute the same full column/type/collation/index compatibility inspector as migration
    `0027`, closing the prior table-presence-only gap in FR-012.
+9. Reduce the duplicated manifest-level developer suite list to the shared `lint` suite. The typed per-Phase `developer_suites` lists remain the
+   execution authority, so Phase 1 does not incorrectly require the Phase 2 UI/Playwright artifacts before it can
+   merge. Global Technical, Regression and UAT requirements remain unchanged for formal verification.
 
 ## Scope impact
 

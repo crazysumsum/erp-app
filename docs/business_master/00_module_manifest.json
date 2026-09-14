@@ -136,7 +136,7 @@
   "matrix": "08_traceability_matrix.md",
   "state": "00_harness_state.json",
   "required_suites": {
-    "developer": ["lint","client-build","business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
+    "developer": ["lint"],
     "technical": ["business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
     "regression": ["business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
     "uat": ["business-master-uat-browser"]

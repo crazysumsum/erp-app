@@ -1,0 +1,82 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T040223-da9ece0fd946",
+  "suite_id": "business-master-consumer-contract",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "6b612e19d29d6655f295f9c27e858bccf570dffdcb97915061df964c44ce2532",
+  "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+  "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+  "started_at": "2026-09-14T04:02:23.623029Z",
+  "ended_at": "2026-09-14T04:02:23.859802Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-1-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/private/tmp/erp-business-master-phase-1/docs/business_master/evidence/20260914T040223-da9ece0fd946/business-master-consumer-contract.xml",
+    "server/test/business-master/consumer-contract/*.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "abf27120c21a6bafa6c9a549e9a0ee40437c0424cbe6812fe7be0137ee3a96f1",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-020",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T040223-da9ece0fd946/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T040223-da9ece0fd946/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T040223-da9ece0fd946/business-master-consumer-contract.xml",
+      "sha256": "dac3ad86782b7e2ec82f2ce6e4e70573bcfc48de4d5ba9cb0124a1601a648c4f",
+      "bytes": 494
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
