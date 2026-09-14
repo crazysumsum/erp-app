@@ -1,24 +1,24 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 21,
+  "revision": 24,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-002",
+  "current_task": null,
   "baseline": {
     "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
     "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "118773d118f71ae1202a4c957b69580dfc2f3b30",
+    "code_commit": "42117ddade8d07393fb51239dfc8113b5a21d98f",
     "source_fingerprint": "4cfad57151ae34c7cdd2bd6ff5d3b4689756c9daf30bb404f4abe60c3d31d84c",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
     "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
   },
   "runtime": {
-    "instance_id": "CUSTOMER-PHASE-001-UNPROVISIONED",
+    "instance_id": "CUSTOMER-PHASE-001-NO-ACTIVE-RUNTIME",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-001"
@@ -27,7 +27,7 @@
   },
   "tasks": {
     "TASK-001": "DONE",
-    "TASK-002": "IN_PROGRESS",
+    "TASK-002": "DONE",
     "TASK-003": "PENDING",
     "TASK-004": "PENDING",
     "TASK-005": "PENDING",
@@ -293,9 +293,17 @@
       "idempotency_key": "mode-change-17",
       "status": "CONFIRMED",
       "source_ref": "2026-09-14 Codex task user: 進入IMPLEMENT階段"
+    },
+    {
+      "id": "EXT-MIGRATION-002",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_20260914",
+      "idempotency_key": "customer-phase001-permission-migration-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14: fresh isolated schema migration through 0027, full rerun no-op, six permission rows and system-admin matrix verified; erp_customer_phase001_20260914 dropped after verification"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Provision an isolated MySQL schema, then execute and rerun the approved Customer permission migration before marking TASK-002 DONE; do not use erp_dev or any unverified database."
+  "next_safe_action": "Before TASK-003, refresh origin/main and allocate a new migration number only after an isolated MySQL schema is again available; TASK-004 remains blocked on the Business Master Currency/Payment Term provider."
 }
