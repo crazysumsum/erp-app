@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 4,
+  "revision": 5,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
     "plan": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
-    "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
-    "source_fingerprint": "85fd1e6533cebf178303c9d4fde1831b7cf464fb073318183d3884ae5404a587",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-gap-reconcile",
-    "default_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+    "code_commit": "34563b66880ea248a1595b4f84117a52f68d36eb",
+    "source_fingerprint": "34707d3beb85552d7e1ef44092f56fe5d8bb962b200290d7dc18e860b30f180d",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-closeout",
+    "default_commit": "34563b66880ea248a1595b4f84117a52f68d36eb",
     "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
   },
   "runtime": {
@@ -277,7 +277,7 @@
         "DES-004"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Owner approved repointing docs/customer_management/00_module_manifest.json to docs/fulfillment_shipping_management/03_design_spec.md, sha256 7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec, mirroring PR #92 for the supplier -> purchasing pointer. The edit is NOT applied in this change: validate_module_boundary.py returned MODE_WRITE_DENIED because REVIEW_AND_ALIGN may write only inside the selected module directory, and a SCOPE approval never bypasses a mode limit. It is delivered as a separate Customer-module-scoped pull request. GAP-TR-002 stays ASSIGNED until that pull request merges."
+      "answer_ref": "CLOSED. docs/customer_management/00_module_manifest.json was repointed to docs/fulfillment_shipping_management/03_design_spec.md, sha256 7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec, by PR #97 (merge commit 34563b6), delivered as a Customer-module-scoped change because validate_module_boundary.py returned MODE_WRITE_DENIED when it was bundled into a REVIEW_AND_ALIGN change. The pointer now verifies as MATCH. GAP-TR-002 is closed."
     }
   ],
   "external_actions": [
@@ -320,9 +320,33 @@
       "idempotency_key": "fulfillment-shipping-align-cleanup-20260914",
       "status": "CONFIRMED",
       "source_ref": "git merge-base --is-ancestor confirmed 5fcd19d is contained in origin/main before deletion; remote branch deleted, worktree removed, local branch deleted with -d (not -D) after fast-forwarding main."
+    },
+    {
+      "id": "EXT-006",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/95 -> main",
+      "idempotency_key": "fulfillment-gap-tc001-pr95-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 536459a94ffee833727bb3a84cf7ab2c8b0bd2dd on origin/main. CI was green on head 6912aae (4/4) after origin/main 3ea1dd8 was integrated and after the cross-module edit was removed following MODE_WRITE_DENIED. Earlier green runs on 5f0ec50 and 1bb33f6 were not reused as merge evidence."
+    },
+    {
+      "id": "EXT-007",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/97 -> main",
+      "idempotency_key": "customer-fulfillment-manifest-pr97-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 34563b66880ea248a1595b4f84117a52f68d36eb on origin/main; CI green on head 0a9ad1c (4/4). A Customer-module-scoped pull request, recorded here because it closes this module's GAP-TR-002 and answers HD-005. The write itself belongs to docs/customer_management and was not performed under this module's scope."
+    },
+    {
+      "id": "EXT-008",
+      "kind": "BRANCH_CLEANUP",
+      "target": "codex/fulfillment-gap-tc-001-reconcile and codex/fix-customer-fulfillment-manifest, remote plus local plus worktrees",
+      "idempotency_key": "fulfillment-closeout-cleanup-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "git merge-base --is-ancestor confirmed each branch tip was contained in origin/main before deletion; worktrees verified clean; remote branches deleted, local branches deleted with -d after fast-forwarding main. No fulfillment branch or worktree remains."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Follow-up alignment run on branch codex/fulfillment-gap-tc-001-reconcile, based on origin/main c397242. This checkpoint was written before this branch's own commit, so state_tool.py inspect will report COMMIT_CHANGED against the branch head; that is expected and is reconciled by the second commit on this branch. Changes: GAP-TC-001 downgraded HIGH -> MEDIUM with verified evidence, DR-04 rewritten, the two factually wrong Playwright sentences in 06 and 07 corrected, and the GAP-TR-002 fix deliberately excluded after validate_module_boundary.py returned MODE_WRITE_DENIED for docs/customer_management/00_module_manifest.json; that repoint ships as a separate Customer-scoped pull request. Plan baseline moved to d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a; APR-004 and HD-003-R2 re-approve at that baseline while APR-003 and HD-003 are retained as superseded history. Design baseline cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758 is unchanged, so APR-001 and APR-002 remain valid. Next safe step is to commit, push and open a PR; do not merge with checks pending or failing, and integrate origin/main first if it has moved again. Status stays BLOCKED on HD-004 (pin Playwright into the repository and CI before PHASE-002 opens any UI route) and on GAP-IMP-001 through GAP-IMP-005; IMPLEMENT is not authorized."
+  "next_safe_action": "Design and planning for this module are complete and closed out. All canonical artifacts are on origin/main at 34563b66880ea248a1595b4f84117a52f68d36eb; no fulfillment branch, worktree or open pull request remains. validate_traceability.py --check-approvals reports STRUCTURE_PASS, and design baseline cba0d670 and plan baseline d9e72993 are unchanged by this close-out because 00_gap_analysis.md, 00_artifact_inventory.md and 09_final_alignment_review.md are records, not specification files, so APR-001, APR-002, APR-004 and HD-003-R2 all remain bound to current baselines. Status stays BLOCKED, and the remaining blockers are not design work: HD-004 (pin the verified-working Playwright CLI into the repository and CI, and declare a separate browser suite in the profile rather than probing for it on fulfillment-technical) must be answered before PHASE-002 opens any UI route, and GAP-IMP-001 through GAP-IMP-005 (the Sales, Inventory and Customer modules, the transaction-aware Item assert and the three Fulfillment permissions) do not exist at 34563b66880ea248a1595b4f84117a52f68d36eb. Do not enter IMPLEMENT without an explicit mode authorization recorded with --mode-change-ref, and do not restart PHASE-001 until those providers land. Business acceptance and release sign-off remain open by design (GAP-RQ-002); both sign-off tables are filled only after the corresponding UAT batch is actually executed in TEST_AND_VERIFY."
 }
