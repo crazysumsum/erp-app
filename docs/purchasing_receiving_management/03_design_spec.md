@@ -1,4 +1,4 @@
-# Purchasing & Receiving Management 系統設計規格
+# Purchasing & Receiving Management 系統設計規格（Harness Aligned）
 
 ## 0. 文件資訊
 
@@ -6,18 +6,21 @@
 | --- | --- |
 | 模組 | Purchasing & Receiving Management |
 | 文件類型 | 可執行系統設計規格 |
-| 版本 | 0.1 Draft |
+| 版本 | 0.2 Approved Planning Baseline |
 | 日期 | 2026-09-08 |
-| 需求來源 | `docs/purchasing_receiving_management/requirement.md` |
+| 需求來源 | `docs/purchasing_receiving_management/01_requirement_spec.md` 0.2 |
 | UI／UX基準 | `docs/frontend-design.md` |
-| 目標技術棧 | Node.js ESM、Express 5、AJV、MySQL 5.7、Vue 3、Quasar 2 |
+| 目標技術棧 | Node.js ESM、Express 5、AJV、MySQL 8.0、Vue 3、Quasar 2 |
 | 實作狀態 | 本文件只定義設計；尚未實作、測試、提交或部署 |
+| 文件狀態 | ERP Product Owner（Sam）已批准為 planning baseline；尚未授權進入 IMPLEMENT |
 
 ### 0.1 文件目的
 
 本文件把業務需求轉成可直接拆解開發任務的前端、後端、API、資料庫、權限、交易、併發、冪等、測試及部署設計。它不改變需求書的業務範圍；如本文件與已批准的業務需求衝突，以需求書及其後明確確認的決策為準，先更新規格再開發。
 
 ### 0.2 本輪已確認並關閉的需求 Gate
+
+以下五項決策已由ERP Product Owner（Sam）於Harness 2.0對齊時正式批准，並已回寫`01_requirement_spec.md`的BR-038、BR-039及§18.3。
 
 | Gate | 最終設計決策 | 實作影響 |
 | --- | --- | --- |
@@ -459,7 +462,7 @@ Receipt輸入UOM只接受該PO Line確認時的Purchase UOM或Base UOM：Purchas
 - PK使用`BIGINT UNSIGNED AUTO_INCREMENT`；一家公司，不加tenant／company column。
 - Timestamp使用epoch milliseconds `BIGINT UNSIGNED`；業務日期用`DATE`；顯示依`APP_TIME_ZONE`。
 - Mutable root使用`version INT UNSIGNED NOT NULL DEFAULT 1`及compare-and-set。
-- MySQL 5.7不依賴CHECK constraints；enum／跨row規則由service驗證，DB以UNSIGNED、NOT NULL、FK、UNIQUE及generated columns作第二層防護。
+- 相容基線為MySQL 8.0：`CHECK` constraints可用，適合用於單row的數量、金額及enum下限上限防護；跨row與跨aggregate規則仍由service在transaction內驗證，DB另以UNSIGNED、NOT NULL、FK、UNIQUE及generated columns作第二層防護。（對齊修正：原稿以MySQL 5.7為基線並聲明不依賴CHECK constraints；實際CI服務為`mysql:8.0`，且Inventory模組已批准MySQL 8.0為相容基線。）
 - Business master及歷史FK預設`ON DELETE RESTRICT`；actor FK可`SET NULL`並保存username snapshot。
 - Confirmed交易、Approval snapshot、Status History、Operation及Audit至少保留7年，不提供一般DELETE。
 - 所有normalized keys由service產生；dynamic sort只能用allowlist映射。
@@ -1931,7 +1934,7 @@ Metrics labels不得包含PO／GR Number、Supplier／SKU名稱、reason或user 
 
 - Capability Map、module boundaries、API命名、permission及auth strength獲Engineering／Product確認。
 - Supplier／Item／Inventory owners確認§2.4 contracts，特別是Inventory batch receipt及partial reversal。
-- DBA確認§4 tables、FK、indexes、trigger及migration順序可在MySQL 5.7執行。
+- DBA確認§4 tables、FK、CHECK、indexes、trigger及migration順序可在MySQL 8.0執行。
 - QA確認§10～11覆蓋55項AC及真並發／失敗注入。
 - Frontend確認§7符合`docs/frontend-design.md`及375／768／1024／1440驗收。
 
@@ -1944,4 +1947,162 @@ Metrics labels不得包含PO／GR Number、Supplier／SKU名稱、reason或user 
 
 ### 15.3 規格變更控制
 
-若實作發現需求或provider contract需改變，先修改`requirement.md`／本文件並取得確認，再修改tasks及code。不可在程式內以未記錄fallback放寬Blocked Supplier、existing SKU commitment、無PO收貨、部分GR確認、超收原因、金額round或Reversal不變量。
+若實作發現需求或provider contract需改變，先修改`01_requirement_spec.md`／本文件並取得確認，再修改tasks及code。不可在程式內以未記錄fallback放寬Blocked Supplier、existing SKU commitment、無PO收貨、部分GR確認、超收原因、金額round或Reversal不變量。
+
+---
+
+## 16. Harness 2.0 正式設計定義
+
+本節把 §1～§15 的設計敘述整理成 12 個穩定的設計實體，作為 `08_traceability.json` 的 `DES` 節點。每個實體指向其權威章節；章節內容本身仍然是設計細節的來源，本節不重複也不取代它們。
+
+
+### 16.1 設計實體與權威章節
+
+| Design ID | 名稱 | 權威章節 |
+| --- | --- | --- |
+| DES-001 | 架構、模組邊界與Provider契約 | §1、§2.1～§2.4 |
+| DES-002 | 寫入交易骨架、全域鎖順序與冪等 | §2.5～§2.7 |
+| DES-003 | 數量與金額算法 | §2.8 |
+| DES-004 | Domain aggregate、狀態機與不變量 | §3 |
+| DES-005 | Database table、約束與migration切片 | §4 |
+| DES-006 | API與internal interface契約 | §5 |
+| DES-007 | 權限、安全與威脅模型 | §6 |
+| DES-008 | UI／UX、導航與A4列印 | §7 |
+| DES-009 | Service與核心算法 | §8 |
+| DES-010 | 程式碼架構與變更清單 | §9 |
+| DES-011 | 測試設計 | §10～§11 |
+| DES-012 | Configuration、logging、營運與分階段部署 | §12～§13 |
+
+## Formal definitions
+
+## DES-001 — 架構、模組邊界與Provider契約
+
+### Decision
+Purchasing與Receiving為同一monolith domain module，共用MySQL schema及transaction；對Supplier、Item、Inventory、User、Currency／Payment Term只經具名provider契約讀取，提交時重驗，provider不可用時fail closed。
+
+### Rationale
+設計規格 §1、§2.1～§2.4。單一交易邊界令GR確認可與Inventory過帳共用原子性；具名契約令跨模組語意可被contract test靜態驗證，避免以自由文字或本地table複製他模組主資料。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-002 — 寫入交易骨架、全域鎖順序與冪等
+
+### Decision
+所有state-changing命令走POST command＋framework idempotency＋永久domain operation記錄；固定全域鎖順序，同一event重送返回原結果，同一event搭配不同payload回409。
+
+### Rationale
+設計規格 §2.5～§2.7。雙層claim（HTTP idempotency與domain operation）令TTL過後的重送仍不會重複建單或重複入庫；固定鎖順序避免PO／GR／Inventory交叉deadlock。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-003 — 數量與金額算法
+
+### Decision
+Base Quantity為正整數且受config上限限制；Unit Price最多4位小數，Line Amount按Currency小數位ROUND_HALF_UP，PO Total為已round Line Amount之和；金額在API為decimal string，在程式以整數縮放／BigInt計算。
+
+### Rationale
+設計規格 §2.8，關閉需求OPEN-003。避免binary float造成可見rounding誤差，並令UI、CSV、列印與整合介面得到同一個server端正本數值。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-004 — Domain aggregate、狀態機與不變量
+
+### Decision
+PO、Approval、Goods Receipt及Receipt Reversal各自為aggregate root；PO狀態機為Draft／Pending Approval／Confirmed／Partially Received／Fully Received／Closed／Cancelled，狀態由Confirmed Receipt、Reversal及Close Remaining結果一致推導。
+
+### Rationale
+設計規格 §3。狀態由事實推導而非人工設定，令PO進度、Outstanding、Over-received與Inventory保持可對賬；Confirmed歷史採append-only，錯誤只能由Reversal更正。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-005 — Database table、約束與migration切片
+
+### Decision
+15張purchasing／receiving表（settings、document sequences、PO header／lines／approvals／status history、goods receipts／lines／details、reversals／reversal details、operation requests、audit logs）採InnoDB、BIGINT UNSIGNED PK、epoch毫秒時間、optimistic version及ON DELETE RESTRICT；migration按切片依賴順序additive交付。
+
+### Rationale
+設計規格 §4。以FK、UNIQUE、NOT NULL、generated column及trigger作第二層防護，令不變量不完全依賴應用層；additive migration令每個Phase可獨立forward migrate及回滾。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-006 — API與internal interface契約
+
+### Decision
+`/api/v1`之下查詢用GET、業務命令用POST；handler以靜態`api`宣告method、path、auth strength、permission、AJV schema（`additionalProperties:false`）及idempotency；response經projection allowlist輸出，錯誤使用穩定公開錯誤碼。
+
+### Rationale
+設計規格 §5。宣告式邊界令權限與schema可被自動註冊及靜態檢查；projection allowlist防止內部欄位、銀行資料或路徑意外外洩。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-007 — 權限、安全與威脅模型
+
+### Decision
+六項模組權限互不繼承；Approval使用password、Settings及Receipt Reversal使用device-password等高強度重新認證；route與transaction提交點各驗一次actor freshness，owner不符與不存在同回404。
+
+### Rationale
+設計規格 §6。職責分離必須在後端成立，前端隱藏按鈕不構成授權；提交點重驗令畫面載入後被撤權的使用者無法完成寫入。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-008 — UI／UX、導航與A4列印
+
+### Decision
+七個頁面沿用`PageHeader`、`DataTable`、`FormPanel`、`EllipsisCell`、confirm helper及notify；風險（超收、零單價、效期不足、版本衝突、逾時）以文字＋icon呈現而非只靠顏色；列印只提供A4 browser print。
+
+### Rationale
+設計規格 §7，關閉需求OPEN-005。沿用既有framework避免第二套UI pattern；不產生server-side PDF artifact令本期不需引入PDF library、檔案表或範本引擎。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-009 — Service與核心算法
+
+### Decision
+九個具名service（Sequence、PurchaseOrder、PurchaseApproval、PurchaseOrderLifecycle、GoodsReceipt、ReceivingPolicy、GoodsReceiptPosting、ReceiptReversal、PurchasingInquiry）以constructor injection取得database、provider、audit及time，transaction由service持有。
+
+### Rationale
+設計規格 §8。具名方法令狀態、權限與Audit可被靜態檢查及單元測試；禁止接收table name／status／permission的generic CRUD service。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-010 — 程式碼架構與變更清單
+
+### Decision
+明確列出需修改的既有檔案（權限正本、idempotency identity scope、menu、error messages）與新增的backend config／domain／handler／schema、frontend page／service及migration／test support檔案。
+
+### Rationale
+設計規格 §9。把設計轉成可核對的檔案清單，令Task拆分維持1～5檔案規模，並令越界修改在review時可見。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-011 — 測試設計
+
+### Decision
+純算法／service unit test、真MySQL migration與constraint integration、API＋DB integration、真並發與失敗注入、consumer／provider contract test、Vue page test、security test、效能容量及backup／restore對賬。
+
+### Rationale
+設計規格 §10～§11。冪等、原子性與lock order無法由mock證明，必須以真資料庫並發及失敗注入驗證；contract test令跨模組語意變更可被偵測。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
+
+## DES-012 — Configuration、logging、營運與分階段部署
+
+### Decision
+`server/config/purchasing.js`集中數量／金額／分頁上限；audit action allowlist、結構化log（脫敏）、metrics與告警、7年保留；Phase 0～4依序部署，每Phase一個PR與capability gate。
+
+### Rationale
+設計規格 §12～§13。集中config令上限可被測試引用而非散落；capability gate令未完成Phase的入口不會提前暴露給一般使用者。
+
+### Failure behavior
+違反此設計決策的實作（例如繞過交易邊界、以generic CRUD取代具名service、以client計算值取代server正本、或在未記錄的fallback中放寬不變量）必須在 review 或測試被攔截，而不是以警告放行；相關 Gate 記為 BLOCKED，先修訂本規格並重新取得批准。
