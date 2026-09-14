@@ -51,6 +51,7 @@
       "client/config/menu.js",
       "client/src/framework/http/errorMessages.js",
       "client/package.json",
+      "package.json",
       "package-lock.json",
       "docs/customer_management/**",
       "docs/supplier_management/**",

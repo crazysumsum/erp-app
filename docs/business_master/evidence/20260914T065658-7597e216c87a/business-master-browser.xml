@@ -1,0 +1,36 @@
+<testsuites id="" name="" tests="15" failures="0" skipped="0" errors="0" time="11.306507">
+<testsuite name="business-master.spec.js" timestamp="2026-09-14T06:56:59.321Z" hostname="technical" tests="6" failures="0" skipped="0" time="3.799" errors="0">
+<testcase name="TC-017 @technical 管理員可查看目錄並完成具 impact token 的停用" classname="business-master.spec.js" time="0.952">
+</testcase>
+<testcase name="TC-017 @technical 未知網路結果以相同 idempotency key 安全重試" classname="business-master.spec.js" time="0.937">
+</testcase>
+<testcase name="TC-017 @technical 雙擊確認只送出一個高影響命令" classname="business-master.spec.js" time="0.757">
+</testcase>
+<testcase name="TC-017 @technical 清單 503 顯示中文錯誤並可重試" classname="business-master.spec.js" time="0.456">
+</testcase>
+<testcase name="TC-017 @technical 空清單有明確狀態" classname="business-master.spec.js" time="0.338">
+</testcase>
+<testcase name="TC-017 @technical 未登入使用者會導向登入頁" classname="business-master.spec.js" time="0.359">
+</testcase>
+</testsuite>
+<testsuite name="business-master.spec.js" timestamp="2026-09-14T06:56:59.321Z" hostname="uat" tests="9" failures="0" skipped="0" time="6.456" errors="0">
+<testcase name="UAT-001 @uat 可按 URL-backed search 查閱 Currency" classname="business-master.spec.js" time="0.35">
+</testcase>
+<testcase name="UAT-002 @uat 管理員可建立 ISO Currency，代碼建立後編輯時唯讀" classname="business-master.spec.js" time="1.201">
+</testcase>
+<testcase name="UAT-003 @uat 可建立 NET_DAYS Payment Term 並看到 deterministic preview" classname="business-master.spec.js" time="0.913">
+</testcase>
+<testcase name="UAT-004 @uat END_OF_MONTH 與 MANUAL preview 顯示正確語意" classname="business-master.spec.js" time="0.863">
+</testcase>
+<testcase name="UAT-005 @uat 停用前顯示 entity、語意差異及 consumer 計數" classname="business-master.spec.js" time="0.497">
+</testcase>
+<testcase name="UAT-006 @uat consumer impact 未知時 fail closed" classname="business-master.spec.js" time="0.476">
+</testcase>
+<testcase name="UAT-007 @uat view-only 使用者可看頁面但沒有管理操作" classname="business-master.spec.js" time="0.338">
+</testcase>
+<testcase name="UAT-008 @uat 409 重新載入列表並保留未提交文字" classname="business-master.spec.js" time="0.824">
+</testcase>
+<testcase name="UAT-009 @uat 375px 回應式流程無 console 或 request failure" classname="business-master.spec.js" time="0.994">
+</testcase>
+</testsuite>
+</testsuites>

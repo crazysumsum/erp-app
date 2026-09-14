@@ -1,0 +1,109 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T065505-16c7c781d72e",
+  "suite_id": "business-master-browser",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+  "source_fingerprint": "5ce70e4bcc3d52d1b758c395485d002eaf65857c34f6c859311a839c9b2f272b",
+  "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+  "started_at": "2026-09-14T06:55:05.123542Z",
+  "ended_at": "2026-09-14T06:55:16.945287Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-2-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/business-master/playwright.config.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "145cd73cbab020388fbd87612cc68cdbd31f94c1b6a498a5db43ec4da06732a2",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-017",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-001",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-002",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-003",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-004",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-005",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-006",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-007",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-008",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-009",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T065505-16c7c781d72e/stdout.log",
+      "sha256": "e1a45e24f47f458235971af44f057962a36c8a3ed402202955ea60cac556dc56",
+      "bytes": 2224
+    },
+    {
+      "path": "evidence/20260914T065505-16c7c781d72e/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T065505-16c7c781d72e/business-master-browser.xml",
+      "sha256": "70fea43202193e0120bc1e5f0c7dfc7c7e7e2fbe974a331f375a0bd4a5fe3835",
+      "bytes": 2587
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": false,
+  "spec_unchanged": true,
+  "limitations": [
+    "Execution changed source/specification/HEAD; previous evidence cannot establish the new baseline.",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

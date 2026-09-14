@@ -1,0 +1,108 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T065658-7597e216c87a",
+  "suite_id": "business-master-browser",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+  "source_fingerprint": "975c0af52d5470651b762a984958448c7db3a34b555da88358f2ebafd03986f3",
+  "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+  "started_at": "2026-09-14T06:56:58.495678Z",
+  "ended_at": "2026-09-14T06:57:10.363295Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-2-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/business-master/playwright.config.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "145cd73cbab020388fbd87612cc68cdbd31f94c1b6a498a5db43ec4da06732a2",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-017",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-001",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-002",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-003",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-004",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-005",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-006",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-007",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-008",
+      "status": "PASS"
+    },
+    {
+      "id": "UAT-009",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T065658-7597e216c87a/stdout.log",
+      "sha256": "c198e7c6fa6e6c6afbd022708790406e268962d0f6a65e50d23957020e195a10",
+      "bytes": 2224
+    },
+    {
+      "path": "evidence/20260914T065658-7597e216c87a/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T065658-7597e216c87a/business-master-browser.xml",
+      "sha256": "51e9e8b31ea5616762be9ab590c865f5754c28737b39d770f1b86415d466f9e1",
+      "bytes": 2586
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

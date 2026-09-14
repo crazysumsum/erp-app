@@ -1,0 +1,271 @@
+{
+  "schema_version": "2.0",
+  "module_id": "fulfillment-shipping-management",
+  "revision": 3,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "BLOCKED",
+  "resume_status": "PLANNED",
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+    "plan": "72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c",
+    "code_commit": "350f6cbec62697dc8251c6c4615b8af445e02617",
+    "source_fingerprint": "b5d2ed2099ddc6ce412ec5510e18ee4aaa76c72485f830bc9360192fd0b9344e",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment",
+    "default_commit": "c1ed49225524e60d7dcf28ef8941ea2c14a8f04f",
+    "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
+  },
+  "runtime": {
+    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "owner": "Primary Harness agent",
+    "resources": {
+      "workspace": "fulfillment-shipping-alignment"
+    },
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING",
+    "TASK-017": "PENDING",
+    "TASK-018": "PENDING",
+    "TASK-019": "PENDING",
+    "TASK-020": "PENDING",
+    "TASK-021": "PENDING",
+    "TASK-022": "PENDING",
+    "TASK-023": "PENDING",
+    "TASK-024": "PENDING",
+    "TASK-025": "PENDING",
+    "TASK-026": "PENDING",
+    "TASK-027": "PENDING",
+    "TASK-028": "PENDING",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING",
+    "TASK-037": "PENDING",
+    "TASK-038": "PENDING",
+    "TASK-039": "PENDING",
+    "TASK-040": "PENDING",
+    "TASK-041": "PENDING",
+    "TASK-042": "PENDING",
+    "TASK-043": "PENDING",
+    "TASK-044": "PENDING",
+    "TASK-045": "PENDING"
+  },
+  "approvals": [
+    {
+      "id": "APR-001",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/02_requirement_review.md#review-result",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management requirement baseline, file 01_requirement_spec.md sha256 7ab6bbf93cda92fd9aa2ad1db430510902a765c30f4a2be289ec3e74ab2879b7; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
+        "FR-001 through FR-107",
+        "NFR-001 through NFR-026",
+        "SEC-001 through SEC-012",
+        "BR-001 through BR-036",
+        "AC-001 through AC-056",
+        "DEC-001 through DEC-010",
+        "GATE-001 through GATE-007"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#decision",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "DES-001 through DES-014",
+        "FSD-001 through FSD-012",
+        "MySQL 8.0 compatibility baseline"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-003",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#independent-review-and-baseline-approval",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 through PHASE-004",
+        "TASK-001 through TASK-045",
+        "TC-001 through TC-012",
+        "UAT-001 through UAT-120"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "HD-003",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-003--nfr-023-business-uat-applicability",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c",
+      "code_commit": null,
+      "scope": [
+        "NFR-023"
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Legacy Fulfillment & Shipping authorship not authenticated in repository metadata",
+      "reviewer": "Alignment agent in this session",
+      "reviewed_baseline": "89ea6e33a4f1707fbc01a6cac73e408310f589f295284353964665b7665bee1a",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 4,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "Alignment agent; legacy authorship not authenticated in repository metadata",
+      "reviewer": "Sam (ERP Product Owner and independent reviewer)",
+      "reviewed_baseline": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#decision",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "design_spec.md and tasks.md target MySQL 5.7 while CI runs mysql:8.0 and the Inventory and Purchasing baselines are MySQL 8.0. Which is the compatibility baseline for Fulfillment & Shipping?",
+      "affected_ids": [
+        "DES-009",
+        "TC-009",
+        "NFR-025"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-001--mysql-80-compatibility-baseline"
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "Both legacy sign-off tables are empty and no separate reviewer exists. Should the aligned requirement, design and plan be recorded as SELF_REVIEW pending later human review, or approved in this run as a planning baseline by a named human reviewer?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-002--reviewer-provenance-and-baseline-approval"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "NFR-023 (provider contract versioning and migration/compatibility planning) has no business-observable UAT case among the 120. Mark it UAT NOT_APPLICABLE, author a new UAT case, or leave it as an open coverage gap?",
+      "affected_ids": [
+        "NFR-023",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-003--nfr-023-business-uat-applicability"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "No Playwright tool chain exists, yet design 11.5 and 10.6 require browser and responsive/WCAG verification. Who adds the Playwright suite, and by when relative to PHASE-002?",
+      "affected_ids": [
+        "TC-010",
+        "DES-013",
+        "PHASE-002"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "docs/customer_management/00_module_manifest.json pins the deleted docs/fulfillment_shipping_management/design_spec.md (sha256 89ea6e33...) as a consumed contract source. Should it be repointed to 03_design_spec.md (sha256 7c0101e8...) by the Customer module owner?",
+      "affected_ids": [
+        "DES-004"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    }
+  ],
+  "external_actions": [
+    {
+      "id": "EXT-001",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/fulfillment-shipping-harness-v2-alignment",
+      "idempotency_key": "fulfillment-shipping-align-push-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new-branch push output on 2026-09-14; local branch now tracks origin at commit e7fa46b"
+    },
+    {
+      "id": "EXT-002",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/fulfillment-shipping-harness-v2-alignment",
+      "idempotency_key": "fulfillment-shipping-align-pr-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/94"
+    },
+    {
+      "id": "EXT-003",
+      "kind": "GIT_MERGE_TARGET_INTO_TOPIC",
+      "target": "codex/fulfillment-shipping-harness-v2-alignment <- origin/main c1ed492",
+      "idempotency_key": "fulfillment-shipping-align-integrate-main-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed clean 'ort' merge on 2026-09-14; origin/main had advanced to c1ed492 (PR #92, supplier manifest repoint) after this branch was created at b6f0321. Only docs/supplier_management/00_module_manifest.json changed, which this module does not pin. Design baseline cba0d670 and plan baseline 72c826de are unchanged, so APR-001 through APR-003 and HD-003 remain bound to a current baseline."
+    }
+  ],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Target branch integrated: origin/main c1ed492 merged into the topic branch at 350f6cbec62697dc8251c6c4615b8af445e02617 with no conflicts. validate_traceability.py (--check-approvals) STRUCTURE_PASS and validate_module_boundary.py LOCAL_CHECKS_PASS were re-run on the integrated baseline; design and plan baselines are unchanged. Next safe step is to confirm CI is green on THIS head commit (the previously observed green run was on 1bb33f6, not this one) and then merge PR #94. After the merge, delete the remote and local branch and remove the worktree /Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment, then reconcile this state to the resulting main commit. Do not re-run the push or PR creation. Status stays BLOCKED: HD-004 (no Playwright tool chain, GAP-TC-001) must be answered before PHASE-002 opens any UI route, and HD-005 (GAP-TR-002, the dangling Customer manifest pointer) belongs to the Customer module owner. IMPLEMENT is not authorized: GAP-IMP-001 through GAP-IMP-005 are unmet at the integrated baseline."
+}
