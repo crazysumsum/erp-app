@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "purchasing-receiving-management",
-  "revision": 3,
+  "revision": 4,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -13,7 +13,7 @@
     "plan": "54e2b1cb2fa8058d5b96bbcfc2885a96ca7b23d6a1d5e32f6c82691caf4031c7",
     "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
     "source_fingerprint": "76c9851b4916df526e986d89cead282d1a8afab0d1c4f6e3c332ed3a0752d78e",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/purchasing-receiving-harness-v2-alignment",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
     "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
     "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
   },
@@ -224,13 +224,13 @@
     {
       "id": "HD-005",
       "impact": "MAJOR",
-      "question": "docs/supplier_management/00_module_manifest.json pins the deleted docs/purchasing_receiving_management/design_spec.md (sha256 b09f5726...) as a consumed contract source. Should it be repointed to 03_design_spec.md (sha256 a29fb66d...)? That file is an approval-required path outside this module's write scope.",
+      "question": "docs/supplier_management/00_module_manifest.json pins the deleted docs/purchasing_receiving_management/design_spec.md (sha256 b09f5726...) as a consumed contract source. Should this run repoint it to 03_design_spec.md (sha256 a29fb66d...), or does it belong to the Supplier module owner?",
       "affected_ids": [
         "DES-001",
         "DES-006"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "docs/purchasing_receiving_management/09_final_alignment_review.md#hd-005--supplier-manifest-pointer"
     },
     {
       "id": "HD-006",
@@ -262,9 +262,25 @@
       "idempotency_key": "purchasing-receiving-align-pr-20260914",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/90"
+    },
+    {
+      "id": "EXT-003",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/90 -> main",
+      "idempotency_key": "purchasing-receiving-align-pr90-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit bd97e1cc731ef6618e6c3d94cbaa69ccc42263d4 on origin/main; CI run 34815600476 passed on head 7fcb5ff"
+    },
+    {
+      "id": "EXT-004",
+      "kind": "REMOTE_BRANCH_DELETE",
+      "target": "origin/codex/purchasing-receiving-harness-v2-alignment",
+      "idempotency_key": "purchasing-receiving-align-remote-cleanup-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful git push --delete; branch tip 7fcb5ff verified as an ancestor of origin/main before local deletion"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Review and merge PR #90 after CI passes, then stop. Status stays BLOCKED until HD-005 (Supplier manifest contract pointer) and HD-006 (OPEN-006 cutover data and owner) are answered. Do not enter IMPLEMENT without explicit authorization: PHASE-001 additionally requires the Supplier and Inventory provider implementations (GAP-IMP-001, GAP-IMP-002), which do not exist at the observed baseline."
+  "next_safe_action": "Alignment is complete and merged (PR #90, merge commit bd97e1c); branch and worktree are cleaned up. Do not re-run the push, PR or merge. Status remains BLOCKED on HD-006 (OPEN-006 cutover data, dates and reconciliation owner), which blocks Go-Live and TASK-044 only. The Supplier manifest pointer recorded as GAP-TR-002 is owned by the Supplier module owner and is not this module's work. Do not enter IMPLEMENT without an explicit authorization: PHASE-001 also requires the Supplier and Inventory provider implementations (GAP-IMP-001, GAP-IMP-002), which do not exist at the observed baseline."
 }
