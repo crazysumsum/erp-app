@@ -46,6 +46,7 @@ Review findings are recorded in `02_requirement_review.md` (RQ-01–RQ-06) and `
 
 - Typed path: Requirement → Design → Phase → Task → mandatory Technical Test; UAT is grounded in requirements and linked to technical readiness.
 - `08_traceability_matrix.md` is generated deterministically from `08_traceability.json`; it is never edited by hand.
+- `state_tool.py inspect` reports one residual `COMMIT_CHANGED`: `baseline.code_commit` pins the observed product baseline `a3040c9`, while branch HEAD has advanced by this run's documentation commits. That is structural, not drift — a state file cannot contain the hash of the commit that contains it. `source_fingerprint` is unchanged and no `SOURCE_CHANGED` issue is raised, which confirms no product source moved.
 - `validate_traceability.py` against this module root returns `STRUCTURE_PASS` with zero issues. That is a structural result only — it says nothing about business correctness, approval or readiness.
 - `00_project_profile.json` records four observed suites: `lint`, `client-build`, `security-audit` (exit-code, developer stage) and `purchasing-technical` (JUnit, developer/technical/regression). `npm run test:coverage` is not modelled as a separate harness suite because exit-code-only evidence cannot establish acceptance; it stays enforced by the CI test job.
 - Observed GitHub Actions checks: Dependency audit, Lint, Test (server + client, MySQL integration), Build frontend, on Node 26 with a `mysql:8.0` service. Their existence is not a PASS observation for this baseline.
