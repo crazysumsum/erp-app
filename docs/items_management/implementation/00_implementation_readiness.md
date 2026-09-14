@@ -24,6 +24,7 @@
 ## Known limits
 
 - Item-level Attribute write/update and arbitrary typed SKU Variant values remain outside TASK-037.
-- TASK-042 through TASK-044 remain pending under their own dependencies and gates. TASK-039 through TASK-041 have current developer implementation evidence and independent review, but still require CI and formal acceptance gates.
+- TASK-042 documentation reconciliation is complete by maintainer decision: T23's index omission now matches its detailed implementation/Git evidence while retaining the original source hash and pre/post counts.
+- TASK-043 and TASK-044 remain pending under their own dependencies and gates. TASK-039 through TASK-041 have current developer implementation evidence and independent review, but still require CI and formal acceptance gates.
 - `DEC-025` (Product Owner Sam, 2026-09-14): `item.mgmt` now explicitly grants complete Item Management API read/write access. Read policies accept `item.view` or `item.mgmt`; write policies remain `item.mgmt`. This resolves the earlier SKU-create page/read-projection conflict without a write-only alternate UX.
 - A later merge candidate still requires developer self-test, current CI and required code review; none has been created.

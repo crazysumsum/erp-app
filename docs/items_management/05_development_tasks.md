@@ -7,10 +7,10 @@
 | Execution mode | `REVIEW_AND_ALIGN` |
 | Legacy source | `tasks.md`, SHA-256 `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9` |
 | Original size | 1,533 lines; 303 checked boxes; 42 unchecked boxes |
-| Preservation | Full legacy body and every checkbox state retained verbatim below |
+| Preservation | Original source hash/count retained in inventory; the canonical body contains explicitly recorded in-place remediation updates, including the maintainer-authorized T23 index correction |
 | Product-code change | None |
 
-The legacy body is the authoritative development-progress record. Alignment adds aliases and remediation work but does not reinterpret an unchecked historical box as checked. In particular, the Task Index has T23 unchecked while its detailed section contains completed implementation evidence; this is recorded as `STATUS_INCONSISTENT`, not silently corrected.
+The legacy body remains the authoritative development-progress record. On 2026-09-14, ERP Product Owner (Sam) explicitly approved `TASK-042`: reconcile the T23 index omission as completed without erasing its original state. The frozen source remains identified by SHA-256 `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9`; this canonical copy records the one checkbox correction and its evidence rather than silently rewriting history.
 
 ## Phase alignment
 
@@ -37,9 +37,9 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Objective/checkpoint: Attributes/Variants and Media.
 - Included: TASK-023 (PHASE-003) through TASK-026 (PHASE-003).
 - Requirements/design: FR-011, FR-012, FR-015, FR-018, FR-025; SEC-007, SEC-008, SEC-009; NFR-011, NFR-012; DES-004, DES-011, DES-014, DES-015.
-- Verification/evidence: developer records in legacy Checkpoint H and T25/T26. T23 status remains inconsistent.
+- Verification/evidence: developer records in legacy T23/Checkpoint H and T24–T26; TASK-042 reconciles the former T23 index omission to the detailed implementation and Git evidence.
 - Branch/PR/merge: already merged historically.
-- Exit/status: `COMPLETE_RECORDED_WITH_STATUS_INCONSISTENCY`.
+- Exit/status: `COMPLETE_RECORDED`; the former status inconsistency is resolved by maintainer decision under TASK-042.
 
 ### PHASE-004 — Bulk capabilities (legacy Phase D)
 
@@ -98,7 +98,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 | TASK-020 | PHASE-002 | T20 | COMPLETE_RECORDED |
 | TASK-021 | PHASE-002 | T21 | COMPLETE_RECORDED |
 | TASK-022 | PHASE-002 | T22 | COMPLETE_RECORDED |
-| TASK-023 | PHASE-003 | T23 | STATUS_INCONSISTENT: index unchecked; detailed evidence says completed |
+| TASK-023 | PHASE-003 | T23 | COMPLETE_RECORDED; index omission reconciled by TASK-042 |
 | TASK-024 | PHASE-003 | T24 | COMPLETE_RECORDED |
 | TASK-025 | PHASE-003 | T25 | COMPLETE_RECORDED |
 | TASK-026 | PHASE-003 | T26 | COMPLETE_RECORDED |
@@ -174,13 +174,13 @@ The legacy body is the authoritative development-progress record. Alignment adds
 ### TASK-042 — Reconcile historical T23/checkpoint status
 
 - Parent Phase: PHASE-006.
-- Goal: obtain maintainer confirmation for the contradictory T23 index and detailed record without altering history during this alignment.
+- Goal: reconcile the contradictory T23 index and detailed record through an explicit maintainer decision while preserving the original source baseline.
 - Requirement/design: documentation integrity for DES-016.
-- Components: this document only in a later authorized reconciliation.
+- Components: in-place task/status reconciliation and aligned governance references; no product-code change.
 - Acceptance: maintainer-approved status note explains whether the index was an omission; original commit evidence remains linked.
 - Verification: before/after checkbox count and Git history audit.
-- Dependencies: human maintainer decision. Risk: medium traceability ambiguity. Rollback: restore this preserved baseline.
-- Definition of Done/status: `PLANNED`.
+- Dependencies: human maintainer decision, supplied by ERP Product Owner (Sam) in the active Codex task on 2026-09-14. Risk: medium traceability ambiguity. Rollback: restore the canonical checkbox and reconciliation references while retaining the immutable original hash.
+- Definition of Done/status: T23 index corrected from unchecked to checked; pre/post canonical counts are 304/41 and 305/40; implementation commit `21a8be0093d52faa19a1c0f061083046dea2a9f1`, merge commit `45d686ce94c74f08499c35e1e6c3cdc09714480a`, and T24 follow-up commit `b153efac5ad8c36acddaf85b98c82d6d1e4622f5` verified from Git history. `DOCUMENTATION_COMPLETE`; no product behavior or formal acceptance status changed.
 
 ### TASK-043 — Integrate first real downstream reference guard
 
@@ -210,7 +210,7 @@ FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, 
 
 ---
 
-# Preserved legacy body (verbatim; checkbox states are evidence)
+# Preserved legacy body with recorded in-place alignments
 
 # Item Management 開發任務分解
 
@@ -309,7 +309,9 @@ T01 migration freeze
 
 ### Phase C：零售消耗品擴充
 
-- [ ] T23 建立 Attribute schema、variant signature 與 domain 規則
+- [x] T23 建立 Attribute schema、variant signature 與 domain 規則
+
+> **TASK-042 reconciliation（2026-09-14，ERP Product Owner Sam 批准）：** 原始基線此格未勾，但下方 T23 詳細記錄、完整測試證據、實作 commit `21a8be0093d52faa19a1c0f061083046dea2a9f1` 及 merge commit `45d686ce94c74f08499c35e1e6c3cdc09714480a` 均表明 T23 已完成；唯一延後的 Attribute destructive-change criterion 已由 T24 commit `b153efac5ad8c36acddaf85b98c82d6d1e4622f5` 承接。本次將索引改為已完成，原始未勾狀態仍由 inventory 的 source SHA 與本註記保留。變更前 canonical 計數為 304 checked／41 unchecked；變更後為 305 checked／40 unchecked。
 - [x] T24 完成 Attribute／Variant API 與 UI
 - [x] T25 建立 Media schema、service、API 與孤兒檔清理
 - [x] T26 建立 Media UI 與檔案安全整合測試

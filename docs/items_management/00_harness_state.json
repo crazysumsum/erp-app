@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 20,
+  "revision": 24,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
-  "current_task": "TASK-042",
+  "current_task": "TASK-043",
   "baseline": {
     "design": "eb18a55339463ef8928f75b679bd2d57cb3fc770378c31dc1d3b8b503fc56ce4",
-    "plan": "b51cf8d55d3167b524a3daef03958ebb1baae00b30e82b6a9affa5f5356916f3",
-    "code_commit": "41b72dabd5fe59cc0d25edc3e021ec12a878e816",
+    "plan": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
+    "code_commit": "9f9c7464d3636cba73e0e976ef0c20ee9e47ef06",
     "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
@@ -48,7 +48,7 @@
     "TASK-020": "DONE",
     "TASK-021": "DONE",
     "TASK-022": "DONE",
-    "TASK-023": "BLOCKED",
+    "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
@@ -67,7 +67,7 @@
     "TASK-039": "DONE",
     "TASK-040": "DONE",
     "TASK-041": "DONE",
-    "TASK-042": "PENDING",
+    "TASK-042": "DONE",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING"
   },
@@ -226,6 +226,24 @@
         "TASK-040"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-012",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly agreed on 2026-09-14 to reconcile the historical T23 index as completed while retaining original evidence.",
+      "recorded_at": "2026-09-14T09:02:27Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
+      "code_commit": "9f9c7464d3636cba73e0e976ef0c20ee9e47ef06",
+      "scope": [
+        "item-management",
+        "TASK-023",
+        "TASK-042"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -296,6 +314,18 @@
       "reviewer": "/root/item_design_review",
       "reviewed_baseline": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
       "source_ref": "docs/items_management/04_design_review.md#rev-008--separate-task-041-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-009",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
+      "source_ref": "docs/items_management/04_design_review.md#rev-009--separate-task-042-documentation-reconciliation-review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -433,6 +463,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/items_management/03_design_spec.md#hd-003--attribute-and-variant-detail-projection-contract"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Confirm whether the unchecked historical T23 task-index entry was an omission and may be reconciled to completed while retaining original evidence.",
+      "affected_ids": [
+        "TASK-023",
+        "TASK-042",
+        "DES-016",
+        "TC-013"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/items_management/05_development_tasks.md#phase-c零售消耗品擴充"
     }
   ],
   "external_actions": [
@@ -447,5 +490,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain maintainer confirmation for TASK-042's contradictory historical T23/checkpoint status before changing the preserved record; CI and formal TASK-041 acceptance remain separate future gates."
+  "next_safe_action": "Keep TASK-043 deferred until a real downstream Purchasing/Inventory/Sales SKU reference exists; the next actionable gate is explicit TEST_AND_VERIFY authorization and an approved environment for TASK-044."
 }

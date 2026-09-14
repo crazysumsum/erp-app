@@ -13,7 +13,7 @@
 | GAP-IMP-004 | HIGH | LIKELY_DEFECT | OPEN: referenced Brand/UOM delete error mapping |
 | GAP-IMP-005 | HIGH | IMPLEMENTATION_GAP | OPEN: import bypasses aggregate transactional audit |
 | GAP-INT-001 | MEDIUM until dependency exists | DEFERRED_DEPENDENCY | OPEN: downstream reference guard |
-| GAP-TASK-001 | HIGH | STATUS_AMBIGUITY | OPEN: T23 index/detail conflict |
+| GAP-TASK-001 | HIGH | STATUS_AMBIGUITY | RESOLVED: maintainer-approved T23 index correction |
 | GAP-TASK-002 | HIGH | ACCEPTANCE_GAP | OPEN: staging and human sign-offs |
 | GAP-TC-001 | MEDIUM | EVIDENCE_CLASSIFICATION | RESOLVED in docs: developer versus independent evidence |
 | GAP-UAT-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: separate UAT specification |
@@ -55,7 +55,7 @@ No current production Purchasing/Inventory/Sales table has a true SKU FK; existi
 
 ### GAP-TASK-001 — T23 progress conflict
 
-The legacy task index leaves T23 unchecked, while the detailed T23/T24 records and merged code state that the work was completed. Alignment preserves both facts. Only a maintainer-approved historical reconciliation may change the checkbox.
+The frozen legacy task index left T23 unchecked, while the detailed T23/T24 records and merged code state that the work was completed. ERP Product Owner (Sam) approved the TASK-042 reconciliation on 2026-09-14. The canonical index is now checked and carries an explicit note linking implementation commit `21a8be0093d52faa19a1c0f061083046dea2a9f1`, merge commit `45d686ce94c74f08499c35e1e6c3cdc09714480a`, and T24 follow-up `b153efac5ad8c36acddaf85b98c82d6d1e4622f5`; the original source SHA and pre/post counts remain recorded. Status: `RESOLVED`.
 
 ### GAP-TASK-002 — Release checkpoint remains conditional
 

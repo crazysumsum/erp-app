@@ -19,7 +19,7 @@
 | --- | --- | ---: | --- | --- |
 | `requirement.md` | `01_requirement_spec.md` | 808 | `ecf0dc0b4a76ea53c5596e4e4940b69bb5c6dbbae981303ec0f2f9950b1c2041` | Primary business baseline; preserve verbatim and add canonical aliases/DR requirements |
 | `design_spec.md` | `03_design_spec.md` | 1,500 | `58a9e82e14285a8eca95671f5a8cd1cdc1e67a4bc0e361bf0131132c55550805` | Primary proposed design; preserve verbatim and align against current implementation |
-| `tasks.md` | `05_development_tasks.md` | 1,533 | `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9` | Authoritative progress history; preserve 303 checked and 42 unchecked boxes exactly |
+| `tasks.md` | `05_development_tasks.md` | 1,533 | `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9` | Frozen authoritative source: 303 checked/42 unchecked; canonical T23 index later corrected with explicit TASK-042 provenance |
 | `test_case.md` | `06_technical_test_cases.md` | 437 | `6404877088ee5d723337424b57b9e69b0ba5016092c99ac8694bfeaa42137d9f` | Detailed planned catalogue plus developer evidence; preserve and distinguish from independent acceptance |
 
 The prior v1 alignment recorded a temporary session copy; this v2 run does not rely on that ephemeral path. Git commits `ceb33b9` and `fd8a4dd` are the verified durable recovery sources.
@@ -56,7 +56,7 @@ Observed recovery point is Git commit `fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a`
 | --- | --- | --- | --- | --- | --- | --- |
 | `01_requirement_spec.md` | Canonical narrative plus verbatim legacy business baseline | `fd8a4dd` / legacy SHA already recorded above | Same file, Appendix A formal definitions | 64 FR aliases, 15 NFR, 9 SEC, BR/AC and approved RTO/RPO | `KEEP_CANONICAL`; v2 definitions added | Owner confirmation pending |
 | `03_system_design_spec.md` | Overlapping legacy filename containing the only full design | `fd8a4dd` | `03_design_spec.md` | All 1,560 lines, DES index, detailed design and findings | `DELETE_AFTER_MERGE` by lossless Git rename; canonical link updated | No semantic decision |
-| `05_development_tasks.md` | Canonical plan plus historical progress evidence | `fd8a4dd` / legacy SHA above | Same file, Appendix A formal Phase/Task definitions | All T01–T36 evidence/checklists and TASK-037–044 | `KEEP_CANONICAL`; duplicate TASK-012 alias removed | T23 reconciliation remains open |
+| `05_development_tasks.md` | Canonical plan plus historical progress evidence | `fd8a4dd` / legacy SHA above | Same file, Appendix A formal Phase/Task definitions | All T01–T36 evidence/checklists and TASK-037–044 | `KEEP_CANONICAL`; duplicate TASK-012 alias removed | T23 index omission reconciled by TASK-042 on 2026-09-14; original SHA retained |
 | `06_technical_test_cases.md` | Canonical planned technical specification plus historical developer evidence | `fd8a4dd` / legacy SHA above | Same file, Appendix A formal TC definitions | Full detailed risk catalogue and NOT_RUN meaning | `KEEP_CANONICAL`; no result promoted | Recovery runner missing |
 | `07_uat_test_cases.md` | Canonical UAT specification | `fd8a4dd` | Same file, Appendix A formal UAT definitions | UAT-001–015 plus operational/security owner acceptance UAT-016 | `KEEP_CANONICAL`; all remain NOT_RUN | Business sign-off pending |
 | `08_traceability_matrix.md` | Previously hand-maintained generated-view candidate | `fd8a4dd` | Regenerate from `08_traceability.json` | Prior semantic notes retained in inventory/gap/review | `GENERATE`; never edit relationships here | Owner required before renderer passes |

@@ -14,7 +14,7 @@
 | DR-004 | HIGH | Error contract/data integrity | Brand/UOM delete paths do not map current FK-reference failures to `CATALOG_IN_USE` | Referenced deletion may expose generic 500 semantics and inconsistent UX | TASK-040 / TC-014 |
 | DR-005 | HIGH | Transaction/audit | Import worker writes aggregate tables directly; only earlier job-confirm audit exists | Imported changes can lack per-aggregate, same-transaction audit and equivalent domain validation | TASK-041 / TC-015 |
 | DR-006 | MEDIUM | Dependency boundary | No real downstream Purchasing/Inventory/Sales SKU reference exists | Archive/delete/critical-change reference rules cannot be fully proved | TASK-043 on first consumer |
-| DR-007 | MEDIUM | Progress traceability | T23 index unchecked while detailed record/code say complete | Automated/human readers can reach different progress conclusions | Preserve; reconcile via TASK-042 |
+| DR-007 | MEDIUM | Progress traceability | Frozen T23 index was unchecked while detailed record/code say complete | Automated/human readers could reach different progress conclusions | RESOLVED by maintainer-approved TASK-042 correction; original source evidence retained |
 | DR-008 | MEDIUM | Operations | Staging upgrade/re-run, restore and approved DR objectives are untested | Release recovery readiness is unknown | TASK-044 / TC-001, TC-016 |
 | DR-009 | MEDIUM | Acceptance governance | Developer evidence exists; independent QA/UAT and owner sign-offs do not | Completion cannot equal release acceptance | Execute separate TEST_AND_VERIFY |
 
@@ -130,3 +130,12 @@ The earlier “Independent” title is historical wording without sufficient pro
 - evidence reviewed: focused true-MySQL Item Import 21/21, full server 1,447 pass / 0 fail / 1 explicit skip out of 1,448, bounded 10,000-row performance evidence, lint and `state_tool inspect` at `LOCAL_CHECKS_PASS`. The reviewer did not execute commands.
 - documentation follow-up resolved: DES-013 no longer reports the closed direct-SQL gap; TASK-041 is `DONE`, TASK-042 is current, and the exact pass/skip counts agree across readiness and technical-test evidence.
 - disposition: final re-review found no remaining P0/P1/P2 implementation finding. CI, formal acceptance and merge gates remain separate.
+
+## REV-009 — Separate TASK-042 documentation reconciliation review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- reviewed baseline: plan baseline `bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9`; read-only review of the T23 index correction, provenance, aligned governance documents and Harness state
+- evidence confirmed: pre-TASK-042 canonical counts 304 checked/41 unchecked, post-correction 305/40, and frozen `fd8a4dd` source 303/42; original SHA and unchecked state remain traceable.
+- Git provenance confirmed: `21a8be0093d52faa19a1c0f061083046dea2a9f1` implements T23, `45d686ce94c74f08499c35e1e6c3cdc09714480a` is PR #67's merge containing it, and `b153efac5ad8c36acddaf85b98c82d6d1e4622f5` is the later T24 follow-up.
+- disposition: no P0/P1/P2 finding. This approves the documentation reconciliation only; it does not claim new product behavior, CI completion or formal acceptance.
