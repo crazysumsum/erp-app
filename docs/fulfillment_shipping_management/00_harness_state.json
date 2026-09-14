@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 2,
+  "revision": 3,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
     "plan": "72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c",
-    "code_commit": "b6f03219259129de6735263a4d369de2b15a5f9f",
-    "source_fingerprint": "dbbe98d8108b4fb73a1a32daa2192ce6cd9aac21c896252702e9a3d5a162ea66",
+    "code_commit": "350f6cbec62697dc8251c6c4615b8af445e02617",
+    "source_fingerprint": "b5d2ed2099ddc6ce412ec5510e18ee4aaa76c72485f830bc9360192fd0b9344e",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment",
-    "default_commit": "b6f03219259129de6735263a4d369de2b15a5f9f",
+    "default_commit": "c1ed49225524e60d7dcf28ef8941ea2c14a8f04f",
     "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
   },
   "runtime": {
@@ -255,9 +255,17 @@
       "idempotency_key": "fulfillment-shipping-align-pr-20260914",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/94"
+    },
+    {
+      "id": "EXT-003",
+      "kind": "GIT_MERGE_TARGET_INTO_TOPIC",
+      "target": "codex/fulfillment-shipping-harness-v2-alignment <- origin/main c1ed492",
+      "idempotency_key": "fulfillment-shipping-align-integrate-main-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed clean 'ort' merge on 2026-09-14; origin/main had advanced to c1ed492 (PR #92, supplier manifest repoint) after this branch was created at b6f0321. Only docs/supplier_management/00_module_manifest.json changed, which this module does not pin. Design baseline cba0d670 and plan baseline 72c826de are unchanged, so APR-001 through APR-003 and HD-003 remain bound to a current baseline."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Alignment is committed (e7fa46b), pushed and published as documentation PR https://github.com/crazysumsum/erp-app/pull/94. Do not re-run the push or PR creation. Next safe step is human review of that PR; per harness git policy this documentation PR does not wait on CI as a design-stage gate, but do not merge with checks failing. Retain the branch and the worktree /Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment until the PR is resolved, then clean both up. Status stays BLOCKED: HD-004 (no Playwright tool chain, GAP-TC-001) must be answered before PHASE-002 opens any UI route, and HD-005 (GAP-TR-002, the dangling Customer manifest pointer) belongs to the Customer module owner. Do not enter IMPLEMENT without an explicit authorization: PHASE-001 also requires the Sales, Inventory and Customer provider implementations and the three Fulfillment permissions (GAP-IMP-001 through GAP-IMP-005), none of which exist at b6f0321."
+  "next_safe_action": "Target branch integrated: origin/main c1ed492 merged into the topic branch at 350f6cbec62697dc8251c6c4615b8af445e02617 with no conflicts. validate_traceability.py (--check-approvals) STRUCTURE_PASS and validate_module_boundary.py LOCAL_CHECKS_PASS were re-run on the integrated baseline; design and plan baselines are unchanged. Next safe step is to confirm CI is green on THIS head commit (the previously observed green run was on 1bb33f6, not this one) and then merge PR #94. After the merge, delete the remote and local branch and remove the worktree /Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-shipping-alignment, then reconcile this state to the resulting main commit. Do not re-run the push or PR creation. Status stays BLOCKED: HD-004 (no Playwright tool chain, GAP-TC-001) must be answered before PHASE-002 opens any UI route, and HD-005 (GAP-TR-002, the dangling Customer manifest pointer) belongs to the Customer module owner. IMPLEMENT is not authorized: GAP-IMP-001 through GAP-IMP-005 are unmet at the integrated baseline."
 }
