@@ -47,7 +47,7 @@ At state revision 5, `verify_gate.py ... --gate PLAN_READY --json` correctly ret
 
 This was an honest governance blocker, not a structural failure. At that validation point, no CI, product test, Playwright flow, Technical Acceptance, business UAT, PR, merge or release action was run or claimed. The documentation package was subsequently merged through PR #86 without changing product or test execution status.
 
-## HD-001 decision checkpoint (state revision 6)
+## HD-001 decision and technical-gate checkpoints (state revision 8)
 
 On 2026-09-14, Sam accepted HD-001 as Product Owner for DESIGN baseline `484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd`. The checkpoint records `APPROVAL-RISK-001` and marks HD-001 answered; it does not claim Security/Backend technical approval.
 
@@ -55,5 +55,5 @@ Post-decision local results:
 
 - `state_tool.py inspect ... --json`: `LOCAL_CHECKS_PASS`; zero issues.
 - `validate_traceability.py ... --check-approvals --json`: `STRUCTURE_PASS`; zero issues.
-- `verify_gate.py ... --gate PLAN_READY --json`: `BLOCKED` for four remaining governance reasons: HD-002, missing current DESIGN approval, missing current PLAN approval and missing independent review.
-- TASK-020 / PHASE-003 remain blocked pending named Security/Backend technical assurance, independently of Product Owner risk acceptance.
+- `verify_gate.py ... --gate PLAN_READY --json`: remains `BLOCKED`; after HD-003 is recorded, the open decisions are HD-002 and HD-003 in addition to missing current DESIGN approval, missing current PLAN approval and missing independent review.
+- TASK-020 / PHASE-003 remain blocked by HD-003 pending named Security/Backend technical assurance, independently of Product Owner risk acceptance.

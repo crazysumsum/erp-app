@@ -9,7 +9,7 @@
 | Reviewer | `/root` in the same active context |
 | Reviewed baseline | Current `03_design_spec.md`; exact hash recorded in `00_harness_state.json` |
 | Independence | Not independent; a role/perspective list does not create a separate reviewer |
-| Result | `CHANGES_REQUESTED`: Product Owner accepted DR-004 risk; independent Security/Backend assurance remains open |
+| Result | `CHANGES_REQUESTED`: Product Owner accepted DR-004 risk under HD-001; independent Security/Backend assurance remains open under HD-003 |
 
 ## 1. Review Method
 
@@ -28,7 +28,7 @@ This is proportionate for a single-company SME ERP and avoids premature microser
 | DR-001 Canonical key collation contradicted normalization authority | `HIGH` | FR-018..021; DES-003 | Source inherited `utf8mb4_unicode_ci` for equality keys while saying explicit normalization is authoritative. | DB may collapse values beyond business rules. | Use `utf8mb4_bin` on canonical keys and real-MySQL Unicode vectors. | `RESOLVED` in aligned design. |
 | DR-002 Attachment/import file finalize crash window | `HIGH` | FR-064..070, FR-084..093; DES-012, DES-013 | Metadata can commit before rename with no deterministic finalizer for stale `processing`. | Missing files, stuck records, duplicate retries and orphan storage. | Durable operation correlation, deterministic paths and recovery job with hash verification. | `RESOLVED` in aligned design/tasks/tests. |
 | DR-003 Generic Customer status lookup could over-block existing obligations | `HIGH` | FR-034, FR-047..056; DES-017 | Source only names `new_sale/history/shipment`; merged AR needs distinct manual/existing-document semantics. | Suspended customer could wrongly block invoice/receipt/return, or inactive customer could enter a new sale. | Enforce an allowlisted purpose matrix and consumer contract tests. | `RESOLVED` in aligned design. |
-| DR-004 Sensitive permission delegation alters a cross-system trust boundary | `HIGH` | SEC-004..007, SEC-012; DES-015 | Proposed `adminGuard` exception lets protected admin delegate permissions it does not itself hold. | A flaw could become privilege escalation into bank data. | Keep exception narrow; require current protected-admin role, device+password, reason, target allowlist, audit and independent Security/Backend review. | `RISK_ACCEPTED_BY_PRODUCT_OWNER`; Sam accepted the risk as Product Owner on 2026-09-14. This is not Security/Backend technical approval, so TASK-020 and PHASE-003 remain blocked pending that assurance. |
+| DR-004 Sensitive permission delegation alters a cross-system trust boundary | `HIGH` | SEC-004..007, SEC-012; DES-015 | Proposed `adminGuard` exception lets protected admin delegate permissions it does not itself hold. | A flaw could become privilege escalation into bank data. | Keep exception narrow; require current protected-admin role, device+password, reason, target allowlist, audit and independent Security/Backend review. | `RISK_ACCEPTED_BY_PRODUCT_OWNER`; Sam accepted the risk under HD-001 as Product Owner on 2026-09-14. This is not Security/Backend technical approval, so TASK-020 and PHASE-003 remain blocked by HD-003. |
 | DR-005 Framework idempotency alone does not resolve business outcome | `MEDIUM` | NFR-008; DES-006 | Source accepts keys but uses different reconciliation advice per command. | Commit-unknown can lead to new-key replay or operator uncertainty. | Bind durable resource/operation result and standardize safe outcome lookup. | `RESOLVED` in aligned design. |
 | DR-006 Default partial-search implementation is not indexable as written | `MEDIUM` | FR-001..010; NFR-001..005; DES-018, DES-019 | Escaped `LIKE` does not specify prefix vs leading wildcard. | Unbounded scans can breach p95 at 100k Customers. | Default exact/token-prefix, inspect `EXPLAIN`; new requirement for arbitrary infix. | `RESOLVED` in aligned design. |
 | DR-007 Future migration numbers are not reliable coordination | `MEDIUM` | DES-022 | Source reserves `0027..0041`; current main and parallel modules can move. | Migration collision or unsafe edit pressure. | Allocate physical numbers only after latest-main check; logical ordering remains stable. | `RESOLVED`. |
@@ -66,14 +66,14 @@ Four vertical Phases can be delivered without knowingly broken intermediate stat
 
 On 2026-09-14, Sam explicitly confirmed that HD-001 is accepted in the capacity of Product Owner. This records accountable business risk acceptance for the exact DESIGN baseline `484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd` and the affected scope `SEC-004`–`SEC-007`, `SEC-012`, `DES-015`, `TASK-020` and `TC-045`.
 
-This decision does not claim that Sam acted as an independent Security or Backend reviewer. The fail-closed controls remain mandatory, and TASK-020 / PHASE-003 remain blocked until named Security and Backend owners provide technical assurance.
+This decision does not claim that Sam acted as an independent Security or Backend reviewer. The fail-closed controls remain mandatory, and HD-003 keeps TASK-020 / PHASE-003 blocked until named Security and Backend owners provide technical assurance.
 
 ## 6. Human Design Gate
 
 | Gate item | Result |
 | --- | --- |
 | Unresolved CRITICAL findings | 0 |
-| Unresolved HIGH findings | DR-004 business risk is accepted; Security/Backend technical assurance is still required before TASK-020 / PHASE-003 implementation |
+| Unresolved HIGH findings | DR-004 business risk is accepted under HD-001; HD-003 still requires Security/Backend technical assurance before TASK-020 / PHASE-003 implementation |
 | Requirement ambiguity changing core architecture | None |
 | Implementation dependencies | Customer not implemented; downstream Provider contracts must be verified at Phase entry |
 | Major trade-off | Keep modular monolith and separate Customer aggregate; prioritize explicit purpose/security contracts over generic abstractions |
