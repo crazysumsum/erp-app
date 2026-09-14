@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "fulfillment-shipping-management",
-  "revision": 5,
+  "revision": 6,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
     "plan": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
-    "code_commit": "34563b66880ea248a1595b4f84117a52f68d36eb",
+    "code_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
     "source_fingerprint": "34707d3beb85552d7e1ef44092f56fe5d8bb962b200290d7dc18e860b30f180d",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-closeout",
-    "default_commit": "34563b66880ea248a1595b4f84117a52f68d36eb",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-gap-correct",
+    "default_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
     "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
   },
   "runtime": {
@@ -259,7 +259,7 @@
     {
       "id": "HD-004",
       "impact": "MAJOR",
-      "question": "Playwright CLI 1.63.0 with chromium-1243 is installed on the development machine and was verified launching a real browser (375 px viewport, :focus-visible and boundingBox both resolving). It is not pinned in any package.json, absent from package-lock.json, has no config or client/e2e directory, and ci.yml has no browser job. At what scope is it pinned into the repository and CI — fulfillment-only, or shared infrastructure for every module with a frontend — and by when relative to PHASE-002? Note: it must NOT be added as a tool_probe on the fulfillment-technical suite, whose argv runs node --test server/test and has no browser step; that would fail CI on a probe for a tool the suite never uses.",
+      "question": "Narrowed on 2026-09-14 after the earlier finding was corrected. Playwright is already pinned in the repository (root package.json \"@playwright/test\": \"1.63.0\", commit 2c88ed0 via PR #93; a clean npm ci installs it and ./node_modules/.bin/playwright reports 1.63.0 without a global CLI), and a per-module convention already exists (client/e2e/<module>/playwright.config.js with technical/uat projects and HARNESS_RESULT_PATH support, declared in the Business Master profile as business-master-browser and business-master-uat-browser). The single remaining question is when and by whom a CI job is added that actually runs the Playwright suites. It cannot be added today: the one existing suite is red on main (14 failed, 1 passed, the single pass being the unauthenticated-redirect case), so wiring it would turn main red. Repairing that suite belongs to the Business Master owner, and uncommitted work in its worktree may already address it. For this module the exposure is low until PHASE-002 creates the first Fulfillment UI, at which point client/e2e/fulfillment-shipping-management/ plus a matching profile suite and CI coverage must exist. Do NOT attach a Playwright tool_probe to fulfillment-technical, whose argv runs node --test server/test and has no browser step.",
       "affected_ids": [
         "TC-010",
         "DES-013",
@@ -348,5 +348,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Design and planning for this module are complete and closed out. All canonical artifacts are on origin/main at 34563b66880ea248a1595b4f84117a52f68d36eb; no fulfillment branch, worktree or open pull request remains. validate_traceability.py --check-approvals reports STRUCTURE_PASS, and design baseline cba0d670 and plan baseline d9e72993 are unchanged by this close-out because 00_gap_analysis.md, 00_artifact_inventory.md and 09_final_alignment_review.md are records, not specification files, so APR-001, APR-002, APR-004 and HD-003-R2 all remain bound to current baselines. Status stays BLOCKED, and the remaining blockers are not design work: HD-004 (pin the verified-working Playwright CLI into the repository and CI, and declare a separate browser suite in the profile rather than probing for it on fulfillment-technical) must be answered before PHASE-002 opens any UI route, and GAP-IMP-001 through GAP-IMP-005 (the Sales, Inventory and Customer modules, the transaction-aware Item assert and the three Fulfillment permissions) do not exist at 34563b66880ea248a1595b4f84117a52f68d36eb. Do not enter IMPLEMENT without an explicit mode authorization recorded with --mode-change-ref, and do not restart PHASE-001 until those providers land. Business acceptance and release sign-off remain open by design (GAP-RQ-002); both sign-off tables are filled only after the corresponding UAT batch is actually executed in TEST_AND_VERIFY."
+  "next_safe_action": "Design and planning for this module are complete. All artifacts are on origin/main at c88b479a02744b8be654398d0dafb811ddf599c3; no fulfillment branch, worktree or open pull request remains apart from the documentation correction being delivered now. This revision corrects GAP-TC-001 and DR-04: the earlier claim that no Playwright tool chain existed was wrong — it was observed at 5b62be1 and PR #93 landed seconds later, pinning \"@playwright/test\": \"1.63.0\" in the root package.json and bringing a per-module e2e convention with it. HD-004 is narrowed to one item: add a CI job that runs the Playwright suites, which is blocked until the Business Master browser suite (14 failed, 1 passed on main) is repaired by its owner. Baselines are untouched by this correction because 00_gap_analysis.md, 04_design_review.md and 09_final_alignment_review.md are records, not specification files; design cba0d670 and plan d9e72993 stand, as do APR-001, APR-002, APR-004 and HD-003-R2. Status stays BLOCKED on HD-004 and on GAP-IMP-001 through GAP-IMP-005 (the Sales, Inventory and Customer modules, the transaction-aware Item assert and the three Fulfillment permissions, none of which exist at c88b479a02744b8be654398d0dafb811ddf599c3). Do not enter IMPLEMENT without an explicit mode authorization recorded with --mode-change-ref. Business acceptance and release sign-off remain open by design (GAP-RQ-002)."
 }
