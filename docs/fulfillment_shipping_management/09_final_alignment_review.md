@@ -60,7 +60,7 @@ Both legacy sign-off tables were empty, so no separate reviewer existed. Sam ide
 
 | ID | Status | Effect |
 | --- | --- | --- |
-| `GAP-TC-001` | OPEN | No Playwright tool chain exists. `TC-010`'s browser assertions are `BLOCKED`, not PASS. Must be closed before `PHASE-002` opens any UI route. |
+| `GAP-TC-001` | OPEN (narrowed) | Playwright is already pinned in the repository and a per-module e2e convention exists; the earlier "no tool chain" finding was wrong and is corrected. What remains is that no CI job runs any browser suite, and the one existing suite is red on `main`. Nothing is blocked until `PHASE-002` creates the first Fulfillment UI. |
 | `GAP-TR-002` | CLOSED | Repointed by PR #97 (merge commit `34563b6`), scoped to the Customer module because `validate_module_boundary.py` refuses cross-module writes in `REVIEW_AND_ALIGN`. The pointer now verifies as `MATCH`. |
 | `GAP-RQ-002` | OPEN BY DESIGN | Both business sign-off tables are empty. Blocks Go-Live and release sign-off only. |
 | `GAP-IMP-001`–`005` | PLANNED | Sales, Inventory and Customer modules do not exist; Item lookup is partial; none of the module permissions exist. `TASK-001` must report `BLOCKED` if any hard dependency is still absent at `PHASE-001` start. |
