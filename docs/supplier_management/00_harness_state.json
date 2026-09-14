@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 17,
+  "revision": 18,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
     "plan": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
-    "code_commit": "3dc5ce0d5a7f723a39a581bc050f21138a0c1ebc",
+    "code_commit": "24a6f319ffd23283e3c2b5a12e875a2a44680a9e",
     "source_fingerprint": "ce72d7ffbd42b5b19356b776659c3b3fb5f5a5e2695fb0cd97cb722d0d2e8519",
     "worktree": "/private/tmp/erp-supplier-management-harness-v2-review",
     "default_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
@@ -380,7 +380,7 @@
       "target": "main from codex/supplier-management-harness-v2-review",
       "idempotency_key": "supplier-management-harness-v2-review-merge",
       "status": "STARTED",
-      "source_ref": "User authorized merge without CI on 2026-09-14; PR #96 observed created against main"
+      "source_ref": "User authorized merge without CI on 2026-09-14; PR #96 observed OPEN/MERGEABLE with head 24a6f319ffd23283e3c2b5a12e875a2a44680a9e and base c3972422d20c56e9656aef9f894b91d7162c79c7"
     }
   ],
   "evidence_files": [],
