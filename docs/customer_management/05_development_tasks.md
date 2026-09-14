@@ -915,4 +915,3 @@ Lint/coverage/build, real MySQL, Playwright, security, performance, DR and regre
 ### Definition of Done
 
 `HIGH`; DoD = Phase PR ready and baseline declared for TEST_AND_VERIFY. Migration/rollback: Approved safe revert/disable strategy.. Code review, developer evidence, traceability and safe worktree/branch cleanup must be complete before DONE.
-

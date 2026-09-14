@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 4,
+  "revision": 5,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -10,8 +10,8 @@
   "current_task": null,
   "baseline": {
     "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
-    "plan": "a28e53c88032002d515df23802db2d126960e9c7acd983c587a9bae0e8dbd03c",
-    "code_commit": "247b632bde9e3e827e37f9dd31e6dcb64ac3f064",
+    "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
+    "code_commit": "e132d6b3b369206b20d8283d67e4c81f04cb6f58",
     "source_fingerprint": "62ef02ad56115eef399dedb2e8d40c955544eaae1a8bce325fe65a2aab0727e1",
     "worktree": "/private/tmp/erp-customer-management-harness-v2-alignment",
     "default_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
