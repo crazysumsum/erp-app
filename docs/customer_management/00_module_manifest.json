@@ -120,9 +120,9 @@
       {
         "module_id": "fulfillment-shipping-management",
         "id": "customer-consumer-contract",
-        "version": "observed-main-c397242-aligned-03-design-spec",
-        "source": "docs/fulfillment_shipping_management/03_design_spec.md",
-        "sha256": "7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec",
+        "version": "observed-main-design",
+        "source": "docs/fulfillment_shipping_management/design_spec.md",
+        "sha256": "89ea6e33a4f1707fbc01a6cac73e408310f589f295284353964665b7665bee1a",
         "regression_suites": [
           "customer-server-technical"
         ]
