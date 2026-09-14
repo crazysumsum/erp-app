@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 5,
+  "revision": 6,
   "mode": "DESIGN_AND_PLAN",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "PLANNED",
@@ -219,8 +219,33 @@
       "answer_ref": "2026-09-14 user agreement to exact hashes and independent HUMAN reviewer statement"
     }
   ],
-  "external_actions": [],
+  "external_actions": [
+    {
+      "id": "ACTION-PUSH-001",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-design-plan",
+      "idempotency_key": "business-master-design-push-9a46e385744b89b2aa15c69a871b8f0c4ba12383",
+      "status": "CONFIRMED",
+      "source_ref": "origin/codex/business-master-design-plan@9a46e385744b89b2aa15c69a871b8f0c4ba12383"
+    },
+    {
+      "id": "ACTION-PR-083",
+      "kind": "GITHUB_PR",
+      "target": "https://github.com/crazysumsum/erp-app/pull/83",
+      "idempotency_key": "business-master-design-pr-83",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/83"
+    },
+    {
+      "id": "ACTION-MERGE-083",
+      "kind": "GITHUB_MERGE",
+      "target": "github.com/crazysumsum/erp-app:main",
+      "idempotency_key": "business-master-design-merge-cc2e3264d2f4caefbef97045b717cf29d0710da0",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/83 commit cc2e3264d2f4caefbef97045b717cf29d0710da0"
+    }
+  ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit, push and open the design PR. Implementation requires separate mode authorization."
+  "next_safe_action": "Clean up the merged design branch/worktree. Product implementation requires separate IMPLEMENT or FULL_LIFECYCLE authorization."
 }
