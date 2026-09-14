@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T065354-16cc4898c1f8",
+  "suite_id": "lint",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+  "source_fingerprint": "632c6ccc01c1aedaf1e19f51b82e7cf103bdd16f2d7867d7c9cb67d493ec045b",
+  "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+  "started_at": "2026-09-14T06:53:54.486348Z",
+  "ended_at": "2026-09-14T06:53:56.953041Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-2-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "lint"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e1648dfbf26899c99d8097ff1a68d4c984454fb5d4fbd8adcf31c46fb8dc61b8",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T065354-16cc4898c1f8/stdout.log",
+      "sha256": "158a74519eb76c4fcb8b07c07f27264edab75036a7e4e2dc954ac72545684fd4",
+      "bytes": 271
+    },
+    {
+      "path": "evidence/20260914T065354-16cc4898c1f8/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "npm",
+        "--version"
+      ],
+      "output": "11.18.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

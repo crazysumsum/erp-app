@@ -43,7 +43,7 @@
     },
     {
       "id":"business-master-client-ui","kind":"UI",
-      "argv":["npm","test","--workspace","client","--","--config","test/business-master.vitest.config.js","--reporter=junit","--outputFile={run_dir}/business-master-client-ui.xml"],
+      "argv":["npm","test","--workspace","client","--","--config","test/business-master/vitest.config.js","--reporter=junit","--outputFile={run_dir}/business-master-client-ui.xml"],
       "cwd":".","timeout_seconds":1800,"result_adapter":"JUNIT","result_path":"business-master-client-ui.xml","min_tests":1,"max_skipped":0,
       "stages":["DEVELOPER","TECHNICAL","REGRESSION"],"required_case_ids":["TC-016"],
       "tool_probes":[{"argv":["node","--version"],"version_pattern":"^v26\\."}],"side_effects":["FILES"],"env_keys":[],"redaction_env_keys":["DB_PASSWORD"]

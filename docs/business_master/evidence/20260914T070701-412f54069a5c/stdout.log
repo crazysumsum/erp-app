@@ -1,0 +1,1 @@
+{"durationMs":34,"rtoObjectiveHours":4,"rpoObjectiveMinutes":15,"observedRpoMinutes":0,"method":"consistent cross-schema logical copy and fresh provider/readiness instances","evidence":{"currencies":true,"payment_terms":true,"business_master_audit_logs":true,"hkd":true,"inactiveCurrency":true,"inactiveTerm":true,"auditLinkage":true,"readinessBefore":true,"readinessAfter":true}}

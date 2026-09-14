@@ -1,0 +1,79 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T065840-583451a01ff0",
+  "suite_id": "business-master-performance",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+  "source_fingerprint": "975c0af52d5470651b762a984958448c7db3a34b555da88358f2ebafd03986f3",
+  "code_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
+  "started_at": "2026-09-14T06:58:40.736167Z",
+  "ended_at": "2026-09-14T06:58:41.731449Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-2-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "server/scripts/runBusinessMasterPerformanceAcceptance.js",
+    "--output",
+    "/private/tmp/erp-business-master-phase-2/docs/business_master/evidence/20260914T065840-583451a01ff0/business-master-performance.json"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "24fb76624c53c95a6588512e4f6f595e6b6db9982d2399654b00e0ac9d695ad1",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-018",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T065840-583451a01ff0/stdout.log",
+      "sha256": "f33de852b9262913877aaf87796118ee974135713669764f31bcbe76d8c366f5",
+      "bytes": 841
+    },
+    {
+      "path": "evidence/20260914T065840-583451a01ff0/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T065840-583451a01ff0/business-master-performance.json",
+      "sha256": "7d2cb04955dde59b923585a36caa15f21de809bc984b94cdd71f144aa41087e3",
+      "bytes": 151
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
