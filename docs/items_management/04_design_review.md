@@ -139,3 +139,21 @@ The earlier “Independent” title is historical wording without sufficient pro
 - evidence confirmed: pre-TASK-042 canonical counts 304 checked/41 unchecked, post-correction 305/40, and frozen `fd8a4dd` source 303/42; original SHA and unchecked state remain traceable.
 - Git provenance confirmed: `21a8be0093d52faa19a1c0f061083046dea2a9f1` implements T23, `45d686ce94c74f08499c35e1e6c3cdc09714480a` is PR #67's merge containing it, and `b153efac5ad8c36acddaf85b98c82d6d1e4622f5` is the later T24 follow-up.
 - disposition: no P0/P1/P2 finding. This approves the documentation reconciliation only; it does not claim new product behavior, CI completion or formal acceptance.
+
+## REV-010 — TEST_AND_VERIFY entry readiness review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- reviewed baseline: design `cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a`, plan `85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3`
+- confirmed: manifest provider SHA matches `03_design_spec.md`; profile only records the user-authorized local test environment and does not lower suites, required case IDs or skip limits.
+- changes requested: APR-013/APR-014 were bound to pre-metadata HEAD `89ae37f`, and the first runtime record asserted serialization without an observed lease. The metadata candidate is now committed at `996072b24acb7daff4453f91da46d93c4613e4c6`; superseding APR-015/APR-016 bind that commit, and MySQL advisory lock `erp-item-task044-local-20260914` is observed acquired on connection 23483.
+- disposition: `CHANGES_REQUESTED` pending follow-up confirmation and revision-checked mode entry; no test execution is accepted under this review.
+
+## REV-011 — TEST_AND_VERIFY entry follow-up review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context
+- reviewed baseline: candidate `996072b24acb7daff4453f91da46d93c4613e4c6`, design `cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a`, plan `85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3`
+- findings closed: APR-015/APR-016 supersede the pre-metadata approvals and bind the exact candidate; runtime resources and MySQL advisory-lock evidence are recorded; REV-010 remains preserved.
+- reviewer limitation: the separate reviewer environment could not connect to `127.0.0.1:3306`, so it reviewed the lease record and supplied acquisition evidence rather than independently live-querying the lock. The primary verifier separately observed `IS_USED_LOCK(...) = 23483` on the still-open lease session.
+- disposition: no remaining P0/P1/P2; current design/plan baseline is approved for PLAN_READY and the revision-checked TEST_AND_VERIFY mode-entry checkpoint.

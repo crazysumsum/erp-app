@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 27,
-  "mode": "IMPLEMENT",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "revision": 30,
+  "mode": "TEST_AND_VERIFY",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "READY_FOR_TESTING",
   "resume_status": null,
   "current_phase": "PHASE-006",
   "current_task": "TASK-044",
   "baseline": {
     "design": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
     "plan": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
-    "code_commit": "89ae37faf19b9cd36b8979a28e8ec219deaafe9c",
+    "code_commit": "996072b24acb7daff4453f91da46d93c4613e4c6",
     "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
-    "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
+    "mode_entry_commit": "996072b24acb7daff4453f91da46d93c4613e4c6"
   },
   "runtime": {
     "instance_id": "ITEM-TASK044-LOCAL-20260914",
@@ -27,7 +27,7 @@
       "import-root": "/private/tmp/erp-item-management-task-038/server/storage/imports",
       "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
-    "lease_ref": null
+    "lease_ref": "MySQL advisory lock erp-item-task044-local-20260914 acquired=1 on connection_id=23483; persistent session owned by ITEM-TASK044-LOCAL-20260914"
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -284,6 +284,42 @@
         "TASK-044"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-015",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed TEST_AND_VERIFY of the frozen current Item Management candidate; this supersedes APR-013 for the metadata-only candidate commit.",
+      "recorded_at": "2026-09-14T09:16:29Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "code_commit": "996072b24acb7daff4453f91da46d93c4613e4c6",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-016",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed TEST_AND_VERIFY and subsequent verification work; this supersedes APR-014 for the metadata-only candidate commit.",
+      "recorded_at": "2026-09-14T09:16:29Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+      "code_commit": "996072b24acb7daff4453f91da46d93c4613e4c6",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -366,6 +402,30 @@
       "reviewer": "/root/item_design_review",
       "reviewed_baseline": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
       "source_ref": "docs/items_management/04_design_review.md#rev-009--separate-task-042-documentation-reconciliation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-010",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "source_ref": "docs/items_management/04_design_review.md#rev-010--test-and-verify-entry-readiness-review",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-011",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "source_ref": "docs/items_management/04_design_review.md#rev-011--test_and_verify-entry-follow-up-review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -526,9 +586,17 @@
       "idempotency_key": "mode-change-6",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized implementation on 2026-09-14"
+    },
+    {
+      "id": "MODE-CHANGE-30",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-30",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized TEST_AND_VERIFY and subsequent verification work on 2026-09-14"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit the reviewed manifest/profile/runtime metadata, reconcile the exact candidate commit, then complete the revision-checked TEST_AND_VERIFY mode-entry checkpoint before executing formal suites."
+  "next_safe_action": "Create TEST_AND_VERIFY readiness/environment reports for candidate 996072b, record unavailable recovery/browser adapters honestly, and execute only formal suites whose runtime and case mapping are trustworthy."
 }
