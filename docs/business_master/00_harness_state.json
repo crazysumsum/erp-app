@@ -1,38 +1,44 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 6,
-  "mode": "DESIGN_AND_PLAN",
-  "active_mode": "DESIGN_AND_PLAN",
-  "status": "PLANNED",
+  "revision": 18,
+  "mode": "FULL_LIFECYCLE",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": null,
+  "current_phase": "PHASE-001",
   "current_task": null,
   "baseline": {
-    "design": "9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87",
-    "plan": "edd6ca008e4ca76ecf281c2b2451733c143e261c89dda28f8af20ea3a1c359c9",
-    "code_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
-    "source_fingerprint": "c709b2c2ab6ab293a75857281db464454e291ce4a74155b92dc95ec9fac32569",
-    "worktree": "/private/tmp/erp-business-master-design-plan",
-    "default_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7",
-    "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
+    "design": "7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565",
+    "plan": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+    "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+    "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+    "worktree": "/private/tmp/erp-business-master-phase-1",
+    "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
+    "mode_entry_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d"
   },
   "runtime": {
-    "instance_id": "design-only-no-runtime",
+    "instance_id": "business-master-phase-1-20260914",
     "owner": "/root Codex context",
-    "resources": {},
+    "resources": {
+      "workspace": "/private/tmp/erp-business-master-phase-1",
+      "mysql-schema": "erp_business_master_phase1",
+      "server-port": "3101",
+      "client-port": "5201",
+      "playwright-profile": "/private/tmp/erp-business-master-phase1-playwright"
+    },
     "lease_ref": null
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
-    "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
-    "TASK-007": "PENDING",
-    "TASK-008": "PENDING",
-    "TASK-009": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
+    "TASK-009": "DONE",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -73,6 +79,221 @@
         "business-master"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user 同意 responding to exact replacement DESIGN and PLAN hashes",
+      "recorded_at": "2026-09-14T02:54:09Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "bbf0c0971f9129f90234cd80bd0747dd144fe4ea9dd5d45fc2c5f2cf340e0526",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user 同意 responding to exact replacement DESIGN and PLAN hashes",
+      "recorded_at": "2026-09-14T02:54:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0ce5ebf237e2fd06a77d3bbd3cac8af81b333698e2df91b29866ab021aba6470",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-001",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 approval of exact Phase 1 replacement plan covering migration 0027 and permission catalogue registration",
+      "recorded_at": "2026-09-14T02:54:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0ce5ebf237e2fd06a77d3bbd3cac8af81b333698e2df91b29866ab021aba6470",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "server/database/migrations/0027_create_business_master.js",
+        "server/src/modules/authorization/permissionCatalogue.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-003",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user 同意以上最終基線 responding to exact final DESIGN and PLAN hashes",
+      "recorded_at": "2026-09-14T03:01:35Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "bb269f03bcef794c5f7df3ea6fb4f3ab7a316b0af048d0da42bde108fdd8920e",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-003",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user 同意以上最終基線 responding to exact final DESIGN and PLAN hashes",
+      "recorded_at": "2026-09-14T03:01:35Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9beba0cd02ae36f94564ec51e88d2bfe64dc13f7ef33370bb05fe2cdee842413",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 approval of exact final Phase 1 plan covering migration 0027 and permission catalogue registration",
+      "recorded_at": "2026-09-14T03:01:35Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "9beba0cd02ae36f94564ec51e88d2bfe64dc13f7ef33370bb05fe2cdee842413",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "server/database/migrations/0027_create_business_master.js",
+        "server/src/modules/authorization/permissionCatalogue.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-004",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user 同意最終 Plan responding to exact final Plan hash",
+      "recorded_at": "2026-09-14T03:06:14Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "134140e80dc0ae92152cfd1c1de372670289be31dde4650ee09fc49ed5f5a159",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-003",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 final Plan approval covering Phase 1 migration 0027 and permission catalogue registration",
+      "recorded_at": "2026-09-14T03:06:14Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "134140e80dc0ae92152cfd1c1de372670289be31dde4650ee09fc49ed5f5a159",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "server/database/migrations/0027_create_business_master.js",
+        "server/src/modules/authorization/permissionCatalogue.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-004",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 明確批准寫入以上三項 harness 授權紀錄",
+      "recorded_at": "2026-09-14T03:50:01Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-005",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 明確批准寫入以上三項 harness 授權紀錄",
+      "recorded_at": "2026-09-14T03:50:01Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6b612e19d29d6655f295f9c27e858bccf570dffdcb97915061df964c44ce2532",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-004",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 明確批准寫入以上三項 harness 授權紀錄",
+      "recorded_at": "2026-09-14T03:50:01Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6b612e19d29d6655f295f9c27e858bccf570dffdcb97915061df964c44ce2532",
+      "code_commit": "46c1235dfd169e15da38e0de1b5ce1818dbabb0d",
+      "scope": [
+        "server/database/migrations/0027_create_business_master.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/index.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Plan 52e5d476 及原有三個共享路徑授權",
+      "recorded_at": "2026-09-14T05:48:50Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-005",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准 Plan 52e5d476 及原有三個共享路徑授權",
+      "recorded_at": "2026-09-14T05:48:50Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+      "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+      "scope": [
+        "server/database/migrations/0027_create_business_master.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/index.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -95,6 +316,42 @@
       "reviewer": "ERP Product Owner (Sam)",
       "reviewed_baseline": "9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87",
       "source_ref": "2026-09-14 Codex task user '同意' responding to exact DESIGN/PLAN hashes and independent HUMAN reviewer statement",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-002",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "bbf0c0971f9129f90234cd80bd0747dd144fe4ea9dd5d45fc2c5f2cf340e0526",
+      "source_ref": "2026-09-14 Codex task approval of exact replacement DESIGN and PLAN hashes",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-003",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "bb269f03bcef794c5f7df3ea6fb4f3ab7a316b0af048d0da42bde108fdd8920e",
+      "source_ref": "2026-09-14 Codex task user approval of exact final DESIGN and PLAN hashes",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-004",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565",
+      "source_ref": "2026-09-14 Codex task user: 本人作為獨立人類 reviewer，批准 Design 7b8058e2，0 Critical、0 High。",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -217,6 +474,38 @@
       "affected_ids": [],
       "status": "ANSWERED",
       "answer_ref": "2026-09-14 user agreement to exact hashes and independent HUMAN reviewer statement"
+    },
+    {
+      "id": "HD-012",
+      "impact": "MAJOR",
+      "question": "Approve exact replacement DESIGN and PLAN baselines after Phase 1 contract reconciliation",
+      "affected_ids": [
+        "DES-007",
+        "TC-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-14 user 同意 to exact design bbf0c097... and plan 0ce5ebf... hashes"
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "question": "Approve exact final DESIGN and PLAN baselines after contract fingerprints and allowed paths were synchronized",
+      "affected_ids": [
+        "DES-007",
+        "TC-004",
+        "TASK-001",
+        "TASK-008"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-14 user: 同意以上最終基線"
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "Approve the final PLAN baseline after recording isolated runtime authorization",
+      "affected_ids": [],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-14 user: 同意最終 Plan"
     }
   ],
   "external_actions": [
@@ -243,9 +532,41 @@
       "idempotency_key": "business-master-design-merge-cc2e3264d2f4caefbef97045b717cf29d0710da0",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/83 commit cc2e3264d2f4caefbef97045b717cf29d0710da0"
+    },
+    {
+      "id": "MODE-CHANGE-7",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-7",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 user request: 進入 FULL_LIFECYCLE"
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "evidence/20260914T030655-44eb3a5e6b8b/run.json",
+    "evidence/20260914T030655-63a5cce258c1/run.json",
+    "evidence/20260914T030713-097e5b6cffa6/run.json",
+    "evidence/20260914T030716-ae558292745d/run.json",
+    "evidence/20260914T030755-5ba5c7317e1d/run.json",
+    "evidence/20260914T030806-18e639a0b41a/run.json",
+    "evidence/20260914T030818-3add1cfb543a/run.json",
+    "evidence/20260914T035632-7e95693c28d0/run.json",
+    "evidence/20260914T035632-9e7c2e6acaae/run.json",
+    "evidence/20260914T035645-978d9930394c/run.json",
+    "evidence/20260914T035657-8fa495c6affc/run.json",
+    "evidence/20260914T035708-cee8b9dfb661/run.json",
+    "evidence/20260914T040223-da9ece0fd946/run.json",
+    "evidence/20260914T040223-df1f8069064f/run.json",
+    "evidence/20260914T040237-ab3a07a86039/run.json",
+    "evidence/20260914T040251-77ebdaf655e1/run.json",
+    "evidence/20260914T040302-60b85cede684/run.json",
+    "evidence/20260914T054926-5ce277e4c6ad/run.json",
+    "evidence/20260914T054926-f62615d692d9/run.json",
+    "evidence/20260914T054939-621d948338cb/run.json",
+    "evidence/20260914T055101-1f710e2d7d9b/run.json",
+    "evidence/20260914T055110-1e48198f2a5b/run.json",
+    "evidence/20260914T055118-6e08b49064b1/run.json"
+  ],
   "defects": [],
-  "next_safe_action": "Clean up the merged design branch/worktree. Product implementation requires separate IMPLEMENT or FULL_LIFECYCLE authorization."
+  "next_safe_action": "Freeze the exact Phase 1 candidate commit, push it, and obtain current-candidate CI plus independent PR review before merge."
 }

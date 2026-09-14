@@ -9,12 +9,17 @@
     "source_paths": [
       "server/src/modules/businessMaster/**",
       "server/src/handlers/business-master/**",
+      "server/src/index.js",
       "client/src/pages/business-master/**",
       "client/src/components/business-master/**",
       "client/src/services/businessMaster.js"
     ],
     "test_paths": [
       "server/test/business-master/**",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/businessMaster*.test.js",
       "server/test/performance/businessMaster*.test.js",
       "client/test/business-master/**",
@@ -24,11 +29,16 @@
       "docs/business_master/**",
       "server/src/modules/businessMaster/**",
       "server/src/handlers/business-master/**",
+      "server/src/index.js",
       "client/src/pages/business-master/**",
       "client/src/components/business-master/**",
       "client/src/services/businessMaster.js",
-      "server/test/business-master/**",
-      "server/test/integration/businessMaster*.test.js",
+    "server/test/business-master/**",
+    "server/test/permissionCatalogueConventions.test.js",
+    "server/test/integration/userManagement.integration.test.js",
+    "server/test/integration/roleManagement.integration.test.js",
+    "server/test/integration/passwordChange.integration.test.js",
+    "server/test/integration/businessMaster*.test.js",
       "server/test/performance/businessMaster*.test.js",
       "server/scripts/runBusinessMaster*.js",
       "client/test/business-master/**",
@@ -37,6 +47,7 @@
     "approval_required_paths": [
       "server/database/migrations/**",
       "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/index.js",
       "client/config/menu.js",
       "client/src/framework/http/errorMessages.js",
       "client/package.json",
@@ -72,7 +83,7 @@
         "id": "business-master-currency-payment-term-provider",
         "version": "v1-design",
         "source": "docs/business_master/03_design_spec.md",
-        "sha256": "a9b3a1a99fd65b65732ed00f3b6e02f80d825a0f94bb21a58a88053de132c2b4",
+      "sha256": "27ff34d8008303fa7a077e9b27a90775699e9e1becc663d831a3b01b5c14569c",
         "consumers": [
           "customer-management",
           "supplier-management",
@@ -89,7 +100,7 @@
         "id": "jwt-role-permission-contract",
         "version": "main-0996cb7",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "54a87230aceea9180500af79f143d9bca4b4d8068ff7c5a0716d6790b69b8dcc",
+      "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
         "regression_suites": ["business-master-server"]
       }
     ],
@@ -125,7 +136,7 @@
   "matrix": "08_traceability_matrix.md",
   "state": "00_harness_state.json",
   "required_suites": {
-    "developer": ["lint","client-build","business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
+    "developer": ["lint"],
     "technical": ["business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
     "regression": ["business-master-server","business-master-client-ui","business-master-browser","business-master-performance","business-master-recovery","business-master-consumer-contract"],
     "uat": ["business-master-uat-browser"]

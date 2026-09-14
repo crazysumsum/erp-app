@@ -13,6 +13,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
+import { PERMISSION_CATALOGUE } from "../../src/modules/authorization/permissionCatalogue.js";
 import { createTestDevice } from "../../test-support/testDevice.js";
 
 const skip =
@@ -105,10 +106,9 @@ async function signedAuthed(device, token, { path, body }) {
   return { method: "POST", headers: { ...headers, Authorization: `Bearer ${token}` }, body: bodyText };
 }
 
-// system-admin 現在持有 5 個權限（0010 migration 之後多咗 item.view／
-// item.mgmt）；claims 要同資料庫現況一致，否則會撞 PERMISSION_STALE 而唔係
-// 測試本身想驗嘅嘢——同 itemCatalog.integration.test.js 嗰份同一個理由。
-const ADMIN_PERMISSIONS = ["user.mgmt", "role.mgmt", "device.mgmt", "item.view", "item.mgmt"];
+// system-admin 持有完整 permission catalogue；claims 必須跟 migration 後現況一致，
+// 否則測試會先撞 PERMISSION_STALE，而不是走到它真正要驗證的行為。
+const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE.map(({ name }) => name);
 
 test("create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked", { skip }, async (t) => {
   const application = await startApplication();
