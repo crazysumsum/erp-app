@@ -6,7 +6,7 @@ import { GetCustomerOperationHandler } from "../src/handlers/customer-operations
 
 test("TC-012 Customer root APIs use strict schemas, route permissions and framework idempotency", () => {
   const values = [...Object.values(handlers), GetCustomerOperationHandler].filter((value) => typeof value === "function" && value.api);
-  assert.equal(values.length, 6);
+  assert.equal(values.length, 12);
   for (const Handler of values) {
     for (const schema of Object.values(Handler.api.requestSchema)) {
       assert.equal(schema.additionalProperties, false, Handler.handlerName);
@@ -18,4 +18,10 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
   }
   assert.equal(handlers.ListCustomersHandler.api.authorizationPolicies[0].options.permissions[0], "customer.view");
   assert.equal(handlers.UpdateCustomerHandler.api.requestSchema.body.properties.customerCode, undefined);
+  assert.equal(handlers.CreateCustomerAddressHandler.api.responseSchema[201].properties.version.minimum, 1);
+  assert.equal(handlers.UpdateCustomerAddressHandler.api.requestSchema.body.properties.reason.minLength, 5);
+  for (const name of ["UpdateCustomerAddressHandler", "DeactivateCustomerAddressHandler", "UpdateCustomerContactHandler", "DeactivateCustomerContactHandler"]) {
+    assert.equal(typeof handlers[name], "function", `${name} must be exported`);
+    assert.deepEqual(handlers[name].api.idempotency, { enabled: true });
+  }
 });

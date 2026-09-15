@@ -99,6 +99,22 @@ integrationTest("TC-012 Customer HTTP create, replay, list, update and operation
   assert.equal(updated.status, 200, JSON.stringify(updated.body));
   assert.equal(updated.body.data.customer.version, 2);
 
+  const addressBody = { label: "Warehouse", addressLine1: "1 Harbour Road", countryCode: "HK", purposes: [{ code: "shipping", isDefault: true }] };
+  const address = await request(`${url}/api/v1/customers/${customerId}/addresses/create`, { method: "POST", token, key: randomUUID(), body: addressBody });
+  assert.equal(address.status, 201, JSON.stringify(address.body));
+  const addressId = address.body.data.id;
+  assert.equal(address.body.data.version, 1);
+  const addressUpdate = await request(`${url}/api/v1/customers/${customerId}/addresses/${addressId}/update`, { method: "POST", token, key: randomUUID(), body: { ...addressBody, label: "Main Warehouse", version: 1, reason: "label correction" } });
+  assert.equal(addressUpdate.status, 200, JSON.stringify(addressUpdate.body));
+  assert.equal(addressUpdate.body.data.version, 2);
+  const addressDeactivate = await request(`${url}/api/v1/customers/${customerId}/addresses/${addressId}/deactivate`, { method: "POST", token, key: randomUUID(), body: { version: 2, reason: "warehouse closed" } });
+  assert.equal(addressDeactivate.status, 200, JSON.stringify(addressDeactivate.body));
+  assert.equal(addressDeactivate.body.data.status, "inactive");
+  const [[addressAudit]] = await db.query("SELECT COUNT(*) AS count FROM customer_audit_logs WHERE customer_id = ? AND action IN ('customer.address.create','customer.address.update','customer.address.deactivate')", [customerId]);
+  assert.equal(Number(addressAudit.count), 3);
+  const [[correlatedAddressAudit]] = await db.query("SELECT COUNT(*) AS count FROM customer_audit_logs WHERE customer_id = ? AND action LIKE 'customer.address.%' AND request_id <> '' AND ip <> ''", [customerId]);
+  assert.equal(Number(correlatedAddressAudit.count), 3);
+
   const operation = await request(`${url}/api/v1/customer-operations/${operationId}`, { token });
   assert.equal(operation.status, 200, JSON.stringify(operation.body));
   assert.equal(operation.body.data.resourceId, customerId);

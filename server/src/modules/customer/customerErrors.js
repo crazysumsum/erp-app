@@ -42,6 +42,22 @@ export function customerIdempotencyConflict() {
   });
 }
 
+export function customerPartyNotFound(type, id) {
+  return customerError(`Customer ${type} ${id} was not found for this owner`, {
+    code: "CUSTOMER_PARTY_NOT_FOUND",
+    statusCode: 404,
+    publicMessage: "找不到指定的客戶資料"
+  });
+}
+
+export function customerPartyInactive() {
+  return customerError("Inactive Customer party records require an explicit reactivate command", {
+    code: "CUSTOMER_PARTY_INACTIVE",
+    statusCode: 409,
+    publicMessage: "已停用的資料不能直接修改"
+  });
+}
+
 export function versionConflict(currentVersion) {
   return customerError("Customer version conflict", {
     code: "VERSION_CONFLICT",

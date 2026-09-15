@@ -1,10 +1,13 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { CustomerService } from "../../modules/customer/CustomerService.js";
+import { CustomerPartyService } from "../../modules/customer/CustomerPartyService.js";
 import { CUSTOMER_ROUTE_POLICIES } from "../../modules/customer/customerPermissions.js";
 import {
   CUSTOMER_COMMAND_RESPONSE, CUSTOMER_DETAIL, CUSTOMER_ID_PARAMS, CUSTOMER_LIST_QUERY,
   CUSTOMER_LIST_RESPONSE, CUSTOMER_ROOT_INPUT, CUSTOMER_UPDATE_INPUT, DUPLICATE_RESPONSE,
-  EMPTY
+  EMPTY, ADDRESS_CREATE, CONTACT_CREATE, PARTY_CREATED, ADDRESS_UPDATE, CONTACT_UPDATE,
+  PARTY_UPDATED, DEACTIVATE_PARTY, PARTY_DEACTIVATED, CUSTOMER_PARENT_PARAMS,
+  CUSTOMER_ADDRESS_PARAMS, CUSTOMER_CONTACT_PARAMS
 } from "./customerSchemas.js";
 
 const IDEMPOTENT = Object.freeze({ enabled: true });
@@ -27,6 +30,7 @@ class CustomerHandler extends BaseRequestHandler {
   constructor(services = {}) {
     super(services);
     this.customer = new CustomerService({ database: services.require("mysqldatabase"), time: services.require("time") });
+    this.party = new CustomerPartyService({ database: services.require("mysqldatabase"), time: services.require("time") });
   }
 }
 
@@ -60,6 +64,42 @@ export class UpdateCustomerHandler extends CustomerHandler {
   async execute(req) { return this.response(await this.customer.update({ ...commandInput(req), id: Number(req.input.params.id), ...req.input.body })); }
 }
 
-for (const Handler of [ListCustomersHandler, GetCustomerHandler, CheckCustomerDuplicatesHandler, CreateCustomerHandler, UpdateCustomerHandler]) {
+export class CreateCustomerAddressHandler extends CustomerHandler {
+  static handlerName = "createCustomerAddress";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/addresses/create", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_PARENT_PARAMS, query: EMPTY, body: ADDRESS_CREATE }, responseSchema: { 201: PARTY_CREATED } };
+  async execute(req) { return this.response(await this.party.create({ ...commandInput(req), type: "address", customerId: Number(req.input.params.customerId), ...req.input.body }), { statusCode: 201 }); }
+}
+
+export class CreateCustomerContactHandler extends CustomerHandler {
+  static handlerName = "createCustomerContact";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/contacts/create", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_PARENT_PARAMS, query: EMPTY, body: CONTACT_CREATE }, responseSchema: { 201: PARTY_CREATED } };
+  async execute(req) { return this.response(await this.party.create({ ...commandInput(req), type: "contact", customerId: Number(req.input.params.customerId), ...req.input.body }), { statusCode: 201 }); }
+}
+
+export class UpdateCustomerAddressHandler extends CustomerHandler {
+  static handlerName = "updateCustomerAddress";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/addresses/:addressId/update", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ADDRESS_PARAMS, query: EMPTY, body: ADDRESS_UPDATE }, responseSchema: { 200: PARTY_UPDATED } };
+  async execute(req) { return this.response(await this.party.update({ ...commandInput(req), type: "address", customerId: Number(req.input.params.customerId), partyId: Number(req.input.params.addressId), ...req.input.body })); }
+}
+
+export class DeactivateCustomerAddressHandler extends CustomerHandler {
+  static handlerName = "deactivateCustomerAddress";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/addresses/:addressId/deactivate", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ADDRESS_PARAMS, query: EMPTY, body: DEACTIVATE_PARTY }, responseSchema: { 200: PARTY_DEACTIVATED } };
+  async execute(req) { return this.response(await this.party.deactivate({ ...commandInput(req), type: "address", customerId: Number(req.input.params.customerId), partyId: Number(req.input.params.addressId), ...req.input.body })); }
+}
+
+export class UpdateCustomerContactHandler extends CustomerHandler {
+  static handlerName = "updateCustomerContact";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/contacts/:contactId/update", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_CONTACT_PARAMS, query: EMPTY, body: CONTACT_UPDATE }, responseSchema: { 200: PARTY_UPDATED } };
+  async execute(req) { return this.response(await this.party.update({ ...commandInput(req), type: "contact", customerId: Number(req.input.params.customerId), partyId: Number(req.input.params.contactId), ...req.input.body })); }
+}
+
+export class DeactivateCustomerContactHandler extends CustomerHandler {
+  static handlerName = "deactivateCustomerContact";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/contacts/:contactId/deactivate", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_CONTACT_PARAMS, query: EMPTY, body: DEACTIVATE_PARTY }, responseSchema: { 200: PARTY_DEACTIVATED } };
+  async execute(req) { return this.response(await this.party.deactivate({ ...commandInput(req), type: "contact", customerId: Number(req.input.params.customerId), partyId: Number(req.input.params.contactId), ...req.input.body })); }
+}
+
+for (const Handler of [ListCustomersHandler, GetCustomerHandler, CheckCustomerDuplicatesHandler, CreateCustomerHandler, UpdateCustomerHandler, CreateCustomerAddressHandler, CreateCustomerContactHandler, UpdateCustomerAddressHandler, DeactivateCustomerAddressHandler, UpdateCustomerContactHandler, DeactivateCustomerContactHandler]) {
   Handler.api.description = `${Handler.handlerName} endpoint.`;
 }

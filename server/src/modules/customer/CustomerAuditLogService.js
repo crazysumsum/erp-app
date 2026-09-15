@@ -3,7 +3,13 @@ const MAX_DETAIL_BYTES = 8192;
 const ACTIONS = new Set([
   "customer.create",
   "customer.update",
-  "customer.status"
+  "customer.status",
+  "customer.address.create",
+  "customer.address.update",
+  "customer.address.deactivate",
+  "customer.contact.create",
+  "customer.contact.update",
+  "customer.contact.deactivate"
 ]);
 
 const ROOT_AUDIT_FIELDS = new Set([
@@ -22,7 +28,25 @@ const ROOT_AUDIT_FIELDS = new Set([
   "generalEmail",
   "status",
   "everActivatedAt",
-  "version"
+  "version",
+  "label",
+  "recipientCompanyDepartment",
+  "addressLine1",
+  "addressLine2",
+  "addressLine3",
+  "city",
+  "stateRegion",
+  "postalCode",
+  "countryCode",
+  "name",
+  "jobTitle",
+  "department",
+  "email",
+  "phone",
+  "mobile",
+  "preferredLanguage",
+  "sortOrder",
+  "purposes"
 ]);
 
 function allowlistedSnapshot(value) {
