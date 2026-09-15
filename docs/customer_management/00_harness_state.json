@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 27,
+  "revision": 28,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-003",
+  "current_task": null,
   "baseline": {
     "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
     "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "748fc38dd1cfd17dc6daa80e62b3560eb415e61b",
+    "code_commit": "357c6f92375938426d74e82c78aaea35d1e5cd89",
     "source_fingerprint": "416505a804af3018c76348c99404926bccab29f44a80f792412d0dc382b56fa7",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
@@ -28,7 +28,7 @@
   "tasks": {
     "TASK-001": "DONE",
     "TASK-002": "DONE",
-    "TASK-003": "IN_PROGRESS",
+    "TASK-003": "DONE",
     "TASK-004": "PENDING",
     "TASK-005": "PENDING",
     "TASK-006": "PENDING",
@@ -332,5 +332,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Review and commit the completed TASK-003 normalization and equality-key foundation slice; TASK-004 remains blocked on the Business Master Currency/Payment Term provider."
+  "next_safe_action": "TASK-003 is complete. TASK-004 remains blocked until the Business Master Currency/Payment Term provider is merged and verified; before any Phase merge, reconcile this branch with the newer origin/main."
 }
