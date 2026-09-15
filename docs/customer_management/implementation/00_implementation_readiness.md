@@ -98,3 +98,26 @@ merge claim.
   column plus customer/target investigative indexes.
 - The isolated schema was dropped after verification; no Customer business data
   or audit fixture was retained.
+
+## TASK-006 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added `0033_create_customer_operation_requests.js`: an actor-scoped durable
+  Customer command outcome record with canonical payload hash, recovery lease,
+  resource reference and terminal-result fields.  The migration shape test, service
+  transaction test and handler contract test passed.
+- All server tests passed in a loopback-capable local environment: 1,267 passed,
+  229 environment-gated tests skipped, 0 failed.  The sandbox-only no-socket run
+  was not used as release evidence.
+- Fresh isolated schemas were migrated through `0033`; one full rerun skipped every
+  migration. Metadata confirmed the actor/route/key unique constraint plus lease,
+  resource and actor indexes. Both schemas were dropped after verification.
+- A real isolated-MySQL HTTP flow created a Draft Customer, replayed the identical
+  framework idempotency key, performed prefix list search and a CAS update, then
+  read the actor-owned durable operation result. It passed with no fixture retained.
+- Create and update revalidate newly assigned Currency and Payment Term values in
+  the caller-owned transaction through the Business Master provider; activation,
+  lifecycle and child aggregate APIs remain intentionally unavailable until their
+  planned tasks.
