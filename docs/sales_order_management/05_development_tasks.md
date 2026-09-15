@@ -1,115 +1,10 @@
-# Sales Order Management Aligned Phase / Task Plan
-
-## 1. Normative Plan
-
-The complete legacy plan, including detailed task fields, acceptance checklists and file-level scope, is embedded in section 6 of this file, with only obsolete self-reference paths normalized to canonical filenames. This entry provides canonical Harness aliases and Phase gates. All statuses are `PLANNED`; no implementation or verification has occurred.
-
-## 2. Phase Checkpoints
-
-| Phase | Objective / deliverable | Requirements / Design | Entry / dependencies | Acceptance / formal verification | PR / rollback / exit | Status |
-| --- | --- | --- | --- | --- | --- | --- |
-| PHASE-001 | Upload foundation, providers, permissions/config, primitives and DB operation foundation; Sales UI/jobs remain disabled. | All cross-cutting NFR/SEC; DES-001–005,007,010,013,018–020 | Latest main; Customer/Item/Inventory owners; disk storage/test DB | TC-001–010 plus provider/migration/50 MB memory gate | One foundation PR or ordered upload/provider/schema PRs; opt-in flags permit safe revert; exit only with approved contracts | PLANNED / BLOCKED by DR-001–005 |
-| PHASE-002 | Quotation, manual Draft SO, inquiry and accessible UI without Inventory commitment. | FR-001–041; DES-002/003/007/009/012–016 | PHASE-001 | TC-011–020; UAT-008–037 and relevant AUTH/INQ | One reviewable vertical-slice PR; routes/menu feature-disabled until exit | PLANNED |
-| PHASE-003 | Durable confirmation, Reservation/Backorder and lifecycle/recovery. | FR-042–075; DES-003–007/009/013–015 | PHASE-002 plus Inventory owner/DBA approval | TC-021–033; UAT-038–064 | One commitment/lifecycle PR; rollback by route/job disable plus forward fix after data exists | PLANNED / BLOCKED by DR-001/002/004 |
-| PHASE-004 | CSV v1 and canonical Channel intake with dedupe, worker recovery and UI. | FR-076–108; DES-007/009–015 | PHASE-001 disk gate, PHASE-003 core confirmation | TC-034–043; UAT-065–091 | One intake PR; no public Channel route; disable upload/jobs for safe stop | PLANNED / BLOCKED by DR-003/007 |
-| PHASE-005 | Inquiry/export/audit/archive/reconciliation, capacity and DR release evidence. | FR-109–140; NFR-001–016; SEC-001–015; DES-008/009/012–020 | PHASE-002–004; open-matter providers; performance/ops environment | TC-044–060; UAT-092–129 | One release PR or ordered query/archive/evidence set; archive enablement separately reversible | PLANNED / BLOCKED by DR-006/008/009 until acceptance |
-
-## 3. Canonical Task Map
-
-Each alias inherits the corresponding legacy task's Goal, Scope, Approach, Dependencies, Acceptance Criteria, Verification, Migration/Rollback, Risk and Definition of Done.
-
-| Canonical task | Parent | Legacy task |
-| --- | --- | --- |
-| TASK-001 (PHASE-001) | PHASE-001 | P0-T01 |
-| TASK-002 (PHASE-001) | PHASE-001 | P0-T02 |
-| TASK-003 (PHASE-001) | PHASE-001 | P0-T03 |
-| TASK-004 (PHASE-001) | PHASE-001 | P0-T04 |
-| TASK-005 (PHASE-001) | PHASE-001 | P0-T05 |
-| TASK-006 (PHASE-001) | PHASE-001 | P0-T06 |
-| TASK-007 (PHASE-001) | PHASE-001 | P0-T07 |
-| TASK-008 (PHASE-001) | PHASE-001 | P0-T08 |
-| TASK-009 (PHASE-001) | PHASE-001 | P0-T09 |
-| TASK-010 (PHASE-001) | PHASE-001 | P0-T10 |
-| TASK-011 (PHASE-001) | PHASE-001 | P0-T11 |
-| TASK-012 (PHASE-002) | PHASE-002 | P1-T01 |
-| TASK-013 (PHASE-002) | PHASE-002 | P1-T02 |
-| TASK-014 (PHASE-002) | PHASE-002 | P1-T03 |
-| TASK-015 (PHASE-002) | PHASE-002 | P1-T04 |
-| TASK-016 (PHASE-002) | PHASE-002 | P1-T05 |
-| TASK-017 (PHASE-002) | PHASE-002 | P1-T06 |
-| TASK-018 (PHASE-002) | PHASE-002 | P1-T07 |
-| TASK-019 (PHASE-002) | PHASE-002 | P1-T08 |
-| TASK-020 (PHASE-002) | PHASE-002 | P1-T09 |
-| TASK-021 (PHASE-002) | PHASE-002 | P1-T10 |
-| TASK-022 (PHASE-002) | PHASE-002 | P1-T11 |
-| TASK-023 (PHASE-002) | PHASE-002 | P1-T12 |
-| TASK-024 (PHASE-002) | PHASE-002 | P1-T13 |
-| TASK-025 (PHASE-002) | PHASE-002 | P1-T14 |
-| TASK-026 (PHASE-002) | PHASE-002 | P1-T15 |
-| TASK-027 (PHASE-002) | PHASE-002 | P1-T16 |
-| TASK-028 (PHASE-003) | PHASE-003 | P2-T01 |
-| TASK-029 (PHASE-003) | PHASE-003 | P2-T02 |
-| TASK-030 (PHASE-003) | PHASE-003 | P2-T03 |
-| TASK-031 (PHASE-003) | PHASE-003 | P2-T04 |
-| TASK-032 (PHASE-003) | PHASE-003 | P2-T05 |
-| TASK-033 (PHASE-003) | PHASE-003 | P2-T06 |
-| TASK-034 (PHASE-003) | PHASE-003 | P2-T07 |
-| TASK-035 (PHASE-003) | PHASE-003 | P2-T08 |
-| TASK-036 (PHASE-003) | PHASE-003 | P2-T09 |
-| TASK-037 (PHASE-003) | PHASE-003 | P2-T10 |
-| TASK-038 (PHASE-004) | PHASE-004 | P3-T01 |
-| TASK-039 (PHASE-004) | PHASE-004 | P3-T02 |
-| TASK-040 (PHASE-004) | PHASE-004 | P3-T03 |
-| TASK-041 (PHASE-004) | PHASE-004 | P3-T04 |
-| TASK-042 (PHASE-004) | PHASE-004 | P3-T05 |
-| TASK-043 (PHASE-004) | PHASE-004 | P3-T06 |
-| TASK-044 (PHASE-004) | PHASE-004 | P3-T07 |
-| TASK-045 (PHASE-004) | PHASE-004 | P3-T08 |
-| TASK-046 (PHASE-004) | PHASE-004 | P3-T09 |
-| TASK-047 (PHASE-004) | PHASE-004 | P3-T10 |
-| TASK-048 (PHASE-004) | PHASE-004 | P3-T11 |
-| TASK-049 (PHASE-004) | PHASE-004 | P3-T12 |
-| TASK-050 (PHASE-005) | PHASE-005 | P4-T01 |
-| TASK-051 (PHASE-005) | PHASE-005 | P4-T02 |
-| TASK-052 (PHASE-005) | PHASE-005 | P4-T03 |
-| TASK-053 (PHASE-005) | PHASE-005 | P4-T04 |
-| TASK-054 (PHASE-005) | PHASE-005 | P4-T05 |
-| TASK-055 (PHASE-005) | PHASE-005 | P4-T06 |
-| TASK-056 (PHASE-005) | PHASE-005 | P4-T07 |
-| TASK-057 (PHASE-005) | PHASE-005 | P4-T08 |
-| TASK-058 (PHASE-005) | PHASE-005 | P4-T09 |
-| TASK-059 (PHASE-005) | PHASE-005 | P4-T10 |
-| TASK-060 (PHASE-005) | PHASE-005 | P4-T11 |
-| TASK-061 (PHASE-005) | PHASE-005 | P4-T12 |
-| TASK-062 (PHASE-005) | PHASE-005 | P4-T13 |
-| TASK-063 (PHASE-005) | PHASE-005 | P4-T14 |
-
-## 4. Requirement Coverage by Phase
-
-- PHASE-001 / TASK-001–011: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015, NFR-016; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014, SEC-015.
-- PHASE-002 / TASK-012–027: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041.
-- PHASE-003 / TASK-028–037: FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075.
-- PHASE-004 / TASK-038–049: FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108.
-- PHASE-005 / TASK-050–063 (PHASE-005): FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
-
-## 5. Phase Completion Rule
-
-Each Phase is a separate merge checkpoint. It may be marked DONE only after all mapped tasks, developer checks, formal technical tests, regression, documentation/traceability and review gates pass on an identified baseline. In this review mode every Phase and Task remains `PLANNED`.
-
-
----
-
-## 6. Embedded Legacy Development Plan Body
-
-The content below preserves the full legacy source semantics; only obsolete document paths were normalized. The exact original source has SHA-256 280472930939ace096f77b7d4eb7f83d49b2319d1779894d81a8c066c38910a2 and remains in the temporary recovery backup. Canonical Phase/Task aliases and gate status above control Harness traceability.
-
-# Sales Order Management 開發執行計劃
+# Sales Order Management 開發執行計劃（Harness Aligned）
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 |---|---|
-| 依據 | `docs/sales_order_management/01_requirement_spec.md`、`docs/sales_order_management/03_system_design_spec.md` |
+| 依據 | `docs/sales_order_management/01_requirement_spec.md`、`docs/sales_order_management/03_design_spec.md` |
 | 產生日期 | 2026-09-09 |
 | 任務狀態 | 待人工 review／批准後執行；本文件不代表已開始開發 |
 | Task List target | 本文件；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
@@ -1808,7 +1703,7 @@ P0 Inventory contract ─────────┘          |
 - Archive永久purge、第二個Database、Data Lake、Search Engine、Queue Broker或Object Storage。
 - 重寫既有framework、generic repository／workflow engine或與Sales無關的重構。
 
-任何上述能力若變成需求，先修改`01_requirement_spec.md`及`03_system_design_spec.md`並重新拆分Tasks，不直接塞入現有Phase。
+任何上述能力若變成需求，先修改`01_requirement_spec.md`及`03_design_spec.md`並重新拆分Tasks，不直接塞入現有Phase。
 
 ---
 
@@ -1819,3 +1714,2038 @@ P0 Inventory contract ─────────┘          |
 - Phase PR Checkpoint未完成時，不得開始下一Phase一般功能；只可做不依賴該結果的read-only準備。
 - 出現規格衝突、Provider contract改變、migration collision、效能門檻不可達或安全風險時，立即停止該Task並回報，不靜默改低標準。
 - 每個Phase合併後，把實際commit、PR、migration編號及測試報告連結回填本文件，再由最新main建立下一Phase worktree。
+
+## 12. Harness 2.0 正式 Phase／Task 定義
+
+### 12.1 對齊來源與保留內容
+
+本節保留 Harness 對齊層的基線、映射與門檻敘述；以上章節為本模組的正式敘述正文，章節編號與既有跨文件引用維持不變。
+
+以上正文保留對齊前來源的完整語意，只正規化了已失效的文件路徑；對齊前來源的 SHA-256 為 `280472930939ace096f77b7d4eb7f83d49b2319d1779894d81a8c066c38910a2`，其內容由 Git 歷史保存為恢復點。 本節的 Canonical Phase／Task 對應與 gate status 控制 Harness traceability。
+
+## 1. Normative Plan
+
+The complete legacy plan, including detailed task fields, acceptance checklists and file-level scope, is embedded in section 6 of this file, with only obsolete self-reference paths normalized to canonical filenames. This entry provides canonical Harness aliases and Phase gates. All statuses are `PLANNED`; no implementation or verification has occurred.
+
+## 2. Phase Checkpoints
+
+| Phase | Objective / deliverable | Requirements / Design | Entry / dependencies | Acceptance / formal verification | PR / rollback / exit | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| PHASE-001 | Upload foundation, providers, permissions/config, primitives and DB operation foundation; Sales UI/jobs remain disabled. | All cross-cutting NFR/SEC; DES-001–005,007,010,013,018–020 | Latest main; Customer/Item/Inventory owners; disk storage/test DB | TC-001–010 plus provider/migration/50 MB memory gate | One foundation PR or ordered upload/provider/schema PRs; opt-in flags permit safe revert; exit only with approved contracts | PLANNED / BLOCKED by DR-001–005 |
+| PHASE-002 | Quotation, manual Draft SO, inquiry and accessible UI without Inventory commitment. | FR-001–041; DES-002/003/007/009/012–016 | PHASE-001 | TC-011–020; UAT-008–037 and relevant AUTH/INQ | One reviewable vertical-slice PR; routes/menu feature-disabled until exit | PLANNED |
+| PHASE-003 | Durable confirmation, Reservation/Backorder and lifecycle/recovery. | FR-042–075; DES-003–007/009/013–015 | PHASE-002 plus Inventory owner/DBA approval | TC-021–033; UAT-038–064 | One commitment/lifecycle PR; rollback by route/job disable plus forward fix after data exists | PLANNED / BLOCKED by DR-001/002/004 |
+| PHASE-004 | CSV v1 and canonical Channel intake with dedupe, worker recovery and UI. | FR-076–108; DES-007/009–015 | PHASE-001 disk gate, PHASE-003 core confirmation | TC-034–043; UAT-065–091 | One intake PR; no public Channel route; disable upload/jobs for safe stop | PLANNED / BLOCKED by DR-003/007 |
+| PHASE-005 | Inquiry/export/audit/archive/reconciliation, capacity and DR release evidence. | FR-109–140; NFR-001–016; SEC-001–015; DES-008/009/012–020 | PHASE-002–004; open-matter providers; performance/ops environment | TC-044–060; UAT-092–129 | One release PR or ordered query/archive/evidence set; archive enablement separately reversible | PLANNED / BLOCKED by DR-006/008/009 until acceptance |
+
+## 3. Canonical Task Map
+
+Each alias inherits the corresponding legacy task's Goal, Scope, Approach, Dependencies, Acceptance Criteria, Verification, Migration/Rollback, Risk and Definition of Done.
+
+| Canonical task | Parent | Legacy task |
+| --- | --- | --- |
+| TASK-001 (PHASE-001) | PHASE-001 | P0-T01 |
+| TASK-002 (PHASE-001) | PHASE-001 | P0-T02 |
+| TASK-003 (PHASE-001) | PHASE-001 | P0-T03 |
+| TASK-004 (PHASE-001) | PHASE-001 | P0-T04 |
+| TASK-005 (PHASE-001) | PHASE-001 | P0-T05 |
+| TASK-006 (PHASE-001) | PHASE-001 | P0-T06 |
+| TASK-007 (PHASE-001) | PHASE-001 | P0-T07 |
+| TASK-008 (PHASE-001) | PHASE-001 | P0-T08 |
+| TASK-009 (PHASE-001) | PHASE-001 | P0-T09 |
+| TASK-010 (PHASE-001) | PHASE-001 | P0-T10 |
+| TASK-011 (PHASE-001) | PHASE-001 | P0-T11 |
+| TASK-012 (PHASE-002) | PHASE-002 | P1-T01 |
+| TASK-013 (PHASE-002) | PHASE-002 | P1-T02 |
+| TASK-014 (PHASE-002) | PHASE-002 | P1-T03 |
+| TASK-015 (PHASE-002) | PHASE-002 | P1-T04 |
+| TASK-016 (PHASE-002) | PHASE-002 | P1-T05 |
+| TASK-017 (PHASE-002) | PHASE-002 | P1-T06 |
+| TASK-018 (PHASE-002) | PHASE-002 | P1-T07 |
+| TASK-019 (PHASE-002) | PHASE-002 | P1-T08 |
+| TASK-020 (PHASE-002) | PHASE-002 | P1-T09 |
+| TASK-021 (PHASE-002) | PHASE-002 | P1-T10 |
+| TASK-022 (PHASE-002) | PHASE-002 | P1-T11 |
+| TASK-023 (PHASE-002) | PHASE-002 | P1-T12 |
+| TASK-024 (PHASE-002) | PHASE-002 | P1-T13 |
+| TASK-025 (PHASE-002) | PHASE-002 | P1-T14 |
+| TASK-026 (PHASE-002) | PHASE-002 | P1-T15 |
+| TASK-027 (PHASE-002) | PHASE-002 | P1-T16 |
+| TASK-028 (PHASE-003) | PHASE-003 | P2-T01 |
+| TASK-029 (PHASE-003) | PHASE-003 | P2-T02 |
+| TASK-030 (PHASE-003) | PHASE-003 | P2-T03 |
+| TASK-031 (PHASE-003) | PHASE-003 | P2-T04 |
+| TASK-032 (PHASE-003) | PHASE-003 | P2-T05 |
+| TASK-033 (PHASE-003) | PHASE-003 | P2-T06 |
+| TASK-034 (PHASE-003) | PHASE-003 | P2-T07 |
+| TASK-035 (PHASE-003) | PHASE-003 | P2-T08 |
+| TASK-036 (PHASE-003) | PHASE-003 | P2-T09 |
+| TASK-037 (PHASE-003) | PHASE-003 | P2-T10 |
+| TASK-038 (PHASE-004) | PHASE-004 | P3-T01 |
+| TASK-039 (PHASE-004) | PHASE-004 | P3-T02 |
+| TASK-040 (PHASE-004) | PHASE-004 | P3-T03 |
+| TASK-041 (PHASE-004) | PHASE-004 | P3-T04 |
+| TASK-042 (PHASE-004) | PHASE-004 | P3-T05 |
+| TASK-043 (PHASE-004) | PHASE-004 | P3-T06 |
+| TASK-044 (PHASE-004) | PHASE-004 | P3-T07 |
+| TASK-045 (PHASE-004) | PHASE-004 | P3-T08 |
+| TASK-046 (PHASE-004) | PHASE-004 | P3-T09 |
+| TASK-047 (PHASE-004) | PHASE-004 | P3-T10 |
+| TASK-048 (PHASE-004) | PHASE-004 | P3-T11 |
+| TASK-049 (PHASE-004) | PHASE-004 | P3-T12 |
+| TASK-050 (PHASE-005) | PHASE-005 | P4-T01 |
+| TASK-051 (PHASE-005) | PHASE-005 | P4-T02 |
+| TASK-052 (PHASE-005) | PHASE-005 | P4-T03 |
+| TASK-053 (PHASE-005) | PHASE-005 | P4-T04 |
+| TASK-054 (PHASE-005) | PHASE-005 | P4-T05 |
+| TASK-055 (PHASE-005) | PHASE-005 | P4-T06 |
+| TASK-056 (PHASE-005) | PHASE-005 | P4-T07 |
+| TASK-057 (PHASE-005) | PHASE-005 | P4-T08 |
+| TASK-058 (PHASE-005) | PHASE-005 | P4-T09 |
+| TASK-059 (PHASE-005) | PHASE-005 | P4-T10 |
+| TASK-060 (PHASE-005) | PHASE-005 | P4-T11 |
+| TASK-061 (PHASE-005) | PHASE-005 | P4-T12 |
+| TASK-062 (PHASE-005) | PHASE-005 | P4-T13 |
+| TASK-063 (PHASE-005) | PHASE-005 | P4-T14 |
+
+## 4. Requirement Coverage by Phase
+
+- PHASE-001 / TASK-001–011: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015, NFR-016; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014, SEC-015.
+- PHASE-002 / TASK-012–027: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041.
+- PHASE-003 / TASK-028–037: FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075.
+- PHASE-004 / TASK-038–049: FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108.
+- PHASE-005 / TASK-050–063 (PHASE-005): FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
+
+## 5. Phase Completion Rule
+
+Each Phase is a separate merge checkpoint. It may be marked DONE only after all mapped tasks, developer checks, formal technical tests, regression, documentation/traceability and review gates pass on an identified baseline. In this review mode every Phase and Task remains `PLANNED`.
+
+
+---
+
+### 12.2 正式定義
+
+以下每個實體的 `Statement`／`Decision`／`Goal` 保留原文，`Acceptance criteria` 與 `Failure behavior` 陳述本模組共通的可驗證條件，不新增任何未經確認的業務規則、門檻或流程。
+
+## PHASE-001 — Upload foundation, providers, permissions/config, primitives and DB operation foundation; Sales UI/jobs remain disabled.
+
+### Outcome
+
+Upload foundation, providers, permissions/config, primitives and DB operation foundation; Sales UI/jobs remain disabled.
+
+範圍為本 Phase 的 11 個 Task（`TASK-001`～`TASK-011`）。需求／設計覆蓋：All cross-cutting NFR/SEC; DES-001–005,007,010,013,018–020。
+
+### Entry criteria
+
+Latest main; Customer/Item/Inventory owners; disk storage/test DB。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+
+### Acceptance criteria
+
+TC-001–010 plus provider/migration/50 MB memory gate。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+
+### Integration and regression
+
+必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+
+### Git and merge plan
+
+`branch_strategy` 為 `DEFAULT`：合併前先 `git fetch origin --prune`，由最新 `origin/main` 建立專用 worktree 與分支，一個 PR、一次完整測試週期。Merge group `sales-p0`。One foundation PR or ordered upload/provider/schema PRs; opt-in flags permit safe revert; exit only with approved contracts。合併時機為開發者自測 → 當前 candidate 的 mandatory CI → 實際人工 review 批准 → 合併。
+
+### Rollback
+
+One foundation PR or ordered upload/provider/schema PRs; opt-in flags permit safe revert; exit only with approved contracts。已套用的 migration 及已配置的 permission seed 不刪除，只以 forward corrective migration 修正。
+
+### Exit criteria
+
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-001–010 plus provider/migration/50 MB memory gate 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-001–005。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+
+## PHASE-002 — Quotation, manual Draft SO, inquiry and accessible UI without Inventory commitment.
+
+### Outcome
+
+Quotation, manual Draft SO, inquiry and accessible UI without Inventory commitment.
+
+範圍為本 Phase 的 16 個 Task（`TASK-012`～`TASK-027`）。需求／設計覆蓋：FR-001–041; DES-002/003/007/009/012–016。
+
+### Entry criteria
+
+PHASE-001。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+
+### Acceptance criteria
+
+TC-011–020; UAT-008–037 and relevant AUTH/INQ。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+
+### Integration and regression
+
+必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+
+### Git and merge plan
+
+`branch_strategy` 為 `DEFAULT`：合併前先 `git fetch origin --prune`，由最新 `origin/main` 建立專用 worktree 與分支，一個 PR、一次完整測試週期。Merge group `sales-p1`。One reviewable vertical-slice PR; routes/menu feature-disabled until exit。合併時機為開發者自測 → 當前 candidate 的 mandatory CI → 實際人工 review 批准 → 合併。
+
+### Rollback
+
+One reviewable vertical-slice PR; routes/menu feature-disabled until exit。已套用的 migration 及已配置的 permission seed 不刪除，只以 forward corrective migration 修正。
+
+### Exit criteria
+
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-011–020; UAT-008–037 and relevant AUTH/INQ 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+
+## PHASE-003 — Durable confirmation, Reservation/Backorder and lifecycle/recovery.
+
+### Outcome
+
+Durable confirmation, Reservation/Backorder and lifecycle/recovery.
+
+範圍為本 Phase 的 10 個 Task（`TASK-028`～`TASK-037`）。需求／設計覆蓋：FR-042–075; DES-003–007/009/013–015。
+
+### Entry criteria
+
+PHASE-002 plus Inventory owner/DBA approval。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+
+### Acceptance criteria
+
+TC-021–033; UAT-038–064。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+
+### Integration and regression
+
+必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+
+### Git and merge plan
+
+`branch_strategy` 為 `DEFAULT`：合併前先 `git fetch origin --prune`，由最新 `origin/main` 建立專用 worktree 與分支，一個 PR、一次完整測試週期。Merge group `sales-p2`。One commitment/lifecycle PR; rollback by route/job disable plus forward fix after data exists。合併時機為開發者自測 → 當前 candidate 的 mandatory CI → 實際人工 review 批准 → 合併。
+
+### Rollback
+
+One commitment/lifecycle PR; rollback by route/job disable plus forward fix after data exists。已套用的 migration 及已配置的 permission seed 不刪除，只以 forward corrective migration 修正。
+
+### Exit criteria
+
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-021–033; UAT-038–064 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-001/002/004。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+
+## PHASE-004 — CSV v1 and canonical Channel intake with dedupe, worker recovery and UI.
+
+### Outcome
+
+CSV v1 and canonical Channel intake with dedupe, worker recovery and UI.
+
+範圍為本 Phase 的 12 個 Task（`TASK-038`～`TASK-049`）。需求／設計覆蓋：FR-076–108; DES-007/009–015。
+
+### Entry criteria
+
+PHASE-001 disk gate, PHASE-003 core confirmation。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+
+### Acceptance criteria
+
+TC-034–043; UAT-065–091。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+
+### Integration and regression
+
+必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+
+### Git and merge plan
+
+`branch_strategy` 為 `DEFAULT`：合併前先 `git fetch origin --prune`，由最新 `origin/main` 建立專用 worktree 與分支，一個 PR、一次完整測試週期。Merge group `sales-p3`。One intake PR; no public Channel route; disable upload/jobs for safe stop。合併時機為開發者自測 → 當前 candidate 的 mandatory CI → 實際人工 review 批准 → 合併。
+
+### Rollback
+
+One intake PR; no public Channel route; disable upload/jobs for safe stop。已套用的 migration 及已配置的 permission seed 不刪除，只以 forward corrective migration 修正。
+
+### Exit criteria
+
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-034–043; UAT-065–091 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-003/007。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+
+## PHASE-005 — Inquiry/export/audit/archive/reconciliation, capacity and DR release evidence.
+
+### Outcome
+
+Inquiry/export/audit/archive/reconciliation, capacity and DR release evidence.
+
+範圍為本 Phase 的 14 個 Task（`TASK-050`～`TASK-063`）。需求／設計覆蓋：FR-109–140; NFR-001–016; SEC-001–015; DES-008/009/012–020。
+
+### Entry criteria
+
+PHASE-002–004; open-matter providers; performance/ops environment。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+
+### Acceptance criteria
+
+TC-044–060; UAT-092–129。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+
+### Integration and regression
+
+必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+
+### Git and merge plan
+
+`branch_strategy` 為 `DEFAULT`：合併前先 `git fetch origin --prune`，由最新 `origin/main` 建立專用 worktree 與分支，一個 PR、一次完整測試週期。Merge group `sales-p4`。One release PR or ordered query/archive/evidence set; archive enablement separately reversible。合併時機為開發者自測 → 當前 candidate 的 mandatory CI → 實際人工 review 批准 → 合併。
+
+### Rollback
+
+One release PR or ordered query/archive/evidence set; archive enablement separately reversible。已套用的 migration 及已配置的 permission seed 不刪除，只以 forward corrective migration 修正。
+
+### Exit criteria
+
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-044–060; UAT-092–129 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-006/008/009 until acceptance。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+
+## TASK-001 — 鎖定主幹基線、Migration及Provider readiness
+
+### Goal
+
+從最新main建立Phase worktree，記錄基線commit、下一migration序號及所有provider的PASS／BLOCKED狀態。 （Legacy identity：`P0-T01`；規模估算：XS（read-only readiness gate）。）
+
+### Approach
+
+預計變更範圍：`docs/sales_order_management/05_development_tasks.md`的Phase 0 readiness紀錄及PR checklist；不修改production code。
+
+依賴：None。
+
+規格追溯：Design §1.3、§2.4、§4.22、§15.1；Requirement §2.4、§12、§16。
+
+### Acceptance criteria
+
+- [ ] Customer、Item、Inventory、Currency、Payment Term、Warehouse及Scheduler各有實際owner、檔案路徑及可重現readiness結論。
+- [ ] 現有migration前綴唯一且既有檔案不改；記錄Phase 0可用連續序號。
+- [ ] 任一硬依賴未落地時清楚標記BLOCKED，沒有fallback table／stub service。
+
+### Definition of Done
+
+驗證方式：`git status --short --branch`、`git log --oneline -5`、`find server/database/migrations -maxdepth 1 -type f -print | sort`及provider focused tests。
+
+Commit：`docs: record sales phase zero readiness`；必須包含實際基線、migration及Provider結論，不建立無內容commit。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-002 — 擴充Upload設定與disk concurrency budgets
+
+### Goal
+
+在不改既有memory route行為下，加入opt-in `storageMode:"disk"`及process-wide disk slot／bytes budgets。 （Legacy identity：`P0-T02`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/config/api.js`、`server/src/framework/upload/normalizeUploadConfig.js`、`server/src/framework/upload/uploadConcurrencyGate.js`、`server/test/uploadLimits.test.js`、`server/test/configNormalizers.test.js`。
+
+依賴：P0-T01。
+
+規格追溯：Design §0.3 GATE-02、§9.1、§12.1；NFR-PERF-002、FR-CSV-001。
+
+### Acceptance criteria
+
+- [ ] 未指定mode仍為memory；disk mode獨立驗max file／total／request bytes、temp root及slot乘積。
+- [ ] 無效mode、symlink／不可寫temp root、超budget設定令startup fail closed。
+- [ ] memory與disk gate滿載均回503＋`Retry-After`，釋放後可再次取得slot。
+
+### Definition of Done
+
+驗證方式：`npm test --workspace server -- test/uploadLimits.test.js test/configNormalizers.test.js`。
+
+Commit：`feat: add bounded disk upload configuration`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-003 — 實作disk-stream multipart寫入
+
+### Goal
+
+Busboy直接把disk-mode file寫入隨機request temp，同時計算size、SHA-256及最多64 KiB prefix。 （Legacy identity：`P0-T03`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/src/framework/upload/uploadMiddleware.js`、`server/src/framework/upload/normalizeUploadConfig.js`、`server/test/fileTransfer.test.js`、`server/test/fileTransferFailureModes.test.js`。
+
+依賴：P0-T02。
+
+規格追溯：Design §5.7–5.8、§7.8、§9.1；FR-CSV-001～003、NFR-PERF-002。
+
+### Acceptance criteria
+
+- [ ] `req.files`只提供`path,storedName,size,mimeType,contentHash,originalName,prefix`，不含完整buffer。
+- [ ] Client filename永不參與storage path；file／directory mode為0600／0700。
+- [ ] Content-Length存在與否都強制file、total及request byte limits。
+
+### Definition of Done
+
+驗證方式：`npm test --workspace server -- test/fileTransfer.test.js test/fileTransferFailureModes.test.js`。
+
+Commit：`feat: stream opt-in uploads to managed temp files`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-004 — 完成disk upload檔案驗證與安全清理
+
+### Goal
+
+補齊CSV bounded-prefix檢查、所有失敗路徑cleanup及受管temp orphan清理。 （Legacy identity：`P0-T04`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/src/framework/upload/cleanupUploadedFiles.js`、`server/src/services/filetype/FileTypeService.js`、`server/src/services/filetype/builtInFileTypes.js`、`server/test/fileTransferFailureModes.test.js`、`server/test/uploadLimits.test.js`。
+
+依賴：P0-T03。
+
+規格追溯：Design §8.4、§10.3、§11.6；Requirement §11.2、FR-CSV-018～020。
+
+### Acceptance criteria
+
+- [ ] `text/csv`／`application/csv`只做extension、MIME及文字prefix初篩，不宣稱magic signature。
+- [ ] Abort、parser error、auth/schema failure、handler throw及idempotency replay均刪partial file並釋放slot。
+- [ ] Orphan cleaner只刪realpath位於受管temp root內且超齡檔案，拒絕symlink traversal。
+
+### Definition of Done
+
+驗證方式：Upload failure、path traversal、symlink及cleanup focused tests。
+
+Commit：`feat: secure and clean disk-stream uploads`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-005 — 完成Upload Framework regression及50 MB memory gate
+
+### Goal
+
+用真HTTP multipart證明50 MB上傳heap不隨檔案線性增長，並凍結memory-mode backward compatibility。 （Legacy identity：`P0-T05`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/test/fileTransfer.test.js`、`server/test/fileTransferFailureModes.test.js`、`server/test/uploadLimits.test.js`、`server/test/applicationFactory.test.js`。
+
+依賴：P0-T04。
+
+規格追溯：Design §10.3、§11.2／11.6／11.7；AC 25、32。
+
+### Acceptance criteria
+
+- [ ] 50 MB多chunk upload完成且`req.files`沒有完整buffer，heap增量符合review批准門檻。
+- [ ] oversized／slow／aborted／concurrent disk uploads不留檔案、不洩漏slot。
+- [ ] 全部既有memory upload及idempotency tests無regression。
+
+### Definition of Done
+
+驗證方式：上述focused tests加`npm test --workspace server`。
+
+Commit：`test: prove disk upload memory and cleanup bounds`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-006 — 建立Sales permissions、config及公開錯誤基礎
+
+### Goal
+
+建立`sales.view`、`sales.mgmt`、`sales.import`，Sales config normalizer、constants及公開錯誤目錄。 （Legacy identity：`P0-T06`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/src/modules/authorization/permissionCatalogue.js`、一支動態編號Sales permission migration、`server/config/sales.js`、`server/src/modules/sales/salesConstants.js`、`server/src/modules/sales/salesErrors.js`。
+
+依賴：P0-T01。
+
+規格追溯：Requirement §4、§11、§13；Design §5.12、§8.1、§12.1。
+
+### Acceptance criteria
+
+- [ ] 三項permission無隱式inheritance；seed、catalogue及startup guard一致。
+- [ ] Domain constants與deployment tuning分開，無效容量／timeout／retention設定在startup失敗。
+- [ ] §5.12 error codes有單一後端定義；尚未加入menu或公開Sales handler。
+
+### Definition of Done
+
+驗證方式：Permission、configuration、`salesConfig.test.js`及error catalogue tests。
+
+Commit：`feat: establish sales permissions and configuration`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-007 — 建立Sales money、quantity及validation primitives
+
+### Goal
+
+先以純函式固定money、quantity、UOM factor、line merge及數量守恆。 （Legacy identity：`P0-T07`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/src/modules/sales/salesMoneyMath.js`、`salesQuantityMath.js`、`salesValidation.js`、`server/test/salesMoneyMath.test.js`、`server/test/salesQuantityValidation.test.js`。
+
+依賴：P0-T06。
+
+規格追溯：BR-003～010、BR-019～027；Design §3.5–3.6、§10.2。
+
+### Acceptance criteria
+
+- [ ] Decimal不經JavaScript Number；rounding、factor、base integer及守恆邊界有測試。
+- [ ] 同SKU＋UOM且price／note相同會exact merge；不同則`SALES_LINE_MERGE_CONFLICT`。
+- [ ] 1～100 merged lines、field lengths、日期、zero-price warning及client-controlled fields有pure validation tests。
+
+### Definition of Done
+
+驗證方式：`salesMoneyMath.test.js`及`salesQuantityValidation.test.js`。
+
+Commit：`feat: define sales money quantity and validation rules`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-008 — 建立Sales state machine及canonical hash primitives
+
+### Goal
+
+固定Quotation／SO／Intake狀態轉換、canonical payload serialization及hash。 （Legacy identity：`P0-T08`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/src/modules/sales/salesOrderStateMachine.js`、`salesQuotationStateMachine.js`、`salesCanonicalHash.js`、`server/test/salesStateMachines.test.js`、`server/test/salesCanonicalHash.test.js`。
+
+依賴：P0-T06。
+
+規格追溯：BR-001～002、BR-027、BR-036～040；Design §3.2–3.4、§10.2。
+
+### Acceptance criteria
+
+- [ ] State machines只允許Design §3列明的transition，effective quotation expiry可重用pure rule。
+- [ ] Canonical serialization不受object key順序影響，decimal及array次序不被改寫。
+- [ ] 同event不同payload hash可穩定判定conflict。
+
+### Definition of Done
+
+驗證方式：State machine全transition table及canonical hash tests。
+
+Commit：`feat: define sales state and canonical event rules`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-009 — 落地Customer與Item Sales provider contracts
+
+### Goal
+
+提供`new_sale` Customer lookup／credit summary及Item sellability／Sales UOM／suggested price批量lookup。 （Legacy identity：`P0-T09`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：Customer lookup service及test、`server/src/modules/item/ItemLookupService.js`、`server/test/itemLookupService.test.js`及一個lookup integration test，總數不超過5。
+
+依賴：P0-T01；Customer及Item核心模組已落地。
+
+規格追溯：FR-SO-003～010、FR-CONF-004～008、BR-011～018；Design §2.4、§11.4。
+
+### Acceptance criteria
+
+- [ ] Customer lookup區分Active、Credit Hold及advisory limit；projection不含銀行帳戶或地址。
+- [ ] Item lookup一次批量回Sale UOM、factor、sellability、price／currency及tracking hints，無N+1。
+- [ ] Provider unavailable或projection缺欄時fail closed，Sales不直接讀Customer／Item tables。
+
+### Definition of Done
+
+驗證方式：Customer／Item provider unit、integration及Sales consumer contract tests。
+
+Commit：`feat: expose customer and item contracts for sales`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-010 — 落地Inventory Sales batch reserve／release contract
+
+### Goal
+
+在Inventory owner內提供`reserveAvailableForSalesBatchInTransaction()`、release及event lookup，遵守固定lock order。 （Legacy identity：`P0-T10`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：Inventory reservation service、source/event lookup、unit test、真MySQL concurrency test及Sales consumer contract test。
+
+依賴：P0-T01；Inventory核心tables／services已落地。
+
+規格追溯：FR-CONF-001～020、BR-019～027；Design §2.4–2.6、§2.8、§7.5。
+
+### Acceptance criteria
+
+- [ ] 一次batch在Inventory lock內重讀ATP，逐line回`reserved + uncovered = ordered`且不超賣。
+- [ ] 同event replay只回原結果；任一contract mismatch或technical failure令caller transaction rollback。
+- [ ] Release batch完整回報每個mapping；不修改generic reservation既有語意。
+
+### Definition of Done
+
+驗證方式：Inventory provider unit、true-concurrency、unknown-outcome及consumer contract tests。
+
+Commit：`feat: add inventory batch reservation contract for sales`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-011 — 建立Sequence／Operation DB foundation並關閉Phase 0 Gate
+
+### Goal
+
+建立`sales_document_sequences`、`sales_operation_requests`及必要test support，完成migration／idempotency foundation。 （Legacy identity：`P0-T11`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：兩支按最新main編號的foundation migrations、`server/test/integration/salesFoundationMigrations.integration.test.js`、`server/test-support/fakeSalesDatabase.js`、`server/src/services/idempotency/IdempotencyService.js`。
+
+依賴：P0-T06～P0-T10。
+
+規格追溯：Design §4.3、§4.13、§4.22、§10.3；NFR-PERF-001～002、FR-CH-006～010。
+
+### Acceptance criteria
+
+- [ ] Sequence period／document type及Operation event／payload hash unique constraints按Design §4.3／4.13建立。
+- [ ] Migration在空DB、升級DB及重跑情境可收斂；JWT auth variants均按authenticated user scope隔離。
+- [ ] Phase 0全量framework、provider、migration及coverage gate通過，Sales capability仍關閉。
+
+### Definition of Done
+
+驗證方式：Migration integration、idempotency、provider contracts、`npm run verify`及50 MB upload gate。
+
+Commit：`feat: add sales operation and sequence foundation`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-012 — 建立Quotation persistence
+
+### Goal
+
+建立`sales_quotations`及`sales_quotation_lines`，包括unique、FK、version及查詢索引。 （Legacy identity：`P1-T01`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：兩支動態編號migrations、`server/test/integration/salesQuotationMigrations.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：Phase 0 PR已合併；P0-T11。
+
+規格追溯：FR-QUOTE-001～017、BR-001～018；Design §4.4–4.5。
+
+### Acceptance criteria
+
+- [ ] Header／line欄位、decimal scale、status、snapshot、1–100 line及`UNIQUE(quotation_id,sku_id,sku_uom_id)`符合Design §4.4–4.5。
+- [ ] FK delete rules、optimistic version及list indexes由真MySQL驗證。
+- [ ] 空DB、升級DB及migration重跑成功。
+
+### Definition of Done
+
+驗證方式：Migration及constraint integration tests。
+
+Commit：`feat: add sales quotation persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-013 — 建立Sales Order core persistence
+
+### Goal
+
+建立`sales_orders`及`sales_order_lines`的Draft／confirmed-ready schema與核心索引。 （Legacy identity：`P1-T02`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：兩支動態編號migrations、`server/test/integration/salesOrderMigrations.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：P1-T01。
+
+規格追溯：FR-SO-001～024、BR-001～027；Design §4.8–4.9。
+
+### Acceptance criteria
+
+- [ ] Header保存source、customer／warehouse／currency snapshot、money totals、status、version及business timestamps。
+- [ ] Lines保存ordered／reserved／backorder／fulfilled／cancelled projections並具唯一SKU＋UOM及守恆guard。
+- [ ] 常用Active list及exact number索引由production-like explain fixture驗證可使用。
+
+### Definition of Done
+
+驗證方式：Sales Order migration／constraint／decimal boundary integration tests。
+
+Commit：`feat: add sales order core persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-014 — 建立History、Audit及Conversion persistence
+
+### Goal
+
+建立`sales_order_status_history`、`sales_audit_logs`及`sales_quotation_conversions`，固定append-only及一對一轉單關係。 （Legacy identity：`P1-T03`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：最多三支動態編號migrations、`server/test/integration/salesAuditConversionMigrations.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：P1-T01～P1-T02。
+
+規格追溯：FR-QUOTE-013～017、FR-INQ-009～012、BR-036～040；Design §4.6、§4.12、§4.18。
+
+### Acceptance criteria
+
+- [ ] History／Audit update被trigger拒絕，Active delete只留給受控Archive流程。
+- [ ] Quotation與SO conversion均一對一，event id唯一且routing fields可支援未來Archive。
+- [ ] Audit detail byte limit及ownership indexes符合Design。
+
+### Definition of Done
+
+驗證方式：真MySQLappend-only、unique race及FK tests。
+
+Commit：`feat: add sales history audit and conversion persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-015 — 實作Sequence、Operation及Audit services
+
+### Goal
+
+提供可在同一transaction使用的月度編號、domain event claim／replay及固定Audit builders。 （Legacy identity：`P1-T04`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesSequenceService.js`、`SalesOperationService.js`、`SalesAuditService.js`及兩個對應unit test files。
+
+依賴：P1-T03、P0-T11。
+
+規格追溯：BR-001、BR-027；Design §4.3、§4.13、§7.1、§12.3。
+
+### Acceptance criteria
+
+- [ ] SO／QT編號按HKT月份原子遞增，rollback不耗號，999999後fail closed。
+- [ ] 同event同payload replay原結果；不同payload回conflict，並能表達unknown outcome。
+- [ ] Audit只用action allowlist及safe builders，核心transaction中Audit失敗會rollback。
+
+### Definition of Done
+
+驗證方式：Sequence concurrency、operation replay及audit projection unit／integration tests。
+
+Commit：`feat: add sales sequence operation and audit services`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-016 — 完成Quotation Draft垂直切片
+
+### Goal
+
+交付Quotation create／update的Service、schemas及Handlers。 （Legacy identity：`P1-T05`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesQuotationService.js`、`salesQuotationSchemas.js`、create／update handlers及`server/test/salesQuotationService.test.js`；list/detail handlers移至P1-T07。
+
+依賴：P1-T04、P0-T08～P0-T09。
+
+規格追溯：FR-QUOTE-001～009、BR-003～018；AC 1～2。
+
+### Acceptance criteria
+
+- [ ] Active Customer及可售SKU可建立Draft；defaults、價格、line merge及totals由server計算。
+- [ ] Update只限Draft並使用version CAS；stale或master invalid回穩定error。
+- [ ] Create／update與Audit同transaction，失敗不留下header或lines。
+
+### Definition of Done
+
+驗證方式：Quotation service unit、handler schema及rollback tests。
+
+Commit：`feat: add quotation draft commands`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-017 — 完成Quotation lifecycle與conversion後端
+
+### Goal
+
+交付issue、cancel、effective expiry及一對一conversion至Draft SO。 （Legacy identity：`P1-T06`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesQuotationService.js`、issue／cancel／convert handlers、`server/test/salesQuotationConversion.test.js`。
+
+依賴：P1-T05、P1-T02。
+
+規格追溯：FR-QUOTE-010～017、BR-036～040；AC 3～7。
+
+### Acceptance criteria
+
+- [ ] Issue重驗Customer／SKU／日期；expiry job或projection令過期Quotation不可轉單。
+- [ ] Convert在一個transaction建立完整Draft SO、difference summary及雙向link；重送只回原SO。
+- [ ] Cancel／convert非法狀態、競態及不同payload event全部安全拒絕。
+
+### Definition of Done
+
+驗證方式：Quotation lifecycle、conversion unique race及transaction rollback tests。
+
+Commit：`feat: add quotation lifecycle and conversion`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-018 — 完成Quotation read APIs與client contract
+
+### Goal
+
+加入list／detail handlers、frontend Sales API client及URL／schema contract tests。 （Legacy identity：`P1-T07`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：list／get Quotation handlers、`client/src/services/sales.js`、`server/test/salesQuotationHandlers.test.js`、`client/test/services/sales.test.js`。
+
+依賴：P1-T05～P1-T06。
+
+規格追溯：FR-QUOTE-001～017、FR-INQ-001～004；Design §5.1–5.2、§5.11。
+
+### Acceptance criteria
+
+- [ ] List採server pagination、allowlisted filters／sort；detail只回具名projection及allowedActions。
+- [ ] Client保留decimal strings、version及eventId，不重算server truth。
+- [ ] Viewer可讀、無view不可讀、mgmt without view不可寫。
+
+### Definition of Done
+
+驗證方式：Server handler metadata tests及`npm test --workspace client -- test/services/sales.test.js`。
+
+Commit：`feat: expose quotation query contracts`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-019 — 完成Quotation editor pages
+
+### Goal
+
+建立Quotation共用Form及create／edit pages。 （Legacy identity：`P1-T08`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesQuotationForm.vue`、`SalesQuotationCreatePage.vue`、`SalesQuotationEditPage.vue`、`QuotationDifferencePanel.vue`、`client/test/pages/sales/quotationEditor.test.js`。
+
+依賴：P1-T07。
+
+規格追溯：Requirement §10、AC 1～7；Design §6.5。
+
+### Acceptance criteria
+
+- [ ] UI遵循`docs/frontend-design.md`，權限、loading／empty／error、keyboard及375～1440px可用。
+- [ ] 使用者可建立／修改Draft，line merge、currency、totals、server errors及stale version清楚。
+- [ ] Convert editor允許加／減SKU及修改數量／價格，提交完整Draft SO input。
+
+### Definition of Done
+
+驗證方式：Quotation form／create／edit page tests及client build。
+
+Commit：`feat: add quotation editing flows`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-020 — 完成Quotation read／print pages
+
+### Goal
+
+建立Quotation list、detail及A4 browser print，串接issue／cancel／convert allowedActions。 （Legacy identity：`P1-T09`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesQuotationsPage.vue`、`SalesQuotationDetailPage.vue`、`SalesQuotationPrintPage.vue`、`client/test/pages/sales/quotationRead.test.js`、`client/test/pages/sales/quotationPrint.test.js`。
+
+依賴：P1-T07～P1-T08。
+
+規格追溯：FR-QUOTE-001～017、AC 1～7；Design §6.5。
+
+### Acceptance criteria
+
+- [ ] List server pagination／filters及detail status、totals、difference、target SO link正確。
+- [ ] Allowed actions及permission由server result控制，mutation後重新載入事實。
+- [ ] Print只用受權detail projection，不加server PDF dependency且不顯示Inventory承諾。
+
+### Definition of Done
+
+驗證方式：Quotation list／detail／print tests、client build及browser print人工檢查。
+
+Commit：`feat: add quotation inquiry and print views`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-021 — 完成Quotation expiry job
+
+### Goal
+
+以bounded hourly job固化有效過期狀態，並與read projection使用同一pure effective-status規則。 （Legacy identity：`P1-T10`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesQuotationExpiryJob.js`、`SalesJobRuntimeService.js`、`server/test/salesQuotationExpiryJob.test.js`、`server/config/scheduler.js`。
+
+依賴：P1-T06、P0-T08。
+
+規格追溯：FR-QUOTE-010～012、BR-036；AC 7。
+
+### Acceptance criteria
+
+- [ ] `ISSUED`且valid-until已過HKT今日的Quotation轉EXPIRED；其他狀態不變。
+- [ ] Job未跑前read／convert亦以同rule視為過期，不存在短暫可轉單窗口。
+- [ ] Job keyset、cluster lease、AbortSignal、Audit及metrics完整。
+
+### Definition of Done
+
+驗證方式：HKT boundary、job overlap、projection consistency及shutdown tests。
+
+Commit：`feat: expire sales quotations consistently`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-022 — 完成Sales lookup APIs
+
+### Goal
+
+提供Customer、SKU、Warehouse及Channel的Sales purpose lookup handlers與client methods。 （Legacy identity：`P1-T11`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`salesLookupHandlers.js`、`salesSchemas.js`、`server/test/salesLookupHandlers.test.js`、`client/src/services/sales.js`、`client/test/services/sales.test.js`。
+
+依賴：P0-T09、P1-T07。
+
+規格追溯：FR-SO-003～010、FR-CSV-004；Design §5.6。
+
+### Acceptance criteria
+
+- [ ] Customer只回new-sale projection；SKU只回sellable UOM／price；Warehouse只回active fulfillment choices。
+- [ ] Lookup要求view＋相應write permission，Channel lookup不回credential。
+- [ ] q／barcode／page有bounds，submit時仍由Service重驗而不信任lookup結果。
+
+### Definition of Done
+
+驗證方式：Lookup handler、provider projection、permission、pagination及client contract tests。
+
+Commit：`feat: expose bounded sales entry lookups`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-023 — 完成人工Draft SO後端垂直切片
+
+### Goal
+
+交付Manual SO create／update，尚不開放confirm。 （Legacy identity：`P1-T12`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderService.js`、`salesSchemas.js`、create／update handlers及`server/test/salesOrderService.test.js`；read handlers納入P1-T15。
+
+依賴：P1-T04、P0-T08～P0-T09、P1-T02。
+
+規格追溯：FR-SO-001～024、BR-001～018；AC 8～14。
+
+### Acceptance criteria
+
+- [ ] Source固定MANUAL；Customer、Currency、Warehouse、1–100 lines及price由server驗證／計算。
+- [ ] Duplicate line按共用規則merge；update只限Draft及version CAS。
+- [ ] Shipping Address、Discount、Tax、Reserved及Backorder不在client writable schema。
+
+### Definition of Done
+
+驗證方式：Sales Order service、handler strict schema、stale version及rollback tests。
+
+Commit：`feat: add manual draft sales order commands`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-024 — 完成人工SO editor components
+
+### Goal
+
+建立可被create／edit重用的SO Form、line editor及quantity summary。 （Legacy identity：`P1-T13`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderForm.vue`、`SalesOrderLineEditor.vue`、`SalesOrderQuantitySummary.vue`、`client/test/components/sales/salesOrderForm.test.js`、`client/test/components/sales/salesOrderLineEditor.test.js`。
+
+依賴：P1-T11～P1-T12、P1-T07的client service。
+
+規格追溯：FR-SO-001～019、Requirement §10.2；AC 8～13。
+
+### Acceptance criteria
+
+- [ ] Customer defaults、SKU／barcode lookup、suggested price currency及zero-price warning正確。
+- [ ] 重選同SKU＋UOM聚焦既有行；100-line guard、totals及server field errors可操作。
+- [ ] 無Shipping Address／Discount／Tax，component只emit editable projection。
+
+### Definition of Done
+
+驗證方式：Form／line editor component tests、accessibility assertions及client build。
+
+Commit：`feat: add sales order editor components`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-025 — 完成人工SO建立／編輯pages
+
+### Goal
+
+以共用editor components建立create／edit route wrappers及command error handling。 （Legacy identity：`P1-T14`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderCreatePage.vue`、`SalesOrderEditPage.vue`、`client/test/pages/sales/salesOrderCreate.test.js`、`client/test/pages/sales/salesOrderEdit.test.js`。
+
+依賴：P1-T13。
+
+規格追溯：FR-SO-001～019、AC 8～13；Design §6.3。
+
+### Acceptance criteria
+
+- [ ] Create保存後導向detail；Edit載入version並只送完整editable projection。
+- [ ] 409 stale version提供reload，不自動覆蓋；validation errors回填正確field／line。
+- [ ] Route guard要求mgmt，API仍獨立要求view＋mgmt。
+
+### Definition of Done
+
+驗證方式：Create／edit page、route permission、stale／validation及client build tests。
+
+Commit：`feat: add sales order create and edit pages`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-026 — 完成Active inquiry後端
+
+### Goal
+
+提供Active SO list／detail的bounded query、具名projection及response schemas。 （Legacy identity：`P1-T15`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesInquiryService.js`、`listSalesOrdersHandler.js`、`getSalesOrderHandler.js`、`server/test/salesOrderQueryHandlers.test.js`、`server/test/integration/salesOrderRead.integration.test.js`。
+
+依賴：P1-T12。
+
+規格追溯：FR-INQ-001～004、FR-SO-020～024；Design §5.3、§7.9。
+
+### Acceptance criteria
+
+- [ ] List採count＋page IDs或covering index，server pagination、allowlisted filters／sort及exact keys。
+- [ ] Detail bounded讀Header、lines、history，不用多child Cartesian join且不自動掃Archive。
+- [ ] Projection不含Customer bank／address、raw internal errors或client不可寫狀態。
+
+### Definition of Done
+
+驗證方式：Query SQL、handler schema、pagination、permission、IDOR及integration tests。
+
+Commit：`feat: expose active sales order inquiries`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-027 — 完成Active inquiry pages及Phase 1驗收
+
+### Goal
+
+完成Active SO list/detail、menu／routes、source／timeline顯示及Phase 1 E2E。 （Legacy identity：`P1-T16`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrdersPage.vue`、`SalesOrderDetailPage.vue`、`client/config/menu.js`、一個page test及一個Phase 1 integration test。
+
+依賴：P1-T09～P1-T15。
+
+規格追溯：FR-INQ-001～004、AC 1～14、39～41；Design §6.1–6.5。
+
+### Acceptance criteria
+
+- [ ] Active list有bounded filters、server pagination、exact number查詢；detail不自動掃Archive。
+- [ ] Viewer只讀、Operator可處理Draft；menu、route guard及API權限一致。
+- [ ] Quotation→Draft SO及Manual Draft SO E2E、snapshot不被主檔後改寫的測試通過。
+
+### Definition of Done
+
+驗證方式：Phase 1 API＋DB integration、client pages、permission matrix、lint、coverage及build。
+
+Commit：`feat: complete draft sales order inquiry`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-028 — 建立Reservation mapping與Backorder persistence
+
+### Goal
+
+建立`sales_order_line_reservations`及`sales_backorder_entries`，補齊所需indexes、FK及quantity guards。 （Legacy identity：`P2-T01`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：兩支動態編號migrations、`server/test/integration/salesCommitmentMigrations.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：Phase 1 PR已合併；P1-T02。
+
+規格追溯：FR-CONF-009～020、BR-019～027；Design §4.10–4.11。
+
+### Acceptance criteria
+
+- [ ] Inventory reservation ID及line relation唯一；mapping original = consumed＋released＋outstanding可驗。
+- [ ] Backorder每line最多一筆，FIFO priority immutable，OPEN時outstanding大於0。
+- [ ] Trigger／FK／unique在真MySQL阻擋負數、超量及owner mismatch。
+
+### Definition of Done
+
+驗證方式：Commitment migration、constraint及quantity invariant integration tests。
+
+Commit：`feat: add sales commitment persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-029 — 實作durable confirmation Phase A
+
+### Goal
+
+`confirm()`先以短transaction claim operation，把Draft轉`CONFIRMING`並保存穩定event／lease。 （Legacy identity：`P2-T02`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderConfirmationService.js`、`salesOrderStateMachine.js`、`server/test/salesOrderConfirmationService.test.js`、`server/test-support/fakeSalesDatabase.js`。
+
+依賴：P2-T01、P1-T04。
+
+規格追溯：FR-CONF-001～003、BR-027；Design §2.5、§7.4。
+
+### Acceptance criteria
+
+- [ ] 同event同payload重送回原狀態；不同payload或stale version拒絕。
+- [ ] Phase A只寫Operation、Header、History及Audit，不建立Reservation。
+- [ ] Phase A後process crash留下可識別`CONFIRMING`，不能建立第二個intent。
+
+### Definition of Done
+
+驗證方式：Confirmation Phase A unit、replay及crash-boundary tests。
+
+Commit：`feat: persist recoverable sales confirmation intents`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-030 — 實作Inventory原子reservation Phase B
+
+### Goal
+
+在第二個transaction重驗主檔及line snapshot，批量鎖Inventory並原子寫入Reservation／Backorder。 （Legacy identity：`P2-T03`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderConfirmationService.js`、`salesProjections.js`、`server/test/salesOrderConfirmationService.test.js`、`server/test/integration/salesConfirmation.integration.test.js`。
+
+依賴：P2-T02、P0-T10。
+
+規格追溯：FR-CONF-004～020、AC 15～19；Design §7.4–7.5。
+
+### Acceptance criteria
+
+- [ ] Full、partial、zero ATP都成功CONFIRMED，逐line`reserved + backorder = ordered`。
+- [ ] Customer Hold、invalid SKU／UOM／Warehouse屬business failure並安全回Draft；Inventory unavailable保持CONFIRMING。
+- [ ] Sales header／lines／mapping／queue／History／Audit與Inventory Reservation同transaction commit或rollback。
+
+### Definition of Done
+
+驗證方式：Unit、真DBtransaction、provider mismatch及rollback injection tests。
+
+Commit：`feat: confirm sales orders with atomic inventory reservation`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-031 — 完成Confirm API、operation polling及UI
+
+### Goal
+
+提供confirm 200／202 contract、operation-by-event lookup及Frontend穩定event polling。 （Legacy identity：`P2-T04`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`confirmSalesOrderHandler.js`、`salesOperationLookupHandler.js`、`useSalesCommandEvent.js`、`SalesOrderDetailPage.vue`、一個client/server contract test。
+
+依賴：P2-T03。
+
+規格追溯：FR-CONF-001～020、NFR availability；Design §5.5、§6.3–6.4。
+
+### Acceptance criteria
+
+- [ ] 正常同步回逐line結果；timeout回202、status URL及Retry-After，不誤報成功／失敗。
+- [ ] Client在202／network timeout保留同UUID並poll，terminal後才清除。
+- [ ] Lookup不可列舉他人event，原操作權限失效時fail closed。
+
+### Definition of Done
+
+驗證方式：Handler response schema、idempotency、polling timer／abort及detail UI tests。
+
+Commit：`feat: expose recoverable sales confirmation flow`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-032 — 完成Confirmation Recovery Job
+
+### Goal
+
+以cluster lease安全恢復過期CONFIRMING，查原event事實後完成或保留重試。 （Legacy identity：`P2-T05`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesJobRuntimeService.js`、`SalesConfirmationRecoveryJob.js`、`server/test/salesConfirmationRecoveryJob.test.js`、`server/config/scheduler.js`。
+
+依賴：P2-T03。
+
+規格追溯：FR-CONF-017～020；Design §2.5、§12.2／12.4。
+
+### Acceptance criteria
+
+- [ ] Job只claim過期lease，使用原event且遵守AbortSignal／bounded batch。
+- [ ] Unknown commit先查Sales Operation及Inventory event，不能盲目重建意圖。
+- [ ] 多instance只有一個有效worker，failure有backoff、metrics及safe logs。
+
+### Definition of Done
+
+驗證方式：Lease、process crash、unknown outcome及shutdown tests。
+
+Commit：`feat: recover interrupted sales confirmations`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-033 — 完成withdraw／cancel／close後端
+
+### Goal
+
+實作未履約撤回Draft、取消及部分履約後close remaining，全部原子release Reservation。 （Legacy identity：`P2-T06`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderLifecycleService.js`、`salesOrderLifecycleHandlers.js`、`server/test/salesOrderLifecycleService.test.js`、一個lifecycle integration test。
+
+依賴：P2-T03、P0-T10。
+
+規格追溯：FR-LIFE-001～014、AC 21～24；Design §7.6。
+
+### Acceptance criteria
+
+- [ ] Withdraw只限零fulfilled Confirmed並要求5～500字原因；release完成後才回Draft。
+- [ ] Draft cancel不呼Inventory；Confirmed零fulfilled可cancel；partially fulfilled只能close remaining。
+- [ ] Release缺漏／失敗完整rollback，fulfilled歷史及quantity equation不被改寫。
+
+### Definition of Done
+
+驗證方式：Lifecycle unit、HTTP＋DB＋Inventory integration及failure injection tests。
+
+Commit：`feat: add safe sales order lifecycle commands`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-034 — 完成lifecycle操作UI
+
+### Goal
+
+在SO detail加入withdraw、cancel、close remaining dialogs及allowedActions刷新。 （Legacy identity：`P2-T07`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesOrderDetailPage.vue`、`SalesOrderStatusTimeline.vue`、`SalesOrderQuantitySummary.vue`、`client/src/services/sales.js`、一個detail page test。
+
+依賴：P2-T06。
+
+規格追溯：FR-LIFE-001～014、Requirement §10.2；AC 21～24。
+
+### Acceptance criteria
+
+- [ ] 按鈕只依server allowedActions及permission顯示，dialog要求有效reason並防重複提交。
+- [ ] Release failure／409／202清楚顯示且不樂觀改狀態。
+- [ ] 成功後重載Header、lines、History及quantity summary。
+
+### Definition of Done
+
+驗證方式：Detail page、dialog、permission及error-state tests；client build。
+
+Commit：`feat: add sales lifecycle controls`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-035 — 完成Backorder FIFO allocator及manual wake
+
+### Goal
+
+交付`SalesBackorderService`、FIFO allocation transaction及manual wake API。 （Legacy identity：`P2-T08`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesBackorderService.js`、`runSalesBackorderAllocationHandler.js`、`server/test/salesBackorderService.test.js`、一個Backorder integration test。
+
+依賴：P2-T01、P2-T03。
+
+規格追溯：FR-CONF-012～016、BR-023；AC 20。
+
+### Acceptance criteria
+
+- [ ] 同Warehouse＋SKU按`priorityAt,orderId,lineNo`配貨，無priority input或插隊API。
+- [ ] ATP不足只處理最早entries並停止；0 ATP非error，stale rows安全terminal。
+- [ ] Allocation以穩定system event原子新增mapping、Reserved及減少Backorder。
+
+### Definition of Done
+
+驗證方式：FIFO、partial allocation、stale／technical failure及true-concurrency tests。
+
+Commit：`feat: allocate sales backorders in fifo order`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-036 — 完成Backorder UI與job runtime
+
+### Goal
+
+加入Backorder status／summary、manual wake dialog及scheduled allocator runtime。 （Legacy identity：`P2-T09`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesBackorderAllocationJob.js`、`BackorderAllocationDialog.vue`、`SalesOrderDetailPage.vue`、`server/test/salesBackorderJob.test.js`、一個client dialog test。
+
+依賴：P2-T08。
+
+規格追溯：FR-CONF-012～016、NFR observability；Design §6.4、§12.2／12.4。
+
+### Acceptance criteria
+
+- [ ] Scheduled與manual trigger共用global lease；manual只wake，不開第二個allocator。
+- [ ] UI顯示line-level Reserved／Backorder及FIFO說明，不承諾即時配到。
+- [ ] Job metrics含open count、oldest age及outcome，不用SO／SKU作高基數labels。
+
+### Definition of Done
+
+驗證方式：Scheduler overlap、UI及metrics tests。
+
+Commit：`feat: operate sales backorder allocation`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-037 — 完成Phase 2併發、crash及效能驗收
+
+### Goal
+
+以真MySQL及production-like負載關閉Commitment capability release gate。 （Legacy identity：`P2-T10`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`server/test/integration/salesConcurrency.integration.test.js`、`salesRecovery.integration.test.js`、capacity generator／report及必要coverage floor更新。
+
+依賴：P2-T04～P2-T09。
+
+規格追溯：KPI-04、AC 15～24、NFR-PERF-003；Design §11.2–11.7。
+
+### Acceptance criteria
+
+- [ ] 20～100 concurrent SO競爭同Warehouse＋SKU，總Reserved不超ATP且無負stock。
+- [ ] 所有指定crash／unknown outcome邊界重跑只形成一次effect，reconciliation零mismatch。
+- [ ] 50 interactive users加background recovery／backorder時manual confirm P95 ≤3秒且無pool starvation。
+
+### Definition of Done
+
+驗證方式：真DBconcurrency、crash injection、capacity run及Phase 2完整regression。
+
+Commit：`test: validate sales commitment concurrency and recovery`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-038 — 建立External Key及Import／Intake persistence
+
+### Goal
+
+建立`sales_external_order_keys`、`sales_import_jobs`、`sales_intake_orders`及`sales_intake_errors`。 （Legacy identity：`P3-T01`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：兩至三支動態編號migrations、`server/test/integration/salesIntakeMigrations.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：Phase 2 PR已合併；P1-T02、P2-T03。
+
+規格追溯：FR-CSV-001～020、FR-CH-001～013、BR-028～035；Design §4.7、§4.14–4.16。
+
+### Acceptance criteria
+
+- [ ] Channel＋exact external ID hash具長期unique；原external ID不進index／log但可受控保存。
+- [ ] Job／Intake lease、counts、payload hash、processing event及owner FK完整。
+- [ ] Error child ownership、最多200 errors及source-intake-to-SO一對一由DB／Service guards保護。
+
+### Definition of Done
+
+驗證方式：Migration、unique race、FK ownership及lease index integration tests。
+
+Commit：`feat: add sales intake and import persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-039 — 完成CSV V1 parser與template
+
+### Goal
+
+實作streaming CSV parser、UTF-8／Header／limit validation、source grouping及versioned template下載。 （Legacy identity：`P3-T02`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`salesCsv.js`、`getCurrentSalesImportTemplateHandler.js`、template fixture、`server/test/salesCsv.test.js`、handler test。
+
+依賴：P3-T01、P0-T07。
+
+規格追溯：FR-CSV-001～008、BR-003、BR-010；AC 25～27、32。
+
+### Acceptance criteria
+
+- [ ] 支援BOM、CRLF／LF及RFC4180 quotes；拒絕unknown／missing／duplicate header、NUL及非UTF-8。
+- [ ] 同source key跨區段可bounded grouping；same SKU＋UOM相同商業條件合併，衝突令整張來源訂單invalid。
+- [ ] 50 MB／100,000 rows／10,000 orders／100 lines limits在建立SO前拒絕，templateVersion固定1.0。
+
+### Definition of Done
+
+驗證方式：`npm test --workspace server -- test/salesCsv.test.js`及template handler contract test。
+
+Commit：`feat: define sales csv v1 parsing contract`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-040 — 完成安全Upload及Import Job建立
+
+### Goal
+
+註冊disk-mode upload handler，把安全temp file在Job transaction後atomic move至private storage。 （Legacy identity：`P3-T03`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`uploadSalesImportHandler.js`、`salesImportSchemas.js`、`SalesImportService.js`、`server/test/salesImportUpload.test.js`、一個HTTP＋file integration test。
+
+依賴：P0-T05、P3-T01～P3-T02。
+
+規格追溯：FR-CSV-001～004、FR-CSV-018～020；Design §5.7、§7.8。
+
+### Acceptance criteria
+
+- [ ] Route只接受field `file`、單一CSV、50 MB file limit及`sales.view + sales.import`。
+- [ ] Job建立與source file接手一致；schema／auth／DB／move失敗不留orphan或無檔Job。
+- [ ] Upload idempotency按contentHash；相同檔案只warning，不取代External Key業務去重。
+
+### Definition of Done
+
+驗證方式：真HTTP multipart、permission、idempotency、atomic move及cleanup tests。
+
+Commit：`feat: accept secure sales import uploads`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-041 — 完成Precheck worker
+
+### Goal
+
+背景stream parse並批量驗證Customer／Item／Warehouse，持久化normalized Intake及bounded errors，但不建SO。 （Legacy identity：`P3-T04`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesImportService.js`、`SalesImportJob.js`、`server/test/salesImportService.test.js`、一個precheck integration test。
+
+依賴：P3-T03、P0-T09。
+
+規格追溯：FR-CSV-005～012、BR-033～035；AC 26～27、29。
+
+### Acceptance criteria
+
+- [ ] Precheck產生VALID／INVALID／DUPLICATE／WARNING counts與逐order errors，對Sales／Inventory零副作用。
+- [ ] Provider lookup批量且無N+1；一張來源訂單任一line錯誤令整張invalid。
+- [ ] Worker lease、heartbeat、AbortSignal及crash resume不重複child rows。
+
+### Definition of Done
+
+驗證方式：Precheck unit、partial batch、provider failure、lease recovery及DB integration tests。
+
+Commit：`feat: precheck sales import batches`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-042 — 完成Import查詢APIs
+
+### Goal
+
+提供Job list／detail、Intake orders及owner-safe errors的bounded read APIs。 （Legacy identity：`P3-T05`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：list／get Import handlers、list Intake orders／errors handlers及`server/test/salesImportQueryHandlers.test.js`。
+
+依賴：P3-T04。
+
+規格追溯：FR-CSV-009～013、FR-INQ-001～004；AC 27、33、39～41。
+
+### Acceptance criteria
+
+- [ ] 所有列表server pagination、allowlisted sort／filters，child ID必須同時驗parent ownership。
+- [ ] Viewer可讀安全summary；response不含raw file、normalized full payload或其他Job資料。
+- [ ] 不存在與owner mismatch都回相同404，避免IDOR oracle。
+
+### Definition of Done
+
+驗證方式：Handler metadata、pagination、projection及IDOR tests。
+
+Commit：`feat: expose sales import query APIs`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-043 — 完成Import控制及結果APIs
+
+### Goal
+
+提供confirm、cancel及result CSV下載，固定version／event及安全CSV輸出。 （Legacy identity：`P3-T06`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：confirm／cancel grouped lifecycle handler、download result handler、`SalesImportService.js`、`server/test/salesImportCommands.test.js`。
+
+依賴：P3-T04～P3-T05。
+
+規格追溯：FR-CSV-013～020、AC 28～33；Design §5.7。
+
+### Acceptance criteria
+
+- [ ] READY可confirm進QUEUED；cancel只限設計允許狀態，均使用version CAS及event replay。
+- [ ] Result逐source order回success／duplicate／error，formula cells neutralize，過期回410。
+- [ ] Write需`sales.view + sales.import`；download需view並通過owner-safe relation。
+
+### Definition of Done
+
+驗證方式：Import command state machine、replay、CSV injection及download security tests。
+
+Commit：`feat: control sales imports and download results`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-044 — 完成External Key claim及atomic Intake confirmation
+
+### Goal
+
+實作`SalesIntakeService`，每張VALID Intake以單一transaction claim source key、建Draft並共用confirmation core。 （Legacy identity：`P3-T07`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesIntakeService.js`、`salesCanonicalHash.js`、`server/test/salesIntakeService.test.js`、一個external-key concurrency integration test。
+
+依賴：P3-T06、P2-T03。
+
+規格追溯：FR-CSV-014～017、FR-CH-004～010、BR-028～035；AC 28～31、34～37。
+
+### Acceptance criteria
+
+- [ ] 成功訂單在同transaction形成SO、Reservation／Backorder、External Key SUCCESS及Intake terminal。
+- [ ] Business validation rollback不留下SO、Reservation或External Key；Intake另以短transaction記FAILED。
+- [ ] 同Channel＋External ID重送回原SO；不同Channel可各自建立；hash collision fail closed並告警。
+
+### Definition of Done
+
+驗證方式：Atomic success/failure、duplicate storm、hash collision及commit-unknown tests。
+
+Commit：`feat: atomically convert sales intake into confirmed orders`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-045 — 完成Intake worker、lease及recovery
+
+### Goal
+
+Worker以keyset及lease處理VALID Intake，每張互相獨立並沿用processingEventId恢復。 （Legacy identity：`P3-T08`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesImportJob.js`、`SalesJobRuntimeService.js`、`server/test/salesIntakeWorker.test.js`、一個worker crash integration test。
+
+依賴：P3-T07。
+
+規格追溯：FR-CSV-014～020、NFR availability；AC 28～33。
+
+### Acceptance criteria
+
+- [ ] Job CAS QUEUED→PROCESSING，bounded claim及heartbeat；一張failed不阻止其他成功。
+- [ ] Crash／lease expiry／commit unknown先查operation／external key，再以同event重試。
+- [ ] Job summary只由child terminal states重算，worker使用fresh service identity permission。
+
+### Definition of Done
+
+驗證方式：Partial batch、worker crash、stale permission、lease takeover及shutdown tests。
+
+Commit：`feat: process sales intake with recoverable workers`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-046 — 完成Canonical Channel V1 contract
+
+### Goal
+
+建立versioned JavaScript intake contract、authenticated context boundary及discriminated outcomes，不新增HTTP route。 （Legacy identity：`P3-T09`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`salesSchemas.js`、`SalesIntakeService.js`、`server/test/salesChannelContract.test.js`、versioned fixtures。
+
+依賴：P3-T07。
+
+規格追溯：FR-CH-001～013、AC 34～38；Design §5.9。
+
+### Acceptance criteria
+
+- [ ] V1輸入只接受canonical Customer／Warehouse／SKU／UOM／Currency IDs及decimal strings。
+- [ ] Channel identity由transport context覆蓋payload聲稱值；untrusted service identity拒絕。
+- [ ] ACCEPTED／DUPLICATE／VALIDATION_FAILED／TECHNICAL_RETRY契約及backward compatibility tests固定。
+
+### Definition of Done
+
+驗證方式：Channel V1 schema、identity spoof、same-key-different-payload及fixture compatibility tests。
+
+Commit：`feat: publish canonical sales channel intake contract`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-047 — 完成Import UI components及polling
+
+### Goal
+
+建立Import summary、error table、可停止polling及client API contract。 （Legacy identity：`P3-T10`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesImportSummary.vue`、`SalesImportErrorTable.vue`、`useImportJobPolling.js`、`client/src/services/sales.js`、`client/test/components/sales/salesImportComponents.test.js`。
+
+依賴：P3-T05～P3-T08。
+
+規格追溯：FR-CSV-001～020、Requirement §10.1–10.2；AC 25～33。
+
+### Acceptance criteria
+
+- [ ] Summary正確顯示precheck／processing counts及allowedActions，不自行推算job truth。
+- [ ] Error table按source／field呈現safe errors，不渲染raw HTML或公式。
+- [ ] Polling在hidden／unmount abort並backoff；Import permission只控制write，不阻止有view者查結果。
+
+### Definition of Done
+
+驗證方式：Components、client service、polling／abort及permission tests。
+
+Commit：`feat: add sales import UI components`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-048 — 完成Import pages
+
+### Goal
+
+以已測components建立Import list／upload／detail／exceptions pages。 （Legacy identity：`P3-T11`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesImportsPage.vue`、`SalesImportCreatePage.vue`、`SalesImportDetailPage.vue`、`SalesImportExceptionsPage.vue`、`client/test/pages/sales/salesImports.test.js`。
+
+依賴：P3-T10。
+
+規格追溯：FR-CSV-001～020、Requirement §10.1–10.2；AC 25～33。
+
+### Acceptance criteria
+
+- [ ] 使用者可下載template、upload、看precheck、confirm／cancel及下載result。
+- [ ] Exceptions可按source／field瀏覽，成功／duplicate結果可導向原SO。
+- [ ] Write controls要求import permission；375～1440px、keyboard、loading／empty／error可用。
+
+### Definition of Done
+
+驗證方式：Import page、route、responsive、accessibility tests及client build。
+
+Commit：`feat: add sales import user workflow`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-049 — 完成retention、10,000張容量及Phase 3安全驗收
+
+### Goal
+
+加入Import file／payload retention，並以標準batch完成容量、安全及恢復驗收。 （Legacy identity：`P3-T12`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesFileRetentionJob.js`、retention test、sales import capacity generator／report及一個Phase 3 E2E integration test。
+
+依賴：P3-T08～P3-T11。
+
+規格追溯：KPI-02／03／05／06、NFR-PERF-001～004、AC 25～38。
+
+### Acceptance criteria
+
+- [ ] Source／result file及payload按90日清理，結構化source result／External Key保留至少7年。
+- [ ] 10,000 orders／50,000 lines標準CSV端到端≤30分鐘且memory bounded。
+- [ ] MIME spoof、path traversal、symlink、CSV injection、duplicate storm、worker crash及file purge 410通過。
+
+### Definition of Done
+
+驗證方式：Phase 3真HTTP＋DB E2E、capacity、security、retention及完整regression。
+
+Commit：`test: validate sales intake capacity security and retention`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-050 — 建立Export persistence
+
+### Goal
+
+建立`sales_export_jobs`及owner／status／expiry indexes。 （Legacy identity：`P4-T01`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：一支動態編號migration、`server/test/integration/salesExportMigration.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：Phase 3 PR已合併；P3-T01。
+
+規格追溯：FR-INQ-005～008、FR-ARC-016；Design §4.17。
+
+### Acceptance criteria
+
+- [ ] Job保存ACTIVE／ARCHIVE filter snapshot、owner、progress、file metadata、expiry及lease。
+- [ ] Filter JSON canonical且有byte limit，filename／path不接受client input。
+- [ ] Owner/status/created及worker claim indexes在真MySQL驗證。
+
+### Definition of Done
+
+驗證方式：Export migration、FK、lease及JSON boundary integration tests。
+
+Commit：`feat: add sales export job persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-051 — 建立Archive persistence
+
+### Goal
+
+建立`sales_archive_batches`及所有Active aggregate mirror Archive tables。 （Legacy identity：`P4-T02`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：最多三支動態編號migrations、`server/test/integration/salesArchiveMigrations.integration.test.js`、`server/test/migrate.test.js`。
+
+依賴：P4-T01、Phase 3全部Sales schema。
+
+規格追溯：FR-ARC-001～020、BR-041～048；Design §4.19–4.20。
+
+### Acceptance criteria
+
+- [ ] Archive保留原ID、所有snapshot／quantity／source／history／audit，另有batch、archivedAt及rowHash。
+- [ ] Archive child FK及query indexes完整，不對可變master或Inventory建立FK。
+- [ ] MySQL 5.7不使用partitioning；Archive rows update／delete由後續immutable guard保護。
+
+### Definition of Done
+
+驗證方式：空DB／升級DBmigration、mirror column parity、FK及index integration tests。
+
+Commit：`feat: add relational sales archive persistence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-052 — 完成Outstanding、Audit及Operation inquiry
+
+### Goal
+
+提供Outstanding list、Sales Audit list及operation-by-event安全查詢。 （Legacy identity：`P4-T03`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesInquiryService.js`、Outstanding／Audit／Operation handlers及`server/test/salesInquiryService.test.js`。
+
+依賴：P3-T08、P2-T09。
+
+規格追溯：FR-INQ-001～004、009～012；AC 39～43。
+
+### Acceptance criteria
+
+- [ ] Outstanding只回Reserved／Backorder／未履約Active orders，SQL與domain invariant一致。
+- [ ] Audit按target／action／actor／date bounded pagination；Operation只能本人或有原操作權限精確查。
+- [ ] 三條resource paths不被`/:id` shadow，所有sort／filter由allowlist映射。
+
+### Definition of Done
+
+驗證方式：Query unit、handler registry collision、pagination、permission及IDOR tests。
+
+Commit：`feat: add outstanding audit and operation inquiries`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-053 — 完成Inquiry pages及安全導覽
+
+### Goal
+
+建立Outstanding page、Audit／source／status timeline導覽及Active找不到時Archive hint。 （Legacy identity：`P4-T04`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`OutstandingSalesOrdersPage.vue`、`SalesOrderSourcePanel.vue`、`SalesOrderStatusTimeline.vue`、`SalesOrderDetailPage.vue`、一個Inquiry page test。
+
+依賴：P4-T03。
+
+規格追溯：FR-INQ-001～004、009～012；Design §6.2、§6.4。
+
+### Acceptance criteria
+
+- [ ] Outstanding／Has Backorder filters、server pagination及line quantity summary可用。
+- [ ] Active 404只顯示safe Archive搜尋link，不自動union或洩漏Archive existence。
+- [ ] Source external ID、Audit reason及operation狀態按permission安全投影。
+
+### Definition of Done
+
+驗證方式：Page、route、IDOR-safe hint、responsive及accessibility tests。
+
+Commit：`feat: add sales outstanding inquiry experience`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-054 — 完成background Export service與worker
+
+### Goal
+
+實作durable Export Service／Worker、ACTIVE／ARCHIVE filter routing、keyset CSV writer及retention metadata。 （Legacy identity：`P4-T05`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesExportService.js`、`SalesExportJob.js`、`server/test/salesExportService.test.js`、`server/test/integration/salesExport.integration.test.js`。
+
+依賴：P4-T01、P4-T03。
+
+規格追溯：FR-INQ-005～008、FR-ARC-016；AC 43、49。
+
+### Acceptance criteria
+
+- [ ] Service建立durable job；worker只查一套store、使用keyset、row cap及AbortSignal，不把全結果載入heap。
+- [ ] CSV公式字元neutralize、RFC4180 escape，完成前只寫private temp再atomic rename。
+- [ ] Worker lease／retry／unknown outcome不產生不完整可下載檔，完成後才atomic publish。
+
+### Definition of Done
+
+驗證方式：Export service、worker lease、formula、abort cleanup及large-row integration tests。
+
+Commit：`feat: generate sales exports through durable jobs`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-055 — 完成Export APIs
+
+### Goal
+
+提供create／list／status／download handlers及owner-safe response schemas。 （Legacy identity：`P4-T06`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：create／list／get／download Export handlers及`server/test/salesExportHandlers.test.js`。
+
+依賴：P4-T05。
+
+規格追溯：FR-INQ-005～008、FR-ARC-016；AC 43、49。
+
+### Acceptance criteria
+
+- [ ] Create一律202並保存ACTIVE／ARCHIVE filter snapshot；list只回本人jobs。
+- [ ] Status及download驗owner relation，不存在與他人job同樣404；expired file回410。
+- [ ] Download限定private root、safe Content-Disposition、no-store及nosniff。
+
+### Definition of Done
+
+驗證方式：Handler metadata、schema、owner／IDOR、path containment及expired download tests。
+
+Commit：`feat: expose owner-safe sales export APIs`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-056 — 完成Export UI及owner-safe download
+
+### Goal
+
+建立Export Jobs page及Active／Archive list的建立匯出入口。 （Legacy identity：`P4-T07`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesExportJobsPage.vue`、`SalesOrdersPage.vue`、`SalesArchivePage.vue`、`client/src/services/sales.js`、一個Export page test。
+
+依賴：P4-T06。
+
+規格追溯：FR-INQ-005～008、AC 43；Design §6.7。
+
+### Acceptance criteria
+
+- [ ] 建立時顯示filter snapshot及store，不提供unbounded「全部歷史」捷徑。
+- [ ] Polling／download／expired／failed states清楚，使用者只能看到自己的jobs。
+- [ ] CSV下載不在client重組資料，頁面hidden／unmount停止polling。
+
+### Definition of Done
+
+驗證方式：Export page、service、permission、polling及client build tests。
+
+Commit：`feat: add sales export job experience`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-057 — 完成Archive eligibility及Open Matter contracts
+
+### Goal
+
+實作finalized＋24月＋無Backorder／Reservation／Operation／下游Open Matter的唯一eligibility判定。 （Legacy identity：`P4-T08`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesArchiveService.js`、open-matter provider interface／fixtures、`server/test/salesArchiveEligibility.test.js`及consumer contract test。
+
+依賴：P4-T02、P2-T06、下游provider owners可提供contract。
+
+規格追溯：FR-ARC-001～008、018～020、BR-041～045；AC 45～46。
+
+### Acceptance criteria
+
+- [ ] Cutoff使用last business update，不因read／report更新；所有本地predicate fail closed。
+- [ ] 每個已配置downstream provider只可回CLOSED／OPEN／UNKNOWN，UNKNOWN或unavailable必須skip。
+- [ ] 沒有接入的未來provider不被假裝為CLOSED；接入新下游須擴充正式contract。
+
+### Definition of Done
+
+驗證方式：每個eligibility predicate、boundary date、provider true／false／unknown tests。
+
+Commit：`feat: determine safe sales archive eligibility`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-058 — 完成Archive aggregate原子搬移
+
+### Goal
+
+單張Aggregate transaction內copy、read-back hash驗證、routing更新及Active delete。 （Legacy identity：`P4-T09`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesArchiveService.js`、`salesCanonicalHash.js`、`server/test/salesArchiveService.test.js`、一個archive transaction integration test。
+
+依賴：P4-T08。
+
+規格追溯：FR-ARC-009～015、BR-046～048；AC 47～51。
+
+### Acceptance criteria
+
+- [ ] 鎖Header後重驗資格，完整copy header／lines／mapping／terminal backorder／history／audit。
+- [ ] Counts、money及canonical row hashes read-back一致後才更新routing並按child順序刪Active。
+- [ ] Existing identical Archive row可恢復unknown outcome；different hash回`ARCHIVE_DATA_CONFLICT`並保留Active。
+
+### Definition of Done
+
+驗證方式：Copy/hash/delete order、failure injection、unknown commit及conflict integration tests。
+
+Commit：`feat: atomically archive sales order aggregates`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-059 — 完成Archive scheduler、recovery及immutable guards
+
+### Goal
+
+加入月度batch、500張keyset resume、Archive immutable triggers及job lifecycle。 （Legacy identity：`P4-T10`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesArchiveJob.js`、`SalesJobRuntimeService.js`、一支immutable trigger migration、`server/test/salesArchiveJob.test.js`、一個job recovery integration test。
+
+依賴：P4-T09。
+
+規格追溯：FR-ARC-009～015、NFR archive operations；AC 50～52。
+
+### Acceptance criteria
+
+- [ ] Interval job以HKT window＋period unique row確保每月只啟動一次，單張transaction避免長鎖。
+- [ ] Crash從last scanned cursor續跑；一張失敗不回滾已commit orders且Batch counters正確。
+- [ ] Archive UPDATE／DELETE被trigger拒絕，沒有application override或自動`OPTIMIZE TABLE`。
+
+### Definition of Done
+
+驗證方式：Multi-instance、resume、AbortSignal、immutable及Active availability tests。
+
+Commit：`feat: run recoverable monthly sales archiving`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-060 — 完成Archive inquiry APIs
+
+### Goal
+
+提供Archive-only list／detail／audit及Archive Batch safe metrics APIs。 （Legacy identity：`P4-T11`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：list／get／audit Archive handlers、archive schemas及`server/test/salesArchiveHandlers.test.js`。
+
+依賴：P4-T10。
+
+規格追溯：FR-ARC-016～017、FR-INQ-001～004；AC 47～49。
+
+### Acceptance criteria
+
+- [ ] Archive list要求bounded filters／最多366日range，exact number可直接查；不union Active。
+- [ ] Detail／Audit唯讀且只回snapshot／final state／safe audit；所有write method不存在。
+- [ ] External ID先查永久External Key，再依routing只查唯一store。
+
+### Definition of Done
+
+驗證方式：API schema、route collision、range guard、read-only、permission及routing tests。
+
+Commit：`feat: expose bounded sales archive inquiries`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-061 — 完成Archive pages
+
+### Goal
+
+建立Archive list／detail、Active↔Archive明確導覽及read-only匯出入口。 （Legacy identity：`P4-T12`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesArchivePage.vue`、`SalesArchiveDetailPage.vue`、`client/src/services/sales.js`、`client/config/menu.js`、一個Archive page test。
+
+依賴：P4-T11、P4-T07。
+
+規格追溯：FR-ARC-016～017、AC 47～49；Design §6.7。
+
+### Acceptance criteria
+
+- [ ] Empty filter不發unbounded query；日期range、exact number及Customer filters可用。
+- [ ] Detail明確標示「歷史唯讀」，沒有edit／confirm／cancel actions。
+- [ ] Active與Archive不混在同一table，找不到／服務暫不可用不顯示為零結果。
+
+### Definition of Done
+
+驗證方式：Archive page、route、read-only、empty-filter及responsive tests；client build。
+
+Commit：`feat: add read-only sales archive experience`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-062 — 完成Reconciliation及營運可觀測性
+
+### Goal
+
+建立只讀Reconciliation、structured metrics／alerts及Confirmation／Import／Backorder／Archive runbooks。 （Legacy identity：`P4-T13`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：`SalesReconciliationService.js`、`server/test/salesReconciliationService.test.js`、logging／metrics配置、`docs/runbooks/sales-order-management.md`及一個job stats test。
+
+依賴：P4-T05、P4-T10。
+
+規格追溯：FR-INQ-009～012、FR-ARC-018～020、Requirement §13.4；Design §7.11、§12.3–12.5。
+
+### Acceptance criteria
+
+- [ ] 對數line equation、Inventory mappings、Backorder、External routing及Archive manifest；只報告不自動修復。
+- [ ] Alerts涵蓋stuck CONFIRMING／Intake、contract mismatch、old Backorder、Archive failure及query P95。
+- [ ] Logs／metric labels不含SO number、External ID、Customer、SKU、User、reason或完整payload。
+
+### Definition of Done
+
+驗證方式：每類mismatch、safe logging、metric cardinality及runbook dry-run tests／review。
+
+Commit：`feat: reconcile and observe sales order processing`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+## TASK-063 — 完成容量、Restore、Regression及Release Gate
+
+### Goal
+
+以production-like dataset完成效能、備份復原、安全回歸及發布證據。 （Legacy identity：`P4-T14`；規模估算：M（3–5個主要檔案）。）
+
+### Approach
+
+預計變更範圍：容量generator、performance report、restore／archive integration test、release checklist及必要coverage floor更新。
+
+依賴：P4-T01～P4-T13。
+
+規格追溯：KPI-01～09、NFR-PERF-001～008、AC 1～53；Design §11.7–11.8、§13.3。
+
+### Acceptance criteria
+
+- [ ] 730萬Active headers下常用query P95≤2秒；Archive exact≤3秒、Customer＋366日≤5秒。
+- [ ] 2,500萬External Keys exact dedupe／routing走unique hash index；月度30萬candidates不造成長transaction lock。
+- [ ] 隔離DB restore後counts／amounts／hashes一致，重播event／source不重複，全部AC 1～53有PASS證據或已批准豁免。
+
+### Definition of Done
+
+驗證方式：全量migration、server／client tests、coverage、build、security audit、performance suite、backup／restore及UAT evidence review。
+
+Commit：`test: complete sales order release evidence`。
+
+另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。

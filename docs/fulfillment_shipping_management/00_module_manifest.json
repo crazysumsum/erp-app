@@ -121,8 +121,8 @@
         "module_id": "sales-order-management",
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED",
-        "source": "docs/sales_order_management/03_system_design_spec.md",
-        "sha256": "668b8b2ae6d0ecf8beabb52b7d97672a929b364e7de4b689e15ac400ff73b061",
+        "source": "docs/sales_order_management/03_design_spec.md",
+        "sha256": "f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107",
         "regression_suites": [
           "fulfillment-technical"
         ]
