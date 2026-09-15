@@ -1,0 +1,139 @@
+{
+  "schema_version": "2.0",
+  "module_id": "business-master",
+  "run_id": "20260914T054939-621d948338cb",
+  "suite_id": "business-master-server",
+  "stage": "DEVELOPER",
+  "result": "FAIL",
+  "spec_baseline": "52e5d476fc28d92c77b058923c2651d130d45128aa5bfde887faf0cbc5554cb5",
+  "source_fingerprint": "a1a3363903b281cd507bec3a450f80bbd19d045d1a24587991ed157d5408e84f",
+  "code_commit": "0a392a2cbfd1de5900384d095db0104076acc80b",
+  "started_at": "2026-09-14T05:49:39.336047Z",
+  "ended_at": "2026-09-14T05:49:39.783675Z",
+  "environment_id": "business-master-isolated-test",
+  "runtime_instance_id": "business-master-phase-1-20260914",
+  "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/private/tmp/erp-business-master-phase-1/docs/business_master/evidence/20260914T054939-621d948338cb/business-master-server.xml",
+    "server/test/business-master/*.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "4212243de228c291b3f356d486b4ce055659f29388aa15b7b64c7c13d01c2557",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 31,
+    "passed": 24,
+    "failed": 7,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-001",
+      "status": "FAIL"
+    },
+    {
+      "id": "TC-002",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-003",
+      "status": "FAIL"
+    },
+    {
+      "id": "TC-004",
+      "status": "FAIL"
+    },
+    {
+      "id": "TC-005",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-006",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-007",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-008",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-009",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-010",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-011",
+      "status": "FAIL"
+    },
+    {
+      "id": "TC-012",
+      "status": "FAIL"
+    },
+    {
+      "id": "TC-013",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-014",
+      "status": "FAIL"
+    },
+    {
+      "id": "TC-015",
+      "status": "FAIL"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T054939-621d948338cb/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T054939-621d948338cb/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T054939-621d948338cb/business-master-server.xml",
+      "sha256": "9cf386d26ebd863a58420ec7b15067646cfd8e1e19ef194f4af116354598b129",
+      "bytes": 14533
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Required cases not passed: TC-001, TC-003, TC-004, TC-011, TC-012, TC-014, TC-015",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

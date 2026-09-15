@@ -79,7 +79,7 @@
         "id": "supplier-public-provider-contracts",
         "version": "design-1.0",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "983f351f027732516cb126722bf97db85d4c5548dd572ccd6f00badfbad5cbbb",
+        "sha256": "16031c0f63ce28baf333f02e65f68107a42d4d711baf2e9f55c77d60625859db",
         "consumers": [
           "purchasing-receiving",
           "item-management",
@@ -91,10 +91,10 @@
     "consumed": [
       {
         "module_id": "item-management",
-        "id": "sku-uom-provider",
-        "version": "aligned-design",
-        "source": "docs/items_management/03_system_design_spec.md",
-        "sha256": "47082f6b4381994b253ced7ef8e27098f10abec16860483939d25ac25072ee87",
+        "id": "item-sku-uom-provider",
+        "version": "aligned-design-v2",
+        "source": "docs/items_management/03_design_spec.md",
+        "sha256": "6a01476bc89437946dcc635fc21a66d932609d2609a07f0bdee64465a016dd6a",
         "regression_suites": [
           "supplier-server-integration"
         ]
@@ -103,8 +103,8 @@
         "module_id": "purchasing-receiving-management",
         "id": "supplier-consumer-contract",
         "version": "design-spec",
-        "source": "docs/purchasing_receiving_management/design_spec.md",
-        "sha256": "b09f5726d4b119e1e7775157f42eb37fd9aa4542ea0299a99d4aae9703157c95",
+        "source": "docs/purchasing_receiving_management/03_design_spec.md",
+        "sha256": "a29fb66d0e5ad10c638e5c556e40cf16c534cfce7c7283077a8f922a8fd0ee70",
         "regression_suites": [
           "supplier-server-integration"
         ]

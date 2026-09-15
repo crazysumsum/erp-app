@@ -1,0 +1,10 @@
+
+> erp-app@0.1.0 lint
+> eslint .
+
+
+/private/tmp/erp-business-master-phase-2/client/e2e/business-master/business-master.spec.js
+  105:40  error  Return values from promise executor functions cannot be read  no-promise-executor-return
+
+✖ 1 problem (1 error, 0 warnings)
+

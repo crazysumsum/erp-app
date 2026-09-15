@@ -23,6 +23,7 @@
     "server"
   ],
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "concurrently": "^8.2.2",
     "eslint": "^9.39.5",
     "eslint-plugin-vue": "^10.10.0"

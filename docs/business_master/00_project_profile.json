@@ -5,7 +5,7 @@
     "id": "business-master-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic Currency, Payment Term and consumer-reference fixtures defined in 06_technical_test_cases.md; no production data",
-    "authorization_ref": null
+    "authorization_ref": "2026-09-14 user request: 進入 FULL_LIFECYCLE; synthetic isolated local runtime only"
   },
   "permissions": {
     "product_write": ["IMPLEMENT"],
@@ -34,7 +34,7 @@
     },
     {
       "id":"business-master-server","kind":"INTEGRATION",
-      "argv":["node","--test","--import","./server/test-support/testEnv.js","--test-reporter=junit","--test-reporter-destination={run_dir}/business-master-server.xml","server/test/business-master"],
+      "argv":["node","--test","--import","./server/test-support/testEnv.js","--test-reporter=junit","--test-reporter-destination={run_dir}/business-master-server.xml","server/test/business-master/*.test.js"],
       "cwd":".","timeout_seconds":3600,"result_adapter":"JUNIT","result_path":"business-master-server.xml","min_tests":15,"max_skipped":0,
       "stages":["DEVELOPER","TECHNICAL","REGRESSION"],
       "required_case_ids":["TC-001","TC-002","TC-003","TC-004","TC-005","TC-006","TC-007","TC-008","TC-009","TC-010","TC-011","TC-012","TC-013","TC-014","TC-015"],
@@ -43,7 +43,7 @@
     },
     {
       "id":"business-master-client-ui","kind":"UI",
-      "argv":["npm","test","--workspace","client","--","--config","test/business-master.vitest.config.js","--reporter=junit","--outputFile={run_dir}/business-master-client-ui.xml"],
+      "argv":["npm","test","--workspace","client","--","--config","test/business-master/vitest.config.js","--reporter=junit","--outputFile={run_dir}/business-master-client-ui.xml"],
       "cwd":".","timeout_seconds":1800,"result_adapter":"JUNIT","result_path":"business-master-client-ui.xml","min_tests":1,"max_skipped":0,
       "stages":["DEVELOPER","TECHNICAL","REGRESSION"],"required_case_ids":["TC-016"],
       "tool_probes":[{"argv":["node","--version"],"version_pattern":"^v26\\."}],"side_effects":["FILES"],"env_keys":[],"redaction_env_keys":["DB_PASSWORD"]
@@ -73,7 +73,7 @@
     },
     {
       "id":"business-master-consumer-contract","kind":"INTEGRATION",
-      "argv":["node","--test","--import","./server/test-support/testEnv.js","--test-reporter=junit","--test-reporter-destination={run_dir}/business-master-consumer-contract.xml","server/test/business-master/consumer-contract"],
+      "argv":["node","--test","--import","./server/test-support/testEnv.js","--test-reporter=junit","--test-reporter-destination={run_dir}/business-master-consumer-contract.xml","server/test/business-master/consumer-contract/*.test.js"],
       "cwd":".","timeout_seconds":3600,"result_adapter":"JUNIT","result_path":"business-master-consumer-contract.xml","min_tests":1,"max_skipped":0,
       "stages":["DEVELOPER","TECHNICAL","REGRESSION"],"required_case_ids":["TC-020"],
       "tool_probes":[{"argv":["node","--version"],"version_pattern":"^v26\\."},{"argv":["mysql","--version"],"version_pattern":"(?i)mysql"}],

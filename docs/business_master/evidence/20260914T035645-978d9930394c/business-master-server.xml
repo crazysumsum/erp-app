@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="TC-003 currency create validates, writes through a transaction, and records allowlisted audit" time="0.001600" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-004 a failed currency compare-and-swap surfaces VERSION_CONFLICT without success audit" time="0.000358" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-004 mutation revalidates the actor at commit point and rejects lifecycle no-op" time="0.000302" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-014 rejected high-risk deactivation records a separate rejected audit without a mutation" time="0.000522" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-005 payment term create normalizes identity and persists a valid conditional rule" time="0.000475" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-008 calculates against the requested current payment term version" time="0.000839" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-009 impact confirmation is actor-bound, expiring, drift-sensitive, and fail closed" time="0.001841" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-009 impact preview rejects operation and proposed-change mismatches before running checkers" time="0.000354" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-010 provider separates active selection, history, and transaction-aware revalidation" time="0.000927" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/domainServices.test.js"/>
+	<testcase name="TC-012 admin routes enforce view/mgmt permission boundaries" time="0.000602" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/handlerContracts.test.js"/>
+	<testcase name="TC-013 all request object schemas are strict and protected fields have no PATCH path" time="0.000644" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/handlerContracts.test.js"/>
+	<testcase name="TC-015 every non-GET Business Master route enables framework idempotency" time="0.000103" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/handlerContracts.test.js"/>
+	<testcase name="TC-012 real HTTP authentication and authorized admin flow" time="0.428785" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/http.integration.test.js"/>
+	<testcase name="TC-001 creates sole-owner tables, seeds two permissions, and only HKD catalog data" time="0.001513" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/migration.test.js"/>
+	<testcase name="TC-001 rejects an incompatible adopted table before issuing DDL or seed writes" time="0.000238" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/migration.test.js"/>
+	<testcase name="TC-001 rejects an adopted Payment Term table with compatible names but incompatible types" time="0.000653" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/migration.test.js"/>
+	<testcase name="TC-001 real MySQL migration has exact HKD and no Payment Term seed" time="0.009458" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/mysql.integration.test.js"/>
+	<testcase name="TC-015 real MySQL readiness recognizes information_schema aliases" time="0.006307" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/mysql.integration.test.js"/>
+	<testcase name="TC-003 real MySQL prefix search treats wildcard characters literally" time="0.001327" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/mysql.integration.test.js"/>
+	<testcase name="TC-004 real MySQL concurrent CAS has one winner and one atomic audit" time="0.006388" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/mysql.integration.test.js"/>
+	<testcase name="TC-014 unique conflict and audit failure leave no partial Payment Term" time="0.004398" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/mysql.integration.test.js"/>
+	<testcase name="TC-011 provider locks and revalidates current Active state" time="0.003169" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/mysql.integration.test.js"/>
+	<testcase name="TC-002 accepts official uppercase currencies and rejects aliases or private codes" time="0.001327" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/pureRules.test.js"/>
+	<testcase name="TC-005 payment term codes use NFKC, trim, collapse whitespace, and uppercase" time="0.000657" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/pureRules.test.js"/>
+	<testcase name="TC-006 validates the complete payment term type and dueDays decision table" time="0.000183" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/pureRules.test.js"/>
+	<testcase name="TC-007 calculates calendar due dates without local timezone drift" time="0.000881" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/pureRules.test.js"/>
+	<testcase name="TC-015 readiness reports the provider contract, schema, HKD, permissions, and checker registry" time="0.001550" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/readiness.test.js"/>
+	<testcase name="TC-015 eager Business Master service registers provider and fails startup when readiness is not READY" time="0.000431" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/readiness.test.js"/>
+	<testcase name="TC-003 list query keeps user search and sort values out of SQL" time="0.000724" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/repository.test.js"/>
+	<testcase name="TC-004 currency CAS updates only allowlisted columns and returns mapped projection" time="0.000788" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/repository.test.js"/>
+	<testcase name="TC-014 audit insert contains only the explicit catalog snapshots and hashed idempotency key" time="0.000268" classname="test" file="/private/tmp/erp-business-master-phase-1/server/test/business-master/repository.test.js"/>
+	<!-- tests 31 -->
+	<!-- suites 0 -->
+	<!-- pass 31 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 600.292042 -->
+</testsuites>

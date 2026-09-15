@@ -23,7 +23,9 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   // item.view；商品管理員角色要兩者都配。設計見
   // docs/items_management/design_spec.md §3.1。
   Object.freeze({ name: "item.view", description: "查看商品、SKU 與商品變更歷史" }),
-  Object.freeze({ name: "item.mgmt", description: "管理商品、SKU 與商品主資料" })
+  Object.freeze({ name: "item.mgmt", description: "管理商品、SKU 與商品主資料" }),
+  Object.freeze({ name: "business_master.view", description: "查看貨幣、付款條款與變更歷史" }),
+  Object.freeze({ name: "business_master.mgmt", description: "管理貨幣與付款條款主資料" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */
