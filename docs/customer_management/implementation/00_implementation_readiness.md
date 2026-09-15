@@ -65,3 +65,20 @@ merge claim.
   integration tests skipped, 0 failed; lint passed.
 - The isolated schema was verified empty of Customer test fixtures and dropped after
   the checks.
+
+## TASK-004 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Focused classification-catalog migration tests and the Business Master v1
+  provider-contract tests: 9 passed.
+- Fresh isolated MySQL schema `erp_customer_phase001_task004_20260915`: complete
+  framework and application migrations through
+  `0030_create_customer_classification_catalogs.js` applied successfully; a full
+  rerun skipped every migration.
+- MySQL metadata verified the one Business Master-owned active `HKD` currency,
+  `utf8mb4_bin` `code_key` columns and `(status,sort_order,name)` indexes on all
+  three Customer-owned classification catalogs.
+- The isolated schema was dropped after verification. No category, industry or
+  territory seed data was invented.

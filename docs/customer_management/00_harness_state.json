@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 28,
-  "mode": "IMPLEMENT",
+  "revision": 32,
+  "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": null,
   "baseline": {
-    "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
-    "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "357c6f92375938426d74e82c78aaea35d1e5cd89",
-    "source_fingerprint": "416505a804af3018c76348c99404926bccab29f44a80f792412d0dc382b56fa7",
+    "design": "131cf0a5016ecfbf184c06a51eb982e764cea5e54ae4237ad4241ef0ca397de8",
+    "plan": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+    "code_commit": "0766a854e4d230138dbe701cd3395477d145e88c",
+    "source_fingerprint": "a763eb9ea194e524fe36b01e3b549d454e4adb6c3db4f7d94d2617e3bbc4ec17",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
-    "default_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e",
-    "mode_entry_commit": "134c2722f92eae298da7ad1a1b01b6a75522550e"
+    "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+    "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
     "instance_id": "CUSTOMER-PHASE-001-NO-ACTIVE-RUNTIME",
@@ -29,7 +29,7 @@
     "TASK-001": "DONE",
     "TASK-002": "DONE",
     "TASK-003": "DONE",
-    "TASK-004": "PENDING",
+    "TASK-004": "DONE",
     "TASK-005": "PENDING",
     "TASK-006": "PENDING",
     "TASK-007": "PENDING",
@@ -200,6 +200,59 @@
         "server/test/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004",
+      "recorded_at": "2026-09-15T01:12:44Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "131cf0a5016ecfbf184c06a51eb982e764cea5e54ae4237ad4241ef0ca397de8",
+      "code_commit": "f7fd95584e827f1bce112388fc2c196b5939671f",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004",
+      "recorded_at": "2026-09-15T01:12:44Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "f7fd95584e827f1bce112388fc2c196b5939671f",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-004",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004",
+      "recorded_at": "2026-09-15T01:12:44Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "f7fd95584e827f1bce112388fc2c196b5939671f",
+      "scope": [
+        "TASK-004",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/src/handlers/customer-settings/**",
+        "server/database/migrations/**",
+        "server/test/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -328,9 +381,33 @@
       "idempotency_key": "customer-phase001-task003-equality-key-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-14: isolated schema erp_customer_phase001_task003_20260914 migrated through 0028; full rerun no-op; real MySQL binary-collation and concurrent uniqueness tests passed; Customer fixtures were empty before the schema was dropped."
+    },
+    {
+      "id": "EXT-MIGRATION-004",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task004_20260915",
+      "idempotency_key": "customer-phase001-task004-classification-catalog-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0030; full rerun skipped every migration; HKD was ACTIVE with decimal_places=2; all three Customer classification code_key columns were utf8mb4_bin and their status/sort/name indexes matched; schema was dropped after verification."
+    },
+    {
+      "id": "MODE-CHANGE-29",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-29",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15 Codex task user: 請從main更新一下你的分支，Business Master 的 Currency／Payment Term provider應該已完成，可以繼續FULL Cycle的開發"
+    },
+    {
+      "id": "MODE-CHANGE-30",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-30",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-003 is complete. TASK-004 remains blocked until the Business Master Currency/Payment Term provider is merged and verified; before any Phase merge, reconcile this branch with the newer origin/main."
+  "next_safe_action": "TASK-004 is complete. Seek explicit scope approval before beginning TASK-005, which extends customers and introduces append-only audit persistence."
 }
