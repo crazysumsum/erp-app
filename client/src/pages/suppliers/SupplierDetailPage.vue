@@ -11,14 +11,19 @@ export const page = {
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
+import { can } from "@/framework/authorization/can.js";
 import supplierService from "@/services/supplier.js";
+import { useSessionStore } from "@/stores/session.js";
 
 const STATUS_LABEL = Object.freeze({
   draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停",
   blocked: "已封鎖", archived: "已封存"
 });
 const route = useRoute();
+const session = useSessionStore();
+const canManage = computed(() => can(session, { permissions: ["supplier.mgmt"] }));
 const supplier = ref(null);
 const loading = ref(true);
 const error = ref(null);
@@ -80,7 +85,12 @@ onMounted(load);
               <q-item><q-item-section><q-item-label caption>電話／電郵</q-item-label><q-item-label>{{ supplier.generalPhone || "—" }}／{{ supplier.generalEmail || "—" }}</q-item-label></q-item-section></q-item>
             </q-list>
           </q-tab-panel>
-          <q-tab-panel name="addresses"><div v-if="!supplier.addresses.length" class="text-grey-7">尚未設定地址</div></q-tab-panel>
+          <q-tab-panel name="addresses">
+            <SupplierAddressPanel
+              :supplier-id="supplier.id" :supplier-code="supplier.supplierCode"
+              :addresses="supplier.addresses" :can-manage="canManage" @refresh="load"
+            />
+          </q-tab-panel>
           <q-tab-panel name="contacts"><div v-if="!supplier.contacts.length" class="text-grey-7">尚未設定聯絡人</div></q-tab-panel>
           <q-tab-panel name="identifiers"><div v-if="!supplier.identifiers.length" class="text-grey-7">尚未設定識別資料</div></q-tab-panel>
           <q-tab-panel name="bank">

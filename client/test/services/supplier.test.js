@@ -69,4 +69,16 @@ describe("supplier service", () => {
       "/api/v1/suppliers/7/completeness"
     ]);
   });
+
+  it("uses ownership-scoped versioned Address routes", async () => {
+    httpClient.post.mockResolvedValue({ id: 12 });
+    await supplierService.createAddress(7, { label: "總部", purposes: [] });
+    await supplierService.updateAddress(7, 12, { label: "新總部", purposes: [], version: 2 });
+    await supplierService.deactivateAddress(7, 12, { version: 3 });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/suppliers/7/addresses/create", { body: { label: "總部", purposes: [] } }],
+      ["/api/v1/suppliers/7/addresses/12/update", { body: { label: "新總部", purposes: [], version: 2 } }],
+      ["/api/v1/suppliers/7/addresses/12/deactivate", { body: { version: 3 } }]
+    ]);
+  });
 });

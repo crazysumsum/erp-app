@@ -43,5 +43,17 @@ export default {
 
   completeness(id) {
     return httpClient.get(`/api/v1/suppliers/${id}/completeness`);
+  },
+
+  createAddress(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/create`, { body: payload });
+  },
+
+  updateAddress(supplierId, addressId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/update`, { body: payload });
+  },
+
+  deactivateAddress(supplierId, addressId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/deactivate`, { body: payload });
   }
 };
