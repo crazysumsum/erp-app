@@ -1,31 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "business-master",
-  "revision": 40,
+  "revision": 63,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "ACCEPTED",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-016",
+  "current_task": null,
   "baseline": {
     "design": "615321edab3df32c5d267997c1d3c51f1523e50dcf5802bf5a549fafda9e5bd8",
     "plan": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
-    "code_commit": "ba7bdc260dbde05e168187d07d59cb4065aac1c2",
-    "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
-    "worktree": "/private/tmp/erp-business-master-phase-2",
-    "default_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844",
-    "mode_entry_commit": "a3040c96e1aa92902df964d44a1ad0b83f37f844"
+    "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+    "source_fingerprint": "d407db985203a648d5051ecf73718c6519e9fda8659e17658b5cdf302071d532",
+    "worktree": "/private/tmp/erp-business-master-test-verify",
+    "default_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+    "mode_entry_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7"
   },
   "runtime": {
-    "instance_id": "business-master-phase-2-20260914",
+    "instance_id": "business-master-test-verify-20260914",
     "owner": "/root Codex context",
     "resources": {
-      "workspace": "/private/tmp/erp-business-master-phase-2",
-      "mysql-schema": "erp_business_master_phase2",
+      "workspace": "/private/tmp/erp-business-master-test-verify",
+      "mysql-schema": "erp_business_master_uat_staging",
       "server-port": "3102",
       "client-port": "5202",
-      "playwright-profile": "/private/tmp/erp-business-master-phase2-playwright"
+      "playwright-profile": "/private/tmp/erp-business-master-test-verify-playwright",
+      "mysql-restore-schema": "erp_business_master_uat_restore",
+      "restore-server-port": "3103"
     },
     "lease_ref": null
   },
@@ -362,6 +364,83 @@
         "package-lock.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-008",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Business Master owner and Operations representative (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user exact authorization for local MySQL 127.0.0.1:3311 schemas erp_business_master_uat_staging and erp_business_master_uat_restore; TEST_AND_VERIFY fresh migration, synthetic UAT-NET30, local restart and isolated backup/restore; consumer modules accepted as NOT_INSTALLED; no production or evidence export",
+      "recorded_at": "2026-09-14T09:15:43Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "scope": [
+        "mysql://127.0.0.1:3311/erp_business_master_uat_staging",
+        "mysql://127.0.0.1:3311/erp_business_master_uat_restore",
+        "TEST_AND_VERIFY:fresh-migration",
+        "TEST_AND_VERIFY:synthetic-UAT-NET30",
+        "TEST_AND_VERIFY:local-restart",
+        "TEST_AND_VERIFY:isolated-backup-restore"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-BUSINESS-001",
+      "kind": "BUSINESS",
+      "authority_kind": "HUMAN",
+      "actor": "Business Master owner and Operations representative (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user explicitly confirmed Business Master business acceptance as ACCEPTED after reviewing the local UAT evidence for commit c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "recorded_at": "2026-09-14T09:55:04Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "scope": [
+        "business-master",
+        "UAT-010",
+        "UAT-011"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RELEASE-001",
+      "kind": "RELEASE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner and release authority (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 由我審批同意 RELEASE_APPROVAL; interpreted against the immediately preceding sole remaining release gate and exact accepted baseline commit c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "recorded_at": "2026-09-15T00:49:58Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "scope": [
+        "business-master"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-009",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner and release authority (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 將 business-master 這個功能模塊未完成合併的分支開 PR 進行合併，完成後清理分支及 worktree，不要動其他功能模塊的分支",
+      "recorded_at": "2026-09-15T09:08:30+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "scope": [
+        "docs/business_master/00_harness_state.json",
+        "docs/business_master/testing/**",
+        "GIT_PUSH:codex/business-master-test-verify",
+        "GITHUB_PR:codex/business-master-test-verify-to-main",
+        "GITHUB_MERGE:main",
+        "LOCAL_CLEANUP:codex/business-master-test-verify",
+        "LOCAL_RETENTION:docs/business_master/evidence/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -448,6 +527,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REVIEW-HUMAN-007",
+      "method": "HUMAN",
+      "author": "/root Codex context",
+      "reviewer": "ERP Product Owner (Sam)",
+      "reviewed_baseline": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+      "source_ref": "2026-09-14 Codex task user: 那就合併到main吧; bound to immediately preceding exact PR #93 head 5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9 and all-green CI disclosure",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -505,6 +596,83 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/89 merge commit a3040c96e1aa92902df964d44a1ad0b83f37f844",
       "actor": "ERP Product Owner (Sam)",
       "observed_at": "2026-09-14T06:07:35Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34822666721/job/103907559876",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T08:26:18Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34822666721/job/103907560243",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T08:26:14Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34822666721/job/103907560170",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T08:32:24Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/34822666721/job/103907560181",
+      "actor": "GitHub Actions",
+      "observed_at": "2026-09-14T08:26:13Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PHASE-002",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "4bcf7deeaf3c006b7f45989954905507ceeedd10e026b8cfb0bb9a646d52c377",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/93 merge commit c3972422d20c56e9656aef9f894b91d7162c79c7; parents 5b62be10b98f4ec6e4e9b553073981c94b9cd1a2 and 5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "actor": "ERP Product Owner (Sam)",
+      "observed_at": "2026-09-14T08:38:44Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "UAT-010",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "d407db985203a648d5051ecf73718c6519e9fda8659e17658b5cdf302071d532",
+      "status": "PASS",
+      "source_ref": "2026-09-14 Codex task user: Sam reviewed the local UAT evidence bound to commit c3972422d20c56e9656aef9f894b91d7162c79c7 and explicitly confirmed UAT-010 PASS",
+      "actor": "Business Master owner and Operations representative (Sam)",
+      "observed_at": "2026-09-14T09:55:04Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "UAT-011",
+      "code_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "spec_baseline": "0426c5aba3ce5906628cf56c575d5a405308f492d621ba283b77a98e7ffc400b",
+      "source_fingerprint": "d407db985203a648d5051ecf73718c6519e9fda8659e17658b5cdf302071d532",
+      "status": "PASS",
+      "source_ref": "2026-09-14 Codex task user: Sam accepted the no-extra-inactive-fixture and six-consumers-NOT_INSTALLED limitations and explicitly confirmed UAT-011 PASS",
+      "actor": "Business Master owner and Operations representative (Sam)",
+      "observed_at": "2026-09-14T09:55:04Z"
     }
   ],
   "pending_decisions": [
@@ -654,6 +822,28 @@
       "affected_ids": [],
       "status": "ANSWERED",
       "answer_ref": "2026-09-14 user: 同意最終 Plan"
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "Execute and record manual UAT-010 and UAT-011 against an identified staging/restored artifact, then provide the separate baseline-bound business acceptance decision",
+      "affected_ids": [
+        "UAT-010",
+        "UAT-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-14 Codex task user explicitly confirmed UAT-010 PASS, accepted the stated UAT-011 limitations and confirmed UAT-011 PASS, then separately confirmed Business Master business acceptance as ACCEPTED"
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "Authorize recovery correction of three accidental non-runner evidence_files entries while preserving their provenance in the execution report",
+      "affected_ids": [
+        "UAT-010",
+        "UAT-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "2026-09-14 Codex task user explicitly approved correction of harness state revision 55 by removing only the three accidentally indexed non-runner attachment/detail paths while retaining the redacted evidence and correction provenance"
     }
   ],
   "external_actions": [
@@ -776,6 +966,150 @@
       "idempotency_key": "business-master-phase2-merge-413ba3db2519341f75db8ce82cb9871fa5336118",
       "status": "FAILED",
       "source_ref": "Not executed: origin/main advanced from b6f03219 to c1ed4922 before merge"
+    },
+    {
+      "id": "ACTION-PUSH-006",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-phase-2",
+      "idempotency_key": "business-master-phase2-push-5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "status": "CONFIRMED",
+      "source_ref": "origin/codex/business-master-phase-2@5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9"
+    },
+    {
+      "id": "ACTION-MERGE-093-002",
+      "kind": "GITHUB_MERGE",
+      "target": "github.com/crazysumsum/erp-app:main",
+      "idempotency_key": "business-master-phase2-merge-5ad28c2878e3e3e3be43d551111dd6c3b9fab6d9",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/93 merge commit c3972422d20c56e9656aef9f894b91d7162c79c7"
+    },
+    {
+      "id": "MODE-CHANGE-41",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-41",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 user: 清理分支及 worktree，進入正式 TEST_AND_VERIFY"
+    },
+    {
+      "id": "ACTION-UAT-DB-CREATE-001",
+      "kind": "DB_SCHEMA_CREATE",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_staging,erp_business_master_uat_restore",
+      "idempotency_key": "business-master-uat-create-exact-schemas-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 local MySQL information_schema observation: both exact schemas exist with utf8mb4/utf8mb4_0900_ai_ci after prior nonexistence check"
+    },
+    {
+      "id": "ACTION-UAT-MIGRATE-001",
+      "kind": "DB_MIGRATION",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_staging@c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "idempotency_key": "business-master-uat-staging-migrate-c3972422-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 observed fresh migration complete; repeat skipped all 30 ledger entries; fr_schema_migrations total=30 and migrations/0027_create_business_master.js count=1"
+    },
+    {
+      "id": "ACTION-UAT-ACCOUNT-001",
+      "kind": "SYNTHETIC_TEST_ACCOUNT",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_staging/users:uat-business-master-owner",
+      "idempotency_key": "business-master-uat-account-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 local CLI output and DB/UI login observation; synthetic system-admin account only"
+    },
+    {
+      "id": "ACTION-UAT-TESTDATA-001",
+      "kind": "SYNTHETIC_TEST_DATA",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_staging/payment_terms:UAT-NET30",
+      "idempotency_key": "business-master-uat-net30-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 Playwright UI POST 201 and read-only DB observation: UAT-NET30/UAT Net 30/NET_DAYS/30 ACTIVE v1 with CREATE audit actor"
+    },
+    {
+      "id": "ACTION-UAT-RESTART-001",
+      "kind": "SERVICE_RESTART",
+      "target": "http://127.0.0.1:3102@erp_business_master_uat_staging",
+      "idempotency_key": "business-master-uat-staging-restart-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 post-restart health 200, readiness READY activePaymentTermCount=1, Playwright GET 200 and UAT-NET30 visible"
+    },
+    {
+      "id": "ACTION-UAT-BACKUP-001",
+      "kind": "DB_BACKUP",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_staging -> local private temporary logical dump",
+      "idempotency_key": "business-master-uat-staging-backup-c3972422-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 local private mysqldump 53696 bytes sha256 e330d3b48224161506eddab6ad5f1f5597c51ca4891aeecc8e72efc6f0ff0276; single-transaction, no export"
+    },
+    {
+      "id": "ACTION-UAT-RESTORE-001",
+      "kind": "DB_RESTORE",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_restore",
+      "idempotency_key": "business-master-uat-restore-c3972422-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 observed restore success: 32/32 tables, 334/334 columns, 57/57 rows, zero row-count diffs; HKD/UAT-NET30/audit linkage intact; restore API health 200 and readiness READY"
+    },
+    {
+      "id": "ACTION-UAT-RESTORE-MIGRATE-001",
+      "kind": "DB_MIGRATION_RERUN",
+      "target": "mysql://127.0.0.1:3311/erp_business_master_uat_restore@c3972422d20c56e9656aef9f894b91d7162c79c7",
+      "idempotency_key": "business-master-uat-restore-migrate-rerun-c3972422-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 restore migration rerun skipped all 30 entries; ledger total=30 and Business Master entry=1; post-rerun restart health 200 and readiness READY with active counts 1/1"
+    },
+    {
+      "id": "ACTION-UAT-RAW-DUMP-CLEANUP-001",
+      "kind": "LOCAL_SENSITIVE_TEMP_CLEANUP",
+      "target": "/private/tmp/business-master-uat-backup.JWUPgO/staging.sql",
+      "idempotency_key": "business-master-uat-dump-cleanup-e330d3b4-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 exact temporary 53696-byte logical dump and its empty private directory deleted after verified restore; not recoverable through this workflow"
+    },
+    {
+      "id": "ACTION-STATE-RECOVERY-001",
+      "kind": "HARNESS_STATE_RECOVERY",
+      "target": "docs/business_master/00_harness_state.json revision 55 evidence_files",
+      "idempotency_key": "business-master-state-recovery-revision-55-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 user explicitly authorized removal of exactly three accidental non-runner evidence_files entries; actual redacted detail JSON and two PNG images remain under evidence/20260914T093900-manual-uat-staging-restore and the correction is recorded in reports/state"
+    },
+    {
+      "id": "ACTION-LOCAL-EVIDENCE-ARCHIVE-001",
+      "kind": "LOCAL_EVIDENCE_RETENTION",
+      "target": "restricted local non-repository archive; no evidence export",
+      "idempotency_key": "business-master-local-evidence-archive-c3972422-20260915",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15 local observation: restricted non-repository archive contains 326 files, 231309 bytes, mode 0600, SHA-256 840a5d26f3e3ca86affc134e1ffe9025fcfb0a0380af8f02ea0a88cfcb051276; evidence was not exported"
+    },
+    {
+      "id": "ACTION-PUSH-007",
+      "kind": "GIT_PUSH",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-test-verify",
+      "idempotency_key": "business-master-closeout-push-20260915",
+      "status": "PLANNED",
+      "source_ref": "2026-09-15 Codex task user: 將 business-master 這個功能模塊未完成合併的分支開 PR 進行合併，完成後清理分支及 worktree，不要動其他功能模塊的分支"
+    },
+    {
+      "id": "ACTION-PR-CLOSEOUT-001",
+      "kind": "GITHUB_PR",
+      "target": "github.com/crazysumsum/erp-app:codex/business-master-test-verify-to-main",
+      "idempotency_key": "business-master-closeout-pr-20260915",
+      "status": "PLANNED",
+      "source_ref": "2026-09-15 Codex task user: 將 business-master 這個功能模塊未完成合併的分支開 PR 進行合併，完成後清理分支及 worktree，不要動其他功能模塊的分支"
+    },
+    {
+      "id": "ACTION-MERGE-CLOSEOUT-001",
+      "kind": "GITHUB_MERGE",
+      "target": "github.com/crazysumsum/erp-app:main",
+      "idempotency_key": "business-master-closeout-merge-20260915",
+      "status": "PLANNED",
+      "source_ref": "2026-09-15 Codex task user: 將 business-master 這個功能模塊未完成合併的分支開 PR 進行合併，完成後清理分支及 worktree，不要動其他功能模塊的分支"
+    },
+    {
+      "id": "ACTION-CLEANUP-CLOSEOUT-001",
+      "kind": "GIT_WORKTREE_BRANCH_CLEANUP",
+      "target": "local codex/business-master-test-verify worktree/branch and matching remote branch",
+      "idempotency_key": "business-master-closeout-cleanup-20260915",
+      "status": "PLANNED",
+      "source_ref": "2026-09-15 Codex task user: 將 business-master 這個功能模塊未完成合併的分支開 PR 進行合併，完成後清理分支及 worktree，不要動其他功能模塊的分支"
     }
   ],
   "evidence_files": [
@@ -847,8 +1181,22 @@
     "evidence/20260914T082229-cadbac232ea9/run.json",
     "evidence/20260914T082238-61deb9f98d77/run.json",
     "evidence/20260914T082248-83ed4b32a5b8/run.json",
-    "evidence/20260914T082258-9d4a4100d82b/run.json"
+    "evidence/20260914T082258-9d4a4100d82b/run.json",
+    "evidence/20260914T085052-f4c05c4c2930/run.json",
+    "evidence/20260914T085049-de3790608219/run.json",
+    "evidence/20260914T085104-0c032264fa1a/run.json",
+    "evidence/20260914T085114-3d94a95779a2/run.json",
+    "evidence/20260914T085124-096296efdce5/run.json",
+    "evidence/20260914T085141-b908a9d322a1/run.json",
+    "evidence/20260914T085219-c1bae5a548cb/run.json",
+    "evidence/20260914T085217-f5b9a311668f/run.json",
+    "evidence/20260914T085235-ddc5dcd6cc55/run.json",
+    "evidence/20260914T085244-dbbf09fa1b5e/run.json",
+    "evidence/20260914T085254-d875b2c996be/run.json",
+    "evidence/20260914T085306-35cae941ac90/run.json",
+    "evidence/20260914T085628-a7d05d9a8f74/run.json",
+    "evidence/20260914T085653-a30e74de7806/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit latest-main integration evidence and reconciled harness state, then push the exact resulting PR #93 head and obtain current-candidate CI and independent code review before merge."
+  "next_safe_action": "Commit only Business Master closeout state and testing reports (never evidence), validate/review, integrate the latest main, push and open a PR, observe required checks, merge under APPROVAL-SCOPE-009, then clean only codex/business-master-test-verify and its worktree after re-verifying the local evidence archive."
 }
