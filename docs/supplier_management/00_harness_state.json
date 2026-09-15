@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 50,
+  "revision": 51,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-011",
+  "current_task": "TASK-012",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "d46cd7b827a9f76e287de8f8321f9afece47abf5",
-    "source_fingerprint": "51fc09b8969858695ed28a2023d2e040bc55869e21e4b7fc17394514809442fc",
+    "code_commit": "745afdf1c885f4dc581112a523f54b1dd8efcaa0",
+    "source_fingerprint": "0b0025f91c6327dfaf87387db966c0a60a323b05f15129d5ebe230edbf2ed471",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -38,8 +38,8 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "IN_PROGRESS",
-    "TASK-012": "PENDING",
+    "TASK-011": "DONE",
+    "TASK-012": "IN_PROGRESS",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
@@ -780,5 +780,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-011 Supplier create client service, route page, minimum-field form and permission-aware menu test-first; browser validation follows after the runnable UI slice is complete."
+  "next_safe_action": "Implement TASK-012 indexed Supplier list, masked detail, duplicate check and completeness APIs test-first; preserve fresh permission checks, stable sort and IDOR-safe projections."
 }
