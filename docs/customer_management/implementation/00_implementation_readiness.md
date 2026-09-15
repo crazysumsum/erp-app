@@ -121,3 +121,38 @@ merge claim.
   the caller-owned transaction through the Business Master provider; activation,
   lifecycle and child aggregate APIs remain intentionally unavailable until their
   planned tasks.
+
+## TASK-007 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added `0034_create_customer_party_tables.js` for Customer-owned Address, Contact
+  and purpose mappings. Composite owner foreign keys prevent cross-Customer child
+  references; generated default slots and unique indexes enforce at most one
+  default per Customer and purpose. The migration rejects partial or incompatible
+  adopted table/index shapes before issuing DDL.
+- Added strict, idempotent create/update/deactivate HTTP contracts and
+  `CustomerPartyService`. Mutations revalidate the actor, lock the Customer before
+  child/mapping rows, scope child reads and CAS writes by both Customer and child
+  ID, reject inactive updates/repeated deactivation, replace purposes atomically,
+  bump the root version and write correlated allowlisted before/after audit data in
+  the same transaction.
+- Focused migration, service, handler-contract and audit tests: 13 passed. Static
+  syntax checks for all changed production JavaScript and `git diff --check`
+  passed. The server workspace declares no lint script.
+- Full local server regression after the final response-schema correction: 1,506
+  tests, 1,275 passed, 231 environment-gated tests skipped and 0 failed. CI was not
+  run, as directed by the Product Owner. No frontend file changed, so browser and
+  Playwright verification are not applicable to TASK-007.
+- Fresh isolated MySQL verification applied all migrations through `0034`, accepted
+  the resulting schema through its compatibility inspector and proved concurrent
+  Address default switching, cross-owner safe-not-found behavior, default clearing,
+  Contact multi-purpose/default replacement, preserved inactive mappings, exact
+  root-version increments, HTTP response versions and request-correlated audit
+  rows. A full migration rerun skipped every migration, and the final isolated
+  schema deletion was confirmed.
+- Code review covered correctness, readability, architecture, security and
+  performance. Required findings for create response versioning, audit context and
+  snapshots, repeated deactivation, Contact real-MySQL coverage and response-schema
+  composition were corrected before the review verdict was `Approve`.
