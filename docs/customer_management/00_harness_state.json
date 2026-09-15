@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 32,
+  "revision": 35,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "131cf0a5016ecfbf184c06a51eb982e764cea5e54ae4237ad4241ef0ca397de8",
     "plan": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
-    "code_commit": "0766a854e4d230138dbe701cd3395477d145e88c",
-    "source_fingerprint": "a763eb9ea194e524fe36b01e3b549d454e4adb6c3db4f7d94d2617e3bbc4ec17",
+    "code_commit": "b81a8dc11ce84b78a134fc0777acdc0bd07207ad",
+    "source_fingerprint": "da3701fc4b9cb364d94d2d95b2c7b5cfffc13d309a0985ff3f508ac510e51f1b",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -30,7 +30,7 @@
     "TASK-002": "DONE",
     "TASK-003": "DONE",
     "TASK-004": "DONE",
-    "TASK-005": "PENDING",
+    "TASK-005": "DONE",
     "TASK-006": "PENDING",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
@@ -253,6 +253,25 @@
         "server/test/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-005",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批準",
+      "recorded_at": "2026-09-15T01:29:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "74a7650d5e2162f90849cd374d6b5efd815e7178",
+      "scope": [
+        "TASK-005",
+        "server/src/modules/customer/**",
+        "server/database/migrations/**",
+        "server/test/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -391,6 +410,14 @@
       "source_ref": "2026-09-15: fresh isolated schema migrated through 0030; full rerun skipped every migration; HKD was ACTIVE with decimal_places=2; all three Customer classification code_key columns were utf8mb4_bin and their status/sort/name indexes matched; schema was dropped after verification."
     },
     {
+      "id": "EXT-MIGRATION-005",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task005_20260915",
+      "idempotency_key": "customer-phase001-task005-root-audit-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0032; full rerun skipped every migration; Customer root columns, catalog/user foreign keys, root indexes, audit JSON detail column and audit investigative indexes were verified; schema was dropped after verification."
+    },
+    {
       "id": "MODE-CHANGE-29",
       "kind": "MODE_CHANGE",
       "target": "IMPLEMENT",
@@ -409,5 +436,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-004 is complete. Seek explicit scope approval before beginning TASK-005, which extends customers and introduces append-only audit persistence."
+  "next_safe_action": "TASK-005 is complete. Seek explicit scope approval before TASK-006, which implements Draft Customer create/update/list/detail/duplicate APIs and idempotency outcomes."
 }

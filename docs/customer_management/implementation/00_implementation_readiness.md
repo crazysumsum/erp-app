@@ -82,3 +82,19 @@ merge claim.
   three Customer-owned classification catalogs.
 - The isolated schema was dropped after verification. No category, industry or
   territory seed data was invented.
+
+## TASK-005 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Focused Customer root migration, audit log, projection and public-error tests:
+  9 passed; lint passed for all TASK-005 files.
+- Fresh isolated MySQL schema `erp_customer_phase001_task005_20260915`: complete
+  migrations through `0032_create_customer_audit_logs.js` applied successfully;
+  a full rerun skipped every migration.
+- MySQL metadata verified Customer root binary normalized keys, active catalog
+  foreign keys, root filter indexes, and the append-only audit table's JSON detail
+  column plus customer/target investigative indexes.
+- The isolated schema was dropped after verification; no Customer business data
+  or audit fixture was retained.
