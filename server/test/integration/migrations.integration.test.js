@@ -927,19 +927,20 @@ test("0024 built item_audit_logs with a non-cascading actor FK and no target FK"
 test("re-running all twelve migrations changes nothing", { skip }, async (t) => {
   const database = await withDatabase(t);
 
+  // `permissions` 只數本測試重跑嘅兩支 seed migration 所擁有嘅五個名稱，
   // `links` 只數 system-admin 自己嘅 role_permissions 列，不是整張表的
   // COUNT(*)：node --test 預設跨檔案平行跑，role_permissions 這種共用表隨時
   // 有別的 integration 測試檔案（roleManagement／userManagement／itemCatalog
-  // 等）在建立、刪除自己另外角色的權限連結——跟 0008／0010 那兩支「seeded
-  // exactly the catalogue」測試上面註解的理由一樣。`permissions` 表本身沒有
-  // 任何測試會寫入新列（其他檔案只用 SELECT 讀既有 id），維持整表 COUNT(*)
-  // 沒問題。0011–0017、0024 這八支純粹是 `CREATE TABLE IF NOT EXISTS`，不寫
+  // 等）在建立、刪除自己另外角色的權限連結；authFlow.integration.test.js 亦會
+  // 暫時建立一個獨立 permission，所以不能用 permissions 整表 COUNT(*) 判斷
+  // migration 冪等。0011–0017、0024 這八支純粹是 `CREATE TABLE IF NOT EXISTS`，不寫
   // 任何資料列（見各檔案開頭註解），所以「重跑不變」對它們而言驗的是表結構
   // 有沒有被動到，不是列數——列數本來就會被 itemCatalog.integration.test.js
   // 等同時在跑的測試改動，跟這幾支 migration 有沒有正確重跑無關。
   const countRows = async () => {
     const [[{ permissions }]] = await database.query(
-      "SELECT COUNT(*) AS permissions FROM permissions"
+      `SELECT COUNT(*) AS permissions FROM permissions
+        WHERE name IN ('user.mgmt', 'role.mgmt', 'device.mgmt', 'item.view', 'item.mgmt')`
     );
     const [[{ links }]] = await database.query(
       `SELECT COUNT(*) AS links FROM role_permissions rp

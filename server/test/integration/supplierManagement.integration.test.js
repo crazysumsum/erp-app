@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import test from "node:test";
 import mysql from "mysql2/promise";
 
@@ -66,10 +67,29 @@ function lookupFor(pool) {
   };
 }
 
+async function seedActor(pool) {
+  const username = `supplier-it-${randomUUID()}`;
+  const now = Date.now();
+  const [result] = await pool.execute(
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    [username, "not-used-by-this-test", "Supplier Integration Actor", now, now]
+  );
+  return { id: Number(result.insertId), username };
+}
+
+async function cleanupActor(pool, actorId) {
+  if (actorId === null) return;
+  await pool.query("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [actorId]);
+  await pool.query("DELETE FROM user_roles WHERE user_id = ?", [actorId]);
+  await pool.query("DELETE FROM fr_token_versions WHERE subject = ?", [String(actorId)]);
+  await pool.query("DELETE FROM users WHERE id = ?", [actorId]);
+}
+
 integrationTest("Supplier create atomically persists root, grams and audit while duplicate codes and audit failure leave no partial data", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
   const suffix = String(Date.now());
   const codes = [`INT-${suffix}-A`, `INT-${suffix}-B`];
+  let actorId = null;
   t.after(async () => {
     const [rows] = await pool.query("SELECT id FROM suppliers WHERE supplier_code_key IN (?, ?)", codes.map((code) => code.toLowerCase()));
     const ids = rows.map((row) => Number(row.id));
@@ -77,12 +97,11 @@ integrationTest("Supplier create atomically persists root, grams and audit while
       await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${ids.map(() => "?").join(",")})`, ids);
       await pool.query(`DELETE FROM suppliers WHERE id IN (${ids.map(() => "?").join(",")})`, ids);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
   const service = serviceFor(pool);
-  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
-  assert.ok(actor, "erp_dev must contain an active synthetic test user");
-  const actorId = Number(actor.id);
+  actorId = (await seedActor(pool)).id;
   const created = await service.createSupplier({
     actorId, claimedRoles: [], claimedPermissions: [], supplierCode: codes[0], supplierName: "Integration Snacks Supplier",
     defaultCurrencyCode: "HKD", defaultCurrencyVersion: 1, activate: true, requestId: `req-${suffix}`
@@ -147,17 +166,17 @@ integrationTest("Supplier root update and controlled Code correction enforce CAS
   const changedCode = `UPD-${suffix}-B`;
   const occupiedCode = `UPD-${suffix}-C`;
   const ids = [];
+  let actorId = null;
   t.after(async () => {
     if (ids.length > 0) {
       await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${ids.map(() => "?").join(",")})`, ids);
       await pool.query(`DELETE FROM suppliers WHERE id IN (${ids.map(() => "?").join(",")})`, ids);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
   const service = serviceFor(pool);
-  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
-  assert.ok(actor, "erp_dev must contain an active synthetic test user");
-  const actorId = Number(actor.id);
+  actorId = (await seedActor(pool)).id;
   const base = {
     actorId,
     claimedRoles: [],
@@ -255,16 +274,17 @@ integrationTest("Supplier lifecycle is atomic, idempotent at the target state an
   const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
   const suffix = String(Date.now());
   const ids = [];
+  let actorId = null;
   t.after(async () => {
     if (ids.length > 0) {
       await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${ids.map(() => "?").join(",")})`, ids);
       await pool.query(`DELETE FROM suppliers WHERE id IN (${ids.map(() => "?").join(",")})`, ids);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
   const service = serviceFor(pool);
-  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
-  const actorId = Number(actor.id);
+  actorId = (await seedActor(pool)).id;
   const base = { actorId, claimedRoles: [], claimedPermissions: [], defaultCurrencyCode: "HKD", supplierName: "Lifecycle Supplier", requestId: `life-${suffix}` };
   const created = await service.createSupplier({ ...base, supplierCode: `LIFE-${suffix}` });
   ids.push(created.id);
@@ -334,17 +354,18 @@ integrationTest("Supplier core lookup keeps history visible and revalidates purc
   const suffix = String(Date.now());
   const code = `LOOK-${suffix}`;
   const supplierIds = [];
+  let actorId = null;
   t.after(async () => {
     if (supplierIds.length > 0) {
       await pool.query("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [supplierIds[0]]);
       await pool.query("DELETE FROM suppliers WHERE id = ?", [supplierIds[0]]);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
   const admin = serviceFor(pool);
   const lookup = lookupFor(pool);
-  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
-  const actorId = Number(actor.id);
+  actorId = (await seedActor(pool)).id;
   const created = await admin.createSupplier({
     actorId,
     claimedRoles: [],
@@ -433,17 +454,19 @@ integrationTest("Supplier Business Master impact checks fail closed for unclassi
   const pool = mysql.createPool({ ...config(), connectionLimit: 2 });
   const suffix = String(Date.now());
   const supplierIds = [];
+  let actorId = null;
   t.after(async () => {
     if (supplierIds.length > 0) await pool.query("DELETE FROM suppliers WHERE id = ?", [supplierIds[0]]);
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
-  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  actorId = (await seedActor(pool)).id;
   const [result] = await pool.execute(
     `INSERT INTO suppliers
        (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
         status, version, created_at, updated_at, created_by, updated_by)
      VALUES (?, ?, 'Future Status Supplier', 'future status supplier', 'HKD', 'future_status', 1, ?, ?, ?, ?)`,
-    [`STATE-${suffix}`, `state-${suffix}`, Date.now(), Date.now(), actor.id, actor.id]
+    [`STATE-${suffix}`, `state-${suffix}`, Date.now(), Date.now(), actorId, actorId]
   );
   supplierIds.push(Number(result.insertId));
   const checker = new SupplierBusinessMasterImpactChecker({ database: database(pool) });

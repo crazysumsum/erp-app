@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import test from "node:test";
 import mysql from "mysql2/promise";
 
@@ -32,19 +33,40 @@ function database(pool) {
   };
 }
 
+async function seedActor(pool) {
+  const username = `supplier-party-it-${randomUUID()}`;
+  const now = Date.now();
+  const [result] = await pool.execute(
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    [username, "not-used-by-this-test", "Supplier Party Integration Actor", now, now]
+  );
+  return { id: Number(result.insertId), username };
+}
+
+async function cleanupActor(pool, actorId) {
+  if (actorId === null) return;
+  await pool.query("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [actorId]);
+  await pool.query("DELETE FROM user_roles WHERE user_id = ?", [actorId]);
+  await pool.query("DELETE FROM fr_token_versions WHERE subject = ?", [String(actorId)]);
+  await pool.query("DELETE FROM users WHERE id = ?", [actorId]);
+}
+
 integrationTest("Address ownership, primary switching, concurrency and deactivation are enforced by service and MySQL", async (t) => {
   const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
   const suffix = String(Date.now());
   const supplierIds = [];
+  let actorId = null;
   t.after(async () => {
     if (supplierIds.length) {
       await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
       await pool.query(`DELETE FROM suppliers WHERE id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
 
-  const [[actor]] = await pool.query("SELECT id, username FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const actor = await seedActor(pool);
+  actorId = actor.id;
   const now = Date.now();
   for (const code of [`ADDR-${suffix}-A`, `ADDR-${suffix}-B`]) {
     const [result] = await pool.execute(
@@ -100,15 +122,18 @@ integrationTest("Contact ownership, primary switching, concurrency and deactivat
   const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
   const suffix = String(Date.now());
   const supplierIds = [];
+  let actorId = null;
   t.after(async () => {
     if (supplierIds.length) {
       await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
       await pool.query(`DELETE FROM suppliers WHERE id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
 
-  const [[actor]] = await pool.query("SELECT id, username FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const actor = await seedActor(pool);
+  actorId = actor.id;
   const now = Date.now();
   for (const code of [`CONT-${suffix}-A`, `CONT-${suffix}-B`]) {
     const [result] = await pool.execute(
@@ -167,15 +192,18 @@ integrationTest("Identifier normalization, global uniqueness, ownership and dele
   const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
   const suffix = String(Date.now());
   const supplierIds = [];
+  let actorId = null;
   t.after(async () => {
     if (supplierIds.length) {
       await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
       await pool.query(`DELETE FROM suppliers WHERE id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
     }
+    await cleanupActor(pool, actorId);
     await pool.end();
   });
 
-  const [[actor]] = await pool.query("SELECT id, username FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const actor = await seedActor(pool);
+  actorId = actor.id;
   const now = Date.now();
   for (const code of [`IDENT-${suffix}-A`, `IDENT-${suffix}-B`]) {
     const [result] = await pool.execute(
