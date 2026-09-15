@@ -1,35 +1,37 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 18,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
-  "resume_status": "DESIGNING",
-  "current_phase": null,
-  "current_task": null,
+  "revision": 41,
+  "mode": "FULL_LIFECYCLE",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-004",
   "baseline": {
-    "design": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
-    "plan": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
-    "code_commit": "24a6f319ffd23283e3c2b5a12e875a2a44680a9e",
-    "source_fingerprint": "ce72d7ffbd42b5b19356b776659c3b3fb5f5a5e2695fb0cd97cb722d0d2e8519",
-    "worktree": "/private/tmp/erp-supplier-management-harness-v2-review",
-    "default_commit": "c3972422d20c56e9656aef9f894b91d7162c79c7",
-    "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
+    "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
+    "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+    "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+    "source_fingerprint": "26cfe0ca43a3379c24759e29b75949a6defa0c3922fb4a2d7a1c1978b71e30b1",
+    "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
+    "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+    "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-supplier-management-harness-v2-review"
+      "workspace": "erp-supplier-management-phase-001-v2",
+      "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
+      "web-port": "NOT_ALLOCATED"
     },
-    "lease_ref": null
+    "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "IN_PROGRESS",
     "TASK-005": "PENDING",
     "TASK-006": "PENDING",
     "TASK-007": "PENDING",
@@ -138,6 +140,239 @@
         "GAP-DEP-004"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-004-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 兩項都批准",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-001..TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-004-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 兩項都批准",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-001..TASK-051",
+        "server/database/migrations/**",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/config/**",
+        "server/package.json",
+        "package-lock.json",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "docs/items_management/**",
+        "docs/customer_management/**",
+        "docs/purchasing_receiving_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-005-SCHEMA",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 兩項都批准",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "localhost:3306",
+        "new dedicated non-production Supplier schema",
+        "existing and new Supplier migrations",
+        "synthetic test data only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-006-ERP-DEV",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 批准直接使用現有測試專用的 erp_dev，並在其中執行全部現有及 Supplier Migration。",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "supplier-management",
+        "erp_dev@127.0.0.1:3306 test-only schema",
+        "all existing migrations",
+        "all Supplier migrations",
+        "synthetic test data only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-004-SHARED-PATHS",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 兩項都批准 (approval of the exact full Design and Plan, including their enumerated files likely touched)",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "server/database/migrations/**",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/config/**",
+        "server/package.json",
+        "package-lock.json",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "docs/items_management/**",
+        "docs/customer_management/**",
+        "docs/purchasing_receiving_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-007-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 同意 (HD-007 corrected Supplier manifest scope and exact baselines)",
+      "recorded_at": "2026-09-15T10:19:23+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-001..TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-007-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 同意 (HD-007 corrected Supplier manifest scope and exact baselines)",
+      "recorded_at": "2026-09-15T10:19:23+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db1bdd800eadec91f07345a8b97a221b652c6c694b6756f251996d0b37d4cc4f",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-001..TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-007-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 同意 (HD-007 approval-required paths)",
+      "recorded_at": "2026-09-15T10:19:23+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db1bdd800eadec91f07345a8b97a221b652c6c694b6756f251996d0b37d4cc4f",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "server/database/migrations/**",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/config/**",
+        "server/package.json",
+        "package-lock.json",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "docs/items_management/**",
+        "docs/customer_management/**",
+        "docs/purchasing_receiving_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-008-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 批準，後面沒有特別需要我決定的問題就繼續做，不用再找我批準",
+      "recorded_at": "2026-09-15T10:30:24+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-001..TASK-051"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-008-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 批準，後面沒有特別需要我決定的問題就繼續做，不用再找我批準",
+      "recorded_at": "2026-09-15T10:30:24+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "scope": [
+        "server/database/migrations/**",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/config/**",
+        "server/package.json",
+        "package-lock.json",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "docs/items_management/**",
+        "docs/customer_management/**",
+        "docs/purchasing_receiving_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -184,6 +419,18 @@
       "reviewer": "/root/supplier_independent_review",
       "reviewed_baseline": "be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210",
       "source_ref": "docs/supplier_management/04_design_review.md#2026-09-14-current-independent-re-review-rev-004",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/supplier_independent_review",
+      "reviewed_baseline": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
+      "source_ref": "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -256,6 +503,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/81",
       "actor": "GitHub (observed by /root via gh CLI)",
       "observed_at": "2026-09-14T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #96 merged to main",
+      "code_commit": "3ea1dd8572810e35ddd61768ab782b3dda3940ae",
+      "spec_baseline": "94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4",
+      "source_fingerprint": "ce72d7ffbd42b5b19356b776659c3b3fb5f5a5e2695fb0cd97cb722d0d2e8519",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/96",
+      "actor": "GitHub (observed by /root via gh CLI)",
+      "observed_at": "2026-09-15T00:00:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -299,6 +557,76 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-14: 同意"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Does the Product Owner approve the complete current Supplier Design baseline be8e5c85347c7db898967e7037164231345ec24d1e8513c1c6406536b9dea210 and Plan baseline 94a87f42917c018b6a971bc98417bef59a31b0fade93bf9a8831df38eeb4a1f4 for FULL_LIFECYCLE implementation across PHASE-001 through PHASE-004?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004",
+        "TASK-001",
+        "TASK-051"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-15: 兩項都批准"
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "May the Supplier FULL_LIFECYCLE create and use a new dedicated non-production MySQL schema on the local 3306 instance, execute the existing and newly implemented Supplier migrations there, and write synthetic test data only?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-001",
+        "TASK-005",
+        "TC-001",
+        "TC-003",
+        "TC-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-15: 兩項都批准"
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "After dedicated schema creation failed for lack of MySQL privilege, may Supplier FULL_LIFECYCLE use the existing test-only erp_dev schema and execute all existing and Supplier migrations there?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-001",
+        "TASK-005",
+        "TC-001",
+        "TC-003",
+        "TC-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-15: 批准直接使用現有測試專用的 erp_dev，並在其中執行全部現有及 Supplier Migration。"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "Does the Product Owner approve the corrected Supplier manifest scope and resulting Design 7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d / Plan db1bdd800eadec91f07345a8b97a221b652c6c694b6756f251996d0b37d4cc4f baselines? The only contract change adds server/.env.example and applicationConfiguration.js to approval-required paths already named by Design and TASK-003.",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-003",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-15: 同意"
+    },
+    {
+      "id": "HD-008",
+      "impact": "MAJOR",
+      "question": "Does the Product Owner approve Plan b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d? The only semantic change from the HD-007-approved plan records the already-granted erp_dev authorization in 00_project_profile.json; no requirements, design, tasks, suites or implementation scope changed.",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-004",
+        "docs/supplier_management/00_project_profile.json#environment.authorization_ref"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-15: 批準，後面沒有特別需要我決定的問題就繼續做，不用再找我批準"
     }
   ],
   "external_actions": [
@@ -379,11 +707,62 @@
       "kind": "MERGE_PR",
       "target": "main from codex/supplier-management-harness-v2-review",
       "idempotency_key": "supplier-management-harness-v2-review-merge",
-      "status": "STARTED",
-      "source_ref": "User authorized merge without CI on 2026-09-14; PR #96 observed OPEN/MERGEABLE with head 24a6f319ffd23283e3c2b5a12e875a2a44680a9e and base c3972422d20c56e9656aef9f894b91d7162c79c7"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/96; merged at 2026-09-14T08:52:52Z; merge commit 3ea1dd8572810e35ddd61768ab782b3dda3940ae"
+    },
+    {
+      "id": "MODE-CHANGE-18",
+      "kind": "MODE_CHANGE",
+      "target": "FULL_LIFECYCLE / active DESIGN_AND_PLAN",
+      "idempotency_key": "supplier-full-lifecycle-2026-09-15",
+      "status": "CONFIRMED",
+      "source_ref": "User message on 2026-09-15: 請繼續進行Full cycle"
+    },
+    {
+      "id": "MODE-CHANGE-19",
+      "kind": "MODE_CHANGE",
+      "target": "DESIGN_AND_PLAN",
+      "idempotency_key": "mode-change-19",
+      "status": "CONFIRMED",
+      "source_ref": "User message on 2026-09-15: 請繼續進行Full cycle"
+    },
+    {
+      "id": "MODE-CHANGE-23",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-23",
+      "status": "CONFIRMED",
+      "source_ref": "User message on 2026-09-15: 請繼續進行Full cycle; followed by user approval: 兩項都批准"
+    },
+    {
+      "id": "SCHEMA-001",
+      "kind": "CREATE_TEST_SCHEMA",
+      "target": "mysql://127.0.0.1:3306/erp_supplier_phase001_v2",
+      "idempotency_key": "supplier-phase-001-schema-v2",
+      "status": "FAILED",
+      "source_ref": "MySQL 1044 on 2026-09-15: erp_user@localhost has ALL only on erp_dev.* and cannot CREATE erp_supplier_phase001_v2; root TCP and Unix-socket access also returned MySQL 1045. No schema was created."
+    },
+    {
+      "id": "MIGRATION-001",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev existing migrations 0001..0027",
+      "idempotency_key": "supplier-phase-001-erp-dev-existing-migrations",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner completed successfully on 2026-09-15 against authorized erp_dev: framework and 0001..0026 already applied; 0027_create_business_master.js applied; exit 0."
+    },
+    {
+      "id": "MIGRATION-002",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migration 0028 Supplier permissions",
+      "idempotency_key": "supplier-phase-001-erp-dev-migration-0028",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0028_seed_supplier_management_permissions.js to authorized erp_dev on 2026-09-15; focused tests 12/12, real-MySQL migration integration 14/14, and focused lint passed."
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "docs/supplier_management/implementation/00_implementation_readiness.md",
+    "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
+  ],
   "defects": [],
-  "next_safe_action": "Push this pre-merge checkpoint, re-observe PR #96 and origin/main, then merge PR #96 without waiting for CI as explicitly authorized. After the response, verify the merge commit before cleanup; do not repeat the merge if the result is unknown."
+  "next_safe_action": "Run current-baseline PLAN_READY and boundary checks, then commit Checkpoint A and continue TASK-004 test-first implementation."
 }

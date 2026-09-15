@@ -169,6 +169,32 @@ test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip },
   );
 });
 
+test("0028 seeded all Supplier permissions and granted each to system-admin", { skip }, async (t) => {
+  const database = await withDatabase(t);
+  const expected = [
+    "supplier.approval",
+    "supplier.bank.mgmt",
+    "supplier.bank.view",
+    "supplier.mgmt",
+    "supplier.settings",
+    "supplier.view"
+  ];
+
+  const [permissions] = await database.query(
+    "SELECT name FROM permissions WHERE name LIKE 'supplier.%' ORDER BY name"
+  );
+  assert.deepEqual(permissions.map((row) => row.name), expected);
+
+  const [held] = await database.query(
+    `SELECT p.name FROM role_permissions rp
+       JOIN roles r ON r.id = rp.role_id
+       JOIN permissions p ON p.id = rp.permission_id
+      WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%'
+      ORDER BY p.name`
+  );
+  assert.deepEqual(held.map((row) => row.name), expected);
+});
+
 test("0011 built item_categories: a generated parent_scope_id blocks duplicate root names too", { skip }, async (t) => {
   const database = await withDatabase(t);
 

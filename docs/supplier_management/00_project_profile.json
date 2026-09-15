@@ -5,7 +5,7 @@
     "id": "supplier-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
-    "authorization_ref": null
+    "authorization_ref": "User message on 2026-09-15: 批准直接使用現有測試專用的 erp_dev，並在其中執行全部現有及 Supplier Migration。"
   },
   "permissions": {
     "product_write": [

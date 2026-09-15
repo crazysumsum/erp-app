@@ -46,6 +46,8 @@
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
+      "server/.env.example",
+      "server/src/framework/configuration/applicationConfiguration.js",
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/config/**",
       "server/package.json",
