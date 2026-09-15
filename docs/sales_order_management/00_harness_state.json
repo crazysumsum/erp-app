@@ -1,0 +1,200 @@
+{
+  "schema_version": "2.0",
+  "module_id": "sales-order-management",
+  "revision": 4,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "BLOCKED",
+  "resume_status": "PLANNED",
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+    "plan": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+    "code_commit": "0b95d4bc56aa9c641e66ae83523c0de8facf221b",
+    "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-order-align-harness-v2",
+    "default_commit": "98fd077cc8279b76353ad3439ee3f92a12bf821d",
+    "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
+  },
+  "runtime": {
+    "instance_id": "sales-order-align-harness-v2",
+    "owner": "ERP Product Owner (Sam)",
+    "resources": {
+      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-order-align-harness-v2"
+    },
+    "lease_ref": null
+  },
+  "tasks": {},
+  "approvals": [
+    {
+      "id": "APR-DESIGN-001",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/sales_order_management/04_design_review.md",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "code_commit": null,
+      "scope": [
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "USER-APPROVED-2026-09-10-RTO-RPO",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/sales_order_management/01_requirement_spec.md NFR-014/NFR-015",
+      "recorded_at": "2026-09-10T00:00:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-SCOPE-001",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15: rename to the canonical design filename and repair the two pinned consumer contracts in the same PR",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "docs/customer_management/00_module_manifest.json",
+        "docs/fulfillment_shipping_management/00_module_manifest.json"
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Legacy design authorship is not authenticated in repository metadata",
+      "reviewer": "Alignment agent (historical v1 review, retained as history)",
+      "reviewed_baseline": "668b8b2ae6d0ecf8beabb52b7d97672a929b364e7de4b689e15ac400ff73b061",
+      "source_ref": "docs/sales_order_management/04_design_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 5,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "Alignment agent (Harness 2.0 canonicalization)",
+      "reviewer": "Sam (ERP Product Owner)",
+      "reviewed_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_ref": "docs/sales_order_management/04_design_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 5,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "validate_module_boundary.py --base 0ca4e9f",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "BLOCKED",
+      "source_ref": "BLOCKED with exactly two MODE_WRITE_DENIED issues, both the human-approved cross-module manifest repairs listed in APR-SCOPE-001. REVIEW_AND_ALIGN is document-only for the selected module and the checker has no approval path for cross-module writes, so this is recorded as BLOCKED, not PASS. Every path inside docs/sales_order_management passed.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "validate_traceability.py",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "STRUCTURE_PASS observed 2026-09-15. Structural checks only: not semantic coverage, not test execution, not authorization.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "origin/main 0ca4e9f -> 98fd077 merged into codex/sales-order-align-harness-v2",
+      "code_commit": "0b95d4bc56aa9c641e66ae83523c0de8facf221b",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "Target branch refreshed before merge per project policy. main advanced with business-master verification closeout only; no file in this PR overlapped. Sales, fulfillment and business_master all re-validated STRUCTURE_PASS after the merge.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    }
+  ],
+  "pending_decisions": [
+    {
+      "id": "DEC-001",
+      "impact": "MAJOR",
+      "question": "DR-001/002/004: Customer, Inventory and Fulfillment provider contracts, the cross-module atomic transaction and the global lock order require provider-owner and DBA approval before PHASE-001/003 entry.",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-003",
+        "DES-003",
+        "DES-004",
+        "DES-005"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "DEC-002",
+      "impact": "MAJOR",
+      "question": "DR-003: the planned 50 MB disk-stream upload contradicts the current in-memory upload implementation; the framework upload change is an approval-required shared path.",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-004",
+        "DES-010",
+        "TASK-002",
+        "TASK-003"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "DEC-003",
+      "impact": "MAJOR",
+      "question": "DR-006/008/009 and OI-002: production workload distribution, downstream open-matter providers and shared-instance archive isolation remain unapproved, blocking PHASE-005 acceptance.",
+      "affected_ids": [
+        "PHASE-005",
+        "DES-017",
+        "DES-019",
+        "NFR-001"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "DEC-004",
+      "impact": "MAJOR",
+      "question": "DR-007: Channel transport security and address handoff are deferred to a separate Adapter gate; real Adapter UAT is out of the current planning baseline.",
+      "affected_ids": [
+        "DES-011",
+        "PHASE-004"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    }
+  ],
+  "external_actions": [],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Module status is BLOCKED because DEC-001..004 are OPEN major-impact decisions. Obtain provider-owner, DBA, Security and Operations disposition for DR-001..009 before any PHASE entry. Do not enter IMPLEMENT while those remain OPEN. No product code, test execution or acceptance was performed."
+}

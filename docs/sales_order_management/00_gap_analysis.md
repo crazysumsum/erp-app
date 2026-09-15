@@ -42,7 +42,7 @@
 
 - Evidence: the design uses `SAD-*` decisions and section references rather than `DES-*` items.
 - Impact: Requirement → Design → Task/Test linkage is not deterministic.
-- Action: add `DES-001` through `DES-020` as section-level aliases in `03_system_design_spec.md`.
+- Action: add `DES-001` through `DES-020` as section-level aliases in `03_design_spec.md`.
 
 ### GAP-DES-002 — Required upstream providers are absent from the inspected baseline
 
@@ -113,3 +113,26 @@
 ## 2. Scope Integrity
 
 The review did not add tax, discount, approval workflow, multi-warehouse fulfillment, platform-specific transport, picking/shipping, invoicing, payment, return/refund or archive purge. These remain explicit non-goals. The only new requirement is the user-approved measurable DR target.
+
+## 3. Harness 2.0 alignment outcome (2026-09-15)
+
+| Gap | Status after this alignment | Evidence |
+| --- | --- | --- |
+| `GAP-RQ-001` Non-canonical FR IDs | `CLOSED` | 140 `## FR-001 — …` definitions with `Statement` / `Acceptance criteria` / `Failure behavior`; legacy identity retained in each Statement. |
+| `GAP-RQ-002` NFR/SEC not independently numbered | `CLOSED` | 16 NFR and 15 SEC canonical definitions. |
+| `GAP-DES-001` No canonical Design IDs | `CLOSED` | 20 `## DES-001 — …` definitions with `Decision` / `Rationale` / `Failure behavior`. |
+| `GAP-TASK-001` Legacy Phase/Task naming | `CLOSED` | 5 PHASE and 63 TASK canonical definitions with the full required section set. |
+| `GAP-TC-001` UAT and technical acceptance mixed | `CLOSED` | 60 TC definitions carry `mandatory` / `blocking` / `applicability` / `suite_id`; 129 UAT definitions carry `execution_surface` / `automation_suitability` separately. |
+| `GAP-UAT-001` UAT catalogue lacks canonical IDs | `CLOSED` | 129 `## UAT-001 — …` definitions, one-to-one with the legacy cases. |
+| `GAP-TRC-001` No complete Harness matrix | `CLOSED` | `08_traceability.json` ledger plus a generated `08_traceability_matrix.md`; `validate_traceability.py` returns `STRUCTURE_PASS`. |
+| `GAP-RQ-003` Missing RTO/RPO | `CLOSED` (earlier) | `NFR-014` / `NFR-015`, user-approved 2026-09-10. |
+| `GAP-DES-002`–`GAP-DES-006`, `GAP-TASK-002`, `GAP-IMP-001` | `OPEN` | These are implementation and provider-ownership gaps, not documentation gaps. They are tracked as `DEC-001`–`DEC-004` in `00_harness_state.json` and gate Phase entry. |
+
+### GAP-DOC-001 — Automated UAT suite is declared but not configured
+
+- Severity: `MEDIUM`
+- Evidence: all 129 UAT entries are recorded as `execution_surface: UI_BROWSER`, `automation_suitability: MANUAL_REQUIRED`, `suite_id: null`. No `client/e2e/sales-order-management/**` suite exists and the project profile declares no UAT suite.
+- Impact: UAT cannot be executed automatically today; business acceptance is manual by definition and is unaffected.
+- Proposed action: when the Sales UI is implemented, add a Playwright suite to `00_project_profile.json` and switch the affected entries to `PLAYWRIGHT_PREFERRED` with that `suite_id`. Declaring a suite before it exists would be an unverifiable execution contract, so it was not done here.
+- Human decision required: No.
+

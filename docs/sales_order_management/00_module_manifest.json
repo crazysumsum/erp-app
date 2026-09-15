@@ -1,0 +1,229 @@
+{
+  "schema_version": "2.0",
+  "module_id": "sales-order-management",
+  "owner": "ERP Product Owner (Sam)",
+  "docs_path": "docs/sales_order_management",
+  "profile": "00_project_profile.json",
+  "risk": "HIGH",
+  "scope": {
+    "source_paths": [
+      "server/config/sales.js",
+      "server/src/modules/sales/**",
+      "server/src/handlers/sales-quotations/**",
+      "server/src/handlers/sales-orders/**",
+      "server/src/handlers/sales-imports/**",
+      "server/src/handlers/sales-intake/**",
+      "server/src/handlers/sales-operations/**",
+      "server/src/handlers/sales-exports/**",
+      "server/src/handlers/archived-sales-orders/**",
+      "server/src/services/scheduler/jobs/Sales*.js",
+      "client/src/services/salesQuotation.js",
+      "client/src/services/salesOrder.js",
+      "client/src/pages/sales/**",
+      "client/src/components/sales/**"
+    ],
+    "test_paths": [
+      "server/test/sales/**",
+      "server/test/integration/sales*.integration.test.js",
+      "server/test-support/fakeSalesDatabase.js",
+      "client/test/**/sales*.test.js",
+      "client/e2e/sales-order-management/**"
+    ],
+    "allowed_write_paths": [
+      "docs/sales_order_management/**",
+      "server/config/sales.js",
+      "server/src/modules/sales/**",
+      "server/src/handlers/sales-quotations/**",
+      "server/src/handlers/sales-orders/**",
+      "server/src/handlers/sales-imports/**",
+      "server/src/handlers/sales-intake/**",
+      "server/src/handlers/sales-operations/**",
+      "server/src/handlers/sales-exports/**",
+      "server/src/handlers/archived-sales-orders/**",
+      "server/src/services/scheduler/jobs/Sales*.js",
+      "client/src/services/salesQuotation.js",
+      "client/src/services/salesOrder.js",
+      "client/src/pages/sales/**",
+      "client/src/components/sales/**",
+      "server/test/sales/**",
+      "server/test/integration/sales*.integration.test.js",
+      "server/test-support/fakeSalesDatabase.js",
+      "client/test/**/sales*.test.js",
+      "client/e2e/sales-order-management/**"
+    ],
+    "approval_required_paths": [
+      "server/database/migrations/**",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/services/scheduler/**",
+      "server/src/framework/upload/**",
+      "server/config/api.js",
+      "server/src/modules/item/ItemLookupService.js",
+      "server/src/modules/inventory/**",
+      "server/src/modules/customer/**",
+      "server/src/modules/fulfillment/**",
+      "client/config/menu.js",
+      "client/src/framework/http/errorMessages.js",
+      "package.json",
+      "server/package.json",
+      "client/package.json",
+      "package-lock.json",
+      ".github/workflows/**",
+      "docs/fulfillment_shipping_management/**",
+      "docs/inventory_management/**",
+      "docs/customer_management/**",
+      "docs/items_management/**"
+    ],
+    "forbidden_paths": [
+      ".env",
+      "server/.env",
+      "secrets/**",
+      "docs/user_management/**",
+      "docs/purchasing_receiving_management/**",
+      "docs/supplier_management/**",
+      "docs/business_master/**",
+      "docs/invoicing_accounts_receivable_management/**"
+    ],
+    "schema_paths": [],
+    "shared_resources": [
+      "global-migration-sequence",
+      "authorization-permission-catalogue",
+      "framework-idempotency-identity-scope",
+      "framework-upload-configuration",
+      "scheduler-job-registry",
+      "client-menu-registry",
+      "inventory-reservation-and-release-contracts",
+      "fulfillment-archive-open-matter-coordination",
+      "local-mysql-instance",
+      "local-web-port"
+    ]
+  },
+  "contracts": {
+    "provided": [
+      {
+        "id": "sales-fulfillment-projection-and-lifecycle-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/sales_order_management/03_design_spec.md",
+        "sha256": "f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107",
+        "consumers": [
+          "fulfillment-shipping-management",
+          "inventory-management",
+          "invoicing-accounts-receivable-management"
+        ]
+      }
+    ],
+    "consumed": [
+      {
+        "module_id": "inventory-management",
+        "id": "inventory-batch-reserve-release-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/inventory_management/03_design_spec.md",
+        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "regression_suites": [
+          "sales-technical"
+        ]
+      },
+      {
+        "module_id": "customer-management",
+        "id": "customer-snapshot-and-credit-contract",
+        "version": "planning-only-NOT_IMPLEMENTED",
+        "source": "docs/customer_management/03_design_spec.md",
+        "sha256": "f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776",
+        "regression_suites": [
+          "sales-technical"
+        ]
+      },
+      {
+        "module_id": "item-management",
+        "id": "item-lookup-service",
+        "version": "observed-main-0ca4e9f-PARTIAL",
+        "source": "server/src/modules/item/ItemLookupService.js",
+        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "regression_suites": [
+          "sales-technical"
+        ]
+      },
+      {
+        "module_id": "authorization",
+        "id": "permission-catalogue",
+        "version": "observed-main-0ca4e9f",
+        "source": "server/src/modules/authorization/permissionCatalogue.js",
+        "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
+        "regression_suites": [
+          "sales-technical"
+        ]
+      },
+      {
+        "module_id": "framework",
+        "id": "idempotency-service",
+        "version": "observed-main-0ca4e9f",
+        "source": "server/src/services/idempotency/IdempotencyService.js",
+        "sha256": "6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925",
+        "regression_suites": [
+          "sales-technical"
+        ]
+      }
+    ],
+    "data_ownership": {
+      "owned": [
+        "Sales document sequences",
+        "Sales Quotation header, lines and conversions",
+        "Sales Order header, lines and line reservation mappings",
+        "Sales backorder entries",
+        "Sales Order status history",
+        "Sales operation requests",
+        "Sales import jobs, intake orders and intake errors",
+        "Sales external order keys",
+        "Sales export jobs",
+        "Sales audit logs",
+        "Sales archive batches and archive mirrors"
+      ],
+      "read_only": [
+        "Customer master data, default currency, payment term and credit state",
+        "Item/SKU sellable eligibility, base UOM, price currency and suggested price",
+        "Inventory balances, reservations, allocations and movements",
+        "Fulfillment and downstream open-matter state",
+        "Warehouse and stock status master data",
+        "User, role and authorization state"
+      ],
+      "forbidden_direct_writes": [
+        "inventory_stock_balances, lots, reservations, allocations and any inventory movement row",
+        "Customer master data, credit limits and payment terms",
+        "Item/SKU master data",
+        "Fulfillment, Shipment and Reversal rows",
+        "User and role records",
+        "Confirmed Sales Order snapshots, status history and audit rows once written",
+        "Archive mirror rows once written and verified"
+      ]
+    }
+  },
+  "specs": {
+    "requirements": "01_requirement_spec.md",
+    "design": "03_design_spec.md",
+    "plan": "05_development_tasks.md",
+    "technical_tests": "06_technical_test_cases.md",
+    "uat": "07_uat_test_cases.md"
+  },
+  "traceability": "08_traceability.json",
+  "matrix": "08_traceability_matrix.md",
+  "state": "00_harness_state.json",
+  "required_suites": {
+    "developer": [
+      "lint",
+      "client-build",
+      "security-audit",
+      "sales-technical"
+    ],
+    "technical": [
+      "sales-technical"
+    ],
+    "regression": [
+      "sales-technical"
+    ],
+    "uat": []
+  },
+  "review_policy": {
+    "independent_required": true,
+    "self_review_exception_approval": null
+  }
+}

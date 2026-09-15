@@ -7,8 +7,9 @@
 | Execution mode | `REVIEW_AND_ALIGN` |
 | Output | `docs/sales_order_management/`（in-place replacement authorized） |
 | Feature | Sales Order Management |
-| Source worktree | `codex/sales-order-requirements` at `62b4d7f41d204238be652ebb4b7787209d463910` |
-| Inspected current main | `5d39d486f1ca9eb8805b24504edec4062ff46c6f` |
+| v1 alignment worktree | `codex/sales-order-requirements` at `62b4d7f41d204238be652ebb4b7787209d463910` (historical) |
+| Harness 2.0 alignment worktree | `codex/sales-order-align-harness-v2` |
+| Refreshed default baseline | `main` at `0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2` (equal to `origin/main`) |
 | Source code changed | No |
 | Application/acceptance tests executed | No |
 
@@ -20,13 +21,16 @@
 | `00_gap_analysis.md` | 15 documentation/implementation/baseline gaps with severity, evidence, impact and action. |
 | `01_requirement_spec.md` | 140 canonical FR aliases, 16 NFR and 15 SEC; approved DR target recorded. |
 | `02_requirement_review.md` | Requirement quality and unresolved gates independently assessed. |
-| `03_system_design_spec.md` | 20 canonical Design items mapped to the unchanged detailed design. |
+| `03_design_spec.md` | 20 canonical Design items mapped to the unchanged detailed design. |
 | `04_design_review.md` | 12 adversarial findings across architecture/security/DB/SRE/engineering/QA. |
 | `05_development_tasks.md` | Five mergeable Phases and 63 canonical Task aliases, all `PLANNED`. |
 | `06_technical_test_cases.md` | 60 formal Technical Acceptance cases, all `PLANNED`. |
 | `07_uat_test_cases.md` | 129 legacy UAT cases preserved with one-to-one canonical aliases, all `NOT_RUN`. |
 | `08_traceability_matrix.md` | Requirement → Design → Phase → Task → TC → UAT and gate status. |
-| `09_traceability_validation.md` | Deterministic Harness validator result. |
+| `08_traceability.json` | Typed ledger: 171 requirements, 20 designs, 5 phases, 63 tasks, 60 technical tests, 129 UAT cases with applicability/mandatory/blocking flags. |
+| `00_module_manifest.json` | Module identity, scope, allowed/approval-required/forbidden paths, provided/consumed contracts with pinned SHA-256 and data ownership. |
+| `00_project_profile.json` | Reviewed command/environment/permission contracts and the four mandatory CI checks. |
+| `00_harness_state.json` | Revisioned state, baselines, approvals, reviews and four open major decisions. |
 
 ## 3. Provenance and Legacy Alignment
 
@@ -90,15 +94,22 @@ The absence of Sales migrations/modules/handlers/pages/tests is an `IMPLEMENTATI
 
 ## 8. Validation Evidence
 
-- Harness validator: observed exit 0; 171/171 Design, Task and Technical Test coverage; no mechanical gaps.
+- `validate_traceability.py` (Harness 2.0, observed 2026-09-15): **`STRUCTURE_PASS`**. Scope is formal definitions and graph consistency only — not semantic coverage, test execution or authorization.
+- `render_traceability.py --write`: **`RECORDED`**; `08_traceability_matrix.md` is now generated from `08_traceability.json` and is no longer hand-maintained.
+- Cross-module regression check: `fulfillment_shipping_management` remains `STRUCTURE_PASS` after its pinned Sales design contract hash was updated in the same PR. `customer_management` and `purchasing_receiving_management` remain `BLOCKED` on **pre-existing** drift against `docs/business_master/03_design_spec.md` and `docs/supplier_management/03_design_spec.md` respectively; those are outside this module's scope and were not touched.
+- The v1 `09_traceability_validation.md` was **deleted**: it recorded a v1 validator PASS against a worktree root that no longer exists, and per `MIGRATION.md` §6 an old PASS string cannot be promoted to current-gate evidence.
 - Identifier completeness: FR 140/140, NFR 16/16, SEC 15/15, DES 20/20, PHASE 5/5, TASK 63/63, TC 60/60, UAT 129/129.
 - Obsolete legacy filenames/path references were removed; canonical document references resolve within the top-level package.
-- Git commit `97d50e2` preserves all four pre-reconciliation workspace files. Requirement、Tasks及UAT match the initial SHA-256 inventory; the Design difference is the documented Fulfillment contract alignment now present in `03_system_design_spec.md`.
+- Git commit `97d50e2` preserves all four pre-reconciliation workspace files. Requirement、Tasks及UAT match the initial SHA-256 inventory; the Design difference is the documented Fulfillment contract alignment now present in `03_design_spec.md`.
 - Markdown trailing-whitespace scan is clean; final whitespace check is recorded in the handoff.
 - Application lint/unit/integration/build/security/browser/performance/restore/UAT were **NOT RUN** because REVIEW_AND_ALIGN forbids claiming execution acceptance.
 
 ## 9. Final Disposition
 
-**ALIGNED — CONDITIONAL; READY FOR OWNER REVIEW AND PHASE PLANNING, NOT READY FOR IMPLEMENTATION.**
+**ALIGNED TO HARNESS 2.0 — `STRUCTURE_PASS`; DESIGN APPROVED AS A PLANNING BASELINE; NOT READY FOR IMPLEMENTATION.**
+
+The design was approved as a planning baseline by human independent reviewer Sam on 2026-09-15 (`APR-DESIGN-001`,
+`REV-002`). That approval does not accept the five open `HIGH` findings and does not authorize `IMPLEMENT`, test
+execution, UAT or release. `STRUCTURE_PASS` means structural checks only — not business coverage, not acceptance.
 
 To proceed, first preserve/commit the documents, update the planning baseline from current main, and obtain the owners/evidence required by the affected Phase entry gates. A separate explicit `IMPLEMENT` authorization is required before product-code changes.

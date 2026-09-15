@@ -100,3 +100,1387 @@ Fields: `ID | Title | Type/Priority | Traceability | Preconditions/Data | Steps/
 Functional requirements covered: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108, FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
 
 Non-functional/security requirements covered: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015, NFR-016; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014, SEC-015.
+
+## 8. Harness 2.0 正式技術測試定義
+
+以下每個實體的 `Statement`／`Decision`／`Goal` 保留原文，`Acceptance criteria` 與 `Failure behavior` 陳述本模組共通的可驗證條件，不新增任何未經確認的業務規則、門檻或流程。
+
+## TC-001 — Provider presence/version gate
+
+### Preconditions and data
+
+provider absent/wrong version/UNKNOWN。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+startup and command。
+
+### Expected result
+
+feature/command fails closed with stable error; no Sales/Inventory write。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONTRACT/P0；自動化：YES；追溯：FR-023–026,043–061,123–140; DES-003; TASK-001,009,010。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore provider。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-002 — Fresh/upgrade migration proof
+
+### Preconditions and data
+
+empty DB and latest supported schema。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+migrate, restart, rerun detector。
+
+### Expected result
+
+ordered schema/indices/triggers exact; no fixed stale migration number。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：DB/P0；自動化：YES；追溯：DES-008,018; TASK-001,011。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+disposable DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-003 — Permission catalogue and route matrix
+
+### Preconditions and data
+
+users with each single permission and none。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+enumerate UI/direct API。
+
+### Expected result
+
+only explicit actions allowed; role names do not grant capability。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/P0；自動化：YES；追溯：SEC-001–004,013; DES-009,013; TASK-006。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset roles。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-004 — 50 MB disk-stream memory bound
+
+### Preconditions and data
+
+boundary CSV, measured heap。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+concurrent uploads/precheck。
+
+### Expected result
+
+heap does not grow linearly with file; no full Buffer exposed。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：PERFORMANCE/SECURITY/P0；自動化：PARTIAL；追溯：FR-076–095; NFR-004/005/008; SEC-006; DES-010; TASK-002–005。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+purge temp。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-005 — Upload traversal/symlink/type/size defense
+
+### Preconditions and data
+
+traversal names, symlink root, bad MIME/UTF-8, >limit。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+upload。
+
+### Expected result
+
+safely rejected before job/SO; no write outside managed root。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/P0；自動化：YES；追溯：SEC-005–008,014; DES-010; TASK-003,004。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+remove fixtures。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-006 — Upload abort/concurrency/orphan recovery
+
+### Preconditions and data
+
+partial streams and full gate。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+abort/timeout/restart。
+
+### Expected result
+
+slots/files released; bounded backpressure; orphan cleanup safe。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：RECOVERY/P0；自動化：YES；追溯：NFR-008/010; SEC-006; DES-010,015; TASK-002–005。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+purge temp。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-007 — Money/quantity/state/hash primitives
+
+### Preconditions and data
+
+scale/overflow/invalid transitions/A-A-B payload。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+normalize/calculate/transition/hash。
+
+### Expected result
+
+decimal exact, invariants hold, invalid rejected, hash stable/conflict distinct。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：UNIT/P0；自動化：YES；追溯：FR-003–007,030–039,042–075; DES-002,007; TASK-007,008。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+—。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-008 — Fresh actor after revocation
+
+### Preconditions and data
+
+page/job initiated then actor disabled/revoked。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+perform command/worker effect。
+
+### Expected result
+
+new effect rejected; initiating/system actor preserved; no partial write。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/P0；自動化：YES；追溯：SEC-001/004/013; DES-013; TASK-006。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore actor。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-009 — Audit/log redaction and correlation
+
+### Preconditions and data
+
+token, path, formula, long notes。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+success/failure paths。
+
+### Expected result
+
+safe fixed fields/correlation present; secrets/high-cardinality labels absent。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/OBSERVABILITY/P0；自動化：YES；追溯：NFR-011; SEC-004/007–012; DES-014; TASK-006,011。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+purge test logs。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-010 — PHASE-001 full gate
+
+### Preconditions and data
+
+clean latest-main branch。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+lint/unit/coverage/build/audit/contracts/real-DB。
+
+### Expected result
+
+all configured gates pass without skips/suppression/lowered thresholds。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：REGRESSION/P0；自動化：PARTIAL；追溯：All NFR/SEC; TASK-001–011。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-011 — Quotation CRUD and amount
+
+### Preconditions and data
+
+active customer/SKUs, currencies。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+create/update/read。
+
+### Expected result
+
+unique number, exact amounts/defaults, no reservation。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：API/INTEGRATION/P0；自動化：YES；追溯：FR-001–008; DES-002,009; TASK-012,016。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+cancel fixture。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-012 — Quotation validation matrix
+
+### Preconditions and data
+
+inactive master, dates, 0/negative/overflow, unknown fields。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+save/issue。
+
+### Expected result
+
+field-safe errors; state/data unchanged。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：NEGATIVE/P0；自動化：YES；追溯：FR-002–009; SEC-005; TASK-016。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-013 — Quotation/SO sequence concurrency
+
+### Preconditions and data
+
+100 parallel creates, HKT month boundary。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+allocate。
+
+### Expected result
+
+globally unique, correct prefix/month, never reused。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：DB/CONCURRENCY/P0；自動化：YES；追溯：FR-018–019; DES-002; TASK-015。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback isolated DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-014 — Issue/expire/cancel state machine
+
+### Preconditions and data
+
+DRAFT/ISSUED and boundary time。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+issue/job/cancel/retry。
+
+### Expected result
+
+only valid transitions; history/audit once; no Inventory effect。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：API/RECOVERY/P0；自動化：YES；追溯：FR-009–011,016; DES-002,015; TASK-017,021。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-015 — Quotation conversion idempotency
+
+### Preconditions and data
+
+one eligible quotation, simultaneous events。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+convert/retry。
+
+### Expected result
+
+exactly one Draft SO, stable reverse links/difference, no reservation。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/CONCURRENCY/P0；自動化：YES；追溯：FR-012–017; DES-007; TASK-017。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+cancel SO。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-016 — Manual Draft validation and totals
+
+### Preconditions and data
+
+1/100/101 lines, mixed currency/UOM。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+create/update。
+
+### Expected result
+
+all business fields/invariants exact; forbidden hidden fields rejected。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：API/P0；自動化：YES；追溯：FR-018–039; DES-002,009; TASK-013,023。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+cancel。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-017 — Draft optimistic concurrency
+
+### Preconditions and data
+
+two editors same version。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+save/confirm stale and current。
+
+### Expected result
+
+stale 409 with safe currentVersion; no overwrite/merge。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONCURRENCY/P0；自動化：YES；追溯：FR-040–041; DES-009; TASK-023。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-018 — Lookup and confirmation-time revalidation
+
+### Preconditions and data
+
+master changes after page load。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+lookup then save/confirm。
+
+### Expected result
+
+lookup is advisory; submit uses provider truth and rejects ineligible item。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONTRACT/P0；自動化：YES；追溯：FR-002,005,023–026,043–046; DES-003; TASK-022,023。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore master。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-019 — Quotation/Draft browser accessibility
+
+### Preconditions and data
+
+roles, 375–1440px, field/server errors。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+Playwright core flows。
+
+### Expected result
+
+keyboard/focus/labels/states/navigation/refresh correct; no console/network failures。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：FRONTEND/P1；自動化：YES；追溯：FR-001–041; NFR-013; SEC-001/002/007; DES-012; TASK-018–027。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+—。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-020 — PHASE-002 full regression
+
+### Preconditions and data
+
+production-like build。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+full Phase gate plus prior P0。
+
+### Expected result
+
+no regression; menu/routes only enabled at exit。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：REGRESSION/P0；自動化：PARTIAL；追溯：FR-001–041; TASK-012–027。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-021 — Inventory batch contract and lock order
+
+### Preconditions and data
+
+multi-SKU, two clients, documented locks。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+barrier reserve/release。
+
+### Expected result
+
+exact per-line result, global lock order, no generic per-line race。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONTRACT/DB/P0；自動化：PARTIAL；追溯：FR-047–061,063–075; DES-003,005; TASK-028–030。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-022 — Full/partial/zero ATP confirmation
+
+### Preconditions and data
+
+three orders, same warehouse。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+confirm。
+
+### Expected result
+
+CONFIRMED; ordered=reserved+backorder; no negative inventory。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-042–053; DES-004–006; TASK-029–031。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+release。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-023 — Multi-line atomicity and snapshot
+
+### Preconditions and data
+
+mixed availability and master data。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+confirm with injected failure。
+
+### Expected result
+
+success commits all lines/snapshot/audit or failure commits none。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-043–055; DES-002,005; TASK-029,030。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-024 — Confirm replay and payload conflict
+
+### Preconditions and data
+
+same event A/A/B。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+simultaneous/retry。
+
+### Expected result
+
+A resolves one outcome/reservations; B 409 no effect。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：IDEMPOTENCY/CONCURRENCY/P0；自動化：YES；追溯：FR-048,055–061; SEC-015; DES-004,007; TASK-029–031。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+release。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-025 — Crash between confirmation phases
+
+### Preconditions and data
+
+kill after Phase A and inside Phase B。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+restart recovery。
+
+### Expected result
+
+same event converges; no editable false-success state/duplicate。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：RECOVERY/P0；自動化：PARTIAL；追溯：FR-055–061; NFR-009/010; DES-004; TASK-029,032。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-026 — Commit-unknown recovery
+
+### Preconditions and data
+
+sever connection at COMMIT。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+lookup/retry same event。
+
+### Expected result
+
+server fact resolves exactly one outcome; no new event/effect。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：RECOVERY/P0；自動化：PARTIAL；追溯：FR-055–061,074; DES-004,007; TASK-029,032,033。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore network。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-027 — FIFO backorder allocation race
+
+### Preconditions and data
+
+ordered confirmed times and replenishment。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+two workers/manual wake。
+
+### Expected result
+
+earlier entries allocated first; one lease; quantity conserved。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONCURRENCY/P0；自動化：PARTIAL；追溯：FR-050–061; DES-005,006; TASK-035,036。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+release。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-028 — Withdraw release failure
+
+### Preconditions and data
+
+zero fulfilled with release success/failure。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+withdraw/retry。
+
+### Expected result
+
+Draft only after full release; failure remains truthful/replay-safe。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-062–064; DES-005; TASK-033。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-029 — Cancel/close/completed invariants
+
+### Preconditions and data
+
+DRAFT/confirmed/partial/full fulfilled。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+cancel/close/apply result。
+
+### Expected result
+
+allowed transitions only; reason/audit; quantities conserved。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-065–075; DES-002,005; TASK-033,034。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-030 — Revoked actor during confirm/lifecycle
+
+### Preconditions and data
+
+loaded page then revoke。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+confirm/cancel/withdraw。
+
+### Expected result
+
+transaction rejects before Inventory/Sales effect。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/P0；自動化：YES；追溯：SEC-001/013; DES-013; TASK-031,033。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore actor。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-031 — Reservation/backorder reconciliation
+
+### Preconditions and data
+
+seeded match/mismatch。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+run read-only reconciliation。
+
+### Expected result
+
+every mismatch detected/correlated; no auto SQL repair。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/OBSERVABILITY/P0；自動化：YES；追溯：FR-053–061,064–075; NFR-011; DES-014; TASK-037。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore fixture。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-032 — 50-user confirmation performance
+
+### Preconditions and data
+
+1/100-line, mixed jobs, real MySQL。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+load test。
+
+### Expected result
+
+p95 <=3s excluding dependency failure; no pool starvation/incorrect result。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：PERFORMANCE/P1；自動化：PARTIAL；追溯：NFR-003/005; DES-019; TASK-037。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+stop load。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-033 — PHASE-003 full regression
+
+### Preconditions and data
+
+production-like。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+full Phase and prior gates。
+
+### Expected result
+
+all concurrency/recovery/security invariants pass。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：REGRESSION/P0；自動化：PARTIAL；追溯：FR-042–075; TASK-028–037。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-034 — CSV v1 grammar/limits/formula matrix
+
+### Preconditions and data
+
+BOM/CRLF/quotes/bad UTF8/NUL/formula/boundaries。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+parse/upload。
+
+### Expected result
+
+exact valid normalization; unsafe/overlimit rejected with no partial job。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：UNIT/SECURITY/P0；自動化：YES；追溯：FR-076–083,091–094; SEC-005–008; DES-010; TASK-039,040。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+purge。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-035 — Precheck has no business effect
+
+### Preconditions and data
+
+valid/invalid/duplicate orders。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+upload/precheck。
+
+### Expected result
+
+status/count/errors stored; zero SO/external-success key/reservation。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-082–083; DES-010; TASK-041。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+purge。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-036 — Per-source atomicity/batch isolation
+
+### Preconditions and data
+
+one invalid multi-line source plus valid peers。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+confirm batch。
+
+### Expected result
+
+bad order has zero effect; valid peers continue; totals exact。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-079–087; DES-007,010; TASK-041–044。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-037 — External key duplicate/retry rules
+
+### Preconditions and data
+
+success, prior business fail, hash collision。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+resubmit across batches/channels。
+
+### Expected result
+
+success unique per channel; prior failure retryable; collision alerts/no duplicate。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：DB/IDEMPOTENCY/P0；自動化：YES；追溯：FR-084–090,102–103; DES-007; TASK-038,044。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-038 — Intake worker lease/crash/resume
+
+### Preconditions and data
+
+mid-batch kills/outcome unknown。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+restart workers。
+
+### Expected result
+
+completed not repeated; original event reused; counts/result converge。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：RECOVERY/P0；自動化：PARTIAL；追溯：FR-083–095,101–105; NFR-009/010; DES-007,015; TASK-044,045。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset jobs。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-039 — Batch confirmation double action
+
+### Preconditions and data
+
+READY batch。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+parallel confirm/refresh。
+
+### Expected result
+
+one processing job and event; replay returns same state。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONCURRENCY/P0；自動化：YES；追溯：FR-094; SEC-015; DES-007; TASK-043。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+cancel。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-040 — Canonical Channel identity/result contract
+
+### Preconditions and data
+
+two adapters, spoofed payload identity。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+submit A/A/B。
+
+### Expected result
+
+transport identity overrides payload; exact union result; core behavior same。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：CONTRACT/SECURITY/P0；自動化：YES；追溯：FR-096–108; SEC-003/010/015; DES-011; TASK-045,046。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-041 — No unauthenticated public Channel route
+
+### Preconditions and data
+
+transport auth undecided。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+enumerate routes/direct request。
+
+### Expected result
+
+no public route registered; only contract tests callable。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/P0；自動化：YES；追溯：FR-096–108; SEC-001/003; DES-011; TASK-046。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+—。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-042 — 10,000-order CSV performance
+
+### Preconditions and data
+
+<=50MB, ~50k lines, standard env。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+end-to-end with 50 users。
+
+### Expected result
+
+<=30m, bounded memory/queue, foreground SLO maintained。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：PERFORMANCE/P1；自動化：PARTIAL；追溯：FR-090–095; NFR-004/005/008; DES-010,019; TASK-049。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+perf DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-043 — PHASE-004 full regression
+
+### Preconditions and data
+
+production-like。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+full Phase and prior gates。
+
+### Expected result
+
+import/channel security, recovery, UI and core invariants pass。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：REGRESSION/P0；自動化：PARTIAL；追溯：FR-076–108; TASK-038–049。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-044 — Active views/filter/exact routing
+
+### Preconditions and data
+
+mixed states/sources, 7.3m dataset。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+query/filter/sort/page。
+
+### Expected result
+
+correct stable results; exact index path; Active not silently unioned。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：API/DB/P0；自動化：YES；追溯：FR-018–021,109–113,120; DES-016; TASK-052,053。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+retain perf DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-045 — Export scope/formula/owner/expiry
+
+### Preconditions and data
+
+scoped users, text risk, expired job。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+create/download as owner/other。
+
+### Expected result
+
+filter/scope exact; safe CSV; other denied; expired 410。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/INTEGRATION/P0；自動化：YES；追溯：FR-114–117,135–136; SEC-007/012/014; DES-016; TASK-054–056。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+purge files。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-046 — History/audit/snapshot immutability
+
+### Preconditions and data
+
+completed actions/archive rows。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+application/direct mutation attempt。
+
+### Expected result
+
+append-only/immutable; all actor/time/outcome/correlation present。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：DB/SECURITY/P0；自動化：YES；追溯：FR-016,041,060,075,118–120,126,133; SEC-011; DES-014; TASK-052,062。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-047 — Archive eligibility/cutoff/open matter
+
+### Preconditions and data
+
+final/open/backorder/UNKNOWN and 24m boundaries。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+candidate/recheck。
+
+### Expected result
+
+only eligible moved; read-only queries do not change business date; UNKNOWN skipped。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-121–125,140; DES-003,017; TASK-057。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-048 — Archive atomic copy/verify/remove
+
+### Preconditions and data
+
+aggregate with source/history/audit。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+inject each copy/verify/remove failure。
+
+### Expected result
+
+complete verified archive then Active removal, or Active remains complete; no half aggregate。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：DB/P0；自動化：PARTIAL；追溯：FR-125–128; DES-008,017; TASK-058。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback isolated DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-049 — Archive retry/hash/conflict
+
+### Preconditions and data
+
+interrupted batch, same/different data。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+rerun/recover。
+
+### Expected result
+
+same data resumes idempotently; conflict stops/alerts; report counts exact。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：RECOVERY/P0；自動化：PARTIAL；追溯：FR-129–132; NFR-009/010; DES-017; TASK-058,059。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-050 — Active/Archive/external-key routing
+
+### Preconditions and data
+
+manual/quotation/CSV/channel archived orders。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+exact/source/link lookup。
+
+### Expected result
+
+exactly one tier/resource found; explicit archive label; no duplicate/false 404。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：INTEGRATION/P0；自動化：YES；追溯：FR-133–136; DES-007,016,017; TASK-060,061。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-051 — Archive immutability/no purge
+
+### Preconditions and data
+
+archive rows <7y and old。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+UI/API/direct mutation/purge discovery。
+
+### Expected result
+
+read/export only; no automatic or user purge; data unchanged。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SECURITY/P0；自動化：YES；追溯：FR-132–140; NFR-016; SEC-011; DES-008,017; TASK-059–061。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+rollback。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-052 — Job failure isolation/backpressure
+
+### Preconditions and data
+
+failing import/export/backorder/archive jobs。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+fail one while Active commands run。
+
+### Expected result
+
+failure visible/retryable; other jobs/Active functions continue; bounded resources。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：RECOVERY/P0；自動化：PARTIAL；追溯：FR-130–138; NFR-008–011; DES-015; TASK-054,059,062。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+clear jobs。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-053 — 7.3m Active query performance
+
+### Preconditions and data
+
+production-like distribution and indexes。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+mixed exact/common workload。
+
+### Expected result
+
+p95 <=2s with correct rows/plans and no empty-data shortcut。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：PERFORMANCE/P1；自動化：PARTIAL；追溯：NFR-001/002/007; DES-019; TASK-063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+retain perf DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-054 — Archive query and monthly batch performance
+
+### Preconditions and data
+
+archive scale, 300k candidates, batch500。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+query/archive with foreground load。
+
+### Expected result
+
+exact <=3s/range <=5s; no long-lock/SLO breach。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：PERFORMANCE/P1；自動化：PARTIAL；追溯：NFR-006/008; DES-017,019; TASK-059,063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+retain perf DB。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-055 — Mixed 50-user capacity
+
+### Preconditions and data
+
+50 users plus all jobs。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+sustained workload。
+
+### Expected result
+
+all stated latency/batch targets, no pool/thread/disk starvation。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：PERFORMANCE/P1；自動化：PARTIAL；追溯：NFR-003–005/008; DES-019; TASK-063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+stop load。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-056 — Backup set completeness
+
+### Preconditions and data
+
+Active/Archive/keys/operations/files/config。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+produce backup/manifests。
+
+### Expected result
+
+every required store/version/key identified and restorable。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：HA_DR/P0；自動化：PARTIAL；追溯：FR-138–140; NFR-016; DES-020; TASK-062,063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+secure/delete test copy。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-057 — Isolated restore and reconciliation
+
+### Preconditions and data
+
+representative sources and aggregates。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+restore isolated env/reconcile。
+
+### Expected result
+
+counts/amounts/hashes/status/routes/reservation refs/audit match。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：HA_DR/P0；自動化：PARTIAL；追溯：FR-127/138–140; NFR-016; DES-017,020; TASK-062,063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+destroy isolated env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-058 — Production RTO drill
+
+### Preconditions and data
+
+approved production-like recovery plan。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+timed failure-to-service exercise。
+
+### Expected result
+
+usable service and verified critical flows restored in <=4h。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：HA_DR/P0；自動化：NO；追溯：NFR-014; DES-020; TASK-063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+restore normal。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-059 — Production RPO drill
+
+### Preconditions and data
+
+controlled writes and backup/log timestamps。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+restore and measure loss window。
+
+### Expected result
+
+reconciled loss window <=15m; no fabricated/duplicate orders。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：HA_DR/P0；自動化：NO；追溯：NFR-015; DES-020; TASK-063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+destroy isolated env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。
+
+## TC-060 — Final system/regression/release gate
+
+### Preconditions and data
+
+identified release candidate。測試環境為隔離測試環境及測試專用 MySQL，資料為合成測試資料。
+
+### Steps
+
+full automated/manual/DB/browser/perf/DR suite。
+
+### Expected result
+
+no blocking defect, all evidence linked; business UAT remains separate。
+
+### Acceptance criteria
+
+Mandatory：`true`；blocking：`true`；applicability：`APPLICABLE`；suite：`sales-technical`；類型／優先級：SYSTEM/P0；自動化：PARTIAL；追溯：FR-001–140; NFR-001–016; SEC-001–015; DES-001–020; TASK-001–063。
+每一條對應案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例、缺失證據或基線改變一律記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。目前狀態：PLANNED。
+
+### Cleanup
+
+reset env。只移除本案例自己建立的合成資料及 runtime 資源，保留已脫敏的報告，不得接觸共用或正式資料，亦不得為了讓 Gate 轉綠而刪除失敗證據。

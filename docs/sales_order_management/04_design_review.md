@@ -1,5 +1,24 @@
 # Sales Order Management Independent Design Review
 
+## 0. Reviewer provenance
+
+| Field | Value |
+| --- | --- |
+| Initial `review_method` | `SELF_REVIEW` by the v1 alignment agent; retained as historical review `REV-001` |
+| Independent `review_method` | `HUMAN` |
+| `author` | Legacy design authorship is not authenticated in repository metadata; the Harness 2.0 canonicalization was performed by the alignment agent |
+| `reviewer` | Sam (ERP Product Owner), identified in this session |
+| `reviewed_baseline` | File `03_design_spec.md` sha256 `f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107`; binding harness composite design baseline `20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e` |
+| Independent review | Completed and approved as a planning baseline on 2026-09-15 (`APR-DESIGN-001`) |
+| Product implementation / tests | Not performed; no PASS claimed |
+
+## 0.1 Review result
+
+`APPROVED` as a planning baseline by human independent reviewer Sam on 2026-09-15. This approval covers the design as a
+basis for planning and estimation only. It does **not** authorize entry to `IMPLEMENT`, test execution, UAT, Go-Live or
+release, and it does **not** accept the five open `HIGH` findings on behalf of Product, Inventory, DBA, Security or
+Operations — those remain `OPEN` and are tracked as `DEC-001`–`DEC-004` in `00_harness_state.json`.
+
 ## 1. Gate Summary
 
 | Item | Result |
@@ -131,3 +150,10 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - No unresolved CRITICAL finding exists.
 - The five HIGH findings require explicit owner evidence; this review does not accept those risks on behalf of Product, Inventory, DBA, Security or Operations.
 - Planning and estimation may proceed. Implementation of an affected Phase remains blocked until its entry criteria are met.
+
+## 5. Harness 2.0 alignment note
+
+This document was brought to the Harness 2.0 canonical set on 2026-09-15. The findings `DR-001`–`DR-012`, their
+severities and their dispositions are unchanged from the v1 review; only reviewer provenance, the reviewed baseline and
+the human gate record were added. The gate remains `CONDITIONAL` for implementation entry: planning and estimation may
+proceed, and implementation of an affected Phase stays blocked until that Phase's entry criteria are met.
