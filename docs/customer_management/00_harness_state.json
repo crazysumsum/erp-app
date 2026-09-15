@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 48,
+  "revision": 53,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-008",
+  "current_task": null,
   "baseline": {
-    "design": "131cf0a5016ecfbf184c06a51eb982e764cea5e54ae4237ad4241ef0ca397de8",
-    "plan": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
-    "code_commit": "87161b85a88b3dfde0d64bad3694c5f8b06e9ddb",
-    "source_fingerprint": "cf7a71f7a65accea7a89c9af046b5c669e8b17dbfd28246fa4188e8af79e34a6",
+    "design": "89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5",
+    "plan": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+    "code_commit": "116fc30fbc35c9121ec70ea99eef3bb3dc37dde0",
+    "source_fingerprint": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -33,7 +33,7 @@
     "TASK-005": "DONE",
     "TASK-006": "DONE",
     "TASK-007": "DONE",
-    "TASK-008": "IN_PROGRESS",
+    "TASK-008": "DONE",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
@@ -370,9 +370,33 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-004",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-008 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-008 local server regression and isolated MySQL/HTTP verification",
+      "code_commit": "116fc30fbc35c9121ec70ea99eef3bb3dc37dde0",
+      "spec_baseline": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "source_fingerprint": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-15T04:09:15Z"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -422,6 +446,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/customer_management/04_design_review.md#7-independent-human-review-and-final-design-gate"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Approve the current Customer Management DESIGN/PLAN baselines after origin/main updated the Sales Order consumer-contract manifest reference, and approve TASK-009 execution against those baselines?",
+      "affected_ids": [
+        "customer-management",
+        "TASK-009"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -544,11 +579,27 @@
       "idempotency_key": "customer-phase001-task007-review-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-15: the first fresh-schema startup rejected a duplicate response-schema requirement and cleanup was confirmed; after the schema fix, a fresh isolated schema migrated through 0034; Address race/ownership and Contact multi-purpose/default/deactivate tests passed; HTTP party audit correlation passed; migration rerun was a no-op; schema deletion was confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-011",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task008_20260915",
+      "idempotency_key": "customer-phase001-task008-identifier-credit-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: sandbox-local TCP was initially denied before schema creation; after approved local access, a first migration attempt exposed and then fixed Currency FK collation, and a first HTTP attempt exposed and then fixed a request-only response-schema keyword. Each attempt used the fixed target, reconciled absence before retry, and confirmed trap cleanup. Final fresh schema migrated through 0036; full rerun skipped every migration; TC-021..TC-025 real MySQL and HTTP Identifier uniqueness, inactive-key retention, Credit null/zero/on_hold, create/clear CAS, inactive Currency rejection, authorization and audit redaction passed; final schema absence was observed."
+    },
+    {
+      "id": "EXT-MIGRATION-012",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task008_review_20260915",
+      "idempotency_key": "customer-phase001-task008-review-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: post-review fixed isolated schema was absent before execution; fresh migrations through 0036 passed, including the hardened credit Currency collation inspector; full migration rerun was a no-op; TC-021..TC-025 real MySQL and HTTP suite passed; trap cleanup and final schema absence were observed."
     }
   ],
   "evidence_files": [
     "docs/customer_management/implementation/00_implementation_readiness.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-008 Identifier uniqueness and Credit null/zero/hold semantics with developer tests before isolated MySQL execution."
+  "next_safe_action": "Obtain explicit human approval for current DESIGN 89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5 and PLAN 96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e baselines plus TASK-009, then resume IMPLEMENTING."
 }

@@ -156,3 +156,40 @@ merge claim.
   performance. Required findings for create response versioning, audit context and
   snapshots, repeated deactivation, Contact real-MySQL coverage and response-schema
   composition were corrected before the review verdict was `Approve`.
+
+## TASK-008 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added `0035_create_customer_identifiers.js` with Customer ownership, binary
+  equality keys, lifecycle/version fields and a retained global uniqueness rule;
+  deactivation therefore never releases an identifier for reuse. Added strict,
+  idempotent create/update/deactivate contracts with owner-scoped reads, Customer
+  locking, CAS writes and generic duplicate-conflict responses.
+- Added `0036_create_customer_credit_profiles.js` and `CustomerCreditService` for
+  exact `DECIMAL(19,4)` limit storage, Business Master-owned active Currency
+  validation, explicit not-configured/zero/on-hold projections, first-write
+  serialization, CAS updates and fresh-authenticated clearing. Raw identifier
+  values, normalized keys, credit notes and password input are excluded from audit
+  detail.
+- Focused migration, service, handler-contract and audit suites passed 58 tests.
+  The post-review migration-inspector regression subset passed 10 tests. Static
+  response-schema regression coverage also prevents request-only normalization
+  keywords from entering response contracts.
+- Fresh isolated MySQL verification applied every migration through `0036`, then
+  proved a complete rerun was a no-op. TC-021 through TC-025 passed against real
+  MySQL and HTTP for identifier uniqueness/inactive-key retention, Credit
+  null-versus-zero/on-hold behavior, create/update/clear concurrency control,
+  inactive-Currency rejection, authorization and audit redaction. Both the main
+  verification schema and the post-review schema were confirmed absent after trap
+  cleanup.
+- The real database checks exposed a Currency foreign-key collation mismatch and a
+  request-only response-schema keyword; both were fixed and rerun from fresh
+  schemas. Final review then required the adoption inspector itself to verify the
+  `ascii_bin` Currency collation; that correction passed fresh-schema, no-op and
+  TC-021 through TC-025 reruns.
+- Final full local server regression on commit `116fc30` passed with exit status 0.
+  `git diff --check` passed, and review found no remaining Critical or High issue.
+  CI was not run, as directed by the Product Owner. No frontend file changed, so
+  browser and Playwright verification are not applicable to TASK-008.
