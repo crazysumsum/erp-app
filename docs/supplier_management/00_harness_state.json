@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 41,
+  "revision": 43,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-004",
+  "current_task": "TASK-005",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
-    "source_fingerprint": "26cfe0ca43a3379c24759e29b75949a6defa0c3922fb4a2d7a1c1978b71e30b1",
+    "code_commit": "c3da62d122cdc11d9523609fe2129c26134805aa",
+    "source_fingerprint": "4495359e928f126677091e391add0132e78897c04aeb8312d71fd5cd262c04c0",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -31,8 +31,8 @@
     "TASK-001": "DONE",
     "TASK-002": "DONE",
     "TASK-003": "DONE",
-    "TASK-004": "IN_PROGRESS",
-    "TASK-005": "PENDING",
+    "TASK-004": "DONE",
+    "TASK-005": "IN_PROGRESS",
     "TASK-006": "PENDING",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
@@ -764,5 +764,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Run current-baseline PLAN_READY and boundary checks, then commit Checkpoint A and continue TASK-004 test-first implementation."
+  "next_safe_action": "Implement TASK-005 Supplier root and name-gram migrations 0029 and 0030 test-first, then execute them on approved erp_dev and verify exact MySQL schema."
 }
