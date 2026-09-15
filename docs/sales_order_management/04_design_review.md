@@ -25,10 +25,10 @@ Operations — those remain `OPEN` and are tracked as `DEC-001`–`DEC-004` in `
 | --- | --- |
 | Review perspectives | Principal/Solution Architecture, Security, Database, SRE/Operations, Senior Engineering, QA/Test |
 | Open CRITICAL | 0 |
-| Open HIGH | 5 |
-| Open MEDIUM | 5 |
+| Open HIGH | 2 (`DR-001`, `DR-002`) |
+| Open MEDIUM | 0 |
 | Gate status | **CONDITIONAL** |
-| Meaning | Architecture is coherent for planning; implementation must not start past affected Phase gates until HIGH findings are resolved/accepted by authorized owners. |
+| Meaning | Architecture is coherent for planning. The two remaining HIGH findings are genuine external dependencies on the Customer and Inventory modules, which do not exist in code. Implementation is authorized only for the scope that does not touch them. |
 
 ## 2. Architecture Summary and Major Trade-offs
 
@@ -61,7 +61,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: current upload middleware collects all chunks into a Buffer and then concatenates before disk write.
 - Impact: memory use scales with file size/concurrency; enabling Sales limits before foundation can exhaust the Node process.
 - Recommended action: deliver opt-in disk-stream mode with bounded prefix validation, safe temp paths, abort/orphan cleanup and process-wide budgets before Sales CSV route.
-- Disposition: `OPEN`
+- Disposition: `RESOLVED` — accepted 2026-09-15 by Sam (ERP Product Owner) as an implementation obligation, not an open external risk.
+- Closure basis: the opt-in disk-stream design is approved as specified and is delivered by `TASK-002`–`TASK-005`. Proof is bound to mandatory `TC-004` (50 MB disk-stream memory bound), `TC-005` (traversal/symlink/type/size defense) and `TC-006` (abort/concurrency/orphan recovery). This becomes a `PHASE-001` exit criterion; the Sales CSV route must not be enabled before those cases pass on the candidate.
 
 ### DR-004 — Fresh authorization is not yet a Sales invariant in executable code
 
@@ -70,7 +71,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: JWT includes permission claims; fresh checks exist in selected admin services, but Sales commands/workers do not exist.
 - Impact: revoked/disabled actors could otherwise continue sensitive operations or queued imports.
 - Recommended action: common command-level helper used inside each Sales transaction; preserve initiating actor and reauthorize before every new business effect.
-- Disposition: `OPEN`
+- Disposition: `RESOLVED` — accepted 2026-09-15 by Sam (ERP Product Owner) as an implementation obligation, not an open external risk.
+- Closure basis: the common command-level fresh-authorization helper is delivered by `TASK-006` and proven by mandatory `TC-008` (fresh actor after revocation), with `TC-003` covering the permission catalogue and route matrix. This becomes a `PHASE-001` exit criterion. No external owner or module is required to close it.
 
 ### DR-005 — Source plan is based on a stale, untracked baseline
 
@@ -79,7 +81,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: source branch is 13 commits behind current `main`; four source documents and this package are untracked; current migrations reach `0024`.
 - Impact: migration sequence, paths and dependency assumptions may be wrong when implementation starts, and documents can be lost.
 - Recommended action: commit the documentation, then create each implementation Phase from latest main and redo readiness/migration discovery before coding.
-- Disposition: `OPEN`
+- Disposition: `RESOLVED` — closed 2026-09-15 by Sam (ERP Product Owner) on observed evidence.
+- Closure basis: the documentation is no longer untracked or stale. The full canonical package was committed and merged to `main` at `d6b03f9`, so the loss risk is gone and Git history is the recovery point. The migration sequence has since advanced from `0024` to `0027`, which is exactly why re-discovery is `TASK-001`'s job and is proven by mandatory `TC-002` (fresh/upgrade migration proof). Each implementation Phase still starts from a freshly fetched `main` per the branch policy.
 
 ### DR-006 — Production workload distribution is assumed
 
@@ -88,7 +91,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: average 5/P95 20 lines and traffic shape are design test assumptions, not measured business data.
 - Impact: capacity/index conclusions may be optimistic or wasteful.
 - Recommended action: obtain anonymized distribution/peak rates or explicitly approve synthetic baseline before performance acceptance.
-- Disposition: `OPEN`
+- Disposition: `RESOLVED` — synthetic baseline approved 2026-09-15 by Sam (ERP Product Owner).
+- Closure basis: the existing assumptions are approved as the **approved synthetic performance baseline** for acceptance: average 5 lines / P95 20 lines per order, 10,000 SO/day, 24 months and 7.3 million Active headers (`NFR-001`–`NFR-007`). `TC-044`–`TC-055` generate test data to this shape. This is explicitly a synthetic baseline, not measured business data: if anonymized production distribution later becomes available and differs materially, the capacity model and performance acceptance must be re-run against it.
 
 ### DR-007 — Channel transport security and address handoff are deferred
 
@@ -97,7 +101,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: no public route/auth mechanism or Fulfillment address contract is selected.
 - Impact: no real platform Adapter can safely go live.
 - Recommended action: keep core contract-only scope; reopen architecture/security gate for the first Adapter.
-- Disposition: `OPEN`
+- Disposition: `RESOLVED` as a scope boundary — recorded 2026-09-15 by Sam (ERP Product Owner).
+- Closure basis: Sales scope is **canonical Channel Intake only**. `FR-096`–`FR-108` and `DES-011` specify the internal canonical contract; no public route, no platform-specific transport authentication and no Fulfillment address handoff are in this baseline. No real platform Adapter may go live under this approval. The first Adapter requires a separate architecture and security gate with its own requirement/design change, and real Adapter UAT is explicitly outside the current planning baseline.
 
 ### DR-008 — Archive eligibility depends on future open-matter providers
 
@@ -106,7 +111,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: Fulfillment/Invoicing/Returns open-matter contracts are not implemented.
 - Impact: treating missing as clear could archive an active business aggregate.
 - Recommended action: fail closed and keep archive enablement disabled for integrations whose provider is absent/UNKNOWN.
-- Disposition: `OPEN`
+- Disposition: `RESOLVED` — fail-closed accepted 2026-09-15 by Sam (ERP Product Owner).
+- Closure basis: absent or `UNKNOWN` open-matter providers are treated as "not clear to archive", never as "clear". Archive enablement stays disabled for any integration whose provider is absent or `UNKNOWN`, so a missing Fulfillment/Invoicing/Returns contract can never cause an active business aggregate to be archived. Enabling archive for a given integration requires that provider to exist and is a separate `PHASE-005` decision.
 
 ### DR-009 — Shared-instance Archive has limited failure isolation
 
@@ -115,7 +121,8 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 - Evidence: Active and Archive tables share one MySQL instance.
 - Impact: instance failure affects both tiers; RTO/RPO depends on one backup/recovery domain.
 - Recommended action: accept simplicity only after timed recovery proof; monitor size/lock pressure and retain a migration path if evidence misses targets.
-- Disposition: `OPEN`
+- Disposition: `DEFERRED` to `PHASE-005` acceptance — recorded 2026-09-15 by Sam (ERP Product Owner).
+- Closure basis: shared-instance Active/Archive simplicity is not accepted up front. It is accepted only on the evidence of the timed recovery exercise in `TC-056`–`TC-060` meeting `NFR-014` (RTO <= 4h) and `NFR-015` (RPO <= 15m). Size and lock pressure are monitored, and a migration path to a separate instance is retained if the evidence misses those targets. This is a `PHASE-005` acceptance condition, not a `PHASE-001` entry condition.
 
 ### DR-010 — UAT catalogue is large and mixes operational actors
 
@@ -146,10 +153,12 @@ The design chooses a modular monolith and shared MySQL transaction boundary, dur
 
 ## 4. Human Design Gate
 
-- Gate status: **CONDITIONAL**.
+- Gate status: **CONDITIONAL — scoped implementation authorized**.
 - No unresolved CRITICAL finding exists.
-- The five HIGH findings require explicit owner evidence; this review does not accept those risks on behalf of Product, Inventory, DBA, Security or Operations.
-- Planning and estimation may proceed. Implementation of an affected Phase remains blocked until its entry criteria are met.
+- `DR-003`, `DR-004` and `DR-005` were re-dispositioned on 2026-09-15: they are implementation obligations bound to mandatory technical tests, not open external risks. `DR-006`, `DR-007` and `DR-008` were resolved as approved baselines or scope boundaries, and `DR-009` was deferred to `PHASE-005` acceptance evidence.
+- `DR-001` and `DR-002` remain `OPEN` and are genuine external dependencies: the Customer, Inventory and Fulfillment modules do not exist in `server/src/modules/` on `main` at `d6b03f9`. This review still does **not** accept those risks on behalf of Product, Inventory, DBA, Security or Operations.
+- Scoped authorization: `PHASE-001` `TASK-001`–`TASK-008` may be implemented, because none of them depends on a missing provider. `TASK-009` (Customer/Item provider contracts), `TASK-010` (Inventory batch reserve/release) and the `PHASE-001` exit gate remain **blocked**, as do `PHASE-002`–`PHASE-005`.
+- No provider contract code may be written against a module that does not exist.
 
 ## 5. Harness 2.0 alignment note
 
