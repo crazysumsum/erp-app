@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 67,
+  "revision": 68,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-021",
+  "current_task": "TASK-022",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "c2d234b59a2be230b49c9d9534bb72b4deaf431b",
-    "source_fingerprint": "746f7eae5bc83036b3aa0f067f45a06c4c90693c6fcc0f1a46a7422b32d3f7c4",
+    "code_commit": "20c5b74265ddd058ea03820cf1400f6f27c96060",
+    "source_fingerprint": "24fb6342779cc2b997ac4082f4069d7325c75036b74e62b784fd95189f51240a",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -48,8 +48,8 @@
     "TASK-018": "DONE",
     "TASK-019": "DONE",
     "TASK-020": "DONE",
-    "TASK-021": "IN_PROGRESS",
-    "TASK-022": "PENDING",
+    "TASK-021": "DONE",
+    "TASK-022": "IN_PROGRESS",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
     "TASK-025": "PENDING",
@@ -569,6 +569,17 @@
       "source_ref": "Authenticated Playwright browser HTTP check on 2026-09-15: Supplier 11 general update advanced version 1 to 2; replaying the stale version returned expected VERSION_CONFLICT and did not overwrite; jwt-device-password with approved device changed Code to PW-SUP-0915-C and advanced version 2 to 3. Focused tests passed 25/25, real MySQL integration passed 2/2 including named-reference rejection and duplicate-Code race, root lint passed, and the only browser errors were the deliberately exercised 409 responses.",
       "actor": "/root via playwright-cli and node:test",
       "observed_at": "2026-09-15T04:19:51Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-021 Supplier general editor, dirty-state, stale draft and controlled Code correction browser validation",
+      "code_commit": "20c5b74265ddd058ea03820cf1400f6f27c96060",
+      "spec_baseline": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "source_fingerprint": "24fb6342779cc2b997ac4082f4069d7325c75036b74e62b784fd95189f51240a",
+      "status": "PASS",
+      "source_ref": "Playwright CLI session supplier-address on 2026-09-15: live general editor kept Supplier Code readonly, saved name/phone/notes and advanced version 3 to 4; completeness was explicitly labelled non-blocking; dirty navigation displayed the unsaved-change prompt and preserved the draft when dismissed; 375px Code dialog withheld submit until Code/reason/password were present and jwt-device-password advanced version 4 to 5; a separate live update created a real stale writer, expected 409 left Preserved Concurrent Draft visible while showing latest version 6, and only explicit reload replaced it. Client tests passed 15/15, production build and lint passed; no unexpected console/network failures.",
+      "actor": "/root via playwright-cli and vitest",
+      "observed_at": "2026-09-15T04:29:42Z"
     }
   ],
   "pending_decisions": [
@@ -891,5 +902,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-021 Supplier general editor, payment defaults, completeness presentation and controlled Code correction dialog test-first, then validate keyboard, dirty-state, conflict and high-risk authentication in Playwright."
+  "next_safe_action": "Implement TASK-022 Supplier lifecycle, block/unblock, archive/restore and controlled delete backend test-first with exact state, permission, re-auth, reason, reference and transactional-audit guards."
 }

@@ -45,6 +45,14 @@ export default {
     return httpClient.get(`/api/v1/suppliers/${id}/completeness`);
   },
 
+  update(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/update`, { body: payload });
+  },
+
+  changeCode(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/code/change`, { body: payload, signed: true });
+  },
+
   createAddress(supplierId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/create`, { body: payload });
   },

@@ -6,7 +6,7 @@ import { h } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/supplier.js", () => ({
-  default: { getById: vi.fn() }, service: { name: "supplier" }
+  default: { getById: vi.fn(), completeness: vi.fn() }, service: { name: "supplier" }
 }));
 
 import supplierService from "@/services/supplier.js";
@@ -25,6 +25,7 @@ const DETAIL = {
 async function mountPage({ permissions = ["supplier.view"], detail = DETAIL } = {}) {
   if (detail instanceof Error) supplierService.getById.mockRejectedValue(detail);
   else supplierService.getById.mockResolvedValue(detail);
+  supplierService.completeness.mockResolvedValue({ supplierId: 7, issues: [], warnings: detail?.warnings ?? [] });
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: SupplierDetailPage }] });
   await router.push("/suppliers/7"); await router.isReady();
   useSessionStore().user = { id: 1, permissions, roles: [] };

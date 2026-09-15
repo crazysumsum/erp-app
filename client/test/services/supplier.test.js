@@ -105,4 +105,17 @@ describe("supplier service", () => {
       ["/api/v1/suppliers/7/identifiers/31/delete", { body: { version: 3, reason: "entered in error" } }]
     ]);
   });
+
+  it("uses normal Supplier update and a signed controlled Code correction", async () => {
+    httpClient.post.mockResolvedValue({ id: 7 });
+    await supplierService.update(7, { supplierName: "Updated", version: 2 });
+    await supplierService.changeCode(7, { supplierCode: "SUP-NEW", reason: "Correct typo", password: "secret", version: 3 });
+    expect(httpClient.post).toHaveBeenNthCalledWith(1, "/api/v1/suppliers/7/update", {
+      body: { supplierName: "Updated", version: 2 }
+    });
+    expect(httpClient.post).toHaveBeenNthCalledWith(2, "/api/v1/suppliers/7/code/change", {
+      body: { supplierCode: "SUP-NEW", reason: "Correct typo", password: "secret", version: 3 },
+      signed: true
+    });
+  });
 });
