@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 44,
+  "revision": 45,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-006",
+  "current_task": "TASK-007",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "2820be786ea2addec0f5301df63c234022f4ce41",
-    "source_fingerprint": "3b07e9c0c002ebbf12aafffd7ab10092e511347bb9841953aab7a0a33d38cea9",
+    "code_commit": "679408bafcb37bb6e81d2f25c8661ba9ed300cea",
+    "source_fingerprint": "ff4b17364c93aae1cda8e36f08213756a3c4d503145acddaec82a1ff5988f467",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -33,8 +33,8 @@
     "TASK-003": "DONE",
     "TASK-004": "DONE",
     "TASK-005": "DONE",
-    "TASK-006": "IN_PROGRESS",
-    "TASK-007": "PENDING",
+    "TASK-006": "DONE",
+    "TASK-007": "IN_PROGRESS",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
@@ -772,5 +772,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-006 Supplier constants, normalization, validation and public errors test-first; keep the activation minimum to Code, Name and Active Currency."
+  "next_safe_action": "Implement TASK-007 indexed Supplier name duplicate candidates test-first, with exact-first ranking, bounded gram candidates and warning-only results."
 }
