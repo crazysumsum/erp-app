@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 3,
+  "revision": 4,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
     "plan": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
-    "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
-    "source_fingerprint": "a83c2cc4821de80a2ed51123a71e07fa7913cd5ad1f8f8c8253e09ea388cde12",
+    "code_commit": "0b95d4bc56aa9c641e66ae83523c0de8facf221b",
+    "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-order-align-harness-v2",
-    "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+    "default_commit": "98fd077cc8279b76353ad3439ee3f92a12bf821d",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -110,7 +110,7 @@
       "subject": "validate_module_boundary.py --base 0ca4e9f",
       "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
       "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
-      "source_fingerprint": "a83c2cc4821de80a2ed51123a71e07fa7913cd5ad1f8f8c8253e09ea388cde12",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
       "status": "BLOCKED",
       "source_ref": "BLOCKED with exactly two MODE_WRITE_DENIED issues, both the human-approved cross-module manifest repairs listed in APR-SCOPE-001. REVIEW_AND_ALIGN is document-only for the selected module and the checker has no approval path for cross-module writes, so this is recorded as BLOCKED, not PASS. Every path inside docs/sales_order_management passed.",
       "actor": "Alignment agent",
@@ -121,9 +121,20 @@
       "subject": "validate_traceability.py",
       "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
       "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
-      "source_fingerprint": "a83c2cc4821de80a2ed51123a71e07fa7913cd5ad1f8f8c8253e09ea388cde12",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
       "status": "PASS",
       "source_ref": "STRUCTURE_PASS observed 2026-09-15. Structural checks only: not semantic coverage, not test execution, not authorization.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "origin/main 0ca4e9f -> 98fd077 merged into codex/sales-order-align-harness-v2",
+      "code_commit": "0b95d4bc56aa9c641e66ae83523c0de8facf221b",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "Target branch refreshed before merge per project policy. main advanced with business-master verification closeout only; no file in this PR overlapped. Sales, fulfillment and business_master all re-validated STRUCTURE_PASS after the merge.",
       "actor": "Alignment agent",
       "observed_at": "2026-09-15T00:00:00+08:00"
     }
