@@ -1,10 +1,22 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
-import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
-import { normalizeContactEmail, normalizeSupplierCode, normalizeSupplierName, normalizeSupplierUrl } from "./supplierNormalization.js";
+import { SupplierReferenceService } from "./SupplierReferenceService.js";
+import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import {
+  normalizeContactEmail,
+  normalizeSupplierCode,
+  normalizeSupplierName,
+  normalizeSupplierOptionalText,
+  normalizeSupplierUrl
+} from "./supplierNormalization.js";
 import { toAddressResponse, toContactResponse, toIdentifierResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
-import { assertKnownSupplierFields, assertSupplierActivatable, supplierCompletenessWarnings } from "./supplierValidation.js";
+import {
+  assertKnownSupplierFields,
+  assertSupplierActivatable,
+  supplierActivatabilityIssues,
+  supplierCompletenessWarnings
+} from "./supplierValidation.js";
 
 function duplicateEntry(error) {
   return (error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY";
@@ -25,6 +37,20 @@ function escapeLikeTerm(value) {
   return value.replace(/[\\%_]/gu, "\\$&");
 }
 
+function requireReason(value, message = "這項修改必須填寫原因") {
+  const reason = String(value ?? "").trim();
+  if (reason.length < 5 || reason.length > 500) {
+    throw invalidSupplierInput("SUPPLIER_REASON_REQUIRED", message, { field: "reason" });
+  }
+  return reason;
+}
+
+function assertExpectedVersion(current, expected) {
+  if (Number(current.version) !== Number(expected)) {
+    throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+  }
+}
+
 export class SupplierAdminService {
   constructor({
     database,
@@ -35,6 +61,7 @@ export class SupplierAdminService {
     duplicates,
     replaceNameGrams = replaceSupplierNameGrams,
     audit,
+    references,
     approvalRequired = async () => false
   } = {}) {
     if (!database || !logger || !time || !businessMaster) {
@@ -46,6 +73,7 @@ export class SupplierAdminService {
     this.duplicates = duplicates ?? new SupplierDuplicateCandidates();
     this.replaceNameGrams = replaceNameGrams;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
+    this.references = references ?? new SupplierReferenceService();
     this.approvalRequired = approvalRequired;
     this.time = time;
   }
@@ -68,8 +96,11 @@ export class SupplierAdminService {
     assertKnownSupplierFields(Object.fromEntries(Object.entries(writable).filter(([, value]) => value !== undefined)));
     const code = normalizeSupplierCode(input.supplierCode);
     const name = normalizeSupplierName(input.supplierName);
+    const displayName = normalizeSupplierOptionalText(input.displayName, { field: "displayName", maxLength: 190 });
     const website = normalizeSupplierUrl(input.website);
     const email = normalizeContactEmail(input.generalEmail);
+    const generalPhone = normalizeSupplierOptionalText(input.generalPhone, { field: "generalPhone", maxLength: 50 });
+    const notes = normalizeSupplierOptionalText(input.notes, { field: "notes", maxLength: 2000 });
     let duplicateCandidates = [];
 
     let supplierId;
@@ -116,9 +147,9 @@ export class SupplierAdminService {
              notes, status, version, created_at, updated_at, created_by, updated_by)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
           [
-            code.value, code.key, name.value, name.key, String(input.displayName ?? "").trim(),
+            code.value, code.key, name.value, name.key, displayName,
             defaults.currency.code, defaults.paymentTerm?.id ?? null, website,
-            String(input.generalPhone ?? "").trim(), email.value, String(input.notes ?? "").trim(),
+            generalPhone, email.value, notes,
             status, nowMs, nowMs, input.actorId, input.actorId
           ]
         );
@@ -149,6 +180,160 @@ export class SupplierAdminService {
     if (!row) throw supplierNotFound(supplierId);
     const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id });
     return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates };
+  }
+
+  async updateSupplier(input) {
+    if (Object.hasOwn(input, "supplierCode")) {
+      throw supplierConflict("SUPPLIER_CODE_CHANGE_REQUIRED", "Supplier Code 只能透過受控修正功能修改");
+    }
+    const name = normalizeSupplierName(input.supplierName);
+    const displayName = normalizeSupplierOptionalText(input.displayName, { field: "displayName", maxLength: 190 });
+    const website = normalizeSupplierUrl(input.website);
+    const email = normalizeContactEmail(input.generalEmail);
+    const generalPhone = normalizeSupplierOptionalText(input.generalPhone, { field: "generalPhone", maxLength: 50 });
+    const notes = normalizeSupplierOptionalText(input.notes, { field: "notes", maxLength: 2000 });
+    let duplicateCandidates = [];
+
+    await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, {
+        actorId: input.actorId,
+        claimedRoles: input.claimedRoles,
+        claimedPermissions: input.claimedPermissions
+      });
+      const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
+      if (!current) throw supplierNotFound(input.id);
+      assertExpectedVersion(current, input.version);
+      if (current.status === "archived") {
+        throw supplierConflict("SUPPLIER_UPDATE_NOT_ALLOWED", "已封存供應商不可修改一般資料", { status: current.status });
+      }
+
+      const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
+        currencyCode: input.defaultCurrencyCode,
+        currencyVersion: input.defaultCurrencyVersion,
+        paymentTermId: input.defaultPaymentTermId ?? null,
+        paymentTermVersion: input.defaultPaymentTermVersion,
+        purpose: "new_assignment"
+      });
+      const currencyChanged = current.default_currency_code !== defaults.currency.code;
+      const reason = currencyChanged ? requireReason(input.reason, "修改預設幣別必須填寫原因") : String(input.reason ?? "").trim();
+      duplicateCandidates = (await this.duplicates.find(connection, { nameKey: name.key }))
+        .filter((candidate) => Number(candidate.supplierId) !== Number(input.id));
+      const nowMs = this.time.nowMs();
+      const next = {
+        supplierName: name.value,
+        displayName,
+        defaultCurrencyCode: defaults.currency.code,
+        defaultPaymentTermId: defaults.paymentTerm?.id ?? null,
+        website,
+        generalPhone,
+        generalEmail: email.value,
+        notes
+      };
+      const [result] = await connection.execute(
+        `UPDATE suppliers
+            SET supplier_name = ?, supplier_name_key = ?, display_name = ?, default_currency_code = ?,
+                default_payment_term_id = ?, website = ?, general_phone = ?, general_email = ?, notes = ?,
+                version = version + 1, updated_at = ?, updated_by = ?
+          WHERE id = ? AND version = ?`,
+        [
+          next.supplierName, name.key, next.displayName, next.defaultCurrencyCode,
+          next.defaultPaymentTermId, next.website, next.generalPhone, next.generalEmail, next.notes,
+          nowMs, input.actorId, input.id, input.version
+        ]
+      );
+      if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+      if (current.supplier_name_key !== name.key) await this.replaceNameGrams(connection, input.id, name.key);
+      await this.audit.record(connection, {
+        actorUserId: input.actorId,
+        actorUsername: actor.username,
+        action: "supplier.update",
+        targetType: "supplier",
+        targetId: input.id,
+        supplierId: input.id,
+        targetLabel: current.supplier_code,
+        reason,
+        detail: {
+          before: {
+            supplierName: current.supplier_name,
+            displayName: current.display_name,
+            defaultCurrencyCode: current.default_currency_code,
+            defaultPaymentTermId: current.default_payment_term_id,
+            website: current.website,
+            generalPhone: current.general_phone,
+            generalEmail: current.general_email,
+            notes: current.notes
+          },
+          after: next
+        },
+        requestId: input.requestId,
+        ip: input.ip
+      });
+    });
+
+    const detail = await this.getSupplier({
+      actorId: input.actorId,
+      claimedRoles: input.claimedRoles,
+      claimedPermissions: input.claimedPermissions,
+      id: input.id
+    });
+    return { ...detail, duplicateCandidates };
+  }
+
+  async changeSupplierCode(input) {
+    const code = normalizeSupplierCode(input.supplierCode);
+    const reason = requireReason(input.reason, "修正 Supplier Code 必須填寫原因");
+    try {
+      await this.database.withTransaction(async (connection) => {
+        const actor = await this.authorize(connection, {
+          actorId: input.actorId,
+          claimedRoles: input.claimedRoles,
+          claimedPermissions: input.claimedPermissions
+        });
+        const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
+        if (!current) throw supplierNotFound(input.id);
+        assertExpectedVersion(current, input.version);
+        if (current.status === "archived") {
+          throw supplierConflict("SUPPLIER_UPDATE_NOT_ALLOWED", "已封存供應商不可修正 Supplier Code", { status: current.status });
+        }
+        const referenceSummary = await this.references.describeReferences(connection, input.id);
+        if (referenceSummary.total !== 0) {
+          throw supplierConflict("SUPPLIER_REFERENCED", "供應商已有引用，不可修改 Supplier Code", referenceSummary);
+        }
+        const nowMs = this.time.nowMs();
+        const [result] = await connection.execute(
+          `UPDATE suppliers
+              SET supplier_code = ?, supplier_code_key = ?, version = version + 1, updated_at = ?, updated_by = ?
+            WHERE id = ? AND version = ?`,
+          [code.value, code.key, nowMs, input.actorId, input.id, input.version]
+        );
+        if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+        await this.audit.record(connection, {
+          actorUserId: input.actorId,
+          actorUsername: actor.username,
+          action: "supplier.code.change",
+          targetType: "supplier",
+          targetId: input.id,
+          supplierId: input.id,
+          targetLabel: code.value,
+          reason,
+          detail: { before: { supplierCode: current.supplier_code }, after: { supplierCode: code.value } },
+          requestId: input.requestId,
+          ip: input.ip
+        });
+      });
+    } catch (error) {
+      if (duplicateEntry(error)) {
+        throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
+      }
+      throw error;
+    }
+
+    return this.getSupplier({
+      actorId: input.actorId,
+      claimedRoles: input.claimedRoles,
+      claimedPermissions: input.claimedPermissions,
+      id: input.id
+    });
   }
 
   async listSuppliers({
@@ -319,9 +504,19 @@ export class SupplierAdminService {
       "SELECT 1 AS present FROM supplier_identifiers WHERE supplier_id = ? LIMIT 1",
       [id]
     );
+    const [[currency]] = await this.database.query(
+      "SELECT code, status FROM currencies WHERE code = ? LIMIT 1",
+      [row.default_currency_code]
+    );
+    const issues = supplierActivatabilityIssues({
+      supplierCode: row.supplier_code,
+      supplierName: row.supplier_name,
+      status: row.status,
+      defaultCurrency: currency
+    }).filter((issue) => row.status !== "active" || issue.code !== "STATUS_NOT_ACTIVATABLE");
     return {
       supplierId: Number(row.id),
-      issues: [],
+      issues,
       warnings: supplierCompletenessWarnings({
         defaultPaymentTermId: row.default_payment_term_id,
         hasOrderingAddress: Boolean(orderingAddress),

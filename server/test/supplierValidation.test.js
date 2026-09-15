@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   assertKnownSupplierFields,
   assertSupplierActivatable,
+  supplierActivatabilityIssues,
   supplierCompletenessWarnings
 } from "../src/modules/supplier/supplierValidation.js";
 
@@ -43,6 +44,13 @@ test("missing optional data produces bounded warnings and never activation issue
     hasIdentifier: true,
     hasBankAccount: true
   }), []);
+});
+
+test("activation issues can be projected separately from non-blocking completeness warnings", () => {
+  assert.deepEqual(
+    supplierActivatabilityIssues({ ...valid, defaultCurrency: { code: "HKD", status: "INACTIVE" } }).map((issue) => issue.code),
+    ["CURRENCY_NOT_ACTIVE"]
+  );
 });
 
 test("unknown write fields are rejected instead of silently persisted", () => {

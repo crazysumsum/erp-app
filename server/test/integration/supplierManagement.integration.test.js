@@ -122,3 +122,114 @@ integrationTest("Supplier create atomically persists root, grams and audit while
   const [[rollbackCount]] = await pool.query("SELECT COUNT(*) AS total FROM suppliers WHERE supplier_code_key = ?", [codes[1].toLowerCase()]);
   assert.equal(Number(rollbackCount.total), 0);
 });
+
+integrationTest("Supplier root update and controlled Code correction enforce CAS, global uniqueness and reference guard", async (t) => {
+  const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
+  const suffix = String(Date.now());
+  const originalCode = `UPD-${suffix}-A`;
+  const changedCode = `UPD-${suffix}-B`;
+  const occupiedCode = `UPD-${suffix}-C`;
+  const ids = [];
+  t.after(async () => {
+    if (ids.length > 0) {
+      await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${ids.map(() => "?").join(",")})`, ids);
+      await pool.query(`DELETE FROM suppliers WHERE id IN (${ids.map(() => "?").join(",")})`, ids);
+    }
+    await pool.end();
+  });
+  const service = serviceFor(pool);
+  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  assert.ok(actor, "erp_dev must contain an active synthetic test user");
+  const actorId = Number(actor.id);
+  const base = {
+    actorId,
+    claimedRoles: [],
+    claimedPermissions: [],
+    defaultCurrencyCode: "HKD",
+    defaultCurrencyVersion: 1,
+    defaultPaymentTermId: null,
+    website: "",
+    generalPhone: "",
+    generalEmail: "",
+    notes: "",
+    requestId: `req-${suffix}`
+  };
+  const created = await service.createSupplier({ ...base, supplierCode: originalCode, supplierName: "Update Integration Supplier" });
+  ids.push(created.id);
+  const occupied = await service.createSupplier({ ...base, supplierCode: occupiedCode, supplierName: "Occupied Code Supplier" });
+  ids.push(occupied.id);
+
+  const updated = await service.updateSupplier({
+    ...base,
+    id: created.id,
+    supplierName: "Updated Integration Supplier",
+    displayName: "Updated",
+    version: created.version
+  });
+  assert.equal(updated.supplierName, "Updated Integration Supplier");
+  assert.equal(updated.version, created.version + 1);
+  const [[gramCount]] = await pool.query("SELECT COUNT(*) AS total FROM supplier_name_grams WHERE supplier_id = ?", [created.id]);
+  assert.ok(Number(gramCount.total) > 0);
+
+  await assert.rejects(
+    () => service.updateSupplier({
+      ...base,
+      id: created.id,
+      supplierName: "Stale Write",
+      displayName: "Stale",
+      version: created.version
+    }),
+    (error) => error.publicCode === "VERSION_CONFLICT"
+  );
+  const [[afterStale]] = await pool.query("SELECT supplier_name, version FROM suppliers WHERE id = ?", [created.id]);
+  assert.equal(afterStale.supplier_name, "Updated Integration Supplier");
+  assert.equal(Number(afterStale.version), updated.version);
+
+  const changed = await service.changeSupplierCode({
+    ...base,
+    id: created.id,
+    supplierCode: changedCode,
+    reason: "Correct an onboarding typo",
+    version: updated.version
+  });
+  assert.equal(changed.supplierCode, changedCode);
+
+  await assert.rejects(
+    () => service.changeSupplierCode({
+      ...base,
+      id: created.id,
+      supplierCode: occupiedCode.toLowerCase(),
+      reason: "Attempt an occupied code",
+      version: changed.version
+    }),
+    (error) => error.publicCode === "SUPPLIER_CODE_TAKEN"
+  );
+
+  const referenced = serviceFor(pool, {
+    references: {
+      async describeReferences() {
+        return { references: { purchaseOrders: 1 }, total: 1 };
+      }
+    }
+  });
+  await assert.rejects(
+    () => referenced.changeSupplierCode({
+      ...base,
+      id: created.id,
+      supplierCode: `${changedCode}-REF`,
+      reason: "Referenced Supplier must reject",
+      version: changed.version
+    }),
+    (error) => error.publicCode === "SUPPLIER_REFERENCED"
+  );
+  const [[afterRejectedChanges]] = await pool.query("SELECT supplier_code, version FROM suppliers WHERE id = ?", [created.id]);
+  assert.equal(afterRejectedChanges.supplier_code, changedCode);
+  assert.equal(Number(afterRejectedChanges.version), changed.version);
+
+  const [audits] = await pool.query(
+    "SELECT action, reason FROM supplier_audit_logs WHERE supplier_id = ? ORDER BY id",
+    [created.id]
+  );
+  assert.deepEqual(audits.map((row) => row.action), ["supplier.create", "supplier.update", "supplier.code.change"]);
+  assert.equal(audits.at(-1).reason, "Correct an onboarding typo");
+});

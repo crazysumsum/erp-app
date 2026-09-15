@@ -27,7 +27,7 @@ export function assertKnownSupplierFields(input) {
   return input;
 }
 
-export function assertSupplierActivatable({ supplierCode, supplierName, status, defaultCurrency }) {
+export function supplierActivatabilityIssues({ supplierCode, supplierName, status, defaultCurrency }) {
   const issues = [];
   if (typeof supplierCode !== "string" || !supplierCode.trim()) {
     issues.push({ field: "supplierCode", code: "SUPPLIER_CODE_REQUIRED", message: "必須填寫 Supplier Code" });
@@ -41,6 +41,11 @@ export function assertSupplierActivatable({ supplierCode, supplierName, status, 
   if (!SUPPLIER_ACTIVATABLE_STATUSES.includes(status)) {
     issues.push({ field: "status", code: "STATUS_NOT_ACTIVATABLE", message: "目前狀態不可啟用" });
   }
+  return issues;
+}
+
+export function assertSupplierActivatable(input) {
+  const issues = supplierActivatabilityIssues(input);
   if (issues.length > 0) throw supplierNotActivatable(issues);
 }
 

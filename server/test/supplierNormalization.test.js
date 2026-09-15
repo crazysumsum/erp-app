@@ -6,6 +6,7 @@ import {
   normalizeIdentifier,
   normalizeSupplierCode,
   normalizeSupplierName,
+  normalizeSupplierOptionalText,
   normalizeSupplierUrl
 } from "../src/modules/supplier/supplierNormalization.js";
 
@@ -59,4 +60,13 @@ test("normalizers reject blank, overlong and control-character input", () => {
   assert.throws(() => normalizeSupplierCode(`ABC\u0000DEF`), (error) => error.publicCode === "SUPPLIER_CODE_INVALID");
   assert.throws(() => normalizeSupplierCode("x".repeat(65)), (error) => error.publicCode === "SUPPLIER_CODE_INVALID");
   assert.throws(() => normalizeSupplierName("x".repeat(191)), (error) => error.publicCode === "SUPPLIER_NAME_INVALID");
+});
+
+test("optional Supplier root text is trimmed and rejects control characters", () => {
+  assert.equal(normalizeSupplierOptionalText("  note  ", { field: "notes", maxLength: 20 }), "note");
+  assert.equal(normalizeSupplierOptionalText(null, { field: "notes", maxLength: 20 }), "");
+  assert.throws(
+    () => normalizeSupplierOptionalText("bad\u0000note", { field: "notes", maxLength: 20 }),
+    (error) => error.publicCode === "SUPPLIER_FIELD_INVALID"
+  );
 });

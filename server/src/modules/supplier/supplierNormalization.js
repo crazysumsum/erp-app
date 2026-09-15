@@ -93,3 +93,13 @@ export function normalizeSupplierUrl(value) {
   }
   return display;
 }
+
+export function normalizeSupplierOptionalText(value, { field, maxLength }) {
+  if (value === null || value === undefined || String(value).trim() === "") return "";
+  return requiredText(String(value), {
+    field,
+    maxLength,
+    code: "SUPPLIER_FIELD_INVALID",
+    publicMessage: "供應商資料不可過長或包含控制字元"
+  });
+}

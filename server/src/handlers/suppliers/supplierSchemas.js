@@ -49,6 +49,38 @@ export const SUPPLIER_CREATE_SCHEMA = Object.freeze({
   }
 });
 
+export const SUPPLIER_UPDATE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "website", "generalPhone", "generalEmail", "notes", "version"],
+  additionalProperties: false,
+  properties: {
+    supplierName: { type: "string", minLength: 1, maxLength: 190 },
+    displayName: { type: "string", maxLength: 190 },
+    defaultCurrencyCode: { type: "string", pattern: "^[A-Z]{3}$" },
+    defaultCurrencyVersion: { type: "integer", minimum: 1 },
+    defaultPaymentTermId: { type: ["integer", "null"], minimum: 1 },
+    defaultPaymentTermVersion: { type: "integer", minimum: 1 },
+    website: { type: "string", maxLength: 500 },
+    generalPhone: { type: "string", maxLength: 50 },
+    generalEmail: { type: "string", maxLength: 254 },
+    notes: { type: "string", maxLength: 2000 },
+    reason: { type: "string", maxLength: 500 },
+    version: { type: "integer", minimum: 1 }
+  }
+});
+
+export const SUPPLIER_CODE_CHANGE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["supplierCode", "reason", "password", "version"],
+  additionalProperties: false,
+  properties: {
+    supplierCode: { type: "string", minLength: 1, maxLength: 64 },
+    reason: { type: "string", minLength: 5, maxLength: 500 },
+    password: { type: "string", minLength: 1, maxLength: 1024 },
+    version: { type: "integer", minimum: 1 }
+  }
+});
+
 const WARNING = Object.freeze({
   type: "object", additionalProperties: false, required: ["field", "code", "message"],
   properties: { field: { type: "string" }, code: { type: "string" }, message: { type: "string" } }
