@@ -17,6 +17,7 @@ function row(overrides = {}) {
     display_name: "Evergreen",
     default_currency_code: "HKD",
     default_payment_term_id: null,
+    primary_contact_name: "Amy Chan",
     website: "",
     general_phone: "2123 4567",
     general_email: "orders@example.test",
@@ -36,7 +37,9 @@ function harness({ rows = [row()], duplicateRows = [] } = {}) {
       queries.push([sql, params]);
       if (sql.includes("COUNT(*) AS total")) return [[{ total: rows.length }]];
       if (sql.includes("FROM suppliers") && sql.includes("WHERE id = ?")) return [[rows[0]].filter(Boolean)];
-      if (sql.includes("supplier_addresses") || sql.includes("supplier_address_purposes")) return [[]];
+      if (sql.includes("supplier_addresses") || sql.includes("supplier_address_purposes") ||
+          sql.includes("SELECT * FROM supplier_contacts") || sql.includes("SELECT contact_id, purpose_code") ||
+          sql.includes("FROM supplier_contacts c")) return [[]];
       return [rows];
     },
     async withTransaction(work) { return work(this); }
@@ -75,6 +78,7 @@ test("list applies bounded paging, escaped search, allowlisted stable sort and e
       displayName: "Evergreen",
       defaultCurrencyCode: "HKD",
       defaultPaymentTermId: null,
+      primaryContactName: "Amy Chan",
       status: "active",
       version: 2,
       updatedAt: 200
@@ -123,6 +127,7 @@ test("query handlers expose distinct view/mgmt policies and bounded schemas", ()
   assert.equal(ListSuppliersHandler.api.requestSchema.query.properties.pageSize.maximum, 100);
   assert.deepEqual(ListSuppliersHandler.api.authorizationPolicies[0].options.permissions, ["supplier.view"]);
   assert.equal(GetSupplierHandler.api.path, "/api/v1/suppliers/:id");
+  assert.ok(GetSupplierHandler.api.responseSchema[200].properties.primaryContactName);
   assert.equal(GetSupplierCompletenessHandler.api.path, "/api/v1/suppliers/:id/completeness");
   assert.deepEqual(CheckSupplierDuplicatesHandler.api.authorizationPolicies[0].options.permissions, ["supplier.mgmt"]);
 });

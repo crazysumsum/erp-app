@@ -81,4 +81,16 @@ describe("supplier service", () => {
       ["/api/v1/suppliers/7/addresses/12/deactivate", { body: { version: 3 } }]
     ]);
   });
+
+  it("uses ownership-scoped versioned Contact routes", async () => {
+    httpClient.post.mockResolvedValue({ id: 21 });
+    await supplierService.createContact(7, { name: "Amy Chan", purposes: [] });
+    await supplierService.updateContact(7, 21, { name: "Amy Lee", purposes: [], version: 2 });
+    await supplierService.deactivateContact(7, 21, { version: 3 });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/suppliers/7/contacts/create", { body: { name: "Amy Chan", purposes: [] } }],
+      ["/api/v1/suppliers/7/contacts/21/update", { body: { name: "Amy Lee", purposes: [], version: 2 } }],
+      ["/api/v1/suppliers/7/contacts/21/deactivate", { body: { version: 3 } }]
+    ]);
+  });
 });

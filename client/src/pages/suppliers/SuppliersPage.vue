@@ -53,6 +53,7 @@ const columns = [
   { name: "displayName", label: "顯示名稱", field: "displayName", align: "left" },
   { name: "defaultCurrencyCode", label: "貨幣", field: "defaultCurrencyCode", align: "left" },
   { name: "defaultPaymentTermId", label: "付款條件", field: "defaultPaymentTermId", align: "left" },
+  { name: "primaryContactName", label: "主要聯絡人", field: "primaryContactName", align: "left" },
   { name: "status", label: "狀態", field: "status", align: "left", sortable: true },
   { name: "updatedAt", label: "更新時間", field: "updatedAt", align: "left", sortable: true },
   { name: "actions", label: "", field: "id", align: "right" }
@@ -107,6 +108,7 @@ function formatDate(value) {
         <template #body-cell-supplierName="{ value }"><EllipsisCell :text="value" max-width="240px" /></template>
         <template #body-cell-displayName="{ value }"><EllipsisCell :text="value || '—'" max-width="180px" /></template>
         <template #body-cell-defaultPaymentTermId="{ value }"><q-td class="text-left">{{ value ?? "未設定" }}</q-td></template>
+        <template #body-cell-primaryContactName="{ value }"><EllipsisCell :text="value || '未設定'" max-width="160px" /></template>
         <template #body-cell-status="{ value }">
           <q-td class="text-left"><q-badge :color="STATUS_COLOR[value]" :label="STATUS_LABEL[value] ?? value" /></q-td>
         </template>

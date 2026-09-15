@@ -31,13 +31,24 @@ const row = {
 test("Supplier summary and detail projections are explicit allowlists", () => {
   assert.deepEqual(toSupplierSummaryResponse(row), {
     id: 7, supplierCode: "SUP-7", supplierName: "Demo", displayName: "D",
-    defaultCurrencyCode: "HKD", defaultPaymentTermId: null, status: "active", version: 2, updatedAt: 20
+    defaultCurrencyCode: "HKD", defaultPaymentTermId: null, primaryContactName: "",
+    status: "active", version: 2, updatedAt: 20
   });
   const detail = toSupplierDetailResponse(row, { warnings: [] });
   assert.equal(detail.website, "https://example.com");
   assert.equal(detail.supplierCodeKey, undefined);
   assert.equal(detail.accountCiphertext, undefined);
   assert.equal(detail.unknownInternal, undefined);
+});
+
+test("Supplier summary exposes only the primary-order Contact display name", () => {
+  const result = toSupplierSummaryResponse({
+    id: 7, supplier_code: "SUP-007", supplier_name: "Evergreen", display_name: "",
+    default_currency_code: "HKD", default_payment_term_id: null, primary_contact_name: "Amy Chan",
+    status: "active", version: 1, updated_at: 100, email: "must-not-leak@example.com"
+  });
+  assert.equal(result.primaryContactName, "Amy Chan");
+  assert.equal("email" in result, false);
 });
 
 test("masked Bank projection never exposes encrypted material, key IDs or a short account tail", () => {

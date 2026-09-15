@@ -220,7 +220,13 @@ export class SupplierAdminService {
     const listParams = exactCodeKey ? [...params, exactCodeKey, pageSize, offset] : [...params, pageSize, offset];
     const [rows] = await this.database.query(
       `SELECT s.id, s.supplier_code, s.supplier_name, s.display_name,
-              s.default_currency_code, s.default_payment_term_id, s.status, s.version, s.updated_at
+              s.default_currency_code, s.default_payment_term_id, s.status, s.version, s.updated_at,
+              (SELECT c.name
+                 FROM supplier_contact_purposes cp
+                 JOIN supplier_contacts c ON c.id = cp.contact_id AND c.supplier_id = cp.supplier_id
+                WHERE cp.supplier_id = s.id AND cp.purpose_code = 'orders' AND cp.primary_slot = 1
+                  AND c.status = 'active'
+                LIMIT 1) AS primary_contact_name
          FROM suppliers s ${where}
         ORDER BY ${exactOrder}${stableSort}
         LIMIT ? OFFSET ?`,

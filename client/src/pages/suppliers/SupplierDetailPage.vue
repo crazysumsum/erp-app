@@ -13,6 +13,7 @@ import { useRoute } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
+import SupplierContactPanel from "@/components/suppliers/SupplierContactPanel.vue";
 import { can } from "@/framework/authorization/can.js";
 import supplierService from "@/services/supplier.js";
 import { useSessionStore } from "@/stores/session.js";
@@ -91,7 +92,12 @@ onMounted(load);
               :addresses="supplier.addresses" :can-manage="canManage" @refresh="load"
             />
           </q-tab-panel>
-          <q-tab-panel name="contacts"><div v-if="!supplier.contacts.length" class="text-grey-7">尚未設定聯絡人</div></q-tab-panel>
+          <q-tab-panel name="contacts">
+            <SupplierContactPanel
+              :supplier-id="supplier.id" :supplier-code="supplier.supplierCode"
+              :contacts="supplier.contacts" :can-manage="canManage" @refresh="load"
+            />
+          </q-tab-panel>
           <q-tab-panel name="identifiers"><div v-if="!supplier.identifiers.length" class="text-grey-7">尚未設定識別資料</div></q-tab-panel>
           <q-tab-panel name="bank">
             <div v-if="!supplier.bankAccounts.length" class="text-grey-7">尚未設定銀行資料</div>

@@ -55,5 +55,17 @@ export default {
 
   deactivateAddress(supplierId, addressId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/deactivate`, { body: payload });
+  },
+
+  createContact(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/create`, { body: payload });
+  },
+
+  updateContact(supplierId, contactId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/update`, { body: payload });
+  },
+
+  deactivateContact(supplierId, contactId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/deactivate`, { body: payload });
   }
 };

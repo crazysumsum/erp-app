@@ -6,6 +6,7 @@ export function toSupplierSummaryResponse(row) {
     displayName: row.display_name,
     defaultCurrencyCode: row.default_currency_code,
     defaultPaymentTermId: row.default_payment_term_id === null ? null : Number(row.default_payment_term_id),
+    primaryContactName: row.primary_contact_name ?? "",
     status: row.status,
     version: Number(row.version),
     updatedAt: Number(row.updated_at)

@@ -62,10 +62,11 @@ const DUPLICATE = Object.freeze({
 });
 export const SUPPLIER_SUMMARY_SCHEMA = Object.freeze({
   type: "object", additionalProperties: false,
-  required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "status", "version", "updatedAt"],
+  required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "primaryContactName", "status", "version", "updatedAt"],
   properties: {
     id: { type: "integer", minimum: 1 }, supplierCode: { type: "string" }, supplierName: { type: "string" },
     displayName: { type: "string" }, defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] },
+    primaryContactName: { type: "string" },
     status: { type: "string", enum: [...SUPPLIER_STATUSES] }, version: { type: "integer", minimum: 1 }, updatedAt: { type: "integer", minimum: 0 }
   }
 });
@@ -82,7 +83,8 @@ export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
   required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "status", "version", "updatedAt", "website", "generalPhone", "generalEmail", "notes", "createdAt", "addresses", "contacts", "identifiers", "bankAccounts", "warnings"],
   properties: {
     id: { type: "integer" }, supplierCode: { type: "string" }, supplierName: { type: "string" }, displayName: { type: "string" },
-    defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] }, status: { type: "string", enum: [...SUPPLIER_STATUSES] },
+    defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] }, primaryContactName: { type: "string" },
+    status: { type: "string", enum: [...SUPPLIER_STATUSES] },
     version: { type: "integer" }, updatedAt: { type: "integer" }, website: { type: "string" }, generalPhone: { type: "string" },
     generalEmail: { type: "string" }, notes: { type: "string" }, createdAt: { type: "integer" },
     addresses: { type: "array" }, contacts: { type: "array" }, identifiers: { type: "array" }, bankAccounts: { type: "array" },

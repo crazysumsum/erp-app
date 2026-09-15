@@ -14,7 +14,8 @@ import { useSessionStore } from "@/stores/session.js";
 
 const ROW = {
   id: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen",
-  defaultCurrencyCode: "HKD", defaultPaymentTermId: null, status: "active", version: 2, updatedAt: 1700000000000
+  defaultCurrencyCode: "HKD", defaultPaymentTermId: null, primaryContactName: "Amy Chan",
+  status: "active", version: 2, updatedAt: 1700000000000
 };
 
 async function mountPage({ permissions = ["supplier.view", "supplier.mgmt"], initialRoute = "/suppliers" } = {}) {
@@ -43,6 +44,7 @@ describe("pages/suppliers/SuppliersPage.vue", () => {
     expect(page.requires.permissions).toEqual(["supplier.view"]);
     const { body } = await mountPage();
     expect(body.text()).toContain("SUP-007");
+    expect(body.text()).toContain("Amy Chan");
     expect(body.text()).toContain("啟用");
     expect(body.find('a[href="/suppliers/7"]').exists()).toBe(true);
   });
