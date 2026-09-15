@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 54,
+  "revision": 56,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-009",
+  "current_task": null,
   "baseline": {
     "design": "89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5",
     "plan": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
-    "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
-    "source_fingerprint": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
+    "code_commit": "b9774e4a52605bd6d1c49e181b89d24b93daf887",
+    "source_fingerprint": "b8dfde3ce84fe59ff81e72a7829566f71e7446cbd46c31344ba81a2496e89d58",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -34,7 +34,7 @@
     "TASK-006": "DONE",
     "TASK-007": "DONE",
     "TASK-008": "DONE",
-    "TASK-009": "IN_PROGRESS",
+    "TASK-009": "DONE",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -433,6 +433,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-009 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "b8dfde3ce84fe59ff81e72a7829566f71e7446cbd46c31344ba81a2496e89d58",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -446,6 +458,17 @@
       "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
       "actor": "/root local developer verification",
       "observed_at": "2026-09-15T04:09:15Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-009 local server regression and isolated MySQL lookup-contract verification",
+      "code_commit": "b9774e4a52605bd6d1c49e181b89d24b93daf887",
+      "spec_baseline": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "source_fingerprint": "b8dfde3ce84fe59ff81e72a7829566f71e7446cbd46c31344ba81a2496e89d58",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-15T08:07:05Z"
     }
   ],
   "pending_decisions": [
@@ -508,6 +531,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "APPROVAL-DESIGN-003; APPROVAL-PLAN-003; APPROVAL-SCOPE-009"
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "Approve TASK-010 execution against the current Customer Management DESIGN and PLAN baselines?",
+      "affected_ids": [
+        "TASK-010",
+        "PHASE-001"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -646,11 +680,19 @@
       "idempotency_key": "customer-phase001-task008-review-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-15: post-review fixed isolated schema was absent before execution; fresh migrations through 0036 passed, including the hardened credit Currency collation inspector; full migration rerun was a no-op; TC-021..TC-025 real MySQL and HTTP suite passed; trap cleanup and final schema absence were observed."
+    },
+    {
+      "id": "EXT-MIGRATION-013",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task009_20260915",
+      "idempotency_key": "customer-phase001-task009-lookup-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: the fixed schema was absent before execution; fresh migrations through 0036 passed; a complete rerun skipped every migration; TC-018 and TC-027 real MySQL status, minimal projection, credit, ownership, purpose and transaction-version assertions passed 1/1; trap cleanup and final schema absence were confirmed."
     }
   ],
   "evidence_files": [
     "docs/customer_management/implementation/00_implementation_readiness.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-009 reference-provider registry and minimum Customer lookup contracts with focused RED/GREEN tests, then run readiness/lookup contract verification."
+  "next_safe_action": "Obtain explicit Product Owner approval for TASK-010, then reconcile current baselines and begin the PHASE-001 integration, query-plan, regression and controlled capability gate work."
 }

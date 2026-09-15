@@ -193,3 +193,36 @@ merge claim.
   `git diff --check` passed, and review found no remaining Critical or High issue.
   CI was not run, as directed by the Product Owner. No frontend file changed, so
   browser and Playwright verification are not applicable to TASK-008.
+
+## TASK-009 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added the versioned `CustomerReferenceProviderRegistry` contract with required
+  provider/version readiness, bounded calls and fail-closed `UNKNOWN` aggregation.
+  Missing, incompatible, unavailable, malformed and empty mandatory-provider
+  configurations can never be interpreted as safe to clear a reference guard.
+- Added purpose-specific `CustomerLookupService` contracts. `new_sale` and
+  `manual_invoice` are Active-only, existing-document/history purposes retain
+  status-tolerant access, unknown purposes fail closed, and projections exclude
+  notes and other non-contract fields. Address and Contact lookups are active,
+  owner- and purpose-scoped; transaction assertions require a positive
+  `expectedVersion`, lock the selected row and return the Customer version snapshot.
+- Focused TC-018, TC-026 and TC-027 contract suites passed 14 tests. A fresh
+  isolated MySQL schema `erp_customer_phase001_task009_20260915` migrated through
+  `0036`, a complete rerun skipped every migration, and the real lookup contract
+  test passed 1/1 for status handling, minimal projection, credit zero/on-hold,
+  ownership, purpose and transaction-version checks. Trap cleanup completed and
+  the final schema-absence query returned zero.
+- Final full local server regression on commit `b9774e4` executed 1,538 tests:
+  1,305 passed, 233 existing environment-gated tests skipped and 0 failed.
+  Repository ESLint and `git diff --check` passed. CI was not run, as directed by
+  the Product Owner. No frontend file changed, so browser and Playwright validation
+  are not applicable to TASK-009.
+- Self-review covered correctness, readability, architecture, security and
+  performance. It corrected vacuous-clear behavior for an empty provider list,
+  enforced transaction `expectedVersion`, preserved 190-character legal-name
+  search independently of the 64-character code limit, and repaired five earlier
+  Customer integration-fixture lint findings without weakening teardown safety.
+  No Critical or High issue remains.
