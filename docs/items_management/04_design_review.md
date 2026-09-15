@@ -168,3 +168,13 @@ The earlier “Independent” title is historical wording without sufficient pro
 - evidence reviewed: `remediation-server-scoped.junit.xml` 459/459, `remediation-client.junit.xml` 492/492, `remediation-performance-bounded.junit.xml` 4/4, `remediation-item-uat-browser.junit.xml` 11 pass/2 explicit skips; these are developer remediation artifacts, and the reviewer checked evidence/current files but did not rerun commands
 - residual risks: `TC-016` recovery environment, full-scale 100k performance, TASK-043/UAT-005 downstream reference and UAT-015 business sign-off remain blocked and are not waived
 - final disposition: `APPROVED`, no remaining P0/P1/P2. This is independent review of the remediation PLAN baseline, not Product Owner approval, formal acceptance, CI or release approval.
+
+## REV-013 — TASK-044 recovery adapter independent review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context; read-only review, no file edits or privileged MySQL execution
+- reviewed baseline: candidate `61db18cc5f79a822a7f1d7d78f52de84a6a5f327`; TASK-044 recovery core/CLI, tests, trust policy and aligned Item documents
+- first review disposition: `CHANGES_REQUESTED`, one Critical false-PASS path and three Required findings—the operator-controlled manifest was not independently attested, production-schema protection used an incomplete blacklist, the MySQL test did not derive exact counts, and readiness still said the runner was absent
+- findings closed: the candidate contains an initially `UNPROVISIONED` repo trust policy, detached Ed25519 verification of exact manifest bytes, approved environment/schema-prefix binding plus defence-in-depth blacklist, per-table `COUNT(*)` integration logic with mismatch assertion, conservative RTO calculation through adapter verification start, and superseded readiness/gap records
+- evidence reviewed: focused recovery tests 10/10, full server regression 1,497 total / 1,255 pass / 0 fail / 242 gated skips, lint pass and traceability `STRUCTURE_PASS`; the local true-MySQL rehearsal remains unexecuted because `erp_user` cannot create an isolated recovery schema
+- final disposition: `APPROVED`, no remaining Critical/Required finding. This approves the implementation increment only; the unprovisioned trust key, approved staging-like restore, TC-016 formal execution, PLAN/candidate approval, CI and release gates remain separate.
