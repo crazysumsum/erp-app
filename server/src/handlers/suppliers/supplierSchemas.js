@@ -4,6 +4,31 @@ export const EMPTY_SUPPLIER_SCHEMA = Object.freeze({ type: "object", properties:
 export const SUPPLIER_MGMT_POLICY = Object.freeze([Object.freeze({ name: "hasPermission", options: Object.freeze({ permissions: Object.freeze(["supplier.mgmt"]) }) })]);
 export const SUPPLIER_VIEW_POLICY = Object.freeze([Object.freeze({ name: "hasPermission", options: Object.freeze({ permissions: Object.freeze(["supplier.view"]) }) })]);
 
+export const SUPPLIER_ID_PARAMS_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id"],
+  additionalProperties: false,
+  properties: { id: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } }
+});
+
+export const SUPPLIER_LIST_QUERY_SCHEMA = Object.freeze({
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    page: { type: "integer", minimum: 1, default: 1 },
+    pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+    q: { type: "string", maxLength: 190, default: "" },
+    status: { type: "string", enum: [...SUPPLIER_STATUSES] },
+    currencyCode: { type: "string", pattern: "^[A-Z]{3}$" },
+    paymentTermId: { type: "integer", minimum: 1 },
+    updatedFrom: { type: "integer", minimum: 0 },
+    updatedTo: { type: "integer", minimum: 0 },
+    includeArchived: { type: "boolean", default: false },
+    sortBy: { type: "string", enum: ["supplierCode", "supplierName", "status", "updatedAt"], default: "updatedAt" },
+    descending: { type: "boolean", default: true }
+  }
+});
+
 export const SUPPLIER_CREATE_SCHEMA = Object.freeze({
   type: "object",
   required: ["supplierCode", "supplierName", "defaultCurrencyCode"],
@@ -35,9 +60,26 @@ const DUPLICATE = Object.freeze({
     score: { type: "number" }, exact: { type: "boolean" }, warningOnly: { const: true }
   }
 });
+export const SUPPLIER_SUMMARY_SCHEMA = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "status", "version", "updatedAt"],
+  properties: {
+    id: { type: "integer", minimum: 1 }, supplierCode: { type: "string" }, supplierName: { type: "string" },
+    displayName: { type: "string" }, defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] },
+    status: { type: "string", enum: [...SUPPLIER_STATUSES] }, version: { type: "integer", minimum: 1 }, updatedAt: { type: "integer", minimum: 0 }
+  }
+});
+export const SUPPLIER_LIST_RESPONSE_SCHEMA = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["items", "total", "page", "pageSize"],
+  properties: {
+    items: { type: "array", items: SUPPLIER_SUMMARY_SCHEMA }, total: { type: "integer", minimum: 0 },
+    page: { type: "integer", minimum: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100 }
+  }
+});
 export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
   type: "object", additionalProperties: false,
-  required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "status", "version", "updatedAt", "website", "generalPhone", "generalEmail", "notes", "createdAt", "addresses", "contacts", "identifiers", "bankAccounts", "warnings", "duplicateCandidates"],
+  required: ["id", "supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId", "status", "version", "updatedAt", "website", "generalPhone", "generalEmail", "notes", "createdAt", "addresses", "contacts", "identifiers", "bankAccounts", "warnings"],
   properties: {
     id: { type: "integer" }, supplierCode: { type: "string" }, supplierName: { type: "string" }, displayName: { type: "string" },
     defaultCurrencyCode: { type: "string" }, defaultPaymentTermId: { type: ["integer", "null"] }, status: { type: "string", enum: [...SUPPLIER_STATUSES] },
@@ -45,5 +87,36 @@ export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
     generalEmail: { type: "string" }, notes: { type: "string" }, createdAt: { type: "integer" },
     addresses: { type: "array" }, contacts: { type: "array" }, identifiers: { type: "array" }, bankAccounts: { type: "array" },
     warnings: { type: "array", items: WARNING }, duplicateCandidates: { type: "array", items: DUPLICATE }
+  }
+});
+
+export const SUPPLIER_DUPLICATE_CHECK_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["supplierCode", "supplierName"],
+  additionalProperties: false,
+  properties: {
+    supplierCode: { type: "string", minLength: 1, maxLength: 64 },
+    supplierName: { type: "string", minLength: 1, maxLength: 190 }
+  }
+});
+
+const CODE_CONFLICT = Object.freeze({
+  type: ["object", "null"],
+  required: ["supplierId", "supplierCode", "supplierName"],
+  additionalProperties: false,
+  properties: { supplierId: { type: "integer" }, supplierCode: { type: "string" }, supplierName: { type: "string" } }
+});
+
+export const SUPPLIER_DUPLICATE_RESPONSE_SCHEMA = Object.freeze({
+  type: "object", required: ["codeConflict", "duplicateCandidates"], additionalProperties: false,
+  properties: { codeConflict: CODE_CONFLICT, duplicateCandidates: { type: "array", maxItems: 10, items: DUPLICATE } }
+});
+
+export const SUPPLIER_COMPLETENESS_SCHEMA = Object.freeze({
+  type: "object", required: ["supplierId", "issues", "warnings"], additionalProperties: false,
+  properties: {
+    supplierId: { type: "integer", minimum: 1 },
+    issues: { type: "array", items: WARNING },
+    warnings: { type: "array", items: WARNING }
   }
 });

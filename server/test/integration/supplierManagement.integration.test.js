@@ -80,6 +80,35 @@ integrationTest("Supplier create atomically persists root, grams and audit while
   assert.ok(Number(counts.grams) > 0);
   assert.equal(Number(counts.audits), 1);
 
+  const listed = await service.listSuppliers({
+    actorId,
+    claimedRoles: [],
+    claimedPermissions: [],
+    q: codes[0],
+    page: 1,
+    pageSize: 20,
+    sortBy: "supplierCode",
+    descending: false
+  });
+  assert.equal(listed.total, 1);
+  assert.equal(listed.items[0].supplierCode, codes[0]);
+  assert.equal("supplierCodeKey" in listed.items[0], false);
+
+  const detail = await service.getSupplier({ actorId, claimedRoles: [], claimedPermissions: [], id: created.id });
+  assert.equal(detail.id, created.id);
+  assert.deepEqual(detail.bankAccounts, []);
+  assert.ok(detail.warnings.some((warning) => warning.code === "BANK_ACCOUNT_MISSING"));
+
+  const duplicateCheck = await service.findSupplierDuplicateCandidates({
+    actorId,
+    claimedRoles: [],
+    claimedPermissions: [],
+    supplierCode: codes[0],
+    supplierName: "Integration Snacks Supplier"
+  });
+  assert.equal(duplicateCheck.codeConflict.supplierId, created.id);
+  assert.ok(duplicateCheck.duplicateCandidates.some((candidate) => candidate.supplierId === created.id));
+
   await assert.rejects(
     () => service.createSupplier({ actorId, claimedRoles: [], claimedPermissions: [], supplierCode: codes[0].toLowerCase(), supplierName: "Duplicate", defaultCurrencyCode: "HKD" }),
     (error) => error.publicCode === "SUPPLIER_CODE_TAKEN"

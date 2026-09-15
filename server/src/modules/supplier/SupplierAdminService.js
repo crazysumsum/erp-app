@@ -3,11 +3,26 @@ import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeContactEmail, normalizeSupplierCode, normalizeSupplierName, normalizeSupplierUrl } from "./supplierNormalization.js";
-import { toSupplierDetailResponse } from "./supplierProjections.js";
+import { toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
 import { assertKnownSupplierFields, assertSupplierActivatable, supplierCompletenessWarnings } from "./supplierValidation.js";
 
 function duplicateEntry(error) {
   return (error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY";
+}
+
+const SUPPLIER_SORT_COLUMNS = Object.freeze({
+  supplierCode: "s.supplier_code_key",
+  supplierName: "s.supplier_name",
+  status: "s.status",
+  updatedAt: "s.updated_at"
+});
+
+function supplierSortColumn(sortBy) {
+  return SUPPLIER_SORT_COLUMNS[sortBy] ?? SUPPLIER_SORT_COLUMNS.updatedAt;
+}
+
+function escapeLikeTerm(value) {
+  return value.replace(/[\\%_]/gu, "\\$&");
 }
 
 export class SupplierAdminService {
@@ -134,5 +149,122 @@ export class SupplierAdminService {
     if (!row) throw supplierNotFound(supplierId);
     const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id });
     return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates };
+  }
+
+  async listSuppliers({
+    actorId,
+    claimedRoles,
+    claimedPermissions,
+    page = 1,
+    pageSize = 20,
+    q = "",
+    status,
+    currencyCode,
+    paymentTermId,
+    updatedFrom,
+    updatedTo,
+    includeArchived = false,
+    sortBy = "updatedAt",
+    descending = true
+  }) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const conditions = [];
+    const params = [];
+    if (status) {
+      conditions.push("s.status = ?");
+      params.push(status);
+    } else if (!includeArchived) {
+      conditions.push("s.status != 'archived'");
+    }
+    if (currencyCode) {
+      conditions.push("s.default_currency_code = ?");
+      params.push(currencyCode);
+    }
+    if (paymentTermId !== undefined) {
+      if (paymentTermId === null) conditions.push("s.default_payment_term_id IS NULL");
+      else {
+        conditions.push("s.default_payment_term_id = ?");
+        params.push(paymentTermId);
+      }
+    }
+    if (updatedFrom !== undefined) {
+      conditions.push("s.updated_at >= ?");
+      params.push(updatedFrom);
+    }
+    if (updatedTo !== undefined) {
+      conditions.push("s.updated_at <= ?");
+      params.push(updatedTo);
+    }
+
+    const search = String(q ?? "").normalize("NFKC").trim();
+    let exactCodeKey = null;
+    if (search) {
+      const escaped = escapeLikeTerm(search);
+      exactCodeKey = search.toLowerCase();
+      conditions.push(`(
+        s.supplier_code_key LIKE ? ESCAPE '\\\\'
+        OR s.supplier_name LIKE ? ESCAPE '\\\\'
+        OR s.display_name LIKE ? ESCAPE '\\\\'
+        OR s.general_phone LIKE ? ESCAPE '\\\\'
+        OR s.general_email LIKE ? ESCAPE '\\\\'
+      )`);
+      params.push(`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`);
+    }
+
+    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const direction = descending ? "DESC" : "ASC";
+    const stableSort = `${supplierSortColumn(sortBy)} ${direction}, s.id ${direction}`;
+    const exactOrder = exactCodeKey ? "CASE WHEN s.supplier_code_key = ? THEN 0 ELSE 1 END, " : "";
+    const offset = (page - 1) * pageSize;
+    const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s ${where}`, params);
+    const listParams = exactCodeKey ? [...params, exactCodeKey, pageSize, offset] : [...params, pageSize, offset];
+    const [rows] = await this.database.query(
+      `SELECT s.id, s.supplier_code, s.supplier_name, s.display_name,
+              s.default_currency_code, s.default_payment_term_id, s.status, s.version, s.updated_at
+         FROM suppliers s ${where}
+        ORDER BY ${exactOrder}${stableSort}
+        LIMIT ? OFFSET ?`,
+      listParams
+    );
+    return { items: rows.map(toSupplierSummaryResponse), total: Number(countRows[0].total), page, pageSize };
+  }
+
+  async getSupplier({ actorId, claimedRoles, claimedPermissions, id }) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
+    if (!row) throw supplierNotFound(id);
+    return toSupplierDetailResponse(row, { warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id }) });
+  }
+
+  async getSupplierCompleteness({ actorId, claimedRoles, claimedPermissions, id }) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
+    if (!row) throw supplierNotFound(id);
+    return {
+      supplierId: Number(row.id),
+      issues: [],
+      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id })
+    };
+  }
+
+  async findSupplierDuplicateCandidates({ actorId, claimedRoles, claimedPermissions, supplierCode, supplierName }) {
+    const code = normalizeSupplierCode(supplierCode);
+    const name = normalizeSupplierName(supplierName);
+    return this.database.withTransaction(async (connection) => {
+      await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const [[existing]] = await connection.query(
+        "SELECT id, supplier_code, supplier_name FROM suppliers WHERE supplier_code_key = ? LIMIT 1",
+        [code.key]
+      );
+      const duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
+      return {
+        codeConflict: existing ? {
+          supplierId: Number(existing.id),
+          supplierCode: existing.supplier_code,
+          supplierName: existing.supplier_name
+        } : null,
+        duplicateCandidates
+      };
+    });
   }
 }
