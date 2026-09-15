@@ -47,7 +47,9 @@
     "approval_required_paths": [
       "server/database/migrations/**",
       "server/.env.example",
+      "server/src/index.js",
       "server/src/framework/configuration/applicationConfiguration.js",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/config/**",
       "server/package.json",
@@ -81,7 +83,7 @@
         "id": "supplier-public-provider-contracts",
         "version": "design-1.0",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "16031c0f63ce28baf333f02e65f68107a42d4d711baf2e9f55c77d60625859db",
+        "sha256": "a9f644939616f70c1099c2a9d9b82847394abfcc29de64730ec5247ad46697bc",
         "consumers": [
           "purchasing-receiving",
           "item-management",

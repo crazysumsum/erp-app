@@ -26,7 +26,10 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   const application = await createApplication({
     configurationSource: { ...source, application: { ...source.application, port: 0 } },
     serviceDiscoveryOptions: {
-      additionalModuleUrls: [new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href]
+      additionalModuleUrls: [
+        new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href
+      ]
     }
   });
   const db = application.services.require("mysqldatabase");
@@ -90,7 +93,17 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   });
   assert.equal(preview.status, 200);
   assert.equal(preview.body.data.results.length, 6);
-  assert.equal(preview.body.data.results.every((row) => row.status === "NOT_INSTALLED"), true);
+  assert.deepEqual(
+    preview.body.data.results.map(({ checkerId, status }) => ({ checkerId, status })),
+    [
+      { checkerId: "ap", status: "NOT_INSTALLED" },
+      { checkerId: "ar", status: "NOT_INSTALLED" },
+      { checkerId: "customer", status: "NOT_INSTALLED" },
+      { checkerId: "purchasing", status: "NOT_INSTALLED" },
+      { checkerId: "sales", status: "NOT_INSTALLED" },
+      { checkerId: "supplier", status: "READY" }
+    ]
+  );
   const rejected = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {
     method: "POST", token, key: randomUUID(), body: { version: 1, reason: "stale impact test", impactToken: "invalid-token" }
   });

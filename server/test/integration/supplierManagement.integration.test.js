@@ -7,6 +7,8 @@ import { BusinessMasterReadinessService } from "../../src/modules/businessMaster
 import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
 import { BusinessMasterLookupProvider } from "../../src/modules/supplier/providers/BusinessMasterLookupProvider.js";
 import { SupplierAdminService } from "../../src/modules/supplier/SupplierAdminService.js";
+import { SupplierBusinessMasterImpactChecker } from "../../src/modules/supplier/SupplierBusinessMasterImpactChecker.js";
+import { SupplierLookupService } from "../../src/modules/supplier/SupplierLookupService.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
@@ -47,6 +49,21 @@ function serviceFor(pool, overrides = {}) {
     authorize: async () => ({ id: null, username: "integration" }),
     ...overrides
   });
+}
+
+function lookupFor(pool) {
+  const db = database(pool);
+  const provider = new BusinessMasterProvider({ database: db, repository: new BusinessMasterRepository() });
+  const businessMaster = new BusinessMasterLookupProvider({ provider, readiness: new BusinessMasterReadinessService({ database: db, checkerIds: ["supplier"] }) });
+  return {
+    database: db,
+    service: new SupplierLookupService({
+      database: db,
+      logger: { error() {} },
+      time: { nowMs: () => Date.now() },
+      businessMaster
+    })
+  };
 }
 
 integrationTest("Supplier create atomically persists root, grams and audit while duplicate codes and audit failure leave no partial data", async (t) => {
@@ -310,4 +327,129 @@ integrationTest("Supplier lifecycle is atomic, idempotent at the target state an
   const [[afterRollback]] = await pool.query("SELECT status, version FROM suppliers WHERE id = ?", [created.id]);
   assert.equal(afterRollback.status, "suspended");
   assert.equal(Number(afterRollback.version), restored.version);
+});
+
+integrationTest("Supplier core lookup keeps history visible and revalidates purchase eligibility in the caller transaction", async (t) => {
+  const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
+  const suffix = String(Date.now());
+  const code = `LOOK-${suffix}`;
+  const supplierIds = [];
+  t.after(async () => {
+    if (supplierIds.length > 0) {
+      await pool.query("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [supplierIds[0]]);
+      await pool.query("DELETE FROM suppliers WHERE id = ?", [supplierIds[0]]);
+    }
+    await pool.end();
+  });
+  const admin = serviceFor(pool);
+  const lookup = lookupFor(pool);
+  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const actorId = Number(actor.id);
+  const created = await admin.createSupplier({
+    actorId,
+    claimedRoles: [],
+    claimedPermissions: [],
+    supplierCode: code,
+    supplierName: "Lookup Integration Supplier",
+    defaultCurrencyCode: "HKD",
+    defaultCurrencyVersion: 1,
+    activate: true,
+    requestId: `lookup-${suffix}`
+  });
+  const supplierId = created.id;
+  supplierIds.push(supplierId);
+  const now = Date.now();
+  const [addressResult] = await pool.execute(
+    `INSERT INTO supplier_addresses
+       (supplier_id, label, address_line1, city, country_code, status, version, created_at, updated_at, created_by, updated_by)
+     VALUES (?, 'Ordering', '1 Integration Road', 'Hong Kong', 'HK', 'active', 1, ?, ?, ?, ?)`,
+    [supplierId, now, now, actorId, actorId]
+  );
+  await pool.execute(
+    `INSERT INTO supplier_address_purposes
+       (address_id, supplier_id, purpose_code, is_primary, created_at, updated_at, created_by, updated_by)
+     VALUES (?, ?, 'ordering', 1, ?, ?, ?, ?)`,
+    [addressResult.insertId, supplierId, now, now, actorId, actorId]
+  );
+
+  const byId = await lookup.service.findById(supplierId, { purpose: "purchase" });
+  const byCode = await lookup.service.findByCode(code.toLowerCase(), { purpose: "history" });
+  const many = await lookup.service.findManyByIds([supplierId, supplierId], { purpose: "purchase" });
+  assert.equal(byId.usable, true);
+  assert.equal(byCode.supplierId, supplierId);
+  assert.equal(many.size, 1);
+  assert.equal("bankAccounts" in byId, false);
+
+  const defaults = await lookup.service.getPurchaseDefaults(supplierId);
+  assert.equal(defaults.currency.code, "HKD");
+  assert.equal(defaults.paymentTerm, null);
+  assert.equal(defaults.orderingAddress.addressLine1, "1 Integration Road");
+
+  const lockOwner = await pool.getConnection();
+  const contender = await pool.getConnection();
+  try {
+    await lockOwner.beginTransaction();
+    const locked = await lookup.service.assertUsableInTransaction(lockOwner, supplierId, { purpose: "purchase" });
+    assert.equal(locked.status, "active");
+    await contender.query("SET SESSION innodb_lock_wait_timeout = 1");
+    await contender.beginTransaction();
+    await assert.rejects(
+      () => contender.query("UPDATE suppliers SET status = 'suspended' WHERE id = ?", [supplierId]),
+      (error) => error.errno === 1205 || error.code === "ER_LOCK_WAIT_TIMEOUT"
+    );
+    await contender.rollback();
+    await lockOwner.commit();
+  } finally {
+    await contender.rollback().catch(() => undefined);
+    await lockOwner.rollback().catch(() => undefined);
+    contender.release();
+    lockOwner.release();
+  }
+
+  const suspended = await admin.suspendSupplier({
+    actorId,
+    claimedRoles: [],
+    claimedPermissions: [],
+    id: supplierId,
+    version: created.version,
+    reason: "Verify submit-time status change",
+    requestId: `lookup-suspend-${suffix}`
+  });
+  assert.equal(suspended.status, "suspended");
+  const purchaseAfterSuspend = await lookup.service.findById(supplierId, { purpose: "purchase" });
+  const historyAfterSuspend = await lookup.service.findById(supplierId, { purpose: "history" });
+  assert.deepEqual(purchaseAfterSuspend.reasons, ["STATUS_NOT_ACTIVE"]);
+  assert.equal(historyAfterSuspend.usable, true);
+
+  await assert.rejects(
+    () => lookup.database.withTransaction((connection) =>
+      lookup.service.assertUsableInTransaction(connection, supplierId, { purpose: "purchase" })
+    ),
+    (error) => error.code === "SUPPLIER_NOT_USABLE" && error.details.supplierId === supplierId
+  );
+});
+
+integrationTest("Supplier Business Master impact checks fail closed for unclassified persisted statuses", async (t) => {
+  const pool = mysql.createPool({ ...config(), connectionLimit: 2 });
+  const suffix = String(Date.now());
+  const supplierIds = [];
+  t.after(async () => {
+    if (supplierIds.length > 0) await pool.query("DELETE FROM suppliers WHERE id = ?", [supplierIds[0]]);
+    await pool.end();
+  });
+  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const [result] = await pool.execute(
+    `INSERT INTO suppliers
+       (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
+        status, version, created_at, updated_at, created_by, updated_by)
+     VALUES (?, ?, 'Future Status Supplier', 'future status supplier', 'HKD', 'future_status', 1, ?, ?, ?, ?)`,
+    [`STATE-${suffix}`, `state-${suffix}`, Date.now(), Date.now(), actor.id, actor.id]
+  );
+  supplierIds.push(Number(result.insertId));
+  const checker = new SupplierBusinessMasterImpactChecker({ database: database(pool) });
+
+  await assert.rejects(
+    () => checker.check({ entityType: "CURRENCY", entityKey: "HKD" }),
+    /unclassified status/u
+  );
 });

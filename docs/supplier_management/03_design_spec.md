@@ -1220,6 +1220,8 @@ Constructor接收已正規化的兩組secret key rings；AES-GCM decrypt authent
 
 由`BusinessMasterLookupService`取代Supplier-owned catalog service。Supplier只呼叫`listCurrencies()`、`listPaymentTerms()`、`assertCurrencyUsableInTransaction()`及`assertPaymentTermUsableInTransaction()`；所有write、normalization、deactivation及catalog authorization由Business Master負責。Supplier update／activate／import必須在caller transaction內重驗所選值，並保存ID/code/name/version的必要snapshot或audit before/after。
 
+Supplier同時擁有`SupplierBusinessMasterImpactChecker`，只按Currency／Payment Term reference回傳`activeDefaultCount`、`openUseCount`、`historicalCount`及data-drift watermark，不回傳Supplier或Bank明細。狀態分類固定為Active、可恢復／待處理（Draft、Pending Approval、Suspended、Blocked）及Archived；總引用數與三類合計不一致時必須fail closed，不可低報未知狀態。正式server bootstrap把`SupplierBusinessMasterImpactCheckerService`註冊為`businessMasterFactory`可解析的`supplierBusinessMasterImpactChecker`；其他未安裝consumer仍沿用`NOT_INSTALLED`／fail-closed契約。這項跨模組組裝只允許修改manifest列明的共享factory與bootstrap，Business Master仍擁有catalog及registry語義。
+
 ### 8.7 `SupplierRelationService`／`SupplierLookupService`
 
 Relation service 驗證 Supplier、SKU、SKU UOM及 relationship status。建立 relation不會使 Supplier Active，也不改 SKU status。
@@ -1243,6 +1245,8 @@ Supplier對下游公開的最小contract固定為：
 - `getOpenMatterStatusInTransaction(connection, supplierId)`：聚合已註冊下游providers，結果為`OPEN`、`CLEAR`或`UNKNOWN`；永久刪除／封存等安全操作不得把`UNKNOWN`當`CLEAR`。
 
 所有provider在startup registry宣告name、purpose、required capability及health/readiness；不允許Fulfillment、Purchasing、Receiving、Returns、AP或Payment自行複製Supplier狀態判斷。一般lookup永不包含Bank欄；未來Payment Bank contract按§8.4的高信任流程另行增加。
+
+正式runtime adapter為`SupplierCoreProviderService`，service name固定`supplierCoreProvider`、contract固定`supplier-core-provider/v1`，依賴`mysqldatabase`、`logging`、`time`及READY的`businessMaster`。它由server bootstrap自動發現，在startup驗證Supplier root、Ordering Address所需tables及Business Master provider後才回`READY`；缺table、provider/version不符或檢查失敗均阻止正式server啟動。下游透過container contract解析，不得只靠手動import或production fake。提交重驗的真MySQL測試必須使用兩條獨立connection證明`FOR UPDATE`會序列化同時發生的Suspend／Block，而非只做順序測試。
 
 ### 8.8 `SupplierImportService`／Processor
 

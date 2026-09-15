@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 70,
+  "revision": 71,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
-    "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
-    "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "78b01e70324bc39263248067478f695ff475c11c",
-    "source_fingerprint": "c41396b1c0d717464629ceb1cb6e6fdd48a7698d7c27fc66b2ac109264ad9f8f",
+    "design": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
+    "plan": "24cdb1e9a7b1a45de1b223e75b0a6c36b66a07dbcecb313b029a19a7bd13ab5d",
+    "code_commit": "9f394c288adf5d3e6a31d949b5705380be65be58",
+    "source_fingerprint": "3925c5a171c16b2bc0298bd47424607670b878125a08cb6ea1c69bc91c1f772d",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -371,6 +371,59 @@
         "docs/items_management/**",
         "docs/customer_management/**",
         "docs/purchasing_receiving_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-009-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 批准 (reply to the exact Supplier provider remediation Design baseline)",
+      "recorded_at": "2026-09-15T07:43:30Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
+      "code_commit": "9f394c288adf5d3e6a31d949b5705380be65be58",
+      "scope": [
+        "supplier-management",
+        "Supplier Core runtime provider",
+        "Supplier Business Master impact checker"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-009-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 批准 (reply to the exact Supplier provider remediation Plan baseline)",
+      "recorded_at": "2026-09-15T07:43:30Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "24cdb1e9a7b1a45de1b223e75b0a6c36b66a07dbcecb313b029a19a7bd13ab5d",
+      "code_commit": "9f394c288adf5d3e6a31d949b5705380be65be58",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "TASK-024"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-009-SHARED-PATHS",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-15: 批准 (reply explicitly naming the two shared paths)",
+      "recorded_at": "2026-09-15T07:43:30Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "24cdb1e9a7b1a45de1b223e75b0a6c36b66a07dbcecb313b029a19a7bd13ab5d",
+      "code_commit": "9f394c288adf5d3e6a31d949b5705380be65be58",
+      "scope": [
+        "server/src/index.js",
+        "server/src/modules/businessMaster/businessMasterFactory.js"
       ],
       "expires_at": null
     }

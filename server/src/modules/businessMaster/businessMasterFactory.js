@@ -36,7 +36,10 @@ export function createBusinessMasterAdminService(services) {
   const time = services.require("time");
   const logger = services.require("logging").logger;
   const repository = new BusinessMasterRepository();
-  const checkers = Object.entries(CONSUMER_TABLES).map(([id, table]) => readinessChecker(database, id, table));
+  const supplierChecker = services.get?.("supplierBusinessMasterImpactChecker");
+  const checkers = Object.entries(CONSUMER_TABLES).map(([id, table]) =>
+    id === "supplier" && supplierChecker ? supplierChecker : readinessChecker(database, id, table)
+  );
   const impactRegistry = new BusinessMasterImpactRegistry({ time, checkers, requiredCheckerIds: Object.keys(CONSUMER_TABLES) });
   return new BusinessMasterAdminService({
     database,
