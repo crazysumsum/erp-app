@@ -35,3 +35,12 @@ export function supplierNotFound(id) {
     publicMessage: "找不到這個供應商"
   });
 }
+
+export function supplierChildNotFound(childType) {
+  const labels = { address: "地址", contact: "聯絡人", identifier: "識別資料" };
+  return supplierError(`Supplier ${childType} was not found for this owner`, {
+    code: `SUPPLIER_${childType.toUpperCase()}_NOT_FOUND`,
+    statusCode: 404,
+    publicMessage: `找不到這項供應商${labels[childType] ?? "子資料"}`
+  });
+}

@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 55,
+  "revision": 57,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-014",
+  "current_task": "TASK-015",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "a92925d9e8f7586fef69afcd6f2a9e0c0dde335a",
-    "source_fingerprint": "4d790e4e53a26cdd5968ec386c936c83a40ab7ddf85b09533d15760872f755be",
+    "code_commit": "fbbfb26c535958de092901c99b8fcf3dbe97ac5b",
+    "source_fingerprint": "b7ba82365cfa115f31fd963687ba36a48be4af5d73174239bcc817f1e9cf3f6d",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -41,8 +41,8 @@
     "TASK-011": "DONE",
     "TASK-012": "DONE",
     "TASK-013": "DONE",
-    "TASK-014": "IN_PROGRESS",
-    "TASK-015": "PENDING",
+    "TASK-014": "DONE",
+    "TASK-015": "IN_PROGRESS",
     "TASK-016": "PENDING",
     "TASK-017": "PENDING",
     "TASK-018": "PENDING",
@@ -800,6 +800,14 @@
       "idempotency_key": "supplier-phase-001-playwright-device-4253",
       "status": "CONFIRMED",
       "source_ref": "approveDevice.js confirmed synthetic device binding 4253 on 2026-09-15; subsequent Playwright login and authenticated Supplier API calls succeeded."
+    },
+    {
+      "id": "MIGRATION-005",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migration 0032 Supplier addresses and purpose mappings",
+      "idempotency_key": "supplier-phase-001-erp-dev-migration-0032",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0032_create_supplier_addresses.js to authorized erp_dev on 2026-09-15; real MySQL passed ownership, primary switch, concurrency, deactivation mapping preservation and Supplier regression tests."
     }
   ],
   "evidence_files": [
@@ -807,5 +815,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-014 Supplier Address and purpose schema, ownership-safe versioned CRUD, primary switching and deactivation test-first, then apply the migration to authorized erp_dev."
+  "next_safe_action": "Implement TASK-015 Supplier Address panel and client methods test-first, including accessible field errors, primary-purpose switching, version conflict preservation and deactivation refresh."
 }

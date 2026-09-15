@@ -3,7 +3,7 @@ import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeContactEmail, normalizeSupplierCode, normalizeSupplierName, normalizeSupplierUrl } from "./supplierNormalization.js";
-import { toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
+import { toAddressResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
 import { assertKnownSupplierFields, assertSupplierActivatable, supplierCompletenessWarnings } from "./supplierValidation.js";
 
 function duplicateEntry(error) {
@@ -233,17 +233,47 @@ export class SupplierAdminService {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
     if (!row) throw supplierNotFound(id);
-    return toSupplierDetailResponse(row, { warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id }) });
+    const [addressRows] = await this.database.query(
+      "SELECT * FROM supplier_addresses WHERE supplier_id = ? ORDER BY status, id LIMIT 100",
+      [id]
+    );
+    let purposeRows = [];
+    if (addressRows.length > 0) {
+      [purposeRows] = await this.database.query(
+        "SELECT address_id, purpose_code, is_primary FROM supplier_address_purposes WHERE supplier_id = ? ORDER BY address_id, purpose_code",
+        [id]
+      );
+    }
+    const purposesByAddress = new Map();
+    for (const purpose of purposeRows) {
+      const addressId = Number(purpose.address_id);
+      if (!purposesByAddress.has(addressId)) purposesByAddress.set(addressId, []);
+      purposesByAddress.get(addressId).push(purpose);
+    }
+    const addresses = addressRows.map((address) => toAddressResponse(address, purposesByAddress.get(Number(address.id)) ?? []));
+    const hasOrderingAddress = addresses.some((address) => address.status === "active" && address.purposes.some((purpose) => purpose.purposeCode === "ordering"));
+    return toSupplierDetailResponse(row, {
+      addresses,
+      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasOrderingAddress })
+    });
   }
 
   async getSupplierCompleteness({ actorId, claimedRoles, claimedPermissions, id }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [id]);
     if (!row) throw supplierNotFound(id);
+    const [[orderingAddress]] = await this.database.query(
+      `SELECT 1 AS present
+         FROM supplier_addresses a
+         JOIN supplier_address_purposes p ON p.address_id = a.id AND p.supplier_id = a.supplier_id
+        WHERE a.supplier_id = ? AND a.status = 'active' AND p.purpose_code = 'ordering'
+        LIMIT 1`,
+      [id]
+    );
     return {
       supplierId: Number(row.id),
       issues: [],
-      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id })
+      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasOrderingAddress: Boolean(orderingAddress) })
     };
   }
 

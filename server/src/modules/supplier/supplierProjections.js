@@ -34,7 +34,7 @@ export function toSupplierDetailResponse(row, {
   };
 }
 
-export function toAddressResponse(row) {
+export function toAddressResponse(row, purposes = []) {
   return {
     id: Number(row.id),
     supplierId: Number(row.supplier_id),
@@ -49,6 +49,10 @@ export function toAddressResponse(row) {
     phone: row.phone,
     notes: row.notes,
     status: row.status,
+    purposes: purposes.map((purpose) => ({
+      purposeCode: purpose.purpose_code,
+      isPrimary: Boolean(purpose.is_primary)
+    })),
     version: Number(row.version),
     updatedAt: Number(row.updated_at)
   };

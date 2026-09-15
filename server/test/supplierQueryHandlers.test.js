@@ -36,6 +36,7 @@ function harness({ rows = [row()], duplicateRows = [] } = {}) {
       queries.push([sql, params]);
       if (sql.includes("COUNT(*) AS total")) return [[{ total: rows.length }]];
       if (sql.includes("FROM suppliers") && sql.includes("WHERE id = ?")) return [[rows[0]].filter(Boolean)];
+      if (sql.includes("supplier_addresses") || sql.includes("supplier_address_purposes")) return [[]];
       return [rows];
     },
     async withTransaction(work) { return work(this); }
