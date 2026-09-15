@@ -5,8 +5,9 @@
 - review_method: HUMAN（preceded by SELF_REVIEW）
 - author: `/root` Codex context
 - reviewer and actual context/identity: ERP Product Owner (Sam)，真實人類 reviewer，與 author 不同
-- reviewed_baseline (DESIGN hash): `9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87`
-- source/evidence reference: 2026-09-14 Codex task 使用者「同意」明確回應 exact-hash approval／independent
+- reviewed_baseline (DESIGN hash): `7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565`
+- source/evidence reference: 2026-09-14 Codex task 使用者明確聲明「本人作為獨立人類 reviewer，批准
+  Design 7b8058e2，0 Critical、0 High」；此前各版 approval／review history保留於 harness state；
   HUMAN reviewer 聲明；`01_requirement_spec.md`、`03_design_spec.md`、`05_development_tasks.md`、
   `06_technical_test_cases.md`、`07_uat_test_cases.md`、`08_traceability.json`
 - Read-only review constraints: 先以需求、API、資料、交易、安全、失敗模式、UI、可觀察性、migration、
@@ -16,8 +17,8 @@
 
 - Design sub-gate: READY_FOR_PLANNING
 - Open CRITICAL and HIGH findings: 0
-- Current human design approval reference: 2026-09-14 Codex task 使用者「同意」，綁定 DESIGN
-  `9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87`
+- Current human design approval reference: 2026-09-14 Codex task 使用者獨立 reviewer 聲明，綁定 DESIGN
+  `7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565`
 - Scoped risk/self-review exception, if approved: 無；manifest 要求 independent review
 
 ## Findings
@@ -49,8 +50,8 @@
 - Impact and recommended action: self-review 可找錯但不能提供 reviewer independence；請由真實人類 reviewer 或不同
   context reviewer 對 exact DESIGN hash 審閱並記錄 findings/disposition。
 - Disposition: RESOLVED
-- Resolution evidence and actual approving authority: ERP Product Owner (Sam) 於 2026-09-14 對上一則完整
-  exact-hash／independent HUMAN reviewer 聲明回答「同意」；reviewer 為人類且不同於 Codex author。
+- Resolution evidence and actual approving authority: ERP Product Owner (Sam) 於 2026-09-14 明確以獨立人類 reviewer
+  批准 current exact DESIGN `7b8058e2...`，聲明 0 Critical、0 High；reviewer 為人類且不同於 Codex author。
 
 ### DR-004 — Exact design/plan baseline 尚未由 Product Owner 批准
 
@@ -59,9 +60,9 @@
 - Impact and recommended action: 未批准的計畫不可進 implementation；向 Product Owner 展示 exact hashes 與 artifacts，
   取得明確 DESIGN、PLAN approval 後寫入 state。
 - Disposition: RESOLVED
-- Resolution evidence and actual approving authority: ERP Product Owner (Sam) 於 2026-09-14 批准 exact DESIGN
-  `9d77d905dc4a82d6e079898cd98fd5bbf74f8aab466d85b56ca9830d0b8b4f87` 與 PLAN
-  `edd6ca008e4ca76ecf281c2b2451733c143e261c89dda28f8af20ea3a1c359c9`。
+- Resolution evidence and actual approving authority: ERP Product Owner (Sam) 於 2026-09-14 明確批准寫入 current exact DESIGN
+  `7b8058e2286e037f65f46e98bedab2e3e68064e52fe1f783a8d97a5d96c2f565` 與 PLAN
+  `6b612e19d29d6655f295f9c27e858bccf570dffdcb97915061df964c44ce2532` 的 harness 授權紀錄。
 
 ### DR-005 — 五分鐘 impact token 時效為低風險假設
 

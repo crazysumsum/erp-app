@@ -1,0 +1,352 @@
+{
+  "schema_version": "2.0",
+  "module_id": "fulfillment-shipping-management",
+  "revision": 6,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "BLOCKED",
+  "resume_status": "PLANNED",
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+    "plan": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
+    "code_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
+    "source_fingerprint": "34707d3beb85552d7e1ef44092f56fe5d8bb962b200290d7dc18e860b30f180d",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/fulfillment-gap-correct",
+    "default_commit": "c88b479a02744b8be654398d0dafb811ddf599c3",
+    "mode_entry_commit": "b6f03219259129de6735263a4d369de2b15a5f9f"
+  },
+  "runtime": {
+    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "owner": "Primary Harness agent",
+    "resources": {
+      "workspace": "fulfillment-shipping-alignment"
+    },
+    "lease_ref": null
+  },
+  "tasks": {
+    "TASK-001": "PENDING",
+    "TASK-002": "PENDING",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING",
+    "TASK-009": "PENDING",
+    "TASK-010": "PENDING",
+    "TASK-011": "PENDING",
+    "TASK-012": "PENDING",
+    "TASK-013": "PENDING",
+    "TASK-014": "PENDING",
+    "TASK-015": "PENDING",
+    "TASK-016": "PENDING",
+    "TASK-017": "PENDING",
+    "TASK-018": "PENDING",
+    "TASK-019": "PENDING",
+    "TASK-020": "PENDING",
+    "TASK-021": "PENDING",
+    "TASK-022": "PENDING",
+    "TASK-023": "PENDING",
+    "TASK-024": "PENDING",
+    "TASK-025": "PENDING",
+    "TASK-026": "PENDING",
+    "TASK-027": "PENDING",
+    "TASK-028": "PENDING",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING",
+    "TASK-037": "PENDING",
+    "TASK-038": "PENDING",
+    "TASK-039": "PENDING",
+    "TASK-040": "PENDING",
+    "TASK-041": "PENDING",
+    "TASK-042": "PENDING",
+    "TASK-043": "PENDING",
+    "TASK-044": "PENDING",
+    "TASK-045": "PENDING"
+  },
+  "approvals": [
+    {
+      "id": "APR-001",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/02_requirement_review.md#review-result",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management requirement baseline, file 01_requirement_spec.md sha256 7ab6bbf93cda92fd9aa2ad1db430510902a765c30f4a2be289ec3e74ab2879b7; recorded under kind SCOPE and bound to the harness composite design baseline because the state schema has no REQUIREMENT approval kind",
+        "FR-001 through FR-107",
+        "NFR-001 through NFR-026",
+        "SEC-001 through SEC-012",
+        "BR-001 through BR-036",
+        "AC-001 through AC-056",
+        "DEC-001 through DEC-010",
+        "GATE-001 through GATE-007"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#decision",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "DES-001 through DES-014",
+        "FSD-001 through FSD-012",
+        "MySQL 8.0 compatibility baseline"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-003",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#independent-review-and-baseline-approval",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 through PHASE-004",
+        "TASK-001 through TASK-045",
+        "TC-001 through TC-012",
+        "UAT-001 through UAT-120",
+        "SUPERSEDED on 2026-09-14 by APR-004: 06_technical_test_cases.md and 07_uat_test_cases.md were factually corrected, so plan baseline 72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c is no longer current. Record retained as history; not rewritten."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "HD-003",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-003--nfr-023-business-uat-applicability",
+      "recorded_at": "2026-09-14T16:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "72c826de1f64864573f99ed03aa670fe5e5b19f6f638c0e483e07d850aea9a3c",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "SUPERSEDED on 2026-09-14 by HD-003-R2 at the new plan baseline. The decision itself is unchanged; only the bound baseline moved. Record retained as history; not rewritten."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-004",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#independent-review-and-baseline-approval",
+      "recorded_at": "2026-09-14T16:47:35+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
+      "code_commit": null,
+      "scope": [
+        "fulfillment-shipping-management",
+        "PHASE-001 through PHASE-004",
+        "TASK-001 through TASK-045",
+        "TC-001 through TC-012",
+        "UAT-001 through UAT-120",
+        "Re-approval of the unchanged plan at plan baseline d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a after the GAP-TC-001 factual correction to 06_technical_test_cases.md and 07_uat_test_cases.md. No requirement, design, phase, task or case content changed; supersedes APR-003."
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "HD-003-R2",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-003--nfr-023-business-uat-applicability",
+      "recorded_at": "2026-09-14T16:47:35+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a",
+      "code_commit": null,
+      "scope": [
+        "NFR-023",
+        "Unchanged decision re-bound to plan baseline d9e729935b8a3094241f5c9f438a4bda7d576468a7c4ed74063e7814b6b5657a; supersedes HD-003."
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Legacy Fulfillment & Shipping authorship not authenticated in repository metadata",
+      "reviewer": "Alignment agent in this session",
+      "reviewed_baseline": "89ea6e33a4f1707fbc01a6cac73e408310f589f295284353964665b7665bee1a",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 4,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "Alignment agent; legacy authorship not authenticated in repository metadata",
+      "reviewer": "Sam (ERP Product Owner and independent reviewer)",
+      "reviewed_baseline": "cba0d670c928af3443c6ce6794c955004ee6243a44f4b33bdd2bc3957947b758",
+      "source_ref": "docs/fulfillment_shipping_management/04_design_review.md#decision",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    }
+  ],
+  "observations": [],
+  "pending_decisions": [
+    {
+      "id": "HD-001",
+      "impact": "MAJOR",
+      "question": "design_spec.md and tasks.md target MySQL 5.7 while CI runs mysql:8.0 and the Inventory and Purchasing baselines are MySQL 8.0. Which is the compatibility baseline for Fulfillment & Shipping?",
+      "affected_ids": [
+        "DES-009",
+        "TC-009",
+        "NFR-025"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-001--mysql-80-compatibility-baseline"
+    },
+    {
+      "id": "HD-002",
+      "impact": "MAJOR",
+      "question": "Both legacy sign-off tables are empty and no separate reviewer exists. Should the aligned requirement, design and plan be recorded as SELF_REVIEW pending later human review, or approved in this run as a planning baseline by a named human reviewer?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "PHASE-003",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-002--reviewer-provenance-and-baseline-approval"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "NFR-023 (provider contract versioning and migration/compatibility planning) has no business-observable UAT case among the 120. Mark it UAT NOT_APPLICABLE, author a new UAT case, or leave it as an open coverage gap?",
+      "affected_ids": [
+        "NFR-023",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/fulfillment_shipping_management/09_final_alignment_review.md#hd-003--nfr-023-business-uat-applicability"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Narrowed on 2026-09-14 after the earlier finding was corrected. Playwright is already pinned in the repository (root package.json \"@playwright/test\": \"1.63.0\", commit 2c88ed0 via PR #93; a clean npm ci installs it and ./node_modules/.bin/playwright reports 1.63.0 without a global CLI), and a per-module convention already exists (client/e2e/<module>/playwright.config.js with technical/uat projects and HARNESS_RESULT_PATH support, declared in the Business Master profile as business-master-browser and business-master-uat-browser). The single remaining question is when and by whom a CI job is added that actually runs the Playwright suites. It cannot be added today: the one existing suite is red on main (14 failed, 1 passed, the single pass being the unauthenticated-redirect case), so wiring it would turn main red. Repairing that suite belongs to the Business Master owner, and uncommitted work in its worktree may already address it. For this module the exposure is low until PHASE-002 creates the first Fulfillment UI, at which point client/e2e/fulfillment-shipping-management/ plus a matching profile suite and CI coverage must exist. Do NOT attach a Playwright tool_probe to fulfillment-technical, whose argv runs node --test server/test and has no browser step.",
+      "affected_ids": [
+        "TC-010",
+        "DES-013",
+        "PHASE-002",
+        "PHASE-003"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "docs/customer_management/00_module_manifest.json pins the deleted docs/fulfillment_shipping_management/design_spec.md (sha256 89ea6e33...) as a consumed contract source. Should it be repointed to 03_design_spec.md (sha256 7c0101e8...) by the Customer module owner?",
+      "affected_ids": [
+        "DES-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "CLOSED. docs/customer_management/00_module_manifest.json was repointed to docs/fulfillment_shipping_management/03_design_spec.md, sha256 7c0101e85f9651b8588fe3b09508cc7961238a69d9903c33d7a8f8bd8e2de4ec, by PR #97 (merge commit 34563b6), delivered as a Customer-module-scoped change because validate_module_boundary.py returned MODE_WRITE_DENIED when it was bundled into a REVIEW_AND_ALIGN change. The pointer now verifies as MATCH. GAP-TR-002 is closed."
+    }
+  ],
+  "external_actions": [
+    {
+      "id": "EXT-001",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/fulfillment-shipping-harness-v2-alignment",
+      "idempotency_key": "fulfillment-shipping-align-push-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed new-branch push output on 2026-09-14; local branch now tracks origin at commit e7fa46b"
+    },
+    {
+      "id": "EXT-002",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/fulfillment-shipping-harness-v2-alignment",
+      "idempotency_key": "fulfillment-shipping-align-pr-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/94"
+    },
+    {
+      "id": "EXT-003",
+      "kind": "GIT_MERGE_TARGET_INTO_TOPIC",
+      "target": "codex/fulfillment-shipping-harness-v2-alignment <- origin/main c1ed492",
+      "idempotency_key": "fulfillment-shipping-align-integrate-main-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed clean 'ort' merge on 2026-09-14; origin/main had advanced to c1ed492 (PR #92, supplier manifest repoint) after this branch was created at b6f0321. Only docs/supplier_management/00_module_manifest.json changed, which this module does not pin. Design baseline cba0d670 and plan baseline 72c826de are unchanged, so APR-001 through APR-003 and HD-003 remain bound to a current baseline."
+    },
+    {
+      "id": "EXT-004",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/94 -> main",
+      "idempotency_key": "fulfillment-shipping-align-pr94-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 5b62be10b98f4ec6e4e9b553073981c94b9cd1a2 on origin/main; PR state MERGED, mergedBy crazysumsum, mergedAt 2026-09-14T08:38:25Z. CI was green on head 5fcd19d (4/4) before the merge. Note: the gh pr merge command exited non-zero on its local checkout step because main is checked out in the primary worktree; the remote merge had already succeeded and was NOT retried."
+    },
+    {
+      "id": "EXT-005",
+      "kind": "BRANCH_CLEANUP",
+      "target": "origin/codex/fulfillment-shipping-harness-v2-alignment plus local branch and worktree",
+      "idempotency_key": "fulfillment-shipping-align-cleanup-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "git merge-base --is-ancestor confirmed 5fcd19d is contained in origin/main before deletion; remote branch deleted, worktree removed, local branch deleted with -d (not -D) after fast-forwarding main."
+    },
+    {
+      "id": "EXT-006",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/95 -> main",
+      "idempotency_key": "fulfillment-gap-tc001-pr95-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 536459a94ffee833727bb3a84cf7ab2c8b0bd2dd on origin/main. CI was green on head 6912aae (4/4) after origin/main 3ea1dd8 was integrated and after the cross-module edit was removed following MODE_WRITE_DENIED. Earlier green runs on 5f0ec50 and 1bb33f6 were not reused as merge evidence."
+    },
+    {
+      "id": "EXT-007",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/97 -> main",
+      "idempotency_key": "customer-fulfillment-manifest-pr97-merge-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 34563b66880ea248a1595b4f84117a52f68d36eb on origin/main; CI green on head 0a9ad1c (4/4). A Customer-module-scoped pull request, recorded here because it closes this module's GAP-TR-002 and answers HD-005. The write itself belongs to docs/customer_management and was not performed under this module's scope."
+    },
+    {
+      "id": "EXT-008",
+      "kind": "BRANCH_CLEANUP",
+      "target": "codex/fulfillment-gap-tc-001-reconcile and codex/fix-customer-fulfillment-manifest, remote plus local plus worktrees",
+      "idempotency_key": "fulfillment-closeout-cleanup-20260914",
+      "status": "CONFIRMED",
+      "source_ref": "git merge-base --is-ancestor confirmed each branch tip was contained in origin/main before deletion; worktrees verified clean; remote branches deleted, local branches deleted with -d after fast-forwarding main. No fulfillment branch or worktree remains."
+    }
+  ],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "Design and planning for this module are complete. All artifacts are on origin/main at c88b479a02744b8be654398d0dafb811ddf599c3; no fulfillment branch, worktree or open pull request remains apart from the documentation correction being delivered now. This revision corrects GAP-TC-001 and DR-04: the earlier claim that no Playwright tool chain existed was wrong — it was observed at 5b62be1 and PR #93 landed seconds later, pinning \"@playwright/test\": \"1.63.0\" in the root package.json and bringing a per-module e2e convention with it. HD-004 is narrowed to one item: add a CI job that runs the Playwright suites, which is blocked until the Business Master browser suite (14 failed, 1 passed on main) is repaired by its owner. Baselines are untouched by this correction because 00_gap_analysis.md, 04_design_review.md and 09_final_alignment_review.md are records, not specification files; design cba0d670 and plan d9e72993 stand, as do APR-001, APR-002, APR-004 and HD-003-R2. Status stays BLOCKED on HD-004 and on GAP-IMP-001 through GAP-IMP-005 (the Sales, Inventory and Customer modules, the transaction-aware Item assert and the three Fulfillment permissions, none of which exist at c88b479a02744b8be654398d0dafb811ddf599c3). Do not enter IMPLEMENT without an explicit mode authorization recorded with --mode-change-ref. Business acceptance and release sign-off remain open by design (GAP-RQ-002)."
+}

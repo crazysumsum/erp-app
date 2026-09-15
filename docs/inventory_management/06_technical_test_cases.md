@@ -44,10 +44,10 @@ Remove only owned synthetic records and runtime resources from the isolated test
 SKUs for none, batch, batch-expiry and serial policies; expiry boundaries and mixed Stock Status buckets.
 
 ### Steps
-Verify schema constraints, Lot identity, Base-UOM integers, expiry/minimum-life rules, immutable movements and reconciliation invariants.
+Verify schema constraints, Lot identity, Base-UOM integers, expiry/minimum-life rules, Serial SKU posting rejection, the Active-Serial Go-Live guard, immutable movements and reconciliation invariants.
 
 ### Expected result
-All bucket and Lot invariants hold; unsupported or inconsistent tracking input is rejected without partial persistence.
+All bucket and Lot invariants hold; every Serial SKU posting fails closed, any Active inventory-tracked Serial SKU blocks Go-Live, and unsupported or inconsistent tracking input creates no partial persistence.
 
 ### Acceptance criteria
 Mandatory: `true`; blocking: `true`; applicability: `APPLICABLE`; suite: `inventory-technical`. Every mapped case ID must be observed as PASS on the current approved baseline; zero discovery, skips or stale evidence block the gate.
@@ -58,13 +58,13 @@ Remove only owned synthetic records and runtime resources from the isolated test
 ## TC-004 — Atomic posting, idempotency and immutable audit
 
 ### Preconditions and data
-Receipt/Issue operations with stable source events, fault injection and two database connections.
+Receipt/Issue operations with stable source events, low-life and Expired Lots, Receiving actors with and without `receiving.expiry.override`, fault injection and two database connections.
 
 ### Steps
-Execute success, replay, conflicting payload, timeout/unknown result, duplicate race and failure at state/movement/audit/commit boundaries.
+Execute success, replay, conflicting payload, timeout/unknown result, duplicate race, incomplete low-life evidence, Expired override attempts and failure at state/movement/audit/commit boundaries.
 
 ### Expected result
-One source event creates at most one complete effect; conflicts are stable; all injected failures reconcile to zero partial effect.
+One source event creates at most one complete effect; only authorized non-Expired low-life input with complete per-detail evidence succeeds; Expired override and all injected failures reconcile to zero partial effect.
 
 ### Acceptance criteria
 Mandatory: `true`; blocking: `true`; applicability: `APPLICABLE`; suite: `inventory-technical`. Every mapped case ID must be observed as PASS on the current approved baseline; zero discovery, skips or stale evidence block the gate.
@@ -112,10 +112,10 @@ Remove only owned synthetic records and runtime resources from the isolated test
 Authorized/unauthorized adjustment actors and reversible/non-reversible movement fixtures.
 
 ### Steps
-Test positive/negative adjustments, status transfers, reason categories, reservation protection, reversal links, stale versions and direct ledger tampering.
+Test positive/negative adjustments, all seven approved reason categories, unknown categories, `OTHER` with and without detailed text, status transfers, reservation protection, reversal links, stale versions and direct ledger tampering.
 
 ### Expected result
-Only authorized new compensating movements occur; totals and reservations remain valid and immutable history cannot be changed.
+Only authorized new compensating movements using the fixed reason allowlist occur; unknown categories and insufficient `OTHER` detail fail closed, totals and reservations remain valid, and immutable history cannot be changed.
 
 ### Acceptance criteria
 Mandatory: `true`; blocking: `true`; applicability: `APPLICABLE`; suite: `inventory-technical`. Every mapped case ID must be observed as PASS on the current approved baseline; zero discovery, skips or stale evidence block the gate.
@@ -143,13 +143,13 @@ Remove only owned synthetic records and runtime resources from the isolated test
 ## TC-009 — Opening precheck, fencing and Go-Live
 
 ### Preconditions and data
-Valid/invalid 10,000-row Opening files, stale prechecks and competing fenced workers.
+Valid/invalid 10,000-row Opening files, stale prechecks, competing fenced workers, Active Serial data, separated/non-separated DB accounts, backup/restore evidence and Data Freeze/reconciliation fixtures.
 
 ### Steps
-Test streaming limits, formula/encoding/header errors, no-write precheck, authorization, lease takeover, failure recovery, idempotency and irreversible Go-Live.
+Test streaming limits, formula/encoding/header errors, no-write precheck, authorization, lease takeover, failure recovery, idempotency, Active Serial rejection, DB-account separation, backup/restore evidence, Data Freeze, Warehouse／Operations Lead reconciliation and Sam's irreversible Go-Live sign-off.
 
 ### Expected result
-Invalid/stale work creates no inventory; one fenced worker commits one complete Opening and LIVE permanently blocks new Opening commands.
+Invalid/stale work creates no inventory; one fenced worker commits one complete Opening; Go-Live remains blocked without every approved operational gate and Sam sign-off; LIVE permanently blocks new Opening commands.
 
 ### Acceptance criteria
 Mandatory: `true`; blocking: `true`; applicability: `APPLICABLE`; suite: `inventory-technical`. Every mapped case ID must be observed as PASS on the current approved baseline; zero discovery, skips or stale evidence block the gate.

@@ -60,7 +60,7 @@ epoch-ms 與 actor FK users SET NULL；index `(status,name,code)`。
 utf8mb4_bin UNIQUE`、`name VARCHAR(100)`、`description VARCHAR(500)`、`calculation_type VARCHAR(30) ASCII`、
 `due_days SMALLINT UNSIGNED NULL`、status/version/timestamps/actors；index `(status,name,id)`。
 
-`business_master_audit_logs`：id、entity_type、entity_key、action、before_json、after_json、impact_json、reason、
+`business_master_audit_logs`：id、entity_type、entity_key、action、`result=SUCCESS|REJECTED`、before_json、after_json、impact_json、reason、
 actor_user_id SET NULL、correlation_id、idempotency_key_hash、created_at；indexes `(entity_type,entity_key,created_at,id)`、
 `(actor_user_id,created_at,id)`、`(action,created_at,id)`。JSON 只保存 allowlisted catalog fields。
 
@@ -75,8 +75,9 @@ FK 全部 RESTRICT catalog delete；MySQL 5.7 無法可靠表達的 conditional 
 ## DES-003 — ISO snapshot、normalization 與 validation
 
 ### Decision
-repository 內受控 `iso4217Snapshot.json` 保存 code、English name、minor unit、來源標識及 effective date；create/update 在
-service boundary 使用它驗證 official active code。Currency code 不做自動 uppercase：trim 後必須已是 `[A-Z]{3}` 且存在，
+repository 內受控 `iso4217Snapshot.js` 保存 runtime validation 所需的 active legal-tender code、來源標識及 snapshot date；
+English name/minor unit 留在來源與 provenance 記錄，不覆寫管理 catalog。create/update 在 service boundary 使用 snapshot 驗證 official active code。
+Currency code 不做自動 uppercase：trim 後必須已是 `[A-Z]{3}` 且存在，
 避免使用者誤認輸入被更正。Payment Term code 使用 NFKC + trim + Unicode case-fold 形成 codeKey；所有 text 有 length limit，
 只作 plain text output。
 
@@ -159,9 +160,11 @@ deadlock；snapshot 令未來主資料變更不重寫既有正式交易。
 | `GET /api/v1/business-master/audit` | view | allowlisted filters/pagination |
 
 所有 schema `additionalProperties:false`；request/response camelCase、enum UPPER_SNAKE。Error shape 沿用 framework，codes 包括
-`CURRENCY_INVALID/NOT_FOUND/INACTIVE/CODE_IMMUTABLE`、`PAYMENT_TERM_INVALID/NOT_FOUND/INACTIVE`、
-`PAYMENT_TERM_RULE_INVALID`、`BUSINESS_MASTER_VERSION_CONFLICT`、`IMPACT_PREVIEW_STALE/UNAVAILABLE`、
-`IDEMPOTENCY_KEY_REUSED`。POST/PATCH/commands 都使用現有 MySQL IdempotencyService；同 key 不同 payload 422，in-flight 409。
+`CURRENCY_CODE_INVALID/CURRENCY_PRECISION_INVALID/CURRENCY_NAME_INVALID/CURRENCY_NOT_FOUND/CURRENCY_NOT_ACTIVE`、
+`PAYMENT_TERM_CODE_INVALID/PAYMENT_TERM_NAME_INVALID/PAYMENT_TERM_DESCRIPTION_INVALID/PAYMENT_TERM_NOT_FOUND/PAYMENT_TERM_NOT_ACTIVE`、
+`PAYMENT_TERM_RULE_INVALID`、`VERSION_CONFLICT`、`IMPACT_TOKEN_INVALID/IMPACT_TOKEN_EXPIRED/IMPACT_CHANGED/IMPACT_CHECK_UNAVAILABLE`、
+`IDEMPOTENCY_CONFLICT`。POST/PATCH/commands 都使用現有 MySQL IdempotencyService；同 key 不同 payload及 in-flight 均回 409，
+並以 error code 區分 `IDEMPOTENCY_CONFLICT` 與 `IDEMPOTENCY_IN_PROGRESS`。
 
 ### Rationale
 resource-oriented endpoints、strict schemas、stable errors、pagination及 idempotent mutation 令 UI/consumer 安全重試；狀態、精度與
@@ -169,7 +172,7 @@ resource-oriented endpoints、strict schemas、stable errors、pagination及 ide
 
 ### Failure behavior
 timeout 結果不明時 client 以相同 Idempotency-Key 重試／查回；transaction commit 後回應中斷仍 replay原 response。Internal errors
-500 不暴露 SQL/stack；401/403/404/409/422/503 語意固定。
+500 不暴露 SQL/stack；401/403/404/409/503 語意固定。
 
 ## DES-008 — Authentication、authorization、audit 與 threat controls
 
@@ -184,7 +187,7 @@ unbounded search與 privilege escalation。
 不構成安全控制。
 
 ### Failure behavior
-authorization、audit 或 required impact checker unavailable 時 fail closed；log redaction failure/credential exposure 為 blocking security
+authorization、audit 或 required impact checker unavailable 時 fail closed；可預期的高風險拒絕在 catalog transaction rollback 後，以獨立 audit transaction 記錄 `result=REJECTED` 且不保存 token/request body；log redaction failure/credential exposure 為 blocking security
 defect。Rate/request limits 沿用 platform，模組不自行放寬。
 
 ## DES-009 — 管理 UI 與 interaction design
@@ -201,7 +204,7 @@ count/status、reason、明確 entity code/name，unknown 時禁用確認；Curr
 `errorMessages.js` 統一 mapping。
 
 ### Failure behavior
-loading、empty、slow、network error、403、404、409、422、503 各有可重試/重新載入狀態；dialog focus trap/return、error summary focus、
+loading、empty、slow、network error、400、403、404、409、503 各有可重試/重新載入狀態；dialog focus trap/return、error summary focus、
 鍵盤與 screen reader label 必須可用。窄畫面操作欄 sticky，不截掉 impact details。
 
 ## DES-010 — Observability、performance、availability 與 capacity
@@ -222,10 +225,11 @@ new use。RTO/RPO 由共同 MySQL HA/backup runbook承擔。
 ## DES-011 — Migration、seed、cutover、rollback 與 recovery
 
 ### Decision
-implementation 從當時最新 main 配置下一個 migration 序號，建立/compatibility-check tables、兩 permissions、system-admin mapping、HKD seed。
+implementation 以當時最新 main 的下一個序號 `0027` 建立/compatibility-check tables、兩 permissions、system-admin mapping、HKD seed。
 Migration 可重跑及從 half-applied state恢復；已套用檔 immutable。若 Customer 舊 migration 已建立相容 tables，shape guard採用並補缺的 index/
 audit/permissions；若不相容，停止並以新 forward compatibility migration修正，不 drop/recreate。部署順序：schema/permissions/HKD -> provider/readiness
--> admin API -> UI -> consumer switch/regression。Rollback 為關閉新入口/回退 app code；schema 保留，往前修。
+-> admin API -> UI -> consumer switch/regression。Production `server/src/index.js` 明確註冊 eager provider/readiness service；通用 application factory
+不隱含特定模組 schema。Rollback 為關閉新入口/回退 app code；schema 保留，往前修。
 
 ### Rationale
 全域 migration sequence 是共享資源，不能在設計時預留 `0027`。兼容採用既有 table 可避免資料遺失與多 owner；production Payment Term 不 seed。
@@ -238,7 +242,8 @@ audit/permissions；若不相容，停止並以新 forward compatibility migrati
 
 ### Decision
 提供 `business-master-currency-payment-term-provider/v1`：Currency `{code,name,decimalPlaces,status,version}`；Payment Term
-`{id,code,name,description,calculationType,dueDays,status,version}`；calculation output含 snapshot/baseDate/dueDate/manual flag。契約為 additive single version，
+`{id,code,name,calculationType,dueDays,status,version}`；description 為管理文案，不進最小 consumer projection。calculation output含
+snapshot/baseDate/dueDate/manual flag。契約為 additive single version，
 consumer contract suites覆蓋 Customer、Supplier、Sales、Purchasing、AR。舊 Supplier planned generic HTTP lookup改為其 own-permission handler + internal provider，
 不得同時維護兩個真相 endpoint。
 
@@ -253,8 +258,9 @@ NOT_INSTALLED，但其 contract test fixture仍要驗證 provider shape。
 
 ### Transaction、concurrency、idempotency
 
-Create/Update/Activate/Deactivate/ChangePrecision/ChangeRule 每個 command 在一個 MySQL transaction 完成 idempotency claim、locked current row、fresh authorization、validation、
-CAS mutation、audit與 idempotency result。Impact preview不鎖跨模組資料；confirm時重新計算 token。全域 lock order：idempotency operation -> catalog row
+Create/Update/Activate/Deactivate/ChangePrecision/ChangeRule 每個 command 在一個 catalog MySQL transaction 完成 locked current row、fresh authorization、validation、
+CAS mutation與audit；現有 framework IdempotencyService 在 handler 外層另行 claim/complete/fail，成功但response無法保存時標記 result unavailable。
+Impact preview不鎖跨模組資料；confirm時重新計算 token。全域 lock order：idempotency operation -> catalog row
 （Currency code先於Payment Term id）-> consumer checker自己的只讀順序 -> audit。checker 不得寫 consumer data。
 
 ### API projection and examples
@@ -301,6 +307,8 @@ forward migration及 consumer compatibility dashboard。
 - 拒絕 generic key/value catalog：Currency 與 Payment Term 有不同 identity/validation/calculation contract。
 - 拒絕 runtime ISO API：外部 failure、變更與非重現性不值得；用 reviewed snapshot。
 - 拒絕 hard block referenced deactivation：違反已確認業務決定；用 impact + fail-closed confirmation。
+- Stateless SHA-256 impact token 是 canonical preview/重算的一致性憑證，不是授權 MAC；持有 mgmt 權限的 caller 本來即可取得 preview，
+  真正安全邊界仍是 fresh authorization、catalog version、五分鐘 TTL、checker recompute 與 audit。首版因此不新增跨 instance signing secret。
 - 拒絕 permanent delete：破壞 FK/history/audit。
 - 拒絕 event-driven/cache：現階段同 DB modular monolith，直接 transaction provider較簡單可靠。
 - 拒絕 approval workflow/import/export：未要求，增加不必要 scope。

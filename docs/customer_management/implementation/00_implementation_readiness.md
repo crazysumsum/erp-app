@@ -53,9 +53,11 @@ This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or
 merge claim.
 
 - Focused normalization, migration-shape and migration-order tests: 15 passed.
-- Fresh isolated MySQL schema `erp_customer_phase001_task003_20260914`: migrations
-  through `0028_create_customer_equality_key_foundation.js` applied; a full rerun
-  skipped every migration.
+- Fresh isolated MySQL schema `erp_customer_phase001_task003_20260914`: the
+  provisional equality-key migration at `0028` applied; a full rerun skipped every
+  migration. That schema was then dropped. After integrating the Business Master
+  `0027` migration, the final sequence is `0028_seed_customer_permissions.js` then
+  `0029_create_customer_equality_key_foundation.js` and requires fresh verification.
 - Real MySQL tests proved both key columns are `utf8mb4_bin`, normalized duplicate
   inserts fail with `ER_DUP_ENTRY`, accent-distinct normalized keys coexist, and two
   concurrent same-key inserts produce exactly one winner.

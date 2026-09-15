@@ -63,10 +63,10 @@ API response schema、DB row、version及audit一致；無leading-wildcard stand
 並發update、activate/deactivate/change-precision、重送、commit後斷線replay、同key異payload。
 
 ### Expected result
-每個intent只一個mutation/audit/version winner；loser 409；replay同response；payload reuse 422。
+每個intent只一個mutation/audit/version winner；loser 409；replay同response；payload reuse 回 409 `IDEMPOTENCY_CONFLICT`。
 
 ### Acceptance criteria
-無lost update/double audit/unknown state，idempotency與catalog transaction一致。
+無lost update/double audit/unknown state；驗證 framework idempotency envelope 與 catalog transaction 的既有協作契約。
 
 ### Cleanup
 Restore fixture至初始version/status。
@@ -253,7 +253,7 @@ Reset failure injection並drop fixture schema。
 呼叫DES-007 endpoints，驗HTTP/status/body/schema/Retry behavior及相同key replay。
 
 ### Expected result
-401/403/404/409/422/503/500語意一致；page max有界；timeout不鼓勵新intent重送。
+400/401/403/404/409/503/500語意一致；page max有界；timeout不鼓勵新intent重送。
 
 ### Acceptance criteria
 每個error有correlationId、安全public message及無internal detail；replay不重做effect。

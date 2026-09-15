@@ -2,17 +2,18 @@
 
 ## Review result
 
-`CHANGES_REQUESTED` — no critical structural contradiction was found. The accountable owner, `DEC-014`–`DEC-019` and MySQL 8.0 baseline are resolved, but other major design/authority inputs remain open. The design must not enter implementation merely because local traceability becomes structurally valid.
+`APPROVED` as a planning baseline by human independent reviewer Sam on 2026-09-14. The accountable owner, `DEC-014`–`DEC-026`, MySQL 8.0 baseline and P0→P5 order are confirmed. This review explicitly does not authorize entry to `IMPLEMENT`, test execution, UAT, Go-Live or release.
 
 ## Reviewer provenance
 
 | Field | Value |
 | --- | --- |
-| `review_method` | `SELF_REVIEW` |
+| Initial `review_method` | `SELF_REVIEW` by `/root`; retained as historical review `REV-001` |
+| Independent `review_method` | `HUMAN` |
 | `author` | Existing Inventory design authorship is not authenticated in repository metadata |
-| `reviewer` | `/root` in the same active Codex context |
-| `reviewed_baseline` | `3ded66aa8bbbac4b264eb20a64eb65718358a40d30e234847e45fe7290414358` |
-| Independent review | Required by manifest; not observed |
+| `reviewer` | Sam, named by the user in the active Codex task |
+| `reviewed_baseline` | `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273` |
+| Independent review | Completed and approved on 2026-09-14 |
 | Product implementation / tests | Not performed |
 
 ## Review dimensions
@@ -29,12 +30,12 @@
 | --- | --- | --- | --- | --- | --- |
 | DR-01 | HIGH | RESOLVED | Requirement ambiguity | `ERP Product Owner (Sam)` approved `DEC-014`–`DEC-019` through `HD-002` on 2026-09-14. | Canonical requirement/design/plan now record the confirmed semantics; this is not whole-design approval. |
 | DR-02 | HIGH | RESOLVED | Compatibility ambiguity | `HD-003` selected MySQL 8.0, matching the observed GitHub CI service baseline. | Canonical requirement/design/plan and environment probe now use MySQL 8.0. |
-| DR-03 | HIGH | OPEN | Implementation gap | No Inventory product module, handlers, pages, migrations or tests are present. | Execute only under a later approved `IMPLEMENT` mode and Phase plan. |
-| DR-04 | HIGH | OPEN | Security prerequisite | The design records a strong-auth idempotency actor-scope defect; current Inventory permissions also do not exist. | Keep P0 fail-closed and require regression before enabling state-changing routes. |
-| DR-05 | HIGH | OPEN | Integration decisions | Serial handling, low-life override, Returns status and Adjustment reason categories remain open. | Resolve before their declared Phase gates; do not guess in implementation. |
-| DR-06 | HIGH | OPEN | Review provenance | No separate reviewer or human whole-design approval is observed. | Obtain an actual independent review and baseline-bound human disposition. |
-| DR-07 | HIGH | OPEN | Browser acceptance | No Inventory UI or Playwright Inventory suite exists. | Implement and validate with Playwright in the authorized later stage; current UAT is specification-only. |
+| DR-03 | HIGH | ACCEPTED_PLANNED | Implementation gap | No Inventory product module, handlers, pages, migrations or tests are present. | Expected pre-implementation condition; execute only under a later explicit `IMPLEMENT` authorization and approved Phase plan. |
+| DR-04 | HIGH | ACCEPTED_P0 | Security prerequisite | The design records a strong-auth idempotency actor-scope defect; current Inventory permissions also do not exist. | Sam approved keeping these as fail-closed P0 prerequisites with regression coverage before enabling writes. |
+| DR-05 | HIGH | RESOLVED | Integration decisions | Serial, low-life override, Returns status, Adjustment reasons and cutover constraints were open. | Resolved by `HD-004` / `DEC-021`–`DEC-026` and propagated to requirements, design, plan and tests. |
+| DR-06 | HIGH | RESOLVED | Review provenance | A separate human reviewer was missing. | Sam identified himself as the independent human reviewer and approved the resulting design/plan baseline. |
+| DR-07 | HIGH | ACCEPTED_PLANNED | Browser acceptance | No Inventory UI or Playwright Inventory suite exists. | Expected before implementation; Playwright remains mandatory for later UI Phase verification and no PASS is claimed now. |
 
 ## Decision
 
-The aligned design is suitable as a single review baseline, not as an approved implementation baseline. Five open HIGH findings remain visible in `00_gap_analysis.md` and `00_harness_state.json`.
+The aligned design and P0→P5 plan are approved planning baselines with zero open CRITICAL/HIGH review findings. All implementation gaps remain unstarted Tasks, all tests remain `NOT_RUN`, and the user has explicitly deferred `IMPLEMENT` authorization.

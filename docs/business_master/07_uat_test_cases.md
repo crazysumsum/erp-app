@@ -147,7 +147,7 @@ A成功、B收到可重載409且文字保留；停用只一次；retry顯示原�
 查閱/管理員能以鍵盤與常用裝置可靠完成核心流程及從可恢復錯誤繼續。
 
 ### Preconditions and data
-375/768/1024/1440 viewports；loading/empty/422/403/409/503 fixtures；鍵盤操作。
+375/768/1024/1440 viewports；loading/empty/400/403/409/503 fixtures；鍵盤操作。
 
 ### Steps
 瀏覽兩頁、tab至所有control、提交invalid form、停用dialog、refresh/back、network retry；檢查heading/focus/status。
