@@ -3,7 +3,7 @@ import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeContactEmail, normalizeSupplierCode, normalizeSupplierName, normalizeSupplierUrl } from "./supplierNormalization.js";
-import { toAddressResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
+import { toAddressResponse, toContactResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
 import { assertKnownSupplierFields, assertSupplierActivatable, supplierCompletenessWarnings } from "./supplierValidation.js";
 
 function duplicateEntry(error) {
@@ -252,9 +252,29 @@ export class SupplierAdminService {
     }
     const addresses = addressRows.map((address) => toAddressResponse(address, purposesByAddress.get(Number(address.id)) ?? []));
     const hasOrderingAddress = addresses.some((address) => address.status === "active" && address.purposes.some((purpose) => purpose.purposeCode === "ordering"));
+    const [contactRows] = await this.database.query(
+      "SELECT * FROM supplier_contacts WHERE supplier_id = ? ORDER BY status, name, id LIMIT 100",
+      [id]
+    );
+    let contactPurposeRows = [];
+    if (contactRows.length > 0) {
+      [contactPurposeRows] = await this.database.query(
+        "SELECT contact_id, purpose_code, is_primary FROM supplier_contact_purposes WHERE supplier_id = ? ORDER BY contact_id, purpose_code",
+        [id]
+      );
+    }
+    const purposesByContact = new Map();
+    for (const purpose of contactPurposeRows) {
+      const contactId = Number(purpose.contact_id);
+      if (!purposesByContact.has(contactId)) purposesByContact.set(contactId, []);
+      purposesByContact.get(contactId).push(purpose);
+    }
+    const contacts = contactRows.map((contact) => toContactResponse(contact, purposesByContact.get(Number(contact.id)) ?? []));
+    const hasOrdersContact = contacts.some((contact) => contact.status === "active" && contact.purposes.some((purpose) => purpose.purposeCode === "orders" && purpose.isPrimary));
     return toSupplierDetailResponse(row, {
       addresses,
-      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasOrderingAddress })
+      contacts,
+      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasOrderingAddress, hasOrdersContact })
     });
   }
 
@@ -270,10 +290,22 @@ export class SupplierAdminService {
         LIMIT 1`,
       [id]
     );
+    const [[ordersContact]] = await this.database.query(
+      `SELECT 1 AS present
+         FROM supplier_contacts c
+         JOIN supplier_contact_purposes p ON p.contact_id = c.id AND p.supplier_id = c.supplier_id
+        WHERE c.supplier_id = ? AND c.status = 'active' AND p.purpose_code = 'orders' AND p.is_primary = 1
+        LIMIT 1`,
+      [id]
+    );
     return {
       supplierId: Number(row.id),
       issues: [],
-      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasOrderingAddress: Boolean(orderingAddress) })
+      warnings: supplierCompletenessWarnings({
+        defaultPaymentTermId: row.default_payment_term_id,
+        hasOrderingAddress: Boolean(orderingAddress),
+        hasOrdersContact: Boolean(ordersContact)
+      })
     };
   }
 

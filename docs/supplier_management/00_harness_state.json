@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 60,
+  "revision": 62,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "234527e54a146c1198065141e6c8657590789c4a",
-    "source_fingerprint": "20bc745a72419c5bc0bef4a9185fa1fbdeb6150a7a494a63381373be3220b81e",
+    "code_commit": "eb1e50bf74db229f91e9f582a554fbafc815278a",
+    "source_fingerprint": "30e504d8abca293cd11c025f5d92d47a123b2e693bcdad726cf8118ea104a2b2",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -43,8 +43,8 @@
     "TASK-013": "DONE",
     "TASK-014": "DONE",
     "TASK-015": "DONE",
-    "TASK-016": "IN_PROGRESS",
-    "TASK-017": "PENDING",
+    "TASK-016": "DONE",
+    "TASK-017": "IN_PROGRESS",
     "TASK-018": "PENDING",
     "TASK-019": "PENDING",
     "TASK-020": "PENDING",
@@ -835,6 +835,14 @@
       "idempotency_key": "supplier-phase-001-playwright-device-4255",
       "status": "CONFIRMED",
       "source_ref": "approveDevice.js confirmed synthetic device binding 4255 on 2026-09-15; subsequent Playwright login and authenticated Supplier Address API calls succeeded."
+    },
+    {
+      "id": "MIGRATION-006",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migration 0033 Supplier contacts and purpose mappings",
+      "idempotency_key": "supplier-phase-001-erp-dev-migration-0033",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0033_create_supplier_contacts.js to authorized erp_dev on 2026-09-15; ledger/schema were re-observed and real MySQL passed Address/Contact ownership, primary switching, concurrency and deactivation tests."
     }
   ],
   "evidence_files": [
@@ -842,5 +850,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-016 Supplier Contact persistence, purpose-primary rules, authorization, audit and API tests test-first."
+  "next_safe_action": "Implement TASK-017 Supplier Contact client methods and panel test-first, then restart the local API and complete real Playwright validation in the existing approved session."
 }

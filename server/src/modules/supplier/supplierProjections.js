@@ -58,7 +58,7 @@ export function toAddressResponse(row, purposes = []) {
   };
 }
 
-export function toContactResponse(row) {
+export function toContactResponse(row, purposes = []) {
   return {
     id: Number(row.id),
     supplierId: Number(row.supplier_id),
@@ -71,6 +71,10 @@ export function toContactResponse(row) {
     preferredLanguage: row.preferred_language,
     notes: row.notes,
     status: row.status,
+    purposes: purposes.map((purpose) => ({
+      purposeCode: purpose.purpose_code,
+      isPrimary: Boolean(purpose.is_primary)
+    })),
     version: Number(row.version),
     updatedAt: Number(row.updated_at)
   };
