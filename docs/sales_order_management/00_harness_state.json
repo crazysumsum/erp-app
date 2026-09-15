@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 4,
+  "revision": 8,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
+  "status": "PLANNED",
   "resume_status": "PLANNED",
   "current_phase": null,
   "current_task": null,
   "baseline": {
     "design": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
     "plan": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
-    "code_commit": "0b95d4bc56aa9c641e66ae83523c0de8facf221b",
+    "code_commit": "d6b03f97d654c72dc94c197305a13c570e7cd944",
     "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-order-align-harness-v2",
-    "default_commit": "98fd077cc8279b76353ad3439ee3f92a12bf821d",
-    "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-plan-gate",
+    "default_commit": "d6b03f97d654c72dc94c197305a13c570e7cd944",
+    "mode_entry_commit": "d6b03f97d654c72dc94c197305a13c570e7cd944"
   },
   "runtime": {
-    "instance_id": "sales-order-align-harness-v2",
+    "instance_id": "sales-plan-gate",
     "owner": "ERP Product Owner (Sam)",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-order-align-harness-v2"
+      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-plan-gate"
     },
     "lease_ref": null
   },
@@ -39,6 +39,7 @@
       "baseline_sha256": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
       "code_commit": null,
       "scope": [
+        "sales-order-management",
         "docs/sales_order_management/**"
       ],
       "expires_at": null
@@ -51,8 +52,8 @@
       "decision": "APPROVED",
       "source_ref": "docs/sales_order_management/01_requirement_spec.md NFR-014/NFR-015",
       "recorded_at": "2026-09-10T00:00:00+08:00",
-      "baseline_kind": "DESIGN",
-      "baseline_sha256": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
       "code_commit": null,
       "scope": [
         "NFR-014",
@@ -76,6 +77,82 @@
         "docs/fulfillment_shipping_management/00_module_manifest.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-RISK-001",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15. Route A (scoped start) selected; the user expressed no preference between routes and delegated the choice to the recommended option, which explicitly carried this scoped risk acceptance. SCOPE OF ACCEPTANCE: DR-001 and DR-002 stay OPEN and are NOT accepted as resolved. What is accepted is proceeding with PHASE-001 TASK-001..TASK-008 only, none of which touches a missing provider. TASK-009, TASK-010, the PHASE-001 exit gate and PHASE-002..PHASE-005 remain blocked. No provider contract code may be written against Customer, Inventory or Fulfillment while those modules do not exist in server/src/modules/.",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "REV-002",
+        "DR-001",
+        "DR-002",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PLAN-001",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15: the Phase/Task plan is approved for implementation, scoped to PHASE-001 TASK-001..TASK-008. PHASE-001 cannot reach its exit gate under this approval because TC-001 requires TASK-009/TASK-010. PHASE-002..PHASE-005 are approved as a plan but are NOT authorized for implementation entry.",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-BASELINE-PERF-001",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15: DR-006 closed by approving the SYNTHETIC performance baseline (average 5 lines / P95 20 lines, 10,000 SO/day, 24 months, 7.3M Active headers) for NFR-001..NFR-007 acceptance. This is not measured business data. If anonymized production distribution later differs materially, the capacity model and performance acceptance must be re-run.",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "DR-006",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -88,7 +165,7 @@
       "source_ref": "docs/sales_order_management/04_design_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
-      "open_high": 5,
+      "open_high": 2,
       "risk_approval_id": null
     },
     {
@@ -100,8 +177,8 @@
       "source_ref": "docs/sales_order_management/04_design_review.md",
       "status": "APPROVED",
       "open_critical": 0,
-      "open_high": 5,
-      "risk_approval_id": null
+      "open_high": 2,
+      "risk_approval_id": "APR-RISK-001"
     }
   ],
   "observations": [
@@ -151,8 +228,8 @@
         "DES-004",
         "DES-005"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "DR-004 resolved (TASK-006 + TC-008). DR-001 and DR-002 remain genuine external dependencies and stay OPEN as findings; the answer is a SCOPED start: implement PHASE-001 TASK-001..008 only, which touch no missing provider. TASK-009/010, the PHASE-001 exit gate and PHASE-002..005 stay blocked until the Customer and Inventory modules exist and their owners plus a DBA approve the contracts and global lock order. See APR-RISK-001 and APR-PLAN-001."
     },
     {
       "id": "DEC-002",
@@ -165,8 +242,8 @@
         "TASK-002",
         "TASK-003"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Approved: the opt-in disk-stream upload design stands as specified and is delivered by TASK-002..005, proven by mandatory TC-004/TC-005/TC-006 as a PHASE-001 exit criterion. The Sales CSV route must not be enabled before those pass. See DR-003 disposition."
     },
     {
       "id": "DEC-003",
@@ -178,8 +255,8 @@
         "DES-019",
         "NFR-001"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Answered in three parts. DR-006: synthetic performance baseline approved (APR-BASELINE-PERF-001). DR-008: fail-closed accepted — archive stays disabled for any integration whose open-matter provider is absent or UNKNOWN. DR-009: deferred to PHASE-005 acceptance, contingent on the timed recovery exercise in TC-056..060 meeting NFR-014/015. None of these is a PHASE-001 entry condition."
     },
     {
       "id": "DEC-004",
@@ -189,12 +266,12 @@
         "DES-011",
         "PHASE-004"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Answered: Sales scope is canonical Channel Intake only (FR-096..108, DES-011). No public route, no platform transport authentication, no Fulfillment address handoff, and no real Adapter go-live under this approval. The first Adapter requires a separate architecture and security gate with its own requirement/design change. See DR-007 disposition."
     }
   ],
   "external_actions": [],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Module status is BLOCKED because DEC-001..004 are OPEN major-impact decisions. Obtain provider-owner, DBA, Security and Operations disposition for DR-001..009 before any PHASE entry. Do not enter IMPLEMENT while those remain OPEN. No product code, test execution or acceptance was performed."
+  "next_safe_action": "PLAN_READY is LOCAL_CHECKS_PASS for a SCOPED start. Authorized next step: enter IMPLEMENT for PHASE-001 TASK-001..TASK-008 only (upload framework hardening and Sales primitives), starting with TASK-001, which re-discovers the migration sequence — currently 0027 on main d6b03f9, not the 0024 the plan was written against. HARD LIMITS: do not implement TASK-009 (Customer/Item provider contracts), TASK-010 (Inventory batch reserve/release) or the PHASE-001 exit gate, and do not enter PHASE-002..PHASE-005. DR-001 and DR-002 remain OPEN: the Customer, Inventory and Fulfillment modules do not exist in server/src/modules/. No provider contract code may be written against a module that does not exist. LOCAL_CHECKS_PASS is local evidence consistency only: it is not authorization, not CI, and not business acceptance."
 }

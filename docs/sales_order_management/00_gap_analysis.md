@@ -136,3 +136,15 @@ The review did not add tax, discount, approval workflow, multi-warehouse fulfill
 - Proposed action: when the Sales UI is implemented, add a Playwright suite to `00_project_profile.json` and switch the affected entries to `PLAYWRIGHT_PREFERRED` with that `suite_id`. Declaring a suite before it exists would be an unverifiable execution contract, so it was not done here.
 - Human decision required: No.
 
+## 4. Implementation-gap status after the PLAN_READY gate (2026-09-15)
+
+| Gap | Status | Basis |
+| --- | --- | --- |
+| `GAP-DES-003` 50 MB disk-stream not implemented | `SCHEDULED` | `DR-003` resolved; delivered by `TASK-002`–`TASK-005`, proven by `TC-004`/`TC-005`/`TC-006`. Authorized to start. |
+| `GAP-DES-005` fresh actor checks not a framework guarantee | `SCHEDULED` | `DR-004` resolved; delivered by `TASK-006`, proven by `TC-008`. Authorized to start. |
+| `GAP-TASK-002` planning baseline behind main | `CLOSED` | `DR-005` resolved. Docs merged to `main` at `d6b03f9`; migration re-discovery is `TASK-001`'s job and the sequence is now `0027`. |
+| `GAP-DES-006` channel transport deferred | `CLOSED as scope` | `DR-007` resolved as a scope boundary: canonical intake only, first Adapter needs its own architecture/security gate. |
+| `GAP-DES-002` upstream providers absent | `OPEN — BLOCKING` | `DR-001`. `customer`, `inventory`, `fulfillment` do not exist in `server/src/modules/`. Blocks `TASK-009`/`TASK-010` and `PHASE-002`–`PHASE-005`. |
+| `GAP-DES-004` cross-module atomic contract unproven | `OPEN — BLOCKING` | `DR-002`. Lands in `PHASE-003` (`TASK-028`–`TASK-030`, `TC-021`), so it does not block `PHASE-001` `TASK-001`–`TASK-008`. |
+| `GAP-IMP-001` Sales module not implemented | `OPEN — IN PROGRESS` | This is the work now authorized to begin, scoped to `TASK-001`–`TASK-008`. |
+

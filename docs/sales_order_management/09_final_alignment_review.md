@@ -113,3 +113,28 @@ The design was approved as a planning baseline by human independent reviewer Sam
 execution, UAT or release. `STRUCTURE_PASS` means structural checks only — not business coverage, not acceptance.
 
 To proceed, first preserve/commit the documents, update the planning baseline from current main, and obtain the owners/evidence required by the affected Phase entry gates. A separate explicit `IMPLEMENT` authorization is required before product-code changes.
+
+## 10. PLAN_READY gate closure (2026-09-15)
+
+`verify_gate.py --gate PLAN_READY` now returns **`LOCAL_CHECKS_PASS`** for a **scoped** start. The path from `BLOCKED` to here was four separate things, recorded so the reasoning can be audited:
+
+**1. Three findings were re-dispositioned, not waived.** `DR-003` (50 MB upload), `DR-004` (fresh authorization) and `DR-005` (stale baseline) were `OPEN` `HIGH`. None is an external unknown: each is an implementation obligation already bound to a mandatory technical test — `TC-004`/`TC-005`/`TC-006` for `DR-003`, `TC-008` for `DR-004`, `TC-002` for `DR-005` — and each becomes a `PHASE-001` exit criterion. `DR-005` is additionally closed on observed evidence: the documentation is committed and merged to `main` at `d6b03f9`, so it is neither untracked nor recoverable only from a vanished worktree.
+
+**2. Four medium findings were closed or explicitly deferred.** `DR-006` by approving a **synthetic** performance baseline (`APR-BASELINE-PERF-001`) — not measured business data, and re-runnable if real distribution differs. `DR-007` by recording the canonical-intake-only scope boundary the design already implements. `DR-008` by accepting fail-closed archive behavior. `DR-009` deferred to `PHASE-005` timed-recovery evidence against `NFR-014`/`NFR-015`.
+
+**3. Two findings remain OPEN and were not resolved.** `DR-001` and `DR-002` are genuine external dependencies: `server/src/modules/` on `main` at `d6b03f9` contains `audit`, `authorization`, `businessMaster`, `item`, `role`, `user` — no `customer`, `inventory`, `fulfillment` or `sales`. What was approved is not the risk but a **reduced scope** that avoids it (`APR-RISK-001`).
+
+**4. Three recording defects were corrected.** `APR-DESIGN-001` carried a path glob where `approval_valid()` matches on `module_id`; the RTO/RPO `UAT_NA` approval and the `RISK` approval were bound to the DESIGN baseline, but every non-`DESIGN` approval kind must bind to the PLAN baseline. These misrepresented approvals that had actually been given.
+
+### Authorized scope
+
+| Scope | Status |
+| --- | --- |
+| `PHASE-001` `TASK-001`–`TASK-008` | **Authorized** for `IMPLEMENT` — upload framework hardening and Sales primitives; no dependency on any missing provider |
+| `TASK-009`, `TASK-010`, `PHASE-001` exit gate | **Blocked** — require Customer and Inventory modules to exist |
+| `PHASE-002` – `PHASE-005` | **Blocked** — approved as a plan, not authorized for entry |
+
+`TASK-001` must re-discover the migration sequence before coding: it is `0027` on `d6b03f9`, not the `0024` the plan was written against.
+
+`LOCAL_CHECKS_PASS` is local evidence consistency only. It is not authorization, not CI, and not business acceptance. No product code has been written and no test has been executed.
+
