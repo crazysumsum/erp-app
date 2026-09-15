@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 39,
+  "revision": 47,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,15 +11,15 @@
   "baseline": {
     "design": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
     "plan": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
-    "code_commit": "5c0f16a7794dacdee814eb5d006a2df3a0b090d4",
-    "source_fingerprint": "327c9b77536f33375ef525b6375f43eb21dd598886378c0ef6aac8a64d3632bb",
+    "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
+    "source_fingerprint": "d29d33de8231c84a5e72c12aee4d27257f56fe570471604555ce3d08c61a58bd",
     "worktree": "/private/tmp/erp-item-management-task-038",
     "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
-    "mode_entry_commit": "49d487e876932e6684cbdbec46043312b3f730bd"
+    "mode_entry_commit": "00ce7271b17f31383a9662754eab56c85ef98987"
   },
   "runtime": {
     "instance_id": "ITEM-TASK044-LOCAL-20260914",
-    "owner": "Primary TEST_AND_VERIFY agent",
+    "owner": "Primary IMPLEMENT remediation agent; DEF-106 regression complete",
     "resources": {
       "workspace": "/private/tmp/erp-item-management-task-038",
       "mysql-schema": "erp_dev@127.0.0.1:3306; user-authorized local synthetic-data test database; serialized by ITEM-TASK044-LOCAL-20260914",
@@ -27,7 +27,7 @@
       "import-root": "/private/tmp/erp-item-management-task-038/server/storage/imports",
       "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
-    "lease_ref": "MySQL advisory lock erp-item-task044-local-20260914 was acquired on connection_id=23483 for execution and released successfully (RELEASE_LOCK=1) after cleanup"
+    "lease_ref": "MySQL advisory lock erp-item-task044-def106-20260915 was acquired on connection_id=26133 and released successfully (RELEASE_LOCK=1) after the 459-case regression."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -356,6 +356,42 @@
         "TASK-044"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-019",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved PLAN de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91 bound to candidate 00ce7271b17f31383a9662754eab56c85ef98987 on 2026-09-15.",
+      "recorded_at": "2026-09-15T02:25:02Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-020",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly accepted deferral risk for DEF-103/TC-016 until a staging-like recovery environment is available on 2026-09-15.",
+      "recorded_at": "2026-09-15T02:25:02Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
+      "scope": [
+        "item-management",
+        "DEF-103",
+        "TC-016"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -658,6 +694,22 @@
       "idempotency_key": "mode-change-33",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized REMEDIATE_AND_RETEST on 2026-09-15"
+    },
+    {
+      "id": "MODE-CHANGE-41",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-41",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved PLAN de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91, accepted DEF-103/TC-016 deferral risk, and authorized continuation into formal TEST_AND_VERIFY on 2026-09-15."
+    },
+    {
+      "id": "MODE-CHANGE-45",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-45",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized REMEDIATE_AND_RETEST for DEF-106, limited to renaming four duplicate test titles and creating a new candidate; DEF-103/TC-016 remains BLOCKED_DEFERRED, on 2026-09-15."
     }
   ],
   "evidence_files": [
@@ -669,7 +721,11 @@
     "testing/evidence/remediation-client.xml",
     "testing/evidence/remediation-item-uat-browser.xml",
     "testing/evidence/remediation-performance-bounded.xml",
-    "testing/evidence/remediation-server-scoped.xml"
+    "testing/evidence/remediation-server-scoped.xml",
+    "evidence/20260915T022734-0e13fa08d720/run.json",
+    "evidence/20260915T022954-219f01eed099/run.json",
+    "evidence/20260915T023008-644114a5c002/run.json",
+    "evidence/20260915T023324-35fe8b579a91/run.json"
   ],
   "defects": [
     {
@@ -732,7 +788,7 @@
         "TC-016"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APR-020"
     },
     {
       "id": "DEF-104",
@@ -772,7 +828,32 @@
         "testing/evidence/remediation-server-scoped.junit.xml"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-106",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-013",
+        "TC-014",
+        "TC-015"
+      ],
+      "closure_evidence": [
+        "testing/evidence/def106-targeted.junit.xml",
+        "testing/evidence/def106-server-regression.junit.xml"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Obtain explicit ERP Product Owner (Sam) approval of PLAN baseline de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91 and an explicit RISK disposition for deferred DEF-103 before entering TEST_AND_VERIFY; keep TASK-043/UAT-005 and UAT-015 blocked."
+  "next_safe_action": "Commit the exact DEF-106 test-title-only remediation candidate, checkpoint its candidate SHA, then request explicit Product Owner approval to bind formal retest to that new candidate; retain DEF-103/TC-016 as BLOCKED_DEFERRED."
 }

@@ -9,6 +9,10 @@
 
 Remediation supersession (2026-09-15): this report preserves the original readiness decision below, but the current executable baseline is plan hash `de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91`. DEF-101/102/104/105 are closed by targeted developer retest plus impact regression; formal execution still waits for explicit approval of that changed PLAN baseline. DEF-103 remains deferred without an approved risk disposition.
 
+Formal-rerun supersession: PLAN approval `APR-019` and DEF-103 risk disposition `APR-020` were recorded against candidate `00ce7271b17f31383a9662754eab56c85ef98987`. Formal client and bounded-performance suites passed; recovery stayed explicitly deferred, and the server suite exposed new JUnit-name ambiguity `DEF-106`. Readiness is therefore `BLOCKED` pending a test-only remediation and new candidate binding.
+
+DEF-106 remediation supersession: the authorized four-title correction passes targeted and full server regression and is closed locally. Readiness remains `BLOCKED` until the correction is committed and the Product Owner binds verification to that new candidate; DEF-103/TC-016 remains `BLOCKED_DEFERRED`.
+
 ## Baselines
 
 - Requirement baseline: `docs/items_management/01_requirement_spec.md`, SHA-256 `8181e39034218c09408772105dfec25a6bd71fbd67effc4e07ac59252914ba13`

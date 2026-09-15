@@ -121,3 +121,27 @@ The user explicitly authorized `REMEDIATE_AND_RETEST`. Remediation changed test 
 Evidence: `testing/evidence/remediation-server-scoped.junit.xml`, `remediation-client.junit.xml`, `remediation-performance-bounded.junit.xml`, and `remediation-item-uat-browser.junit.xml` (developer remediation artifacts only; formal retest remains pending).
 
 The first attempted whole-repository retest is deliberately not counted: the shared `erp_dev` contains Supplier permissions from a local migration newer than `origin/main`, causing 12 User/Role tests to return `PERMISSION_STALE`. The Item suite was therefore corrected to a module-scoped contract rather than treating unrelated module state as an Item failure.
+
+## DEF-106 — Formal server JUnit contains duplicate runner names
+
+- Source Test/Finding: formal `item-server-technical`, run `20260915T022734-0e13fa08d720`
+- Severity: HIGH
+- Failure Type: TEST_AUTOMATION_DEFECT / EVIDENCE_NORMALIZATION
+- Requirement: TC-001–TC-010 and TC-013–TC-015 uniquely attributable formal evidence
+- Design: Harness JUnit evidence contract
+- Phase: PHASE-006
+- Task: TASK-044
+- Expected: every JUnit testcase has a unique normalized `classname.name` key so the evidence adapter can safely map canonical IDs.
+- Actual: all 459 Node tests exited successfully, but two names occur twice: `test.constructor requires database, logger and time` and `test.the job is discovered by the ordinary service mechanism`. Harness rejected and removed the ambiguous raw report, recording zero credited cases.
+- Evidence: `docs/items_management/evidence/20260915T022734-0e13fa08d720/run.json`; the duplicate identities are reproducible in the preserved developer artifact `testing/evidence/remediation-server-scoped.junit.xml`.
+- Root Cause: Node's JUnit reporter uses the generic classname `test`; pairs of Item unit-test files reuse generic top-level test names.
+- Remediation Route: rename only the four colliding test titles with their Item service/job identity, then rerun the formal server Technical suite and impact Regression. Product behavior and assertions must remain unchanged.
+- Retest Cases: formal `item-server-technical`, TC-001–TC-010 and TC-013–TC-015.
+- Regression Scope: formal server Regression plus unchanged client/performance evidence reconciliation.
+- Status: CLOSED
+- Closure Evidence: targeted `testing/evidence/def106-targeted.junit.xml` (59/59, 59 unique names); impact regression `testing/evidence/def106-server-regression.junit.xml` (459/459, 459 unique names, all required Item server TC IDs PASS).
+- Residual Risk / Notes: this was evidence ambiguity, not an observed Item product failure. Only four test titles changed; assertions, product code and suite scope remained unchanged. Formal credit still requires rerunning against the newly committed candidate.
+
+### DEF-106 remediation — 2026-09-15
+
+The ERP Product Owner explicitly authorized a test-title-only remediation. `ItemAuditLogService`, `ItemLookupService`, `ItemImportFileCleanupJob`, and `ItemMediaCleanupJob` now identify themselves in their top-level Node test names. Targeted and full module regression passed, Harness `parse_results` accepted the full JUnit report, and lint passed.

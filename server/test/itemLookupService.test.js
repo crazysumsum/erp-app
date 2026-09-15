@@ -75,7 +75,7 @@ function uomRow(overrides = {}) {
   };
 }
 
-test("constructor requires database, logger and time", () => {
+test("ItemLookupService constructor requires database, logger and time", () => {
   assert.throws(() => new ItemLookupService({}), TypeError);
   assert.throws(() => new ItemLookupService({ database: {} }), TypeError);
   assert.throws(() => new ItemLookupService({ database: {}, logger: collectingLogger() }), TypeError);

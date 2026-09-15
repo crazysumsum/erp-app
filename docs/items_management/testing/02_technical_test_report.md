@@ -82,4 +82,19 @@ This section supplements, but does not rewrite, the original formal blocked run.
 
 These JUnit files are remediation/developer artifacts, not formal Harness gate evidence. The original `.xml` state references now contain explicit `BLOCKED` correction records so the accidental raw-XML registration remains preserved without being misread as a formal result.
 
+## Approved-baseline formal rerun — 2026-09-15
+
+| Suite | Formal result | Evidence / disposition |
+|---|---|---|
+| `item-server-technical` | `BLOCKED` | Run `20260915T022734-0e13fa08d720`: process exit 0, but duplicate JUnit names prevented trustworthy normalization; `DEF-106` opened. |
+| `item-client-technical` | `PASS` | Run `20260915T022954-219f01eed099`: 492/492, 0 skipped/failed; required `TC-011` PASS. An unrelated Business Master test also emits `TC-016`, but it cannot substitute for the separately required Item recovery suite. |
+| `item-performance` | `PASS_WITH_LIMITATION` | Run `20260915T023008-644114a5c002`: 3/3, required `TC-012` PASS under the approved bounded profile; not the outstanding 100k capacity exercise. |
+| `item-recovery` | `BLOCKED_DEFERRED` | Run `20260915T023324-35fe8b579a91`: TC-016 not run because the adapter/staging-like environment is absent; risk deferral approved as `APR-020`, never counted as PASS. |
+
+Technical Acceptance remains `BLOCKED`: `DEF-106` requires a test-only candidate correction, and the required recovery suite remains deferred rather than passed.
+
+### DEF-106 remediation result
+
+The approved test-title-only correction passed targeted testing (59/59) and the complete module-scoped server regression (459/459). All 459 normalized JUnit names are unique, and required `TC-001`–`TC-010` plus `TC-013`–`TC-015` map to PASS. Evidence: `testing/evidence/def106-targeted.junit.xml` and `testing/evidence/def106-server-regression.junit.xml`. This is developer remediation evidence; the previous blocked formal run remains preserved and a new-candidate formal rerun is still required.
+
 The profile now allows `ITEM_PERFORMANCE_TESTS` for the dedicated performance suite. Full-scale performance and `TC-016` recovery remain unexecuted, so Technical Acceptance remains `BLOCKED` pending the formal retest and external prerequisites.
