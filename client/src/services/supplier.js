@@ -53,6 +53,38 @@ export default {
     return httpClient.post(`/api/v1/suppliers/${id}/code/change`, { body: payload, signed: true });
   },
 
+  activate(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/activate`, { body: payload });
+  },
+
+  suspend(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/suspend`, { body: payload });
+  },
+
+  reactivate(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/reactivate`, { body: payload });
+  },
+
+  block(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/block`, { body: payload, signed: true });
+  },
+
+  unblock(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/unblock`, { body: payload, signed: true });
+  },
+
+  archive(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/archive`, { body: payload });
+  },
+
+  restore(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/restore`, { body: payload });
+  },
+
+  deleteSupplier(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/delete`, { body: payload, signed: true });
+  },
+
   createAddress(supplierId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/create`, { body: payload });
   },

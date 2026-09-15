@@ -118,4 +118,27 @@ describe("supplier service", () => {
       signed: true
     });
   });
+
+  it("maps lifecycle commands to their required password and device-signature levels", async () => {
+    httpClient.post.mockResolvedValue({ id: 7 });
+    const common = { reason: "Lifecycle reason", password: "secret", version: 2 };
+    await supplierService.activate(7, { version: 2 });
+    await supplierService.suspend(7, common);
+    await supplierService.reactivate(7, common);
+    await supplierService.block(7, common);
+    await supplierService.unblock(7, common);
+    await supplierService.archive(7, common);
+    await supplierService.restore(7, common);
+    await supplierService.deleteSupplier(7, common);
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/suppliers/7/activate", { body: { version: 2 } }],
+      ["/api/v1/suppliers/7/suspend", { body: common }],
+      ["/api/v1/suppliers/7/reactivate", { body: common }],
+      ["/api/v1/suppliers/7/block", { body: common, signed: true }],
+      ["/api/v1/suppliers/7/unblock", { body: common, signed: true }],
+      ["/api/v1/suppliers/7/archive", { body: common }],
+      ["/api/v1/suppliers/7/restore", { body: common }],
+      ["/api/v1/suppliers/7/delete", { body: common, signed: true }]
+    ]);
+  });
 });

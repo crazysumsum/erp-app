@@ -15,6 +15,7 @@ import appConfig from "@config/app.js";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
+import SupplierStatusActions from "@/components/suppliers/SupplierStatusActions.vue";
 import { can } from "@/framework/authorization/can.js";
 import { useSessionStore } from "@/stores/session.js";
 import supplierService from "@/services/supplier.js";
@@ -34,6 +35,7 @@ const route = useRoute();
 const router = useRouter();
 const session = useSessionStore();
 const canManage = computed(() => can(session, { permissions: ["supplier.mgmt"] }));
+const canApprove = computed(() => can(session, { permissions: ["supplier.view", "supplier.approval"] }));
 const initialQuery = route.query;
 const searchText = ref(typeof initialQuery.q === "string" ? initialQuery.q : "");
 const statusFilter = ref(typeof initialQuery.status === "string" ? initialQuery.status : null);
@@ -116,6 +118,11 @@ function formatDate(value) {
         <template #body-cell-actions="{ row }">
           <q-td class="text-right">
             <q-btn flat dense icon="visibility" :aria-label="`查看 ${row.supplierCode} 詳情`" :to="`/suppliers/${row.id}`" />
+            <SupplierStatusActions
+              compact :supplier="row" :can-manage="canManage" :can-approve="canApprove"
+              :username="session.user?.username ?? ''"
+              @updated="table?.reload()" @deleted="table?.reload()" @conflict="table?.reload()"
+            />
           </q-td>
         </template>
       </DataTable>

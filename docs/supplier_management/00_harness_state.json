@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 69,
+  "revision": 70,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-023",
+  "current_task": "TASK-024",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "684ae07c6c22723d5eb3974594b7b5e0d0bdd31f",
-    "source_fingerprint": "fb70666c9ec1fa31ac345e5de16f2bc2b1ae2c1689f63cf16c0962bffeb56407",
+    "code_commit": "78b01e70324bc39263248067478f695ff475c11c",
+    "source_fingerprint": "c41396b1c0d717464629ceb1cb6e6fdd48a7698d7c27fc66b2ac109264ad9f8f",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -50,8 +50,8 @@
     "TASK-020": "DONE",
     "TASK-021": "DONE",
     "TASK-022": "DONE",
-    "TASK-023": "IN_PROGRESS",
-    "TASK-024": "PENDING",
+    "TASK-023": "DONE",
+    "TASK-024": "IN_PROGRESS",
     "TASK-025": "PENDING",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
@@ -591,6 +591,17 @@
       "source_ref": "Authenticated HTTP matrix on 2026-09-15 exercised activate/replay/suspend/reactivate/block/unblock/archive/restore and controlled Draft delete. Initial browser evidence exposed that target-only validation could misclassify Restore as Suspend; implementation was tightened to command-specific allowed source states plus latest-action replay proof. Recheck returned STATUS_TRANSITION_INVALID for wrong Suspend, Unblock and Restore, preserved true Restore replay at version 13, and left Supplier 11 Suspended at version 15. Synthetic Draft 62 was device-password deleted and then returned SUPPLIER_NOT_FOUND. Focused tests passed 13/13, real MySQL lifecycle/create/update integration passed 3/3, root lint passed; all browser 409s were deliberately exercised negative cases.",
       "actor": "/root via playwright-cli and node:test",
       "observed_at": "2026-09-15T04:37:30Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-023 permission-aware Supplier lifecycle actions and responsive confirmation dialogs",
+      "code_commit": "78b01e70324bc39263248067478f695ff475c11c",
+      "spec_baseline": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "source_fingerprint": "c41396b1c0d717464629ceb1cb6e6fdd48a7698d7c27fc66b2ac109264ad9f8f",
+      "status": "PASS",
+      "source_ref": "Playwright CLI on 2026-09-15 exercised Reactivate, Block, Unblock, Archive and Restore against the approved erp_dev fixture, including approved-device signed actions, exact state-valid action visibility and the compact list action menu. At 375x812 the dialog content and controls remained usable. Browser validation exposed and fixed a Quasar dialog layering defect caused by placing q-form above the direct q-card child; mouse and keyboard submission then passed. Supplier 11 was returned to Suspended at version 24. Client tests passed 23/23, production build and lint passed; final browser console contained 0 errors and 0 warnings and all observed lifecycle requests returned 200. VERSION_CONFLICT draft preservation and password clearing passed automated component coverage.",
+      "actor": "/root via playwright-cli and vitest",
+      "observed_at": "2026-09-15T04:55:35Z"
     }
   ],
   "pending_decisions": [
@@ -913,5 +924,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-023 permission-aware Supplier lifecycle actions and dialogs test-first, then validate suspend, block, unblock, archive, restore, delete and conflict keyboard flows in Playwright."
+  "next_safe_action": "Implement TASK-024 bounded Supplier core lookup and downstream integration contracts test-first, then run the complete Phase 1 security, concurrency, audit-rollback and browser smoke gate."
 }

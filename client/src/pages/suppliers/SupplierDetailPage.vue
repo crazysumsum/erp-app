@@ -9,13 +9,14 @@ export const page = {
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
-import { onBeforeRouteLeave, useRoute } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
 import SupplierContactPanel from "@/components/suppliers/SupplierContactPanel.vue";
 import SupplierIdentifierPanel from "@/components/suppliers/SupplierIdentifierPanel.vue";
 import SupplierPaymentDefaults from "@/components/suppliers/SupplierPaymentDefaults.vue";
+import SupplierStatusActions from "@/components/suppliers/SupplierStatusActions.vue";
 import { can } from "@/framework/authorization/can.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/framework/ui/validationIssues.js";
@@ -27,8 +28,10 @@ const STATUS_LABEL = Object.freeze({
   blocked: "已封鎖", archived: "已封存"
 });
 const route = useRoute();
+const router = useRouter();
 const session = useSessionStore();
 const canManage = computed(() => can(session, { permissions: ["supplier.mgmt"] }));
+const canApprove = computed(() => can(session, { permissions: ["supplier.view", "supplier.approval"] }));
 const supplier = ref(null);
 const completeness = ref({ issues: [], warnings: [] });
 const loading = ref(true);
@@ -118,6 +121,20 @@ async function load() {
   } finally {
     loading.value = false;
   }
+}
+
+async function lifecycleUpdated(updated) {
+  supplier.value = updated;
+  completeness.value = await supplierService.completeness(updated.id);
+  if (!editing.value) loadForm(updated);
+}
+
+async function lifecycleConflict() {
+  await load();
+}
+
+function lifecycleDeleted() {
+  router.push("/suppliers");
 }
 onMounted(() => { window.addEventListener("beforeunload", beforeUnload); void load(); });
 onUnmounted(() => window.removeEventListener("beforeunload", beforeUnload));
@@ -270,6 +287,11 @@ async function submitCodeChange() {
             <q-icon name="block" /> 不可用於新採購
           </span>
           <span class="text-caption text-grey-7">版本 {{ supplier.version }}</span>
+          <SupplierStatusActions
+            :supplier="supplier" :can-manage="canManage" :can-approve="canApprove"
+            :username="session.user?.username ?? ''"
+            @updated="lifecycleUpdated" @conflict="lifecycleConflict" @deleted="lifecycleDeleted"
+          />
         </div>
 
         <SupplierCompletenessBanner :issues="completeness.issues" :warnings="completeness.warnings" />
@@ -380,6 +402,8 @@ async function submitCodeChange() {
 
     <q-dialog v-model="showCodeDialog" persistent>
       <q-card style="width: min(560px, 94vw)">
+        <q-form @submit.prevent="submitCodeChange">
+          <input class="reauth-username" type="text" autocomplete="username" :value="session.user?.username ?? ''" tabindex="-1" aria-hidden="true">
         <q-card-section><div class="text-h6">受控修正 Supplier Code</div></q-card-section>
         <q-card-section class="q-pt-none">
           <q-banner class="bg-warning text-dark q-mb-md" rounded>
@@ -392,8 +416,9 @@ async function submitCodeChange() {
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="取消" v-close-popup />
-          <q-btn color="negative" label="確認修正" :disable="!codeValid" :loading="codeSubmitting" @click="submitCodeChange" />
+          <q-btn color="negative" label="確認修正" type="submit" :disable="!codeValid" :loading="codeSubmitting" />
         </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </div>
@@ -401,4 +426,11 @@ async function submitCodeChange() {
 
 <style scoped>
 .pre-line { white-space: pre-line; }
+.reauth-username {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
 </style>
