@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 43,
+  "revision": 44,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-005",
+  "current_task": "TASK-006",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "c3da62d122cdc11d9523609fe2129c26134805aa",
-    "source_fingerprint": "4495359e928f126677091e391add0132e78897c04aeb8312d71fd5cd262c04c0",
+    "code_commit": "2820be786ea2addec0f5301df63c234022f4ce41",
+    "source_fingerprint": "3b07e9c0c002ebbf12aafffd7ab10092e511347bb9841953aab7a0a33d38cea9",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -32,8 +32,8 @@
     "TASK-002": "DONE",
     "TASK-003": "DONE",
     "TASK-004": "DONE",
-    "TASK-005": "IN_PROGRESS",
-    "TASK-006": "PENDING",
+    "TASK-005": "DONE",
+    "TASK-006": "IN_PROGRESS",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
@@ -757,6 +757,14 @@
       "idempotency_key": "supplier-phase-001-erp-dev-migration-0028",
       "status": "CONFIRMED",
       "source_ref": "Repository migration runner applied 0028_seed_supplier_management_permissions.js to authorized erp_dev on 2026-09-15; focused tests 12/12, real-MySQL migration integration 14/14, and focused lint passed."
+    },
+    {
+      "id": "MIGRATION-003",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migrations 0029 Supplier root and 0030 Supplier name grams",
+      "idempotency_key": "supplier-phase-001-erp-dev-migrations-0029-0030",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0029_create_suppliers.js and 0030_create_supplier_name_grams.js to authorized erp_dev on 2026-09-15; rerun convergence, exact indexes, FK ownership and delete rules passed on real MySQL."
     }
   ],
   "evidence_files": [
@@ -764,5 +772,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-005 Supplier root and name-gram migrations 0029 and 0030 test-first, then execute them on approved erp_dev and verify exact MySQL schema."
+  "next_safe_action": "Implement TASK-006 Supplier constants, normalization, validation and public errors test-first; keep the activation minimum to Code, Name and Active Currency."
 }
