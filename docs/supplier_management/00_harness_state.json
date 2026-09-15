@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 65,
+  "revision": 66,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-015",
+  "current_task": "TASK-020",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "fd35cb74287792c2e94c978d3197d9b920b6c15e",
-    "source_fingerprint": "e3451675d80ab69106d45f416dcb45d71ed93096cd61dd561b5eb067014c3534",
+    "code_commit": "6859e1dd2c4e3483098bd822e379aa5bc9f950aa",
+    "source_fingerprint": "86da0c77003a1c784008eadd986f7ba892d1e0336b3b8e2876b4b7d18a01d45e",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -46,8 +46,8 @@
     "TASK-016": "DONE",
     "TASK-017": "DONE",
     "TASK-018": "DONE",
-    "TASK-019": "IN_PROGRESS",
-    "TASK-020": "PENDING",
+    "TASK-019": "DONE",
+    "TASK-020": "IN_PROGRESS",
     "TASK-021": "PENDING",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
@@ -547,6 +547,17 @@
       "source_ref": "Playwright CLI session supplier-address on 2026-09-15: live API created Amy and Ben; assigning Ben as orders/accounts-payable primary atomically removed Amy's primary markers; completeness warning disappeared and list showed Ben; deactivating Ben cleared both primary markers, restored the warning and list showed unconfigured; invalid email returned expected 400 with focused accessible summary and preserved draft; 375px dialog remained readable; no unexpected console/network errors.",
       "actor": "/root via playwright-cli",
       "observed_at": "2026-09-15T03:55:45Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-019 Supplier Identifier create, normalized duplicate rejection, reasoned update/delete and responsive browser validation",
+      "code_commit": "6859e1dd2c4e3483098bd822e379aa5bc9f950aa",
+      "spec_baseline": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "source_fingerprint": "86da0c77003a1c784008eadd986f7ba892d1e0336b3b8e2876b4b7d18a01d45e",
+      "status": "PASS",
+      "source_ref": "Playwright CLI session supplier-address on 2026-09-15: live API created HK business registration PW-AB-123; case/separator-equivalent pw ab 123 returned the expected non-disclosing 409 while preserving the draft; reasoned update changed the value to PW-CD-999; delete stayed disabled until a reason was entered, then removed the row and restored the completeness warning; 375px dialog remained usable; the only console/network error was the deliberately exercised 409. Automated client tests cover canDelete=false for referenced identifiers.",
+      "actor": "/root via playwright-cli",
+      "observed_at": "2026-09-15T04:10:24Z"
     }
   ],
   "pending_decisions": [
@@ -869,5 +880,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-019 Supplier Identifier client methods and panel test-first, then restart the local API and validate create, normalized duplicate, reasoned update/delete and completeness refresh in Playwright."
+  "next_safe_action": "Implement TASK-020 Supplier root update, controlled code correction and completeness backend test-first, preserving version, reason, audit and non-disclosing duplicate semantics."
 }

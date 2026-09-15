@@ -35,10 +35,10 @@ const DELETE_BODY = Object.freeze({
 });
 const IDENTIFIER_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,
-  required: ["id", "supplierId", "identifierType", "issuerCountryCode", "identifierValue", "notes", "version", "updatedAt"],
+  required: ["id", "supplierId", "identifierType", "issuerCountryCode", "identifierValue", "notes", "canDelete", "version", "updatedAt"],
   properties: {
     id: { type: "integer" }, supplierId: { type: "integer" }, identifierType: { type: "string", enum: [...SUPPLIER_IDENTIFIER_TYPES] },
-    issuerCountryCode: { type: "string" }, identifierValue: { type: "string" }, notes: { type: "string" },
+    issuerCountryCode: { type: "string" }, identifierValue: { type: "string" }, notes: { type: "string" }, canDelete: { type: "boolean" },
     version: { type: "integer" }, updatedAt: { type: "integer" }
   }
 });

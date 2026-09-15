@@ -89,6 +89,7 @@ export function toIdentifierResponse(row) {
     issuerCountryCode: row.issuer_country_code,
     identifierValue: row.identifier_value,
     notes: row.notes,
+    canDelete: row.can_delete === undefined ? true : Boolean(row.can_delete),
     version: Number(row.version),
     updatedAt: Number(row.updated_at)
   };

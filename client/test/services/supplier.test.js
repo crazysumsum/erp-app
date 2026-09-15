@@ -93,4 +93,16 @@ describe("supplier service", () => {
       ["/api/v1/suppliers/7/contacts/21/deactivate", { body: { version: 3 } }]
     ]);
   });
+
+  it("uses ownership-scoped reasoned Identifier routes", async () => {
+    httpClient.post.mockResolvedValue({ id: 31 });
+    await supplierService.createIdentifier(7, { identifierType: "tax", issuerCountryCode: "HK", identifierValue: "T-1" });
+    await supplierService.updateIdentifier(7, 31, { identifierType: "tax", issuerCountryCode: "HK", identifierValue: "T-2", version: 2, reason: "correct" });
+    await supplierService.deleteIdentifier(7, 31, { version: 3, reason: "entered in error" });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/suppliers/7/identifiers/create", { body: { identifierType: "tax", issuerCountryCode: "HK", identifierValue: "T-1" } }],
+      ["/api/v1/suppliers/7/identifiers/31/update", { body: { identifierType: "tax", issuerCountryCode: "HK", identifierValue: "T-2", version: 2, reason: "correct" } }],
+      ["/api/v1/suppliers/7/identifiers/31/delete", { body: { version: 3, reason: "entered in error" } }]
+    ]);
+  });
 });

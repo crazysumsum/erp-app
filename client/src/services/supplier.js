@@ -67,5 +67,17 @@ export default {
 
   deactivateContact(supplierId, contactId, payload) {
     return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/deactivate`, { body: payload });
+  },
+
+  createIdentifier(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/create`, { body: payload });
+  },
+
+  updateIdentifier(supplierId, identifierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/${identifierId}/update`, { body: payload });
+  },
+
+  deleteIdentifier(supplierId, identifierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/${identifierId}/delete`, { body: payload });
   }
 };
