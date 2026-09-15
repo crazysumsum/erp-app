@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 8,
+  "revision": 9,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
   "status": "PLANNED",
-  "resume_status": "PLANNED",
+  "resume_status": null,
   "current_phase": null,
   "current_task": null,
   "baseline": {
     "design": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
     "plan": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
-    "code_commit": "d6b03f97d654c72dc94c197305a13c570e7cd944",
+    "code_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b",
     "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-plan-gate",
-    "default_commit": "d6b03f97d654c72dc94c197305a13c570e7cd944",
-    "mode_entry_commit": "d6b03f97d654c72dc94c197305a13c570e7cd944"
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b",
+    "mode_entry_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b"
   },
   "runtime": {
-    "instance_id": "sales-plan-gate",
+    "instance_id": "erp-app-primary",
     "owner": "ERP Product Owner (Sam)",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/sales-plan-gate"
+      "workspace": "/Users/sam/Documents/workspace/erp-app"
     },
     "lease_ref": null
   },
@@ -214,6 +214,17 @@
       "source_ref": "Target branch refreshed before merge per project policy. main advanced with business-master verification closeout only; no file in this PR overlapped. Sales, fulfillment and business_master all re-validated STRUCTURE_PASS after the merge.",
       "actor": "Alignment agent",
       "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "state_tool.py checkpoint -> active_mode IMPLEMENT (probe, reverted)",
+      "code_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "Probed on 2026-09-15 in an isolated worktree at ea601dd: with resume_status cleared, a checkpoint to active_mode IMPLEMENT / status IMPLEMENTING returned RECORDED, which runs the PLAN_READY gate internally. The probe was reverted and NOT committed; the module remains in REVIEW_AND_ALIGN / PLANNED. Before the fix the same checkpoint was refused with \"unblocked state must clear resume_status\", so the transition into IMPLEMENT was genuinely unreachable.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -273,5 +284,5 @@
   "external_actions": [],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "PLAN_READY is LOCAL_CHECKS_PASS for a SCOPED start. Authorized next step: enter IMPLEMENT for PHASE-001 TASK-001..TASK-008 only (upload framework hardening and Sales primitives), starting with TASK-001, which re-discovers the migration sequence — currently 0027 on main d6b03f9, not the 0024 the plan was written against. HARD LIMITS: do not implement TASK-009 (Customer/Item provider contracts), TASK-010 (Inventory batch reserve/release) or the PHASE-001 exit gate, and do not enter PHASE-002..PHASE-005. DR-001 and DR-002 remain OPEN: the Customer, Inventory and Fulfillment modules do not exist in server/src/modules/. No provider contract code may be written against a module that does not exist. LOCAL_CHECKS_PASS is local evidence consistency only: it is not authorization, not CI, and not business acceptance."
+  "next_safe_action": "READY TO ENTER IMPLEMENT, scoped to PHASE-001 TASK-001..TASK-008. The transition was probed and returns RECORDED. ENTRY PROCEDURE: (1) fetch origin and create a worktree from the refreshed default branch; (2) re-observe and checkpoint baseline.worktree, baseline.code_commit and baseline.source_fingerprint in THAT worktree -- they are a live environment observation, not a durable property, and state_tool inspect reads stale from any other location by construction, because a committed state file can never record the commit that contains it; (3) checkpoint active_mode to IMPLEMENT with a real authorization reference; (4) start at TASK-001, which must re-discover the migration sequence -- it is 0027 on main, not the 0024 the plan was written against. HARD LIMITS: TASK-009, TASK-010, the PHASE-001 exit gate and PHASE-002..PHASE-005 remain blocked. DR-001 and DR-002 are OPEN: customer, inventory and fulfillment do not exist in server/src/modules/. No provider contract code may be written against a module that does not exist. The readiness signal is verify_gate --gate PLAN_READY, not state_tool inspect run from the primary repo."
 }

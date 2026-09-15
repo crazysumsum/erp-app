@@ -138,3 +138,49 @@ To proceed, first preserve/commit the documents, update the planning baseline fr
 
 `LOCAL_CHECKS_PASS` is local evidence consistency only. It is not authorization, not CI, and not business acceptance. No product code has been written and no test has been executed.
 
+## 11. State reconciliation and IMPLEMENT readiness (2026-09-15)
+
+### The real blocker that was found
+
+`state_tool.py checkpoint` into `active_mode: IMPLEMENT` was **refused**:
+
+```
+BLOCKED  STATE_ERROR  unblocked state must clear resume_status
+```
+
+`resume_status` was correctly set to `PLANNED` while `status` was `BLOCKED`, but was not cleared when `status` became `PLANNED`. `validate_state()` does not check this, so `state_tool inspect` and `verify_gate --gate PLAN_READY` both passed while the transition into `IMPLEMENT` was actually unreachable. It is now cleared, and a probe checkpoint returns `RECORDED` (the probe was reverted; the module remains `REVIEW_AND_ALIGN` / `PLANNED`).
+
+### Why `state_tool inspect` reads BLOCKED from the primary repo
+
+This is structural, not a defect in this module. `state_tool inspect` calls `validate_state(observed=True)`, which compares three fields against the environment you inspect from:
+
+| Field | Compared against |
+| --- | --- |
+| `baseline/worktree` | the `--repo-root` you passed |
+| `baseline/code_commit` | that repo's current `HEAD` |
+| `baseline/source_fingerprint` | a hash of tracked **and non-ignored untracked** files, excluding this module's docs |
+
+Two consequences follow:
+
+1. **A committed state file can never record the commit that contains it.** Recording `code_commit` requires knowing a SHA that depends on the file's own content. So `inspect` cannot pass at the commit that introduces the state — only in the working tree before that commit is made.
+2. **The fingerprint moves for reasons outside this module.** It covers non-ignored untracked files, so a developer's local scratch files change it; and because it spans the repository outside `docs/sales_order_management`, any other module's commit changes it too.
+
+This is why **all eight** v2 modules in this repository report `BLOCKED` on `state_tool inspect` from the primary repo, not just this one. It is the normal resting state between sessions.
+
+`verify_gate` deliberately calls `validate_state()` **without** `observed=True`, which is why `PLAN_READY` is unaffected. **`verify_gate --gate PLAN_READY` is the readiness signal; `state_tool inspect` from the primary repo is not.**
+
+### What was changed
+
+- `resume_status` cleared — the substantive fix.
+- `baseline/worktree` re-anchored from the deleted `sales-plan-gate` worktree to the primary repository, so a resuming session has a live path.
+- `next_safe_action` now carries the entry procedure, including the requirement to re-observe `worktree` / `code_commit` / `source_fingerprint` in the new worktree.
+
+### Entry procedure
+
+1. `git fetch origin --prune`, create a worktree from the refreshed default branch.
+2. Re-observe and checkpoint the three environment fields **in that worktree**.
+3. Checkpoint `active_mode` to `IMPLEMENT` with a real authorization reference.
+4. Start at `TASK-001`, which re-discovers the migration sequence — `0027` on main, not the `0024` the plan was written against.
+
+Scope limits are unchanged: `TASK-009`, `TASK-010`, the `PHASE-001` exit gate and `PHASE-002`–`PHASE-005` stay blocked while `DR-001` and `DR-002` are open.
+
