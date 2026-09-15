@@ -1,0 +1,288 @@
+{
+  "schema_version": "2.0",
+  "module_id": "sales-order-management",
+  "revision": 9,
+  "mode": "REVIEW_AND_ALIGN",
+  "active_mode": "REVIEW_AND_ALIGN",
+  "status": "PLANNED",
+  "resume_status": null,
+  "current_phase": null,
+  "current_task": null,
+  "baseline": {
+    "design": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+    "plan": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+    "code_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b",
+    "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b",
+    "mode_entry_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b"
+  },
+  "runtime": {
+    "instance_id": "erp-app-primary",
+    "owner": "ERP Product Owner (Sam)",
+    "resources": {
+      "workspace": "/Users/sam/Documents/workspace/erp-app"
+    },
+    "lease_ref": null
+  },
+  "tasks": {},
+  "approvals": [
+    {
+      "id": "APR-DESIGN-001",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/sales_order_management/04_design_review.md",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "docs/sales_order_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "USER-APPROVED-2026-09-10-RTO-RPO",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "docs/sales_order_management/01_requirement_spec.md NFR-014/NFR-015",
+      "recorded_at": "2026-09-10T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-SCOPE-001",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15: rename to the canonical design filename and repair the two pinned consumer contracts in the same PR",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "docs/customer_management/00_module_manifest.json",
+        "docs/fulfillment_shipping_management/00_module_manifest.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-RISK-001",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15. Route A (scoped start) selected; the user expressed no preference between routes and delegated the choice to the recommended option, which explicitly carried this scoped risk acceptance. SCOPE OF ACCEPTANCE: DR-001 and DR-002 stay OPEN and are NOT accepted as resolved. What is accepted is proceeding with PHASE-001 TASK-001..TASK-008 only, none of which touches a missing provider. TASK-009, TASK-010, the PHASE-001 exit gate and PHASE-002..PHASE-005 remain blocked. No provider contract code may be written against Customer, Inventory or Fulfillment while those modules do not exist in server/src/modules/.",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "REV-002",
+        "DR-001",
+        "DR-002",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PLAN-001",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15: the Phase/Task plan is approved for implementation, scoped to PHASE-001 TASK-001..TASK-008. PHASE-001 cannot reach its exit gate under this approval because TC-001 requires TASK-009/TASK-010. PHASE-002..PHASE-005 are approved as a plan but are NOT authorized for implementation entry.",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-BASELINE-PERF-001",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Session decision 2026-09-15: DR-006 closed by approving the SYNTHETIC performance baseline (average 5 lines / P95 20 lines, 10,000 SO/day, 24 months, 7.3M Active headers) for NFR-001..NFR-007 acceptance. This is not measured business data. If anonymized production distribution later differs materially, the capacity model and performance acceptance must be re-run.",
+      "recorded_at": "2026-09-15T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e1b368266bbce2d9e91a3aea5d13ac6bd040d4b79a94c8ce543b58a5888f5642",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "DR-006",
+        "NFR-001",
+        "NFR-002",
+        "NFR-003",
+        "NFR-004",
+        "NFR-005",
+        "NFR-006",
+        "NFR-007"
+      ],
+      "expires_at": null
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-001",
+      "method": "SELF_REVIEW",
+      "author": "Legacy design authorship is not authenticated in repository metadata",
+      "reviewer": "Alignment agent (historical v1 review, retained as history)",
+      "reviewed_baseline": "668b8b2ae6d0ecf8beabb52b7d97672a929b364e7de4b689e15ac400ff73b061",
+      "source_ref": "docs/sales_order_management/04_design_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "HUMAN",
+      "author": "Alignment agent (Harness 2.0 canonicalization)",
+      "reviewer": "Sam (ERP Product Owner)",
+      "reviewed_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_ref": "docs/sales_order_management/04_design_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": "APR-RISK-001"
+    }
+  ],
+  "observations": [
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "validate_module_boundary.py --base 0ca4e9f",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "BLOCKED",
+      "source_ref": "BLOCKED with exactly two MODE_WRITE_DENIED issues, both the human-approved cross-module manifest repairs listed in APR-SCOPE-001. REVIEW_AND_ALIGN is document-only for the selected module and the checker has no approval path for cross-module writes, so this is recorded as BLOCKED, not PASS. Every path inside docs/sales_order_management passed.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "validate_traceability.py",
+      "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "STRUCTURE_PASS observed 2026-09-15. Structural checks only: not semantic coverage, not test execution, not authorization.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "origin/main 0ca4e9f -> 98fd077 merged into codex/sales-order-align-harness-v2",
+      "code_commit": "0b95d4bc56aa9c641e66ae83523c0de8facf221b",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "Target branch refreshed before merge per project policy. main advanced with business-master verification closeout only; no file in this PR overlapped. Sales, fulfillment and business_master all re-validated STRUCTURE_PASS after the merge.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "state_tool.py checkpoint -> active_mode IMPLEMENT (probe, reverted)",
+      "code_commit": "ea601dd14ac0bf13af4fdfbf223dff3a8067446b",
+      "spec_baseline": "20cdd2410c9d7804aa2b287b4d74930602f2a00b0247c907c738632f48b5b95e",
+      "source_fingerprint": "ffc6397d80a682fec85cd8287d552062839e838f817f7c2d1b38b538ef487982",
+      "status": "PASS",
+      "source_ref": "Probed on 2026-09-15 in an isolated worktree at ea601dd: with resume_status cleared, a checkpoint to active_mode IMPLEMENT / status IMPLEMENTING returned RECORDED, which runs the PLAN_READY gate internally. The probe was reverted and NOT committed; the module remains in REVIEW_AND_ALIGN / PLANNED. Before the fix the same checkpoint was refused with \"unblocked state must clear resume_status\", so the transition into IMPLEMENT was genuinely unreachable.",
+      "actor": "Alignment agent",
+      "observed_at": "2026-09-15T00:00:00+08:00"
+    }
+  ],
+  "pending_decisions": [
+    {
+      "id": "DEC-001",
+      "impact": "MAJOR",
+      "question": "DR-001/002/004: Customer, Inventory and Fulfillment provider contracts, the cross-module atomic transaction and the global lock order require provider-owner and DBA approval before PHASE-001/003 entry.",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-003",
+        "DES-003",
+        "DES-004",
+        "DES-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "DR-004 resolved (TASK-006 + TC-008). DR-001 and DR-002 remain genuine external dependencies and stay OPEN as findings; the answer is a SCOPED start: implement PHASE-001 TASK-001..008 only, which touch no missing provider. TASK-009/010, the PHASE-001 exit gate and PHASE-002..005 stay blocked until the Customer and Inventory modules exist and their owners plus a DBA approve the contracts and global lock order. See APR-RISK-001 and APR-PLAN-001."
+    },
+    {
+      "id": "DEC-002",
+      "impact": "MAJOR",
+      "question": "DR-003: the planned 50 MB disk-stream upload contradicts the current in-memory upload implementation; the framework upload change is an approval-required shared path.",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-004",
+        "DES-010",
+        "TASK-002",
+        "TASK-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Approved: the opt-in disk-stream upload design stands as specified and is delivered by TASK-002..005, proven by mandatory TC-004/TC-005/TC-006 as a PHASE-001 exit criterion. The Sales CSV route must not be enabled before those pass. See DR-003 disposition."
+    },
+    {
+      "id": "DEC-003",
+      "impact": "MAJOR",
+      "question": "DR-006/008/009 and OI-002: production workload distribution, downstream open-matter providers and shared-instance archive isolation remain unapproved, blocking PHASE-005 acceptance.",
+      "affected_ids": [
+        "PHASE-005",
+        "DES-017",
+        "DES-019",
+        "NFR-001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Answered in three parts. DR-006: synthetic performance baseline approved (APR-BASELINE-PERF-001). DR-008: fail-closed accepted — archive stays disabled for any integration whose open-matter provider is absent or UNKNOWN. DR-009: deferred to PHASE-005 acceptance, contingent on the timed recovery exercise in TC-056..060 meeting NFR-014/015. None of these is a PHASE-001 entry condition."
+    },
+    {
+      "id": "DEC-004",
+      "impact": "MAJOR",
+      "question": "DR-007: Channel transport security and address handoff are deferred to a separate Adapter gate; real Adapter UAT is out of the current planning baseline.",
+      "affected_ids": [
+        "DES-011",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Answered: Sales scope is canonical Channel Intake only (FR-096..108, DES-011). No public route, no platform transport authentication, no Fulfillment address handoff, and no real Adapter go-live under this approval. The first Adapter requires a separate architecture and security gate with its own requirement/design change. See DR-007 disposition."
+    }
+  ],
+  "external_actions": [],
+  "evidence_files": [],
+  "defects": [],
+  "next_safe_action": "READY TO ENTER IMPLEMENT, scoped to PHASE-001 TASK-001..TASK-008. The transition was probed and returns RECORDED. ENTRY PROCEDURE: (1) fetch origin and create a worktree from the refreshed default branch; (2) re-observe and checkpoint baseline.worktree, baseline.code_commit and baseline.source_fingerprint in THAT worktree -- they are a live environment observation, not a durable property, and state_tool inspect reads stale from any other location by construction, because a committed state file can never record the commit that contains it; (3) checkpoint active_mode to IMPLEMENT with a real authorization reference; (4) start at TASK-001, which must re-discover the migration sequence -- it is 0027 on main, not the 0024 the plan was written against. HARD LIMITS: TASK-009, TASK-010, the PHASE-001 exit gate and PHASE-002..PHASE-005 remain blocked. DR-001 and DR-002 are OPEN: customer, inventory and fulfillment do not exist in server/src/modules/. No provider contract code may be written against a module that does not exist. The readiness signal is verify_gate --gate PLAN_READY, not state_tool inspect run from the primary repo."
+}

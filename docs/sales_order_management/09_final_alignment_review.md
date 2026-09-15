@@ -7,8 +7,9 @@
 | Execution mode | `REVIEW_AND_ALIGN` |
 | Output | `docs/sales_order_management/`（in-place replacement authorized） |
 | Feature | Sales Order Management |
-| Source worktree | `codex/sales-order-requirements` at `62b4d7f41d204238be652ebb4b7787209d463910` |
-| Inspected current main | `5d39d486f1ca9eb8805b24504edec4062ff46c6f` |
+| v1 alignment worktree | `codex/sales-order-requirements` at `62b4d7f41d204238be652ebb4b7787209d463910` (historical) |
+| Harness 2.0 alignment worktree | `codex/sales-order-align-harness-v2` |
+| Refreshed default baseline | `main` at `0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2` (equal to `origin/main`) |
 | Source code changed | No |
 | Application/acceptance tests executed | No |
 
@@ -20,13 +21,16 @@
 | `00_gap_analysis.md` | 15 documentation/implementation/baseline gaps with severity, evidence, impact and action. |
 | `01_requirement_spec.md` | 140 canonical FR aliases, 16 NFR and 15 SEC; approved DR target recorded. |
 | `02_requirement_review.md` | Requirement quality and unresolved gates independently assessed. |
-| `03_system_design_spec.md` | 20 canonical Design items mapped to the unchanged detailed design. |
+| `03_design_spec.md` | 20 canonical Design items mapped to the unchanged detailed design. |
 | `04_design_review.md` | 12 adversarial findings across architecture/security/DB/SRE/engineering/QA. |
 | `05_development_tasks.md` | Five mergeable Phases and 63 canonical Task aliases, all `PLANNED`. |
 | `06_technical_test_cases.md` | 60 formal Technical Acceptance cases, all `PLANNED`. |
 | `07_uat_test_cases.md` | 129 legacy UAT cases preserved with one-to-one canonical aliases, all `NOT_RUN`. |
 | `08_traceability_matrix.md` | Requirement → Design → Phase → Task → TC → UAT and gate status. |
-| `09_traceability_validation.md` | Deterministic Harness validator result. |
+| `08_traceability.json` | Typed ledger: 171 requirements, 20 designs, 5 phases, 63 tasks, 60 technical tests, 129 UAT cases with applicability/mandatory/blocking flags. |
+| `00_module_manifest.json` | Module identity, scope, allowed/approval-required/forbidden paths, provided/consumed contracts with pinned SHA-256 and data ownership. |
+| `00_project_profile.json` | Reviewed command/environment/permission contracts and the four mandatory CI checks. |
+| `00_harness_state.json` | Revisioned state, baselines, approvals, reviews and four open major decisions. |
 
 ## 3. Provenance and Legacy Alignment
 
@@ -90,15 +94,93 @@ The absence of Sales migrations/modules/handlers/pages/tests is an `IMPLEMENTATI
 
 ## 8. Validation Evidence
 
-- Harness validator: observed exit 0; 171/171 Design, Task and Technical Test coverage; no mechanical gaps.
+- `validate_traceability.py` (Harness 2.0, observed 2026-09-15): **`STRUCTURE_PASS`**. Scope is formal definitions and graph consistency only — not semantic coverage, test execution or authorization.
+- `render_traceability.py --write`: **`RECORDED`**; `08_traceability_matrix.md` is now generated from `08_traceability.json` and is no longer hand-maintained.
+- Cross-module regression check: `fulfillment_shipping_management` remains `STRUCTURE_PASS` after its pinned Sales design contract hash was updated in the same PR. `customer_management` and `purchasing_receiving_management` remain `BLOCKED` on **pre-existing** drift against `docs/business_master/03_design_spec.md` and `docs/supplier_management/03_design_spec.md` respectively; those are outside this module's scope and were not touched.
+- The v1 `09_traceability_validation.md` was **deleted**: it recorded a v1 validator PASS against a worktree root that no longer exists, and per `MIGRATION.md` §6 an old PASS string cannot be promoted to current-gate evidence.
 - Identifier completeness: FR 140/140, NFR 16/16, SEC 15/15, DES 20/20, PHASE 5/5, TASK 63/63, TC 60/60, UAT 129/129.
 - Obsolete legacy filenames/path references were removed; canonical document references resolve within the top-level package.
-- Git commit `97d50e2` preserves all four pre-reconciliation workspace files. Requirement、Tasks及UAT match the initial SHA-256 inventory; the Design difference is the documented Fulfillment contract alignment now present in `03_system_design_spec.md`.
+- Git commit `97d50e2` preserves all four pre-reconciliation workspace files. Requirement、Tasks及UAT match the initial SHA-256 inventory; the Design difference is the documented Fulfillment contract alignment now present in `03_design_spec.md`.
 - Markdown trailing-whitespace scan is clean; final whitespace check is recorded in the handoff.
 - Application lint/unit/integration/build/security/browser/performance/restore/UAT were **NOT RUN** because REVIEW_AND_ALIGN forbids claiming execution acceptance.
 
 ## 9. Final Disposition
 
-**ALIGNED — CONDITIONAL; READY FOR OWNER REVIEW AND PHASE PLANNING, NOT READY FOR IMPLEMENTATION.**
+**ALIGNED TO HARNESS 2.0 — `STRUCTURE_PASS`; DESIGN APPROVED AS A PLANNING BASELINE; NOT READY FOR IMPLEMENTATION.**
+
+The design was approved as a planning baseline by human independent reviewer Sam on 2026-09-15 (`APR-DESIGN-001`,
+`REV-002`). That approval does not accept the five open `HIGH` findings and does not authorize `IMPLEMENT`, test
+execution, UAT or release. `STRUCTURE_PASS` means structural checks only — not business coverage, not acceptance.
 
 To proceed, first preserve/commit the documents, update the planning baseline from current main, and obtain the owners/evidence required by the affected Phase entry gates. A separate explicit `IMPLEMENT` authorization is required before product-code changes.
+
+## 10. PLAN_READY gate closure (2026-09-15)
+
+`verify_gate.py --gate PLAN_READY` now returns **`LOCAL_CHECKS_PASS`** for a **scoped** start. The path from `BLOCKED` to here was four separate things, recorded so the reasoning can be audited:
+
+**1. Three findings were re-dispositioned, not waived.** `DR-003` (50 MB upload), `DR-004` (fresh authorization) and `DR-005` (stale baseline) were `OPEN` `HIGH`. None is an external unknown: each is an implementation obligation already bound to a mandatory technical test — `TC-004`/`TC-005`/`TC-006` for `DR-003`, `TC-008` for `DR-004`, `TC-002` for `DR-005` — and each becomes a `PHASE-001` exit criterion. `DR-005` is additionally closed on observed evidence: the documentation is committed and merged to `main` at `d6b03f9`, so it is neither untracked nor recoverable only from a vanished worktree.
+
+**2. Four medium findings were closed or explicitly deferred.** `DR-006` by approving a **synthetic** performance baseline (`APR-BASELINE-PERF-001`) — not measured business data, and re-runnable if real distribution differs. `DR-007` by recording the canonical-intake-only scope boundary the design already implements. `DR-008` by accepting fail-closed archive behavior. `DR-009` deferred to `PHASE-005` timed-recovery evidence against `NFR-014`/`NFR-015`.
+
+**3. Two findings remain OPEN and were not resolved.** `DR-001` and `DR-002` are genuine external dependencies: `server/src/modules/` on `main` at `d6b03f9` contains `audit`, `authorization`, `businessMaster`, `item`, `role`, `user` — no `customer`, `inventory`, `fulfillment` or `sales`. What was approved is not the risk but a **reduced scope** that avoids it (`APR-RISK-001`).
+
+**4. Three recording defects were corrected.** `APR-DESIGN-001` carried a path glob where `approval_valid()` matches on `module_id`; the RTO/RPO `UAT_NA` approval and the `RISK` approval were bound to the DESIGN baseline, but every non-`DESIGN` approval kind must bind to the PLAN baseline. These misrepresented approvals that had actually been given.
+
+### Authorized scope
+
+| Scope | Status |
+| --- | --- |
+| `PHASE-001` `TASK-001`–`TASK-008` | **Authorized** for `IMPLEMENT` — upload framework hardening and Sales primitives; no dependency on any missing provider |
+| `TASK-009`, `TASK-010`, `PHASE-001` exit gate | **Blocked** — require Customer and Inventory modules to exist |
+| `PHASE-002` – `PHASE-005` | **Blocked** — approved as a plan, not authorized for entry |
+
+`TASK-001` must re-discover the migration sequence before coding: it is `0027` on `d6b03f9`, not the `0024` the plan was written against.
+
+`LOCAL_CHECKS_PASS` is local evidence consistency only. It is not authorization, not CI, and not business acceptance. No product code has been written and no test has been executed.
+
+## 11. State reconciliation and IMPLEMENT readiness (2026-09-15)
+
+### The real blocker that was found
+
+`state_tool.py checkpoint` into `active_mode: IMPLEMENT` was **refused**:
+
+```
+BLOCKED  STATE_ERROR  unblocked state must clear resume_status
+```
+
+`resume_status` was correctly set to `PLANNED` while `status` was `BLOCKED`, but was not cleared when `status` became `PLANNED`. `validate_state()` does not check this, so `state_tool inspect` and `verify_gate --gate PLAN_READY` both passed while the transition into `IMPLEMENT` was actually unreachable. It is now cleared, and a probe checkpoint returns `RECORDED` (the probe was reverted; the module remains `REVIEW_AND_ALIGN` / `PLANNED`).
+
+### Why `state_tool inspect` reads BLOCKED from the primary repo
+
+This is structural, not a defect in this module. `state_tool inspect` calls `validate_state(observed=True)`, which compares three fields against the environment you inspect from:
+
+| Field | Compared against |
+| --- | --- |
+| `baseline/worktree` | the `--repo-root` you passed |
+| `baseline/code_commit` | that repo's current `HEAD` |
+| `baseline/source_fingerprint` | a hash of tracked **and non-ignored untracked** files, excluding this module's docs |
+
+Two consequences follow:
+
+1. **A committed state file can never record the commit that contains it.** Recording `code_commit` requires knowing a SHA that depends on the file's own content. So `inspect` cannot pass at the commit that introduces the state — only in the working tree before that commit is made.
+2. **The fingerprint moves for reasons outside this module.** It covers non-ignored untracked files, so a developer's local scratch files change it; and because it spans the repository outside `docs/sales_order_management`, any other module's commit changes it too.
+
+This is why **all eight** v2 modules in this repository report `BLOCKED` on `state_tool inspect` from the primary repo, not just this one. It is the normal resting state between sessions.
+
+`verify_gate` deliberately calls `validate_state()` **without** `observed=True`, which is why `PLAN_READY` is unaffected. **`verify_gate --gate PLAN_READY` is the readiness signal; `state_tool inspect` from the primary repo is not.**
+
+### What was changed
+
+- `resume_status` cleared — the substantive fix.
+- `baseline/worktree` re-anchored from the deleted `sales-plan-gate` worktree to the primary repository, so a resuming session has a live path.
+- `next_safe_action` now carries the entry procedure, including the requirement to re-observe `worktree` / `code_commit` / `source_fingerprint` in the new worktree.
+
+### Entry procedure
+
+1. `git fetch origin --prune`, create a worktree from the refreshed default branch.
+2. Re-observe and checkpoint the three environment fields **in that worktree**.
+3. Checkpoint `active_mode` to `IMPLEMENT` with a real authorization reference.
+4. Start at `TASK-001`, which re-discovers the migration sequence — `0027` on main, not the `0024` the plan was written against.
+
+Scope limits are unchanged: `TASK-009`, `TASK-010`, the `PHASE-001` exit gate and `PHASE-002`–`PHASE-005` stay blocked while `DR-001` and `DR-002` are open.
+

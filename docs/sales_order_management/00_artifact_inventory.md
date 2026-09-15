@@ -19,7 +19,7 @@
 | Source artifact | Apparent type | Coverage / quality | Authority / confidence | SHA-256 | Action |
 | --- | --- | --- | --- | --- | --- |
 | Legacy requirement body embedded in `01_requirement_spec.md` | Business requirement specification | `GOOD` business breadth; `PARTIAL` original Harness ID/NFR/SEC structure | Primary source, high confidence; claims prior decisions | original SHA-256 `6dbdec0883cd6be197b217b7425004dfb809a22eee3ba1c974cfa799f0012756` | `PRESERVE SEMANTICS` + normalize obsolete paths + `ALIGN` |
-| Legacy design body embedded in `03_system_design_spec.md` | Detailed system design | `GOOD` technical depth; `PARTIAL` original canonical `DES-*` traceability and implementation evidence | Primary proposed design, medium-high confidence | original SHA-256 `aa2b38ebb9db6af62097e7923cd8debbdf30ab2e65ad0b778d157816f9fe9272` | `PRESERVE SEMANTICS` + normalize obsolete paths + independent review |
+| Legacy design body embedded in `03_design_spec.md` | Detailed system design | `GOOD` technical depth; `PARTIAL` original canonical `DES-*` traceability and implementation evidence | Primary proposed design, medium-high confidence | original SHA-256 `aa2b38ebb9db6af62097e7923cd8debbdf30ab2e65ad0b778d157816f9fe9272` | `PRESERVE SEMANTICS` + normalize obsolete paths + independent review |
 | Legacy plan body embedded in `05_development_tasks.md` | Five-Phase development plan | `GOOD` executable detail; `PARTIAL` original Harness `PHASE-*` / `TASK-*` naming | Primary proposed plan, medium-high confidence | original SHA-256 `280472930939ace096f77b7d4eb7f83d49b2319d1779894d81a8c066c38910a2` | `PRESERVE SEMANTICS` + normalize obsolete paths + canonical alias |
 | Legacy UAT body embedded in `07_uat_test_cases.md` | UAT catalogue with technical/operational cases | `GOOD` scenario coverage; `PARTIAL` original Technical Acceptance/UAT separation | Primary planned acceptance source, medium-high confidence | original SHA-256 `a3750deeaf3b669de4eb9c91e3c57751e8603731413ef38f8b063846ace3418e` | `PRESERVE SEMANTICS` + normalize obsolete paths + split/alias |
 | `../../../frontend-design.md` | Shared UI standard | `GOOD` project convention | Existing project standard, high confidence | Not pinned by this package | `VERIFY` during implementation |
@@ -32,7 +32,7 @@
 1. Explicit user decisions in this review, including production `RTO <= 4h` and `RPO <= 15m` approved on 2026-09-10.
 2. The embedded legacy body in `01_requirement_spec.md` for existing business intent and acceptance criteria.
 3. This aligned requirement entry for canonical IDs and provenance only.
-4. The embedded legacy body in `03_system_design_spec.md` for proposed architecture, subject to `04_design_review.md` findings and gates.
+4. The embedded legacy body in `03_design_spec.md` for proposed architecture, subject to `04_design_review.md` findings and gates.
 5. Current `main` implementation for what exists today; proposed provider contracts are not treated as implemented facts.
 
 ## 4. Preservation Rules
@@ -41,3 +41,23 @@
 - Aligned files add aliases, findings, missing acceptance layers and provenance; embedded bodies are still identified as legacy and are not claimed to have been created under the Harness.
 - Any conflict affecting business semantics routes back to the requirement gate before implementation.
 - `PLANNED` and `NOT_RUN` are specifications, not execution evidence.
+
+## 5. Harness 2.0 consolidation (2026-09-15)
+
+Recovery point: every file below was tracked and committed at `0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2` with a clean
+worktree before any edit; Git history is the recovery mechanism, so no parallel `review/`, `aligned/` or timestamped copy
+was created.
+
+| Source | Action | Canonical target | Notes |
+| --- | --- | --- | --- |
+| `01_requirement_spec.md` §1–§7 wrapper | `MERGE_INTO_CANONICAL` | `01_requirement_spec.md` §20.1 | Baseline, scope, provenance, NFR/SEC tables and requirement gate preserved verbatim. |
+| `01_requirement_spec.md` §8 embedded legacy body | `KEEP_CANONICAL` | `01_requirement_spec.md` §0–§19 | Promoted to the document body; section numbering unchanged so existing `§x.y` cross-references keep resolving. |
+| `03_system_design_spec.md` | `KEEP_CANONICAL` (renamed) | `03_design_spec.md` | Renamed because `harness_core.py` requires the canonical filename; the two manifests that pinned the old path were updated in the same PR. |
+| `05_development_tasks.md` §6 / `07_uat_test_cases.md` §6 legacy bodies | `KEEP_CANONICAL` | same files | Promoted to document bodies; wrapper content moved to §12 / §11. |
+| Hand-written `08_traceability_matrix.md` | `GENERATE` | `08_traceability.json` → `08_traceability_matrix.md` | Grouped rows verified cell by cell into the typed ledger; the matrix is now generated, not maintained. |
+| `09_traceability_validation.md` | `DELETE_AFTER_MERGE` | `09_final_alignment_review.md` §8 | v1 validator PASS against a worktree root that no longer exists; superseded by the observed `STRUCTURE_PASS`. |
+
+Content preservation was verified mechanically: every non-heading line of the five pre-alignment specification files was
+checked for a verbatim match in the post-alignment set. The only four lines that changed were the "Embedded Legacy Body"
+preambles, whose SHA-256 provenance statements were re-stated in each document's new harness section.
+
