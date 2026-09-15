@@ -7,6 +7,7 @@ export const CUSTOMER_ID_PARAMS = Object.freeze({
 
 export const CUSTOMER_ADDRESS_PARAMS = Object.freeze({ type: "object", required: ["customerId", "addressId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }, addressId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
 export const CUSTOMER_CONTACT_PARAMS = Object.freeze({ type: "object", required: ["customerId", "contactId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }, contactId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
+export const CUSTOMER_IDENTIFIER_PARAMS = Object.freeze({ type: "object", required: ["customerId", "identifierId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }, identifierId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
 export const CUSTOMER_PARENT_PARAMS = Object.freeze({ type: "object", required: ["customerId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
 
 export const OPERATION_ID_PARAMS = Object.freeze({
@@ -61,6 +62,24 @@ export const CONTACT_UPDATE = Object.freeze({ ...CONTACT_CREATE, required: [...C
 export const PARTY_UPDATED = PARTY_CREATED;
 export const DEACTIVATE_PARTY = Object.freeze({ type: "object", required: ["version", "reason"], additionalProperties: false, properties: { version: { type: "integer", minimum: 1 }, reason: { type: "string", trim: true, minLength: 5, maxLength: 500 } } });
 export const PARTY_DEACTIVATED = Object.freeze({ type: "object", required: ["id", "customerId", "status", "version"], additionalProperties: false, properties: { id: { type: "integer", minimum: 1 }, customerId: { type: "integer", minimum: 1 }, status: { const: "inactive" }, version: { type: "integer", minimum: 1 } } });
+
+const IDENTIFIER_FIELDS = Object.freeze({
+  identifierType: { type: "string", enum: ["company_registration", "business_registration", "tax", "other"] },
+  issuerCountryCode: { type: "string", pattern: "^[A-Z]{2}$" },
+  identifierValue: { type: "string", trim: true, minLength: 1, maxLength: 190 },
+  validFrom: { type: ["integer", "null"], minimum: 0 },
+  expiresAt: { type: ["integer", "null"], minimum: 0 },
+  notes: TEXT(500)
+});
+export const IDENTIFIER_CREATE = Object.freeze({ type: "object", required: ["identifierType", "issuerCountryCode", "identifierValue"], additionalProperties: false, properties: IDENTIFIER_FIELDS });
+export const IDENTIFIER_UPDATE = Object.freeze({ type: "object", required: ["identifierType", "issuerCountryCode", "identifierValue", "version", "reason"], additionalProperties: false, properties: { ...IDENTIFIER_FIELDS, version: { type: "integer", minimum: 1 }, reason: { type: "string", trim: true, minLength: 5, maxLength: 500 } } });
+export const IDENTIFIER_RESPONSE = Object.freeze({ type: "object", required: ["id", "customerId", ...Object.keys(IDENTIFIER_FIELDS), "status", "version"], additionalProperties: false, properties: { id: { type: "integer", minimum: 1 }, customerId: { type: "integer", minimum: 1 }, identifierType: IDENTIFIER_FIELDS.identifierType, issuerCountryCode: IDENTIFIER_FIELDS.issuerCountryCode, identifierValue: { type: "string", minLength: 1, maxLength: 190 }, validFrom: IDENTIFIER_FIELDS.validFrom, expiresAt: IDENTIFIER_FIELDS.expiresAt, notes: { type: "string", maxLength: 500 }, status: { type: "string", enum: ["active", "inactive"] }, version: { type: "integer", minimum: 1 } } });
+
+const CREDIT_LIMIT = Object.freeze({ type: ["string", "null"], pattern: "^(?:0|[1-9][0-9]{0,14})\\.[0-9]{4}$" });
+const CREDIT_CURRENCY = Object.freeze({ type: ["string", "null"], pattern: "^[A-Z]{3}$" });
+export const CREDIT_POLICY_RESPONSE = Object.freeze({ type: "object", required: ["configured", "creditLimit", "currencyCode", "status", "policyVersion"], additionalProperties: false, properties: { configured: { type: "boolean" }, creditLimit: CREDIT_LIMIT, currencyCode: CREDIT_CURRENCY, status: { type: "string", enum: ["not_configured", "normal", "on_hold"] }, policyVersion: { type: ["integer", "null"], minimum: 1 } } });
+export const CREDIT_POLICY_SAVE = Object.freeze({ type: "object", required: ["creditLimit", "creditCurrencyCode", "creditStatus", "creditNotes", "reason", "version"], additionalProperties: false, properties: { creditLimit: CREDIT_LIMIT, creditCurrencyCode: CREDIT_CURRENCY, creditStatus: { type: "string", enum: ["normal", "on_hold"] }, creditNotes: TEXT(1000), reason: { type: "string", trim: true, minLength: 5, maxLength: 500 }, version: { type: ["integer", "null"], minimum: 1 } } });
+export const CREDIT_POLICY_CLEAR = Object.freeze({ type: "object", required: ["reason", "version", "password"], additionalProperties: false, properties: { reason: { type: "string", trim: true, minLength: 5, maxLength: 500 }, version: { type: "integer", minimum: 1 }, password: { type: "string", minLength: 1, maxLength: 1024 } } });
 
 export const CUSTOMER_SUMMARY = Object.freeze({
   type: "object", additionalProperties: false,

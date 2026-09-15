@@ -58,6 +58,22 @@ export function customerPartyInactive() {
   });
 }
 
+export function identifierTaken() {
+  return customerError("Customer identifier uniqueness conflict", {
+    code: "IDENTIFIER_TAKEN",
+    statusCode: 409,
+    publicMessage: "此識別資料已被使用"
+  });
+}
+
+export function creditPolicyInvalid() {
+  return customerError("Customer credit policy is invalid", {
+    code: "CREDIT_POLICY_INVALID",
+    statusCode: 400,
+    publicMessage: "信用政策資料無效"
+  });
+}
+
 export function versionConflict(currentVersion) {
   return customerError("Customer version conflict", {
     code: "VERSION_CONFLICT",

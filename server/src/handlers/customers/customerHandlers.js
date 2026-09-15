@@ -1,13 +1,16 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { CustomerService } from "../../modules/customer/CustomerService.js";
 import { CustomerPartyService } from "../../modules/customer/CustomerPartyService.js";
+import { CustomerCreditService } from "../../modules/customer/CustomerCreditService.js";
 import { CUSTOMER_ROUTE_POLICIES } from "../../modules/customer/customerPermissions.js";
 import {
   CUSTOMER_COMMAND_RESPONSE, CUSTOMER_DETAIL, CUSTOMER_ID_PARAMS, CUSTOMER_LIST_QUERY,
   CUSTOMER_LIST_RESPONSE, CUSTOMER_ROOT_INPUT, CUSTOMER_UPDATE_INPUT, DUPLICATE_RESPONSE,
   EMPTY, ADDRESS_CREATE, CONTACT_CREATE, PARTY_CREATED, ADDRESS_UPDATE, CONTACT_UPDATE,
   PARTY_UPDATED, DEACTIVATE_PARTY, PARTY_DEACTIVATED, CUSTOMER_PARENT_PARAMS,
-  CUSTOMER_ADDRESS_PARAMS, CUSTOMER_CONTACT_PARAMS
+  CUSTOMER_ADDRESS_PARAMS, CUSTOMER_CONTACT_PARAMS, CUSTOMER_IDENTIFIER_PARAMS,
+  IDENTIFIER_CREATE, IDENTIFIER_UPDATE, IDENTIFIER_RESPONSE,
+  CREDIT_POLICY_RESPONSE, CREDIT_POLICY_SAVE, CREDIT_POLICY_CLEAR
 } from "./customerSchemas.js";
 
 const IDEMPOTENT = Object.freeze({ enabled: true });
@@ -31,6 +34,7 @@ class CustomerHandler extends BaseRequestHandler {
     super(services);
     this.customer = new CustomerService({ database: services.require("mysqldatabase"), time: services.require("time") });
     this.party = new CustomerPartyService({ database: services.require("mysqldatabase"), time: services.require("time") });
+    this.credit = new CustomerCreditService({ database: services.require("mysqldatabase"), time: services.require("time") });
   }
 }
 
@@ -100,6 +104,42 @@ export class DeactivateCustomerContactHandler extends CustomerHandler {
   async execute(req) { return this.response(await this.party.deactivate({ ...commandInput(req), type: "contact", customerId: Number(req.input.params.customerId), partyId: Number(req.input.params.contactId), ...req.input.body })); }
 }
 
-for (const Handler of [ListCustomersHandler, GetCustomerHandler, CheckCustomerDuplicatesHandler, CreateCustomerHandler, UpdateCustomerHandler, CreateCustomerAddressHandler, CreateCustomerContactHandler, UpdateCustomerAddressHandler, DeactivateCustomerAddressHandler, UpdateCustomerContactHandler, DeactivateCustomerContactHandler]) {
+export class CreateCustomerIdentifierHandler extends CustomerHandler {
+  static handlerName = "createCustomerIdentifier";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/identifiers/create", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_PARENT_PARAMS, query: EMPTY, body: IDENTIFIER_CREATE }, responseSchema: { 201: IDENTIFIER_RESPONSE } };
+  async execute(req) { return this.response(await this.party.createIdentifier({ ...commandInput(req), customerId: Number(req.input.params.customerId), ...req.input.body }), { statusCode: 201 }); }
+}
+
+export class UpdateCustomerIdentifierHandler extends CustomerHandler {
+  static handlerName = "updateCustomerIdentifier";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/identifiers/:identifierId/update", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_IDENTIFIER_PARAMS, query: EMPTY, body: IDENTIFIER_UPDATE }, responseSchema: { 200: IDENTIFIER_RESPONSE } };
+  async execute(req) { return this.response(await this.party.updateIdentifier({ ...commandInput(req), customerId: Number(req.input.params.customerId), identifierId: Number(req.input.params.identifierId), ...req.input.body })); }
+}
+
+export class DeactivateCustomerIdentifierHandler extends CustomerHandler {
+  static handlerName = "deactivateCustomerIdentifier";
+  static api = { method: "POST", path: "/api/v1/customers/:customerId/identifiers/:identifierId/deactivate", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_IDENTIFIER_PARAMS, query: EMPTY, body: DEACTIVATE_PARTY }, responseSchema: { 200: IDENTIFIER_RESPONSE } };
+  async execute(req) { return this.response(await this.party.deactivateIdentifier({ ...commandInput(req), customerId: Number(req.input.params.customerId), identifierId: Number(req.input.params.identifierId), ...req.input.body })); }
+}
+
+export class GetCustomerCreditPolicyHandler extends CustomerHandler {
+  static handlerName = "getCustomerCreditPolicy";
+  static api = { method: "GET", path: "/api/v1/customers/:id/credit-policy", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY }, responseSchema: { 200: CREDIT_POLICY_RESPONSE } };
+  async execute(req) { return this.response(await this.credit.get({ ...actorInput(req), customerId: Number(req.input.params.id) })); }
+}
+
+export class SaveCustomerCreditPolicyHandler extends CustomerHandler {
+  static handlerName = "saveCustomerCreditPolicy";
+  static api = { method: "POST", path: "/api/v1/customers/:id/credit-policy/save", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY, body: CREDIT_POLICY_SAVE }, responseSchema: { 200: CREDIT_POLICY_RESPONSE } };
+  async execute(req) { return this.response(await this.credit.save({ ...commandInput(req), customerId: Number(req.input.params.id), ...req.input.body })); }
+}
+
+export class ClearCustomerCreditPolicyHandler extends CustomerHandler {
+  static handlerName = "clearCustomerCreditPolicy";
+  static api = { method: "POST", path: "/api/v1/customers/:id/credit-policy/clear", authType: "jwt-password", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY, body: CREDIT_POLICY_CLEAR }, responseSchema: { 200: CREDIT_POLICY_RESPONSE } };
+  async execute(req) { return this.response(await this.credit.clear({ ...commandInput(req), customerId: Number(req.input.params.id), version: req.input.body.version, reason: req.input.body.reason })); }
+}
+
+for (const Handler of [ListCustomersHandler, GetCustomerHandler, CheckCustomerDuplicatesHandler, CreateCustomerHandler, UpdateCustomerHandler, CreateCustomerAddressHandler, CreateCustomerContactHandler, UpdateCustomerAddressHandler, DeactivateCustomerAddressHandler, UpdateCustomerContactHandler, DeactivateCustomerContactHandler, CreateCustomerIdentifierHandler, UpdateCustomerIdentifierHandler, DeactivateCustomerIdentifierHandler, GetCustomerCreditPolicyHandler, SaveCustomerCreditPolicyHandler, ClearCustomerCreditPolicyHandler]) {
   Handler.api.description = `${Handler.handlerName} endpoint.`;
 }

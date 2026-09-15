@@ -6,7 +6,7 @@ import { GetCustomerOperationHandler } from "../src/handlers/customer-operations
 
 test("TC-012 Customer root APIs use strict schemas, route permissions and framework idempotency", () => {
   const values = [...Object.values(handlers), GetCustomerOperationHandler].filter((value) => typeof value === "function" && value.api);
-  assert.equal(values.length, 12);
+  assert.equal(values.length, 18);
   for (const Handler of values) {
     for (const schema of Object.values(Handler.api.requestSchema)) {
       assert.equal(schema.additionalProperties, false, Handler.handlerName);
@@ -24,4 +24,11 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
     assert.equal(typeof handlers[name], "function", `${name} must be exported`);
     assert.deepEqual(handlers[name].api.idempotency, { enabled: true });
   }
+  assert.equal(handlers.CreateCustomerIdentifierHandler.api.requestSchema.body.properties.identifierValue.maxLength, 190);
+  assert.equal(handlers.UpdateCustomerIdentifierHandler.api.requestSchema.body.properties.reason.minLength, 5);
+  assert.equal(handlers.SaveCustomerCreditPolicyHandler.api.requestSchema.body.properties.creditLimit.pattern, "^(?:0|[1-9][0-9]{0,14})\\.[0-9]{4}$");
+  assert.deepEqual(handlers.GetCustomerCreditPolicyHandler.api.authorizationPolicies[0].options.permissions, ["customer.view"]);
+  assert.equal(handlers.ClearCustomerCreditPolicyHandler.api.authType, "jwt-password");
+  assert.ok(handlers.ClearCustomerCreditPolicyHandler.api.requestSchema.body.required.includes("password"));
+  for (const Handler of values) assert.doesNotMatch(JSON.stringify(Handler.api.responseSchema), /"trim"/, Handler.handlerName);
 });

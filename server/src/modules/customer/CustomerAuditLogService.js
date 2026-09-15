@@ -9,7 +9,13 @@ const ACTIONS = new Set([
   "customer.address.deactivate",
   "customer.contact.create",
   "customer.contact.update",
-  "customer.contact.deactivate"
+  "customer.contact.deactivate",
+  "customer.identifier.create",
+  "customer.identifier.update",
+  "customer.identifier.deactivate",
+  "customer.credit.create",
+  "customer.credit.update",
+  "customer.credit.clear"
 ]);
 
 const ROOT_AUDIT_FIELDS = new Set([
@@ -46,7 +52,16 @@ const ROOT_AUDIT_FIELDS = new Set([
   "mobile",
   "preferredLanguage",
   "sortOrder",
-  "purposes"
+  "purposes",
+  "identifierType",
+  "issuerCountryCode",
+  "validFrom",
+  "expiresAt",
+  "configured",
+  "creditLimit",
+  "currencyCode",
+  "creditStatus",
+  "policyVersion"
 ]);
 
 function allowlistedSnapshot(value) {
