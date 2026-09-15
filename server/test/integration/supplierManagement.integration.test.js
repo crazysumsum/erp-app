@@ -233,3 +233,81 @@ integrationTest("Supplier root update and controlled Code correction enforce CAS
   assert.deepEqual(audits.map((row) => row.action), ["supplier.create", "supplier.update", "supplier.code.change"]);
   assert.equal(audits.at(-1).reason, "Correct an onboarding typo");
 });
+
+integrationTest("Supplier lifecycle is atomic, idempotent at the target state and preserves delete audit", async (t) => {
+  const pool = mysql.createPool({ ...config(), connectionLimit: 5 });
+  const suffix = String(Date.now());
+  const ids = [];
+  t.after(async () => {
+    if (ids.length > 0) {
+      await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${ids.map(() => "?").join(",")})`, ids);
+      await pool.query(`DELETE FROM suppliers WHERE id IN (${ids.map(() => "?").join(",")})`, ids);
+    }
+    await pool.end();
+  });
+  const service = serviceFor(pool);
+  const [[actor]] = await pool.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const actorId = Number(actor.id);
+  const base = { actorId, claimedRoles: [], claimedPermissions: [], defaultCurrencyCode: "HKD", supplierName: "Lifecycle Supplier", requestId: `life-${suffix}` };
+  const created = await service.createSupplier({ ...base, supplierCode: `LIFE-${suffix}` });
+  ids.push(created.id);
+  const command = { actorId, claimedRoles: [], claimedPermissions: [], id: created.id, reason: "Integration lifecycle reason", requestId: `life-${suffix}` };
+
+  const active = await service.activateSupplier({ ...command, version: created.version });
+  assert.equal(active.status, "active");
+  const replay = await service.activateSupplier({ ...command, version: created.version });
+  assert.equal(replay.version, active.version);
+  const suspended = await service.suspendSupplier({ ...command, version: active.version });
+  const reactivated = await service.reactivateSupplier({ ...command, version: suspended.version });
+  const blocked = await service.blockSupplier({ ...command, version: reactivated.version });
+  const unblocked = await service.unblockSupplier({ ...command, version: blocked.version });
+  assert.equal(unblocked.status, "suspended");
+  const archived = await service.archiveSupplier({ ...command, version: unblocked.version });
+  const restored = await service.restoreSupplier({ ...command, version: archived.version });
+  assert.equal(restored.status, "suspended");
+
+  const [audits] = await pool.query("SELECT action FROM supplier_audit_logs WHERE supplier_id = ? ORDER BY id", [created.id]);
+  assert.deepEqual(audits.map((row) => row.action), [
+    "supplier.create", "supplier.activate", "supplier.suspend", "supplier.reactivate",
+    "supplier.block", "supplier.unblock", "supplier.archive", "supplier.restore"
+  ]);
+
+  const openFlowService = serviceFor(pool, {
+    openFlows: { async describeReferences() { return { references: { openPurchaseOrders: 1 }, total: 1 }; } }
+  });
+  await assert.rejects(
+    () => openFlowService.archiveSupplier({ ...command, version: restored.version }),
+    (error) => error.publicCode === "SUPPLIER_OPEN_FLOWS"
+  );
+  const [[afterOpenFlow]] = await pool.query("SELECT status, version FROM suppliers WHERE id = ?", [created.id]);
+  assert.equal(afterOpenFlow.status, "suspended");
+  assert.equal(Number(afterOpenFlow.version), restored.version);
+
+  const deleteCandidate = await service.createSupplier({ ...base, supplierCode: `DEL-${suffix}`, supplierName: "Delete Candidate" });
+  ids.push(deleteCandidate.id);
+  const referencedDelete = serviceFor(pool, {
+    references: { async describeReferences() { return { references: { purchaseOrders: 1 }, total: 1 }; } }
+  });
+  await assert.rejects(
+    () => referencedDelete.deleteSupplier({ ...command, id: deleteCandidate.id, version: deleteCandidate.version }),
+    (error) => error.publicCode === "SUPPLIER_REFERENCED"
+  );
+  assert.deepEqual(
+    await service.deleteSupplier({ ...command, id: deleteCandidate.id, version: deleteCandidate.version }),
+    { id: deleteCandidate.id }
+  );
+  const [[deletedRoot]] = await pool.query("SELECT id FROM suppliers WHERE id = ?", [deleteCandidate.id]);
+  assert.equal(deletedRoot, undefined);
+  const [[deleteAudit]] = await pool.query("SELECT action, reason FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.delete'", [deleteCandidate.id]);
+  assert.equal(deleteAudit.action, "supplier.delete");
+  assert.equal(deleteAudit.reason, command.reason);
+
+  const rollback = serviceFor(pool, { audit: { async record() { throw new Error("lifecycle audit failed"); } } });
+  await assert.rejects(
+    () => rollback.archiveSupplier({ ...command, version: restored.version }),
+    /lifecycle audit failed/u
+  );
+  const [[afterRollback]] = await pool.query("SELECT status, version FROM suppliers WHERE id = ?", [created.id]);
+  assert.equal(afterRollback.status, "suspended");
+  assert.equal(Number(afterRollback.version), restored.version);
+});

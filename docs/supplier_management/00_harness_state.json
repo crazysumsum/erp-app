@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 68,
+  "revision": 69,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-022",
+  "current_task": "TASK-023",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "20c5b74265ddd058ea03820cf1400f6f27c96060",
-    "source_fingerprint": "24fb6342779cc2b997ac4082f4069d7325c75036b74e62b784fd95189f51240a",
+    "code_commit": "684ae07c6c22723d5eb3974594b7b5e0d0bdd31f",
+    "source_fingerprint": "fb70666c9ec1fa31ac345e5de16f2bc2b1ae2c1689f63cf16c0962bffeb56407",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -49,8 +49,8 @@
     "TASK-019": "DONE",
     "TASK-020": "DONE",
     "TASK-021": "DONE",
-    "TASK-022": "IN_PROGRESS",
-    "TASK-023": "PENDING",
+    "TASK-022": "DONE",
+    "TASK-023": "IN_PROGRESS",
     "TASK-024": "PENDING",
     "TASK-025": "PENDING",
     "TASK-026": "PENDING",
@@ -580,6 +580,17 @@
       "source_ref": "Playwright CLI session supplier-address on 2026-09-15: live general editor kept Supplier Code readonly, saved name/phone/notes and advanced version 3 to 4; completeness was explicitly labelled non-blocking; dirty navigation displayed the unsaved-change prompt and preserved the draft when dismissed; 375px Code dialog withheld submit until Code/reason/password were present and jwt-device-password advanced version 4 to 5; a separate live update created a real stale writer, expected 409 left Preserved Concurrent Draft visible while showing latest version 6, and only explicit reload replaced it. Client tests passed 15/15, production build and lint passed; no unexpected console/network failures.",
       "actor": "/root via playwright-cli and vitest",
       "observed_at": "2026-09-15T04:29:42Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-022 Supplier lifecycle command matrix, idempotency, guarded delete and browser-discovered command fix",
+      "code_commit": "684ae07c6c22723d5eb3974594b7b5e0d0bdd31f",
+      "spec_baseline": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "source_fingerprint": "fb70666c9ec1fa31ac345e5de16f2bc2b1ae2c1689f63cf16c0962bffeb56407",
+      "status": "PASS",
+      "source_ref": "Authenticated HTTP matrix on 2026-09-15 exercised activate/replay/suspend/reactivate/block/unblock/archive/restore and controlled Draft delete. Initial browser evidence exposed that target-only validation could misclassify Restore as Suspend; implementation was tightened to command-specific allowed source states plus latest-action replay proof. Recheck returned STATUS_TRANSITION_INVALID for wrong Suspend, Unblock and Restore, preserved true Restore replay at version 13, and left Supplier 11 Suspended at version 15. Synthetic Draft 62 was device-password deleted and then returned SUPPLIER_NOT_FOUND. Focused tests passed 13/13, real MySQL lifecycle/create/update integration passed 3/3, root lint passed; all browser 409s were deliberately exercised negative cases.",
+      "actor": "/root via playwright-cli and node:test",
+      "observed_at": "2026-09-15T04:37:30Z"
     }
   ],
   "pending_decisions": [
@@ -902,5 +913,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-022 Supplier lifecycle, block/unblock, archive/restore and controlled delete backend test-first with exact state, permission, re-auth, reason, reference and transactional-audit guards."
+  "next_safe_action": "Implement TASK-023 permission-aware Supplier lifecycle actions and dialogs test-first, then validate suspend, block, unblock, archive, restore, delete and conflict keyboard flows in Playwright."
 }

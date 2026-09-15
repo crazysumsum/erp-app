@@ -11,6 +11,7 @@ import {
   normalizeSupplierUrl
 } from "./supplierNormalization.js";
 import { toAddressResponse, toContactResponse, toIdentifierResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
+import { assertSupplierDeletable, transitionSupplierStatus } from "./supplierStateMachine.js";
 import {
   assertKnownSupplierFields,
   assertSupplierActivatable,
@@ -62,6 +63,7 @@ export class SupplierAdminService {
     replaceNameGrams = replaceSupplierNameGrams,
     audit,
     references,
+    openFlows,
     approvalRequired = async () => false
   } = {}) {
     if (!database || !logger || !time || !businessMaster) {
@@ -74,6 +76,7 @@ export class SupplierAdminService {
     this.replaceNameGrams = replaceNameGrams;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.references = references ?? new SupplierReferenceService();
+    this.openFlows = openFlows ?? new SupplierReferenceService();
     this.approvalRequired = approvalRequired;
     this.time = time;
   }
@@ -334,6 +337,153 @@ export class SupplierAdminService {
       claimedPermissions: input.claimedPermissions,
       id: input.id
     });
+  }
+
+  async #changeStatus(input, { targetStatus, allowedFrom, action, activationCheck = false, approvalCheck = false, openFlowCheck = false }) {
+    const reason = action === "supplier.activate" ? "" : requireReason(input.reason);
+    await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, {
+        actorId: input.actorId,
+        claimedRoles: input.claimedRoles,
+        claimedPermissions: input.claimedPermissions
+      });
+      const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
+      if (!current) throw supplierNotFound(input.id);
+      if (current.status === targetStatus) {
+        const [[latestTransition]] = await connection.query(
+          "SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action LIKE 'supplier.%' ORDER BY id DESC LIMIT 1",
+          [input.id]
+        );
+        if (latestTransition?.action === action) return;
+        throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: targetStatus });
+      }
+      assertExpectedVersion(current, input.version);
+      if (!allowedFrom.includes(current.status)) {
+        throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: targetStatus });
+      }
+      transitionSupplierStatus(current.status, targetStatus);
+
+      if (approvalCheck) {
+        const required = await this.approvalRequired(connection);
+        if (required) throw supplierConflict("SUPPLIER_APPROVAL_NOT_READY", "供應商審批功能尚未部署完成");
+        if (input.approverUserId !== undefined && input.approverUserId !== null) {
+          throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
+        }
+      }
+      if (activationCheck) {
+        const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
+          currencyCode: current.default_currency_code,
+          paymentTermId: current.default_payment_term_id,
+          purpose: "new_assignment"
+        });
+        assertSupplierActivatable({
+          supplierCode: current.supplier_code,
+          supplierName: current.supplier_name,
+          status: current.status,
+          defaultCurrency: defaults.currency
+        });
+      }
+      if (openFlowCheck) {
+        const blockers = await this.openFlows.describeReferences(connection, input.id);
+        if (blockers.total !== 0) {
+          throw supplierConflict("SUPPLIER_OPEN_FLOWS", "供應商仍有未完成流程，不可封存", blockers);
+        }
+      }
+
+      const [result] = await connection.execute(
+        `UPDATE suppliers
+            SET status = ?, version = version + 1, updated_at = ?, updated_by = ?
+          WHERE id = ? AND version = ?`,
+        [targetStatus, this.time.nowMs(), input.actorId, input.id, input.version]
+      );
+      if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+      await this.audit.record(connection, {
+        actorUserId: input.actorId,
+        actorUsername: actor.username,
+        action,
+        targetType: "supplier",
+        targetId: input.id,
+        supplierId: input.id,
+        targetLabel: current.supplier_code,
+        reason,
+        detail: { before: { status: current.status }, after: { status: targetStatus } },
+        requestId: input.requestId,
+        ip: input.ip
+      });
+    });
+    return this.getSupplier({
+      actorId: input.actorId,
+      claimedRoles: input.claimedRoles,
+      claimedPermissions: input.claimedPermissions,
+      id: input.id
+    });
+  }
+
+  activateSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "active", allowedFrom: ["draft"], action: "supplier.activate", activationCheck: true, approvalCheck: true });
+  }
+
+  suspendSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["active"], action: "supplier.suspend" });
+  }
+
+  reactivateSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "active", allowedFrom: ["suspended"], action: "supplier.reactivate", activationCheck: true });
+  }
+
+  blockSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "blocked", allowedFrom: ["active", "suspended"], action: "supplier.block" });
+  }
+
+  unblockSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["blocked"], action: "supplier.unblock" });
+  }
+
+  archiveSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "archived", allowedFrom: ["draft", "active", "suspended"], action: "supplier.archive", openFlowCheck: true });
+  }
+
+  restoreSupplier(input) {
+    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["archived"], action: "supplier.restore" });
+  }
+
+  async deleteSupplier(input) {
+    const reason = requireReason(input.reason);
+    await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, {
+        actorId: input.actorId,
+        claimedRoles: input.claimedRoles,
+        claimedPermissions: input.claimedPermissions
+      });
+      const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
+      if (!current) throw supplierNotFound(input.id);
+      assertExpectedVersion(current, input.version);
+      const referenceSummary = await this.references.describeReferences(connection, input.id);
+      assertSupplierDeletable(current.status, referenceSummary);
+      const [[activeHistory]] = await connection.query(
+        "SELECT 1 AS present FROM supplier_audit_logs WHERE supplier_id = ? AND action IN ('supplier.activate', 'approval.approve') LIMIT 1",
+        [input.id]
+      );
+      if (activeHistory) {
+        throw supplierConflict("SUPPLIER_DELETE_NOT_ALLOWED", "曾經啟用的供應商不可永久刪除");
+      }
+      const [result] = await connection.execute("DELETE FROM suppliers WHERE id = ? AND version = ?", [input.id, input.version]);
+      if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+      await this.audit.record(connection, {
+        actorUserId: input.actorId,
+        actorUsername: actor.username,
+        action: "supplier.delete",
+        targetType: "supplier",
+        targetId: input.id,
+        supplierId: input.id,
+        targetLabel: current.supplier_code,
+        reason,
+        detail: { before: { status: current.status }, after: { deleted: true } },
+        requestId: input.requestId,
+        ip: input.ip
+      });
+    });
+    return { id: input.id };
   }
 
   async listSuppliers({

@@ -81,6 +81,35 @@ export const SUPPLIER_CODE_CHANGE_SCHEMA = Object.freeze({
   }
 });
 
+export const SUPPLIER_ACTIVATE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["version"],
+  additionalProperties: false,
+  properties: {
+    version: { type: "integer", minimum: 1 },
+    approverUserId: { type: "integer", minimum: 1 },
+    requestNote: { type: "string", maxLength: 500 }
+  }
+});
+
+export const SUPPLIER_LIFECYCLE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["reason", "password", "version"],
+  additionalProperties: false,
+  properties: {
+    reason: { type: "string", minLength: 5, maxLength: 500 },
+    password: { type: "string", minLength: 1, maxLength: 1024 },
+    version: { type: "integer", minimum: 1 }
+  }
+});
+
+export const SUPPLIER_DELETE_RESPONSE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["id"],
+  additionalProperties: false,
+  properties: { id: { type: "integer", minimum: 1 } }
+});
+
 const WARNING = Object.freeze({
   type: "object", additionalProperties: false, required: ["field", "code", "message"],
   properties: { field: { type: "string" }, code: { type: "string" }, message: { type: "string" } }
