@@ -35,8 +35,8 @@ integrationTest("TC-021..025 real MySQL and HTTP preserve Identifier uniqueness 
   const roleName = `task8-role-${suffix}`;
   const username = `task8-user-${suffix}`;
   const marker = `sensitive-${suffix}`;
-  let roleId;
-  let userId;
+  let roleId = null;
+  let userId = null;
   const customerIds = [];
 
   t.after(async () => {

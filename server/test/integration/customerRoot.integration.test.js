@@ -31,9 +31,9 @@ integrationTest("TC-012 Customer HTTP create, replay, list, update and operation
   const roleName = `customer-role-${suffix}`;
   const username = `customer-user-${suffix}`;
   const customerCode = `CUS-${suffix}`;
-  let userId;
-  let roleId;
-  let customerId;
+  let userId = null;
+  let roleId = null;
+  let customerId = null;
   t.after(async () => {
     if (customerId) {
       await db.execute("DELETE FROM customer_audit_logs WHERE customer_id = ?", [customerId]);
