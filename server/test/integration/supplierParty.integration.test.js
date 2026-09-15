@@ -4,6 +4,7 @@ import mysql from "mysql2/promise";
 
 import { SupplierAddressService } from "../../src/modules/supplier/SupplierAddressService.js";
 import { SupplierContactService } from "../../src/modules/supplier/SupplierContactService.js";
+import { SupplierIdentifierService } from "../../src/modules/supplier/SupplierIdentifierService.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
@@ -160,4 +161,63 @@ integrationTest("Contact ownership, primary switching, concurrency and deactivat
     [supplierIds[0]]
   );
   assert.equal(Number(afterConcurrent.total), 1);
+});
+
+integrationTest("Identifier normalization, global uniqueness, ownership and deletion are enforced by service and MySQL", async (t) => {
+  const pool = mysql.createPool({ ...config(), connectionLimit: 6 });
+  const suffix = String(Date.now());
+  const supplierIds = [];
+  t.after(async () => {
+    if (supplierIds.length) {
+      await pool.query(`DELETE FROM supplier_audit_logs WHERE supplier_id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
+      await pool.query(`DELETE FROM suppliers WHERE id IN (${supplierIds.map(() => "?").join(",")})`, supplierIds);
+    }
+    await pool.end();
+  });
+
+  const [[actor]] = await pool.query("SELECT id, username FROM users WHERE status = 'active' ORDER BY id LIMIT 1");
+  const now = Date.now();
+  for (const code of [`IDENT-${suffix}-A`, `IDENT-${suffix}-B`]) {
+    const [result] = await pool.execute(
+      `INSERT INTO suppliers
+        (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
+         status, version, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, 'HKD', 'active', 1, ?, ?, ?, ?)`,
+      [code, code.toLowerCase(), code, code.toLowerCase(), now, now, actor.id, actor.id]
+    );
+    supplierIds.push(Number(result.insertId));
+  }
+
+  const service = new SupplierIdentifierService({
+    database: database(pool), logger: { warn() {} }, time: { nowMs: () => Date.now() },
+    authorize: async () => ({ id: Number(actor.id), username: actor.username })
+  });
+  const base = {
+    actorId: Number(actor.id), claimedRoles: [], claimedPermissions: [], identifierType: "business_registration",
+    issuerCountryCode: "HK", notes: ""
+  };
+  const results = await Promise.allSettled([
+    service.create({ ...base, supplierId: supplierIds[0], identifierValue: `${suffix}-AB 123` }),
+    service.create({ ...base, supplierId: supplierIds[1], identifierValue: `${suffix}-ab-123` })
+  ]);
+  assert.deepEqual(results.map((result) => result.status).sort(), ["fulfilled", "rejected"]);
+  assert.equal(results.find((result) => result.status === "rejected").reason.publicCode, "SUPPLIER_IDENTIFIER_TAKEN");
+  const created = results.find((result) => result.status === "fulfilled").value;
+
+  const otherCountry = await service.create({
+    ...base, supplierId: supplierIds[1], issuerCountryCode: "SG", identifierValue: `${suffix}-AB-123`
+  });
+  assert.equal(otherCountry.issuerCountryCode, "SG");
+  await assert.rejects(
+    () => service.update({
+      ...base, supplierId: created.supplierId === supplierIds[0] ? supplierIds[1] : supplierIds[0],
+      identifierId: created.id, identifierValue: "wrong owner", version: created.version, reason: "test"
+    }),
+    (error) => error.publicCode === "SUPPLIER_IDENTIFIER_NOT_FOUND" && error.statusCode === 404
+  );
+
+  const deleted = await service.delete({
+    ...base, supplierId: otherCountry.supplierId, identifierId: otherCountry.id, version: otherCountry.version, reason: "test cleanup"
+  });
+  assert.deepEqual(deleted, { id: otherCountry.id, deleted: true });
 });

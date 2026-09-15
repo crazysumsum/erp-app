@@ -39,7 +39,7 @@ function harness({ rows = [row()], duplicateRows = [] } = {}) {
       if (sql.includes("FROM suppliers") && sql.includes("WHERE id = ?")) return [[rows[0]].filter(Boolean)];
       if (sql.includes("supplier_addresses") || sql.includes("supplier_address_purposes") ||
           sql.includes("SELECT * FROM supplier_contacts") || sql.includes("SELECT contact_id, purpose_code") ||
-          sql.includes("FROM supplier_contacts c")) return [[]];
+          sql.includes("FROM supplier_contacts c") || sql.includes("supplier_identifiers")) return [[]];
       return [rows];
     },
     async withTransaction(work) { return work(this); }

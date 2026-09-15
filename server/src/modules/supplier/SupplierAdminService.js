@@ -3,7 +3,7 @@ import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeContactEmail, normalizeSupplierCode, normalizeSupplierName, normalizeSupplierUrl } from "./supplierNormalization.js";
-import { toAddressResponse, toContactResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
+import { toAddressResponse, toContactResponse, toIdentifierResponse, toSupplierDetailResponse, toSupplierSummaryResponse } from "./supplierProjections.js";
 import { assertKnownSupplierFields, assertSupplierActivatable, supplierCompletenessWarnings } from "./supplierValidation.js";
 
 function duplicateEntry(error) {
@@ -277,10 +277,21 @@ export class SupplierAdminService {
     }
     const contacts = contactRows.map((contact) => toContactResponse(contact, purposesByContact.get(Number(contact.id)) ?? []));
     const hasOrdersContact = contacts.some((contact) => contact.status === "active" && contact.purposes.some((purpose) => purpose.purposeCode === "orders" && purpose.isPrimary));
+    const [identifierRows] = await this.database.query(
+      "SELECT * FROM supplier_identifiers WHERE supplier_id = ? ORDER BY identifier_type, issuer_country_code, id LIMIT 100",
+      [id]
+    );
+    const identifiers = identifierRows.map(toIdentifierResponse);
     return toSupplierDetailResponse(row, {
       addresses,
       contacts,
-      warnings: supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id, hasOrderingAddress, hasOrdersContact })
+      identifiers,
+      warnings: supplierCompletenessWarnings({
+        defaultPaymentTermId: row.default_payment_term_id,
+        hasOrderingAddress,
+        hasOrdersContact,
+        hasIdentifier: identifiers.length > 0
+      })
     });
   }
 
@@ -304,13 +315,18 @@ export class SupplierAdminService {
         LIMIT 1`,
       [id]
     );
+    const [[identifier]] = await this.database.query(
+      "SELECT 1 AS present FROM supplier_identifiers WHERE supplier_id = ? LIMIT 1",
+      [id]
+    );
     return {
       supplierId: Number(row.id),
       issues: [],
       warnings: supplierCompletenessWarnings({
         defaultPaymentTermId: row.default_payment_term_id,
         hasOrderingAddress: Boolean(orderingAddress),
-        hasOrdersContact: Boolean(ordersContact)
+        hasOrdersContact: Boolean(ordersContact),
+        hasIdentifier: Boolean(identifier)
       })
     };
   }

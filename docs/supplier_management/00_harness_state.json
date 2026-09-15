@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 63,
+  "revision": 65,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "11070a183b9263cb2d989c454c2dd50343c9ff11",
-    "source_fingerprint": "09b0f93c34651f44a8bede36e56fb4530d5f1cc1a5f55bf7b631f2b0b7f4b1bf",
+    "code_commit": "fd35cb74287792c2e94c978d3197d9b920b6c15e",
+    "source_fingerprint": "e3451675d80ab69106d45f416dcb45d71ed93096cd61dd561b5eb067014c3534",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -45,8 +45,8 @@
     "TASK-015": "DONE",
     "TASK-016": "DONE",
     "TASK-017": "DONE",
-    "TASK-018": "IN_PROGRESS",
-    "TASK-019": "PENDING",
+    "TASK-018": "DONE",
+    "TASK-019": "IN_PROGRESS",
     "TASK-020": "PENDING",
     "TASK-021": "PENDING",
     "TASK-022": "PENDING",
@@ -854,6 +854,14 @@
       "idempotency_key": "supplier-phase-001-erp-dev-migration-0033",
       "status": "CONFIRMED",
       "source_ref": "Repository migration runner applied 0033_create_supplier_contacts.js to authorized erp_dev on 2026-09-15; ledger/schema were re-observed and real MySQL passed Address/Contact ownership, primary switching, concurrency and deactivation tests."
+    },
+    {
+      "id": "MIGRATION-007",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migration 0034 Supplier identifiers",
+      "idempotency_key": "supplier-phase-001-erp-dev-migration-0034",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0034_create_supplier_identifiers.js to authorized erp_dev on 2026-09-15; ledger/schema were re-observed and real MySQL passed normalization, global uniqueness race, ownership and deletion tests together with Address/Contact regressions."
     }
   ],
   "evidence_files": [
@@ -861,5 +869,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-018 Supplier Identifier schema, normalization, ownership/version/reference guards, audit and APIs test-first."
+  "next_safe_action": "Implement TASK-019 Supplier Identifier client methods and panel test-first, then restart the local API and validate create, normalized duplicate, reasoned update/delete and completeness refresh in Playwright."
 }
