@@ -325,12 +325,12 @@
         "node",
         "server/scripts/runItemRecoveryAcceptance.js",
         "--output",
-        "{run_dir}/item-recovery.xml"
+        "{run_dir}/item-recovery.json"
       ],
       "cwd": ".",
       "timeout_seconds": 18000,
-      "result_adapter": "JUNIT",
-      "result_path": "item-recovery.xml",
+      "result_adapter": "HARNESS_JSON",
+      "result_path": "item-recovery.json",
       "min_tests": 1,
       "max_skipped": 0,
       "stages": [
@@ -366,10 +366,26 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_SOCKET_PATH",
+        "DB_SSL_ENABLED",
+        "DB_SSL_CA",
+        "DB_SSL_REJECT_UNAUTHORIZED",
+        "DB_INTEGRATION_TESTS",
+        "ITEM_RECOVERY_CONFIRM",
+        "ITEM_RECOVERY_ENVIRONMENT_CLASS",
+        "ITEM_RECOVERY_ENVIRONMENT_ID",
+        "ITEM_RECOVERY_MANIFEST_PATH",
+        "ITEM_RECOVERY_ATTESTATION_PATH",
+        "ITEM_RECOVERY_POINT_ID",
+        "ITEM_RECOVERY_BACKUP_ID",
+        "ITEM_RECOVERY_MEDIA_SNAPSHOT_ID",
+        "ITEM_RECOVERY_IMPORT_SNAPSHOT_ID",
+        "ITEM_RECOVERY_MEDIA_ROOT",
+        "ITEM_RECOVERY_IMPORT_ROOT"
       ],
       "redaction_env_keys": [
-        "DB_PASSWORD"
+        "DB_PASSWORD",
+        "DB_SSL_CA"
       ]
     },
     {

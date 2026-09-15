@@ -13,6 +13,8 @@ Formal-rerun supersession: PLAN approval `APR-019` and DEF-103 risk disposition 
 
 DEF-106 remediation supersession: the authorized four-title correction passes targeted and full server regression and is closed locally. Readiness remains `BLOCKED` until the correction is committed and the Product Owner binds verification to that new candidate; DEF-103/TC-016 remains `BLOCKED_DEFERRED`.
 
+TASK-044 adapter supersession (2026-09-15): `server/scripts/runItemRecoveryAcceptance.js` now exists on the implementation worktree with a repo-bound, initially `UNPROVISIONED` trust policy and detached Ed25519 manifest verification. Focused tests, full server regression, lint and traceability validation pass. This removes the missing-command portion of GAP-TC-002 but does not change readiness or grant TC-016 credit: the trusted staging-like environment, signing key, real backup identifiers and restore exercise remain unavailable.
+
 ## Baselines
 
 - Requirement baseline: `docs/items_management/01_requirement_spec.md`, SHA-256 `8181e39034218c09408772105dfec25a6bd71fbd67effc4e07ac59252914ba13`
@@ -45,7 +47,7 @@ DEF-106 remediation supersession: the authorized four-title correction passes ta
 ## Blockers / Conditions
 
 - `GAP-TC-003`: remediation closure verified; meaningful Node/Vitest/performance assertions now emit all required `TC-001`–`TC-015` IDs. The result remains supporting evidence until the new PLAN baseline is approved and formally executed.
-- `GAP-TC-002`: `server/scripts/runItemRecoveryAcceptance.js` is absent. More importantly, `TC-016` requires an approved staging-like backup/restore environment, backup identifiers, storage restoration and timed RPO/RTO evidence; the current local schema is not sufficient.
+- `GAP-TC-002`: the verification-only adapter is implemented, but its repository trust policy is intentionally `UNPROVISIONED`. `TC-016` still requires an approved staging-like backup/restore environment, independent manifest signer, real backup identifiers, storage restoration and timed RPO/RTO evidence; the current local schema is not sufficient.
 - `GAP-UAT-002`: remediation closure verified; the configured project executes all 13 automated IDs. UAT-005 and UAT-015 remain blocked for their own external conditions, not because configuration is absent.
 - Changed PLAN baseline `de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91` requires independent review and explicit ERP Product Owner approval before formal retest.
 - `UAT-013` and `UAT-014` require named human business/control owners. `UAT-015` also requires explicit business-owner sign-off after technical exit criteria; automation cannot grant it.

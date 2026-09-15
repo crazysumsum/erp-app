@@ -95,16 +95,16 @@ No product behavior was changed. Receiving overrides, real downstream reference 
 - Human clarification required: NO
 - Status: OPEN
 
-### GAP-TC-002 — Recovery acceptance command is not implemented
+### GAP-TC-002 — Recovery acceptance environment is not available
 
 - Area: TECH_TEST
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: TC-016 requires timed DB/media/import restore and reconciliation; no `server/scripts/runItemRecoveryAcceptance.js` or equivalent adapter exists.
-- Impact: RTO/RPO cannot pass an executable Harness gate.
-- Proposed action: implement and review the isolated recovery adapter/runbook before `TEST_AND_VERIFY`; until then the suite is BLOCKED, never simulated.
+- Evidence: superseded on 2026-09-15. `server/scripts/runItemRecoveryAcceptance.js` now implements a fail-closed, verification-only adapter for an already restored schema plus media/import roots. Its repo-bound trust policy is deliberately `UNPROVISIONED`, so it emits TC-016 `NOT_RUN` until an approved environment identity, restored-schema prefix and Ed25519 attestation public key are committed. Focused developer tests pass; a true-MySQL rehearsal cannot create an isolated schema because the local `erp_user` is scoped to `erp_dev` only. No approved staging-like restore environment or real backup identifiers are available.
+- Impact: the executable gap is remediated locally, but RTO/RPO still cannot receive formal PASS evidence until a real restore is run in an authorized staging-like environment.
+- Proposed action: review and commit the adapter, provision an isolated restored schema/volumes with appropriate credentials, generate the pre-restore manifest, then execute the `item-recovery` suite under a newly approved PLAN/candidate.
 - Human clarification required: YES for environment/operations authority
-- Status: OPEN
+- Status: PARTIALLY_REMEDIATED; ENVIRONMENT_BLOCKED
 
 ### GAP-TC-003 — Existing automated results do not emit canonical TC IDs
 

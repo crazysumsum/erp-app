@@ -40,7 +40,7 @@
 - Closure Evidence: targeted canonical-ID results in `testing/evidence/remediation-server-scoped.junit.xml` and `testing/evidence/remediation-client.junit.xml`; impact/performance regression in `testing/evidence/remediation-performance-bounded.junit.xml`.
 - Residual Risk / Notes: canonical IDs are now emitted by meaningful server, client and performance cases. Formal Technical Acceptance remains pending against the approved/frozen baseline.
 
-## DEF-103 — Recovery acceptance adapter and staging-like environment are absent
+## DEF-103 — Staging-like recovery environment is absent
 
 - Source Test/Finding: formal `item-recovery`, run `20260914T093142-11c20da04269`
 - Severity: HIGH
@@ -50,14 +50,14 @@
 - Phase: PHASE-006
 - Task: TASK-044
 - Expected: timed backup/restore adapter runs in an approved staging-like environment and proves RTO/RPO plus integrity.
-- Actual: `server/scripts/runItemRecoveryAcceptance.js` is missing; no approved staging-like backup/storage environment or backup identifiers exist.
+- Actual: superseded on 2026-09-15. A fail-closed verification-only `server/scripts/runItemRecoveryAcceptance.js`, repo-bound trust policy, detached Ed25519 manifest verification and focused developer tests now exist. The trust policy remains deliberately `UNPROVISIONED`: no approved staging-like backup/storage environment, signing key or real backup identifiers exist; local `erp_user` cannot create the separate schema required for a true-MySQL rehearsal.
 - Evidence: `docs/items_management/evidence/20260914T093142-11c20da04269/run.json`
-- Root Cause: recovery execution capability was planned but not implemented/provisioned.
-- Remediation Route: provide adapter under controlled implementation mode and separately authorize a destructive-safe staging-like exercise.
+- Root Cause: the adapter implementation gap is remediated locally; environment provisioning and operational restore authority remain outstanding.
+- Remediation Route: independently review and commit the adapter, then provision and authorize a destructive-safe staging-like restore exercise and bind the resulting formal run to a newly approved PLAN/candidate.
 - Retest Cases: TC-016.
 - Regression Scope: post-restore service smoke and reconciliation.
-- Status: DEFERRED (environment-blocked)
-- Residual Risk / Notes: local MySQL is not an acceptable substitute for operational DR evidence.
+- Status: DEFERRED (environment-blocked; adapter remediation in progress)
+- Residual Risk / Notes: focused adapter tests are developer evidence only. Local MySQL is not an acceptable substitute for operational DR evidence, and APR-020 still does not grant TC-016 PASS.
 
 ## DEF-104 — Configured Item UAT Playwright project is absent
 

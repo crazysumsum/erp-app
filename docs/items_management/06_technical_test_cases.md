@@ -755,7 +755,17 @@ job/item/SKU/audit before/after and transaction logs; cleanup
 approved staging-like environment, backups, media/import storage and timestamped writes
 
 ### Steps
-Execute the detailed source cases referenced by the `TC-016` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+1. Before restore, create a version-1 recovery manifest that binds the approved environment ID and recovery-point ID to the database backup ID, media snapshot ID, import snapshot ID, expected counts for all 16 Item tables, one known SKU/audit pair, and at least one database-linked media file and import file (stored filename, byte count and SHA-256). An independent backup/recovery system signs the exact manifest bytes with Ed25519; its public key, environment ID and restored-schema prefix must already be approved in `server/config/itemRecoveryTrustPolicy.json` on the candidate baseline.
+2. Restore the database, media root and import root to an isolated schema/volumes. Do not point the adapter at `erp_dev`, a production schema or a system schema.
+3. Export the manifest and detached-signature paths, approved environment ID, the four matching recovery identifiers, absolute restored roots and `ITEM_RECOVERY_CONFIRM=VERIFY_RESTORED_COPY`; execute the declared `item-recovery` suite.
+4. Preserve the adapter summary, Harness report, external backup/restore timestamps and operator evidence. The adapter uses a consistent read-only transaction and must not orchestrate or repair the restore.
+
+The executable manifest file entries are:
+
+- media: `{ "area": "media", "recordId": <item_media.id>, "path": "<stored_name>", "bytes": <byte_size>, "sha256": "<sha256>" }`;
+- import source/result: `{ "area": "import", "recordId": <item_import_jobs.id>, "fileKind": "source|result", "path": "<stored_name>", "bytes": <size>, "sha256": "<sha256>" }`.
+
+The adapter verifies the detached signature against the repository trust anchor, approved environment/schema identity, exact table counts, orphan/linkage checks, `ItemLookupService` SKU smoke, audit linkage, DB-to-volume filenames, sizes/hashes, RTO <= 4h and RPO <= 15m. An unprovisioned trust policy produces TC-016 `NOT_RUN`; invalid signatures, missing inputs, identifier mismatches, unsafe paths, unapproved schemas or failed checks produce `FAIL`.
 
 ### Expected result
 restore returns usable service in <=4h and no more than 15 minutes of committed data is lost; integrity/reconciliation passes
@@ -764,4 +774,4 @@ restore returns usable service in <=4h and no more than 15 minutes of committed 
 Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
 
 ### Cleanup
-timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove exercise data
+timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove the isolated restored schema, restored volumes and manifest according to the approved exercise plan. Never remove the source backup or production data as adapter cleanup.

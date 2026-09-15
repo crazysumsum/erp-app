@@ -202,7 +202,7 @@ The legacy body remains the authoritative development-progress record. On 2026-0
 - Acceptance: staging upgrade/re-run succeeds; formal QA/UAT is recorded; restore demonstrates RTO <= 4h and RPO <= 15m; business/Ops/compliance approve or residual risk is explicitly accepted.
 - Verification: `06_technical_test_cases.md` and `07_uat_test_cases.md` executed under `TEST_AND_VERIFY`, not this review.
 - Dependencies: remediation code merged and target environment available. Risk: release-critical evidence gap. Rollback: no production mutation without an approved exercise plan.
-- Definition of Done/status: signed evidence and traceability; `PLANNED`.
+- Definition of Done/status: verification-only adapter, repo-bound trust policy, detached Ed25519 attestation, fail-closed manifest contract and developer tests implemented on 2026-09-15. The trust policy deliberately remains `UNPROVISIONED`, and the isolated local MySQL rehearsal is blocked because `erp_user` cannot create a separate recovery schema. Staging restore execution, trust-key/environment approval and sign-offs remain; `IN_PROGRESS`.
 
 ## Full canonical requirement coverage
 
