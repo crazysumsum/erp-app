@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 53,
+  "revision": 54,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": null,
+  "current_task": "TASK-009",
   "baseline": {
     "design": "89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5",
     "plan": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
-    "code_commit": "116fc30fbc35c9121ec70ea99eef3bb3dc37dde0",
+    "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
     "source_fingerprint": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
@@ -34,7 +34,7 @@
     "TASK-006": "DONE",
     "TASK-007": "DONE",
     "TASK-008": "DONE",
-    "TASK-009": "PENDING",
+    "TASK-009": "IN_PROGRESS",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -332,6 +332,57 @@
         "server/test/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-003",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN baseline 89cc44fe、PLAN baseline 96ed30c6，以及 TASK-009",
+      "recorded_at": "2026-09-15T07:43:53Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5",
+      "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-003",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN baseline 89cc44fe、PLAN baseline 96ed30c6，以及 TASK-009",
+      "recorded_at": "2026-09-15T07:43:53Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-009",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN baseline 89cc44fe、PLAN baseline 96ed30c6，以及 TASK-009",
+      "recorded_at": "2026-09-15T07:43:53Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
+      "scope": [
+        "TASK-009",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-lookups/**",
+        "server/test/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -455,8 +506,8 @@
         "customer-management",
         "TASK-009"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-DESIGN-003; APPROVAL-PLAN-003; APPROVAL-SCOPE-009"
     }
   ],
   "external_actions": [
@@ -601,5 +652,5 @@
     "docs/customer_management/implementation/00_implementation_readiness.md"
   ],
   "defects": [],
-  "next_safe_action": "Obtain explicit human approval for current DESIGN 89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5 and PLAN 96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e baselines plus TASK-009, then resume IMPLEMENTING."
+  "next_safe_action": "Implement TASK-009 reference-provider registry and minimum Customer lookup contracts with focused RED/GREEN tests, then run readiness/lookup contract verification."
 }
