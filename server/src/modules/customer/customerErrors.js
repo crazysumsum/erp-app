@@ -74,6 +74,14 @@ export function creditPolicyInvalid() {
   });
 }
 
+export function customerLookupPurposeInvalid(purpose) {
+  return customerError(`Unsupported Customer lookup purpose: ${String(purpose)}`, {
+    code: "CUSTOMER_LOOKUP_PURPOSE_INVALID",
+    statusCode: 400,
+    publicMessage: "不支援的客戶查詢用途"
+  });
+}
+
 export function versionConflict(currentVersion) {
   return customerError("Customer version conflict", {
     code: "VERSION_CONFLICT",

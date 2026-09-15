@@ -103,3 +103,9 @@ test("TC-026 registered references remain blockers and unknown provider configur
     /Unknown Customer reference provider/
   );
 });
+
+test("TC-026 an empty mandatory-provider configuration is UNKNOWN rather than vacuously clear", async () => {
+  const registry = new CustomerReferenceProviderRegistry();
+  assert.equal((await registry.inspectReadiness()).status, "NOT_READY");
+  assert.deepEqual(await registry.checkCustomerReferences(4), { status: "UNKNOWN", providers: [] });
+});

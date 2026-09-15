@@ -60,7 +60,7 @@ export class CustomerReferenceProviderRegistry {
         results.push(unknownResult(id));
       }
     }
-    const status = results.some((result) => result.status === "UNKNOWN")
+    const status = results.length === 0 || results.some((result) => result.status === "UNKNOWN")
       ? "UNKNOWN"
       : results.some((result) => result.status === "REFERENCE") ? "REFERENCE" : "NO_REFERENCE";
     return { status, providers: results };
