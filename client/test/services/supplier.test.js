@@ -48,4 +48,25 @@ describe("supplier service", () => {
       body: { supplierCode: "SUP-041", supplierName: "Evergreen Trading" }
     });
   });
+
+  it("maps paged Supplier results to DataTable shape", async () => {
+    httpClient.get.mockResolvedValue({ items: [{ id: 7 }], total: 1, page: 1, pageSize: 20 });
+    const result = await supplierService.list({
+      page: 1, rowsPerPage: 20, sortBy: "supplierCode", descending: false, filter: "SUP", status: "active"
+    });
+    expect(result).toEqual({ rows: [{ id: 7 }], rowsNumber: 1 });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/suppliers", {
+      params: expect.objectContaining({ page: 1, pageSize: 20, q: "SUP", status: "active", sortBy: "supplierCode" })
+    });
+  });
+
+  it("loads detail and completeness by Supplier id", async () => {
+    httpClient.get.mockResolvedValueOnce({ id: 7 }).mockResolvedValueOnce({ supplierId: 7, issues: [], warnings: [] });
+    expect(await supplierService.getById(7)).toEqual({ id: 7 });
+    expect(await supplierService.completeness(7)).toEqual({ supplierId: 7, issues: [], warnings: [] });
+    expect(httpClient.get.mock.calls.map(([path]) => path)).toEqual([
+      "/api/v1/suppliers/7",
+      "/api/v1/suppliers/7/completeness"
+    ]);
+  });
 });

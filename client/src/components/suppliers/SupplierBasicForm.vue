@@ -91,6 +91,7 @@ onMounted(loadOptions);
         emit-value
         map-options
         label="Default Currency *"
+        aria-label="Default Currency *"
         outlined
         dense
         :loading="loadingOptions"
@@ -107,6 +108,7 @@ onMounted(loadOptions);
         map-options
         clearable
         label="預設付款條件（選填）"
+        aria-label="預設付款條件（選填）"
         outlined
         dense
         :loading="loadingOptions"

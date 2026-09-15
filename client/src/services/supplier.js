@@ -14,5 +14,34 @@ export default {
     return httpClient.post("/api/v1/suppliers/duplicates/check", {
       body: payload
     });
+  },
+
+  list({
+    page, rowsPerPage, sortBy, descending, filter, status, currencyCode, paymentTermId,
+    updatedFrom, updatedTo, includeArchived
+  }) {
+    return httpClient.get("/api/v1/suppliers", {
+      params: {
+        page,
+        pageSize: rowsPerPage,
+        q: filter || undefined,
+        status: status || undefined,
+        currencyCode: currencyCode || undefined,
+        paymentTermId: paymentTermId || undefined,
+        updatedFrom,
+        updatedTo,
+        includeArchived,
+        sortBy: sortBy || undefined,
+        descending
+      }
+    }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+
+  getById(id) {
+    return httpClient.get(`/api/v1/suppliers/${id}`);
+  },
+
+  completeness(id) {
+    return httpClient.get(`/api/v1/suppliers/${id}/completeness`);
   }
 };

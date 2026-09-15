@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 52,
+  "revision": 55,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-013",
+  "current_task": "TASK-014",
   "baseline": {
     "design": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
     "plan": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
-    "code_commit": "e12ec98eaee8c4ff8da40e1c919fb567aac83f8a",
-    "source_fingerprint": "18be3a9b61da94dae1cd98f06102e5bcedacc20a0379c12cda06f20a8711095c",
+    "code_commit": "a92925d9e8f7586fef69afcd6f2a9e0c0dde335a",
+    "source_fingerprint": "4d790e4e53a26cdd5968ec386c936c83a40ab7ddf85b09533d15760872f755be",
     "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -40,8 +40,8 @@
     "TASK-010": "DONE",
     "TASK-011": "DONE",
     "TASK-012": "DONE",
-    "TASK-013": "IN_PROGRESS",
-    "TASK-014": "PENDING",
+    "TASK-013": "DONE",
+    "TASK-014": "IN_PROGRESS",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
     "TASK-017": "PENDING",
@@ -514,6 +514,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/96",
       "actor": "GitHub (observed by /root via gh CLI)",
       "observed_at": "2026-09-15T00:00:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-011/TASK-013 Supplier create, list, detail and responsive browser validation",
+      "code_commit": "a92925d9e8f7586fef69afcd6f2a9e0c0dde335a",
+      "spec_baseline": "b75280ba852360e8256d7215e32052cb80f0049c217db44b1addd50ed600370d",
+      "source_fingerprint": "4d790e4e53a26cdd5968ec386c936c83a40ab7ddf85b09533d15760872f755be",
+      "status": "PASS",
+      "source_ref": "Playwright CLI session supplier-phase1 on 2026-09-15: approved-device login; live create/list/detail APIs returned 200/201; minimum Draft, completeness warnings, dirty-leave prompt, URL filter, explicit non-Active warning, 375px no horizontal overflow; relevant console/network errors 0.",
+      "actor": "/root via playwright-cli",
+      "observed_at": "2026-09-15T03:14:30Z"
     }
   ],
   "pending_decisions": [
@@ -773,6 +784,22 @@
       "idempotency_key": "supplier-phase-001-erp-dev-migration-0031",
       "status": "CONFIRMED",
       "source_ref": "Repository migration runner applied 0031_create_supplier_audit_logs.js to authorized erp_dev on 2026-09-15; real MySQL proved audit rollback, commit and masked query behavior."
+    },
+    {
+      "id": "TEST-DATA-001",
+      "kind": "CREATE_TEST_USER",
+      "target": "mysql://127.0.0.1:3306/erp_dev user pw_supplier_0915 with system-admin role",
+      "idempotency_key": "supplier-phase-001-playwright-user-20260915",
+      "status": "CONFIRMED",
+      "source_ref": "createUser.js created synthetic user id 18658 with system-admin role in authorized erp_dev on 2026-09-15."
+    },
+    {
+      "id": "TEST-DATA-002",
+      "kind": "APPROVE_TEST_DEVICE",
+      "target": "mysql://127.0.0.1:3306/erp_dev device binding 4253 for pw_supplier_0915",
+      "idempotency_key": "supplier-phase-001-playwright-device-4253",
+      "status": "CONFIRMED",
+      "source_ref": "approveDevice.js confirmed synthetic device binding 4253 on 2026-09-15; subsequent Playwright login and authenticated Supplier API calls succeeded."
     }
   ],
   "evidence_files": [
@@ -780,5 +807,5 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-013 Supplier list and detail pages test-first with URL-synchronised filters, permission-aware actions, explicit status text and masked bank presentation."
+  "next_safe_action": "Implement TASK-014 Supplier Address and purpose schema, ownership-safe versioned CRUD, primary switching and deactivation test-first, then apply the migration to authorized erp_dev."
 }
