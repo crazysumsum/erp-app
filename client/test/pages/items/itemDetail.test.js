@@ -142,7 +142,7 @@ describe("pages/items/ItemDetailPage.vue", () => {
     expect(body.text()).toContain("版本 2");
   });
 
-  it("VERSION_CONFLICT：唔會自動覆蓋用戶輸入，顯示提示，撳「重新載入」先攞新資料", async () => {
+  it("TC-011 VERSION_CONFLICT：唔會自動覆蓋用戶輸入，顯示提示，撳「重新載入」先攞新資料", async () => {
     const conflict = Object.assign(new Error("版本衝突"), { code: "VERSION_CONFLICT" });
     itemService.updateItem.mockRejectedValue(conflict);
     itemService.getItem.mockResolvedValueOnce(ITEM).mockResolvedValueOnce({ ...ITEM, name: "被人改咗", version: 5 });

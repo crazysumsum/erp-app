@@ -1,0 +1,70 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20260914T092606-54f0584eddea",
+  "suite_id": "item-client-technical",
+  "stage": "TECHNICAL",
+  "result": "BLOCKED",
+  "spec_baseline": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+  "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
+  "code_commit": "49d487e876932e6684cbdbec46043312b3f730bd",
+  "started_at": "2026-09-14T09:26:06.896395Z",
+  "ended_at": "2026-09-14T09:26:11.340122Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260914T092606-54f0584eddea/item-client-technical.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "3aab64f1e11788965f2bec72865bacc1e9bdbf7d371835270d796ebe600f6c36",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 476,
+    "passed": 476,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T092606-54f0584eddea/stdout.log",
+      "sha256": "4f046727b6bd8b355bc4fe913ca4582fc2249e17e577baa04c24b738c63588b3",
+      "bytes": 350
+    },
+    {
+      "path": "evidence/20260914T092606-54f0584eddea/stderr.log",
+      "sha256": "0cb9b81966b132739ffe57379d7199bef82e96d5fcac40a06ef9fe5b712dea82",
+      "bytes": 6226
+    },
+    {
+      "path": "evidence/20260914T092606-54f0584eddea/item-client-technical.xml",
+      "sha256": "b9d568e6cb6ea73bc83d5e43f921aee4e0d443a855720cfba9c5f49506cc9be8",
+      "bytes": 132236
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Required cases not passed: TC-011",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -120,7 +120,7 @@ async function cleanupImportedItems(db, skuCodePrefix) {
 }
 
 test(
-  "T35 效能驗證：100k SKU／1M barcode／1M UOM，50 併發混合負載，10,000-row import KPI",
+  "TC-012 T35 效能驗證：100k SKU／1M barcode／1M UOM，50 併發混合負載，10,000-row import KPI",
   { skip, timeout: TEST_TIMEOUT_MS },
   async (t) => {
     const application = await startApplication();
@@ -153,7 +153,7 @@ test(
     const adminService = new ItemAdminService({ database: db, logger, time });
     const lookupService = new ItemLookupService({ database: db, logger, time });
 
-    await t.test("EXPLAIN：exact SKU code／barcode lookup 唔係 full table scan", async () => {
+    await t.test("TC-012 EXPLAIN：exact SKU code／barcode lookup 唔係 full table scan", async () => {
       const sampleIndex = Math.floor(Math.random() * fixtures.skuCount);
       const skuCode = `PERF-SKU-${fixtures.marker}-${sampleIndex}`;
       const barcode = `PERFBC${fixtures.marker}-${sampleIndex}-0`;
@@ -179,7 +179,7 @@ test(
     });
 
     await t.test(
-      `${CONCURRENCY} 併發混合負載：exact lookup／首頁／常用 filters p95 < 2 秒`,
+      `TC-012 ${CONCURRENCY} 併發混合負載：exact lookup／首頁／常用 filters p95 < 2 秒`,
       async () => {
         const categories = { exactCode: [], exactBarcode: [], homepage: [], statusAndCategoryFilter: [] };
 
@@ -216,7 +216,7 @@ test(
     );
 
     await t.test(
-      `${IMPORT_ROW_COUNT}-row CSV import KPI：preflight＋execution 合計 ≤ 10 分鐘，執行期間 lookup p95 < 2 秒`,
+      `TC-012 ${IMPORT_ROW_COUNT}-row CSV import KPI：preflight＋execution 合計 ≤ 10 分鐘，執行期間 lookup p95 < 2 秒`,
       async (t) => {
         const importDirectory = application.services.config.item.importDirectory;
         await mkdir(importDirectory, { recursive: true });

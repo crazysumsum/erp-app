@@ -7,17 +7,21 @@
 | GAP-RQ-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: duplicate NFR crosswalk |
 | GAP-RQ-002 | HIGH | REQUIREMENT_GAP | RESOLVED by user: measurable RTO/RPO |
 | GAP-DES-001 | MEDIUM | DOCUMENTATION_GAP | RESOLVED: canonical `DES-*` index |
-| GAP-IMP-001 | HIGH | IMPLEMENTATION_GAP | OPEN: Attribute/Variant values unreadable |
-| GAP-IMP-002 | HIGH | IMPLEMENTATION_GAP | OPEN: retained standalone add-SKU flow pending TASK-038 |
-| GAP-IMP-003 | HIGH | IMPLEMENTATION_GAP | OPEN: user-facing audit history absent |
-| GAP-IMP-004 | HIGH | LIKELY_DEFECT | OPEN: referenced Brand/UOM delete error mapping |
-| GAP-IMP-005 | HIGH | IMPLEMENTATION_GAP | OPEN: import bypasses aggregate transactional audit |
-| GAP-INT-001 | MEDIUM until dependency exists | DEFERRED_DEPENDENCY | OPEN: downstream reference guard |
+| GAP-IMP-001 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-037 |
+| GAP-IMP-002 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-038 and UAT-004 developer retest |
+| GAP-IMP-003 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-039 |
+| GAP-IMP-004 | HIGH | LIKELY_DEFECT | RESOLVED by TASK-040 |
+| GAP-IMP-005 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-041 |
+| GAP-INT-001 | MEDIUM until dependency exists | DEFERRED_DEPENDENCY | OPEN: downstream reference guard / TASK-043 |
 | GAP-TASK-001 | HIGH | STATUS_AMBIGUITY | RESOLVED: maintainer-approved T23 index correction |
 | GAP-TASK-002 | HIGH | ACCEPTANCE_GAP | OPEN: staging and human sign-offs |
 | GAP-TC-001 | MEDIUM | EVIDENCE_CLASSIFICATION | RESOLVED in docs: developer versus independent evidence |
 | GAP-UAT-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: separate UAT specification |
 | GAP-TRC-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: canonical traceability matrix |
+| GAP-TC-002 | HIGH | IMPLEMENTATION_GAP | OPEN: recovery adapter/environment |
+| GAP-TC-003 | HIGH | IMPLEMENTATION_GAP | CLOSED: canonical IDs emitted and developer retest/regression passed |
+| GAP-UAT-002 | HIGH | IMPLEMENTATION_GAP | CLOSED: Playwright project executes; external-condition skips remain separately tracked |
+| GAP-REV-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: separate-agent reviews recorded |
 
 ## Findings
 
@@ -107,22 +111,22 @@ No product behavior was changed. Receiving overrides, real downstream reference 
 - Area: TECH_TEST / EXECUTION CONTRACT
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: existing Node/Vitest JUnit cases use legacy or descriptive names rather than canonical `TC-001`–`TC-016`; the Harness adapter requires observable case IDs.
-- Impact: a green aggregate suite cannot establish mandatory per-TC coverage and must fail closed.
-- Proposed action: add reviewed reporter properties/name mapping or a trustworthy project adapter before formal execution; do not lower required case mappings.
+- Evidence: superseded on 2026-09-15. Meaningful server cases now emit `TC-001`–`TC-010` and `TC-013`–`TC-015`, seven client cases emit `TC-011`, and the real performance suite emits `TC-012`; see `testing/evidence/remediation-*.xml`.
+- Impact: local mapping is now complete for `TC-001`–`TC-015`; formal credit still fails closed until review, PLAN approval and Harness rerun.
+- Proposed action: complete independent review and formal retest without lowering required case mappings.
 - Human clarification required: NO
-- Status: OPEN
+- Status: CLOSED by developer retest and impact regression; formal acceptance rerun remains pending.
 
 ### GAP-UAT-002 — Project Playwright configuration is absent
 
 - Area: UAT
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: AGENTS.md mandates Playwright, but `client/e2e/item-management/playwright.config.js` and executable Item UAT tests do not exist.
-- Impact: UI/browser acceptance cannot be executed reproducibly; unit/component tests are insufficient.
-- Proposed action: add the planned Playwright suite under authorized implementation scope, then validate happy, negative, navigation, console and network behavior.
+- Evidence: superseded on 2026-09-15. The configured project executes 13 canonical IDs against live API/UI/MySQL; 11 pass and UAT-005/UAT-015 are explicit external-condition skips.
+- Impact: reproducible browser automation now exists; the two skipped cases and business acceptance still block UAT completion.
+- Proposed action: formally rerun after PLAN approval; retain TASK-043/real-reference and staging/sign-off blockers.
 - Human clarification required: NO
-- Status: OPEN
+- Status: CLOSED by developer browser retest and client regression; UAT-005/UAT-015 remain separately blocked.
 
 ### GAP-REV-001 — Independent review provenance is not observable
 

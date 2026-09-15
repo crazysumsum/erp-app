@@ -205,7 +205,7 @@ function statusCounts(results) {
 
 // --- Version race：Item update ------------------------------------------------
 
-test("Version race：兩個並行 update 撞同一個 version，只有一個贏，輸嗰個 409", { skip }, async (t) => {
+test("TC-004 Version race：兩個並行 update 撞同一個 version，只有一個贏，輸嗰個 409", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
   const catalog = await seedCatalog(db);

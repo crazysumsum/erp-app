@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20260914T092531-d37464deab2b",
+  "suite_id": "item-server-technical",
+  "stage": "TECHNICAL",
+  "result": "FAIL",
+  "spec_baseline": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+  "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
+  "code_commit": "49d487e876932e6684cbdbec46043312b3f730bd",
+  "started_at": "2026-09-14T09:25:32.017854Z",
+  "ended_at": "2026-09-14T09:25:32.254211Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260914T092531-d37464deab2b/item-server-technical.xml",
+    "server/test"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "77dd0b243d541c50fba253de040470d2886dc4bf1ee73327ed946724d1a86bde",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T092531-d37464deab2b/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T092531-d37464deab2b/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T092531-d37464deab2b/item-server-technical.xml",
+      "sha256": "5e5b00407499430acf3a448054ff2a1e7cd2ab375ca5634aa234e6e39eaea90d",
+      "bytes": 589
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Required cases not passed: TC-001, TC-002, TC-003, TC-004, TC-005, TC-006, TC-007, TC-008, TC-009, TC-010, TC-013, TC-014, TC-015",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

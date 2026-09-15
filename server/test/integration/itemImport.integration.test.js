@@ -588,7 +588,7 @@ test("結果 CSV：skuCode 開頭係 =／+／-／@ 會加單引號，防試算�
 
 // --- T29：Confirm／Execution 全流程 ------------------------------------------
 
-test("Confirm＋execution 全流程：create-only job 完成後真係建咗一個 Item＋SKU，結果 CSV 下載得到", { skip }, async (t) => {
+test("TC-009 Confirm＋execution 全流程：create-only job 完成後真係建咗一個 Item＋SKU，結果 CSV 下載得到", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token, actorId, actorUsername } = await withManager(t, application);
   const catalog = await seedCatalog(db);
@@ -841,7 +841,7 @@ test("Upsert 更新一粒真嘅 SKU：confirm＋execution 之後 SKU 欄位同 v
   });
 });
 
-test("逐項 audit 寫入失敗：同一 execution transaction 內嘅 Item、SKU、UOM、audit 全部 rollback", { skip }, async (t) => {
+test("TC-015 逐項 audit 寫入失敗：同一 execution transaction 內嘅 Item、SKU、UOM、audit 全部 rollback", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
   const catalog = await seedCatalog(db);

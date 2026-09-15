@@ -157,3 +157,14 @@ The earlier “Independent” title is historical wording without sufficient pro
 - findings closed: APR-015/APR-016 supersede the pre-metadata approvals and bind the exact candidate; runtime resources and MySQL advisory-lock evidence are recorded; REV-010 remains preserved.
 - reviewer limitation: the separate reviewer environment could not connect to `127.0.0.1:3306`, so it reviewed the lease record and supplied acquisition evidence rather than independently live-querying the lock. The primary verifier separately observed `IS_USED_LOCK(...) = 23483` on the still-open lease session.
 - disposition: no remaining P0/P1/P2; current design/plan baseline is approved for PLAN_READY and the revision-checked TEST_AND_VERIFY mode-entry checkpoint.
+
+## REV-012 — REMEDIATE_AND_RETEST independent review
+
+- review method: `SEPARATE_AGENT`
+- reviewer and actual context/identity: `/root/item_design_review`, a separate Codex agent context; read-only review, no file edits or test execution
+- reviewed baseline: plan `de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91`
+- first review disposition: `CHANGES_REQUESTED`, three P1 findings—do not weaken the global system-admin permission assertion, resolve Playwright JUnit to the canonical evidence path, and supersede stale readiness/gap claims
+- findings closed: the original exact global permission assertion is restored; Item-owned `TC-001` independently snapshots migrations 0010–0026 and exact Item permission seeds; the Playwright reporter resolves absolute Harness paths and canonical evidence exists; readiness/gap records now show fixed items in `RETEST` while preserving historical failures
+- evidence reviewed: `remediation-server-scoped.junit.xml` 459/459, `remediation-client.junit.xml` 492/492, `remediation-performance-bounded.junit.xml` 4/4, `remediation-item-uat-browser.junit.xml` 11 pass/2 explicit skips; these are developer remediation artifacts, and the reviewer checked evidence/current files but did not rerun commands
+- residual risks: `TC-016` recovery environment, full-scale 100k performance, TASK-043/UAT-005 downstream reference and UAT-015 business sign-off remain blocked and are not waived
+- final disposition: `APPROVED`, no remaining P0/P1/P2. This is independent review of the remediation PLAN baseline, not Product Owner approval, formal acceptance, CI or release approval.

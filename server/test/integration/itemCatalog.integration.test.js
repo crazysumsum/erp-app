@@ -437,7 +437,7 @@ test("UOM 建立（code 建立後不可修改）、stale version 409、更新、
   );
 });
 
-test("item.view 可唯讀 Catalog；item.mgmt 可讀寫所有 Catalog API", { skip }, async (t) => {
+test("TC-010 item.view 可唯讀 Catalog；item.mgmt 可讀寫所有 Catalog API", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -1014,7 +1014,7 @@ test("Category attribute assignment：expectedAttributeIds 過期時拒絕覆蓋
   assert.equal(auditRows.length, 2);
 });
 
-test("被 Item／SKU UOM／SKU 度量／屬性引用的 Brand／UOM 刪除回 CATALOG_IN_USE，資料與 audit 均不變", { skip }, async (t) => {
+test("TC-014 被 Item／SKU UOM／SKU 度量／屬性引用的 Brand／UOM 刪除回 CATALOG_IN_USE，資料與 audit 均不變", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);

@@ -209,7 +209,7 @@ async function withViewer(t, application) {
 
 // --- GET /api/v1/items -----------------------------------------------------
 
-test("GET /items：q 搜 Item 名稱及其 SKU 的 Code／名稱／條碼，用 EXISTS 唔會因為一個 Item 有多個符合嘅 SKU 就撞大 total", { skip }, async (t) => {
+test("TC-002 GET /items：q 搜 Item 名稱及其 SKU 的 Code／名稱／條碼，用 EXISTS 唔會因為一個 Item 有多個符合嘅 SKU 就撞大 total", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withViewer(t, application);
   const fixture = await seedFixture(db);
@@ -379,7 +379,7 @@ test("GET /items/:id：完整詳情，含全部 SKU 摘要", { skip }, async (t)
   assert.deepEqual(body.data.attributeValues, []);
 });
 
-test("GET /items/:id 與 /skus/:id：投影已保存的 Attribute／Variant 值", { skip }, async (t) => {
+test("TC-013 GET /items/:id 與 /skus/:id：投影已保存的 Attribute／Variant 值", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withViewer(t, application);
   const fixture = await seedFixture(db);

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="T35 效能驗證：100k SKU／1M barcode／1M UOM，50 併發混合負載，10,000-row import KPI" time="0.000561" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/performance/itemManagement.performance.test.js">
+		<skipped type="skipped" message="set ITEM_PERFORMANCE_TESTS=1 against a real, migrated MySQL to run this release performance test (design_spec §11.5) — it seeds ~2.1M rows and is not part of routine CI"/>
+	</testcase>
+	<!-- tests 1 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 1 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 154.177708 -->
+</testsuites>

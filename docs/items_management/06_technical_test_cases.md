@@ -41,6 +41,12 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 - Current implementation findings without an observed developer run remain classified as static-review findings until the corresponding `TC-*` is executed.
 - Formal Technical Acceptance, including true-browser and DR execution, requires a later `TEST_AND_VERIFY` authorization.
 
+## Canonical automation mapping added during remediation
+
+The 2026-09-15 `REMEDIATE_AND_RETEST` cycle attaches canonical IDs to existing meaningful assertions instead of adding no-op marker tests. `TC-001`–`TC-010` and `TC-013`–`TC-015` are emitted by the corresponding server migration/read/create/concurrency/lifecycle/lookup/price/media/import/authorization/projection/catalog/transaction cases; `TC-011` is emitted by seven client behavior tests; `TC-012` is emitted by the real performance parent and its three workload checks. The Item server command is serialized and explicitly module-scoped because the approved local MySQL is shared with independently moving modules.
+
+These mapping and runner changes alter the PLAN baseline. Their local developer evidence is recorded under `testing/evidence/remediation-*.xml`; formal status remains `PLANNED` until independent review, explicit baseline approval and Harness execution.
+
 ---
 
 # Preserved legacy body (verbatim)

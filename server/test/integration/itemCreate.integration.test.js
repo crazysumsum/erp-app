@@ -896,7 +896,7 @@ test("Idempotency-Key：同一個 key 連撞兩次，第二次直接攞返第一
 
 // --- TASK-038：POST /skus/create ------------------------------------------
 
-test("既有 Variant Item 可以新增唯一 SKU；審計與 idempotency 同一交易生效", { skip }, async (t) => {
+test("TC-003 既有 Variant Item 可以新增唯一 SKU；審計與 idempotency 同一交易生效", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
   const catalog = await seedCatalog(db);

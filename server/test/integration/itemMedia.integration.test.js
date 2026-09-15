@@ -239,7 +239,7 @@ async function fileExists(filePath) {
 // --- Item 層級：完整生命週期 --------------------------------------------------
 
 test(
-  "Item 層級 media：上傳、下載、update、delete 全部經真實 HTTP＋MySQL＋檔案系統，每步都有 audit",
+  "TC-008 Item 層級 media：上傳、下載、update、delete 全部經真實 HTTP＋MySQL＋檔案系統，每步都有 audit",
   { skip },
   async (t) => {
     const application = await startApplication();
