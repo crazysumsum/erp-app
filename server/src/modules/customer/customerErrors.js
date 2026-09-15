@@ -26,6 +26,22 @@ export function customerCodeTaken() {
   });
 }
 
+export function customerLegalNameTaken() {
+  return customerError("Customer legal-name uniqueness conflict", {
+    code: "CUSTOMER_LEGAL_NAME_TAKEN",
+    statusCode: 409,
+    publicMessage: "客戶法定名稱已被使用"
+  });
+}
+
+export function customerIdempotencyConflict() {
+  return customerError("Customer operation idempotency key was reused with a different payload", {
+    code: "IDEMPOTENCY_CONFLICT",
+    statusCode: 409,
+    publicMessage: "此冪等鍵已用於不同的請求內容"
+  });
+}
+
 export function versionConflict(currentVersion) {
   return customerError("Customer version conflict", {
     code: "VERSION_CONFLICT",
