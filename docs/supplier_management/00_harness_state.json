@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 95,
+  "revision": 96,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -830,6 +830,18 @@
       "open_critical": 0,
       "open_high": 2,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-014",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-013 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 5e00986..9a9984b",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/10_rev_014_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1214,7 +1226,7 @@
       "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
       "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
       "status": "PASS",
-      "source_ref": "Schema approved by the Product Owner before any migration was written, per the project rule requiring schema sign-off. Sequence numbers 0035 and 0036 allocated from latest main, with the collision risk disclosed beforehand: the unmerged customer-management branch already claims both, so whichever merges second must renumber. Verification: migrate.test.js 7/7; migrations.integration.test.js 14/14 with 0 skipped against erp_dev; npm run lint exit 0. Real-MySQL manual checks, all passing: the settings singleton is seeded id=1 with require_activation_approval 0 and version 1; a second pending activation request for the same supplier is rejected by the database with ER_DUP_ENTRY while two non-pending rows for that supplier are accepted, proving the pending_slot generated-column emulation of a partial unique index; no table matching %bank% exists. Convergence: a clean rerun of the runner recorded both as already applied and did not re-enter up() — that is the migration ledger, not idempotency of up() itself, which is now covered directly by supplierCoreMigrations.integration.test.js calling up() twice; a half-applied case with the table present but the singleton row deleted re-seeded exactly one row at version 1 with approval still OFF; a further rerun neither duplicated the row nor bumped its version. Test rows created during the manual check were deleted; the table is empty. supplier_id is RESTRICT rather than CASCADE by design, so approval history counts as a reference and a Supplier that has ever been submitted cannot be hard-deleted.",
+      "source_ref": "Schema approved by the Product Owner before any migration was written, per the project rule requiring schema sign-off. Sequence numbers 0035 and 0036 allocated from latest main, with the collision risk disclosed beforehand: the unmerged customer-management branch already claims both, so whichever merges second must renumber. Verification: migrate.test.js 7/7; npm run lint exit 0. The 'migrations.integration.test.js 14/14' originally cited here is Item-side pre-existing coverage and is NOT probative for 0035/0036, as REV-013 MEDIUM-2 found; the probative coverage is server/test/integration/supplierCoreMigrations.integration.test.js plus server/test/supplierActivationRequestSchema.test.js, both added afterwards. Real-MySQL manual checks, all passing: the settings singleton is seeded id=1 with require_activation_approval 0 and version 1; a second pending activation request for the same supplier is rejected by the database with ER_DUP_ENTRY while two non-pending rows for that supplier are accepted, proving the pending_slot generated-column emulation of a partial unique index; no table matching %bank% exists. Convergence: a clean rerun of the runner recorded both as already applied and did not re-enter up() — that is the migration ledger, not idempotency of up() itself, which is now covered directly by supplierCoreMigrations.integration.test.js calling up() twice; a half-applied case with the table present but the singleton row deleted re-seeded exactly one row at version 1 with approval still OFF; a further rerun neither duplicated the row nor bumped its version. CORRECTED by REV-014 M-3: this originally claimed the manual-check rows were deleted and the table empty. It was false — supplier 603 MIG-8cbabc31 and two activation rows survived a verification run whose connection closed before its cleanup hook, and were only removed after the reviewer found them. The table is empty as of 2026-09-16T09:44:41+00:00. supplier_id is RESTRICT rather than CASCADE by design, so approval history counts as a reference and a Supplier that has ever been submitted cannot be hard-deleted.",
       "actor": "Claude Opus 5 via node:test and mysql2",
       "observed_at": "2026-09-16T08:50:12Z"
     },
@@ -1239,6 +1251,17 @@
       "source_ref": "HIGH-2: deleteSupplier maps ER_ROW_IS_REFERENCED/_2 to SUPPLIER_REFERENCED. Discrimination proven — disabling the mapping with the test untouched turns the new case RED, 9 pass 1 fail. MEDIUM-1: inspectSupplierActivationRequestSchema now asserts pending_slot carries EXTRA LIKE '%GENERATED%' and that uq_supplier_activation_pending is NON_UNIQUE=0 over exactly (supplier_id, pending_slot). These assertions pass against the real DDL but were NOT mutation-proven; doing so would require altering the erp_dev schema. MEDIUM-2: coverage was added to server/test/integration/supplierCoreMigrations.integration.test.js, the Supplier module's actual migration integration file, rather than the Item-side migrations.integration.test.js named in TASK-025. It calls up() on 0035 and 0036 twice, and against real MySQL proves a second pending request for the same supplier is rejected with ER_DUP_ENTRY, that approving the first frees the slot so the next pending insert succeeds, that deleting the supplier while a request exists raises ER_ROW_IS_REFERENCED_2, and that a settings rerun neither duplicates the singleton nor resets an operator's value. Run twice consecutively: 3 pass 0 fail both times, with supplier_settings restored to its prior value each time. MEDIUM-3: LIFECYCLE_COMMANDS is deep-frozen. LOW-1: the slot guard's dependence on the exact lowercase 'pending' literal under ascii_bin is documented at the definition. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 163 pass 0 fail 0 skipped with DB_INTEGRATION_TESTS=1 against erp_dev; supplier-phase-001-client 40 pass 0 fail. Whole server suite: 1354 pass 0 fail 255 skipped.",
       "actor": "Claude Opus 5",
       "observed_at": "2026-09-16T09:33:34+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-014 remediated: shared-singleton window closed, generated-column predicate checked and mutation-proven, leaked erp_dev rows removed, over-broad DEF-011 claim narrowed",
+      "code_commit": "a089ddf2bd61ea53be3635e443b82eb641c115dd",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "b09758b92a717ea7ead05464ed712920d016477684f4f5b8e73bcb2d80777175",
+      "status": "PASS",
+      "source_ref": "M-1: the reviewer injected a bespoke submitSupplier doing its own SELECT FOR UPDATE, UPDATE and audit.record without touching #changeStatus, and with the test file byte-identical the suite stayed 10 pass 0 fail. The 'impossible by construction' claim was therefore broader than the code delivers. DEF-011's closure text is narrowed to transitions routed through #changeStatus and DEF-016 now carries the residual. M-2: the 0036 test's delete-and-reseed of the supplier_settings singleton now runs inside a transaction rolled back in a finally, so the parallel test-file window cannot observe it; TASK-026 is the Settings backend and would have turned this into the recorded TC-001 shape. M-3: supplier 603 MIG-8cbabc31 and its two activation rows, leaked by an earlier verification run whose connection closed before its cleanup hook, are deleted; supplier_activation_requests now holds 0 rows, no MIG-% supplier remains, and supplier_settings id=1 is require_activation_approval 0 version 1. The reviewer separately established the COMMITTED test's cleanup is correct by injecting a failing assertion before the insert and confirming the after-hook still removed its supplier. L-4: the inspection now checks GENERATION_EXPRESSION, not only EXTRA. MySQL stores that text with backslash-escaped quotes, which the first attempt missed and the real schema rejected, so normalization was added. MEDIUM-1 is now mutation-proven WITHOUT altering erp_dev: server/test/supplierActivationRequestSchema.test.js drives the inspection with a fake connection, and neutering the three property conditions turns exactly the four property cases red while the two accept cases stay green. Nit deliberately not fixed, reason recorded in 10_rev_014_independent_review.md. The reviewer also verified in production what the author had only mocked: the real deleteSupplier path through createApplication against erp_dev raises MySqlDatabaseOperationError with cause.code ER_ROW_IS_REFERENCED_2, so the HIGH-2 mapping resolves through exactly one level of wrapping. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 169 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T09:44:41+00:00"
     }
   ],
   "pending_decisions": [
@@ -1945,17 +1968,19 @@
     },
     {
       "id": "DEF-011",
-      "severity": "LOW",
+      "severity": "MEDIUM",
       "status": "CLOSED",
       "source_ids": [
         "REV-007",
         "REV-013",
+        "REV-014",
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
       "closure_evidence": [
-        "server/src/modules/supplier/SupplierAdminService.js##changeStatus takes a LIFECYCLE_COMMANDS key",
+        "server/src/modules/supplier/SupplierAdminService.js##changeStatus takes a LIFECYCLE_COMMANDS key, so a transition ROUTED THROUGH IT cannot escape LIFECYCLE_ACTIONS",
         "server/test/supplierLifecycleService.test.js#every-registered-lifecycle-command-covered",
-        "docs/supplier_management/implementation/09_rev_013_independent_review.md#discrimination-proof"
+        "docs/supplier_management/implementation/10_rev_014_independent_review.md#what-the-reviewer-verified-independently",
+        "Bounded claim: transitions that BYPASS #changeStatus are covered by neither the registry nor the test. That residual is DEF-016, not part of this closure."
       ],
       "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
@@ -2009,7 +2034,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-016",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-014",
+        "server/src/modules/supplier/SupplierAdminService.js#changeStatus",
+        "TASK-026",
+        "TASK-038"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "All REV-013 findings are remediated on commit ff2bd7e and DEF-011 is re-closed, this time on evidence produced with the test file untouched. Next: push, ask the reviewer to verify the remediation, and confirm CI green on the exact final head before any merge decision. Then TASK-026, the Supplier Settings backend. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so whichever merges second must renumber; DEF-013 stays OPEN for TASK-038 and registering real reference checkers remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "REV-014 findings are remediated on commit a089ddf. DEF-011 stays CLOSED but on a narrowed, bounded claim; DEF-016 is OPEN for the residual, a transition that bypasses #changeStatus is covered by neither the registry nor the test, which matters directly to TASK-026 and TASK-038. Next: push, confirm CI green on the exact final head, and ask the reviewer to verify this remediation before any merge decision. No REV has yet returned APPROVED on this branch. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so whichever merges second must renumber; DEF-013 stays OPEN for TASK-038 and registering real reference checkers remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
