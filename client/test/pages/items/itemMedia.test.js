@@ -195,7 +195,7 @@ describe("ItemMediaPanel.vue", () => {
     expect(wrapper.emitted("refresh")).toHaveLength(1);
   });
 
-  it("delete unlink 失敗（後端仍然 200，但屬於已知失敗場景）一樣顯示可理解錯誤", async () => {
+  it("TC-011 delete unlink 失敗（後端仍然 200，但屬於已知失敗場景）一樣顯示可理解錯誤", async () => {
     promptPassword.mockResolvedValue({ reason: "唔要喇", password: "pw123" });
     itemMediaService.deleteMedia.mockRejectedValue(new Error("找不到這個檔案"));
     const wrapper = mountPanel({ mediaList: [ATTACHMENT_MEDIA] });

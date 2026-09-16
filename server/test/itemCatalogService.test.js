@@ -675,6 +675,39 @@ test("deleteBrand removes the row and records the reason; a stale version leaves
   assert.equal(database.state.brands.has(1), false);
 });
 
+test("deleteBrand maps a wrapped MySQL FK reference failure to CATALOG_IN_USE without audit", async () => {
+  const base = createFakeItemCatalogDatabase({ brands: [brand({ id: 1, name: "Brand A" })] });
+  const database = {
+    ...base,
+    withTransaction: async (work) =>
+      work({
+        query: base.query,
+        execute: async (sql, params) => {
+          if (sql.includes("DELETE FROM item_brands")) {
+            const error = new Error("Database query failed");
+            error.cause = Object.assign(new Error("foreign key constraint fails"), {
+              code: "ER_ROW_IS_REFERENCED_2"
+            });
+            throw error;
+          }
+          return base.execute(sql, params);
+        }
+      })
+  };
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.deleteBrand({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "建立錯誤" }),
+    (error) => {
+      assert.equal(error.code, "CATALOG_IN_USE");
+      assert.deepEqual(error.details, { referenceTypes: ["items"] });
+      return true;
+    }
+  );
+  assert.equal(base.state.brands.has(1), true);
+  assert.equal(base.state.auditRows.length, 0);
+});
+
 test("brand operations on an unknown id raise BRAND_NOT_FOUND", async () => {
   const database = createFakeItemCatalogDatabase();
   const { service } = createService({ database });
@@ -776,6 +809,92 @@ test("uom status transitions and controlled delete behave like category/brand", 
   const deleted = await service.deleteUom({ ...ADMIN_ACTOR, id: 1, version: 3, reason: "建立錯誤" });
   assert.equal(deleted.id, 1);
   assert.equal(database.state.uoms.has(1), false);
+});
+
+test("deleteUom maps a MySQL FK reference failure to CATALOG_IN_USE without audit", async () => {
+  const base = createFakeItemCatalogDatabase({
+    uoms: [uom({ id: 1, code: "EA", name: "Each", status: "inactive" })]
+  });
+  const database = {
+    ...base,
+    withTransaction: async (work) =>
+      work({
+        query: async (sql, params) => {
+          if (sql.includes("FROM item_sku_uoms")) {
+            return [[]];
+          }
+          if (sql.includes("FROM item_skus")) {
+            return [[{ id: 10 }]];
+          }
+          if (sql.includes("FROM item_attribute_definitions")) {
+            return [[{ id: 20 }]];
+          }
+          return base.query(sql, params);
+        },
+        execute: async (sql, params) => {
+          if (sql.includes("DELETE FROM item_uoms")) {
+            throw Object.assign(new Error("foreign key constraint fails"), {
+              code: "ER_ROW_IS_REFERENCED_2"
+            });
+          }
+          return base.execute(sql, params);
+        }
+      })
+  };
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.deleteUom({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "建立錯誤" }),
+    (error) => {
+      assert.equal(error.code, "CATALOG_IN_USE");
+      assert.deepEqual(error.details, { referenceTypes: ["sku_measurements", "attributes"] });
+      return true;
+    }
+  );
+  assert.equal(base.state.uoms.has(1), true);
+  assert.equal(base.state.auditRows.length, 0);
+});
+
+test("deleteUom reports an unknown reference when the raced dependency is already gone", async () => {
+  const base = createFakeItemCatalogDatabase({
+    uoms: [uom({ id: 1, code: "EA", name: "Each", status: "inactive" })]
+  });
+  const database = {
+    ...base,
+    withTransaction: async (work) =>
+      work({
+        query: async (sql, params) => {
+          if (
+            sql.includes("FROM item_sku_uoms") ||
+            sql.includes("FROM item_skus") ||
+            sql.includes("FROM item_attribute_definitions")
+          ) {
+            return [[]];
+          }
+          return base.query(sql, params);
+        },
+        execute: async (sql, params) => {
+          if (sql.includes("DELETE FROM item_uoms")) {
+            throw Object.assign(new Error("foreign key constraint fails"), {
+              code: "ER_ROW_IS_REFERENCED_2"
+            });
+          }
+          return base.execute(sql, params);
+        }
+      })
+  };
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    service.deleteUom({ ...ADMIN_ACTOR, id: 1, version: 1, reason: "建立錯誤" }),
+    (error) => {
+      assert.equal(error.code, "CATALOG_IN_USE");
+      assert.deepEqual(error.details, { referenceTypes: ["unknown"] });
+      return true;
+    }
+  );
+  assert.equal(base.state.uoms.has(1), true);
+  assert.equal(base.state.auditRows.length, 0);
 });
 
 // --- Attribute ---------------------------------------------------------------
@@ -1171,6 +1290,16 @@ test("assignAttributes atomically overwrites the mapping (add/update/remove) and
   );
   assert.equal(result.assignments.find((a) => a.attributeId === 1).requiredForActivation, true);
   assert.equal(database.state.auditRows.at(-1)[3], "category.attributes.assign");
+  assert.deepEqual(JSON.parse(database.state.auditRows.at(-1)[8]), {
+    added: [{ attributeId: 2, requiredForActivation: false, sortOrder: 1 }],
+    removed: [],
+    updated: [
+      {
+        before: { attributeId: 1, requiredForActivation: false, sortOrder: 0 },
+        after: { attributeId: 1, requiredForActivation: true, sortOrder: 0 }
+      }
+    ]
+  });
 });
 
 test("assignAttributes rejects a stale expectedAttributeIds without writing", async () => {

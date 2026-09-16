@@ -85,7 +85,7 @@ test("the job submits itself with cluster scope, since the media volume is share
   assert.equal(typeof job[declared.method], "function");
 });
 
-test("the job is discovered by the ordinary service mechanism", async () => {
+test("ItemMediaCleanupJob is discovered by the ordinary service mechanism", async () => {
   const { discoverServiceDefinitions } = await import("../src/framework/services/serviceDiscovery.js");
   const definitions = await discoverServiceDefinitions();
   const found = definitions.find(({ name }) => name === "job.itemMediaCleanup");

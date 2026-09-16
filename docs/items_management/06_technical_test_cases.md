@@ -37,8 +37,15 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 ## Evidence interpretation
 
 - The legacy Round 1 record is developer self-test/CI evidence for an earlier commit. It remains valuable provenance but is not an observed result of this independent review.
-- Current implementation findings are classified as static-review findings until the corresponding `TC-*` is executed.
+- TASK-041 developer evidence on 2026-09-14: shared SKU validation checks passed; 21 true-MySQL import integration cases passed, including create/update audit and reason propagation, audit/commit rollback, post-confirm permission revocation, expired-lease recovery and a two-owner stale-worker fencing race; the full server regression passed 1,447/1,448 with one explicit performance-suite skip; the bounded 10,000-row run completed preflight plus execution in 7.096 seconds with lookup p95 0.5 ms. These are developer checks, not formal `TC-015` acceptance, so the canonical status remains `PLANNED`.
+- Current implementation findings without an observed developer run remain classified as static-review findings until the corresponding `TC-*` is executed.
 - Formal Technical Acceptance, including true-browser and DR execution, requires a later `TEST_AND_VERIFY` authorization.
+
+## Canonical automation mapping added during remediation
+
+The 2026-09-15 `REMEDIATE_AND_RETEST` cycle attaches canonical IDs to existing meaningful assertions instead of adding no-op marker tests. `TC-001`–`TC-010` and `TC-013`–`TC-015` are emitted by the corresponding server migration/read/create/concurrency/lifecycle/lookup/price/media/import/authorization/projection/catalog/transaction cases; `TC-011` is emitted by seven client behavior tests; `TC-012` is emitted by the real performance parent and its three workload checks. The Item server command is serialized and explicitly module-scoped because the approved local MySQL is shared with independently moving modules.
+
+These mapping and runner changes alter the PLAN baseline. Their local developer evidence is recorded under `testing/evidence/remediation-*.xml`; formal status remains `PLANNED` until independent review, explicit baseline approval and Harness execution.
 
 ---
 
@@ -106,7 +113,7 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 | --- | --- |
 | U-VIEW | Active user，只持有 item.view |
 | U-MGMT | Active user，同時持有 item.view＋item.mgmt |
-| U-MGMT-ONLY | Active user，只持有 item.mgmt，用於證明沒有隱含 permission inheritance |
+| U-MGMT-ONLY | Active user，只持有 item.mgmt，用於驗證完整 Item Management API 讀寫權限 |
 | U-DOWN-P／U-DOWN-S／U-DOWN-I | 分別只持有採購、銷售、庫存流程權限的下游 user |
 | U-RECV-O | 只在 Receiving contract fixture 中持有 receiving.override_shelf_life |
 | U-NONE／U-DISABLED | 無 Item 權限的 Active user／已停用 user |
@@ -288,7 +295,7 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 | MEDIA-006 | P0 | DB／檔案雙資源失敗一致性 | Failure/Integration | 可注入DB insert/commit、file move、unlink失敗 | 合法image | upload/delete各失敗點 | upload失敗不留孤兒或metadata；delete先commit DB/audit再unlink；unlink失敗有結構化告警供cleanup重試 | errors、transaction/file inventory、logs | — | NOT RUN |
 | MEDIA-007 | P0 | Download response安全 | API/Security | U-VIEW；合法image/PDF | originalName含CRLF/Unicode；Content-Type | GET download | image受控inline、PDF一律attachment；filename安全編碼；nosniff；不回stored path；內容hash一致 | headers、hash、response scan | — | NOT RUN |
 | MEDIA-008 | P1 | Media metadata update | API/DB | U-MGMT；既有media | display name、sort、primary；企圖改path/hash/MIME | POST update | 只允許三類mutable欄；內部欄拒絕；version/ownership/audit正確 | responses、DB/audit diff | — | NOT RUN |
-| MEDIA-009 | P0 | SEC-001～002；Media授權 | API/Auth | U-VIEW/U-MGMT/U-MGMT-ONLY/U-NONE | download/upload/update/delete | 權限矩陣呼叫 | view可download；mgmt+view可寫；mgmt-only不可誤讀；delete需jwt-password；拒絕無副作用 | responses、auth metadata、DB/file diff | — | NOT RUN |
+| MEDIA-009 | P0 | SEC-001～002；Media授權 | API/Auth | U-VIEW/U-MGMT/U-MGMT-ONLY/U-NONE | download/upload/update/delete | 權限矩陣呼叫 | view可download；mgmt 或 mgmt-only可完整讀寫；delete需jwt-password；拒絕無副作用 | responses、auth metadata、DB/file diff | — | NOT RUN |
 | MEDIA-010 | P1 | Media cleanup grace | Job/File | referenced、recent orphan、old orphan | root外檔、symlink、grace前後 | 執行cleanup及重跑 | referenced/recent/root外/symlink保留；只刪過grace的root內orphan；重跑冪等；失敗有log | inventory、job logs/metrics | — | NOT RUN |
 | MEDIA-011 | P0 | FR-AUDIT-004；Media audit原子性 | Failure/Transaction | 注入audit失敗 | upload/update/delete | 各操作 | metadata寫入與audit一致；audit失敗不回成功；delete不先刪實體檔造成不可恢復 | response、transaction、DB/file/audit | — | NOT RUN |
 | MEDIA-012 | P0 | SEC-005；不得外洩未定義敏感欄 | API/Export | media與SKU fixtures | stored path/hash、未來cost/supplier欄 | 掃list/detail/download/export/audit/log | 白名單projection不含stored path、內部hash、cost或supplier terms；log不含檔案內容 | response/CSV/log scans | — | NOT RUN |
@@ -327,7 +334,7 @@ All canonical requirement IDs are covered above or by the retained detailed cata
 | AUD-006 | P1 | NFR-005(A)；每日變更audit完整 | Performance/DB | 1,000次混合Item/SKU/Catalog write workload | create/update/status比率 | 執行一日代表負載並對帳 | 每個成功state change均有對應audit；失敗沒有success audit；count/target/requestId可完整對帳 | workload、reconciliation SQL/report | — | NOT RUN |
 | AUTH-001 | P0 | SEC-001 | API/UI | 未登入/session過期 | 所有route family樣本 | 直接URL與API呼叫 | API 401；頁面導登入/403依既有慣例；不回任何商品資料、不產生副作用 | responses、routes、DB/file diff | — | NOT RUN |
 | AUTH-002 | P0 | SEC-002、AC-019、AC-028 | API/UI | U-VIEW | list/detail/media/audit及全部write family | 權限矩陣呼叫 | 所有指定read成功；所有create/update/status/delete/import write 403且無資料變更 | matrix responses、DB/audit/file diff | — | NOT RUN |
-| AUTH-003 | P0 | SEC-002；無permission inheritance | API/UI | U-MGMT-ONLY | 所有read/write樣本 | 呼叫及直接URL | 因缺item.view，GET與detail頁均拒絕；write是否允許依明確item.mgmt policy，但不得順帶獲得read | responses、route guard、policy metadata | — | NOT RUN |
+| AUTH-003 | P0 | SEC-002、DEC-025；管理者完整 API 權限 | API/UI | U-MGMT-ONLY | 所有read/write樣本 | 呼叫及直接URL | Item、SKU、Catalog、Media、Audit 的 GET/detail 頁與 write 均成功；無 Item 權限者仍拒絕 | responses、route guard、policy metadata | — | NOT RUN |
 | AUTH-004 | P0 | SEC-003 | Integration/Security | U-DOWN-P/S/I | Lookup及管理API | 從獲授權下游流程查SKU，再直接呼叫管理端點 | Lookup只回用途最小projection；管理API/頁拒絕；不可改主資料或查audit/media | responses、projection scan、DB | — | NOT RUN |
 | AUTH-005 | P0 | SEC-004 | API/Security | UI隱藏按鈕；U-NONE/U-VIEW | 手工HTTP write | 直接呼叫所有write route classes | 後端逐支驗證permission/authType；全部拒絕且無副作用 | route inventory、responses、DB/audit | — | NOT RUN |
 | AUTH-006 | P0 | SEC-006；高風險認證矩陣 | API/Auth | U-MGMT；DEV-OK/BAD | delete/status/code-change/barcode-release/import-confirm/bulk | 缺/錯password、device、signature、reason及合法組合 | delete/discontinue/archive/restore/import confirm/bulk需jwt-password；code/release需jwt-device-password；合法才進service | handler metadata、auth responses/logs | — | NOT RUN |
@@ -748,7 +755,17 @@ job/item/SKU/audit before/after and transaction logs; cleanup
 approved staging-like environment, backups, media/import storage and timestamped writes
 
 ### Steps
-Execute the detailed source cases referenced by the `TC-016` row using the declared suite and controlled failure/negative paths; record request, persisted state, audit and browser evidence where applicable.
+1. Before restore, create a version-1 recovery manifest that binds the approved environment ID and recovery-point ID to the database backup ID, media snapshot ID, import snapshot ID, expected counts for all 16 Item tables, one known SKU/audit pair, and at least one database-linked media file and import file (stored filename, byte count and SHA-256). An independent backup/recovery system signs the exact manifest bytes with Ed25519; its public key, environment ID and restored-schema prefix must already be approved in `server/config/itemRecoveryTrustPolicy.json` on the candidate baseline.
+2. Restore the database, media root and import root to an isolated schema/volumes. Do not point the adapter at `erp_dev`, a production schema or a system schema.
+3. Export the manifest and detached-signature paths, approved environment ID, the four matching recovery identifiers, absolute restored roots and `ITEM_RECOVERY_CONFIRM=VERIFY_RESTORED_COPY`; execute the declared `item-recovery` suite.
+4. Preserve the adapter summary, Harness report, external backup/restore timestamps and operator evidence. The adapter uses a consistent read-only transaction and must not orchestrate or repair the restore.
+
+The executable manifest file entries are:
+
+- media: `{ "area": "media", "recordId": <item_media.id>, "path": "<stored_name>", "bytes": <byte_size>, "sha256": "<sha256>" }`;
+- import source/result: `{ "area": "import", "recordId": <item_import_jobs.id>, "fileKind": "source|result", "path": "<stored_name>", "bytes": <size>, "sha256": "<sha256>" }`.
+
+The adapter verifies the detached signature against the repository trust anchor, approved environment/schema identity, exact table counts, orphan/linkage checks, `ItemLookupService` SKU smoke, audit linkage, DB-to-volume filenames, sizes/hashes, RTO <= 4h and RPO <= 15m. An unprovisioned trust policy produces TC-016 `NOT_RUN`; invalid signatures, missing inputs, identifier mismatches, unsafe paths, unapproved schemas or failed checks produce `FAIL`.
 
 ### Expected result
 restore returns usable service in <=4h and no more than 15 minutes of committed data is lost; integrity/reconciliation passes
@@ -757,4 +774,4 @@ restore returns usable service in <=4h and no more than 15 minutes of committed 
 Every required source case passes with the expected observable and persisted result; missing tools, skipped mandatory cases, stale reports or baseline drift block acceptance.
 
 ### Cleanup
-timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove exercise data
+timed runbook, backup IDs, RPO calculation, smoke/reconciliation; securely remove the isolated restored schema, restored volumes and manifest according to the approved exercise plan. Never remove the source backup or production data as adapter cleanup.

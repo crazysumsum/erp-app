@@ -185,7 +185,7 @@ test("findByCode：搵唔到就回 null", { skip }, async (t) => {
   assert.equal(result, null);
 });
 
-test("findByBarcode：真 JOIN 去 item_sku_barcodes，搵到啱嘅 SKU", { skip }, async (t) => {
+test("TC-006 findByBarcode：真 JOIN 去 item_sku_barcodes，搵到啱嘅 SKU", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const catalog = await seedCatalog(db);

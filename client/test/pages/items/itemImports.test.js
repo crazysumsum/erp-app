@@ -198,7 +198,7 @@ describe("pages/items/ItemImportsPage.vue", () => {
     expect(itemImportService.listJobs).toHaveBeenCalledTimes(2);
   });
 
-  it("上傳失敗顯示後端訊息，唔會靜靜哋失敗", async () => {
+  it("TC-011 上傳失敗顯示後端訊息，唔會靜靜哋失敗", async () => {
     itemImportService.uploadJob.mockRejectedValue(new Error("找不到這個匯入工作"));
     const { wrapper, body } = await mountImportsPage();
 

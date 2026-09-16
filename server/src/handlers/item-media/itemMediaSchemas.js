@@ -16,7 +16,7 @@ import { MEDIA_KINDS } from "../../modules/item/itemConstants.js";
 export const ITEM_VIEW_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
-    options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+    options: Object.freeze({ permissions: Object.freeze(["item.view", "item.mgmt"]), match: "any" })
   })
 ]);
 

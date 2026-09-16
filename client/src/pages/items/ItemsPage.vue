@@ -3,7 +3,7 @@ export const page = {
   name: "items",
   path: "/items",
   title: "商品與 SKU",
-  requires: { permissions: ["item.view"] },
+  requires: { permissions: ["item.view", "item.mgmt"], match: "any" },
   menu: { group: "items", icon: "inventory_2", order: 10 }
 };
 </script>

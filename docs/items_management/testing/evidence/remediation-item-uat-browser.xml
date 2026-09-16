@@ -1,0 +1,37 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "remediation-item-uat-artifact-correction",
+  "suite_id": "manual-remediation-artifact-correction",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+  "source_fingerprint": "327c9b77536f33375ef525b6375f43eb21dd598886378c0ef6aac8a64d3632bb",
+  "code_commit": "5c0f16a7794dacdee814eb5d006a2df3a0b090d4",
+  "started_at": "2026-09-15T09:47:47Z",
+  "ended_at": "2026-09-15T09:47:47Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": ["historical-manual-run", "not-gate-evidence"],
+  "cwd": ".",
+  "command_contract_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "exit_code": null,
+  "timed_out": false,
+  "counts": {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "not_run": 0},
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "testing/evidence/remediation-item-uat-browser.junit.xml",
+      "sha256": "e1a2360106884c33de17f20f4b8e6ed021c06b6e23a1e0117bb4a2496fc4a3fc",
+      "bytes": 3775
+    }
+  ],
+  "tools": [],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Correction marker: this path was mistakenly registered as Harness evidence while it contained raw JUnit XML.",
+    "The preserved JUnit artifact is developer remediation output only and does not satisfy a formal Harness gate."
+  ]
+}

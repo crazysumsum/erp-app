@@ -16,6 +16,7 @@ import {
 } from "../../modules/item/itemConstants.js";
 import { decimalStringPattern } from "../../modules/item/itemValidation.js";
 import { MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
+import { VARIANT_VALUE_PROJECTION_SCHEMA } from "../items/itemAttributeResponseSchemas.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -26,7 +27,7 @@ export const EMPTY_OBJECT_SCHEMA = Object.freeze({
 export const ITEM_VIEW_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
-    options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+    options: Object.freeze({ permissions: Object.freeze(["item.view", "item.mgmt"]), match: "any" })
   })
 ]);
 
@@ -225,9 +226,7 @@ export const SKU_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     skuName: { type: "string" },
     item: SKU_DETAIL_ITEM_SCHEMA,
     variantSignature: { type: ["string", "null"] },
-    // SKU attribute values：item_sku_attribute_values 表要等 T23 先建立，
-    // 現在固定回空陣列。
-    variantValues: { type: "array", items: {}, maxItems: 0 },
+    variantValues: { type: "array", items: VARIANT_VALUE_PROJECTION_SCHEMA },
     netContent: { type: ["string", "null"] },
     netContentUomId: { type: ["integer", "null"] },
     weight: { type: ["string", "null"] },
@@ -301,6 +300,72 @@ const SKU_UPDATE_BARCODE_SCHEMA = Object.freeze({
   }
 });
 
+// --- POST /api/v1/skus/create ---------------------------------------------
+//
+// 新增 SKU 與 Item 初建內的 SKU 使用相同欄位語意，但此 route 的 body 是
+// 頂層 SKU 欄位加 `itemId`（跟 SKU update 一致），不另包一層 `sku`。
+
+const SKU_CREATE_UOM_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["uomId", "toBaseFactor"],
+  additionalProperties: false,
+  properties: {
+    uomId: { type: "integer", minimum: 1 },
+    toBaseFactor: { type: "integer", minimum: UOM_FACTOR_MIN, maximum: UOM_FACTOR_MAX },
+    isBase: { type: "boolean", default: false },
+    isDefaultPurchase: { type: "boolean", default: false },
+    isDefaultSale: { type: "boolean", default: false }
+  }
+});
+
+const SKU_CREATE_BARCODE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["barcode", "barcodeType", "uomId"],
+  additionalProperties: false,
+  properties: {
+    barcode: { type: "string", minLength: 1, maxLength: 190 },
+    barcodeType: { type: "string", enum: [...BARCODE_TYPES] },
+    uomId: { type: "integer", minimum: 1 },
+    isPrimary: { type: "boolean", default: false }
+  }
+});
+
+const SKU_CREATE_VARIANT_VALUE_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["attributeId", "optionId"],
+  additionalProperties: false,
+  properties: {
+    attributeId: { type: "integer", minimum: 1 },
+    optionId: { type: "integer", minimum: 1 }
+  }
+});
+
+export const SKU_CREATE_REQUEST_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["itemId", "skuCode", "skuName"],
+  additionalProperties: false,
+  properties: {
+    itemId: { type: "integer", minimum: 1 },
+    // Code 的 trim／控制字元／長度規則由 ItemAdminService 集中處理，確保
+    // 所有建 SKU 路徑都回同一個 SKU_CODE_INVALID 合約。
+    skuCode: { type: "string" },
+    skuName: { type: "string", minLength: 1, maxLength: 190, pattern: ".*\\S.*" },
+    trackingPolicy: { type: "string", enum: [...TRACKING_POLICIES] },
+    shelfLifeDays: { type: "integer", minimum: 1 },
+    minReceiptLifeDays: { type: "integer", minimum: 0 },
+    minSaleLifeDays: { type: "integer", minimum: 0 },
+    purchasable: { type: "boolean", default: true },
+    sellable: { type: "boolean", default: true },
+    inventoryTracked: { type: "boolean", default: true },
+    suggestedPriceAmount: MONEY_STRING_SCHEMA,
+    effectiveFrom: { type: "integer", minimum: 0 },
+    effectiveTo: { type: "integer", minimum: 0 },
+    uoms: { type: "array", items: SKU_CREATE_UOM_SCHEMA, default: [] },
+    barcodes: { type: "array", items: SKU_CREATE_BARCODE_SCHEMA, default: [] },
+    variantValues: { type: "array", items: SKU_CREATE_VARIANT_VALUE_SCHEMA, default: [] }
+  }
+});
+
 export const SKU_UPDATE_REQUEST_SCHEMA = Object.freeze({
   type: "object",
   required: ["skuName", "version"],
@@ -368,7 +433,8 @@ export const SKU_CODE_CHANGE_REQUEST_SCHEMA = Object.freeze({
   required: ["skuCode", "reason", "version", "password"],
   additionalProperties: false,
   properties: {
-    skuCode: { type: "string", minLength: 1, maxLength: 190 },
+    // 同 create／copy 一樣交由 ItemAdminService 回傳 SKU_CODE_INVALID。
+    skuCode: { type: "string" },
     reason: REASON_SCHEMA,
     version: VERSION_SCHEMA,
     password: PASSWORD_SCHEMA

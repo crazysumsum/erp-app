@@ -7,17 +7,21 @@
 | GAP-RQ-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: duplicate NFR crosswalk |
 | GAP-RQ-002 | HIGH | REQUIREMENT_GAP | RESOLVED by user: measurable RTO/RPO |
 | GAP-DES-001 | MEDIUM | DOCUMENTATION_GAP | RESOLVED: canonical `DES-*` index |
-| GAP-IMP-001 | HIGH | IMPLEMENTATION_GAP | OPEN: Attribute/Variant values unreadable |
-| GAP-IMP-002 | HIGH | IMPLEMENTATION_GAP | OPEN: retained standalone add-SKU flow pending TASK-038 |
-| GAP-IMP-003 | HIGH | IMPLEMENTATION_GAP | OPEN: user-facing audit history absent |
-| GAP-IMP-004 | HIGH | LIKELY_DEFECT | OPEN: referenced Brand/UOM delete error mapping |
-| GAP-IMP-005 | HIGH | IMPLEMENTATION_GAP | OPEN: import bypasses aggregate transactional audit |
-| GAP-INT-001 | MEDIUM until dependency exists | DEFERRED_DEPENDENCY | OPEN: downstream reference guard |
-| GAP-TASK-001 | HIGH | STATUS_AMBIGUITY | OPEN: T23 index/detail conflict |
+| GAP-IMP-001 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-037 |
+| GAP-IMP-002 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-038 and UAT-004 developer retest |
+| GAP-IMP-003 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-039 |
+| GAP-IMP-004 | HIGH | LIKELY_DEFECT | RESOLVED by TASK-040 |
+| GAP-IMP-005 | HIGH | IMPLEMENTATION_GAP | RESOLVED by TASK-041 |
+| GAP-INT-001 | MEDIUM until dependency exists | DEFERRED_DEPENDENCY | OPEN: downstream reference guard / TASK-043 |
+| GAP-TASK-001 | HIGH | STATUS_AMBIGUITY | RESOLVED: maintainer-approved T23 index correction |
 | GAP-TASK-002 | HIGH | ACCEPTANCE_GAP | OPEN: staging and human sign-offs |
 | GAP-TC-001 | MEDIUM | EVIDENCE_CLASSIFICATION | RESOLVED in docs: developer versus independent evidence |
 | GAP-UAT-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: separate UAT specification |
 | GAP-TRC-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: canonical traceability matrix |
+| GAP-TC-002 | HIGH | IMPLEMENTATION_GAP | OPEN: recovery adapter/environment |
+| GAP-TC-003 | HIGH | IMPLEMENTATION_GAP | CLOSED: canonical IDs emitted and developer retest/regression passed |
+| GAP-UAT-002 | HIGH | IMPLEMENTATION_GAP | CLOSED: Playwright project executes; external-condition skips remain separately tracked |
+| GAP-REV-001 | HIGH | DOCUMENTATION_GAP | RESOLVED: separate-agent reviews recorded |
 
 ## Findings
 
@@ -55,7 +59,7 @@ No current production Purchasing/Inventory/Sales table has a true SKU FK; existi
 
 ### GAP-TASK-001 — T23 progress conflict
 
-The legacy task index leaves T23 unchecked, while the detailed T23/T24 records and merged code state that the work was completed. Alignment preserves both facts. Only a maintainer-approved historical reconciliation may change the checkbox.
+The frozen legacy task index left T23 unchecked, while the detailed T23/T24 records and merged code state that the work was completed. ERP Product Owner (Sam) approved the TASK-042 reconciliation on 2026-09-14. The canonical index is now checked and carries an explicit note linking implementation commit `21a8be0093d52faa19a1c0f061083046dea2a9f1`, merge commit `45d686ce94c74f08499c35e1e6c3cdc09714480a`, and T24 follow-up `b153efac5ad8c36acddaf85b98c82d6d1e4622f5`; the original source SHA and pre/post counts remain recorded. Status: `RESOLVED`.
 
 ### GAP-TASK-002 — Release checkpoint remains conditional
 
@@ -91,38 +95,38 @@ No product behavior was changed. Receiving overrides, real downstream reference 
 - Human clarification required: NO
 - Status: OPEN
 
-### GAP-TC-002 — Recovery acceptance command is not implemented
+### GAP-TC-002 — Recovery acceptance trust chain and formal execution are incomplete
 
 - Area: TECH_TEST
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: TC-016 requires timed DB/media/import restore and reconciliation; no `server/scripts/runItemRecoveryAcceptance.js` or equivalent adapter exists.
-- Impact: RTO/RPO cannot pass an executable Harness gate.
-- Proposed action: implement and review the isolated recovery adapter/runbook before `TEST_AND_VERIFY`; until then the suite is BLOCKED, never simulated.
+- Evidence: superseded again on 2026-09-15. `server/scripts/runItemRecoveryAcceptance.js` implements a fail-closed verification-only adapter. Under explicit Product Owner authorization, MySQL root provisioned an isolated staging-like source and restored target (`item_recovery_tc016_20260915_run1`) plus separate media/import roots without changing `erp_dev`; source/restore counts, smoke records and file hashes matched. The exact unsigned manifest is retained at `evidence/task-044-local-recovery/manifest.json` with SHA-256 `3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df`. The repo-bound trust policy remains deliberately `UNPROVISIONED`, and no independent Ed25519 signature or approved public key exists.
+- Impact: schema/storage provisioning is no longer the blocker, but RTO/RPO cannot receive formal PASS credit until the exact manifest is independently signed, the trust binding is approved on a new candidate, and the adapter is executed in `TEST_AND_VERIFY`.
+- Proposed action: obtain an independent detached Ed25519 signature and public key for the retained manifest, approve and commit the trust policy on a refreshed candidate, then execute the `item-recovery` suite and preserve formal evidence.
 - Human clarification required: YES for environment/operations authority
-- Status: OPEN
+- Status: PARTIALLY_REMEDIATED; SIGNING_AND_APPROVAL_BLOCKED
 
 ### GAP-TC-003 — Existing automated results do not emit canonical TC IDs
 
 - Area: TECH_TEST / EXECUTION CONTRACT
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: existing Node/Vitest JUnit cases use legacy or descriptive names rather than canonical `TC-001`–`TC-016`; the Harness adapter requires observable case IDs.
-- Impact: a green aggregate suite cannot establish mandatory per-TC coverage and must fail closed.
-- Proposed action: add reviewed reporter properties/name mapping or a trustworthy project adapter before formal execution; do not lower required case mappings.
+- Evidence: superseded on 2026-09-15. Meaningful server cases now emit `TC-001`–`TC-010` and `TC-013`–`TC-015`, seven client cases emit `TC-011`, and the real performance suite emits `TC-012`; see `testing/evidence/remediation-*.xml`.
+- Impact: local mapping is now complete for `TC-001`–`TC-015`; formal credit still fails closed until review, PLAN approval and Harness rerun.
+- Proposed action: complete independent review and formal retest without lowering required case mappings.
 - Human clarification required: NO
-- Status: OPEN
+- Status: CLOSED by developer retest and impact regression; formal acceptance rerun remains pending.
 
 ### GAP-UAT-002 — Project Playwright configuration is absent
 
 - Area: UAT
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: AGENTS.md mandates Playwright, but `client/e2e/item-management/playwright.config.js` and executable Item UAT tests do not exist.
-- Impact: UI/browser acceptance cannot be executed reproducibly; unit/component tests are insufficient.
-- Proposed action: add the planned Playwright suite under authorized implementation scope, then validate happy, negative, navigation, console and network behavior.
+- Evidence: superseded on 2026-09-15. The configured project executes 13 canonical IDs against live API/UI/MySQL; 11 pass and UAT-005/UAT-015 are explicit external-condition skips.
+- Impact: reproducible browser automation now exists; the two skipped cases and business acceptance still block UAT completion.
+- Proposed action: formally rerun after PLAN approval; retain TASK-043/real-reference and staging/sign-off blockers.
 - Human clarification required: NO
-- Status: OPEN
+- Status: CLOSED by developer browser retest and client regression; UAT-005/UAT-015 remain separately blocked.
 
 ### GAP-REV-001 — Independent review provenance is not observable
 

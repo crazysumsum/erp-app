@@ -117,6 +117,29 @@ describe("pages/items/SkuDetailPage.vue", () => {
     expect(body.findAll(".q-btn").some((btn) => btn.text() === "編輯")).toBe(false);
   });
 
+  it("顯示已保存的 SKU 變體值", async () => {
+    const { body } = await mountPage({
+      sku: {
+        ...SKU,
+        variantValues: [
+          {
+            attributeId: 103,
+            code: "COLOR",
+            name: "顏色",
+            dataType: "single_option",
+            value: "blue",
+            option: { id: 401, value: "blue", label: "藍" }
+          }
+        ]
+      }
+    });
+
+    const variants = body.find('[data-testid="attribute-value-list"]');
+    expect(variants.text()).toContain("變體規格");
+    expect(variants.text()).toContain("顏色");
+    expect(variants.text()).toContain("藍");
+  });
+
   it("SKU Code 就算撳咗「編輯」都仲係 readonly", async () => {
     const { body } = await mountPage();
 
