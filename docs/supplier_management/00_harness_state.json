@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 79,
+  "revision": 81,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
     "design": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
     "plan": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
     "code_commit": "681b3aed21480ceecd0c4bb5494c30a0de86b533",
-    "source_fingerprint": "a54d1623128b895330f686cd9406eea6755f82c1ea9e6442b220577b9ae33a4a",
+    "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-defect-001-002",
     "default_commit": "aa7d19276cb12c4375eecdf205b72051d7f03b65",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -51,7 +51,7 @@
     "TASK-021": "DONE",
     "TASK-022": "DONE",
     "TASK-023": "DONE",
-    "TASK-024": "IN_PROGRESS",
+    "TASK-024": "DONE",
     "TASK-025": "PENDING",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
@@ -466,6 +466,24 @@
         "DEF-008"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-013-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: 同意你的意見, accepting the stated recommendation to defer DEF-010 (bank completeness flag uses the opposite absent-key convention from its siblings) and DEF-011 (LIFECYCLE_ACTIONS is a hand-maintained duplicate with no structural link), both rated LOW by REV-007, with the DEF-011 invariant assert to be done as the first task of PHASE-002.",
+      "recorded_at": "2026-09-16T03:31:08Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "code_commit": "dc378090f694f1e5d2d1a7fe624eb3354ab8cd86",
+      "scope": [
+        "supplier-management",
+        "DEF-010",
+        "DEF-011"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -549,6 +567,18 @@
       "reviewed_baseline": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
       "source_ref": "docs/supplier_management/implementation/04_rev_007_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-008",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (DEF-001/DEF-002 remediation)",
+      "reviewer": "agent-skills:code-reviewer separate-agent instance (same instance as REV-007, resumed with its own context)",
+      "reviewed_baseline": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
+      "source_ref": "docs/supplier_management/implementation/05_rev_008_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -796,6 +826,28 @@
       "source_ref": "REV-007 demonstrated that the DEF-002 unit test could not detect the defect it was written for: its fake derives the filter from the implementation own bound params and never inspects the SQL, so a broken hybrid LIKE-OR-IN implementation passed 8/8. The author reproduced that experiment and confirmed it. supplierManagement.integration.test.js now inserts a supplier.contact.create audit row via pool.query between the activate and its replay. Discrimination proven by running both implementations: correct IN(...) gives integration 5/5 pass and unit 8/8 pass; the broken LIKE-OR-IN hybrid gives integration 1 FAILURE and unit 8/8 pass. The broken implementation was applied only transiently and restored with git checkout; grep confirms no LIKE remains. Full re-run after the change: npm run lint exit 0 and supplier-phase-001-server 159 testcases / 0 failures / 0 skipped. The remediation doc claim that the unit fake exercised the filtering was wrong and is corrected in 04_rev_007_independent_review.md.",
       "actor": "Claude Opus 5 via node:test",
       "observed_at": "2026-09-16T03:15:41Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "GitHub Actions CI on PR #106 head dc37809",
+      "code_commit": "dc378090f694f1e5d2d1a7fe624eb3354ab8cd86",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "a54d1623128b895330f686cd9406eea6755f82c1ea9e6442b220577b9ae33a4a",
+      "status": "PASS",
+      "source_ref": "gh run 35051145278 with headSha dc378090f694f1e5d2d1a7fe624eb3354ab8cd86: Lint, Build frontend, Dependency audit and Test (server + client, MySQL integration) all passed FIRST TIME with no re-run, 4/4. gh pr view 106 reports headRefOid dc37809 and mergeStateStatus CLEAN. Independently confirmed by the REV-008 reviewer. This supersedes reliance on the 235c202 run, whose test job needed a re-run after the unrelated Item Management flake recorded as DEF-012.",
+      "actor": "GitHub Actions, observed by Claude Opus 5 and by the REV-008 reviewer via gh",
+      "observed_at": "2026-09-16T03:34:08Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-008 independent re-verification: DEF-002 coverage discriminates a plain revert, and audit fixture corrected",
+      "code_commit": "dc378090f694f1e5d2d1a7fe624eb3354ab8cd86",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
+      "status": "PASS",
+      "source_ref": "The REV-008 reviewer executed the stricter discrimination test the author had not: a PLAIN revert to action LIKE 'supplier.%' (not only the contrived LIKE-OR-IN hybrid), against real MySQL erp_dev. HEAD gives 5/5 pass; the plain revert gives 1 failure with payload code STATUS_TRANSITION_INVALID, from 'active', to 'active', which can only be thrown from the current.status === targetStatus replay branch at SupplierAdminService.js:371. DEF-009 closed. Full supplier suite in the reviewer scratch copy: 105/105 pass, 0 failures, 0 skipped. The reviewer also confirmed the coverage cannot silently evaporate, since integrationTest degrades to test.skip without DB_INTEGRATION_TESTS=1 and the suite contract enforces max_skipped 0, and confirmed zero test-data residue in erp_dev after its failing run. One cosmetic fixture infidelity it raised as a nit was corrected afterwards: target_type changed from \"supplier_contact\" to \"contact\" to match SupplierContactService.js:133; the replay query filters on supplier_id and action only, so no outcome changed, and the integration file was re-run at 5/5 after the correction.",
+      "actor": "agent-skills:code-reviewer separate-agent instance, and Claude Opus 5 via node:test",
+      "observed_at": "2026-09-16T03:34:08Z"
     }
   ],
   "pending_decisions": [
@@ -972,8 +1024,8 @@
         "DEF-012",
         "PHASE-002"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: 同意你的意見 — accepting the recommendation: (a) ask the same reviewer to re-verify the candidate for an APPROVED review; (b) defer DEF-010 and DEF-011, with the DEF-011 invariant assert scheduled as the first task of PHASE-002; (c) route DEF-012 to a separate Item Management task."
     }
   ],
   "external_actions": [
@@ -1255,13 +1307,14 @@
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
     "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
     "docs/supplier_management/implementation/03_def_001_002_remediation.md",
-    "docs/supplier_management/implementation/04_rev_007_independent_review.md"
+    "docs/supplier_management/implementation/04_rev_007_independent_review.md",
+    "docs/supplier_management/implementation/05_rev_008_independent_review.md"
   ],
   "defects": [
     {
       "id": "DEF-001",
       "severity": "MEDIUM",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-024",
         "DES-014",
@@ -1270,14 +1323,15 @@
       ],
       "closure_evidence": [
         "docs/supplier_management/implementation/03_def_001_002_remediation.md",
-        "docs/supplier_management/implementation/04_rev_007_independent_review.md"
+        "docs/supplier_management/implementation/04_rev_007_independent_review.md",
+        "docs/supplier_management/implementation/05_rev_008_independent_review.md"
       ],
       "risk_approval_id": null
     },
     {
       "id": "DEF-002",
       "severity": "MEDIUM",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TASK-022",
         "TASK-024",
@@ -1286,7 +1340,8 @@
       ],
       "closure_evidence": [
         "docs/supplier_management/implementation/03_def_001_002_remediation.md",
-        "docs/supplier_management/implementation/04_rev_007_independent_review.md"
+        "docs/supplier_management/implementation/04_rev_007_independent_review.md",
+        "docs/supplier_management/implementation/05_rev_008_independent_review.md"
       ],
       "risk_approval_id": null
     },
@@ -1368,44 +1423,45 @@
     {
       "id": "DEF-009",
       "severity": "MEDIUM",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "REV-007",
         "server/test/supplierLifecycleService.test.js:19",
         "DEF-002"
       ],
       "closure_evidence": [
-        "docs/supplier_management/implementation/04_rev_007_independent_review.md"
+        "docs/supplier_management/implementation/04_rev_007_independent_review.md",
+        "docs/supplier_management/implementation/05_rev_008_independent_review.md"
       ],
       "risk_approval_id": null
     },
     {
       "id": "DEF-010",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-007",
         "server/src/modules/supplier/supplierValidation.js:68",
         "DEF-001"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-013-RISK"
     },
     {
       "id": "DEF-011",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "REV-007",
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-013-RISK"
     },
     {
       "id": "DEF-012",
       "severity": "MEDIUM",
-      "status": "OPEN",
+      "status": "DEFERRED",
       "source_ids": [
         "server/test/integration/itemCreate.integration.test.js:946",
         "server/src/services/idempotency/IdempotencyService.js:233"
@@ -1414,5 +1470,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DECISION_REQUIRED on HD-013. REV-007 is CHANGES_REQUESTED with 0 Critical / 0 High; its one MEDIUM (DEF-009) is fixed and the fix is proven to discriminate a broken implementation. DEF-010, DEF-011 and DEF-012 are OPEN and unfixed. PR #106 has green CI on 235c202 but the test-coverage commit is not yet pushed, so CI must run again on the new head. Checkpoint H and TASK-024 stay open until an APPROVED review bound to design baseline dcb74d3c exists. Do not merge PR #106 and do not start TASK-025."
+  "next_safe_action": "REV-008 is APPROVED and bound to design baseline dcb74d3c, with 0 Critical and 0 High. DEF-001, DEF-002 and DEF-009 are CLOSED. TASK-024 is DONE, completing PHASE-001 TASK-001..TASK-024, and Checkpoint H is satisfied. Next: push this state commit, confirm required CI is green on that final head, then obtain the user decision to merge PR #106. After merge, reconcile state to the integrated main, retire the worktree and branch, and only then enter PHASE-002 starting with TASK-025 — whose first item is the DEF-011 invariant assert, and whose migrations touch approval_required_paths and need explicit schema sign-off before any migration is written."
 }

@@ -302,7 +302,7 @@ integrationTest("Supplier lifecycle is atomic, idempotent at the target state an
   // rather than whatever params the implementation happens to bind.
   await pool.query(
     "INSERT INTO supplier_audit_logs (occurred_at, actor_user_id, actor_username, action, target_type, target_id, supplier_id, target_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [Date.now(), actorId, "integration", "supplier.contact.create", "supplier_contact", null, created.id, `LIFE-${suffix}`]
+    [Date.now(), actorId, "integration", "supplier.contact.create", "contact", null, created.id, `LIFE-${suffix}`]
   );
   const replay = await service.activateSupplier({ ...command, version: created.version });
   assert.equal(replay.version, active.version);
