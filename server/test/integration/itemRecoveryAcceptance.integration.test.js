@@ -26,17 +26,24 @@ function sha256(value) {
 
 test("TC-016 adapter verifies a separately restored schema through a read-only transaction", { skip }, async (t) => {
   const sourceSchema = process.env.DB_NAME;
-  const recoverySchema = `item_recovery_it_${randomUUID().replaceAll("-", "").slice(0, 12)}`;
-  const connectionOptions = {
+  const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
+  const recoverySchema = `item_recovery_it_${suffix}`;
+  const recoveryReader = `item_recovery_${suffix}`;
+  const recoveryPassword = randomUUID().replaceAll("-", "");
+  const githubActions = process.env.GITHUB_ACTIONS === "true";
+  const adminOptions = {
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD
+    user: process.env.DB_ADMIN_USER ?? (githubActions ? "root" : undefined),
+    password: process.env.DB_ADMIN_PASSWORD ?? (githubActions ? "root" : undefined)
   };
-  const admin = await mysql.createConnection({ ...connectionOptions, database: sourceSchema });
+  assert.ok(adminOptions.user, "DB_ADMIN_USER is required for recovery integration setup");
+  assert.ok(adminOptions.password, "DB_ADMIN_PASSWORD is required for recovery integration setup");
+  const admin = await mysql.createConnection({ ...adminOptions, database: sourceSchema });
   const root = await mkdtemp(path.join(os.tmpdir(), "item-recovery-integration-"));
   t.after(async () => {
     await admin.query(`DROP DATABASE IF EXISTS \`${recoverySchema}\``).catch(() => {});
+    await admin.query(`DROP USER IF EXISTS '${recoveryReader}'@'%'`).catch(() => {});
     await admin.end().catch(() => {});
     await rm(root, { recursive: true, force: true });
   });
@@ -46,6 +53,8 @@ test("TC-016 adapter verifies a separately restored schema through a read-only t
   for (const table of ITEM_RECOVERY_TABLES) {
     await admin.query(`CREATE TABLE \`${recoverySchema}\`.\`${table}\` LIKE \`${sourceSchema}\`.\`${table}\``);
   }
+  await admin.query(`CREATE USER '${recoveryReader}'@'%' IDENTIFIED BY '${recoveryPassword}'`);
+  await admin.query(`GRANT SELECT ON \`${recoverySchema}\`.* TO '${recoveryReader}'@'%'`);
 
   const now = Date.now();
   await admin.query(
@@ -138,7 +147,13 @@ test("TC-016 adapter verifies a separately restored schema through a read-only t
     ITEM_RECOVERY_IMPORT_ROOT: importRoot
   };
   const context = parseItemRecoveryContext({ env, manifest, trustPolicy, nowMs: now });
-  const recovered = await mysql.createConnection({ ...connectionOptions, database: recoverySchema });
+  const recovered = await mysql.createConnection({
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    user: recoveryReader,
+    password: recoveryPassword,
+    database: recoverySchema
+  });
   t.after(() => recovered.end().catch(() => {}));
   await recovered.query("SET SESSION TRANSACTION READ ONLY");
   await recovered.query("START TRANSACTION WITH CONSISTENT SNAPSHOT");
