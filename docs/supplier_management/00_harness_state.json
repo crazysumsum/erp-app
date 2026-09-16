@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 90,
+  "revision": 92,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "999118722ce252e797cfbf60abde1af9e7d32193",
+    "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
     "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bookkeeping",
     "default_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
@@ -806,6 +806,18 @@
       "open_critical": 0,
       "open_high": 1,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-012",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (evidence_files correction and .gitignore scope declaration)",
+      "reviewer": "agent-skills:code-reviewer (the REV-011 instance, resumed to verify its own HIGH-1 was resolved)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/08_rev_011_independent_review.md#high-1",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1149,6 +1161,28 @@
       "source_ref": "LOW-2: an earlier observation in this file stated that evidence_files had held SIX repo-relative paths. It held EIGHT. That earlier observation is superseded by this one rather than edited; the immediately following observation enumerated all eight correctly, so the ledger contradicted itself. LOW-1: the PR #108 body stated that every original record is retained and none is rewritten. That is true of approvals, reviews, pending_decisions and external_actions, all verified byte-equal by REV-011, but FALSE of defects: nine risk_approval_id values were rewritten to the APPROVAL-HD-017-* equivalents. state_tool.py:58-60 permits this, requiring only an ID superset rather than field immutability, and every superseded approval is retained — but the claim as written was wrong and the PR body is corrected.",
       "actor": "Claude Opus 5",
       "observed_at": "2026-09-16T08:07:34Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-012 supersedes REV-011 with open_high 0 after the reviewer verified its own HIGH-1 was resolved",
+      "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "REV-011 was recorded verbatim with open_high 1, which keeps the gate closed via harness_checks.py:279-280. The author declined two shortcuts: recording a RISK approval, which would have said the finding was accepted as an open risk when it had actually been fixed, and rewriting the reviewer count unilaterally. The REV-011 reviewer was asked to verify its own finding at commit 2d5a759 and to leave the count at 1 if anything remained understated. It confirmed resolution by execution, running the gate as-is and again with open_high forced to 0 in memory only: 11 issues including REVIEW_NOT_SATISFIED versus 10 with REVIEW_NOT_SATISFIED gone, establishing harness_checks.py:279-280 as the sole cause. It further verified observations[0:29] are byte-identical to 9991187, that LOW-2 was fixed by superseding rather than editing, that no entry in any collection was mutated, and that the fix did not strand itself. REV-011 is retained unmodified. It also raised one nit now applied: next_safe_action had said REVIEW_NOT_SATISFIED clears once REV-011 is committed, which is wrong — REV-011 is committed and it did not clear. The real predicate is an APPROVED review binding e4083319 that carries open_high 0, or a RISK approval covering it. The reviewer noted this is the same species of defect as HIGH-1, much smaller.",
+      "actor": "agent-skills:code-reviewer, recorded by Claude Opus 5",
+      "observed_at": "2026-09-16T08:09:37Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Run evidence regenerated at plan baseline a0d41e31 after the HD-017 scope change",
+      "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "The five records produced earlier in this branch bind the superseded plan baseline 14cb9ebc and are retained rather than deleted, including the exit-127 lint FAIL. Four new records were produced at a0d41e31 once REV-012 cleared REVIEW_NOT_SATISFIED: lint PASS, client-build PASS, supplier-phase-001-server PASS 159/159 with 0 skipped against the authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, and supplier-phase-001-client PASS 40/40 with 0 skipped. All nine records are registered. Counts match what REV-011 independently reproduced by re-running both suites itself. A secret scan of the new files found zero hits for the real database password value, JWT-shaped tokens, Authorization or Bearer headers, password fields and the synthetic Playwright account password.",
+      "actor": "Claude Opus 5 via run_check.py",
+      "observed_at": "2026-09-16T08:10:07Z"
     }
   ],
   "pending_decisions": [
@@ -1702,7 +1736,11 @@
     "evidence/20260916T073723-d1dc661a049d/run.json",
     "evidence/20260916T073727-c3fb7497a9c2/run.json",
     "evidence/20260916T073736-e4cbe46f4e72/run.json",
-    "evidence/20260916T073739-afacfa147578/run.json"
+    "evidence/20260916T073739-afacfa147578/run.json",
+    "evidence/20260916T080942-445983f78533/run.json",
+    "evidence/20260916T080944-5a3e5659e755/run.json",
+    "evidence/20260916T080945-fcae0250cb5f/run.json",
+    "evidence/20260916T080948-dd38307485b5/run.json"
   ],
   "defects": [
     {
@@ -1904,5 +1942,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-011 is APPROVED with 0 Critical and 1 High, bound to design baseline e4083319. It established from git history that NO history or authoritative content was lost, re-ran both suites itself to confirm the recorded evidence is not fabricated, and independently confirmed the secret scan is clean. Its HIGH-1 and both LOW record corrections are applied above. THE GATE IS NOT SATISFIED. Scoped to PHASE-001 it currently returns 11 issues across 5 codes: REVIEW_NOT_SATISFIED (clears once REV-011 is committed), REQUIRED_RUN_MISSING x4 and CI_MISSING_OR_STALE x4 and PR_REVIEW_MISSING (all stranded on the plan-baseline move, and the CI and PR ones additionally on code_commit), and COMMIT_CHANGED (the structural one-commit lag that cannot be fully eliminated). Next, in order: commit this review record, which unblocks run_check.py --execute; re-run the four DEVELOPER suites to produce evidence at plan baseline a0d41e31; register it; push; confirm CI green on the exact final head; then obtain the decision to merge. New: DEF-014 (committed evidence embeds absolute developer paths; fixing it moves the plan baseline, so bundle it with a change already doing so) and DEF-015 (Supplier is the only module declaring .gitignore in approval_required_paths; any other module editing it faces the same cost). Carried forward: six SCOPE approvals already stale beforehand; Purchasing pinning Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-012. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations need explicit schema sign-off."
+  "next_safe_action": "REV-011 is APPROVED with 0 Critical and 1 High, bound to design baseline e4083319. It established from git history that NO history or authoritative content was lost, re-ran both suites itself to confirm the recorded evidence is not fabricated, and independently confirmed the secret scan is clean. Its HIGH-1 and both LOW record corrections are applied above. THE GATE IS NOT SATISFIED. Scoped to PHASE-001 it currently returns 11 issues across 5 codes: REVIEW_NOT_SATISFIED (cleared by REV-012, which binds e4083319 with open_high 0; REV-011 alone did not clear it because harness_checks.py:279-280 skips an APPROVED review with a non-zero open_high unless a RISK approval covers it), REQUIRED_RUN_MISSING x4 and CI_MISSING_OR_STALE x4 and PR_REVIEW_MISSING (all stranded on the plan-baseline move, and the CI and PR ones additionally on code_commit), and COMMIT_CHANGED (the structural one-commit lag that cannot be fully eliminated). Next, in order: commit this review record, which unblocks run_check.py --execute; re-run the four DEVELOPER suites to produce evidence at plan baseline a0d41e31; register it; push; confirm CI green on the exact final head; then obtain the decision to merge. New: DEF-014 (committed evidence embeds absolute developer paths; fixing it moves the plan baseline, so bundle it with a change already doing so) and DEF-015 (Supplier is the only module declaring .gitignore in approval_required_paths; any other module editing it faces the same cost). Carried forward: six SCOPE approvals already stale beforehand; Purchasing pinning Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-012. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations need explicit schema sign-off."
 }
