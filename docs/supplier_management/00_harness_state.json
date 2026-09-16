@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 77,
+  "revision": 78,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -1187,16 +1187,16 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/supplier-defect-001-002",
       "idempotency_key": "supplier-def-001-002-push",
-      "status": "PLANNED",
-      "source_ref": null
+      "status": "CONFIRMED",
+      "source_ref": "git push created origin/codex/supplier-defect-001-002 on 2026-09-16; remote confirmed the new branch."
     },
     {
       "id": "PR-005",
       "kind": "CREATE_PR",
       "target": "base=main head=codex/supplier-defect-001-002",
       "idempotency_key": "supplier-def-001-002-pr",
-      "status": "PLANNED",
-      "source_ref": null
+      "status": "CONFIRMED",
+      "source_ref": "gh pr create returned https://github.com/crazysumsum/erp-app/pull/106 on 2026-09-16; state open, base main, head codex/supplier-defect-001-002, mergeable MERGEABLE."
     }
   ],
   "evidence_files": [
@@ -1312,5 +1312,5 @@
       "risk_approval_id": "APPROVAL-HD-012-RISK"
     }
   ],
-  "next_safe_action": "Push codex/supplier-defect-001-002 and open a PR against main, then observe required CI on the exact pushed candidate and obtain an actual review of it. Only after that, re-run the independent review to try to replace REV-006 CHANGES_REQUESTED with an APPROVED review bound to design baseline dcb74d3c. Checkpoint H and TASK-024 stay open until that APPROVED review exists. Do not start TASK-025. PUSH-005 and PR-005 are PLANNED: on interruption inspect origin and the PR list before retrying either."
+  "next_safe_action": "PR #106 is open. Observe required CI on the exact final pushed candidate and obtain an actual review of it, then re-run the independent review to try to replace REV-006 CHANGES_REQUESTED with an APPROVED review bound to design baseline dcb74d3c. Checkpoint H and TASK-024 stay open until that APPROVED review exists. Do not start TASK-025, and do not merge PR #106 before CI is green and a real review exists."
 }
