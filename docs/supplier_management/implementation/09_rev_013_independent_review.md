@@ -2,14 +2,19 @@
 
 ## Decision
 
-`CHANGES_REQUESTED` — all findings have since been remediated; see "Remediation" below.
+`CHANGES_REQUESTED`
 
-| Severity | Findings raised | Open after remediation |
+| Severity | Findings raised | Open at the time of this decision |
 | --- | ---: | ---: |
 | Critical | 0 | 0 |
-| High | 2 | 0 |
-| Medium | 3 | 0 |
-| Low | 1 + 1 nit | 0 |
+| High | 2 | 2 |
+| Medium | 3 | 3 |
+| Low | 1 + 1 nit | 1 + 1 nit |
+
+This table records what REV-013 decided on `5e00986`. The reviewer never saw the
+remediation below, so nothing here clears those findings; that is REV-014's record
+(`10_rev_014_independent_review.md`). The author's remediation and its evidence are
+set out below as claims, and REV-014 is where they were independently checked.
 
 ## Provenance
 

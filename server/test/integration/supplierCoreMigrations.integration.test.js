@@ -143,28 +143,29 @@ integrationTest("0035 gives the database the one-pending-request guarantee and c
 
 integrationTest("0036 seeds the settings singleton once and a rerun neither duplicates nor resets it", async (t) => {
   const connection = await mysql.createConnection(config());
+  t.after(() => connection.end());
   await createSupplierSettings(connection);
 
-  // erp_dev is shared, so the row already carries whatever the last run left. Take
-  // the current value as the restore point rather than assuming a fresh database,
-  // then re-exercise the seed by removing the row and letting up() put it back.
-  const [[existing]] = await connection.query("SELECT require_activation_approval FROM supplier_settings WHERE id = 1");
-  const previous = Number(existing?.require_activation_approval ?? existing?.REQUIRE_ACTIVATION_APPROVAL ?? 0);
-  t.after(async () => {
-    await connection.execute("UPDATE supplier_settings SET require_activation_approval = ? WHERE id = 1", [previous]);
-    await connection.end();
-  });
+  // node --test runs test FILES in parallel against this one shared erp_dev, and
+  // supplier_settings is a singleton every Settings caller will read. Re-exercising
+  // the seed means deleting and rewriting that row, so it happens inside a
+  // transaction that is always rolled back: no other connection ever observes the
+  // intermediate values, and nothing depends on an after-hook running.
+  await connection.beginTransaction();
+  try {
+    await connection.execute("DELETE FROM supplier_settings WHERE id = 1");
+    await createSupplierSettings(connection);
+    const [[seeded]] = await connection.query("SELECT require_activation_approval FROM supplier_settings WHERE id = 1");
+    assert.equal(Number(seeded.require_activation_approval ?? seeded.REQUIRE_ACTIVATION_APPROVAL), 0,
+      "the seed must leave existing activation behaviour unchanged");
 
-  await connection.execute("DELETE FROM supplier_settings WHERE id = 1");
-  await createSupplierSettings(connection);
-  const [[seeded]] = await connection.query("SELECT require_activation_approval FROM supplier_settings WHERE id = 1");
-  assert.equal(Number(seeded.require_activation_approval ?? seeded.REQUIRE_ACTIVATION_APPROVAL), 0,
-    "the seed must leave existing activation behaviour unchanged");
-
-  await connection.execute("UPDATE supplier_settings SET require_activation_approval = 1 WHERE id = 1");
-  await createSupplierSettings(connection);
-  const [rows] = await connection.query("SELECT id, require_activation_approval FROM supplier_settings");
-  assert.equal(rows.length, 1);
-  assert.equal(Number(rows[0].require_activation_approval ?? rows[0].REQUIRE_ACTIVATION_APPROVAL), 1,
-    "a rerun overwrote an operator's setting");
+    await connection.execute("UPDATE supplier_settings SET require_activation_approval = 1 WHERE id = 1");
+    await createSupplierSettings(connection);
+    const [rows] = await connection.query("SELECT id, require_activation_approval FROM supplier_settings");
+    assert.equal(rows.length, 1);
+    assert.equal(Number(rows[0].require_activation_approval ?? rows[0].REQUIRE_ACTIVATION_APPROVAL), 1,
+      "a rerun overwrote an operator's setting");
+  } finally {
+    await connection.rollback();
+  }
 });

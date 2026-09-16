@@ -17,7 +17,7 @@ function value(row, lower, upper) {
 
 export async function inspectSupplierActivationRequestSchema(connection) {
   const [columns] = await connection.query(
-    `SELECT column_name AS column_name, extra AS extra
+    `SELECT column_name AS column_name, extra AS extra, generation_expression AS generation_expression
        FROM information_schema.columns
       WHERE table_schema = DATABASE() AND table_name = 'supplier_activation_requests'
       ORDER BY ordinal_position`
@@ -33,6 +33,14 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   const slot = columns.find((row) => value(row, "column_name", "COLUMN_NAME") === "pending_slot");
   if (!String(value(slot, "extra", "EXTRA") ?? "").toUpperCase().includes("GENERATED")) {
     throw new Error("Incompatible existing Supplier activation request column: pending_slot is not a generated column");
+  }
+  // A generated column over the wrong predicate would enforce the wrong invariant,
+  // so check the predicate itself. MySQL rewrites the expression and stores its
+  // quotes backslash-escaped (`_utf8mb4\\'pending\\'`), so normalize before matching
+  // the status literal rather than comparing against the exact source form.
+  const slotExpression = String(value(slot, "generation_expression", "GENERATION_EXPRESSION") ?? "").replace(/\\/gu, "");
+  if (!slotExpression.includes("status") || !slotExpression.includes("'pending'")) {
+    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not derived from status = 'pending'");
   }
 
   const [indexes] = await connection.query(
