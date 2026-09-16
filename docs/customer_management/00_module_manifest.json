@@ -83,6 +83,18 @@
   "contracts": {
     "provided": [
       {
+        "id": "customer-business-master-impact-checker",
+        "version": "v1",
+        "source": "server/src/modules/customer/CustomerBusinessMasterImpactChecker.js",
+        "sha256": "4505cf74d770d8ff3f0ef14219aaf5f807a3f0575f9e38a29aafee8cf12544eb",
+        "consumers": [
+          "business-master"
+        ],
+        "regression_suites": [
+          "customer-server-technical"
+        ]
+      },
+      {
         "id": "customer-purpose-provider-contracts",
         "version": "aligned-design-2.0",
         "source": "docs/customer_management/03_design_spec.md",

@@ -1,10 +1,10 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 84,
+  "revision": 86,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
+  "status": "IMPLEMENTING",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-010",
@@ -35,7 +35,7 @@
     "TASK-007": "DONE",
     "TASK-008": "DONE",
     "TASK-009": "DONE",
-    "TASK-010": "BLOCKED",
+    "TASK-010": "VERIFYING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -423,6 +423,26 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-012",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-16 Codex task user: 批准 HD-007：將 TASK-010 擴展為實作正式的 Customer impact checker",
+      "recorded_at": "2026-09-16T02:57:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "555c0a571bc8b0e4bf3585bc995ef49fdc8c8d5d",
+      "scope": [
+        "TASK-010",
+        "server/src/modules/customer/**",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -628,8 +648,8 @@
         "Business Master impact checker",
         "coverage"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-SCOPE-012"
     }
   ],
   "external_actions": [
@@ -864,6 +884,22 @@
       "idempotency_key": "customer-phase001-task010-coverage-corrected-serial-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Corrected system-admin claims removed all stale-permission failures and the serial run measured 96.04% lines, 85.43% branches and 93.70% functions. It still failed exactly one Business Master HTTP assertion because the installed Customer table has no registered impact checker; businessMasterFactory deliberately reports this as IMPACT_CHECK_UNAVAILABLE (503). No test assertion, threshold or fail-closed behavior was weakened."
+    },
+    {
+      "id": "EXT-MIGRATION-025",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_hd007_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-hd007-v1",
+      "status": "FAILED",
+      "source_ref": "2026-09-16: HD-007-approved Customer impact checker full real-MySQL run migrated through 0036, reran migrations as no-ops, and cleaned up the exact schema with final absence zero. The new checker returned READY, but an outdated Business Master HTTP assertion still required every consumer to be NOT_INSTALLED. Coverage was 96.04% lines, 85.43% branches and 93.74% functions; no pass is claimed because the command failed on that assertion."
+    },
+    {
+      "id": "EXT-MIGRATION-026",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_hd007_retry_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-hd007-retry-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: corrected HD-007 full real-MySQL coverage run freshly migrated through 0036, reran every migration as a no-op, passed the complete server test:coverage command, and deleted the exact synthetic schema with final absence zero. Aggregate coverage was 96.13% lines, 85.42% branches and 94.05% functions; all repository thresholds and 34 high-risk per-file floors passed."
     }
   ],
   "evidence_files": [
@@ -871,5 +907,5 @@
     "docs/customer_management/implementation/phase-PHASE-001-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Obtain Product Owner direction for HD-007 before extending TASK-010 into the Business Master Customer impact-checker integration; until then, retain the verified coverage blocker without weakening tests, thresholds or fail-closed behavior."
+  "next_safe_action": "Complete final local lint/build/test review of the HD-007 checker change, then update TASK-010 developer evidence without claiming CI, PR, merge or release status."
 }

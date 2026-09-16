@@ -90,7 +90,17 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   });
   assert.equal(preview.status, 200, JSON.stringify(preview.body));
   assert.equal(preview.body.data.results.length, 6);
-  assert.equal(preview.body.data.results.every((row) => row.status === "NOT_INSTALLED"), true);
+  assert.deepEqual(
+    preview.body.data.results.map(({ checkerId, status, activeDefaultCount, openUseCount, historicalCount }) => ({ checkerId, status, activeDefaultCount, openUseCount, historicalCount })),
+    [
+      { checkerId: "ap", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "ar", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "customer", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "purchasing", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "sales", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "supplier", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 }
+    ]
+  );
   const rejected = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {
     method: "POST", token, key: randomUUID(), body: { version: 1, reason: "stale impact test", impactToken: "invalid-token" }
   });

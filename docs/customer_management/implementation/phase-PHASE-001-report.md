@@ -19,6 +19,13 @@ Playwright evidence is not applicable to this Phase.
 
 ## TASK-010 evidence
 
+- HD-007 is approved by the Product Owner: TASK-010 now includes the minimal
+  production `customer-business-master-impact-checker/v1`. It reads only the
+  Customer-owned `customers` table, reports aggregate default references and a
+  deterministic watermark, and is registered by Business Master. It neither writes
+  Business Master records nor changes Business Master's fail-closed registry/token
+  policy.
+
 - `CustomerService.list` follows `DES-019`: count, stable ordered page IDs, then
   summary projection by those IDs. The result ordering is reconstructed from the
   ID page; it does not join Customer child collections. TC-028 unit tests cover
@@ -44,22 +51,17 @@ Playwright evidence is not applicable to this Phase.
   client tests (476 passed) succeeded. CI was not run, as directed by the Product
   Owner.
 
-## Known gate result
+## Final gate result
 
-The real-MySQL server coverage command now reaches 96.04% lines, 85.43% branches
-and 93.70% functions, above the repository thresholds of 92%/83%/90%. It still
-cannot pass as a command because one pre-existing Business Master HTTP assertion
-expects Currency deactivation to proceed after the Customer table is installed.
-Business Master deliberately fails closed with `IMPACT_CHECK_UNAVAILABLE` until that
-consumer registers its real Currency/Payment Term impact checker. The Customer
-design only requires the read contract in this Phase, so adding that cross-module
-consumer-adoption capability exceeds TASK-010's approved scope. No threshold,
-assertion or fail-closed behavior was weakened. This remains a merge/readiness
-blocker pending Product Owner direction for HD-007.
+The corrected full real-MySQL server coverage command passed after the HD-007
+checker was registered: 96.13% lines, 85.42% branches and 94.05% functions, above
+the repository thresholds of 92%/83%/90% and all 34 high-risk per-file floors. A
+fresh schema migrated through `0036`, a complete rerun was a no-op, and the exact
+synthetic schema was deleted with final absence confirmed. No threshold, assertion
+or fail-closed behavior was weakened.
 
 ## Review and next decision
 
-Self-review of the TASK-010 diff found no remaining Critical or High issue within
-the approved scope. The previous long-search branch lacked direct coverage and was
-corrected before the candidate commit. The Phase cannot be marked complete or
-PR-ready while HD-007 remains unresolved.
+The HD-007 extension has focused and full real-MySQL verification. Final local
+lint/build/test review remains required before TASK-010 developer completion can
+be recorded; this report remains neither a CI, PR, merge nor release claim.

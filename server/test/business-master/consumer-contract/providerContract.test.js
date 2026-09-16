@@ -133,6 +133,38 @@ test("TC-020 all six absent consumer modules report explicit NOT_INSTALLED, neve
   ));
 });
 
+test("TC-020 the registered Customer checker reports Currency defaults without exposing Customer records", async () => {
+  const database = {
+    async query(sql, params = []) {
+      if (sql.includes("information_schema.tables")) {
+        return [[{ present: sql.includes("table_name = 'customers'") ? 1 : 0 }]];
+      }
+      assert.match(sql, /FROM customers/);
+      assert.deepEqual(params, ["HKD"]);
+      return [[{ status: "active", reference_count: 2, version_sum: 5, latest_updated_at: 11, max_id: 4 }]];
+    }
+  };
+  const admin = createBusinessMasterAdminService(factoryServices(database));
+  const preview = await admin.impactRegistry.preview({
+    actorId: 1,
+    entityType: "CURRENCY",
+    entityKey: "HKD",
+    version: 1,
+    operation: "DEACTIVATE",
+    proposedChange: { status: "INACTIVE" }
+  });
+
+  assert.deepEqual(preview.results.map(({ watermark: _watermark, ...result }) => result), [
+    { checkerId: "ap", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+    { checkerId: "ar", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+    { checkerId: "customer", status: "READY", activeDefaultCount: 2, openUseCount: 0, historicalCount: 0 },
+    { checkerId: "purchasing", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+    { checkerId: "sales", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+    { checkerId: "supplier", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 }
+  ]);
+  assert.match(preview.results[2].watermark, /^customer:CURRENCY:HKD:/);
+});
+
 test("TC-020 an installed consumer without its real checker fails closed", async () => {
   const database = { async query() { return [[{ present: 1 }]]; } };
   const admin = createBusinessMasterAdminService(factoryServices(database));
