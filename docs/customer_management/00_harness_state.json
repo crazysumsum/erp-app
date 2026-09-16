@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 56,
+  "revision": 62,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": null,
+  "current_task": "TASK-010",
   "baseline": {
     "design": "89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5",
     "plan": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
-    "code_commit": "b9774e4a52605bd6d1c49e181b89d24b93daf887",
-    "source_fingerprint": "b8dfde3ce84fe59ff81e72a7829566f71e7446cbd46c31344ba81a2496e89d58",
+    "code_commit": "e553dded1a470a14839afabf6ace7ef403903e8e",
+    "source_fingerprint": "396f651986d7bc7817e176562db05c84d81ecd32d847c29895a1abb99e8648ce",
     "worktree": "/private/tmp/erp-customer-management-phase-001",
     "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -35,7 +35,7 @@
     "TASK-007": "DONE",
     "TASK-008": "DONE",
     "TASK-009": "DONE",
-    "TASK-010": "PENDING",
+    "TASK-010": "IN_PROGRESS",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -383,6 +383,27 @@
         "server/test/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-010",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-16 Codex task user: 批准 TASK-010",
+      "recorded_at": "2026-09-16T00:47:22Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "3fe9699956fd9c8c8c2d03a7cb7fe8c4b15639a1",
+      "scope": [
+        "TASK-010",
+        "server/test/performance/**",
+        "server/test-support/**",
+        "server/test/**",
+        "server/scripts/**",
+        "docs/customer_management/implementation/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -540,8 +561,8 @@
         "TASK-010",
         "PHASE-001"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-SCOPE-010"
     }
   ],
   "external_actions": [
@@ -688,11 +709,27 @@
       "idempotency_key": "customer-phase001-task009-lookup-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-15: the fixed schema was absent before execution; fresh migrations through 0036 passed; a complete rerun skipped every migration; TC-018 and TC-027 real MySQL status, minimal projection, credit, ownership, purpose and transaction-version assertions passed 1/1; trap cleanup and final schema absence were confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-014",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh schema migrated through 0036 and the complete rerun skipped every migration. The first TC-028 attempt failed before inserting any Customer fixture because the new fixture SQL omitted the required version value; the interrupted process left the fixed schema. Read-only reconciliation observed 39 migration rows and zero Customer rows, then the exact synthetic schema was dropped and final absence was confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-015",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-retry-v1",
+      "status": "FAILED",
+      "source_ref": "2026-09-16: corrected TASK-010 performance fixture retry was started after EXT-MIGRATION-014 reconciliation and fixed schema absence confirmation, but its terminal session ended without a retained result. Follow-up read-only verification could not connect because local MySQL was no longer listening on 127.0.0.1:3306; no performance result or cleanup claim is accepted from this attempt."
     }
   ],
   "evidence_files": [
     "docs/customer_management/implementation/00_implementation_readiness.md"
   ],
   "defects": [],
-  "next_safe_action": "Obtain explicit Product Owner approval for TASK-010, then reconcile current baselines and begin the PHASE-001 integration, query-plan, regression and controlled capability gate work."
+  "next_safe_action": "After local MySQL is restored on 127.0.0.1:3306, create a fresh isolated TASK-010 schema, run the corrected 100k TC-028 plan/load test and focused real-MySQL integration/redaction checks, confirm cleanup, then record the PHASE-001 developer report and compatible rollback rehearsal."
 }
