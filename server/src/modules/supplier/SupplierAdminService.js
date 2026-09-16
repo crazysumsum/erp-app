@@ -23,18 +23,23 @@ function duplicateEntry(error) {
   return (error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY";
 }
 
+// One definition per status transition. The public commands and the replay filter
+// both read from here, so the filter cannot drift from the commands it must cover
+// when a later phase adds a transition.
+const LIFECYCLE_COMMANDS = Object.freeze({
+  activate: { targetStatus: "active", allowedFrom: ["draft"], action: "supplier.activate", activationCheck: true, approvalCheck: true },
+  suspend: { targetStatus: "suspended", allowedFrom: ["active"], action: "supplier.suspend" },
+  reactivate: { targetStatus: "active", allowedFrom: ["suspended"], action: "supplier.reactivate", activationCheck: true },
+  block: { targetStatus: "blocked", allowedFrom: ["active", "suspended"], action: "supplier.block" },
+  unblock: { targetStatus: "suspended", allowedFrom: ["blocked"], action: "supplier.unblock" },
+  archive: { targetStatus: "archived", allowedFrom: ["draft", "active", "suspended"], action: "supplier.archive", openFlowCheck: true },
+  restore: { targetStatus: "suspended", allowedFrom: ["archived"], action: "supplier.restore" }
+});
+
 // Replay detection must look only at status transitions. Every audit action this
 // module writes begins with "supplier.", so a broader match lets an unrelated
 // child-record write shadow the real transition.
-const LIFECYCLE_ACTIONS = Object.freeze([
-  "supplier.activate",
-  "supplier.suspend",
-  "supplier.reactivate",
-  "supplier.block",
-  "supplier.unblock",
-  "supplier.archive",
-  "supplier.restore"
-]);
+const LIFECYCLE_ACTIONS = Object.freeze(Object.values(LIFECYCLE_COMMANDS).map((command) => command.action));
 
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
   supplierCode: "s.supplier_code_key",
@@ -433,31 +438,31 @@ export class SupplierAdminService {
   }
 
   activateSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "active", allowedFrom: ["draft"], action: "supplier.activate", activationCheck: true, approvalCheck: true });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.activate);
   }
 
   suspendSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["active"], action: "supplier.suspend" });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.suspend);
   }
 
   reactivateSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "active", allowedFrom: ["suspended"], action: "supplier.reactivate", activationCheck: true });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.reactivate);
   }
 
   blockSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "blocked", allowedFrom: ["active", "suspended"], action: "supplier.block" });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.block);
   }
 
   unblockSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["blocked"], action: "supplier.unblock" });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.unblock);
   }
 
   archiveSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "archived", allowedFrom: ["draft", "active", "suspended"], action: "supplier.archive", openFlowCheck: true });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.archive);
   }
 
   restoreSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["archived"], action: "supplier.restore" });
+    return this.#changeStatus(input, LIFECYCLE_COMMANDS.restore);
   }
 
   async deleteSupplier(input) {

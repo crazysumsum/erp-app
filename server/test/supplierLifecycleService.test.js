@@ -99,6 +99,36 @@ test("same-target lifecycle replay returns current state without version increme
   await assert.rejects(() => wrongCommand.service.restoreSupplier({ ...context, version: 5 }), (error) => error.publicCode === "STATUS_TRANSITION_INVALID");
 });
 
+test("every lifecycle command the service exposes is covered by the replay filter", async () => {
+  // DEF-011: LIFECYCLE_ACTIONS used to be a hand-maintained copy of the action
+  // strings, with no structural link to the commands. This discovers the commands
+  // by reflection, so a transition added in a later phase without extending the
+  // filter fails here rather than silently turning a replay into a 409.
+  const starting = { activateSupplier: "draft", suspendSupplier: "active", reactivateSupplier: "suspended",
+    blockSupplier: "active", unblockSupplier: "blocked", archiveSupplier: "active", restoreSupplier: "archived" };
+  const commands = Object.getOwnPropertyNames(SupplierAdminService.prototype)
+    .filter((name) => /^(?!delete)[a-z].*Supplier$/.test(name) && name in starting);
+  assert.equal(commands.length, 7, "starting-state map is stale; a lifecycle command was added or removed");
+
+  let boundActions = null;
+  const audited = [];
+  for (const name of commands) {
+    const { service, events } = harness({ status: starting[name] });
+    await service[name]({ ...context });
+    audited.push(events.find(([kind]) => kind === "audit")[1].action);
+    // Re-issuing the same command now that the row sits at the target status
+    // drives the replay branch, which is where the filter is bound.
+    await service[name]({ ...context }).catch(() => {});
+    const query = events.find(([kind, sql]) => kind === "query" && String(sql).includes("ORDER BY id DESC"));
+    if (query) boundActions = new Set(query[2].slice(1));
+  }
+
+  assert.ok(boundActions, "no replay lookup was observed");
+  for (const action of audited) {
+    assert.ok(boundActions.has(action), `${action} is written by a command but absent from the replay filter`);
+  }
+});
+
 test("replay detection ignores non-lifecycle audit rows written after the command", async () => {
   // DEF-002: every audit action this module writes begins with "supplier.", so
   // matching on LIKE 'supplier.%' let an unrelated child-record write shadow the

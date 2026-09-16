@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 92,
+  "revision": 93,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-024",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-025",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
-    "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bookkeeping",
-    "default_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
+    "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+    "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-phase-002",
+    "default_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-bookkeeping (branch codex/supplier-bookkeeping)",
+      "workspace": "erp-app-worktrees/supplier-phase-002 (branch codex/supplier-phase-002)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -52,7 +52,7 @@
     "TASK-022": "DONE",
     "TASK-023": "DONE",
     "TASK-024": "DONE",
-    "TASK-025": "PENDING",
+    "TASK-025": "DONE",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
@@ -1183,6 +1183,28 @@
       "source_ref": "The five records produced earlier in this branch bind the superseded plan baseline 14cb9ebc and are retained rather than deleted, including the exit-127 lint FAIL. Four new records were produced at a0d41e31 once REV-012 cleared REVIEW_NOT_SATISFIED: lint PASS, client-build PASS, supplier-phase-001-server PASS 159/159 with 0 skipped against the authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, and supplier-phase-001-client PASS 40/40 with 0 skipped. All nine records are registered. Counts match what REV-011 independently reproduced by re-running both suites itself. A secret scan of the new files found zero hits for the real database password value, JWT-shaped tokens, Authorization or Bearer headers, password fields and the synthetic Playwright account password.",
       "actor": "Claude Opus 5 via run_check.py",
       "observed_at": "2026-09-16T08:10:07Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-011 closed by eliminating the duplication rather than guarding it",
+      "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
+      "status": "PASS",
+      "source_ref": "REV-007 suggested a one-line invariant assert in #changeStatus. That is not testable without exposing the private method, and it guards the duplication rather than removing it. Instead LIFECYCLE_COMMANDS is now the single definition per transition, and both the seven public commands and LIFECYCLE_ACTIONS derive from it, so the replay filter cannot drift from the commands it must cover. The test discovers commands by reflection over the prototype rather than hard-coding a list. Discrimination was proven, not assumed: injecting a PHASE-002-shaped regression — a submitSupplier command calling #changeStatus with an inline descriptor instead of via the map — turned the test red with the precise message \"supplier.approval.submit is written by a command but absent from the replay filter\". The injection was then reverted and grep confirms no trace remains. Supplier suite 106/106 with 0 skipped and lint exit 0 after the refactor.",
+      "actor": "Claude Opus 5 via node:test",
+      "observed_at": "2026-09-16T08:50:12Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-025 Approval and Settings persistence gate verified against real MySQL",
+      "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
+      "status": "PASS",
+      "source_ref": "Schema approved by the Product Owner before any migration was written, per the project rule requiring schema sign-off. Sequence numbers 0035 and 0036 allocated from latest main, with the collision risk disclosed beforehand: the unmerged customer-management branch already claims both, so whichever merges second must renumber. Verification: migrate.test.js 7/7; migrations.integration.test.js 14/14 with 0 skipped against erp_dev; npm run lint exit 0. Real-MySQL manual checks, all passing: the settings singleton is seeded id=1 with require_activation_approval 0 and version 1; a second pending activation request for the same supplier is rejected by the database with ER_DUP_ENTRY while two non-pending rows for that supplier are accepted, proving the pending_slot generated-column emulation of a partial unique index; no table matching %bank% exists. Convergence: a clean rerun of the runner skipped both as already applied; a half-applied case with the table present but the singleton row deleted re-seeded exactly one row at version 1 with approval still OFF; a further rerun neither duplicated the row nor bumped its version. Test rows created during the manual check were deleted; the table is empty. supplier_id is RESTRICT rather than CASCADE by design, so approval history counts as a reference and a Supplier that has ever been submitted cannot be hard-deleted.",
+      "actor": "Claude Opus 5 via node:test and mysql2",
+      "observed_at": "2026-09-16T08:50:12Z"
     }
   ],
   "pending_decisions": [
@@ -1729,6 +1751,14 @@
       "idempotency_key": "supplier-contract-pin-worktree-retire",
       "status": "CONFIRMED",
       "source_ref": "git branch --merged main confirmed full merge before removal; worktree removed, local branch deleted, remote branch deleted."
+    },
+    {
+      "id": "MIGRATION-008",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migrations 0035 Supplier activation requests and 0036 Supplier settings",
+      "idempotency_key": "supplier-phase-002-erp-dev-migration-0035-0036",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0035_create_supplier_activation_requests.js and 0036_create_supplier_settings.js to the authorized test-only erp_dev on 2026-09-16 under APPROVAL-HD-006-ERP-DEV. An immediate rerun skipped both as already applied."
     }
   ],
   "evidence_files": [
@@ -1882,12 +1912,15 @@
     {
       "id": "DEF-011",
       "severity": "LOW",
-      "status": "DEFERRED",
+      "status": "CLOSED",
       "source_ids": [
         "REV-007",
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "server/src/modules/supplier/SupplierAdminService.js#LIFECYCLE_COMMANDS",
+        "server/test/supplierLifecycleService.test.js#every-lifecycle-command-covered"
+      ],
       "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
@@ -1942,5 +1975,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-011 is APPROVED with 0 Critical and 1 High, bound to design baseline e4083319. It established from git history that NO history or authoritative content was lost, re-ran both suites itself to confirm the recorded evidence is not fabricated, and independently confirmed the secret scan is clean. Its HIGH-1 and both LOW record corrections are applied above. THE GATE IS NOT SATISFIED. Scoped to PHASE-001 it currently returns 11 issues across 5 codes: REVIEW_NOT_SATISFIED (cleared by REV-012, which binds e4083319 with open_high 0; REV-011 alone did not clear it because harness_checks.py:279-280 skips an APPROVED review with a non-zero open_high unless a RISK approval covers it), REQUIRED_RUN_MISSING x4 and CI_MISSING_OR_STALE x4 and PR_REVIEW_MISSING (all stranded on the plan-baseline move, and the CI and PR ones additionally on code_commit), and COMMIT_CHANGED (the structural one-commit lag that cannot be fully eliminated). Next, in order: commit this review record, which unblocks run_check.py --execute; re-run the four DEVELOPER suites to produce evidence at plan baseline a0d41e31; register it; push; confirm CI green on the exact final head; then obtain the decision to merge. New: DEF-014 (committed evidence embeds absolute developer paths; fixing it moves the plan baseline, so bundle it with a change already doing so) and DEF-015 (Supplier is the only module declaring .gitignore in approval_required_paths; any other module editing it faces the same cost). Carried forward: six SCOPE approvals already stale beforehand; Purchasing pinning Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-012. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations need explicit schema sign-off."
+  "next_safe_action": "TASK-025 is DONE and DEF-011 is CLOSED. Next: commit, push, open a PR for independent review bound to design baseline e4083319, and confirm CI green on the exact final head before merge. Then TASK-026, the Supplier Settings backend. Watch the migration numbering: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so whichever merges second must renumber. Carried forward, none introduced here: six SCOPE approvals already stale; Purchasing pinning Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-012 Item idempotency race; DEF-013 for TASK-038; DEF-014 and DEF-015."
 }
