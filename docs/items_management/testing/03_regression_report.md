@@ -48,3 +48,14 @@ The highest-risk regression areas were Item aggregate create/update/lifecycle, C
 - A whole-repository DB run was rejected as evidence because the shared schema contains unmerged Supplier permission rows. The profile now names Item-owned test files explicitly, which is the module-scoped contract and avoids false cross-module failures.
 
 Result: remediation impact regression is locally green; formal Regression remains `BLOCKED` until the changed PLAN/profile baseline is reviewed and approved.
+
+## Candidate `5c620bd` formal Regression — 2026-09-15
+
+| Suite | Result | Current-baseline evidence |
+|---|---|---|
+| `item-server-technical` | `PASS` | `20260915T030140-5f4671994278`: 459/459, required server TC mappings PASS |
+| `item-client-technical` | `PASS` | `20260915T030248-57050e3d96b5`: 492/492, TC-011 PASS |
+| `item-performance` | `PASS_WITH_LIMITATION` | `20260915T030312-a6347c1d7274`: 3/3 bounded regression, TC-012 PASS |
+| `item-recovery` | `BLOCKED_DEFERRED` | `20260915T030630-20d57aa8c7d5`: TC-016 remains unexecuted under APR-020 |
+
+The executable Item application suites are green in both Technical and Regression stages. Overall Regression/Technical Acceptance remains `BLOCKED`, because risk deferral preserves the missing recovery result rather than converting it to PASS. Post-run cleanup was verified: zero `PERF-*` SKU fixtures, performance users or performance roles remained, and the MySQL advisory lock was released successfully.

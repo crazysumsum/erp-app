@@ -97,3 +97,7 @@ Keep the candidate frozen and review this evidence. If approved, transition expl
 `REMEDIATE_AND_RETEST` has repaired the executable server command, canonical JUnit mapping, Item Playwright project and shared-schema scheduling contract. Developer retests pass: server 459/459, client 492/492, bounded performance 4/4, browser 11 pass with 2 explicit external-condition skips; lint and build pass.
 
 DEF-101, DEF-102, DEF-104 and DEF-105 are `CLOSED` after targeted developer retest and impact regression; this closes the remediation issues but does not grant formal Technical/UAT acceptance. The changed profile/test baseline invalidates the earlier PLAN approval and must be explicitly re-approved before a formal Harness rerun. DEF-103/TC-016 still needs an explicit risk disposition, while TASK-043/UAT-005, full 100k performance evidence and human UAT/release acceptance remain blockers; overall status therefore stays `BLOCKED`.
+
+## Current-candidate verification update — 2026-09-15
+
+Candidate `5c620bdff8afa84e72d26187b942d46bb6d3e2ca` is bound by `APR-021`. Server, client and bounded-performance suites pass in both Technical and Regression stages. Recovery remains `BLOCKED_DEFERRED` in both stages under `APR-020`; this does not satisfy TC-016. Technical Acceptance therefore remains `BLOCKED`. TASK-037, TASK-038, TASK-043 and TASK-044 also remain short of their full Definition of Done, primarily because required CI/external dependency/DR and sign-off evidence is incomplete.

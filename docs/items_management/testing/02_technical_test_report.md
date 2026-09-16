@@ -97,4 +97,15 @@ Technical Acceptance remains `BLOCKED`: `DEF-106` requires a test-only candidate
 
 The approved test-title-only correction passed targeted testing (59/59) and the complete module-scoped server regression (459/459). All 459 normalized JUnit names are unique, and required `TC-001`–`TC-010` plus `TC-013`–`TC-015` map to PASS. Evidence: `testing/evidence/def106-targeted.junit.xml` and `testing/evidence/def106-server-regression.junit.xml`. This is developer remediation evidence; the previous blocked formal run remains preserved and a new-candidate formal rerun is still required.
 
+## Candidate `5c620bd` Technical rerun — 2026-09-15
+
+| Suite | Result | Current-baseline evidence |
+|---|---|---|
+| `item-server-technical` | `PASS` | `20260915T025642-5a90557a2bfb`: 459/459; all required Item server TC IDs PASS |
+| `item-client-technical` | `PASS` | `20260915T025743-3ff0b84153c9`: 492/492; required TC-011 PASS |
+| `item-performance` | `PASS_WITH_LIMITATION` | `20260915T025801-1f98c219d70a`: 3/3; TC-012 PASS under the bounded profile, not the pending 100k capacity exercise |
+| `item-recovery` | `BLOCKED_DEFERRED` | `20260915T030118-828741e0f9f4`: TC-016 not executed; APR-020 accepts deferral risk but does not grant PASS |
+
+No Item product or executable-suite defect was observed on the new candidate. Technical Acceptance remains blocked by the required recovery evidence and incomplete Task Definition-of-Done gates.
+
 The profile now allows `ITEM_PERFORMANCE_TESTS` for the dedicated performance suite. Full-scale performance and `TC-016` recovery remain unexecuted, so Technical Acceptance remains `BLOCKED` pending the formal retest and external prerequisites.
