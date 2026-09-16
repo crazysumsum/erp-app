@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 62,
+  "revision": 76,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-010",
   "baseline": {
@@ -35,7 +35,7 @@
     "TASK-007": "DONE",
     "TASK-008": "DONE",
     "TASK-009": "DONE",
-    "TASK-010": "IN_PROGRESS",
+    "TASK-010": "BLOCKED",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -466,6 +466,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-010 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "396f651986d7bc7817e176562db05c84d81ecd32d847c29895a1abb99e8648ce",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -490,6 +502,17 @@
       "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
       "actor": "/root local developer verification",
       "observed_at": "2026-09-15T08:07:05Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-010 PHASE-001 query-plan, real-MySQL integration, rollback and local regression verification",
+      "code_commit": "e553dded1a470a14839afabf6ace7ef403903e8e",
+      "spec_baseline": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "source_fingerprint": "396f651986d7bc7817e176562db05c84d81ecd32d847c29895a1abb99e8648ce",
+      "status": "PARTIAL",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-16T01:21:16Z"
     }
   ],
   "pending_decisions": [
@@ -563,6 +586,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "APPROVAL-SCOPE-010"
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "The repository-wide server coverage gate reports 82.68% against its 92% threshold after all TASK-010 tests otherwise pass. Should PHASE-001 remain blocked while coverage is remediated, or does the Product Owner approve a documented exception for this baseline gate?",
+      "affected_ids": [
+        "TASK-010",
+        "PHASE-001",
+        "coverage"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -725,11 +760,52 @@
       "idempotency_key": "customer-phase001-task010-performance-retry-v1",
       "status": "FAILED",
       "source_ref": "2026-09-16: corrected TASK-010 performance fixture retry was started after EXT-MIGRATION-014 reconciliation and fixed schema absence confirmation, but its terminal session ended without a retained result. Follow-up read-only verification could not connect because local MySQL was no longer listening on 127.0.0.1:3306; no performance result or cleanup claim is accepted from this attempt."
+    },
+    {
+      "id": "EXT-MIGRATION-016",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_perf_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-host-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: host-environment run freshly migrated through 0036 and a complete rerun skipped every migration. The harness test did not execute because it was invoked from repository root with a server-relative test path; trap cleanup dropped the exact synthetic schema and final absence query returned zero. No TC-028 result is claimed."
+    },
+    {
+      "id": "EXT-MIGRATION-017",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_perf_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-host-retry-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration. Corrected TC-028 passed against 100,000 Customers, 10,000 addresses and 10,000 contacts at 50 concurrent workers x 5 operations: list/exact/address/contact p95 were 16.24/5.12/3.48/5.45ms (all below 2,000ms). EXPLAIN showed code and legal-name covering index range scans and the shipping EXISTS owner/status and primary-key lookups. Trap cleanup dropped the exact synthetic schema and final absence query returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-018",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_integration_20260916",
+      "idempotency_key": "customer-phase001-task010-integration-host-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration. Real MySQL/HTTP suites passed 6/6: TC-012 root create/replay/list/update, equality-key collation and concurrent canonical duplicate, TC-018..020 party defaults/owner isolation, TC-021..025 Identifier/Credit including redacted audit behavior, and TC-027 lookup purpose/status/version contracts. Trap cleanup dropped the exact isolated schema and final absence query returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-019",
+      "kind": "ROLLBACK_REHEARSAL",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_rollback_20260916",
+      "idempotency_key": "customer-phase001-task010-compatible-rollback-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: current candidate migrations applied successfully to the fresh isolated schema and cleanup removed both exact schema and disposable f7fd955 worktree (final schema absence zero). The old application could not load because its csv-stringify dependency was absent from the linked root node_modules; no rollback-health pass is claimed."
+    },
+    {
+      "id": "EXT-MIGRATION-020",
+      "kind": "ROLLBACK_REHEARSAL",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_rollback_20260916",
+      "idempotency_key": "customer-phase001-task010-compatible-rollback-deps-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh isolated schema applied current candidate migrations through 0036. Disposable pre-PHASE-001 baseline f7fd955 started against that expanded schema and GET /api/v1/health returned 200. Exact temporary worktree and schema were removed; final schema absence query returned zero."
     }
   ],
   "evidence_files": [
-    "docs/customer_management/implementation/00_implementation_readiness.md"
+    "docs/customer_management/implementation/00_implementation_readiness.md",
+    "docs/customer_management/implementation/phase-PHASE-001-report.md"
   ],
   "defects": [],
-  "next_safe_action": "After local MySQL is restored on 127.0.0.1:3306, create a fresh isolated TASK-010 schema, run the corrected 100k TC-028 plan/load test and focused real-MySQL integration/redaction checks, confirm cleanup, then record the PHASE-001 developer report and compatible rollback rehearsal."
+  "next_safe_action": "Obtain the Product Owner decision for HD-006. If coverage remediation is selected, plan and approve a bounded coverage task; if an exception is approved, record it against the current candidate baseline before completing TASK-010 and preparing the Phase PR."
 }
