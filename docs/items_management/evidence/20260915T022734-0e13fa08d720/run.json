@@ -1,0 +1,106 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20260915T022734-0e13fa08d720",
+  "suite_id": "item-server-technical",
+  "stage": "TECHNICAL",
+  "result": "BLOCKED",
+  "spec_baseline": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+  "source_fingerprint": "327c9b77536f33375ef525b6375f43eb21dd598886378c0ef6aac8a64d3632bb",
+  "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
+  "started_at": "2026-09-15T02:27:34.842855Z",
+  "ended_at": "2026-09-15T02:28:24.768765Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--test-concurrency=1",
+    "--import",
+    "./test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260915T022734-0e13fa08d720/item-server-technical.xml",
+    "test/itemAuditLogService.test.js",
+    "test/itemCatalogHandlers.test.js",
+    "test/itemCatalogService.test.js",
+    "test/itemConfig.test.js",
+    "test/itemErrors.test.js",
+    "test/itemImportFileCleanupJob.test.js",
+    "test/itemImportProcessor.test.js",
+    "test/itemLookupService.test.js",
+    "test/itemMediaCleanupJob.test.js",
+    "test/itemPerformanceFixtures.test.js",
+    "test/itemReadProjection.test.js",
+    "test/itemValidation.test.js",
+    "test/variantSignature.test.js",
+    "test/integration/itemAttributeMigrations.integration.test.js",
+    "test/integration/itemAudit.integration.test.js",
+    "test/integration/itemBulkStatus.integration.test.js",
+    "test/integration/itemCatalog.integration.test.js",
+    "test/integration/itemConcurrency.integration.test.js",
+    "test/integration/itemCreate.integration.test.js",
+    "test/integration/itemExport.integration.test.js",
+    "test/integration/itemHighRisk.integration.test.js",
+    "test/integration/itemImport.integration.test.js",
+    "test/integration/itemImportFileCleanup.integration.test.js",
+    "test/integration/itemImportMigrations.integration.test.js",
+    "test/integration/itemLifecycle.integration.test.js",
+    "test/integration/itemLookup.integration.test.js",
+    "test/integration/itemManagement.integration.test.js",
+    "test/integration/itemMigrationIdempotency.integration.test.js",
+    "test/integration/itemMedia.integration.test.js",
+    "test/integration/itemRead.integration.test.js",
+    "test/integration/itemUpdate.integration.test.js"
+  ],
+  "cwd": "server",
+  "command_contract_sha256": "e4dc60614e854b37cf3c2a0d41a551292d45b966f2d87c1c4457cb25fa7623e2",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260915T022734-0e13fa08d720/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260915T022734-0e13fa08d720/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "duplicate runner test names; parameterized cases must use distinct names",
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: TC-001, TC-002, TC-003, TC-004, TC-005, TC-006, TC-007, TC-008, TC-009, TC-010, TC-013, TC-014, TC-015",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

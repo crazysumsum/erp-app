@@ -25,13 +25,13 @@ The complete legacy design is retained below. Canonical `DES-*` items provide st
 | DES-006 | Fixed HKD price and numeric rules | §4.6, §5.2, §6.5 | FR-044, FR-045, FR-046, FR-047, FR-048, FR-049 | ALIGNED |
 | DES-007 | Relational schema, constraints and migrations | §5 | FR-011, FR-012, FR-015, FR-039, FR-040; SEC-008; NFR-006, NFR-008, NFR-009, NFR-010 | PARTIAL; operational upgrade proof pending |
 | DES-008 | Item/SKU API contracts, error semantics and idempotency | §6.1–6.3, §6.9–6.11 | FR-011, FR-012, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031 | PARTIAL; standalone SKU create retained by HD-001 and pending TASK-038 |
-| DES-009 | Catalog API and reference protection | §6.4, §8.2, §8.4 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | IMPLEMENTATION_GAP for referenced Brand/UOM error mapping |
+| DES-009 | Catalog API and reference protection | §6.4, §8.2, §8.4 | FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038 | IMPLEMENTED with current developer evidence; formal acceptance pending |
 | DES-010 | UOM conversion and lookup contract | §5.8, §8.3 | FR-039, FR-040, FR-041, FR-042, FR-043 | ALIGNED for current consumers |
 | DES-011 | Media storage, API and consistency | §2.6, §5.11, §6.6, §8.5 | FR-011, FR-012, FR-015; SEC-007, SEC-008, SEC-009; NFR-011 | ALIGNED with filesystem compensation risk |
-| DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTATION_GAP: backend exists, user-facing history view absent |
-| DES-013 | CSV import/export, job lifecycle and retention | §5.13, §6.8, §8.6 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-007, SEC-008, SEC-009; NFR-005, NFR-011 | HIGH gap: direct SQL bypasses aggregate audit contract |
+| DES-012 | Audit persistence, query and presentation | §5.12, §6.7, §8.7 | FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064; NFR-006 | IMPLEMENTED with current developer evidence; formal acceptance pending |
+| DES-013 | CSV import/export, job lifecycle and retention | §5.13, §6.8, §8.6 | FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058; SEC-007, SEC-008, SEC-009; NFR-005, NFR-011 | IMPLEMENTED with current developer evidence; formal acceptance pending |
 | DES-014 | Query, pagination, search, filters and response projections | §6.10, §8.8 | FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-014, FR-015; NFR-002, NFR-003, NFR-004 | PARTIAL; attribute/variant arrays forced empty |
-| DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit page absent; standalone SKU-create page retained by HD-001 and pending TASK-038 |
+| DES-015 | Page routes, editors, scanner UX and accessibility | §7 | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025; SEC-009; NFR-012, NFR-013 | PARTIAL; Audit and standalone SKU-create pages are implemented, while formal acceptance remains pending |
 | DES-016 | Validation and automated-test architecture | §10, §11 | All FR/NFR/SEC through the canonical test crosswalk | PARTIAL; developer evidence exists, independent acceptance not executed |
 | DES-017 | Configuration, logs, metrics and alerts | §12.1–12.3 | SEC-007, SEC-009; NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-013 | IMPLEMENTED with developer evidence |
 | DES-018 | Retention, backup, restore and DR objectives | §12.4, §14 | FR-063; SEC-008, SEC-009; NFR-010, NFR-011, NFR-014, NFR-015 | DESIGN ENHANCED; RTO/RPO verification pending |
@@ -48,11 +48,32 @@ Non-functional and security: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-00
 
 - Implemented tables and services broadly follow the legacy design; migrations currently reach `0026` for Item scope.
 - `ItemAdminService` still projects `attributeValues: []` and `variantValues: []`, while response schemas cap both arrays at zero. The Attribute/Variant persistence therefore is not observable through the promised detail contract.
-- Variant creation exists inside Item aggregate creation, but the designed `POST /api/v1/skus/create` / standalone SKU-create flow is absent. Human decision `HD-001` on 2026-09-11 retains this contract for existing Variant Items and places its implementation under `TASK-038`.
-- Audit query API exists at `GET /api/v1/item-audit/logs`, but the designed user-facing audit page/timeline and frontend client are absent.
-- Brand and UOM permanent deletion still contain stale assumptions that no reference tables exist. Current foreign keys reject referenced deletion, but the service does not translate those failures to the documented `CATALOG_IN_USE` public error as Attribute deletion does.
-- Import execution writes Item/SKU/UOM rows directly. The earlier confirm transaction writes one job-level `item.import` audit record, but item.create/item.update audit is not transactionally coupled to the imported aggregate changes.
+- The retained `POST /api/v1/skus/create` standalone SKU-create flow for existing Variant Items is implemented under `TASK-038` after human decision `HD-001` on 2026-09-11.
+- The `GET /api/v1/item-audit/logs` query is presented by `ItemAuditPage.vue` at `/items/audit`, with date, actor, target, action and target-type filters plus before/after/reason context (`TASK-039`).
+- Brand and UOM permanent deletion maps current MySQL FK-reference failures to the documented `CATALOG_IN_USE` public error. `referenceTypes` is stable and actionable: Brand reports `items`; UOM reports the actual ordered subset of `sku_uoms`, `sku_measurements` and `attributes` (or `unknown` if a raced dependency disappears before description). Focused service tests cover direct and wrapped driver errors; TC-014 has current local-MySQL evidence for rollback and no audit on failure (`TASK-040`).
+- Import execution now routes each row through `ItemImportAggregateService` inside one caller-owned transaction. It re-authorizes the confirming actor, applies shared SKU validation, writes per-aggregate Item/SKU audit with the confirmed reason, commits successful job/row state atomically with the aggregate, and fences recovered leases so a stale worker cannot overwrite a newer owner. Failure injection, owner revocation, lease recovery/fencing and the 10,000-row bound have current developer evidence under `TASK-041`; CI and formal acceptance remain pending.
 - No production downstream Purchasing/Inventory/Sales FK currently exists; the future reference-guard integration remains a declared dependency, not an implementation failure against an available provider.
+
+## HD-003 — Attribute and Variant detail projection contract
+
+`ERP Product Owner (Sam)` approved this contract in the active Codex task on 2026-09-14 for `TASK-037`. It resolves the previously unspecified non-empty response shape without expanding the task into Attribute write support or arbitrary typed SKU Variant values.
+
+`GET /api/v1/items/:id` returns `attributeValues`, ordered by the assigned Category Attribute `sort_order` and then `attributeId`. Each row is a whitelist projection:
+
+```json
+{
+  "attributeId": 4,
+  "code": "MATERIAL",
+  "name": "材質",
+  "dataType": "single_option",
+  "value": "cotton",
+  "option": { "id": 17, "value": "cotton", "label": "棉" }
+}
+```
+
+`value` is the typed display value: `string` for text, long text and decimal; `boolean` for boolean; epoch milliseconds for date; and the option `value` for `single_option`. `option` is `null` for every non-option data type and otherwise contains only `id`, `value` and `label`.
+
+`GET /api/v1/skus/:id` returns `variantValues` in the same stable order. This task projects the existing Variant domain only: every row has `dataType: "single_option"` and a non-null option object. The response does not add a write API, and Item-detail SKU summaries remain summaries rather than duplicating each SKU's variant values.
 
 ---
 
@@ -222,13 +243,13 @@ server/src/modules/item/
 { name: "item.mgmt", description: "管理商品、SKU 與商品主資料" }
 ```
 
-Migration 將兩者種入 `permissions` 並授予 `system-admin`。商品管理員角色必須同時獲授 `item.view` 與 `item.mgmt`；現有 authorization 沒有 permission inheritance，不假設持有 `item.mgmt` 會自動得到 `item.view`。Permission 仍是程式碼目錄的一部分，不提供新增／修改 permission API。
+Migration 將兩者種入 `permissions` 並授予 `system-admin`。`item.view` 保持純讀取權限；`item.mgmt` 是 Item Management 的完整讀寫權限，對 Item 相關讀取 API 明確以 `item.view` **或** `item.mgmt` 授權，毋須另加 `item.view`。這是 Item 模組明確的 policy，不是跨模組的 permission inheritance。Permission 仍是程式碼目錄的一部分，不提供新增／修改 permission API。
 
 ### 3.2 認證強度
 
 | 操作 | authType | permission | 理由 |
 | --- | --- | --- | --- |
-| Item／SKU 列表、詳情、catalog 查詢、media download、audit 查詢 | `jwt` | `item.view` | 只讀商品查閱。 |
+| Item／SKU 列表、詳情、catalog 查詢、media download、audit 查詢 | `jwt` | `item.view` 或 `item.mgmt` | 純讀使用者以 view 查閱；管理者以 mgmt 完整讀寫。 |
 | 建立、一般修改、直接啟用、圖片上傳 | `jwt` | `item.mgmt` | 日常商品維護；啟用仍需完整驗證及 audit。 |
 | Inactive／Active 切換 | `jwt` | `item.mgmt` | 可逆且有 audit。 |
 | Discontinued／Archived／Restore | `jwt-password` | `item.mgmt` | 會中止新交易或重新開放資料，要求密碼再確認及原因。 |
@@ -244,7 +265,7 @@ Migration 將兩者種入 `permissions` 並授予 `system-admin`。商品管理�
 列表、Item／SKU 詳情及 audit 頁宣告：
 
 ```js
-requires: { permissions: ["item.view"] }
+requires: { permissions: ["item.view", "item.mgmt"], match: "any" }
 ```
 
 Create、Catalog 維護及 Import 頁宣告 `item.mgmt`；詳情頁內所有寫入按鈕另以 `v-can="item.mgmt"` 控制。前端 route guard、menu visibility 及 `v-can` 只是體驗層；所有 API 仍獨立驗證 permission。
@@ -254,7 +275,7 @@ Create、Catalog 維護及 Import 頁宣告 `item.mgmt`；詳情頁內所有寫�
 | 使用者類型 | Permission | 可用範圍 |
 | --- | --- | --- |
 | `system-admin` | Migration 預設授予兩者 | 全部 Item 頁及 API，包括稽核、匯入與高風險操作。 |
-| 商品管理員自訂角色 | `item.view`＋`item.mgmt` | 完整 Item 業務能力；高風險操作仍須相應再認證。 |
+| 商品管理員自訂角色 | `item.mgmt` | 完整 Item 業務能力（包括讀取）；高風險操作仍須相應再認證。 |
 | 只讀／一般後台角色 | `item.view` | 列表、詳情、附件下載及 audit；所有寫入 API 403。 |
 | 採購／庫存角色 | 按需要另授 `item.view` | 可進管理端只讀查閱；交易內查找仍依各模組自己的權限。 |
 | 銷售／POS 角色 | 通常不授 Item permission | 只在自己的已授權流程，由後端呼叫 `ItemLookupService` 取得用途相符的 SKU。 |
@@ -410,7 +431,7 @@ erDiagram
 | `status` | VARCHAR(20) | `active` | `active`／`inactive`／`archived`。 |
 | `version`、時間、操作者 | 共通欄位 | — | 同 §5.1。 |
 
-索引／約束：`UNIQUE(code)`、`INDEX(status, name)`。被 SKU UOM、attribute 或 net content 引用時不可刪。
+索引／約束：`UNIQUE(code)`、`INDEX(status, name)`。被 SKU UOM、attribute，或 SKU 的 net content／weight／dimension 引用時不可刪；`CATALOG_IN_USE.details.referenceTypes` 分別以 `sku_uoms`、`attributes`、`sku_measurements` 回報實際依賴類型。
 
 ### 5.6 `items`
 
@@ -716,7 +737,7 @@ Primary key `(job_id,row_number)`，另有 `(job_id,status)`。
 
 ### 6.4 Catalog APIs
 
-Catalog GET 要求 jwt＋`item.view`；create／update／activate／deactivate 要求 jwt＋`item.mgmt`；archive／restore／delete 要求 jwt-password＋`item.mgmt`。列表不分頁的唯一例外是 UOM 小目錄；Category 回整棵樹。Brand／Attribute 仍分頁。
+Catalog GET 要求 jwt＋`item.view` 或 `item.mgmt`；create／update／activate／deactivate 要求 jwt＋`item.mgmt`；archive／restore／delete 要求 jwt-password＋`item.mgmt`。列表不分頁的唯一例外是 UOM 小目錄；Category 回整棵樹。Brand／Attribute 仍分頁。
 
 | Resource | APIs |
 | --- | --- |
@@ -740,7 +761,7 @@ Category move 的 update body 帶 `parentId` 及 version；service 在同一交�
 | --- | --- | --- |
 | `POST /api/v1/items/:id/media/upload` | jwt＋item.mgmt | multipart，一次一檔；body fields kind、isPrimary、sortOrder、version。 |
 | `POST /api/v1/skus/:id/media/upload` | jwt＋item.mgmt | SKU 專屬 media；驗證 SKU 屬 Item。 |
-| `GET /api/v1/item-media/:id/download` | jwt＋item.view | 以 `this.file()` attachment／受控 inline image 回傳；不得接受使用者 path。 |
+| `GET /api/v1/item-media/:id/download` | jwt＋item.view 或 item.mgmt | 以 `this.file()` attachment／受控 inline image 回傳；不得接受使用者 path。 |
 | `POST /api/v1/item-media/:id/update` | jwt＋item.mgmt | 改 primary／sort／display name。 |
 | `POST /api/v1/item-media/:id/delete` | jwt-password＋item.mgmt | DB delete＋audit 後刪檔。 |
 
@@ -750,7 +771,7 @@ Multipart middleware 提供的非檔案欄位一律先視為字串；Handler sch
 
 ### 6.7 Audit API
 
-`GET /api/v1/item-audit/logs`，jwt＋`item.view`。Query：page、pageSize、from、to、actor、target、action、targetType；固定 `occurred_at DESC, id DESC`，不接受任意 sort。回 item audit，不混入 user audit。
+`GET /api/v1/item-audit/logs`，jwt＋`item.view` 或 `item.mgmt`。Query：page、pageSize、from、to、actor、target、action、targetType；固定 `occurred_at DESC, id DESC`，不接受任意 sort。回 item audit，不混入 user audit。
 
 ### 6.8 Import／Export APIs（Phase 3）
 
@@ -909,17 +930,17 @@ MySQL `ER_DUP_ENTRY` 必須依 constraint 名轉成對應公開 code；不得把
 
 | Page／Route | Menu | Permission | 主要功能 |
 | --- | --- | --- | --- |
-| `ItemsPage.vue` `/items` | 商品與 SKU | item.view | Item／SKU view toggle、搜尋、篩選、分頁；item.mgmt 才顯示操作。 |
+| `ItemsPage.vue` `/items` | 商品與 SKU | item.view 或 item.mgmt | Item／SKU view toggle、搜尋、篩選、分頁；item.mgmt 顯示操作。 |
 | `ItemCreatePage.vue` `/items/new` | 無，從列表進入 | item.mgmt | 分步建立 Item＋初始 SKU，可直接啟用。 |
-| `ItemDetailPage.vue` `/items/:id` | 無 | item.view | 基本資料、SKU、attributes、media、歷史 tabs；編輯需 item.mgmt。 |
+| `ItemDetailPage.vue` `/items/:id` | 無 | item.view 或 item.mgmt | 基本資料、SKU、attributes、media、歷史 tabs；編輯需 item.mgmt。 |
 | `SkuCreatePage.vue` `/items/:itemId/skus/new` | 無 | item.mgmt | 在既有 Item 新增 SKU。 |
-| `SkuDetailPage.vue` `/items/:itemId/skus/:skuId` | 無 | item.view | SKU 資料、variant、UOM、barcode、追蹤政策、價格及 media；編輯需 item.mgmt。 |
+| `SkuDetailPage.vue` `/items/:itemId/skus/:skuId` | 無 | item.view 或 item.mgmt | SKU 資料、variant、UOM、barcode、追蹤政策、價格及 media；編輯需 item.mgmt。 |
 | `CategoriesPage.vue` `/items/categories` | 分類 | item.mgmt | Tree 維護、移動、停用、封存。 |
 | `BrandsPage.vue` `/items/brands` | 品牌 | item.mgmt | 分頁 CRUD。 |
 | `UomsPage.vue` `/items/uoms` | 單位 | item.mgmt | UOM catalog 及使用中保護；本期不設小數精度。 |
 | `AttributesPage.vue` `/items/attributes` | 商品屬性 | item.mgmt | Definition、option、variant flag、category rules。 |
 | `ItemImportsPage.vue` `/items/imports` | 匯入／匯出 | item.mgmt | Template、上傳、預檢、確認、進度、錯誤下載。 |
-| `ItemAuditPage.vue` `/items/audit` | 變更紀錄 | item.view | Audit filter、detail diff。 |
+| `ItemAuditPage.vue` `/items/audit` | 變更紀錄 | item.view 或 item.mgmt | Audit filter、detail diff。 |
 
 Create／detail 頁沒有 menu metadata，但有 page metadata 供 router guard 保護。所有 menu order 在 `items` group 內唯一。
 
@@ -1330,7 +1351,7 @@ Item 列表搜尋 SKU Code／name／barcode 時使用相關 `EXISTS`，避免 JO
 5. stale version update 回 409 且 DB／audit 無變更。
 6. Item deactivate 使 children Inactive；restore 後 children 不自動 Active。
 7. SKU Code 特批 endpoint 驗證 device signature＋password＋audit。
-8. 只有 `item.view` 可讀 list／detail／media／audit，但所有 write 403；只有 `item.mgmt` 而沒有 view 時不能誤讀 GET。
+8. `item.view` 可讀 list／detail／media／audit、所有 write 403；`item.mgmt` 可讀寫所有 Item Management API，無任一 Item 權限時全部拒絕。
 9. 無相應 permission token 對每類 API 都 403。
 10. 無條碼 SKU 可啟用；小數 Base quantity／UOM factor 被拒；RRP response 固定 HKD／`tax_not_applicable`。
 11. Phase 3 duplicate warning 不阻擋建立；100 筆 bulk status 成功及中間一筆失敗全 rollback。
@@ -1386,7 +1407,7 @@ Vue component tests 另驗 route leave dirty prompt、鍵盤操作、狀態不�
 ### 11.4 Security tests
 
 - 每支寫入 API：未登入 401、無 permission 403、stale permission 403。
-- 每支只讀 API：只有 `item.view` 可存取；只有 `item.mgmt` 且未獲 `item.view` 仍拒絕，證明沒有隱含 permission hierarchy。
+- 每支只讀 API：`item.view` 或 `item.mgmt` 均可存取；管理讀取是 Item 模組明確 policy，不延伸為其他模組的 permission hierarchy。
 - 前端按鈕隱藏後直接呼叫 API 仍被拒。
 - SKU Code／names／description／CSV 內的 HTML／script 只當文字，不執行。
 - SQL LIKE wildcard 已 escape，所有值使用 parameterized query；sort column 只走 whitelist。
@@ -1655,7 +1676,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-009 — Catalog API and reference protection
 
 ### Decision
-Apply the detailed design in preserved sections `§6.4, §8.2, §8.4` for catalog api and reference protection. Current alignment classification: `IMPLEMENTATION_GAP for referenced Brand/UOM error mapping`.
+Apply the detailed design in preserved sections `§6.4, §8.2, §8.4` for catalog api and reference protection. Current alignment classification: `IMPLEMENTED with current developer evidence; formal acceptance pending`.
 
 ### Rationale
 This design is required by FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038; exact typed relationships are maintained in `08_traceability.json`.
@@ -1688,7 +1709,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-012 — Audit persistence, query and presentation
 
 ### Decision
-Apply the detailed design in preserved sections `§5.12, §6.7, §8.7` for audit persistence, query and presentation. Current alignment classification: `IMPLEMENTATION_GAP: backend exists, user-facing history view absent`.
+Apply the detailed design in preserved sections `§5.12, §6.7, §8.7` for audit persistence, query and presentation. Current alignment classification: `IMPLEMENTED with current developer evidence; formal acceptance pending`.
 
 ### Rationale
 This design is required by FR-013, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, NFR-006; exact typed relationships are maintained in `08_traceability.json`.
@@ -1699,7 +1720,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-013 — CSV import/export, job lifecycle and retention
 
 ### Decision
-Apply the detailed design in preserved sections `§5.13, §6.8, §8.6` for csv import/export, job lifecycle and retention. Current alignment classification: `HIGH gap: direct SQL bypasses aggregate audit contract`.
+Apply the detailed design in preserved sections `§5.13, §6.8, §8.6` for csv import/export, job lifecycle and retention. Current alignment classification: `IMPLEMENTED with current developer evidence; formal acceptance pending`.
 
 ### Rationale
 This design is required by FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, SEC-007, SEC-008, SEC-009, NFR-005, NFR-011; exact typed relationships are maintained in `08_traceability.json`.
@@ -1721,7 +1742,7 @@ Boundary validation, authorization, optimistic concurrency, transaction/audit co
 ## DES-015 — Page routes, editors, scanner UX and accessibility
 
 ### Decision
-Apply the detailed design in preserved sections `§7` for page routes, editors, scanner ux and accessibility. Current alignment classification: `PARTIAL; Audit page absent; standalone SKU-create page retained by HD-001 and pending TASK-038`.
+Apply the detailed design in preserved sections `§7` for page routes, editors, scanner ux and accessibility. Current alignment classification: `PARTIAL; Audit and standalone SKU-create pages are implemented, while formal acceptance remains pending`.
 
 ### Rationale
 This design is required by FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-022, FR-025, SEC-009, NFR-012, NFR-013; exact typed relationships are maintained in `08_traceability.json`.

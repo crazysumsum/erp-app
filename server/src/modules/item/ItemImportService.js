@@ -183,39 +183,60 @@ export class ItemImportService {
   }
 
   /**
-   * 原子攞一個 `queued` job 嚟做 execution：同
+   * 原子攞一個 `queued` 或 lease 已過期的 `running` job 嚟做 execution：同
    * `claimNextUploadedJobForValidation()` 同一個 compare-and-set＋lease
    * 手法，理由一致。
    */
   async claimNextQueuedJobForExecution({ leaseOwner, leaseDurationMs }) {
     return this.database.withTransaction(async (connection) => {
+      const nowMs = this.time.nowMs();
       const [[job]] = await connection.query(
-        `SELECT id, mode, created_by, version, confirmed_at
+        `SELECT id, mode, status, created_by, confirmed_by, version, confirmed_at
            FROM item_import_jobs
           WHERE status = 'queued'
+             OR (status = 'running' AND lease_until < ?)
           ORDER BY confirmed_at ASC
           LIMIT 1
-          FOR UPDATE`
+          FOR UPDATE`,
+        [nowMs]
       );
 
       if (!job) {
         return null;
       }
 
-      const nowMs = this.time.nowMs();
       const leaseUntil = nowMs + leaseDurationMs;
 
       await connection.execute(
         `UPDATE item_import_jobs
             SET status = 'running', lease_owner = ?, lease_until = ?, updated_at = ?, version = version + 1
-          WHERE id = ? AND version = ?`,
-        [leaseOwner, leaseUntil, nowMs, job.id, job.version]
+          WHERE id = ? AND version = ?
+            AND (status = 'queued' OR (status = 'running' AND lease_until < ?))`,
+        [leaseOwner, leaseUntil, nowMs, job.id, job.version, nowMs]
+      );
+
+      // confirm 與 item.import audit 在同一個 transaction 寫入；queued job
+      // 因此一定有且只有一筆對應確認紀錄。Execution 沿用當時已驗證及已落
+      // audit 的 reason/request metadata，毋須為背景 worker 新增另一套 schema。
+      const [[confirmation]] = await connection.query(
+        `SELECT reason, request_id, ip
+           FROM item_audit_logs
+          WHERE action = 'item.import' AND target_type = 'import' AND target_id = ?
+          ORDER BY id DESC
+          LIMIT 1`,
+        [job.id]
       );
 
       return {
         id: job.id,
         mode: job.mode,
         createdBy: job.created_by === null ? null : Number(job.created_by),
+        confirmedBy: job.confirmed_by === null ? null : Number(job.confirmed_by),
+        confirmation:
+          confirmation === undefined
+            ? null
+            : { reason: confirmation.reason, requestId: confirmation.request_id, ip: confirmation.ip },
+        leaseRecovered: job.status === "running",
         confirmedAt: job.confirmed_at === null ? null : Number(job.confirmed_at)
       };
     });
@@ -241,37 +262,77 @@ export class ItemImportService {
     }));
   }
 
+  async lockExecutionLease(connection, { jobId, leaseOwner }) {
+    const [[job]] = await connection.query(
+      "SELECT status, lease_owner FROM item_import_jobs WHERE id = ? FOR UPDATE",
+      [jobId]
+    );
+    if (!job || job.status !== "running" || job.lease_owner !== leaseOwner) {
+      throw new Error("Item import execution lease is no longer owned by this worker");
+    }
+  }
+
   /**
-   * Execution 完成之後、用一個獨立嘅短交易更新 job 狀態——同套用商品變更嗰個
-   * transaction 分開，確保「商品變更 rollback 咗」同「job 狀態更新成功」呢
-   * 兩件事唔會綁死喺同一個 all-or-nothing 單位入面（design_spec §5.13：
-   * 「Worker 捕捉失敗後，另開短交易把 Job 記為 failed，確保狀態更新不會跟
-   * 商品交易一起 rollback」）。 */
-  /**
-   * `appliedRowNumbers`／`failedRow` 同 job 狀態一齊喺呢個短交易更新
-   * `item_import_rows.status`：preflight 得出嘅 valid／warning 只代表「執行
-   * 之前睇落冇問題」，執行完成之後一定要覆寫做 applied／failed，等 row 逐列
-   * 結果（詳情頁、結果 CSV）反映返真正套用咗嘅結果，唔係停留喺過時嘅
-   * preflight 判斷（design_spec §5.13 row status 定義含 applied／failed）。
-   * 全有全無：失敗淨係嗰一 row 標 failed 並帶失敗原因，其餘 row 保持原本
-   * preflight 狀態——佢哋本身冇問題，令成批 rollback 嘅係另一 row。
+   * 成功狀態與 aggregate 寫入共用 caller 提供的 transaction。這關閉了
+   * 「商品已 commit、process 在另一次 job-status transaction 前 crash」的
+   * 重做窗口：expired lease 只可能接管尚未 commit 的 execution。
    */
-  async recordExecutionResult({ jobId, status, successCount, failureCount, errorSummary, appliedRowNumbers = [], failedRow = null }) {
+  async recordExecutionSuccessInTransaction(connection, { jobId, leaseOwner, successCount, appliedRowNumbers }) {
+    const nowMs = this.time.nowMs();
+    const [result] = await connection.execute(
+      `UPDATE item_import_jobs
+          SET status = 'completed', success_count = ?, failure_count = 0, error_summary = NULL,
+              lease_owner = NULL, lease_until = NULL, completed_at = ?, updated_at = ?, version = version + 1
+        WHERE id = ? AND status = 'running' AND lease_owner = ?`,
+      [successCount, nowMs, nowMs, jobId, leaseOwner]
+    );
+    if (result.affectedRows !== 1) {
+      throw new Error("Item import job could not be completed by its execution owner");
+    }
+
+    if (appliedRowNumbers.length > 0) {
+      await connection.query(
+        "UPDATE item_import_rows SET status = 'applied', updated_at = ? WHERE job_id = ? AND `row_number` IN (?)",
+        [nowMs, jobId, appliedRowNumbers]
+      );
+    }
+  }
+
+  /**
+   * 商品 transaction rollback 後，用獨立短交易記錄 execution failure，並只
+   * 標示真正觸發 rollback 的 row。更新用 `leaseOwner` fencing；若另一 worker
+   * 已接管或完成，舊 owner 不得覆寫 job、row 或 result file。
+   */
+  async recordExecutionResult({
+    jobId,
+    leaseOwner,
+    status,
+    successCount,
+    failureCount,
+    errorSummary,
+    failedRow = null
+  }) {
     return this.database.withTransaction(async (connection) => {
       const nowMs = this.time.nowMs();
-      await connection.execute(
+      const [result] = await connection.execute(
         `UPDATE item_import_jobs
             SET status = ?, success_count = ?, failure_count = ?, error_summary = ?,
                 lease_owner = NULL, lease_until = NULL, completed_at = ?, updated_at = ?, version = version + 1
-          WHERE id = ?`,
-        [status, successCount, failureCount, errorSummary ? String(errorSummary).slice(0, 1000) : null, nowMs, nowMs, jobId]
+          WHERE id = ? AND status = 'running' AND lease_owner = ?`,
+        [
+          status,
+          successCount,
+          failureCount,
+          errorSummary ? String(errorSummary).slice(0, 1000) : null,
+          nowMs,
+          nowMs,
+          jobId,
+          leaseOwner
+        ]
       );
 
-      if (appliedRowNumbers.length > 0) {
-        await connection.query(
-          "UPDATE item_import_rows SET status = 'applied', updated_at = ? WHERE job_id = ? AND `row_number` IN (?)",
-          [nowMs, jobId, appliedRowNumbers]
-        );
+      if (result.affectedRows !== 1) {
+        return { recorded: false };
       }
 
       if (failedRow) {
@@ -285,6 +346,7 @@ export class ItemImportService {
           [JSON.stringify(errors), nowMs, jobId, failedRow.rowNumber]
         );
       }
+      return { recorded: true };
     });
   }
 

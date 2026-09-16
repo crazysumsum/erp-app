@@ -827,20 +827,26 @@ export class ItemCatalogService {
   // --- Brand：受控刪除 -------------------------------------------------------
 
   /**
-   * 永久刪除。目前沒有任何表引用 item_brands，所以這裡沒有 in-use 檢查；等
-   * 第一個真引用（items.brand_id）出現時，那張表的 FK RESTRICT 會在資料庫層
-   * 擋下，屆時再把對應的公開錯誤（`CATALOG_IN_USE`）接上，不用先為一張還不
-   * 存在的表寫檢查（design_spec.md §8.4 的 reference guard 原則）。
+   * 永久刪除。`items.brand_id` 的 FK RESTRICT 是競態安全的最後防線；服務層
+   * 將該資料庫錯誤轉成穩定的 `CATALOG_IN_USE` 公開合約。
    */
   async deleteBrand({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       const current = await this.#requireBrand(connection, id);
 
-      const [result] = await connection.execute(
-        "DELETE FROM item_brands WHERE id = ? AND version = ?",
-        [id, version]
-      );
+      let result;
+      try {
+        [result] = await connection.execute(
+          "DELETE FROM item_brands WHERE id = ? AND version = ?",
+          [id, version]
+        );
+      } catch (error) {
+        if (isRowReferenced(error)) {
+          throw catalogInUse(["items"]);
+        }
+        throw error;
+      }
 
       if (result.affectedRows === 0) {
         // #requireBrand 只是一次快照讀，DELETE 檢查的是最新已提交的資料——
@@ -1091,19 +1097,27 @@ export class ItemCatalogService {
   // --- UOM：受控刪除 -----------------------------------------------------------
 
   /**
-   * 永久刪除。跟 deleteBrand 同一個理由：目前沒有 item_sku_uoms／
-   * item_sku_barcodes／net_content 等表存在，in-use 檢查等那些表出現時再
-   * 接上對應的 FK 與 `CATALOG_IN_USE` 錯誤。
+   * 永久刪除。SKU 包裝單位與 decimal Attribute 都以 FK RESTRICT 引用 UOM；
+   * 服務層將該資料庫錯誤轉成穩定的 `CATALOG_IN_USE` 公開合約。
    */
   async deleteUom({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
       const current = await this.#requireUom(connection, id);
 
-      const [result] = await connection.execute(
-        "DELETE FROM item_uoms WHERE id = ? AND version = ?",
-        [id, version]
-      );
+      let result;
+      try {
+        [result] = await connection.execute(
+          "DELETE FROM item_uoms WHERE id = ? AND version = ?",
+          [id, version]
+        );
+      } catch (error) {
+        if (isRowReferenced(error)) {
+          const referenceTypes = await this.#describeUomReferences(connection, id);
+          throw catalogInUse(referenceTypes.length > 0 ? referenceTypes : ["unknown"]);
+        }
+        throw error;
+      }
 
       if (result.affectedRows === 0) {
         // #requireUom 只是一次快照讀，DELETE 檢查的是最新已提交的資料——
@@ -1193,6 +1207,37 @@ export class ItemCatalogService {
     }
 
     return rows[0];
+  }
+
+  async #describeUomReferences(connection, id) {
+    const referenceTypes = [];
+    const [skuUoms] = await connection.query(
+      "SELECT id FROM item_sku_uoms WHERE uom_id = ? LIMIT 1 FOR UPDATE",
+      [id]
+    );
+    if (skuUoms.length > 0) {
+      referenceTypes.push("sku_uoms");
+    }
+
+    const [skuMeasurements] = await connection.query(
+      `SELECT id FROM item_skus
+        WHERE net_content_uom_id = ? OR weight_uom_id = ? OR dimension_uom_id = ?
+        LIMIT 1 FOR UPDATE`,
+      [id, id, id]
+    );
+    if (skuMeasurements.length > 0) {
+      referenceTypes.push("sku_measurements");
+    }
+
+    const [attributes] = await connection.query(
+      "SELECT id FROM item_attribute_definitions WHERE uom_id = ? LIMIT 1 FOR UPDATE",
+      [id]
+    );
+    if (attributes.length > 0) {
+      referenceTypes.push("attributes");
+    }
+
+    return referenceTypes;
   }
 
   #toUomSummary(row) {
@@ -1620,9 +1665,7 @@ export class ItemCatalogService {
   /**
    * 永久刪除。`item_category_attributes`／`item_attribute_values`／
    * `item_sku_attribute_values` 三張表都對 `attribute_id` 設 FK RESTRICT
-   * （見 0020–0022 migration），呢三張表喺呢個 task 已經真實存在（唔似
-   * deleteBrand／deleteUom 嗰陣，被引用嗰張表仲未建立），所以呢度直接接住
-   * FK RESTRICT 轉做公開錯誤，唔留返俾之後先補。
+   * （見 0020–0022 migration），所以直接接住 FK RESTRICT 轉做公開錯誤。
    */
   async deleteAttribute({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
@@ -1712,15 +1755,34 @@ export class ItemCatalogService {
       if (new Set(attributeIds).size !== attributeIds.length) {
         throw attributeValueInvalid("同一個屬性不可以在同一個分類重複指派");
       }
+      const nextById = new Map(
+        assignments.map((assignment) => [
+          Number(assignment.attributeId),
+          {
+            attributeId: Number(assignment.attributeId),
+            requiredForActivation: !!assignment.requiredForActivation,
+            sortOrder: Number(assignment.sortOrder ?? 0)
+          }
+        ])
+      );
       for (const attributeId of new Set(attributeIds)) {
         await this.#requireAttribute(connection, attributeId);
       }
 
+      const currentById = new Map(
+        currentRows.map((row) => {
+          const assignment = this.#toCategoryAttributeAssignment(row);
+          return [assignment.attributeId, assignment];
+        })
+      );
       const nowMs = this.time.nowMs();
-      const nextById = new Map(assignments.map((assignment) => [Number(assignment.attributeId), assignment]));
       const toDelete = [...currentIds].filter((attributeId) => !nextById.has(attributeId));
       const toInsert = [...nextById.keys()].filter((attributeId) => !currentIds.has(attributeId));
-      const toUpdate = [...nextById.keys()].filter((attributeId) => currentIds.has(attributeId));
+      const toUpdate = [...nextById.keys()].filter((attributeId) => {
+        const current = currentById.get(attributeId);
+        const next = nextById.get(attributeId);
+        return current && (current.requiredForActivation !== next.requiredForActivation || current.sortOrder !== next.sortOrder);
+      });
 
       if (toDelete.length > 0) {
         const placeholders = toDelete.map(() => "?").join(",");
@@ -1757,7 +1819,14 @@ export class ItemCatalogService {
         targetType: "category",
         targetId: categoryId,
         targetLabel: category.name,
-        detail: { added: toInsert, removed: toDelete, updated: toUpdate },
+        detail: {
+          added: toInsert.map((attributeId) => nextById.get(attributeId)),
+          removed: toDelete.map((attributeId) => currentById.get(attributeId)),
+          updated: toUpdate.map((attributeId) => ({
+            before: currentById.get(attributeId),
+            after: nextById.get(attributeId)
+          }))
+        },
         requestId,
         ip
       });

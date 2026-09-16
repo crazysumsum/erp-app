@@ -297,7 +297,7 @@ function baseSkuPayload(fixture, catalog, overrides = {}) {
   };
 }
 
-test("更新 SKU：淨係改 RRP，唔使填 reason，audit 保存前後 amount／HKD／tax_not_applicable", { skip }, async (t) => {
+test("TC-007 更新 SKU：淨係改 RRP，唔使填 reason，audit 保存前後 amount／HKD／tax_not_applicable", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
   const catalog = await seedCatalog(db);

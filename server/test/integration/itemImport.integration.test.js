@@ -18,6 +18,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
+import { executeItemImportJob } from "../../src/services/itemImport/jobs/executeItemImportJob.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -207,7 +208,7 @@ async function withManager(t, application, permissionNames = ["item.mgmt"]) {
     await role.cleanup();
   });
 
-  return { db, token, actorId: actor.userId };
+  return { db, token, actorId: actor.userId, actorUsername: actor.username, roleId: role.roleId };
 }
 
 function get(url, token) {
@@ -587,9 +588,9 @@ test("結果 CSV：skuCode 開頭係 =／+／-／@ 會加單引號，防試算�
 
 // --- T29：Confirm／Execution 全流程 ------------------------------------------
 
-test("Confirm＋execution 全流程：create-only job 完成後真係建咗一個 Item＋SKU，結果 CSV 下載得到", { skip }, async (t) => {
+test("TC-009 Confirm＋execution 全流程：create-only job 完成後真係建咗一個 Item＋SKU，結果 CSV 下載得到", { skip }, async (t) => {
   const application = await startApplication();
-  const { db, token } = await withManager(t, application);
+  const { db, token, actorId, actorUsername } = await withManager(t, application);
   const catalog = await seedCatalog(db);
   const worker = application.services.require("job.itemImportWorker");
   const skuCode = `IT-EXEC-${catalog.suffix}`;
@@ -630,7 +631,7 @@ test("Confirm＋execution 全流程：create-only job 完成後真係建咗一�
   assert.equal(afterExecution.body.data.job.failureCount, 0);
 
   const [[skuRow]] = await db.query(
-    "SELECT s.sku_code, s.status, s.suggested_price_amount, i.status AS item_status FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.sku_code = ?",
+    "SELECT s.id, s.item_id, s.sku_code, s.status, s.suggested_price_amount, i.status AS item_status FROM item_skus s JOIN items i ON i.id = s.item_id WHERE s.sku_code = ?",
     [skuCode]
   );
   assert.ok(skuRow, "execution 應該真係建立咗一個 SKU");
@@ -643,6 +644,43 @@ test("Confirm＋execution 全流程：create-only job 完成後真係建咗一�
     [jobId]
   );
   assert.deepEqual(auditRows.map((row) => row.action), ["item.import"]);
+
+  const [aggregateAuditRows] = await db.query(
+    `SELECT actor_user_id, actor_username, action, target_type, target_id, target_label, reason
+       FROM item_audit_logs
+      WHERE (target_type = 'item' AND target_id = ?)
+         OR (target_type = 'sku' AND target_id = ?)
+      ORDER BY id ASC`,
+    [skuRow.item_id, skuRow.id]
+  );
+  assert.deepEqual(
+    aggregateAuditRows.map((row) => ({
+      actorUserId: Number(row.actor_user_id),
+      actorUsername: row.actor_username,
+      action: row.action,
+      targetType: row.target_type,
+      targetLabel: row.target_label,
+      reason: row.reason
+    })),
+    [
+      {
+        actorUserId: actorId,
+        actorUsername,
+        action: "item.create",
+        targetType: "item",
+        targetLabel: "全流程測試 Item",
+        reason: "整合測試：確認匯入"
+      },
+      {
+        actorUserId: actorId,
+        actorUsername,
+        action: "sku.create",
+        targetType: "sku",
+        targetLabel: skuCode,
+        reason: "整合測試：確認匯入"
+      }
+    ]
+  );
 
   const [[rowAfterExecution]] = await db.query(
     "SELECT status FROM item_import_rows WHERE job_id = ? AND `row_number` = 1",
@@ -741,7 +779,7 @@ test("執行中 SKU Code race：preflight 之後、execution 之前俾第三者�
 
 test("Upsert 更新一粒真嘅 SKU：confirm＋execution 之後 SKU 欄位同 version 都變咗", { skip }, async (t) => {
   const application = await startApplication();
-  const { db, token } = await withManager(t, application);
+  const { db, token, actorId, actorUsername } = await withManager(t, application);
   const catalog = await seedCatalog(db);
   const sku = await seedSku(db, catalog);
   const worker = application.services.require("job.itemImportWorker");
@@ -783,6 +821,337 @@ test("Upsert 更新一粒真嘅 SKU：confirm＋execution 之後 SKU 欄位同 v
   assert.equal(skuRow.sku_name, "已經改咗嘅名稱");
   assert.equal(skuRow.suggested_price_amount, "50.0000");
   assert.equal(skuRow.version, sku.version + 1);
+
+  const [auditRows] = await db.query(
+    `SELECT actor_user_id, actor_username, action, target_label, reason, detail
+       FROM item_audit_logs
+      WHERE target_type = 'sku' AND target_id = ?
+      ORDER BY id ASC`,
+    [sku.skuId]
+  );
+  assert.equal(auditRows.length, 1);
+  assert.equal(Number(auditRows[0].actor_user_id), actorId);
+  assert.equal(auditRows[0].actor_username, actorUsername);
+  assert.equal(auditRows[0].action, "sku.update");
+  assert.equal(auditRows[0].target_label, "已經改咗嘅名稱");
+  assert.equal(auditRows[0].reason, "整合測試：確認更新");
+  assert.deepEqual(auditRows[0].detail.skuName, {
+    before: "Integration test SKU",
+    after: "已經改咗嘅名稱"
+  });
+});
+
+test("TC-015 逐項 audit 寫入失敗：同一 execution transaction 內嘅 Item、SKU、UOM、audit 全部 rollback", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-AUDIT-ROLLBACK-${catalog.suffix}`;
+  let jobId = null;
+  t.after(async () => {
+    await cleanupCreatedSku(db, skuCode);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, {
+    csvText: csvFrom([{ skuCode, skuName: "Audit rollback SKU", itemName: "Audit rollback Item", ...names }]),
+    mode: "create_only"
+  });
+  jobId = uploaded.body.data.id;
+
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：audit failure rollback",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+
+  const originalRecord = worker.importAggregate.auditLog.record.bind(worker.importAggregate.auditLog);
+  worker.importAggregate.auditLog.record = async (connection, entry) => {
+    if (entry.action === "sku.create") {
+      throw new Error("injected aggregate audit failure");
+    }
+    return originalRecord(connection, entry);
+  };
+  t.after(() => {
+    worker.importAggregate.auditLog.record = originalRecord;
+  });
+
+  await worker.runExecution();
+
+  const afterExecution = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  assert.equal(afterExecution.body.data.job.status, "failed");
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  assert.equal(skuRows.length, 0, "audit 失敗唔可以留低 SKU");
+  const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", ["Audit rollback Item"]);
+  assert.equal(itemRows.length, 0, "audit 失敗唔可以留低 Item");
+  const [aggregateAuditRows] = await db.query(
+    "SELECT id FROM item_audit_logs WHERE target_type IN ('item', 'sku') AND target_label IN (?, ?)",
+    ["Audit rollback Item", skuCode]
+  );
+  assert.equal(aggregateAuditRows.length, 0, "transaction rollback 唔可以留低半套 aggregate audit");
+});
+
+test("commit 前 failure injection：已寫入的 aggregate、audit 與 completed 狀態一併 rollback", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-COMMIT-ROLLBACK-${catalog.suffix}`;
+  let jobId = null;
+  const originalDatabase = worker.database;
+  t.after(async () => {
+    worker.database = originalDatabase;
+    await cleanupCreatedSku(db, skuCode);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, {
+    csvText: csvFrom([{ skuCode, skuName: "Commit rollback SKU", itemName: "Commit rollback Item", ...names }]),
+    mode: "create_only"
+  });
+  jobId = uploaded.body.data.id;
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：commit failure rollback",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+
+  worker.database = {
+    withTransaction(work, options) {
+      return originalDatabase.withTransaction(async (connection) => {
+        await work(connection);
+        throw new Error("injected failure immediately before COMMIT");
+      }, options);
+    }
+  };
+  await worker.runExecution();
+
+  const [[job]] = await db.query("SELECT status, success_count, failure_count FROM item_import_jobs WHERE id = ?", [jobId]);
+  assert.equal(job.status, "failed");
+  assert.equal(job.success_count, 0);
+  assert.equal(job.failure_count, 1);
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  assert.equal(skuRows.length, 0);
+  const [itemRows] = await db.query("SELECT id FROM items WHERE name = ?", ["Commit rollback Item"]);
+  assert.equal(itemRows.length, 0);
+  const [auditRows] = await db.query(
+    "SELECT id FROM item_audit_logs WHERE target_type IN ('item', 'sku') AND target_label IN (?, ?)",
+    ["Commit rollback Item", skuCode]
+  );
+  assert.equal(auditRows.length, 0);
+});
+
+test("confirm 後 item.mgmt 被撤銷：execution 重新授權並拒絕套用任何 aggregate 資料", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token, roleId } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-REVOKED-${catalog.suffix}`;
+  let jobId = null;
+  t.after(async () => {
+    await cleanupCreatedSku(db, skuCode);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, {
+    csvText: csvFrom([{ skuCode, skuName: "Revoked SKU", itemName: "Revoked Item", ...names }]),
+    mode: "create_only"
+  });
+  jobId = uploaded.body.data.id;
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：confirm 後撤權",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+
+  await db.execute("DELETE FROM role_permissions WHERE role_id = ?", [roleId]);
+  await worker.runExecution();
+
+  const [[job]] = await db.query("SELECT status, error_summary FROM item_import_jobs WHERE id = ?", [jobId]);
+  assert.equal(job.status, "failed");
+  assert.match(job.error_summary, /權限已變更/);
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  assert.equal(skuRows.length, 0);
+});
+
+test("running job lease 過期：另一 worker 可安全接管並只套用一次", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-LEASE-RECOVERY-${catalog.suffix}`;
+  let jobId = null;
+  t.after(async () => {
+    await cleanupCreatedSku(db, skuCode);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, {
+    csvText: csvFrom([{ skuCode, skuName: "Lease recovery SKU", itemName: "Lease recovery Item", ...names }]),
+    mode: "create_only"
+  });
+  jobId = uploaded.body.data.id;
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：lease recovery",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+  await db.execute(
+    "UPDATE item_import_jobs SET status = 'running', lease_owner = 'dead-worker', lease_until = ?, version = version + 1 WHERE id = ?",
+    [Date.now() - 1, jobId]
+  );
+
+  const outcome = await worker.runExecution();
+  assert.equal(outcome.claimed, true);
+  const [[job]] = await db.query(
+    "SELECT status, success_count, failure_count, lease_owner, lease_until FROM item_import_jobs WHERE id = ?",
+    [jobId]
+  );
+  assert.equal(job.status, "completed");
+  assert.equal(job.success_count, 1);
+  assert.equal(job.failure_count, 0);
+  assert.equal(job.lease_owner, null);
+  assert.equal(job.lease_until, null);
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  assert.equal(skuRows.length, 1);
+});
+
+test("舊 worker 租約過期後恢復：不可覆寫新 owner 已完成的 job 或重複套用 aggregate", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const worker = application.services.require("job.itemImportWorker");
+  const skuCode = `IT-LEASE-FENCE-${catalog.suffix}`;
+  const itemName = "Lease fenced Item";
+  let jobId = null;
+  let releaseOldWorker;
+  t.after(async () => {
+    releaseOldWorker?.();
+    await cleanupCreatedSku(db, skuCode);
+    if (jobId) await cleanupImportJob(db, jobId);
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const names = await seedCatalogNames(db, catalog);
+  const uploaded = await uploadCsv(`${url}/api/v1/item-imports/upload`, token, {
+    csvText: csvFrom([{ skuCode, skuName: "Lease fenced SKU", itemName, ...names }]),
+    mode: "create_only"
+  });
+  jobId = uploaded.body.data.id;
+  await worker.runValidation();
+  const ready = await get(`${url}/api/v1/item-imports/${jobId}`, token);
+  await post(`${url}/api/v1/item-imports/${jobId}/confirm`, token, {
+    reason: "整合測試：lease fencing",
+    version: ready.body.data.job.version,
+    password: PASSWORD
+  });
+
+  let signalOldWorker;
+  const oldWorkerBlocked = new Promise((resolve) => {
+    releaseOldWorker = resolve;
+  });
+  const oldWorkerReachedTransaction = new Promise((resolve) => {
+    signalOldWorker = resolve;
+  });
+  const originalWriteResultFile = worker.importService.writeResultFile;
+  let resultFileWrites = 0;
+  worker.importService.writeResultFile = async (options) => {
+    resultFileWrites += 1;
+    return originalWriteResultFile.call(worker.importService, options);
+  };
+  t.after(() => {
+    worker.importService.writeResultFile = originalWriteResultFile;
+  });
+  const pausedDatabase = {
+    async withTransaction(work, options) {
+      signalOldWorker();
+      await oldWorkerBlocked;
+      return db.withTransaction(work, options);
+    }
+  };
+  const executionOptions = {
+    importService: worker.importService,
+    importAggregate: worker.importAggregate,
+    logger: worker.logger,
+    time: worker.time,
+    importDirectory: worker.importDirectory,
+    transactionTimeoutMs: worker.importTransactionTimeoutMs,
+    leaseDurationMs: worker.leaseDurationMs
+  };
+
+  const oldExecution = executeItemImportJob({
+    ...executionOptions,
+    database: pausedDatabase,
+    leaseOwner: "old-worker"
+  });
+  await oldWorkerReachedTransaction;
+  await db.execute("UPDATE item_import_jobs SET lease_until = ? WHERE id = ?", [Date.now() - 1, jobId]);
+
+  const newOutcome = await executeItemImportJob({
+    ...executionOptions,
+    database: db,
+    leaseOwner: "new-worker"
+  });
+  assert.equal(newOutcome.outcome, "completed");
+
+  releaseOldWorker();
+  const oldOutcome = await oldExecution;
+  assert.equal(oldOutcome.outcome, "lost_lease");
+  assert.equal(resultFileWrites, 1, "stale owner 不可重寫新 owner 已產生的 result file");
+
+  const [[job]] = await db.query(
+    "SELECT status, success_count, failure_count, lease_owner, lease_until FROM item_import_jobs WHERE id = ?",
+    [jobId]
+  );
+  assert.equal(job.status, "completed");
+  assert.equal(job.success_count, 1);
+  assert.equal(job.failure_count, 0);
+  assert.equal(job.lease_owner, null);
+  assert.equal(job.lease_until, null);
+
+  const [[row]] = await db.query(
+    "SELECT status FROM item_import_rows WHERE job_id = ? AND `row_number` = 1",
+    [jobId]
+  );
+  assert.equal(row.status, "applied");
+  const [skuRows] = await db.query("SELECT id FROM item_skus WHERE sku_code = ?", [skuCode]);
+  assert.equal(skuRows.length, 1);
+  const [auditRows] = await db.query(
+    `SELECT action
+       FROM item_audit_logs
+      WHERE action IN ('item.create', 'sku.create') AND target_label IN (?, ?)`,
+    [itemName, skuCode]
+  );
+  assert.deepEqual(
+    auditRows.map((entry) => entry.action).sort(),
+    ["item.create", "sku.create"]
+  );
 });
 
 // --- T29：Cancel ------------------------------------------------------------------

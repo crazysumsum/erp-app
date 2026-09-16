@@ -98,9 +98,9 @@ test("every category route lives under /api/v1/catalog", () => {
 
 // --- 權限矩陣 -----------------------------------------------------------------
 
-test("GET requires item.view; every write requires item.mgmt", () => {
+test("GET accepts item.view or item.mgmt; every write requires item.mgmt", () => {
   assert.deepEqual(ListCategoriesHandler.api.authorizationPolicies, [
-    { name: "hasPermission", options: { permissions: ["item.view"] } }
+    { name: "hasPermission", options: { permissions: ["item.view", "item.mgmt"], match: "any" } }
   ]);
 
   for (const HandlerClass of ALL_HANDLERS) {
@@ -301,7 +301,7 @@ test("every brand route lives under /api/v1/catalog/brands, with the same permis
   }
 
   assert.deepEqual(ListBrandsHandler.api.authorizationPolicies, [
-    { name: "hasPermission", options: { permissions: ["item.view"] } }
+    { name: "hasPermission", options: { permissions: ["item.view", "item.mgmt"], match: "any" } }
   ]);
   for (const HandlerClass of BRAND_HANDLERS) {
     if (HandlerClass === ListBrandsHandler) {
@@ -448,7 +448,7 @@ test("every uom route lives under /api/v1/catalog/uoms, with the same permission
   }
 
   assert.deepEqual(ListUomsHandler.api.authorizationPolicies, [
-    { name: "hasPermission", options: { permissions: ["item.view"] } }
+    { name: "hasPermission", options: { permissions: ["item.view", "item.mgmt"], match: "any" } }
   ]);
   for (const HandlerClass of UOM_HANDLERS) {
     if (HandlerClass === ListUomsHandler) {

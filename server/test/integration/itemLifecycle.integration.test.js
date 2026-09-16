@@ -343,7 +343,7 @@ test("啟用 Item：已封存嘅 Item：409 STATUS_TRANSITION_INVALID", { skip }
 
 // --- POST /api/v1/items/:id/deactivate --------------------------------------
 
-test("停用 Item：Active Item＋兩個 Active SKU，同交易全部轉 inactive，SKU audit 記低 cascadedFromItem", { skip }, async (t) => {
+test("TC-005 停用 Item：Active Item＋兩個 Active SKU，同交易全部轉 inactive，SKU audit 記低 cascadedFromItem", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withManager(t, application);
   const catalog = await seedCatalog(db);

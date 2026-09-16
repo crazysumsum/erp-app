@@ -1,0 +1,7 @@
+Error: /private/tmp/erp-item-management-task-038/client/e2e/item-management/playwright.config.js does not exist
+    at resolveConfigFile2 (/Users/sam/Documents/workspace/.tools/git-env/lib/node_modules/playwright/lib/common/index.js:1480:11)
+    at resolveConfigLocation (/Users/sam/Documents/workspace/.tools/git-env/lib/node_modules/playwright/lib/common/index.js:1461:30)
+    at Object.loadConfigFromFile (/Users/sam/Documents/workspace/.tools/git-env/lib/node_modules/playwright/lib/common/index.js:1490:27)
+    at runTests (/Users/sam/Documents/workspace/.tools/git-env/lib/node_modules/playwright/lib/cli/testActions.js:46:51)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async _Command.<anonymous> (/Users/sam/Documents/workspace/.tools/git-env/lib/node_modules/playwright/lib/program.js:55:7)

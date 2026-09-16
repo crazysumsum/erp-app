@@ -1,0 +1,72 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20260914T093142-11c20da04269",
+  "suite_id": "item-recovery",
+  "stage": "TECHNICAL",
+  "result": "BLOCKED",
+  "spec_baseline": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+  "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
+  "code_commit": "49d487e876932e6684cbdbec46043312b3f730bd",
+  "started_at": "2026-09-14T09:31:42.313127Z",
+  "ended_at": "2026-09-14T09:31:42.487780Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "server/scripts/runItemRecoveryAcceptance.js",
+    "--output",
+    "/private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260914T093142-11c20da04269/item-recovery.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "d44ddb4d8d8380d7823464de73911b715f0f80dff9afe4aa60b69295b0589b80",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T093142-11c20da04269/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T093142-11c20da04269/stderr.log",
+      "sha256": "0c5c0b744607e171e1fbaccf27804f92833ead5bb905dec5960d712dba7f7b84",
+      "bytes": 799
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "missing/fresh report required; symlink reports are refused: /private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260914T093142-11c20da04269/item-recovery.xml",
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: TC-016",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

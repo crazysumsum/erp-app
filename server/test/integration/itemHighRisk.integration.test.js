@@ -196,11 +196,12 @@ async function seedCatalog(db) {
 async function seedItemWithSkus(db, catalog, { itemStatus = "draft", skuStatuses = ["draft"] } = {}) {
   const nowMs = Date.now();
   const suffix = randomUUID().slice(0, 8);
+  const name = `it-item-${suffix}`;
 
   const [item] = await db.query(
     `INSERT INTO items (name, category_id, brand_id, product_type, status, created_at, updated_at)
      VALUES (?, ?, ?, 'standard', ?, ?, ?)`,
-    [`it-item-${suffix}`, catalog.categoryId, catalog.brandId, itemStatus, nowMs, nowMs]
+    [name, catalog.categoryId, catalog.brandId, itemStatus, nowMs, nowMs]
   );
   const itemId = item.insertId;
 
@@ -224,6 +225,7 @@ async function seedItemWithSkus(db, catalog, { itemStatus = "draft", skuStatuses
 
   return {
     itemId,
+    name,
     skuId: skus[0].id,
     skuUomId: skus[0].skuUomId,
     skus,
@@ -460,6 +462,34 @@ test("複製 Item：新 Code 撞咗現有 SKU：409 SKU_CODE_TAKEN", { skip }, a
   assert.equal(body.error.code, "SKU_CODE_TAKEN");
 });
 
+test("複製 Item：SKU Code 空白、控制字元或超過 190 字元一律 400 SKU_CODE_INVALID", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSkus(db, catalog, { itemStatus: "draft", skuStatuses: ["draft"] });
+  t.after(async () => {
+    await fixture.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  for (const skuCode of [" \t ", "SKU\u0000CONTROL", "X".repeat(191)]) {
+    const { status, body } = await post(`${url}/api/v1/items/${fixture.itemId}/copy`, token, {
+      skus: [{ sourceSkuId: fixture.skuId, skuCode }]
+    });
+
+    assert.equal(status, 400, JSON.stringify(body));
+    assert.equal(body.error.code, "SKU_CODE_INVALID");
+    const [itemsWithSourceName] = await db.query("SELECT id FROM items WHERE name = ?", [fixture.name]);
+    assert.deepEqual(
+      itemsWithSourceName.map((item) => item.id),
+      [fixture.itemId],
+      "無效 SKU Code 後只可留下來源 Item，不可留下複製 Item"
+    );
+  }
+});
+
 // --- POST /api/v1/skus/:id/delete --------------------------------------------
 
 test("刪除 SKU：Draft SKU，Item 仲有第二個 SKU，成功刪除", { skip }, async (t) => {
@@ -568,6 +598,36 @@ test("SKU Code 特批修改：成功改名，version 遞增，audit 記低 befor
   assert.equal(auditRows.length, 1);
   assert.equal(auditRows[0].detail.skuCode.before, fixture.skus[0].code);
   assert.equal(auditRows[0].detail.skuCode.after, newCode);
+});
+
+test("SKU Code 特批修改：空白、控制字元或超過 190 字元一律 400 SKU_CODE_INVALID，原值不變", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token, device } = await withDeviceManager(t, application);
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSkus(db, catalog, { itemStatus: "active", skuStatuses: ["active"] });
+  t.after(async () => {
+    await fixture.cleanup();
+    await catalog.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const path = `/api/v1/skus/${fixture.skuId}/code/change`;
+  for (const skuCode of [" \t ", "SKU\u0000CONTROL", "X".repeat(191)]) {
+    const { status, body } = await signedPost(url, path, device, token, {
+      skuCode,
+      reason: "整合測試：拒絕無效 Code",
+      version: 1,
+      password: PASSWORD
+    });
+
+    assert.equal(status, 400, JSON.stringify(body));
+    assert.equal(body.error.code, "SKU_CODE_INVALID");
+  }
+
+  const [[sku]] = await db.query("SELECT sku_code, version FROM item_skus WHERE id = ?", [fixture.skuId]);
+  assert.equal(sku.sku_code, fixture.skus[0].code);
+  assert.equal(sku.version, 1);
 });
 
 test("SKU Code 特批修改：新 Code 撞咗另一個 SKU：409 SKU_CODE_TAKEN", { skip }, async (t) => {

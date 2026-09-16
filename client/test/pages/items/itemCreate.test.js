@@ -250,7 +250,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     expect(body.text()).toContain("必須恰好指定一個 Base 單位");
   });
 
-  it("提交失敗之後，錯誤摘要拎到 focus（screen reader 使用者即時知道錯咗）", async () => {
+  it("TC-011 提交失敗之後，錯誤摘要拎到 focus（screen reader 使用者即時知道錯咗）", async () => {
     const error = Object.assign(new Error("失敗"), {
       details: [{ location: "body", path: "/item/name", keyword: "minLength", message: "商品名稱不可空白" }]
     });
@@ -268,7 +268,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     expect(document.activeElement).toBe(summary.element);
   });
 
-  it("表單有改動（dirty）就離開頁面：跳去 window.confirm 確認", async () => {
+  it("TC-011 表單有改動（dirty）就離開頁面：跳去 window.confirm 確認", async () => {
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const { body, router } = await mountPage();
 
@@ -291,7 +291,7 @@ describe("pages/items/ItemCreatePage.vue", () => {
     confirmSpy.mockRestore();
   });
 
-  it("切去 Variant：揀屬性同選項、產生組合、提交時帶 skus[] 而唔係單一 sku", async () => {
+  it("TC-011 切去 Variant：揀屬性同選項、產生組合、提交時帶 skus[] 而唔係單一 sku", async () => {
     itemCatalogService.attributeList.mockResolvedValue({
       rows: [
         {

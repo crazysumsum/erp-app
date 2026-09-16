@@ -142,9 +142,16 @@ export function assertPermissionsCurrent({ claimedRoles, claimedPermissions, cur
   };
 
   if (!sameSet(claimedRoles, currentRoles) || !sameSet(claimedPermissions, currentPermissions)) {
-    throw forbidden("The actor's roles or permissions changed since this token was issued", {
-      code: "PERMISSION_STALE",
-      publicMessage: "權限已變更，請重新整理"
-    });
+    throw permissionStaleError();
   }
+}
+
+/** Background commands do not retain a JWT snapshot after they are queued, but
+ * they still use the same public contract when the decisive actor is no longer
+ * active or no longer has the required permission at execution time. */
+export function permissionStaleError() {
+  return forbidden("The actor's roles or permissions changed since this token was issued", {
+    code: "PERMISSION_STALE",
+    publicMessage: "權限已變更，請重新整理"
+  });
 }

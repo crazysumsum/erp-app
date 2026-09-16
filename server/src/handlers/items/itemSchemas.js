@@ -16,6 +16,7 @@ import {
 } from "../../modules/item/itemConstants.js";
 import { decimalStringPattern } from "../../modules/item/itemValidation.js";
 import { MEDIA_SUMMARY_SCHEMA } from "../item-media/itemMediaSchemas.js";
+import { ATTRIBUTE_VALUE_PROJECTION_SCHEMA } from "./itemAttributeResponseSchemas.js";
 
 export const EMPTY_OBJECT_SCHEMA = Object.freeze({
   type: "object",
@@ -26,7 +27,7 @@ export const EMPTY_OBJECT_SCHEMA = Object.freeze({
 export const ITEM_VIEW_POLICY = Object.freeze([
   Object.freeze({
     name: "hasPermission",
-    options: Object.freeze({ permissions: Object.freeze(["item.view"]) })
+    options: Object.freeze({ permissions: Object.freeze(["item.view", "item.mgmt"]), match: "any" })
   })
 ]);
 
@@ -175,9 +176,7 @@ export const ITEM_DETAIL_RESPONSE_SCHEMA = Object.freeze({
     defaultTrackingPolicy: { type: "string" },
     defaultShelfLifeDays: { type: ["integer", "null"] },
     status: { type: "string", enum: [...ITEM_STATUSES] },
-    // Item attribute values：item_attribute_values 表要等 T23 先建立，現在
-    // 固定回空陣列。
-    attributeValues: { type: "array", items: {}, maxItems: 0 },
+    attributeValues: { type: "array", items: ATTRIBUTE_VALUE_PROJECTION_SCHEMA },
     skus: { type: "array", items: ITEM_DETAIL_SKU_SCHEMA },
     // Item 層級共用 media（sku_id 為 NULL）；SKU 專屬 media 喺 SKU detail 出現。
     media: { type: "array", items: MEDIA_SUMMARY_SCHEMA },
@@ -266,7 +265,9 @@ const ITEM_CREATE_SKU_SCHEMA = Object.freeze({
   required: ["skuCode", "skuName"],
   additionalProperties: false,
   properties: {
-    skuCode: { type: "string", minLength: 1, maxLength: 190 },
+    // SKU Code 的 trim／控制字元／長度規則由 ItemAdminService 統一回傳
+    // SKU_CODE_INVALID，避免 schema 短路成通用 REQUEST_VALIDATION_FAILED。
+    skuCode: { type: "string" },
     skuName: { type: "string", minLength: 1, maxLength: 190 },
     // 冇送就用 item.defaultTrackingPolicy——由 service 決定，schema 呢度唔設
     // default，避免同「呼叫端明確送咗 none」分唔清。
@@ -395,7 +396,7 @@ export const ITEM_COPY_REQUEST_SCHEMA = Object.freeze({
         additionalProperties: false,
         properties: {
           sourceSkuId: { type: "integer", minimum: 1 },
-          skuCode: { type: "string", minLength: 1, maxLength: 190 }
+          skuCode: { type: "string" }
         }
       }
     }

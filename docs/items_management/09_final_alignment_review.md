@@ -26,7 +26,7 @@
 
 ## Recovery and no-loss result
 
-The requirement (808-line legacy body), design (1,500), task (1,533) and technical-test (437) bodies compare byte-for-byte with `fd8a4dd`. Their preserved legacy SHA-256 values remain recorded in `00_artifact_inventory.md`. No migration, request schema, source diagram, executable test or other machine authority was deleted. One accidental duplicate TASK-012 alias row was removed; T23's conflicting index/detail status remains visible and blocked for maintainer reconciliation.
+At this review's original baseline, the requirement (808-line legacy body), design (1,500), task (1,533) and technical-test (437) bodies compared byte-for-byte with `fd8a4dd`; their legacy SHA-256 values remain recorded in `00_artifact_inventory.md`. No migration, request schema, source diagram, executable test or other machine authority was deleted. One accidental duplicate TASK-012 alias row was removed. Post-review update: ERP Product Owner (Sam) approved TASK-042 on 2026-09-14, so the canonical T23 index now records completed with an explicit reconciliation note and immutable Git/source references; the original unchecked state remains preserved by this paragraph and the inventory hash.
 
 ## Review and findings
 

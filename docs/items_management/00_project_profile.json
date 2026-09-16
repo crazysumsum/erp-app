@@ -5,7 +5,7 @@
     "id": "item-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
-    "authorization_ref": null
+    "authorization_ref": "Active Codex task: ERP Product Owner (Sam) authorized TEST_AND_VERIFY on 2026-09-14 and previously directed use of the local MySQL environment"
   },
   "permissions": {
     "product_write": [
@@ -122,13 +122,44 @@
       "argv": [
         "node",
         "--test",
+        "--test-concurrency=1",
         "--import",
-        "./server/test-support/testEnv.js",
+        "./test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/item-server-technical.xml",
-        "server/test"
+        "test/itemAuditLogService.test.js",
+        "test/itemCatalogHandlers.test.js",
+        "test/itemCatalogService.test.js",
+        "test/itemConfig.test.js",
+        "test/itemErrors.test.js",
+        "test/itemImportFileCleanupJob.test.js",
+        "test/itemImportProcessor.test.js",
+        "test/itemLookupService.test.js",
+        "test/itemMediaCleanupJob.test.js",
+        "test/itemPerformanceFixtures.test.js",
+        "test/itemReadProjection.test.js",
+        "test/itemValidation.test.js",
+        "test/variantSignature.test.js",
+        "test/integration/itemAttributeMigrations.integration.test.js",
+        "test/integration/itemAudit.integration.test.js",
+        "test/integration/itemBulkStatus.integration.test.js",
+        "test/integration/itemCatalog.integration.test.js",
+        "test/integration/itemConcurrency.integration.test.js",
+        "test/integration/itemCreate.integration.test.js",
+        "test/integration/itemExport.integration.test.js",
+        "test/integration/itemHighRisk.integration.test.js",
+        "test/integration/itemImport.integration.test.js",
+        "test/integration/itemImportFileCleanup.integration.test.js",
+        "test/integration/itemImportMigrations.integration.test.js",
+        "test/integration/itemLifecycle.integration.test.js",
+        "test/integration/itemLookup.integration.test.js",
+        "test/integration/itemManagement.integration.test.js",
+        "test/integration/itemMigrationIdempotency.integration.test.js",
+        "test/integration/itemMedia.integration.test.js",
+        "test/integration/itemRead.integration.test.js",
+        "test/integration/itemUpdate.integration.test.js"
       ],
-      "cwd": ".",
+      "cwd": "server",
       "timeout_seconds": 3600,
       "result_adapter": "JUNIT",
       "result_path": "item-server-technical.xml",
@@ -280,7 +311,8 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "ITEM_PERFORMANCE_TESTS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD"
@@ -293,12 +325,12 @@
         "node",
         "server/scripts/runItemRecoveryAcceptance.js",
         "--output",
-        "{run_dir}/item-recovery.xml"
+        "{run_dir}/item-recovery.json"
       ],
       "cwd": ".",
       "timeout_seconds": 18000,
-      "result_adapter": "JUNIT",
-      "result_path": "item-recovery.xml",
+      "result_adapter": "HARNESS_JSON",
+      "result_path": "item-recovery.json",
       "min_tests": 1,
       "max_skipped": 0,
       "stages": [
@@ -334,10 +366,26 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_SOCKET_PATH",
+        "DB_SSL_ENABLED",
+        "DB_SSL_CA",
+        "DB_SSL_REJECT_UNAUTHORIZED",
+        "DB_INTEGRATION_TESTS",
+        "ITEM_RECOVERY_CONFIRM",
+        "ITEM_RECOVERY_ENVIRONMENT_CLASS",
+        "ITEM_RECOVERY_ENVIRONMENT_ID",
+        "ITEM_RECOVERY_MANIFEST_PATH",
+        "ITEM_RECOVERY_ATTESTATION_PATH",
+        "ITEM_RECOVERY_POINT_ID",
+        "ITEM_RECOVERY_BACKUP_ID",
+        "ITEM_RECOVERY_MEDIA_SNAPSHOT_ID",
+        "ITEM_RECOVERY_IMPORT_SNAPSHOT_ID",
+        "ITEM_RECOVERY_MEDIA_ROOT",
+        "ITEM_RECOVERY_IMPORT_ROOT"
       ],
       "redaction_env_keys": [
-        "DB_PASSWORD"
+        "DB_PASSWORD",
+        "DB_SSL_CA"
       ]
     },
     {
@@ -381,12 +429,27 @@
             "--version"
           ],
           "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "npx",
+            "playwright",
+            "--version"
+          ],
+          "version_pattern": "^Version 1\\.63\\."
         }
       ],
       "side_effects": [
-        "FILES"
+        "FILES",
+        "ISOLATED_DATA"
       ],
-      "env_keys": [],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME"
+      ],
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]

@@ -209,7 +209,7 @@ async function withViewer(t, application) {
 
 // --- GET /api/v1/items -----------------------------------------------------
 
-test("GET /items：q 搜 Item 名稱及其 SKU 的 Code／名稱／條碼，用 EXISTS 唔會因為一個 Item 有多個符合嘅 SKU 就撞大 total", { skip }, async (t) => {
+test("TC-002 GET /items：q 搜 Item 名稱及其 SKU 的 Code／名稱／條碼，用 EXISTS 唔會因為一個 Item 有多個符合嘅 SKU 就撞大 total", { skip }, async (t) => {
   const application = await startApplication();
   const { db, token } = await withViewer(t, application);
   const fixture = await seedFixture(db);
@@ -379,6 +379,173 @@ test("GET /items/:id：完整詳情，含全部 SKU 摘要", { skip }, async (t)
   assert.deepEqual(body.data.attributeValues, []);
 });
 
+test("TC-013 GET /items/:id 與 /skus/:id：投影已保存的 Attribute／Variant 值", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withViewer(t, application);
+  const fixture = await seedFixture(db);
+  const nowMs = Date.now();
+  const itemId = await fixture.seedItem({ name: "attribute-projection", productType: "variant" });
+  const skuId = await fixture.seedSku(itemId, { skuCode: `IT-ATTRIBUTE-${randomUUID().slice(0, 8)}` });
+
+  const [expiryAttribute] = await db.execute(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, status, created_at, updated_at)
+     VALUES ('IT_EXPIRY', '到期日', 'date', 0, 'active', ?, ?)`,
+    [nowMs, nowMs]
+  );
+  const [colorAttribute] = await db.execute(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, status, created_at, updated_at)
+     VALUES ('IT_COLOR', '顏色', 'single_option', 1, 'active', ?, ?)`,
+    [nowMs, nowMs]
+  );
+  const [materialAttribute] = await db.execute(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, status, created_at, updated_at)
+     VALUES ('IT_MATERIAL', '材質', 'text', 0, 'active', ?, ?)`,
+    [nowMs, nowMs]
+  );
+  const [sizeAttribute] = await db.execute(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, status, created_at, updated_at)
+     VALUES ('IT_SIZE', '尺寸', 'single_option', 1, 'active', ?, ?)`,
+    [nowMs, nowMs]
+  );
+  const [unrelatedOptionAttribute] = await db.execute(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, is_variant, status, created_at, updated_at)
+     VALUES ('IT_UNRELATED_OPTION', '不相干選項', 'single_option', 0, 'active', ?, ?)`,
+    [nowMs, nowMs]
+  );
+  const [blueOption] = await db.execute(
+    `INSERT INTO item_attribute_options
+       (attribute_id, value, label, sort_order, status, created_at, updated_at)
+     VALUES (?, 'blue', '藍', 0, 'active', ?, ?)`,
+    [colorAttribute.insertId, nowMs, nowMs]
+  );
+  const [largeOption] = await db.execute(
+    `INSERT INTO item_attribute_options
+       (attribute_id, value, label, sort_order, status, created_at, updated_at)
+     VALUES (?, 'large', '大', 0, 'active', ?, ?)`,
+    [sizeAttribute.insertId, nowMs, nowMs]
+  );
+  await db.execute(
+    `INSERT INTO item_category_attributes
+       (category_id, attribute_id, required_for_activation, sort_order, created_at, updated_at)
+     VALUES (?, ?, 0, 20, ?, ?), (?, ?, 0, 10, ?, ?), (?, ?, 0, 5, ?, ?), (?, ?, 0, 1, ?, ?), (?, ?, 0, 0, ?, ?)`,
+    [
+      fixture.categoryId,
+      expiryAttribute.insertId,
+      nowMs,
+      nowMs,
+      fixture.categoryId,
+      colorAttribute.insertId,
+      nowMs,
+      nowMs,
+      fixture.categoryId,
+      materialAttribute.insertId,
+      nowMs,
+      nowMs,
+      fixture.categoryId,
+      sizeAttribute.insertId,
+      nowMs,
+      nowMs,
+      fixture.categoryId,
+      unrelatedOptionAttribute.insertId,
+      nowMs,
+      nowMs
+    ]
+  );
+  await db.execute(
+    `INSERT INTO item_attribute_values (item_id, attribute_id, value_date, updated_at)
+     VALUES (?, ?, ?, ?)`,
+    [itemId, expiryAttribute.insertId, 1800000000000, nowMs]
+  );
+  await db.execute(
+    `INSERT INTO item_attribute_values (item_id, attribute_id, value_text, updated_at)
+     VALUES (?, ?, '棉', ?)`,
+    [itemId, materialAttribute.insertId, nowMs]
+  );
+  // MySQL FK 只驗證 option 存在，唔會驗證佢屬於同一 attribute。呢筆故意
+  // 壞資料驗證 read projection 唔會洩漏另一個 attribute 的 option。
+  await db.execute(
+    `INSERT INTO item_attribute_values (item_id, attribute_id, option_id, updated_at)
+     VALUES (?, ?, ?, ?)`,
+    [itemId, unrelatedOptionAttribute.insertId, blueOption.insertId, nowMs]
+  );
+  await db.execute(
+    `INSERT INTO item_sku_attribute_values (sku_id, attribute_id, option_id, updated_at)
+     VALUES (?, ?, ?, ?)`,
+    [skuId, colorAttribute.insertId, blueOption.insertId, nowMs]
+  );
+  await db.execute(
+    `INSERT INTO item_sku_attribute_values (sku_id, attribute_id, option_id, updated_at)
+     VALUES (?, ?, ?, ?)`,
+    [skuId, sizeAttribute.insertId, largeOption.insertId, nowMs]
+  );
+
+  t.after(async () => {
+    await db.execute("DELETE FROM item_sku_attribute_values WHERE sku_id = ?", [skuId]);
+    await db.execute("DELETE FROM item_attribute_values WHERE item_id = ?", [itemId]);
+    await db.execute(
+      "DELETE FROM item_category_attributes WHERE category_id = ? AND attribute_id IN (?, ?, ?, ?, ?)",
+      [fixture.categoryId, expiryAttribute.insertId, colorAttribute.insertId, materialAttribute.insertId, sizeAttribute.insertId, unrelatedOptionAttribute.insertId]
+    );
+    await db.execute("DELETE FROM item_attribute_definitions WHERE id IN (?, ?, ?, ?, ?)", [
+      expiryAttribute.insertId,
+      colorAttribute.insertId,
+      materialAttribute.insertId,
+      sizeAttribute.insertId,
+      unrelatedOptionAttribute.insertId
+    ]);
+    await fixture.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const itemDetail = await get(`${url}/api/v1/items/${itemId}`, token);
+  const skuDetail = await get(`${url}/api/v1/skus/${skuId}`, token);
+
+  assert.equal(itemDetail.status, 200, JSON.stringify(itemDetail.body));
+  assert.deepEqual(itemDetail.body.data.attributeValues, [
+    {
+      attributeId: materialAttribute.insertId,
+      code: "IT_MATERIAL",
+      name: "材質",
+      dataType: "text",
+      value: "棉",
+      option: null
+    },
+    {
+      attributeId: expiryAttribute.insertId,
+      code: "IT_EXPIRY",
+      name: "到期日",
+      dataType: "date",
+      value: 1800000000000,
+      option: null
+    }
+  ]);
+  assert.equal(skuDetail.status, 200, JSON.stringify(skuDetail.body));
+  assert.deepEqual(skuDetail.body.data.variantValues, [
+    {
+      attributeId: sizeAttribute.insertId,
+      code: "IT_SIZE",
+      name: "尺寸",
+      dataType: "single_option",
+      value: "large",
+      option: { id: largeOption.insertId, value: "large", label: "大" }
+    },
+    {
+      attributeId: colorAttribute.insertId,
+      code: "IT_COLOR",
+      name: "顏色",
+      dataType: "single_option",
+      value: "blue",
+      option: { id: blueOption.insertId, value: "blue", label: "藍" }
+    }
+  ]);
+});
+
 test("GET /items/:id：唔存在嘅 id 回 404 ITEM_NOT_FOUND", { skip }, async (t) => {
   const application = await startApplication();
   const { token } = await withViewer(t, application);
@@ -526,7 +693,7 @@ test("GET /skus/:id：唔存在嘅 id 回 404 SKU_NOT_FOUND", { skip }, async (t
 
 // --- 權限矩陣（Item／SKU 讀 API 共用同一組規則） ---------------------------
 
-test("未登入、只有 item.mgmt 冇 item.view、stale permission：Item／SKU 讀 API 一律符合 401／403 規則", { skip }, async (t) => {
+test("未登入、只有 item.mgmt、stale permission：Item／SKU 讀 API 一律符合 401／200／403 規則", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -554,8 +721,8 @@ test("未登入、只有 item.mgmt 冇 item.view、stale permission：Item／SKU
 
   const { url } = await application.start();
   const mgmtToken = await issueToken(mgmtActor.userId, { roles: [mgmtRole.roleName], permissions: ["item.mgmt"] });
-  // Claims 宣稱多過資料庫現況（多咗 item.mgmt），滿足 authorizationPolicies
-  // 嘅靜態檢查（要有 item.view）之後，先喺 service 入面撞 PERMISSION_STALE。
+  // Claims 宣稱多過資料庫現況（多咗 item.mgmt），滿足 read policy（view 或
+  // mgmt）後，先喺 service 入面撞 PERMISSION_STALE。
   const staleToken = await issueToken(staleActor.userId, {
     roles: [viewRole.roleName],
     permissions: ["item.view", "item.mgmt"]
@@ -566,7 +733,7 @@ test("未登入、只有 item.mgmt 冇 item.view、stale permission：Item／SKU
     assert.equal(anonymous.status, 401, path);
 
     const mgmtOnly = await get(`${url}${path}`, mgmtToken);
-    assert.equal(mgmtOnly.status, 403, path);
+    assert.equal(mgmtOnly.status, 200, path);
 
     const stale = await get(`${url}${path}`, staleToken);
     assert.equal(stale.status, 403, path);

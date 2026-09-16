@@ -13,7 +13,7 @@
  */
 import { parse } from "csv-parse/sync";
 import { MONEY_DECIMAL, TRACKING_POLICIES } from "../itemConstants.js";
-import { decimalStringPattern } from "../itemValidation.js";
+import { decimalStringPattern, normalizeAndValidateSkuCode } from "../itemValidation.js";
 import { IMPORT_TEXT_FIELD_MAX_LENGTH } from "./itemCsvSchema.js";
 
 const MONEY_PATTERN = decimalStringPattern(MONEY_DECIMAL);
@@ -276,6 +276,11 @@ export async function parseAndValidateCsv({ csvText, mode, connection, maxRows }
     } else {
       const codeKey = skuCode.toLowerCase();
       if (skuCode) {
+        try {
+          normalizeAndValidateSkuCode(skuCode);
+        } catch (error) {
+          addIssue(errors, "skuCode", error.publicCode ?? "SKU_CODE_INVALID", error.publicMessage ?? "SKU Code 格式不正確");
+        }
         if (existingByCode.has(codeKey)) {
           addIssue(errors, "skuCode", "SKU_CODE_TAKEN", `SKU Code「${skuCode}」已被使用`);
         } else if (seenCodeInFile.has(codeKey)) {

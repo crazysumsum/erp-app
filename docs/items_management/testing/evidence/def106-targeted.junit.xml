@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="ItemAuditLogService constructor requires database, logger and time" time="0.000604" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record writes into item_audit_logs, defaulting reason and detail" time="0.001085" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record writes the caller's requestId and ip instead of the empty-string default" time="0.000062" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record accepts a null actorUserId and targetId" time="0.000060" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record keeps the reason text verbatim" time="0.000056" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record serializes detail as JSON" time="0.000081" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record uses the connection it was given, not the constructor's database" time="0.000053" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record truncates a detail payload larger than 4KB and warns" time="0.000110" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="record keeps a detail payload right at the 4KB boundary untouched" time="0.000079" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemAuditLogService.test.js"/>
+	<testcase name="the job submits itself with cluster scope, since the import volume is shared across instances" time="0.001412" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="ItemImportFileCleanupJob is discovered by the ordinary service mechanism" time="0.037397" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="no candidates: 清一次乜都冇做" time="0.000636" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="未過 1 年保留期嘅 job 唔會被刪" time="0.002841" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="啱好過咗 UTC 週年日：原始檔＋結果檔都刪，並標記 files_purged_at" time="0.001090" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="resultStoredName 係 NULL：只刪原始檔一個" time="0.000506" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="completedAt 係 null：跌返用 updatedAt 計到期日" time="0.000427" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="symlink 唔會被跟隨或刪除，計做刪除失敗，唔標記 files_purged_at" time="0.000763" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="其中一個檔案刪唔到：files_purged_at 唔會被標記，容許安全重跑" time="0.000974" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="markImportFilesPurged 回 false（另一個 instance 已經搶先標記）：計做 racedAway，唔算失敗" time="0.000573" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="重跑一次（檔案已經唔存在）：unlink 視為成功，唔會拋錯" time="0.000281" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="路徑逃出受控 import root：拒絕刪除，計做失敗" time="0.000547" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="signal 已經 aborted：中途停低，唔再處理之後嘅 candidate" time="0.000587" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemImportFileCleanupJob.test.js"/>
+	<testcase name="ItemLookupService constructor requires database, logger and time" time="0.000688" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findById 搵唔到就回 null，唔會多打一次 UOM query" time="0.000130" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findById 搵到就回完整 projection，連 UOM 一齊" time="0.000644" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findByCode 用返 sku_code 查" time="0.000531" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findByBarcode 搵到一個就正常回 projection" time="0.000156" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findByBarcode 撞到一個以上：拋 BARCODE_LOOKUP_INCONSISTENT，記 error log，唔會攞第一筆將貨" time="0.000167" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findByBarcode 對數字條碼剝走空格／連字號先查" time="0.000076" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findManyByIds 對 100 個 id 都係固定兩條 query，唔逐個查" time="0.000117" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findManyByIds 搵唔到嘅 id 唔會出現喺個 map 度" time="0.000074" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="findManyByIds 空陣列完全唔打 DB" time="0.000084" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="assertUsable：SKU 唔存在拋 SKU_NOT_FOUND" time="0.000089" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="assertUsable：存在但唔啱 purpose 拋 SKU_NOT_USABLE，帶埋 reasons" time="0.000115" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="assertUsable：啱就返個 projection" time="0.000050" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="purchase：Item 同 SKU 都 active、purchasable、喺有效期內 → usable" time="0.000057" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="purchase：SKU discontinued 就拒絕" time="0.000042" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="purchase：purchasable=false 就拒絕" time="0.000048" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="purchase：唔喺 effective 範圍內就拒絕" time="0.000038" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="purchase：帶明確 atMs 就用嗰個時間，唔用 time.nowMs()" time="0.000044" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="sale：Item active、SKU discontinued 都算 usable（清貨）" time="0.000030" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="sale：Item 同 SKU 都 discontinued 都算 usable" time="0.000030" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="sale：Item active、SKU draft 唔算 usable" time="0.000026" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="sale：sellable=false 就拒絕" time="0.000032" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="inventory：inventoryTracked、Active、未封存 → usable" time="0.000024" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="inventory：inventoryTracked=false 就拒絕" time="0.000028" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="inventory：Inactive 冇帶 includeInactive 就拒絕" time="0.000029" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="inventory：Inactive 但帶明確 includeInactive:true 就通過" time="0.000031" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="inventory：Archived 就算帶 includeInactive 都唔通過" time="0.000080" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="未知嘅 purpose 拋 TypeError" time="0.000055" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="冇帶 purpose：淨係睇未封存" time="0.000037" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemLookupService.test.js"/>
+	<testcase name="the job submits itself with cluster scope, since the media volume is shared across instances" time="0.001127" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="ItemMediaCleanupJob is discovered by the ordinary service mechanism" time="0.045739" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="a missing media directory is a clean no-op, not an error" time="0.001772" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="a file still referenced by item_media is kept even though it is old" time="0.002543" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="an unreferenced file younger than the grace period is kept" time="0.000742" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="an unreferenced file older than the grace period is removed and logged" time="0.000725" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="symlinks inside the media root are never followed or removed, even if unreferenced and old" time="0.000692" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<testcase name="an unlink failure is logged and counted, not thrown" time="0.000706" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/itemMediaCleanupJob.test.js"/>
+	<!-- tests 59 -->
+	<!-- suites 0 -->
+	<!-- pass 59 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 343.236875 -->
+</testsuites>
