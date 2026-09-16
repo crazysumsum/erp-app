@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 85,
+  "revision": 92,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,19 +9,19 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
-    "design": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
-    "plan": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
-    "code_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
-    "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-contract-pin",
-    "default_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
+    "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+    "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+    "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
+    "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bookkeeping",
+    "default_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-contract-pin (branch codex/supplier-contract-pin)",
+      "workspace": "erp-app-worktrees/supplier-bookkeeping (branch codex/supplier-bookkeeping)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -559,6 +559,119 @@
         "DEF-012"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-016-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"a .gitignore都一齊做\" — authorizing (i) a recorded exception removing all eight invalid evidence_files entries by editing 00_harness_state.json directly, since state_tool.py enforces the field as append-only and the entries cannot otherwise be corrected, and (ii) editing .gitignore, which is repository-wide hygiene outside this module allowed_write_paths.",
+      "recorded_at": "2026-09-16T07:36:57Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "scope": [
+        "supplier-management",
+        ".gitignore",
+        "evidence_files"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds the HD-014 design approval, whose only content was the item-sku-uom-provider pin refresh to 5c193e20.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "item-sku-uom-provider",
+        ".gitignore"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds the HD-014 plan approval. No requirement, design, phase, task, suite or test flag changed.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "item-sku-uom-provider",
+        ".gitignore"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds APPROVAL-HD-015-RISK, itself a re-affirmation of HD-012 and HD-013. It covers the deferral of DEF-003 through DEF-008, DEF-010 and DEF-011, all rated MEDIUM or LOW by REV-006 and REV-007, with DEF-011 still scheduled as the first task of PHASE-002.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "DEF-003",
+        "DEF-004",
+        "DEF-005",
+        "DEF-006",
+        "DEF-007",
+        "DEF-008",
+        "DEF-010",
+        "DEF-011"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-RISK-DEF012",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds APPROVAL-HD-015-RISK-DEF012. DEF-012 is the Item Management idempotency ordering race, outside this module boundary and routed to its own task. Deferral does not resolve it: it remains intermittent and unfixed, and its CI re-run passes prove intermittency, not correctness.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "DEF-012"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds APPROVAL-HD-016-SCOPE, which authorized the recorded exception removing the eight invalid evidence_files entries and the edit to .gitignore. With .gitignore now declared in approval_required_paths, this approval is also what satisfies the gate for that path.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        ".gitignore",
+        "evidence_files"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -677,6 +790,30 @@
       "reviewer": "agent-skills:code-reviewer fresh instance (same instance as REV-009, resumed with its own context)",
       "reviewed_baseline": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
       "source_ref": "docs/supplier_management/implementation/07_rev_010_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-011",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (evidence_files correction and .gitignore scope declaration)",
+      "reviewer": "agent-skills:code-reviewer fresh separate-agent instance (not the REV-007/008 or REV-009/010 instances)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/08_rev_011_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-012",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (evidence_files correction and .gitignore scope declaration)",
+      "reviewer": "agent-skills:code-reviewer (the REV-011 instance, resumed to verify its own HIGH-1 was resolved)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/08_rev_011_independent_review.md#high-1",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -958,6 +1095,94 @@
       "source_ref": "Merged on 2026-09-16 at merge commit f98fc8d after CI run 35052313430 passed 4/4 first time on the exact head f86d43bf3e1d5009d40821554f7629d1f4c0f164, and REV-008 APPROVED bound to design baseline dcb74d3c. origin/main was verified unmoved at aa7d1927 immediately before the merge. Main CI run 35061941920 on f98fc8d was still in_progress when this checkpoint was written and is NOT yet observed as passing.",
       "actor": "Claude Opus 5 via gh and git",
       "observed_at": "2026-09-16T06:03:21Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "GitHub Actions CI on main a4f4f02 after merging PR #107",
+      "code_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
+      "spec_baseline": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
+      "status": "PASS",
+      "source_ref": "gh run 35067484416 on headSha a4f4f02 completed with conclusion success. PR #107 own CI run 35066699010 had already passed 4/4 on the exact merged head b388ea3.",
+      "actor": "GitHub Actions, observed by Claude Opus 5 via gh",
+      "observed_at": "2026-09-16T07:24:39Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "evidence_files corrected and the duplicated docs directory removed",
+      "code_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
+      "spec_baseline": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
+      "status": "PASS",
+      "source_ref": "The evidence_files field requires module-relative paths to run_check.py run.json records validated against evidence.schema.json; it had held six repo-relative paths to narrative Markdown. Resolution via inside(ctx.module_dir, path) doubled them to docs/supplier_management/docs/supplier_management/..., and an earlier state-recovery run had satisfied the first two by creating files at that doubled path whose contents are JSON evidence records despite their .md filenames. Inspected before deletion: both are honest placeholders with result BLOCKED, exit_code null, all counts zero, and limitations stating the suite was not executed and that the JSON is not a substitute for executable test evidence. run_id state_recovery_20260915_01 (lint) and _02 (supplier-phase1-independent-review). No unique authoritative content was lost: the narrative documents they pointed at are the outer Markdown files, which remain, and the provenance is preserved in this record. evidence_files is now empty pending real run.json records; every review document remains referenced from reviews[].source_ref, which takes repo-relative paths and is where they belong.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T07:24:39Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-016 recorded exception: all eight invalid evidence_files entries removed and the duplicated directory deleted",
+      "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "spec_baseline": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "This removal deliberately bypassed state_tool.py, which enforces set(old) <= set(new) on evidence_files. It is recorded here in full rather than erased, which is what that rule exists to prevent. The eight removed entries were, in order: docs/supplier_management/implementation/00_implementation_readiness.md; docs/supplier_management/implementation/01_checkpoint_a_independent_review.md; docs/supplier_management/implementation/02_checkpoint_h_independent_review.md; docs/supplier_management/implementation/03_def_001_002_remediation.md; docs/supplier_management/implementation/04_rev_007_independent_review.md; docs/supplier_management/implementation/05_rev_008_independent_review.md; docs/supplier_management/implementation/06_rev_009_independent_review.md; docs/supplier_management/implementation/07_rev_010_independent_review.md. All eight were repo-relative paths to narrative Markdown, while the validator resolves module-relative via inside(ctx.module_dir, path) and parses each entry against evidence.schema.json, which requires a run_check.py run.json. Entries 00 and 01 resolved only because an earlier state-recovery run created JSON records with .md filenames at the doubled path docs/supplier_management/docs/supplier_management/implementation/; those two files were inspected before deletion and were honest placeholders (result BLOCKED, exit_code null, all counts zero, limitations stating the suite was not executed and that the JSON is not a substitute for executable test evidence, run_id state_recovery_20260915_01 and _02). Entries 02 through 07 were added by this author in revisions 76, 79, 82 and 85, following that wrong convention without checking the field semantics. No authoritative content is lost: every one of the eight narrative documents remains on disk under docs/supplier_management/implementation/ and every review document remains referenced from reviews[].source_ref, which takes repo-relative paths and is the correct home for them. evidence_files is now empty and will hold only real evidence/<run_id>/run.json records produced by run_check.py --execute.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T07:36:57Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Real run_check.py evidence produced for all four DEVELOPER suites",
+      "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "spec_baseline": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "With evidence_files corrected, run_check.py --execute ran for the first time in this module. Five records were produced and all five are registered, the failure included rather than discarded: lint FAIL exit 127 (the worktree had no node_modules yet; npm ci then installed them without modifying package-lock.json), then lint PASS exit 0, client-build PASS exit 0, supplier-phase-001-server PASS with 159/159 and 0 skipped against the authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, and supplier-phase-001-client PASS with 40/40 and 0 skipped. These are the first genuinely registered run records for this module; every earlier suite result in this state file was a manual observation, which is what REQUIRED_RUN_MISSING was correctly reporting all along.",
+      "actor": "Claude Opus 5 via run_check.py",
+      "observed_at": "2026-09-16T07:37:57Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-011 HIGH-1 correction: the plan-baseline move also stranded the entire observation ledger",
+      "code_commit": "999118722ce252e797cfbf60abde1af9e7d32193",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "An earlier next_safe_action asserted that REV-010 stranding was the only remaining gate blocker. That was FALSE and is corrected here. REV-011 ran the gate: scoped to PHASE-001 it returns 11 issues across 5 codes — REVIEW_NOT_SATISFIED x1, REQUIRED_RUN_MISSING x4, CI_MISSING_OR_STALE x4, PR_REVIEW_MISSING x1, COMMIT_CHANGED x1. The undisclosed cause is _observation() at harness_checks.py:237-243, which filters observations on spec_baseline == baselines()[plan]. Author-confirmed by execution: 0 of 29 observations bind the current plan baseline a0d41e31. Two were live at main. Note that _observation() also requires code_commit == HEAD, so the CI observation would be stale from the commit change regardless; the baseline move is one of two independent causes. This is the third consecutive review in which the author under-enumerated what a baseline move invalidates: approvals and reviews in HD-014, run evidence in HD-017, and now the observation ledger.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T08:07:34Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-011 LOW-1 and LOW-2 corrections to earlier records in this state file",
+      "code_commit": "999118722ce252e797cfbf60abde1af9e7d32193",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "LOW-2: an earlier observation in this file stated that evidence_files had held SIX repo-relative paths. It held EIGHT. That earlier observation is superseded by this one rather than edited; the immediately following observation enumerated all eight correctly, so the ledger contradicted itself. LOW-1: the PR #108 body stated that every original record is retained and none is rewritten. That is true of approvals, reviews, pending_decisions and external_actions, all verified byte-equal by REV-011, but FALSE of defects: nine risk_approval_id values were rewritten to the APPROVAL-HD-017-* equivalents. state_tool.py:58-60 permits this, requiring only an ID superset rather than field immutability, and every superseded approval is retained — but the claim as written was wrong and the PR body is corrected.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T08:07:34Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-012 supersedes REV-011 with open_high 0 after the reviewer verified its own HIGH-1 was resolved",
+      "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "REV-011 was recorded verbatim with open_high 1, which keeps the gate closed via harness_checks.py:279-280. The author declined two shortcuts: recording a RISK approval, which would have said the finding was accepted as an open risk when it had actually been fixed, and rewriting the reviewer count unilaterally. The REV-011 reviewer was asked to verify its own finding at commit 2d5a759 and to leave the count at 1 if anything remained understated. It confirmed resolution by execution, running the gate as-is and again with open_high forced to 0 in memory only: 11 issues including REVIEW_NOT_SATISFIED versus 10 with REVIEW_NOT_SATISFIED gone, establishing harness_checks.py:279-280 as the sole cause. It further verified observations[0:29] are byte-identical to 9991187, that LOW-2 was fixed by superseding rather than editing, that no entry in any collection was mutated, and that the fix did not strand itself. REV-011 is retained unmodified. It also raised one nit now applied: next_safe_action had said REVIEW_NOT_SATISFIED clears once REV-011 is committed, which is wrong — REV-011 is committed and it did not clear. The real predicate is an APPROVED review binding e4083319 that carries open_high 0, or a RISK approval covering it. The reviewer noted this is the same species of defect as HIGH-1, much smaller.",
+      "actor": "agent-skills:code-reviewer, recorded by Claude Opus 5",
+      "observed_at": "2026-09-16T08:09:37Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Run evidence regenerated at plan baseline a0d41e31 after the HD-017 scope change",
+      "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "The five records produced earlier in this branch bind the superseded plan baseline 14cb9ebc and are retained rather than deleted, including the exit-127 lint FAIL. Four new records were produced at a0d41e31 once REV-012 cleared REVIEW_NOT_SATISFIED: lint PASS, client-build PASS, supplier-phase-001-server PASS 159/159 with 0 skipped against the authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, and supplier-phase-001-client PASS 40/40 with 0 skipped. All nine records are registered. Counts match what REV-011 independently reproduced by re-running both suites itself. A secret scan of the new files found zero hits for the real database password value, JWT-shaped tokens, Authorization or Bearer headers, password fields and the synthetic Playwright account password.",
+      "actor": "Claude Opus 5 via run_check.py",
+      "observed_at": "2026-09-16T08:10:07Z"
     }
   ],
   "pending_decisions": [
@@ -1168,6 +1393,36 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-16: \"a批準，b補一個 risk approval\" — (a) re-affirms the deferral of DEF-003 through DEF-008, DEF-010 and DEF-011 against plan baseline 14cb9ebc on the same terms as HD-012 and HD-013; (b) authorizes a recorded risk approval for DEF-012 here, which previously had none."
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "The evidence_files field is enforced append-only by state_tool.py (set(old) <= set(new)), but all six of its entries are invalid: they are repo-relative paths to narrative Markdown, while the validator resolves module-relative and parses each entry against evidence.schema.json. Entries 0 and 1 only validate because an earlier state-recovery run created JSON records with .md filenames at the doubled path; the four the author added in revisions 76, 79, 82 and 85 followed that wrong convention and now block run_check.py --execute with EVIDENCE_INVALID, so no genuine run.json evidence can be produced. Options: (a) authorize a documented, recorded exception in which 00_harness_state.json is edited directly to remove the six invalid entries, with the removal and its rationale recorded as an observation so nothing is silently erased; (b) create four more placeholder JSON records at the doubled path so all six resolve, continuing the wrong convention; (c) leave it, never use run_check.py, keep recording MANUAL_TEST observations, and accept that REQUIRED_RUN_MISSING never clears. Which?",
+      "affected_ids": [
+        "evidence_files",
+        "run_check.py",
+        "REQUIRED_RUN_MISSING",
+        "docs/supplier_management/docs"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: \"a .gitignore都一齊做\" — option (a), a documented recorded exception to the append-only evidence_files rule, plus authorization to edit .gitignore in the same change."
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "question": "Declaring .gitignore in the manifest approval_required_paths, so the gate can express the already-granted human authorization instead of reporting OUTSIDE_MODULE, moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31. Enumerated before the change, this strands five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Does the Product Owner accept that cost and re-affirm all five approvals against the new baselines, nothing about their content changed?",
+      "affected_ids": [
+        ".gitignore",
+        "APPROVAL-HD-014-DESIGN",
+        "APPROVAL-HD-014-PLAN",
+        "APPROVAL-HD-015-RISK",
+        "APPROVAL-HD-015-RISK-DEF012",
+        "APPROVAL-HD-016-SCOPE",
+        "REV-009",
+        "REV-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: \"b\""
     }
   ],
   "external_actions": [
@@ -1458,17 +1713,34 @@
       "idempotency_key": "supplier-def-001-002-worktree-retire",
       "status": "CONFIRMED",
       "source_ref": "git branch --merged main confirmed the branch was fully merged before removal; worktree removed, local branch deleted, and origin/codex/supplier-defect-001-002 deleted on the remote."
+    },
+    {
+      "id": "MERGE-006",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-contract-pin via PR #107",
+      "idempotency_key": "supplier-contract-pin-merge-pr-107",
+      "status": "CONFIRMED",
+      "source_ref": "gh pr view 107 reports state MERGED, mergedAt 2026-09-16T07:14:00Z, mergeCommit a4f4f027bf64daa851479288fbcfa08db136c4e5. Pre-merge checks confirmed origin/main unmoved at f98fc8d and CI run 35066699010 headSha equal to the PR head b388ea3 with 4/4 passing."
+    },
+    {
+      "id": "WORKTREE-RETIRE-003",
+      "kind": "REMOVE_WORKTREE",
+      "target": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-contract-pin and branch codex/supplier-contract-pin",
+      "idempotency_key": "supplier-contract-pin-worktree-retire",
+      "status": "CONFIRMED",
+      "source_ref": "git branch --merged main confirmed full merge before removal; worktree removed, local branch deleted, remote branch deleted."
     }
   ],
   "evidence_files": [
-    "docs/supplier_management/implementation/00_implementation_readiness.md",
-    "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
-    "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
-    "docs/supplier_management/implementation/03_def_001_002_remediation.md",
-    "docs/supplier_management/implementation/04_rev_007_independent_review.md",
-    "docs/supplier_management/implementation/05_rev_008_independent_review.md",
-    "docs/supplier_management/implementation/06_rev_009_independent_review.md",
-    "docs/supplier_management/implementation/07_rev_010_independent_review.md"
+    "evidence/20260916T073702-8ed42b0a78d8/run.json",
+    "evidence/20260916T073723-d1dc661a049d/run.json",
+    "evidence/20260916T073727-c3fb7497a9c2/run.json",
+    "evidence/20260916T073736-e4cbe46f4e72/run.json",
+    "evidence/20260916T073739-afacfa147578/run.json",
+    "evidence/20260916T080942-445983f78533/run.json",
+    "evidence/20260916T080944-5a3e5659e755/run.json",
+    "evidence/20260916T080945-fcae0250cb5f/run.json",
+    "evidence/20260916T080948-dd38307485b5/run.json"
   ],
   "defects": [
     {
@@ -1516,7 +1788,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-004",
@@ -1529,7 +1801,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-005",
@@ -1542,7 +1814,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-006",
@@ -1554,7 +1826,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-007",
@@ -1566,7 +1838,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-008",
@@ -1578,7 +1850,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-009",
@@ -1605,7 +1877,7 @@
         "DEF-001"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-011",
@@ -1616,7 +1888,7 @@
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-012",
@@ -1627,7 +1899,7 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK-DEF012"
+      "risk_approval_id": "APPROVAL-HD-017-RISK-DEF012"
     },
     {
       "id": "DEF-013",
@@ -1644,7 +1916,31 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-014",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-011",
+        "docs/supplier_management/00_project_profile.json#suites",
+        "docs/supplier_management/evidence"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-015",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-011",
+        "docs/supplier_management/00_module_manifest.json#scope.approval_required_paths",
+        ".gitignore"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-010 is APPROVED with 0 Critical and 0 High, bound to design baseline 2dc22f70, and supersedes REV-009. All nine deferrals carry valid risk approvals; the superseded HD-012 and HD-013 records are retained unmodified. REV-010 verified that recording an APPROVED verdict cannot re-strand the baselines, because Context.baselines() excludes state by design. DEF-013 must be resolved as part of TASK-038, which now also contains a cross-module Item edit. Next: confirm required CI is green on the exact final head of PR #107, then obtain the user decision to merge. Known items carried forward for separate handling, none of them caused by this change: the evidence_files bookkeeping bug and the duplicated docs/supplier_management/docs/supplier_management directory; six SCOPE approvals that were already stale on main; the Purchasing manifest pinning Supplier's provided contract at 983f351f while the Supplier spec is a9f64493; and permission-catalogue drifted in four manifests. After merge, reconcile state, retire the worktree and branch, then enter PHASE-002 starting with the DEF-011 invariant assert; TASK-025 migrations touch approval_required_paths and need explicit schema sign-off before any migration is written."
+  "next_safe_action": "REV-011 is APPROVED with 0 Critical and 1 High, bound to design baseline e4083319. It established from git history that NO history or authoritative content was lost, re-ran both suites itself to confirm the recorded evidence is not fabricated, and independently confirmed the secret scan is clean. Its HIGH-1 and both LOW record corrections are applied above. THE GATE IS NOT SATISFIED. Scoped to PHASE-001 it currently returns 11 issues across 5 codes: REVIEW_NOT_SATISFIED (cleared by REV-012, which binds e4083319 with open_high 0; REV-011 alone did not clear it because harness_checks.py:279-280 skips an APPROVED review with a non-zero open_high unless a RISK approval covers it), REQUIRED_RUN_MISSING x4 and CI_MISSING_OR_STALE x4 and PR_REVIEW_MISSING (all stranded on the plan-baseline move, and the CI and PR ones additionally on code_commit), and COMMIT_CHANGED (the structural one-commit lag that cannot be fully eliminated). Next, in order: commit this review record, which unblocks run_check.py --execute; re-run the four DEVELOPER suites to produce evidence at plan baseline a0d41e31; register it; push; confirm CI green on the exact final head; then obtain the decision to merge. New: DEF-014 (committed evidence embeds absolute developer paths; fixing it moves the plan baseline, so bundle it with a change already doing so) and DEF-015 (Supplier is the only module declaring .gitignore in approval_required_paths; any other module editing it faces the same cost). Carried forward: six SCOPE approvals already stale beforehand; Purchasing pinning Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-012. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations need explicit schema sign-off."
 }

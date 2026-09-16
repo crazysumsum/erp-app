@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="40" failures="0" errors="0" time="0.725940167">
+    <testsuite name="test/services/supplier.test.js" timestamp="2026-09-16T08:09:50.457Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.004767458">
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; declares its discovery name" time="0.001057917">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; creates a supplier with framework idempotency" time="0.000910375">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; checks duplicate candidates without marking a read as idempotent" time="0.000202958">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps paged Supplier results to DataTable shape" time="0.000896875">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; loads detail and completeness by Supplier id" time="0.000259292">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Address routes" time="0.000143583">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Contact routes" time="0.000133666">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped reasoned Identifier routes" time="0.000113583">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses normal Supplier update and a signed controlled Code correction" time="0.000139">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps lifecycle commands to their required password and device-signature levels" time="0.000160583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/address.test.js" timestamp="2026-09-16T08:09:50.458Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.0764865">
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; shows purpose/primary text and hides all writes from view-only users" time="0.01506425">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; creates an Address and emits refresh with a Supplier-identifying success message" time="0.031477416">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.023537333">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; deactivates only after confirmation and inactive rows expose no write actions" time="0.005794709">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/contact.test.js" timestamp="2026-09-16T08:09:50.458Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.094115334">
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; shows purpose/primary and contact details while hiding writes from view-only users" time="0.01490875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; creates a Contact and emits refresh with a Supplier-identifying success message" time="0.032534708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.026221875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; surfaces server validation accessibly and deactivates only after confirmation" time="0.019850708">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/coreFlow.test.js" timestamp="2026-09-16T08:09:50.459Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.063440083">
+        <testcase classname="test/pages/suppliers/coreFlow.test.js" name="Supplier Core client smoke flow &gt; lets a view-only user move from the bounded list projection to detail without exposing write actions" time="0.062796083">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/create.test.js" timestamp="2026-09-16T08:09:50.459Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.092347208">
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires supplier.mgmt even when opened by direct URL" time="0.001541875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; saves a draft with only Code, Name and an active Currency" time="0.057214208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires explicit confirmation before creating a possible duplicate" time="0.019866">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; prompts before leaving a dirty form" time="0.013141083">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/detail.test.js" timestamp="2026-09-16T08:09:50.459Z" hostname="samMacBook-Pro.local" tests="2" failures="0" errors="0" skipped="0" time="0.045065375">
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; requires supplier.view and shows status, completeness and masked bank data" time="0.040661">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; distinguishes not-found and generic loading failures" time="0.003874125">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/editor.test.js" timestamp="2026-09-16T08:09:50.459Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.124504792">
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; updates editable root fields while keeping Supplier Code outside the normal payload" time="0.064100291">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; keeps the user&apos;s draft visible when a stale update reloads the latest Supplier" time="0.027326208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; uses a separate password-and-reason flow for controlled Supplier Code correction" time="0.017804584">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; prompts before leaving a dirty general editor" time="0.014549709">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/identifier.test.js" timestamp="2026-09-16T08:09:50.460Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.07460575">
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; renders type/country/value, hides writes from viewers and hides delete for referenced rows" time="0.021787417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; creates an Identifier and emits refresh with a Supplier-identifying success message" time="0.023432">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; requires a reason for updates and preserves the draft on unique/version conflicts" time="0.016787791">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; collects a reason before confirmed deletion" time="0.012018667">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/lifecycle.test.js" timestamp="2026-09-16T08:09:50.460Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.062785125">
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; shows only state-valid actions allowed by management and approval permissions" time="0.016240375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; requires reason and password for Block and explains the approved-device requirement" time="0.026286167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT" time="0.012575917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; Draft activation needs confirmation but no password and controlled delete does" time="0.007032208">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/list.test.js" timestamp="2026-09-16T08:09:50.460Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.087822542">
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; is the permission-filtered Supplier menu entry and renders explicit status text" time="0.052612125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; shows create only to supplier.mgmt users" time="0.026160125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; restores filters and paging from URL and keeps the query shareable" time="0.008453209">
+        </testcase>
+    </testsuite>
+</testsuites>
