@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 84,
+  "revision": 85,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -668,6 +668,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-010",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (HD-014 pin refresh and REV-009 corrections)",
+      "reviewer": "agent-skills:code-reviewer fresh instance (same instance as REV-009, resumed with its own context)",
+      "reviewed_baseline": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
+      "source_ref": "docs/supplier_management/implementation/07_rev_010_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -1455,7 +1467,8 @@
     "docs/supplier_management/implementation/03_def_001_002_remediation.md",
     "docs/supplier_management/implementation/04_rev_007_independent_review.md",
     "docs/supplier_management/implementation/05_rev_008_independent_review.md",
-    "docs/supplier_management/implementation/06_rev_009_independent_review.md"
+    "docs/supplier_management/implementation/06_rev_009_independent_review.md",
+    "docs/supplier_management/implementation/07_rev_010_independent_review.md"
   ],
   "defects": [
     {
@@ -1633,5 +1646,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-015 answered. All nine deferred defects now carry a risk approval bound to the current plan baseline 14cb9ebc; the superseded HD-012 and HD-013 records are retained unmodified. REV-009 corrections are recorded. The only remaining gate blocker on PR #107 is that no APPROVED review binds the current design baseline 2dc22f70 — REV-009 is CHANGES_REQUESTED and REV-008 is bound to the superseded dcb74d3c. Next: ask the REV-009 reviewer to re-verify the corrections for a final verdict, then merge PR #107 only on an APPROVED review plus green CI on the exact final head. After that, resolve the harness bookkeeping defects (evidence_files semantics and the duplicated docs directory) and only then enter PHASE-002, which starts with the DEF-011 invariant assert and whose TASK-025 migrations need explicit schema sign-off."
+  "next_safe_action": "REV-010 is APPROVED with 0 Critical and 0 High, bound to design baseline 2dc22f70, and supersedes REV-009. All nine deferrals carry valid risk approvals; the superseded HD-012 and HD-013 records are retained unmodified. REV-010 verified that recording an APPROVED verdict cannot re-strand the baselines, because Context.baselines() excludes state by design. DEF-013 must be resolved as part of TASK-038, which now also contains a cross-module Item edit. Next: confirm required CI is green on the exact final head of PR #107, then obtain the user decision to merge. Known items carried forward for separate handling, none of them caused by this change: the evidence_files bookkeeping bug and the duplicated docs/supplier_management/docs/supplier_management directory; six SCOPE approvals that were already stale on main; the Purchasing manifest pinning Supplier's provided contract at 983f351f while the Supplier spec is a9f64493; and permission-catalogue drifted in four manifests. After merge, reconcile state, retire the worktree and branch, then enter PHASE-002 starting with the DEF-011 invariant assert; TASK-025 migrations touch approval_required_paths and need explicit schema sign-off before any migration is written."
 }
