@@ -1,66 +1,11 @@
-# Sales Order Management UAT Specification — Canonical Entry
-
-## 1. UAT Contract
-
-The complete 129-case legacy business/user catalogue is embedded in section 6 of this file, with only obsolete source-document paths normalized to canonical filenames. Every canonical alias below inherits its legacy case's Priority, Phase, Role, Requirement/Risk, Preconditions, Test Data, User Steps, Expected Result, Required Evidence, Actual Evidence and Status.
-
-- All results are `NOT_RUN`; Actual Evidence is `—`.
-- Technical prerequisites may be supplied by `06_technical_test_cases.md`, but automation evidence is not business-user acceptance.
-- UAT execution requires an identified build/environment and an authorized business signer.
-- Operational cases executed by QA/Ops remain executable UAT evidence only where a business-observable outcome exists; infrastructure-only acceptance remains technical.
-
-## 2. Canonical Alias Map
-
-| Canonical UAT aliases | Legacy cases | Business scope | Primary FR coverage |
-| --- | --- | --- | --- |
-| UAT-001, UAT-002, UAT-003, UAT-004, UAT-005, UAT-006, UAT-007 | AUTH-001–007 | login, least privilege, stale actor, IDOR, safe output | All business FR plus SEC-001–013 |
-| UAT-008, UAT-009, UAT-010, UAT-011, UAT-012, UAT-013, UAT-014, UAT-015, UAT-016, UAT-017, UAT-018, UAT-019, UAT-020, UAT-021 | QUOTE-001–014 | quotation creation, issue, expiry, conversion, print | FR-001–017 |
-| UAT-022, UAT-023, UAT-024, UAT-025, UAT-026, UAT-027, UAT-028, UAT-029, UAT-030, UAT-031, UAT-032, UAT-033, UAT-034, UAT-035, UAT-036, UAT-037 | DRAFT-001–016 | manual Draft, pricing, version conflict, snapshot | FR-018–041 |
-| UAT-038, UAT-039, UAT-040, UAT-041, UAT-042, UAT-043, UAT-044, UAT-045, UAT-046, UAT-047, UAT-048, UAT-049, UAT-050 | CONF-001–013 | full/partial/zero reservation, replay, recovery | FR-042–061 |
-| UAT-051, UAT-052, UAT-053, UAT-054, UAT-055, UAT-056, UAT-057, UAT-058, UAT-059, UAT-060, UAT-061, UAT-062, UAT-063, UAT-064 | LIFE-001–014 | FIFO allocation, withdraw, cancel, close, complete | FR-062–075 |
-| UAT-065, UAT-066, UAT-067, UAT-068, UAT-069, UAT-070, UAT-071, UAT-072, UAT-073, UAT-074, UAT-075, UAT-076, UAT-077, UAT-078, UAT-079, UAT-080, UAT-081, UAT-082 | CSV-001–018 | template, precheck, isolation, dedupe, background result | FR-076–095 |
-| UAT-083, UAT-084, UAT-085, UAT-086, UAT-087, UAT-088, UAT-089, UAT-090, UAT-091 | CH-001–009 | canonical Channel intake and exception recovery | FR-096–108 |
-| UAT-092, UAT-093, UAT-094, UAT-095, UAT-096, UAT-097, UAT-098, UAT-099, UAT-100, UAT-101, UAT-102, UAT-103, UAT-104 | INQ-001–013 | active views, source links, exports, audit, injection | FR-109–120 plus inquiry aspects of FR-018–041 |
-| UAT-105, UAT-106, UAT-107, UAT-108, UAT-109, UAT-110, UAT-111, UAT-112, UAT-113, UAT-114, UAT-115, UAT-116, UAT-117, UAT-118, UAT-119 | ARC-001–015 | eligibility, atomicity, routing, immutability, restore | FR-121–140 |
-| UAT-120, UAT-121, UAT-122, UAT-123, UAT-124, UAT-125, UAT-126, UAT-127, UAT-128, UAT-129 | OPS-001–010 | user-visible performance, recovery, responsive/a11y, job isolation | NFR-001–013/016 and cross-cutting FR |
-
-The mapping is positional inside each row: `UAT-001 = AUTH-001`, `UAT-008 = QUOTE-001`, `UAT-022 = DRAFT-001`, and `UAT-129 = OPS-010`.
-
-## 3. Phase UAT Batches
-
-| Phase | Canonical cases | Business checkpoint | Entry evidence | Result |
-| --- | --- | --- | --- | --- |
-| PHASE-001 | UAT-001–002 smoke only | safe foundation; no Sales capability sign-off | TC-001–010 | NOT_RUN |
-| PHASE-002 | UAT-001–037, UAT-092–104 as applicable | quotation/manual Draft/inquiry usable without reservation | TC-011–020 | NOT_RUN |
-| PHASE-003 | UAT-001–007, UAT-038–064 | confirmation/reservation/lifecycle truthful and recoverable | TC-021–033 | NOT_RUN |
-| PHASE-004 | UAT-001–007, UAT-065–091 | CSV/Channel intake safe, unique and traceable | TC-034–043 | NOT_RUN |
-| PHASE-005 | UAT-092–129 | inquiry/export/archive/operations meet business outcomes | TC-044–060 | NOT_RUN |
-
-## 4. Non-UAT Requirements
-
-- `NFR-014` RTO and `NFR-015` RPO are objectively verified by `TC-058`/`TC-059`; UAT applicability is `N/A — technical DR evidence`. A business owner may acknowledge the report but that is not the execution result.
-- Low-level lock order, DB trigger, heap and migration behavior are Technical Acceptance only.
-- No UAT case may be marked PASS without actual execution evidence and authorized business acceptance.
-
-## 5. Mechanical Functional Coverage
-
-Functional requirements covered: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108, FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
-
-
----
-
-## 6. Embedded Legacy UAT Body
-
-The content below preserves the full legacy source semantics; only obsolete document paths were normalized. The exact original source has SHA-256 a3750deeaf3b669de4eb9c91e3c57751e8603731413ef38f8b063846ace3418e and remains in the temporary recovery backup. Canonical aliases above preserve the distinction between planned execution and acceptance.
-
-# Sales Order Management 用戶驗收測試案例
+# Sales Order Management 用戶驗收測試案例（Harness Aligned）
 
 ## 0. 文件資訊
 
 | 項目 | 內容 |
 | --- | --- |
 | 需求來源 | `docs/sales_order_management/01_requirement_spec.md`（embedded legacy 0.1 Draft） |
-| 設計來源 | `docs/sales_order_management/03_system_design_spec.md`（embedded legacy 0.1 Draft） |
+| 設計來源 | `docs/sales_order_management/03_design_spec.md`（embedded legacy 0.1 Draft） |
 | UI／UX 基準 | `docs/frontend-design.md` |
 | 文件日期 | 2026-09-09 |
 | 測試類型 | User Acceptance Testing（UAT）測試設計 |
@@ -493,3 +438,2902 @@ The content below preserves the full legacy source semantics; only obsolete docu
 | Product Owner | — | — | — | — |
 
 最終簽核只能根據已執行案例、實際證據、缺陷狀態及批准例外作出；本文件目前所有案例均為 `NOT RUN`。
+
+## 11. Harness 2.0 正式 UAT 定義
+
+### 11.1 對齊來源與保留內容
+
+本節保留 Harness 對齊層的基線、映射與門檻敘述；以上章節為本模組的正式敘述正文，章節編號與既有跨文件引用維持不變。
+
+以上正文保留對齊前來源的完整語意，只正規化了已失效的文件路徑；對齊前來源的 SHA-256 為 `a3750deeaf3b669de4eb9c91e3c57751e8603731413ef38f8b063846ace3418e`，其內容由 Git 歷史保存為恢復點。 本節的 Canonical 對應保留「已計劃執行」與「已驗收」的區別。
+
+## 1. UAT Contract
+
+The complete 129-case legacy business/user catalogue is embedded in section 6 of this file, with only obsolete source-document paths normalized to canonical filenames. Every canonical alias below inherits its legacy case's Priority, Phase, Role, Requirement/Risk, Preconditions, Test Data, User Steps, Expected Result, Required Evidence, Actual Evidence and Status.
+
+- All results are `NOT_RUN`; Actual Evidence is `—`.
+- Technical prerequisites may be supplied by `06_technical_test_cases.md`, but automation evidence is not business-user acceptance.
+- UAT execution requires an identified build/environment and an authorized business signer.
+- Operational cases executed by QA/Ops remain executable UAT evidence only where a business-observable outcome exists; infrastructure-only acceptance remains technical.
+
+## 2. Canonical Alias Map
+
+| Canonical UAT aliases | Legacy cases | Business scope | Primary FR coverage |
+| --- | --- | --- | --- |
+| UAT-001, UAT-002, UAT-003, UAT-004, UAT-005, UAT-006, UAT-007 | AUTH-001–007 | login, least privilege, stale actor, IDOR, safe output | All business FR plus SEC-001–013 |
+| UAT-008, UAT-009, UAT-010, UAT-011, UAT-012, UAT-013, UAT-014, UAT-015, UAT-016, UAT-017, UAT-018, UAT-019, UAT-020, UAT-021 | QUOTE-001–014 | quotation creation, issue, expiry, conversion, print | FR-001–017 |
+| UAT-022, UAT-023, UAT-024, UAT-025, UAT-026, UAT-027, UAT-028, UAT-029, UAT-030, UAT-031, UAT-032, UAT-033, UAT-034, UAT-035, UAT-036, UAT-037 | DRAFT-001–016 | manual Draft, pricing, version conflict, snapshot | FR-018–041 |
+| UAT-038, UAT-039, UAT-040, UAT-041, UAT-042, UAT-043, UAT-044, UAT-045, UAT-046, UAT-047, UAT-048, UAT-049, UAT-050 | CONF-001–013 | full/partial/zero reservation, replay, recovery | FR-042–061 |
+| UAT-051, UAT-052, UAT-053, UAT-054, UAT-055, UAT-056, UAT-057, UAT-058, UAT-059, UAT-060, UAT-061, UAT-062, UAT-063, UAT-064 | LIFE-001–014 | FIFO allocation, withdraw, cancel, close, complete | FR-062–075 |
+| UAT-065, UAT-066, UAT-067, UAT-068, UAT-069, UAT-070, UAT-071, UAT-072, UAT-073, UAT-074, UAT-075, UAT-076, UAT-077, UAT-078, UAT-079, UAT-080, UAT-081, UAT-082 | CSV-001–018 | template, precheck, isolation, dedupe, background result | FR-076–095 |
+| UAT-083, UAT-084, UAT-085, UAT-086, UAT-087, UAT-088, UAT-089, UAT-090, UAT-091 | CH-001–009 | canonical Channel intake and exception recovery | FR-096–108 |
+| UAT-092, UAT-093, UAT-094, UAT-095, UAT-096, UAT-097, UAT-098, UAT-099, UAT-100, UAT-101, UAT-102, UAT-103, UAT-104 | INQ-001–013 | active views, source links, exports, audit, injection | FR-109–120 plus inquiry aspects of FR-018–041 |
+| UAT-105, UAT-106, UAT-107, UAT-108, UAT-109, UAT-110, UAT-111, UAT-112, UAT-113, UAT-114, UAT-115, UAT-116, UAT-117, UAT-118, UAT-119 | ARC-001–015 | eligibility, atomicity, routing, immutability, restore | FR-121–140 |
+| UAT-120, UAT-121, UAT-122, UAT-123, UAT-124, UAT-125, UAT-126, UAT-127, UAT-128, UAT-129 | OPS-001–010 | user-visible performance, recovery, responsive/a11y, job isolation | NFR-001–013/016 and cross-cutting FR |
+
+The mapping is positional inside each row: `UAT-001 = AUTH-001`, `UAT-008 = QUOTE-001`, `UAT-022 = DRAFT-001`, and `UAT-129 = OPS-010`.
+
+## 3. Phase UAT Batches
+
+| Phase | Canonical cases | Business checkpoint | Entry evidence | Result |
+| --- | --- | --- | --- | --- |
+| PHASE-001 | UAT-001–002 smoke only | safe foundation; no Sales capability sign-off | TC-001–010 | NOT_RUN |
+| PHASE-002 | UAT-001–037, UAT-092–104 as applicable | quotation/manual Draft/inquiry usable without reservation | TC-011–020 | NOT_RUN |
+| PHASE-003 | UAT-001–007, UAT-038–064 | confirmation/reservation/lifecycle truthful and recoverable | TC-021–033 | NOT_RUN |
+| PHASE-004 | UAT-001–007, UAT-065–091 | CSV/Channel intake safe, unique and traceable | TC-034–043 | NOT_RUN |
+| PHASE-005 | UAT-092–129 | inquiry/export/archive/operations meet business outcomes | TC-044–060 | NOT_RUN |
+
+## 4. Non-UAT Requirements
+
+- `NFR-014` RTO and `NFR-015` RPO are objectively verified by `TC-058`/`TC-059`; UAT applicability is `N/A — technical DR evidence`. A business owner may acknowledge the report but that is not the execution result.
+- Low-level lock order, DB trigger, heap and migration behavior are Technical Acceptance only.
+- No UAT case may be marked PASS without actual execution evidence and authorized business acceptance.
+
+## 5. Mechanical Functional Coverage
+
+Functional requirements covered: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108, FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
+
+
+---
+
+### 11.2 正式定義
+
+以下每個實體的 `Statement`／`Decision`／`Goal` 保留原文，`Acceptance criteria` 與 `Failure behavior` 陳述本模組共通的可驗證條件，不新增任何未經確認的業務規則、門檻或流程。
+
+## UAT-001 — 未登入資料洩漏（AUTH-001）
+
+### Business objective and actor
+
+角色：未登入。業務目標／風險：未登入資料洩漏。執行批次：各 Phase；案例優先級：P0。（Legacy identity：`AUTH-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已登出。測試資料：所有 Sales URL。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+直接開啟 Quotation、SO、Import、Outstanding、Archive、Export 及 Audit URL。
+
+### Expected business result
+
+導向登入或顯示未登入；沒有交易或主檔內容可見。
+
+### Acceptance criteria
+
+必要證據：URL、登入導向及畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-002 — permission 不繼承（AUTH-002）
+
+### Business objective and actor
+
+角色：U-NONE／U-SYS。業務目標／風險：permission 不繼承。執行批次：各 Phase；案例優先級：P0。（Legacy identity：`AUTH-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：兩者沒有 Sales permission。測試資料：所有頁面 URL。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+登入後檢查 menu，再直接開各 URL。
+
+### Expected business result
+
+Menu 不顯示；直接 URL 拒絕；System Administrator 不因角色名稱取得 Sales 能力。
+
+### Acceptance criteria
+
+必要證據：角色設定、menu、拒絕畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-003 — AC-039；只讀邊界（AUTH-003）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：AC-039；只讀邊界。執行批次：P1～P4；案例優先級：P0。（Legacy identity：`AUTH-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已有各狀態資料。測試資料：所有查詢及 write action。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查看／匯出後嘗試建立、修改、發出、轉單、確認、撤回、取消及匯入。
+
+### Expected business result
+
+授權範圍內查詢／匯出成功；所有寫入按鈕不可用，直接提交亦拒絕；資料不變。
+
+### Acceptance criteria
+
+必要證據：權限、查詢、拒絕及前後狀態。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-004 — AC-040；最小權限（AUTH-004）
+
+### Business objective and actor
+
+角色：U-SALES／U-IMPORT。業務目標／風險：AC-040；最小權限。執行批次：P1～P3；案例優先級：P0。（Legacy identity：`AUTH-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：兩個獨立帳戶。測試資料：人工操作及 CSV。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+U-SALES 嘗試人工／報價及 CSV；U-IMPORT 嘗試 CSV 及人工修改。
+
+### Expected business result
+
+U-SALES 可管理人工 SO／Quotation 但不可 upload／confirm import；U-IMPORT 可處理 CSV 但不可修改人工交易。
+
+### Acceptance criteria
+
+必要證據：角色、可用 actions、拒絕畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-005 — 提交點重新授權（AUTH-005）
+
+### Business objective and actor
+
+角色：U-STALE。業務目標／風險：提交點重新授權。執行批次：各 Phase；案例優先級：P0。（Legacy identity：`AUTH-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已載入可提交畫面。測試資料：Issue、convert、confirm、import confirm、cancel。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+管理員撤權或停用後，由原頁提交。
+
+### Expected business result
+
+提交被清楚拒絕；Quotation／SO／Batch／Reservation 不產生成功效果。
+
+### Acceptance criteria
+
+必要證據：撤權時間、錯誤、前後業務頁。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-006 — AC-041；IDOR／aggregate ownership（AUTH-006）
+
+### Business objective and actor
+
+角色：各授權角色。業務目標／風險：AC-041；IDOR／aggregate ownership。執行批次：P1～P4；案例優先級：P0。（Legacy identity：`AUTH-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有多張 Quotation、SO、Import child、Export、Archive。測試資料：替換 URL 或表單中的 parent／child ID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+以瀏覽器可操作方式替換 ID 並查看或提交。
+
+### Expected business result
+
+不可讀寫不屬於目標 aggregate／資料範圍的記錄；不洩漏其存在性。
+
+### Acceptance criteria
+
+必要證據：URL、拒絕、資料未變。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-007 — 敏感資料與錯誤安全（AUTH-007）
+
+### Business objective and actor
+
+角色：各授權角色／U-OPS。業務目標／風險：敏感資料與錯誤安全。執行批次：P1～P4；案例優先級：P1。（Legacy identity：`AUTH-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可觸發驗證及技術錯誤。測試資料：TEXT-RISK、銀行資料關鍵字、Token 樣本。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+輸入不可信文字、查看 SO／Audit／Import error／operational error。
+
+### Expected business result
+
+文字不執行；一般使用者看業務錯誤，只有 U-OPS 看安全技術摘要；畫面／下載／Audit 不含銀行帳戶、Token、SQL、stack 或內部路徑。
+
+### Acceptance criteria
+
+必要證據：輸入、畫面、下載、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-008 — FR-QUOTE-001～004、AC-001（QUOTE-001）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-001～004、AC-001。執行批次：P1；案例優先級：P1。（Legacy identity：`QUOTE-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：主資料可用。測試資料：CUST-A、SKU-A、有效日期。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+建立 Draft，加入行、客戶參考及備註後保存。
+
+### Expected business result
+
+分配唯一不可改 Quotation Number；默認 Currency／PT 帶入；Draft 保存成功且至少一行。
+
+### Acceptance criteria
+
+必要證據：Draft 詳情、number、欄位。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-009 — FR-QUOTE-003～005、AC-002（QUOTE-002）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-003～005、AC-002。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：建立 Draft。測試資料：無行、零／負數量、負價格、Valid Until 早於 Quotation Date、CUST-INACTIVE、SKU-BAD。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別保存／發出。
+
+### Expected business result
+
+不合法資料不可發出；指出實際欄位及原因，不留下 Issued 狀態。
+
+### Acceptance criteria
+
+必要證據：各錯誤、狀態及詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-010 — FR-QUOTE-005～008、BR-007～010（QUOTE-003）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-005～008、BR-007～010。執行批次：P1；案例優先級：P1。（Legacy identity：`QUOTE-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：HKD Quotation。測試資料：SKU-A、SKU-JPY、SKU-DISC。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+逐項加入、修改價格及備註。
+
+### Expected business result
+
+SKU-A 預填 HKD 價；SKU-JPY 不換算且要求輸價；SKU-DISC 可按 Sellable 規則選；可改最終價格；無 Tax／Discount／Shipping Address。
+
+### Acceptance criteria
+
+必要證據：行資料、金額及畫面欄位。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-011 — FR-QUOTE-007、BR-006～007（QUOTE-004）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-007、BR-006～007。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Currency 精度已配置。測試資料：HKD／JPY、邊界小數。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+修改數量及單價。
+
+### Expected business result
+
+每行及總額即時計算，顯示／保存／列印的精度與四捨五入一致。
+
+### Acceptance criteria
+
+必要證據：編輯、詳情及列印金額。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-012 — FR-QUOTE-009、BR-014（QUOTE-005）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-009、BR-014。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 已載入。測試資料：其後停用 Customer／SKU。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+從已開頁面發出。
+
+### Expected business result
+
+發出時重新驗證並拒絕；提示失效項目，狀態仍 Draft。
+
+### Acceptance criteria
+
+必要證據：主檔變更、錯誤、狀態。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-013 — FR-QUOTE-009～010、AC-003（QUOTE-006）
+
+### Business objective and actor
+
+角色：U-SALES／U-VIEW。業務目標／風險：FR-QUOTE-009～010、AC-003。執行批次：P1；案例優先級：P1。（Legacy identity：`QUOTE-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有效 Draft。測試資料：Q-DRAFT。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+發出後以兩角色查看及列印／下載。
+
+### Expected business result
+
+狀態 Issued；客戶版本可讀、金額一致、無內部技術資料；Viewer 不可修改。
+
+### Acceptance criteria
+
+必要證據：Issued 詳情及客戶版本。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-014 — FR-QUOTE-017、BR-019、AC-003（QUOTE-007）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-017、BR-019、AC-003。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：記錄庫存初始值。測試資料：Draft、Issued、Cancelled、Expired Quotation。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+建立、發出、取消及等候過期後查 Inventory。
+
+### Expected business result
+
+任一 Quotation 狀態都不建立／佔用 Reservation，ATP 不因報價改變。
+
+### Acceptance criteria
+
+必要證據：Quotation 狀態與 Inventory 前後。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-015 — FR-QUOTE-011～012、AC-007（QUOTE-008）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-011～012、AC-007。執行批次：P1；案例優先級：P1。（Legacy identity：`QUOTE-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：到期邊界可控。測試資料：Q-EXPIRED／Q-CANCELLED／Q-DRAFT。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+嘗試轉單。
+
+### Expected business result
+
+非有效 Issued 報價不可轉；顯示清楚原因且沒有 SO。
+
+### Acceptance criteria
+
+必要證據：錯誤、Quotation 及 SO 搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-016 — FR-QUOTE-012～015、AC-004～005（QUOTE-009）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-012～015、AC-004～005。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有效 Issued。測試資料：Q-ISSUED。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+轉單，新增／刪除行、改數量／價／Warehouse／日期並保存。
+
+### Expected business result
+
+只建立一張 Draft SO；尚無 Reservation；雙向連結及新增、刪除、數量、價格差異摘要正確。
+
+### Acceptance criteria
+
+必要證據：Quotation、SO、差異摘要、Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-017 — FR-QUOTE-013、AC-006（QUOTE-010）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-013、AC-006。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已成功轉單。測試資料：Q-CONVERTED、原 event。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+再按轉單或重送同一操作。
+
+### Expected business result
+
+返回既有 Target SO；不建立第二張 SO 或 Conversion。
+
+### Acceptance criteria
+
+必要證據：兩次結果、SO 搜尋、連結。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-018 — BR-040（QUOTE-011）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：BR-040。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有效 Issued。測試資料：Q-ISSUED。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+進入轉換畫面後取消／離開，不保存。
+
+### Expected business result
+
+Quotation 仍 Issued、沒有 Target SO／差異摘要／Reservation。
+
+### Acceptance criteria
+
+必要證據：前後 Quotation、SO 搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-019 — FR-QUOTE-009／016（QUOTE-012）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-009／016。執行批次：P1；案例優先級：P1。（Legacy identity：`QUOTE-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 及 Issued。測試資料：REASON。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+取消 Draft；再對 Issued 執行允許的取消流程。
+
+### Expected business result
+
+狀態按規則變為 Cancelled；原因、actor、時間及狀態歷史可查，不可再轉單。
+
+### Acceptance criteria
+
+必要證據：詳情、history、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-020 — FR-QUOTE-011／016（QUOTE-013）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-QUOTE-011／016。執行批次：P1；案例優先級：P1。（Legacy identity：`QUOTE-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Valid Until 到期邊界。測試資料：APP_TIME_ZONE 前後一分鐘。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+到期前後重新整理及搜尋。
+
+### Expected business result
+
+到期判定依業務時區一致；到期後顯示 Expired、不可轉單，History／Audit 可追溯。
+
+### Acceptance criteria
+
+必要證據：系統時區、畫面、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-021 — 版本及重複提交（QUOTE-014）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：版本及重複提交。執行批次：P1；案例優先級：P0。（Legacy identity：`QUOTE-014`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：兩個 browser session 開同一 Draft。測試資料：Q-DRAFT 同一 version。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+A 修改保存；B 再發出或保存；快速雙擊 Issue。
+
+### Expected business result
+
+B 被要求重新載入，不覆蓋 A；雙擊只產生一次狀態轉換及 Audit。
+
+### Acceptance criteria
+
+必要證據：兩 session、最終詳情、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-022 — FR-SO-005～012、AC-008（DRAFT-001）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-005～012、AC-008。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：主資料可用。測試資料：CUST-A、WH-A、SKU-A。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+建立 MANUAL Draft 並首次保存。
+
+### Expected business result
+
+唯一 SO Number 只分配一次；Customer、HKD、PT-30、Warehouse、日期、reference 及 notes 正確。
+
+### Acceptance criteria
+
+必要證據：Draft 詳情及 number。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-023 — FR-SO-006、BR-001（DRAFT-002）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-006、BR-001。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已保存 Draft。測試資料：原 SO Number。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+多次修改、取消，再建立新 Draft。
+
+### Expected business result
+
+原 number 不變、不重用；新 SO 取得另一唯一 number。
+
+### Acceptance criteria
+
+必要證據：前後詳情及搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-024 — FR-SO-007～010、BR-002／011／013（DRAFT-003）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-007～010、BR-002／011／013。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：建單頁。測試資料：CUST-INACTIVE、WH-INACTIVE、跨 Customer／Currency／Warehouse。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別建立或修改。
+
+### Expected business result
+
+每張只接受一個 Active Customer、Currency、Warehouse；無效主檔拒絕且不部分保存。
+
+### Acceptance criteria
+
+必要證據：各錯誤及 Draft 詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-025 — FR-SO-009、AC-008（DRAFT-004）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-009、AC-008。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Customer 可用。測試資料：CUST-NOPT。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+建立並保存。
+
+### Expected business result
+
+沒有 Payment Term 不阻止建單；snapshot 明確為未設定。
+
+### Acceptance criteria
+
+必要證據：Draft 詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-026 — FR-SO-011～013、AC-010（DRAFT-005）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-011～013、AC-010。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：建單頁。測試資料：Requested Delivery Date 邊界。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+檢查欄位；輸入早於／等於／晚於 Order Date。
+
+### Expected business result
+
+沒有 Shipping Address／Tax／Discount 欄位；早於 Order Date 拒絕，其餘接受。
+
+### Acceptance criteria
+
+必要證據：畫面及驗證結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-027 — FR-SO-014～017、BR-003～004（DRAFT-006）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-014～017、BR-003～004。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 可編輯。測試資料：0、負數、小數、100／101 lines。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+嘗試保存各邊界。
+
+### Expected business result
+
+至少 1、最多 100 有效行；quantity >0 且符合 UOM 精度；錯誤指出行號。
+
+### Acceptance criteria
+
+必要證據：各輸入、錯誤、行數。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-028 — FR-SO-015、BR-012（DRAFT-007）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-015、BR-012。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Item 主資料齊備。測試資料：SKU code／name／barcode、SKU-DISC、SKU-BAD。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+以三種鍵搜尋並加入。
+
+### Expected business result
+
+三種搜尋可定位合資格 SKU；Sellable discontinued 可選；SKU-BAD 不可選或被拒絕。
+
+### Acceptance criteria
+
+必要證據：搜尋及行結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-029 — FR-SO-016、BR-010（DRAFT-008）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-016、BR-010。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 有 SKU-A EA。測試資料：同價同 note、不同價／note、不同 UOM。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重複加入。
+
+### Expected business result
+
+同 SKU＋UOM 且價／note相同合併；不同價／note要求使用者解決；不同 UOM 可獨立行。
+
+### Acceptance criteria
+
+必要證據：行合併／提示結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-030 — FR-SO-018～021、AC-009～011（DRAFT-009）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-018～021、AC-009～011。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：HKD SO。測試資料：SKU-A、SKU-JPY、零／負價格。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+加入並修改價格。
+
+### Expected business result
+
+同幣別預填；異幣不換算且須輸價；負價格拒絕；零價格可保存；無 Tax／Discount／Promotion 隱藏金額。
+
+### Acceptance criteria
+
+必要證據：行、total、畫面欄位。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-031 — FR-SO-020、BR-006～008（DRAFT-010）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-020、BR-006～008。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 有多行。測試資料：HKD／JPY 精度及邊界小數。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+修改 quantity／price，保存後重開。
+
+### Expected business result
+
+Line Amount 與 Total 計算正確；UI、保存後詳情與匯出精度一致。
+
+### Acceptance criteria
+
+必要證據：手工期望值、畫面、重開結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-032 — BR-008；價格快照（DRAFT-011）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：BR-008；價格快照。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 已有 SKU-A。測試資料：其後修改建議售價。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重開 Draft、新增同 SKU 到另一張 Draft。
+
+### Expected business result
+
+已有行價格不被改寫；新加入行採用新建議價，仍可手動修改。
+
+### Acceptance criteria
+
+必要證據：主檔、兩張 Draft。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-033 — FR-SO-022～023、AC-012（DRAFT-012）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-022～023、AC-012。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：兩 session 開同一 version。測試資料：SO-DRAFT。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+A 修改保存；B 修改後保存或確認。
+
+### Expected business result
+
+B 被拒絕並提示重新載入；A 的修改保留，無靜默覆蓋／Reservation。
+
+### Acceptance criteria
+
+必要證據：兩 session、version、最終詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-034 — AC-013、BR-014（DRAFT-013）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：AC-013、BR-014。執行批次：P1；案例優先級：P0。（Legacy identity：`DRAFT-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 頁已載入。測試資料：其後停用 Customer／SKU／WH／UOM。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+直接確認。
+
+### Expected business result
+
+Fresh validation 拒絕並指出每個失效項目；SO 仍 Draft，沒有 Reservation。
+
+### Acceptance criteria
+
+必要證據：主檔、錯誤、SO／Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-035 — FR-SO-001～004（DRAFT-014）
+
+### Business objective and actor
+
+角色：U-SALES／U-VIEW。業務目標／風險：FR-SO-001～004。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-014`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有多來源／狀態資料。測試資料：number、Customer、PO、date、source、channel、WH、backorder。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+組合篩選及開詳情。
+
+### Expected business result
+
+列表欄位完整；filters 可組合、可清除、結果正確且分頁不重複／遺漏。
+
+### Acceptance criteria
+
+必要證據：filters、列表、詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-036 — FR-SO-024、AC-014（DRAFT-015）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-024、AC-014。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-015`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：SO 已確認。測試資料：其後更名 CUST-A／SKU-A、改 PT／WH 顯示名。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+開詳情比較 current reference 與 confirmed snapshot。
+
+### Expected business result
+
+清楚顯示目前參考與確認快照；歷史名稱／UOM／價格／條款不被覆寫。
+
+### Acceptance criteria
+
+必要證據：主檔變更、SO 詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-037 — Draft 無庫存承諾（DRAFT-016）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：Draft 無庫存承諾。執行批次：P1；案例優先級：P1。（Legacy identity：`DRAFT-016`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：記錄 ATP／Reservation 初值。測試資料：建立、修改、複製資料輸入及取消 Draft。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+完成所有 Draft 操作。
+
+### Expected business result
+
+Draft 期間 Reserved 為 0，Inventory ATP 不因 Draft 改變；取消無 Release 動作。
+
+### Acceptance criteria
+
+必要證據：SO、Inventory 前後、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-038 — FR-CONF-001～006（CONF-001）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-001～006。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：完整有效 Draft。測試資料：CUST-A、WH-A、SKU-A。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認。
+
+### Expected business result
+
+成功進入 Confirmed；保存 Customer／SKU／UOM／Currency／PT／WH／價格 snapshot 及 Confirmed By／At。
+
+### Acceptance criteria
+
+必要證據：SO 詳情、history、snapshot。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-039 — FR-CONF-001～003（CONF-002）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-001～003。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：不完整／非 Draft 或主檔失效。測試資料：各無效狀態。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別確認。
+
+### Expected business result
+
+只有完整有效 Draft 可確認；失敗不建立 Reservation，狀態不假成功。
+
+### Acceptance criteria
+
+必要證據：錯誤、SO、Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-040 — FR-CONF-004、AC-013（CONF-003）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-004、AC-013。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 完整。測試資料：CUST-HOLD。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認。
+
+### Expected business result
+
+明確因 ON_HOLD 拒絕；SO 保持 Draft、沒有 Reservation。
+
+### Acceptance criteria
+
+必要證據：Customer credit、錯誤、SO／Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-041 — FR-CONF-004～005（CONF-004）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-004～005。執行批次：P2；案例優先級：P1。（Legacy identity：`CONF-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft 完整。測試資料：CUST-NOPT、CUST-LIMIT。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別確認。
+
+### Expected business result
+
+NOT_CONFIGURED 可繼續；Credit Limit 只顯示 advisory，不作不可靠硬攔截；結果可追溯。
+
+### Acceptance criteria
+
+必要證據：提示、最終 SO、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-042 — FR-CONF-007／019（CONF-005）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-007／019。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：ATP 足夠。測試資料：SO-DRAFT、EVT-A。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+快速雙擊 Confirm，再以原 event 重送。
+
+### Expected business result
+
+只有一次有效確認、一次 Reservation 組及一致 history；重送返回同一結果。
+
+### Acceptance criteria
+
+必要證據：操作錄影、SO、Reservation、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-043 — FR-CONF-008／012、AC-015（CONF-006）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-008／012、AC-015。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：記錄 ATP。測試資料：ATP-FULL。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認 quantity 10。
+
+### Expected business result
+
+SO Confirmed；Reserved 10、Backorder 0；Ordered＝Reserved＋Backorder；Inventory 無負數。
+
+### Acceptance criteria
+
+必要證據：SO line、Inventory Reservation／balance。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-044 — FR-CONF-009／012、AC-016（CONF-007）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-009／012、AC-016。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：記錄 ATP。測試資料：ordered 10、ATP 4。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認。
+
+### Expected business result
+
+SO 仍 Confirmed；Reserved 4、Backorder 6；數量等式成立。
+
+### Acceptance criteria
+
+必要證據：SO line、Reservation、Backorder。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-045 — FR-CONF-010～012、AC-017（CONF-008）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-010～012、AC-017。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：記錄 ATP。測試資料：ordered 10、ATP 0。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認。
+
+### Expected business result
+
+SO 仍 Confirmed；Reserved 0、Backorder 10；Inventory 不負庫存。
+
+### Acceptance criteria
+
+必要證據：SO line、Inventory balance。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-046 — FR-CONF-013、AC-018（CONF-009）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-013、AC-018。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：多行 Draft。測試資料：一行 full、一行 partial、一行 zero。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認。
+
+### Expected business result
+
+各行獨立按 ATP Reservation／Backorder；缺貨行不阻止其他行；整張 Confirmed。
+
+### Acceptance criteria
+
+必要證據：三行結果及 Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-047 — FR-CONF-014～015；結果不明（CONF-010）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-CONF-014～015；結果不明。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可受控暫停 Inventory。測試資料：SO-DRAFT、EVT-A。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認至 CONFIRMING；重新整理、重按確認、按 correlation 查詢並依指引續跑。
+
+### Expected business result
+
+不顯示虛假成功；另一確認被阻止；原 event 最終收斂至單一結果，無重複 Reservation。
+
+### Acceptance criteria
+
+必要證據：CONFIRMING 畫面、tracking、最終對賬。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-048 — 跨模組永久／暫時失敗（CONF-011）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：跨模組永久／暫時失敗。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：QA 啟用受控失敗。測試資料：validation failure、technical retry。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別確認並依頁面指引操作。
+
+### Expected business result
+
+永久業務錯誤回 Draft 並可修正；暫時／未知結果保留受控狀態與 Correlation ID；兩者不混淆、不留部分 Reservation。
+
+### Acceptance criteria
+
+必要證據：錯誤碼、SO、Inventory、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-049 — FR-SO-019、BR-005（CONF-012）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-SO-019、BR-005。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：零價格 Draft。測試資料：unit price 0。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認，先取消警告，再重新確認接受。
+
+### Expected business result
+
+確認前有明確零價格警告；取消不改狀態；接受後可確認且 total 正確。
+
+### Acceptance criteria
+
+必要證據：警告、兩次結果、SO。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-050 — FR-CONF-019～020（CONF-013）
+
+### Business objective and actor
+
+角色：U-SALES／Inventory user。業務目標／風險：FR-CONF-019～020。執行批次：P2；案例優先級：P0。（Legacy identity：`CONF-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已確認多行 SO。測試資料：SO number／line／event。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+從 SO 開 Reservation 來源，再從 Inventory 回到 SO。
+
+### Expected business result
+
+每筆 Reservation 可追至 SO Number、Line、Event；Sales 顯示與 Inventory 真相一致，不能在 Sales 手動改庫存數。
+
+### Acceptance criteria
+
+必要證據：雙向來源頁及數量。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-051 — FR-CONF-017～018、AC-020（LIFE-001）
+
+### Business objective and actor
+
+角色：U-SALES／Inventory user。業務目標／風險：FR-CONF-017～018、AC-020。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：多張較早／較晚 Backorder。測試資料：同 WH＋SKU，補貨少於總 backorder。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+補貨後執行明確重試／分配。
+
+### Expected business result
+
+依 Confirmed At、SO ID、Line No 的 FIFO 分配；較晚訂單不可插隊；結果可由頁面解釋。
+
+### Acceptance criteria
+
+必要證據：前後 queue、SO lines、Reservations。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-052 — BR-023、AC-020（LIFE-002）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：BR-023、AC-020。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Backorder 6。測試資料：可分配 4。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+執行補配。
+
+### Expected business result
+
+Ordered 不變；Backorder 減 4、Reserved 增 4；不超過未履約 Backorder。
+
+### Acceptance criteria
+
+必要證據：前後 SO／Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-053 — 補配冪等與上限（LIFE-003）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：補配冪等與上限。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Backorder 尚餘 2。測試資料：同 event 重送、可用 10。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重複補配。
+
+### Expected business result
+
+最多補配 2；同 event 不重複，Ordered 不變且數量守恆。
+
+### Acceptance criteria
+
+必要證據：操作、前後數量、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-054 — 不同 Warehouse 隔離（LIFE-004）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：不同 Warehouse 隔離。執行批次：P2；案例優先級：P1。（Legacy identity：`LIFE-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：WH-A／WH-B 同 SKU 各有 queue。測試資料：只向 WH-A 補貨。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+執行分配。
+
+### Expected business result
+
+只影響 WH-A queue；WH-B 的 Reservation／Backorder 不變。
+
+### Acceptance criteria
+
+必要證據：兩 Warehouse 前後結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-055 — FR-LIFE-001～003、AC-021（LIFE-005）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-001～003、AC-021。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Confirmed、Fulfilled 0。測試資料：有 Reservation＋Backorder。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+撤回為 Draft。
+
+### Expected business result
+
+全部未消耗 Reservation 成功釋放、Backorder 失效後才變 Draft；再次確認按最新資料重建。
+
+### Acceptance criteria
+
+必要證據：SO／Inventory 前後、history。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-056 — FR-LIFE-002／013（LIFE-006）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-002／013。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：QA 令 Release 暫時失敗。測試資料：SO-CONFIRMED。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+撤回。
+
+### Expected business result
+
+不顯示成功，SO 不進 Draft；顯示真實狀態、Correlation ID 及安全重試指引。
+
+### Acceptance criteria
+
+必要證據：錯誤、SO、Reservation。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-057 — FR-LIFE-005（LIFE-007）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-005。執行批次：P2；案例優先級：P1。（Legacy identity：`LIFE-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Draft。測試資料：SO-DRAFT、REASON。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+取消。
+
+### Expected business result
+
+直接變 Cancelled；不呼叫庫存釋放；number、內容及 history 保留。
+
+### Acceptance criteria
+
+必要證據：SO、Inventory、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-058 — FR-LIFE-006～007、AC-022（LIFE-008）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-006～007、AC-022。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Confirmed、Fulfilled 0。測試資料：Reservation＋Backorder、REASON。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+不輸原因嘗試取消，再輸入原因取消。
+
+### Expected business result
+
+無原因拒絕；有效操作釋放 Reservation、取消 Backorder 後才變 Cancelled。
+
+### Acceptance criteria
+
+必要證據：兩次結果、SO／Inventory／Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-059 — FR-LIFE-008～010、AC-023（LIFE-009）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-008～010、AC-023。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已部分履約。測試資料：SO-PARTIAL。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+嘗試整張取消；再 Close Remaining 且不輸／輸原因。
+
+### Expected business result
+
+整張取消拒絕；原因必填；成功後釋放未消耗 Reservation、取消 Backorder、保留 fulfilled／snapshot／downstream reference，狀態 Closed。
+
+### Acceptance criteria
+
+必要證據：SO、Fulfillment、Inventory、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-060 — FR-LIFE-004（LIFE-010）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-004。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已部分履約。測試資料：Customer／Currency／WH／已履約行。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+嘗試修改受保護欄位及歷史價格。
+
+### Expected business result
+
+全部拒絕；已履約資料及 snapshot 不變。
+
+### Acceptance criteria
+
+必要證據：編輯限制、詳情、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-061 — FR-LIFE-011、AC-024（LIFE-011）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-011、AC-024。執行批次：P2；案例優先級：P1。（Legacy identity：`LIFE-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Confirmed／Partially Fulfilled。測試資料：分批履約至全數。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+完成最後一筆履約並重開 SO。
+
+### Expected business result
+
+全部有效 ordered 已履約後狀態 Completed；各數量可完整對賬。
+
+### Acceptance criteria
+
+必要證據：Fulfillment、SO lines、history。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-062 — FR-LIFE-012（LIFE-012）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：FR-LIFE-012。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可取消／撤回／關閉 SO。測試資料：EVT-A 同內容重送。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+對每種 lifecycle action 快速雙擊及重試。
+
+### Expected business result
+
+每種只產生一次狀態改變與一次有效 Release／Cancel Backorder；回傳既有結果。
+
+### Acceptance criteria
+
+必要證據：操作錄影、SO／Inventory／Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-063 — 同 ID 異內容衝突（LIFE-013）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：同 ID 異內容衝突。執行批次：P2；案例優先級：P0。（Legacy identity：`LIFE-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已完成 EVT-A。測試資料：EVT-A 配不同 action／reason。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重送。
+
+### Expected business result
+
+系統拒絕衝突，不以舊成功掩蓋新意圖；資料不變。
+
+### Acceptance criteria
+
+必要證據：錯誤、最終狀態、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-064 — FR-LIFE-014、AC-042（LIFE-014）
+
+### Business objective and actor
+
+角色：U-SALES／U-VIEW。業務目標／風險：FR-LIFE-014、AC-042。執行批次：P2；案例優先級：P1。（Legacy identity：`LIFE-014`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已完成各生命週期動作。測試資料：SO IDs、events、reasons。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查看狀態歷史及 Audit。
+
+### Expected business result
+
+建立、確認、補配、撤回、取消、關閉、完成均有 actor、time、from／to、reason、event／correlation；Viewer 不可修改。
+
+### Acceptance criteria
+
+必要證據：History／Audit 畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-065 — FR-CSV-001～002、AC-025（CSV-001）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-001～002、AC-025。執行批次：P3；案例優先級：P1。（Legacy identity：`CSV-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Import page 可用。測試資料：Current v1。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+下載模板、欄位說明及範例。
+
+### Expected business result
+
+檔案為目前支援版本、UTF-8、欄位與說明一致；頁面顯示大小／筆數／訂單上限。
+
+### Acceptance criteria
+
+必要證據：頁面及下載檔。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-066 — FR-CSV-002／006（CSV-002）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-002／006。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：尚未建立正式 job。測試資料：不支援版本、缺／重複 header、非 UTF-8、NUL、錯 delimiter、損壞 grammar。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別上傳。
+
+### Expected business result
+
+在預檢前或預檢中清楚拒絕；不建立 SO／Reservation；錯誤可供使用者修正。
+
+### Acceptance criteria
+
+必要證據：上傳結果、SO／Inventory 搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-067 — FR-CSV-003～005、AC-026（CSV-003）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-003～005、AC-026。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：模板有效。測試資料：同 Source Order Key 三行。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+上傳並完成預檢。
+
+### Expected business result
+
+三行組成一張來源訂單；header 資料只取一致值，line count／內容正確。
+
+### Acceptance criteria
+
+必要證據：Precheck order detail。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-068 — FR-CSV-004／009（CSV-004）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-004／009。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：同 key 多行。測試資料：Customer／Currency／WH／date／channel／external ID 不一致。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+預檢。
+
+### Expected business result
+
+整張來源訂單 Invalid；指出不一致欄位及行；不建立部分 SO。
+
+### Acceptance criteria
+
+必要證據：Invalid detail、SO 搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-069 — FR-CSV-005～007、AC-027（CSV-005）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-005～007、AC-027。執行批次：P3；案例優先級：P1。（Legacy identity：`CSV-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：CSV-MIXED。測試資料：空值、無效日期／enum、超長、零／負 quantity、負／零 price、TEXT-RISK。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+上傳預檢並查看摘要。
+
+### Expected business result
+
+按來源訂單顯示 Valid／Invalid／Duplicate／Warning；零價格為 Warning；錯誤含安全 field／row／code/message。
+
+### Acceptance criteria
+
+必要證據：摘要及 errors。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-070 — FR-CSV-007、AC-027（CSV-006）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-007、AC-027。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：記錄 SO／Inventory 初值。測試資料：CSV-VALID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+只完成上傳與預檢，不確認處理。
+
+### Expected business result
+
+Precheck 可重開查看，但沒有任何 SO、External success key 或 Reservation。
+
+### Acceptance criteria
+
+必要證據：Batch、SO／Inventory 前後。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-071 — FR-CSV-008／011、AC-028（CSV-007）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-008／011、AC-028。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Precheck valid。測試資料：ATP full／partial／zero source orders。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認正式處理並等候完成。
+
+### Expected business result
+
+有效來源訂單自動建立及確認，套用人工 SO 相同 Customer、price、snapshot、Reservation／Backorder 規則。
+
+### Acceptance criteria
+
+必要證據：Batch result、三張 SO、Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-072 — FR-CSV-009～010、AC-029（CSV-008）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-009～010、AC-029。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：CSV-MIXED。測試資料：一張多行訂單其中一行 invalid；另有 valid order。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+確認處理。
+
+### Expected business result
+
+Invalid 來源整張不建立、不留 lines／Reservation；其他 valid source order 成功。
+
+### Acceptance criteria
+
+必要證據：逐單結果、SO／Inventory 搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-073 — FR-CSV-012～013、AC-030（CSV-009）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-012～013、AC-030。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：EXT-001 已成功。測試資料：同檔重傳、不同檔相同 key、相同檔 hash但不同未成功 key。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+上傳及正式處理。
+
+### Expected business result
+
+成功 key 均標 Duplicate 並返回原 SO；file hash 只提示，不取代逐單判斷。
+
+### Acceptance criteria
+
+必要證據：兩 Batch、原 SO、duplicate result。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-074 — FR-CSV-014、AC-031（CSV-010）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-014、AC-031。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：EXT-001 先前因業務驗證失敗且無 SO。測試資料：修正後相同 external ID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重新上傳及確認。
+
+### Expected business result
+
+可成功建立一次；成功後再重傳受唯一性保護。
+
+### Acceptance criteria
+
+必要證據：前後 Batch、SO、External result。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-075 — FR-CSV-015、AC-032（CSV-011）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-015、AC-032。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可產生邊界檔。測試資料：10,000／10,001 source orders，100／101 lines per order。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別上傳。
+
+### Expected business result
+
+10,000 與每單 100 行可接受為背景 job；超上限在正式處理前拒絕並提示拆檔，不留部分訂單。
+
+### Acceptance criteria
+
+必要證據：Upload／precheck 結果、job list。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-076 — 檔案與 row 上限（CSV-012）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：檔案與 row 上限。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：私有測試檔。測試資料：50 MB 邊界、超過 50 MB、100,000／100,001 rows。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別上傳。
+
+### Expected business result
+
+邊界值可按規格接受；超限清楚拒絕且不建立可正式確認 job／SO；頁面仍可正常使用。
+
+### Acceptance criteria
+
+必要證據：檔案 metadata、結果、job list。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-077 — FR-CSV-016（CSV-013）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-016。執行批次：P3；案例優先級：P1。（Legacy identity：`CSV-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：大型有效 batch。測試資料：CSV-MAX。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+正式確認後離開頁面再返回。
+
+### Expected business result
+
+顯示 Queued／Processing／Completed 或 Partial Success／Failed；進度可刷新，離頁不取消 job。
+
+### Acceptance criteria
+
+必要證據：不同時間的 job 畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-078 — FR-CSV-019；批次冪等（CSV-014）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-019；批次冪等。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-014`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Precheck 完成。測試資料：同 Batch。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+快速雙擊 Confirm，重新整理後再按。
+
+### Expected business result
+
+只啟動一個正式 processing job；已完成來源不重複建立／確認。
+
+### Acceptance criteria
+
+必要證據：操作錄影、job、SO count。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-079 — 背景中斷恢復（CSV-015）
+
+### Business objective and actor
+
+角色：U-IMPORT／U-OPS。業務目標／風險：背景中斷恢復。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-015`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：正在處理 mixed batch。測試資料：受控 worker restart。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+在處理中由 QA 觸發重啟，使用者重開 job。
+
+### Expected business result
+
+Job 由已記錄進度續跑或安全重試；已成功 SO 不重複；最終逐單結果可對賬。
+
+### Acceptance criteria
+
+必要證據：重啟前後 job、SO、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-080 — FR-CSV-017／020、AC-033（CSV-016）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-017／020、AC-033。執行批次：P3；案例優先級：P1。（Legacy identity：`CSV-016`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Batch 完成。測試資料：Mixed results。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查看逐單結果及下載 Result CSV。
+
+### Expected business result
+
+每張有 key、external ID、status、SO number 或 error code／field／message；成功可前往 SO；actor、time、correlation 可查。
+
+### Acceptance criteria
+
+必要證據：畫面、Result CSV、SO link。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-081 — FR-CSV-018、AC-043（CSV-017）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：FR-CSV-018、AC-043。執行批次：P3；案例優先級：P0。（Legacy identity：`CSV-017`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Batch 含 TEXT-RISK。測試資料：公式字首、TAB／CR、Unicode。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+下載 Result CSV，以 spreadsheet 安全開啟。
+
+### Expected business result
+
+UTF-8 文字完整；公式型 cell 不執行；欄位按公布格式且不含敏感 payload。
+
+### Acceptance criteria
+
+必要證據：原值、下載檔、安全開啟畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-082 — 檔案保留（CSV-018）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：檔案保留。執行批次：P3；案例優先級：P1。（Legacy identity：`CSV-018`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已完成及超過 90 日測試 job。測試資料：原始檔／result。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+在保留期內及到期後下載。
+
+### Expected business result
+
+期限內按權限可取；到期後清楚顯示已清理而非零 byte／錯檔；結構化結果及 Audit 仍可查。
+
+### Acceptance criteria
+
+必要證據：兩日期結果及 Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-083 — FR-CH-001～004、AC-034（CH-001）
+
+### Business objective and actor
+
+角色：CH-SIM／U-OPS。業務目標／風險：FR-CH-001～004、AC-034。執行批次：P3；案例優先級：P1。（Legacy identity：`CH-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：獲批准測試 Adapter 可用。測試資料：完整 canonical order、request／correlation IDs。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+從 Adapter 提交並在營運結果頁追蹤。
+
+### Expected business result
+
+標準欄位被接受；request／idempotency／correlation 可端到端查詢，不暴露平台認證。
+
+### Acceptance criteria
+
+必要證據：Adapter receipt、營運結果、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-084 — FR-CH-005、AC-034（CH-002）
+
+### Business objective and actor
+
+角色：CH-SIM／U-SALES。業務目標／風險：FR-CH-005、AC-034。執行批次：P3；案例優先級：P0。（Legacy identity：`CH-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：ATP full／partial／zero。測試資料：CH-A valid orders。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+提交並從結果前往 SO。
+
+### Expected business result
+
+每張自動建立及確認，執行與人工／CSV 相同 snapshot、Reservation／Backorder 規則。
+
+### Acceptance criteria
+
+必要證據：Intake result、SO、Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-085 — FR-CH-006／009～010、AC-037（CH-003）
+
+### Business objective and actor
+
+角色：CH-SIM／U-OPS。業務目標／風險：FR-CH-006／009～010、AC-037。執行批次：P3；案例優先級：P0。（Legacy identity：`CH-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可提交無效資料。測試資料：缺 Customer mapping、無效 SKU、技術暫時失敗。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別提交並查看結果。
+
+### Expected business result
+
+Business validation 形成 Exception 且無部分 SO；technical retry 與不可重試錯誤清楚區分，均有穩定 code／correlation。
+
+### Acceptance criteria
+
+必要證據：結果、Exception、SO 搜尋。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-086 — FR-CH-007、AC-035（CH-004）
+
+### Business objective and actor
+
+角色：CH-SIM。業務目標／風險：FR-CH-007、AC-035。執行批次：P3；案例優先級：P0。（Legacy identity：`CH-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：CH-A＋EXT-001 已成功。測試資料：同 source key 重送。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+以相同及不同 transport request 重送。
+
+### Expected business result
+
+均返回 Duplicate／既有 SO；不建立第二張 SO／Reservation。
+
+### Acceptance criteria
+
+必要證據：兩次 receipt、SO／Inventory。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-087 — FR-CH-008、AC-036（CH-005）
+
+### Business objective and actor
+
+角色：CH-SIM。業務目標／風險：FR-CH-008、AC-036。執行批次：P3；案例優先級：P0。（Legacy identity：`CH-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：CH-A＋EXT-001 已成功。測試資料：CH-B＋EXT-001。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+提交。
+
+### Expected business result
+
+可建立另一張獨立 SO；每個 Channel 內仍各自唯一。
+
+### Acceptance criteria
+
+必要證據：兩 Channel 結果及 SO。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-088 — transport 冪等衝突（CH-006）
+
+### Business objective and actor
+
+角色：CH-SIM。業務目標／風險：transport 冪等衝突。執行批次：P3；案例優先級：P0。（Legacy identity：`CH-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：EVT-A 已處理。測試資料：同 idempotency key 同內容／異內容。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別重送。
+
+### Expected business result
+
+同內容返回原結果；異內容明確衝突且不建立／修改 SO。
+
+### Acceptance criteria
+
+必要證據：receipts、SO count、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-089 — FR-CH-011／013（CH-007）
+
+### Business objective and actor
+
+角色：U-SALES／U-OPS。業務目標／風險：FR-CH-011／013。執行批次：P3；案例優先級：P1。（Legacy identity：`CH-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：渠道 SO 已建立。測試資料：CH-A order。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查看 SO、來源、Audit 及可用 actions。
+
+### Expected business result
+
+保存安全來源參考但不含密碼、Token 或完整認證 payload；第一階段沒有發貨／取消／退款回傳 action。
+
+### Acceptance criteria
+
+必要證據：SO、source、Audit 畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-090 — FR-CH-012、AC-038（CH-008）
+
+### Business objective and actor
+
+角色：CH-SIM／U-OPS。業務目標／風險：FR-CH-012、AC-038。執行批次：P3；案例優先級：P0。（Legacy identity：`CH-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：兩個測試 Adapter 都映射 canonical contract。測試資料：相同商業內容、不同平台欄位。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別提交。
+
+### Expected business result
+
+兩者進入相同核心規則與結果語意；不因 Adapter 改變人工 SO、Reservation 或狀態行為。
+
+### Acceptance criteria
+
+必要證據：兩 Adapter mapping result、SO 比較。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-091 — Import Exception 恢復（CH-009）
+
+### Business objective and actor
+
+角色：U-OPS／U-SALES。業務目標／風險：Import Exception 恢復。執行批次：P3；案例優先級：P1。（Legacy identity：`CH-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：未識別 mapping exception。測試資料：補妥 mapping 後原 source。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+由營運頁查看原因，修正外部 mapping 後按批准流程重送。
+
+### Expected business result
+
+系統不猜測替代值；修正後只建立一次；原 exception、重試及成功 SO 可追溯。
+
+### Acceptance criteria
+
+必要證據：Exception、重試、SO、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-092 — FR-INQ-001～002（INQ-001）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-001～002。執行批次：P4；案例優先級：P1。（Legacy identity：`INQ-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有多狀態資料。測試資料：recent／active／outstanding／backorder／finalized。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+開啟各常用視圖。
+
+### Expected business result
+
+每個視圖只含正確狀態；Outstanding 含未 fulfilled／released 或 backorder 的非最終訂單。
+
+### Acceptance criteria
+
+必要證據：各視圖及樣本詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-093 — FR-SO-003～004（INQ-002）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-SO-003～004。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Active 與 Archive 有相似資料。測試資料：exact SO、exact external ID、Customer、PO、date、status、source、channel、WH。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別及組合查詢。
+
+### Expected business result
+
+精確鍵定位唯一結果；一般 filters 準確；Active 結果不混入 Archive。
+
+### Acceptance criteria
+
+必要證據：搜尋條件、結果及 source 標記。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-094 — FR-INQ-003（INQ-003）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-003。執行批次：P4；案例優先級：P1。（Legacy identity：`INQ-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：各來源 Confirmed SO。測試資料：MANUAL／QUOTATION／CSV／CHANNEL。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+開啟詳情。
+
+### Expected business result
+
+顯示來源、Customer／Item snapshot、total、Reservation／Backorder、status history、downstream reference 及 Active／Archive 標記。
+
+### Acceptance criteria
+
+必要證據：四張詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-095 — FR-INQ-004～005（INQ-004）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-004～005。執行批次：P4；案例優先級：P1。（Legacy identity：`INQ-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已轉單及 imported SO。測試資料：Quotation、CSV Batch、Channel result。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+由來源前往 SO，再由 SO 返回來源。
+
+### Expected business result
+
+連結雙向正確，不跳到其他 aggregate；無權來源時安全拒絕。
+
+### Acceptance criteria
+
+必要證據：瀏覽路徑錄影／截圖。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-096 — FR-INQ-006、AC-043（INQ-005）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-006、AC-043。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：帳戶有受限資料範圍及 filters。測試資料：Customer／date／status filter。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+套用 filter 後匯出。
+
+### Expected business result
+
+匯出只含當前可見權限與 filter 的完整資料，不含範圍外或未篩資料。
+
+### Acceptance criteria
+
+必要證據：畫面計數、CSV 計數及樣本。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-097 — FR-INQ-008、BR-007（INQ-006）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-008、BR-007。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：不同 Currency／來源資料。測試資料：HKD／JPY，多狀態。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+匯出並與詳情對數。
+
+### Expected business result
+
+至少含 number、source、Customer、date、WH、status、amount、quantity summary；金額精度與正式詳情一致。
+
+### Acceptance criteria
+
+必要證據：詳情及 CSV 對照。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-098 — FR-INQ-007（INQ-007）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-007。執行批次：P4；案例優先級：P1。（Legacy identity：`INQ-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：小型及大型結果集。測試資料：有限篩選／大量篩選。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別匯出。
+
+### Expected business result
+
+小型可即時；大型建立背景 Job，顯示狀態並於完成後提供有限期下載；不凍結頁面。
+
+### Acceptance criteria
+
+必要證據：兩種匯出流程。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-099 — Export owner／expiry（INQ-008）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：Export owner／expiry。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：U-VIEW A／B。測試資料：A 建立的 job、過期 job。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+B 嘗試開／下載；A 在期限內及到期後下載。
+
+### Expected business result
+
+B 被拒絕；A 期限內成功，到期後清楚顯示過期；不返回他人資料或不完整檔。
+
+### Acceptance criteria
+
+必要證據：角色、job、下載結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-100 — FR-INQ-009、AC-042（INQ-009）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-009、AC-042。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：各業務動作已完成。測試資料：Quotation／SO／Import／Reservation／Archive events。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+從詳情查看 history／Audit。
+
+### Expected business result
+
+建立、修改、確認、撤回、取消、關閉、轉單、匯入、重試、Reservation、Archive 均有 actor、time、action、outcome 及安全 reference。
+
+### Acceptance criteria
+
+必要證據：Audit samples。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-101 — FR-INQ-010（INQ-010）
+
+### Business objective and actor
+
+角色：U-VIEW／U-OPS。業務目標／風險：FR-INQ-010。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：有技術失敗事件。測試資料：同一 correlation。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+兩角色查看。
+
+### Expected business result
+
+U-VIEW 只見可理解業務狀態；U-OPS 可見安全技術摘要；均不見秘密或完整 payload。
+
+### Acceptance criteria
+
+必要證據：兩角色畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-102 — FR-INQ-011（INQ-011）
+
+### Business objective and actor
+
+角色：U-SALES／U-OPS。業務目標／風險：FR-INQ-011。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已確認 snapshot／Audit。測試資料：既有 SO。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+嘗試從所有 UI 修改。
+
+### Expected business result
+
+沒有修改 action；任何可提交嘗試均拒絕，歷史內容與 hash 對賬不變。
+
+### Acceptance criteria
+
+必要證據：UI、拒絕、前後資料。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-103 — FR-INQ-012（INQ-012）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-INQ-012。執行批次：P4；案例優先級：P1。（Legacy identity：`INQ-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Active／Archive 各有訂單。測試資料：精確及一般搜尋。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+搜尋、開詳情及匯出。
+
+### Expected business result
+
+每筆明確標示 Active 或 Archive；使用者不會把 Archive unavailable 誤認為零結果。
+
+### Acceptance criteria
+
+必要證據：列表、詳情、下載標記。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-104 — CSV formula／XSS（INQ-013）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：CSV formula／XSS。執行批次：P4；案例優先級：P0。（Legacy identity：`INQ-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：資料含 TEXT-RISK。測試資料：notes、Customer PO、external ID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+在列表／詳情查看並匯出後安全開啟。
+
+### Expected business result
+
+畫面只顯示文字不執行 HTML／script；CSV 公式不執行且 Unicode 可讀。
+
+### Acceptance criteria
+
+必要證據：畫面及安全開啟的 CSV。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-105 — FR-ARC-001～005、AC-045～046（ARC-001）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-001～005、AC-045～046。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可執行受控月度 job。測試資料：ARC-ELIGIBLE／ARC-INELIGIBLE。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+執行離峰歸檔並查看候選／跳過原因。
+
+### Expected business result
+
+只選最終狀態、最後業務更新超過 24 個月且無 Reservation／Backorder／CONFIRMING／open downstream matter 的 SO。
+
+### Acceptance criteria
+
+必要證據：Batch report、兩組訂單位置。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-106 — BR-041～044（ARC-002）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：BR-041～044。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：建立日期舊但業務更新新；查詢行為可控。測試資料：cutoff 前後邊界。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查詢、報表後執行歸檔。
+
+### Expected business result
+
+以最後業務更新判斷；單純讀取／登入／報表不刷新該日期；邊界結果依業務時區一致。
+
+### Acceptance criteria
+
+必要證據：前後詳情、候選報告。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-107 — FR-ARC-005（ARC-003）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-005。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：候選掃描後可改資格。測試資料：候選 SO 新增 open matter／Reservation。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+在搬移前由受控流程改變，再繼續 job。
+
+### Expected business result
+
+真正搬移前重新驗證並 Skip；Active 原資料完整，報告有原因。
+
+### Acceptance criteria
+
+必要證據：Batch report、Active 詳情。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-108 — FR-ARC-006～008（ARC-004）
+
+### Business objective and actor
+
+角色：U-OPS／U-VIEW。業務目標／風險：FR-ARC-006～008。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：ARC-ELIGIBLE 含來源／history／audit。測試資料：已知 counts、amounts、snapshots。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+歸檔前保存業務頁，歸檔後從 Archive 查看。
+
+### Expected business result
+
+Header、lines、來源、conversion、必要 history／audit 一併可讀；金額、數量、狀態、snapshot 不重算／不改變。
+
+### Acceptance criteria
+
+必要證據：搬移前後業務對照。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-109 — FR-ARC-007／011（ARC-005）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-007／011。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：可受控造成寫入／校驗失敗。測試資料：單筆 Archive failure。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+執行 job。
+
+### Expected business result
+
+未校驗成功的 SO 保留 Active；不出現半份 Archive；Batch 記錄失敗並可安全重試。
+
+### Acceptance criteria
+
+必要證據：Active／Archive 搜尋、Batch error。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-110 — FR-ARC-009～011（ARC-006）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-009～011。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：部分完成 Batch。測試資料：受控中斷／outcome unknown。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重啟 job 或依營運指引續跑。
+
+### Expected business result
+
+從中斷點安全繼續；已完成 SO 不重複，未完成可處理；hash conflict 不被忽略。
+
+### Acceptance criteria
+
+必要證據：兩次 Batch report、Archive 結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-111 — FR-ARC-013／015、AC-047（ARC-007）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-ARC-013／015、AC-047。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：SO 已歸檔。測試資料：number、external ID、Customer、date≤366d、status、channel。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+從 Active exact 搜尋，再用提示前往 Archive；使用各條件查詢。
+
+### Expected business result
+
+Active 不再列出；有明確 Archive 入口；Archive 找到唯一正確記錄，不自動掃全歷史。
+
+### Acceptance criteria
+
+必要證據：Active hint、Archive results。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-112 — FR-ARC-014、BR-047（ARC-008）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-ARC-014、BR-047。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已歸檔 SO。測試資料：Archive detail。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+嘗試修改、確認、取消、撤回或重開。
+
+### Expected business result
+
+Archive 固定唯讀，只可查看／匯出；沒有 write actions，直接提交亦拒絕。
+
+### Acceptance criteria
+
+必要證據：詳情、拒絕、資料不變。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-113 — Archive 搜尋界線（ARC-009）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：Archive 搜尋界線。執行批次：P4；案例優先級：P1。（Legacy identity：`ARC-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Archive 有大量資料。測試資料：空條件、367 日、366 日、exact ID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+分別搜尋。
+
+### Expected business result
+
+空條件及過大 date range 被要求收窄；366 日或 exact key 可查；提示清楚。
+
+### Acceptance criteria
+
+必要證據：四次搜尋結果。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-114 — FR-ARC-016（ARC-010）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：FR-ARC-016。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：大範圍 Archive 結果。測試資料：Customer＋366 日。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+匯出、查看 job、完成後下載。
+
+### Expected business result
+
+使用背景 job；保存發起人、條件、筆數及下載時間；內容只讀且與 filter 一致。
+
+### Acceptance criteria
+
+必要證據：Job、CSV、Audit。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-115 — FR-ARC-017、BR-048（ARC-011）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-017、BR-048。執行批次：P4；案例優先級：P1。（Legacy identity：`ARC-011`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Batch 有 success／skip／fail。測試資料：測試 batch。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查看 Batch report。
+
+### Expected business result
+
+顯示 candidate、success、skip、fail、elapsed、validation；每個 fail／skip 可安全追查，不靜默遺漏。
+
+### Acceptance criteria
+
+必要證據：Batch report。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-116 — FR-ARC-018（ARC-012）
+
+### Business objective and actor
+
+角色：U-SALES／U-VIEW。業務目標／風險：FR-ARC-018。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-012`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：QA 令 Archive store 暫時不可用。測試資料：新 Draft、Active 查詢／確認、Archive 查詢。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+同時執行。
+
+### Expected business result
+
+新建／Active list／確認／Fulfillment 正常；Archive 清楚顯示暫不可用而非 0 筆。
+
+### Acceptance criteria
+
+必要證據：三種 Active 操作及 Archive error。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-117 — FR-ARC-019（ARC-013）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-019。執行批次：P4；案例優先級：P0。（Legacy identity：`ARC-013`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已完成 Active＋Archive 備份。測試資料：代表性 MANUAL／QUOTE／CSV／CHANNEL、external keys。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+在隔離環境還原後由 UI 查詢與對賬。
+
+### Expected business result
+
+Active／Archive／source routing／operation／Audit 均可讀；每個 external key 只路由一張 SO；counts／amounts 一致。
+
+### Acceptance criteria
+
+必要證據：Restore 環境、對賬表及畫面。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-118 — FR-ARC-012、AC-053（ARC-014）
+
+### Business objective and actor
+
+角色：U-OPS。業務目標／風險：FR-ARC-012、AC-053。執行批次：P4；案例優先級：P1。（Legacy identity：`ARC-014`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：最早 Archive 測試資料。測試資料：7 年內資料。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+查看設定、job actions 及資料。
+
+### Expected business result
+
+資料仍可查；沒有自動 purge、永久刪除或使用者銷毀 action。
+
+### Acceptance criteria
+
+必要證據：Archive 詳情、設定／actions。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-119 — Quotation／External routing（ARC-015）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：Quotation／External routing。執行批次：P4；案例優先級：P1。（Legacy identity：`ARC-015`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：已歸檔 quotation-derived、CSV、Channel SO。測試資料：來源 Quotation／Batch／external ID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+由來源連結或 exact lookup 查 SO。
+
+### Expected business result
+
+正確路由至 Archive 並標示已歸檔；不返回 404 假裝遺失，也不建立副本。
+
+### Acceptance criteria
+
+必要證據：三種來源路徑。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-120 — NFR-PERF-001～002／007、AC-044（OPS-001）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：NFR-PERF-001～002／007、AC-044。執行批次：P4；案例優先級：P1。（Legacy identity：`OPS-001`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：730 萬 Active headers、真實 line 分佈、正常業務負載。測試資料：common filters、exact SO／external ID。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+執行已批准操作腳本並像日常使用者瀏覽。
+
+### Expected business result
+
+Active 常用列表及精確查詢 P95 ≤2 秒；結果正確，不依賴清空資料。
+
+### Acceptance criteria
+
+必要證據：使用者錄影、測量報告、環境基線。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-121 — NFR-PERF-003（OPS-002）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：NFR-PERF-003。執行批次：P2；案例優先級：P1。（Legacy identity：`OPS-002`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：正常負載及 50 concurrent user profile。測試資料：1／100-line Draft，full／partial ATP。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+保存及確認。
+
+### Expected business result
+
+除外部依賴故障外 P95 ≤3 秒；畫面可回應且結果唯一、正確。
+
+### Acceptance criteria
+
+必要證據：操作結果及效能報告。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-122 — 可用性及 unknown outcome（OPS-003）
+
+### Business objective and actor
+
+角色：U-SALES。業務目標／風險：可用性及 unknown outcome。執行批次：P2；案例優先級：P0。（Legacy identity：`OPS-003`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：受控 timeout／connection drop。測試資料：Confirm、withdraw、cancel events。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+提交至結果不明，重新登入後依 correlation 查詢及原 event 重試。
+
+### Expected business result
+
+使用者可辨識 Processing／Failed／Succeeded；不顯示假成功、不新建第二份 Reservation／Release，最終可對賬。
+
+### Acceptance criteria
+
+必要證據：逾時畫面、恢復步驟、最終業務頁。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-123 — NFR-PERF-004（OPS-004）
+
+### Business objective and actor
+
+角色：U-IMPORT。業務目標／風險：NFR-PERF-004。執行批次：P3；案例優先級：P1。（Legacy identity：`OPS-004`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：標準容量環境。測試資料：10,000 orders／約 50,000 lines、≤50 MB。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+上傳、預檢、確認並記錄完成時間。
+
+### Expected business result
+
+end-to-end ≤30 分鐘；進度可查；結果完整；前台查詢／建單仍可使用。
+
+### Acceptance criteria
+
+必要證據：Batch timestamps、result counts、同時前台操作。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-124 — NFR-PERF-006（OPS-005）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：NFR-PERF-006。執行批次：P4；案例優先級：P1。（Legacy identity：`OPS-005`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Archive 標準容量。測試資料：exact number、Customer＋366 日。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+重複查詢。
+
+### Expected business result
+
+exact P95 ≤3 秒；受限日期查詢 P95 ≤5 秒；結果正確。
+
+### Acceptance criteria
+
+必要證據：使用者操作及效能報告。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-125 — NFR-PERF-005／008（OPS-006）
+
+### Business objective and actor
+
+角色：U-VIEW。業務目標／風險：NFR-PERF-005／008。執行批次：P4；案例優先級：P1。（Legacy identity：`OPS-006`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：50 interactive users＋Import／Backorder／Archive／Export jobs。測試資料：common workflow mix。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+執行代表性日常操作。
+
+### Expected business result
+
+查詢、建單及確認沒有 pool starvation／長時間凍結；大型 export 為背景 job；各 job 不令交易結果錯亂。
+
+### Acceptance criteria
+
+必要證據：workload、畫面、效能／錯誤摘要。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-126 — UI／UX、responsive（OPS-007）
+
+### Business objective and actor
+
+角色：各業務角色。業務目標／風險：UI／UX、responsive。執行批次：P1～P4；案例優先級：P1。（Legacy identity：`OPS-007`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：支援瀏覽器。測試資料：375／768／1024／1440 px。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+完成 create、table filter、detail、import、archive 核心流程。
+
+### Expected business result
+
+遵循 frontend-design；無水平遮擋關鍵 action、可辨識 loading／empty／error／success；繁體中文一致。
+
+### Acceptance criteria
+
+必要證據：各 viewport 截圖。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-127 — WCAG AA／鍵盤（OPS-008）
+
+### Business objective and actor
+
+角色：各業務角色。業務目標／風險：WCAG AA／鍵盤。執行批次：P1～P4；案例優先級：P1。（Legacy identity：`OPS-008`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：支援瀏覽器與 screen reader。測試資料：關鍵流程及驗證錯誤。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+只用鍵盤完成；觸發 errors；檢視狀態。
+
+### Expected business result
+
+Focus 可見且順序合理；label／error 可被讀出及定位；狀態不只靠顏色；dialog 可控制。
+
+### Acceptance criteria
+
+必要證據：錄影、accessibility evidence。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-128 — 備份還原與 reconciliation（OPS-009）
+
+### Business objective and actor
+
+角色：U-OPS／U-VIEW。業務目標／風險：備份還原與 reconciliation。執行批次：P4；案例優先級：P1。（Legacy identity：`OPS-009`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：完整測試備份。測試資料：Active＋Archive＋External keys＋operations。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+在隔離環境還原，按抽樣清單逐筆查詢。
+
+### Expected business result
+
+Counts、amounts、status、snapshot、source route、Reservation reference 與 Audit 一致；差異有明確報告，不把缺失當成功。
+
+### Acceptance criteria
+
+必要證據：還原資訊、抽樣表、reconciliation report。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。
+
+## UAT-129 — Job 故障互不拖累（OPS-010）
+
+### Business objective and actor
+
+角色：U-OPS／U-SALES。業務目標／風險：Job 故障互不拖累。執行批次：P3～P4；案例優先級：P1。（Legacy identity：`OPS-010`，詳見 §7 詳細用戶驗收測試案例。）
+
+### Preconditions and data
+
+前置條件：Import／Export／Backorder／Archive jobs 可受控失敗。測試資料：每類各一 job。環境須為 §3.1 進入準則所述的隔離 UAT 環境及測試專用資料庫，並已記錄 build／commit、時區、瀏覽器及資料版本。
+
+### Steps
+
+令一類 job 失敗，同時建單、確認及查詢其他 job。
+
+### Expected business result
+
+失敗 job 顯示可追蹤錯誤／重試資訊；其他日常流程繼續；恢復後不重複結果。
+
+### Acceptance criteria
+
+必要證據：各 job 及日常操作前後。依 §5 規則，只使用使用者或獲授權業務管理員可觀察的證據；沒有執行證據不得標 PASS，狀態只可為 `NOT RUN`、`PASS`、`FAIL`、`BLOCKED` 或 `NOT APPLICABLE`。本案例目前狀態為 `NOT RUN`；自動化或技術測試通過不等同本案例的業務驗收。

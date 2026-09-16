@@ -1,61 +1,4 @@
-# Sales Order Management Aligned System Design — Canonical Entry
-
-## 1. Normative Design Body
-
-The complete 2,386-line legacy architecture is embedded in section 6 of this file, with only obsolete self-reference paths normalized to canonical filenames. This canonical entry assigns design IDs, carries the approved DR targets, and records implementation-readiness boundaries without pretending proposed interfaces exist in code.
-
-## 2. Canonical Design Map
-
-| ID | Design item / decision | Normative section | Requirement drivers | Provenance |
-| --- | --- | --- | --- | --- |
-| DES-001 | Modular monolith; Sales owns its aggregate while User/Customer/Item/Inventory/Fulfillment own their truths. | §2.1–2.2 | FR-001–140, NFR-012 | EXISTING |
-| DES-002 | Quotation/SO aggregates, state machines, snapshots, monetary/quantity invariants and monthly numbering. | §3, §4.3–4.13, §7.1–7.3 | FR-001–075 | EXISTING |
-| DES-003 | Versioned provider/consumer boundaries with fail-closed missing/UNKNOWN behavior. | §2.4 | FR-002,023–026,043–061,121–140 | EXISTING |
-| DES-004 | Durable two-transaction manual confirmation with `CONFIRMING`, operation lease and same-event recovery. | §2.5, §7.4 | FR-042–061, NFR-009 | EXISTING |
-| DES-005 | Inventory batch reserve/release in the same MySQL transaction and one global lock order. | §2.4, §2.8, §7.5–7.6 | FR-049–061,062–075 | EXISTING; owner approval pending |
-| DES-006 | Warehouse+SKU FIFO backorder allocation with bounded scheduler and safe manual wake. | §2.6, §7.7 | FR-050–061 | EXISTING |
-| DES-007 | Three-layer transport/event/external-key idempotency and exact-key routing. | §2.7, §4.7, §4.13 | FR-012–015,048,073,082–095,096–108, SEC-015 | EXISTING |
-| DES-008 | Active/Archive relational schema, constraints, indexes, immutable archive and forward-only migration slices. | §4 | FR-109–140, NFR-016, SEC-011 | EXISTING |
-| DES-009 | Versioned REST contracts, CAS versions, stable errors, owner-safe projections and 200/202 operation lookup. | §5.1–5.6, §5.10–5.12 | FR-018–075,109–120, SEC-001/002/008/014 | EXISTING |
-| DES-010 | Opt-in disk-stream upload, CSV v1 parser/precheck/jobs/results and bounded retention. | §5.7–5.8, §7.8, §12.1 | FR-076–095, NFR-004/008/010, SEC-005–007 | EXISTING; implementation gap |
-| DES-011 | Canonical Channel Intake only; authenticated transport and address handoff deferred to Adapter gate. | §2.4, §5.9 | FR-096–108, SEC-003/010/015 | EXISTING |
-| DES-012 | Vue page/component/service boundaries, permission-aware navigation, responsive and accessible states. | §2.3, §6 | FR-001–140, NFR-013 | EXISTING |
-| DES-013 | Fresh actor/service authorization, minimum data, threat controls and safe output. | §8 | SEC-001–015 | EXISTING; implementation gap |
-| DES-014 | Append-only history/audit plus structured logs, metrics, alerts and correlation. | §4.12/4.18, §8, §12.3–12.4 | FR-016,041,060,075,095,118–120,137, NFR-011 | EXISTING |
-| DES-015 | Scheduler leases, bounded workers, backpressure, retention and recovery runbooks. | §7.7–7.11, §12.2/12.5 | FR-076–108,121–140, NFR-008–010 | EXISTING |
-| DES-016 | Active inquiry, outstanding projections, safe export jobs and exact source routing. | §5.10–5.11, §7.9 | FR-018–041,109–120 | EXISTING |
-| DES-017 | Eligibility recheck, atomic aggregate archive, manifest/hash validation, restore and reconciliation. | §3.7, §4.19–4.22, §7.10–7.11, §11.8 | FR-121–140, NFR-016 | EXISTING |
-| DES-018 | Configuration validation, deployment order, feature disablement and forward-fix rollback strategy. | §12–13 | NFR-008–012, SEC-006/014 | EXISTING |
-| DES-019 | Production-like data generation and measurable query/command/batch capacity gates. | §11.7 | NFR-001–008 | EXISTING; workload input pending |
-| DES-020 | Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4h and RPO <=15m. | §11.8 enhanced by this review | NFR-014–016 | NEW/ENHANCED — USER APPROVED target |
-
-## 3. Architecture Boundaries and Failure Model
-
-- Sales code must not directly update Inventory balances, lots or bins.
-- Any missing/wrong-version/UNKNOWN provider fails closed; no shadow master or production fake is allowed.
-- The planned same-database transaction boundary is a hard assumption until Inventory/DBA approval and real concurrency proof.
-- Channel HTTP transport is intentionally absent until authenticated service identity and Fulfillment address delivery are designed.
-- Archive failure degrades Archive functions only; Active create/confirm/query remains available.
-- No automated archive purge is permitted before legal retention policy is explicitly approved.
-
-## 4. Design Readiness
-
-The design is technically detailed but **CONDITIONAL** because `DR-001`–`DR-005` remain open. It can drive Phase planning, not implementation approval. `DES-020` adds measurable DR acceptance without selecting an unapproved HA product or topology.
-
-## 5. Mechanical Requirement Coverage
-
-Functional coverage: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108, FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
-
-Cross-cutting coverage: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015, NFR-016; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014, SEC-015.
-
-
----
-
-## 6. Embedded Legacy System Design Body
-
-The content below preserves the full legacy source semantics; only obsolete document paths were normalized. The exact original source has SHA-256 aa2b38ebb9db6af62097e7923cd8debbdf30ab2e65ad0b778d157816f9fe9272 and remains in the temporary recovery backup.
-
-# Sales Order Management 系統設計規格
+# Sales Order Management 系統設計規格（Harness Aligned）
 
 ## 0. 文件資訊
 
@@ -2487,3 +2430,346 @@ Alerts：
 - API field移除／改型別、enum語意改變、CSV header變更必須 version及migration，不就地破壞 V1。
 - Inventory batch contract是 provider public internal interface；實作後新增 optional fields優先，不複製 V2 service。
 - 任一效能指標不能以縮小資料集、取消Archive查詢或skip test方式降低；如需改門檻須有量測證據及明確核准。
+
+## 16. Harness 2.0 正式設計定義
+
+### 16.1 對齊來源與保留內容
+
+本節保留 Harness 對齊層的基線、映射與門檻敘述；以上章節為本模組的正式敘述正文，章節編號與既有跨文件引用維持不變。
+
+以上正文保留對齊前來源的完整語意，只正規化了已失效的文件路徑；對齊前來源的 SHA-256 為 `aa2b38ebb9db6af62097e7923cd8debbdf30ab2e65ad0b778d157816f9fe9272`，其內容由 Git 歷史保存為恢復點。
+
+## 1. Normative Design Body
+
+The complete 2,386-line legacy architecture is embedded in section 6 of this file, with only obsolete self-reference paths normalized to canonical filenames. This canonical entry assigns design IDs, carries the approved DR targets, and records implementation-readiness boundaries without pretending proposed interfaces exist in code.
+
+## 2. Canonical Design Map
+
+| ID | Design item / decision | Normative section | Requirement drivers | Provenance |
+| --- | --- | --- | --- | --- |
+| DES-001 | Modular monolith; Sales owns its aggregate while User/Customer/Item/Inventory/Fulfillment own their truths. | §2.1–2.2 | FR-001–140, NFR-012 | EXISTING |
+| DES-002 | Quotation/SO aggregates, state machines, snapshots, monetary/quantity invariants and monthly numbering. | §3, §4.3–4.13, §7.1–7.3 | FR-001–075 | EXISTING |
+| DES-003 | Versioned provider/consumer boundaries with fail-closed missing/UNKNOWN behavior. | §2.4 | FR-002,023–026,043–061,121–140 | EXISTING |
+| DES-004 | Durable two-transaction manual confirmation with `CONFIRMING`, operation lease and same-event recovery. | §2.5, §7.4 | FR-042–061, NFR-009 | EXISTING |
+| DES-005 | Inventory batch reserve/release in the same MySQL transaction and one global lock order. | §2.4, §2.8, §7.5–7.6 | FR-049–061,062–075 | EXISTING; owner approval pending |
+| DES-006 | Warehouse+SKU FIFO backorder allocation with bounded scheduler and safe manual wake. | §2.6, §7.7 | FR-050–061 | EXISTING |
+| DES-007 | Three-layer transport/event/external-key idempotency and exact-key routing. | §2.7, §4.7, §4.13 | FR-012–015,048,073,082–095,096–108, SEC-015 | EXISTING |
+| DES-008 | Active/Archive relational schema, constraints, indexes, immutable archive and forward-only migration slices. | §4 | FR-109–140, NFR-016, SEC-011 | EXISTING |
+| DES-009 | Versioned REST contracts, CAS versions, stable errors, owner-safe projections and 200/202 operation lookup. | §5.1–5.6, §5.10–5.12 | FR-018–075,109–120, SEC-001/002/008/014 | EXISTING |
+| DES-010 | Opt-in disk-stream upload, CSV v1 parser/precheck/jobs/results and bounded retention. | §5.7–5.8, §7.8, §12.1 | FR-076–095, NFR-004/008/010, SEC-005–007 | EXISTING; implementation gap |
+| DES-011 | Canonical Channel Intake only; authenticated transport and address handoff deferred to Adapter gate. | §2.4, §5.9 | FR-096–108, SEC-003/010/015 | EXISTING |
+| DES-012 | Vue page/component/service boundaries, permission-aware navigation, responsive and accessible states. | §2.3, §6 | FR-001–140, NFR-013 | EXISTING |
+| DES-013 | Fresh actor/service authorization, minimum data, threat controls and safe output. | §8 | SEC-001–015 | EXISTING; implementation gap |
+| DES-014 | Append-only history/audit plus structured logs, metrics, alerts and correlation. | §4.12/4.18, §8, §12.3–12.4 | FR-016,041,060,075,095,118–120,137, NFR-011 | EXISTING |
+| DES-015 | Scheduler leases, bounded workers, backpressure, retention and recovery runbooks. | §7.7–7.11, §12.2/12.5 | FR-076–108,121–140, NFR-008–010 | EXISTING |
+| DES-016 | Active inquiry, outstanding projections, safe export jobs and exact source routing. | §5.10–5.11, §7.9 | FR-018–041,109–120 | EXISTING |
+| DES-017 | Eligibility recheck, atomic aggregate archive, manifest/hash validation, restore and reconciliation. | §3.7, §4.19–4.22, §7.10–7.11, §11.8 | FR-121–140, NFR-016 | EXISTING |
+| DES-018 | Configuration validation, deployment order, feature disablement and forward-fix rollback strategy. | §12–13 | NFR-008–012, SEC-006/014 | EXISTING |
+| DES-019 | Production-like data generation and measurable query/command/batch capacity gates. | §11.7 | NFR-001–008 | EXISTING; workload input pending |
+| DES-020 | Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4h and RPO <=15m. | §11.8 enhanced by this review | NFR-014–016 | NEW/ENHANCED — USER APPROVED target |
+
+## 3. Architecture Boundaries and Failure Model
+
+- Sales code must not directly update Inventory balances, lots or bins.
+- Any missing/wrong-version/UNKNOWN provider fails closed; no shadow master or production fake is allowed.
+- The planned same-database transaction boundary is a hard assumption until Inventory/DBA approval and real concurrency proof.
+- Channel HTTP transport is intentionally absent until authenticated service identity and Fulfillment address delivery are designed.
+- Archive failure degrades Archive functions only; Active create/confirm/query remains available.
+- No automated archive purge is permitted before legal retention policy is explicitly approved.
+
+## 4. Design Readiness
+
+The design is technically detailed but **CONDITIONAL** because `DR-001`–`DR-005` remain open. It can drive Phase planning, not implementation approval. `DES-020` adds measurable DR acceptance without selecting an unapproved HA product or topology.
+
+## 5. Mechanical Requirement Coverage
+
+Functional coverage: FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017, FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041, FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061, FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075, FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095, FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108, FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120, FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140.
+
+Cross-cutting coverage: NFR-001, NFR-002, NFR-003, NFR-004, NFR-005, NFR-006, NFR-007, NFR-008, NFR-009, NFR-010, NFR-011, NFR-012, NFR-013, NFR-014, NFR-015, NFR-016; SEC-001, SEC-002, SEC-003, SEC-004, SEC-005, SEC-006, SEC-007, SEC-008, SEC-009, SEC-010, SEC-011, SEC-012, SEC-013, SEC-014, SEC-015.
+
+
+---
+
+### 16.2 正式定義
+
+以下每個實體的 `Statement`／`Decision`／`Goal` 保留原文，`Acceptance criteria` 與 `Failure behavior` 陳述本模組共通的可驗證條件，不新增任何未經確認的業務規則、門檻或流程。
+
+## DES-001 — Modular monolith; Sales owns its aggregate while User/Customer/Item/Inventory/Fulfillment own their truths.
+
+### Decision
+
+Modular monolith; Sales owns its aggregate while User/Customer/Item/Inventory/Fulfillment own their truths.
+
+### Rationale
+
+正式敘述見本文件 §2.1–2.2；需求驅動為 FR-001–140, NFR-012。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.1–2.2 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-002 — Quotation/SO aggregates, state machines, snapshots, monetary/quantity invariants and monthly numbering.
+
+### Decision
+
+Quotation/SO aggregates, state machines, snapshots, monetary/quantity invariants and monthly numbering.
+
+### Rationale
+
+正式敘述見本文件 §3, §4.3–4.13, §7.1–7.3；需求驅動為 FR-001–075。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§3, §4.3–4.13, §7.1–7.3 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-003 — Versioned provider/consumer boundaries with fail-closed missing/UNKNOWN behavior.
+
+### Decision
+
+Versioned provider/consumer boundaries with fail-closed missing/UNKNOWN behavior.
+
+### Rationale
+
+正式敘述見本文件 §2.4；需求驅動為 FR-002,023–026,043–061,121–140。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.4 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-004 — Durable two-transaction manual confirmation with `CONFIRMING`, operation lease and same-event recovery.
+
+### Decision
+
+Durable two-transaction manual confirmation with `CONFIRMING`, operation lease and same-event recovery.
+
+### Rationale
+
+正式敘述見本文件 §2.5, §7.4；需求驅動為 FR-042–061, NFR-009。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.5, §7.4 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-005 — Inventory batch reserve/release in the same MySQL transaction and one global lock order.
+
+### Decision
+
+Inventory batch reserve/release in the same MySQL transaction and one global lock order.
+
+### Rationale
+
+正式敘述見本文件 §2.4, §2.8, §7.5–7.6；需求驅動為 FR-049–061,062–075。Provenance：EXISTING; owner approval pending。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.4, §2.8, §7.5–7.6 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-006 — Warehouse+SKU FIFO backorder allocation with bounded scheduler and safe manual wake.
+
+### Decision
+
+Warehouse+SKU FIFO backorder allocation with bounded scheduler and safe manual wake.
+
+### Rationale
+
+正式敘述見本文件 §2.6, §7.7；需求驅動為 FR-050–061。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.6, §7.7 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-007 — Three-layer transport/event/external-key idempotency and exact-key routing.
+
+### Decision
+
+Three-layer transport/event/external-key idempotency and exact-key routing.
+
+### Rationale
+
+正式敘述見本文件 §2.7, §4.7, §4.13；需求驅動為 FR-012–015,048,073,082–095,096–108, SEC-015。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.7, §4.7, §4.13 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-008 — Active/Archive relational schema, constraints, indexes, immutable archive and forward-only migration slices.
+
+### Decision
+
+Active/Archive relational schema, constraints, indexes, immutable archive and forward-only migration slices.
+
+### Rationale
+
+正式敘述見本文件 §4；需求驅動為 FR-109–140, NFR-016, SEC-011。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§4 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-009 — Versioned REST contracts, CAS versions, stable errors, owner-safe projections and 200/202 operation lookup.
+
+### Decision
+
+Versioned REST contracts, CAS versions, stable errors, owner-safe projections and 200/202 operation lookup.
+
+### Rationale
+
+正式敘述見本文件 §5.1–5.6, §5.10–5.12；需求驅動為 FR-018–075,109–120, SEC-001/002/008/014。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§5.1–5.6, §5.10–5.12 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-010 — Opt-in disk-stream upload, CSV v1 parser/precheck/jobs/results and bounded retention.
+
+### Decision
+
+Opt-in disk-stream upload, CSV v1 parser/precheck/jobs/results and bounded retention.
+
+### Rationale
+
+正式敘述見本文件 §5.7–5.8, §7.8, §12.1；需求驅動為 FR-076–095, NFR-004/008/010, SEC-005–007。Provenance：EXISTING; implementation gap。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§5.7–5.8, §7.8, §12.1 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-011 — Canonical Channel Intake only; authenticated transport and address handoff deferred to Adapter gate.
+
+### Decision
+
+Canonical Channel Intake only; authenticated transport and address handoff deferred to Adapter gate.
+
+### Rationale
+
+正式敘述見本文件 §2.4, §5.9；需求驅動為 FR-096–108, SEC-003/010/015。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.4, §5.9 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-012 — Vue page/component/service boundaries, permission-aware navigation, responsive and accessible states.
+
+### Decision
+
+Vue page/component/service boundaries, permission-aware navigation, responsive and accessible states.
+
+### Rationale
+
+正式敘述見本文件 §2.3, §6；需求驅動為 FR-001–140, NFR-013。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§2.3, §6 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-013 — Fresh actor/service authorization, minimum data, threat controls and safe output.
+
+### Decision
+
+Fresh actor/service authorization, minimum data, threat controls and safe output.
+
+### Rationale
+
+正式敘述見本文件 §8；需求驅動為 SEC-001–015。Provenance：EXISTING; implementation gap。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§8 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-014 — Append-only history/audit plus structured logs, metrics, alerts and correlation.
+
+### Decision
+
+Append-only history/audit plus structured logs, metrics, alerts and correlation.
+
+### Rationale
+
+正式敘述見本文件 §4.12/4.18, §8, §12.3–12.4；需求驅動為 FR-016,041,060,075,095,118–120,137, NFR-011。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§4.12/4.18, §8, §12.3–12.4 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-015 — Scheduler leases, bounded workers, backpressure, retention and recovery runbooks.
+
+### Decision
+
+Scheduler leases, bounded workers, backpressure, retention and recovery runbooks.
+
+### Rationale
+
+正式敘述見本文件 §7.7–7.11, §12.2/12.5；需求驅動為 FR-076–108,121–140, NFR-008–010。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§7.7–7.11, §12.2/12.5 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-016 — Active inquiry, outstanding projections, safe export jobs and exact source routing.
+
+### Decision
+
+Active inquiry, outstanding projections, safe export jobs and exact source routing.
+
+### Rationale
+
+正式敘述見本文件 §5.10–5.11, §7.9；需求驅動為 FR-018–041,109–120。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§5.10–5.11, §7.9 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-017 — Eligibility recheck, atomic aggregate archive, manifest/hash validation, restore and reconciliation.
+
+### Decision
+
+Eligibility recheck, atomic aggregate archive, manifest/hash validation, restore and reconciliation.
+
+### Rationale
+
+正式敘述見本文件 §3.7, §4.19–4.22, §7.10–7.11, §11.8；需求驅動為 FR-121–140, NFR-016。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§3.7, §4.19–4.22, §7.10–7.11, §11.8 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-018 — Configuration validation, deployment order, feature disablement and forward-fix rollback strategy.
+
+### Decision
+
+Configuration validation, deployment order, feature disablement and forward-fix rollback strategy.
+
+### Rationale
+
+正式敘述見本文件 §12–13；需求驅動為 NFR-008–012, SEC-006/014。Provenance：EXISTING。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§12–13 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-019 — Production-like data generation and measurable query/command/batch capacity gates.
+
+### Decision
+
+Production-like data generation and measurable query/command/batch capacity gates.
+
+### Rationale
+
+正式敘述見本文件 §11.7；需求驅動為 NFR-001–008。Provenance：EXISTING; workload input pending。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§11.7 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+## DES-020 — Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4h and RPO <=15m.
+
+### Decision
+
+Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4h and RPO <=15m.
+
+### Rationale
+
+正式敘述見本文件 §11.8 enhanced by this review；需求驅動為 NFR-014–016。Provenance：NEW/ENHANCED — USER APPROVED target。本決定不取代該章節的完整敘述，只作為可追溯的正式定義入口。
+
+### Failure behavior
+
+本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§11.8 enhanced by this review 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。

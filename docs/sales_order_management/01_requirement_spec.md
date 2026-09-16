@@ -1,97 +1,4 @@
-# Sales Order Management Aligned Requirement Specification
-
-## 1. Normative Baseline
-
-The complete legacy business wording is embedded in section 8 of this file, with only obsolete self-reference paths normalized to canonical filenames. This aligned document provides canonical Harness IDs, provenance and measurable cross-cutting requirements. Each canonical functional ID maps one-to-one by position; it does not summarize away the original actor, rule, exception or acceptance semantics.
-
-## 2. Outcome, Scope and Provenance
-
-- Outcome: safely capture quotations and Sales Orders from manual, CSV and future Channel sources; confirm against Inventory without duplicate commitment; preserve traceable inquiry and archive history.
-- In scope: legacy requirement sections 2.1 and 8.1–8.8.
-- Out of scope: legacy section 2.2 and design section 0.4.
-- `EXISTING`: all legacy functional requirements, performance targets and security/control prose.
-- `ENHANCED`: canonical aliases and explicit separation of NFR/SEC requirements.
-- `NEW — USER APPROVED 2026-09-10`: `NFR-014` and `NFR-015` only.
-
-## 3. Canonical Functional Requirement Map
-
-| Canonical IDs | Existing IDs | Normative source | Origin |
-| --- | --- | --- | --- |
-| FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017 | FR-QUOTE-001–017 | embedded legacy body §8.1 | EXISTING |
-| FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041 | FR-SO-001–024 | §8.2 | EXISTING |
-| FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061 | FR-CONF-001–020 | §8.3 | EXISTING |
-| FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075 | FR-LIFE-001–014 | §8.4 | EXISTING |
-| FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095 | FR-CSV-001–020 | §8.5 | EXISTING |
-| FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108 | FR-CH-001–013 | §8.6 | EXISTING |
-| FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120 | FR-INQ-001–012 | §8.7 | EXISTING |
-| FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140 | FR-ARC-001–020 | §8.8 | EXISTING |
-
-Example: `FR-001 = FR-QUOTE-001`, `FR-018 = FR-SO-001`, `FR-042 = FR-CONF-001`, and `FR-140 = FR-ARC-020`. Every original priority, validation, failure behavior, business rule and acceptance criterion is inherited.
-
-## 4. Non-Functional Requirements
-
-| ID | Requirement / measurable acceptance | Existing source | Provenance |
-| --- | --- | --- | --- |
-| NFR-001 | Approximately 10,000 SO/day and 24 months/7.3 million Active headers; capacity dataset must model approved line distribution. | NFR-PERF-001 | EXISTING |
-| NFR-002 | Normal Active common-list and exact lookup p95 <= 2 seconds. | NFR-PERF-002 | EXISTING |
-| NFR-003 | Draft save/confirm up to 100 lines p95 <= 3 seconds excluding dependency failure. | NFR-PERF-003 | EXISTING |
-| NFR-004 | Valid 10,000-order CSV batch completes within 30 minutes in a recorded standard environment. | NFR-PERF-004 | EXISTING |
-| NFR-005 | At least 50 concurrent interactive users plus CSV/Channel/Archive background work. | NFR-PERF-005 | EXISTING |
-| NFR-006 | Archive exact lookup p95 <= 3 seconds; bounded date-range lookup p95 <= 5 seconds. | NFR-PERF-006 | EXISTING |
-| NFR-007 | Active query targets remain valid at the full 24-month dataset, not only on empty/small data. | NFR-PERF-007 | EXISTING |
-| NFR-008 | Large exports/imports/archives use bounded streaming/background work and do not load entire results into application memory. | NFR-PERF-008, §13.3 | EXISTING |
-| NFR-009 | Create/confirm/convert/import/cancel/release/archive operations are idempotent and converge after retry or unknown outcome without duplicate effects. | §13.2 | ENHANCED |
-| NFR-010 | Import, export, backorder and archive jobs safely resume after restart; an Archive outage must not block Active Sales operations. | §13.2–13.3 | ENHANCED |
-| NFR-011 | Metrics/logs/alerts expose throughput, latency, duplicates, queue age, reservation/backorder and archive failure using bounded non-sensitive labels. | §13.4 | ENHANCED |
-| NFR-012 | Intake contracts/templates are versioned and backward-compatible; platform adapters do not fork Sales core rules. | §13.5 | ENHANCED |
-| NFR-013 | UI follows shared design, keyboard operation and non-colour-only state; supported viewports are 375/768/1024/1440 px and target WCAG 2.1 AA. | §13.6; design §6.8 | ENHANCED |
-| NFR-014 | Production Recovery Time Objective is <= 4 hours, demonstrated by a timed isolated recovery exercise. | User decision | NEW — USER APPROVED 2026-09-10 |
-| NFR-015 | Production Recovery Point Objective is <= 15 minutes, demonstrated from backup/log evidence and restored-data reconciliation. | User decision | NEW — USER APPROVED 2026-09-10 |
-| NFR-016 | Active and Archive data, source keys and operations are backed up/restorable; Archive is retained at least seven years and has no automatic purge in Phase 1. | §13.3, FR-ARC-012/019 | EXISTING / ENHANCED |
-
-## 5. Security Requirements
-
-| ID | Requirement | Source / Provenance |
-| --- | --- | --- |
-| SEC-001 | Every Sales query and command enforces server-side authentication and explicit permission. | §11.1 EXISTING |
-| SEC-002 | Parent/child ownership and data-scope checks prevent IDOR; unauthorized and absent targets do not leak existence. | §11.1 EXISTING |
-| SEC-003 | Channel/service identities use least-privilege purpose allowlists and cannot call management APIs. | §11.1 EXISTING |
-| SEC-004 | Background work records initiating business actor and actual system actor. | §11.1 EXISTING |
-| SEC-005 | UI/API/CSV/Adapter data is untrusted and receives type, length, enum and business validation. | §11.2 EXISTING |
-| SEC-006 | Uploads enforce file/row/order/encoding/type/size limits and safe temporary-file handling. | §11.2; design §5.7–5.8 ENHANCED |
-| SEC-007 | UI, logs and spreadsheet output prevent XSS and formula injection while preserving safe Unicode. | §11.2 EXISTING |
-| SEC-008 | Public errors never expose SQL, stack traces, credentials, tokens, private paths or raw sensitive payloads. | §11.2 EXISTING |
-| SEC-009 | Sales data is minimized: no bank data, platform secrets or unnecessary address data is stored in the SO aggregate. | §11.3 EXISTING |
-| SEC-010 | Platform credentials are held by an approved secure integration configuration, not orders/exceptions. | §11.3 EXISTING |
-| SEC-011 | Audit, confirmed snapshots and Archive records are immutable to ordinary business users. | §11.3, FR-INQ-011, FR-ARC-014 ENHANCED |
-| SEC-012 | Exports enforce the initiating user's scope/filters, owner-safe download and audit metadata. | §11.3, FR-INQ-006–008 ENHANCED |
-| SEC-013 | Every write/worker continuation revalidates the actor/service identity inside the command transaction. | design §8.2 ENHANCED |
-| SEC-014 | Private downloads use safe filenames, `no-store/private`, `nosniff`, expiry and authorization at download time. | design §5.1 ENHANCED |
-| SEC-015 | Idempotency/event keys bind to canonical payload hashes; same key/different payload conflicts without side effect. | design §2.7/5.1 ENHANCED |
-
-## 6. Assumptions, Open Issues and Decisions
-
-| ID | Type | Statement | Status / impact |
-| --- | --- | --- | --- |
-| ASM-001–009 | ASSUMPTION | Legacy assumptions in requirement §18.2 remain preserved. | Must be rechecked at affected Phase entry; not silently promoted beyond stated scope. |
-| OI-001 | DECISION REQUIRED | Production RTO/RPO. | RESOLVED: NFR-014/NFR-015 approved 2026-09-10. |
-| OI-002 | OPEN ISSUE | Actual mean/p95 order lines and peak orders/minute. | Blocks performance sign-off, not document alignment. |
-| OI-003 | OPEN ISSUE | Approved Customer/Inventory/Fulfillment provider versions and owners. | Blocks affected implementation Phases. |
-| OI-004 | OPEN ISSUE | First platform transport auth and address-to-Fulfillment contract. | Blocks platform Adapter go-live only. |
-| OI-005 | OPEN ISSUE | Compliance confirmation of retention start and any period longer than seven years. | No purge is allowed until resolved. |
-
-## 7. Requirement Gate
-
-The requirement package is **CONDITIONAL — READY FOR DESIGN/PLANNING, NOT IMPLEMENTATION**. Business scope and acceptance are sufficient for alignment. Provider readiness, current workload distribution and platform/retention decisions remain explicit gates; they are not invented here.
-
-
----
-
-## 8. Embedded Legacy Requirement Body
-
-The content below preserves the full legacy source semantics; only obsolete document paths were normalized. The exact original source has SHA-256 6dbdec0883cd6be197b217b7425004dfb809a22eee3ba1c974cfa799f0012756 and remains in the temporary recovery backup.
-
-# Sales Order Management 業務需求書
+# Sales Order Management 業務需求書（Harness Aligned）
 
 ## 0. 文件資訊
 
@@ -312,7 +219,7 @@ Fulfillment & Delivery 是本模組的下游系統邊界，不在本 Capability 
 
 ## 6. 概念資料模型
 
-本節定義業務資料及關係，不指定實體資料庫表、欄位型別或索引；詳細 Database Table Design 見 `03_system_design_spec.md`。
+本節定義業務資料及關係，不指定實體資料庫表、欄位型別或索引；詳細 Database Table Design 見 `03_design_spec.md`。
 
 ### 6.1 Sales Quotation Header
 
@@ -844,7 +751,7 @@ Backorder 是行級數量狀態，不另設與 Header 狀態互相衝突的 `BAC
 
 ### 12.1 Inventory 整合特別約束
 
-現有 Inventory Reservation 的原子契約不得由 Sales 改成隱式部分成功。Sales 可先按可承諾數量決定本次正式 Reservation Request 數量，未請求部分形成 Backorder；Inventory 對每個正式 Request 仍應是全數成功或失敗。高併發下的重新計算、重試及一致性方案必須在 `03_system_design_spec.md` 明確定義並以整合測試驗證。
+現有 Inventory Reservation 的原子契約不得由 Sales 改成隱式部分成功。Sales 可先按可承諾數量決定本次正式 Reservation Request 數量，未請求部分形成 Backorder；Inventory 對每個正式 Request 仍應是全數成功或失敗。高併發下的重新計算、重試及一致性方案必須在 `03_design_spec.md` 明確定義並以整合測試驗證。
 
 ### 12.2 下游未完成事項
 
@@ -901,7 +808,7 @@ Backorder 是行級數量狀態，不另設與 Header 狀態互相衝突的 `BAC
 
 - 遵循 `docs/frontend-design.md` 的共用版面、表單、表格、提示及響應式規則。
 - 重要狀態不能只依賴顏色；表單錯誤須可由鍵盤及輔助技術定位。
-- 支援專案正式支援的桌面瀏覽器；詳細 Browser Matrix 由 `03_system_design_spec.md` 及測試計劃定義。
+- 支援專案正式支援的桌面瀏覽器；詳細 Browser Matrix 由 `03_design_spec.md` 及測試計劃定義。
 
 ---
 
@@ -1105,7 +1012,7 @@ Backorder 是行級數量狀態，不另設與 Header 狀態互相衝突的 `BAC
 | ASM-008 | 歸檔後資料唯讀；歷史更正由未來正式調整流程處理。 | 保持 Archive 完整及可審計。 |
 | ASM-009 | 不在 Sales Order Core 保存渠道送貨地址；指定平台接入時由 Adapter 與 Fulfillment 契約處理。 | 保持已確認的「發貨時才選地址」邊界，同時避免日後平台履約資料遺失。 |
 
-### 18.3 必須在 `03_system_design_spec.md` 前關閉的規格門檻
+### 18.3 必須在 `03_design_spec.md` 前關閉的規格門檻
 
 | Gate | 待確認內容 | 負責方 |
 |---|---|---|
@@ -1145,12 +1052,2505 @@ Backorder 是行級數量狀態，不另設與 Header 狀態互相衝突的 `BAC
 - 第 18.3 節涉及架構、數據及跨模組契約的 Gate 有 Owner 及處理結論。
 - 所有第一階段範圍均有功能需求及可測試驗收準則。
 - 範圍外項目沒有被系統設計以隱藏功能方式提前加入。
-- `03_system_design_spec.md` 可由每個 Capability 獨立導出前端、API、資料庫、整合、權限及 Unit／Integration Test 設計。
+- `03_design_spec.md` 可由每個 Capability 獨立導出前端、API、資料庫、整合、權限及 Unit／Integration Test 設計。
 
 ### 19.3 後續文件
 
 需求獲確認後，依序產出：
 
-1. `docs/sales_order_management/03_system_design_spec.md`：包括詳細前後端架構、API、Database Table Design、狀態與一致性、歸檔技術設計及測試策略。
+1. `docs/sales_order_management/03_design_spec.md`：包括詳細前後端架構、API、Database Table Design、狀態與一致性、歸檔技術設計及測試策略。
 2. `docs/sales_order_management/05_development_tasks.md`：按可獨立交付及測試的 Phase／Task 拆分。
 3. `docs/sales_order_management/07_uat_test_cases.md`：以業務流程分類的 UAT 及系統驗收案例。
+
+## 20. Harness 2.0 正式需求定義
+
+### 20.1 對齊來源與保留內容
+
+本節保留 Harness 對齊層的基線、映射與門檻敘述；以上章節為本模組的正式敘述正文，章節編號與既有跨文件引用維持不變。
+
+以上正文保留對齊前來源的完整語意，只正規化了已失效的文件路徑；對齊前來源的 SHA-256 為 `6dbdec0883cd6be197b217b7425004dfb809a22eee3ba1c974cfa799f0012756`，其內容由 Git 歷史保存為恢復點。
+
+## 1. Normative Baseline
+
+The complete legacy business wording is embedded in section 8 of this file, with only obsolete self-reference paths normalized to canonical filenames. This aligned document provides canonical Harness IDs, provenance and measurable cross-cutting requirements. Each canonical functional ID maps one-to-one by position; it does not summarize away the original actor, rule, exception or acceptance semantics.
+
+## 2. Outcome, Scope and Provenance
+
+- Outcome: safely capture quotations and Sales Orders from manual, CSV and future Channel sources; confirm against Inventory without duplicate commitment; preserve traceable inquiry and archive history.
+- In scope: legacy requirement sections 2.1 and 8.1–8.8.
+- Out of scope: legacy section 2.2 and design section 0.4.
+- `EXISTING`: all legacy functional requirements, performance targets and security/control prose.
+- `ENHANCED`: canonical aliases and explicit separation of NFR/SEC requirements.
+- `NEW — USER APPROVED 2026-09-10`: `NFR-014` and `NFR-015` only.
+
+## 3. Canonical Functional Requirement Map
+
+| Canonical IDs | Existing IDs | Normative source | Origin |
+| --- | --- | --- | --- |
+| FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014, FR-015, FR-016, FR-017 | FR-QUOTE-001–017 | embedded legacy body §8.1 | EXISTING |
+| FR-018, FR-019, FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026, FR-027, FR-028, FR-029, FR-030, FR-031, FR-032, FR-033, FR-034, FR-035, FR-036, FR-037, FR-038, FR-039, FR-040, FR-041 | FR-SO-001–024 | §8.2 | EXISTING |
+| FR-042, FR-043, FR-044, FR-045, FR-046, FR-047, FR-048, FR-049, FR-050, FR-051, FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058, FR-059, FR-060, FR-061 | FR-CONF-001–020 | §8.3 | EXISTING |
+| FR-062, FR-063, FR-064, FR-065, FR-066, FR-067, FR-068, FR-069, FR-070, FR-071, FR-072, FR-073, FR-074, FR-075 | FR-LIFE-001–014 | §8.4 | EXISTING |
+| FR-076, FR-077, FR-078, FR-079, FR-080, FR-081, FR-082, FR-083, FR-084, FR-085, FR-086, FR-087, FR-088, FR-089, FR-090, FR-091, FR-092, FR-093, FR-094, FR-095 | FR-CSV-001–020 | §8.5 | EXISTING |
+| FR-096, FR-097, FR-098, FR-099, FR-100, FR-101, FR-102, FR-103, FR-104, FR-105, FR-106, FR-107, FR-108 | FR-CH-001–013 | §8.6 | EXISTING |
+| FR-109, FR-110, FR-111, FR-112, FR-113, FR-114, FR-115, FR-116, FR-117, FR-118, FR-119, FR-120 | FR-INQ-001–012 | §8.7 | EXISTING |
+| FR-121, FR-122, FR-123, FR-124, FR-125, FR-126, FR-127, FR-128, FR-129, FR-130, FR-131, FR-132, FR-133, FR-134, FR-135, FR-136, FR-137, FR-138, FR-139, FR-140 | FR-ARC-001–020 | §8.8 | EXISTING |
+
+Example: `FR-001 = FR-QUOTE-001`, `FR-018 = FR-SO-001`, `FR-042 = FR-CONF-001`, and `FR-140 = FR-ARC-020`. Every original priority, validation, failure behavior, business rule and acceptance criterion is inherited.
+
+## 4. Non-Functional Requirements
+
+| ID | Requirement / measurable acceptance | Existing source | Provenance |
+| --- | --- | --- | --- |
+| NFR-001 | Approximately 10,000 SO/day and 24 months/7.3 million Active headers; capacity dataset must model approved line distribution. | NFR-PERF-001 | EXISTING |
+| NFR-002 | Normal Active common-list and exact lookup p95 <= 2 seconds. | NFR-PERF-002 | EXISTING |
+| NFR-003 | Draft save/confirm up to 100 lines p95 <= 3 seconds excluding dependency failure. | NFR-PERF-003 | EXISTING |
+| NFR-004 | Valid 10,000-order CSV batch completes within 30 minutes in a recorded standard environment. | NFR-PERF-004 | EXISTING |
+| NFR-005 | At least 50 concurrent interactive users plus CSV/Channel/Archive background work. | NFR-PERF-005 | EXISTING |
+| NFR-006 | Archive exact lookup p95 <= 3 seconds; bounded date-range lookup p95 <= 5 seconds. | NFR-PERF-006 | EXISTING |
+| NFR-007 | Active query targets remain valid at the full 24-month dataset, not only on empty/small data. | NFR-PERF-007 | EXISTING |
+| NFR-008 | Large exports/imports/archives use bounded streaming/background work and do not load entire results into application memory. | NFR-PERF-008, §13.3 | EXISTING |
+| NFR-009 | Create/confirm/convert/import/cancel/release/archive operations are idempotent and converge after retry or unknown outcome without duplicate effects. | §13.2 | ENHANCED |
+| NFR-010 | Import, export, backorder and archive jobs safely resume after restart; an Archive outage must not block Active Sales operations. | §13.2–13.3 | ENHANCED |
+| NFR-011 | Metrics/logs/alerts expose throughput, latency, duplicates, queue age, reservation/backorder and archive failure using bounded non-sensitive labels. | §13.4 | ENHANCED |
+| NFR-012 | Intake contracts/templates are versioned and backward-compatible; platform adapters do not fork Sales core rules. | §13.5 | ENHANCED |
+| NFR-013 | UI follows shared design, keyboard operation and non-colour-only state; supported viewports are 375/768/1024/1440 px and target WCAG 2.1 AA. | §13.6; design §6.8 | ENHANCED |
+| NFR-014 | Production Recovery Time Objective is <= 4 hours, demonstrated by a timed isolated recovery exercise. | User decision | NEW — USER APPROVED 2026-09-10 |
+| NFR-015 | Production Recovery Point Objective is <= 15 minutes, demonstrated from backup/log evidence and restored-data reconciliation. | User decision | NEW — USER APPROVED 2026-09-10 |
+| NFR-016 | Active and Archive data, source keys and operations are backed up/restorable; Archive is retained at least seven years and has no automatic purge in Phase 1. | §13.3, FR-ARC-012/019 | EXISTING / ENHANCED |
+
+## 5. Security Requirements
+
+| ID | Requirement | Source / Provenance |
+| --- | --- | --- |
+| SEC-001 | Every Sales query and command enforces server-side authentication and explicit permission. | §11.1 EXISTING |
+| SEC-002 | Parent/child ownership and data-scope checks prevent IDOR; unauthorized and absent targets do not leak existence. | §11.1 EXISTING |
+| SEC-003 | Channel/service identities use least-privilege purpose allowlists and cannot call management APIs. | §11.1 EXISTING |
+| SEC-004 | Background work records initiating business actor and actual system actor. | §11.1 EXISTING |
+| SEC-005 | UI/API/CSV/Adapter data is untrusted and receives type, length, enum and business validation. | §11.2 EXISTING |
+| SEC-006 | Uploads enforce file/row/order/encoding/type/size limits and safe temporary-file handling. | §11.2; design §5.7–5.8 ENHANCED |
+| SEC-007 | UI, logs and spreadsheet output prevent XSS and formula injection while preserving safe Unicode. | §11.2 EXISTING |
+| SEC-008 | Public errors never expose SQL, stack traces, credentials, tokens, private paths or raw sensitive payloads. | §11.2 EXISTING |
+| SEC-009 | Sales data is minimized: no bank data, platform secrets or unnecessary address data is stored in the SO aggregate. | §11.3 EXISTING |
+| SEC-010 | Platform credentials are held by an approved secure integration configuration, not orders/exceptions. | §11.3 EXISTING |
+| SEC-011 | Audit, confirmed snapshots and Archive records are immutable to ordinary business users. | §11.3, FR-INQ-011, FR-ARC-014 ENHANCED |
+| SEC-012 | Exports enforce the initiating user's scope/filters, owner-safe download and audit metadata. | §11.3, FR-INQ-006–008 ENHANCED |
+| SEC-013 | Every write/worker continuation revalidates the actor/service identity inside the command transaction. | design §8.2 ENHANCED |
+| SEC-014 | Private downloads use safe filenames, `no-store/private`, `nosniff`, expiry and authorization at download time. | design §5.1 ENHANCED |
+| SEC-015 | Idempotency/event keys bind to canonical payload hashes; same key/different payload conflicts without side effect. | design §2.7/5.1 ENHANCED |
+
+## 6. Assumptions, Open Issues and Decisions
+
+| ID | Type | Statement | Status / impact |
+| --- | --- | --- | --- |
+| ASM-001–009 | ASSUMPTION | Legacy assumptions in requirement §18.2 remain preserved. | Must be rechecked at affected Phase entry; not silently promoted beyond stated scope. |
+| OI-001 | DECISION REQUIRED | Production RTO/RPO. | RESOLVED: NFR-014/NFR-015 approved 2026-09-10. |
+| OI-002 | OPEN ISSUE | Actual mean/p95 order lines and peak orders/minute. | Blocks performance sign-off, not document alignment. |
+| OI-003 | OPEN ISSUE | Approved Customer/Inventory/Fulfillment provider versions and owners. | Blocks affected implementation Phases. |
+| OI-004 | OPEN ISSUE | First platform transport auth and address-to-Fulfillment contract. | Blocks platform Adapter go-live only. |
+| OI-005 | OPEN ISSUE | Compliance confirmation of retention start and any period longer than seven years. | No purge is allowed until resolved. |
+
+## 7. Requirement Gate
+
+The requirement package is **CONDITIONAL — READY FOR DESIGN/PLANNING, NOT IMPLEMENTATION**. Business scope and acceptance are sufficient for alignment. Provider readiness, current workload distribution and platform/retention decisions remain explicit gates; they are not invented here.
+
+
+---
+
+### 20.2 正式定義
+
+以下每個實體的 `Statement`／`Decision`／`Goal` 保留原文，`Acceptance criteria` 與 `Failure behavior` 陳述本模組共通的可驗證條件，不新增任何未經確認的業務規則、門檻或流程。
+
+## FR-001 — 具 `sales.mgmt` 的使用者可建立 Quotation Draft
+
+### Statement
+
+具 `sales.mgmt` 的使用者可建立 Quotation Draft。 （Legacy identity：`FR-QUOTE-001`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-002 — Quotation 必須選擇 Active Customer，並帶入 Customer 的默認 Currency 及可選 Payment Term
+
+### Statement
+
+Quotation 必須選擇 Active Customer，並帶入 Customer 的默認 Currency 及可選 Payment Term。 （Legacy identity：`FR-QUOTE-002`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-003 — Quotation 必須有 Quotation Date 及 Valid Until，且 Valid Until 不得早於 Quotation Date
+
+### Statement
+
+Quotation 必須有 Quotation Date 及 Valid Until，且 Valid Until 不得早於 Quotation Date。 （Legacy identity：`FR-QUOTE-003`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-004 — 每張 Quotation 必須至少一個明細，且每行 Quantity 大於 0、Unit Selling Price 不得為負數
+
+### Statement
+
+每張 Quotation 必須至少一個明細，且每行 Quantity 大於 0、Unit Selling Price 不得為負數。 （Legacy identity：`FR-QUOTE-004`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-005 — 系統只允許選擇當時 Active、Sellable 且在有效期內的 SKU
+
+### Statement
+
+系統只允許選擇當時 Active、Sellable 且在有效期內的 SKU。 （Legacy identity：`FR-QUOTE-005`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-006 — SKU 建議售價只在其 Price Currency 與 Quotation Currency 相同時作預設；否則使用者須輸入 Unit Selling Price。使用者可直接修改最終價格，系統不計算額外折扣或稅
+
+### Statement
+
+SKU 建議售價只在其 Price Currency 與 Quotation Currency 相同時作預設；否則使用者須輸入 Unit Selling Price。使用者可直接修改最終價格，系統不計算額外折扣或稅。 （Legacy identity：`FR-QUOTE-006`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-007 — 系統必須即時計算 Line Amount 及 Quotation Total，並按 Currency 規則顯示及四捨五入
+
+### Statement
+
+系統必須即時計算 Line Amount 及 Quotation Total，並按 Currency 規則顯示及四捨五入。 （Legacy identity：`FR-QUOTE-007`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-008 — Quotation 可保存客戶參考、備註及行備註，但不得要求送貨地址
+
+### Statement
+
+Quotation 可保存客戶參考、備註及行備註，但不得要求送貨地址。 （Legacy identity：`FR-QUOTE-008`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-009 — `DRAFT` 可編輯、發出或取消；發出時必須重新驗證 Customer、SKU、數量、價格及日期
+
+### Statement
+
+`DRAFT` 可編輯、發出或取消；發出時必須重新驗證 Customer、SKU、數量、價格及日期。 （Legacy identity：`FR-QUOTE-009`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-010 — `ISSUED` 報價可產生適合列印或下載的客戶版本；格式細節留待 UI／文件設計
+
+### Statement
+
+`ISSUED` 報價可產生適合列印或下載的客戶版本；格式細節留待 UI／文件設計。 （Legacy identity：`FR-QUOTE-010`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-011 — 到達 Valid Until 後，尚未轉單或取消的報價應顯示為 `EXPIRED`，不可直接轉單
+
+### Statement
+
+到達 Valid Until 後，尚未轉單或取消的報價應顯示為 `EXPIRED`，不可直接轉單。 （Legacy identity：`FR-QUOTE-011`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-012 — 只有 `ISSUED`、未過期及未轉單的 Quotation 可轉為 SO
+
+### Statement
+
+只有 `ISSUED`、未過期及未轉單的 Quotation 可轉為 SO。 （Legacy identity：`FR-QUOTE-012`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-013 — 一張 Quotation 只可成功產生一張 SO；重複操作須返回既有 SO，不得建立第二張
+
+### Statement
+
+一張 Quotation 只可成功產生一張 SO；重複操作須返回既有 SO，不得建立第二張。 （Legacy identity：`FR-QUOTE-013`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-014 — 轉換後的 SO 初始為 `DRAFT`，允許新增／刪除 SKU、修改數量、Unit Selling Price、倉庫及日期
+
+### Statement
+
+轉換後的 SO 初始為 `DRAFT`，允許新增／刪除 SKU、修改數量、Unit Selling Price、倉庫及日期。 （Legacy identity：`FR-QUOTE-014`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-015 — 系統須保存 Quotation 與 SO 的雙向連結，以及新增、刪除、數量及價格差異摘要
+
+### Statement
+
+系統須保存 Quotation 與 SO 的雙向連結，以及新增、刪除、數量及價格差異摘要。 （Legacy identity：`FR-QUOTE-015`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-016 — 建立、修改、發出、取消、過期及轉單均須留下狀態歷史及 Audit
+
+### Statement
+
+建立、修改、發出、取消、過期及轉單均須留下狀態歷史及 Audit。 （Legacy identity：`FR-QUOTE-016`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-016` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-017 — Quotation 在任何狀態均不得建立或佔用 Inventory Reservation
+
+### Statement
+
+Quotation 在任何狀態均不得建立或佔用 Inventory Reservation。 （Legacy identity：`FR-QUOTE-017`。）
+
+### Acceptance criteria
+
+`FR-QUOTE-017` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-018 — 具 `sales.view` 的使用者可查看其權限範圍內的 Sales Order 列表及詳情
+
+### Statement
+
+具 `sales.view` 的使用者可查看其權限範圍內的 Sales Order 列表及詳情。 （Legacy identity：`FR-SO-001`。）
+
+### Acceptance criteria
+
+`FR-SO-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-019 — 列表至少顯示 SO Number、Customer、Source、Order Date、Warehouse、Status、Total、Reserved／Backorder 摘要及最後更新時間
+
+### Statement
+
+列表至少顯示 SO Number、Customer、Source、Order Date、Warehouse、Status、Total、Reserved／Backorder 摘要及最後更新時間。 （Legacy identity：`FR-SO-002`。）
+
+### Acceptance criteria
+
+`FR-SO-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-020 — 列表可按 SO Number、Customer ID／Name、Customer PO、日期、狀態、來源、渠道、倉庫及 Has Backorder 篩選
+
+### Statement
+
+列表可按 SO Number、Customer ID／Name、Customer PO、日期、狀態、來源、渠道、倉庫及 Has Backorder 篩選。 （Legacy identity：`FR-SO-003`。）
+
+### Acceptance criteria
+
+`FR-SO-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-021 — 精確 SO Number 或 External Order ID 查詢應優先直接定位，不要求掃描全部歷史資料
+
+### Statement
+
+精確 SO Number 或 External Order ID 查詢應優先直接定位，不要求掃描全部歷史資料。 （Legacy identity：`FR-SO-004`。）
+
+### Acceptance criteria
+
+`FR-SO-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-022 — 具 `sales.mgmt` 的使用者可建立來源為 `MANUAL` 的 Draft SO
+
+### Statement
+
+具 `sales.mgmt` 的使用者可建立來源為 `MANUAL` 的 Draft SO。 （Legacy identity：`FR-SO-005`。）
+
+### Acceptance criteria
+
+`FR-SO-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-023 — 系統應在首次保存 Draft 時分配唯一 SO Number；號碼一經分配不可更改或重用
+
+### Statement
+
+系統應在首次保存 Draft 時分配唯一 SO Number；號碼一經分配不可更改或重用。 （Legacy identity：`FR-SO-006`。）
+
+### Acceptance criteria
+
+`FR-SO-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-024 — SO 必須選擇一個 Active Customer；非 Active Customer 不可建立或確認新訂單
+
+### Statement
+
+SO 必須選擇一個 Active Customer；非 Active Customer 不可建立或確認新訂單。 （Legacy identity：`FR-SO-007`。）
+
+### Acceptance criteria
+
+`FR-SO-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-025 — 系統帶入 Customer 默認 Currency；第一階段不支援一張 SO 多幣別
+
+### Statement
+
+系統帶入 Customer 默認 Currency；第一階段不支援一張 SO 多幣別。 （Legacy identity：`FR-SO-008`。）
+
+### Acceptance criteria
+
+`FR-SO-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-026 — Customer Payment Term 如有設定可帶入並保存快照；沒有設定不阻止建單
+
+### Statement
+
+Customer Payment Term 如有設定可帶入並保存快照；沒有設定不阻止建單。 （Legacy identity：`FR-SO-009`。）
+
+### Acceptance criteria
+
+`FR-SO-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-027 — SO 必須選擇一個 Active Fulfillment Warehouse，所有明細使用相同倉庫
+
+### Statement
+
+SO 必須選擇一個 Active Fulfillment Warehouse，所有明細使用相同倉庫。 （Legacy identity：`FR-SO-010`。）
+
+### Acceptance criteria
+
+`FR-SO-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-028 — SO 不得要求或保存 Shipping Address；發貨地址由下游 Fulfillment 選擇
+
+### Statement
+
+SO 不得要求或保存 Shipping Address；發貨地址由下游 Fulfillment 選擇。 （Legacy identity：`FR-SO-011`。）
+
+### Acceptance criteria
+
+`FR-SO-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-029 — 使用者可輸入 Order Date、可選 Requested Delivery Date、Customer PO／Reference 及備註
+
+### Statement
+
+使用者可輸入 Order Date、可選 Requested Delivery Date、Customer PO／Reference 及備註。 （Legacy identity：`FR-SO-012`。）
+
+### Acceptance criteria
+
+`FR-SO-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-030 — Requested Delivery Date 如有輸入，不得早於 Order Date；特殊補錄需求留待後續版本
+
+### Statement
+
+Requested Delivery Date 如有輸入，不得早於 Order Date；特殊補錄需求留待後續版本。 （Legacy identity：`FR-SO-013`。）
+
+### Acceptance criteria
+
+`FR-SO-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-031 — 每張 SO 必須至少一個明細；第一階段每張最多 100 個有效明細
+
+### Statement
+
+每張 SO 必須至少一個明細；第一階段每張最多 100 個有效明細。 （Legacy identity：`FR-SO-014`。）
+
+### Acceptance criteria
+
+`FR-SO-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-032 — 使用者可按 SKU Code、Name 或 Barcode 搜尋及加入 Active、Sellable、有效期內的 SKU
+
+### Statement
+
+使用者可按 SKU Code、Name 或 Barcode 搜尋及加入 Active、Sellable、有效期內的 SKU。 （Legacy identity：`FR-SO-015`。）
+
+### Acceptance criteria
+
+`FR-SO-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-033 — 同一 SKU 及 Sales UOM 在同一 SO 原則上應合併為一行，避免重複承諾難以理解
+
+### Statement
+
+同一 SKU 及 Sales UOM 在同一 SO 原則上應合併為一行，避免重複承諾難以理解。 （Legacy identity：`FR-SO-016`。）
+
+### Acceptance criteria
+
+`FR-SO-016` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-034 — 每行 Quantity 必須大於 0，並符合 SKU Sales UOM 的精度規則
+
+### Statement
+
+每行 Quantity 必須大於 0，並符合 SKU Sales UOM 的精度規則。 （Legacy identity：`FR-SO-017`。）
+
+### Acceptance criteria
+
+`FR-SO-017` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-035 — SKU 建議售價的 Price Currency 與 SO Currency 相同時，系統可帶入該價格；幣別不同時不得暗中換算，使用者須輸入最終 Unit Selling Price
+
+### Statement
+
+SKU 建議售價的 Price Currency 與 SO Currency 相同時，系統可帶入該價格；幣別不同時不得暗中換算，使用者須輸入最終 Unit Selling Price。 （Legacy identity：`FR-SO-018`。）
+
+### Acceptance criteria
+
+`FR-SO-018` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-036 — Unit Selling Price 必須大於或等於 0；零售價須接受但在確認前顯示明確警告
+
+### Statement
+
+Unit Selling Price 必須大於或等於 0；零售價須接受但在確認前顯示明確警告。 （Legacy identity：`FR-SO-019`。）
+
+### Acceptance criteria
+
+`FR-SO-019` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-037 — 系統按 `Quantity × Unit Selling Price` 計算 Line Amount 及 Order Total
+
+### Statement
+
+系統按 `Quantity × Unit Selling Price` 計算 Line Amount 及 Order Total。 （Legacy identity：`FR-SO-020`。）
+
+### Acceptance criteria
+
+`FR-SO-020` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-038 — 第一階段不顯示或保存折扣、稅碼、稅率及稅額
+
+### Statement
+
+第一階段不顯示或保存折扣、稅碼、稅率及稅額。 （Legacy identity：`FR-SO-021`。）
+
+### Acceptance criteria
+
+`FR-SO-021` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-039 — Draft 可新增、刪除及修改明細；所有修改須採用版本控制，避免覆蓋其他使用者的新修改
+
+### Statement
+
+Draft 可新增、刪除及修改明細；所有修改須採用版本控制，避免覆蓋其他使用者的新修改。 （Legacy identity：`FR-SO-022`。）
+
+### Acceptance criteria
+
+`FR-SO-022` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-040 — 若版本已被他人更新，保存或確認須拒絕並提示重新載入，不得靜默覆蓋
+
+### Statement
+
+若版本已被他人更新，保存或確認須拒絕並提示重新載入，不得靜默覆蓋。 （Legacy identity：`FR-SO-023`。）
+
+### Acceptance criteria
+
+`FR-SO-023` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-041 — 訂單詳情須同時顯示目前主檔參考及確認時快照；兩者不同時不得改寫歷史值
+
+### Statement
+
+訂單詳情須同時顯示目前主檔參考及確認時快照；兩者不同時不得改寫歷史值。 （Legacy identity：`FR-SO-024`。）
+
+### Acceptance criteria
+
+`FR-SO-024` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-042 — 只有完整且有效的 `DRAFT` SO 可確認
+
+### Statement
+
+只有完整且有效的 `DRAFT` SO 可確認。 （Legacy identity：`FR-CONF-001`。）
+
+### Acceptance criteria
+
+`FR-CONF-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-043 — 確認時必須重新驗證 Customer 仍為 Active、Warehouse 有效、SKU 仍符合銷售條件及 UOM 仍有效
+
+### Statement
+
+確認時必須重新驗證 Customer 仍為 Active、Warehouse 有效、SKU 仍符合銷售條件及 UOM 仍有效。 （Legacy identity：`FR-CONF-002`。）
+
+### Acceptance criteria
+
+`FR-CONF-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-044 — 若 Customer 在頁面開啟後變為非 Active，確認必須拒絕並顯示原因
+
+### Statement
+
+若 Customer 在頁面開啟後變為非 Active，確認必須拒絕並顯示原因。 （Legacy identity：`FR-CONF-003`。）
+
+### Acceptance criteria
+
+`FR-CONF-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-045 — Customer Credit Status 為 `ON_HOLD` 時，第一階段拒絕確認；`NOT_CONFIGURED` 或 `NORMAL` 可繼續
+
+### Statement
+
+Customer Credit Status 為 `ON_HOLD` 時，第一階段拒絕確認；`NOT_CONFIGURED` 或 `NORMAL` 可繼續。 （Legacy identity：`FR-CONF-004`。）
+
+### Acceptance criteria
+
+`FR-CONF-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-046 — 在 Accounts Receivable 尚未提供實時 Exposure 前，Credit Limit 只作提示，不實作不可靠的硬額度攔截
+
+### Statement
+
+在 Accounts Receivable 尚未提供實時 Exposure 前，Credit Limit 只作提示，不實作不可靠的硬額度攔截。 （Legacy identity：`FR-CONF-005`。）
+
+### Acceptance criteria
+
+`FR-CONF-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-047 — 系統必須在確認時保存 Customer、SKU、UOM、Currency、Payment Term、Warehouse 及價格的 Business Snapshot
+
+### Statement
+
+系統必須在確認時保存 Customer、SKU、UOM、Currency、Payment Term、Warehouse 及價格的 Business Snapshot。 （Legacy identity：`FR-CONF-006`。）
+
+### Acceptance criteria
+
+`FR-CONF-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-048 — 確認必須具冪等性；重複點擊或重送同一確認請求不得建立重複 Reservation
+
+### Statement
+
+確認必須具冪等性；重複點擊或重送同一確認請求不得建立重複 Reservation。 （Legacy identity：`FR-CONF-007`。）
+
+### Acceptance criteria
+
+`FR-CONF-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-049 — 系統按 SO Line 及 Fulfillment Warehouse 查詢可承諾庫存，建立可用數量的正式 Reservation
+
+### Statement
+
+系統按 SO Line 及 Fulfillment Warehouse 查詢可承諾庫存，建立可用數量的正式 Reservation。 （Legacy identity：`FR-CONF-008`。）
+
+### Acceptance criteria
+
+`FR-CONF-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-050 — 若可承諾數量小於 Ordered Quantity，未能保留的差額成為 Backorder，SO 仍可確認
+
+### Statement
+
+若可承諾數量小於 Ordered Quantity，未能保留的差額成為 Backorder，SO 仍可確認。 （Legacy identity：`FR-CONF-009`。）
+
+### Acceptance criteria
+
+`FR-CONF-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-051 — 若沒有可承諾數量，整行可全部成為 Backorder，SO 仍可確認
+
+### Statement
+
+若沒有可承諾數量，整行可全部成為 Backorder，SO 仍可確認。 （Legacy identity：`FR-CONF-010`。）
+
+### Acceptance criteria
+
+`FR-CONF-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-052 — Inventory 不得自動負庫存；Sales 不得直接更新 Inventory Balance、Lot 或 Bin
+
+### Statement
+
+Inventory 不得自動負庫存；Sales 不得直接更新 Inventory Balance、Lot 或 Bin。 （Legacy identity：`FR-CONF-011`。）
+
+### Acceptance criteria
+
+`FR-CONF-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-053 — 每行須顯示 Ordered、Reserved 及 Backorder Quantity，且 `Ordered = Reserved + Backorder` 於初次確認後成立
+
+### Statement
+
+每行須顯示 Ordered、Reserved 及 Backorder Quantity，且 `Ordered = Reserved + Backorder` 於初次確認後成立。 （Legacy identity：`FR-CONF-012`。）
+
+### Acceptance criteria
+
+`FR-CONF-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-054 — 多行訂單中個別 SKU 缺貨不得阻止其他行建立可用 Reservation
+
+### Statement
+
+多行訂單中個別 SKU 缺貨不得阻止其他行建立可用 Reservation。 （Legacy identity：`FR-CONF-013`。）
+
+### Acceptance criteria
+
+`FR-CONF-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-055 — 確認開始後 SO 進入短暫的 `CONFIRMING`。若 Inventory 完全不可用或最終承諾結果未明，SO 不得假裝確認成功，也不得接受另一個確認；系統須以原事件安全查詢或續跑
+
+### Statement
+
+確認開始後 SO 進入短暫的 `CONFIRMING`。若 Inventory 完全不可用或最終承諾結果未明，SO 不得假裝確認成功，也不得接受另一個確認；系統須以原事件安全查詢或續跑。 （Legacy identity：`FR-CONF-014`。）
+
+### Acceptance criteria
+
+`FR-CONF-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-056 — 技術恢復流程不得建立重複 SO 或重複 Reservation，最終結果須可由 Correlation ID 對數
+
+### Statement
+
+技術恢復流程不得建立重複 SO 或重複 Reservation，最終結果須可由 Correlation ID 對數。 （Legacy identity：`FR-CONF-015`。）
+
+### Acceptance criteria
+
+`FR-CONF-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-057 — 確認成功後，SO 進入 `CONFIRMED` 並記錄 Confirmed By／At
+
+### Statement
+
+確認成功後，SO 進入 `CONFIRMED` 並記錄 Confirmed By／At。 （Legacy identity：`FR-CONF-016`。）
+
+### Acceptance criteria
+
+`FR-CONF-016` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-058 — 已確認訂單的 Backorder 可在庫存補充後由明確的重試／分配動作轉為 Reservation；第一階段不要求複雜分配優先級
+
+### Statement
+
+已確認訂單的 Backorder 可在庫存補充後由明確的重試／分配動作轉為 Reservation；第一階段不要求複雜分配優先級。 （Legacy identity：`FR-CONF-017`。）
+
+### Acceptance criteria
+
+`FR-CONF-017` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-059 — Backorder 補配不得超過當前未履約 Backorder，也不得改變原始 Ordered Quantity
+
+### Statement
+
+Backorder 補配不得超過當前未履約 Backorder，也不得改變原始 Ordered Quantity。 （Legacy identity：`FR-CONF-018`。）
+
+### Acceptance criteria
+
+`FR-CONF-018` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-060 — Reservation 的建立、補配、消耗及釋放須引用 SO Number、Line Number 及穩定的業務事件 ID
+
+### Statement
+
+Reservation 的建立、補配、消耗及釋放須引用 SO Number、Line Number 及穩定的業務事件 ID。 （Legacy identity：`FR-CONF-019`。）
+
+### Acceptance criteria
+
+`FR-CONF-019` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-061 — Inventory 回傳的 Reservation 狀態為庫存承諾真相；SO 保存可查詢投影及 Reference，不得形成第二套可獨立修改的庫存賬
+
+### Statement
+
+Inventory 回傳的 Reservation 狀態為庫存承諾真相；SO 保存可查詢投影及 Reference，不得形成第二套可獨立修改的庫存賬。 （Legacy identity：`FR-CONF-020`。）
+
+### Acceptance criteria
+
+`FR-CONF-020` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-062 — 未有任何 Fulfilled Quantity 的 `CONFIRMED` SO 可撤回為 Draft，以便更正商業資料
+
+### Statement
+
+未有任何 Fulfilled Quantity 的 `CONFIRMED` SO 可撤回為 Draft，以便更正商業資料。 （Legacy identity：`FR-LIFE-001`。）
+
+### Acceptance criteria
+
+`FR-LIFE-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-063 — 撤回前必須成功釋放所有未消耗 Reservation；釋放失敗時不得進入 Draft
+
+### Statement
+
+撤回前必須成功釋放所有未消耗 Reservation；釋放失敗時不得進入 Draft。 （Legacy identity：`FR-LIFE-002`。）
+
+### Acceptance criteria
+
+`FR-LIFE-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-064 — 撤回後原有 Reservation／Backorder 結果失效；再次確認時按最新資料重新建立
+
+### Statement
+
+撤回後原有 Reservation／Backorder 結果失效；再次確認時按最新資料重新建立。 （Legacy identity：`FR-LIFE-003`。）
+
+### Acceptance criteria
+
+`FR-LIFE-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-065 — 已有任何 Fulfilled Quantity 後，Customer、Currency、Warehouse、已履約 SKU、已履約數量及歷史價格快照不可直接修改
+
+### Statement
+
+已有任何 Fulfilled Quantity 後，Customer、Currency、Warehouse、已履約 SKU、已履約數量及歷史價格快照不可直接修改。 （Legacy identity：`FR-LIFE-004`。）
+
+### Acceptance criteria
+
+`FR-LIFE-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-066 — `DRAFT` 可取消且不需庫存操作
+
+### Statement
+
+`DRAFT` 可取消且不需庫存操作。 （Legacy identity：`FR-LIFE-005`。）
+
+### Acceptance criteria
+
+`FR-LIFE-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-067 — `CONFIRMED` 且 Fulfilled Quantity 全為 0 時，可整張取消；必須輸入取消原因
+
+### Statement
+
+`CONFIRMED` 且 Fulfilled Quantity 全為 0 時，可整張取消；必須輸入取消原因。 （Legacy identity：`FR-LIFE-006`。）
+
+### Acceptance criteria
+
+`FR-LIFE-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-068 — 確認訂單取消前，系統必須釋放所有未消耗 Reservation 並取消全部 Backorder
+
+### Statement
+
+確認訂單取消前，系統必須釋放所有未消耗 Reservation 並取消全部 Backorder。 （Legacy identity：`FR-LIFE-007`。）
+
+### Acceptance criteria
+
+`FR-LIFE-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-069 — 已部分履約的訂單不可整張取消，只可關閉剩餘數量
+
+### Statement
+
+已部分履約的訂單不可整張取消，只可關閉剩餘數量。 （Legacy identity：`FR-LIFE-008`。）
+
+### Acceptance criteria
+
+`FR-LIFE-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-070 — 關閉剩餘數量必須輸入原因，釋放未消耗 Reservation 並取消未履約 Backorder
+
+### Statement
+
+關閉剩餘數量必須輸入原因，釋放未消耗 Reservation 並取消未履約 Backorder。 （Legacy identity：`FR-LIFE-009`。）
+
+### Acceptance criteria
+
+`FR-LIFE-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-071 — 關閉後保留已 Fulfilled Quantity、歷史快照及下游參考，Status 為 `CLOSED`
+
+### Statement
+
+關閉後保留已 Fulfilled Quantity、歷史快照及下游參考，Status 為 `CLOSED`。 （Legacy identity：`FR-LIFE-010`。）
+
+### Acceptance criteria
+
+`FR-LIFE-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-072 — 當全部有效 Ordered Quantity 已履約後，SO 進入 `COMPLETED`
+
+### Statement
+
+當全部有效 Ordered Quantity 已履約後，SO 進入 `COMPLETED`。 （Legacy identity：`FR-LIFE-011`。）
+
+### Acceptance criteria
+
+`FR-LIFE-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-073 — 取消、撤回及關閉須使用冪等業務事件，重試不得重複釋放庫存
+
+### Statement
+
+取消、撤回及關閉須使用冪等業務事件，重試不得重複釋放庫存。 （Legacy identity：`FR-LIFE-012`。）
+
+### Acceptance criteria
+
+`FR-LIFE-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-074 — 任何跨模組操作部分失敗時，使用者須看到目前實際狀態及可恢復指引，不得顯示虛假成功
+
+### Statement
+
+任何跨模組操作部分失敗時，使用者須看到目前實際狀態及可恢復指引，不得顯示虛假成功。 （Legacy identity：`FR-LIFE-013`。）
+
+### Acceptance criteria
+
+`FR-LIFE-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-075 — 狀態變更、原因、Actor、時間及關聯庫存事件均須寫入 Audit
+
+### Statement
+
+狀態變更、原因、Actor、時間及關聯庫存事件均須寫入 Audit。 （Legacy identity：`FR-LIFE-014`。）
+
+### Acceptance criteria
+
+`FR-LIFE-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-076 — 具 `sales.import` 的使用者可下載當前 CSV 模板、欄位說明及有效範例
+
+### Statement
+
+具 `sales.import` 的使用者可下載當前 CSV 模板、欄位說明及有效範例。 （Legacy identity：`FR-CSV-001`。）
+
+### Acceptance criteria
+
+`FR-CSV-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-077 — 模板必須有版本；系統須識別檔案版本並拒絕不支援版本
+
+### Statement
+
+模板必須有版本；系統須識別檔案版本並拒絕不支援版本。 （Legacy identity：`FR-CSV-002`。）
+
+### Acceptance criteria
+
+`FR-CSV-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-078 — 每個 CSV 行代表一個訂單明細，以 Source Order Key 把多行組成一張來源訂單
+
+### Statement
+
+每個 CSV 行代表一個訂單明細，以 Source Order Key 把多行組成一張來源訂單。 （Legacy identity：`FR-CSV-003`。）
+
+### Acceptance criteria
+
+`FR-CSV-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-079 — 同一 Source Order Key 的 Customer、Currency、Warehouse、Order Date、Channel Code 及 External Order ID 等表頭欄位必須一致
+
+### Statement
+
+同一 Source Order Key 的 Customer、Currency、Warehouse、Order Date、Channel Code 及 External Order ID 等表頭欄位必須一致。 （Legacy identity：`FR-CSV-004`。）
+
+### Acceptance criteria
+
+`FR-CSV-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-080 — CSV 必填資料至少包括 Source Order Key、Channel Code、External Order ID、Customer ID、Warehouse Code、Order Date、SKU Code、Quantity 及 Unit Selling Price
+
+### Statement
+
+CSV 必填資料至少包括 Source Order Key、Channel Code、External Order ID、Customer ID、Warehouse Code、Order Date、SKU Code、Quantity 及 Unit Selling Price。 （Legacy identity：`FR-CSV-005`。）
+
+### Acceptance criteria
+
+`FR-CSV-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-081 — 系統須檢查編碼、分隔符、欄位、日期、數值、空值、長度、枚舉及惡意公式內容
+
+### Statement
+
+系統須檢查編碼、分隔符、欄位、日期、數值、空值、長度、枚舉及惡意公式內容。 （Legacy identity：`FR-CSV-006`。）
+
+### Acceptance criteria
+
+`FR-CSV-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-082 — 預檢不得建立 SO 或 Reservation；須按來源訂單顯示 Valid、Invalid、Duplicate 及 Warning 結果
+
+### Statement
+
+預檢不得建立 SO 或 Reservation；須按來源訂單顯示 Valid、Invalid、Duplicate 及 Warning 結果。 （Legacy identity：`FR-CSV-007`。）
+
+### Acceptance criteria
+
+`FR-CSV-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-083 — 操作人員確認後才正式處理；有效訂單自動建立及確認，不需逐張人工操作
+
+### Statement
+
+操作人員確認後才正式處理；有效訂單自動建立及確認，不需逐張人工操作。 （Legacy identity：`FR-CSV-008`。）
+
+### Acceptance criteria
+
+`FR-CSV-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-084 — 一張來源訂單任何表頭或明細失敗時，整張訂單失敗，不得留下部分 SO、部分明細或 Reservation
+
+### Statement
+
+一張來源訂單任何表頭或明細失敗時，整張訂單失敗，不得留下部分 SO、部分明細或 Reservation。 （Legacy identity：`FR-CSV-009`。）
+
+### Acceptance criteria
+
+`FR-CSV-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-085 — 同一批次內其他有效來源訂單可繼續處理，不因單一失敗全部中止
+
+### Statement
+
+同一批次內其他有效來源訂單可繼續處理，不因單一失敗全部中止。 （Legacy identity：`FR-CSV-010`。）
+
+### Acceptance criteria
+
+`FR-CSV-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-086 — 成功訂單須執行與人工 SO 相同的 Customer、SKU、價格、Reservation 及 Backorder 規則
+
+### Statement
+
+成功訂單須執行與人工 SO 相同的 Customer、SKU、價格、Reservation 及 Backorder 規則。 （Legacy identity：`FR-CSV-011`。）
+
+### Acceptance criteria
+
+`FR-CSV-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-087 — `Channel Code + External Order ID` 對成功訂單必須唯一；同一檔案重傳或跨批次重傳不得重複開單
+
+### Statement
+
+`Channel Code + External Order ID` 對成功訂單必須唯一；同一檔案重傳或跨批次重傳不得重複開單。 （Legacy identity：`FR-CSV-012`。）
+
+### Acceptance criteria
+
+`FR-CSV-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-088 — 檔案雜湊可用於提示完整檔案重傳，但不得取代訂單級唯一性判斷
+
+### Statement
+
+檔案雜湊可用於提示完整檔案重傳，但不得取代訂單級唯一性判斷。 （Legacy identity：`FR-CSV-013`。）
+
+### Acceptance criteria
+
+`FR-CSV-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-089 — 先前失敗且未建立 SO 的 External Order ID 可在修正後重新提交；成功後即受唯一性約束
+
+### Statement
+
+先前失敗且未建立 SO 的 External Order ID 可在修正後重新提交；成功後即受唯一性約束。 （Legacy identity：`FR-CSV-014`。）
+
+### Acceptance criteria
+
+`FR-CSV-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-090 — 每次上傳最多支援 10,000 張來源訂單；超過上限須在建立背景工作前拒絕並提示拆檔
+
+### Statement
+
+每次上傳最多支援 10,000 張來源訂單；超過上限須在建立背景工作前拒絕並提示拆檔。 （Legacy identity：`FR-CSV-015`。）
+
+### Acceptance criteria
+
+`FR-CSV-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-091 — 大型檔案以背景工作處理，頁面須顯示排隊、處理中、完成、部分成功或失敗狀態
+
+### Statement
+
+大型檔案以背景工作處理，頁面須顯示排隊、處理中、完成、部分成功或失敗狀態。 （Legacy identity：`FR-CSV-016`。）
+
+### Acceptance criteria
+
+`FR-CSV-016` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-092 — 完成後須提供包含 Source Order Key、External Order ID、結果、SO Number、錯誤代碼及錯誤訊息的結果 CSV
+
+### Statement
+
+完成後須提供包含 Source Order Key、External Order ID、結果、SO Number、錯誤代碼及錯誤訊息的結果 CSV。 （Legacy identity：`FR-CSV-017`。）
+
+### Acceptance criteria
+
+`FR-CSV-017` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-093 — 匯出內容須防止 spreadsheet formula injection，並使用 UTF-8 及已公布格式
+
+### Statement
+
+匯出內容須防止 spreadsheet formula injection，並使用 UTF-8 及已公布格式。 （Legacy identity：`FR-CSV-018`。）
+
+### Acceptance criteria
+
+`FR-CSV-018` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-094 — 同一 Batch 的確認操作具冪等性；重複點擊不得啟動多個正式處理工作
+
+### Statement
+
+同一 Batch 的確認操作具冪等性；重複點擊不得啟動多個正式處理工作。 （Legacy identity：`FR-CSV-019`。）
+
+### Acceptance criteria
+
+`FR-CSV-019` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-095 — 系統須保留 Batch、每張來源訂單結果、Actor、時間及 Correlation ID，供查詢及 Audit
+
+### Statement
+
+系統須保留 Batch、每張來源訂單結果、Actor、時間及 Correlation ID，供查詢及 Audit。 （Legacy identity：`FR-CSV-020`。）
+
+### Acceptance criteria
+
+`FR-CSV-020` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-096 — 第一階段須定義穩定的 Sales Order Intake Contract，供日後每個平台 Adapter 對接
+
+### Statement
+
+第一階段須定義穩定的 Sales Order Intake Contract，供日後每個平台 Adapter 對接。 （Legacy identity：`FR-CH-001`。）
+
+### Acceptance criteria
+
+`FR-CH-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-097 — 平台專屬欄位轉換、簽名及認證由 Adapter 負責；Sales Order Core 只接收標準契約
+
+### Statement
+
+平台專屬欄位轉換、簽名及認證由 Adapter 負責；Sales Order Core 只接收標準契約。 （Legacy identity：`FR-CH-002`。）
+
+### Acceptance criteria
+
+`FR-CH-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-098 — 標準契約至少包含 Channel Code、External Order ID、Customer、Warehouse、Order Date、Currency 及一至多個訂單明細
+
+### Statement
+
+標準契約至少包含 Channel Code、External Order ID、Customer、Warehouse、Order Date、Currency 及一至多個訂單明細。 （Legacy identity：`FR-CH-003`。）
+
+### Acceptance criteria
+
+`FR-CH-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-099 — 每個請求必須有 Request ID／Idempotency Key 及可端到端追蹤的 Correlation ID
+
+### Statement
+
+每個請求必須有 Request ID／Idempotency Key 及可端到端追蹤的 Correlation ID。 （Legacy identity：`FR-CH-004`。）
+
+### Acceptance criteria
+
+`FR-CH-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-100 — 有效渠道訂單自動建立及確認，並執行相同 Reservation／Backorder 規則
+
+### Statement
+
+有效渠道訂單自動建立及確認，並執行相同 Reservation／Backorder 規則。 （Legacy identity：`FR-CH-005`。）
+
+### Acceptance criteria
+
+`FR-CH-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-101 — 驗證失敗的渠道訂單形成 Import Exception；不得建立部分 SO
+
+### Statement
+
+驗證失敗的渠道訂單形成 Import Exception；不得建立部分 SO。 （Legacy identity：`FR-CH-006`。）
+
+### Acceptance criteria
+
+`FR-CH-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-102 — 重送已成功的 Channel Code ＋ External Order ID 時，系統返回既有 SO 及結果，不再建立訂單
+
+### Statement
+
+重送已成功的 Channel Code ＋ External Order ID 時，系統返回既有 SO 及結果，不再建立訂單。 （Legacy identity：`FR-CH-007`。）
+
+### Acceptance criteria
+
+`FR-CH-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-103 — 相同 External Order ID 在不同 Channel 可視為不同來源訂單
+
+### Statement
+
+相同 External Order ID 在不同 Channel 可視為不同來源訂單。 （Legacy identity：`FR-CH-008`。）
+
+### Acceptance criteria
+
+`FR-CH-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-104 — 渠道接入須返回 Accepted、Duplicate、Validation Failed 或 Technical Retry 等可機器識別結果
+
+### Statement
+
+渠道接入須返回 Accepted、Duplicate、Validation Failed 或 Technical Retry 等可機器識別結果。 （Legacy identity：`FR-CH-009`。）
+
+### Acceptance criteria
+
+`FR-CH-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-105 — 可重試的技術失敗與不可重試的業務驗證錯誤必須清楚區分
+
+### Statement
+
+可重試的技術失敗與不可重試的業務驗證錯誤必須清楚區分。 （Legacy identity：`FR-CH-010`。）
+
+### Acceptance criteria
+
+`FR-CH-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-106 — 渠道訂單須保存來源參考，但不得在 SO 中保存平台密碼、Token 或完整認證 Payload
+
+### Statement
+
+渠道訂單須保存來源參考，但不得在 SO 中保存平台密碼、Token 或完整認證 Payload。 （Legacy identity：`FR-CH-011`。）
+
+### Acceptance criteria
+
+`FR-CH-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-107 — 未來新增 Adapter 不應要求修改 SO 核心業務規則；平台差異由 Adapter 映射處理
+
+### Statement
+
+未來新增 Adapter 不應要求修改 SO 核心業務規則；平台差異由 Adapter 映射處理。 （Legacy identity：`FR-CH-012`。）
+
+### Acceptance criteria
+
+`FR-CH-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-108 — 第一階段不要求向平台回傳發貨、取消或退款狀態，只保留可擴展的訂單結果邊界
+
+### Statement
+
+第一階段不要求向平台回傳發貨、取消或退款狀態，只保留可擴展的訂單結果邊界。 （Legacy identity：`FR-CH-013`。）
+
+### Acceptance criteria
+
+`FR-CH-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-109 — 系統須提供 My Recent Orders、All Active Orders、Outstanding Orders、Has Backorder 及 Finalized Orders 常用視圖
+
+### Statement
+
+系統須提供 My Recent Orders、All Active Orders、Outstanding Orders、Has Backorder 及 Finalized Orders 常用視圖。 （Legacy identity：`FR-INQ-001`。）
+
+### Acceptance criteria
+
+`FR-INQ-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-110 — Outstanding Orders 包括仍有未 Fulfilled、未 Released 或 Backorder 數量的非最終訂單
+
+### Statement
+
+Outstanding Orders 包括仍有未 Fulfilled、未 Released 或 Backorder 數量的非最終訂單。 （Legacy identity：`FR-INQ-002`。）
+
+### Acceptance criteria
+
+`FR-INQ-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-111 — 詳情頁須顯示來源、客戶及商品快照、金額、Reservation／Backorder、狀態歷史及下游參考
+
+### Statement
+
+詳情頁須顯示來源、客戶及商品快照、金額、Reservation／Backorder、狀態歷史及下游參考。 （Legacy identity：`FR-INQ-003`。）
+
+### Acceptance criteria
+
+`FR-INQ-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-112 — 使用者可從 Quotation 前往轉換後 SO，也可從 SO 返回來源 Quotation
+
+### Statement
+
+使用者可從 Quotation 前往轉換後 SO，也可從 SO 返回來源 Quotation。 （Legacy identity：`FR-INQ-004`。）
+
+### Acceptance criteria
+
+`FR-INQ-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-113 — 使用者可從 CSV／Channel SO 前往來源 Batch 或 Import Result
+
+### Statement
+
+使用者可從 CSV／Channel SO 前往來源 Batch 或 Import Result。 （Legacy identity：`FR-INQ-005`。）
+
+### Acceptance criteria
+
+`FR-INQ-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-114 — 列表匯出須套用與畫面相同的權限及篩選，不得繞過資料範圍
+
+### Statement
+
+列表匯出須套用與畫面相同的權限及篩選，不得繞過資料範圍。 （Legacy identity：`FR-INQ-006`。）
+
+### Acceptance criteria
+
+`FR-INQ-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-115 — 小型匯出可即時下載；大型匯出須使用背景工作並提供狀態及有限期下載
+
+### Statement
+
+小型匯出可即時下載；大型匯出須使用背景工作並提供狀態及有限期下載。 （Legacy identity：`FR-INQ-007`。）
+
+### Acceptance criteria
+
+`FR-INQ-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-116 — 匯出至少包括 SO Number、來源、客戶、日期、倉庫、狀態、金額及數量摘要
+
+### Statement
+
+匯出至少包括 SO Number、來源、客戶、日期、倉庫、狀態、金額及數量摘要。 （Legacy identity：`FR-INQ-008`。）
+
+### Acceptance criteria
+
+`FR-INQ-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-117 — Audit 須記錄建立、修改、確認、撤回、取消、關閉、轉單、匯入、重試、Reservation 及歸檔事件
+
+### Statement
+
+Audit 須記錄建立、修改、確認、撤回、取消、關閉、轉單、匯入、重試、Reservation 及歸檔事件。 （Legacy identity：`FR-INQ-009`。）
+
+### Acceptance criteria
+
+`FR-INQ-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-118 — 具查看權限的使用者可看業務狀態歷史；只有獲授權運維人員可看技術錯誤詳情
+
+### Statement
+
+具查看權限的使用者可看業務狀態歷史；只有獲授權運維人員可看技術錯誤詳情。 （Legacy identity：`FR-INQ-010`。）
+
+### Acceptance criteria
+
+`FR-INQ-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-119 — 使用者不得修改 Audit Event 或已確認的歷史快照
+
+### Statement
+
+使用者不得修改 Audit Event 或已確認的歷史快照。 （Legacy identity：`FR-INQ-011`。）
+
+### Acceptance criteria
+
+`FR-INQ-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-120 — 查詢結果須明確標示資料來自 Active 或 Archive，避免使用者誤以為歷史資料遺失
+
+### Statement
+
+查詢結果須明確標示資料來自 Active 或 Archive，避免使用者誤以為歷史資料遺失。 （Legacy identity：`FR-INQ-012`。）
+
+### Acceptance criteria
+
+`FR-INQ-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-121 — 系統須每月於可設定的離峰時段執行銷售訂單歸檔
+
+### Statement
+
+系統須每月於可設定的離峰時段執行銷售訂單歸檔。 （Legacy identity：`FR-ARC-001`。）
+
+### Acceptance criteria
+
+`FR-ARC-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-122 — 只有 `COMPLETED`、`CLOSED` 或 `CANCELLED` SO 才可成為歸檔候選
+
+### Statement
+
+只有 `COMPLETED`、`CLOSED` 或 `CANCELLED` SO 才可成為歸檔候選。 （Legacy identity：`FR-ARC-002`。）
+
+### Acceptance criteria
+
+`FR-ARC-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-123 — 候選 SO 的最後業務更新時間必須早於執行日 24 個月
+
+### Statement
+
+候選 SO 的最後業務更新時間必須早於執行日 24 個月。 （Legacy identity：`FR-ARC-003`。）
+
+### Acceptance criteria
+
+`FR-ARC-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-124 — 仍有 Reservation、Backorder、未完成 Fulfillment 或其他已接入下游事項的 SO 不得歸檔
+
+### Statement
+
+仍有 Reservation、Backorder、未完成 Fulfillment 或其他已接入下游事項的 SO 不得歸檔。 （Legacy identity：`FR-ARC-004`。）
+
+### Acceptance criteria
+
+`FR-ARC-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-125 — 歸檔資格須在真正搬移前再次檢查，避免候選產生後狀態已改變
+
+### Statement
+
+歸檔資格須在真正搬移前再次檢查，避免候選產生後狀態已改變。 （Legacy identity：`FR-ARC-005`。）
+
+### Acceptance criteria
+
+`FR-ARC-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-126 — SO Header、Lines、來源連結、Quotation Conversion 摘要、必要狀態歷史及 Audit 關聯須一併歸檔
+
+### Statement
+
+SO Header、Lines、來源連結、Quotation Conversion 摘要、必要狀態歷史及 Audit 關聯須一併歸檔。 （Legacy identity：`FR-ARC-006`。）
+
+### Acceptance criteria
+
+`FR-ARC-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-127 — 系統須先寫入 Archive Store 並完成筆數及完整性校驗，才可從 Active Store 移除
+
+### Statement
+
+系統須先寫入 Archive Store 並完成筆數及完整性校驗，才可從 Active Store 移除。 （Legacy identity：`FR-ARC-007`。）
+
+### Acceptance criteria
+
+`FR-ARC-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-128 — 歸檔不得重新計算金額、數量、狀態或快照，也不得改變訂單業務結果
+
+### Statement
+
+歸檔不得重新計算金額、數量、狀態或快照，也不得改變訂單業務結果。 （Legacy identity：`FR-ARC-008`。）
+
+### Acceptance criteria
+
+`FR-ARC-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-129 — Archive Batch 須分批處理、可安全重跑及可從中斷點繼續，避免長時間鎖定日常交易
+
+### Statement
+
+Archive Batch 須分批處理、可安全重跑及可從中斷點繼續，避免長時間鎖定日常交易。 （Legacy identity：`FR-ARC-009`。）
+
+### Acceptance criteria
+
+`FR-ARC-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-130 — 同一 SO 不得重複歸檔；重跑已完成批次不得產生重複資料
+
+### Statement
+
+同一 SO 不得重複歸檔；重跑已完成批次不得產生重複資料。 （Legacy identity：`FR-ARC-010`。）
+
+### Acceptance criteria
+
+`FR-ARC-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-131 — 單筆失敗須記錄原因並留待重試；不得因少量失敗使已校驗成功資料回到不一致狀態
+
+### Statement
+
+單筆失敗須記錄原因並留待重試；不得因少量失敗使已校驗成功資料回到不一致狀態。 （Legacy identity：`FR-ARC-011`。）
+
+### Acceptance criteria
+
+`FR-ARC-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-132 — 歸檔 SO 至少保存 7 年；正式銷毀政策不屬第一階段，期間不得自動刪除
+
+### Statement
+
+歸檔 SO 至少保存 7 年；正式銷毀政策不屬第一階段，期間不得自動刪除。 （Legacy identity：`FR-ARC-012`。）
+
+### Acceptance criteria
+
+`FR-ARC-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-133 — 使用者可按 SO Number、Customer、External Order ID、Order Date、Status 及 Channel 查詢 Archive
+
+### Statement
+
+使用者可按 SO Number、Customer、External Order ID、Order Date、Status 及 Channel 查詢 Archive。 （Legacy identity：`FR-ARC-013`。）
+
+### Acceptance criteria
+
+`FR-ARC-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-134 — Archive 結果為唯讀，可查看詳情、Audit 摘要及匯出，不可修改、取消或重新確認
+
+### Statement
+
+Archive 結果為唯讀，可查看詳情、Audit 摘要及匯出，不可修改、取消或重新確認。 （Legacy identity：`FR-ARC-014`。）
+
+### Acceptance criteria
+
+`FR-ARC-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-135 — Active Search 找不到資料時，可提供明確入口搜尋 Archive，但不得在每個常用列表自動掃描整個 Archive
+
+### Statement
+
+Active Search 找不到資料時，可提供明確入口搜尋 Archive，但不得在每個常用列表自動掃描整個 Archive。 （Legacy identity：`FR-ARC-015`。）
+
+### Acceptance criteria
+
+`FR-ARC-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-136 — 大範圍 Archive 匯出須使用背景工作，並記錄發起人、條件、筆數及下載時間
+
+### Statement
+
+大範圍 Archive 匯出須使用背景工作，並記錄發起人、條件、筆數及下載時間。 （Legacy identity：`FR-ARC-016`。）
+
+### Acceptance criteria
+
+`FR-ARC-016` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-137 — 每次 Archive Batch 須產生候選、成功、跳過、失敗、耗時及校驗報告，供運維監察
+
+### Statement
+
+每次 Archive Batch 須產生候選、成功、跳過、失敗、耗時及校驗報告，供運維監察。 （Legacy identity：`FR-ARC-017`。）
+
+### Acceptance criteria
+
+`FR-ARC-017` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-138 — 歸檔工作失敗不得阻止新訂單、訂單查詢、確認或 Fulfillment 的正常運作
+
+### Statement
+
+歸檔工作失敗不得阻止新訂單、訂單查詢、確認或 Fulfillment 的正常運作。 （Legacy identity：`FR-ARC-018`。）
+
+### Acceptance criteria
+
+`FR-ARC-018` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-139 — 活躍及歸檔資料的備份、復原及完整性驗證須納入營運程序
+
+### Statement
+
+活躍及歸檔資料的備份、復原及完整性驗證須納入營運程序。 （Legacy identity：`FR-ARC-019`。）
+
+### Acceptance criteria
+
+`FR-ARC-019` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## FR-140 — 未來下游模組接入後，Open Downstream Matter 判定須按正式契約擴充，不能只依 Header Status
+
+### Statement
+
+未來下游模組接入後，Open Downstream Matter 判定須按正式契約擴充，不能只依 Header Status。 （Legacy identity：`FR-ARC-020`。）
+
+### Acceptance criteria
+
+`FR-ARC-020` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-001 — Approximately 10,000 SO/day and 24 months/7.3 million Active headers; capacity dataset must model approved line distribution.
+
+### Statement
+
+Approximately 10,000 SO/day and 24 months/7.3 million Active headers; capacity dataset must model approved line distribution. （來源／Provenance：NFR-PERF-001 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-002 — Normal Active common-list and exact lookup p95 <= 2 seconds.
+
+### Statement
+
+Normal Active common-list and exact lookup p95 <= 2 seconds. （來源／Provenance：NFR-PERF-002 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-003 — Draft save/confirm up to 100 lines p95 <= 3 seconds excluding dependency failure.
+
+### Statement
+
+Draft save/confirm up to 100 lines p95 <= 3 seconds excluding dependency failure. （來源／Provenance：NFR-PERF-003 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-004 — Valid 10,000-order CSV batch completes within 30 minutes in a recorded standard environment.
+
+### Statement
+
+Valid 10,000-order CSV batch completes within 30 minutes in a recorded standard environment. （來源／Provenance：NFR-PERF-004 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-005 — At least 50 concurrent interactive users plus CSV/Channel/Archive background work.
+
+### Statement
+
+At least 50 concurrent interactive users plus CSV/Channel/Archive background work. （來源／Provenance：NFR-PERF-005 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-006 — Archive exact lookup p95 <= 3 seconds; bounded date-range lookup p95 <= 5 seconds.
+
+### Statement
+
+Archive exact lookup p95 <= 3 seconds; bounded date-range lookup p95 <= 5 seconds. （來源／Provenance：NFR-PERF-006 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-007 — Active query targets remain valid at the full 24-month dataset, not only on empty/small data.
+
+### Statement
+
+Active query targets remain valid at the full 24-month dataset, not only on empty/small data. （來源／Provenance：NFR-PERF-007 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-008 — Large exports/imports/archives use bounded streaming/background work and do not load entire results into application memory.
+
+### Statement
+
+Large exports/imports/archives use bounded streaming/background work and do not load entire results into application memory. （來源／Provenance：NFR-PERF-008, §13.3 | EXISTING。）
+
+### Acceptance criteria
+
+`NFR-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-009 — Create/confirm/convert/import/cancel/release/archive operations are idempotent and converge after retry or unknown outcome without duplicate effects.
+
+### Statement
+
+Create/confirm/convert/import/cancel/release/archive operations are idempotent and converge after retry or unknown outcome without duplicate effects. （來源／Provenance：§13.2 | ENHANCED。）
+
+### Acceptance criteria
+
+`NFR-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-010 — Import, export, backorder and archive jobs safely resume after restart; an Archive outage must not block Active Sales operations.
+
+### Statement
+
+Import, export, backorder and archive jobs safely resume after restart; an Archive outage must not block Active Sales operations. （來源／Provenance：§13.2–13.3 | ENHANCED。）
+
+### Acceptance criteria
+
+`NFR-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-011 — Metrics/logs/alerts expose throughput, latency, duplicates, queue age, reservation/backorder and archive failure using bounded non-sensitive labels.
+
+### Statement
+
+Metrics/logs/alerts expose throughput, latency, duplicates, queue age, reservation/backorder and archive failure using bounded non-sensitive labels. （來源／Provenance：§13.4 | ENHANCED。）
+
+### Acceptance criteria
+
+`NFR-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-012 — Intake contracts/templates are versioned and backward-compatible; platform adapters do not fork Sales core rules.
+
+### Statement
+
+Intake contracts/templates are versioned and backward-compatible; platform adapters do not fork Sales core rules. （來源／Provenance：§13.5 | ENHANCED。）
+
+### Acceptance criteria
+
+`NFR-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-013 — UI follows shared design, keyboard operation and non-colour-only state; supported viewports are 375/768/1024/1440 px and target WCAG 2.1 AA.
+
+### Statement
+
+UI follows shared design, keyboard operation and non-colour-only state; supported viewports are 375/768/1024/1440 px and target WCAG 2.1 AA. （來源／Provenance：§13.6; design §6.8 | ENHANCED。）
+
+### Acceptance criteria
+
+`NFR-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-014 — Production Recovery Time Objective is <= 4 hours, demonstrated by a timed isolated recovery exercise.
+
+### Statement
+
+Production Recovery Time Objective is <= 4 hours, demonstrated by a timed isolated recovery exercise. （來源／Provenance：User decision | NEW — USER APPROVED 2026-09-10。）
+
+### Acceptance criteria
+
+`NFR-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-015 — Production Recovery Point Objective is <= 15 minutes, demonstrated from backup/log evidence and restored-data reconciliation.
+
+### Statement
+
+Production Recovery Point Objective is <= 15 minutes, demonstrated from backup/log evidence and restored-data reconciliation. （來源／Provenance：User decision | NEW — USER APPROVED 2026-09-10。）
+
+### Acceptance criteria
+
+`NFR-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## NFR-016 — Active and Archive data, source keys and operations are backed up/restorable; Archive is retained at least seven years and has no automatic purge in Phase 1.
+
+### Statement
+
+Active and Archive data, source keys and operations are backed up/restorable; Archive is retained at least seven years and has no automatic purge in Phase 1. （來源／Provenance：§13.3, FR-ARC-012/019 | EXISTING / ENHANCED。）
+
+### Acceptance criteria
+
+`NFR-016` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-001 — Every Sales query and command enforces server-side authentication and explicit permission.
+
+### Statement
+
+Every Sales query and command enforces server-side authentication and explicit permission. （來源／Provenance：§11.1 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-001` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-002 — Parent/child ownership and data-scope checks prevent IDOR; unauthorized and absent targets do not leak existence.
+
+### Statement
+
+Parent/child ownership and data-scope checks prevent IDOR; unauthorized and absent targets do not leak existence. （來源／Provenance：§11.1 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-002` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-003 — Channel/service identities use least-privilege purpose allowlists and cannot call management APIs.
+
+### Statement
+
+Channel/service identities use least-privilege purpose allowlists and cannot call management APIs. （來源／Provenance：§11.1 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-003` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-004 — Background work records initiating business actor and actual system actor.
+
+### Statement
+
+Background work records initiating business actor and actual system actor. （來源／Provenance：§11.1 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-004` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-005 — UI/API/CSV/Adapter data is untrusted and receives type, length, enum and business validation.
+
+### Statement
+
+UI/API/CSV/Adapter data is untrusted and receives type, length, enum and business validation. （來源／Provenance：§11.2 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-005` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-006 — Uploads enforce file/row/order/encoding/type/size limits and safe temporary-file handling.
+
+### Statement
+
+Uploads enforce file/row/order/encoding/type/size limits and safe temporary-file handling. （來源／Provenance：§11.2; design §5.7–5.8 ENHANCED。）
+
+### Acceptance criteria
+
+`SEC-006` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-007 — UI, logs and spreadsheet output prevent XSS and formula injection while preserving safe Unicode.
+
+### Statement
+
+UI, logs and spreadsheet output prevent XSS and formula injection while preserving safe Unicode. （來源／Provenance：§11.2 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-007` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-008 — Public errors never expose SQL, stack traces, credentials, tokens, private paths or raw sensitive payloads.
+
+### Statement
+
+Public errors never expose SQL, stack traces, credentials, tokens, private paths or raw sensitive payloads. （來源／Provenance：§11.2 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-008` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-009 — Sales data is minimized: no bank data, platform secrets or unnecessary address data is stored in the SO aggregate.
+
+### Statement
+
+Sales data is minimized: no bank data, platform secrets or unnecessary address data is stored in the SO aggregate. （來源／Provenance：§11.3 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-009` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-010 — Platform credentials are held by an approved secure integration configuration, not orders/exceptions.
+
+### Statement
+
+Platform credentials are held by an approved secure integration configuration, not orders/exceptions. （來源／Provenance：§11.3 EXISTING。）
+
+### Acceptance criteria
+
+`SEC-010` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-011 — Audit, confirmed snapshots and Archive records are immutable to ordinary business users.
+
+### Statement
+
+Audit, confirmed snapshots and Archive records are immutable to ordinary business users. （來源／Provenance：§11.3, FR-INQ-011, FR-ARC-014 ENHANCED。）
+
+### Acceptance criteria
+
+`SEC-011` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-012 — Exports enforce the initiating user's scope/filters, owner-safe download and audit metadata.
+
+### Statement
+
+Exports enforce the initiating user's scope/filters, owner-safe download and audit metadata. （來源／Provenance：§11.3, FR-INQ-006–008 ENHANCED。）
+
+### Acceptance criteria
+
+`SEC-012` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-013 — Every write/worker continuation revalidates the actor/service identity inside the command transaction.
+
+### Statement
+
+Every write/worker continuation revalidates the actor/service identity inside the command transaction. （來源／Provenance：design §8.2 ENHANCED。）
+
+### Acceptance criteria
+
+`SEC-013` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-014 — Private downloads use safe filenames, `no-store/private`, `nosniff`, expiry and authorization at download time.
+
+### Statement
+
+Private downloads use safe filenames, `no-store/private`, `nosniff`, expiry and authorization at download time. （來源／Provenance：design §5.1 ENHANCED。）
+
+### Acceptance criteria
+
+`SEC-014` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
+
+## SEC-015 — Idempotency/event keys bind to canonical payload hashes; same key/different payload conflicts without side effect.
+
+### Statement
+
+Idempotency/event keys bind to canonical payload hashes; same key/different payload conflicts without side effect. （來源／Provenance：design §2.7/5.1 ENHANCED。）
+
+### Acceptance criteria
+
+`SEC-015` 所述的可觀察結果在已批准基線上成立，並由每一條對應的 mandatory 技術測試及 UAT 案例驗證通過。缺少測試、零發現案例、被 skip 的案例或過時證據一律視為未通過。
+
+### Failure behavior
+
+非法、未授權、過時、衝突或不完整的輸入不得產生部分 Quotation、部分 Sales Order、部分 Reservation、部分 Backorder、部分 Intake 或部分 Archive 效果；呼叫方取得穩定且可行動的業務結果及下一步，必要的 Audit 證據保留且不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或內部路徑。
