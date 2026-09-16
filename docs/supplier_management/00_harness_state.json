@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 78,
+  "revision": 79,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -12,7 +12,7 @@
     "design": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
     "plan": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
     "code_commit": "681b3aed21480ceecd0c4bb5494c30a0de86b533",
-    "source_fingerprint": "5134c047dabcfcd9c603b55ad50b4a90bb4839d1c62277b5f36366b0e4ca8eab",
+    "source_fingerprint": "a54d1623128b895330f686cd9406eea6755f82c1ea9e6442b220577b9ae33a4a",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-defect-001-002",
     "default_commit": "aa7d19276cb12c4375eecdf205b72051d7f03b65",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -540,6 +540,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-007",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (DEF-001/DEF-002 remediation)",
+      "reviewer": "agent-skills:code-reviewer separate-agent instance (fresh context, read-only)",
+      "reviewed_baseline": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
+      "source_ref": "docs/supplier_management/implementation/04_rev_007_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -762,6 +774,28 @@
       "source_ref": "origin/main had advanced from b3e5aa9 to aa7d1927 (PR #105, Item Management) while this branch was in progress, so the earlier developer evidence at fingerprint 13627f6c was invalidated and re-run. origin/main was merged into codex/supplier-defect-001-002 with no conflicts; the 165 changed paths touch no Supplier, Business Master, index.js, permission catalogue, migration or package file. npm ci reinstalled dependencies without modifying package-lock.json. On merged commit 681b3aed: npm run lint exit 0; npm run build --workspace client exit 0; supplier-phase-001-server JUnit 159 testcases / 0 failures / 0 skipped against authorized test-only erp_dev with DB_INTEGRATION_TESTS=1; supplier-phase-001-client JUnit 40 / 0 / 0. Browser validation was performed on the pre-merge source and not repeated, since the merge changed no Supplier or shared runtime file.",
       "actor": "Claude Opus 5 via npm, node:test and vitest",
       "observed_at": "2026-09-16T02:49:45Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "GitHub Actions CI on PR #106 candidate 235c202",
+      "code_commit": "235c2024bbdd901a718f8aa3b56aa8d2fc9748cf",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "5134c047dabcfcd9c603b55ad50b4a90bb4839d1c62277b5f36366b0e4ca8eab",
+      "status": "PASS",
+      "source_ref": "gh run 35049576822 on head 235c202: Lint, Build frontend and Dependency audit passed first time. Test (server + client, MySQL integration) FAILED once on server/test/integration/itemCreate.integration.test.js:946 with IDEMPOTENCY_IN_PROGRESS (409 instead of 201 replaying an idempotency key) — an Item Management test outside this module boundary, which passes locally 30/30 on this branch and passes on origin/main aa7d1927. The job was re-run unchanged and passed, giving 4/4 and mergeStateStatus CLEAN. A re-run pass proves intermittency, NOT correctness: the underlying Item ordering gap (HTTP 201 flushed before the idempotency record is marked complete) is unresolved and outside Supplier scope. Recorded as DEF-012.",
+      "actor": "GitHub Actions, observed by Claude Opus 5 via gh",
+      "observed_at": "2026-09-16T03:15:41Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-007 MEDIUM resolution: real-SQL regression coverage for DEF-002 proven to discriminate",
+      "code_commit": "235c2024bbdd901a718f8aa3b56aa8d2fc9748cf",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "a54d1623128b895330f686cd9406eea6755f82c1ea9e6442b220577b9ae33a4a",
+      "status": "PASS",
+      "source_ref": "REV-007 demonstrated that the DEF-002 unit test could not detect the defect it was written for: its fake derives the filter from the implementation own bound params and never inspects the SQL, so a broken hybrid LIKE-OR-IN implementation passed 8/8. The author reproduced that experiment and confirmed it. supplierManagement.integration.test.js now inserts a supplier.contact.create audit row via pool.query between the activate and its replay. Discrimination proven by running both implementations: correct IN(...) gives integration 5/5 pass and unit 8/8 pass; the broken LIKE-OR-IN hybrid gives integration 1 FAILURE and unit 8/8 pass. The broken implementation was applied only transiently and restored with git checkout; grep confirms no LIKE remains. Full re-run after the change: npm run lint exit 0 and supplier-phase-001-server 159 testcases / 0 failures / 0 skipped. The remediation doc claim that the unit fake exercised the filtering was wrong and is corrected in 04_rev_007_independent_review.md.",
+      "actor": "Claude Opus 5 via node:test",
+      "observed_at": "2026-09-16T03:15:41Z"
     }
   ],
   "pending_decisions": [
@@ -923,6 +957,23 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-16: \"(b)跑playwright驗證\" — remediate the two user-visible functional bugs DEF-001 and DEF-002, defer DEF-003..DEF-008 under a recorded RISK approval, and close the browser-validation gap with Playwright."
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "question": "REV-007 returned CHANGES_REQUESTED with 0 Critical and 0 High. It confirmed both product fixes correct, the merge inert, and the author rejection of the REV-006 secondary finding right. Its single MEDIUM was a gap in the author own test coverage, now closed and proven to discriminate. Two new LOW findings DEF-010 and DEF-011 are recorded and unfixed. Separately DEF-012 is an Item Management idempotency ordering race outside this module boundary, surfaced by a CI flake on this PR. Questions: (a) may the same reviewer re-verify the candidate to produce an APPROVED review so Checkpoint H can close; (b) should DEF-010 and DEF-011 be fixed now or deferred under a risk approval; (c) how should DEF-012 be routed, since server/src/services/idempotency and server/src/modules/item are outside Supplier allowed_write_paths?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-024",
+        "REV-007",
+        "DEF-009",
+        "DEF-010",
+        "DEF-011",
+        "DEF-012",
+        "PHASE-002"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -1203,7 +1254,8 @@
     "docs/supplier_management/implementation/00_implementation_readiness.md",
     "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
     "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
-    "docs/supplier_management/implementation/03_def_001_002_remediation.md"
+    "docs/supplier_management/implementation/03_def_001_002_remediation.md",
+    "docs/supplier_management/implementation/04_rev_007_independent_review.md"
   ],
   "defects": [
     {
@@ -1217,7 +1269,8 @@
         "REV-006"
       ],
       "closure_evidence": [
-        "docs/supplier_management/implementation/03_def_001_002_remediation.md"
+        "docs/supplier_management/implementation/03_def_001_002_remediation.md",
+        "docs/supplier_management/implementation/04_rev_007_independent_review.md"
       ],
       "risk_approval_id": null
     },
@@ -1232,7 +1285,8 @@
         "REV-006"
       ],
       "closure_evidence": [
-        "docs/supplier_management/implementation/03_def_001_002_remediation.md"
+        "docs/supplier_management/implementation/03_def_001_002_remediation.md",
+        "docs/supplier_management/implementation/04_rev_007_independent_review.md"
       ],
       "risk_approval_id": null
     },
@@ -1310,7 +1364,55 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": "APPROVAL-HD-012-RISK"
+    },
+    {
+      "id": "DEF-009",
+      "severity": "MEDIUM",
+      "status": "RETEST",
+      "source_ids": [
+        "REV-007",
+        "server/test/supplierLifecycleService.test.js:19",
+        "DEF-002"
+      ],
+      "closure_evidence": [
+        "docs/supplier_management/implementation/04_rev_007_independent_review.md"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-010",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-007",
+        "server/src/modules/supplier/supplierValidation.js:68",
+        "DEF-001"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-011",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-007",
+        "server/src/modules/supplier/SupplierAdminService.js:29"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-012",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "server/test/integration/itemCreate.integration.test.js:946",
+        "server/src/services/idempotency/IdempotencyService.js:233"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #106 is open. Observe required CI on the exact final pushed candidate and obtain an actual review of it, then re-run the independent review to try to replace REV-006 CHANGES_REQUESTED with an APPROVED review bound to design baseline dcb74d3c. Checkpoint H and TASK-024 stay open until that APPROVED review exists. Do not start TASK-025, and do not merge PR #106 before CI is green and a real review exists."
+  "next_safe_action": "DECISION_REQUIRED on HD-013. REV-007 is CHANGES_REQUESTED with 0 Critical / 0 High; its one MEDIUM (DEF-009) is fixed and the fix is proven to discriminate a broken implementation. DEF-010, DEF-011 and DEF-012 are OPEN and unfixed. PR #106 has green CI on 235c202 but the test-coverage commit is not yet pushed, so CI must run again on the new head. Checkpoint H and TASK-024 stay open until an APPROVED review bound to design baseline dcb74d3c exists. Do not merge PR #106 and do not start TASK-025."
 }

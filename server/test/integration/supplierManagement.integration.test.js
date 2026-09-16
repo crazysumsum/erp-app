@@ -295,8 +295,18 @@ integrationTest("Supplier lifecycle is atomic, idempotent at the target state an
 
   const active = await service.activateSupplier({ ...command, version: created.version });
   assert.equal(active.status, "active");
+  // DEF-002: every audit action this module writes begins with "supplier.", so a
+  // child-record write landing after the transition must not be mistaken for the
+  // latest lifecycle action. Replay detection has to see supplier.activate here,
+  // not this row. Inserted directly so the assertion covers the SQL filter itself
+  // rather than whatever params the implementation happens to bind.
+  await pool.query(
+    "INSERT INTO supplier_audit_logs (occurred_at, actor_user_id, actor_username, action, target_type, target_id, supplier_id, target_label) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [Date.now(), actorId, "integration", "supplier.contact.create", "supplier_contact", null, created.id, `LIFE-${suffix}`]
+  );
   const replay = await service.activateSupplier({ ...command, version: created.version });
   assert.equal(replay.version, active.version);
+  assert.equal(replay.status, "active");
   const suspended = await service.suspendSupplier({ ...command, version: active.version });
   const reactivated = await service.reactivateSupplier({ ...command, version: suspended.version });
   const blocked = await service.blockSupplier({ ...command, version: reactivated.version });
@@ -308,7 +318,7 @@ integrationTest("Supplier lifecycle is atomic, idempotent at the target state an
 
   const [audits] = await pool.query("SELECT action FROM supplier_audit_logs WHERE supplier_id = ? ORDER BY id", [created.id]);
   assert.deepEqual(audits.map((row) => row.action), [
-    "supplier.create", "supplier.activate", "supplier.suspend", "supplier.reactivate",
+    "supplier.create", "supplier.activate", "supplier.contact.create", "supplier.suspend", "supplier.reactivate",
     "supplier.block", "supplier.unblock", "supplier.archive", "supplier.restore"
   ]);
 
