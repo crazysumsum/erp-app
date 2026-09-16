@@ -2,14 +2,14 @@
 
 ## Scope
 
-`IMPLEMENT` is authorized by `ERP Product Owner (Sam)` in the active Codex task on 2026-09-14. This stacked branch carries `TASK-038` through `TASK-041` after its exact `TASK-037` parent; it does not authorize release, formal Technical Acceptance, business UAT, deployment, or a CI/merge waiver.
+`IMPLEMENT` is authorized by `ERP Product Owner (Sam)` in the active Codex task. This branch carries the aligned Item Management implementation through the current `TASK-044` developer candidate; it does not authorize release, formal Technical Acceptance, business UAT, deployment, or a CI/merge waiver.
 
 ## Baseline and isolation
 
-- Default branch / observed remote baseline: `origin/main` at `5ecc59968f660a0a76d8a481dfb23666752e1a1d`.
+- Default branch / observed remote baseline: `origin/main` at `e4aed631ce1d3eda34f4727a36d656462d7f0db4` (refreshed 2026-09-16).
 - Topic branch / worktree: `codex/item-management-task-038` / `/private/tmp/erp-item-management-task-038`.
-- Approved stacked parent / merge order: `03f70112448b38ec5fe4f6782e87c3e69ace71cc` (`TASK-037`) → `TASK-038`; the parent must merge before this dependent branch.
-- Runtime: developer checks use the existing local test configuration only. No schema migration, external service or production data action is in scope.
+- Branch synchronization: merge commit `9f4d5c9ba8a790a26da8c3e74d2d7d466633dd15` incorporates that exact `origin/main` without conflicts.
+- Runtime: developer checks use local isolated resources only. TASK-044 uses source `item_recovery_tc016_20260915`, restored target `item_recovery_tc016_20260915_run1`, and separate restored media/import roots; `erp_dev` is preserved and no production data or deployment action is in scope.
 
 ## Task readiness
 
@@ -21,10 +21,12 @@
 
 `TASK-041` is implementation-complete with developer evidence. Import execution now uses a connection-aware Item domain service rather than worker-owned aggregate SQL, re-authorizes the confirming actor, propagates the confirmed reason into per-aggregate audit, and commits aggregate/audit/completed state in one transaction. Failure status uses lease-owner fencing, including an observed two-worker takeover race where the stale worker returns `lost_lease` without changing the newer owner's completed result. Focused unit checks and all 21 true-MySQL import cases pass; the full server regression reports 1,448 tests: 1,447 pass, 0 fail and one explicit performance-suite skip. A separate bounded 10,000-row performance run also passes. `REV-008` records independent review; CI and formal acceptance remain separate gates.
 
+`TASK-044` now has the fail-closed recovery adapter, CLI, unprovisioned repository trust policy, unit coverage and a real local-MySQL integration test. On candidate `be9244ef9f51b6b6775fe916e22d0bd141a93fc2`, lint and production client build pass; client tests report 57 files / 492 tests passed; recovery-focused tests report 10/10 passed; the complete server regression reports 1,497 total / 1,255 passed / 0 failed / 242 environment-gated skips; and the separately restored-schema MySQL recovery integration reports 1/1 passed. These are developer checks only. The retained manifest is still unsigned, the trust policy remains `UNPROVISIONED`, and formal `TC-016` has not run.
+
 ## Known limits
 
 - Item-level Attribute write/update and arbitrary typed SKU Variant values remain outside TASK-037.
 - TASK-042 documentation reconciliation is complete by maintainer decision: T23's index omission now matches its detailed implementation/Git evidence while retaining the original source hash and pre/post counts.
-- TASK-043 and TASK-044 remain pending under their own dependencies and gates. TASK-039 through TASK-041 have current developer implementation evidence and independent review, but still require CI and formal acceptance gates.
+- TASK-043 remains dependency-blocked: refreshed `origin/main` contains no real downstream module that owns a reference to `item_skus`, so an honest provider/registry integration cannot yet be implemented. TASK-044 remains in progress only for independent signing, trust-policy approval, formal `TC-016`, CI and human sign-offs.
 - `DEC-025` (Product Owner Sam, 2026-09-14): `item.mgmt` now explicitly grants complete Item Management API read/write access. Read policies accept `item.view` or `item.mgmt`; write policies remain `item.mgmt`. This resolves the earlier SKU-create page/read-projection conflict without a write-only alternate UX.
-- A later merge candidate still requires developer self-test, current CI and required code review; none has been created.
+- The current candidate has developer self-test evidence and existing independent Item source review (`REV-013`); current CI, PR review and exact-baseline Product Owner approval remain required before formal verification or merge.

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 47,
+  "revision": 62,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,25 +9,25 @@
   "current_phase": "PHASE-006",
   "current_task": "TASK-044",
   "baseline": {
-    "design": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
-    "plan": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
-    "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
-    "source_fingerprint": "d29d33de8231c84a5e72c12aee4d27257f56fe570471604555ce3d08c61a58bd",
+    "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
+    "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
+    "code_commit": "be9244ef9f51b6b6775fe916e22d0bd141a93fc2",
+    "source_fingerprint": "2b5f8a2a3255369b9313dc2fac6ab11eb9a08f6b3b51c0ded0c16be68c1f39d9",
     "worktree": "/private/tmp/erp-item-management-task-038",
-    "default_commit": "5ecc59968f660a0a76d8a481dfb23666752e1a1d",
-    "mode_entry_commit": "00ce7271b17f31383a9662754eab56c85ef98987"
+    "default_commit": "e4aed631ce1d3eda34f4727a36d656462d7f0db4",
+    "mode_entry_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca"
   },
   "runtime": {
     "instance_id": "ITEM-TASK044-LOCAL-20260914",
-    "owner": "Primary IMPLEMENT remediation agent; DEF-106 regression complete",
+    "owner": "Primary IMPLEMENT agent; TASK-044 adapter developer checks complete",
     "resources": {
       "workspace": "/private/tmp/erp-item-management-task-038",
-      "mysql-schema": "erp_dev@127.0.0.1:3306; user-authorized local synthetic-data test database; serialized by ITEM-TASK044-LOCAL-20260914",
-      "media-root": "/private/tmp/erp-item-management-task-038/server/storage/items",
-      "import-root": "/private/tmp/erp-item-management-task-038/server/storage/imports",
+      "mysql-schema": "staging-like fixture source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1 on local MySQL 26.7.0; erp_dev preserved",
+      "media-root": "/private/tmp/item-recovery-restored-20260915/media",
+      "import-root": "/private/tmp/item-recovery-restored-20260915/imports",
       "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
-    "lease_ref": "MySQL advisory lock erp-item-task044-def106-20260915 was acquired on connection_id=26133 and released successfully (RELEASE_LOCK=1) after the 459-case regression."
+    "lease_ref": "ENV-PROVISION-55 completed under ERP Product Owner (Sam)'s local MySQL root authorization. The temporary item-recovery-root login path was removed after provisioning, so no root credential remains in repository artifacts or the task-specific MySQL login profile. An erp_dev clone was isolated as staging-like fixture source item_recovery_tc016_20260915; synthetic Item/SKU/media/import/audit evidence was added only there, then a consistent snapshot was restored to item_recovery_tc016_20260915_run1 with separate media/import roots. All 16 Item table counts matched source versus restore; erp_user SELECT succeeded under a schema-only SELECT grant; erp_dev Item/SKU/media/import counts remained unchanged at zero. Unsigned manifest SHA-256: 3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -392,6 +392,59 @@
         "TC-016"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-021",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved formal retest under PLAN de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91 bound to candidate 5c620bdff8afa84e72d26187b942d46bb6d3e2ca, retaining APR-020 for DEF-103/TC-016, on 2026-09-15.",
+      "recorded_at": "2026-09-15T02:55:40Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "code_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-022",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved PLAN 73d116cc1c38cbc9a3a72d3077001550517559e9fd211ec2c839469c3f4d4984 bound to candidate 16414b9cc5fdb70c982277cc1f31de29496572ae on 2026-09-15; staging trust provisioning and TEST_AND_VERIFY entry remain separate prerequisites.",
+      "recorded_at": "2026-09-15T03:54:23Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "73d116cc1c38cbc9a3a72d3077001550517559e9fd211ec2c839469c3f4d4984",
+      "code_commit": "16414b9cc5fdb70c982277cc1f31de29496572ae",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "DEF-103",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-023",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly changed the specification so item.mgmt can fully read and write all Item-related APIs, then directed continuation of the remaining Item Management implementation work.",
+      "recorded_at": "2026-09-16T00:48:39Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
+      "code_commit": null,
+      "scope": [
+        "server/src/modules/authorization/adminGuard.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -510,6 +563,18 @@
       "reviewer": "/root/item_design_review",
       "reviewed_baseline": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
       "source_ref": "docs/items_management/04_design_review.md#rev-012--remediate_and_retest-independent-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-013",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "ac982ae8325ccaad6be80e726672a5a28831ff5263d2b8faa4084e139b311db9",
+      "source_ref": "docs/items_management/04_design_review.md#rev-013--task-044-recovery-adapter-independent-review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -710,6 +775,38 @@
       "idempotency_key": "mode-change-45",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized REMEDIATE_AND_RETEST for DEF-106, limited to renaming four duplicate test titles and creating a new candidate; DEF-103/TC-016 remains BLOCKED_DEFERRED, on 2026-09-15."
+    },
+    {
+      "id": "MODE-CHANGE-49",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-49",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved formal retest under the unchanged PLAN bound to candidate 5c620bdff8afa84e72d26187b942d46bb6d3e2ca and retained APR-020 DEF-103/TC-016 deferral on 2026-09-15."
+    },
+    {
+      "id": "MODE-CHANGE-52",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-52",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized starting TASK-044 recovery adapter development on 2026-09-15; local work must not claim staging DR acceptance."
+    },
+    {
+      "id": "ENV-PROVISION-55",
+      "kind": "ENVIRONMENT_PROVISION",
+      "target": "local MySQL staging-like source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1; preserve erp_dev",
+      "idempotency_key": "item-recovery-local-mysql-provision-20260915",
+      "status": "CONFIRMED",
+      "source_ref": "Observed local MySQL 26.7.0 provisioning on 2026-09-15: 40/40 total schemas tables and all 16 Item table counts matched source to item_recovery_tc016_20260915_run1; restored files matched 29/59 byte sizes and SHA-256; erp_user SELECT succeeded; erp_dev Item/SKU/media/import remained unchanged. Unsigned manifest: /private/tmp/item-recovery-restored-20260915/manifest.json (SHA-256 3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df)."
+    },
+    {
+      "id": "BRANCH-SYNC-59",
+      "kind": "BRANCH_SYNC",
+      "target": "merge origin/main e4aed631ce1d3eda34f4727a36d656462d7f0db4 into codex/item-management-task-038",
+      "idempotency_key": "item-management-task-038-sync-e4aed631-20260916",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 9f4d5c9ba8a790a26da8c3e74d2d7d466633dd15 on 2026-09-16 after git fetch --prune: origin/main e4aed631ce1d3eda34f4727a36d656462d7f0db4 was merged without conflicts; Item work was preserved."
     }
   ],
   "evidence_files": [
@@ -725,7 +822,15 @@
     "evidence/20260915T022734-0e13fa08d720/run.json",
     "evidence/20260915T022954-219f01eed099/run.json",
     "evidence/20260915T023008-644114a5c002/run.json",
-    "evidence/20260915T023324-35fe8b579a91/run.json"
+    "evidence/20260915T023324-35fe8b579a91/run.json",
+    "evidence/20260915T025642-5a90557a2bfb/run.json",
+    "evidence/20260915T025743-3ff0b84153c9/run.json",
+    "evidence/20260915T025801-1f98c219d70a/run.json",
+    "evidence/20260915T030118-828741e0f9f4/run.json",
+    "evidence/20260915T030140-5f4671994278/run.json",
+    "evidence/20260915T030248-57050e3d96b5/run.json",
+    "evidence/20260915T030312-a6347c1d7274/run.json",
+    "evidence/20260915T030630-20d57aa8c7d5/run.json"
   ],
   "defects": [
     {
@@ -855,5 +960,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit the exact DEF-106 test-title-only remediation candidate, checkpoint its candidate SHA, then request explicit Product Owner approval to bind formal retest to that new candidate; retain DEF-103/TC-016 as BLOCKED_DEFERRED."
+  "next_safe_action": "Commit the current TASK-044 developer-validation and module-boundary alignment, rerun traceability/boundary checks, and request exact Product Owner approval for the sensitive server/config/itemRecoveryTrustPolicy.json scope plus the resulting DESIGN/PLAN/candidate binding. Only then record push/PR external actions. TASK-043 remains dependency-blocked; independent manifest signing remains required before TC-016."
 }
