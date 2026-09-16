@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 82,
+  "revision": 83,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
@@ -616,6 +616,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-009",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (HD-014 contract pin refresh)",
+      "reviewer": "agent-skills:code-reviewer fresh separate-agent instance (not the REV-007/REV-008 instance)",
+      "reviewed_baseline": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
+      "source_ref": "docs/supplier_management/implementation/06_rev_009_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1084,6 +1096,25 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-16: 批準刷新pin, 完成後就merge"
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "REV-009 found the HD-014 pin refresh silently invalidated two RISK approvals that were never superseded. Moving the plan baseline d54764e4 to 14cb9ebc left APPROVAL-HD-012-RISK and APPROVAL-HD-013-RISK bound to the old hash, and approval_valid() now returns False for both. They are the sole authorization for eight deferred defects: DEF-003 through DEF-008 under HD-012, and DEF-010 and DEF-011 under HD-013. Nothing blocks today because the BLOCKING_DEFECT gate fires only on CRITICAL or HIGH and all eight are MEDIUM or LOW, but the module now carries eight deferrals with no valid authorization. The harness forbids rewriting an old approval hash to look current, so this needs a new decision with the original records retained. Separately, DEF-012 is DEFERRED with risk_approval_id null — no risk approval at all, not merely a stale one. Questions: (a) does the Product Owner re-affirm the deferral of DEF-003 through DEF-008, DEF-010 and DEF-011 against plan baseline 14cb9ebc, on the same terms as HD-012 and HD-013, with nothing about the defects themselves changed; and (b) should DEF-012, which is an Item Management defect outside this module boundary already routed to its own task, carry a recorded risk approval here or be recorded some other way?",
+      "affected_ids": [
+        "DEF-003",
+        "DEF-004",
+        "DEF-005",
+        "DEF-006",
+        "DEF-007",
+        "DEF-008",
+        "DEF-010",
+        "DEF-011",
+        "DEF-012",
+        "PHASE-002"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -1382,7 +1413,8 @@
     "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
     "docs/supplier_management/implementation/03_def_001_002_remediation.md",
     "docs/supplier_management/implementation/04_rev_007_independent_review.md",
-    "docs/supplier_management/implementation/05_rev_008_independent_review.md"
+    "docs/supplier_management/implementation/05_rev_008_independent_review.md",
+    "docs/supplier_management/implementation/06_rev_009_independent_review.md"
   ],
   "defects": [
     {
@@ -1549,7 +1581,10 @@
       "status": "OPEN",
       "source_ids": [
         "HD-014",
-        "docs/items_management/03_design_spec.md#5.5",
+        "REV-009",
+        "docs/items_management/03_design_spec.md#8.4",
+        "server/src/modules/item/itemErrors.js:293",
+        "docs/supplier_management/03_design_spec.md#5.11",
         "PHASE-004",
         "TASK-038"
       ],
@@ -1557,5 +1592,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #106 is merged at f98fc8d and PHASE-001 is complete. The HD-014 pin refresh moved the design baseline to 2dc22f70 and the plan baseline to 14cb9ebc, both with recorded human approval. IMPORTANT: REV-008 is bound to the previous design baseline dcb74d3c, so no APPROVED review currently binds the module design baseline. That blocks nothing today because PHASE-001 is merged, but PHASE-002 must obtain a review bound to 2dc22f70 (or its successor) before its own gate. Next: push this pin-refresh branch and open a PR. Then, before PHASE-002 implementation, resolve the harness bookkeeping defects — evidence_files holds Markdown documents at repo-relative paths while the validator resolves module-relative and expects run_check.py run.json files, which is what produced the tracked duplicate directory docs/supplier_management/docs/supplier_management/. PHASE-002 starts with the DEF-011 invariant assert, then TASK-025, whose migrations touch approval_required_paths and need explicit schema sign-off before any migration is written. DEF-013 must be resolved as part of TASK-038."
+  "next_safe_action": "DECISION_REQUIRED on HD-015. REV-009 confirmed the HD-014 pin refresh itself is SAFE — it verified by content that Item DES-010, 5.8, 8.3 and 5.14 are all unchanged, that PR #105 touched no Supplier file, and that server/src/modules/supplier has zero cross-module imports to Item. But the disclosure was incomplete and is corrected here: the plan baseline move also stranded APPROVAL-HD-012-RISK and APPROVAL-HD-013-RISK, which authorize eight deferred defects, and DEF-012 was deferred with no risk approval at all. DEF-013 was factually wrong and its corrected statement is recorded in 06_rev_009_independent_review.md; its source_ids now point at Item 8.4, itemErrors.js:293 and Supplier 5.11 instead of Item 5.5. TASK-038 is now recorded as containing a cross-module Item edit. Two pre-existing drifts are on the record for later: the Purchasing manifest pins Supplier provided contract 983f351f while Supplier spec is a9f64493, and permission-catalogue is drifted in four manifests. Do not merge PR #107 until HD-015 is answered and an APPROVED review binds design baseline 2dc22f70. Do not start TASK-025."
 }
