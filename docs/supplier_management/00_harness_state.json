@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 88,
+  "revision": 89,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
-    "design": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
-    "plan": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
-    "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+    "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+    "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+    "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
     "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bookkeeping",
     "default_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
@@ -571,6 +571,101 @@
       "baseline_kind": "PLAN",
       "baseline_sha256": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
       "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "scope": [
+        "supplier-management",
+        ".gitignore",
+        "evidence_files"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds the HD-014 design approval, whose only content was the item-sku-uom-provider pin refresh to 5c193e20.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "item-sku-uom-provider",
+        ".gitignore"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds the HD-014 plan approval. No requirement, design, phase, task, suite or test flag changed.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "item-sku-uom-provider",
+        ".gitignore"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds APPROVAL-HD-015-RISK, itself a re-affirmation of HD-012 and HD-013. It covers the deferral of DEF-003 through DEF-008, DEF-010 and DEF-011, all rated MEDIUM or LOW by REV-006 and REV-007, with DEF-011 still scheduled as the first task of PHASE-002.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "DEF-003",
+        "DEF-004",
+        "DEF-005",
+        "DEF-006",
+        "DEF-007",
+        "DEF-008",
+        "DEF-010",
+        "DEF-011"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-RISK-DEF012",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds APPROVAL-HD-015-RISK-DEF012. DEF-012 is the Item Management idempotency ordering race, outside this module boundary and routed to its own task. Deferral does not resolve it: it remains intermittent and unfixed, and its CI re-run passes prove intermittency, not correctness.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
+      "scope": [
+        "supplier-management",
+        "DEF-012"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-017-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b\" — choosing option (b), to declare .gitignore in the module manifest approval_required_paths rather than accept an OUTSIDE_MODULE gate finding. The cost was stated before the choice: doing so moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31, requiring a fresh approval and review cycle. Before the change, every affected record was enumerated: five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Nothing about any underlying decision changed; only the baselines the records bind to. All original records are retained and none is rewritten. This record re-binds APPROVAL-HD-016-SCOPE, which authorized the recorded exception removing the eight invalid evidence_files entries and the edit to .gitignore. With .gitignore now declared in approval_required_paths, this approval is also what satisfies the gate for that path.",
+      "recorded_at": "2026-09-16T07:58:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "5829039e57246adf76a5ceb0e0b02ed5295a2cdf",
       "scope": [
         "supplier-management",
         ".gitignore",
@@ -1243,6 +1338,23 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-16: \"a .gitignore都一齊做\" — option (a), a documented recorded exception to the append-only evidence_files rule, plus authorization to edit .gitignore in the same change."
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "question": "Declaring .gitignore in the manifest approval_required_paths, so the gate can express the already-granted human authorization instead of reporting OUTSIDE_MODULE, moves the design baseline 2dc22f70 to e4083319 and the plan baseline 14cb9ebc to a0d41e31. Enumerated before the change, this strands five approvals (HD-014-DESIGN, HD-014-PLAN, HD-015-RISK, HD-015-RISK-DEF012, HD-016-SCOPE) and two reviews (REV-009, REV-010). Does the Product Owner accept that cost and re-affirm all five approvals against the new baselines, nothing about their content changed?",
+      "affected_ids": [
+        ".gitignore",
+        "APPROVAL-HD-014-DESIGN",
+        "APPROVAL-HD-014-PLAN",
+        "APPROVAL-HD-015-RISK",
+        "APPROVAL-HD-015-RISK-DEF012",
+        "APPROVAL-HD-016-SCOPE",
+        "REV-009",
+        "REV-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: \"b\""
     }
   ],
   "external_actions": [
@@ -1604,7 +1716,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-004",
@@ -1617,7 +1729,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-005",
@@ -1630,7 +1742,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-006",
@@ -1642,7 +1754,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-007",
@@ -1654,7 +1766,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-008",
@@ -1666,7 +1778,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-009",
@@ -1693,7 +1805,7 @@
         "DEF-001"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-011",
@@ -1704,7 +1816,7 @@
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK"
+      "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
       "id": "DEF-012",
@@ -1715,7 +1827,7 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-015-RISK-DEF012"
+      "risk_approval_id": "APPROVAL-HD-017-RISK-DEF012"
     },
     {
       "id": "DEF-013",
@@ -1734,5 +1846,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Bookkeeping cleanup complete: evidence_files holds five real run.json records including one failure, the duplicated directory is deleted, .gitignore covers .claude/ and graphify-out/, and state is reconciled to the merged main. Next: commit, push and open a PR for independent review bound to design baseline 2dc22f70. Still open for separate handling, none introduced here: six SCOPE approvals already stale before this change; the Purchasing manifest pinning Supplier's provided contract at 983f351f while the spec is a9f64493; permission-catalogue drifted in four manifests; and DEF-012, the Item idempotency race, which remains intermittent and unfixed in its own module. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations touch approval_required_paths and need explicit schema sign-off before any migration is written."
+  "next_safe_action": "HD-017 applied. .gitignore is declared in approval_required_paths, and all five stranded approvals are re-bound by APPROVAL-HD-017-* with every original retained and none rewritten. REV-010 is now stranded on the superseded design baseline 2dc22f70, so no APPROVED review binds e4083319 — that is the only remaining gate blocker and it requires a fresh independent review of this candidate. Next: commit, push, open a PR, obtain green CI on the exact final head and that review. Still open for separate handling, none introduced here: six SCOPE approvals already stale beforehand; the Purchasing manifest pinning Supplier's provided contract at 983f351f while the spec is a9f64493; permission-catalogue drifted in four manifests; and DEF-012. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations need explicit schema sign-off."
 }

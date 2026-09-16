@@ -45,20 +45,21 @@
       "client/e2e/**"
     ],
     "approval_required_paths": [
-      "server/database/migrations/**",
-      "server/.env.example",
-      "server/src/index.js",
-      "server/src/framework/configuration/applicationConfiguration.js",
-      "server/src/modules/businessMaster/businessMasterFactory.js",
-      "server/src/modules/authorization/permissionCatalogue.js",
-      "server/config/**",
-      "server/package.json",
-      "package-lock.json",
+      ".gitignore",
       "client/config/menu.js",
       "client/src/framework/http/errorMessages.js",
-      "docs/items_management/**",
       "docs/customer_management/**",
-      "docs/purchasing_receiving_management/**"
+      "docs/items_management/**",
+      "docs/purchasing_receiving_management/**",
+      "package-lock.json",
+      "server/.env.example",
+      "server/config/**",
+      "server/database/migrations/**",
+      "server/package.json",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/src/index.js",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/modules/businessMaster/businessMasterFactory.js"
     ],
     "forbidden_paths": [
       ".env",
