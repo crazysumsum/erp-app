@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
 
-function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null } = {}) {
+function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null } = {}) {
   const events = [];
   const row = {
     id: 7, supplier_code: "SUP-7", supplier_code_key: "sup-7", supplier_name: "Supplier",
@@ -16,7 +16,16 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
       events.push(["query", sql, params]);
       if (sql.includes("SELECT * FROM suppliers") && sql.includes("FOR UPDATE")) return [[row]];
       if (sql.includes("supplier_audit_logs") && sql.includes("supplier.activate")) return [[]];
-      if (sql.includes("ORDER BY id DESC")) return [latestAction ? [{ action: latestAction }] : []];
+      if (sql.includes("ORDER BY id DESC")) {
+        // Mirror the real query: only the actions the statement actually filters
+        // on (its bound params after supplier_id) are candidates for replay.
+        if (auditLog) {
+          const allowed = new Set(params.slice(1));
+          const matches = auditLog.filter((action) => allowed.has(action));
+          return [matches.length ? [{ action: matches[matches.length - 1] }] : []];
+        }
+        return [latestAction ? [{ action: latestAction }] : []];
+      }
       return [[]];
     },
     async execute(sql, params) {
@@ -88,6 +97,32 @@ test("same-target lifecycle replay returns current state without version increme
   assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
   const wrongCommand = harness({ status: "suspended", version: 5, latestAction: "supplier.suspend" });
   await assert.rejects(() => wrongCommand.service.restoreSupplier({ ...context, version: 5 }), (error) => error.publicCode === "STATUS_TRANSITION_INVALID");
+});
+
+test("replay detection ignores non-lifecycle audit rows written after the command", async () => {
+  // DEF-002: every audit action this module writes begins with "supplier.", so
+  // matching on LIKE 'supplier.%' let an unrelated child-record write shadow the
+  // real transition and turn a genuine replay into a misleading 409.
+  const { service, events } = harness({
+    status: "suspended",
+    version: 5,
+    auditLog: ["supplier.activate", "supplier.suspend", "supplier.contact.create", "supplier.address.update"]
+  });
+  const result = await service.suspendSupplier({ ...context, version: 2 });
+  assert.equal(result.status, "suspended");
+  assert.equal(result.version, 5);
+  assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
+
+  // A genuinely wrong command is still rejected on the same audit history.
+  const wrong = harness({
+    status: "suspended",
+    version: 5,
+    auditLog: ["supplier.activate", "supplier.suspend", "supplier.contact.create"]
+  });
+  await assert.rejects(
+    () => wrong.service.restoreSupplier({ ...context, version: 5 }),
+    (error) => error.publicCode === "STATUS_TRANSITION_INVALID"
+  );
 });
 
 test("block and unblock follow the exact state matrix and unblock only to Suspended", async () => {

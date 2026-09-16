@@ -34,8 +34,7 @@ test("missing optional data produces bounded warnings and never activation issue
     { field: "defaultPaymentTermId", code: "PAYMENT_TERM_MISSING", message: "尚未設定預設付款條款" },
     { field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" },
     { field: "contacts", code: "ORDERS_CONTACT_MISSING", message: "尚未設定訂單用途主要聯絡人" },
-    { field: "identifiers", code: "IDENTIFIER_MISSING", message: "尚未設定供應商識別資料" },
-    { field: "bankAccounts", code: "BANK_ACCOUNT_MISSING", message: "尚未設定銀行帳戶" }
+    { field: "identifiers", code: "IDENTIFIER_MISSING", message: "尚未設定供應商識別資料" }
   ]);
   assert.deepEqual(supplierCompletenessWarnings({
     defaultPaymentTermId: 2,
@@ -44,6 +43,16 @@ test("missing optional data produces bounded warnings and never activation issue
     hasIdentifier: true,
     hasBankAccount: true
   }), []);
+});
+
+test("bank completeness is only evaluated once a caller can answer it", () => {
+  // DEF-001: Bank accounts arrive in PHASE-003. While no caller supplies the
+  // flag, emitting the warning produced one no user action could ever clear.
+  const everythingElseSatisfied = { defaultPaymentTermId: 2, hasOrderingAddress: true, hasOrdersContact: true, hasIdentifier: true };
+  assert.deepEqual(supplierCompletenessWarnings(everythingElseSatisfied), []);
+  assert.deepEqual(supplierCompletenessWarnings({ ...everythingElseSatisfied, hasBankAccount: false }), [
+    { field: "bankAccounts", code: "BANK_ACCOUNT_MISSING", message: "尚未設定銀行帳戶" }
+  ]);
 });
 
 test("activation issues can be projected separately from non-blocking completeness warnings", () => {

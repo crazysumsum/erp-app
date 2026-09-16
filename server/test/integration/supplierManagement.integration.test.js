@@ -133,7 +133,10 @@ integrationTest("Supplier create atomically persists root, grams and audit while
   const detail = await service.getSupplier({ actorId, claimedRoles: [], claimedPermissions: [], id: created.id });
   assert.equal(detail.id, created.id);
   assert.deepEqual(detail.bankAccounts, []);
-  assert.ok(detail.warnings.some((warning) => warning.code === "BANK_ACCOUNT_MISSING"));
+  // DEF-001: bank completeness is not evaluated until PHASE-003 supplies the flag,
+  // so a supplier must not carry a warning no user action could clear.
+  assert.equal(detail.warnings.some((warning) => warning.code === "BANK_ACCOUNT_MISSING"), false);
+  assert.ok(detail.warnings.some((warning) => warning.code === "ORDERING_ADDRESS_MISSING"));
 
   const duplicateCheck = await service.findSupplierDuplicateCandidates({
     actorId,

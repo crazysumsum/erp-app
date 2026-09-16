@@ -1,29 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 71,
+  "revision": 76,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
     "design": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
-    "plan": "24cdb1e9a7b1a45de1b223e75b0a6c36b66a07dbcecb313b029a19a7bd13ab5d",
-    "code_commit": "9f394c288adf5d3e6a31d949b5705380be65be58",
-    "source_fingerprint": "3925c5a171c16b2bc0298bd47424607670b878125a08cb6ea1c69bc91c1f772d",
-    "worktree": "/private/tmp/erp-supplier-management-phase-001-v2",
-    "default_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+    "plan": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+    "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+    "source_fingerprint": "13627f6cbc5eee6e9f2edba1080c563e9ef49d62a41b47846ff984191ba2a4e7",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-defect-001-002",
+    "default_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-supplier-management-phase-001-v2",
+      "workspace": "erp-app-worktrees/supplier-defect-001-002 (branch codex/supplier-defect-001-002)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "NOT_ALLOCATED"
+      "web-port": "127.0.0.1:3000 API and 127.0.0.1:5273 client dev server, both started and stopped inside this session"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -426,6 +426,46 @@
         "server/src/modules/businessMaster/businessMasterFactory.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-010-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: 同意 — replying to the exact HD-010 question, which named Plan baseline d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd and stated that its only difference from the HD-008-approved plan 24cdb1e9 comes from commit b47ad44 (two developer suite definitions in 00_project_profile.json, required_suites in 00_module_manifest.json, test applicability flags in 08_traceability.json), with no requirement, design, phase, task or scope change.",
+      "recorded_at": "2026-09-16T01:38:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+      "scope": [
+        "supplier-management",
+        "PHASE-001",
+        "TASK-024"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-012-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"(b)跑playwright驗證\", selecting option (b) from the HD-012 question, which listed DEF-003 (raw Business Master currencies read bypassing the provider contract), DEF-004 (SupplierReferenceService fail-open default with no checkers registered), DEF-005 (address normalization missing length/control-character validation), DEF-006, DEF-007 and DEF-008 as the findings to defer. REV-006 rated all of them MEDIUM or LOW with 0 Critical and 0 High.",
+      "recorded_at": "2026-09-16T01:57:59Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+      "scope": [
+        "supplier-management",
+        "DEF-003",
+        "DEF-004",
+        "DEF-005",
+        "DEF-006",
+        "DEF-007",
+        "DEF-008"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -485,6 +525,18 @@
       "reviewed_baseline": "7bcfe3f1d138ee140ea33e73d0b2f2d73221afd4c5caebad52cc144926d2ea2d",
       "source_ref": "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "SEPARATE_AGENT",
+      "author": "Prior Supplier harness implementer (PHASE-001 TASK-001..TASK-024, commits c3da62d..b47ad44)",
+      "reviewer": "agent-skills:code-reviewer separate-agent instance (fresh context, read-only)",
+      "reviewed_baseline": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
+      "source_ref": "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -655,6 +707,50 @@
       "source_ref": "Playwright CLI on 2026-09-15 exercised Reactivate, Block, Unblock, Archive and Restore against the approved erp_dev fixture, including approved-device signed actions, exact state-valid action visibility and the compact list action menu. At 375x812 the dialog content and controls remained usable. Browser validation exposed and fixed a Quasar dialog layering defect caused by placing q-form above the direct q-card child; mouse and keyboard submission then passed. Supplier 11 was returned to Suspended at version 24. Client tests passed 23/23, production build and lint passed; final browser console contained 0 errors and 0 warnings and all observed lifecycle requests returned 200. VERSION_CONFLICT draft preservation and password clearing passed automated component coverage.",
       "actor": "/root via playwright-cli and vitest",
       "observed_at": "2026-09-15T04:55:35Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PHASE-001 TASK-001..TASK-024 integrated into main via PR #104",
+      "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "d41997ac54f35c96aa57a11d2489583ce3eae8395e57043a40ca65097b1e5007",
+      "status": "PASS",
+      "source_ref": "Observed on 2026-09-16: PR #104 MERGED at merge commit b3e5aa9; git fetch/pull --ff-only confirm local main == origin/main == b3e5aa9; Supplier source, handlers, migrations 0028-0034 and client pages are present on that commit.",
+      "actor": "Claude Opus 5 via gh and git",
+      "observed_at": "2026-09-16T00:00:00Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "GitHub Actions CI on the integrated main baseline b3e5aa9",
+      "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "d41997ac54f35c96aa57a11d2489583ce3eae8395e57043a40ca65097b1e5007",
+      "status": "PASS",
+      "source_ref": "gh run view 35042948571 (headSha b3e5aa9, created 2026-09-16T01:09:20Z): Lint success, Build frontend success, Dependency audit success, Test (server + client, MySQL integration) success. Local source_fingerprint additionally covers untracked .claude/ and server/src/modules/businessMaster/graphify-out/, which CI did not see.",
+      "actor": "GitHub Actions, observed by Claude Opus 5 via gh",
+      "observed_at": "2026-09-16T01:09:20Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEVELOPER suites lint, client-build, supplier-phase-001-server and supplier-phase-001-client on integrated main b3e5aa9",
+      "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "d41997ac54f35c96aa57a11d2489583ce3eae8395e57043a40ca65097b1e5007",
+      "status": "PASS",
+      "source_ref": "Executed on 2026-09-16 with the exact 00_project_profile.json argv for all four suites, directly rather than through run_check.py --execute, because the runner returned BLOCKED on APPROVAL_MISSING_STALE(PLAN) and REVIEW_NOT_SATISFIED. Results: npm run lint exit 0; npm run build --workspace client exit 0 (vite 279 modules, only the pre-existing >500kB chunk warning); supplier-phase-001-server JUnit 157 testcases / 0 failures / 0 skipped against authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, meeting min_tests=157 and max_skipped=0; supplier-phase-001-client JUnit 40 testcases / 0 failures / 0 skipped, meeting min_tests=40 and max_skipped=0. A first server attempt failed 24 cases solely because local node_modules lacked declared dependency csv-stringify; npm ci reinstalled it without modifying package-lock.json and the rerun was fully green. The source fingerprint was identical before and after the whole run. These are honest developer observations, NOT registered harness run evidence: no evidence/<run-id>/run.json exists for them.",
+      "actor": "Claude Opus 5 via npm, node:test and vitest",
+      "observed_at": "2026-09-16T00:00:00Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-001 and DEF-002 remediation: developer suites plus real-browser Playwright validation on branch codex/supplier-defect-001-002",
+      "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "13627f6cbc5eee6e9f2edba1080c563e9ef49d62a41b47846ff984191ba2a4e7",
+      "status": "PASS",
+      "source_ref": "Test-first remediation on 2026-09-16. Both defects were independently re-verified against source before any change, and three new/updated tests were confirmed RED before the fix and GREEN after. Developer suites on the fixed source: npm run lint exit 0; npm run build --workspace client exit 0; supplier-phase-001-server JUnit 159 testcases / 0 failures / 0 skipped against authorized test-only erp_dev with DB_INTEGRATION_TESTS=1 (was 157; two tests added, still above min_tests=157); supplier-phase-001-client JUnit 40 / 0 / 0. Playwright CLI browser validation against a server and client dev server started from this worktree on 127.0.0.1:3000 and 127.0.0.1:5273, logged in as synthetic system-admin pw_def_0916 with approved device binding 4499. DEF-001: creating supplier DEF-0916-095339 showed exactly four completeness warnings and no BANK_ACCOUNT_MISSING; adding an ordering address, an orders primary contact and an HK identifier through the real UI cleared them one by one down to a single PAYMENT_TERM_MISSING, proving the banner is now reachable to zero. Both GET /suppliers/:id and GET /suppliers/:id/completeness returned issues [] and exactly one PAYMENT_TERM_MISSING warning. The residual payment-term warning cannot be cleared in this environment because Business Master has zero Active Payment Terms seeded; payment term is optional by design, so this is an environment data gap, not a Supplier defect. DEF-002: supplier 404 was suspended through the real UI (version 1 -> 2), a second contact was then created through the UI so that a supplier.contact.create audit row became the newest supplier.% row, and replaying POST /suppliers/404/suspend with the original stale version 1 returned 200 with status suspended and version still 2 — the designed §476 idempotent replay. Before the fix this exact sequence returned 409 STATUS_TRANSITION_INVALID, which the new unit test pins. The negative path is intact: POST /suppliers/404/restore on a suspended supplier still returned 409 STATUS_TRANSITION_INVALID. Final reloaded detail page reported 0 console errors and 0 warnings; the only network requests were user/me, the supplier and completeness reads, all 200. Verified at desktop width and at 375x812. Screenshots captured to the session scratchpad (not repository evidence). REV-006 secondary claim REJECTED: the reviewer also asked for assertExpectedVersion to run before the replay return. Design §476 and §1387 specify that a repeated status command already in the same target state returns current state, and a genuine replay necessarily carries a stale version, so that change would break designed idempotency and the pre-existing test at supplierLifecycleService.test.js:85. Not applied.",
+      "actor": "Claude Opus 5 via node:test, vitest and playwright-cli",
+      "observed_at": "2026-09-16T01:57:59Z"
     }
   ],
   "pending_decisions": [
@@ -768,6 +864,54 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-15: 批準，後面沒有特別需要我決定的問題就繼續做，不用再找我批準"
+    },
+    {
+      "id": "HD-010",
+      "impact": "MAJOR",
+      "question": "Does the Product Owner approve Plan baseline d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd? It differs from the HD-008-approved plan 24cdb1e9 only through commit b47ad44, which added the supplier-phase-001-server / supplier-phase-001-client developer suites to 00_project_profile.json, adjusted required_suites in 00_module_manifest.json and set test applicability flags in 08_traceability.json. No requirement, design, phase, task or implementation scope changed.",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-024",
+        "00_project_profile.json",
+        "00_module_manifest.json",
+        "08_traceability.json"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: 同意 (recorded as APPROVAL-HD-010-PLAN, bound to plan baseline d54764e4 and code commit b3e5aa9)"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "PR #104 delivering PHASE-001 TASK-001..TASK-024 was merged into main with zero GitHub reviews while review_policy.independent_required is true, and Checkpoint H requires human review approval of the Core contract before any PHASE-002 Approval/Bank/Import work starts. How should this be satisfied: a separate independent agent review of the merged baseline b3e5aa9, a human review by the Product Owner, or a recorded SELF_REVIEW exception with explicit risk approval?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-024",
+        "REV-006",
+        "supplier-public-provider-contracts",
+        "PHASE-002",
+        "TASK-025"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: 同意 — authorized option 1, a separate independent agent review of merged baseline b3e5aa9. Executed; recorded as REV-006 with decision CHANGES_REQUESTED, 0 Critical / 0 High, 5 Medium and 4 Low findings (DEF-001..DEF-008). See docs/supplier_management/implementation/02_checkpoint_h_independent_review.md."
+    },
+    {
+      "id": "HD-012",
+      "impact": "MAJOR",
+      "question": "REV-006 returned CHANGES_REQUESTED (0 Critical, 0 High, 5 Medium, 4 Low), so the harness review gate — which requires an APPROVED review bound to design baseline dcb74d3c — is not satisfied, Checkpoint H is not met and TASK-024 cannot close. How should this be resolved: (a) remediate DEF-001..DEF-005 under IMPLEMENT, then re-review and re-run the developer suites; (b) remediate only the two user-visible functional bugs DEF-001 and DEF-002 and defer DEF-003..DEF-008 with a recorded RISK approval; or (c) accept all findings as deferred with a recorded RISK approval and proceed to PHASE-002? A separate question is whether the missing browser/Playwright validation of the Supplier UI must be closed before Checkpoint H, given the project UI testing standard.",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-024",
+        "REV-006",
+        "DEF-001",
+        "DEF-002",
+        "DEF-003",
+        "DEF-004",
+        "DEF-005",
+        "PHASE-002",
+        "TASK-025"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: \"(b)跑playwright驗證\" — remediate the two user-visible functional bugs DEF-001 and DEF-002, defer DEF-003..DEF-008 under a recorded RISK approval, and close the browser-validation gap with Playwright."
     }
   ],
   "external_actions": [
@@ -970,12 +1114,176 @@
       "idempotency_key": "supplier-phase-001-erp-dev-migration-0034",
       "status": "CONFIRMED",
       "source_ref": "Repository migration runner applied 0034_create_supplier_identifiers.js to authorized erp_dev on 2026-09-15; ledger/schema were re-observed and real MySQL passed normalization, global uniqueness race, ownership and deletion tests together with Address/Contact regressions."
+    },
+    {
+      "id": "PUSH-004",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/supplier-management-phase-001-v2",
+      "idempotency_key": "supplier-phase-001-v2-push-b47ad44",
+      "status": "CONFIRMED",
+      "source_ref": "origin/codex/supplier-management-phase-001-v2 reached b47ad44cbdf7266aa311e3d9c1b36f707b50df99; GitHub Actions run 35041705458 executed against that candidate."
+    },
+    {
+      "id": "PR-004",
+      "kind": "CREATE_PR",
+      "target": "base=main head=codex/supplier-management-phase-001-v2 (PR #104)",
+      "idempotency_key": "supplier-phase-001-v2-pr-104",
+      "status": "CONFIRMED",
+      "source_ref": "gh pr view 104 observed on 2026-09-16: \"feat: deliver supplier management phase 1 core\", scope PHASE-001/TASK-001..TASK-024, state MERGED."
+    },
+    {
+      "id": "MERGE-004",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-management-phase-001-v2 via PR #104",
+      "idempotency_key": "supplier-phase-001-v2-merge-pr-104",
+      "status": "CONFIRMED",
+      "source_ref": "gh pr view 104 reports mergedAt 2026-09-16T01:09:17Z and mergeCommit b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255; local main and origin/main both resolve to that commit."
+    },
+    {
+      "id": "WORKTREE-RETIRE-001",
+      "kind": "REMOVE_WORKTREE",
+      "target": "/private/tmp/erp-supplier-management-phase-001-v2",
+      "idempotency_key": "supplier-phase-001-v2-worktree-retire",
+      "status": "CONFIRMED",
+      "source_ref": "git worktree list no longer registers the path; only an empty client/ directory remains on disk and it is not a Git worktree. Branch codex/supplier-management-phase-001-v2 is merged via PR #104."
+    },
+    {
+      "id": "TEST-DATA-005",
+      "kind": "CREATE_TEST_USER",
+      "target": "mysql://127.0.0.1:3306/erp_dev user pw_def_0916 with system-admin role",
+      "idempotency_key": "supplier-def-001-002-browser-user-20260916",
+      "status": "CONFIRMED",
+      "source_ref": "createUser.js created synthetic user id 20438 with system-admin role in authorized erp_dev on 2026-09-16 for browser validation only."
+    },
+    {
+      "id": "TEST-DATA-006",
+      "kind": "APPROVE_TEST_DEVICE",
+      "target": "mysql://127.0.0.1:3306/erp_dev device binding 4499 for pw_def_0916",
+      "idempotency_key": "supplier-def-001-002-browser-device-4499",
+      "status": "CONFIRMED",
+      "source_ref": "approveDevice.js approved synthetic device binding 4499 on 2026-09-16; subsequent Playwright login and authenticated Supplier calls succeeded."
+    },
+    {
+      "id": "TEST-DATA-007",
+      "kind": "CREATE_TEST_SUPPLIER",
+      "target": "mysql://127.0.0.1:3306/erp_dev supplier 404 DEF-0916-095339",
+      "idempotency_key": "supplier-def-001-002-browser-supplier-404",
+      "status": "CONFIRMED",
+      "source_ref": "Synthetic supplier DEF-0916-095339 (id 404) created through the real UI on 2026-09-16 with one address, two contacts and one identifier; left in suspended state."
     }
   ],
   "evidence_files": [
     "docs/supplier_management/implementation/00_implementation_readiness.md",
-    "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md"
+    "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
+    "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
+    "docs/supplier_management/implementation/03_def_001_002_remediation.md"
   ],
-  "defects": [],
-  "next_safe_action": "Implement TASK-024 bounded Supplier core lookup and downstream integration contracts test-first, then run the complete Phase 1 security, concurrency, audit-rollback and browser smoke gate."
+  "defects": [
+    {
+      "id": "DEF-001",
+      "severity": "MEDIUM",
+      "status": "RETEST",
+      "source_ids": [
+        "TASK-024",
+        "DES-014",
+        "supplierValidation.js:66",
+        "REV-006"
+      ],
+      "closure_evidence": [
+        "docs/supplier_management/implementation/03_def_001_002_remediation.md"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-002",
+      "severity": "MEDIUM",
+      "status": "RETEST",
+      "source_ids": [
+        "TASK-022",
+        "TASK-024",
+        "SupplierAdminService.js:353",
+        "REV-006"
+      ],
+      "closure_evidence": [
+        "docs/supplier_management/implementation/03_def_001_002_remediation.md"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-003",
+      "severity": "MEDIUM",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-024",
+        "DES-001",
+        "SupplierAdminService.js:657",
+        "REV-006"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APPROVAL-HD-012-RISK"
+    },
+    {
+      "id": "DEF-004",
+      "severity": "MEDIUM",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-022",
+        "DES-018",
+        "SupplierAdminService.js:78",
+        "REV-006"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APPROVAL-HD-012-RISK"
+    },
+    {
+      "id": "DEF-005",
+      "severity": "MEDIUM",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-014",
+        "SEC-004",
+        "SupplierAddressService.js:9",
+        "REV-006"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APPROVAL-HD-012-RISK"
+    },
+    {
+      "id": "DEF-006",
+      "severity": "LOW",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-018",
+        "SupplierIdentifierService.js:126",
+        "REV-006"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APPROVAL-HD-012-RISK"
+    },
+    {
+      "id": "DEF-007",
+      "severity": "LOW",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-014",
+        "SupplierAddressService.js:140",
+        "REV-006"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APPROVAL-HD-012-RISK"
+    },
+    {
+      "id": "DEF-008",
+      "severity": "LOW",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-024",
+        "businessMasterFactory.js:39",
+        "REV-006"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APPROVAL-HD-012-RISK"
+    }
+  ],
+  "next_safe_action": "DEF-001 and DEF-002 are fixed test-first on branch codex/supplier-defect-001-002 with developer suites and real-browser Playwright validation PASS; DEF-003..DEF-008 are DEFERRED under APPROVAL-HD-012-RISK. The change is NOT yet committed, pushed or opened as a PR. Next: commit the remediation, push, open a PR, obtain required CI green plus an actual review of that candidate, and only then re-run the independent review to replace REV-006 CHANGES_REQUESTED with an APPROVED review bound to design baseline dcb74d3c. Checkpoint H and TASK-024 remain open until that APPROVED review exists. Do not start TASK-025."
 }
