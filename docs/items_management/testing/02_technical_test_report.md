@@ -109,3 +109,7 @@ The approved test-title-only correction passed targeted testing (59/59) and the 
 No Item product or executable-suite defect was observed on the new candidate. Technical Acceptance remains blocked by the required recovery evidence and incomplete Task Definition-of-Done gates.
 
 The profile now allows `ITEM_PERFORMANCE_TESTS` for the dedicated performance suite. Full-scale performance and `TC-016` recovery remain unexecuted, so Technical Acceptance remains `BLOCKED` pending the formal retest and external prerequisites.
+
+## TASK-044 local recovery provisioning update — 2026-09-15
+
+The previously missing isolated schema/storage portion is now provisioned: source `item_recovery_tc016_20260915`, restored target `item_recovery_tc016_20260915_run1`, and separate restored media/import roots. Source/restore table counts, smoke records and file hashes matched, and the exact unsigned manifest is retained under `evidence/task-044-local-recovery/`. This is developer preflight only. `TC-016` remains `BLOCKED_DEFERRED` because the manifest is not independently signed, the repository trust policy remains `UNPROVISIONED`, and no formal current-candidate recovery suite has run.

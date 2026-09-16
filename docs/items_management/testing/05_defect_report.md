@@ -40,7 +40,7 @@
 - Closure Evidence: targeted canonical-ID results in `testing/evidence/remediation-server-scoped.junit.xml` and `testing/evidence/remediation-client.junit.xml`; impact/performance regression in `testing/evidence/remediation-performance-bounded.junit.xml`.
 - Residual Risk / Notes: canonical IDs are now emitted by meaningful server, client and performance cases. Formal Technical Acceptance remains pending against the approved/frozen baseline.
 
-## DEF-103 — Staging-like recovery environment is absent
+## DEF-103 — Recovery trust chain and formal execution are incomplete
 
 - Source Test/Finding: formal `item-recovery`, run `20260914T093142-11c20da04269`
 - Severity: HIGH
@@ -50,14 +50,14 @@
 - Phase: PHASE-006
 - Task: TASK-044
 - Expected: timed backup/restore adapter runs in an approved staging-like environment and proves RTO/RPO plus integrity.
-- Actual: superseded on 2026-09-15. A fail-closed verification-only `server/scripts/runItemRecoveryAcceptance.js`, repo-bound trust policy, detached Ed25519 manifest verification and focused developer tests now exist. The trust policy remains deliberately `UNPROVISIONED`: no approved staging-like backup/storage environment, signing key or real backup identifiers exist; local `erp_user` cannot create the separate schema required for a true-MySQL rehearsal.
-- Evidence: `docs/items_management/evidence/20260914T093142-11c20da04269/run.json`
-- Root Cause: the adapter implementation gap is remediated locally; environment provisioning and operational restore authority remain outstanding.
-- Remediation Route: independently review and commit the adapter, then provision and authorize a destructive-safe staging-like restore exercise and bind the resulting formal run to a newly approved PLAN/candidate.
+- Actual: superseded on 2026-09-15. The fail-closed adapter exists and Product Owner-authorized MySQL root provisioning produced an isolated source, restored schema and restored media/import roots whose counts, smoke records and file hashes matched. The exact manifest is retained, but it is unsigned and the repo trust policy remains `UNPROVISIONED`; therefore the adapter must still return `NOT_RUN` and no formal RTO/RPO credit exists.
+- Evidence: original blocked run `docs/items_management/evidence/20260914T093142-11c20da04269/run.json`; provisioning record `docs/items_management/evidence/task-044-local-recovery/README.md`; exact unsigned manifest `docs/items_management/evidence/task-044-local-recovery/manifest.json`.
+- Root Cause: adapter and environment provisioning gaps are remediated; independent attestation, Product Owner trust-policy approval and formal immutable-candidate execution remain outstanding.
+- Remediation Route: an independent operator signs the exact retained manifest with an independently controlled Ed25519 key; commit/approve the public trust binding on a refreshed candidate; then enter `TEST_AND_VERIFY` and execute `TC-016` without changing the restored data.
 - Retest Cases: TC-016.
 - Regression Scope: post-restore service smoke and reconciliation.
-- Status: DEFERRED (environment-blocked; adapter remediation in progress)
-- Residual Risk / Notes: focused adapter tests are developer evidence only. Local MySQL is not an acceptable substitute for operational DR evidence, and APR-020 still does not grant TC-016 PASS.
+- Status: DEFERRED (signing/approval-blocked; adapter and local environment provisioning complete)
+- Residual Risk / Notes: provisioning and focused adapter tests are developer evidence only. APR-020 still does not grant `TC-016` PASS, and self-signing would defeat the independent-attestation control.
 
 ## DEF-104 — Configured Item UAT Playwright project is absent
 

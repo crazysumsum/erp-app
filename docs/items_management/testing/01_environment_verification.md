@@ -46,3 +46,12 @@
 - Mode-entry commit / source fingerprint / plan hash: `49d487e876932e6684cbdbec46043312b3f730bd` / `905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073` / `85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3`.
 - External deployment identity adapter and unsupported limits: not configured; local process identity is the maximum observable deployment identity. No claim is made about a remote deployment.
 - Evidence classification, redaction and export permission: repository-local verification evidence; secrets redacted; profile `allow_export=false`, so evidence is not exported externally.
+
+## Local recovery provisioning supersession — 2026-09-15
+
+- Authorized operator path: ERP Product Owner (Sam) explicitly authorized local MySQL root provisioning. The temporary root login profile was removed afterward; no root credential is retained in repository evidence.
+- Staging-like fixture source / restored target: `item_recovery_tc016_20260915` / `item_recovery_tc016_20260915_run1` on local MySQL 26.7.0.
+- Restored storage: `/private/tmp/item-recovery-restored-20260915/media` and `/private/tmp/item-recovery-restored-20260915/imports`.
+- Observation: all 40 source/target tables and all exact 16 Item table counts matched; SKU/audit smoke records and the two database-linked restored files matched byte count and SHA-256. `erp_user` SELECT succeeded under a target-schema-only grant. `erp_dev` Item/SKU/media/import counts remained zero.
+- Retained unsigned manifest: `docs/items_management/evidence/task-044-local-recovery/manifest.json`, SHA-256 `3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df`.
+- Limitation: this observation proves local provisioning only. The manifest has no independent Ed25519 signature, the repository trust policy is `UNPROVISIONED`, and no formal `TC-016` run or acceptance claim is made.

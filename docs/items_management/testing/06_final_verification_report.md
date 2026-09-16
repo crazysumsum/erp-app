@@ -101,3 +101,7 @@ DEF-101, DEF-102, DEF-104 and DEF-105 are `CLOSED` after targeted developer rete
 ## Current-candidate verification update — 2026-09-15
 
 Candidate `5c620bdff8afa84e72d26187b942d46bb6d3e2ca` is bound by `APR-021`. Server, client and bounded-performance suites pass in both Technical and Regression stages. Recovery remains `BLOCKED_DEFERRED` in both stages under `APR-020`; this does not satisfy TC-016. Technical Acceptance therefore remains `BLOCKED`. TASK-037, TASK-038, TASK-043 and TASK-044 also remain short of their full Definition of Done, primarily because required CI/external dependency/DR and sign-off evidence is incomplete.
+
+## TASK-044 provisioning and branch-freshness update — 2026-09-16
+
+The isolated local recovery source, restored MySQL target and restored media/import roots are now provisioned and reconciled; the exact unsigned manifest is retained with SHA-256 `3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df`. This closes the environment-creation portion of DEF-103 but not the defect or `TC-016`: independent Ed25519 signing, trust-policy approval and formal execution remain mandatory. Refreshed `origin/main` still contains no real downstream `item_skus` reference, so TASK-043 remains dependency-blocked. The Item branch was merged with `origin/main` at merge commit `9f4d5c9ba8a790a26da8c3e74d2d7d466633dd15`; no PR, CI or release approval is implied by that local merge.

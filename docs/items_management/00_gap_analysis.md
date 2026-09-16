@@ -95,16 +95,16 @@ No product behavior was changed. Receiving overrides, real downstream reference 
 - Human clarification required: NO
 - Status: OPEN
 
-### GAP-TC-002 — Recovery acceptance environment is not available
+### GAP-TC-002 — Recovery acceptance trust chain and formal execution are incomplete
 
 - Area: TECH_TEST
 - Severity: HIGH
 - Type: IMPLEMENTATION_GAP
-- Evidence: superseded on 2026-09-15. `server/scripts/runItemRecoveryAcceptance.js` now implements a fail-closed, verification-only adapter for an already restored schema plus media/import roots. Its repo-bound trust policy is deliberately `UNPROVISIONED`, so it emits TC-016 `NOT_RUN` until an approved environment identity, restored-schema prefix and Ed25519 attestation public key are committed. Focused developer tests pass; a true-MySQL rehearsal cannot create an isolated schema because the local `erp_user` is scoped to `erp_dev` only. No approved staging-like restore environment or real backup identifiers are available.
-- Impact: the executable gap is remediated locally, but RTO/RPO still cannot receive formal PASS evidence until a real restore is run in an authorized staging-like environment.
-- Proposed action: review and commit the adapter, provision an isolated restored schema/volumes with appropriate credentials, generate the pre-restore manifest, then execute the `item-recovery` suite under a newly approved PLAN/candidate.
+- Evidence: superseded again on 2026-09-15. `server/scripts/runItemRecoveryAcceptance.js` implements a fail-closed verification-only adapter. Under explicit Product Owner authorization, MySQL root provisioned an isolated staging-like source and restored target (`item_recovery_tc016_20260915_run1`) plus separate media/import roots without changing `erp_dev`; source/restore counts, smoke records and file hashes matched. The exact unsigned manifest is retained at `evidence/task-044-local-recovery/manifest.json` with SHA-256 `3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df`. The repo-bound trust policy remains deliberately `UNPROVISIONED`, and no independent Ed25519 signature or approved public key exists.
+- Impact: schema/storage provisioning is no longer the blocker, but RTO/RPO cannot receive formal PASS credit until the exact manifest is independently signed, the trust binding is approved on a new candidate, and the adapter is executed in `TEST_AND_VERIFY`.
+- Proposed action: obtain an independent detached Ed25519 signature and public key for the retained manifest, approve and commit the trust policy on a refreshed candidate, then execute the `item-recovery` suite and preserve formal evidence.
 - Human clarification required: YES for environment/operations authority
-- Status: PARTIALLY_REMEDIATED; ENVIRONMENT_BLOCKED
+- Status: PARTIALLY_REMEDIATED; SIGNING_AND_APPROVAL_BLOCKED
 
 ### GAP-TC-003 — Existing automated results do not emit canonical TC IDs
 
