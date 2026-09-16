@@ -944,10 +944,12 @@ T24/T31/T37/T40/T49 ────────────────────
 **Acceptance criteria：**
 - [ ] `purpose=purchase`只接受Active，`history`可讀未物理刪除狀態；呼叫方權限與Supplier projection分離。
 - [ ] findById／findByCode／findManyByIds／assertUsable使用stable ID、bounded inputs及提交時重新驗證。
+- [ ] `supplierCoreProvider`及`supplierBusinessMasterImpactChecker`由正式server bootstrap與container解析，具明確contract/readiness；Business Master impact分類不完整時fail closed。
+- [ ] 兩條獨立MySQL connection證明purchase submit-time `FOR UPDATE`與Suspend／Block競態被序列化，不能以順序測試代替。
 - [ ] Core full flow、concurrent unique／version、IDOR、audit rollback及client smoke全綠，沒有P0／P1 defect。
 
 **Verification：**
-- [ ] `npm test --workspace server -- test/supplierLookupService.test.js test/integration/supplierManagement.integration.test.js`
+- [ ] `npm test --workspace server -- test/supplierLookupService.test.js test/supplierBusinessMasterImpactChecker.test.js test/supplierProviderServices.test.js test/integration/supplierManagement.integration.test.js`
 - [ ] `npm test --workspace client -- test/pages/suppliers`
 - [ ] `npm run lint && npm run build --workspace client`
 
@@ -955,11 +957,19 @@ T24/T31/T37/T40/T49 ────────────────────
 
 **Files likely touched：**
 - `server/src/modules/supplier/SupplierLookupService.js`
+- `server/src/modules/supplier/SupplierBusinessMasterImpactChecker.js`
+- `server/src/modules/supplier/SupplierProviderServices.js`
+- `server/src/modules/businessMaster/businessMasterFactory.js`
+- `server/src/index.js`
 - `server/test/supplierLookupService.test.js`
+- `server/test/supplierBusinessMasterImpactChecker.test.js`
+- `server/test/supplierProviderServices.test.js`
+- `server/test/business-master/consumer-contract/providerContract.test.js`
+- `server/test/business-master/http.integration.test.js`
 - `server/test/integration/supplierManagement.integration.test.js`
 - `client/test/pages/suppliers/coreFlow.test.js`
 
-**Estimated scope：** M（4 files）
+**Estimated scope：** L（12 files）
 
 ## Checkpoint H：T22–T24
 

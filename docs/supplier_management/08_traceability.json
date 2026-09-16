@@ -1575,7 +1575,8 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "supplier-server-integration"
+        "supplier-phase-001-server",
+        "supplier-phase-001-client"
       ]
     },
     {
@@ -1641,7 +1642,8 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "supplier-server-integration"
+        "supplier-server-integration",
+        "supplier-client-ui"
       ]
     },
     {
@@ -1700,7 +1702,10 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "supplier-server-integration"
+        "supplier-server-integration",
+        "supplier-bank-security",
+        "supplier-security",
+        "supplier-client-ui"
       ]
     },
     {
@@ -1802,7 +1807,10 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "supplier-server-integration"
+        "supplier-server-integration",
+        "supplier-bank-security",
+        "supplier-security",
+        "supplier-client-ui"
       ]
     }
   ],

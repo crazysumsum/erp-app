@@ -1,0 +1,30 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "state_recovery_20260915_02",
+  "suite_id": "supplier-phase1-independent-review",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "db1bdd800eadec91f07345a8b97a221b652c6c694b6756f251996d0b37d4cc4f",
+  "source_fingerprint": "26cfe0ca43a3379c24759e29b75949a6defa0c3922fb4a2d7a1c1978b71e30b1",
+  "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+  "started_at": "2026-09-15T10:20:00+08:00",
+  "ended_at": "2026-09-15T10:20:01+08:00",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-independent-review",
+  "data_reference": "manifest and TASK-001 through TASK-003 candidate",
+  "command": ["harness", "state-recovery", "preserve-invalid-evidence-reference"],
+  "cwd": "/private/tmp/erp-supplier-management-phase-001-v2",
+  "command_contract_sha256": "ee14e6a5a24122dd8984bd0e3fd6c3ed0c608ef32de9d869fe73e7011a7c4ba5",
+  "exit_code": null,
+  "timed_out": false,
+  "counts": {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "not_run": 0},
+  "cases": [],
+  "artifacts": [
+    {"path": "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md", "sha256": "8113a5b0fbfe8356c4edf99c7b2d1d6fd64972f0dd3421046f1f043876537277", "bytes": 2223}
+  ],
+  "tools": [],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": ["State-recovery record only. The actual independent review is preserved in REV-005 and the canonical Markdown; this JSON is not a substitute for executable test evidence."]
+}

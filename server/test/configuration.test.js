@@ -26,6 +26,7 @@ test("global configuration validation normalizes every configuration section", (
     "requestLimiter",
     "scheduler",
     "security",
+    "supplier",
     // 撤銷也是一個 service，所以設定自己一個區塊、自己一個檔案。
     "tokenRevocation"
   ]);
@@ -39,6 +40,7 @@ test("global configuration validation normalizes every configuration section", (
   // 打到不同實例會各自執行一次，而那是負載平衡下的常態。
   assert.equal(configuration.idempotency.storeAdapter, "mysql");
   assert.equal(configuration.item.categoryMaxDepth, 8);
+  assert.equal(configuration.supplier.duplicateNameThreshold, 0.85);
   assert.match(configuration.item.mediaDirectory, /storage\/items$/);
   assert.equal(configuration.logging.loggers.request.filePrefix, "requests");
   assert.equal(configuration.logging.loggers.request.minimumLevel, "info");

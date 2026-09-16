@@ -97,8 +97,11 @@ test("TC-020 payment snapshots preserve rule/version and cover calendar/manual r
   });
 });
 
-function factoryServices(database) {
+function factoryServices(database, supplierChecker = null) {
   return {
+    get(name) {
+      return name === "supplierBusinessMasterImpactChecker" ? supplierChecker : undefined;
+    },
     require(name) {
       if (name === "mysqldatabase") return database;
       if (name === "time") return { nowMs: () => 1_757_808_000_000 };
@@ -107,6 +110,36 @@ function factoryServices(database) {
     }
   };
 }
+
+test("TC-020 the registered Supplier-owned checker replaces only its conservative readiness boundary", async () => {
+  const database = { async query() { return [[{ present: 0 }]]; } };
+  const supplierChecker = {
+    id: "supplier",
+    async check() {
+      return { status: "READY", activeDefaultCount: 1, openUseCount: 2, historicalCount: 3, watermark: "supplier:ready" };
+    }
+  };
+  const admin = createBusinessMasterAdminService(factoryServices(database, supplierChecker));
+
+  const preview = await admin.impactRegistry.preview({
+    actorId: 1,
+    entityType: "CURRENCY",
+    entityKey: "HKD",
+    version: 1,
+    operation: "DEACTIVATE",
+    proposedChange: { status: "INACTIVE" }
+  });
+
+  assert.deepEqual(preview.results.at(-1), {
+    checkerId: "supplier",
+    status: "READY",
+    activeDefaultCount: 1,
+    openUseCount: 2,
+    historicalCount: 3,
+    watermark: "supplier:ready"
+  });
+  assert.ok(preview.results.slice(0, -1).every((result) => result.status === "NOT_INSTALLED"));
+});
 
 test("TC-020 all six absent consumer modules report explicit NOT_INSTALLED, never an unknown success", async () => {
   const database = { async query() { return [[{ present: 0 }]]; } };
