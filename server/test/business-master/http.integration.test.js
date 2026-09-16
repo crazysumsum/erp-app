@@ -88,7 +88,7 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   const preview = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/impact-preview`, {
     method: "POST", token, key: randomUUID(), body: { operation: "DEACTIVATE", version: 1, proposedChange: {} }
   });
-  assert.equal(preview.status, 200);
+  assert.equal(preview.status, 200, JSON.stringify(preview.body));
   assert.equal(preview.body.data.results.length, 6);
   assert.equal(preview.body.data.results.every((row) => row.status === "NOT_INSTALLED"), true);
   const rejected = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {

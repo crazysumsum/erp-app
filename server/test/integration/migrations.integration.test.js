@@ -118,7 +118,7 @@ test("0007 built user_audit_logs with the three indexes and an actor FK that doe
   assert.equal(constraints.length, 1, "user_audit_logs should have exactly one FK");
 });
 
-test("0008 seeded exactly the catalogue, and gave all of it to system-admin", { skip }, async (t) => {
+test("0028 seeds the Customer catalogue but does not grant bank permissions to system-admin", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   // 只驗證目錄涵蓋這幾項，不驗證「剛好只有」這幾項：node --test 預設會跨檔案
@@ -137,10 +137,16 @@ test("0008 seeded exactly the catalogue, and gave all of it to system-admin", { 
        JOIN permissions p ON p.id = rp.permission_id
       WHERE r.name = 'system-admin'`
   );
+  const heldNames = held.map((row) => row.name);
   assert.deepEqual(
-    held.map((row) => row.name).sort(),
-    PERMISSION_CATALOGUE.map((permission) => permission.name).sort()
+    heldNames.sort(),
+    PERMISSION_CATALOGUE
+      .map((permission) => permission.name)
+      .filter((name) => !name.startsWith("customer.bank."))
+      .sort()
   );
+  assert.equal(heldNames.includes("customer.bank.view"), false);
+  assert.equal(heldNames.includes("customer.bank.mgmt"), false);
 });
 
 test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip }, async (t) => {

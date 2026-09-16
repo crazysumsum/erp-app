@@ -106,9 +106,11 @@ async function signedAuthed(device, token, { path, body }) {
   return { method: "POST", headers: { ...headers, Authorization: `Bearer ${token}` }, body: bodyText };
 }
 
-// system-admin 持有完整 permission catalogue；claims 必須跟 migration 後現況一致，
-// 否則測試會先撞 PERMISSION_STALE，而不是走到它真正要驗證的行為。
-const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE.map(({ name }) => name);
+// Customer bank 權限存在於目錄，但 0028 刻意不授予 system-admin；claims 要反映
+// 遷移後的實際角色權限，否則測試會先撞 PERMISSION_STALE。
+const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
+  .map(({ name }) => name)
+  .filter((name) => !name.startsWith("customer.bank."));
 
 test("create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked", { skip }, async (t) => {
   const application = await startApplication();
