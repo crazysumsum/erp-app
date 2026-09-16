@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 83,
+  "revision": 84,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
@@ -516,6 +516,47 @@
       "scope": [
         "supplier-management",
         "item-sku-uom-provider"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-015-RISK",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"a批準\" — re-affirming, against plan baseline 14cb9ebc, the deferrals originally approved as APPROVAL-HD-012-RISK (DEF-003 raw Business Master currencies read bypassing the provider contract; DEF-004 SupplierReferenceService fail-open default with no checkers registered; DEF-005 address normalization missing length and control-character validation; DEF-006, DEF-007, DEF-008) and APPROVAL-HD-013-RISK (DEF-010 bank completeness flag convention; DEF-011 hand-maintained LIFECYCLE_ACTIONS). Nothing about any defect changed; only the plan baseline moved, from d54764e4 to 14cb9ebc, as a consequence of the HD-014 contract pin refresh. The original HD-012 and HD-013 approval records are retained and are NOT rewritten. DEF-011 remains scheduled as the first task of PHASE-002.",
+      "recorded_at": "2026-09-16T07:01:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "code_commit": "d9be439f290a31463c7c042590a6745a96525552",
+      "scope": [
+        "supplier-management",
+        "DEF-003",
+        "DEF-004",
+        "DEF-005",
+        "DEF-006",
+        "DEF-007",
+        "DEF-008",
+        "DEF-010",
+        "DEF-011"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-015-RISK-DEF012",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"b補一個 risk approval\" — a NEW authorization, not a re-affirmation. DEF-012 is the Item Management idempotency ordering race observed at server/test/integration/itemCreate.integration.test.js:946, where the HTTP 201 is flushed before the idempotency record is marked complete, so a fast retry receives 409 IDEMPOTENCY_IN_PROGRESS instead of the replayed result. It lies outside this module boundary — server/src/services/idempotency/** and server/src/modules/item/** are not in allowed_write_paths — and has been routed to a separate Item Management task. It had been recorded as DEFERRED with risk_approval_id null, an unauthorized deferral, which this record corrects. Deferral here does not resolve the race: it remains intermittent and unfixed, and its CI re-run passes prove intermittency, not correctness.",
+      "recorded_at": "2026-09-16T07:01:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "code_commit": "d9be439f290a31463c7c042590a6745a96525552",
+      "scope": [
+        "supplier-management",
+        "DEF-012"
       ],
       "expires_at": null
     }
@@ -1113,8 +1154,8 @@
         "DEF-012",
         "PHASE-002"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: \"a批準，b補一個 risk approval\" — (a) re-affirms the deferral of DEF-003 through DEF-008, DEF-010 and DEF-011 against plan baseline 14cb9ebc on the same terms as HD-012 and HD-013; (b) authorizes a recorded risk approval for DEF-012 here, which previously had none."
     }
   ],
   "external_actions": [
@@ -1462,7 +1503,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-012-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-004",
@@ -1475,7 +1516,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-012-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-005",
@@ -1488,7 +1529,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-012-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-006",
@@ -1500,7 +1541,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-012-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-007",
@@ -1512,7 +1553,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-012-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-008",
@@ -1524,7 +1565,7 @@
         "REV-006"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-012-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-009",
@@ -1551,7 +1592,7 @@
         "DEF-001"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-013-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-011",
@@ -1562,7 +1603,7 @@
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
       "closure_evidence": [],
-      "risk_approval_id": "APPROVAL-HD-013-RISK"
+      "risk_approval_id": "APPROVAL-HD-015-RISK"
     },
     {
       "id": "DEF-012",
@@ -1573,7 +1614,7 @@
         "server/src/services/idempotency/IdempotencyService.js:233"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null
+      "risk_approval_id": "APPROVAL-HD-015-RISK-DEF012"
     },
     {
       "id": "DEF-013",
@@ -1592,5 +1633,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DECISION_REQUIRED on HD-015. REV-009 confirmed the HD-014 pin refresh itself is SAFE — it verified by content that Item DES-010, 5.8, 8.3 and 5.14 are all unchanged, that PR #105 touched no Supplier file, and that server/src/modules/supplier has zero cross-module imports to Item. But the disclosure was incomplete and is corrected here: the plan baseline move also stranded APPROVAL-HD-012-RISK and APPROVAL-HD-013-RISK, which authorize eight deferred defects, and DEF-012 was deferred with no risk approval at all. DEF-013 was factually wrong and its corrected statement is recorded in 06_rev_009_independent_review.md; its source_ids now point at Item 8.4, itemErrors.js:293 and Supplier 5.11 instead of Item 5.5. TASK-038 is now recorded as containing a cross-module Item edit. Two pre-existing drifts are on the record for later: the Purchasing manifest pins Supplier provided contract 983f351f while Supplier spec is a9f64493, and permission-catalogue is drifted in four manifests. Do not merge PR #107 until HD-015 is answered and an APPROVED review binds design baseline 2dc22f70. Do not start TASK-025."
+  "next_safe_action": "HD-015 answered. All nine deferred defects now carry a risk approval bound to the current plan baseline 14cb9ebc; the superseded HD-012 and HD-013 records are retained unmodified. REV-009 corrections are recorded. The only remaining gate blocker on PR #107 is that no APPROVED review binds the current design baseline 2dc22f70 — REV-009 is CHANGES_REQUESTED and REV-008 is bound to the superseded dcb74d3c. Next: ask the REV-009 reviewer to re-verify the corrections for a final verdict, then merge PR #107 only on an APPROVED review plus green CI on the exact final head. After that, resolve the harness bookkeeping defects (evidence_files semantics and the duplicated docs directory) and only then enter PHASE-002, which starts with the DEF-011 invariant assert and whose TASK-025 migrations need explicit schema sign-off."
 }
