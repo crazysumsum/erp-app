@@ -184,10 +184,15 @@ export class CustomerService {
     const params = [];
     const search = String(q).trim();
     if (search) {
-      const code = normalizeCustomerCode(search).key;
       const name = normalizeLegalName(search).key;
-      conditions.push("(customer_code_key LIKE ? ESCAPE '!' OR legal_name_key LIKE ? ESCAPE '!')");
-      params.push(prefix(code), prefix(name));
+      const normalizedSearch = search.normalize("NFKC");
+      if ([...search].length <= 64 && [...normalizedSearch].length <= 64) {
+        conditions.push("(customer_code_key LIKE ? ESCAPE '!' OR legal_name_key LIKE ? ESCAPE '!')");
+        params.push(prefix(normalizeCustomerCode(search).key), prefix(name));
+      } else {
+        conditions.push("legal_name_key LIKE ? ESCAPE '!'");
+        params.push(prefix(name));
+      }
     }
     if (status) { conditions.push("status = ?"); params.push(status); }
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -196,12 +201,19 @@ export class CustomerService {
     const sort = SORT_COLUMNS[sortBy] ?? SORT_COLUMNS.updatedAt;
     const direction = descending ? "DESC" : "ASC";
     const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
-    const [rows] = await this.database.query(
-      `SELECT ${CUSTOMER_COLUMNS} FROM customers ${where}
+    const [idRows] = await this.database.query(
+      `SELECT id FROM customers ${where}
        ORDER BY ${sort} ${direction}, id DESC LIMIT ? OFFSET ?`,
       [...params, safePageSize, (safePage - 1) * safePageSize]
     );
-    return { items: rows.map(toCustomerSummary), total: Number(countRows[0].total), page: safePage, pageSize: safePageSize };
+    const ids = idRows.map((row) => Number(row.id));
+    if (ids.length === 0) return { items: [], total: Number(countRows[0].total), page: safePage, pageSize: safePageSize };
+    const [rows] = await this.database.query(
+      `SELECT ${CUSTOMER_COLUMNS} FROM customers WHERE id IN (${ids.map(() => "?").join(",")})`,
+      ids
+    );
+    const summariesById = new Map(rows.map((row) => [Number(row.id), toCustomerSummary(row)]));
+    return { items: ids.map((id) => summariesById.get(id)), total: Number(countRows[0].total), page: safePage, pageSize: safePageSize };
   }
 
   async checkDuplicates({ actorId, claimedRoles, claimedPermissions, customerCode, legalName, tradingName = "" }) {
