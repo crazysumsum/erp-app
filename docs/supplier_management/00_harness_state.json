@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 81,
+  "revision": 82,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,21 +9,21 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
-    "design": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
-    "plan": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
-    "code_commit": "681b3aed21480ceecd0c4bb5494c30a0de86b533",
+    "design": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
+    "plan": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+    "code_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
     "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-defect-001-002",
-    "default_commit": "aa7d19276cb12c4375eecdf205b72051d7f03b65",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-contract-pin",
+    "default_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-defect-001-002 (branch codex/supplier-defect-001-002)",
+      "workspace": "erp-app-worktrees/supplier-contract-pin (branch codex/supplier-contract-pin)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "127.0.0.1:3000 API and 127.0.0.1:5273 client dev server, both started and stopped inside this session"
+      "web-port": "NOT_ALLOCATED"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -484,6 +484,40 @@
         "DEF-011"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-014-DESIGN",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: 批準刷新pin — approving the HD-014 refresh of the consumed item-sku-uom-provider pin to 5c193e20a3e7fec1cd02f3ea76969d616af74a62cde599eac6202c468d8e8ecd. The manifest contracts block is part of the DESIGN digest, so this refresh moves the design baseline from dcb74d3c to 2dc22f70; no requirement or design document text changed.",
+      "recorded_at": "2026-09-16T06:03:21Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
+      "code_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
+      "scope": [
+        "supplier-management",
+        "item-sku-uom-provider"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-014-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: 批準刷新pin — the plan digest covers the manifest, so the same refresh moves the plan baseline from d54764e4 to 14cb9ebc. No requirement, design, phase, task, suite or test flag changed.",
+      "recorded_at": "2026-09-16T06:03:21Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "code_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
+      "scope": [
+        "supplier-management",
+        "item-sku-uom-provider"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -848,6 +882,17 @@
       "source_ref": "The REV-008 reviewer executed the stricter discrimination test the author had not: a PLAIN revert to action LIKE 'supplier.%' (not only the contrived LIKE-OR-IN hybrid), against real MySQL erp_dev. HEAD gives 5/5 pass; the plain revert gives 1 failure with payload code STATUS_TRANSITION_INVALID, from 'active', to 'active', which can only be thrown from the current.status === targetStatus replay branch at SupplierAdminService.js:371. DEF-009 closed. Full supplier suite in the reviewer scratch copy: 105/105 pass, 0 failures, 0 skipped. The reviewer also confirmed the coverage cannot silently evaporate, since integrationTest degrades to test.skip without DB_INTEGRATION_TESTS=1 and the suite contract enforces max_skipped 0, and confirmed zero test-data residue in erp_dev after its failing run. One cosmetic fixture infidelity it raised as a nit was corrected afterwards: target_type changed from \"supplier_contact\" to \"contact\" to match SupplierContactService.js:133; the replay query filters on supplier_id and action only, so no outcome changed, and the integration file was re-run at 5/5 after the correction.",
       "actor": "agent-skills:code-reviewer separate-agent instance, and Claude Opus 5 via node:test",
       "observed_at": "2026-09-16T03:34:08Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #106 DEF-001/DEF-002 remediation integrated into main",
+      "code_commit": "f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
+      "status": "PASS",
+      "source_ref": "Merged on 2026-09-16 at merge commit f98fc8d after CI run 35052313430 passed 4/4 first time on the exact head f86d43bf3e1d5009d40821554f7629d1f4c0f164, and REV-008 APPROVED bound to design baseline dcb74d3c. origin/main was verified unmoved at aa7d1927 immediately before the merge. Main CI run 35061941920 on f98fc8d was still in_progress when this checkpoint was written and is NOT yet observed as passing.",
+      "actor": "Claude Opus 5 via gh and git",
+      "observed_at": "2026-09-16T06:03:21Z"
     }
   ],
   "pending_decisions": [
@@ -1026,6 +1071,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "User message on 2026-09-16: 同意你的意見 — accepting the recommendation: (a) ask the same reviewer to re-verify the candidate for an APPROVED review; (b) defer DEF-010 and DEF-011, with the DEF-011 invariant assert scheduled as the first task of PHASE-002; (c) route DEF-012 to a separate Item Management task."
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "Item design spec docs/items_management/03_design_spec.md changed from 6a01476b to 5c193e20 via PR #105, triggering CONTRACT_DRIFT on the consumed item-sku-uom-provider pin. Review of the diff found the change touches DES-009/012/013/015 status classifications, a new HD-003 attribute/variant projection contract, an Item-internal permission policy (read APIs accept item.view OR item.mgmt, explicitly not a cross-module hierarchy), the CATALOG_IN_USE referenceTypes detail, and the import aggregate transaction. DES-010, 5.8 and 8.3 — the SKU/UOM identity contract Supplier actually pins — are untouched, and 5.14 item_supplier_refs is byte-identical. May Supplier refresh the pin to 5c193e20?",
+      "affected_ids": [
+        "item-sku-uom-provider",
+        "DES-017",
+        "TASK-038",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: 批準刷新pin, 完成後就merge"
     }
   ],
   "external_actions": [
@@ -1300,6 +1358,22 @@
       "idempotency_key": "supplier-def-001-002-pr",
       "status": "CONFIRMED",
       "source_ref": "gh pr create returned https://github.com/crazysumsum/erp-app/pull/106 on 2026-09-16; state open, base main, head codex/supplier-defect-001-002, mergeable MERGEABLE."
+    },
+    {
+      "id": "MERGE-005",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-defect-001-002 via PR #106",
+      "idempotency_key": "supplier-def-001-002-merge-pr-106",
+      "status": "CONFIRMED",
+      "source_ref": "gh pr view 106 reports state MERGED, mergedAt 2026-09-16T06:02:15Z, mergeCommit f98fc8d581d1d0b4cabb7600699a6cf8d8c2f085. Local main fast-forwarded to that commit."
+    },
+    {
+      "id": "WORKTREE-RETIRE-002",
+      "kind": "REMOVE_WORKTREE",
+      "target": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-defect-001-002 and branch codex/supplier-defect-001-002",
+      "idempotency_key": "supplier-def-001-002-worktree-retire",
+      "status": "CONFIRMED",
+      "source_ref": "git branch --merged main confirmed the branch was fully merged before removal; worktree removed, local branch deleted, and origin/codex/supplier-defect-001-002 deleted on the remote."
     }
   ],
   "evidence_files": [
@@ -1468,7 +1542,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-013",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "HD-014",
+        "docs/items_management/03_design_spec.md#5.5",
+        "PHASE-004",
+        "TASK-038"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-008 is APPROVED and bound to design baseline dcb74d3c, with 0 Critical and 0 High. DEF-001, DEF-002 and DEF-009 are CLOSED. TASK-024 is DONE, completing PHASE-001 TASK-001..TASK-024, and Checkpoint H is satisfied. Next: push this state commit, confirm required CI is green on that final head, then obtain the user decision to merge PR #106. After merge, reconcile state to the integrated main, retire the worktree and branch, and only then enter PHASE-002 starting with TASK-025 — whose first item is the DEF-011 invariant assert, and whose migrations touch approval_required_paths and need explicit schema sign-off before any migration is written."
+  "next_safe_action": "PR #106 is merged at f98fc8d and PHASE-001 is complete. The HD-014 pin refresh moved the design baseline to 2dc22f70 and the plan baseline to 14cb9ebc, both with recorded human approval. IMPORTANT: REV-008 is bound to the previous design baseline dcb74d3c, so no APPROVED review currently binds the module design baseline. That blocks nothing today because PHASE-001 is merged, but PHASE-002 must obtain a review bound to 2dc22f70 (or its successor) before its own gate. Next: push this pin-refresh branch and open a PR. Then, before PHASE-002 implementation, resolve the harness bookkeeping defects — evidence_files holds Markdown documents at repo-relative paths while the validator resolves module-relative and expects run_check.py run.json files, which is what produced the tracked duplicate directory docs/supplier_management/docs/supplier_management/. PHASE-002 starts with the DEF-011 invariant assert, then TASK-025, whose migrations touch approval_required_paths and need explicit schema sign-off before any migration is written. DEF-013 must be resolved as part of TASK-038."
 }
