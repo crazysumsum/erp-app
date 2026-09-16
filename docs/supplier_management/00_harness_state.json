@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 76,
+  "revision": 77,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "dcb74d3c781236860d85b4dc15e2efce4ea33b58b0ed9739241d2d2c8cd61445",
     "plan": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
-    "code_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
-    "source_fingerprint": "13627f6cbc5eee6e9f2edba1080c563e9ef49d62a41b47846ff984191ba2a4e7",
+    "code_commit": "681b3aed21480ceecd0c4bb5494c30a0de86b533",
+    "source_fingerprint": "5134c047dabcfcd9c603b55ad50b4a90bb4839d1c62277b5f36366b0e4ca8eab",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-defect-001-002",
-    "default_commit": "b3e5aa90229762e9cfc18b5f9c042fbbfe6cf255",
+    "default_commit": "aa7d19276cb12c4375eecdf205b72051d7f03b65",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -751,6 +751,17 @@
       "source_ref": "Test-first remediation on 2026-09-16. Both defects were independently re-verified against source before any change, and three new/updated tests were confirmed RED before the fix and GREEN after. Developer suites on the fixed source: npm run lint exit 0; npm run build --workspace client exit 0; supplier-phase-001-server JUnit 159 testcases / 0 failures / 0 skipped against authorized test-only erp_dev with DB_INTEGRATION_TESTS=1 (was 157; two tests added, still above min_tests=157); supplier-phase-001-client JUnit 40 / 0 / 0. Playwright CLI browser validation against a server and client dev server started from this worktree on 127.0.0.1:3000 and 127.0.0.1:5273, logged in as synthetic system-admin pw_def_0916 with approved device binding 4499. DEF-001: creating supplier DEF-0916-095339 showed exactly four completeness warnings and no BANK_ACCOUNT_MISSING; adding an ordering address, an orders primary contact and an HK identifier through the real UI cleared them one by one down to a single PAYMENT_TERM_MISSING, proving the banner is now reachable to zero. Both GET /suppliers/:id and GET /suppliers/:id/completeness returned issues [] and exactly one PAYMENT_TERM_MISSING warning. The residual payment-term warning cannot be cleared in this environment because Business Master has zero Active Payment Terms seeded; payment term is optional by design, so this is an environment data gap, not a Supplier defect. DEF-002: supplier 404 was suspended through the real UI (version 1 -> 2), a second contact was then created through the UI so that a supplier.contact.create audit row became the newest supplier.% row, and replaying POST /suppliers/404/suspend with the original stale version 1 returned 200 with status suspended and version still 2 — the designed §476 idempotent replay. Before the fix this exact sequence returned 409 STATUS_TRANSITION_INVALID, which the new unit test pins. The negative path is intact: POST /suppliers/404/restore on a suspended supplier still returned 409 STATUS_TRANSITION_INVALID. Final reloaded detail page reported 0 console errors and 0 warnings; the only network requests were user/me, the supplier and completeness reads, all 200. Verified at desktop width and at 375x812. Screenshots captured to the session scratchpad (not repository evidence). REV-006 secondary claim REJECTED: the reviewer also asked for assertExpectedVersion to run before the replay return. Design §476 and §1387 specify that a repeated status command already in the same target state returns current state, and a genuine replay necessarily carries a stale version, so that change would break designed idempotency and the pre-existing test at supplierLifecycleService.test.js:85. Not applied.",
       "actor": "Claude Opus 5 via node:test, vitest and playwright-cli",
       "observed_at": "2026-09-16T01:57:59Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-001/DEF-002 developer suites re-run on the branch after integrating origin/main aa7d1927",
+      "code_commit": "681b3aed21480ceecd0c4bb5494c30a0de86b533",
+      "spec_baseline": "d54764e4e3b4cad5d907d6f4d906566df157b4cd4907e0f4e06533cef8d8c6bd",
+      "source_fingerprint": "5134c047dabcfcd9c603b55ad50b4a90bb4839d1c62277b5f36366b0e4ca8eab",
+      "status": "PASS",
+      "source_ref": "origin/main had advanced from b3e5aa9 to aa7d1927 (PR #105, Item Management) while this branch was in progress, so the earlier developer evidence at fingerprint 13627f6c was invalidated and re-run. origin/main was merged into codex/supplier-defect-001-002 with no conflicts; the 165 changed paths touch no Supplier, Business Master, index.js, permission catalogue, migration or package file. npm ci reinstalled dependencies without modifying package-lock.json. On merged commit 681b3aed: npm run lint exit 0; npm run build --workspace client exit 0; supplier-phase-001-server JUnit 159 testcases / 0 failures / 0 skipped against authorized test-only erp_dev with DB_INTEGRATION_TESTS=1; supplier-phase-001-client JUnit 40 / 0 / 0. Browser validation was performed on the pre-merge source and not repeated, since the merge changed no Supplier or shared runtime file.",
+      "actor": "Claude Opus 5 via npm, node:test and vitest",
+      "observed_at": "2026-09-16T02:49:45Z"
     }
   ],
   "pending_decisions": [
@@ -1170,6 +1181,22 @@
       "idempotency_key": "supplier-def-001-002-browser-supplier-404",
       "status": "CONFIRMED",
       "source_ref": "Synthetic supplier DEF-0916-095339 (id 404) created through the real UI on 2026-09-16 with one address, two contacts and one identifier; left in suspended state."
+    },
+    {
+      "id": "PUSH-005",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/supplier-defect-001-002",
+      "idempotency_key": "supplier-def-001-002-push",
+      "status": "PLANNED",
+      "source_ref": null
+    },
+    {
+      "id": "PR-005",
+      "kind": "CREATE_PR",
+      "target": "base=main head=codex/supplier-defect-001-002",
+      "idempotency_key": "supplier-def-001-002-pr",
+      "status": "PLANNED",
+      "source_ref": null
     }
   ],
   "evidence_files": [
@@ -1285,5 +1312,5 @@
       "risk_approval_id": "APPROVAL-HD-012-RISK"
     }
   ],
-  "next_safe_action": "DEF-001 and DEF-002 are fixed test-first on branch codex/supplier-defect-001-002 with developer suites and real-browser Playwright validation PASS; DEF-003..DEF-008 are DEFERRED under APPROVAL-HD-012-RISK. The change is NOT yet committed, pushed or opened as a PR. Next: commit the remediation, push, open a PR, obtain required CI green plus an actual review of that candidate, and only then re-run the independent review to replace REV-006 CHANGES_REQUESTED with an APPROVED review bound to design baseline dcb74d3c. Checkpoint H and TASK-024 remain open until that APPROVED review exists. Do not start TASK-025."
+  "next_safe_action": "Push codex/supplier-defect-001-002 and open a PR against main, then observe required CI on the exact pushed candidate and obtain an actual review of it. Only after that, re-run the independent review to try to replace REV-006 CHANGES_REQUESTED with an APPROVED review bound to design baseline dcb74d3c. Checkpoint H and TASK-024 stay open until that APPROVED review exists. Do not start TASK-025. PUSH-005 and PR-005 are PLANNED: on interruption inspect origin and the PR list before retrying either."
 }
