@@ -23,6 +23,19 @@ function duplicateEntry(error) {
   return (error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY";
 }
 
+// Replay detection must look only at status transitions. Every audit action this
+// module writes begins with "supplier.", so a broader match lets an unrelated
+// child-record write shadow the real transition.
+const LIFECYCLE_ACTIONS = Object.freeze([
+  "supplier.activate",
+  "supplier.suspend",
+  "supplier.reactivate",
+  "supplier.block",
+  "supplier.unblock",
+  "supplier.archive",
+  "supplier.restore"
+]);
+
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
   supplierCode: "s.supplier_code_key",
   supplierName: "s.supplier_name",
@@ -351,8 +364,8 @@ export class SupplierAdminService {
       if (!current) throw supplierNotFound(input.id);
       if (current.status === targetStatus) {
         const [[latestTransition]] = await connection.query(
-          "SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action LIKE 'supplier.%' ORDER BY id DESC LIMIT 1",
-          [input.id]
+          `SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action IN (${LIFECYCLE_ACTIONS.map(() => "?").join(", ")}) ORDER BY id DESC LIMIT 1`,
+          [input.id, ...LIFECYCLE_ACTIONS]
         );
         if (latestTransition?.action === action) return;
         throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: targetStatus });

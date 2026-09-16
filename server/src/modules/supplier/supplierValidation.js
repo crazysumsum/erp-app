@@ -63,7 +63,9 @@ export function supplierCompletenessWarnings(input) {
   if (!input.hasIdentifier) {
     warnings.push({ field: "identifiers", code: "IDENTIFIER_MISSING", message: "尚未設定供應商識別資料" });
   }
-  if (!input.hasBankAccount) {
+  // Bank accounts land in PHASE-003. Until a caller can actually answer the
+  // question, evaluating it emits a warning no user action could clear.
+  if (Object.hasOwn(input, "hasBankAccount") && !input.hasBankAccount) {
     warnings.push({ field: "bankAccounts", code: "BANK_ACCOUNT_MISSING", message: "尚未設定銀行帳戶" });
   }
   return warnings;
