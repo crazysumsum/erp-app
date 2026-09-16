@@ -3,7 +3,7 @@
 ## Scope and status
 
 - Candidate branch: `codex/customer-management-phase-001`.
-- Candidate code commit: `e553dde`.
+- Candidate code commit: `6f6bbb9`.
 - DESIGN baseline: `89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5`.
 - PLAN baseline: `96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e`.
 - This is developer verification only. It is not Technical Acceptance, UAT, CI,
@@ -46,10 +46,9 @@ Playwright evidence is not applicable to this Phase.
 - Compatible rollback rehearsal: the pre-PHASE-001 application baseline `f7fd955`
   started against a schema expanded by the candidate migrations and returned HTTP
   200 from `GET /api/v1/health`. The temporary worktree and schema were removed.
-- Final local server regression: 1,541 tests, 1,307 passed, 234 existing
-  environment-gated skips, 0 failed. Repository lint, client production build and
-  client tests (476 passed) succeeded. CI was not run, as directed by the Product
-  Owner.
+- Final local verification: the full real-MySQL server `test:coverage` command
+  passed; repository lint, client production build and all 476 client tests passed.
+  CI was not run, as directed by the Product Owner.
 
 ## Final gate result
 
@@ -62,6 +61,8 @@ or fail-closed behavior was weakened.
 
 ## Review and next decision
 
-The HD-007 extension has focused and full real-MySQL verification. Final local
-lint/build/test review remains required before TASK-010 developer completion can
-be recorded; this report remains neither a CI, PR, merge nor release claim.
+The HD-007 extension has focused and full real-MySQL verification, final local
+lint/build/test review, and a five-axis self-review (correctness, readability,
+architecture, security and performance) with no Critical or High findings. TASK-010
+developer verification is complete; this report remains neither a CI, PR, merge nor
+release claim.
