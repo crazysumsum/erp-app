@@ -122,6 +122,110 @@
       ]
     },
     {
+      "id": "supplier-phase-001-server",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/supplier-phase-001-server.xml",
+        "server/test/supplier*.test.js",
+        "server/test/integration/supplier*.integration.test.js",
+        "server/test/businessMasterSupplierContract.test.js",
+        "server/test/business-master/consumer-contract/providerContract.test.js",
+        "server/test/business-master/http.integration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/configuration.test.js",
+        "server/test/configSecrets.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/itemImportMigrations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3600,
+      "result_adapter": "JUNIT",
+      "result_path": "supplier-phase-001-server.xml",
+      "min_tests": 157,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)mysql"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "supplier-phase-001-client",
+      "kind": "UI",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/suppliers",
+        "test/services/supplier.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/supplier-phase-001-client.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "supplier-phase-001-client.xml",
+      "min_tests": 40,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
       "id": "supplier-server-integration",
       "kind": "INTEGRATION",
       "argv": [

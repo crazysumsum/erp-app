@@ -157,11 +157,7 @@
   "required_suites": {
     "developer": [
       "lint",
-      "client-build",
-      "supplier-server-integration",
-      "supplier-bank-security",
-      "supplier-security",
-      "supplier-client-ui"
+      "client-build"
     ],
     "technical": [
       "supplier-server-integration",

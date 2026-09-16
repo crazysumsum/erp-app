@@ -53,7 +53,7 @@ test("create switches each requested primary and writes address, purposes and au
   assert.equal(events.at(-1)[0], "audit");
 });
 
-test("update rejects a child id that does not belong to the route Supplier", async () => {
+test("address update rejects a child id that does not belong to the route Supplier", async () => {
   const { service } = harness({ address: null });
   await assert.rejects(
     () => service.update({ ...actor, supplierId: 8, addressId: 12, version: 1, label: "Other", purposes: [] }),
@@ -61,7 +61,7 @@ test("update rejects a child id that does not belong to the route Supplier", asy
   );
 });
 
-test("deactivate clears primary flags and preserves purpose mappings", async () => {
+test("address deactivate clears primary flags and preserves purpose mappings", async () => {
   const { service, events } = harness();
   const result = await service.deactivate({ ...actor, supplierId: 7, addressId: 12, version: 1 });
   assert.equal(result.status, "inactive");

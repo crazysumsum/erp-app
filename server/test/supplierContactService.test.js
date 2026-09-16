@@ -88,7 +88,7 @@ test("create rejects malformed optional email and phone values", async () => {
   );
 });
 
-test("update rejects a child id that does not belong to the route Supplier", async () => {
+test("contact update rejects a child id that does not belong to the route Supplier", async () => {
   const { service } = harness({ contact: null });
   await assert.rejects(
     () => service.update({ ...actor, supplierId: 8, contactId: 21, version: 1, name: "Amy", purposes: [] }),
@@ -96,7 +96,7 @@ test("update rejects a child id that does not belong to the route Supplier", asy
   );
 });
 
-test("deactivate clears primary flags and preserves purpose mappings", async () => {
+test("contact deactivate clears primary flags and preserves purpose mappings", async () => {
   const { service, events } = harness();
   const result = await service.deactivate({ ...actor, supplierId: 7, contactId: 21, version: 1 });
   assert.equal(result.status, "inactive");
