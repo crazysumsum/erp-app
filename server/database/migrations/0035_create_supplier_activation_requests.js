@@ -17,7 +17,7 @@ function value(row, lower, upper) {
 
 export async function inspectSupplierActivationRequestSchema(connection) {
   const [columns] = await connection.query(
-    `SELECT column_name AS column_name
+    `SELECT column_name AS column_name, extra AS extra
        FROM information_schema.columns
       WHERE table_schema = DATABASE() AND table_name = 'supplier_activation_requests'
       ORDER BY ordinal_position`
@@ -26,6 +26,13 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   const actual = columns.map((row) => value(row, "column_name", "COLUMN_NAME"));
   if (actual.length !== COLUMNS.length || COLUMNS.some((name) => !actual.includes(name))) {
     throw new Error("Incompatible existing Supplier activation request schema: supplier_activation_requests");
+  }
+  // A plain TINYINT named pending_slot would satisfy the name check above while
+  // letting the application write the slot freely, so the one-pending guarantee
+  // has to be checked as a property of the column, not of the column list.
+  const slot = columns.find((row) => value(row, "column_name", "COLUMN_NAME") === "pending_slot");
+  if (!String(value(slot, "extra", "EXTRA") ?? "").toUpperCase().includes("GENERATED")) {
+    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not a generated column");
   }
 
   const [indexes] = await connection.query(
@@ -36,6 +43,19 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   const actualIndexes = new Set(indexes.map((row) => value(row, "index_name", "INDEX_NAME")));
   for (const name of INDEXES) {
     if (!actualIndexes.has(name)) throw new Error(`Incompatible existing Supplier activation request index: ${name}`);
+  }
+  // Likewise, a non-unique index of the same name would enforce nothing.
+  const [pendingSlotIndex] = await connection.query(
+    `SELECT non_unique AS non_unique, column_name AS column_name
+       FROM information_schema.statistics
+      WHERE table_schema = DATABASE() AND table_name = 'supplier_activation_requests'
+        AND index_name = 'uq_supplier_activation_pending'
+      ORDER BY seq_in_index`
+  );
+  const slotColumns = pendingSlotIndex.map((row) => value(row, "column_name", "COLUMN_NAME"));
+  const slotUnique = pendingSlotIndex.every((row) => Number(value(row, "non_unique", "NON_UNIQUE")) === 0);
+  if (!slotUnique || slotColumns.join(",") !== "supplier_id,pending_slot") {
+    throw new Error("Incompatible existing Supplier activation request index: uq_supplier_activation_pending must be UNIQUE (supplier_id, pending_slot)");
   }
 
   const [foreignKeys] = await connection.query(
@@ -53,7 +73,10 @@ export async function inspectSupplierActivationRequestSchema(connection) {
 export async function up(connection) {
   if (await inspectSupplierActivationRequestSchema(connection)) return;
   // pending_slot is the database-level guarantee of at most one pending request per
-  // Supplier. MySQL has no partial index, so the slot is NULL for every non-pending
+  // Supplier. The guard compares status to the exact lowercase 'pending'; status is
+  // ascii_bin, so any other casing silently frees the slot. Writers must use the
+  // literal value, and a later status rename has to move with this expression.
+  // MySQL has no partial index, so the slot is NULL for every non-pending
   // row and a UNIQUE index does not compare NULLs — unlimited history, one pending.
   // Same emulation as primary_slot in 0032 and 0033.
   //

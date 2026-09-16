@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
 import { up as createSuppliers } from "../../database/migrations/0029_create_suppliers.js";
 import { up as createSupplierNameGrams } from "../../database/migrations/0030_create_supplier_name_grams.js";
+import { up as createSupplierActivationRequests } from "../../database/migrations/0035_create_supplier_activation_requests.js";
+import { up as createSupplierSettings } from "../../database/migrations/0036_create_supplier_settings.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
@@ -62,4 +65,106 @@ integrationTest("0029 and 0030 create the exact Supplier root and owned gram sch
     ["suppliers", "users", "SET NULL"],
     ["suppliers", "users", "SET NULL"]
   ]);
+});
+
+integrationTest("0035 gives the database the one-pending-request guarantee and converges on rerun", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  // One hook: node:test runs after-hooks in registration order, so a separate
+  // cleanup hook registered later would find the connection already closed.
+  t.after(async () => {
+    if (supplierId !== null) {
+      await connection.execute("DELETE FROM supplier_activation_requests WHERE supplier_id = ?", [supplierId]);
+      await connection.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
+    }
+    await connection.end();
+  });
+  await createSupplierActivationRequests(connection);
+  await createSupplierActivationRequests(connection);
+
+  const [[slot]] = await connection.query(
+    `SELECT extra FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'supplier_activation_requests' AND column_name = 'pending_slot'`
+  );
+  assert.match(String(slot.extra ?? slot.EXTRA).toUpperCase(), /GENERATED/u);
+
+  const [slotIndex] = await connection.query(
+    `SELECT non_unique, column_name FROM information_schema.statistics
+      WHERE table_schema = DATABASE() AND table_name = 'supplier_activation_requests'
+        AND index_name = 'uq_supplier_activation_pending'
+      ORDER BY seq_in_index`
+  );
+  assert.deepEqual(slotIndex.map((row) => row.column_name ?? row.COLUMN_NAME), ["supplier_id", "pending_slot"]);
+  assert.deepEqual([...new Set(slotIndex.map((row) => Number(row.non_unique ?? row.NON_UNIQUE)))], [0]);
+
+  const [[restrictRule]] = await connection.query(
+    `SELECT delete_rule FROM information_schema.referential_constraints
+      WHERE constraint_schema = DATABASE() AND constraint_name = 'fk_supplier_activation_supplier'`
+  );
+  assert.equal(restrictRule.delete_rule ?? restrictRule.DELETE_RULE, "RESTRICT");
+
+  // The index only enforces anything if the generated slot really is recomputed on
+  // UPDATE, so exercise it against real rows rather than reading the DDL back.
+  const suffix = randomUUID().slice(0, 8);
+  const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+  const now = Date.now();
+  const [supplier] = await connection.execute(
+    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+       default_currency_code, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [`MIG-${suffix}`, `mig-${suffix}`, `Migration ${suffix}`, `migration ${suffix}`, currency.code ?? currency.CODE, now, now]
+  );
+  supplierId = supplier.insertId;
+
+  const insertPending = () => connection.execute(
+    `INSERT INTO supplier_activation_requests (supplier_id, supplier_version, summary, requested_at)
+     VALUES (?, 1, JSON_OBJECT(), ?)`,
+    [supplierId, Date.now()]
+  );
+  const [first] = await insertPending();
+  await assert.rejects(insertPending, (error) => error.code === "ER_DUP_ENTRY");
+
+  // A hard delete must not slip past the reference rules while a request is open.
+  await assert.rejects(
+    () => connection.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]),
+    (error) => error.code === "ER_ROW_IS_REFERENCED_2"
+  );
+
+  await connection.execute("UPDATE supplier_activation_requests SET status = 'approved' WHERE id = ?", [first.insertId]);
+  await insertPending();
+  const [[counts]] = await connection.query(
+    `SELECT COUNT(*) AS total, COUNT(pending_slot) AS pending
+       FROM supplier_activation_requests WHERE supplier_id = ?`,
+    [supplierId]
+  );
+  assert.equal(Number(counts.total ?? counts.TOTAL), 2);
+  assert.equal(Number(counts.pending ?? counts.PENDING), 1);
+});
+
+integrationTest("0036 seeds the settings singleton once and a rerun neither duplicates nor resets it", async (t) => {
+  const connection = await mysql.createConnection(config());
+  await createSupplierSettings(connection);
+
+  // erp_dev is shared, so the row already carries whatever the last run left. Take
+  // the current value as the restore point rather than assuming a fresh database,
+  // then re-exercise the seed by removing the row and letting up() put it back.
+  const [[existing]] = await connection.query("SELECT require_activation_approval FROM supplier_settings WHERE id = 1");
+  const previous = Number(existing?.require_activation_approval ?? existing?.REQUIRE_ACTIVATION_APPROVAL ?? 0);
+  t.after(async () => {
+    await connection.execute("UPDATE supplier_settings SET require_activation_approval = ? WHERE id = 1", [previous]);
+    await connection.end();
+  });
+
+  await connection.execute("DELETE FROM supplier_settings WHERE id = 1");
+  await createSupplierSettings(connection);
+  const [[seeded]] = await connection.query("SELECT require_activation_approval FROM supplier_settings WHERE id = 1");
+  assert.equal(Number(seeded.require_activation_approval ?? seeded.REQUIRE_ACTIVATION_APPROVAL), 0,
+    "the seed must leave existing activation behaviour unchanged");
+
+  await connection.execute("UPDATE supplier_settings SET require_activation_approval = 1 WHERE id = 1");
+  await createSupplierSettings(connection);
+  const [rows] = await connection.query("SELECT id, require_activation_approval FROM supplier_settings");
+  assert.equal(rows.length, 1);
+  assert.equal(Number(rows[0].require_activation_approval ?? rows[0].REQUIRE_ACTIVATION_APPROVAL), 1,
+    "a rerun overwrote an operator's setting");
 });

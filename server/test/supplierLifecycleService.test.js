@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
+import { LIFECYCLE_COMMANDS, SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
 
-function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null } = {}) {
+function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null, deleteError = null } = {}) {
   const events = [];
   const row = {
     id: 7, supplier_code: "SUP-7", supplier_code_key: "sup-7", supplier_name: "Supplier",
@@ -35,7 +35,10 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
         row.version += 1;
         return [{ affectedRows: 1 }];
       }
-      if (sql.includes("DELETE FROM suppliers")) return [{ affectedRows: 1 }];
+      if (sql.includes("DELETE FROM suppliers")) {
+        if (deleteError) throw deleteError;
+        return [{ affectedRows: 1 }];
+      }
       return [{ affectedRows: 1 }];
     }
   };
@@ -99,33 +102,31 @@ test("same-target lifecycle replay returns current state without version increme
   await assert.rejects(() => wrongCommand.service.restoreSupplier({ ...context, version: 5 }), (error) => error.publicCode === "STATUS_TRANSITION_INVALID");
 });
 
-test("every lifecycle command the service exposes is covered by the replay filter", async () => {
+test("every registered lifecycle command is covered by the replay filter", async () => {
   // DEF-011: LIFECYCLE_ACTIONS used to be a hand-maintained copy of the action
-  // strings, with no structural link to the commands. This discovers the commands
-  // by reflection, so a transition added in a later phase without extending the
-  // filter fails here rather than silently turning a replay into a 409.
-  const starting = { activateSupplier: "draft", suspendSupplier: "active", reactivateSupplier: "suspended",
-    blockSupplier: "active", unblockSupplier: "blocked", archiveSupplier: "active", restoreSupplier: "archived" };
-  const commands = Object.getOwnPropertyNames(SupplierAdminService.prototype)
-    .filter((name) => /^(?!delete)[a-z].*Supplier$/.test(name) && name in starting);
-  assert.equal(commands.length, 7, "starting-state map is stale; a lifecycle command was added or removed");
+  // strings. #changeStatus now takes a key of LIFECYCLE_COMMANDS rather than a
+  // descriptor, so a transition cannot reach the transition path at all without
+  // being registered — and registering it puts its action in the filter. This
+  // walks the registry itself and proves the filter really binds what each
+  // command writes; a command added to the registry fails here until this test
+  // is taught how to reach it.
+  const starting = { activate: "draft", suspend: "active", reactivate: "suspended",
+    block: "active", unblock: "blocked", archive: "active", restore: "archived" };
+  const unreached = Object.keys(LIFECYCLE_COMMANDS).filter((name) => !(name in starting));
+  assert.deepEqual(unreached, [], "a lifecycle command was registered without a starting status here");
 
-  let boundActions = null;
-  const audited = [];
-  for (const name of commands) {
+  for (const [name, command] of Object.entries(LIFECYCLE_COMMANDS)) {
     const { service, events } = harness({ status: starting[name] });
-    await service[name]({ ...context });
-    audited.push(events.find(([kind]) => kind === "audit")[1].action);
+    await service[`${name}Supplier`]({ ...context });
+    const written = events.find(([kind]) => kind === "audit")[1].action;
+    assert.equal(written, command.action, `${name} writes an action the registry does not declare`);
     // Re-issuing the same command now that the row sits at the target status
     // drives the replay branch, which is where the filter is bound.
-    await service[name]({ ...context }).catch(() => {});
+    await service[`${name}Supplier`]({ ...context }).catch(() => {});
     const query = events.find(([kind, sql]) => kind === "query" && String(sql).includes("ORDER BY id DESC"));
-    if (query) boundActions = new Set(query[2].slice(1));
-  }
-
-  assert.ok(boundActions, "no replay lookup was observed");
-  for (const action of audited) {
-    assert.ok(boundActions.has(action), `${action} is written by a command but absent from the replay filter`);
+    assert.ok(query, `${name} did not reach the replay lookup`);
+    assert.ok(new Set(query[2].slice(1)).has(written),
+      `${written} is written by ${name} but absent from the replay filter`);
   }
 });
 
@@ -203,4 +204,13 @@ test("approval-enabled activation fails explicitly until the approval phase is d
   const { service, events } = harness({ approvalRequired: true });
   await assert.rejects(() => service.activateSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_APPROVAL_NOT_READY");
   assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
+});
+
+test("a RESTRICT foreign key that no reference checker covers is reported as a reference conflict", async () => {
+  // this.references only reports the child tables whose checkers the caller
+  // registered. supplier_activation_requests (0035) is RESTRICT, so its rows can
+  // reach the DELETE unannounced; the driver error must not become a 500.
+  const referenced = Object.assign(new Error("Cannot delete or update a parent row"), { code: "ER_ROW_IS_REFERENCED_2" });
+  const { service } = harness({ status: "draft", deleteError: referenced });
+  await assert.rejects(() => service.deleteSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_REFERENCED");
 });
