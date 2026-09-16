@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 86,
+  "revision": 88,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-024",
   "baseline": {
     "design": "2dc22f70754ee9fe3f880cec40b2408c2c7cd3c3dcf48875f1a856a3d3138743",
     "plan": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
-    "code_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
-    "source_fingerprint": "db5b7e8e7a447cd2179277472ae4f0e83b43eed248f947b90a38aeff28c7b4be",
+    "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+    "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bookkeeping",
     "default_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -559,6 +559,24 @@
         "DEF-012"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-016-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User message on 2026-09-16: \"a .gitignore都一齊做\" — authorizing (i) a recorded exception removing all eight invalid evidence_files entries by editing 00_harness_state.json directly, since state_tool.py enforces the field as append-only and the entries cannot otherwise be corrected, and (ii) editing .gitignore, which is repository-wide hygiene outside this module allowed_write_paths.",
+      "recorded_at": "2026-09-16T07:36:57Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "scope": [
+        "supplier-management",
+        ".gitignore",
+        "evidence_files"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -980,6 +998,28 @@
       "source_ref": "The evidence_files field requires module-relative paths to run_check.py run.json records validated against evidence.schema.json; it had held six repo-relative paths to narrative Markdown. Resolution via inside(ctx.module_dir, path) doubled them to docs/supplier_management/docs/supplier_management/..., and an earlier state-recovery run had satisfied the first two by creating files at that doubled path whose contents are JSON evidence records despite their .md filenames. Inspected before deletion: both are honest placeholders with result BLOCKED, exit_code null, all counts zero, and limitations stating the suite was not executed and that the JSON is not a substitute for executable test evidence. run_id state_recovery_20260915_01 (lint) and _02 (supplier-phase1-independent-review). No unique authoritative content was lost: the narrative documents they pointed at are the outer Markdown files, which remain, and the provenance is preserved in this record. evidence_files is now empty pending real run.json records; every review document remains referenced from reviews[].source_ref, which takes repo-relative paths and is where they belong.",
       "actor": "Claude Opus 5",
       "observed_at": "2026-09-16T07:24:39Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-016 recorded exception: all eight invalid evidence_files entries removed and the duplicated directory deleted",
+      "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "spec_baseline": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "This removal deliberately bypassed state_tool.py, which enforces set(old) <= set(new) on evidence_files. It is recorded here in full rather than erased, which is what that rule exists to prevent. The eight removed entries were, in order: docs/supplier_management/implementation/00_implementation_readiness.md; docs/supplier_management/implementation/01_checkpoint_a_independent_review.md; docs/supplier_management/implementation/02_checkpoint_h_independent_review.md; docs/supplier_management/implementation/03_def_001_002_remediation.md; docs/supplier_management/implementation/04_rev_007_independent_review.md; docs/supplier_management/implementation/05_rev_008_independent_review.md; docs/supplier_management/implementation/06_rev_009_independent_review.md; docs/supplier_management/implementation/07_rev_010_independent_review.md. All eight were repo-relative paths to narrative Markdown, while the validator resolves module-relative via inside(ctx.module_dir, path) and parses each entry against evidence.schema.json, which requires a run_check.py run.json. Entries 00 and 01 resolved only because an earlier state-recovery run created JSON records with .md filenames at the doubled path docs/supplier_management/docs/supplier_management/implementation/; those two files were inspected before deletion and were honest placeholders (result BLOCKED, exit_code null, all counts zero, limitations stating the suite was not executed and that the JSON is not a substitute for executable test evidence, run_id state_recovery_20260915_01 and _02). Entries 02 through 07 were added by this author in revisions 76, 79, 82 and 85, following that wrong convention without checking the field semantics. No authoritative content is lost: every one of the eight narrative documents remains on disk under docs/supplier_management/implementation/ and every review document remains referenced from reviews[].source_ref, which takes repo-relative paths and is the correct home for them. evidence_files is now empty and will hold only real evidence/<run_id>/run.json records produced by run_check.py --execute.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T07:36:57Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Real run_check.py evidence produced for all four DEVELOPER suites",
+      "code_commit": "c320e2a024e0fe14967ecdbe3ab70a6814dd0d35",
+      "spec_baseline": "14cb9ebc0d6e954ae7cc266cd3ed8882a00c01cbb10bc75992049036469c3574",
+      "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
+      "status": "PASS",
+      "source_ref": "With evidence_files corrected, run_check.py --execute ran for the first time in this module. Five records were produced and all five are registered, the failure included rather than discarded: lint FAIL exit 127 (the worktree had no node_modules yet; npm ci then installed them without modifying package-lock.json), then lint PASS exit 0, client-build PASS exit 0, supplier-phase-001-server PASS with 159/159 and 0 skipped against the authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, and supplier-phase-001-client PASS with 40/40 and 0 skipped. These are the first genuinely registered run records for this module; every earlier suite result in this state file was a manual observation, which is what REQUIRED_RUN_MISSING was correctly reporting all along.",
+      "actor": "Claude Opus 5 via run_check.py",
+      "observed_at": "2026-09-16T07:37:57Z"
     }
   ],
   "pending_decisions": [
@@ -1201,8 +1241,8 @@
         "REQUIRED_RUN_MISSING",
         "docs/supplier_management/docs"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "User message on 2026-09-16: \"a .gitignore都一齊做\" — option (a), a documented recorded exception to the append-only evidence_files rule, plus authorization to edit .gitignore in the same change."
     }
   ],
   "external_actions": [
@@ -1512,14 +1552,11 @@
     }
   ],
   "evidence_files": [
-    "docs/supplier_management/implementation/00_implementation_readiness.md",
-    "docs/supplier_management/implementation/01_checkpoint_a_independent_review.md",
-    "docs/supplier_management/implementation/02_checkpoint_h_independent_review.md",
-    "docs/supplier_management/implementation/03_def_001_002_remediation.md",
-    "docs/supplier_management/implementation/04_rev_007_independent_review.md",
-    "docs/supplier_management/implementation/05_rev_008_independent_review.md",
-    "docs/supplier_management/implementation/06_rev_009_independent_review.md",
-    "docs/supplier_management/implementation/07_rev_010_independent_review.md"
+    "evidence/20260916T073702-8ed42b0a78d8/run.json",
+    "evidence/20260916T073723-d1dc661a049d/run.json",
+    "evidence/20260916T073727-c3fb7497a9c2/run.json",
+    "evidence/20260916T073736-e4cbe46f4e72/run.json",
+    "evidence/20260916T073739-afacfa147578/run.json"
   ],
   "defects": [
     {
@@ -1697,5 +1734,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "State reconciled to merged main a4f4f02. DECISION_REQUIRED on HD-016: the evidence_files bookkeeping defect CANNOT be fixed through state_tool.py, which enforces set(old) <= set(new) on evidence_files as append-only history. The six entries are repo-relative paths to narrative Markdown; resolution doubles them to docs/supplier_management/docs/supplier_management/..., where an earlier state-recovery run satisfied the first two by creating JSON evidence records with .md filenames. The four the author added in revisions 76, 79, 82 and 85 followed that wrong convention and now make run_check.py --execute return EVIDENCE_INVALID, so no real run.json evidence can be produced and REQUIRED_RUN_MISSING cannot be cleared honestly. The duplicated directory also cannot be deleted, because removing it would invalidate entries 0 and 1 which must be preserved. Do not work around this by creating more placeholder JSON at the doubled path. Also still open: whether .gitignore, which is outside this module allowed_write_paths, may be edited; six SCOPE approvals already stale before this change; the Purchasing manifest pinning Supplier provided contract at 983f351f while the spec is a9f64493; permission-catalogue drifted in four manifests."
+  "next_safe_action": "Bookkeeping cleanup complete: evidence_files holds five real run.json records including one failure, the duplicated directory is deleted, .gitignore covers .claude/ and graphify-out/, and state is reconciled to the merged main. Next: commit, push and open a PR for independent review bound to design baseline 2dc22f70. Still open for separate handling, none introduced here: six SCOPE approvals already stale before this change; the Purchasing manifest pinning Supplier's provided contract at 983f351f while the spec is a9f64493; permission-catalogue drifted in four manifests; and DEF-012, the Item idempotency race, which remains intermittent and unfixed in its own module. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations touch approval_required_paths and need explicit schema sign-off before any migration is written."
 }
