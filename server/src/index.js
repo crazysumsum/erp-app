@@ -13,7 +13,10 @@ async function bootstrap() {
 
   application = await createApplication({
     serviceDiscoveryOptions: {
-      additionalModuleUrls: [new URL("./modules/businessMaster/BusinessMasterService.js", import.meta.url).href]
+      additionalModuleUrls: [
+        new URL("./modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("./modules/supplier/SupplierProviderServices.js", import.meta.url).href
+      ]
     }
   });
   registerProcessLifecycle({ application });

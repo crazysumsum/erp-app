@@ -11,6 +11,7 @@ import requestConfig from "../../../config/request.js";
 import requestLimiterConfig from "../../../config/requestLimiter.js";
 import schedulerConfig from "../../../config/scheduler.js";
 import securityConfig from "../../../config/security.js";
+import supplierConfig from "../../../config/supplier.js";
 import tokenRevocationConfig from "../../../config/tokenRevocation.js";
 import { normalizeLoggingConfig } from "../../services/logging/normalizeLoggingConfig.js";
 import { normalizeSecurityConfig } from "../security/normalizeSecurityConfig.js";
@@ -25,6 +26,7 @@ import { normalizeJwtConfig } from "./normalizeJwtConfig.js";
 import { normalizeRequestConfig } from "./normalizeRequestConfig.js";
 import { normalizeRequestLimiterConfig } from "../../services/requestLimiter/normalizeRequestLimiterConfig.js";
 import { normalizeSchedulerConfig } from "../../services/scheduler/normalizeSchedulerConfig.js";
+import { normalizeSupplierConfig } from "../../modules/supplier/normalizeSupplierConfig.js";
 import { normalizeTokenRevocationConfig } from "../../services/tokenRevocation/normalizeTokenRevocationConfig.js";
 import { JOB_NAME as REVOCATION_REFRESH_JOB } from "../../services/tokenRevocation/jobs/TokenRevocationRefreshJob.js";
 
@@ -42,6 +44,7 @@ export function defaultConfigurationSource() {
     requestLimiter: requestLimiterConfig,
     scheduler: schedulerConfig,
     security: securityConfig,
+    supplier: supplierConfig,
     tokenRevocation: tokenRevocationConfig
   };
 }
@@ -101,6 +104,7 @@ export function validateApplicationConfiguration(
   );
   validateSection("scheduler", () => normalizeSchedulerConfig(source?.scheduler));
   validateSection("security", () => normalizeSecurityConfig(source?.security));
+  validateSection("supplier", () => normalizeSupplierConfig(source?.supplier));
   validateSection("tokenRevocation", () =>
     normalizeTokenRevocationConfig(source?.tokenRevocation)
   );

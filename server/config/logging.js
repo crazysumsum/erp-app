@@ -94,7 +94,13 @@ const loggingConfig = {
         "refreshToken",
         "authorization",
         "cookie",
-        "set-cookie"
+        "set-cookie",
+        "accountNumber",
+        "iban",
+        "bankAccountNumber",
+        "accountNumberCiphertext",
+        "bankEncryptionKey",
+        "bankLookupKey"
       ]
     },
 
@@ -148,7 +154,13 @@ const loggingConfig = {
         "refreshToken",
         "authorization",
         "cookie",
-        "set-cookie"
+        "set-cookie",
+        "accountNumber",
+        "iban",
+        "bankAccountNumber",
+        "accountNumberCiphertext",
+        "bankEncryptionKey",
+        "bankLookupKey"
       ]
     }
   }

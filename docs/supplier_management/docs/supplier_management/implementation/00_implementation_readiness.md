@@ -1,0 +1,30 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "state_recovery_20260915_01",
+  "suite_id": "lint",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "db1bdd800eadec91f07345a8b97a221b652c6c694b6756f251996d0b37d4cc4f",
+  "source_fingerprint": "26cfe0ca43a3379c24759e29b75949a6defa0c3922fb4a2d7a1c1978b71e30b1",
+  "code_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2",
+  "started_at": "2026-09-15T10:20:00+08:00",
+  "ended_at": "2026-09-15T10:20:01+08:00",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "erp_dev synthetic data only",
+  "command": ["python3", "run_check.py", "--suite", "lint", "--stage", "DEVELOPER", "--execute"],
+  "cwd": "/private/tmp/erp-supplier-management-phase-001-v2",
+  "command_contract_sha256": "08fe05caee370940c9e8dd6cc277e9928d69e56a199fa060433be9e417dfa2a2",
+  "exit_code": null,
+  "timed_out": false,
+  "counts": {"total": 0, "passed": 0, "failed": 0, "skipped": 0, "not_run": 0},
+  "cases": [],
+  "artifacts": [
+    {"path": "docs/supplier_management/implementation/00_implementation_readiness.md", "sha256": "d54bce5eaa7f777551827c46dd4d1975df17aa14f41fff2170498ed80da1bdf6", "bytes": 6798}
+  ],
+  "tools": [],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": ["Suite was not executed: state revision 38 referenced narrative Markdown as machine evidence and the environment authorization_ref was not yet recorded."]
+}
