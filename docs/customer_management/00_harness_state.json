@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 76,
+  "revision": 84,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -404,6 +404,25 @@
         "docs/customer_management/implementation/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-011",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-16 Codex task user: 修復 coverage",
+      "recorded_at": "2026-09-16T01:21:16Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "e553dded1a470a14839afabf6ace7ef403903e8e",
+      "scope": [
+        "TASK-010",
+        "server/test/**",
+        "server/test-support/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -594,6 +613,19 @@
       "affected_ids": [
         "TASK-010",
         "PHASE-001",
+        "coverage"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-SCOPE-011"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "The full real-MySQL coverage command now meets its numeric thresholds but cannot pass because Business Master correctly fails closed when it discovers the installed Customer table without a registered Currency/Payment Term impact checker. May TASK-010 extend scope into a production Customer impact checker (Business Master integration), or should this existing cross-module gate remain a documented blocker until its planned consumer-adoption task?",
+      "affected_ids": [
+        "TASK-010",
+        "PHASE-001",
+        "Business Master impact checker",
         "coverage"
       ],
       "status": "OPEN",
@@ -800,6 +832,38 @@
       "idempotency_key": "customer-phase001-task010-compatible-rollback-deps-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-16: fresh isolated schema applied current candidate migrations through 0036. Disposable pre-PHASE-001 baseline f7fd955 started against that expanded schema and GET /api/v1/health returned 200. Exact temporary worktree and schema were removed; final schema absence query returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-021",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-real-db-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. The real-DB coverage measurements met 95.70% lines, 85.26% branches and 93.39% functions, but the command was not accepted because parallel integration files shared mutable permission fixtures and one legacy assertion incorrectly expected Customer bank permissions to be granted to system-admin."
+    },
+    {
+      "id": "EXT-MIGRATION-022",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-serial-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Serial execution preserved coverage above the thresholds (95.70% lines, 85.24% branches, 93.39% functions) but is not an accepted gate run: pre-existing integration tests incorrectly minted system-admin claims with the two Customer bank permissions that migration 0028 deliberately withholds. The run established the bounded correction and did not weaken any gate."
+    },
+    {
+      "id": "EXT-MIGRATION-023",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-corrected-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Corrected system-admin claims removed all stale-permission failures and coverage was 96.04% lines, 85.45% branches and 93.70% functions. The normal parallel profile is not accepted because concurrent test-file applications exhausted local shared MySQL/HTTP capacity, producing one 503 in the Business Master HTTP test; this is a test-runner resource-isolation issue, not a coverage deficit or production behavior claim."
+    },
+    {
+      "id": "EXT-MIGRATION-024",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-corrected-serial-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Corrected system-admin claims removed all stale-permission failures and the serial run measured 96.04% lines, 85.43% branches and 93.70% functions. It still failed exactly one Business Master HTTP assertion because the installed Customer table has no registered impact checker; businessMasterFactory deliberately reports this as IMPACT_CHECK_UNAVAILABLE (503). No test assertion, threshold or fail-closed behavior was weakened."
     }
   ],
   "evidence_files": [
@@ -807,5 +871,5 @@
     "docs/customer_management/implementation/phase-PHASE-001-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Obtain the Product Owner decision for HD-006. If coverage remediation is selected, plan and approve a bounded coverage task; if an exception is approved, record it against the current candidate baseline before completing TASK-010 and preparing the Phase PR."
+  "next_safe_action": "Obtain Product Owner direction for HD-007 before extending TASK-010 into the Business Master Customer impact-checker integration; until then, retain the verified coverage blocker without weakening tests, thresholds or fail-closed behavior."
 }

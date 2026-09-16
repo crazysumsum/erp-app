@@ -46,17 +46,20 @@ Playwright evidence is not applicable to this Phase.
 
 ## Known gate result
 
-The server coverage command executed its tests but failed the repository-wide 92%
-coverage threshold, reporting 82.68% line coverage across the pre-existing full
-server source tree. The threshold was not weakened and this report does not claim a
-coverage pass. Client coverage completed successfully. This remains a merge/readiness
-blocker until the project coverage baseline is addressed or an authorized policy
-decision records another disposition.
+The real-MySQL server coverage command now reaches 96.04% lines, 85.43% branches
+and 93.70% functions, above the repository thresholds of 92%/83%/90%. It still
+cannot pass as a command because one pre-existing Business Master HTTP assertion
+expects Currency deactivation to proceed after the Customer table is installed.
+Business Master deliberately fails closed with `IMPACT_CHECK_UNAVAILABLE` until that
+consumer registers its real Currency/Payment Term impact checker. The Customer
+design only requires the read contract in this Phase, so adding that cross-module
+consumer-adoption capability exceeds TASK-010's approved scope. No threshold,
+assertion or fail-closed behavior was weakened. This remains a merge/readiness
+blocker pending Product Owner direction for HD-007.
 
 ## Review and next decision
 
-Self-review of the TASK-010 diff found no remaining Critical or High issue. The
-previous long-search branch lacked direct coverage and was corrected before the
-candidate commit. The developer evidence is ready for Product Owner review; the
-Phase cannot be marked complete or PR-ready while the server coverage gate remains
-failing.
+Self-review of the TASK-010 diff found no remaining Critical or High issue within
+the approved scope. The previous long-search branch lacked direct coverage and was
+corrected before the candidate commit. The Phase cannot be marked complete or
+PR-ready while HD-007 remains unresolved.
