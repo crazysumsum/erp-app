@@ -21,7 +21,18 @@ function harness({ approvalRequired = false, duplicateRows = [], approverEligibl
     }
   };
   const database = {
-    async withTransaction(work) { events.push(["transaction", "begin"]); const result = await work(connection); events.push(["transaction", "commit"]); return result; },
+    async withTransaction(work) {
+      events.push(["transaction", "begin"]);
+      try {
+        const result = await work(connection);
+        events.push(["transaction", "commit"]);
+        return result;
+      } catch (error) {
+        // 之前呢個 fake 唔會記 rollback，所以「失敗時冇留低嘢」係 assert 唔到嘅。
+        events.push(["transaction", "rollback"]);
+        throw error;
+      }
+    },
     async query() {
       return [[{
         id: 7, supplier_code: "SUP-7", supplier_name: "Demo Supplier", display_name: "",
@@ -200,5 +211,24 @@ test("change Supplier Code maps the database uniqueness race without disclosing 
   await assert.rejects(
     () => service.changeSupplierCode({ ...updateInput, supplierCode: "SUP-NEW", reason: "Correct legacy code" }),
     (error) => error.publicCode === "SUPPLIER_CODE_TAKEN" && error.details.supplierCode === "SUP-NEW"
+  );
+});
+
+test("AC-009: naming an ineligible approver refuses the create and leaves nothing behind", async () => {
+  // The approverEligible scaffolding existed but no test used it, so the seam
+  // between createSupplier and the approval domain was never exercised for refusal.
+  const { service, events } = harness({ approvalRequired: true, approverEligible: false });
+  await assert.rejects(
+    () => service.createSupplier({ ...input, approverUserId: 2 }),
+    (error) => error.publicCode === "APPROVER_NOT_ELIGIBLE"
+  );
+  assert.equal(events.at(-1)[1], "rollback", "a refused submission must not leave a Supplier behind");
+});
+
+test("naming an approver while the policy is OFF is refused rather than ignored", async () => {
+  const { service } = harness({ approvalRequired: false });
+  await assert.rejects(
+    () => service.createSupplier({ ...input, approverUserId: 2 }),
+    (error) => error.publicCode === "APPROVER_NOT_REQUIRED"
   );
 });

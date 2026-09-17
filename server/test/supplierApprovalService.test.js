@@ -101,6 +101,7 @@ test("the snapshot carries the minimum activation data and masks identifiers", a
   assert.deepEqual(summary, {
     supplierCode: "SUP-7", supplierName: "Demo", displayName: "D",
     defaultCurrencyCode: "HKD", defaultPaymentTermId: 3,
+    identifierCount: 1, identifiersTruncated: false,
     identifiers: [{ identifierType: "tax", issuerCountryCode: "HK", identifierValueMasked: "****5678" }]
   });
 });
@@ -264,14 +265,131 @@ test("a closed request cannot be reassigned", async () => {
   );
 });
 
-test("the lock order is settings then supplier then request, per design 2.6", async () => {
-  // The decision path does not read settings, so what it must show is that the
-  // Supplier row is locked before the request is updated, never the reverse.
+test("suppliers is locked before the request, per design 2.6", async () => {
+  // The previous version of this test asserted indexOf("supplier") < lastIndexOf("request"),
+  // which passes under BOTH orders because the request is read twice. It certified
+  // nothing, and the inverted order it missed deadlocks against updateSupplier on
+  // real MySQL. Compare only the row locks, in the order they are actually taken.
   const { service, events } = harness();
   await service.approveRequest({ ...context, reason: "批准" });
-  const order = events
-    .filter(([kind, sql]) => (kind === "query" || kind === "execute") && /FOR UPDATE|UPDATE supplier/u.test(String(sql)))
-    .map(([, sql]) => (/FROM suppliers|UPDATE suppliers/u.test(String(sql)) ? "supplier" : "request"));
-  assert.equal(order.indexOf("supplier") < order.lastIndexOf("request"), true,
-    `supplier must be locked before the request is written, saw ${order.join(" -> ")}`);
+  const locks = events
+    .filter(([kind, sql]) => kind === "query" && String(sql).includes("FOR UPDATE"))
+    .map(([, sql]) => (String(sql).includes("FROM suppliers") ? "suppliers" : "supplier_activation_requests"));
+  assert.deepEqual(locks, ["suppliers", "supplier_activation_requests"],
+    "updateSupplier locks suppliers then the request; taking them in the reverse order here closes a deadlock cycle");
+});
+
+test("reassigning requires the actor to hold supplier.approval right now", async () => {
+  const { service } = harness({ actorId: 1, actorPermissions: ["supplier.mgmt"] });
+  await assert.rejects(
+    () => service.reassignRequest({ ...context, actorId: 1, approverUserId: 3, reason: "冇權限都想指派" }),
+    (error) => error.publicCode === "APPROVAL_PERMISSION_LOST"
+  );
+});
+
+test("an unauthorised actor cannot learn the request state through the replay branch", async () => {
+  // The replay short-circuit used to return request and Supplier state before the
+  // assignment check ran, so anyone fresh could probe a request by re-sending a
+  // decision that had already happened.
+  const { service } = harness({ requestStatus: "approved", supplierStatus: "active", assignedApproverId: 9 });
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "APPROVAL_NOT_ASSIGNED"
+  );
+});
+
+test("no decision may be taken on a Supplier that has left pending_approval", async () => {
+  for (const command of ["approveRequest", "rejectRequest", "withdrawRequest"]) {
+    const { service } = harness({ supplierStatus: "active", requestedBy: 2, actorId: 2, assignedApproverId: 2 });
+    await assert.rejects(
+      () => service[command]({ ...context, reason: "供應商已經唔喺審批中" }),
+      (error) => error.publicCode === "STATUS_TRANSITION_INVALID" || error.publicCode === "APPROVER_MUST_DIFFER",
+      `${command} decided on a Supplier that is not pending`
+    );
+  }
+});
+
+// ---- AC2 second half: invalidation (H5 -- this path had no coverage at all) ----
+
+function txHarness({ openRequestRow = { id: 11, supplier_id: 7 } } = {}) {
+  const events = [];
+  const connection = {
+    async query(sql, params) {
+      events.push(["query", sql, params]);
+      if (sql.includes("FROM supplier_activation_requests")) return [openRequestRow ? [openRequestRow] : []];
+      return [[]];
+    },
+    async execute(sql, params) { events.push(["execute", sql, params]); return [{ affectedRows: 1 }]; }
+  };
+  const service = new SupplierApprovalService({
+    database: { async withTransaction(work) { return work(connection); }, async query() { return [[]]; } },
+    logger: { warn() {} },
+    time: { nowMs: () => 100 },
+    audit: { async record(_c, entry) { events.push(["audit", entry]); } }
+  });
+  return { service, connection, events };
+}
+
+test("invalidating an open request closes it and records what changed", async () => {
+  const { service, connection, events } = txHarness();
+  const result = await service.invalidateOpenRequest(connection, {
+    supplierId: 7, actorId: 1, actorUsername: "sam", supplierCode: "SUP-7",
+    changedFields: ["supplierName"], reason: "名稱更正", requestId: "req-1", ip: "127.0.0.1"
+  });
+  assert.deepEqual(result, { id: 11, status: "invalidated" });
+  const lock = events.find(([kind, sql]) => kind === "query" && String(sql).includes("FOR UPDATE"));
+  assert.match(String(lock[1]), /status = \?/u, "only an open request may be invalidated");
+  const write = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE supplier_activation_requests"));
+  assert.match(String(write[1]), /status = 'invalidated'/u);
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.action, "approval.invalidate");
+  assert.deepEqual(audit.detail.changes, ["supplierName"]);
+});
+
+test("invalidating when there is no open request is a no-op, not an error", async () => {
+  const { service, connection, events } = txHarness({ openRequestRow: null });
+  assert.equal(await service.invalidateOpenRequest(connection, { supplierId: 7, actorId: 1 }), null);
+  assert.equal(events.some(([kind]) => kind === "audit"), false);
+  assert.equal(events.some(([kind]) => kind === "execute"), false);
+});
+
+test("an insignificant edit keeps a pending request usable by syncing its Supplier version", async () => {
+  // Design 4.5 says Address/Contact/Notes/Bank changes do not affect the approval.
+  // updateSupplier bumps suppliers.version regardless, and staleness is judged on
+  // that version -- so without this sync, editing a phone number would make the
+  // request permanently unapprovable.
+  const { service, connection, events } = txHarness();
+  assert.equal(await service.syncOpenRequestSupplierVersion(connection, { supplierId: 7, supplierVersion: 9 }), true);
+  const [, sql, params] = events.find(([kind]) => kind === "execute");
+  assert.match(String(sql), /SET supplier_version = \?/u);
+  assert.deepEqual(params, [9, 7, "pending"], "only an open request may be re-pinned");
+});
+
+test("approval re-checks that the Supplier can still be activated", async () => {
+  // Design 4.5: a Supplier whose default currency was retired between submit and
+  // approve must not reach Active just because nothing about it changed.
+  const { service } = harness();
+  service.businessMaster = {
+    async assertSupplierDefaultsInTransaction() {
+      return { currency: { code: "HKD", status: "INACTIVE" }, paymentTerm: null };
+    }
+  };
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "SUPPLIER_NOT_ACTIVATABLE"
+  );
+});
+
+test("the snapshot is size-bounded, and says so when it truncates", async () => {
+  // A Supplier has no cap on identifiers and the summary is written as one JSON
+  // column. Design 4.5 asks for a bounded snapshot; an unbounded one is how a
+  // single row becomes hundreds of kilobytes.
+  const many = Array.from({ length: 200 }, (_, index) => ({
+    identifier_type: "other", issuer_country_code: "HK", identifier_value: `ID-${index}`
+  }));
+  const summary = buildApprovalSummary({ supplier_code: "SUP-7", supplier_name: "Demo" }, many);
+  assert.equal(summary.identifiers.length, 50);
+  assert.equal(summary.identifierCount, 200, "the real count must survive truncation");
+  assert.equal(summary.identifiersTruncated, true);
+  assert.ok(JSON.stringify(summary).length < 8192, "the snapshot must stay small enough to store and read");
 });

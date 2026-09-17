@@ -1,6 +1,7 @@
 import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import { assertSupplierActivatable } from "./supplierValidation.js";
 
 /**
  * 啟用審批 domain。設計說明見 docs/supplier_management/03_design_spec.md §4.4、§4.5。
@@ -28,8 +29,17 @@ const OPEN_STATUS = "pending";
 const DECISIONS = Object.freeze({
   approve: { status: "approved", supplierStatus: "active", action: "approval.approve", requiresReason: false },
   reject: { status: "rejected", supplierStatus: "draft", action: "approval.reject", requiresReason: true },
-  withdraw: { status: "withdrawn", supplierStatus: "draft", action: "approval.withdraw", requiresReason: true }
+  // FR-APPROVAL-005 只講建檔人可以喺決定前撤回，冇要求原因，所以唔喺度加一個
+  // spec 冇要求嘅限制。撤回一樣會留低稽核。
+  withdraw: { status: "withdrawn", supplierStatus: "draft", action: "approval.withdraw", requiresReason: false }
 });
+
+// Number(null) 係 0，所以直接 Number(a) === Number(b) 會將兩個 null 當成同一個人。
+// requested_by 係 SET NULL 嘅 FK，所以呢個情況真係出得到。
+function sameUser(left, right) {
+  if (left === null || left === undefined || right === null || right === undefined) return false;
+  return Number(left) === Number(right);
+}
 
 function requireReason(value, message = "這項操作必須填寫原因") {
   const reason = String(value ?? "").trim();
@@ -43,7 +53,12 @@ function requireReason(value, message = "這項操作必須填寫原因") {
  * 設計 §4.5：summary 只包含最低啟用資料同遮罩後嘅 identifier，**唔包含**完整銀行
  * 帳號。呢度用白名單而唔係黑名單：新欄位預設唔會入 snapshot，要明確加先有。
  */
+// 一個 Supplier 冇上限咁多 identifier，而 summary 係 JSON NOT NULL 一次過寫入。
+// 有界係設計 4.5 明文要求；呢度截頂並且講明截咗。
+const MAX_SUMMARY_IDENTIFIERS = 50;
+
 export function buildApprovalSummary(supplierRow, identifierRows = []) {
+  const bounded = identifierRows.slice(0, MAX_SUMMARY_IDENTIFIERS);
   return {
     supplierCode: String(supplierRow.supplier_code ?? ""),
     supplierName: String(supplierRow.supplier_name ?? ""),
@@ -52,7 +67,9 @@ export function buildApprovalSummary(supplierRow, identifierRows = []) {
     defaultPaymentTermId: supplierRow.default_payment_term_id === null || supplierRow.default_payment_term_id === undefined
       ? null
       : Number(supplierRow.default_payment_term_id),
-    identifiers: identifierRows.map((row) => ({
+    identifierCount: identifierRows.length,
+    identifiersTruncated: identifierRows.length > MAX_SUMMARY_IDENTIFIERS,
+    identifiers: bounded.map((row) => ({
       identifierType: String(row.identifier_type ?? ""),
       issuerCountryCode: String(row.issuer_country_code ?? ""),
       // 遮罩：審批人要知有冇同係邊類，唔需要完整號碼。
@@ -68,7 +85,7 @@ function maskIdentifier(value) {
 }
 
 export class SupplierApprovalService {
-  constructor({ database, logger, time, authorize = assertActorFresh, audit, loadPermissions = loadPermissionNamesForUser } = {}) {
+  constructor({ database, logger, time, authorize = assertActorFresh, audit, loadPermissions = loadPermissionNamesForUser, businessMaster } = {}) {
     if (!database || !logger || !time) {
       throw new TypeError("SupplierApprovalService requires database, logger and time");
     }
@@ -77,6 +94,7 @@ export class SupplierApprovalService {
     this.time = time;
     this.authorize = authorize;
     this.loadPermissions = loadPermissions;
+    this.businessMaster = businessMaster;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
   }
 
@@ -88,7 +106,7 @@ export class SupplierApprovalService {
     if (approverUserId === undefined || approverUserId === null) {
       throw invalidSupplierInput("APPROVER_REQUIRED", "目前設定需要指定審批人", { field: "approverUserId" });
     }
-    if (Number(approverUserId) === Number(requesterId)) {
+    if (sameUser(approverUserId, requesterId)) {
       throw invalidSupplierInput("APPROVER_MUST_DIFFER", "審批人不可以是提交人", { field: "approverUserId" });
     }
     const [[approver]] = await connection.query(
@@ -150,7 +168,7 @@ export class SupplierApprovalService {
     if (!open) return null;
     await connection.execute(
       "UPDATE supplier_activation_requests SET status = 'invalidated', decided_at = ?, decision_reason = ?, version = version + 1 WHERE id = ? AND status = ?",
-      [this.time.nowMs(), String(input.reason ?? "關鍵資料變更"), open.id, OPEN_STATUS]
+      [this.time.nowMs(), String(input.reason ?? "").trim() || "關鍵資料變更", open.id, OPEN_STATUS]
     );
     await this.audit.record(connection, {
       actorUserId: input.actorId,
@@ -160,12 +178,26 @@ export class SupplierApprovalService {
       targetId: Number(open.id),
       supplierId: input.supplierId,
       targetLabel: String(input.supplierCode ?? ""),
-      reason: String(input.reason ?? "關鍵資料變更"),
+      reason: String(input.reason ?? "").trim() || "關鍵資料變更",
       detail: { before: { status: OPEN_STATUS }, after: { status: "invalidated" }, changes: input.changedFields ?? [] },
       requestId: input.requestId,
       ip: input.ip
     });
     return { id: Number(open.id), status: "invalidated" };
+  }
+
+  /**
+   * 設計 4.5：Address／Contact／Notes／Bank 嘅改動唔影響 activation approval。但
+   * updateSupplier 一律會 bump suppliers.version，而 #assertRequestStillCurrent 係
+   * 用 version 判斷有冇變過 —— 所以唔同步嘅話，改個電話都會令個申請**永遠**批唔到。
+   * 由 caller 喺同一個交易入面叫，佢已經揸住 suppliers 嘅鎖。
+   */
+  async syncOpenRequestSupplierVersion(connection, { supplierId, supplierVersion }) {
+    const [result] = await connection.execute(
+      "UPDATE supplier_activation_requests SET supplier_version = ? WHERE supplier_id = ? AND status = ?",
+      [supplierVersion, supplierId, OPEN_STATUS]
+    );
+    return result.affectedRows > 0;
   }
 
   approveRequest(input) { return this.#decide(input, "approve"); }
@@ -184,20 +216,29 @@ export class SupplierApprovalService {
         claimedRoles: input.claimedRoles,
         claimedPermissions: input.claimedPermissions
       });
-      // 鎖序：supplier 先，然後 request。
+      // 設計 2.6：settings -> suppliers -> requests -> child -> audit。呢度需要 request
+      // 嘅 supplier_id 先鎖得到 Supplier，所以用一個唔上鎖嘅 probe 攞 id，然後先鎖
+      // suppliers，再鎖 request。倒轉嚟做會同 updateSupplier（佢係 suppliers 先）
+      // 喺同一對 row 上面砌成一個循環，實測會出 ER_LOCK_DEADLOCK。
+      const [[probe]] = await connection.query(
+        "SELECT supplier_id FROM supplier_activation_requests WHERE id = ?",
+        [input.id]
+      );
+      if (!probe) throw supplierNotFound(input.id);
+      const [[supplier]] = await connection.query(
+        "SELECT * FROM suppliers WHERE id = ? FOR UPDATE",
+        [probe.supplier_id]
+      );
+      if (!supplier) throw supplierNotFound(probe.supplier_id);
       const [[request]] = await connection.query(
         "SELECT * FROM supplier_activation_requests WHERE id = ? FOR UPDATE",
         [input.id]
       );
       if (!request) throw supplierNotFound(input.id);
-      const [[supplier]] = await connection.query(
-        "SELECT * FROM suppliers WHERE id = ? FOR UPDATE",
-        [request.supplier_id]
-      );
-      if (!supplier) throw supplierNotFound(request.supplier_id);
 
       // FR-APPROVAL-007：重送一個已經去到相同終態嘅決定，回現況，唔再 transition
       // 亦唔再寫 audit。相反或過時嘅轉換仍然係 conflict。
+      this.#assertActorMayDecide(command, { request, actor, actorId: input.actorId });
       if (request.status === command.status) {
         outcome = this.#project(request, supplier, { replayed: true });
         return;
@@ -208,7 +249,6 @@ export class SupplierApprovalService {
       if (Number(request.version) !== Number(input.version)) {
         throw supplierConflict("VERSION_CONFLICT", "審批申請已被其他人修改，請重新載入");
       }
-      this.#assertActorMayDecide(command, { request, actor, actorId: input.actorId });
       await this.#assertRequestStillCurrent(connection, { request, supplier, command });
 
       const nowMs = this.time.nowMs();
@@ -259,15 +299,15 @@ export class SupplierApprovalService {
   #assertActorMayDecide(command, { request, actor, actorId }) {
     if (command.status === "withdrawn") {
       // FR-APPROVAL-005：只有提交人可以撤回。
-      if (Number(request.requested_by) !== Number(actorId)) {
+      if (!sameUser(request.requested_by, actorId)) {
         throw supplierConflict("APPROVAL_NOT_REQUESTER", "只有提交人可以撤回申請");
       }
       return;
     }
-    if (Number(request.assigned_approver_id) !== Number(actorId)) {
+    if (!sameUser(request.assigned_approver_id, actorId)) {
       throw supplierConflict("APPROVAL_NOT_ASSIGNED", "只有被指定的審批人可以處理這個申請");
     }
-    if (Number(request.requested_by) === Number(actorId)) {
+    if (sameUser(request.requested_by, actorId)) {
       throw supplierConflict("APPROVER_MUST_DIFFER", "審批人不可以是提交人");
     }
     // 設計 §4.5：actor 而家仍然要有權限，唔係提交嗰陣有就算。
@@ -277,17 +317,36 @@ export class SupplierApprovalService {
   }
 
   async #assertRequestStillCurrent(connection, { request, supplier, command }) {
+    // 呢個檢查對三個決定都要做。今日冇任何 LIFECYCLE_COMMANDS 容許由
+    // pending_approval 出去，所以 reject／withdraw 理論上撞唔到；但個安全性唔應該
+    // 淨係靠嗰個可達性論證 —— 將來加一條 allowedFrom: ["pending_approval"] 嘅指令，
+    // 就會變成由 active 靜靜哋退回 draft。
+    if (supplier.status !== "pending_approval") {
+      throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", {
+        from: supplier.status, to: command.supplierStatus
+      });
+    }
     if (command.status !== "approved") return;
+    // 設計 4.5：批准時 Supplier 仍然要可以啟用。一個未改過嘅 Supplier，如果佢嘅預設
+    // 幣別喺提交同批准之間被 Business Master 停用，唔可以就咁變 Active。
+    if (this.businessMaster) {
+      const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
+        currencyCode: supplier.default_currency_code,
+        paymentTermId: supplier.default_payment_term_id,
+        purpose: "new_assignment"
+      });
+      assertSupplierActivatable({
+        supplierCode: supplier.supplier_code,
+        supplierName: supplier.supplier_name,
+        status: supplier.status,
+        defaultCurrency: defaults.currency
+      });
+    }
     // AC-012：Supplier 喺提交之後改過就唔可以批舊申請。
     if (Number(supplier.version) !== Number(request.supplier_version)) {
       throw supplierConflict("APPROVAL_REQUEST_STALE", "供應商資料在提交後已變更，請重新提交審批", {
         submittedVersion: Number(request.supplier_version),
         currentVersion: Number(supplier.version)
-      });
-    }
-    if (supplier.status !== "pending_approval") {
-      throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", {
-        from: supplier.status, to: command.supplierStatus
       });
     }
   }
@@ -315,11 +374,16 @@ export class SupplierApprovalService {
       if (Number(request.version) !== Number(input.version)) {
         throw supplierConflict("VERSION_CONFLICT", "審批申請已被其他人修改，請重新載入");
       }
+      // 設計 6.4：任一目前具 approval permission 者都可以重新指派。之前呢度完全冇
+      // 驗過 actor —— assertActorFresh 只係比對 claim 同現況，佢唔執行任何 permission。
+      if (!actor.permissions?.includes("supplier.approval")) {
+        throw supplierConflict("APPROVAL_PERMISSION_LOST", "你目前沒有審批權限");
+      }
       const approver = await this.assertEligibleApprover(connection, {
         approverUserId: input.approverUserId,
         requesterId: request.requested_by
       });
-      if (Number(approver.id) === Number(request.assigned_approver_id)) {
+      if (sameUser(approver.id, request.assigned_approver_id)) {
         outcome = { id: Number(request.id), assignedApproverId: approver.id, version: Number(request.version), replayed: true };
         return;
       }

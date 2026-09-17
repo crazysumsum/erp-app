@@ -216,7 +216,7 @@ export class SupplierAdminService {
               supplier_code: code.value, supplier_name: name.value, display_name: displayName,
               default_currency_code: defaults.currency.code, default_payment_term_id: defaults.paymentTerm?.id ?? null
             }),
-            requestNote: input.approvalNote,
+            requestNote: input.requestNote,
             requestId: input.requestId,
             ip: input.ip
           });
@@ -333,6 +333,13 @@ export class SupplierAdminService {
             [input.id]
           );
           approvalInvalidated = true;
+        } else {
+          // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
+          // request 記住嗰個 version，否則佢會永遠 stale。
+          await this.approvals.syncOpenRequestSupplierVersion(connection, {
+            supplierId: input.id,
+            supplierVersion: Number(current.version) + 1
+          });
         }
       }
       await this.audit.record(connection, {
@@ -445,7 +452,9 @@ export class SupplierAdminService {
       const approvalIsRequired = approvalCheck ? await this.approvalRequired(connection) : false;
       const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
       if (!current) throw supplierNotFound(input.id);
-      if (current.status === targetStatus) {
+      const routeToApproval = approvalCheck && approvalIsRequired;
+      const effectiveTargetStatus = routeToApproval ? "pending_approval" : targetStatus;
+      if (current.status === effectiveTargetStatus) {
         const [[latestTransition]] = await connection.query(
           `SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action IN (${LIFECYCLE_ACTIONS.map(() => "?").join(", ")}) ORDER BY id DESC LIMIT 1`,
           [input.id, ...LIFECYCLE_ACTIONS]
@@ -465,8 +474,6 @@ export class SupplierAdminService {
       // 設計 4.4：設定開啟時 activate 唔會直接去 active，而係開一個申請並轉
       // pending_approval。轉換合法性喺上面已經由 transitionSupplierStatus 檢查過
       // draft -> active；draft -> pending_approval 亦係合法邊。
-      const routeToApproval = approvalCheck && approvalIsRequired;
-      const effectiveTargetStatus = routeToApproval ? "pending_approval" : targetStatus;
       if (routeToApproval) transitionSupplierStatus(current.status, effectiveTargetStatus);
       if (activationCheck) {
         const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
@@ -507,7 +514,7 @@ export class SupplierAdminService {
           actorUsername: actor.username,
           approverUserId: input.approverUserId,
           summary: buildApprovalSummary(current, identifiers),
-          requestNote: input.approvalNote ?? input.reason,
+          requestNote: input.requestNote ?? input.reason,
           requestId: input.requestId,
           ip: input.ip
         });

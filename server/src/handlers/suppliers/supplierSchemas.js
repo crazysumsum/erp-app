@@ -45,7 +45,12 @@ export const SUPPLIER_CREATE_SCHEMA = Object.freeze({
     generalPhone: { type: "string", maxLength: 50, default: "" },
     generalEmail: { type: "string", maxLength: 254, default: "" },
     notes: { type: "string", maxLength: 2000, default: "" },
-    activate: { type: "boolean", default: false }
+    activate: { type: "boolean", default: false },
+    // 設定開啟時 activate 會開一個審批申請，所以 create 亦要收得到審批人同備註。
+    // 之前冇呢兩個欄位，additionalProperties: false 會 400，令 policy ON 之下
+    // 根本冇可能 create-with-activate。
+    approverUserId: { type: "integer", minimum: 1 },
+    requestNote: { type: "string", maxLength: 500 }
   }
 });
 
