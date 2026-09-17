@@ -10,6 +10,15 @@ discriminate**. The ledger corrections are visible as corrections and the struct
 diff shows nothing undisclosed. The reviewer found a third instance of one standing pattern,
 smaller than the previous two, and named the pattern itself.
 
+> **SUPERSEDED IN PART — REV-018.** Every section below that describes the
+> `GENERATION_EXPRESSION` text check, or the behavioural probe that replaced it, describes
+> **code that no longer exists**. Five review rounds were spent on that guard; three of them
+> found a defect in it, and each fix introduced the next. `0035` no longer attempts to verify
+> the `pending_slot` predicate at all. The one-pending invariant is proved against real MySQL
+> by `server/test/integration/supplierCoreMigrations.integration.test.js`. Read the findings
+> below as the record of what was found when; do not read any "Fixed:" or "It now…" sentence
+> as a description of the current code. See `14_rev_018_independent_review.md`.
+
 ## Provenance
 
 | Item | Value |
@@ -36,11 +45,13 @@ the inspection over nine expressions and it **accepted** all of these:
 | `if((status <> 'pending'),1,NULL)` | the exact inverse invariant |
 | `if((not((status = 'pending'))),1,NULL)` | the inverse again |
 | `if((status = 'pending'),NULL,1)` | branches swapped |
-| **`if((status = 'pending'),id,NULL)`** | **nothing at all** |
+| **`if((status = 'pending'),id,NULL)`** | **nothing at all** — but see below |
 | `if((status = 'pending'),1,1)` | the slot is never freed |
 | `concat(status,'pending')` | not a predicate |
 
-The fourth is the one that matters. A distinct slot value per pending row makes
+**REV-018 L-1 correction:** the fourth was never constructible. MySQL refuses it outright — `ER_GENERATED_COLUMN_REF_AUTO_INC: Generated column 'pending_slot' cannot refer to auto-increment column`. It existed only behind a fake connection, and was echoed through REV-015, the ledger and the since-deleted tests as though it were a real accepted schema. The constructible version of the same hazard is a slot generated from a non-auto-increment column such as `supplier_version`, which REV-018 showed the behavioural probe accepting.
+
+The fourth is the one that matters in principle. A distinct slot value per pending row makes
 `UNIQUE (supplier_id, pending_slot)` constrain nothing, while `inspectSupplierActivation­RequestSchema`
 returns `true`, `up()` returns early, the runner records `0035` as applied, and the
 one-pending-request guarantee — the entire reason the column exists — is silently absent.

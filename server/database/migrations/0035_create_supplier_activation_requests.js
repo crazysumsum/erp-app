@@ -15,64 +15,6 @@ function value(row, lower, upper) {
   return row[lower] ?? row[upper];
 }
 
-// Four rounds of independent review found a defect in three of them, all in one
-// attempt to infer this behaviour from the text of GENERATION_EXPRESSION. That
-// approach validates a string to conclude something about a behaviour, so every
-// rendering variation is a new false reject and every normalization step is a new
-// false accept, and the two pressures push against each other: each fix created the
-// next defect. Measured on real MySQL, the text check accepted a literal containing
-// a backslash (which enforces nothing) and rejected CASE WHEN, <=> and BINARY forms
-// (which all enforce correctly, and would have made up() throw on a sound schema).
-//
-// So ask the database the actual question instead. Rendering, charset, sql_mode,
-// engine and escaping cannot defeat this, because it is the invariant itself.
-async function assertPendingSlotEnforces(connection) {
-  const [[candidate]] = await connection.query(
-    `SELECT s.id AS id FROM suppliers s
-      WHERE NOT EXISTS (SELECT 1 FROM supplier_activation_requests r
-                         WHERE r.supplier_id = s.id AND r.status = 'pending')
-      LIMIT 1`
-  );
-  // A database with no Supplier cannot be probed, and has no divergent table to
-  // probe: on that path this migration created the table a few statements ago.
-  if (!candidate) return;
-  const supplierId = value(candidate, "id", "ID");
-
-  const insert = (status) => connection.execute(
-    `INSERT INTO supplier_activation_requests (supplier_id, supplier_version, summary, requested_at, status)
-     VALUES (?, 1, JSON_OBJECT(), ?, ?)`,
-    [supplierId, Date.now(), status]
-  );
-  const duplicate = async (status) => {
-    try {
-      await insert(status);
-      return false;
-    } catch (error) {
-      if ((error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY") return true;
-      throw error;
-    }
-  };
-
-  await connection.beginTransaction();
-  try {
-    await insert("pending");
-    // Both halves are needed. Without the first, a slot that is never NULL passes;
-    // without the second, IF(status = 'pending', 1, 1) passes while it also blocks
-    // the decided history the table exists to keep.
-    const secondPendingBlocked = await duplicate("pending");
-    await insert("approved");
-    const secondDecidedBlocked = await duplicate("approved");
-    if (!secondPendingBlocked || secondDecidedBlocked) {
-      throw new Error(
-        "Incompatible existing Supplier activation request table: it does not enforce exactly one pending request " +
-        `per Supplier (second pending blocked: ${secondPendingBlocked}, second decided blocked: ${secondDecidedBlocked})`
-      );
-    }
-  } finally {
-    await connection.rollback();
-  }
-}
-
 export async function inspectSupplierActivationRequestSchema(connection) {
   const [columns] = await connection.query(
     `SELECT column_name AS column_name, extra AS extra
@@ -92,8 +34,20 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   if (!String(value(slot, "extra", "EXTRA") ?? "").toUpperCase().includes("GENERATED")) {
     throw new Error("Incompatible existing Supplier activation request column: pending_slot is not a generated column");
   }
-  await assertPendingSlotEnforces(connection);
-
+  // Deliberately NOT verified here: that the column's expression really yields one
+  // pending slot per Supplier. Five review rounds were spent trying — first by
+  // matching the text of GENERATION_EXPRESSION, which accepted forms enforcing
+  // nothing and rejected CASE WHEN / <=> / BINARY forms that enforce correctly, and
+  // then by probing the behaviour from inside up(), which raced with concurrent
+  // Supplier deletes and still accepted a slot generated from another column.
+  //
+  // The invariant is proved against real MySQL in
+  // server/test/integration/supplierCoreMigrations.integration.test.js, which inserts
+  // a second pending request and requires ER_DUP_ENTRY. What is left here are facts
+  // information_schema states directly: the column exists, it is generated, and the
+  // unique index covers exactly (supplier_id, pending_slot). A table that satisfies
+  // those but computes the wrong slot is a hand-divergent schema this guard does not
+  // claim to catch.
   const [indexes] = await connection.query(
     `SELECT DISTINCT index_name AS index_name
        FROM information_schema.statistics

@@ -9,6 +9,15 @@ The anchored predicate check closed seven real holes, and the reviewer measured 
 so this round shipped a behavioural regression. One finding, `M-2`, is not sustained; the
 detail is below, with the reproduction.
 
+> **SUPERSEDED IN PART — REV-018.** Every section below that describes the
+> `GENERATION_EXPRESSION` text check, or the behavioural probe that replaced it, describes
+> **code that no longer exists**. Five review rounds were spent on that guard; three of them
+> found a defect in it, and each fix introduced the next. `0035` no longer attempts to verify
+> the `pending_slot` predicate at all. The one-pending invariant is proved against real MySQL
+> by `server/test/integration/supplierCoreMigrations.integration.test.js`. Read the findings
+> below as the record of what was found when; do not read any "Fixed:" or "It now…" sentence
+> as a description of the current code. See `14_rev_018_independent_review.md`.
+
 ## Provenance
 
 | Item | Value |
@@ -114,7 +123,7 @@ exact lowercase literal.
 No note said what happens if a server renders the expression differently: `up()` throws and the
 migration runner is blocked on a correct schema. The reviewer confirmed MariaDB is untestable
 here, and that `CASE WHEN … THEN 1 END`, `<=>` and `BINARY` forms are behaviourally correct and
-now rejected. That trade is now stated in the code comment and the ledger.
+now rejected. That trade is now stated in the ledger. [AMENDED by REV-018 M-3: this sentence originally said 'in the code comment and the ledger'. The code-comment half was never true — no such sentence was ever added under server/ — and it went uncorrected through two further rounds. It is counted as instance (11) of the standing bias. Moot now: the guard it described has been removed.]
 
 `DEF-011.closure_evidence[2]` had replaced the REV-014 citation with the REV-015 one instead of
 appending, which the commit message did not mention. Both are now listed.

@@ -9,6 +9,15 @@ directly that `DEF-011`'s closure is now adequately evidenced for the defect as
 originally scoped. The remaining findings are narrower, and one of them — `M-1` — is
 again a claim stated more broadly than the evidence supports.
 
+> **SUPERSEDED IN PART — REV-018.** Every section below that describes the
+> `GENERATION_EXPRESSION` text check, or the behavioural probe that replaced it, describes
+> **code that no longer exists**. Five review rounds were spent on that guard; three of them
+> found a defect in it, and each fix introduced the next. `0035` no longer attempts to verify
+> the `pending_slot` predicate at all. The one-pending invariant is proved against real MySQL
+> by `server/test/integration/supplierCoreMigrations.integration.test.js`. Read the findings
+> below as the record of what was found when; do not read any "Fixed:" or "It now…" sentence
+> as a description of the current code. See `14_rev_018_independent_review.md`.
+
 ## Provenance
 
 | Item | Value |
