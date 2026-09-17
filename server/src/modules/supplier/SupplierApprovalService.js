@@ -1,6 +1,7 @@
 import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierNotActivatable, supplierNotFound } from "./supplierErrors.js";
+import { escapeLikeTerm } from "./supplierNormalization.js";
 import { supplierActivatabilityIssues } from "./supplierValidation.js";
 
 /**
@@ -26,6 +27,18 @@ export const APPROVAL_SIGNIFICANT_COLUMNS = Object.freeze([
 ]);
 
 const OPEN_STATUS = "pending";
+
+// 一個申請最終會停喺呢五個狀態之一。Queue filter 同 response schema 都用呢個清單，
+// 所以將來加一個狀態唔會淨係喺其中一邊生效。
+export const APPROVAL_REQUEST_STATUSES = Object.freeze([
+  "pending", "approved", "rejected", "withdrawn", "invalidated"
+]);
+
+// 設計 6.4：queue 預設 mine，另外支援 all 同 unassigned。
+export const APPROVAL_QUEUE_SCOPES = Object.freeze(["mine", "all", "unassigned"]);
+
+// 設計 6.4：eligible approver lookup 固定最多 100 筆。
+const MAX_ELIGIBLE_APPROVERS = 100;
 
 const DECISIONS = Object.freeze({
   approve: { status: "approved", supplierStatus: "active", action: "approval.approve", requiresReason: false },
@@ -85,6 +98,67 @@ function maskIdentifier(value) {
   return `${"*".repeat(characters.length - 4)}${characters.slice(-4).join("")}`;
 }
 
+/**
+ * 設計 6.4／SEC-009：approval route 上面嘅 User 只講得出三樣嘢。requested_by 同
+ * assigned_approver_id 都係 SET NULL 嘅 FK，所以「冇人」要係 null，唔係一個 id 0
+ * 嘅假使用者。
+ */
+function toApprovalUser(id, username, displayName) {
+  if (id === null || id === undefined) return null;
+  return { id: Number(id), username: String(username ?? ""), displayName: String(displayName ?? "") };
+}
+
+function toApprovalSummaryResponse(row) {
+  return {
+    id: Number(row.id),
+    supplierId: Number(row.supplier_id),
+    supplierCode: String(row.supplier_code ?? ""),
+    supplierName: String(row.supplier_name ?? ""),
+    supplierStatus: String(row.supplier_status ?? ""),
+    status: String(row.status ?? ""),
+    requester: toApprovalUser(row.requested_by, row.requester_username, row.requester_display_name),
+    assignedApprover: toApprovalUser(row.assigned_approver_id, row.approver_username, row.approver_display_name),
+    requestNote: String(row.request_note ?? ""),
+    requestedAt: Number(row.requested_at),
+    decidedAt: row.decided_at === null || row.decided_at === undefined ? null : Number(row.decided_at),
+    version: Number(row.version)
+  };
+}
+
+// summary 係 JSON 欄位。mysql2 通常已經 parse 好，但 driver 設定同測試 double 都
+// 可能俾返一個 string，所以兩種都收。壞資料唔應該令成個 detail 500。
+function parseSummary(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "string") return value;
+  try { return JSON.parse(value); } catch { return null; }
+}
+
+// 提交嗰陣嘅 identifier 查詢冇 ORDER BY，所以 snapshot 入面嘅次序係唔保證嘅。
+// 逐個 index 比會令「次序唔同」睇落似「資料改咗」，所以比較之前先正規化。
+function identifierKey(identifier) {
+  return [identifier?.identifierType, identifier?.issuerCountryCode, identifier?.identifierValueMasked].join("\u0000");
+}
+
+function sameIdentifiers(left, right) {
+  const a = (left ?? []).map(identifierKey).sort();
+  const b = (right ?? []).map(identifierKey).sort();
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+/**
+ * 設計 6.4：detail 要顯示 snapshot 同現況嘅 diff。呢度只比 snapshot 本身有嘅欄位 ——
+ * 佢就係審批人當時答應緊嘅嘢。
+ */
+export function approvalSummaryChanges(submitted, current) {
+  if (!submitted || !current) return [];
+  const changed = [];
+  for (const field of ["supplierCode", "supplierName", "displayName", "defaultCurrencyCode", "defaultPaymentTermId"]) {
+    if (submitted[field] !== current[field]) changed.push(field);
+  }
+  if (!sameIdentifiers(submitted.identifiers, current.identifiers)) changed.push("identifiers");
+  return changed;
+}
+
 export class SupplierApprovalService {
   constructor({ database, logger, time, authorize = assertActorFresh, audit, loadPermissions = loadPermissionNamesForUser, businessMaster } = {}) {
     if (!database || !logger || !time) {
@@ -97,6 +171,143 @@ export class SupplierApprovalService {
     this.loadPermissions = loadPermissions;
     this.businessMaster = businessMaster;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
+  }
+
+  /**
+   * 設計 6.4 queue。讀路徑唔上鎖：佢唔寫嘢，而決定嗰陣會喺自己嘅交易入面重新鎖同
+   * 驗 version，所以呢度攞到一個啱啱好過時嘅 row 只會令個決定回 conflict。
+   */
+  async listRequests({
+    actorId, claimedRoles, claimedPermissions,
+    scope = "mine", status = OPEN_STATUS, requesterId, requestedFrom, requestedTo,
+    page = 1, pageSize = 20
+  } = {}) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    if (!APPROVAL_QUEUE_SCOPES.includes(scope)) {
+      throw invalidSupplierInput("APPROVAL_SCOPE_INVALID", "未知的審批清單範圍", { field: "scope" });
+    }
+    if (!APPROVAL_REQUEST_STATUSES.includes(status)) {
+      throw invalidSupplierInput("APPROVAL_STATUS_INVALID", "未知的審批狀態", { field: "status" });
+    }
+    const conditions = ["r.status = ?"];
+    const params = [status];
+    // mine 係綁 actor 本身，唔係綁 client 送嚟嘅任何 id：queue 唔可以攞嚟扮另一個人。
+    if (scope === "mine") {
+      conditions.push("r.assigned_approver_id = ?");
+      params.push(actorId);
+    } else if (scope === "unassigned") {
+      conditions.push("r.assigned_approver_id IS NULL");
+    }
+    if (requesterId !== undefined && requesterId !== null) {
+      conditions.push("r.requested_by = ?");
+      params.push(requesterId);
+    }
+    if (requestedFrom !== undefined && requestedFrom !== null) {
+      conditions.push("r.requested_at >= ?");
+      params.push(requestedFrom);
+    }
+    if (requestedTo !== undefined && requestedTo !== null) {
+      conditions.push("r.requested_at <= ?");
+      params.push(requestedTo);
+    }
+    const where = `WHERE ${conditions.join(" AND ")}`;
+    const [countRows] = await this.database.query(
+      `SELECT COUNT(*) AS total FROM supplier_activation_requests r ${where}`,
+      params
+    );
+    const [rows] = await this.database.query(
+      `SELECT r.id, r.supplier_id, r.requested_by, r.assigned_approver_id, r.status,
+              r.request_note, r.requested_at, r.decided_at, r.version,
+              s.supplier_code, s.supplier_name, s.status AS supplier_status,
+              requester.username AS requester_username, requester.display_name AS requester_display_name,
+              approver.username AS approver_username, approver.display_name AS approver_display_name
+         FROM supplier_activation_requests r
+         JOIN suppliers s ON s.id = r.supplier_id
+         LEFT JOIN users requester ON requester.id = r.requested_by
+         LEFT JOIN users approver ON approver.id = r.assigned_approver_id
+        ${where}
+        ORDER BY r.requested_at DESC, r.id DESC
+        LIMIT ? OFFSET ?`,
+      [...params, pageSize, (page - 1) * pageSize]
+    );
+    return { items: rows.map(toApprovalSummaryResponse), total: Number(countRows[0].total), page, pageSize };
+  }
+
+  /**
+   * 設計 6.4 detail：提交時嘅 snapshot、Supplier 現況同兩者嘅 diff。銀行資料唔會
+   * 喺呢度出現 —— snapshot 本身係白名單，而現況亦都係由同一個 builder 砌。
+   */
+  async getRequest({ actorId, claimedRoles, claimedPermissions, id } = {}) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[row]] = await this.database.query(
+      `SELECT r.id, r.supplier_id, r.requested_by, r.assigned_approver_id, r.decided_by, r.status,
+              r.request_note, r.decision_reason, r.requested_at, r.decided_at, r.version,
+              r.supplier_version, r.summary,
+              s.supplier_code, s.supplier_name, s.display_name, s.default_currency_code,
+              s.default_payment_term_id, s.status AS supplier_status, s.version AS current_supplier_version,
+              requester.username AS requester_username, requester.display_name AS requester_display_name,
+              approver.username AS approver_username, approver.display_name AS approver_display_name,
+              decider.username AS decider_username, decider.display_name AS decider_display_name
+         FROM supplier_activation_requests r
+         JOIN suppliers s ON s.id = r.supplier_id
+         LEFT JOIN users requester ON requester.id = r.requested_by
+         LEFT JOIN users approver ON approver.id = r.assigned_approver_id
+         LEFT JOIN users decider ON decider.id = r.decided_by
+        WHERE r.id = ?`,
+      [id]
+    );
+    if (!row) throw supplierNotFound(id);
+    const [identifiers] = await this.database.query(
+      "SELECT identifier_type, issuer_country_code, identifier_value FROM supplier_identifiers WHERE supplier_id = ? ORDER BY id",
+      [row.supplier_id]
+    );
+    const submitted = parseSummary(row.summary);
+    const current = buildApprovalSummary(row, identifiers);
+    return {
+      ...toApprovalSummaryResponse(row),
+      decidedBy: toApprovalUser(row.decided_by, row.decider_username, row.decider_display_name),
+      decisionReason: String(row.decision_reason ?? ""),
+      supplierVersion: Number(row.supplier_version),
+      currentSupplierVersion: Number(row.current_supplier_version),
+      // AC-012：提交之後 Supplier 改過就批唔到。呢個 flag 同 #assertRequestStillCurrent
+      // 用同一個判準，所以 UI 睇到可以批嘅時候，服務層唔會突然話過時。
+      stale: Number(row.supplier_version) !== Number(row.current_supplier_version),
+      submitted,
+      current,
+      changedFields: approvalSummaryChanges(submitted, current)
+    };
+  }
+
+  /**
+   * 設計 6.4：以真正嘅 role／permission join 揀人，唔係信前端或者 token；亦都唔
+   * 重用要 user.mgmt 嘅 User Admin API，所以只回三個欄位、固定上限 100 筆。
+   */
+  async listEligibleApprovers({ actorId, claimedRoles, claimedPermissions, q = "", excludeUserId } = {}) {
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const conditions = ["u.status = 'active'", "p.name = 'supplier.approval'"];
+    const params = [];
+    if (excludeUserId !== undefined && excludeUserId !== null) {
+      conditions.push("u.id <> ?");
+      params.push(excludeUserId);
+    }
+    const search = String(q ?? "").normalize("NFKC").trim();
+    if (search) {
+      const escaped = escapeLikeTerm(search);
+      conditions.push("(u.username LIKE ? ESCAPE '\\\\' OR u.display_name LIKE ? ESCAPE '\\\\')");
+      params.push(`%${escaped}%`, `%${escaped}%`);
+    }
+    const [rows] = await this.database.query(
+      `SELECT DISTINCT u.id, u.username, u.display_name
+         FROM users u
+         JOIN user_roles ur ON ur.user_id = u.id
+         JOIN role_permissions rp ON rp.role_id = ur.role_id
+         JOIN permissions p ON p.id = rp.permission_id
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY u.display_name, u.username, u.id
+        LIMIT ${MAX_ELIGIBLE_APPROVERS}`,
+      params
+    );
+    return { items: rows.map((user) => toApprovalUser(user.id, user.username, user.display_name)) };
   }
 
   /**
@@ -249,6 +460,13 @@ export class SupplierApprovalService {
         [input.id]
       );
       if (!probe) throw supplierNotFound(input.id);
+      // 撤回係由 /suppliers/:id/approval/withdraw 入嚟嘅，所以 route 嘅 Supplier 同
+      // request 嘅 Supplier 要夾得返。設計 6.3 對 child route 定咗同一條規矩：唔可以
+      // 借另一個 Supplier 嘅 route 去郁呢個 request，而唔屬於你嘅嘢一律回 404。
+      // supplier_id 係 NOT NULL，input.supplierId 由 route param 嚟，所以直接比數值。
+      if (input.supplierId !== undefined && Number(probe.supplier_id) !== Number(input.supplierId)) {
+        throw supplierNotFound(input.supplierId);
+      }
       const [[supplier]] = await connection.query(
         "SELECT * FROM suppliers WHERE id = ? FOR UPDATE",
         [probe.supplier_id]

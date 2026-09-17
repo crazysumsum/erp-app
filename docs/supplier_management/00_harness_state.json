@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 107,
+  "revision": 110,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-028",
+  "current_task": "TASK-029",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
-    "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-phase-002",
-    "default_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+    "code_commit": "95886556e45216eb5fedb247a921e25d3f1c2b06",
+    "source_fingerprint": "42947fa190439de60578d96b5d3a139025157be02f36faf19f7a823b9df40ee4",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-029",
+    "default_commit": "95886556e45216eb5fedb247a921e25d3f1c2b06",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-phase-002 (branch codex/supplier-phase-002)",
+      "workspace": "erp-app-worktrees/supplier-task-029 (branch codex/supplier-task-029)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -55,8 +55,8 @@
     "TASK-025": "DONE",
     "TASK-026": "DONE",
     "TASK-027": "PENDING",
-    "TASK-028": "PENDING",
-    "TASK-029": "PENDING",
+    "TASK-028": "DONE",
+    "TASK-029": "IN_PROGRESS",
     "TASK-030": "PENDING",
     "TASK-031": "PENDING",
     "TASK-032": "PENDING",
@@ -1504,6 +1504,50 @@
       "source_ref": "REV-025 returned APPROVED with 0 Critical and 0 High -- the first approval on this branch, after REV-021 (5 HIGH), REV-022 (1 CRITICAL + 2 HIGH), REV-023 (1 HIGH), REV-024 (2 HIGH). It applied 36 targeted mutations across four supplier services and 32 were killed by the existing suite, which it called a materially stronger posture than at REV-024. Its two Mediums are remediated here rather than deferred. M1: createSupplier's approval snapshot version was untested -- mutating supplierVersion 1 to 2 left the suite at 250 pass 0 fail, while a probe showed every Supplier created through create-with-activate would be PERMANENTLY UNAPPROVABLE with APPROVAL_REQUEST_STALE. Third time on this branch that version arithmetic has been green and broken, and the second time a fix landed at two sites and was tested at one. An integration test now creates with activate and approves what it produced; the mutation turns it red. M2: the H2 narrative in the commit message, this ledger and the REV-024 document all claimed the blocked submission reports SUPPLIER_CODE_TAKEN. False, and verified false independently before conceding: #changeStatus has no catch at all, so it is an unmapped ER_DUP_ENTRY with publicCode undefined. Corrected in all three places. No defensive mapping was added, because with the short-circuit in place two concurrent activates serialize on the suppliers row lock and the second takes the replay branch, so the unique index is unreachable in normal operation. L3: the interleaving integration test could not fail for any change to this repository -- its body issues only inline SQL and imports nothing from src/ -- while costing 3.3s of a 3.8s file and being satisfied by a lock-wait timeout rather than by the absence of a deadlock. Removed, with a comment recording where the cycle was actually measured; the file now runs in 0.49s and the guarding work is done by the observation test, which drives the real service and does turn red on the hoist revert. L2 tested. L1 left as defence in depth: the assertSupplierActivatable call in createSupplier is unreachable, and a test for unreachable code asserts nothing. HD-019's audit-tail wording is widened -- several paths share the inversion, not only changeSupplierCode -- with the conclusion unchanged, since nothing anywhere locks supplier_audit_logs. The reviewer independently confirmed every number and every 'turns red' claim in the previous commit message, ran the suite 12 consecutive times at 250/250 with zero variance, and verified erp_dev byte-identical including supplier_name_grams. AC2's 'Supplier version' half now holds on BOTH submit paths rather than one; verification item 3 is upgraded to substantially met. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 251 pass 0 fail 0 skipped against erp_dev across 5 consecutive runs; supplier-phase-001-client 40 pass 0 fail.",
       "actor": "Claude Opus 5",
       "observed_at": "2026-09-17T07:53:40+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #111 required checks green on the exact head 725008e before merge",
+      "code_commit": "725008eb29ef0ae957b5b52eee9d38faa378868a",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1863a02375c06745fc81613db8a08a6e1394802d4a2603a12a8e30d4c730769c",
+      "status": "PASS",
+      "source_ref": "gh pr checks 111 reports all four required checks pass -- Dependency audit, Lint, Test (server + client, MySQL integration), Build frontend -- in GitHub Actions run 35199817330, whose headSha is 725008eb29ef0ae957b5b52eee9d38faa378868a, the PR head that was merged. The source_fingerprint recorded here is the one REV-025 observed on 92e02aa and is NOT re-derived for 725008e: 725008e and 400cc99 landed after that review and were not independently fingerprinted, so this CI observation binds to the commit, not to a verified fingerprint.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-17T16:53:46+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-028 merged to main via PR #111; ledger had lagged behind the merge",
+      "code_commit": "95886556e45216eb5fedb247a921e25d3f1c2b06",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "287e191b6b965e8fc333867e657545fd69c33e3260da142f1f4d8331cfc850d3",
+      "status": "PASS",
+      "source_ref": "gh pr view 111 reports state MERGED, mergedAt 2026-09-17T08:46:15Z, mergeCommit 95886556e45216eb5fedb247a921e25d3f1c2b06. git fetch --prune then rev-parse confirms local main and origin/main are both at that commit and the worktree is clean. The previous checkpoint (revision 107) still carried TASK-028 as PENDING and a next_safe_action that asked for the PR to be opened: the merge happened outside that checkpoint, so this observation reconciles the ledger rather than reporting new work.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-17T16:53:46+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-029 developer checks on the pre-commit source: server suite 282/282, lint and client build clean",
+      "code_commit": "95886556e45216eb5fedb247a921e25d3f1c2b06",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "42947fa190439de60578d96b5d3a139025157be02f36faf19f7a823b9df40ee4",
+      "status": "PASS",
+      "source_ref": "run_check.py --execute wrote three DEVELOPER evidence records against fingerprint 42947fa1, before any commit existed: supplier-phase-001-server 282 passed / 0 failed / 0 skipped (evidence/20260917T090035-8c0d3a023e6d), lint exit 0 (evidence/20260917T090045-ff2b7c3439ad) and client-build exit 0 (evidence/20260917T090048-85d8a83197fa). The integration half ran with DB_INTEGRATION_TESTS=1 against the authorized test-only erp_dev under APPROVAL-HD-006-ERP-DEV. The client build is included although TASK-029 changes no client file, so the number is a regression check rather than evidence about new client code.",
+      "actor": "Harness agent via run_check.py",
+      "observed_at": "2026-09-17T17:01:13+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-029 mutation check: 10 of 10 targeted mutations killed, and two of them first exposed weak tests",
+      "code_commit": "95886556e45216eb5fedb247a921e25d3f1c2b06",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "42947fa190439de60578d96b5d3a139025157be02f36faf19f7a823b9df40ee4",
+      "status": "PASS",
+      "source_ref": "Ten mutations were applied one at a time to SupplierApprovalService and the three approval suites re-run each time. The first pass reported two survivors and both were the author's fault rather than the code's: the 'count ignores the filter' mutation was written as params -> [...params], which is the same value, so it proved nothing and was rerun as params -> []; and 'LIMIT ${MAX_ELIGIBLE_APPROVERS}' -> 'LIMIT 1000' genuinely survived because the assertion was /LIMIT 100/, which matches 'LIMIT 1000' as a substring. That assertion was tightened to /LIMIT 100\\b/ and the mutation then died. Killed: the mine scope dropping its actor binding; offset page*pageSize; an unfiltered COUNT; a raised approver cap; inactive users becoming eligible; the permission predicate widened to supplier.%; stale inverted; identifier comparison made order-sensitive; the withdraw Supplier-scope guard removed; and a deleted requester projecting as user 0.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-17T17:01:13+08:00"
     }
   ],
   "pending_decisions": [
@@ -1768,8 +1812,22 @@
         "server/src/modules/supplier/SupplierAdminService.js#createSupplier",
         "server/src/modules/businessMaster/BusinessMasterRepository.js"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-17: 維持記錄式例外. Leave 03_design_spec.md 2.6 as written; HD-019 stands as the standing record for the unsequenced Business Master currencies/payment_terms lock and for the invalidation audit emitted before later locks in changeSupplierCode, updateSupplier and the three SupplierIdentifierService write paths. Same disposition as HD-018 and for the same reason: amending the design moves the DESIGN baseline e4083319 and strands every approval and review bound to it, and REV-024 could not construct a cycle (2880 interleavings, 0 deadlocks, negative control 41)."
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "question": "Design 6.4 lists POST /api/v1/suppliers/:id/approval/submit as a distinct route (Draft -> Pending), but that behaviour is already fully implemented by POST /api/v1/suppliers/:id/activate (design 6.2: direct Active or Pending depending on the setting); TASK-028's openRequest is called from that path. Adding submit would give two URLs for one operation, and with approval OFF it would return an Active supplier, contradicting its own documented 'Draft -> Pending'. Withdraw has no route at all. Separately, handlerConventions.test.js enforces that a handler's directory equals its URL prefix, so both /suppliers/... approval routes must live in handlers/suppliers/, not in the handlers/supplier-approvals/ directory the T29 plan lists. Implement submit as a thin delegate, implement it strictly (erroring when approval is OFF), or implement withdraw only and record activate as the submit route?",
+      "affected_ids": [
+        "TASK-029",
+        "docs/supplier_management/03_design_spec.md#6.4",
+        "server/src/handlers/suppliers/supplierLifecycleHandlers.js",
+        "FR-APPROVAL-002",
+        "AC-008"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-17: 只做 withdraw. TASK-029 adds POST /api/v1/suppliers/:id/approval/withdraw only. POST /api/v1/suppliers/:id/activate is the submit route; design 6.4's submit row stands as a standing exception recorded here rather than by editing 03_design_spec.md, which would move the DESIGN baseline. Rationale accepted: no duplicate API surface, and AC-008/FR-APPROVAL-002 are already satisfied by activate."
     }
   ],
   "external_actions": [
@@ -2084,6 +2142,22 @@
       "idempotency_key": "supplier-phase-002-erp-dev-migration-0035-0036",
       "status": "CONFIRMED",
       "source_ref": "Repository migration runner applied 0035_create_supplier_activation_requests.js and 0036_create_supplier_settings.js to the authorized test-only erp_dev on 2026-09-16 under APPROVAL-HD-006-ERP-DEV. An immediate rerun recorded both as already applied, which evidences the migration ledger rather than idempotency of up(); up() is exercised twice directly in server/test/integration/supplierCoreMigrations.integration.test.js."
+    },
+    {
+      "id": "MERGE-007",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-task-028 via PR #111",
+      "idempotency_key": "supplier-task-028-merge-pr-111",
+      "status": "CONFIRMED",
+      "source_ref": "gh pr view 111: MERGED at 2026-09-17T08:46:15Z, mergeCommit 9588655. Required CI was green on the merged head 725008e (run 35199817330)."
+    },
+    {
+      "id": "WORKTREE-RETIRE-004",
+      "kind": "REMOVE_WORKTREE",
+      "target": "worktree for codex/supplier-task-028 and the local/remote branch",
+      "idempotency_key": "supplier-task-028-worktree-retire",
+      "status": "CONFIRMED",
+      "source_ref": "End state observed, not performed by this session: git worktree list shows no supplier worktree, git branch -a after git fetch --prune shows neither codex/supplier-task-028 nor origin/codex/supplier-task-028. Who removed them is not recorded; the branch was fully merged into main first, so nothing unique was lost."
     }
   ],
   "evidence_files": [
@@ -2095,7 +2169,10 @@
     "evidence/20260916T080942-445983f78533/run.json",
     "evidence/20260916T080944-5a3e5659e755/run.json",
     "evidence/20260916T080945-fcae0250cb5f/run.json",
-    "evidence/20260916T080948-dd38307485b5/run.json"
+    "evidence/20260916T080948-dd38307485b5/run.json",
+    "evidence/20260917T090035-8c0d3a023e6d/run.json",
+    "evidence/20260917T090045-ff2b7c3439ad/run.json",
+    "evidence/20260917T090048-85d8a83197fa/run.json"
   ],
   "defects": [
     {
@@ -2322,5 +2399,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-028 is APPROVED by REV-025 on 92e02aa with 0 Critical and 0 High, and its two Medium findings are remediated on 92e02aa rather than deferred. The review gate is satisfied. Next: open the PR, confirm CI green on the exact final head, and obtain the Product Owner's merge decision, which has not been given. HD-019 is OPEN and should be answered before TASK-029, whose API layer drives these paths. HD-018 remains ANSWERED. TASK-027 depends on T04 and T26 rather than T28, so its toggle must be gated or TASK-028 must merge first, or turning the setting ON fails every activation. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "Ledger reconciled with the PR #111 merge: TASK-028 is DONE on main at 9588655 with all four required checks green on its merged head 725008e. TASK-029 is IN_PROGRESS in a fresh worktree branched from that commit. HD-019 and HD-020 are both ANSWERED, so no human decision is open. Next: implement the approval query layer and handlers, run the focused server suites, lint and the real-MySQL integration test, then open a PR and obtain an independent review before merge. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; TASK-027 is still PENDING and needs the Business Master management entry point; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
