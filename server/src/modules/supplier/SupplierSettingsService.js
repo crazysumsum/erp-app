@@ -42,7 +42,7 @@ function readSettings(input) {
 // Handler schema 已經 additionalProperties: false，但 service 唔靠 caller 去守呢件事：
 // 一個未定義嘅參數唔可以有業務效果（FR-SET-006）。
 function assertNoUnknownSettings(input) {
-  const reserved = new Set(["actorId", "claimedRoles", "claimedPermissions", "reason", "version", "requestId", "ip", "password"]);
+  const reserved = new Set(["actorId", "claimedRoles", "claimedPermissions", "reason", "version", "requestId", "ip"]);
   const unknown = Object.keys(input).filter((key) => !reserved.has(key) && !Object.hasOwn(SETTING_FIELDS, key));
   if (unknown.length > 0) {
     throw invalidSupplierInput("SUPPLIER_SETTING_UNKNOWN", "不支援這項設定", { fields: unknown });
@@ -74,7 +74,9 @@ export async function getActivationPolicy(connection) {
        FROM supplier_settings WHERE id = ${SETTINGS_ROW_ID} FOR SHARE`
   );
   if (!row) {
-    throw new Error("supplier_settings singleton row id=1 is missing; cannot determine the activation policy");
+    // Runs inside every create and activate, so it has to fail as a domain error
+    // rather than an opaque 500 the way a raw Error would on those routes.
+    throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
   }
   return SETTING_FIELDS.requireActivationApproval.fromRow(row.require_activation_approval);
 }

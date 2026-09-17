@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { SupplierSettingsService, getActivationPolicy } from "../src/modules/supplier/SupplierSettingsService.js";
 
-function harness({ requireActivationApproval = 0, version = 1, missingRow = false } = {}) {
+function harness({ requireActivationApproval = 0, version = 1, missingRow = false, updateAffectedRows = 1 } = {}) {
   const events = [];
   const row = { id: 1, require_activation_approval: requireActivationApproval, version, updated_at: 10, updated_by: null };
   const connection = {
@@ -15,9 +15,10 @@ function harness({ requireActivationApproval = 0, version = 1, missingRow = fals
     async execute(sql, params) {
       events.push(["execute", sql, params]);
       if (sql.includes("UPDATE supplier_settings")) {
+        if (updateAffectedRows === 0) return [{ affectedRows: 0 }];
         row.require_activation_approval = params[0];
         row.version += 1;
-        return [{ affectedRows: 1 }];
+        return [{ affectedRows: updateAffectedRows }];
       }
       return [{ affectedRows: 1 }];
     }
@@ -149,5 +150,41 @@ test("getActivationPolicy refuses to guess when the singleton row is absent", as
   // Defaulting to false would silently grant direct activation when the policy is
   // unknown, which is the wrong direction to fail in for SEC-007.
   const { connection } = harness({ missingRow: true });
-  await assert.rejects(() => getActivationPolicy(connection), /supplier_settings/u);
+  await assert.rejects(() => getActivationPolicy(connection), (error) => error.publicCode === "SUPPLIER_SETTINGS_MISSING");
+});
+
+test("a writer that slips in between the lock and the UPDATE is caught by the WHERE version guard", async () => {
+  // The in-memory check compares the version read under FOR UPDATE, so it can never
+  // be the thing that catches this. The `AND version = ?` in the UPDATE is the only
+  // guard left, and without a fake that can report affectedRows 0 nothing reaches it.
+  const { service, events } = harness({ version: 4, updateAffectedRows: 0 });
+  await assert.rejects(
+    () => service.updateSettings({ ...context, version: 4, requireActivationApproval: true }),
+    (error) => error.publicCode === "VERSION_CONFLICT"
+  );
+  assert.equal(events.some(([kind]) => kind === "audit"), false, "a lost update must not be audited as if it happened");
+  assert.equal(events.at(-1)[1], "rollback");
+});
+
+test("an uninitialised settings table is a domain error on both the read and the write path", async () => {
+  // getActivationPolicy now runs inside every create and activate, so this must not
+  // surface as an opaque 500 on those routes.
+  const { service } = harness({ missingRow: true });
+  await assert.rejects(
+    () => service.getSettings({ ...context }),
+    (error) => error.publicCode === "SUPPLIER_SETTINGS_MISSING"
+  );
+  await assert.rejects(
+    () => service.updateSettings({ ...context, version: 1, requireActivationApproval: true }),
+    (error) => error.publicCode === "SUPPLIER_SETTINGS_MISSING"
+  );
+});
+
+test("an update naming no setting at all is rejected rather than bumping the version", async () => {
+  const { service, events } = harness({ version: 4 });
+  await assert.rejects(
+    () => service.updateSettings({ ...context, version: 4 }),
+    (error) => error.publicCode === "SUPPLIER_SETTING_EMPTY"
+  );
+  assert.equal(events.length, 0, "nothing should be locked for an update that changes nothing");
 });

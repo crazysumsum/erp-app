@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import mysql from "mysql2/promise";
 
+import { SupplierAuditLogService } from "../../src/modules/supplier/SupplierAuditLogService.js";
 import { SupplierSettingsService, getActivationPolicy } from "../../src/modules/supplier/SupplierSettingsService.js";
 
 /**
@@ -23,25 +24,32 @@ function config() {
   };
 }
 
-function serviceFor(connection, { username = "integration", audited = [] } = {}) {
-  return new SupplierSettingsService({
-    database: {
-      query: (sql, params) => connection.query(sql, params),
-      async withTransaction(work) {
-        await connection.beginTransaction();
-        try {
-          const result = await work(connection);
-          // 唔 commit：呢個 suite 唔會留低任何改動。Service 已經做晒佢要做嘅寫入。
-          return result;
-        } finally {
-          await connection.rollback();
-        }
+function serviceFor(connection, { username = "integration", audited = [], realAudit = false } = {}) {
+  const database = {
+    query: (sql, params) => connection.query(sql, params),
+    async withTransaction(work) {
+      await connection.beginTransaction();
+      try {
+        const result = await work(connection);
+        // 唔 commit：呢個 suite 唔會留低任何改動。Service 已經做晒佢要做嘅寫入。
+        return result;
+      } finally {
+        await connection.rollback();
       }
-    },
-    logger: { warn() {} },
-    time: { nowMs: () => Date.now() },
+    }
+  };
+  const logger = { warn() {} };
+  const time = { nowMs: () => Date.now() };
+  return new SupplierSettingsService({
+    database,
+    logger,
+    time,
     authorize: async () => ({ id: null, username }),
-    audit: { async record(txn, input) { audited.push(input); await txn.execute(
+    // realAudit 行真正嘅 SupplierAuditLogService：action prefix、detail key 白名單、
+    // 敏感欄位檢查同 8KB 上限全部由佢執行，唔係由測試自己寫一句 INSERT 模仿。
+    audit: realAudit
+      ? new SupplierAuditLogService({ database, logger, time, authorize: async () => ({ id: null, username }) })
+      : { async record(txn, input) { audited.push(input); await txn.execute(
       `INSERT INTO supplier_audit_logs (occurred_at, actor_user_id, actor_username, action, target_type, target_id, supplier_id, target_label, reason, detail, request_id, ip)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [Date.now(), null, input.actorUsername, input.action, input.targetType, input.targetId, input.supplierId,
@@ -92,7 +100,7 @@ integrationTest("an update bumps the version and writes an audit row the real sc
   assert.equal(Number(after.require_activation_approval), Number(before.require_activation_approval));
 });
 
-integrationTest("a stale version is refused by real MySQL, not only by the in-memory check", async (t) => {
+integrationTest("a stale version is refused before any write reaches MySQL", async (t) => {
   const connection = await mysql.createConnection(config());
   t.after(() => connection.end());
   const [[current]] = await connection.query("SELECT version FROM supplier_settings WHERE id = 1");
@@ -139,4 +147,42 @@ integrationTest("an in-flight activation read blocks a concurrent settings write
   } finally {
     await reader.rollback();
   }
+});
+
+integrationTest("the real audit recorder accepts a settings update and stores before/after", async (t) => {
+  // AC-037 要求前後值同原因喺稽核查得到。之前兩層測試都注入假 audit，所以真正
+  // 嘅 SupplierAuditLogService 由頭到尾冇跑過：拆走佢個 "setting." action prefix
+  // 都唔會有測試變紅。呢個測試行真嘅 recorder，喺 rollback 之前讀返條 row。
+  const connection = await mysql.createConnection(config());
+  t.after(() => connection.end());
+  const [[before]] = await connection.query("SELECT require_activation_approval, version FROM supplier_settings WHERE id = 1");
+  const target = Number(before.require_activation_approval) !== 1;
+
+  let stored = null;
+  const service = serviceFor(connection, { realAudit: true });
+  const inspect = service.database.withTransaction.bind(service.database);
+  service.database.withTransaction = async (work) => inspect(async (txn) => {
+    const result = await work(txn);
+    const [[row]] = await txn.query(
+      "SELECT action, target_type, target_id, supplier_id, target_label, reason, detail FROM supplier_audit_logs ORDER BY id DESC LIMIT 1"
+    );
+    stored = row;
+    return result;
+  });
+
+  await service.updateSettings({ ...actor, version: Number(before.version), requireActivationApproval: target });
+
+  assert.equal(stored.action, "setting.update", "the real recorder rejects an action prefix it does not allow");
+  assert.equal(stored.target_type, "setting");
+  assert.equal(Number(stored.target_id), 1);
+  assert.equal(stored.supplier_id, null);
+  assert.equal(stored.reason, actor.reason);
+  const detail = typeof stored.detail === "string" ? JSON.parse(stored.detail) : stored.detail;
+  assert.deepEqual(detail, {
+    before: { requireActivationApproval: !target },
+    after: { requireActivationApproval: target }
+  });
+
+  const [[after]] = await connection.query("SELECT version FROM supplier_settings WHERE id = 1");
+  assert.equal(Number(after.version), Number(before.version), "the rolled-back probe must leave no trace");
 });
