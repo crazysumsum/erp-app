@@ -76,7 +76,7 @@ export class SupplierIdentifierService {
    */
   async #invalidateApprovalIfPending(connection, supplier, input, changedField) {
     if (supplier.status !== "pending_approval") return false;
-    await this.approvals.invalidateOpenRequest(connection, {
+    return this.approvals.invalidateForSignificantChange(connection, {
       supplierId: supplier.id,
       actorId: input.actorId,
       actorUsername: input.actorUsername,
@@ -86,13 +86,6 @@ export class SupplierIdentifierService {
       requestId: input.requestId,
       ip: input.ip
     });
-    // Bump version/updated_at/updated_by: a client holding version N has to see that
-    // the Supplier moved underneath it, and the status change needs an actor.
-    await connection.execute(
-      "UPDATE suppliers SET status = 'draft', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND status = 'pending_approval'",
-      [this.time.nowMs(), input.actorId ?? null, supplier.id]
-    );
-    return true;
   }
 
   async #identifierForUpdate(connection, supplierId, identifierId) {

@@ -65,6 +65,15 @@ const COLUMN_TO_INPUT_FIELD = Object.freeze({
   default_currency_code: "defaultCurrencyCode",
   default_payment_term_id: "defaultPaymentTermId"
 });
+// 忘記喺 COLUMN_TO_INPUT_FIELD 加對應會令個欄位映射到 undefined，跟住 next[undefined]
+// 永遠係 ""，於是任何一個 pending Supplier 一改就被判定為關鍵變更、申請被銷毀。
+// 舊嘅兩份清單漂移係靜靜哋少做嘢；呢個係靜靜哋做多咗，更差。所以喺載入時就炸。
+for (const column of APPROVAL_SIGNIFICANT_COLUMNS) {
+  if (!COLUMN_TO_INPUT_FIELD[column]) {
+    throw new TypeError(`APPROVAL_SIGNIFICANT_COLUMNS lists ${column} with no COLUMN_TO_INPUT_FIELD mapping`);
+  }
+}
+
 const SIGNIFICANT_UPDATE_FIELDS = Object.freeze(
   APPROVAL_SIGNIFICANT_COLUMNS
     .filter((column) => column !== "supplier_code")
@@ -165,6 +174,12 @@ export class SupplierAdminService {
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
+        // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
+        // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
+        // currencies -> settings，而 #changeStatus 係 settings -> currencies，夾埋一個
+        // 等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK。
+        const activationRequested = Boolean(input.activate);
+        const approvalRequired = activationRequested && await this.approvalRequired(connection);
         const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
           currencyCode: input.defaultCurrencyCode,
           currencyVersion: input.defaultCurrencyVersion,
@@ -180,10 +195,8 @@ export class SupplierAdminService {
           throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
         }
         duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
-        const activationRequested = Boolean(input.activate);
         // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
         // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
-        const approvalRequired = activationRequested && await this.approvalRequired(connection);
         if (!approvalRequired && input.approverUserId !== undefined && input.approverUserId !== null) {
           throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
         }
@@ -326,7 +339,7 @@ export class SupplierAdminService {
           .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
           .map(([, name_]) => name_);
         if (changedSignificant.length > 0) {
-          await this.approvals.invalidateOpenRequest(connection, {
+          await this.approvals.invalidateForSignificantChange(connection, {
             supplierId: input.id,
             actorId: input.actorId,
             actorUsername: actor.username,
@@ -336,10 +349,6 @@ export class SupplierAdminService {
             requestId: input.requestId,
             ip: input.ip
           });
-          await connection.execute(
-            "UPDATE suppliers SET status = 'draft' WHERE id = ? AND status = 'pending_approval'",
-            [input.id]
-          );
           approvalInvalidated = true;
         } else {
           // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
@@ -432,7 +441,7 @@ export class SupplierAdminService {
         // 之後個申請會卡死：snapshot 對唔上所以批唔到，Supplier 仲留喺
         // pending_approval 所以又重新提交唔到。
         if (current.status === "pending_approval") {
-          await this.approvals.invalidateOpenRequest(connection, {
+          await this.approvals.invalidateForSignificantChange(connection, {
             supplierId: input.id,
             actorId: input.actorId,
             actorUsername: actor.username,
@@ -442,10 +451,6 @@ export class SupplierAdminService {
             requestId: input.requestId,
             ip: input.ip
           });
-          await connection.execute(
-            "UPDATE suppliers SET status = 'draft' WHERE id = ? AND status = 'pending_approval'",
-            [input.id]
-          );
           codeApprovalInvalidated = true;
         }
       });

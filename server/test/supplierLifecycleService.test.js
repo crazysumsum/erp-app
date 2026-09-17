@@ -243,3 +243,27 @@ test("a re-sent activate returns current state whether the Supplier is pending o
       `re-sent activate on ${status} with policy ${approvalRequired ? "ON" : "OFF"} transitioned again`);
   }
 });
+
+test("AC-013: a pending Supplier cannot be activated directly, even after the policy is switched off", async () => {
+  // The policy is snapshotted at submission. Flipping it OFF must not turn a pending
+  // Supplier into an activatable one -- the open request still has to be decided.
+  const { service, events } = harness({ status: "pending_approval", approvalRequired: false });
+  await assert.rejects(
+    () => service.activateSupplier({ ...context }),
+    (error) => error.publicCode === "STATUS_TRANSITION_INVALID" || error.publicCode === "SUPPLIER_NOT_ACTIVATABLE"
+  );
+  assert.equal(events.some(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers")), false);
+});
+
+test("no lifecycle command admits pending_approval as a source state", () => {
+  // The behaviour has defence in depth -- assertSupplierActivatable rejects
+  // pending_approval independently via SUPPLIER_ACTIVATABLE_STATUSES -- so widening
+  // allowedFrom only changes which error surfaces, and no behavioural test can catch
+  // it. Pin the registry directly: leaving pending_approval only through approve,
+  // reject, withdraw or invalidate is design 4.4's rule, not an incidental outcome.
+  for (const [name, command] of Object.entries(LIFECYCLE_COMMANDS)) {
+    assert.equal(command.allowedFrom.includes("pending_approval"), false,
+      `${name} would let a Supplier leave pending_approval without a decision`);
+  }
+  assert.deepEqual([...LIFECYCLE_COMMANDS.activate.allowedFrom], ["draft"]);
+});

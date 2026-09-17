@@ -7,8 +7,9 @@ import { supplierActivatabilityIssues } from "./supplierValidation.js";
  * 啟用審批 domain。設計說明見 docs/supplier_management/03_design_spec.md §4.4、§4.5。
  *
  * 呢個 service 唔擁有 HTTP 層（T29 先做）。佢分兩組操作：
- *   - `openRequest` 同 `invalidateOpenRequest` 由 SupplierAdminService 喺佢自己嘅
- *     交易入面叫，因為提交同失效必須同 Supplier 狀態改動 atomically 一齊發生。
+ *   - `openRequest`、`invalidateForSignificantChange` 同 `syncOpenRequestSupplierVersion`
+ *     由 SupplierAdminService 同 SupplierIdentifierService 喺佢哋自己嘅交易入面叫，
+ *     因為提交同失效必須同 Supplier 狀態改動 atomically 一齊發生。
  *   - approve／reject／withdraw／reassign 各自擁有一個交易。
  *
  * 鎖序跟設計 §2.6：settings → suppliers → requests → child → audit。
@@ -166,9 +167,10 @@ export class SupplierApprovalService {
       [input.supplierId, OPEN_STATUS]
     );
     if (!open) return null;
+    const reason = String(input.reason ?? "").trim() || "關鍵資料變更";
     await connection.execute(
       "UPDATE supplier_activation_requests SET status = 'invalidated', decided_at = ?, decision_reason = ?, version = version + 1 WHERE id = ? AND status = ?",
-      [this.time.nowMs(), String(input.reason ?? "").trim() || "關鍵資料變更", open.id, OPEN_STATUS]
+      [this.time.nowMs(), reason, open.id, OPEN_STATUS]
     );
     await this.audit.record(connection, {
       actorUserId: input.actorId,
@@ -178,12 +180,34 @@ export class SupplierApprovalService {
       targetId: Number(open.id),
       supplierId: input.supplierId,
       targetLabel: String(input.supplierCode ?? ""),
-      reason: String(input.reason ?? "").trim() || "關鍵資料變更",
+      reason,
       detail: { before: { status: OPEN_STATUS }, after: { status: "invalidated" }, changes: input.changedFields ?? [] },
       requestId: input.requestId,
       ip: input.ip
     });
     return { id: Number(open.id), status: "invalidated" };
+  }
+
+  /**
+   * 設計 4.5 嘅完整規則：關鍵資料改動 -> 原申請失效 **而且** Supplier 回 draft，
+   * 兩個寫入喺同一個交易入面。
+   *
+   * 呢個規則之前喺兩個 service 入面覆製咗三次，而且已經漂移咗：identifier 嗰份會
+   * bump version／updated_at／updated_by，另外兩份唔會。H-A 就係第四份唔見咗。
+   * 而家呢度係唯一擁有者，call site 只負責講邊啲欄位變咗。
+   *
+   * 由 caller 喺佢自己嘅交易入面叫，佢已經揸住 suppliers 嘅鎖。
+   */
+  async invalidateForSignificantChange(connection, input) {
+    const invalidated = await this.invalidateOpenRequest(connection, input);
+    if (!invalidated) return false;
+    // version／updated_at／updated_by 一定要動：客戶端揸住 version N 要睇得出個
+    // Supplier 喺佢腳下郁咗，而狀態改動要有 actor。
+    await connection.execute(
+      "UPDATE suppliers SET status = 'draft', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND status = 'pending_approval'",
+      [this.time.nowMs(), input.actorId ?? null, input.supplierId]
+    );
+    return true;
   }
 
   /**
@@ -334,23 +358,21 @@ export class SupplierApprovalService {
       // 靜靜哋跳過檢查 —— 咁樣一個忘記接線嘅 composition root 會令規則消失。
       throw new TypeError("SupplierApprovalService requires businessMaster to approve a request");
     }
-    {
-      const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
-        currencyCode: supplier.default_currency_code,
-        paymentTermId: supplier.default_payment_term_id,
-        purpose: "new_assignment"
-      });
-      // status 喺上面已經驗過一定係 pending_approval。SUPPLIER_ACTIVATABLE_STATUSES
-      // 刻意唔包 pending_approval，令 activateSupplier 跳唔過審批，所以呢度只取資料
-      // 層面嘅問題，唔重複用一個對呢條路唔啱嘅 status 規則。
-      const issues = supplierActivatabilityIssues({
-        supplierCode: supplier.supplier_code,
-        supplierName: supplier.supplier_name,
-        status: supplier.status,
-        defaultCurrency: defaults.currency
-      }).filter((issue) => issue.field !== "status");
-      if (issues.length > 0) throw supplierNotActivatable(issues);
-    }
+    const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
+      currencyCode: supplier.default_currency_code,
+      paymentTermId: supplier.default_payment_term_id,
+      purpose: "new_assignment"
+    });
+    // status 喺上面已經驗過一定係 pending_approval。SUPPLIER_ACTIVATABLE_STATUSES
+    // 刻意唔包 pending_approval，令 activateSupplier 跳唔過審批，所以呢度只取資料
+    // 層面嘅問題，唔重複用一個對呢條路唔啱嘅 status 規則。
+    const issues = supplierActivatabilityIssues({
+      supplierCode: supplier.supplier_code,
+      supplierName: supplier.supplier_name,
+      status: supplier.status,
+      defaultCurrency: defaults.currency
+    }).filter((issue) => issue.field !== "status");
+    if (issues.length > 0) throw supplierNotActivatable(issues);
     // AC-012：Supplier 喺提交之後改過就唔可以批舊申請。
     if (Number(supplier.version) !== Number(request.supplier_version)) {
       throw supplierConflict("APPROVAL_REQUEST_STALE", "供應商資料在提交後已變更，請重新提交審批", {

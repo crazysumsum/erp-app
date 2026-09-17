@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import Ajv from "ajv";
 import test from "node:test";
 
@@ -262,9 +263,12 @@ test("an insignificant edit while pending keeps the request and re-pins its Supp
   assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), false);
   const repin = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("SET supplier_version = ?"));
   assert.ok(repin, "the open request must be re-pinned to the new Supplier version");
+  // The value matters, not just the statement: off by one and the request can never
+  // be approved, because staleness compares it to suppliers.version.
+  assert.deepEqual(repin[2], [3, 7, "pending"], "re-pinned to the version the UPDATE produced");
 });
 
-test("an edit while not pending touches the approval domain at all", async () => {
+test("an edit while not pending leaves the approval domain untouched", async () => {
   const { service, events } = updateHarness({ status: "draft" });
   await service.updateSupplier({ ...updateInput, supplierName: "Another Name", reason: "更正供應商名稱" });
   assert.equal(events.some(([kind, sql]) => (kind === "query" || kind === "execute") &&
@@ -310,30 +314,42 @@ test("changing the Supplier Code while not pending leaves the approval domain al
   assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), false);
 });
 
-test("the enforced significant-field map is derived from the documented list, not a second copy", async () => {
-  // DEF-011 shape: two hand-maintained lists side by side drifted, and supplier_code
-  // fell out of enforcement while the comment claimed it could not be changed here.
+test("a documented significant column with no input mapping fails at module load", async () => {
+  // The previous version of this test was `assert.ok(owner, ...)` where both
+  // branches produced a non-empty string -- it could not fail. Meanwhile adding a
+  // column to APPROVAL_SIGNIFICANT_COLUMNS without a COLUMN_TO_INPUT_FIELD entry
+  // made every pending Supplier lose its approval on any edit, silently.
   const { APPROVAL_SIGNIFICANT_COLUMNS } = await import("../src/modules/supplier/SupplierApprovalService.js");
-  assert.ok(APPROVAL_SIGNIFICANT_COLUMNS.includes("supplier_code"));
+  const source = await readFile(new URL("../src/modules/supplier/SupplierAdminService.js", import.meta.url), "utf8");
+  const mapped = new Set([...source.matchAll(/^\s+(\w+): "(\w+)",?$/gmu)].map(([, column]) => column));
   for (const column of APPROVAL_SIGNIFICANT_COLUMNS) {
-    const owner = column === "supplier_code" ? "changeSupplierCode" : "updateSupplier";
-    assert.ok(owner, `${column} has no owning invalidation path`);
+    assert.ok(mapped.has(column), `${column} is documented as significant but has no input-field mapping`);
   }
+  assert.match(source, /APPROVAL_SIGNIFICANT_COLUMNS lists \$\{column\} with no COLUMN_TO_INPUT_FIELD mapping/u,
+    "the mismatch must fail at module load, not silently invalidate approvals");
+});
+
+test("the identifier responses declare the invalidation flag their service returns", async () => {
+  // Same class as C1: an undeclared field 500s a committed write, because the
+  // response schemas are additionalProperties:false and validation runs everywhere.
+  const source = await readFile(new URL("../src/handlers/suppliers/supplierIdentifierHandlers.js", import.meta.url), "utf8");
+  const declarations = source.match(/approvalInvalidated: \{ type: "boolean" \}/gu) ?? [];
+  assert.equal(declarations.length, 2,
+    "both IDENTIFIER_RESPONSE and DELETE_RESPONSE must declare approvalInvalidated");
 });
 
 test("the supplier detail response declares every field the service actually returns", async () => {
-  // updateSupplier and changeSupplierCode return approvalInvalidated, which design
-  // 4.5 requires. The response schema is additionalProperties:false and response
-  // validation runs in every environment, so an undeclared field 500s a write that
-  // already committed.
+  // C1: updateSupplier and changeSupplierCode return approvalInvalidated, which
+  // design 4.5 requires. The schema is additionalProperties:false and response
+  // validation runs in every environment, so an undeclared field turns a committed
+  // write into a 500.
   const detail = {
     id: 1, supplierCode: "S", supplierName: "N", displayName: "", defaultCurrencyCode: "HKD",
     defaultPaymentTermId: null, status: "draft", version: 1, updatedAt: 1, website: "",
     generalPhone: "", generalEmail: "", notes: "", createdAt: 1,
     addresses: [], contacts: [], identifiers: [], bankAccounts: [], warnings: []
   };
-  const ajv = new Ajv({ allErrors: true, strict: false });
-  const validate = ajv.compile(SUPPLIER_DETAIL_SCHEMA);
+  const validate = new Ajv({ allErrors: true, strict: false }).compile(SUPPLIER_DETAIL_SCHEMA);
   assert.equal(validate({ ...detail, duplicateCandidates: [], approvalInvalidated: true }), true,
     `the payload updateSupplier returns is rejected: ${JSON.stringify(validate.errors)}`);
 });

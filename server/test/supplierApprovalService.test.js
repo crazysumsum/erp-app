@@ -406,3 +406,42 @@ test("approving without a businessMaster dependency fails loudly rather than ski
     (error) => error instanceof TypeError && /businessMaster/u.test(error.message)
   );
 });
+
+test("the activatability filter drops only the status issue, not the data ones", async () => {
+  // status is filtered because #assertRequestStillCurrent has already established
+  // pending_approval, which SUPPLIER_ACTIVATABLE_STATUSES deliberately excludes so
+  // activateSupplier cannot skip approval. Nothing else may be filtered out.
+  const { service, supplier } = harness();
+  supplier.supplier_name = "";
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "SUPPLIER_NOT_ACTIVATABLE" &&
+      error.publicDetails?.issues?.some((issue) => issue.field === "supplierName")
+  );
+});
+
+test("invalidating bumps the request version so a concurrent holder sees it moved", async () => {
+  const { service, connection, events } = txHarness();
+  await service.invalidateOpenRequest(connection, { supplierId: 7, actorId: 1, reason: "關鍵資料變更" });
+  const write = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE supplier_activation_requests"));
+  assert.match(String(write[1]), /version = version \+ 1/u);
+});
+
+test("invalidateForSignificantChange owns both writes, so no caller can do half of it", async () => {
+  // The rule used to be copied into three call sites across two services, and the
+  // copies had already drifted: one bumped the Supplier row, two did not.
+  const { service, connection, events } = txHarness();
+  assert.equal(await service.invalidateForSignificantChange(connection, {
+    supplierId: 7, actorId: 1, actorUsername: "sam", changedFields: ["supplierName"], reason: "名稱更正"
+  }), true);
+  const draft = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("SET status = 'draft'"));
+  assert.ok(draft, "the Supplier must return to draft");
+  assert.match(String(draft[1]), /version = version \+ 1/u, "and the row must signal that it moved");
+  assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), true);
+});
+
+test("with no open request it reports false and writes nothing", async () => {
+  const { service, connection, events } = txHarness({ openRequestRow: null });
+  assert.equal(await service.invalidateForSignificantChange(connection, { supplierId: 7, actorId: 1 }), false);
+  assert.equal(events.some(([kind]) => kind === "execute"), false);
+});

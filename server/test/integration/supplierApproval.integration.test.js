@@ -3,6 +3,7 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
+import { SupplierAdminService } from "../../src/modules/supplier/SupplierAdminService.js";
 import { SupplierApprovalService, buildApprovalSummary } from "../../src/modules/supplier/SupplierApprovalService.js";
 
 /**
@@ -168,4 +169,74 @@ integrationTest("an approve interleaved with an editing transaction does not dea
   const outcome = await approving;
   assert.notEqual(outcome, "ER_LOCK_DEADLOCK", "the approve path re-inverted the lock order");
   assert.equal(outcome, "approved");
+});
+
+integrationTest("a Supplier submitted through activateSupplier can actually be approved", async (t) => {
+  // Every other test in this file seeds the request by hand, so the version the
+  // submit path writes was never compared against the version the approve path
+  // reads. Both off-by-one mutations of that arithmetic left the whole suite green,
+  // and either one makes every approval impossible forever.
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  t.after(async () => { if (supplierId) await cleanup(connection, supplierId); await connection.end(); });
+
+  const who = await actors(connection);
+  const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+  const suffix = randomUUID().slice(0, 8);
+  const now = Date.now();
+  const [created] = await connection.execute(
+    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+       default_currency_code, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)`,
+    [`APR-${suffix}`, `apr-${suffix}`, `Round Trip ${suffix}`, `round trip ${suffix}`, currency.code ?? currency.CODE, now, now]
+  );
+  supplierId = created.insertId;
+
+  const admin = new SupplierAdminService({
+    database: {
+      query: (sql, params) => connection.query(sql, params),
+      async withTransaction(work) {
+        await connection.beginTransaction();
+        try { const result = await work(connection); await connection.commit(); return result; }
+        catch (error) { await connection.rollback(); throw error; }
+      }
+    },
+    logger: { warn() {} },
+    time: { nowMs: () => Date.now() },
+    authorize: async () => ({ id: who.requesterId, username: "integration", permissions: ["supplier.mgmt", "supplier.approval"] }),
+    businessMaster: {
+      async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; }
+    },
+    approvalRequired: async () => true,
+    approvals: new SupplierApprovalService({
+      database: { query: (sql, params) => connection.query(sql, params) },
+      logger: { warn() {} }, time: { nowMs: () => Date.now() },
+      loadPermissions: async () => ["supplier.approval"],
+      businessMaster: {
+        async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; }
+      }
+    })
+  });
+
+  await admin.activateSupplier({
+    actorId: who.requesterId, claimedRoles: [], claimedPermissions: ["supplier.mgmt"],
+    id: supplierId, version: 1, approverUserId: who.approverId,
+    reason: "整合測試提交審批", requestId: "req-int", ip: "127.0.0.1"
+  });
+
+  const [[supplier]] = await connection.query("SELECT status, version FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(supplier.status, "pending_approval");
+  const [[request]] = await connection.query(
+    "SELECT id, supplier_version, status FROM supplier_activation_requests WHERE supplier_id = ?", [supplierId]
+  );
+  assert.equal(Number(request.supplier_version), Number(supplier.version),
+    "the snapshot must pin the version the submit actually produced, or approval is impossible");
+
+  const result = await serviceOn(connection, { actorId: who.approverId }).approveRequest({
+    actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"],
+    id: request.id, version: 1, reason: "整合測試批准原因", requestId: "req-int", ip: "127.0.0.1"
+  });
+  assert.equal(result.status, "approved");
+  const [[approved]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(approved.status, "active");
 });
