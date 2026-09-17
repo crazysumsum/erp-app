@@ -54,10 +54,32 @@ function serviceOn(connection, { actorId, permissions = ["supplier.approval"] })
   });
 }
 
-async function actors(connection) {
-  const [rows] = await connection.query("SELECT id FROM users WHERE status = 'active' ORDER BY id LIMIT 2");
-  assert.equal(rows.length, 2, "this suite needs two active users in erp_dev");
-  return { requesterId: Number(rows[0].id), approverId: Number(rows[1].id) };
+/**
+ * 種返自己嘅 actor，唔好靠 erp_dev 入面啱啱好有人。CI 嘅 schema 係新嘅，一個 user
+ * 都冇 —— 而本機開發嘅 erp_dev 有一堆舊 user，所以「SELECT ... LIMIT 2」喺本機
+ * 跑五次都綠，一上 CI 就 0 !== 2。呢個測試需要兩個唔同嘅人（提交人同審批人），
+ * 佢就自己整兩個。
+ */
+async function seedActors(connection, suffix) {
+  const now = Date.now();
+  const ids = [];
+  for (const role of ["requester", "approver"]) {
+    const [result] = await connection.execute(
+      "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      [`supplier-approval-it-${role}-${suffix}`, "not-used-by-this-test", `Approval IT ${role}`, now, now]
+    );
+    ids.push(Number(result.insertId));
+  }
+  return { requesterId: ids[0], approverId: ids[1] };
+}
+
+async function cleanupActors(connection, who) {
+  if (!who) return;
+  for (const id of [who.requesterId, who.approverId]) {
+    await connection.execute("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [id]);
+    await connection.execute("DELETE FROM user_roles WHERE user_id = ?", [id]);
+    await connection.execute("DELETE FROM users WHERE id = ?", [id]);
+  }
 }
 
 async function seed(connection, suffix, { requesterId, approverId }) {
@@ -94,9 +116,14 @@ integrationTest("approving runs against real MySQL: every column exists and the 
   // 真係出 ER_BAD_FIELD_ERROR。
   const connection = await mysql.createConnection(config());
   let supplierId = null;
-  t.after(async () => { if (supplierId) await cleanup(connection, supplierId); await connection.end(); });
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
 
-  const who = await actors(connection);
+  who = await seedActors(connection, randomUUID().slice(0, 8));
   const seeded = await seed(connection, randomUUID().slice(0, 8), who);
   supplierId = seeded.supplierId;
 
@@ -122,9 +149,15 @@ integrationTest("approving runs against real MySQL: every column exists and the 
 integrationTest("the database refuses a second pending request for one Supplier", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
-  t.after(async () => { if (supplierId) await cleanup(connection, supplierId); await connection.end(); });
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
 
-  const seeded = await seed(connection, randomUUID().slice(0, 8), await actors(connection));
+  who = await seedActors(connection, randomUUID().slice(0, 8));
+  const seeded = await seed(connection, randomUUID().slice(0, 8), who);
   supplierId = seeded.supplierId;
   await assert.rejects(
     () => connection.execute(
@@ -145,12 +178,14 @@ integrationTest("an approve interleaved with an editing transaction does not dea
   const approver = await mysql.createConnection(config());
   const setup = await mysql.createConnection(config());
   let supplierId = null;
+  let who = null;
   t.after(async () => {
     if (supplierId) await cleanup(setup, supplierId);
+    await cleanupActors(setup, who);
     await editor.end(); await approver.end(); await setup.end();
   });
 
-  const who = await actors(setup);
+  who = await seedActors(setup, randomUUID().slice(0, 8));
   const seeded = await seed(setup, randomUUID().slice(0, 8), who);
   supplierId = seeded.supplierId;
 
@@ -182,9 +217,14 @@ integrationTest("a Supplier submitted through activateSupplier can actually be a
   // and either one makes every approval impossible forever.
   const connection = await mysql.createConnection(config());
   let supplierId = null;
-  t.after(async () => { if (supplierId) await cleanup(connection, supplierId); await connection.end(); });
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
 
-  const who = await actors(connection);
+  who = await seedActors(connection, randomUUID().slice(0, 8));
   const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
   const suffix = randomUUID().slice(0, 8);
   const now = Date.now();
@@ -308,9 +348,14 @@ integrationTest("a Supplier created with activate can actually be approved", asy
   // version arithmetic has been green and broken.
   const connection = await mysql.createConnection(config());
   let supplierId = null;
-  t.after(async () => { if (supplierId) await cleanup(connection, supplierId); await connection.end(); });
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
 
-  const who = await actors(connection);
+  who = await seedActors(connection, randomUUID().slice(0, 8));
   const [[currency]] = await connection.query("SELECT code FROM currencies WHERE status = 'ACTIVE' LIMIT 1");
   const suffix = randomUUID().slice(0, 8);
 
