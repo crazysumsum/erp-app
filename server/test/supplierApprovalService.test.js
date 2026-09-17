@@ -445,3 +445,15 @@ test("with no open request it reports false and writes nothing", async () => {
   assert.equal(await service.invalidateForSignificantChange(connection, { supplierId: 7, actorId: 1 }), false);
   assert.equal(events.some(([kind]) => kind === "execute"), false);
 });
+
+test("an invalidation with no reason still records why the request died", async () => {
+  // updateSupplier always supplies one, but changeSupplierCode and the identifier
+  // paths can reach here with an empty string, and an audit row saying nothing is
+  // not much of an audit row.
+  const { service, connection, events } = txHarness();
+  await service.invalidateOpenRequest(connection, { supplierId: 7, actorId: 1, reason: "   " });
+  const write = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE supplier_activation_requests"));
+  assert.equal(write[2][1], "關鍵資料變更");
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.reason, "關鍵資料變更");
+});

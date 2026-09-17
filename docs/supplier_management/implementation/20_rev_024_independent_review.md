@@ -39,8 +39,16 @@ Only the second discriminates.
 Removing it left the suite green. The resulting behaviour: with the policy ON, a plain draft
 create opens a pending request against a `draft` Supplier. That request can never be decided —
 `#assertRequestStillCurrent` rejects a non-pending Supplier — and
-`uq_supplier_activation_pending` then blocks the genuine submission, surfacing as
-**`SUPPLIER_CODE_TAKEN`**, an error naming a field that is fine. Now tested.
+`uq_supplier_activation_pending` then blocks the genuine submission. Now tested.
+
+> **CORRECTED by REV-025 M2.** This section originally said the blocked submission surfaces as
+> `SUPPLIER_CODE_TAKEN`, "an error naming a field that is fine". That is false.
+> `SUPPLIER_CODE_TAKEN` comes only from `createSupplier`'s own `duplicateEntry` catch; the
+> genuine submission goes through `#changeStatus`, which has **no catch at all**. Reproduced:
+> `code: ER_DUP_ENTRY, publicCode: undefined` — an unmapped `INTERNAL_SERVER_ERROR`. The real
+> symptom is worse than the one recorded, so this understated rather than flattered, but it was
+> still written into the permanent ledger by a process whose rule is to verify before recording.
+> This is the fifth claim of the author's found false across three rounds.
 
 ## Two claims of mine the reviewer found FALSE, both confirmed and corrected
 

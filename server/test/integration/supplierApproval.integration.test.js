@@ -245,52 +245,14 @@ integrationTest("a Supplier submitted through activateSupplier can actually be a
   assert.equal(approved.status, "active");
 });
 
-integrationTest("createSupplier and activateSupplier take the settings and currency locks in the same order", async (t) => {
-  // REV-024 H1: the lock-order fix this branch is named after had no regression
-  // test, and every other integration test here stubs both locks -- businessMaster
-  // and approvalRequired are faked, so no test ever took a real `currencies FOR
-  // UPDATE` or `supplier_settings FOR SHARE`. That is the precise pair behind two of
-  // the three High findings this branch produced.
-  //
-  // createSupplier used to lock currencies (X) before settings (S) while
-  // #changeStatus locks settings first. InnoDB will not grant S past a waiting X, so
-  // an updateSettings queued between them closes a three-way cycle. This replays
-  // that interleaving with the real statements.
-  const conns = await Promise.all([0, 1, 2].map(() => mysql.createConnection(config())));
-  const [activator, creator, settingsWriter] = conns;
-  t.after(async () => { for (const c of conns) { await c.rollback().catch(() => {}); await c.end(); } });
-
-  const [[currency]] = await activator.query("SELECT code FROM currencies LIMIT 1");
-  const code = currency.code ?? currency.CODE;
-  const settingsRead = "SELECT require_activation_approval FROM supplier_settings WHERE id = 1 FOR SHARE";
-  const currencyLock = "SELECT code FROM currencies WHERE code = ? FOR UPDATE";
-  const outcome = {};
-
-  for (const c of conns) {
-    await c.query("SET SESSION innodb_lock_wait_timeout = 3");
-    await c.beginTransaction();
-  }
-  // #changeStatus order: settings first.
-  await activator.query(settingsRead);
-  // createSupplier must take settings first too. Taking the currency lock here is
-  // what used to close the cycle.
-  await creator.query(settingsRead);
-  await new Promise((resolve) => { setTimeout(resolve, 150); });
-  // An operator saving settings queues an X, which blocks any later S.
-  const writing = settingsWriter.query("SELECT version FROM supplier_settings WHERE id = 1 FOR UPDATE")
-    .then(() => { outcome.settingsWriter = "ok"; }, (error) => { outcome.settingsWriter = error.code ?? error.message; });
-  await new Promise((resolve) => { setTimeout(resolve, 150); });
-  const activating = activator.query(currencyLock, [code])
-    .then(() => { outcome.activator = "ok"; }, (error) => { outcome.activator = error.code ?? error.message; });
-  const creating = creator.query(currencyLock, [code])
-    .then(() => { outcome.creator = "ok"; }, (error) => { outcome.creator = error.code ?? error.message; });
-  await Promise.all([writing, activating, creating]);
-
-  assert.notEqual(outcome.activator, "ER_LOCK_DEADLOCK", "the settings/currency lock order was re-inverted");
-  assert.notEqual(outcome.creator, "ER_LOCK_DEADLOCK", "the settings/currency lock order was re-inverted");
-  assert.notEqual(outcome.settingsWriter, "ER_LOCK_DEADLOCK", "the settings/currency lock order was re-inverted");
-});
-
+// A previous revision had an interleaving test here that replayed the three-way
+// settings/currency cycle across raw connections. It was removed: its body issued
+// only inline SQL and imported nothing from src/, so no production change could turn
+// it red, and it cost 3.3s of a 4.8s suite while its assertion was satisfied by a
+// lock-wait timeout. The cycle it characterised was measured by REV-023 (41
+// ER_LOCK_DEADLOCK in 960 iterations of the old order) and REV-024 (2880 iterations,
+// 0 deadlocks, of the current one). What guards the branch is the test below, which
+// drives the real service and fails when the lock order is reverted.
 integrationTest("createSupplier really does read the policy before the currency lock", async (t) => {
   // The interleaving test above proves the ORDER is safe; this proves createSupplier
   // is the thing that takes it, by observing the statements the real service issues.
@@ -336,4 +298,71 @@ integrationTest("createSupplier really does read the policy before the currency 
   assert.notEqual(currencyAt, -1, "createSupplier did not take the currency lock");
   assert.ok(settingsAt < currencyAt,
     `design 2.6 puts settings first; saw settings at ${settingsAt} and currency at ${currencyAt}`);
+});
+
+integrationTest("a Supplier created with activate can actually be approved", async (t) => {
+  // The submit path exists twice -- createSupplier and activateSupplier -- and the
+  // round trip was only covered on the second. Mutating createSupplier's snapshot
+  // version leaves the whole suite green while making every Supplier created this
+  // way permanently unapprovable, which is the third time on this branch that
+  // version arithmetic has been green and broken.
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  t.after(async () => { if (supplierId) await cleanup(connection, supplierId); await connection.end(); });
+
+  const who = await actors(connection);
+  const [[currency]] = await connection.query("SELECT code FROM currencies WHERE status = 'ACTIVE' LIMIT 1");
+  const suffix = randomUUID().slice(0, 8);
+
+  const admin = new SupplierAdminService({
+    database: {
+      query: (sql, params) => connection.query(sql, params),
+      async withTransaction(work) {
+        await connection.beginTransaction();
+        try { const result = await work(connection); await connection.commit(); return result; }
+        catch (error) { await connection.rollback(); throw error; }
+      }
+    },
+    logger: { warn() {} },
+    time: { nowMs: () => Date.now() },
+    authorize: async () => ({ id: who.requesterId, username: "integration", permissions: ["supplier.mgmt"] }),
+    businessMaster: {
+      async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; }
+    },
+    approvalRequired: async () => true,
+    approvals: new SupplierApprovalService({
+      database: { query: (sql, params) => connection.query(sql, params) },
+      logger: { warn() {} }, time: { nowMs: () => Date.now() },
+      loadPermissions: async () => ["supplier.approval"],
+      businessMaster: {
+        async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; }
+      }
+    })
+  });
+
+  const created = await admin.createSupplier({
+    actorId: who.requesterId, claimedRoles: [], claimedPermissions: ["supplier.mgmt"],
+    supplierCode: `APR-${suffix}`, supplierName: `Create Approve ${suffix}`,
+    defaultCurrencyCode: currency.code ?? currency.CODE, activate: true,
+    approverUserId: who.approverId, requestNote: "建檔即提交審批",
+    requestId: "req-int", ip: "127.0.0.1"
+  });
+  supplierId = created.id;
+
+  const [[supplier]] = await connection.query("SELECT status, version FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(supplier.status, "pending_approval");
+  const [[request]] = await connection.query(
+    "SELECT id, supplier_version, request_note FROM supplier_activation_requests WHERE supplier_id = ?", [supplierId]
+  );
+  assert.equal(Number(request.supplier_version), Number(supplier.version),
+    "the snapshot must pin the version the create actually produced, or approval is impossible");
+  assert.equal(request.request_note, "建檔即提交審批");
+
+  const result = await serviceOn(connection, { actorId: who.approverId }).approveRequest({
+    actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"],
+    id: request.id, version: 1, reason: "整合測試批准原因", requestId: "req-int", ip: "127.0.0.1"
+  });
+  assert.equal(result.status, "approved");
+  const [[approved]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(approved.status, "active");
 });
