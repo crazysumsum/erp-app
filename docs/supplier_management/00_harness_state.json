@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 104,
+  "revision": 105,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-026",
+  "current_task": "TASK-028",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
@@ -53,7 +53,7 @@
     "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
-    "TASK-026": "PENDING",
+    "TASK-026": "DONE",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
     "TASK-029": "PENDING",
@@ -914,6 +914,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-021",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-028 activation approval domain)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 44368ca -- TASK-028 as first implemented",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/17_rev_021_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 5,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-022",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-028 activation approval domain)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 4d631bd -- the first remediation; found 1 Critical it had introduced",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/18_rev_022_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 1,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-023",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-028 activation approval domain)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 72e0ec2 -- the second remediation; the first round that introduced nothing new",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/19_rev_023_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1411,6 +1447,17 @@
       "source_ref": "REV-020 returned APPROVED with 0 Critical and 0 High on b3bb4c1, before any PR existed. It upheld all three design judgements and proved the deadlock question empirically rather than by argument: six workers by sixty iterations interleaving all three real lock orders under innodb_deadlock_detect gave 360 ok, 0 deadlocks, 0 timeouts. On wiring approvalRequired it was more definite than the author: AC3 says the policy is shared by create, so wiring create IS the acceptance criterion, and leaving it unwired would have shipped TASK-027's toggle as a silent no-op. FINDINGS, ALL REMEDIATED IN a435f81 rather than deferred. M2, the strongest: both test layers injected a fake audit recorder, so the real SupplierAuditLogService never ran on this path -- deleting 'setting.' from ACTION_PREFIXES left all 188 tests green, while AC-037 requires the before/after values and reason to be findable in the audit log. One integration test now drives the real recorder and reads the row back before the rollback; the same mutation now fails with 'Unsupported Supplier audit action setting.update'. M1: #changeStatus took the suppliers row lock before reading the policy, inverting design 2.6's settings -> suppliers -> requests -> child -> audit. Latent rather than live, but TASK-028 adds request writes to that transaction and its verification is a manual lock-order review; the policy read is hoisted above the row lock. L1: a raw Error on a missing settings row became an opaque 500 on create and activate, where the same condition gave a clean 409 on the GET; it is a domain error on all three paths now, and failing loud rather than defaulting to false is unchanged. L2: an integration test named 'refused by real MySQL' never reached MySQL's guard, because the in-memory check throws first and the unit fake returned affectedRows 1 unconditionally -- the WHERE version guard and its affectedRows === 0 branch were unreachable from any test. Renamed, and a unit test now simulates the lost update only that guard catches; removing the guard turns it red. L3: SUPPLIER_SETTINGS_MISSING on both paths and SUPPLIER_SETTING_EMPTY covered. Nit: the dead 'password' reserved key removed. Each of the three mutations was grep-verified before being trusted and the test files were md5-identical throughout. SUITE STABILITY MEASURED, NOT ASSUMED: an earlier revision of the integration test asserted a global COUNT(*) on suppliers, which other integration files write in parallel, and failed 3 runs in 5; with that assertion replaced by SQL inspection in the unit layer the full developer suite is 192 pass 0 fail across 5 consecutive runs. lint exit 0; client build exit 0; client 40 pass 0 fail. erp_dev left at settings 0/1 with 0 setting.update audit rows. NOT DISCHARGED HERE: AC-037's first half, '新提交使用審批流程', is TASK-028's work -- today a new submission throws SUPPLIER_APPROVAL_NOT_READY. T26's own acceptance criteria do not claim it, but its traceability line lists AC-037. SEQUENCING HAZARD for TASK-027: it depends on T04 and T26, not T28, so once the Settings UI lands an admin has a working toggle that, turned ON, fails every activation until TASK-028. Default is OFF and it is reversible; TASK-027 should gate the toggle or TASK-028 should land first.",
       "actor": "Claude Opus 5",
       "observed_at": "2026-09-17T03:19:13+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-028 activation approval domain implemented across three review rounds; the invalidation rule now has a single owner",
+      "code_commit": "d956a6263b6074bc2d05efe8809a1e3cad3f6790",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9553ed92e9dbe664c6ebb8b5f80b616f5ad06dc59e81ecbbb8cb8e408dc5ea5b",
+      "status": "PASS",
+      "source_ref": "THREE INDEPENDENT REVIEWS, recorded here together because the branch carried no provenance until now (REV-023 L9). REV-021 on 44368ca: 5 HIGH, headline being the lock-order inversion in #decide -- request before suppliers, the reverse of design 2.6 and of updateSupplier -- reproduced as a real ER_LOCK_DEADLOCK on erp_dev. That is the one verification item T28 names that the author deliberately did not self-certify, and it is where the implementation failed. The author's own lock-order test could not have caught it: indexOf < lastIndexOf passes under both orders. REV-022 on 4d631bd: 1 CRITICAL and 2 HIGH, every one of them in the remediation rather than the original. The Critical was a shipped endpoint returning 500 for every caller -- updateSupplier returned approvalInvalidated, undeclared in a response schema that is additionalProperties:false with validation enabled in every environment, so a committed write surfaced as INTERNAL_SERVER_ERROR. H-A was changeSupplierCode failing to invalidate, leaving the request permanently stuck, caused by two hand-maintained lists that had drifted. H-B was seven claimed fixes with no discriminating test -- each could be deleted with the suite green. REV-023 on 72e0ec2: 1 HIGH, and the first round of three that introduced no new defect. Its substance was structural: the invalidation rule was implemented three times across two services and the copies had ALREADY DRIFTED, one bumping the Supplier row and two not; H-A had been a missing fourth copy. SupplierApprovalService.invalidateForSignificantChange now owns both writes and the three call sites supply only changedFields -- removing the draft write turns 13 tests red. Its H1 was a second, different lock cycle: createSupplier took the Business Master currency X lock before the settings S lock while #changeStatus takes settings first, and InnoDB will not grant S past a waiting X, closing a three-way cycle across three live paths. Reproduced on erp_dev before and after the one-line hoist: old order ER_LOCK_DEADLOCK, hoisted order lock waits only. Pre-existing from TASK-026, fixed here because T28's verification asserts this order. Also corrected: a derived field map that had moved the seam rather than closing it (a missing mapping silently destroyed every pending approval on any edit), a guard test that was literally unfalsifiable, version arithmetic whose off-by-ones both left the suite green while making every approval impossible forever, and the absence of any submit-then-approve round trip -- every integration test had seeded its request by hand. ELEVEN mutations identified across REV-022 and REV-023 as undetected now turn the suite red with the test files byte-identical. A stated verification number was also wrong and is corrected rather than quietly dropped: a commit message said 239 pass when the count was 238. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 246 pass 0 fail 0 skipped against erp_dev across 5 consecutive runs; supplier-phase-001-client 40 pass 0 fail. erp_dev left clean: 0 activation requests, no APR-% suppliers, no orphaned audit rows.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T07:12:47+00:00"
     }
   ],
   "pending_decisions": [
@@ -2216,5 +2263,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-026 is implemented on a435f81 and REV-020 APPROVED it with 0 Critical and 0 High before any PR was opened; its findings are remediated rather than deferred. Next: open the PR, confirm CI green on the exact final head, and obtain the Product Owner's merge decision. HD-018 is OPEN and needs an answer before TASK-028: the code uses FOR SHARE where design 2.6 line 254 says FOR UPDATE, recorded here rather than by editing the design document because that would move the DESIGN baseline and strand every approval and review bound to the current one. TASK-028's verification is a manual lock-order review against that same section. Also before TASK-027: it depends on T04 and T26 rather than T28, so its toggle must be gated or TASK-028 must land first, or turning the setting ON fails every activation. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN, a transition bypassing #changeStatus reproduces DEF-011's 409-on-retry symptom; DEF-013 OPEN for TASK-038 and checker registration remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-028 is implemented on d956a62 after three independent review rounds (REV-021 5 HIGH, REV-022 1 CRITICAL + 2 HIGH, REV-023 1 HIGH). No review has returned APPROVED yet; REV-023's remaining findings are remediated in d956a62 and need verifying. Next: have the reviewer verify, then open the PR and confirm CI green on the exact final head before any merge decision. TASK-026's ledger status was corrected to DONE here -- it merged in PR #110 while the ledger still read PENDING. Still open: TASK-027, the Settings UI, depends on T04 and T26 rather than T28, so its toggle must be gated or TASK-028 must merge first, or turning the setting ON fails every activation. HD-018 remains ANSWERED and is not to be re-litigated; lock ORDERING was re-derived from scratch in REV-023 and the surviving cycle it found is fixed. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038 and checker registration remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
