@@ -63,9 +63,13 @@ created `2026-09-16T09:31:22Z`, survived an earlier verification run whose conne
 closed before its cleanup hook. The `TASK-025` record still asserted "Test rows
 created during the manual check were deleted; the table is empty."
 
-The reviewer established that the **committed** test's cleanup is correct — injecting
-`assert.equal(1, 2)` before the insert still ran the after-hook and removed its own
-supplier. So this was leaked state plus a false cleanliness claim, not a test defect.
+The **committed** test's cleanup is correct. REV-014 reported proving that by injecting
+`assert.equal(1, 2)` *before* the insert — which cannot have shown it, since `supplierId`
+is still `null` there and the hook's `if (supplierId !== null)` branch never runs. REV-015
+re-established the same conclusion with the injection placed *after* the supplier and both
+activation rows exist: the test went red and `erp_dev` came back with 0 `MIG-%` suppliers,
+0 activation rows and `supplier_settings` untouched. So this was leaked state plus a false
+cleanliness claim, not a test defect.
 
 Fixed: the rows are deleted (`supplier_activation_requests` is empty, no `MIG-%`
 supplier remains, `supplier_settings` id=1 is `require_activation_approval = 0`,
@@ -98,11 +102,21 @@ e.g. `IF(status = 'approved', 1, NULL)`. The inspection now also checks
 (`if((\`status\` = _utf8mb4\\'pending\\'),1,NULL)`), which the first attempt did not
 account for — it failed against the real schema and the normalization was added.
 
-This also answers REV-014's own "could not verify" item. The property assertions are
-now mutation-proven **without altering `erp_dev`**:
-`server/test/supplierActivationRequestSchema.test.js` drives
-`inspectSupplierActivationRequestSchema` with a fake connection returning a schema
-MySQL never produced here — one violated property per case.
+The property assertions are exercised **without altering `erp_dev`** by
+`server/test/supplierActivationRequestSchema.test.js`, which drives
+`inspectSupplierActivationRequestSchema` with a fake connection returning a schema MySQL
+never produced here — one violated property per case.
+
+REV-014 recorded this as "mutation-proven". REV-015 found that overstated on exactly the
+property it mattered for: the predicate check was a substring test, and the only mutation
+tried was a different status literal. See `11_rev_015_independent_review.md#medium-1`; the
+check is now anchored on the whole expression and the mutation set covers every form REV-015
+demonstrated was accepted.
+
+The fake also cannot prove the SQL is right. REV-015 removed `generation_expression` from
+the real `SELECT` and the unit tests stayed green, because the fake hands the field back
+regardless of what was asked for; only the integration test went red. Cite the pair, never
+the unit file alone.
 
 ### Nit — `SUPPLIER_REFERENCED` on the delete path omits `details` → not fixed, deliberately
 

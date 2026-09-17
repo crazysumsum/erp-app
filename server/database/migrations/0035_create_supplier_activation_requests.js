@@ -34,13 +34,19 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   if (!String(value(slot, "extra", "EXTRA") ?? "").toUpperCase().includes("GENERATED")) {
     throw new Error("Incompatible existing Supplier activation request column: pending_slot is not a generated column");
   }
-  // A generated column over the wrong predicate would enforce the wrong invariant,
-  // so check the predicate itself. MySQL rewrites the expression and stores its
-  // quotes backslash-escaped (`_utf8mb4\\'pending\\'`), so normalize before matching
-  // the status literal rather than comparing against the exact source form.
-  const slotExpression = String(value(slot, "generation_expression", "GENERATION_EXPRESSION") ?? "").replace(/\\/gu, "");
-  if (!slotExpression.includes("status") || !slotExpression.includes("'pending'")) {
-    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not derived from status = 'pending'");
+  // A generated column over the wrong predicate enforces the wrong invariant, so
+  // check the whole expression, not that it mentions the right tokens. Substring
+  // matching accepts `status <> 'pending'`, swapped branches, and worst of all
+  // IF(status = 'pending', id, NULL), which gives every pending row a distinct slot
+  // and leaves the unique index constraining nothing. MySQL rewrites the expression
+  // and stores its quotes backslash-escaped, so normalize first; the charset
+  // introducer it adds to the literal depends on the column's charset and is the
+  // only part allowed to vary.
+  const slotExpression = String(value(slot, "generation_expression", "GENERATION_EXPRESSION") ?? "")
+    .replace(/\\/gu, "")
+    .replace(/\s+/gu, "");
+  if (!/^if\(\(`status`=(_[a-z0-9]+)?'pending'\),1,NULL\)$/iu.test(slotExpression)) {
+    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not exactly IF(status = 'pending', 1, NULL)");
   }
 
   const [indexes] = await connection.query(

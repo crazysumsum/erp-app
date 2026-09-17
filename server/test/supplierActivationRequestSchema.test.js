@@ -59,14 +59,50 @@ test("pending_slot must be generated, not merely named pending_slot", async () =
   );
 });
 
-test("pending_slot must be generated from the pending status, not some other predicate", async () => {
-  const wrongPredicate = schema().columns.map((row) => (row.column_name === "pending_slot"
-    ? { ...row, generation_expression: "if((`status` = _utf8mb4\\'approved\\'),1,NULL)" }
-    : row));
-  await assert.rejects(
-    () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns: wrongPredicate }))),
-    /not derived from status = 'pending'/u
-  );
+test("pending_slot must be exactly IF(status = 'pending', 1, NULL), not merely an expression mentioning both", async () => {
+  // Every one of these was accepted by an earlier substring check. The last group
+  // matters most: IF(status = 'pending', id, NULL) gives each pending row a
+  // distinct slot, so UNIQUE (supplier_id, pending_slot) constrains nothing while
+  // the inspection reports the table as correct and up() returns early.
+  const rejected = [
+    "if((`status` = _utf8mb4\\'approved\\'),1,NULL)",       // different status
+    "if((`status` like _utf8mb4\\'pending%\\'),1,NULL)",     // different operator
+    "if((`status` <> _utf8mb4\\'pending\\'),1,NULL)",        // exact inverse invariant
+    "if((not((`status` = _utf8mb4\\'pending\\'))),1,NULL)",  // negated
+    "if((`status` = _utf8mb4\\'pending\\'),NULL,1)",         // branches swapped
+    "if((`status` = _utf8mb4\\'pending\\'),`id`,NULL)",      // slot is not a constant
+    "if((`status` = _utf8mb4\\'pending\\'),1,1)",            // never frees the slot
+    "if((`request_status` = _utf8mb4\\'pending\\'),1,NULL)", // different column
+    "concat(`status`,_utf8mb4\\'pending\\')",                // not a predicate at all
+    ""                                                     // absent
+  ];
+  for (const generation_expression of rejected) {
+    const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
+      ? { ...row, generation_expression }
+      : row));
+    await assert.rejects(
+      () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))),
+      /pending_slot is not exactly IF\(status = 'pending', 1, NULL\)/u,
+      `accepted ${generation_expression || "an empty expression"}`
+    );
+  }
+});
+
+test("the accepted expression tolerates only MySQL's own rewriting of the committed DDL", async () => {
+  // The charset introducer follows the column's charset, and MySQL's spacing and
+  // NULL casing are its own; nothing else about the expression may vary.
+  for (const generation_expression of [
+    "if((`status` = _utf8mb4\\'pending\\'),1,NULL)",
+    "if((`status` = _ascii\\'pending\\'),1,NULL)",
+    "if((`status` = \\'pending\\'),1,NULL)",
+    "if((`status`=_utf8mb4\\'pending\\'),1,null)"
+  ]) {
+    const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
+      ? { ...row, generation_expression }
+      : row));
+    assert.equal(await inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))), true,
+      `rejected ${generation_expression}`);
+  }
 });
 
 test("uq_supplier_activation_pending must actually be unique", async () => {
