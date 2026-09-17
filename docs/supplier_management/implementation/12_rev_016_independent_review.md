@@ -56,7 +56,15 @@ allowed to vary" appeared in the code comment, the commit message, the review do
 ledger, and was false in all four.
 
 Fixed: no whitespace is stripped. The pattern allows `\s*` at token boundaries instead, which
-tolerates server spacing without reaching inside the quotes. All four wordings are corrected.
+tolerates server spacing without reaching inside the quotes.
+
+> **AMENDED by REV-017 H-2.** This section claimed all four wordings were corrected. Two
+> were: the other two — `11_rev_015_independent_review.md` and the REV-015 ledger
+> observation — still carried the retracted sentence, and the first also still presented
+> the regressed `/i` regex as the fix. Both are corrected now. The fix this section
+> describes has since been removed entirely: the backslash strip it left in place
+> admitted a literal containing a backslash, so `0035` no longer matches the expression
+> text at all. See `13_rev_017_independent_review.md`.
 
 ## M-2 — not sustained: the quoted control output is genuine
 
