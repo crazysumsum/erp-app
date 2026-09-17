@@ -3,6 +3,7 @@ import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMas
 import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
+import { getActivationPolicy } from "../../modules/supplier/SupplierSettingsService.js";
 import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
 import { EMPTY_SUPPLIER_SCHEMA, SUPPLIER_CREATE_SCHEMA, SUPPLIER_DETAIL_SCHEMA, SUPPLIER_MGMT_POLICY } from "./supplierSchemas.js";
 
@@ -25,7 +26,7 @@ export class CreateSupplierHandler extends BaseRequestHandler {
       provider,
       readiness: new BusinessMasterReadinessService({ database, checkerIds: ["supplier"] })
     });
-    this.suppliers = new SupplierAdminService({ database, logger, time, businessMaster });
+    this.suppliers = new SupplierAdminService({ database, logger, time, businessMaster, approvalRequired: getActivationPolicy });
   }
 
   async execute(req) {

@@ -379,6 +379,10 @@ export class SupplierAdminService {
         claimedRoles: input.claimedRoles,
         claimedPermissions: input.claimedPermissions
       });
+      // Design 2.6 fixes the lock order as settings -> suppliers -> requests ->
+      // child -> audit. The policy read takes a settings lock, so it belongs before
+      // the row lock below even though the answer is not needed until further down.
+      const approvalIsRequired = approvalCheck ? await this.approvalRequired(connection) : false;
       const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
       if (!current) throw supplierNotFound(input.id);
       if (current.status === targetStatus) {
@@ -396,8 +400,7 @@ export class SupplierAdminService {
       transitionSupplierStatus(current.status, targetStatus);
 
       if (approvalCheck) {
-        const required = await this.approvalRequired(connection);
-        if (required) throw supplierConflict("SUPPLIER_APPROVAL_NOT_READY", "供應商審批功能尚未部署完成");
+        if (approvalIsRequired) throw supplierConflict("SUPPLIER_APPROVAL_NOT_READY", "供應商審批功能尚未部署完成");
         if (input.approverUserId !== undefined && input.approverUserId !== null) {
           throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
         }
