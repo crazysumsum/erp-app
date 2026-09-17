@@ -1,5 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
-import { SupplierApprovalService, buildApprovalSummary } from "./SupplierApprovalService.js";
+import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSummary } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
@@ -53,15 +53,23 @@ export const LIFECYCLE_COMMANDS = deepFreeze({
 // child-record write shadow the real transition.
 const LIFECYCLE_ACTIONS = Object.freeze(Object.values(LIFECYCLE_COMMANDS).map((command) => command.action));
 
-// 設計 4.5 嘅 approval-significant 欄位，喺 updateSupplier 可以改到嗰啲。
-// Supplier Code 唔喺內：佢喺呢個 service 入面唔可以改。Identifier 集合由
-// SupplierIdentifierService 擁有，佢自己嗰條路要分開處理。
-const SIGNIFICANT_UPDATE_FIELDS = Object.freeze([
-  ["supplier_name", "supplierName"],
-  ["display_name", "displayName"],
-  ["default_currency_code", "defaultCurrencyCode"],
-  ["default_payment_term_id", "defaultPaymentTermId"]
-]);
+// 設計 4.5 嘅 approval-significant 欄位。呢個 map 由 APPROVAL_SIGNIFICANT_COLUMNS
+// 推導，唔係第二份人手維護嘅清單 —— 之前兩份清單擺埋一齊但唔同步，supplier_code
+// 就係咁樣跌咗出強制範圍，而個 comment 仲寫住佢喺呢個 service 改唔到（佢改得到，
+// changeSupplierCode 就喺下面）。identifiers 由 SupplierIdentifierService 擁有，
+// supplier_code 由 changeSupplierCode 擁有，兩條路各自失效。
+const COLUMN_TO_INPUT_FIELD = Object.freeze({
+  supplier_code: "supplierCode",
+  supplier_name: "supplierName",
+  display_name: "displayName",
+  default_currency_code: "defaultCurrencyCode",
+  default_payment_term_id: "defaultPaymentTermId"
+});
+const SIGNIFICANT_UPDATE_FIELDS = Object.freeze(
+  APPROVAL_SIGNIFICANT_COLUMNS
+    .filter((column) => column !== "supplier_code")
+    .map((column) => [column, COLUMN_TO_INPUT_FIELD[column]])
+);
 const NEXT_FIELD_NAMES = Object.freeze(Object.fromEntries(SIGNIFICANT_UPDATE_FIELDS));
 
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
@@ -120,7 +128,7 @@ export class SupplierAdminService {
     this.references = references ?? new SupplierReferenceService();
     this.openFlows = openFlows ?? new SupplierReferenceService();
     this.approvalRequired = approvalRequired;
-    this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit });
+    this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit, businessMaster });
     this.time = time;
   }
 
@@ -381,6 +389,7 @@ export class SupplierAdminService {
   async changeSupplierCode(input) {
     const code = normalizeSupplierCode(input.supplierCode);
     const reason = requireReason(input.reason, "修正 Supplier Code 必須填寫原因");
+    let codeApprovalInvalidated = false;
     try {
       await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, {
@@ -419,6 +428,26 @@ export class SupplierAdminService {
           requestId: input.requestId,
           ip: input.ip
         });
+        // 設計 4.5 將 Supplier Code 排第一位；AC-012 亦點名咗佢。冇呢段，改完 code
+        // 之後個申請會卡死：snapshot 對唔上所以批唔到，Supplier 仲留喺
+        // pending_approval 所以又重新提交唔到。
+        if (current.status === "pending_approval") {
+          await this.approvals.invalidateOpenRequest(connection, {
+            supplierId: input.id,
+            actorId: input.actorId,
+            actorUsername: actor.username,
+            supplierCode: current.supplier_code,
+            changedFields: ["supplierCode"],
+            reason,
+            requestId: input.requestId,
+            ip: input.ip
+          });
+          await connection.execute(
+            "UPDATE suppliers SET status = 'draft' WHERE id = ? AND status = 'pending_approval'",
+            [input.id]
+          );
+          codeApprovalInvalidated = true;
+        }
       });
     } catch (error) {
       if (duplicateEntry(error)) {
@@ -427,12 +456,13 @@ export class SupplierAdminService {
       throw error;
     }
 
-    return this.getSupplier({
+    const detail = await this.getSupplier({
       actorId: input.actorId,
       claimedRoles: input.claimedRoles,
       claimedPermissions: input.claimedPermissions,
       id: input.id
     });
+    return { ...detail, approvalInvalidated: codeApprovalInvalidated };
   }
 
   async #changeStatus(input, commandName) {
@@ -454,17 +484,19 @@ export class SupplierAdminService {
       if (!current) throw supplierNotFound(input.id);
       const routeToApproval = approvalCheck && approvalIsRequired;
       const effectiveTargetStatus = routeToApproval ? "pending_approval" : targetStatus;
-      if (current.status === effectiveTargetStatus) {
+      // 兩個都算「已經到咗」：policy 開咗之後，一個喺 policy 關閉期間已經 active
+      // 嘅 Supplier 收到重送嘅 activate，一樣要回現況而唔係 409。
+      if (current.status === effectiveTargetStatus || current.status === targetStatus) {
         const [[latestTransition]] = await connection.query(
           `SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action IN (${LIFECYCLE_ACTIONS.map(() => "?").join(", ")}) ORDER BY id DESC LIMIT 1`,
           [input.id, ...LIFECYCLE_ACTIONS]
         );
         if (latestTransition?.action === action) return;
-        throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: targetStatus });
+        throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: effectiveTargetStatus });
       }
       assertExpectedVersion(current, input.version);
       if (!allowedFrom.includes(current.status)) {
-        throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: targetStatus });
+        throw supplierConflict("STATUS_TRANSITION_INVALID", "目前供應商狀態不允許這項操作", { from: current.status, to: effectiveTargetStatus });
       }
       transitionSupplierStatus(current.status, targetStatus);
 

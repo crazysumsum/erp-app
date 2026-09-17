@@ -39,7 +39,13 @@ function serviceOn(connection, { actorId, permissions = ["supplier.approval"] })
     logger: { warn() {} },
     time: { nowMs: () => Date.now() },
     authorize: async () => ({ id: actorId, username: "integration", permissions }),
-    loadPermissions: async () => ["supplier.approval"]
+    loadPermissions: async () => ["supplier.approval"],
+    // businessMaster 係必需嘅：設計 4.5 要求批准時重新確認 Supplier 仍可啟用。
+    businessMaster: {
+      async assertSupplierDefaultsInTransaction() {
+        return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null };
+      }
+    }
   });
 }
 
@@ -70,7 +76,10 @@ async function seed(connection, suffix, { requesterId, approverId }) {
 }
 
 async function cleanup(connection, supplierId) {
-  await connection.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [supplierId]);
+  // supplier_audit_logs has no FK to suppliers, so an audit row committed by a
+  // connection that is still finishing would be orphaned by a supplier-id-only
+  // delete. The request_id sweep catches it whichever order they land in.
+  await connection.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ? OR request_id IN ('req-int', 'req-race')", [supplierId]);
   await connection.execute("DELETE FROM supplier_activation_requests WHERE supplier_id = ?", [supplierId]);
   await connection.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
 }

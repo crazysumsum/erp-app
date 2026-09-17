@@ -11,13 +11,14 @@ function identifierRow(overrides = {}) {
   };
 }
 
-function harness({ identifier = identifierRow(), referenceCount = 0, duplicateOnWrite = false } = {}) {
+function harness({ identifier = identifierRow(), referenceCount = 0, duplicateOnWrite = false, supplierStatus = "draft", openRequest = { id: 11, supplier_id: 7 } } = {}) {
   const events = [];
   let current = identifier;
   const connection = {
     async query(sql, params) {
       events.push(["query", sql, params]);
-      if (sql.includes("FROM suppliers") && sql.includes("FOR UPDATE")) return [[{ id: 7, supplier_code: "SUP-007" }]];
+      if (sql.includes("FROM suppliers") && sql.includes("FOR UPDATE")) return [[{ id: 7, supplier_code: "SUP-007", status: supplierStatus }]];
+      if (sql.includes("supplier_activation_requests")) return [openRequest ? [openRequest] : []];
       if (sql.includes("FROM supplier_identifiers") && sql.includes("FOR UPDATE")) return [[current].filter(Boolean)];
       if (sql.includes("FROM supplier_identifiers") && sql.includes("WHERE i.id")) return [[current].filter(Boolean)];
       return [[]];
@@ -111,7 +112,37 @@ test("delete rejects referenced identifiers and audits an allowed versioned dele
 
   const { service, events } = harness();
   const result = await service.delete({ ...actor, supplierId: 7, identifierId: 31, version: 1, reason: "entered in error" });
-  assert.deepEqual(result, { id: 31, deleted: true });
+  assert.deepEqual(result, { id: 31, deleted: true, approvalInvalidated: false });
   assert.ok(events.some(([, sql]) => sql?.includes("DELETE FROM supplier_identifiers")));
   assert.equal(events.at(-1)[0], "audit");
+});
+
+test("an identifier write invalidates a pending approval and returns the Supplier to draft", async () => {
+  // Design 4.5 lists the identifier set as approval-significant and BR-013 forbids
+  // approving after key data changes. Without this, a submitter could add an
+  // identifier no approver ever saw and the old snapshot would still be approvable.
+  for (const [label, run] of [
+    ["create", (service) => service.create({ ...actor, supplierId: 7, identifierType: "tax", issuerCountryCode: "HK", identifierValue: "99999999", reason: "補一個稅務編號" })],
+    ["update", (service) => service.update({ ...actor, supplierId: 7, identifierId: 31, identifierType: "tax", issuerCountryCode: "HK", identifierValue: "88888888", version: 1, reason: "更正稅務編號" })],
+    ["delete", (service) => service.delete({ ...actor, supplierId: 7, identifierId: 31, version: 1, reason: "刪除錯誤的識別資料" })]
+  ]) {
+    const { service, events } = harness({ supplierStatus: "pending_approval" });
+    const result = await run(service);
+    assert.equal(result.approvalInvalidated, true, `${label} did not report the invalidation`);
+    const audits = events.filter(([kind]) => kind === "audit").map(([, entry]) => entry.action);
+    assert.ok(audits.includes("approval.invalidate"), `${label} did not invalidate the pending request`);
+    const draft = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("SET status = 'draft'"));
+    assert.ok(draft, `${label} left the Supplier in pending_approval`);
+    assert.match(String(draft[1]), /version = version \+ 1/u, "the Supplier row must signal that it moved");
+  }
+});
+
+test("an identifier write on a Supplier that is not pending leaves the approval domain alone", async () => {
+  const { service, events } = harness({ supplierStatus: "draft" });
+  const result = await service.create({
+    ...actor, supplierId: 7, identifierType: "tax", issuerCountryCode: "HK", identifierValue: "77777777", reason: "新增稅務編號"
+  });
+  assert.equal(result.approvalInvalidated, false);
+  assert.equal(events.some(([kind, sql]) => (kind === "query" || kind === "execute") &&
+    String(sql).includes("supplier_activation_requests")), false);
 });

@@ -1,7 +1,7 @@
 import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
-import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
-import { assertSupplierActivatable } from "./supplierValidation.js";
+import { invalidSupplierInput, supplierConflict, supplierNotActivatable, supplierNotFound } from "./supplierErrors.js";
+import { supplierActivatabilityIssues } from "./supplierValidation.js";
 
 /**
  * 啟用審批 domain。設計說明見 docs/supplier_management/03_design_spec.md §4.4、§4.5。
@@ -329,18 +329,27 @@ export class SupplierApprovalService {
     if (command.status !== "approved") return;
     // 設計 4.5：批准時 Supplier 仍然要可以啟用。一個未改過嘅 Supplier，如果佢嘅預設
     // 幣別喺提交同批准之間被 Business Master 停用，唔可以就咁變 Active。
-    if (this.businessMaster) {
+    if (!this.businessMaster) {
+      // 設計 4.5 要求批准時重新確認 Supplier 仍然可以啟用。呢個依賴冇接上就唔可以
+      // 靜靜哋跳過檢查 —— 咁樣一個忘記接線嘅 composition root 會令規則消失。
+      throw new TypeError("SupplierApprovalService requires businessMaster to approve a request");
+    }
+    {
       const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
         currencyCode: supplier.default_currency_code,
         paymentTermId: supplier.default_payment_term_id,
         purpose: "new_assignment"
       });
-      assertSupplierActivatable({
+      // status 喺上面已經驗過一定係 pending_approval。SUPPLIER_ACTIVATABLE_STATUSES
+      // 刻意唔包 pending_approval，令 activateSupplier 跳唔過審批，所以呢度只取資料
+      // 層面嘅問題，唔重複用一個對呢條路唔啱嘅 status 規則。
+      const issues = supplierActivatabilityIssues({
         supplierCode: supplier.supplier_code,
         supplierName: supplier.supplier_name,
         status: supplier.status,
         defaultCurrency: defaults.currency
-      });
+      }).filter((issue) => issue.field !== "status");
+      if (issues.length > 0) throw supplierNotActivatable(issues);
     }
     // AC-012：Supplier 喺提交之後改過就唔可以批舊申請。
     if (Number(supplier.version) !== Number(request.supplier_version)) {

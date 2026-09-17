@@ -72,7 +72,8 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
     approvals: new SupplierApprovalService({
       database, logger: { warn() {} }, time: { nowMs: () => 100 },
       audit: { async record(_c, entry) { events.push(["audit", entry]); } },
-      loadPermissions: async () => (approverEligible ? ["supplier.approval"] : [])
+      loadPermissions: async () => (approverEligible ? ["supplier.approval"] : []),
+  businessMaster: { async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; } },
     }),
     businessMaster: {
       async assertSupplierDefaultsInTransaction() {
@@ -229,4 +230,16 @@ test("a RESTRICT foreign key that no reference checker covers is reported as a r
   const referenced = Object.assign(new Error("Cannot delete or update a parent row"), { code: "ER_ROW_IS_REFERENCED_2" });
   const { service } = harness({ status: "draft", deleteError: referenced });
   await assert.rejects(() => service.deleteSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_REFERENCED");
+});
+
+test("a re-sent activate returns current state whether the Supplier is pending or already active", async () => {
+  // Scoping the replay comparison to the effective target lost idempotency for a
+  // Supplier that went active while the policy was OFF and is re-activated after it
+  // was switched ON. Both states are terminal for a re-sent activate.
+  for (const [status, approvalRequired] of [["pending_approval", true], ["active", true], ["active", false]]) {
+    const { service, events } = harness({ status, approvalRequired, latestAction: "supplier.activate" });
+    await service.activateSupplier({ ...context, ...(approvalRequired ? { approverUserId: 2 } : {}) });
+    assert.equal(events.some(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers")), false,
+      `re-sent activate on ${status} with policy ${approvalRequired ? "ON" : "OFF"} transitioned again`);
+  }
 });

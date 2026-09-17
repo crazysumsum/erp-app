@@ -56,7 +56,8 @@ function harness({
     time: { nowMs: () => 100 },
     authorize: async () => { events.push(["authorize"]); return { id: actorId, username: "approver", permissions: actorPermissions }; },
     audit: { async record(_connection, entry) { events.push(["audit", entry]); } },
-    loadPermissions: async () => approverPermissions
+    loadPermissions: async () => approverPermissions,
+    businessMaster: { async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; } },
   });
   return { service, events, request, supplier, connection };
 }
@@ -392,4 +393,16 @@ test("the snapshot is size-bounded, and says so when it truncates", async () => 
   assert.equal(summary.identifierCount, 200, "the real count must survive truncation");
   assert.equal(summary.identifiersTruncated, true);
   assert.ok(JSON.stringify(summary).length < 8192, "the snapshot must stay small enough to store and read");
+});
+
+test("approving without a businessMaster dependency fails loudly rather than skipping the check", async () => {
+  // Design 4.5 mandates re-checking activatability at approval. When that dependency
+  // was optional, a composition root that forgot to wire it silently removed the
+  // rule -- and T29 wires the approve route.
+  const { service } = harness();
+  service.businessMaster = undefined;
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error instanceof TypeError && /businessMaster/u.test(error.message)
+  );
 });

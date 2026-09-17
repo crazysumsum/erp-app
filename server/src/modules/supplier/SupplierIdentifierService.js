@@ -86,9 +86,11 @@ export class SupplierIdentifierService {
       requestId: input.requestId,
       ip: input.ip
     });
+    // Bump version/updated_at/updated_by: a client holding version N has to see that
+    // the Supplier moved underneath it, and the status change needs an actor.
     await connection.execute(
-      "UPDATE suppliers SET status = 'draft' WHERE id = ? AND status = 'pending_approval'",
-      [supplier.id]
+      "UPDATE suppliers SET status = 'draft', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND status = 'pending_approval'",
+      [this.time.nowMs(), input.actorId ?? null, supplier.id]
     );
     return true;
   }
@@ -112,11 +114,12 @@ export class SupplierIdentifierService {
 
   async create(input) {
     const identifier = normalizedInput(input);
+    let approvalInvalidated = false;
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
-        await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
+        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const nowMs = this.time.nowMs();
         const [result] = await connection.execute(
           `INSERT INTO supplier_identifiers
@@ -135,7 +138,7 @@ export class SupplierIdentifierService {
           detail: { after: { identifierType: identifier.type, issuerCountryCode: identifier.issuerCountryCode, identifierValue: identifier.value } },
           requestId: input.requestId, ip: input.ip
         });
-        return projected;
+        return { ...projected, approvalInvalidated };
       });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
@@ -144,13 +147,14 @@ export class SupplierIdentifierService {
   }
 
   async update(input) {
+    let approvalInvalidated = false;
     const identifier = normalizedInput(input);
     const reason = requiredReason(input.reason);
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
-        await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
+        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const current = await this.#identifierForUpdate(connection, input.supplierId, input.identifierId);
         if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         const nowMs = this.time.nowMs();
@@ -173,7 +177,7 @@ export class SupplierIdentifierService {
           },
           requestId: input.requestId, ip: input.ip
         });
-        return projected;
+        return { ...projected, approvalInvalidated };
       });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
@@ -182,12 +186,13 @@ export class SupplierIdentifierService {
   }
 
   async delete(input) {
+    let approvalInvalidated = false;
     const reason = requiredReason(input.reason);
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
         const supplier = await this.#supplierForUpdate(connection, input.supplierId);
-        await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
+        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const current = await this.#identifierForUpdate(connection, input.supplierId, input.identifierId);
         if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         const referenceCount = Number(await this.countReferences(connection, {
@@ -218,7 +223,7 @@ export class SupplierIdentifierService {
           },
           requestId: input.requestId, ip: input.ip
         });
-        return { id: Number(input.identifierId), deleted: true };
+        return { id: Number(input.identifierId), deleted: true, approvalInvalidated };
       });
     } catch (error) {
       if (referencedRow(error)) {

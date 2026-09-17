@@ -154,7 +154,9 @@ export const SUPPLIER_DETAIL_SCHEMA = Object.freeze({
     version: { type: "integer" }, updatedAt: { type: "integer" }, website: { type: "string" }, generalPhone: { type: "string" },
     generalEmail: { type: "string" }, notes: { type: "string" }, createdAt: { type: "integer" },
     addresses: { type: "array" }, contacts: { type: "array" }, identifiers: { type: "array" }, bankAccounts: { type: "array" },
-    warnings: { type: "array", items: WARNING }, duplicateCandidates: { type: "array", items: DUPLICATE }
+    warnings: { type: "array", items: WARNING }, duplicateCandidates: { type: "array", items: DUPLICATE },
+    // 設計 4.5 要求關鍵資料變更令原申請失效之後回 approvalInvalidated: true。
+    approvalInvalidated: { type: "boolean" }
   }
 });
 
