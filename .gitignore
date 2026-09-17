@@ -11,3 +11,4 @@ server/storage/
 # Agent tooling scratch and generated caches — never part of a review candidate.
 .claude/
 graphify-out/
+.playwright-cli/

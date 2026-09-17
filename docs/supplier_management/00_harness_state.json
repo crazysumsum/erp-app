@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 92,
+  "revision": 102,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-024",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-025",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "2d5a7590bc12d624343dd3a8fe976a940efc235f",
-    "source_fingerprint": "d0295f10e5a1515d7f53441512b61e808ea15c6c887d488c094262233181882f",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bookkeeping",
-    "default_commit": "a4f4f027bf64daa851479288fbcfa08db136c4e5",
+    "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+    "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-phase-002",
+    "default_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-bookkeeping (branch codex/supplier-bookkeeping)",
+      "workspace": "erp-app-worktrees/supplier-phase-002 (branch codex/supplier-phase-002)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -52,7 +52,7 @@
     "TASK-022": "DONE",
     "TASK-023": "DONE",
     "TASK-024": "DONE",
-    "TASK-025": "PENDING",
+    "TASK-025": "DONE",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
@@ -818,6 +818,90 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-013",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (PHASE-002 TASK-025 Approval and Settings persistence gate)",
+      "reviewer": "agent-skills:code-reviewer, fresh read-only review of PR #109 at 5e00986",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/09_rev_013_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-014",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-013 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 5e00986..9a9984b",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/10_rev_014_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-015",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-014 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 9a9984b..3128059 with CI 4/4 green",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/11_rev_015_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-016",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-015 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 3128059..b8170ae with CI 4/4 green",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/12_rev_016_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-017",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-016 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing b8170ae..6281ef4 with CI 4/4 green",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/13_rev_017_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-018",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-017 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 6281ef4..b39a27f with CI 4/4 green",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/14_rev_018_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-019",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-018 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing b39a27f..5023add with CI 4/4 green",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/15_rev_019_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1183,6 +1267,127 @@
       "source_ref": "The five records produced earlier in this branch bind the superseded plan baseline 14cb9ebc and are retained rather than deleted, including the exit-127 lint FAIL. Four new records were produced at a0d41e31 once REV-012 cleared REVIEW_NOT_SATISFIED: lint PASS, client-build PASS, supplier-phase-001-server PASS 159/159 with 0 skipped against the authorized test-only erp_dev with DB_INTEGRATION_TESTS=1, and supplier-phase-001-client PASS 40/40 with 0 skipped. All nine records are registered. Counts match what REV-011 independently reproduced by re-running both suites itself. A secret scan of the new files found zero hits for the real database password value, JWT-shaped tokens, Authorization or Bearer headers, password fields and the synthetic Playwright account password.",
       "actor": "Claude Opus 5 via run_check.py",
       "observed_at": "2026-09-16T08:10:07Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "RETRACTED — DEF-011 closure evidence was false",
+      "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
+      "status": "FAIL",
+      "source_ref": "RETRACTED by REV-013. This record claimed the reflection-based test proved it could detect a lifecycle command added without extending the replay filter. It could not: the filter `name in starting` is a hand-maintained allowlist, so an unlisted command was excluded from the very list meant to catch it. Reproduced with the test file untouched — injecting submitSupplier left the suite 9/9 green. The earlier 'discrimination was proven' sentence described a run in which the test had first been edited in two places. DEF-011 is reopened. See docs/supplier_management/implementation/09_rev_013_independent_review.md#high-1.",
+      "actor": "Claude Opus 5 via node:test",
+      "observed_at": "2026-09-16T08:50:12Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-025 Approval and Settings persistence gate verified against real MySQL",
+      "code_commit": "15e5ae6320454cd2dbed70be17e5489f42a418fe",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "10ef569a3919101b86a87533e590700a5b2c5f638999bb689f7d3fc208950ba3",
+      "status": "PASS",
+      "source_ref": "Schema approved by the Product Owner before any migration was written, per the project rule requiring schema sign-off. Sequence numbers 0035 and 0036 allocated from latest main, with the collision risk disclosed beforehand: the unmerged customer-management branch already claims both, so whichever merges second must renumber. Verification: migrate.test.js 7/7; npm run lint exit 0. The 'migrations.integration.test.js 14/14' originally cited here is Item-side pre-existing coverage and is NOT probative for 0035/0036, as REV-013 MEDIUM-2 found; the probative coverage is server/test/integration/supplierCoreMigrations.integration.test.js plus server/test/supplierActivationRequestSchema.test.js, both added afterwards. Real-MySQL manual checks, all passing: the settings singleton is seeded id=1 with require_activation_approval 0 and version 1; a second pending activation request for the same supplier is rejected by the database with ER_DUP_ENTRY while two non-pending rows for that supplier are accepted, proving the pending_slot generated-column emulation of a partial unique index; no table matching %bank% exists. Convergence: a clean rerun of the runner recorded both as already applied and did not re-enter up() — that is the migration ledger, not idempotency of up() itself, which is now covered directly by supplierCoreMigrations.integration.test.js calling up() twice; a half-applied case with the table present but the singleton row deleted re-seeded exactly one row at version 1 with approval still OFF; a further rerun neither duplicated the row nor bumped its version. CORRECTED by REV-014 M-3: this originally claimed the manual-check rows were deleted and the table empty. It was false — supplier 603 MIG-8cbabc31 and two activation rows survived a verification run whose connection closed before its cleanup hook, and were only removed after the reviewer found them. The table is empty as of 2026-09-16T09:44:41+00:00. supplier_id is RESTRICT rather than CASCADE by design, so approval history counts as a reference and a Supplier that has ever been submitted cannot be hard-deleted.",
+      "actor": "Claude Opus 5 via node:test and mysql2",
+      "observed_at": "2026-09-16T08:50:12Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-011 re-closed: the defect class is now impossible by construction, and the test's discrimination was proven with the test file untouched",
+      "code_commit": "ff2bd7e422ac487c31a68e08f54c6852b4ff4043",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "70a2d91d8d999e579b7beb293f1b15f0a391110958897f046fab6c278ee64c38",
+      "status": "PASS",
+      "source_ref": "The first closure was retracted because the test's `name in starting` allowlist filtered out the very command it was meant to catch. The fix is structural rather than another guard: #changeStatus takes a KEY of LIFECYCLE_COMMANDS, not a descriptor, so a transition cannot reach the transition path without being registered, and LIFECYCLE_ACTIONS derives from the registry. Proven on 2026-09-16, with server/test/supplierLifecycleService.test.js byte-identical throughout (md5 compared before and after each injection): (1) a registered command injected — `submit` added to LIFECYCLE_COMMANDS plus a submitSupplier method — turned the suite RED, 8 pass 1 fail, 'AssertionError: a lifecycle command was registered without a starting status here'; (2) an inline descriptor, the original DEF-011 shape, reached the seam and threw 'TypeError: Unknown supplier lifecycle command: [object Object]' rather than silently bypassing the replay filter. Both injections were reverted and the service file compared against its backup. See docs/supplier_management/implementation/09_rev_013_independent_review.md.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T09:33:34+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-013 HIGH-2 and MEDIUM-1/2/3, LOW-1 remediated and verified against real MySQL",
+      "code_commit": "ff2bd7e422ac487c31a68e08f54c6852b4ff4043",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "70a2d91d8d999e579b7beb293f1b15f0a391110958897f046fab6c278ee64c38",
+      "status": "PASS",
+      "source_ref": "HIGH-2: deleteSupplier maps ER_ROW_IS_REFERENCED/_2 to SUPPLIER_REFERENCED. Discrimination proven — disabling the mapping with the test untouched turns the new case RED, 9 pass 1 fail. MEDIUM-1: inspectSupplierActivationRequestSchema now asserts pending_slot carries EXTRA LIKE '%GENERATED%' and that uq_supplier_activation_pending is NON_UNIQUE=0 over exactly (supplier_id, pending_slot). These assertions pass against the real DDL but were NOT mutation-proven; doing so would require altering the erp_dev schema. MEDIUM-2: coverage was added to server/test/integration/supplierCoreMigrations.integration.test.js, the Supplier module's actual migration integration file, rather than the Item-side migrations.integration.test.js named in TASK-025. It calls up() on 0035 and 0036 twice, and against real MySQL proves a second pending request for the same supplier is rejected with ER_DUP_ENTRY, that approving the first frees the slot so the next pending insert succeeds, that deleting the supplier while a request exists raises ER_ROW_IS_REFERENCED_2, and that a settings rerun neither duplicates the singleton nor resets an operator's value. Run twice consecutively: 3 pass 0 fail both times, with supplier_settings restored to its prior value each time. MEDIUM-3: LIFECYCLE_COMMANDS is deep-frozen. LOW-1: the slot guard's dependence on the exact lowercase 'pending' literal under ascii_bin is documented at the definition. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 163 pass 0 fail 0 skipped with DB_INTEGRATION_TESTS=1 against erp_dev; supplier-phase-001-client 40 pass 0 fail. Whole server suite: 1354 pass 0 fail 255 skipped.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T09:33:34+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-014 remediated: shared-singleton window closed, generated-column predicate checked, leaked erp_dev rows removed, over-broad DEF-011 claim narrowed [AMENDED by REV-016 M-3: 'mutation-proven' retracted]",
+      "code_commit": "a089ddf2bd61ea53be3635e443b82eb641c115dd",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "b09758b92a717ea7ead05464ed712920d016477684f4f5b8e73bcb2d80777175",
+      "status": "PASS",
+      "source_ref": "AMENDED IN PLACE by REV-016 M-3. Two claims in the original text are retracted and the prose corrections that had only been made in 10_rev_014_independent_review.md are applied here too. (1) 'MEDIUM-1 is now mutation-proven' was false: the predicate check was a substring test and the only mutation tried was a different status literal. REV-015 showed it also accepted status <> 'pending', a negation, swapped branches, concat, IF(...,1,1) and IF(status = 'pending', id, NULL). (2) 'The reviewer separately established the COMMITTED test's cleanup is correct by injecting a failing assertion BEFORE the insert and confirming the after-hook still removed its supplier' could not have observed that: supplierId is null at that point, so the hook's guard never runs. The conclusion is true — re-established with the injection placed AFTER the supplier and both activation rows exist, leaving erp_dev at 0 activation rows, no MIG-% supplier and settings (1, 0, 1) — but the recorded evidence was not. Everything else in the original record stands: M-1: the reviewer injected a bespoke submitSupplier doing its own SELECT FOR UPDATE, UPDATE and audit.record without touching #changeStatus, and with the test file byte-identical the suite stayed 10 pass 0 fail. The 'impossible by construction' claim was therefore broader than the code delivers. DEF-011's closure text is narrowed to transitions routed through #changeStatus and DEF-016 now carries the residual. M-2: the 0036 test's delete-and-reseed of the supplier_settings singleton now runs inside a transaction rolled back in a finally, so the parallel test-file window cannot observe it; TASK-026 is the Settings backend and would have turned this into the recorded TC-001 shape. M-3: supplier 603 MIG-8cbabc31 and its two activation rows, leaked by an earlier verification run whose connection closed before its cleanup hook, are deleted; supplier_activation_requests now holds 0 rows, no MIG-% supplier remains, and supplier_settings id=1 is require_activation_approval 0 version 1. The reviewer separately established the COMMITTED test's cleanup is correct by injecting a failing assertion before the insert and confirming the after-hook still removed its supplier. L-4: the inspection now checks GENERATION_EXPRESSION, not only EXTRA. MySQL stores that text with backslash-escaped quotes, which the first attempt missed and the real schema rejected, so normalization was added. MEDIUM-1 is now mutation-proven WITHOUT altering erp_dev: server/test/supplierActivationRequestSchema.test.js drives the inspection with a fake connection, and neutering the three property conditions turns exactly the four property cases red while the two accept cases stay green. Nit deliberately not fixed, reason recorded in 10_rev_014_independent_review.md. The reviewer also verified in production what the author had only mocked: the real deleteSupplier path through createApplication against erp_dev raises MySqlDatabaseOperationError with cause.code ER_ROW_IS_REFERENCED_2, so the HIGH-2 mapping resolves through exactly one level of wrapping. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 169 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-16T09:44:41+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-015 remediated: the pending_slot predicate check is anchored on the whole expression, and two overstated evidence claims are corrected [AMENDED by REV-017 H-2: the fix described here was itself defective and has been removed]",
+      "code_commit": "0d7fdd075de249028ed0c6c9894d34179566b146",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "983f6d7c3a4ffec340d8ee60c93e2a0553bdcf9a33c0d32ad53fee80f3e2b72a",
+      "status": "PASS",
+      "source_ref": "AMENDED IN PLACE by REV-017 H-2. This record described the anchored regex as the fix, 'with only MySQL's charset introducer allowed to vary'. That sentence was false in every version it appeared in, and the code it describes is gone. The /i flag made the literal case-insensitive (REV-016 HIGH: under ascii_bin, 'PENDING' matches nothing the application writes, so the slot stays NULL and the index enforces nothing); the whitespace strip admitted 'pen ding'; and the surviving backslash strip admitted a literal containing a backslash, which REV-017 proved end-to-end on real MySQL. The text-matching approach has been REMOVED, not repaired again: 0035 now asks the database the invariant directly inside a rolled-back transaction. See docs/supplier_management/implementation/13_rev_017_independent_review.md. The original record follows: MEDIUM-1: the predicate check required the normalized GENERATION_EXPRESSION to contain 'status' and \"'pending'\". The reviewer drove the inspection over nine expressions and it accepted the exact inverse invariant (status <> 'pending'), a negation, swapped branches, concat, IF(...,1,1), and worst IF(status = 'pending', id, NULL) -- a distinct slot per pending row, so UNIQUE (supplier_id, pending_slot) constrains nothing while the inspection returns true and up() returns early. Only a different literal was rejected, and that was the single mutation the unit test tried. The check is now anchored on the whole expression with only MySQL's charset introducer allowed to vary, and the mutation set covers every accepted form plus a different column, an empty expression and four acceptable rewritings. Negative control with the test file byte-identical (md5 2437f439bd6122a3c19daf43f16f8b27 before and after): reverting to the substring check turns the mutation case red on status <> 'pending' while the six other cases stay green. LOW-1: REV-014 recorded that injecting a failing assertion BEFORE the insert proved the committed test's cleanup; it could not have, because supplierId is null there and the hook's guard never runs. The conclusion is true but the recorded evidence was not; REV-015 re-established it with the injection placed AFTER the supplier and both activation rows exist, and both records now describe that experiment. LOW-2: DEF-011's closure now states that REV-015 reproduced its exact 409-on-retry symptom on head 3128059 through the DEF-016 path, so a reader of the defects array cannot conclude the symptom is gone. The reviewer judged the CLOSED/OPEN split not to flatter the numbers -- DEF-011 is MEDIUM and DEF-016 is OPEN at MEDIUM, so the open-MEDIUM count is unchanged. LOW-3: the 0036 transaction holds locks on supplier_settings id=1 across a DELETE, two up() calls and an UPDATE, so under TASK-026 a parallel writer could hit innodb_lock_wait_timeout; recorded against DEF-016's scope, not a misstatement, since the ledger claimed only that no other connection OBSERVES the intermediate values, which is true for reads. Nit declined, and the reviewer endorsed the decline with a stronger reason: referenceSummary necessarily has total 0 on that path, so attaching it would assert '0 references' on a 409 that exists because of a reference. The reviewer verified with a discriminating control that M-2 genuinely closes the parallel window -- injecting ANALYZE TABLE, an implicit commit, made an observer connection see the mutated value and rollback ineffective. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 170 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T00:47:20+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Standing bias recorded: 20 times on this branch a claim was recorded stronger than its evidence",
+      "code_commit": "0d7fdd075de249028ed0c6c9894d34179566b146",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "983f6d7c3a4ffec340d8ee60c93e2a0553bdcf9a33c0d32ad53fee80f3e2b72a",
+      "status": "FAIL",
+      "source_ref": "SCOPE: every claim made by the author in code comments, commit messages, review documents under docs/supplier_management/implementation/ or this ledger, on branch codex/supplier-phase-002, that an independent reviewer subsequently found stronger than its evidence. It does not cover claims no reviewer examined. COUNTING RULE, added by REV-019 because the count has now been wrong five rounds running (three, six, nine, eleven, and eleven-while-its-own-prose-said-thirteen): the count is the length of the enumeration below and nothing else. An instance named in prose but absent from the enumeration is a defect in this record, not a footnote. (1) REV-013 H-1 -- DEF-011's original regression test filtered candidate commands through a hand-maintained allowlist, so the very command it was meant to catch was excluded; the closure was recorded as proven; (2) REV-014 M-1 -- 'the defect class is now impossible by construction', disproved by a transition bypassing #changeStatus with the test file byte-identical; (3) REV-014 M-3 -- a ledger record asserting 'Test rows created during the manual check were deleted; the table is empty' while supplier 603 MIG-8cbabc31 and two activation rows survived; (4) REV-014 L-2 -- the REV-013 document's Decision table claimed 'Open after remediation | High | 0', a clearance its reviewer never granted; (5) REV-015 M-1 -- 'mutation-proven' for a check where the only mutation tried was a different status literal; (6) REV-015 L-1 -- a cleanup proof that injected its failure before the state it claimed to clean existed, so it could not have observed what it reported; (7) REV-016 H-1 -- a fix recorded as closing a hole while the /i flag opened another in the dimension the file's own comment flags; (8) REV-016 M-1 -- 'only MySQL's charset introducer allowed to vary', asserted in four places and false in all four; (9) REV-016 L-1 -- 'None was a false claim about behaviour', false for instance 1 on the record's own words; (10) REV-016 L-4 -- 'that trade is now stated in the code comment and the ledger', whose code-comment half was never true and went uncorrected through two further rounds; (11) REV-016 (tolerated expressions) -- two of four 'acceptable rewritings of the committed DDL' asserted as observed MySQL output and never observed; (12) REV-017 H-1 -- 'nothing is stripped now', while the backslash strip remained and admitted a schema enforcing nothing; (13) REV-017 H-2 -- 'corrected in all four places', true of two, while a review document still presented the regressed code as the fix; (14) REV-018 H-1 -- '171 pass 0 fail 0 skipped' recorded as a result when the suite failed 2 runs in 5, caused by code in this PR; (15) REV-018 H-2 -- 'rendering, charset, sql_mode, engine and escaping cannot defeat this, because it is the invariant itself' -- the probe tested one row pair, not the invariant; (16) REV-018 M-1 -- the second half of the probe's oracle justified in three places by IF(status='pending',1,1), which the database contradicts; (17) REV-018 M-2 -- the skip path's in-code justification, false for the early-return call site; (18) REV-018 L-1 -- IF(status='pending', id, NULL) cited from REV-014 onward as the worst accepted form, though MySQL refuses to create it; (19) REV-019 M-1 -- a test header claiming the column list 'is exercised against a schema that violates that property', which no test did; (20) REV-019 M-3 -- this census asserting 'eleven' while its own prose placed at least thirteen in the count. None was a lie about behaviour except (1), where a defect closure is itself a behaviour claim and was retracted. Each treated a passing experiment or a tidy sentence as proof of more than it isolates. The tell REV-015 named: an experiment whose negative control does not discriminate. The counters, each of which earned its keep: run the case where the property is false; verify the injection landed before believing the result, since one control silently failed to apply and passed; do not couple a control to an error message; when a fix repeatedly regresses in one place, suspect the approach rather than the increment; and when a reviewer says the simpler option was better, weigh that before building the more thorough one -- the probe that replaced the regex was over-built, raced with parallel tests, and carried a false accept of the very class it was built to kill. Status FAIL because this records a defect in the author's method.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T00:47:20+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-016: a behavioural regression was shipped by the previous fix and is now corrected; one reviewer finding not sustained [AMENDED by REV-017 H-2] [AMENDED by REV-018 M-4]",
+      "code_commit": "70f6c93b28c9757d3bc46095e14eda89869a0938",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "4533e7c62a9b15e126e374bf9d97c3dfb4bf9f4f6eb6ec97f7f11d3d9a589ec0",
+      "status": "PASS",
+      "source_ref": "H-1 REGRESSION, introduced by the REV-015 fix and caught by REV-016: the anchored regex carried /i, which also made the status literal case-insensitive. status is ascii_bin, so IF(status = 'PENDING', 1, NULL) matches nothing the application writes, the slot stays NULL on every row and the unique index enforces nothing while the inspection reports the table correct. Reproduced against the shipped code before changing it: lowercase true, 'PENDING' true, 'Pending' true, 'pen ding' true. The substring check it replaced REJECTED all three wrong forms, so this fix closed seven holes and opened one — and was recorded as closing a hole full stop. After the fix the same probe returns true, false, false, false. M-1: whitespace was stripped inside the quotes as well, so 'pen ding' normalized to 'pending'. [AMENDED by REV-018 M-4: this record then said 'nothing is stripped now'. That was false -- the backslash strip remained and admitted a literal containing a backslash, which is instance (7) of the standing bias this same ledger records. It stayed unretracted through two further rounds. Moot now: the whole predicate check has been removed.] The claim 'only MySQL's charset introducer allowed to vary' was false in all four places it appeared. [AMENDED by REV-017 H-2: this record then said it was corrected in all four. It was corrected in two. 11_rev_015_independent_review.md and the REV-015 ledger observation still carried the retracted sentence, and the first also still presented the regressed /i regex as the fix. Both are corrected now, and the whole text-matching approach has since been removed. This amendment was itself made only after grepping for surviving copies rather than trusting the claim, which is the discipline whose absence produced H-2.] L-3: the thrown message named a property the code did not verify. L-4: the brittleness trade is now disclosed — a server rendering the expression differently makes up() throw on a correct schema, and CASE WHEN / <=> / BINARY forms are behaviourally correct but rejected — and the REV-014 citation that had been REPLACED rather than appended in DEF-011.closure_evidence is restored. M-2 NOT SUSTAINED: the reviewer reported the quoted negative-control output as impossible for that run and therefore predicted rather than observed. Re-running the original control with the injection verified by grep first and the test file md5 2437f439bd6122a3c19daf43f16f8b27 before and after reproduces it exactly: 6 pass 1 fail, 'Missing expected rejection: accepted if((`status` <> _utf8mb4\\'pending\\'),1,NULL)'. The original control reverted ONLY the condition and left the thrown message identical, so the run reached the <> case, a genuine acceptance difference; the reviewer's reconstruction reverted the message too and aborted at index 0 on a message-regex mismatch. Both runs are real and they are different experiments. The reviewer's methodological point stands and was acted on anyway: the rejection assertions are now message-agnostic, and all three controls in this round discriminate on acceptance — reverting to the substring check goes red on status <> 'pending', restoring /i goes red on 'PENDING', restoring the whitespace strip goes red on 'pen ding', each injection verified by grep and the test file byte-identical at 0edd7379284ab77078de31442373c650 throughout. One control in this round failed to inject and passed 8/8 proving nothing; that was caught by the grep check and rerun. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 171 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T01:14:46+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-017: the DDL text-matching approach is removed in favour of a behavioural probe; disputed M-2 adjudicated in the author's favour",
+      "code_commit": "0b31e99d9cbf864b6f1fbfcaa8a48cad8a47e1c0",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "f926d998577deb5891651516ef7d285d1ca3c924333a922745b86280e98ce8dd",
+      "status": "PASS",
+      "source_ref": "H-1, the seventh instance and the last: the backslash strip survived the previous fix. A literal holding a real backslash renders with doubled backslashes, so stripping made IF(status = 'pen\\\\ding', 1, NULL) byte-identical to the correct expression. The reviewer proved it end-to-end on real MySQL by MEASURING ENFORCEMENT -- inserting two pending rows for one supplier and watching the second succeed -- not by reading the regex. Three sentences asserted the normalization was gone: the commit message, the code comment and this ledger, all written in the commit that retracted the previous identical over-broad claim. DESIGN CHANGE, which is the substance of this round: inferring a behaviour from GENERATION_EXPRESSION text is abandoned rather than repaired a sixth time. Four rounds produced a defect in three, and each fix created the next, because every rendering variation is a new false reject and every normalization step a new false accept and the two push against each other. Measured on real MySQL, the text check accepted a form enforcing nothing and rejected CASE WHEN, <=> and BINARY forms that all enforce correctly -- a false reject makes up() throw on a sound schema and blocks the migration runner. inspectSupplierActivationRequestSchema now requires, inside a transaction always rolled back, that a second pending request for one supplier is refused with ER_DUP_ENTRY and a second decided request is accepted. Both halves are needed: without the first a slot that is never NULL passes; without the second IF(status = 'pending', 1, 1) passes while blocking the decided history the table exists to keep. The probe is skipped when no supplier exists to probe against, where this migration created the table a few statements earlier. The table definition is unchanged; this is not a schema change. NOT DONE, offered rather than assumed: demonstrating on real MySQL that the probe REJECTS the backslash exploit requires building a divergent table in erp_dev, which is a schema change needing sign-off. The acceptance path is verified against real MySQL by supplierCoreMigrations.integration.test.js; the rejection paths by unit tests simulating a non-enforcing table. H-2: two of the four claimed corrections had not been made, and 11_rev_015_independent_review.md still presented the regressed /i regex as the fix, unmarked, four lines above an edit made in that same commit. Both corrected; observations[38] amended in place as [37] was. M-1 is moot -- a probe has no rendering to be brittle about. M-2: the census is extended to nine and now states its own scope so completeness is checkable rather than asserted. DISPUTED FINDING ADJUDICATED: REV-017 reconstructed both experiments at b8170ae and found the author right, decisively -- the REV-015 control output is verbatim genuine including its counts, and the two runs are different experiments differing exactly as the author said. The reviewer added that defending real evidence under reviewer pressure is correct behaviour and distinct from stubbornness, and that acting on the valid methodological point behind an invalid finding is the right disposition. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 171 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T01:27:36+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-018: the pending_slot predicate guard is removed entirely; the redesign's diagnosis was confirmed empirically but the implementation was over-built and defective",
+      "code_commit": "a6cb4260bfb1807e1507a625f12187305da61c1a",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "edc74620929d75a87eed1f0fc7f2f29f489cf34cfd7fc9ecad8444ae3f884e8a",
+      "status": "PASS",
+      "source_ref": "THE OUTSTANDING EMPIRICAL CHECK PASSED. The previous round disclosed rather than faked that nobody had shown the probe REJECTS a divergent table on real MySQL, because building one is a schema change needing sign-off. REV-018 built and dropped its own probe tables and confirmed: the backslash exploit, the ascii_bin casing hole and the inverted predicate are all REJECTED, and CASE WHEN and <=> -- correct forms the regex would have blocked a sound schema on -- are ACCEPTED. The diagnosis behind the redesign was right and is now established rather than asserted. THE IMPLEMENTATION WAS NOT. H-1: the candidate supplier was selected outside the transaction without a lock while three other integration files create and delete suppliers in parallel against the same erp_dev; five runs of the server suite produced 2 failures with ER_NO_REFERENCED_ROW_2 raised inside the probe, so the recorded '171 pass 0 fail 0 skipped' was not reproducible and the cause was code in this PR. H-2: both probe rows carried supplier_version = 1, so a slot generated from any other column was indistinguishable from the constant 1 -- IF(status = 'pending', supplier_version, NULL), which permits three simultaneous pending rows for one supplier, was ACCEPTED, and the regex it replaced rejected that form. With the slot derived from requested_at the oracle was non-deterministic, 8 ACCEPT / 4 REJECT over 12 runs against one unchanged table. The code comment claiming rendering, charset, sql_mode, engine and escaping could not defeat it was again stronger than the code: it tested one row pair, not the invariant. H-3: deleting the probe call left the integration suite green, and NOT EXISTS -> EXISTS was invisible to both suites though it would make up() throw on any database holding a pending request -- the same defect REV-014 recorded about fakes, reintroduced in the replacement. M-2: the skip path's in-code justification was false for the early-return call site, and a table generated as IF(status <> 'pending', 1, NULL) passed through it. M-1: the second half of the oracle was justified in three places by IF(status = 'pending', 1, 1), which on real MySQL throws ER_DUP_ENTRY out of an unwrapped insert before that half is evaluated. DISPOSITION: the guard is REMOVED, not fixed a sixth time. The reviewer's judgement, accepted in full, is that the simpler option was better from the start and was not taken -- relying on supplierCoreMigrations.integration.test.js, which already proves the invariant against real MySQL, removes 46 lines, the write path inside a migration, the race, the skip hole and the non-determinism, and costs only a guard against a hand-divergent table nobody has observed. Under the project's 'minimum code that solves the problem' this was over-built. 0035 now says plainly that it does not verify what the slot computes; what remains are facts information_schema states directly and which have never been defective. Flakiness re-measured after the removal: five consecutive runs, 168 pass 0 fail each (168 rather than 171 because the three probe unit tests went with the probe). L-1: IF(status = 'pending', id, NULL), cited from REV-014 onward as the worst accepted form, was never constructible -- MySQL refuses it with ER_GENERATED_COLUMN_REF_AUTO_INC. It existed only behind a fake. Corrected in 11_rev_015_independent_review.md. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 168 pass 0 fail 0 skipped against erp_dev, five times consecutively; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T02:08:19+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-019 APPROVED: first approval on this branch, 0 Critical 0 High, remaining items explicitly non-blocking",
+      "code_commit": "5023adda8e8be79ec6079357d31441eacf5c0bea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6e5416bcf88f82446db417d83743b7897c6747659a4a24c2cf6edadca2d6709b",
+      "status": "PASS",
+      "source_ref": "REV-019 returned APPROVED with 0 Critical, 0 High, 3 Medium, 1 Low, all graded non-blocking and recommended as follow-ups rather than a seventh round. Verified by the reviewer rather than accepted: the one-pending invariant is still genuinely proved -- pointing the second pending insert at a different supplier turns supplierCoreMigrations.integration.test.js red with 'Missing expected rejection', injection grep-verified and the file restored to md5 f95498dc1b57e855bfeb39030156cea3; the flakiness is gone, TEN consecutive runs at 168 pass 0 fail 0 skipped where the probe had produced 2 failures in 5; the removal is complete with no orphans, no unreachable branch and lint clean; all five surviving checks are non-vacuous under five grep-verified mutations; the early return is now behaviourally identical to falling through; the fake's SQL routing cannot drift silently because the specific index branch is matched first and the default arm throws; and a recursive parsed JSON diff shows no removed keys, no removed elements and no lost content. The reviewer noted the migration comment is the first closure text on this branch it could not break, and that it under-claims rather than over-claims. ITS FINDINGS, ALL REMEDIATED HERE RATHER THAN DEFERRED: M-1, the test header claimed the column list was exercised against a violating schema when no test did -- deleting the column-list check left the suite green. A violating-column-list test was added covering a missing column and a renamed one, and the negative control now discriminates: deleting that check turns the suite red, 5 pass 1 fail, with the test file byte-identical. M-2, the banner went on three of the four documents that needed it and missed 13_rev_017_independent_review.md, the one describing the removed probe most extensively and in the present tense; it now carries a banner naming its three specifically false sentences. The commit message's 'Verified by grep before claiming, not after' was disproved by a one-line grep, which is itself instance (20)'s sibling. M-3 and L-1, this census asserted eleven while its own prose placed at least thirteen in the count, and carried a duplicated clause. It is rewritten with an explicit counting rule and a complete enumeration, now twenty. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 168 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T02:24:50+00:00"
     }
   ],
   "pending_decisions": [
@@ -1729,6 +1934,14 @@
       "idempotency_key": "supplier-contract-pin-worktree-retire",
       "status": "CONFIRMED",
       "source_ref": "git branch --merged main confirmed full merge before removal; worktree removed, local branch deleted, remote branch deleted."
+    },
+    {
+      "id": "MIGRATION-008",
+      "kind": "EXECUTE_TEST_MIGRATIONS",
+      "target": "mysql://127.0.0.1:3306/erp_dev migrations 0035 Supplier activation requests and 0036 Supplier settings",
+      "idempotency_key": "supplier-phase-002-erp-dev-migration-0035-0036",
+      "status": "CONFIRMED",
+      "source_ref": "Repository migration runner applied 0035_create_supplier_activation_requests.js and 0036_create_supplier_settings.js to the authorized test-only erp_dev on 2026-09-16 under APPROVAL-HD-006-ERP-DEV. An immediate rerun recorded both as already applied, which evidences the migration ledger rather than idempotency of up(); up() is exercised twice directly in server/test/integration/supplierCoreMigrations.integration.test.js."
     }
   ],
   "evidence_files": [
@@ -1881,13 +2094,23 @@
     },
     {
       "id": "DEF-011",
-      "severity": "LOW",
-      "status": "DEFERRED",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
       "source_ids": [
         "REV-007",
+        "REV-013",
+        "REV-014",
+        "REV-015",
+        "REV-016",
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "server/src/modules/supplier/SupplierAdminService.js##changeStatus takes a LIFECYCLE_COMMANDS key, so a transition ROUTED THROUGH IT cannot escape LIFECYCLE_ACTIONS",
+        "server/test/supplierLifecycleService.test.js#every-registered-lifecycle-command-covered",
+        "docs/supplier_management/implementation/11_rev_015_independent_review.md#low-2",
+        "docs/supplier_management/implementation/10_rev_014_independent_review.md#what-the-reviewer-verified-independently",
+        "BOUNDED: transitions that BYPASS #changeStatus are covered by neither the registry nor the test, and REV-015 REPRODUCED THIS DEFECT'S EXACT 409-ON-RETRY SYMPTOM on head 3128059 through that path. Closing this record does not mean the symptom is unreachable; DEF-016 carries it."
+      ],
       "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
     {
@@ -1940,7 +2163,22 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-016",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-014",
+        "REV-015",
+        "TASK-026",
+        "TASK-038",
+        "server/src/modules/supplier/SupplierAdminService.js#changeStatus",
+        "server/test/integration/supplierCoreMigrations.integration.test.js#supplier_settings-lock-window"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-011 is APPROVED with 0 Critical and 1 High, bound to design baseline e4083319. It established from git history that NO history or authoritative content was lost, re-ran both suites itself to confirm the recorded evidence is not fabricated, and independently confirmed the secret scan is clean. Its HIGH-1 and both LOW record corrections are applied above. THE GATE IS NOT SATISFIED. Scoped to PHASE-001 it currently returns 11 issues across 5 codes: REVIEW_NOT_SATISFIED (cleared by REV-012, which binds e4083319 with open_high 0; REV-011 alone did not clear it because harness_checks.py:279-280 skips an APPROVED review with a non-zero open_high unless a RISK approval covers it), REQUIRED_RUN_MISSING x4 and CI_MISSING_OR_STALE x4 and PR_REVIEW_MISSING (all stranded on the plan-baseline move, and the CI and PR ones additionally on code_commit), and COMMIT_CHANGED (the structural one-commit lag that cannot be fully eliminated). Next, in order: commit this review record, which unblocks run_check.py --execute; re-run the four DEVELOPER suites to produce evidence at plan baseline a0d41e31; register it; push; confirm CI green on the exact final head; then obtain the decision to merge. New: DEF-014 (committed evidence embeds absolute developer paths; fixing it moves the plan baseline, so bundle it with a change already doing so) and DEF-015 (Supplier is the only module declaring .gitignore in approval_required_paths; any other module editing it faces the same cost). Carried forward: six SCOPE approvals already stale beforehand; Purchasing pinning Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-012. PHASE-002 starts with the DEF-011 invariant assert; TASK-025 migrations need explicit schema sign-off."
+  "next_safe_action": "REV-019 APPROVED on 5023add with 0 Critical and 0 High, the first approval on this branch, and its three non-blocking findings are remediated on 5023add rather than deferred. The review gate is satisfied: an APPROVED review with open_high 0 needs no RISK approval. Next: confirm CI green on the exact final head, then the merge decision is the Product Owner's -- it has not been given for this head and no earlier approval carries forward. Before TASK-026, read DEF-016: a transition bypassing #changeStatus reproduces DEF-011's 409-on-retry symptom, and the 0036 test holds locks on supplier_settings id=1 that a parallel Settings test would contend with. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so whichever merges second must renumber; DEF-013 stays OPEN for TASK-038 and checker registration remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }

@@ -23,18 +23,34 @@ function duplicateEntry(error) {
   return (error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY";
 }
 
+function referencedRow(error) {
+  return ["ER_ROW_IS_REFERENCED", "ER_ROW_IS_REFERENCED_2"].includes(error?.cause?.code ?? error?.code);
+}
+
+function deepFreeze(value) {
+  for (const entry of Object.values(value)) {
+    if (entry && typeof entry === "object") deepFreeze(entry);
+  }
+  return Object.freeze(value);
+}
+
+// One definition per status transition. #changeStatus takes a key of this map, not
+// a descriptor, so a transition added in a later phase cannot reach the transition
+// path without also entering the replay filter derived below.
+export const LIFECYCLE_COMMANDS = deepFreeze({
+  activate: { targetStatus: "active", allowedFrom: ["draft"], action: "supplier.activate", activationCheck: true, approvalCheck: true },
+  suspend: { targetStatus: "suspended", allowedFrom: ["active"], action: "supplier.suspend" },
+  reactivate: { targetStatus: "active", allowedFrom: ["suspended"], action: "supplier.reactivate", activationCheck: true },
+  block: { targetStatus: "blocked", allowedFrom: ["active", "suspended"], action: "supplier.block" },
+  unblock: { targetStatus: "suspended", allowedFrom: ["blocked"], action: "supplier.unblock" },
+  archive: { targetStatus: "archived", allowedFrom: ["draft", "active", "suspended"], action: "supplier.archive", openFlowCheck: true },
+  restore: { targetStatus: "suspended", allowedFrom: ["archived"], action: "supplier.restore" }
+});
+
 // Replay detection must look only at status transitions. Every audit action this
 // module writes begins with "supplier.", so a broader match lets an unrelated
 // child-record write shadow the real transition.
-const LIFECYCLE_ACTIONS = Object.freeze([
-  "supplier.activate",
-  "supplier.suspend",
-  "supplier.reactivate",
-  "supplier.block",
-  "supplier.unblock",
-  "supplier.archive",
-  "supplier.restore"
-]);
+const LIFECYCLE_ACTIONS = Object.freeze(Object.values(LIFECYCLE_COMMANDS).map((command) => command.action));
 
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
   supplierCode: "s.supplier_code_key",
@@ -352,7 +368,10 @@ export class SupplierAdminService {
     });
   }
 
-  async #changeStatus(input, { targetStatus, allowedFrom, action, activationCheck = false, approvalCheck = false, openFlowCheck = false }) {
+  async #changeStatus(input, commandName) {
+    const command = LIFECYCLE_COMMANDS[commandName];
+    if (!command) throw new TypeError(`Unknown supplier lifecycle command: ${commandName}`);
+    const { targetStatus, allowedFrom, action, activationCheck = false, approvalCheck = false, openFlowCheck = false } = command;
     const reason = action === "supplier.activate" ? "" : requireReason(input.reason);
     await this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, {
@@ -433,69 +452,80 @@ export class SupplierAdminService {
   }
 
   activateSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "active", allowedFrom: ["draft"], action: "supplier.activate", activationCheck: true, approvalCheck: true });
+    return this.#changeStatus(input, "activate");
   }
 
   suspendSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["active"], action: "supplier.suspend" });
+    return this.#changeStatus(input, "suspend");
   }
 
   reactivateSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "active", allowedFrom: ["suspended"], action: "supplier.reactivate", activationCheck: true });
+    return this.#changeStatus(input, "reactivate");
   }
 
   blockSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "blocked", allowedFrom: ["active", "suspended"], action: "supplier.block" });
+    return this.#changeStatus(input, "block");
   }
 
   unblockSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["blocked"], action: "supplier.unblock" });
+    return this.#changeStatus(input, "unblock");
   }
 
   archiveSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "archived", allowedFrom: ["draft", "active", "suspended"], action: "supplier.archive", openFlowCheck: true });
+    return this.#changeStatus(input, "archive");
   }
 
   restoreSupplier(input) {
-    return this.#changeStatus(input, { targetStatus: "suspended", allowedFrom: ["archived"], action: "supplier.restore" });
+    return this.#changeStatus(input, "restore");
   }
 
   async deleteSupplier(input) {
     const reason = requireReason(input.reason);
-    await this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, {
-        actorId: input.actorId,
-        claimedRoles: input.claimedRoles,
-        claimedPermissions: input.claimedPermissions
+    try {
+      await this.database.withTransaction(async (connection) => {
+        const actor = await this.authorize(connection, {
+          actorId: input.actorId,
+          claimedRoles: input.claimedRoles,
+          claimedPermissions: input.claimedPermissions
+        });
+        const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
+        if (!current) throw supplierNotFound(input.id);
+        assertExpectedVersion(current, input.version);
+        const referenceSummary = await this.references.describeReferences(connection, input.id);
+        assertSupplierDeletable(current.status, referenceSummary);
+        const [[activeHistory]] = await connection.query(
+          "SELECT 1 AS present FROM supplier_audit_logs WHERE supplier_id = ? AND action IN ('supplier.activate', 'approval.approve') LIMIT 1",
+          [input.id]
+        );
+        if (activeHistory) {
+          throw supplierConflict("SUPPLIER_DELETE_NOT_ALLOWED", "曾經啟用的供應商不可永久刪除");
+        }
+        const [result] = await connection.execute("DELETE FROM suppliers WHERE id = ? AND version = ?", [input.id, input.version]);
+        if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+        await this.audit.record(connection, {
+          actorUserId: input.actorId,
+          actorUsername: actor.username,
+          action: "supplier.delete",
+          targetType: "supplier",
+          targetId: input.id,
+          supplierId: input.id,
+          targetLabel: current.supplier_code,
+          reason,
+          detail: { before: { status: current.status }, after: { deleted: true } },
+          requestId: input.requestId,
+          ip: input.ip
+        });
       });
-      const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
-      if (!current) throw supplierNotFound(input.id);
-      assertExpectedVersion(current, input.version);
-      const referenceSummary = await this.references.describeReferences(connection, input.id);
-      assertSupplierDeletable(current.status, referenceSummary);
-      const [[activeHistory]] = await connection.query(
-        "SELECT 1 AS present FROM supplier_audit_logs WHERE supplier_id = ? AND action IN ('supplier.activate', 'approval.approve') LIMIT 1",
-        [input.id]
-      );
-      if (activeHistory) {
-        throw supplierConflict("SUPPLIER_DELETE_NOT_ALLOWED", "曾經啟用的供應商不可永久刪除");
+    } catch (error) {
+      // this.references only reports the child tables whose checkers a caller
+      // actually registered, so a RESTRICT foreign key the checker set does not
+      // cover still reaches the DELETE. Report it as the same domain conflict
+      // instead of letting the driver error surface as a 500.
+      if (referencedRow(error)) {
+        throw supplierConflict("SUPPLIER_REFERENCED", "供應商已有引用，不可永久刪除");
       }
-      const [result] = await connection.execute("DELETE FROM suppliers WHERE id = ? AND version = ?", [input.id, input.version]);
-      if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
-      await this.audit.record(connection, {
-        actorUserId: input.actorId,
-        actorUsername: actor.username,
-        action: "supplier.delete",
-        targetType: "supplier",
-        targetId: input.id,
-        supplierId: input.id,
-        targetLabel: current.supplier_code,
-        reason,
-        detail: { before: { status: current.status }, after: { deleted: true } },
-        requestId: input.requestId,
-        ip: input.ip
-      });
-    });
+      throw error;
+    }
     return { id: input.id };
   }
 
