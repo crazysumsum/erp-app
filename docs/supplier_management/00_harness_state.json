@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 96,
+  "revision": 97,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -842,6 +842,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-015",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (REV-014 remediation)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior context, reviewing 9a9984b..3128059 with CI 4/4 green",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/11_rev_015_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1262,6 +1274,28 @@
       "source_ref": "M-1: the reviewer injected a bespoke submitSupplier doing its own SELECT FOR UPDATE, UPDATE and audit.record without touching #changeStatus, and with the test file byte-identical the suite stayed 10 pass 0 fail. The 'impossible by construction' claim was therefore broader than the code delivers. DEF-011's closure text is narrowed to transitions routed through #changeStatus and DEF-016 now carries the residual. M-2: the 0036 test's delete-and-reseed of the supplier_settings singleton now runs inside a transaction rolled back in a finally, so the parallel test-file window cannot observe it; TASK-026 is the Settings backend and would have turned this into the recorded TC-001 shape. M-3: supplier 603 MIG-8cbabc31 and its two activation rows, leaked by an earlier verification run whose connection closed before its cleanup hook, are deleted; supplier_activation_requests now holds 0 rows, no MIG-% supplier remains, and supplier_settings id=1 is require_activation_approval 0 version 1. The reviewer separately established the COMMITTED test's cleanup is correct by injecting a failing assertion before the insert and confirming the after-hook still removed its supplier. L-4: the inspection now checks GENERATION_EXPRESSION, not only EXTRA. MySQL stores that text with backslash-escaped quotes, which the first attempt missed and the real schema rejected, so normalization was added. MEDIUM-1 is now mutation-proven WITHOUT altering erp_dev: server/test/supplierActivationRequestSchema.test.js drives the inspection with a fake connection, and neutering the three property conditions turns exactly the four property cases red while the two accept cases stay green. Nit deliberately not fixed, reason recorded in 10_rev_014_independent_review.md. The reviewer also verified in production what the author had only mocked: the real deleteSupplier path through createApplication against erp_dev raises MySqlDatabaseOperationError with cause.code ER_ROW_IS_REFERENCED_2, so the HIGH-2 mapping resolves through exactly one level of wrapping. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 169 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
       "actor": "Claude Opus 5",
       "observed_at": "2026-09-16T09:44:41+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-015 remediated: the pending_slot predicate check is anchored on the whole expression, and two overstated evidence claims are corrected",
+      "code_commit": "0d7fdd075de249028ed0c6c9894d34179566b146",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "983f6d7c3a4ffec340d8ee60c93e2a0553bdcf9a33c0d32ad53fee80f3e2b72a",
+      "status": "PASS",
+      "source_ref": "MEDIUM-1: the predicate check required the normalized GENERATION_EXPRESSION to contain 'status' and \"'pending'\". The reviewer drove the inspection over nine expressions and it accepted the exact inverse invariant (status <> 'pending'), a negation, swapped branches, concat, IF(...,1,1), and worst IF(status = 'pending', id, NULL) -- a distinct slot per pending row, so UNIQUE (supplier_id, pending_slot) constrains nothing while the inspection returns true and up() returns early. Only a different literal was rejected, and that was the single mutation the unit test tried. The check is now anchored on the whole expression with only MySQL's charset introducer allowed to vary, and the mutation set covers every accepted form plus a different column, an empty expression and four acceptable rewritings. Negative control with the test file byte-identical (md5 2437f439bd6122a3c19daf43f16f8b27 before and after): reverting to the substring check turns the mutation case red on status <> 'pending' while the six other cases stay green. LOW-1: REV-014 recorded that injecting a failing assertion BEFORE the insert proved the committed test's cleanup; it could not have, because supplierId is null there and the hook's guard never runs. The conclusion is true but the recorded evidence was not; REV-015 re-established it with the injection placed AFTER the supplier and both activation rows exist, and both records now describe that experiment. LOW-2: DEF-011's closure now states that REV-015 reproduced its exact 409-on-retry symptom on head 3128059 through the DEF-016 path, so a reader of the defects array cannot conclude the symptom is gone. The reviewer judged the CLOSED/OPEN split not to flatter the numbers -- DEF-011 is MEDIUM and DEF-016 is OPEN at MEDIUM, so the open-MEDIUM count is unchanged. LOW-3: the 0036 transaction holds locks on supplier_settings id=1 across a DELETE, two up() calls and an UPDATE, so under TASK-026 a parallel writer could hit innodb_lock_wait_timeout; recorded against DEF-016's scope, not a misstatement, since the ledger claimed only that no other connection OBSERVES the intermediate values, which is true for reads. Nit declined, and the reviewer endorsed the decline with a stronger reason: referenceSummary necessarily has total 0 on that path, so attaching it would assert '0 references' on a 409 that exists because of a reference. The reviewer verified with a discriminating control that M-2 genuinely closes the parallel window -- injecting ANALYZE TABLE, an implicit commit, made an observer connection see the mutated value and rollback ineffective. Four developer suites on this commit: lint exit 0; client build exit 0; supplier-phase-001-server 170 pass 0 fail 0 skipped against erp_dev; supplier-phase-001-client 40 pass 0 fail.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T00:47:20+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Standing bias recorded: three times on this branch a passing experiment was recorded as proof of more than it isolates",
+      "code_commit": "0d7fdd075de249028ed0c6c9894d34179566b146",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "983f6d7c3a4ffec340d8ee60c93e2a0553bdcf9a33c0d32ad53fee80f3e2b72a",
+      "status": "FAIL",
+      "source_ref": "Recorded as a standing bias rather than a fourth case to fix. Three instances on this branch, each found by an independent reviewer and none by the author: (1) DEF-011's original regression test, whose allowlist filtered out the very command it was meant to catch; (2) 'the defect class is now impossible by construction', disproved by a transition that bypassed #changeStatus entirely; (3) 'mutation-proven' for a property where only the easiest mutation -- a different string literal -- was tried. None was a false claim about behaviour. Each treated a passing experiment as proof of more than it isolates. REV-015 named the tell: an experiment whose negative control does not discriminate. The counter is to ask of every proof 'what would this have looked like if the property were false?' and to run that case. The controls in this round are what it looks like in practice: the ANALYZE TABLE implicit-commit probe, the post-insert failure injection, and reverting the migration to the substring check. Status FAIL because this records a defect in the author's method, not a passing check.",
+      "actor": "Claude Opus 5",
+      "observed_at": "2026-09-17T00:47:20+00:00"
     }
   ],
   "pending_decisions": [
@@ -1974,13 +2008,14 @@
         "REV-007",
         "REV-013",
         "REV-014",
+        "REV-015",
         "server/src/modules/supplier/SupplierAdminService.js:29"
       ],
       "closure_evidence": [
         "server/src/modules/supplier/SupplierAdminService.js##changeStatus takes a LIFECYCLE_COMMANDS key, so a transition ROUTED THROUGH IT cannot escape LIFECYCLE_ACTIONS",
         "server/test/supplierLifecycleService.test.js#every-registered-lifecycle-command-covered",
-        "docs/supplier_management/implementation/10_rev_014_independent_review.md#what-the-reviewer-verified-independently",
-        "Bounded claim: transitions that BYPASS #changeStatus are covered by neither the registry nor the test. That residual is DEF-016, not part of this closure."
+        "docs/supplier_management/implementation/11_rev_015_independent_review.md#low-2",
+        "BOUNDED: transitions that BYPASS #changeStatus are covered by neither the registry nor the test, and REV-015 REPRODUCED THIS DEFECT'S EXACT 409-ON-RETRY SYMPTOM on head 3128059 through that path. Closing this record does not mean the symptom is unreachable; DEF-016 carries it."
       ],
       "risk_approval_id": "APPROVAL-HD-017-RISK"
     },
@@ -2041,13 +2076,15 @@
       "status": "OPEN",
       "source_ids": [
         "REV-014",
-        "server/src/modules/supplier/SupplierAdminService.js#changeStatus",
+        "REV-015",
         "TASK-026",
-        "TASK-038"
+        "TASK-038",
+        "server/src/modules/supplier/SupplierAdminService.js#changeStatus",
+        "server/test/integration/supplierCoreMigrations.integration.test.js#supplier_settings-lock-window"
       ],
       "closure_evidence": [],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "REV-014 findings are remediated on commit a089ddf. DEF-011 stays CLOSED but on a narrowed, bounded claim; DEF-016 is OPEN for the residual, a transition that bypasses #changeStatus is covered by neither the registry nor the test, which matters directly to TASK-026 and TASK-038. Next: push, confirm CI green on the exact final head, and ask the reviewer to verify this remediation before any merge decision. No REV has yet returned APPROVED on this branch. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so whichever merges second must renumber; DEF-013 stays OPEN for TASK-038 and registering real reference checkers remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "REV-015 findings are remediated on commit 0d7fdd0. Next: push, confirm CI green on the exact final head, and have the reviewer verify this remediation. No REV has returned APPROVED on this branch yet: REV-013 CHANGES_REQUESTED 2 HIGH, REV-014 CHANGES_REQUESTED 3 MEDIUM, REV-015 CHANGES_REQUESTED 1 MEDIUM. Each round has been smaller, and the open findings are now bounded to claims about evidence rather than behaviour. Before TASK-026, read DEF-016: a transition bypassing #changeStatus reproduces DEF-011's 409-on-retry symptom on current head, and the 0036 test holds locks on supplier_settings id=1 that a parallel Settings test would contend with. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so whichever merges second must renumber; DEF-013 stays OPEN for TASK-038 and registering real reference checkers remains DEF-004, deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
