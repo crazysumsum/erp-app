@@ -59,7 +59,7 @@ test("pending_slot must be generated, not merely named pending_slot", async () =
   );
 });
 
-test("pending_slot must be exactly IF(status = 'pending', 1, NULL), not merely an expression mentioning both", async () => {
+test("pending_slot must be IF(status = 'pending', 1, NULL) with that exact lowercase literal", async () => {
   // Every one of these was accepted by an earlier substring check. The last group
   // matters most: IF(status = 'pending', id, NULL) gives each pending row a
   // distinct slot, so UNIQUE (supplier_id, pending_slot) constrains nothing while
@@ -74,23 +74,42 @@ test("pending_slot must be exactly IF(status = 'pending', 1, NULL), not merely a
     "if((`status` = _utf8mb4\\'pending\\'),1,1)",            // never frees the slot
     "if((`request_status` = _utf8mb4\\'pending\\'),1,NULL)", // different column
     "concat(`status`,_utf8mb4\\'pending\\')",                // not a predicate at all
+    "if((`status` = _utf8mb4\\'PENDING\\'),1,NULL)",          // ascii_bin: matches nothing the app writes
+    "if((`status` = _utf8mb4\\'Pending\\'),1,NULL)",          // same, and the /i flag used to accept it
+    "if((`status` = _utf8mb4\\'pen ding\\'),1,NULL)",         // same, via whitespace stripping
     ""                                                     // absent
   ];
   for (const generation_expression of rejected) {
     const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
       ? { ...row, generation_expression }
       : row));
+    // Deliberately message-agnostic: matching the thrown text would make this go red
+    // when the wording changes and green when only the wording is right, which is the
+    // opposite of what a control must discriminate on.
     await assert.rejects(
       () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))),
-      /pending_slot is not exactly IF\(status = 'pending', 1, NULL\)/u,
+      (error) => error instanceof Error,
       `accepted ${generation_expression || "an empty expression"}`
     );
   }
 });
 
-test("the accepted expression tolerates only MySQL's own rewriting of the committed DDL", async () => {
-  // The charset introducer follows the column's charset, and MySQL's spacing and
-  // NULL casing are its own; nothing else about the expression may vary.
+test("the rejection names the literal, so a reader knows which property failed", async () => {
+  const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
+    ? { ...row, generation_expression: "if((`status` = _utf8mb4\\'approved\\'),1,NULL)" }
+    : row));
+  await assert.rejects(
+    () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))),
+    /pending_slot is not IF\(status = 'pending', 1, NULL\) with that exact lowercase literal/u
+  );
+});
+
+test("only variation that cannot affect the invariant is tolerated", async () => {
+  // The first form is what this MySQL actually stores for the committed DDL; it is
+  // the only one of these observed here. The rest are deliberate tolerance for
+  // servers that might render keywords, the charset introducer or spacing
+  // differently, since none of those changes what the column computes. This is
+  // tolerance, not a claim that MySQL emits them.
   for (const generation_expression of [
     "if((`status` = _utf8mb4\\'pending\\'),1,NULL)",
     "if((`status` = _ascii\\'pending\\'),1,NULL)",

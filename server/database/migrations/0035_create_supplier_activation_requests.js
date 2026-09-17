@@ -38,15 +38,18 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   // check the whole expression, not that it mentions the right tokens. Substring
   // matching accepts `status <> 'pending'`, swapped branches, and worst of all
   // IF(status = 'pending', id, NULL), which gives every pending row a distinct slot
-  // and leaves the unique index constraining nothing. MySQL rewrites the expression
-  // and stores its quotes backslash-escaped, so normalize first; the charset
-  // introducer it adds to the literal depends on the column's charset and is the
-  // only part allowed to vary.
-  const slotExpression = String(value(slot, "generation_expression", "GENERATION_EXPRESSION") ?? "")
-    .replace(/\\/gu, "")
-    .replace(/\s+/gu, "");
-  if (!/^if\(\(`status`=(_[a-z0-9]+)?'pending'\),1,NULL\)$/iu.test(slotExpression)) {
-    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not exactly IF(status = 'pending', 1, NULL)");
+  // and leaves the unique index constraining nothing.
+  //
+  // The literal is matched CASE-SENSITIVELY and with no whitespace stripped inside
+  // it. status is ascii_bin, so 'PENDING' or 'pen ding' compares equal to nothing
+  // the application writes: the slot would stay NULL forever and the unique index
+  // would enforce nothing, which is the same silent failure this check exists to
+  // catch. Keyword casing and the charset introducer MySQL adds to the literal do
+  // not affect the invariant, so those are tolerated; nothing else is.
+  const slotExpression = String(value(slot, "generation_expression", "GENERATION_EXPRESSION") ?? "").replace(/\\/gu, "");
+  const SLOT_EXPRESSION = /^\s*[iI][fF]\s*\(\s*\(\s*`status`\s*=\s*(?:_[a-z0-9]+)?'pending'\s*\)\s*,\s*1\s*,\s*(?:NULL|null)\s*\)\s*$/u;
+  if (!SLOT_EXPRESSION.test(slotExpression)) {
+    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not IF(status = 'pending', 1, NULL) with that exact lowercase literal");
   }
 
   const [indexes] = await connection.query(

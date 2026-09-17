@@ -56,10 +56,19 @@ whitespace-normalized text, with only MySQL's charset introducer allowed to vary
 mutation set covers every form above plus a different column, an empty expression, and four
 acceptable rewritings of the committed DDL.
 
-**Negative control, with the test file byte-identical** (md5 `2437f439bd6122a3c19daf43f16f8b27`
-before and after): reverting the migration to the substring check turns the mutation case red —
-`Missing expected rejection: accepted if((`status` <> _utf8mb4\'pending\'),1,NULL)` — while the
-six other cases stay green, because they test different properties.
+**Negative controls, all message-agnostic, with the test file byte-identical**
+(md5 `0edd7379284ab77078de31442373c650` before and after each, injection verified by `grep`
+before every run):
+
+| Injection into the migration | Result |
+| --- | --- |
+| revert to the substring check | red — `accepted if((\`status\` <> _utf8mb4\\'pending\\'),1,NULL)` |
+| restore the `/i` flag | red — `accepted if((\`status\` = _utf8mb4\\'PENDING\\'),1,NULL)` |
+| restore the whitespace strip | red — `accepted if((\`status\` = _utf8mb4\\'pen ding\\'),1,NULL)` |
+
+The rejection assertions no longer match on the thrown text. Matching it would make the
+control go red when only the wording changes and green when only the wording is right, which
+is the opposite of what a control must isolate. One separate case asserts the message.
 
 ### LOW-1 — REV-014's cleanup proof could not have observed what it reported → corrected
 
