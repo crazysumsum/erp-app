@@ -52,6 +52,25 @@ test("a schema matching the migration is accepted, and an absent table is not an
   assert.equal(await inspectSupplierActivationRequestSchema(connectionFor(schema({ columns: [] }))), false);
 });
 
+test("a column list that is the wrong shape is rejected, not just an absent table", async () => {
+  // columns: [] is the absent-table early return, not a violation. A pre-existing table
+  // missing a column has to fail here, or up() returns early and the first write to the
+  // missing column fails at runtime instead.
+  const missing = schema().columns.filter((row) => row.column_name !== "decision_reason");
+  await assert.rejects(
+    () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns: missing }))),
+    /Incompatible existing Supplier activation request schema/u
+  );
+
+  const renamed = schema().columns.map((row) => (row.column_name === "request_note"
+    ? { ...row, column_name: "note" }
+    : row));
+  await assert.rejects(
+    () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns: renamed }))),
+    /Incompatible existing Supplier activation request schema/u
+  );
+});
+
 test("pending_slot must be generated, not merely named pending_slot", async () => {
   const plainColumn = schema().columns.map((row) => (row.column_name === "pending_slot" ? { ...row, extra: "" } : row));
   await assert.rejects(

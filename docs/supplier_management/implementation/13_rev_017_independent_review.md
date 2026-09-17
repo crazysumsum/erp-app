@@ -9,6 +9,18 @@ disputed finding in the author's favour. It also found a **seventh instance of t
 bias, carrying a working exploit**, and delivered the judgement that matters most: the
 approach itself is wrong and should be replaced. It has been.
 
+> **SUPERSEDED IN PART — REV-019.** Every section below that describes the behavioural probe
+> describes **code that no longer exists**. The probe was removed in `a6cb426` after REV-018
+> found it raced with concurrent Supplier deletes, accepted a slot generated from
+> `supplier_version`, and could be deleted entirely with the integration suite still green.
+> Three sentences here are specifically false and are left in place as the record of what was
+> claimed: that `inspectSupplierActivationRequestSchema` "now asks the database the invariant
+> itself" (it no longer does anything of the kind); that "rendering, charset, `sql_mode`,
+> engine and escaping cannot defeat it" (REV-018 H-2 defeated it); and that the skip path is
+> safe because "the table was created by this same migration a few statements earlier" (false
+> for the early-return call site, REV-018 M-2). `0035` no longer verifies the `pending_slot`
+> predicate by any means. See `14_rev_018_independent_review.md`.
+
 ## Provenance
 
 | Item | Value |
