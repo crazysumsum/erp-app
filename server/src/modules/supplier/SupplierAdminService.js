@@ -1,4 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { SupplierApprovalService, buildApprovalSummary } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplierDuplicateCandidates.js";
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
@@ -52,6 +53,17 @@ export const LIFECYCLE_COMMANDS = deepFreeze({
 // child-record write shadow the real transition.
 const LIFECYCLE_ACTIONS = Object.freeze(Object.values(LIFECYCLE_COMMANDS).map((command) => command.action));
 
+// 設計 4.5 嘅 approval-significant 欄位，喺 updateSupplier 可以改到嗰啲。
+// Supplier Code 唔喺內：佢喺呢個 service 入面唔可以改。Identifier 集合由
+// SupplierIdentifierService 擁有，佢自己嗰條路要分開處理。
+const SIGNIFICANT_UPDATE_FIELDS = Object.freeze([
+  ["supplier_name", "supplierName"],
+  ["display_name", "displayName"],
+  ["default_currency_code", "defaultCurrencyCode"],
+  ["default_payment_term_id", "defaultPaymentTermId"]
+]);
+const NEXT_FIELD_NAMES = Object.freeze(Object.fromEntries(SIGNIFICANT_UPDATE_FIELDS));
+
 const SUPPLIER_SORT_COLUMNS = Object.freeze({
   supplierCode: "s.supplier_code_key",
   supplierName: "s.supplier_name",
@@ -93,7 +105,8 @@ export class SupplierAdminService {
     audit,
     references,
     openFlows,
-    approvalRequired = async () => false
+    approvalRequired = async () => false,
+    approvals
   } = {}) {
     if (!database || !logger || !time || !businessMaster) {
       throw new TypeError("SupplierAdminService requires database, logger, time and businessMaster");
@@ -107,6 +120,7 @@ export class SupplierAdminService {
     this.references = references ?? new SupplierReferenceService();
     this.openFlows = openFlows ?? new SupplierReferenceService();
     this.approvalRequired = approvalRequired;
+    this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit });
     this.time = time;
   }
 
@@ -159,8 +173,11 @@ export class SupplierAdminService {
         }
         duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
         const activationRequested = Boolean(input.activate);
-        if (activationRequested && await this.approvalRequired(connection)) {
-          throw supplierConflict("SUPPLIER_APPROVAL_NOT_READY", "供應商審批功能尚未部署完成");
+        // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
+        // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
+        const approvalRequired = activationRequested && await this.approvalRequired(connection);
+        if (!approvalRequired && input.approverUserId !== undefined && input.approverUserId !== null) {
+          throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
         }
         if (activationRequested) {
           assertSupplierActivatable({
@@ -170,7 +187,7 @@ export class SupplierAdminService {
             defaultCurrency: defaults.currency
           });
         }
-        const status = activationRequested ? "active" : "draft";
+        const status = activationRequested ? (approvalRequired ? "pending_approval" : "active") : "draft";
         const nowMs = this.time.nowMs();
         const [result] = await connection.execute(
           `INSERT INTO suppliers
@@ -187,6 +204,23 @@ export class SupplierAdminService {
         );
         const id = Number(result.insertId);
         await this.replaceNameGrams(connection, id, name.key);
+        if (approvalRequired) {
+          // 新建嘅 Supplier 仲未有 identifier，所以 snapshot 淨係得 root 欄位。
+          await this.approvals.openRequest(connection, {
+            supplierId: id,
+            supplierVersion: 1,
+            actorId: input.actorId,
+            actorUsername: actor.username,
+            approverUserId: input.approverUserId,
+            summary: buildApprovalSummary({
+              supplier_code: code.value, supplier_name: name.value, display_name: displayName,
+              default_currency_code: defaults.currency.code, default_payment_term_id: defaults.paymentTerm?.id ?? null
+            }),
+            requestNote: input.approvalNote,
+            requestId: input.requestId,
+            ip: input.ip
+          });
+        }
         await this.audit.record(connection, {
           actorUserId: input.actorId,
           actorUsername: actor.username,
@@ -225,6 +259,7 @@ export class SupplierAdminService {
     const generalPhone = normalizeSupplierOptionalText(input.generalPhone, { field: "generalPhone", maxLength: 50 });
     const notes = normalizeSupplierOptionalText(input.notes, { field: "notes", maxLength: 2000 });
     let duplicateCandidates = [];
+    let approvalInvalidated = false;
 
     await this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, {
@@ -275,6 +310,31 @@ export class SupplierAdminService {
       );
       if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
       if (current.supplier_name_key !== name.key) await this.replaceNameGrams(connection, input.id, name.key);
+      // 設計 4.5：Pending 期間改動任何 approval-significant 欄位，原申請即時失效、
+      // Supplier 回 draft，全部喺同一個交易入面，再回 approvalInvalidated: true。
+      // Address／Contact／Notes／Bank 唔喺內，所以佢哋改動唔會令申請失效。
+      if (current.status === "pending_approval") {
+        const changedSignificant = SIGNIFICANT_UPDATE_FIELDS
+          .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
+          .map(([, name_]) => name_);
+        if (changedSignificant.length > 0) {
+          await this.approvals.invalidateOpenRequest(connection, {
+            supplierId: input.id,
+            actorId: input.actorId,
+            actorUsername: actor.username,
+            supplierCode: current.supplier_code,
+            changedFields: changedSignificant,
+            reason,
+            requestId: input.requestId,
+            ip: input.ip
+          });
+          await connection.execute(
+            "UPDATE suppliers SET status = 'draft' WHERE id = ? AND status = 'pending_approval'",
+            [input.id]
+          );
+          approvalInvalidated = true;
+        }
+      }
       await this.audit.record(connection, {
         actorUserId: input.actorId,
         actorUsername: actor.username,
@@ -308,7 +368,7 @@ export class SupplierAdminService {
       claimedPermissions: input.claimedPermissions,
       id: input.id
     });
-    return { ...detail, duplicateCandidates };
+    return { ...detail, duplicateCandidates, approvalInvalidated };
   }
 
   async changeSupplierCode(input) {
@@ -399,12 +459,15 @@ export class SupplierAdminService {
       }
       transitionSupplierStatus(current.status, targetStatus);
 
-      if (approvalCheck) {
-        if (approvalIsRequired) throw supplierConflict("SUPPLIER_APPROVAL_NOT_READY", "供應商審批功能尚未部署完成");
-        if (input.approverUserId !== undefined && input.approverUserId !== null) {
-          throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
-        }
+      if (approvalCheck && !approvalIsRequired && input.approverUserId !== undefined && input.approverUserId !== null) {
+        throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
       }
+      // 設計 4.4：設定開啟時 activate 唔會直接去 active，而係開一個申請並轉
+      // pending_approval。轉換合法性喺上面已經由 transitionSupplierStatus 檢查過
+      // draft -> active；draft -> pending_approval 亦係合法邊。
+      const routeToApproval = approvalCheck && approvalIsRequired;
+      const effectiveTargetStatus = routeToApproval ? "pending_approval" : targetStatus;
+      if (routeToApproval) transitionSupplierStatus(current.status, effectiveTargetStatus);
       if (activationCheck) {
         const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
           currencyCode: current.default_currency_code,
@@ -429,9 +492,26 @@ export class SupplierAdminService {
         `UPDATE suppliers
             SET status = ?, version = version + 1, updated_at = ?, updated_by = ?
           WHERE id = ? AND version = ?`,
-        [targetStatus, this.time.nowMs(), input.actorId, input.id, input.version]
+        [effectiveTargetStatus, this.time.nowMs(), input.actorId, input.id, input.version]
       );
       if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+      if (routeToApproval) {
+        const [identifiers] = await connection.query(
+          "SELECT identifier_type, issuer_country_code, identifier_value FROM supplier_identifiers WHERE supplier_id = ?",
+          [input.id]
+        );
+        await this.approvals.openRequest(connection, {
+          supplierId: input.id,
+          supplierVersion: Number(current.version) + 1,
+          actorId: input.actorId,
+          actorUsername: actor.username,
+          approverUserId: input.approverUserId,
+          summary: buildApprovalSummary(current, identifiers),
+          requestNote: input.approvalNote ?? input.reason,
+          requestId: input.requestId,
+          ip: input.ip
+        });
+      }
       await this.audit.record(connection, {
         actorUserId: input.actorId,
         actorUsername: actor.username,
@@ -441,7 +521,7 @@ export class SupplierAdminService {
         supplierId: input.id,
         targetLabel: current.supplier_code,
         reason,
-        detail: { before: { status: current.status }, after: { status: targetStatus } },
+        detail: { before: { status: current.status }, after: { status: effectiveTargetStatus } },
         requestId: input.requestId,
         ip: input.ip
       });

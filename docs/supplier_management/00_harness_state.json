@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 103,
+  "revision": 104,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1662,8 +1662,8 @@
         "docs/supplier_management/03_design_spec.md#2.6",
         "server/src/modules/supplier/SupplierSettingsService.js#getActivationPolicy"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-17: keep the code as written and leave 03_design_spec.md untouched; HD-018 stands as the recorded standing exception for the FOR SHARE / FOR UPDATE difference at design 2.6 line 254. Rationale accepted: REV-020 judged FOR SHARE correct on the merits, and amending the design would move both baselines, stranding 5 approvals (including APPROVAL-HD-017-RISK and -RISK-DEF012, which authorize the 8 deferred defects), all 10 reviews (including the two APPROVED ones) and 16 observations. TASK-028's manual lock-order review cites this record rather than the design sentence."
     }
   ],
   "external_actions": [

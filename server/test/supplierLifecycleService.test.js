@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { SupplierApprovalService } from "../src/modules/supplier/SupplierApprovalService.js";
 import { LIFECYCLE_COMMANDS, SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
 
-function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null, deleteError = null } = {}) {
+function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null, deleteError = null, approverEligible = true } = {}) {
   const events = [];
   const row = {
     id: 7, supplier_code: "SUP-7", supplier_code_key: "sup-7", supplier_name: "Supplier",
@@ -14,6 +15,9 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
   const connection = {
     async query(sql, params) {
       events.push(["query", sql, params]);
+      if (sql.includes("FROM users") && sql.includes("status = 'active'")) {
+        return [approverEligible ? [{ id: params[0], username: "approver" }] : []];
+      }
       if (sql.includes("SELECT * FROM suppliers") && sql.includes("FOR UPDATE")) return [[row]];
       if (sql.includes("supplier_audit_logs") && sql.includes("supplier.activate")) return [[]];
       if (sql.includes("ORDER BY id DESC")) {
@@ -65,6 +69,11 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
     logger: { warn() {} },
     time: { nowMs: () => 100 },
     authorize: async () => { events.push(["authorize"]); return { id: 1, username: "sam", permissions: ["supplier.mgmt", "supplier.view", "supplier.approval"] }; },
+    approvals: new SupplierApprovalService({
+      database, logger: { warn() {} }, time: { nowMs: () => 100 },
+      audit: { async record(_c, entry) { events.push(["audit", entry]); } },
+      loadPermissions: async () => (approverEligible ? ["supplier.approval"] : [])
+    }),
     businessMaster: {
       async assertSupplierDefaultsInTransaction() {
         events.push(["business-master"]);
@@ -200,10 +209,17 @@ test("audit failure rolls a lifecycle state change back as one transaction", asy
   assert.equal(events.at(-1)[1], "rollback");
 });
 
-test("approval-enabled activation fails explicitly until the approval phase is deployed", async () => {
-  const { service, events } = harness({ approvalRequired: true });
-  await assert.rejects(() => service.activateSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_APPROVAL_NOT_READY");
-  assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
+test("approval-enabled activation routes to pending_approval instead of going straight to active", async () => {
+  // TASK-025 shipped this path as an explicit refusal because the approval domain
+  // did not exist. TASK-028 replaces the refusal with the transition design 4.4
+  // specifies: draft -> pending_approval, with a request opened in the same
+  // transaction rather than the Supplier reaching active.
+  const { service, events } = harness({ approvalRequired: true, status: "draft" });
+  await service.activateSupplier({ ...context, approverUserId: 2 });
+  const statusWrite = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers"));
+  assert.equal(statusWrite[2][0], "pending_approval", "approval ON must not produce an active Supplier");
+  const audits = events.filter(([kind]) => kind === "audit").map(([, entry]) => entry.action);
+  assert.ok(audits.includes("approval.submit"), "the submission must be audited in the same transaction");
 });
 
 test("a RESTRICT foreign key that no reference checker covers is reported as a reference conflict", async () => {

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { SupplierApprovalService } from "../src/modules/supplier/SupplierApprovalService.js";
 import { SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
 
-function harness({ approvalRequired = false, duplicateRows = [] } = {}) {
+function harness({ approvalRequired = false, duplicateRows = [], approverEligible = true } = {}) {
   const events = [];
   const connection = {
     async execute(sql, params) {
@@ -11,7 +12,13 @@ function harness({ approvalRequired = false, duplicateRows = [] } = {}) {
       if (sql.includes("INSERT INTO suppliers")) return [{ insertId: 7 }];
       return [{ affectedRows: 1 }];
     },
-    async query(sql, params) { events.push(["query", sql, params]); return [[]]; }
+    async query(sql, params) {
+      events.push(["query", sql, params]);
+      if (sql.includes("FROM users") && sql.includes("status = 'active'")) {
+        return [approverEligible ? [{ id: params[0], username: "approver" }] : []];
+      }
+      return [[]];
+    }
   };
   const database = {
     async withTransaction(work) { events.push(["transaction", "begin"]); const result = await work(connection); events.push(["transaction", "commit"]); return result; },
@@ -26,6 +33,11 @@ function harness({ approvalRequired = false, duplicateRows = [] } = {}) {
   const service = new SupplierAdminService({
     database, logger: { warn() {} }, time: { nowMs: () => 100 },
     authorize: async () => { events.push(["authorize"]); return { id: 1, username: "sam" }; },
+    approvals: new SupplierApprovalService({
+      database, logger: { warn() {} }, time: { nowMs: () => 100 },
+      audit: { async record(_c, entry) { events.push(["audit", entry]); } },
+      loadPermissions: async () => (approverEligible ? ["supplier.approval"] : [])
+    }),
     businessMaster: {
       async assertSupplierDefaultsInTransaction(_connection, input) {
         events.push(["business-master", input]);
@@ -62,9 +74,13 @@ test("duplicate names remain warnings and do not block creation", async () => {
   assert.deepEqual((await service.createSupplier({ ...input, activate: false })).duplicateCandidates, [warning]);
 });
 
-test("approval-enabled activation fails explicitly until the approval capability is deployed", async () => {
-  const { service } = harness({ approvalRequired: true });
-  await assert.rejects(() => service.createSupplier(input), (error) => error.publicCode === "SUPPLIER_APPROVAL_NOT_READY");
+test("creating with activate under approval ON lands in pending_approval, not active", async () => {
+  // Replaces TASK-025's placeholder refusal. Design 4.4: the setting decides
+  // draft -> active or draft -> pending_approval at submission time.
+  const { service, events } = harness({ approvalRequired: true });
+  await service.createSupplier({ ...input, approverUserId: 2 });
+  const insert = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("INSERT INTO suppliers"));
+  assert.ok(insert[2].includes("pending_approval"), "approval ON must not create an active Supplier");
 });
 
 function updateHarness({ version = 2, references = 0, duplicateError = false } = {}) {
