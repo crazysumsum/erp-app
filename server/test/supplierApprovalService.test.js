@@ -1,0 +1,459 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { APPROVAL_SIGNIFICANT_COLUMNS, SupplierApprovalService, buildApprovalSummary } from "../src/modules/supplier/SupplierApprovalService.js";
+
+function harness({
+  requestStatus = "pending", requestVersion = 1, requestedBy = 1, assignedApproverId = 2,
+  supplierStatus = "pending_approval", supplierVersion = 5, requestSupplierVersion = 5,
+  actorId = 2, actorPermissions = ["supplier.approval"], approverActive = true,
+  approverPermissions = ["supplier.approval"], updateAffectedRows = 1
+} = {}) {
+  const events = [];
+  const request = {
+    id: 11, supplier_id: 7, requested_by: requestedBy, assigned_approver_id: assignedApproverId,
+    supplier_version: requestSupplierVersion, status: requestStatus, version: requestVersion,
+    summary: "{}", request_note: "", decision_reason: "", requested_at: 10
+  };
+  const supplier = {
+    id: 7, supplier_code: "SUP-7", supplier_name: "Demo", display_name: "",
+    default_currency_code: "HKD", default_payment_term_id: null,
+    status: supplierStatus, version: supplierVersion
+  };
+  const connection = {
+    async query(sql, params) {
+      events.push(["query", sql, params]);
+      if (sql.includes("FROM supplier_activation_requests")) return [[request]];
+      if (sql.includes("FROM suppliers")) return [[supplier]];
+      if (sql.includes("FROM users")) return [approverActive ? [{ id: params[0], username: "approver" }] : []];
+      return [[]];
+    },
+    async execute(sql, params) {
+      events.push(["execute", sql, params]);
+      if (updateAffectedRows === 0) return [{ affectedRows: 0 }];
+      if (sql.includes("UPDATE supplier_activation_requests")) request.status = params[0];
+      if (sql.includes("UPDATE suppliers")) supplier.status = params[0];
+      return [{ affectedRows: 1, insertId: 11 }];
+    }
+  };
+  const database = {
+    async withTransaction(work) {
+      events.push(["transaction", "begin"]);
+      try {
+        const result = await work(connection);
+        events.push(["transaction", "commit"]);
+        return result;
+      } catch (error) {
+        events.push(["transaction", "rollback"]);
+        throw error;
+      }
+    },
+    async query() { return [[]]; }
+  };
+  const service = new SupplierApprovalService({
+    database,
+    logger: { warn() {} },
+    time: { nowMs: () => 100 },
+    authorize: async () => { events.push(["authorize"]); return { id: actorId, username: "approver", permissions: actorPermissions }; },
+    audit: { async record(_connection, entry) { events.push(["audit", entry]); } },
+    loadPermissions: async () => approverPermissions,
+    businessMaster: { async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; } },
+  });
+  return { service, events, request, supplier, connection };
+}
+
+const context = { actorId: 2, claimedRoles: [], claimedPermissions: ["supplier.approval"], id: 11, version: 1, requestId: "req-1", ip: "127.0.0.1" };
+
+// ---- AC1: eligible approver -------------------------------------------------
+
+test("an approver must be named, must be someone else, must be active and must hold the permission now", async () => {
+  const cases = [
+    [{ approverUserId: undefined }, "APPROVER_REQUIRED", {}],
+    [{ approverUserId: 1 }, "APPROVER_MUST_DIFFER", {}],
+    [{ approverUserId: 2 }, "APPROVER_NOT_ELIGIBLE", { approverActive: false }],
+    [{ approverUserId: 2 }, "APPROVER_NOT_ELIGIBLE", { approverPermissions: ["supplier.mgmt"] }]
+  ];
+  for (const [input, code, options] of cases) {
+    const { service, connection } = harness(options);
+    await assert.rejects(
+      () => service.assertEligibleApprover(connection, { ...input, requesterId: 1 }),
+      (error) => error.publicCode === code,
+      `expected ${code} for ${JSON.stringify({ ...input, ...options })}`
+    );
+  }
+});
+
+test("the permission is read from the database, not from what the submitter claimed", async () => {
+  // BR-012/AC-009: a submitter could claim anything. The check that matters is what
+  // the directory says about the approver right now.
+  const { service, connection, events } = harness({ approverPermissions: ["supplier.approval"] });
+  await service.assertEligibleApprover(connection, { approverUserId: 2, requesterId: 1 });
+  const lookup = events.find(([kind, sql]) => kind === "query" && String(sql).includes("FROM users"));
+  assert.match(String(lookup[1]), /status = 'active'/u, "an inactive user must not be an eligible approver");
+});
+
+// ---- AC2: snapshot ----------------------------------------------------------
+
+test("the snapshot carries the minimum activation data and masks identifiers", async () => {
+  const summary = buildApprovalSummary(
+    { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "D", default_currency_code: "HKD", default_payment_term_id: 3 },
+    [{ identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }]
+  );
+  assert.deepEqual(summary, {
+    supplierCode: "SUP-7", supplierName: "Demo", displayName: "D",
+    defaultCurrencyCode: "HKD", defaultPaymentTermId: 3,
+    identifierCount: 1, identifiersTruncated: false,
+    identifiers: [{ identifierType: "tax", issuerCountryCode: "HK", identifierValueMasked: "****5678" }]
+  });
+});
+
+test("the snapshot is a whitelist, so a bank field cannot leak into it", async () => {
+  // Design 4.5: the summary must not contain a full bank account. A blacklist would
+  // let the next column added to suppliers through by default; this is a whitelist.
+  const summary = buildApprovalSummary({
+    supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD",
+    default_payment_term_id: null,
+    bank_account_number: "1234567890", account_ciphertext: "x", notes: "internal"
+  });
+  const serialized = JSON.stringify(summary);
+  for (const leaked of ["1234567890", "account_ciphertext", "internal"]) {
+    assert.equal(serialized.includes(leaked), false, `${leaked} reached the approval snapshot`);
+  }
+});
+
+test("the significant-field list is the one design 4.5 names", () => {
+  assert.deepEqual([...APPROVAL_SIGNIFICANT_COLUMNS], [
+    "supplier_code", "supplier_name", "display_name", "default_currency_code", "default_payment_term_id"
+  ]);
+});
+
+// ---- AC3: decisions ---------------------------------------------------------
+
+test("approving moves the Supplier to active and closes the request in one transaction", async () => {
+  const { service, events } = harness();
+  const result = await service.approveRequest({ ...context, reason: "資料齊全，批准啟用" });
+  assert.equal(result.status, "approved");
+  assert.equal(result.supplierStatus, "active");
+  assert.equal(events.at(-1)[1], "commit");
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.action, "approval.approve");
+  assert.deepEqual(audit.detail.after, { requestStatus: "approved", supplierStatus: "active" });
+});
+
+test("rejecting returns the Supplier to draft and keeps the reason", async () => {
+  const { service, events } = harness();
+  const result = await service.rejectRequest({ ...context, reason: "幣別資料需要補充" });
+  assert.equal(result.supplierStatus, "draft");
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.action, "approval.reject");
+  assert.equal(audit.reason, "幣別資料需要補充");
+});
+
+test("rejecting without a reason is refused before anything is locked", async () => {
+  const { service, events } = harness();
+  await assert.rejects(
+    () => service.rejectRequest({ ...context, reason: "  " }),
+    (error) => error.publicCode === "SUPPLIER_REASON_REQUIRED"
+  );
+  assert.equal(events.length, 0);
+});
+
+test("only the assigned approver may decide, and never the requester", async () => {
+  const notAssigned = harness({ assignedApproverId: 9, actorId: 2 });
+  await assert.rejects(
+    () => notAssigned.service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "APPROVAL_NOT_ASSIGNED"
+  );
+  const selfApprove = harness({ requestedBy: 2, assignedApproverId: 2, actorId: 2 });
+  await assert.rejects(
+    () => selfApprove.service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "APPROVER_MUST_DIFFER"
+  );
+});
+
+test("an approver who has lost the permission since submission cannot decide", async () => {
+  // Design 4.5 requires the actor to hold the permission at decision time, not
+  // merely to have held it when the request was created.
+  const { service } = harness({ actorPermissions: ["supplier.view"] });
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "APPROVAL_PERMISSION_LOST"
+  );
+});
+
+test("only the requester may withdraw", async () => {
+  const { service } = harness({ requestedBy: 1, actorId: 2 });
+  await assert.rejects(
+    () => service.withdrawRequest({ ...context, reason: "暫時不需要這個供應商" }),
+    (error) => error.publicCode === "APPROVAL_NOT_REQUESTER"
+  );
+  const own = harness({ requestedBy: 2, actorId: 2 });
+  const result = await own.service.withdrawRequest({ ...context, reason: "暫時不需要這個供應商" });
+  assert.equal(result.supplierStatus, "draft");
+});
+
+test("a Supplier changed since submission cannot be approved on the old request", async () => {
+  // AC-012: the snapshot is bound to a Supplier version.
+  const { service, events } = harness({ supplierVersion: 8, requestSupplierVersion: 5 });
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "APPROVAL_REQUEST_STALE" &&
+      error.publicDetails?.submittedVersion === 5 && error.publicDetails?.currentVersion === 8
+  );
+  assert.equal(events.some(([kind]) => kind === "audit"), false, "a stale approval must not be audited");
+  assert.equal(events.at(-1)[1], "rollback");
+});
+
+test("re-sending a decision that already happened returns the current state without a second audit", async () => {
+  // FR-APPROVAL-007: a retried approve must not transition or audit twice.
+  const { service, events } = harness({ requestStatus: "approved", supplierStatus: "active" });
+  const result = await service.approveRequest({ ...context, reason: "批准" });
+  assert.equal(result.replayed, true);
+  assert.equal(result.status, "approved");
+  assert.equal(events.some(([kind]) => kind === "audit"), false);
+  assert.equal(events.some(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE")), false);
+});
+
+test("an opposite decision on a closed request is a conflict, not a replay", async () => {
+  const { service } = harness({ requestStatus: "approved", supplierStatus: "active" });
+  await assert.rejects(
+    () => service.rejectRequest({ ...context, reason: "改變主意想拒絕" }),
+    (error) => error.publicCode === "APPROVAL_REQUEST_NOT_OPEN"
+  );
+});
+
+test("a stale request version is a conflict", async () => {
+  const { service, events } = harness({ requestVersion: 3 });
+  await assert.rejects(
+    () => service.approveRequest({ ...context, version: 1, reason: "批准" }),
+    (error) => error.publicCode === "VERSION_CONFLICT"
+  );
+  assert.equal(events.some(([kind]) => kind === "audit"), false);
+});
+
+test("a writer that slips in between the lock and the UPDATE is caught by the WHERE guards", async () => {
+  const { service, events } = harness({ updateAffectedRows: 0 });
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "VERSION_CONFLICT"
+  );
+  assert.equal(events.some(([kind]) => kind === "audit"), false);
+  assert.equal(events.at(-1)[1], "rollback");
+});
+
+test("reassigning changes the approver without touching the Supplier", async () => {
+  const { service, events } = harness({ actorId: 1 });
+  const result = await service.reassignRequest({ ...context, actorId: 1, approverUserId: 3, reason: "原審批人休假" });
+  assert.equal(result.assignedApproverId, 3);
+  const supplierWrite = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers"));
+  assert.equal(supplierWrite, undefined, "reassignment is not a decision and must not move the Supplier");
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.action, "approval.reassign");
+});
+
+test("reassigning to the current approver is a no-op, not a version bump", async () => {
+  const { service, events } = harness({ assignedApproverId: 3, actorId: 1 });
+  const result = await service.reassignRequest({ ...context, actorId: 1, approverUserId: 3, reason: "重送同一個指派" });
+  assert.equal(result.replayed, true);
+  assert.equal(events.some(([kind]) => kind === "audit"), false);
+});
+
+test("a closed request cannot be reassigned", async () => {
+  const { service } = harness({ requestStatus: "approved", actorId: 1 });
+  await assert.rejects(
+    () => service.reassignRequest({ ...context, actorId: 1, approverUserId: 3, reason: "已經結案再指派" }),
+    (error) => error.publicCode === "APPROVAL_REQUEST_NOT_OPEN"
+  );
+});
+
+test("suppliers is locked before the request, per design 2.6", async () => {
+  // The previous version of this test asserted indexOf("supplier") < lastIndexOf("request"),
+  // which passes under BOTH orders because the request is read twice. It certified
+  // nothing, and the inverted order it missed deadlocks against updateSupplier on
+  // real MySQL. Compare only the row locks, in the order they are actually taken.
+  const { service, events } = harness();
+  await service.approveRequest({ ...context, reason: "批准" });
+  const locks = events
+    .filter(([kind, sql]) => kind === "query" && String(sql).includes("FOR UPDATE"))
+    .map(([, sql]) => (String(sql).includes("FROM suppliers") ? "suppliers" : "supplier_activation_requests"));
+  assert.deepEqual(locks, ["suppliers", "supplier_activation_requests"],
+    "updateSupplier locks suppliers then the request; taking them in the reverse order here closes a deadlock cycle");
+});
+
+test("reassigning requires the actor to hold supplier.approval right now", async () => {
+  const { service } = harness({ actorId: 1, actorPermissions: ["supplier.mgmt"] });
+  await assert.rejects(
+    () => service.reassignRequest({ ...context, actorId: 1, approverUserId: 3, reason: "冇權限都想指派" }),
+    (error) => error.publicCode === "APPROVAL_PERMISSION_LOST"
+  );
+});
+
+test("an unauthorised actor cannot learn the request state through the replay branch", async () => {
+  // The replay short-circuit used to return request and Supplier state before the
+  // assignment check ran, so anyone fresh could probe a request by re-sending a
+  // decision that had already happened.
+  const { service } = harness({ requestStatus: "approved", supplierStatus: "active", assignedApproverId: 9 });
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "APPROVAL_NOT_ASSIGNED"
+  );
+});
+
+test("no decision may be taken on a Supplier that has left pending_approval", async () => {
+  for (const command of ["approveRequest", "rejectRequest", "withdrawRequest"]) {
+    const { service } = harness({ supplierStatus: "active", requestedBy: 2, actorId: 2, assignedApproverId: 2 });
+    await assert.rejects(
+      () => service[command]({ ...context, reason: "供應商已經唔喺審批中" }),
+      (error) => error.publicCode === "STATUS_TRANSITION_INVALID" || error.publicCode === "APPROVER_MUST_DIFFER",
+      `${command} decided on a Supplier that is not pending`
+    );
+  }
+});
+
+// ---- AC2 second half: invalidation (H5 -- this path had no coverage at all) ----
+
+function txHarness({ openRequestRow = { id: 11, supplier_id: 7 } } = {}) {
+  const events = [];
+  const connection = {
+    async query(sql, params) {
+      events.push(["query", sql, params]);
+      if (sql.includes("FROM supplier_activation_requests")) return [openRequestRow ? [openRequestRow] : []];
+      return [[]];
+    },
+    async execute(sql, params) { events.push(["execute", sql, params]); return [{ affectedRows: 1 }]; }
+  };
+  const service = new SupplierApprovalService({
+    database: { async withTransaction(work) { return work(connection); }, async query() { return [[]]; } },
+    logger: { warn() {} },
+    time: { nowMs: () => 100 },
+    audit: { async record(_c, entry) { events.push(["audit", entry]); } }
+  });
+  return { service, connection, events };
+}
+
+test("invalidating an open request closes it and records what changed", async () => {
+  const { service, connection, events } = txHarness();
+  const result = await service.invalidateOpenRequest(connection, {
+    supplierId: 7, actorId: 1, actorUsername: "sam", supplierCode: "SUP-7",
+    changedFields: ["supplierName"], reason: "名稱更正", requestId: "req-1", ip: "127.0.0.1"
+  });
+  assert.deepEqual(result, { id: 11, status: "invalidated" });
+  const lock = events.find(([kind, sql]) => kind === "query" && String(sql).includes("FOR UPDATE"));
+  assert.match(String(lock[1]), /status = \?/u, "only an open request may be invalidated");
+  const write = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE supplier_activation_requests"));
+  assert.match(String(write[1]), /status = 'invalidated'/u);
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.action, "approval.invalidate");
+  assert.deepEqual(audit.detail.changes, ["supplierName"]);
+});
+
+test("invalidating when there is no open request is a no-op, not an error", async () => {
+  const { service, connection, events } = txHarness({ openRequestRow: null });
+  assert.equal(await service.invalidateOpenRequest(connection, { supplierId: 7, actorId: 1 }), null);
+  assert.equal(events.some(([kind]) => kind === "audit"), false);
+  assert.equal(events.some(([kind]) => kind === "execute"), false);
+});
+
+test("an insignificant edit keeps a pending request usable by syncing its Supplier version", async () => {
+  // Design 4.5 says Address/Contact/Notes/Bank changes do not affect the approval.
+  // updateSupplier bumps suppliers.version regardless, and staleness is judged on
+  // that version -- so without this sync, editing a phone number would make the
+  // request permanently unapprovable.
+  const { service, connection, events } = txHarness();
+  assert.equal(await service.syncOpenRequestSupplierVersion(connection, { supplierId: 7, supplierVersion: 9 }), true);
+  const [, sql, params] = events.find(([kind]) => kind === "execute");
+  assert.match(String(sql), /SET supplier_version = \?/u);
+  assert.deepEqual(params, [9, 7, "pending"], "only an open request may be re-pinned");
+});
+
+test("approval re-checks that the Supplier can still be activated", async () => {
+  // Design 4.5: a Supplier whose default currency was retired between submit and
+  // approve must not reach Active just because nothing about it changed.
+  const { service } = harness();
+  service.businessMaster = {
+    async assertSupplierDefaultsInTransaction() {
+      return { currency: { code: "HKD", status: "INACTIVE" }, paymentTerm: null };
+    }
+  };
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "SUPPLIER_NOT_ACTIVATABLE"
+  );
+});
+
+test("the snapshot is size-bounded, and says so when it truncates", async () => {
+  // A Supplier has no cap on identifiers and the summary is written as one JSON
+  // column. Design 4.5 asks for a bounded snapshot; an unbounded one is how a
+  // single row becomes hundreds of kilobytes.
+  const many = Array.from({ length: 200 }, (_, index) => ({
+    identifier_type: "other", issuer_country_code: "HK", identifier_value: `ID-${index}`
+  }));
+  const summary = buildApprovalSummary({ supplier_code: "SUP-7", supplier_name: "Demo" }, many);
+  assert.equal(summary.identifiers.length, 50);
+  assert.equal(summary.identifierCount, 200, "the real count must survive truncation");
+  assert.equal(summary.identifiersTruncated, true);
+  assert.ok(JSON.stringify(summary).length < 8192, "the snapshot must stay small enough to store and read");
+});
+
+test("approving without a businessMaster dependency fails loudly rather than skipping the check", async () => {
+  // Design 4.5 mandates re-checking activatability at approval. When that dependency
+  // was optional, a composition root that forgot to wire it silently removed the
+  // rule -- and T29 wires the approve route.
+  const { service } = harness();
+  service.businessMaster = undefined;
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error instanceof TypeError && /businessMaster/u.test(error.message)
+  );
+});
+
+test("the activatability filter drops only the status issue, not the data ones", async () => {
+  // status is filtered because #assertRequestStillCurrent has already established
+  // pending_approval, which SUPPLIER_ACTIVATABLE_STATUSES deliberately excludes so
+  // activateSupplier cannot skip approval. Nothing else may be filtered out.
+  const { service, supplier } = harness();
+  supplier.supplier_name = "";
+  await assert.rejects(
+    () => service.approveRequest({ ...context, reason: "批准" }),
+    (error) => error.publicCode === "SUPPLIER_NOT_ACTIVATABLE" &&
+      error.publicDetails?.issues?.some((issue) => issue.field === "supplierName")
+  );
+});
+
+test("invalidating bumps the request version so a concurrent holder sees it moved", async () => {
+  const { service, connection, events } = txHarness();
+  await service.invalidateOpenRequest(connection, { supplierId: 7, actorId: 1, reason: "關鍵資料變更" });
+  const write = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE supplier_activation_requests"));
+  assert.match(String(write[1]), /version = version \+ 1/u);
+});
+
+test("invalidateForSignificantChange owns both writes, so no caller can do half of it", async () => {
+  // The rule used to be copied into three call sites across two services, and the
+  // copies had already drifted: one bumped the Supplier row, two did not.
+  const { service, connection, events } = txHarness();
+  assert.equal(await service.invalidateForSignificantChange(connection, {
+    supplierId: 7, actorId: 1, actorUsername: "sam", changedFields: ["supplierName"], reason: "名稱更正"
+  }), true);
+  const draft = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("SET status = 'draft'"));
+  assert.ok(draft, "the Supplier must return to draft");
+  assert.match(String(draft[1]), /version = version \+ 1/u, "and the row must signal that it moved");
+  assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), true);
+});
+
+test("with no open request it reports false and writes nothing", async () => {
+  const { service, connection, events } = txHarness({ openRequestRow: null });
+  assert.equal(await service.invalidateForSignificantChange(connection, { supplierId: 7, actorId: 1 }), false);
+  assert.equal(events.some(([kind]) => kind === "execute"), false);
+});
+
+test("an invalidation with no reason still records why the request died", async () => {
+  // updateSupplier always supplies one, but changeSupplierCode and the identifier
+  // paths can reach here with an empty string, and an audit row saying nothing is
+  // not much of an audit row.
+  const { service, connection, events } = txHarness();
+  await service.invalidateOpenRequest(connection, { supplierId: 7, actorId: 1, reason: "   " });
+  const write = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE supplier_activation_requests"));
+  assert.equal(write[2][1], "關鍵資料變更");
+  const [, audit] = events.find(([kind]) => kind === "audit");
+  assert.equal(audit.reason, "關鍵資料變更");
+});

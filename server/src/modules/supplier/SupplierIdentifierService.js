@@ -1,4 +1,5 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import { normalizeIdentifier } from "./supplierNormalization.js";
@@ -48,7 +49,7 @@ function taken(identifier) {
 }
 
 export class SupplierIdentifierService {
-  constructor({ database, logger, time, authorize = assertActorFresh, audit, countReferences = async () => 0 } = {}) {
+  constructor({ database, logger, time, authorize = assertActorFresh, audit, countReferences = async () => 0, approvals } = {}) {
     if (!database || !logger || !time) throw new TypeError("SupplierIdentifierService requires database, logger and time");
     if (typeof countReferences !== "function") throw new TypeError("SupplierIdentifierService countReferences must be a function");
     this.database = database;
@@ -56,12 +57,35 @@ export class SupplierIdentifierService {
     this.authorize = authorize;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
     this.countReferences = countReferences;
+    this.approvals = approvals ?? new SupplierApprovalService({ database, logger, time, audit: this.audit });
   }
 
   async #supplierForUpdate(connection, supplierId) {
-    const [[supplier]] = await connection.query("SELECT id, supplier_code FROM suppliers WHERE id = ? FOR UPDATE", [supplierId]);
+    const [[supplier]] = await connection.query("SELECT id, supplier_code, status FROM suppliers WHERE id = ? FOR UPDATE", [supplierId]);
     if (!supplier) throw supplierNotFound(supplierId);
     return supplier;
+  }
+
+  /**
+   * 設計 4.5 將「Identifier 集合」列為 approval-significant，BR-013 要求關鍵資料
+   * 改動之後原申請唔可以再批。冇呢個，提交人可以喺提交之後加一個審批人從來冇睇過
+   * 嘅識別資料，而個申請照樣批得到 —— snapshot 係提交嗰刻影低嘅。
+   *
+   * 三條寫入路徑都經過 #supplierForUpdate，而佢已經揸住 suppliers 嘅鎖，所以喺呢度
+   * 做啱晒設計 2.6 嘅鎖序：suppliers -> requests -> audit。
+   */
+  async #invalidateApprovalIfPending(connection, supplier, input, changedField) {
+    if (supplier.status !== "pending_approval") return false;
+    return this.approvals.invalidateForSignificantChange(connection, {
+      supplierId: supplier.id,
+      actorId: input.actorId,
+      actorUsername: input.actorUsername,
+      supplierCode: supplier.supplier_code,
+      changedFields: [changedField],
+      reason: input.reason ?? "識別資料變更",
+      requestId: input.requestId,
+      ip: input.ip
+    });
   }
 
   async #identifierForUpdate(connection, supplierId, identifierId) {
@@ -83,10 +107,12 @@ export class SupplierIdentifierService {
 
   async create(input) {
     const identifier = normalizedInput(input);
+    let approvalInvalidated = false;
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
-        await this.#supplierForUpdate(connection, input.supplierId);
+        const supplier = await this.#supplierForUpdate(connection, input.supplierId);
+        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const nowMs = this.time.nowMs();
         const [result] = await connection.execute(
           `INSERT INTO supplier_identifiers
@@ -105,7 +131,7 @@ export class SupplierIdentifierService {
           detail: { after: { identifierType: identifier.type, issuerCountryCode: identifier.issuerCountryCode, identifierValue: identifier.value } },
           requestId: input.requestId, ip: input.ip
         });
-        return projected;
+        return { ...projected, approvalInvalidated };
       });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
@@ -114,12 +140,14 @@ export class SupplierIdentifierService {
   }
 
   async update(input) {
+    let approvalInvalidated = false;
     const identifier = normalizedInput(input);
     const reason = requiredReason(input.reason);
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
-        await this.#supplierForUpdate(connection, input.supplierId);
+        const supplier = await this.#supplierForUpdate(connection, input.supplierId);
+        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const current = await this.#identifierForUpdate(connection, input.supplierId, input.identifierId);
         if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         const nowMs = this.time.nowMs();
@@ -142,7 +170,7 @@ export class SupplierIdentifierService {
           },
           requestId: input.requestId, ip: input.ip
         });
-        return projected;
+        return { ...projected, approvalInvalidated };
       });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
@@ -151,11 +179,13 @@ export class SupplierIdentifierService {
   }
 
   async delete(input) {
+    let approvalInvalidated = false;
     const reason = requiredReason(input.reason);
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
-        await this.#supplierForUpdate(connection, input.supplierId);
+        const supplier = await this.#supplierForUpdate(connection, input.supplierId);
+        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
         const current = await this.#identifierForUpdate(connection, input.supplierId, input.identifierId);
         if (Number(current.version) !== input.version) throw supplierConflict("VERSION_CONFLICT", "識別資料已被其他人修改，請重新載入");
         const referenceCount = Number(await this.countReferences(connection, {
@@ -186,7 +216,7 @@ export class SupplierIdentifierService {
           },
           requestId: input.requestId, ip: input.ip
         });
-        return { id: Number(input.identifierId), deleted: true };
+        return { id: Number(input.identifierId), deleted: true, approvalInvalidated };
       });
     } catch (error) {
       if (referencedRow(error)) {

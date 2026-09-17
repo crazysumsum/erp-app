@@ -247,5 +247,5 @@ integrationTest("Identifier normalization, global uniqueness, ownership and dele
   const deleted = await service.delete({
     ...base, supplierId: otherCountry.supplierId, identifierId: otherCountry.id, version: otherCountry.version, reason: "test cleanup"
   });
-  assert.deepEqual(deleted, { id: otherCountry.id, deleted: true });
+  assert.deepEqual(deleted, { id: otherCountry.id, deleted: true, approvalInvalidated: false });
 });

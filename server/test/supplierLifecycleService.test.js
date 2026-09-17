@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { SupplierApprovalService } from "../src/modules/supplier/SupplierApprovalService.js";
 import { LIFECYCLE_COMMANDS, SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
 
-function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null, deleteError = null } = {}) {
+function harness({ status = "draft", version = 2, references = 0, openFlows = 0, approvalRequired = false, auditFails = false, latestAction = null, auditLog = null, deleteError = null, approverEligible = true } = {}) {
   const events = [];
   const row = {
     id: 7, supplier_code: "SUP-7", supplier_code_key: "sup-7", supplier_name: "Supplier",
@@ -14,6 +15,9 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
   const connection = {
     async query(sql, params) {
       events.push(["query", sql, params]);
+      if (sql.includes("FROM users") && sql.includes("status = 'active'")) {
+        return [approverEligible ? [{ id: params[0], username: "approver" }] : []];
+      }
       if (sql.includes("SELECT * FROM suppliers") && sql.includes("FOR UPDATE")) return [[row]];
       if (sql.includes("supplier_audit_logs") && sql.includes("supplier.activate")) return [[]];
       if (sql.includes("ORDER BY id DESC")) {
@@ -65,6 +69,12 @@ function harness({ status = "draft", version = 2, references = 0, openFlows = 0,
     logger: { warn() {} },
     time: { nowMs: () => 100 },
     authorize: async () => { events.push(["authorize"]); return { id: 1, username: "sam", permissions: ["supplier.mgmt", "supplier.view", "supplier.approval"] }; },
+    approvals: new SupplierApprovalService({
+      database, logger: { warn() {} }, time: { nowMs: () => 100 },
+      audit: { async record(_c, entry) { events.push(["audit", entry]); } },
+      loadPermissions: async () => (approverEligible ? ["supplier.approval"] : []),
+  businessMaster: { async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; } },
+    }),
     businessMaster: {
       async assertSupplierDefaultsInTransaction() {
         events.push(["business-master"]);
@@ -200,10 +210,17 @@ test("audit failure rolls a lifecycle state change back as one transaction", asy
   assert.equal(events.at(-1)[1], "rollback");
 });
 
-test("approval-enabled activation fails explicitly until the approval phase is deployed", async () => {
-  const { service, events } = harness({ approvalRequired: true });
-  await assert.rejects(() => service.activateSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_APPROVAL_NOT_READY");
-  assert.equal(events.some(([name]) => name === "execute" || name === "audit"), false);
+test("approval-enabled activation routes to pending_approval instead of going straight to active", async () => {
+  // TASK-025 shipped this path as an explicit refusal because the approval domain
+  // did not exist. TASK-028 replaces the refusal with the transition design 4.4
+  // specifies: draft -> pending_approval, with a request opened in the same
+  // transaction rather than the Supplier reaching active.
+  const { service, events } = harness({ approvalRequired: true, status: "draft" });
+  await service.activateSupplier({ ...context, approverUserId: 2 });
+  const statusWrite = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers"));
+  assert.equal(statusWrite[2][0], "pending_approval", "approval ON must not produce an active Supplier");
+  const audits = events.filter(([kind]) => kind === "audit").map(([, entry]) => entry.action);
+  assert.ok(audits.includes("approval.submit"), "the submission must be audited in the same transaction");
 });
 
 test("a RESTRICT foreign key that no reference checker covers is reported as a reference conflict", async () => {
@@ -213,4 +230,53 @@ test("a RESTRICT foreign key that no reference checker covers is reported as a r
   const referenced = Object.assign(new Error("Cannot delete or update a parent row"), { code: "ER_ROW_IS_REFERENCED_2" });
   const { service } = harness({ status: "draft", deleteError: referenced });
   await assert.rejects(() => service.deleteSupplier({ ...context }), (error) => error.publicCode === "SUPPLIER_REFERENCED");
+});
+
+test("a re-sent activate returns current state whether the Supplier is pending or already active", async () => {
+  // Scoping the replay comparison to the effective target lost idempotency for a
+  // Supplier that went active while the policy was OFF and is re-activated after it
+  // was switched ON. Both states are terminal for a re-sent activate.
+  for (const [status, approvalRequired] of [["pending_approval", true], ["active", true], ["active", false]]) {
+    const { service, events } = harness({ status, approvalRequired, latestAction: "supplier.activate" });
+    await service.activateSupplier({ ...context, ...(approvalRequired ? { approverUserId: 2 } : {}) });
+    assert.equal(events.some(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers")), false,
+      `re-sent activate on ${status} with policy ${approvalRequired ? "ON" : "OFF"} transitioned again`);
+  }
+});
+
+test("AC-013: a pending Supplier cannot be activated directly, even after the policy is switched off", async () => {
+  // The policy is snapshotted at submission. Flipping it OFF must not turn a pending
+  // Supplier into an activatable one -- the open request still has to be decided.
+  const { service, events } = harness({ status: "pending_approval", approvalRequired: false });
+  await assert.rejects(
+    () => service.activateSupplier({ ...context }),
+    (error) => error.publicCode === "STATUS_TRANSITION_INVALID" || error.publicCode === "SUPPLIER_NOT_ACTIVATABLE"
+  );
+  assert.equal(events.some(([kind, sql]) => kind === "execute" && String(sql).includes("UPDATE suppliers")), false);
+});
+
+test("no lifecycle command admits pending_approval as a source state", () => {
+  // The behaviour has defence in depth -- assertSupplierActivatable rejects
+  // pending_approval independently via SUPPLIER_ACTIVATABLE_STATUSES -- so widening
+  // allowedFrom only changes which error surfaces, and no behavioural test can catch
+  // it. Pin the registry directly: leaving pending_approval only through approve,
+  // reject, withdraw or invalidate is design 4.4's rule, not an incidental outcome.
+  for (const [name, command] of Object.entries(LIFECYCLE_COMMANDS)) {
+    assert.equal(command.allowedFrom.includes("pending_approval"), false,
+      `${name} would let a Supplier leave pending_approval without a decision`);
+  }
+  assert.deepEqual([...LIFECYCLE_COMMANDS.activate.allowedFrom], ["draft"]);
+});
+
+test("the submitted note reaches the request on the activate submit path too", async () => {
+  // The requestNote rename was fixed at two sites; only createSupplier's had a test,
+  // so reverting this one stayed green. This is the path T29's API will drive, and
+  // the note is what the approver reads.
+  const { service, events } = harness({ status: "draft", approvalRequired: true });
+  await service.activateSupplier({ ...context, approverUserId: 2, requestNote: "急單，請盡快批准" });
+  const insert = events.find(([kind, sql]) => kind === "execute" &&
+    String(sql).includes("INSERT INTO supplier_activation_requests"));
+  assert.ok(insert, "a request must be opened");
+  assert.ok(insert[2].includes("急單，請盡快批准"),
+    `the submitter's note was replaced by something else: ${JSON.stringify(insert[2])}`);
 });

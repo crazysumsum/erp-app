@@ -39,12 +39,14 @@ const IDENTIFIER_RESPONSE = Object.freeze({
   properties: {
     id: { type: "integer" }, supplierId: { type: "integer" }, identifierType: { type: "string", enum: [...SUPPLIER_IDENTIFIER_TYPES] },
     issuerCountryCode: { type: "string" }, identifierValue: { type: "string" }, notes: { type: "string" }, canDelete: { type: "boolean" },
-    version: { type: "integer" }, updatedAt: { type: "integer" }
+    version: { type: "integer" }, updatedAt: { type: "integer" },
+    // 識別資料變更會令 pending 申請失效並將 Supplier 打回 draft，客戶端要知。
+    approvalInvalidated: { type: "boolean" }
   }
 });
 const DELETE_RESPONSE = Object.freeze({
   type: "object", required: ["id", "deleted"], additionalProperties: false,
-  properties: { id: { type: "integer" }, deleted: { const: true } }
+  properties: { id: { type: "integer" }, deleted: { const: true }, approvalInvalidated: { type: "boolean" } }
 });
 
 function context(req) {
