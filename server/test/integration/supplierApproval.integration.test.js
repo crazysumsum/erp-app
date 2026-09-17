@@ -3,7 +3,11 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
+import { BusinessMasterProvider } from "../../src/modules/businessMaster/BusinessMasterProvider.js";
+import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
+import { BusinessMasterLookupProvider } from "../../src/modules/supplier/providers/BusinessMasterLookupProvider.js";
 import { SupplierAdminService } from "../../src/modules/supplier/SupplierAdminService.js";
+import { getActivationPolicy } from "../../src/modules/supplier/SupplierSettingsService.js";
 import { SupplierApprovalService, buildApprovalSummary } from "../../src/modules/supplier/SupplierApprovalService.js";
 
 /**
@@ -239,4 +243,97 @@ integrationTest("a Supplier submitted through activateSupplier can actually be a
   assert.equal(result.status, "approved");
   const [[approved]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
   assert.equal(approved.status, "active");
+});
+
+integrationTest("createSupplier and activateSupplier take the settings and currency locks in the same order", async (t) => {
+  // REV-024 H1: the lock-order fix this branch is named after had no regression
+  // test, and every other integration test here stubs both locks -- businessMaster
+  // and approvalRequired are faked, so no test ever took a real `currencies FOR
+  // UPDATE` or `supplier_settings FOR SHARE`. That is the precise pair behind two of
+  // the three High findings this branch produced.
+  //
+  // createSupplier used to lock currencies (X) before settings (S) while
+  // #changeStatus locks settings first. InnoDB will not grant S past a waiting X, so
+  // an updateSettings queued between them closes a three-way cycle. This replays
+  // that interleaving with the real statements.
+  const conns = await Promise.all([0, 1, 2].map(() => mysql.createConnection(config())));
+  const [activator, creator, settingsWriter] = conns;
+  t.after(async () => { for (const c of conns) { await c.rollback().catch(() => {}); await c.end(); } });
+
+  const [[currency]] = await activator.query("SELECT code FROM currencies LIMIT 1");
+  const code = currency.code ?? currency.CODE;
+  const settingsRead = "SELECT require_activation_approval FROM supplier_settings WHERE id = 1 FOR SHARE";
+  const currencyLock = "SELECT code FROM currencies WHERE code = ? FOR UPDATE";
+  const outcome = {};
+
+  for (const c of conns) {
+    await c.query("SET SESSION innodb_lock_wait_timeout = 3");
+    await c.beginTransaction();
+  }
+  // #changeStatus order: settings first.
+  await activator.query(settingsRead);
+  // createSupplier must take settings first too. Taking the currency lock here is
+  // what used to close the cycle.
+  await creator.query(settingsRead);
+  await new Promise((resolve) => { setTimeout(resolve, 150); });
+  // An operator saving settings queues an X, which blocks any later S.
+  const writing = settingsWriter.query("SELECT version FROM supplier_settings WHERE id = 1 FOR UPDATE")
+    .then(() => { outcome.settingsWriter = "ok"; }, (error) => { outcome.settingsWriter = error.code ?? error.message; });
+  await new Promise((resolve) => { setTimeout(resolve, 150); });
+  const activating = activator.query(currencyLock, [code])
+    .then(() => { outcome.activator = "ok"; }, (error) => { outcome.activator = error.code ?? error.message; });
+  const creating = creator.query(currencyLock, [code])
+    .then(() => { outcome.creator = "ok"; }, (error) => { outcome.creator = error.code ?? error.message; });
+  await Promise.all([writing, activating, creating]);
+
+  assert.notEqual(outcome.activator, "ER_LOCK_DEADLOCK", "the settings/currency lock order was re-inverted");
+  assert.notEqual(outcome.creator, "ER_LOCK_DEADLOCK", "the settings/currency lock order was re-inverted");
+  assert.notEqual(outcome.settingsWriter, "ER_LOCK_DEADLOCK", "the settings/currency lock order was re-inverted");
+});
+
+integrationTest("createSupplier really does read the policy before the currency lock", async (t) => {
+  // The interleaving test above proves the ORDER is safe; this proves createSupplier
+  // is the thing that takes it, by observing the statements the real service issues.
+  const connection = await mysql.createConnection(config());
+  t.after(() => connection.end());
+  const order = [];
+  const spy = {
+    query: (sql, params) => { order.push(String(sql)); return connection.query(sql, params); },
+    execute: (sql, params) => { order.push(String(sql)); return connection.execute(sql, params); },
+    beginTransaction: () => connection.beginTransaction(),
+    rollback: () => connection.rollback()
+  };
+  const admin = new SupplierAdminService({
+    database: {
+      query: (sql, params) => connection.query(sql, params),
+      async withTransaction(work) {
+        await connection.beginTransaction();
+        try { return await work(spy); } finally { await connection.rollback(); }
+      }
+    },
+    logger: { warn() {} },
+    time: { nowMs: () => Date.now() },
+    authorize: async () => ({ id: null, username: "integration", permissions: ["supplier.mgmt"] }),
+    businessMaster: new BusinessMasterLookupProvider({
+      provider: new BusinessMasterProvider({ database: connection, repository: new BusinessMasterRepository() }),
+      readiness: { async assertReady() { return true; } }
+    }),
+    approvalRequired: getActivationPolicy
+  });
+
+  const [[currency]] = await connection.query("SELECT code FROM currencies WHERE status = 'ACTIVE' LIMIT 1");
+  const suffix = randomUUID().slice(0, 8);
+  await admin.createSupplier({
+    actorId: null, claimedRoles: [], claimedPermissions: ["supplier.mgmt"],
+    supplierCode: `APR-${suffix}`, supplierName: `Order Probe ${suffix}`,
+    defaultCurrencyCode: currency.code ?? currency.CODE, activate: true,
+    requestId: "req-int", ip: "127.0.0.1"
+  }).catch(() => {});   // the transaction is rolled back either way; the order is the assertion
+
+  const settingsAt = order.findIndex((sql) => sql.includes("supplier_settings"));
+  const currencyAt = order.findIndex((sql) => sql.includes("FROM currencies") && sql.includes("FOR UPDATE"));
+  assert.notEqual(settingsAt, -1, "createSupplier did not read the activation policy");
+  assert.notEqual(currencyAt, -1, "createSupplier did not take the currency lock");
+  assert.ok(settingsAt < currencyAt,
+    `design 2.6 puts settings first; saw settings at ${settingsAt} and currency at ${currencyAt}`);
 });

@@ -267,3 +267,16 @@ test("no lifecycle command admits pending_approval as a source state", () => {
   }
   assert.deepEqual([...LIFECYCLE_COMMANDS.activate.allowedFrom], ["draft"]);
 });
+
+test("the submitted note reaches the request on the activate submit path too", async () => {
+  // The requestNote rename was fixed at two sites; only createSupplier's had a test,
+  // so reverting this one stayed green. This is the path T29's API will drive, and
+  // the note is what the approver reads.
+  const { service, events } = harness({ status: "draft", approvalRequired: true });
+  await service.activateSupplier({ ...context, approverUserId: 2, requestNote: "急單，請盡快批准" });
+  const insert = events.find(([kind, sql]) => kind === "execute" &&
+    String(sql).includes("INSERT INTO supplier_activation_requests"));
+  assert.ok(insert, "a request must be opened");
+  assert.ok(insert[2].includes("急單，請盡快批准"),
+    `the submitter's note was replaced by something else: ${JSON.stringify(insert[2])}`);
+});

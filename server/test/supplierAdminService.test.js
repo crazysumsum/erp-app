@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import test from "node:test";
 
 import { SUPPLIER_DETAIL_SCHEMA } from "../src/handlers/suppliers/supplierSchemas.js";
+import { assertSignificantColumnsMapped } from "../src/modules/supplier/SupplierAdminService.js";
 import { SupplierApprovalService } from "../src/modules/supplier/SupplierApprovalService.js";
 import { SupplierAdminService } from "../src/modules/supplier/SupplierAdminService.js";
 
@@ -314,19 +315,16 @@ test("changing the Supplier Code while not pending leaves the approval domain al
   assert.equal(events.some(([kind, entry]) => kind === "audit" && entry.action === "approval.invalidate"), false);
 });
 
-test("a documented significant column with no input mapping fails at module load", async () => {
-  // The previous version of this test was `assert.ok(owner, ...)` where both
-  // branches produced a non-empty string -- it could not fail. Meanwhile adding a
-  // column to APPROVAL_SIGNIFICANT_COLUMNS without a COLUMN_TO_INPUT_FIELD entry
-  // made every pending Supplier lose its approval on any edit, silently.
-  const { APPROVAL_SIGNIFICANT_COLUMNS } = await import("../src/modules/supplier/SupplierApprovalService.js");
-  const source = await readFile(new URL("../src/modules/supplier/SupplierAdminService.js", import.meta.url), "utf8");
-  const mapped = new Set([...source.matchAll(/^\s+(\w+): "(\w+)",?$/gmu)].map(([, column]) => column));
-  for (const column of APPROVAL_SIGNIFICANT_COLUMNS) {
-    assert.ok(mapped.has(column), `${column} is documented as significant but has no input-field mapping`);
-  }
-  assert.match(source, /APPROVAL_SIGNIFICANT_COLUMNS lists \$\{column\} with no COLUMN_TO_INPUT_FIELD mapping/u,
-    "the mismatch must fail at module load, not silently invalidate approvals");
+test("a documented significant column with no input mapping is refused, not silently mapped to undefined", () => {
+  // The previous version grepped the source for the throw's message, so neutering
+  // the condition left it green. This runs the guard. The failure it prevents is
+  // severe: an unmapped column compares against `next[undefined] ?? ""`, so every
+  // pending Supplier loses its approval on any edit.
+  assert.throws(
+    () => assertSignificantColumnsMapped(["supplier_name", "general_email"], { supplier_name: "supplierName" }),
+    /general_email with no COLUMN_TO_INPUT_FIELD mapping/u
+  );
+  assert.doesNotThrow(() => assertSignificantColumnsMapped(["supplier_name"], { supplier_name: "supplierName" }));
 });
 
 test("the identifier responses declare the invalidation flag their service returns", async () => {
@@ -352,4 +350,19 @@ test("the supplier detail response declares every field the service actually ret
   const validate = new Ajv({ allErrors: true, strict: false }).compile(SUPPLIER_DETAIL_SCHEMA);
   assert.equal(validate({ ...detail, duplicateCandidates: [], approvalInvalidated: true }), true,
     `the payload updateSupplier returns is rejected: ${JSON.stringify(validate.errors)}`);
+});
+
+test("H2: with the policy ON, a plain draft create opens no activation request", async () => {
+  // Losing the `activationRequested &&` short-circuit opens a request against a
+  // draft Supplier. That request can never be decided -- #assertRequestStillCurrent
+  // rejects a non-pending Supplier -- and uq_supplier_activation_pending then blocks
+  // the genuine submission, surfacing as SUPPLIER_CODE_TAKEN, an error naming a
+  // field that is fine.
+  const { service, events } = harness({ approvalRequired: true });
+  await service.createSupplier({ ...input, activate: false });
+  assert.equal(events.some(([kind, sql]) => kind === "execute" &&
+    String(sql).includes("INSERT INTO supplier_activation_requests")), false,
+    "a draft create must not open an approval request");
+  const insert = events.find(([kind, sql]) => kind === "execute" && String(sql).includes("INSERT INTO suppliers"));
+  assert.ok(insert[2].includes("draft"));
 });

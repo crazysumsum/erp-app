@@ -68,11 +68,14 @@ const COLUMN_TO_INPUT_FIELD = Object.freeze({
 // 忘記喺 COLUMN_TO_INPUT_FIELD 加對應會令個欄位映射到 undefined，跟住 next[undefined]
 // 永遠係 ""，於是任何一個 pending Supplier 一改就被判定為關鍵變更、申請被銷毀。
 // 舊嘅兩份清單漂移係靜靜哋少做嘢；呢個係靜靜哋做多咗，更差。所以喺載入時就炸。
-for (const column of APPROVAL_SIGNIFICANT_COLUMNS) {
-  if (!COLUMN_TO_INPUT_FIELD[column]) {
-    throw new TypeError(`APPROVAL_SIGNIFICANT_COLUMNS lists ${column} with no COLUMN_TO_INPUT_FIELD mapping`);
+export function assertSignificantColumnsMapped(columns, mapping) {
+  for (const column of columns) {
+    if (!mapping[column]) {
+      throw new TypeError(`APPROVAL_SIGNIFICANT_COLUMNS lists ${column} with no COLUMN_TO_INPUT_FIELD mapping`);
+    }
   }
 }
+assertSignificantColumnsMapped(APPROVAL_SIGNIFICANT_COLUMNS, COLUMN_TO_INPUT_FIELD);
 
 const SIGNIFICANT_UPDATE_FIELDS = Object.freeze(
   APPROVAL_SIGNIFICANT_COLUMNS
