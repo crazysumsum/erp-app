@@ -50,11 +50,23 @@ Only a different *literal* was rejected, and that was the single mutation the ne
 exercised. Recording that as "mutation-proven" is the third instance of the standing pattern
 below.
 
-Fixed: the check is now anchored on the whole expression —
-`/^if\(\(`status`=(_[a-z0-9]+)?'pending'\),1,NULL\)$/i` over the backslash- and
-whitespace-normalized text, with only MySQL's charset introducer allowed to vary. The
-mutation set covers every form above plus a different column, an empty expression, and four
-acceptable rewritings of the committed DDL.
+> **AMENDED by REV-017 H-2.** What this section originally recorded as the fix —
+> `/^if\(\(`status`=(_[a-z0-9]+)?'pending'\),1,NULL\)$/i` over backslash- and
+> whitespace-normalized text, "with only MySQL's charset introducer allowed to vary" — was
+> itself defective and is no longer the code. The `/i` flag made the literal
+> case-insensitive, which REV-016 graded HIGH: under `ascii_bin`, `'PENDING'` matches
+> nothing the application writes, so the slot stays NULL and the unique index enforces
+> nothing. The whitespace strip admitted `'pen ding'`, and the surviving backslash strip
+> admitted a literal containing a backslash, which REV-017 proved end-to-end on real MySQL.
+> "Only the charset introducer allowed to vary" was false in every version of this sentence.
+>
+> The text-matching approach has been **removed entirely**, not repaired again. `0035` now
+> asks the database the invariant directly: inside a rolled-back transaction it requires a
+> second pending request for one Supplier to be refused with `ER_DUP_ENTRY`, and a second
+> decided request to be accepted. See `13_rev_017_independent_review.md`.
+
+The controls below were run against the regex version this section describes and are
+retained as the record of that round.
 
 **Negative controls, all message-agnostic, with the test file byte-identical**
 (md5 `0edd7379284ab77078de31442373c650` before and after each, injection verified by `grep`

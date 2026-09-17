@@ -18,9 +18,12 @@ function schema(overrides = {}) {
   return {
     columns: COLUMNS.map((name) => ({
       column_name: name,
-      extra: name === "pending_slot" ? "STORED GENERATED" : "",
-      generation_expression: name === "pending_slot" ? "if((`status` = _utf8mb4\\'pending\\'),1,NULL)" : ""
+      extra: name === "pending_slot" ? "STORED GENERATED" : ""
     })),
+    // The behavioural probe. `candidate` is the Supplier it would probe against;
+    // no candidate means it has nothing to probe and returns without a verdict.
+    candidate: [],
+    blocks: { pending: true, approved: false },
     indexes: ["PRIMARY", "uq_supplier_activation_pending", "idx_supplier_activation_approver", "idx_supplier_activation_supplier"]
       .map((index_name) => ({ index_name })),
     pendingSlotIndex: [
@@ -35,8 +38,21 @@ function schema(overrides = {}) {
 }
 
 function connectionFor(shape) {
+  const inserted = [];
   return {
+    inserted,
+    async beginTransaction() { inserted.push("BEGIN"); },
+    async rollback() { inserted.push("ROLLBACK"); },
+    async execute(sql, params) {
+      const status = params[2];
+      inserted.push(status);
+      if (inserted.filter((entry) => entry === status).length > 1 && shape.blocks[status]) {
+        throw Object.assign(new Error("Duplicate entry"), { code: "ER_DUP_ENTRY" });
+      }
+      return [{ affectedRows: 1 }];
+    },
     async query(sql) {
+      if (sql.includes("FROM suppliers")) return [shape.candidate];
       if (sql.includes("information_schema.columns")) return [shape.columns];
       if (sql.includes("index_name = 'uq_supplier_activation_pending'")) return [shape.pendingSlotIndex];
       if (sql.includes("information_schema.statistics")) return [shape.indexes];
@@ -57,71 +73,6 @@ test("pending_slot must be generated, not merely named pending_slot", async () =
     () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns: plainColumn }))),
     /pending_slot is not a generated column/u
   );
-});
-
-test("pending_slot must be IF(status = 'pending', 1, NULL) with that exact lowercase literal", async () => {
-  // Every one of these was accepted by an earlier substring check. The last group
-  // matters most: IF(status = 'pending', id, NULL) gives each pending row a
-  // distinct slot, so UNIQUE (supplier_id, pending_slot) constrains nothing while
-  // the inspection reports the table as correct and up() returns early.
-  const rejected = [
-    "if((`status` = _utf8mb4\\'approved\\'),1,NULL)",       // different status
-    "if((`status` like _utf8mb4\\'pending%\\'),1,NULL)",     // different operator
-    "if((`status` <> _utf8mb4\\'pending\\'),1,NULL)",        // exact inverse invariant
-    "if((not((`status` = _utf8mb4\\'pending\\'))),1,NULL)",  // negated
-    "if((`status` = _utf8mb4\\'pending\\'),NULL,1)",         // branches swapped
-    "if((`status` = _utf8mb4\\'pending\\'),`id`,NULL)",      // slot is not a constant
-    "if((`status` = _utf8mb4\\'pending\\'),1,1)",            // never frees the slot
-    "if((`request_status` = _utf8mb4\\'pending\\'),1,NULL)", // different column
-    "concat(`status`,_utf8mb4\\'pending\\')",                // not a predicate at all
-    "if((`status` = _utf8mb4\\'PENDING\\'),1,NULL)",          // ascii_bin: matches nothing the app writes
-    "if((`status` = _utf8mb4\\'Pending\\'),1,NULL)",          // same, and the /i flag used to accept it
-    "if((`status` = _utf8mb4\\'pen ding\\'),1,NULL)",         // same, via whitespace stripping
-    ""                                                     // absent
-  ];
-  for (const generation_expression of rejected) {
-    const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
-      ? { ...row, generation_expression }
-      : row));
-    // Deliberately message-agnostic: matching the thrown text would make this go red
-    // when the wording changes and green when only the wording is right, which is the
-    // opposite of what a control must discriminate on.
-    await assert.rejects(
-      () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))),
-      (error) => error instanceof Error,
-      `accepted ${generation_expression || "an empty expression"}`
-    );
-  }
-});
-
-test("the rejection names the literal, so a reader knows which property failed", async () => {
-  const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
-    ? { ...row, generation_expression: "if((`status` = _utf8mb4\\'approved\\'),1,NULL)" }
-    : row));
-  await assert.rejects(
-    () => inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))),
-    /pending_slot is not IF\(status = 'pending', 1, NULL\) with that exact lowercase literal/u
-  );
-});
-
-test("only variation that cannot affect the invariant is tolerated", async () => {
-  // The first form is what this MySQL actually stores for the committed DDL; it is
-  // the only one of these observed here. The rest are deliberate tolerance for
-  // servers that might render keywords, the charset introducer or spacing
-  // differently, since none of those changes what the column computes. This is
-  // tolerance, not a claim that MySQL emits them.
-  for (const generation_expression of [
-    "if((`status` = _utf8mb4\\'pending\\'),1,NULL)",
-    "if((`status` = _ascii\\'pending\\'),1,NULL)",
-    "if((`status` = \\'pending\\'),1,NULL)",
-    "if((`status`=_utf8mb4\\'pending\\'),1,null)"
-  ]) {
-    const columns = schema().columns.map((row) => (row.column_name === "pending_slot"
-      ? { ...row, generation_expression }
-      : row));
-    assert.equal(await inspectSupplierActivationRequestSchema(connectionFor(schema({ columns }))), true,
-      `rejected ${generation_expression}`);
-  }
 });
 
 test("uq_supplier_activation_pending must actually be unique", async () => {
@@ -151,12 +102,54 @@ test("uq_supplier_activation_pending must cover exactly (supplier_id, pending_sl
 test("MySQL's uppercase information_schema column names are read the same way", async () => {
   const upper = schema();
   const shouted = {
-    columns: upper.columns.map(({ column_name, extra, generation_expression }) =>
-      ({ COLUMN_NAME: column_name, EXTRA: extra, GENERATION_EXPRESSION: generation_expression })),
+    candidate: [{ ID: 7 }],
+    blocks: upper.blocks,
+    columns: upper.columns.map(({ column_name, extra }) => ({ COLUMN_NAME: column_name, EXTRA: extra })),
     indexes: upper.indexes.map(({ index_name }) => ({ INDEX_NAME: index_name })),
     pendingSlotIndex: upper.pendingSlotIndex.map(({ non_unique, column_name }) =>
       ({ NON_UNIQUE: non_unique, COLUMN_NAME: column_name })),
     foreignKeys: upper.foreignKeys.map(({ constraint_name }) => ({ CONSTRAINT_NAME: constraint_name }))
   };
   assert.equal(await inspectSupplierActivationRequestSchema(connectionFor(shouted)), true);
+});
+
+test("the table must actually refuse a second pending request for the same Supplier", async () => {
+  // This is the invariant pending_slot exists to provide. Earlier revisions tried to
+  // infer it from the text of GENERATION_EXPRESSION; that accepted a literal holding
+  // a backslash, which enforces nothing, and rejected CASE WHEN, <=> and BINARY
+  // forms, which all enforce correctly. Asking the database is not defeatable by
+  // rendering, charset, sql_mode, engine or escaping.
+  const enforcing = schema({ candidate: [{ id: 7 }] });
+  assert.equal(await inspectSupplierActivationRequestSchema(connectionFor(enforcing)), true);
+
+  const notEnforcing = schema({ candidate: [{ id: 7 }], blocks: { pending: false, approved: false } });
+  await assert.rejects(
+    () => inspectSupplierActivationRequestSchema(connectionFor(notEnforcing)),
+    (error) => error instanceof Error && /second pending blocked: false/u.test(error.message)
+  );
+});
+
+test("a slot that is never NULL is rejected too, because it would block decided history", async () => {
+  // IF(status = 'pending', 1, 1) blocks a second pending request, so the first half
+  // of the probe passes it. It also blocks the second decided request, which is the
+  // history this table exists to keep.
+  const blocksHistory = schema({ candidate: [{ id: 7 }], blocks: { pending: true, approved: true } });
+  await assert.rejects(
+    () => inspectSupplierActivationRequestSchema(connectionFor(blocksHistory)),
+    (error) => error instanceof Error && /second decided blocked: true/u.test(error.message)
+  );
+});
+
+test("the probe always rolls back, and skips a database with no Supplier to probe", async () => {
+  const enforcing = connectionFor(schema({ candidate: [{ id: 7 }] }));
+  await inspectSupplierActivationRequestSchema(enforcing);
+  assert.deepEqual(enforcing.inserted, ["BEGIN", "pending", "pending", "approved", "approved", "ROLLBACK"]);
+
+  const failing = connectionFor(schema({ candidate: [{ id: 7 }], blocks: { pending: false, approved: false } }));
+  await assert.rejects(() => inspectSupplierActivationRequestSchema(failing));
+  assert.equal(failing.inserted.at(-1), "ROLLBACK", "a failed probe must still roll back");
+
+  const empty = connectionFor(schema());
+  assert.equal(await inspectSupplierActivationRequestSchema(empty), true);
+  assert.deepEqual(empty.inserted, [], "nothing to probe against means nothing is written");
 });

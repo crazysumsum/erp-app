@@ -15,9 +15,67 @@ function value(row, lower, upper) {
   return row[lower] ?? row[upper];
 }
 
+// Four rounds of independent review found a defect in three of them, all in one
+// attempt to infer this behaviour from the text of GENERATION_EXPRESSION. That
+// approach validates a string to conclude something about a behaviour, so every
+// rendering variation is a new false reject and every normalization step is a new
+// false accept, and the two pressures push against each other: each fix created the
+// next defect. Measured on real MySQL, the text check accepted a literal containing
+// a backslash (which enforces nothing) and rejected CASE WHEN, <=> and BINARY forms
+// (which all enforce correctly, and would have made up() throw on a sound schema).
+//
+// So ask the database the actual question instead. Rendering, charset, sql_mode,
+// engine and escaping cannot defeat this, because it is the invariant itself.
+async function assertPendingSlotEnforces(connection) {
+  const [[candidate]] = await connection.query(
+    `SELECT s.id AS id FROM suppliers s
+      WHERE NOT EXISTS (SELECT 1 FROM supplier_activation_requests r
+                         WHERE r.supplier_id = s.id AND r.status = 'pending')
+      LIMIT 1`
+  );
+  // A database with no Supplier cannot be probed, and has no divergent table to
+  // probe: on that path this migration created the table a few statements ago.
+  if (!candidate) return;
+  const supplierId = value(candidate, "id", "ID");
+
+  const insert = (status) => connection.execute(
+    `INSERT INTO supplier_activation_requests (supplier_id, supplier_version, summary, requested_at, status)
+     VALUES (?, 1, JSON_OBJECT(), ?, ?)`,
+    [supplierId, Date.now(), status]
+  );
+  const duplicate = async (status) => {
+    try {
+      await insert(status);
+      return false;
+    } catch (error) {
+      if ((error?.cause?.code ?? error?.code) === "ER_DUP_ENTRY") return true;
+      throw error;
+    }
+  };
+
+  await connection.beginTransaction();
+  try {
+    await insert("pending");
+    // Both halves are needed. Without the first, a slot that is never NULL passes;
+    // without the second, IF(status = 'pending', 1, 1) passes while it also blocks
+    // the decided history the table exists to keep.
+    const secondPendingBlocked = await duplicate("pending");
+    await insert("approved");
+    const secondDecidedBlocked = await duplicate("approved");
+    if (!secondPendingBlocked || secondDecidedBlocked) {
+      throw new Error(
+        "Incompatible existing Supplier activation request table: it does not enforce exactly one pending request " +
+        `per Supplier (second pending blocked: ${secondPendingBlocked}, second decided blocked: ${secondDecidedBlocked})`
+      );
+    }
+  } finally {
+    await connection.rollback();
+  }
+}
+
 export async function inspectSupplierActivationRequestSchema(connection) {
   const [columns] = await connection.query(
-    `SELECT column_name AS column_name, extra AS extra, generation_expression AS generation_expression
+    `SELECT column_name AS column_name, extra AS extra
        FROM information_schema.columns
       WHERE table_schema = DATABASE() AND table_name = 'supplier_activation_requests'
       ORDER BY ordinal_position`
@@ -34,23 +92,7 @@ export async function inspectSupplierActivationRequestSchema(connection) {
   if (!String(value(slot, "extra", "EXTRA") ?? "").toUpperCase().includes("GENERATED")) {
     throw new Error("Incompatible existing Supplier activation request column: pending_slot is not a generated column");
   }
-  // A generated column over the wrong predicate enforces the wrong invariant, so
-  // check the whole expression, not that it mentions the right tokens. Substring
-  // matching accepts `status <> 'pending'`, swapped branches, and worst of all
-  // IF(status = 'pending', id, NULL), which gives every pending row a distinct slot
-  // and leaves the unique index constraining nothing.
-  //
-  // The literal is matched CASE-SENSITIVELY and with no whitespace stripped inside
-  // it. status is ascii_bin, so 'PENDING' or 'pen ding' compares equal to nothing
-  // the application writes: the slot would stay NULL forever and the unique index
-  // would enforce nothing, which is the same silent failure this check exists to
-  // catch. Keyword casing and the charset introducer MySQL adds to the literal do
-  // not affect the invariant, so those are tolerated; nothing else is.
-  const slotExpression = String(value(slot, "generation_expression", "GENERATION_EXPRESSION") ?? "").replace(/\\/gu, "");
-  const SLOT_EXPRESSION = /^\s*[iI][fF]\s*\(\s*\(\s*`status`\s*=\s*(?:_[a-z0-9]+)?'pending'\s*\)\s*,\s*1\s*,\s*(?:NULL|null)\s*\)\s*$/u;
-  if (!SLOT_EXPRESSION.test(slotExpression)) {
-    throw new Error("Incompatible existing Supplier activation request column: pending_slot is not IF(status = 'pending', 1, NULL) with that exact lowercase literal");
-  }
+  await assertPendingSlotEnforces(connection);
 
   const [indexes] = await connection.query(
     `SELECT DISTINCT index_name AS index_name
