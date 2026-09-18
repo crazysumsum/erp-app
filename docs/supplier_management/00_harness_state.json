@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 126,
+  "revision": 128,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "8c3e252759c1a202b0475c667d970b0d12c7c3cf",
-    "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+    "code_commit": "9cd51a29b565d58b5f4b3ff02d33d6a98ec513ee",
+    "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027",
     "default_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1010,6 +1010,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-029",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-027 REV-028 remediation)",
+      "reviewer": "agent-skills:code-reviewer, the same agent as REV-028 resumed with its context, reviewing 26d8a4c",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/25_rev_029_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1782,6 +1794,28 @@
       "source_ref": "Deterministic in cause, intermittent in appearance: the test fails only when another file happens to insert between the two snapshots. Unlike DEF-017 this needs no hypothesis -- the mechanism is visible in the test's own source. The fix is one line, stripping the AUTO_INCREMENT clause before comparing, which would also make the test assert what its name claims rather than the state of a shared counter. Outside the Supplier module boundary, so routed to Item Management and not fixed here. It does not block this PR on the merits, but it does mean CI has to be re-run, and a re-run to green establishes non-determinism rather than innocence -- what separates it from TASK-027 is that no code on this branch touches item tables.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T14:47:11+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-029 APPROVED: all nine REV-028 findings closed, 29 of 29 mutations now die, and the reviewer retracted two of its own claims",
+      "code_commit": "26d8a4c1c9c8e257891a307de0a923baa5b5ab11",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "PASS",
+      "source_ref": "REV-029 returned APPROVED with 0 Critical, 0 High, 1 Medium, 2 Low and a Nit. It re-ran all 29 of its original mutations (all now die, against 26 that genuinely died before -- S4 had previously escaped the targeted suite and was caught only at boot) plus 10 new ones aimed at the remediation, of which 9 died and 1 was equivalent. It retracted two of its own positions after checking them: its blanket-catch proposal for M-2 would have reported 'Business Master is not ready' on a dropped connection and sent an admin to migrate a healthy schema, and its 'one-word change' description of L-5 was wrong -- it verified harness_core.py:307 hashes the profile into the plan baseline and that its own recommended edit moves it from a0d41e31 to abfe63dd. It verified L-4 the way it was asked to: all three env permutations land the XML correctly including the exact form harness_runner.py sets, git status is clean after every run, and the fix is load-bearing beyond tidiness because the old artifacts would have tripped CANDIDATE_DIRTY on formal runs. Counts re-run independently: 300/300 declared server gate, 50/50 declared client gate, 545/545 full client, 1746/1749 full server with the same two pre-existing Item environment failures, 8/8 Playwright, lint and build clean.",
+      "actor": "agent-skills:code-reviewer (same agent as REV-028, resumed)",
+      "observed_at": "2026-09-18T14:54:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-029's findings closed on 9cd51a2, and a stray-spec hole closed from an incident rather than a finding",
+      "code_commit": "9cd51a29b565d58b5f4b3ff02d33d6a98ec513ee",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
+      "status": "PASS",
+      "source_ref": "M-1 was a real residue of H-1's fix: the conflict branch called loadSettings() directly, so a reload that itself failed escaped toggleApproval, fired no notification at all, and hit the same error boundary H-1 was raised about -- with H-1's banner suppressed because settings was non-null by then. Wrapped in try/catch rather than switching to load(), which would flip loading back to true and make the toggle vanish and return mid-conflict; covered in both layers and the wrapper's removal turns both red. L-1: 1054 ER_BAD_FIELD_ERROR joins 1146 in the schema-not-ready set, which is the 版本不符 half of the page's own label and the case inspect() is structurally blind to, since it SELECTs columns before running the schema inspector. The Nit is taken. Recorded honestly: the mutation aimed at that Nit survived, and correctly so -- reverting an assertion to a weaker form is a test-strength change, not a behaviour one, so it proves nothing; the reviewer had already said the companion assertions carry the case. Also hardened from an incident rather than a finding: testMatch was '*.spec.js', so any stray spec in that directory became this module's formal browser evidence, which is exactly what happened when my own git add -A swept a reviewer probe into 2dfba2c and turned CI lint red. It is now supplier-*.spec.js, and doc-recording commits name their paths. Verification on this commit: 546 client, 255 supplier server, 9/9 Playwright, lint and build clean, four evidence records naming 9cd51a2.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:54:51+08:00"
     }
   ],
   "pending_decisions": [
@@ -2512,7 +2546,11 @@
     "evidence/20260918T063406-f876081276f5/run.json",
     "evidence/20260918T063409-1943b81907d9/run.json",
     "evidence/20260918T063411-3ae5f10851a4/run.json",
-    "evidence/20260918T063414-f31150fe7a8f/run.json"
+    "evidence/20260918T063414-f31150fe7a8f/run.json",
+    "evidence/20260918T065427-47693db4bfaf/run.json",
+    "evidence/20260918T065430-3b1c2f7d9e26/run.json",
+    "evidence/20260918T065432-4518dfad4efe/run.json",
+    "evidence/20260918T065435-112048660f69/run.json"
   ],
   "defects": [
     {
@@ -2777,5 +2815,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-027 is complete on the branch; REV-029 is re-verifying the remediation and required CI needs a green run on the final head. The last run was red on one Item Management case recorded as DEF-019, which no code on this branch can reach. Next: let CI run on the head this ledger entry creates, confirm the four required checks, then the Product Owner's merge decision, which has not been given. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is the last PHASE-002 task. Two Item Management defects are now open from this session's CI alone, DEF-017 and DEF-019, both shared-database parallelism in that module's integration tests; worth raising with its owner as a pair rather than singly. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-027 is complete at 9cd51a2 and REV-029 is APPROVED, so the review gate is satisfied. Every finding across REV-028 and REV-029 is closed except L-5, a recorded exception under HD-023. No decision is open. Next: required CI green on this head -- the last two runs were red on Item Management defects DEF-017-style parallelism recorded as DEF-019, and on a lint error from a reviewer probe I committed by accident, which 86bfc35 untracked. Then the Product Owner's merge decision, which has not been given. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is the last PHASE-002 task. Worth raising with the Item Management owner as a pair rather than singly: DEF-017 and DEF-019 are both shared-database parallelism in that module's integration tests and both surfaced on supplier PRs. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
