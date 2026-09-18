@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 133,
+  "revision": 135,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1034,6 +1034,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-031",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-030 REV-030 remediation)",
+      "reviewer": "agent-skills:code-reviewer, the same agent as REV-030 resumed with its context, reviewing 3403cb6",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/27_rev_031_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1883,6 +1895,39 @@
       "source_ref": "H-1 is the third instance in this module of an assertion that looks like a control and reaches it by a route that cannot discriminate, and the second that was mine. The marking assertion is now row-scoped in both layers and asserts the unchanged row is unmarked -- without that second half the 'mark everything' mutant still passes, which the reviewer demonstrated and I re-confirmed. The browser case keys on a data-field attribute because 名稱 is a substring of 顯示名稱. M-1: both halves of the policy-read rule are now tested; the mutant that treats an unreadable policy as no-approval-needed dies. M-2: two browser cases cover the create flow on and off, driving the real Quasar select rather than vm.$emit, and a create page that withholds the approver dies only in that layer. L-1 was a real divergence: the service's stale check returns early unless the command is approve, so refusing 拒絕 blocked something the service accepts, and a browser assertion had locked it in as intended -- reject is now gated on canDecide. L-2, L-3, L-4, N-1 and N-3 are closed. L-5 is a correction rather than a fix: 259 was wrong, the evidence contract is 305 and the narrow supplier selection is 251, both re-measured. N-2 is left as the reviewer recorded it: a preference the browser suite already covers. Verification on this commit: 566 client, 17/17 Playwright, lint and build clean, four evidence records naming 00900fe.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T15:33:34+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #114 required checks green on 3403cb6, first attempt, with no Item Management interference this time",
+      "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "PASS",
+      "source_ref": "Run 35320043450 attempt 1 on head 3403cb6: Test (server + client, MySQL integration) 4m9s, Lint 25s, Build frontend 18s, Dependency audit 21s, all pass, and the run's head_sha equals the PR head. The previous run on this branch was red on DEF-019's itemMigrationIdempotency case; it did not fire here, which is consistent with the recorded reading that its cause is deterministic while its appearance depends on which files interleave. Recorded as an observation about this candidate, not as evidence that DEF-019 is resolved -- it is not, and under HD-025 it stays with its own module.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-18T16:38:45+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-031 APPROVED: all eleven REV-030 findings closed, 24 of 24 mutations now die, Checkpoint J met",
+      "code_commit": "3403cb634802b702972dd69d009d216d678c4483",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "PASS",
+      "source_ref": "REV-031 returned APPROVED with 0 Critical, 0 High, 0 Medium, 1 Low and 2 Nit, and re-ran all 24 of its original mutations rather than only the 7 survivors: all now die, up from 17, with nothing revived. It probed the three product changes instead of reading them. L-1: driving SupplierApprovalService with a stale fixture, approve is refused APPROVAL_REQUEST_STALE while reject is accepted and lands the Supplier in draft, which is where FR-APPROVAL-004 and AC-011 put it; the other guards are intact, and it named a consequence in favour of the change -- with both buttons disabled an absent requester left a stale request in the queue permanently. L-2: it captured both readers' observable behaviour at this head and at 1cf40ca and diffed them -- identical, FOR SHARE included, the only difference being constructor.name AsyncFunction to Function, invisible to callers, with the two by-reference call sites still satisfying the identity assertion at supplierSettingsHandlers.test.js:46. It also confirmed the 「已建立」 wait is load-bearing by making created.value never set and watching the case fail, and that data-field is worth keeping because 名稱 really is a substring of 顯示名稱. Checkpoint J: all three bullets met, including the first it reported short last round. Its one Low: the L-4 field-error wiring works but is untested -- three mutations survive -- so a fix for 'written and never rendered' became 'rendered and never tested'. Non-blocking, and the same message still reaches the user through the tested summary path.",
+      "actor": "agent-skills:code-reviewer (same agent as REV-030, resumed)",
+      "observed_at": "2026-09-18T16:51:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-020 raised and deliberately not fixed before merge",
+      "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "FAIL",
+      "source_ref": "REV-031's only Low: the approver field-error wiring renders but has no test, so three mutations survive -- the page not passing :field-error, and the panel dropping either binding. The reviewer proved the control works and specified the three-line fix. I began writing it and stopped: the Product Owner had already authorised the merge and the reviewer had called it non-blocking, so adding a commit and another CI cycle was expanding past the instruction rather than serving it. Recorded as an open defect on this module rather than carried silently, with the fix already specified in the review report. It is the same family this module keeps meeting -- a control that exists and cannot fail a test -- which is the argument for closing it in the next supplier task rather than letting it age.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T16:51:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -2221,6 +2266,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-18: 加一條 supplier-lookups. GET /api/v1/supplier-lookups/activation-policy answers { requireActivationApproval } to any of supplier.mgmt, supplier.approval or supplier.settings, following the pattern HD-022 set for the Business Master readiness read. The server remains authoritative -- policy on without an approver is 400 APPROVER_REQUIRED, policy off with one is 400 APPROVER_NOT_REQUIRED -- so the lookup only spares the user a round trip. It reads without FOR SHARE, unlike getActivationPolicy beside it: that lock exists to freeze the answer inside a transaction, and reusing it would make a settings write wait behind a read-only page lookup. A missing settings row stays an error rather than 'no approval needed', because defaulting open on an unknown policy is silently skipping the approval requirement (SEC-007)."
+    },
+    {
+      "id": "HD-025",
+      "impact": "MINOR",
+      "question": "DEF-019, an Item Management test that deep-equals raw SHOW CREATE TABLE output including the AUTO_INCREMENT counter, has turned two supplier PRs red this phase (TASK-027 and TASK-030), each costing a CI cycle. The cause is visible in the test's own source and the fix is one line, stripping the counter before comparing. server/test/** is inside this module's allowed_write_paths, so the path permits a supplier branch to change it while the ownership does not -- the harness is explicit that a path check does not replace module ownership review. Options: fix it inline in the TASK-030 PR; fix it in its own PR, optionally with DEF-017; or leave it routed to the Item Management owner and keep re-running CI when it fires.",
+      "affected_ids": [
+        "DEF-019",
+        "DEF-017",
+        "TASK-030",
+        "server/test/integration/itemMigrationIdempotency.integration.test.js",
+        "item-management"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18: DEF-019 唔好郁. It stays routed to the Item Management owner and is not touched from a supplier branch, in this PR or a separate one. The recommendation of a separate PR was declined, so the standing cost is accepted: a supplier PR whose Test job fails on an item case should be checked against DEF-019 and DEF-017 before anyone concludes the branch is at fault, and re-run. DEF-017 is unaffected by this decision and also stays routed out."
     }
   ],
   "external_actions": [
@@ -2918,7 +2977,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-020",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "client/src/pages/suppliers/SupplierCreatePage.vue",
+        "client/src/components/suppliers/SupplierApprovalPanel.vue",
+        "REV-031",
+        "TASK-030"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-030's REV-030 remediation is committed at 00900fe. All eleven findings are closed or dispositioned and no decision is open. Next: required CI green on the new head, then a re-review of the remediation by the same reviewer under HD-021's precedent, then the Product Owner's merge decision, which has not been given. Checkpoint J covers T28-T30 and the reviewer judged bullets 2 and 3 met with bullet 1 short on negative flows; the error-path and browser cases added here are what it was waiting on, so it is worth re-assessing after the re-review. Still unanswered and raised twice: whether DEF-019, an Item Management test that compares AUTO_INCREMENT and has now turned two supplier PRs red, should be fixed from a supplier branch, in its own PR, or left to its module owner; server/test/** is inside this module's allowed_write_paths, so the path permits it while the ownership does not. DEF-017 and DEF-018 also remain OPEN and routed out. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-030 is complete at 3403cb6 with required CI green on the exact head, first attempt. REV-031, the same reviewer re-verifying the REV-030 remediation under HD-021's precedent, is the outstanding gate; that remediation is not test-only, so it warrants the round -- it splits canApprove into canDecide, merges the two activation-policy readers used by create, activate and import paths outside this task, and adds a template test hook. After it: the Product Owner's merge decision, which has not been given, then mark TASK-030 DONE, retire the worktree and both branches, refresh the default baseline, and assess Checkpoint J across T28-T30. HD-025 settles DEF-019: it stays with Item Management and is not touched from a supplier branch, so a red Test job on an item case should be checked against DEF-019 and DEF-017 before blaming the branch. DEF-018 also remains OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
