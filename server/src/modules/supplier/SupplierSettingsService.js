@@ -68,6 +68,25 @@ function project(row) {
  * 讀唔到設定列就拋錯，唔會當佢係 false：喺政策未知嘅情況下預設放行等於靜靜哋
  * 繞過審批要求，方向錯（SEC-007）。
  */
+/**
+ * 同 `getActivationPolicy` 讀同一個欄位，但**唔上鎖**，畀唯讀 UI lookup 用
+ * （HD-024）。
+ *
+ * 唔重用上面嗰個：佢個 `FOR SHARE` 係為咗「喺同一個交易入面答案唔會變」，代價
+ * 係設定寫入要等進行中嘅啟用完成。一個建檔頁嘅 lookup 唔喺任何交易入面，亦都
+ * 唔需要嗰個保證 —— 用返嗰個版本只會令一個純讀取阻住設定寫入。
+ *
+ * 一樣唔會將讀唔到當成 false：政策未知就放行等於靜靜哋繞過審批（SEC-007）。
+ */
+export async function readActivationPolicy(database) {
+  const [[row]] = await database.query(
+    `SELECT ${SETTING_FIELDS.requireActivationApproval.column} AS require_activation_approval
+       FROM supplier_settings WHERE id = ${SETTINGS_ROW_ID}`
+  );
+  if (!row) throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
+  return SETTING_FIELDS.requireActivationApproval.fromRow(row.require_activation_approval);
+}
+
 export async function getActivationPolicy(connection) {
   const [[row]] = await connection.query(
     `SELECT ${SETTING_FIELDS.requireActivationApproval.column} AS require_activation_approval

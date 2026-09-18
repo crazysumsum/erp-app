@@ -13,12 +13,17 @@ vi.mock("@/services/businessMaster.js", () => ({
   default: { currencyList: vi.fn(), paymentTermList: vi.fn() },
   service: { name: "businessMaster" }
 }));
+vi.mock("@/services/supplierApproval.js", () => ({
+  default: { activationPolicy: vi.fn(), eligibleApprovers: vi.fn() },
+  service: { name: "supplierApproval" }
+}));
 vi.mock("@/framework/ui/notify.js", () => ({
   notifyError: vi.fn(),
   notifySuccess: vi.fn()
 }));
 
 import businessMasterService from "@/services/businessMaster.js";
+import supplierApprovalService from "@/services/supplierApproval.js";
 import supplierService from "@/services/supplier.js";
 import { notifySuccess } from "@/framework/ui/notify.js";
 import SupplierCreatePage, { page } from "@/pages/suppliers/SupplierCreatePage.vue";
@@ -27,7 +32,9 @@ import { useSessionStore } from "@/stores/session.js";
 const RouterViewHost = { render: () => h(RouterView) };
 let currentWrapper;
 
-async function mountPage() {
+async function mountPage({ requireActivationApproval = false, approvers = [] } = {}) {
+  supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval });
+  supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: approvers });
   businessMasterService.currencyList.mockResolvedValue({
     rows: [{ code: "HKD", name: "Hong Kong Dollar", version: 3 }],
     rowsNumber: 1
@@ -136,5 +143,63 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
 
     expect(confirm).toHaveBeenCalledWith(expect.stringContaining("未儲存"));
     confirm.mockRestore();
+  });
+
+  // ---- T30 AC 1: the approver selector ------------------------------------
+
+  it("does not offer an approver, or send one, when the policy is off", async () => {
+    // 設計 §6.2：政策關閉時帶 approverUserId 會 400 APPROVER_NOT_REQUIRED。
+    supplierService.create.mockResolvedValue({ id: 41, supplierCode: "SUP-041", status: "active" });
+    const { wrapper, body } = await mountPage({ requireActivationApproval: false });
+    await fillRequired(wrapper, body);
+
+    expect(body.text()).not.toContain("啟用審批");
+    expect(supplierApprovalService.eligibleApprovers).not.toHaveBeenCalled();
+
+    await body.findAll("button").find((candidate) => candidate.text().includes("直接啟用")).trigger("click");
+    await flushPromises();
+
+    const [payload] = supplierService.create.mock.calls[0];
+    expect(payload.activate).toBe(true);
+    expect("approverUserId" in payload).toBe(false);
+  });
+
+  it("offers an approver selector that excludes the actor when the policy is on", async () => {
+    // AC-009：唔可以揀自己。伺服器一樣會拒絕，但唔應該俾使用者揀完先話佢知。
+    const { body } = await mountPage({
+      requireActivationApproval: true,
+      approvers: [{ id: 2, username: "checker", displayName: "Checker" }]
+    });
+    expect(body.text()).toContain("啟用審批");
+    expect(supplierApprovalService.eligibleApprovers).toHaveBeenCalledWith(
+      expect.objectContaining({ excludeUserId: 1 })
+    );
+    // 政策開啟時，啟用掣講嘅係提交審批，唔係直接啟用。
+    expect(body.text()).toContain("提交審批");
+    expect(body.text()).not.toContain("直接啟用");
+  });
+
+  it("sends the chosen approver, and refuses to submit without one", async () => {
+    supplierService.create.mockResolvedValue({ id: 41, supplierCode: "SUP-041", status: "pending_approval" });
+    const { wrapper, body } = await mountPage({
+      requireActivationApproval: true,
+      approvers: [{ id: 2, username: "checker", displayName: "Checker" }]
+    });
+    await fillRequired(wrapper, body);
+
+    await body.findAll("button").find((candidate) => candidate.text().includes("提交審批")).trigger("click");
+    await flushPromises();
+    expect(supplierService.create).not.toHaveBeenCalled();
+    expect(body.text()).toContain("請先選擇審批人");
+
+    const approver = wrapper.findAllComponents(QSelect).find((select) => select.props("label") === "審批人");
+    approver.vm.$emit("update:modelValue", 2);
+    await flushPromises();
+
+    await body.findAll("button").find((candidate) => candidate.text().includes("提交審批")).trigger("click");
+    await flushPromises();
+
+    const [payload] = supplierService.create.mock.calls[0];
+    expect(payload).toMatchObject({ activate: true, approverUserId: 2 });
   });
 });

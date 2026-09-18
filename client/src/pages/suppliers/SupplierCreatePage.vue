@@ -11,6 +11,7 @@ export const page = {
 import { computed, nextTick, onUnmounted, reactive, ref, watch } from "vue";
 import { onBeforeRouteLeave } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
+import SupplierApprovalPanel from "@/components/suppliers/SupplierApprovalPanel.vue";
 import SupplierBasicForm from "@/components/suppliers/SupplierBasicForm.vue";
 import { mapValidationDetailsToFieldErrors, unmatchedFieldErrors } from "@/framework/ui/validationIssues.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
@@ -29,6 +30,10 @@ const form = reactive({
   website: "",
   notes: ""
 });
+
+// Panel 自己讀政策（HD-024）同自己隱藏；呢一頁只需要知要唔要送 approverUserId。
+const approval = ref({ approverUserId: null, requestNote: "" });
+const requireApproval = ref(false);
 
 const dirty = ref(false);
 const submitting = ref(false);
@@ -74,7 +79,15 @@ function payload(activate) {
     generalEmail: form.generalEmail.trim(),
     website: form.website.trim(),
     notes: form.notes.trim(),
-    activate
+    activate,
+    // 設計 §6.2：政策關閉時唔可以帶 approverUserId，帶咗會 400 APPROVER_NOT_REQUIRED。
+    // 所以呢個欄位只喺「真係要啟用」而且「政策開啟」嗰陣先出現。
+    ...(activate && requireApproval.value
+      ? {
+        approverUserId: approval.value.approverUserId,
+        ...(approval.value.requestNote ? { requestNote: approval.value.requestNote } : {})
+      }
+      : {})
   };
 }
 
@@ -111,6 +124,14 @@ async function requestCreate(activate) {
 async function submit(activate) {
   intendedActivation.value = activate;
   duplicateCandidates.value = [];
+  // 一般必填欄位檢查，唔係喺前端重做規則：伺服器照樣會 400 APPROVER_REQUIRED。
+  // 呢度只係唔好等使用者撞完一次錯先知要揀人。
+  if (activate && requireApproval.value && !approval.value.approverUserId) {
+    fieldErrors.value = { ...fieldErrors.value, approverUserId: "請選擇審批人" };
+    summaryMessage.value = "目前設定要求啟用前經過審批，請先選擇審批人。";
+    await focusSummary();
+    return;
+  }
   try {
     const result = await supplierService.checkDuplicates({
       supplierCode: form.supplierCode.trim(),
@@ -178,6 +199,12 @@ async function submit(activate) {
 
       <SupplierBasicForm :model-value="form" :field-error="fieldError" />
 
+      <SupplierApprovalPanel
+        v-model="approval"
+        :disable="submitting"
+        @policy="(value) => { requireApproval = value; }"
+      />
+
       <div class="row q-gutter-sm q-mt-lg">
         <q-btn
           color="secondary"
@@ -188,9 +215,9 @@ async function submit(activate) {
         />
         <q-btn
           color="primary"
-          label="直接啟用"
+          :label="requireApproval ? '提交審批' : '直接啟用'"
           :loading="submitting"
-          :aria-label="submitting ? '直接啟用中' : '直接啟用'"
+          :aria-label="submitting ? '處理中' : (requireApproval ? '提交審批' : '直接啟用')"
           @click="submit(true)"
         />
       </div>

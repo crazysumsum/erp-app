@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { GetSupplierBusinessMasterReadinessHandler } from "../src/handlers/supplier-lookups/businessMasterReadinessHandler.js";
+import { GetSupplierActivationPolicyHandler } from "../src/handlers/supplier-lookups/activationPolicyHandler.js";
 import { GetSupplierSettingsHandler } from "../src/handlers/supplier-settings/settingsHandlers.js";
 
 const services = { require: () => ({ logger: { warn() {} }, nowMs: () => 1 }) };
@@ -142,4 +143,49 @@ test("a table present with the wrong columns is the version-mismatch half of the
   const { data } = await handler.execute();
   assert.equal(data.status, "NOT_READY");
   assert.equal(data.schemaReady, false);
+});
+
+// ---- HD-024: the activation policy lookup for the create page --------------
+
+function policyHandler(read) {
+  const handler = new GetSupplierActivationPolicyHandler(services);
+  handler.database = { async query() { return read(); } };
+  return handler;
+}
+
+test("the activation policy lookup is reachable by a creator, an approver or a settings admin", () => {
+  // 建檔頁閘喺 supplier.mgmt，而設定頁閘喺 supplier.settings。設計 §4.3：permission
+  // catalogue 冇隱式繼承，所以三個都要明文列出，任一個就夠。
+  const [policy] = GetSupplierActivationPolicyHandler.api.authorizationPolicies;
+  assert.equal(policy.name, "hasPermission");
+  assert.deepEqual(policy.options.permissions, ["supplier.mgmt", "supplier.approval", "supplier.settings"]);
+  assert.equal(policy.options.match, "any");
+  assert.equal(GetSupplierActivationPolicyHandler.api.path, "/api/v1/supplier-lookups/activation-policy");
+  assert.equal(GetSupplierActivationPolicyHandler.api.authType, undefined, "reading the policy must not demand a password");
+});
+
+test("the policy lookup answers one boolean and nothing else about the settings row", async () => {
+  // version、updatedAt、updatedBy 係設定頁先需要嘅。建檔頁只需要知要唔要揀審批人。
+  const { data } = await policyHandler(() => [[{ require_activation_approval: 1 }]]).execute();
+  assert.deepEqual(data, { requireActivationApproval: true });
+  const off = await policyHandler(() => [[{ require_activation_approval: 0 }]]).execute();
+  assert.deepEqual(off.data, { requireActivationApproval: false });
+});
+
+test("the policy read does not lock the settings row", async () => {
+  // getActivationPolicy 用 FOR SHARE，係為咗喺交易入面定住答案，代價係設定寫入
+  // 要等。一個唯讀 lookup 唔喺任何交易入面，用返嗰個版本只會令純讀取阻住寫入。
+  let issued = "";
+  const handler = new GetSupplierActivationPolicyHandler(services);
+  handler.database = { async query(sql) { issued = String(sql); return [[{ require_activation_approval: 0 }]]; } };
+  await handler.execute();
+  assert.ok(!/FOR SHARE|FOR UPDATE/u.test(issued), `the lookup must not lock: ${issued}`);
+});
+
+test("a missing settings row is an error, never a silent no-approval-needed", async () => {
+  // SEC-007：政策未知就當唔使審批，等於靜靜哋繞過審批要求。
+  await assert.rejects(
+    () => policyHandler(() => [[]]).execute(),
+    (error) => error.publicCode === "SUPPLIER_SETTINGS_MISSING"
+  );
 });
