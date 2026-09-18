@@ -184,11 +184,11 @@ test("an approver who has lost the permission since submission cannot decide", a
 test("only the requester may withdraw", async () => {
   const { service } = harness({ requestedBy: 1, actorId: 2 });
   await assert.rejects(
-    () => service.withdrawRequest({ ...context, reason: "暫時不需要這個供應商" }),
+    () => service.withdrawRequest({ ...context, supplierId: 7, reason: "暫時不需要這個供應商" }),
     (error) => error.publicCode === "APPROVAL_NOT_REQUESTER"
   );
   const own = harness({ requestedBy: 2, actorId: 2 });
-  const result = await own.service.withdrawRequest({ ...context, reason: "暫時不需要這個供應商" });
+  const result = await own.service.withdrawRequest({ ...context, supplierId: 7, reason: "暫時不需要這個供應商" });
   assert.equal(result.supplierStatus, "draft");
 });
 
@@ -303,7 +303,8 @@ test("no decision may be taken on a Supplier that has left pending_approval", as
   for (const command of ["approveRequest", "rejectRequest", "withdrawRequest"]) {
     const { service } = harness({ supplierStatus: "active", requestedBy: 2, actorId: 2, assignedApproverId: 2 });
     await assert.rejects(
-      () => service[command]({ ...context, reason: "供應商已經唔喺審批中" }),
+      // withdraw 而家一定要帶 route scope（REV-026 H-1），approve／reject 唔帶。
+      () => service[command]({ ...context, reason: "供應商已經唔喺審批中", ...(command === "withdrawRequest" ? { supplierId: 7 } : {}) }),
       (error) => error.publicCode === "STATUS_TRANSITION_INVALID" || error.publicCode === "APPROVER_MUST_DIFFER",
       `${command} decided on a Supplier that is not pending`
     );
@@ -464,8 +465,9 @@ test("an invalidation with no reason still records why the request died", async 
  * 讀路徑唔經 withTransaction，所以佢哋淨係需要一個識記低 SQL 嘅 `database.query`。
  * 呢啲斷言睇 SQL 本身：真 MySQL 行為喺 integration/supplierApproval 度證。
  */
-function readHarness({ rows = [], total = 0, identifiers = [], actorId = 2 } = {}) {
+function readHarness({ rows = [], total = 0, identifiers = [], actorId = 2, authorizeError = null } = {}) {
   const queries = [];
+  const authorizeCalls = [];
   const database = {
     async query(sql, params) {
       queries.push({ sql: String(sql), params });
@@ -478,11 +480,15 @@ function readHarness({ rows = [], total = 0, identifiers = [], actorId = 2 } = {
     database,
     logger: { warn() {} },
     time: { nowMs: () => 100 },
-    authorize: async () => ({ id: actorId, username: "approver", permissions: ["supplier.approval"] }),
+    authorize: async (connection, input) => {
+      authorizeCalls.push(input);
+      if (authorizeError) throw authorizeError;
+      return { id: actorId, username: "approver", permissions: ["supplier.approval"] };
+    },
     loadPermissions: async () => ["supplier.approval"]
   });
   const listSql = () => queries.find((entry) => entry.sql.includes("FROM supplier_activation_requests r") && !entry.sql.includes("COUNT(*)"));
-  return { service, queries, listSql };
+  return { service, queries, authorizeCalls, listSql };
 }
 
 const reader = { actorId: 2, claimedRoles: [], claimedPermissions: ["supplier.approval"] };
@@ -668,4 +674,122 @@ test("withdraw refuses a request that belongs to another Supplier", async () => 
   const matched = harness({ requestedBy: 2 });
   const outcome = await matched.service.withdrawRequest({ ...context, supplierId: 7 });
   assert.equal(outcome.status, "withdrawn");
+});
+
+// ---- REV-026 remediation: controls that had no test that could fail --------
+
+test("every read path re-reads the actor from the database before answering", async () => {
+  // REV-026 M-1：hasPermission 係睇 token claim 嘅。設計 1.4 第四道守衛係呢句
+  // assertActorFresh —— 由三條讀路徑各自叫。三句都可以刪走而套測試唔會出聲，
+  // 而真實後果係一個已經俾人收返權限嘅 token 由 403 PERMISSION_STALE 變成 200
+  // 加成個 queue。
+  const detailRow = queueRow({
+    supplier_version: 5, current_supplier_version: 5, summary: "{}",
+    display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+    decided_by: null, decision_reason: ""
+  });
+  const calls = [
+    ["listRequests", (service) => service.listRequests({ ...reader })],
+    ["getRequest", (service) => service.getRequest({ ...reader, id: 11 })],
+    ["listEligibleApprovers", (service) => service.listEligibleApprovers({ ...reader })]
+  ];
+  for (const [name, invoke] of calls) {
+    const harnessed = readHarness({ rows: [detailRow], total: 1 });
+    await invoke(harnessed.service);
+    assert.equal(harnessed.authorizeCalls.length, 1, `${name} must re-read the actor`);
+    assert.deepEqual(harnessed.authorizeCalls[0], {
+      actorId: reader.actorId, claimedRoles: reader.claimedRoles, claimedPermissions: reader.claimedPermissions
+    }, `${name} must pass the claims through for comparison`);
+  }
+});
+
+test("a rejected actor stops the read: no query runs and the error propagates", async () => {
+  const stale = new Error("PERMISSION_STALE");
+  for (const invoke of [
+    (service) => service.listRequests({ ...reader }),
+    (service) => service.getRequest({ ...reader, id: 11 }),
+    (service) => service.listEligibleApprovers({ ...reader })
+  ]) {
+    const harnessed = readHarness({ authorizeError: stale });
+    await assert.rejects(() => invoke(harnessed.service), (error) => error === stale);
+    assert.equal(harnessed.queries.length, 0, "a rejected actor must not reach the database");
+  }
+});
+
+test("scope=mine ignores a client-supplied requesterId when choosing whose queue to read", async () => {
+  // REV-026 M-2：requesterId 係一個真嘅 query parameter。之前嗰個測試根本冇送過
+  // requesterId，所以佢分唔出 actor 同「啱啱好冇送嘅 client 值」。
+  const { service, listSql } = readHarness({ rows: [queueRow()], total: 1 });
+  await service.listRequests({ ...reader, scope: "mine", requesterId: 999 });
+  const { sql, params } = listSql();
+  // approverIndex 係「approver 個 ? 之前有幾多個 ?」，亦即佢喺 params 入面嘅位置。
+  const approverIndex = sql.slice(0, sql.indexOf("r.assigned_approver_id = ?")).split("?").length - 1;
+  assert.equal(params[approverIndex], reader.actorId,
+    "?scope=mine&requesterId=<someone else> must still read the actor's own queue");
+  assert.ok(params.includes(999), "the requesterId filter itself still applies");
+});
+
+test("an added identifier is a change, not just a removed one", async () => {
+  // REV-026 L-1：舊測試只覆蓋咗「少咗一個」，嗰邊 b[0] 係 undefined，就算冇長度
+  // 檢查都會唔等。長度檢查真正存在嘅理由係「多咗一個」呢個方向。
+  // 新嗰個 identifier 要排喺原有嗰個之後，先至真係考到長度檢查：如果佢排前面，
+  // 逐 index 比第一項就已經唔等，冇長度檢查一樣會報到改動。business_registration
+  // 排喺 tax 之前，所以原有嗰個係 business_registration，新加嘅係 tax。
+  const kept = { identifier_type: "business_registration", issuer_country_code: "HK", identifier_value: "87654321" };
+  const submitted = buildApprovalSummary(
+    { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD", default_payment_term_id: null },
+    [kept]
+  );
+  const identifiers = [kept, { identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }];
+  const { service } = readHarness({
+    rows: [queueRow({
+      supplier_version: 5, current_supplier_version: 5, summary: JSON.stringify(submitted),
+      display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+      decided_by: null, decision_reason: ""
+    })],
+    identifiers
+  });
+  const detail = await service.getRequest({ ...reader, id: 11 });
+  assert.deepEqual(detail.changedFields, ["identifiers"]);
+});
+
+test("two identifiers that differ only by country or by value are not the same identifier", async () => {
+  // REV-026 L-2：identifierKey 可以掉走 issuerCountryCode 或者遮罩值而唔會有人出聲。
+  const base = { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD", default_payment_term_id: null };
+  const cases = [
+    ["issuer country", { identifier_type: "tax", issuer_country_code: "CN", identifier_value: "12345678" }],
+    ["identifier value", { identifier_type: "tax", issuer_country_code: "HK", identifier_value: "87654321" }]
+  ];
+  for (const [what, changed] of cases) {
+    const submitted = buildApprovalSummary(base, [{ identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }]);
+    const { service } = readHarness({
+      rows: [queueRow({
+        supplier_version: 5, current_supplier_version: 5, summary: JSON.stringify(submitted),
+        display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+        decided_by: null, decision_reason: ""
+      })],
+      identifiers: [changed]
+    });
+    const detail = await service.getRequest({ ...reader, id: 11 });
+    assert.deepEqual(detail.changedFields, ["identifiers"], `a changed ${what} must count as a change`);
+  }
+});
+
+test("the date filters bound the range they name, and the newest request comes first", async () => {
+  // REV-026 L-2：requestedTo 由 <= 變 >= 唔會有人出聲，而兩頁分割嗰個測試係靠
+  // 排序穩定先成立，但冇邊度講明排邊個方向。
+  const { service, listSql } = readHarness();
+  await service.listRequests({ ...reader, requestedFrom: 5, requestedTo: 50 });
+  const { sql } = listSql();
+  assert.match(sql, /r\.requested_at >= \?/u, "requestedFrom is a lower bound");
+  assert.match(sql, /r\.requested_at <= \?/u, "requestedTo is an upper bound");
+  assert.match(sql, /ORDER BY r\.requested_at DESC, r\.id DESC/u, "the queue shows the newest first, stably");
+});
+
+test("a user who holds the permission through two roles is listed once", async () => {
+  // REV-026 L-2：三張 join 表會將同一個人乘出幾行；DISTINCT 可以刪走而套測試全綠。
+  const { service, queries } = readHarness({ rows: [] });
+  await service.listEligibleApprovers({ ...reader });
+  assert.match(queries.at(-1).sql, /SELECT DISTINCT/u,
+    "user_roles x role_permissions can yield the same user more than once");
 });

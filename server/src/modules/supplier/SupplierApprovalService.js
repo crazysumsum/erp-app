@@ -1,6 +1,6 @@
 import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
-import { invalidSupplierInput, supplierConflict, supplierNotActivatable, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, supplierApprovalRequestNotFound, supplierConflict, supplierNotActivatable, supplierNotFound } from "./supplierErrors.js";
 import { escapeLikeTerm } from "./supplierNormalization.js";
 import { supplierActivatabilityIssues } from "./supplierValidation.js";
 
@@ -156,6 +156,10 @@ export function approvalSummaryChanges(submitted, current) {
     if (submitted[field] !== current[field]) changed.push(field);
   }
   if (!sameIdentifiers(submitted.identifiers, current.identifiers)) changed.push("identifiers");
+  // identifierCount 同 identifiersTruncated 刻意唔比：一個超過 MAX_SUMMARY_IDENTIFIERS
+  // 嘅 Supplier，提交時截嘅係一個冇 ORDER BY 嘅 50 個，而 getRequest 截嘅係頭 50 個
+  // （按 id），兩邊可以係唔同子集，咁就會永遠報 identifiers 改咗。實際上去唔到呢度：
+  // 任何 identifier 寫入都會 invalidateForSignificantChange，個申請即刻失效。
   return changed;
 }
 
@@ -256,7 +260,7 @@ export class SupplierApprovalService {
         WHERE r.id = ?`,
       [id]
     );
-    if (!row) throw supplierNotFound(id);
+    if (!row) throw supplierApprovalRequestNotFound(id);
     const [identifiers] = await this.database.query(
       "SELECT identifier_type, issuer_country_code, identifier_value FROM supplier_identifiers WHERE supplier_id = ? ORDER BY id",
       [row.supplier_id]
@@ -437,7 +441,20 @@ export class SupplierApprovalService {
 
   approveRequest(input) { return this.#decide(input, "approve"); }
   rejectRequest(input) { return this.#decide(input, "reject"); }
-  withdrawRequest(input) { return this.#decide(input, "withdraw"); }
+  /**
+   * REV-026 H-1：#decide 嘅 supplier scope 檢查係 `input.supplierId !== undefined` ——
+   * approve 同 reject 本身唔帶 scope，所以個條件係結構性嘅。副作用係：唯一武裝到
+   * 佢嘅，就係 withdraw handler 嗰行 `supplierId: Number(req.input.params.id)`。
+   * 刪咗嗰行，個 guard 會靜靜哋熄咗，而任何人都可以借 Supplier B 嘅 route 撤
+   * Supplier A 嘅申請。呢度令佢變成嘈：withdraw 冇 scope 就係接線出事，唔係一個
+   * 要處理嘅使用者輸入，所以拋 TypeError 而唔係 400。
+   */
+  withdrawRequest(input) {
+    if (input.supplierId === undefined || input.supplierId === null) {
+      throw new TypeError("withdrawRequest requires the route supplierId to scope the request");
+    }
+    return this.#decide(input, "withdraw");
+  }
 
   async #decide(input, commandName) {
     const command = DECISIONS[commandName];
@@ -459,7 +476,7 @@ export class SupplierApprovalService {
         "SELECT supplier_id FROM supplier_activation_requests WHERE id = ?",
         [input.id]
       );
-      if (!probe) throw supplierNotFound(input.id);
+      if (!probe) throw supplierApprovalRequestNotFound(input.id);
       // 撤回係由 /suppliers/:id/approval/withdraw 入嚟嘅，所以 route 嘅 Supplier 同
       // request 嘅 Supplier 要夾得返。設計 6.3 對 child route 定咗同一條規矩：唔可以
       // 借另一個 Supplier 嘅 route 去郁呢個 request，而唔屬於你嘅嘢一律回 404。

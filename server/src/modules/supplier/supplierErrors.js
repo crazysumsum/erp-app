@@ -36,6 +36,19 @@ export function supplierNotFound(id) {
   });
 }
 
+/**
+ * 一個搵唔到嘅審批申請唔係一個搵唔到嘅供應商。Public code 刻意同 supplierNotFound
+ * 一樣：兩者對 client 嚟講都係「你要嘅嘢唔喺度」，而加一個新 code 會擴張 6.4 冇
+ * 列過嘅 error contract。分別只喺人睇到嗰句。
+ */
+export function supplierApprovalRequestNotFound(id) {
+  return supplierError(`Supplier approval request ${id} was not found`, {
+    code: "SUPPLIER_NOT_FOUND",
+    statusCode: 404,
+    publicMessage: "找不到這個審批申請"
+  });
+}
+
 export function supplierChildNotFound(childType) {
   const labels = { address: "地址", contact: "聯絡人", identifier: "識別資料" };
   return supplierError(`Supplier ${childType} was not found for this owner`, {

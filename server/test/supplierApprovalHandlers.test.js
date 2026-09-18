@@ -11,6 +11,7 @@ import {
 import { ListSupplierApproversHandler } from "../src/handlers/supplier-approvers/listSupplierApproversHandler.js";
 import { WithdrawSupplierApprovalHandler } from "../src/handlers/suppliers/supplierApprovalWithdrawHandler.js";
 import { BlockSupplierHandler, UnblockSupplierHandler } from "../src/handlers/suppliers/supplierLifecycleHandlers.js";
+import apiConfig from "../config/api.js";
 
 /**
  * 呢個檔案守住 HTTP contract 本身：邊條路徑、要幾強嘅認證、要邊幾個 permission、
@@ -59,6 +60,10 @@ test("approve, reject and reassign re-confirm the password; reading the queue do
   for (const Handler of [...QUEUE_HANDLERS, ListSupplierApproversHandler]) {
     assert.equal(Handler.api.authType, undefined, `${Handler.handlerName} must not demand a password to read`);
   }
+  // REV-026 L-5：上面斷言嘅係「冇寫」，唔係「係 jwt」。冇寫解讀成乜，由 config 話事，
+  // 所以喺度釘死個預設 —— 如果將來預設變咗 public，呢五條 route 會靜靜哋開晒。
+  assert.equal(apiConfig.defaults.authType, "jwt",
+    "the read routes rely on the framework default; if that default changes they silently change with it");
 });
 
 test("the block routes keep device-password: the approval work does not weaken them", () => {
@@ -144,4 +149,36 @@ test("no approval response can name a bank field, and none of them is open", () 
       walk(schema, `${Handler.handlerName}.${code}`);
     }
   }
+});
+
+test("the withdraw handler passes the route Supplier id into the command", async () => {
+  // REV-026 H-1：service 嗰邊嘅 scope 檢查係 `input.supplierId !== undefined`，所以
+  // 呢行接線就係武裝佢嘅唯一嘢。冇呢個測試，刪咗佢 suite 一樣全綠，而任何人都可以
+  // 借 Supplier B 嘅 route 撤 Supplier A 嘅申請。
+  const handler = new WithdrawSupplierApprovalHandler({ require: () => ({ logger: { warn() {} }, nowMs: () => 1 }) });
+  const passed = [];
+  handler.approvals = { async withdrawRequest(input) { passed.push(input); return { id: input.id }; } };
+  await handler.execute({
+    auth: { claims: { sub: "5", roles: [], permissions: ["supplier.mgmt"] } },
+    input: { params: { id: "7" }, query: {}, body: { requestId: 11, version: 2 } },
+    requestId: "req-1",
+    ip: "127.0.0.1"
+  });
+  assert.equal(passed.length, 1);
+  assert.equal(passed[0].supplierId, 7, "the route Supplier id must reach the service, or its scope guard never arms");
+  assert.equal(passed[0].id, 11, "the request id comes from the body, not from the route");
+  assert.equal(passed[0].actorId, 5);
+  assert.ok(!("requestId" in passed[0]) || passed[0].requestId === "req-1");
+});
+
+test("withdraw refuses to run unscoped, so a lost caller line is loud", async () => {
+  // 同一個控制嘅另一半：就算接線斷咗，service 都唔會靜靜哋撤一個唔知邊個 Supplier
+  // 嘅申請。
+  const { SupplierApprovalService } = await import("../src/modules/supplier/SupplierApprovalService.js");
+  const service = new SupplierApprovalService({
+    database: { async withTransaction() { throw new Error("must not reach the transaction"); } },
+    logger: { warn() {} },
+    time: { nowMs: () => 1 }
+  });
+  assert.throws(() => service.withdrawRequest({ actorId: 1, id: 11, version: 1 }), TypeError);
 });
