@@ -103,3 +103,14 @@ export function normalizeSupplierOptionalText(value, { field, maxLength }) {
     publicMessage: "供應商資料不可過長或包含控制字元"
   });
 }
+
+/**
+ * LIKE 嘅 metacharacter escape。搜尋一個真係含有 `%` 或 `_` 嘅名（例如 "A_B 有限公司"）
+ * 唔應該變成萬用字元。呼叫端要配 `ESCAPE '\\\\'`。
+ *
+ * 由 SupplierAdminService 同 SupplierApprovalService 共用：兩份一模一樣嘅 escape
+ * 只會各自漂移。
+ */
+export function escapeLikeTerm(value) {
+  return String(value).replace(/[\\%_]/gu, "\\$&");
+}

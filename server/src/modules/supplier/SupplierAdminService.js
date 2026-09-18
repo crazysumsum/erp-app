@@ -5,6 +5,7 @@ import { SupplierDuplicateCandidates, replaceSupplierNameGrams } from "./supplie
 import { SupplierReferenceService } from "./SupplierReferenceService.js";
 import { invalidSupplierInput, supplierConflict, supplierNotFound } from "./supplierErrors.js";
 import {
+  escapeLikeTerm,
   normalizeContactEmail,
   normalizeSupplierCode,
   normalizeSupplierName,
@@ -93,10 +94,6 @@ const SUPPLIER_SORT_COLUMNS = Object.freeze({
 
 function supplierSortColumn(sortBy) {
   return SUPPLIER_SORT_COLUMNS[sortBy] ?? SUPPLIER_SORT_COLUMNS.updatedAt;
-}
-
-function escapeLikeTerm(value) {
-  return value.replace(/[\\%_]/gu, "\\$&");
 }
 
 function requireReason(value, message = "這項修改必須填寫原因") {

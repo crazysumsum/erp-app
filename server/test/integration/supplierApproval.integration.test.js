@@ -411,3 +411,159 @@ integrationTest("a Supplier created with activate can actually be approved", asy
   const [[approved]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
   assert.equal(approved.status, "active");
 });
+
+// ---- T29 read paths against real MySQL -------------------------------------
+
+/**
+ * Queue、detail 同 approver lookup 全部係 join：兩個 users self-join 加一個
+ * suppliers join，approver lookup 仲要行 user_roles → role_permissions →
+ * permissions。假連線用 sql.includes(...) 派送，所以一個打錯咗嘅欄位名或者一個
+ * 唔存在嘅 join 照樣「成功」。呢度會真係出 ER_BAD_FIELD_ERROR。
+ *
+ * erp_dev 係共用嘅，`node --test` 亦會並行行唔同檔案，所以每個斷言都收窄到自己
+ * 種落去嘅 id：`scope=all` 唔可以斷言總數，但 `requesterId` 收窄之後可以。
+ */
+async function seedQueue(connection, suffix, { requesterId, approverId }) {
+  const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+  const code = currency.code ?? currency.CODE;
+  const now = Date.now();
+  const created = [];
+  for (const [index, approver] of [approverId, null, approverId].entries()) {
+    const [supplier] = await connection.execute(
+      `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+         default_currency_code, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'pending_approval', ?, ?)`,
+      [`QUE-${suffix}-${index}`, `que-${suffix}-${index}`, `Queue ${suffix} ${index}`, `queue ${suffix} ${index}`, code, now, now]
+    );
+    const supplierId = Number(supplier.insertId);
+    const [[row]] = await connection.query("SELECT * FROM suppliers WHERE id = ?", [supplierId]);
+    const [request] = await connection.execute(
+      `INSERT INTO supplier_activation_requests (supplier_id, requested_by, assigned_approver_id,
+         supplier_version, summary, status, request_note, requested_at)
+       VALUES (?, ?, ?, ?, CAST(? AS JSON), 'pending', ?, ?)`,
+      [supplierId, requesterId, approver, row.version, JSON.stringify(buildApprovalSummary(row)), `note ${index}`, now + index]
+    );
+    created.push({ supplierId, requestId: Number(request.insertId), assignedApproverId: approver, supplierVersion: Number(row.version) });
+  }
+  return created;
+}
+
+integrationTest("the queue scopes resolve against real MySQL joins", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let who = null;
+  let created = [];
+  t.after(async () => {
+    for (const row of created) await cleanup(connection, row.supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  created = await seedQueue(connection, suffix, who);
+  const mine = created.filter((row) => row.assignedApproverId === who.approverId).map((row) => row.requestId).sort();
+  const service = serviceOn(connection, { actorId: who.approverId });
+
+  // approver 係啱啱種出嚟嘅，所以冇第二個測試可以指派嘢俾佢：mine 可以斷言精確集合。
+  const queue = await service.listRequests({ actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"] });
+  assert.deepEqual(queue.items.map((item) => item.id).sort(), mine);
+  assert.equal(queue.total, mine.length);
+  assert.deepEqual(queue.items[0].requester, { id: who.requesterId, username: `supplier-approval-it-requester-${suffix}`, displayName: "Approval IT requester" },
+    "the requester name must come from the users join, not from the request row");
+
+  const unassigned = await service.listRequests({ actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"], scope: "unassigned" });
+  const ours = new Set(created.map((row) => row.requestId));
+  const unassignedOurs = unassigned.items.filter((item) => ours.has(item.id));
+  assert.deepEqual(unassignedOurs.map((item) => item.id), created.filter((row) => row.assignedApproverId === null).map((row) => row.requestId));
+  assert.equal(unassignedOurs[0].assignedApprover, null, "an unassigned request must read as nobody");
+});
+
+integrationTest("the queue counts and pages the same filtered set", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let who = null;
+  let created = [];
+  t.after(async () => {
+    for (const row of created) await cleanup(connection, row.supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  created = await seedQueue(connection, suffix, who);
+  const service = serviceOn(connection, { actorId: who.approverId });
+  const filter = { actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"], scope: "all", requesterId: who.requesterId };
+
+  const first = await service.listRequests({ ...filter, page: 1, pageSize: 2 });
+  const second = await service.listRequests({ ...filter, page: 2, pageSize: 2 });
+  assert.equal(first.total, 3, "COUNT must see the whole filtered set, not the page");
+  assert.equal(second.total, 3);
+  assert.equal(first.items.length, 2);
+  assert.equal(second.items.length, 1);
+  const seen = [...first.items, ...second.items].map((item) => item.id).sort();
+  assert.deepEqual(seen, created.map((row) => row.requestId).sort(), "the two pages must partition the set");
+});
+
+integrationTest("the detail reads the snapshot, the current Supplier and the real difference", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let who = null;
+  let seeded = null;
+  t.after(async () => {
+    if (seeded) await cleanup(connection, seeded.supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  seeded = await seed(connection, suffix, who);
+  const service = serviceOn(connection, { actorId: who.approverId });
+  const reader = { actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"] };
+
+  const fresh = await service.getRequest({ ...reader, id: seeded.requestId });
+  assert.equal(fresh.stale, false);
+  assert.deepEqual(fresh.changedFields, []);
+  assert.equal(fresh.assignedApprover.id, who.approverId);
+
+  // 一次真正嘅 approval-significant 改動：名同 version 一齊郁，snapshot 留喺原地。
+  await connection.execute(
+    "UPDATE suppliers SET supplier_name = ?, supplier_name_key = ?, version = version + 1 WHERE id = ?",
+    [`Renamed ${suffix}`, `renamed ${suffix}`, seeded.supplierId]
+  );
+  const stale = await service.getRequest({ ...reader, id: seeded.requestId });
+  assert.equal(stale.stale, true, "AC-012: a Supplier edited after submission makes the request stale");
+  assert.deepEqual(stale.changedFields, ["supplierName"]);
+  assert.equal(stale.current.supplierName, `Renamed ${suffix}`);
+  assert.equal(stale.submitted.supplierName, `Approval ${suffix}`);
+});
+
+integrationTest("the eligible approver lookup is decided by the real role and permission rows", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let who = null;
+  let roleId = null;
+  t.after(async () => {
+    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  const [[permission]] = await connection.query("SELECT id FROM permissions WHERE name = 'supplier.approval'");
+  assert.ok(permission, "migration 0034 must have seeded supplier.approval");
+  const [role] = await connection.execute(
+    "INSERT INTO roles (name, description, created_at) VALUES (?, '', ?)",
+    [`supplier-approval-it-${suffix}`, Date.now()]
+  );
+  roleId = Number(role.insertId);
+  // user_roles 同 role_permissions 都係 CASCADE，所以刪 role 就會連帶清走。
+  await connection.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [who.approverId, roleId]);
+
+  const service = serviceOn(connection, { actorId: who.requesterId });
+  const reader = { actorId: who.requesterId, claimedRoles: [], claimedPermissions: ["supplier.mgmt"] };
+
+  const { items } = await service.listEligibleApprovers({ ...reader, q: `supplier-approval-it-` });
+  const ours = items.filter((item) => item.id === who.approverId || item.id === who.requesterId);
+  assert.deepEqual(ours, [{ id: who.approverId, username: `supplier-approval-it-approver-${suffix}`, displayName: "Approval IT approver" }],
+    "only the user who really holds supplier.approval may be listed");
+
+  const excluded = await service.listEligibleApprovers({ ...reader, q: "supplier-approval-it-", excludeUserId: who.approverId });
+  assert.ok(!excluded.items.some((item) => item.id === who.approverId), "excludeUserId must drop that user");
+});

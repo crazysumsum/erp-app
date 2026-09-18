@@ -7,7 +7,7 @@ function harness({
   requestStatus = "pending", requestVersion = 1, requestedBy = 1, assignedApproverId = 2,
   supplierStatus = "pending_approval", supplierVersion = 5, requestSupplierVersion = 5,
   actorId = 2, actorPermissions = ["supplier.approval"], approverActive = true,
-  approverPermissions = ["supplier.approval"], updateAffectedRows = 1
+  approverPermissions = ["supplier.approval"], updateAffectedRows = 1, requestMissing = false
 } = {}) {
   const events = [];
   const request = {
@@ -23,7 +23,7 @@ function harness({
   const connection = {
     async query(sql, params) {
       events.push(["query", sql, params]);
-      if (sql.includes("FROM supplier_activation_requests")) return [[request]];
+      if (sql.includes("FROM supplier_activation_requests")) return [requestMissing ? [] : [request]];
       if (sql.includes("FROM suppliers")) return [[supplier]];
       if (sql.includes("FROM users")) return [approverActive ? [{ id: params[0], username: "approver" }] : []];
       return [[]];
@@ -184,11 +184,11 @@ test("an approver who has lost the permission since submission cannot decide", a
 test("only the requester may withdraw", async () => {
   const { service } = harness({ requestedBy: 1, actorId: 2 });
   await assert.rejects(
-    () => service.withdrawRequest({ ...context, reason: "暫時不需要這個供應商" }),
+    () => service.withdrawRequest({ ...context, supplierId: 7, reason: "暫時不需要這個供應商" }),
     (error) => error.publicCode === "APPROVAL_NOT_REQUESTER"
   );
   const own = harness({ requestedBy: 2, actorId: 2 });
-  const result = await own.service.withdrawRequest({ ...context, reason: "暫時不需要這個供應商" });
+  const result = await own.service.withdrawRequest({ ...context, supplierId: 7, reason: "暫時不需要這個供應商" });
   assert.equal(result.supplierStatus, "draft");
 });
 
@@ -303,7 +303,8 @@ test("no decision may be taken on a Supplier that has left pending_approval", as
   for (const command of ["approveRequest", "rejectRequest", "withdrawRequest"]) {
     const { service } = harness({ supplierStatus: "active", requestedBy: 2, actorId: 2, assignedApproverId: 2 });
     await assert.rejects(
-      () => service[command]({ ...context, reason: "供應商已經唔喺審批中" }),
+      // withdraw 而家一定要帶 route scope（REV-026 H-1），approve／reject 唔帶。
+      () => service[command]({ ...context, reason: "供應商已經唔喺審批中", ...(command === "withdrawRequest" ? { supplierId: 7 } : {}) }),
       (error) => error.publicCode === "STATUS_TRANSITION_INVALID" || error.publicCode === "APPROVER_MUST_DIFFER",
       `${command} decided on a Supplier that is not pending`
     );
@@ -456,4 +457,366 @@ test("an invalidation with no reason still records why the request died", async 
   assert.equal(write[2][1], "關鍵資料變更");
   const [, audit] = events.find(([kind]) => kind === "audit");
   assert.equal(audit.reason, "關鍵資料變更");
+});
+
+// ---- T29 read paths: queue, detail and the eligible approver lookup ---------
+
+/**
+ * 讀路徑唔經 withTransaction，所以佢哋淨係需要一個識記低 SQL 嘅 `database.query`。
+ * 呢啲斷言睇 SQL 本身：真 MySQL 行為喺 integration/supplierApproval 度證。
+ */
+function readHarness({ rows = [], total = 0, identifiers = [], actorId = 2, authorizeError = null } = {}) {
+  const queries = [];
+  const authorizeCalls = [];
+  const database = {
+    async query(sql, params) {
+      queries.push({ sql: String(sql), params });
+      if (String(sql).includes("COUNT(*)")) return [[{ total }]];
+      if (String(sql).includes("FROM supplier_identifiers")) return [identifiers];
+      return [rows];
+    }
+  };
+  const service = new SupplierApprovalService({
+    database,
+    logger: { warn() {} },
+    time: { nowMs: () => 100 },
+    authorize: async (connection, input) => {
+      authorizeCalls.push(input);
+      if (authorizeError) throw authorizeError;
+      return { id: actorId, username: "approver", permissions: ["supplier.approval"] };
+    },
+    loadPermissions: async () => ["supplier.approval"]
+  });
+  const listSql = () => queries.find((entry) => entry.sql.includes("FROM supplier_activation_requests r") && !entry.sql.includes("COUNT(*)"));
+  return { service, queries, authorizeCalls, listSql };
+}
+
+const reader = { actorId: 2, claimedRoles: [], claimedPermissions: ["supplier.approval"] };
+
+function queueRow(overrides = {}) {
+  return {
+    id: 11, supplier_id: 7, requested_by: 1, assigned_approver_id: 2, status: "pending",
+    request_note: "請覆核", requested_at: 10, decided_at: null, version: 1,
+    supplier_code: "SUP-7", supplier_name: "Demo", supplier_status: "pending_approval",
+    requester_username: "maker", requester_display_name: "Maker",
+    approver_username: "checker", approver_display_name: "Checker",
+    ...overrides
+  };
+}
+
+test("the queue defaults to the actor's own pending requests", async () => {
+  const { service, listSql } = readHarness({ rows: [queueRow()], total: 1 });
+  await service.listRequests({ ...reader });
+  const { sql, params } = listSql();
+  assert.match(sql, /r\.assigned_approver_id = \?/u);
+  assert.deepEqual(params.slice(0, 2), ["pending", 2], "mine must bind the actor, not a client-supplied id");
+});
+
+test("scope=all drops the approver filter and scope=unassigned asks for a NULL approver", async () => {
+  const all = readHarness();
+  await all.service.listRequests({ ...reader, scope: "all" });
+  assert.ok(!all.listSql().sql.includes("assigned_approver_id ="), "scope=all must not filter by approver");
+  assert.ok(!all.listSql().sql.includes("assigned_approver_id IS NULL"));
+
+  const unassigned = readHarness();
+  await unassigned.service.listRequests({ ...reader, scope: "unassigned" });
+  assert.match(unassigned.listSql().sql, /r\.assigned_approver_id IS NULL/u);
+  assert.deepEqual(unassigned.listSql().params, ["pending", 20, 0], "unassigned must not bind an approver id");
+});
+
+test("an unknown scope or status is refused, not silently treated as the default", async () => {
+  const { service } = readHarness();
+  await assert.rejects(() => service.listRequests({ ...reader, scope: "everyone" }),
+    (error) => error.publicCode === "APPROVAL_SCOPE_INVALID");
+  await assert.rejects(() => service.listRequests({ ...reader, status: "maybe" }),
+    (error) => error.publicCode === "APPROVAL_STATUS_INVALID");
+});
+
+test("the queue pages and counts on the server, and both halves see the same filter", async () => {
+  const { service, queries } = readHarness({ rows: [], total: 137 });
+  const page = await service.listRequests({ ...reader, scope: "all", status: "approved", requesterId: 9, requestedFrom: 5, requestedTo: 50, page: 3, pageSize: 25 });
+  assert.deepEqual({ total: page.total, page: page.page, pageSize: page.pageSize }, { total: 137, page: 3, pageSize: 25 });
+  const count = queries.find((entry) => entry.sql.includes("COUNT(*)"));
+  const list = queries.find((entry) => entry.sql.includes("LIMIT ? OFFSET ?"));
+  assert.deepEqual(count.params, ["approved", 9, 5, 50], "the count must use the same filter as the page");
+  assert.deepEqual(list.params, ["approved", 9, 5, 50, 25, 50], "offset must be (page - 1) * pageSize");
+});
+
+test("the queue exposes the minimal user projection and never reads the bank table", async () => {
+  const { service, listSql } = readHarness({ rows: [queueRow()], total: 1 });
+  const { items } = await service.listRequests({ ...reader });
+  assert.deepEqual(items[0].requester, { id: 1, username: "maker", displayName: "Maker" });
+  assert.deepEqual(Object.keys(items[0]).sort(), [
+    "assignedApprover", "decidedAt", "id", "requestNote", "requestedAt", "requester",
+    "status", "supplierCode", "supplierId", "supplierName", "supplierStatus", "version"
+  ]);
+  assert.ok(!/supplier_bank_accounts/u.test(listSql().sql), "the approval queue must not touch bank rows");
+  assert.ok(!/u\.email|password_hash/u.test(listSql().sql), "the queue must not select account security fields");
+});
+
+test("a request whose requester was deleted reads as nobody, not as user 0", async () => {
+  // requested_by 同 assigned_approver_id 都係 ON DELETE SET NULL。
+  const { service } = readHarness({ rows: [queueRow({ requested_by: null, assigned_approver_id: null })], total: 1 });
+  const { items } = await service.listRequests({ ...reader, scope: "unassigned" });
+  assert.equal(items[0].requester, null);
+  assert.equal(items[0].assignedApprover, null);
+});
+
+test("the detail says stale exactly when the Supplier moved after submission", async () => {
+  for (const [supplierVersion, currentVersion, expected] of [[5, 5, false], [5, 6, true]]) {
+    const { service } = readHarness({
+      rows: [queueRow({
+        supplier_version: supplierVersion, current_supplier_version: currentVersion,
+        summary: JSON.stringify({ supplierCode: "SUP-7", supplierName: "Demo", displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, identifierCount: 0, identifiersTruncated: false, identifiers: [] }),
+        display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+        decided_by: null, decision_reason: ""
+      })]
+    });
+    const detail = await service.getRequest({ ...reader, id: 11 });
+    assert.equal(detail.stale, expected, `versions ${supplierVersion}/${currentVersion}`);
+  }
+});
+
+test("the detail names exactly the snapshot fields that differ from the Supplier now", async () => {
+  const submitted = { supplierCode: "SUP-7", supplierName: "Old Name", displayName: "", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, identifierCount: 0, identifiersTruncated: false, identifiers: [] };
+  const { service } = readHarness({
+    rows: [queueRow({
+      supplier_version: 5, current_supplier_version: 6, summary: JSON.stringify(submitted),
+      supplier_name: "New Name", display_name: "", default_currency_code: "USD", default_payment_term_id: null,
+      decided_by: null, decision_reason: ""
+    })]
+  });
+  const detail = await service.getRequest({ ...reader, id: 11 });
+  assert.deepEqual(detail.changedFields, ["supplierName", "defaultCurrencyCode"]);
+  assert.equal(detail.submitted.supplierName, "Old Name");
+  assert.equal(detail.current.supplierName, "New Name");
+});
+
+test("identifier order is not a change: the snapshot query has no ORDER BY to rely on", async () => {
+  // 提交嗰陣嘅 identifier 查詢冇 ORDER BY，所以逐 index 比會報一個唔存在嘅改動。
+  const identifiers = [
+    { identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" },
+    { identifier_type: "business_registration", issuer_country_code: "HK", identifier_value: "87654321" }
+  ];
+  const submitted = buildApprovalSummary(
+    { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD", default_payment_term_id: null },
+    [identifiers[1], identifiers[0]]
+  );
+  const { service } = readHarness({
+    rows: [queueRow({
+      supplier_version: 5, current_supplier_version: 5, summary: JSON.stringify(submitted),
+      display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+      decided_by: null, decision_reason: ""
+    })],
+    identifiers
+  });
+  const detail = await service.getRequest({ ...reader, id: 11 });
+  assert.deepEqual(detail.changedFields, []);
+});
+
+test("a dropped identifier is a change even though the count is the only thing that moved", async () => {
+  const submitted = buildApprovalSummary(
+    { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD", default_payment_term_id: null },
+    [{ identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }]
+  );
+  const { service } = readHarness({
+    rows: [queueRow({
+      supplier_version: 5, current_supplier_version: 5, summary: JSON.stringify(submitted),
+      display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+      decided_by: null, decision_reason: ""
+    })],
+    identifiers: []
+  });
+  const detail = await service.getRequest({ ...reader, id: 11 });
+  assert.deepEqual(detail.changedFields, ["identifiers"]);
+});
+
+test("a missing request is a 404, not an empty detail", async () => {
+  const { service } = readHarness({ rows: [] });
+  await assert.rejects(() => service.getRequest({ ...reader, id: 999 }),
+    (error) => error.statusCode === 404 && error.publicCode === "SUPPLIER_NOT_FOUND");
+});
+
+test("the eligible approver lookup joins the real permission tables", async () => {
+  const { service, queries } = readHarness({ rows: [{ id: 3, username: "checker", display_name: "Checker" }] });
+  const { items } = await service.listEligibleApprovers({ ...reader });
+  const { sql } = queries.at(-1);
+  for (const table of ["user_roles", "role_permissions", "permissions"]) {
+    assert.ok(sql.includes(table), `the lookup must join ${table} rather than trust a claim`);
+  }
+  assert.match(sql, /u\.status = 'active'/u);
+  assert.match(sql, /p\.name = 'supplier\.approval'/u);
+  // \b 係必要嘅：/LIMIT 100/ 會照樣 match "LIMIT 1000"，即係一個放寬上限嘅改動
+  // 可以完全唔驚動呢個斷言。
+  assert.match(sql, /LIMIT 100\b/u, "設計 6.4 固定上限 100 筆");
+  assert.deepEqual(items, [{ id: 3, username: "checker", displayName: "Checker" }]);
+});
+
+test("the approver lookup can exclude one user and escapes a LIKE search", async () => {
+  const { service, queries } = readHarness({ rows: [] });
+  await service.listEligibleApprovers({ ...reader, q: "a_b%", excludeUserId: 9 });
+  const { sql, params } = queries.at(-1);
+  assert.match(sql, /u\.id <> \?/u);
+  assert.deepEqual(params, [9, "%a\\_b\\%%", "%a\\_b\\%%"],
+    "a name that really contains _ or % must not become a wildcard search");
+});
+
+test("withdraw refuses a request that belongs to another Supplier", async () => {
+  // 撤回由 /suppliers/:id/approval/withdraw 入嚟。Route 嘅 Supplier 同 request 嘅
+  // Supplier 唔夾就當搵唔到，唔可以借 Supplier B 嘅 route 去撤 Supplier A 嘅申請。
+  const mismatched = harness({ requestedBy: 2 });
+  await assert.rejects(
+    () => mismatched.service.withdrawRequest({ ...context, supplierId: 8 }),
+    (error) => error.statusCode === 404 && error.publicCode === "SUPPLIER_NOT_FOUND"
+  );
+  assert.ok(!mismatched.events.some(([kind]) => kind === "audit"), "a rejected scope must not write an audit row");
+
+  const matched = harness({ requestedBy: 2 });
+  const outcome = await matched.service.withdrawRequest({ ...context, supplierId: 7 });
+  assert.equal(outcome.status, "withdrawn");
+});
+
+// ---- REV-026 remediation: controls that had no test that could fail --------
+
+test("every read path re-reads the actor from the database before answering", async () => {
+  // REV-026 M-1：hasPermission 係睇 token claim 嘅。設計 1.4 第四道守衛係呢句
+  // assertActorFresh —— 由三條讀路徑各自叫。三句都可以刪走而套測試唔會出聲，
+  // 而真實後果係一個已經俾人收返權限嘅 token 由 403 PERMISSION_STALE 變成 200
+  // 加成個 queue。
+  const detailRow = queueRow({
+    supplier_version: 5, current_supplier_version: 5, summary: "{}",
+    display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+    decided_by: null, decision_reason: ""
+  });
+  const calls = [
+    ["listRequests", (service) => service.listRequests({ ...reader })],
+    ["getRequest", (service) => service.getRequest({ ...reader, id: 11 })],
+    ["listEligibleApprovers", (service) => service.listEligibleApprovers({ ...reader })]
+  ];
+  for (const [name, invoke] of calls) {
+    const harnessed = readHarness({ rows: [detailRow], total: 1 });
+    await invoke(harnessed.service);
+    assert.equal(harnessed.authorizeCalls.length, 1, `${name} must re-read the actor`);
+    assert.deepEqual(harnessed.authorizeCalls[0], {
+      actorId: reader.actorId, claimedRoles: reader.claimedRoles, claimedPermissions: reader.claimedPermissions
+    }, `${name} must pass the claims through for comparison`);
+  }
+});
+
+test("a rejected actor stops the read: no query runs and the error propagates", async () => {
+  const stale = new Error("PERMISSION_STALE");
+  for (const invoke of [
+    (service) => service.listRequests({ ...reader }),
+    (service) => service.getRequest({ ...reader, id: 11 }),
+    (service) => service.listEligibleApprovers({ ...reader })
+  ]) {
+    const harnessed = readHarness({ authorizeError: stale });
+    await assert.rejects(() => invoke(harnessed.service), (error) => error === stale);
+    assert.equal(harnessed.queries.length, 0, "a rejected actor must not reach the database");
+  }
+});
+
+test("scope=mine ignores a client-supplied requesterId when choosing whose queue to read", async () => {
+  // REV-026 M-2：requesterId 係一個真嘅 query parameter。之前嗰個測試根本冇送過
+  // requesterId，所以佢分唔出 actor 同「啱啱好冇送嘅 client 值」。
+  const { service, listSql } = readHarness({ rows: [queueRow()], total: 1 });
+  await service.listRequests({ ...reader, scope: "mine", requesterId: 999 });
+  const { sql, params } = listSql();
+  // approverIndex 係「approver 個 ? 之前有幾多個 ?」，亦即佢喺 params 入面嘅位置。
+  const approverIndex = sql.slice(0, sql.indexOf("r.assigned_approver_id = ?")).split("?").length - 1;
+  assert.equal(params[approverIndex], reader.actorId,
+    "?scope=mine&requesterId=<someone else> must still read the actor's own queue");
+  assert.ok(params.includes(999), "the requesterId filter itself still applies");
+});
+
+test("an added identifier is a change, not just a removed one", async () => {
+  // REV-026 L-1：舊測試只覆蓋咗「少咗一個」，嗰邊 b[0] 係 undefined，就算冇長度
+  // 檢查都會唔等。長度檢查真正存在嘅理由係「多咗一個」呢個方向。
+  // 新嗰個 identifier 要排喺原有嗰個之後，先至真係考到長度檢查：如果佢排前面，
+  // 逐 index 比第一項就已經唔等，冇長度檢查一樣會報到改動。business_registration
+  // 排喺 tax 之前，所以原有嗰個係 business_registration，新加嘅係 tax。
+  const kept = { identifier_type: "business_registration", issuer_country_code: "HK", identifier_value: "87654321" };
+  const submitted = buildApprovalSummary(
+    { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD", default_payment_term_id: null },
+    [kept]
+  );
+  const identifiers = [kept, { identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }];
+  const { service } = readHarness({
+    rows: [queueRow({
+      supplier_version: 5, current_supplier_version: 5, summary: JSON.stringify(submitted),
+      display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+      decided_by: null, decision_reason: ""
+    })],
+    identifiers
+  });
+  const detail = await service.getRequest({ ...reader, id: 11 });
+  assert.deepEqual(detail.changedFields, ["identifiers"]);
+});
+
+test("two identifiers that differ only by country or by value are not the same identifier", async () => {
+  // REV-026 L-2：identifierKey 可以掉走 issuerCountryCode 或者遮罩值而唔會有人出聲。
+  const base = { supplier_code: "SUP-7", supplier_name: "Demo", display_name: "", default_currency_code: "HKD", default_payment_term_id: null };
+  const cases = [
+    ["issuer country", { identifier_type: "tax", issuer_country_code: "CN", identifier_value: "12345678" }],
+    ["identifier value", { identifier_type: "tax", issuer_country_code: "HK", identifier_value: "87654321" }]
+  ];
+  for (const [what, changed] of cases) {
+    const submitted = buildApprovalSummary(base, [{ identifier_type: "tax", issuer_country_code: "HK", identifier_value: "12345678" }]);
+    const { service } = readHarness({
+      rows: [queueRow({
+        supplier_version: 5, current_supplier_version: 5, summary: JSON.stringify(submitted),
+        display_name: "", default_currency_code: "HKD", default_payment_term_id: null,
+        decided_by: null, decision_reason: ""
+      })],
+      identifiers: [changed]
+    });
+    const detail = await service.getRequest({ ...reader, id: 11 });
+    assert.deepEqual(detail.changedFields, ["identifiers"], `a changed ${what} must count as a change`);
+  }
+});
+
+test("the date filters bound the range they name, and the newest request comes first", async () => {
+  // REV-026 L-2：requestedTo 由 <= 變 >= 唔會有人出聲，而兩頁分割嗰個測試係靠
+  // 排序穩定先成立，但冇邊度講明排邊個方向。
+  const { service, listSql } = readHarness();
+  await service.listRequests({ ...reader, requestedFrom: 5, requestedTo: 50 });
+  const { sql } = listSql();
+  assert.match(sql, /r\.requested_at >= \?/u, "requestedFrom is a lower bound");
+  assert.match(sql, /r\.requested_at <= \?/u, "requestedTo is an upper bound");
+  assert.match(sql, /ORDER BY r\.requested_at DESC, r\.id DESC/u, "the queue shows the newest first, stably");
+});
+
+test("a user who holds the permission through two roles is listed once", async () => {
+  // REV-026 L-2：三張 join 表會將同一個人乘出幾行；DISTINCT 可以刪走而套測試全綠。
+  const { service, queries } = readHarness({ rows: [] });
+  await service.listEligibleApprovers({ ...reader });
+  assert.match(queries.at(-1).sql, /SELECT DISTINCT/u,
+    "user_roles x role_permissions can yield the same user more than once");
+});
+
+test("a missing approval request says so on every command, not that the Supplier is missing", async () => {
+  // REV-027 L-7：五條路入面有四條改咗，reassign 漏低咗。Public code 五條都一樣，
+  // 所以分別只喺人睇到嗰句 —— 呢個斷言就係守住嗰句。
+  const commands = [
+    ["approveRequest", { ...context, supplierId: undefined }],
+    ["rejectRequest", { ...context, reason: "拒絕原因夠長" }],
+    ["withdrawRequest", { ...context, supplierId: 7 }],
+    ["reassignRequest", { ...context, approverUserId: 3, reason: "重新指派原因" }]
+  ];
+  for (const [command, input] of commands) {
+    const { service } = harness({ requestMissing: true, requestedBy: 2 });
+    await assert.rejects(
+      () => service[command](input),
+      (error) => error.statusCode === 404
+        && error.publicCode === "SUPPLIER_NOT_FOUND"
+        && error.publicMessage === "找不到這個審批申請",
+      `${command} reported a missing approval request as a missing Supplier`
+    );
+  }
+  // 讀路徑係第五條。
+  const { service } = readHarness({ rows: [] });
+  await assert.rejects(
+    () => service.getRequest({ ...reader, id: 999 }),
+    (error) => error.publicMessage === "找不到這個審批申請"
+  );
 });
