@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 116,
+  "revision": 118,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "270a84fd2020a5c635f89e08d612692c666fc795",
-    "source_fingerprint": "db75b8ec973da289c250e8747926d19279657f5ee9628ae204a745e149101890",
+    "code_commit": "3f012f968105bf9ff7ccf6f122bd466960471e01",
+    "source_fingerprint": "a2e014cb26e459e674fdd9c7fd505804209a1467823789ed230d0799b2ae2cf7",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-029",
     "default_commit": "95886556e45216eb5fedb247a921e25d3f1c2b06",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -986,6 +986,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-027",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-029 REV-026 remediation)",
+      "reviewer": "agent-skills:code-reviewer, the same agent as REV-026 resumed with its context, reviewing 270a84f at head f96a67b",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/23_rev_027_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1626,6 +1638,28 @@
       "source_ref": "Observed once in CI and not reproduced locally in 7 attempts including one under full parallel load. Two concurrent deactivates of the last two Active SKUs under one Item returned 200 and 500 rather than 200 and 409, so a user loses a real conflict answer and gets an opaque server error. Consistent-but-UNPROVEN cause: the only deadlock handling in the codebase is UserAdminService's retry on ER_LOCK_DEADLOCK / ER_LOCK_WAIT_TIMEOUT; the SKU status path has none, so an InnoDB deadlock there surfaces unmapped as INTERNAL_SERVER_ERROR. Not confirmed because the CI log carries no server-side error line for request 9ced2f59-c808-411a-99f3-16ec153f13c8. This is outside the supplier module boundary and outside TASK-029's scope, so it is recorded and routed to Item Management rather than fixed here -- the same routing HD-013 gave DEF-012. It does not block this PR: the required checks are green on the current head and the defect is not reachable from any code this branch changes.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T09:42:39+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-027 APPROVED: all nine REV-026 findings closed by probe, and 38 of 38 mutations now die",
+      "code_commit": "f96a67b54cbbf57aa7a382fa5563f7b4456d0df4",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "db75b8ec973da289c250e8747926d19279657f5ee9628ae204a745e149101890",
+      "status": "PASS",
+      "source_ref": "REV-027 returned APPROVED with 0 Critical, 0 High, 0 Medium and 2 non-blocking Low. It re-ran all 38 of its original mutations rather than only the 11 survivors: 38 killed against 27 before, with nothing that used to die now surviving, plus 13 new mutations aimed at the remediation of which 11 died. H-1 is defence in depth rather than only a test: cutting the handler wiring line and driving it over real HTTP gives 500 with request A still pending and Supplier A still pending_approval, where the same cut on e5bffc5 gave 200 withdrawn and knocked A to draft; the TypeError breaks no caller and a legitimate withdraw still returns 200. It confirmed the L-1 ordering caveat by computing both orderings directly with the length guard removed -- addition sorting after gives [] so the mutant hides and the test kills it, addition sorting before gives ['identifiers'] either way so the mutant lives -- and found no equivalent mistake in the other seven new tests. Counts re-run independently: 291/291 on the evidence contract, matching the recorded evidence, full server suite 1467 pass 0 fail, lint and client build clean. It also corrected one line of DEF-017's reasoning: this branch's modules ARE loaded in that test's process via createApplication, so 'not reachable' is too strong -- the routing stands because the failure mode is not one supplier code can produce, which is the narrower and correct claim.",
+      "actor": "agent-skills:code-reviewer (same agent as REV-026, resumed)",
+      "observed_at": "2026-09-18T11:33:39+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-027's two Lows closed on 3f012f9; both fixes proved to discriminate",
+      "code_commit": "3f012f968105bf9ff7ccf6f122bd466960471e01",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "a2e014cb26e459e674fdd9c7fd505804209a1467823789ed230d0799b2ae2cf7",
+      "status": "PASS",
+      "source_ref": "L-7: reassignRequest was the one path of five still answering the Supplier-flavoured message for a missing approval request. All five now share one assertion, and reverting reassign alone turns it red. L-8: the assertion !('requestId' in x) || x.requestId === 'req-1' is true either way; it now asserts that a body requestId cannot displace the framework correlation id, and removing the handler's requestId line turns it red. Both mutations were run to confirm that rather than assumed. Developer evidence on this exact commit: 292/292 server (evidence/20260918T033239-1e970877794b), lint and client build clean. Nothing from REV-026 or REV-027 is deferred and no RISK approval is outstanding for this task.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T11:33:39+08:00"
     }
   ],
   "pending_decisions": [
@@ -1906,6 +1940,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-17: 只做 withdraw. TASK-029 adds POST /api/v1/suppliers/:id/approval/withdraw only. POST /api/v1/suppliers/:id/activate is the submit route; design 6.4's submit row stands as a standing exception recorded here rather than by editing 03_design_spec.md, which would move the DESIGN baseline. Rationale accepted: no duplicate API surface, and AC-008/FR-APPROVAL-002 are already satisfied by activate."
+    },
+    {
+      "id": "HD-021",
+      "impact": "MINOR",
+      "question": "REV-026 returned CHANGES_REQUESTED with 0 Critical and 0 High, and the remediation is test-only plus one defensive TypeError. The review policy does not compel another round at that severity. Should the same reviewer re-verify the remediation, as HD-013 chose for REV-007, or does the green CI plus the recorded remediation suffice for the merge decision?",
+      "affected_ids": [
+        "TASK-029",
+        "REV-026",
+        "REV-027",
+        "PR #112"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18: reviewer 覆驗 remediation. The same agent was resumed with its REV-026 context intact rather than a fresh reviewer being spawned, which is what HD-013 chose."
     }
   ],
   "external_actions": [
@@ -2285,7 +2332,10 @@
     "evidence/20260917T090048-85d8a83197fa/run.json",
     "evidence/20260918T012841-22ae38e512e3/run.json",
     "evidence/20260918T012916-6517ae246975/run.json",
-    "evidence/20260918T012919-ca8473d699f8/run.json"
+    "evidence/20260918T012919-ca8473d699f8/run.json",
+    "evidence/20260918T033239-1e970877794b/run.json",
+    "evidence/20260918T033242-b045bbca1386/run.json",
+    "evidence/20260918T033244-d2e5df347b08/run.json"
   ],
   "defects": [
     {
@@ -2525,5 +2575,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-029 is implemented, REV-026 is remediated in full, and all four required checks are green on the current PR #112 head 5fc3421. Developer evidence on 270a84f: 291/291 server, lint and client build clean. The only thing left before merge is the Product Owner's decision, which has not been given; a re-review of the remediation is optional and also unanswered. Do not merge without it. New here: DEF-017, an Item Management SKU deactivate race answering 500 instead of 409, seen once in CI, not reproduced locally, routed out of this module and not blocking. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; TASK-027 is still PENDING and needs the Business Master management entry point; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-029 is complete on the branch and every gate that can be satisfied before merge is satisfied. REV-026 (CHANGES_REQUESTED) and REV-027 (APPROVED, by the same reviewer at the Product Owner's direction under HD-021) are both recorded; all eleven findings across the two rounds are closed on the branch with nothing deferred. Developer evidence on 3f012f9: 292/292 server, lint and client build clean. Required CI was green on f96a67b first attempt; 3f012f9 changes source, so it needs its own run and that run is the merge gate. The Product Owner's merge decision has not been given -- do not merge without it. After merge: mark TASK-029 DONE, retire the worktree and both branches, and refresh the default baseline before TASK-030. DEF-017 is open and routed to Item Management, not blocking. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; TASK-027 is still PENDING and needs the Business Master management entry point; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
