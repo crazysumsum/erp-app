@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 119,
+  "revision": 120,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1964,6 +1964,22 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-18: reviewer 覆驗 remediation. The same agent was resumed with its REV-026 context intact rather than a fresh reviewer being spawned, which is what HD-013 chose."
+    },
+    {
+      "id": "HD-022",
+      "impact": "MAJOR",
+      "question": "TASK-027's acceptance criterion requires the Supplier Settings page to show Business Master provider readiness, but there is no way for it to read one. The management entry point itself exists and is complete -- /system/business-master/currencies, /payment-terms and /audit are routed, menued under the system group and gated on business_master.view / .mgmt, and that module's harness state is ACCEPTED. What is missing is the read path for a supplier.settings holder. Supplier design 6.7 says the UI should call GET /api/v1/business-master/currencies with 'supplier.view 或相應 consumer 權限', but the implemented routes use VIEW_POLICY = [business_master.view] only. Widening that constant was the first instruction. Three costs were surfaced before acting: it contradicts Business Master DES-001, which states that consumer-facing selector endpoints are authorised by each consumer's own handler with its own permission and whose rationale is explicitly to avoid a generic HTTP lookup handler hardcoding every future consumer role; it contradicts DES-012, which records that the old Supplier planned generic HTTP lookup was already changed to an own-permission handler plus internal provider; and VIEW_POLICY is shared by six routes including GET /api/v1/business-master/audit, so widening the constant would hand the Business Master audit log to every supplier.view holder. server/src/handlers/business-master/** is also outside the Supplier module boundary entirely. Which approach?",
+      "affected_ids": [
+        "TASK-027",
+        "TASK-030",
+        "docs/supplier_management/03_design_spec.md#6.7",
+        "docs/business_master/03_design_spec.md#DES-001",
+        "docs/business_master/03_design_spec.md#DES-012",
+        "server/src/handlers/business-master/businessMasterSchemas.js",
+        "server/src/handlers/supplier-lookups/**"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18, after being shown the conflict: 改做 supplier-lookups. TASK-027 adds a Supplier-owned lookup route under server/src/handlers/supplier-lookups/ -- a path the Supplier manifest already lists in allowed_write_paths, so no manifest edit and no stranded approvals -- authorised with Supplier permissions and backed by the existing internal BusinessMasterLookupProvider, including the readiness projection the Settings page needs. Business Master is not modified at all. Consequently Supplier design 6.7's row describing the UI calling the Business Master endpoints directly is stale: it documents the approach DES-012 records as abandoned. It is recorded here as a standing exception rather than corrected in place, on the same reasoning as HD-018 and HD-019 -- editing 03_design_spec.md moves the DESIGN baseline e4083319 and strands every approval and review bound to it. Noted for TASK-027 but not decided here: SupplierBasicForm.vue and SupplierPaymentDefaults.vue already call the Business Master endpoints directly from the client, which deviates from DES-001 the same way; whether they move to the new route is a TASK-027 scoping question."
     }
   ],
   "external_actions": [
@@ -2602,5 +2618,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-029 is DONE and merged at f7441c08; the branch and worktree are retired and this ledger entry is the merge record, so no reconciliation is owed to the next session. PHASE-002 still has TASK-027 and TASK-030 PENDING. Neither is startable as things stand: TASK-027 (Settings UI) needs the Business Master management entry point to be READY, and TASK-030 (Approval UI) depends on T11, T13, T27 and T29 -- T29 is now done, so TASK-027 is the real blocker for both. The next safe step is to establish whether the Business Master management entry point exists, and if it does not, to put that to the Product Owner before starting either task. Any new branch must be cut from a freshly fetched main, which has moved to f7441c08. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-017 is OPEN and routed to Item Management; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-029 is DONE and merged at f7441c08 with its worktree and branches retired. TASK-027's dependency is now resolved: the Business Master management entry point exists and that module is ACCEPTED, and HD-022 settles how the Settings page reads provider readiness -- a Supplier-owned route under server/src/handlers/supplier-lookups/, with Business Master untouched. TASK-027's other dependencies, T04 and T26, are both DONE, so it is startable. Its scope now includes a server route that its 'Files likely touched' list does not mention; that list is advisory in the plan and the path is already inside the manifest's allowed_write_paths, so no plan or manifest edit is needed and no baseline moves. TASK-027 is client-facing, so the project UI testing standard applies and Playwright validation is required before it can be called done. TASK-030 unblocks after it. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-017 is OPEN and routed to Item Management; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
