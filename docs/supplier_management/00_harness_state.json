@@ -1,29 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 128,
+  "revision": 129,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-027",
+  "current_task": null,
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "9cd51a29b565d58b5f4b3ff02d33d6a98ec513ee",
+    "code_commit": "54180db28dc0adc16d77869907469352ae72e093",
     "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027",
-    "default_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "54180db28dc0adc16d77869907469352ae72e093",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-027 (branch codex/supplier-task-027)",
+      "workspace": "erp-app (main); no supplier worktree is open",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "127.0.0.1:5203 (Playwright dev server; 5202 belongs to business-master)"
+      "web-port": "NOT_ALLOCATED"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -54,7 +54,7 @@
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
-    "TASK-027": "IN_PROGRESS",
+    "TASK-027": "DONE",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
     "TASK-030": "PENDING",
@@ -1816,6 +1816,17 @@
       "source_ref": "M-1 was a real residue of H-1's fix: the conflict branch called loadSettings() directly, so a reload that itself failed escaped toggleApproval, fired no notification at all, and hit the same error boundary H-1 was raised about -- with H-1's banner suppressed because settings was non-null by then. Wrapped in try/catch rather than switching to load(), which would flip loading back to true and make the toggle vanish and return mid-conflict; covered in both layers and the wrapper's removal turns both red. L-1: 1054 ER_BAD_FIELD_ERROR joins 1146 in the schema-not-ready set, which is the 版本不符 half of the page's own label and the case inspect() is structurally blind to, since it SELECTs columns before running the schema inspector. The Nit is taken. Recorded honestly: the mutation aimed at that Nit survived, and correctly so -- reverting an assertion to a weaker form is a test-strength change, not a behaviour one, so it proves nothing; the reviewer had already said the companion assertions carry the case. Also hardened from an incident rather than a finding: testMatch was '*.spec.js', so any stray spec in that directory became this module's formal browser evidence, which is exactly what happened when my own git add -A swept a reviewer probe into 2dfba2c and turned CI lint red. It is now supplier-*.spec.js, and doc-recording commits name their paths. Verification on this commit: 546 client, 255 supplier server, 9/9 Playwright, lint and build clean, four evidence records naming 9cd51a2.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T14:54:51+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-027 merged to main via PR #113; the merge changed no source content",
+      "code_commit": "54180db28dc0adc16d77869907469352ae72e093",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
+      "status": "PASS",
+      "source_ref": "gh pr view 113 reports state MERGED, mergedAt 2026-09-18T07:08:47Z, mergeCommit 54180db2. Pre-merge checks, observed rather than assumed: origin/main had not moved from 6899a02 since the branch was cut, mergeStateStatus CLEAN, and run 35316990841 attempt 1 green on the exact head cf4ade5 for all four required checks. Local main fast-forwarded. The source fingerprint observed on main after the merge is fa56305b, identical to the one measured on the branch at 9cd51a2, so the merge carried no content beyond what REV-029 approved and CI exercised. Merge authorised by the Product Owner on 2026-09-18. Review gate: REV-028 CHANGES_REQUESTED then REV-029 APPROVED, both by the same reviewer under HD-021's precedent, with every finding closed except L-5, a recorded exception under HD-023.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-18T15:09:21+08:00"
     }
   ],
   "pending_decisions": [
@@ -2518,6 +2529,22 @@
       "idempotency_key": "supplier-task-029-worktree-retire",
       "status": "CONFIRMED",
       "source_ref": "Performed by this session after the merge, and checked first rather than after: the worktree was clean and had zero unpushed commits, and git branch --merged main listed the branch. Worktree removed and pruned, local branch deleted with -d (not force), remote branch deleted. git worktree list and git branch -a now show only main plus the unrelated customer-management-phase-001 and item-management-task-037 worktrees, which were left alone."
+    },
+    {
+      "id": "MERGE-009",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-task-027 via PR #113",
+      "idempotency_key": "supplier-task-027-merge-pr-113",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED at 2026-09-18T07:08:47Z, mergeCommit 54180db2. Required CI green on the merged head cf4ade5 (run 35316990841, attempt 1)."
+    },
+    {
+      "id": "WORKTREE-RETIRE-006",
+      "kind": "REMOVE_WORKTREE",
+      "target": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027 and branch codex/supplier-task-027",
+      "idempotency_key": "supplier-task-027-worktree-retire",
+      "status": "CONFIRMED",
+      "source_ref": "Performed by this session after the merge, checked before rather than after: the worktree was clean, had zero unpushed commits, and git branch --merged main listed the branch. The reviewer's probe file was gone by then, so nothing of theirs was destroyed. Worktree removed and pruned, local branch deleted with -d, remote branch deleted. git worktree list and git branch -a now show only main plus the unrelated customer-management-phase-001 and item-management-task-037 worktrees, left alone."
     }
   ],
   "evidence_files": [
@@ -2815,5 +2842,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-027 is complete at 9cd51a2 and REV-029 is APPROVED, so the review gate is satisfied. Every finding across REV-028 and REV-029 is closed except L-5, a recorded exception under HD-023. No decision is open. Next: required CI green on this head -- the last two runs were red on Item Management defects DEF-017-style parallelism recorded as DEF-019, and on a lint error from a reviewer probe I committed by accident, which 86bfc35 untracked. Then the Product Owner's merge decision, which has not been given. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is the last PHASE-002 task. Worth raising with the Item Management owner as a pair rather than singly: DEF-017 and DEF-019 are both shared-database parallelism in that module's integration tests and both surfaced on supplier PRs. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-027 is DONE and merged at 54180db2; the branch and worktree are retired and this entry is the merge record, so nothing is owed to the next session. PHASE-002 has one task left: TASK-030, the Approval UI. Its dependencies T11, T13, T27 and T29 are all DONE, so it is startable from a freshly fetched main, which has moved to 54180db2. It is a frontend task, so the project UI testing standard applies and Playwright validation is part of its Definition of Done; the config and spec naming convention are now in place under client/e2e/supplier-management, and a new spec must be named supplier-*.spec.js to be picked up. Worth raising with the Item Management owner as a pair rather than singly: DEF-017 and DEF-019 are both shared-database parallelism in that module's integration tests and both surfaced on supplier PRs during PHASE-002. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
