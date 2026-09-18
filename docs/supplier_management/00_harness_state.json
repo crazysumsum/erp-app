@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 115,
+  "revision": 116,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1604,6 +1604,28 @@
       "source_ref": "The Product Owner turned crazysumsum/erp-app public on 2026-09-18 (visibility PUBLIC confirmed by gh repo view), which removes the billing constraint on GitHub-hosted runners. Attempt 3 of run 35202896933 then executed for real: Dependency audit 16s, Lint 23s, Build frontend 19s, Test (server + client, MySQL integration) 3m56s, all pass. This observation binds to e5bffc5 and is superseded as a merge gate by the remediation commit 270a84f, which needs its own run.",
       "actor": "Harness agent via gh",
       "observed_at": "2026-09-18T09:30:44+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #112 required checks pass on 5fc3421, but only after rerunning a failure in another module",
+      "code_commit": "5fc34219746fcb0a2e991ef5893cf702c8a21568",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "db75b8ec973da289c250e8747926d19279657f5ee9628ae204a745e149101890",
+      "status": "PASS",
+      "source_ref": "Run 35295649501 on head 5fc3421. First attempt: Lint, Build frontend and Dependency audit passed; Test (server + client, MySQL integration) failed on ONE case, itemConcurrency.integration.test.js:406 'Last-active race', which expected {200:1, 409:1} and got {200:1, 500:1} -- one of two concurrent SKU deactivates answered INTERNAL_SERVER_ERROR. Rerun of the failed job: 3m32s, pass. All four checks now green on the current head. Recorded honestly: a rerun-to-green establishes non-determinism, not innocence. What supports routing it away from TASK-029 is separate: the test is Item Management, and nothing under server/src/modules/item, handlers/skus or handlers/items imports any file this branch changed (grep for supplierNormalization, supplierErrors, SupplierApprovalService and SupplierAdminService returns nothing there), so the changed code is not reachable from the failing path. Locally the case passed 6/6 in isolation and once more under the exact CI command with the whole suite in parallel against real MySQL; the only local failure is itemRecoveryAcceptance needing DB_ADMIN_USER, pre-existing and environment-specific, which REV-026 also noted. See DEF-017.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-18T09:42:39+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-017 raised: an Item SKU deactivate race answers 500 instead of 409, intermittently",
+      "code_commit": "5fc34219746fcb0a2e991ef5893cf702c8a21568",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "db75b8ec973da289c250e8747926d19279657f5ee9628ae204a745e149101890",
+      "status": "FAIL",
+      "source_ref": "Observed once in CI and not reproduced locally in 7 attempts including one under full parallel load. Two concurrent deactivates of the last two Active SKUs under one Item returned 200 and 500 rather than 200 and 409, so a user loses a real conflict answer and gets an opaque server error. Consistent-but-UNPROVEN cause: the only deadlock handling in the codebase is UserAdminService's retry on ER_LOCK_DEADLOCK / ER_LOCK_WAIT_TIMEOUT; the SKU status path has none, so an InnoDB deadlock there surfaces unmapped as INTERNAL_SERVER_ERROR. Not confirmed because the CI log carries no server-side error line for request 9ced2f59-c808-411a-99f3-16ec153f13c8. This is outside the supplier module boundary and outside TASK-029's scope, so it is recorded and routed to Item Management rather than fixed here -- the same routing HD-013 gave DEF-012. It does not block this PR: the required checks are green on the current head and the defect is not reachable from any code this branch changes.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T09:42:39+08:00"
     }
   ],
   "pending_decisions": [
@@ -2488,7 +2510,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-017",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "server/test/integration/itemConcurrency.integration.test.js:406",
+        "server/src/handlers/skus/skuStatusHandlers.js",
+        "GitHub Actions run 35295649501 attempt 1 on 5fc3421",
+        "item-management"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-029 is implemented and REV-026 is remediated on 270a84f, which is pushed to PR #112. All nine REV-026 findings are closed on the branch; nothing is deferred. Developer evidence on this exact commit: 291/291 server, lint and client build clean. Next, and not yet done: CI must run and pass on 270a84f -- the green run on e5bffc5 does not carry, because the remediation changed the candidate. After that the Product Owner's merge decision is required; it has not been given. A second independent review of the remediation is optional under the review policy, since REV-026 shipped 0 Critical and 0 High and the fix is test-only plus one defensive TypeError, but the same reviewer re-verifying would be the precedent from HD-013. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; TASK-027 is still PENDING and needs the Business Master management entry point; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-029 is implemented, REV-026 is remediated in full, and all four required checks are green on the current PR #112 head 5fc3421. Developer evidence on 270a84f: 291/291 server, lint and client build clean. The only thing left before merge is the Product Owner's decision, which has not been given; a re-review of the remediation is optional and also unanswered. Do not merge without it. New here: DEF-017, an Item Management SKU deactivate race answering 500 instead of 409, seen once in CI, not reproduced locally, routed out of this module and not blocking. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; TASK-027 is still PENDING and needs the Business Master management entry point; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
