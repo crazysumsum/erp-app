@@ -58,46 +58,45 @@ function project(row) {
 }
 
 /**
+ * 一個 reader，兩種鎖法（REV-028 L-2）。本來係兩份一模一樣嘅 SELECT、同一個
+ * 欄位別名、同一個錯誤碼、同一個投影，分別只喺 `FOR SHARE`。呢個檔案自己就記
+ * 錄過同一個模組入面一條規則複製三次之後漂移嘅事，所以呢度唔留第二份。
+ */
+async function activationPolicy(runner, { lock }) {
+  const [[row]] = await runner.query(
+    `SELECT ${SETTING_FIELDS.requireActivationApproval.column} AS require_activation_approval
+       FROM supplier_settings WHERE id = ${SETTINGS_ROW_ID}${lock ? " FOR SHARE" : ""}`
+  );
+  if (!row) {
+    // 兩條路都要係 domain error：create／activate 行緊嗰條唔可以出一個 opaque 500，
+    // 而 lookup 嗰條唔可以將「讀唔到」當成 false —— 政策未知就放行等於靜靜哋繞過
+    // 審批要求（SEC-007）。
+    throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
+  }
+  return SETTING_FIELDS.requireActivationApproval.fromRow(row.require_activation_approval);
+}
+
+/**
+ * 唯讀 UI lookup 用（HD-024），**唔上鎖**。
+ *
+ * 唔行下面嗰個 `FOR SHARE` 版本：嗰個鎖係為咗喺交易入面定住答案，代價係設定寫入
+ * 要等進行中嘅啟用完成。一個建檔頁嘅 lookup 唔喺任何交易入面，用返嗰個只會令一個
+ * 純讀取阻住設定寫入。
+ */
+export function readActivationPolicy(database) {
+  return activationPolicy(database, { lock: false });
+}
+
+/**
  * 供 create／approval／import 喺自己嘅交易入面共用。
  *
  * 用 `FOR SHARE` 而唔係 `FOR UPDATE`：呢度要嘅係「同一個交易入面答案唔會變」，
  * 唔係排斥其他啟用操作。`FOR UPDATE` 會令所有 Supplier 建立同啟用喺同一行排隊。
  * `FOR SHARE` 容許並發讀，但會令設定寫入等待進行中嘅啟用完成 —— 亦即 AC-013
  * 想要嘅方向：設定改動唔會追溯影響進行中嘅操作。
- *
- * 讀唔到設定列就拋錯，唔會當佢係 false：喺政策未知嘅情況下預設放行等於靜靜哋
- * 繞過審批要求，方向錯（SEC-007）。
  */
-/**
- * 同 `getActivationPolicy` 讀同一個欄位，但**唔上鎖**，畀唯讀 UI lookup 用
- * （HD-024）。
- *
- * 唔重用上面嗰個：佢個 `FOR SHARE` 係為咗「喺同一個交易入面答案唔會變」，代價
- * 係設定寫入要等進行中嘅啟用完成。一個建檔頁嘅 lookup 唔喺任何交易入面，亦都
- * 唔需要嗰個保證 —— 用返嗰個版本只會令一個純讀取阻住設定寫入。
- *
- * 一樣唔會將讀唔到當成 false：政策未知就放行等於靜靜哋繞過審批（SEC-007）。
- */
-export async function readActivationPolicy(database) {
-  const [[row]] = await database.query(
-    `SELECT ${SETTING_FIELDS.requireActivationApproval.column} AS require_activation_approval
-       FROM supplier_settings WHERE id = ${SETTINGS_ROW_ID}`
-  );
-  if (!row) throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
-  return SETTING_FIELDS.requireActivationApproval.fromRow(row.require_activation_approval);
-}
-
-export async function getActivationPolicy(connection) {
-  const [[row]] = await connection.query(
-    `SELECT ${SETTING_FIELDS.requireActivationApproval.column} AS require_activation_approval
-       FROM supplier_settings WHERE id = ${SETTINGS_ROW_ID} FOR SHARE`
-  );
-  if (!row) {
-    // Runs inside every create and activate, so it has to fail as a domain error
-    // rather than an opaque 500 the way a raw Error would on those routes.
-    throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
-  }
-  return SETTING_FIELDS.requireActivationApproval.fromRow(row.require_activation_approval);
+export function getActivationPolicy(connection) {
+  return activationPolicy(connection, { lock: true });
 }
 
 export class SupplierSettingsService {

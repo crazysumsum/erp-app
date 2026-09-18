@@ -76,13 +76,20 @@ function formatValue(field, value) {
   return value === null || value === undefined || value === "" ? "（無）" : String(value);
 }
 
-// AC-012：提交之後 Supplier 改過就唔可以批舊申請。`stale` 同服務層批准時用嘅
-// 判準係同一個，所以呢度禁用嘅嘢，服務層唔會突然又批得。
-const canApprove = computed(() =>
+// 設計 §4.5：只有被指派嘅審批人可以決定。
+const canDecide = computed(() =>
   Boolean(detail.value)
   && detail.value.status === "pending"
-  && !detail.value.stale
   && detail.value.assignedApprover?.id === session.user?.id);
+
+// AC-012：提交之後 Supplier 改過就唔可以批舊申請。`stale` 同服務層批准時用嘅判準
+// 係同一個，所以呢度禁用嘅嘢，服務層唔會突然又批得。
+//
+// 只綁住批准，唔綁拒絕：服務層嘅 #assertRequestStillCurrent 喺 `command.status
+// !== "approved"` 就已經 return，即係拒絕同撤回本身唔受 stale 影響，設計 §7.6 亦
+// 都只寫「stale 時禁止 approve」。一併禁埋拒絕會令 UI 擋住一個服務層會接受嘅動作，
+// 而且過時申請最合理嘅出路正正就係拒絕（REV-030 L-1）。
+const canApprove = computed(() => canDecide.value && !detail.value.stale);
 
 const isRequester = computed(() =>
   Boolean(detail.value) && detail.value.status === "pending" && detail.value.requester?.id === session.user?.id);
@@ -246,7 +253,7 @@ async function withdraw() {
               <tr><th class="text-left">欄位</th><th class="text-left">提交時</th><th class="text-left">目前</th></tr>
             </thead>
             <tbody>
-              <tr v-for="row in diffRows" :key="row.field" :class="row.changed ? 'bg-orange-1' : ''">
+              <tr v-for="row in diffRows" :key="row.field" :data-field="row.field" :class="row.changed ? 'bg-orange-1' : ''">
                 <td class="text-left">{{ row.label }}<span v-if="row.changed" class="text-negative"> ・已變更</span></td>
                 <td class="text-left">{{ row.submitted }}</td>
                 <td class="text-left">{{ row.current }}</td>
@@ -264,7 +271,7 @@ async function withdraw() {
 
         <q-card-actions align="left" class="q-px-md q-pb-md">
           <q-btn color="positive" label="批准" :disable="!canApprove || busy" :loading="busy" @click="approve" />
-          <q-btn color="negative" label="拒絕" :disable="!canApprove || busy" :loading="busy" @click="reject" />
+          <q-btn color="negative" label="拒絕" :disable="!canDecide || busy" :loading="busy" @click="reject" />
           <q-btn v-if="isRequester" flat label="撤回" :disable="busy" :loading="busy" @click="withdraw" />
         </q-card-actions>
 

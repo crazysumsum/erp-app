@@ -202,6 +202,7 @@ async function submit(activate) {
       <SupplierApprovalPanel
         v-model="approval"
         :disable="submitting"
+        :field-error="fieldError('approverUserId')"
         @policy="(value) => { requireApproval = value; }"
       />
 

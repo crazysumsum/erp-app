@@ -93,12 +93,18 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
       changedFields: ["supplierName"], stale: true, currentSupplierVersion: 6
     }));
     const { body } = await mountPage();
-    await button(body, "").exists();
     await body.findAll("button").find((candidate) => candidate.attributes("aria-label")?.includes("審批詳情")).trigger("click");
     await flushPromises();
 
     expect(body.text()).toContain("Evergreen Trading");
-    expect(body.text()).toContain("已變更");
+    // REV-030 H-1：`body.text()).toContain("已變更")` 由 stale chip 嘅「提交後已變更」
+    // 滿足，行都未行到 diff table。所以要逐行睇，而且要睇埋「冇改嘅行冇標記」——
+    // 少咗第二句，一個「乜都標記」嘅實作一樣過。
+    const rows = body.findAll("tbody tr");
+    const named = rows.find((row) => row.text().includes("名稱"));
+    const coded = rows.find((row) => row.text().includes("Supplier Code"));
+    expect(named.text()).toContain("已變更");
+    expect(coded.text()).not.toContain("已變更");
   });
 
   it("refuses to approve a stale request, which is the same rule the service enforces", async () => {
@@ -110,6 +116,10 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
 
     expect(body.text()).toContain("不能批准");
     expect(button(body, "批准").attributes("disabled")).toBeDefined();
+    // REV-030 L-1：服務層嘅 #assertRequestStillCurrent 喺 command 唔係 approve 就
+    // 已經 return，所以拒絕唔受 stale 影響，設計 §7.6 亦只講禁止 approve。一併禁埋
+    // 拒絕會令 UI 擋住一個服務層會接受嘅動作，而拒絕正正係過時申請最合理嘅出路。
+    expect(button(body, "拒絕").attributes("disabled")).toBeUndefined();
   });
 
   it("only the assigned approver may decide", async () => {
@@ -239,5 +249,30 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     await flushPromises();
     expect(supplierApprovalService.reassign).not.toHaveBeenCalled();
     expect(notifyError).toHaveBeenCalledWith(expect.stringContaining("審批人"));
+  });
+
+  // ---- REV-030 M-1: the error paths -----------------------------------------
+
+  it("a failed detail read reports the failure instead of showing a half-open detail", async () => {
+    supplierApprovalService.get.mockRejectedValue(new Error("網路錯誤，請檢查連線"));
+    const { body } = await mountPage();
+    await body.findAll("button").find((candidate) => candidate.attributes("aria-label")?.includes("審批詳情")).trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith(expect.stringContaining("網路錯誤"));
+    expect(body.text()).not.toContain("提交時快照");
+    expect(button(body, "批准")).toBeUndefined();
+  });
+
+  it("a failed approver lookup leaves the reassign list empty rather than stale", async () => {
+    supplierApprovalService.get.mockResolvedValue(detail());
+    supplierApprovalService.eligibleApprovers.mockRejectedValue(new Error("網路錯誤，請檢查連線"));
+    const { wrapper, body } = await mountPage();
+    await body.findAll("button").find((candidate) => candidate.attributes("aria-label")?.includes("審批詳情")).trigger("click");
+    await flushPromises();
+
+    // 服務層拋乜就講乜；`|| "載入可選審批人失敗"` 只係冇 message 嗰陣先用。
+    expect(notifyError).toHaveBeenCalledWith("網路錯誤，請檢查連線");
+    expect(wrapper.vm.reassignOptions).toEqual([]);
   });
 });

@@ -43,6 +43,7 @@ async function installApi(page, options = {}) {
     user: sessionUser(options.actor ?? APPROVER),
     rows: options.rows ?? [request()],
     detail: options.detail ?? detailOf(request()),
+    policy: options.policy ?? false,
     calls: []
   };
 
@@ -66,6 +67,15 @@ async function installApi(page, options = {}) {
     const fail = (status, code, message) => route.fulfill({ status, headers, body: JSON.stringify({ success: false, error: { code, message }, meta: { requestId: "pw" } }) });
 
     if (path === "/api/v1/user/me") return ok(state.user);
+    if (path === "/api/v1/supplier-lookups/activation-policy") return ok({ requireActivationApproval: state.policy });
+    if (path === "/api/v1/business-master/currencies") {
+      return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar", decimalPlaces: 2, status: "ACTIVE", version: 1 }], total: 1, page: 1, pageSize: 100 });
+    }
+    if (path === "/api/v1/business-master/payment-terms") return ok({ items: [], total: 0, page: 1, pageSize: 100 });
+    if (method === "POST" && path === "/api/v1/suppliers/duplicates/check") return ok({ codeConflict: null, duplicateCandidates: [] });
+    if (method === "POST" && path === "/api/v1/suppliers/create") {
+      return ok({ id: 41, supplierCode: body.supplierCode, status: body.approverUserId ? "pending_approval" : "active", warnings: [] });
+    }
     if (path === "/api/v1/supplier-approvers") {
       return ok({ items: [OTHER] });
     }
@@ -160,8 +170,19 @@ test("@technical a stale request shows the difference and cannot be approved", a
 
   await expect(page.getByText("這個申請已經過時")).toBeVisible();
   await expect(page.getByText("Evergreen Trading")).toBeVisible();
+
+  // REV-030 H-1：逐行睇個標記。page 層面搵「已變更」會俾 stale chip 嘅「提交後已變更」
+  // 滿足，行都未行到 diff table；而且冇「未改嗰行冇標記」呢一句，一個乜都標記嘅
+  // 實作一樣過。
+  // 用 data-field 而唔係行文字：「名稱」係「顯示名稱」嘅子字串，兩行都會中。
+  const table = page.getByRole("table", { name: "提交時快照與目前資料比較" });
+  await expect(table.locator('[data-field="supplierName"]')).toContainText("已變更");
+  await expect(table.locator('[data-field="supplierCode"]')).not.toContainText("已變更");
+
   await expect(page.getByRole("button", { name: "批准" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "拒絕" })).toBeDisabled();
+  // REV-030 L-1：拒絕唔受 stale 影響——服務層嘅 stale 檢查喺 command 唔係 approve
+  // 就已經 return，而拒絕正正係過時申請最合理嘅出路。
+  await expect(page.getByRole("button", { name: "拒絕" })).toBeEnabled();
 });
 
 test("@technical approving by keyboard sends the password and the request version", async ({ page }) => {
@@ -238,4 +259,51 @@ test("@technical an unassigned request can be reassigned, excluding the requeste
 
   const reassign = state.calls.find((call) => call.path.endsWith("/reassign"));
   expect(reassign.body).toMatchObject({ approverUserId: OTHER.id, reason: "原審批人休假", version: 1 });
+});
+
+test("@technical the create page offers an approver only when the policy is on, and sends it", async ({ page }) => {
+  // REV-030 M-2：呢條就係 HD-024 同新 route 存在嘅原因，但之前冇任何瀏覽器覆蓋。
+  // 而且單元層用 `select.vm.$emit("update:modelValue", 2)` 繞過咗 Quasar 嘅
+  // emit-value／map-options 接線——正正係單元層睇唔到嗰類缺陷。
+  const state = await installApi(page, { actor: REQUESTER, policy: true });
+  await page.goto("/suppliers/new");
+
+  await expect(page.getByRole("heading", { name: "啟用審批" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /提交審批/u })).toBeVisible();
+  const lookup = state.calls.find((call) => call.path === "/api/v1/supplier-approvers");
+  expect(lookup.query).toMatchObject({ excludeUserId: String(REQUESTER.id) });
+
+  await page.getByLabel("Supplier Code *").fill("SUP-900");
+  await page.getByLabel("Supplier Name *").fill("Keyboard Trading");
+  await page.getByLabel("Default Currency *").first().click();
+  await page.getByRole("option").first().click();
+
+  await page.getByLabel("審批人", { exact: true }).click();
+  await page.getByRole("option", { name: /Other/u }).click();
+  await page.getByRole("button", { name: /提交審批/u }).click();
+  // 撳完要等個 POST 真係出咗去：唔等就會喺 duplicates check 同 create 之間讀 state。
+  await expect(page.getByText("已建立")).toBeVisible();
+
+  const create = state.calls.find((call) => call.path === "/api/v1/suppliers/create");
+  expect(create.body).toMatchObject({ activate: true, approverUserId: OTHER.id });
+});
+
+test("@technical with the policy off the create page shows no selector and sends no approver", async ({ page }) => {
+  const state = await installApi(page, { actor: REQUESTER, policy: false });
+  await page.goto("/suppliers/new");
+
+  await expect(page.getByRole("button", { name: /直接啟用/u })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "啟用審批" })).toHaveCount(0);
+  expect(state.calls.some((call) => call.path === "/api/v1/supplier-approvers")).toBe(false);
+
+  await page.getByLabel("Supplier Code *").fill("SUP-901");
+  await page.getByLabel("Supplier Name *").fill("No Approval Trading");
+  await page.getByLabel("Default Currency *").first().click();
+  await page.getByRole("option").first().click();
+  await page.getByRole("button", { name: /直接啟用/u }).click();
+  await expect(page.getByText("已建立")).toBeVisible();
+
+  const create = state.calls.find((call) => call.path === "/api/v1/suppliers/create");
+  // 設計 §6.2：政策關閉時帶 approverUserId 會 400 APPROVER_NOT_REQUIRED。
+  expect("approverUserId" in create.body).toBe(false);
 });

@@ -25,16 +25,18 @@ vi.mock("@/framework/ui/notify.js", () => ({
 import businessMasterService from "@/services/businessMaster.js";
 import supplierApprovalService from "@/services/supplierApproval.js";
 import supplierService from "@/services/supplier.js";
-import { notifySuccess } from "@/framework/ui/notify.js";
+import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import SupplierCreatePage, { page } from "@/pages/suppliers/SupplierCreatePage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
 const RouterViewHost = { render: () => h(RouterView) };
 let currentWrapper;
 
-async function mountPage({ requireActivationApproval = false, approvers = [] } = {}) {
-  supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval });
-  supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: approvers });
+async function mountPage({ requireActivationApproval = false, approvers = [], policyError = null, approversError = null } = {}) {
+  if (policyError) supplierApprovalService.activationPolicy.mockRejectedValue(policyError);
+  else supplierApprovalService.activationPolicy.mockResolvedValue({ requireActivationApproval });
+  if (approversError) supplierApprovalService.eligibleApprovers.mockRejectedValue(approversError);
+  else supplierApprovalService.eligibleApprovers.mockResolvedValue({ items: approvers });
   businessMasterService.currencyList.mockResolvedValue({
     rows: [{ code: "HKD", name: "Hong Kong Dollar", version: 3 }],
     rowsNumber: 1
@@ -201,5 +203,32 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
 
     const [payload] = supplierService.create.mock.calls[0];
     expect(payload).toMatchObject({ activate: true, approverUserId: 2 });
+  });
+
+  it("an unreadable policy hides the selector and never assumes no approval is needed", async () => {
+    // REV-030 M-1：呢條係 HD-024 同組件自己段註解都明文寫低嘅姿態。將 catch 換成
+    // 「讀唔到就當唔使審批」—— SEC-007 禁止嗰樣 —— 之前七個 create case 全部照綠。
+    supplierService.create.mockResolvedValue({ id: 41, supplierCode: "SUP-041", status: "draft" });
+    const { wrapper, body } = await mountPage({ policyError: new Error("網路錯誤，請檢查連線") });
+
+    expect(notifyError).toHaveBeenCalledWith("網路錯誤，請檢查連線");
+    expect(body.text()).not.toContain("啟用審批");
+    expect(supplierApprovalService.eligibleApprovers).not.toHaveBeenCalled();
+
+    // 唔知政策就唔可以扮知：伺服器仍然係權威，佢會答 400 APPROVER_REQUIRED。
+    await fillRequired(wrapper, body);
+    await body.findAll("button").find((candidate) => candidate.text().includes("直接啟用")).trigger("click");
+    await flushPromises();
+    const [payload] = supplierService.create.mock.calls[0];
+    expect("approverUserId" in payload).toBe(false);
+  });
+
+  it("a failed approver lookup tells the user instead of offering an empty list silently", async () => {
+    const { body } = await mountPage({
+      requireActivationApproval: true,
+      approversError: new Error("網路錯誤，請檢查連線")
+    });
+    expect(body.text()).toContain("啟用審批");
+    expect(notifyError).toHaveBeenCalledWith("網路錯誤，請檢查連線");
   });
 });

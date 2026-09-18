@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { notifyError } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import supplierApprovalService from "@/services/supplierApproval.js";
@@ -15,7 +15,9 @@ import supplierApprovalService from "@/services/supplierApproval.js";
 const props = defineProps({
   // 呢個 panel 唔擁有 approverUserId，佢只係報告揀咗邊個。
   modelValue: { type: Object, default: () => ({ approverUserId: null, requestNote: "" }) },
-  disable: { type: Boolean, default: false }
+  disable: { type: Boolean, default: false },
+  // 錯誤要出喺使用者要改嗰個控制上面，唔係淨係出喺頁頂嘅摘要（REV-030 L-4）。
+  fieldError: { type: String, default: "" }
 });
 const emit = defineEmits(["update:modelValue", "policy"]);
 
@@ -63,6 +65,10 @@ onMounted(async () => {
 });
 
 let searchTimer = null;
+// 離開建檔頁嗰陣如果 debounce 仲喺度行緊，佢會喺一個已經 unmount 嘅 component 上面
+// 叫 loadApprovers，錯誤就會彈喺一個使用者已經走咗嘅頁面上面（REV-030 N-3）。
+onUnmounted(() => clearTimeout(searchTimer));
+
 watch(search, () => {
   if (!requireApproval.value) return;
   clearTimeout(searchTimer);
@@ -86,6 +92,8 @@ function update(patch) {
       :loading="loading"
       :disable="disable"
       label="審批人"
+      :error="Boolean(fieldError)"
+      :error-message="fieldError"
       emit-value
       map-options
       use-input
