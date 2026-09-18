@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 124,
+  "revision": 125,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "50658a8f0c80fde70abeffc883f316a686c72c01",
-    "source_fingerprint": "99f6f0a837955c080786adc7c80efd6848596919ba1cd0a14d72329076ec815e",
+    "code_commit": "8c3e252759c1a202b0475c667d970b0d12c7c3cf",
+    "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027",
     "default_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1749,6 +1749,17 @@
       "source_ref": "Seven of nine findings are closed on the branch. H-1: the settings read has its own state, an error banner with retry, a vitest case and a browser case; removing the null guard again turns both red. H-2: both fixtures now start ON and click OFF against a server holding ON, and the reviewer's overwrite mutant dies in vitest and in Playwright. M-1: the vitest button/href loop is now in the spec, and a q-btn labelled 新增貨幣 dies in both. M-2: the handler catches ER_NO_SUCH_TABLE only and reports NOT_READY; a connection loss still propagates, because we would not know the provider is unready and reporting NOT_READY would assert something unproven -- narrower than the blanket catch the reviewer proposed. Two tests drive the real BusinessMasterReadinessService over a throwing double, since every other test here replaces it. L-1 and L-2 are closed by a policy-name assertion and a denied-user browser case. Verification on this commit: 254/254 supplier server selection, 545/545 full client, 8/8 Playwright technical, lint and build clean, and four evidence records naming 50658a8. L-3 needs no change: the reviewer recorded it rather than raising it, and a test already guards the duplication against drift. L-4 and L-5 are open under HD-023.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T14:34:34+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-023 closed: the browser run no longer dirties the tree, and .gitignore did not need touching",
+      "code_commit": "8c3e252759c1a202b0475c667d970b0d12c7c3cf",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "PASS",
+      "source_ref": "The approval to edit .gitignore was given and deliberately not used. The repository already contained a better answer that TASK-027's first config had missed: client/e2e/item-management/playwright.config.js defaults its run directory outside the repository. The supplier config now does the same, so an approval_required_paths entry stays untouched and business-master's identical gap is recorded rather than papered over from another module's branch. Checked the way L-4 described the problem: the full technical suite ran 8/8 and git status afterwards showed only the config file itself, with no client/test-results/ and no supplier-browser.xml at the root. L-5 stands as a recorded exception; nothing about the test moves.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:42:02+08:00"
     }
   ],
   "pending_decisions": [
@@ -2071,8 +2082,8 @@
         "REV-028",
         "APPROVAL-HD-004-PLAN"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18: 同意 -- accepting the recommendation on both. L-4: authorised adding the two entries to .gitignore. L-5: leave the client suite filter as a recorded exception rather than move the plan baseline off a0d41e31 for a gate-completeness issue that CI's full run already covers; the three assertions in client/test/services/supplierSettings.test.js do execute in CI, they simply sit outside supplier-phase-001-client. L-4 was then closed WITHOUT using that authorisation: item-management's playwright config already defaults its run directory to /private/tmp, so the supplier config follows it and nothing reaches the working tree at all. .gitignore is untouched and the granted approval stays unspent. Verified as the finding was stated -- full technical suite 8/8, then git status showed only the config file. business-master still writes client/test-results/ and a root .xml the old way; out of scope here."
     }
   ],
   "external_actions": [
@@ -2731,5 +2742,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-027's REV-028 remediation is committed at 50658a8 and pushed to PR #113. Seven of the nine findings are closed on the branch; L-3 needs no change; L-4 and L-5 are OPEN under HD-023 and need the Product Owner, because one touches an approval-required path and the other moves the PLAN baseline. Next: required CI on the new head, then a re-review of the remediation -- the same reviewer, following HD-021's precedent -- then the merge decision, which has not been given. The correction above matters for how this task is reported: a claim recorded at revision 122 was false and is superseded, not edited away. DEF-018 is OPEN and routed to the framework owner; DEF-017 is OPEN and routed to Item Management; neither blocks. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-027 is complete on the branch at 8c3e252. All nine REV-028 findings are now closed or dispositioned: seven fixed in code and tests, L-3 needs no change, L-4 closed by moving the browser output out of the repository, and L-5 left as a recorded exception under HD-023. No decision is open. Next: required CI on this new head, then the same reviewer re-verifying the remediation under HD-021's precedent, then the Product Owner's merge decision, which has not been given. Do not merge without it. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is then the only PHASE-002 task left. DEF-018 is OPEN and routed to the framework owner; DEF-017 is OPEN and routed to Item Management; neither blocks. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
