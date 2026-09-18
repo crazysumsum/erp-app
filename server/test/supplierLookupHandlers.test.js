@@ -128,3 +128,18 @@ test("any other database failure is not dressed up as a readiness answer", async
   });
   await assert.rejects(() => handler.execute(), (error) => error.code === "PROTOCOL_CONNECTION_LOST");
 });
+
+test("a table present with the wrong columns is the version-mismatch half of the same label", async () => {
+  // REV-029 L-1：頁面個 label 講「資料表尚未建立**或版本不符**」，而 1054 就係
+  // 第二種。inspect() 喺行 inspectBusinessMasterSchema 之前已經 SELECT 過欄位,
+  // 所以嗰個專門用嚟驗結構嘅檢查，永遠行唔到喺一個結構真係壞咗嘅 schema 上面。
+  const handler = await realServiceHandler(() => {
+    const error = new Error("Unknown column 'decimal_places' in 'field list'");
+    error.code = "ER_BAD_FIELD_ERROR";
+    error.errno = 1054;
+    return error;
+  });
+  const { data } = await handler.execute();
+  assert.equal(data.status, "NOT_READY");
+  assert.equal(data.schemaReady, false);
+});

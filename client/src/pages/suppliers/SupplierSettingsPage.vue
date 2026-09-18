@@ -114,8 +114,18 @@ async function toggleApproval(next) {
     // VERSION_CONFLICT 唔自動重試：重新載入最新值，要求使用者對住新狀態再決定一次
     // （設計 §7.4 同 §7.7 同一條規矩）。
     if (error.code === "VERSION_CONFLICT") {
-      await loadSettings();
-      notifyError("設定已被其他人修改，已重新載入目前值，請確認後再儲存");
+      // REV-029 M-1：呢個 reload 本身都會失敗。唔包住嘅話 rejection 會由
+      // toggleApproval 走甩，notifyError 一次都唔行，而個頁會撞返 H-1 嗰個 error
+      // boundary —— 但今次連 H-1 個橫額都唔會出，因為 settings 仲係非 null。
+      //
+      // 用 try/catch 而唔係改叫 load()：load() 會將 loading 揼返 true，個開關喺
+      // 衝突中間閃走再返嚟。
+      try {
+        await loadSettings();
+        notifyError("設定已被其他人修改，已重新載入目前值，請確認後再儲存");
+      } catch (reloadError) {
+        notifyError(reloadError.message || "設定已被其他人修改，但重新載入失敗，請重新整理頁面");
+      }
     } else {
       notifyError(error.message || "儲存設定失敗");
     }

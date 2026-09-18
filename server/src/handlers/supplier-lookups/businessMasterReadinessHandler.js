@@ -18,6 +18,15 @@ import { BusinessMasterReadinessService } from "../../modules/businessMaster/Bus
 
 const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
 
+/**
+ * 「我哋真係知個 schema 未 ready」嗰組錯誤。個頁面自己嗰句 label 講咗兩種情況 ——
+ * 「資料表尚未建立或版本不符」—— 所以兩種都要喺度：
+ *   1146 ER_NO_SUCH_TABLE  張表未建
+ *   1054 ER_BAD_FIELD_ERROR 張表喺度但欄位唔啱，即係版本不符（REV-029 L-1）
+ * 其他錯誤（連線斷、逾時）唔喺度：嗰啲情況我哋唔知 provider 就唔就緒。
+ */
+const SCHEMA_NOT_READY = new Set([1146, 1054]);
+
 // Settings 頁係唯一 caller，所以權限同設定頁一致。設計 §4.3：permission catalogue
 // 冇隱式繼承，所以呢度唔可以假設 supplier.settings 持有人順手有 supplier.view。
 const SUPPLIER_SETTINGS_POLICY = Object.freeze([Object.freeze({
@@ -77,7 +86,7 @@ export class GetSupplierBusinessMasterReadinessHandler extends BaseRequestHandle
     try {
       return await this.readiness.inspect();
     } catch (error) {
-      if (error?.code !== "ER_NO_SUCH_TABLE" && error?.errno !== 1146) throw error;
+      if (!SCHEMA_NOT_READY.has(error?.errno) && error?.code !== "ER_NO_SUCH_TABLE") throw error;
       return {
         status: "NOT_READY",
         providerContract: BusinessMasterProvider.contract,

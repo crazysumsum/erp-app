@@ -190,4 +190,23 @@ describe("pages/suppliers/SupplierSettingsPage.vue", () => {
     expect(toggle(wrapper).exists()).toBe(true);
     expect(body.text()).toContain("啟用供應商前需要另一名使用者審批");
   });
+
+  it("a failed reload after a version conflict still tells the user, instead of losing the page", async () => {
+    // REV-029 M-1：呢個 reload 自己都會失敗。唔包住嘅話 rejection 走甩，一次
+    // notifyError 都唔行，而個頁會撞 error boundary —— 連 H-1 個橫額都唔會出，
+    // 因為 settings 仲係非 null。
+    promptPassword.mockResolvedValue({ reason: "公司開始要求覆核", password: "pw" });
+    supplierSettingsService.update.mockRejectedValue(
+      Object.assign(new Error("設定已被其他人修改"), { code: "VERSION_CONFLICT" })
+    );
+    const { wrapper } = await mountPage();
+    supplierSettingsService.get.mockRejectedValue(new Error("網路錯誤，請檢查連線"));
+
+    await toggle(wrapper).trigger("click");
+    await flushPromises();
+
+    expect(notifyError).toHaveBeenCalledWith(expect.stringContaining("網路錯誤"));
+    // 個頁仲喺度：開關唔應該因為一個讀取失敗而消失。
+    expect(toggle(wrapper).exists()).toBe(true);
+  });
 });

@@ -18,14 +18,16 @@ const isUatOnly = process.argv.includes("uat");
  * 嘅 approval_required_paths。Harness runner 照樣可以用 HARNESS_RUN_DIR 同
  * HARNESS_RESULT_PATH 覆寫去佢自己個 evidence 目錄。
  */
-const runDirectory = process.env.HARNESS_RUN_DIR
-  || path.resolve(process.cwd(), "/private/tmp/supplier-management-playwright");
+const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || "/private/tmp/supplier-management-playwright");
 const reportOutput = process.env.HARNESS_RESULT_PATH
   || path.join(runDirectory, isUatOnly ? "supplier-uat-browser.xml" : "supplier-browser.xml");
 
 export default defineConfig({
   testDir: here,
-  testMatch: "*.spec.js",
+  // 唔用 "*.spec.js"：任何跌低咗喺呢個目錄嘅 spec 都會被當成呢個模組嘅正式
+  // evidence。REV-029 嗰輪就真係發生過一次（一個 probe 被我 git add -A 掃咗入
+  // commit），所以收窄到本模組自己嘅命名。
+  testMatch: "supplier-*.spec.js",
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,

@@ -83,6 +83,7 @@ async function installApi(page, options = {}) {
     if (method === "POST" && path === "/api/v1/supplier-settings/update") {
       if (options.conflictOnce && !state.conflicted) {
         state.conflicted = true;
+        if (options.failReloadAfterConflict) state.settingsFails = true;
         // 服務器揸住 ON，而呢個請求要求 OFF。重載之後個開關要跟服務器，即係 ON。
         state.settings = { ...state.settings, requireActivationApproval: true, version: 9 };
         return fail(409, "VERSION_CONFLICT", "設定已被其他人修改，請重新載入");
@@ -277,8 +278,27 @@ test("@technical a user without supplier.settings gets neither the menu entry no
   });
   await page.goto("/suppliers/settings");
 
-  await expect(page).not.toHaveURL(/\/suppliers\/settings$/u);
+  // 講明去咗邊，唔係「唔喺設定頁」—— 後者連撞版都算過（REV-029 Nit）。
+  await expect(page).toHaveURL(/\/403$/u);
   await expect(page.locator(".q-toggle")).toHaveCount(0);
   expect(state.calls.some((call) => call.path.startsWith("/api/v1/supplier-settings"))).toBe(false);
   expect(state.calls.some((call) => call.path === "/api/v1/supplier-lookups/business-master")).toBe(false);
+});
+
+test("@technical a failed reload after a conflict still tells the user and keeps the page", async ({ page }) => {
+  // REV-029 M-1：兩個失敗連住嚟。個 reload 嘅 rejection 走甩嘅話，一次通知都冇，
+  // 而個頁會被 error boundary 換走 —— 而且 H-1 個橫額唔會出，因為 settings 非 null。
+  const state = await installApi(page, { conflictOnce: true, approvalOn: true, failReloadAfterConflict: true });
+  await page.goto("/suppliers/settings");
+  await expect(page.locator(".q-toggle")).toHaveAttribute("aria-checked", "true");
+
+  await page.locator(".q-toggle").click();
+  await confirmDialog(page, "與其他管理員同時修改", "browser-test-password");
+
+  // 用框架對個 500 mapped 出嚟嗰句，唔係我個 fallback —— ApiError 本身有 message，
+  // 所以 `||` 嗰邊行唔到。要守嘅係「使用者收到通知」而唔係某一句字。
+  await expect(page.locator(".q-notification")).toContainText("系統發生錯誤");
+  await expect(page.locator("body")).not.toContainText("呢一頁出咗問題");
+  await expect(page.locator(".q-toggle")).toHaveCount(1);
+  expect(state.calls.filter((call) => call.path === "/api/v1/supplier-settings/update")).toHaveLength(1);
 });
