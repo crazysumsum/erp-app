@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 120,
+  "revision": 122,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": null,
+  "current_task": "TASK-027",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
-    "source_fingerprint": "a2e014cb26e459e674fdd9c7fd505804209a1467823789ed230d0799b2ae2cf7",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+    "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027",
     "default_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
@@ -21,9 +21,9 @@
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app (main); no supplier worktree is open",
+      "workspace": "erp-app-worktrees/supplier-task-027 (branch codex/supplier-task-027)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "NOT_ALLOCATED"
+      "web-port": "127.0.0.1:5203 (Playwright dev server; 5202 belongs to business-master)"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -54,7 +54,7 @@
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
-    "TASK-027": "PENDING",
+    "TASK-027": "IN_PROGRESS",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
     "TASK-030": "PENDING",
@@ -1671,6 +1671,39 @@
       "source_ref": "gh pr view 112 reports state MERGED, mergedAt 2026-09-18T03:44:06Z, mergeCommit f7441c08. Pre-merge checks, all observed rather than assumed: origin/main had not moved from 9588655 since the branch was cut, mergeStateStatus CLEAN, and run 35303703591 attempt 1 green on the exact head 8a6be63 for all four required checks. Local main was fast-forwarded to f7441c08. The source fingerprint observed on main after the merge is a2e014cb, identical to the one measured on the branch at 3f012f9, so the merge introduced no source content beyond what was reviewed and tested. Merge authorised by the Product Owner on 2026-09-18.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-18T11:45:04+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-027 developer checks on 5fb3a4c: 298 server, 49 client suite, full client 544, lint and build clean",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "PASS",
+      "source_ref": "run_check.py --execute wrote four DEVELOPER evidence records against fingerprint 8515273a, all naming 5fb3a4c rather than its parent: supplier-phase-001-server 298/298, supplier-phase-001-client 49/49, lint exit 0, client-build exit 0. Separately the whole client suite was run at 544/544 and the supplier server selection at 249/249 with DB_INTEGRATION_TESTS=1 against the authorized erp_dev. Seven targeted mutations were applied one at a time and all seven died: dropping requireReason from the confirmation, hardcoding the version instead of sending the loaded one, not reloading after VERSION_CONFLICT, rendering the Business Master link regardless of permission, adding a write control to the dependency card, dropping signed:true from the settings update, and spreading the readiness result instead of projecting it.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:18:47+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-027 Playwright validation: 6/6 technical browser cases pass, and the run found two things",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "PASS",
+      "source_ref": "npx playwright test --config client/e2e/supplier-management/playwright.config.js --project technical: 6 passed against a real Chromium and the real dev server, with the API mocked at the network layer. Covered: toggle ON then OFF with the real Quasar dialog, the non-retroactive wording, cancel writing nothing, VERSION_CONFLICT reloading the server's value rather than the user's click, the read-only dependency panel naming the missing part, a failed readiness read not disabling the toggle, keyboard reachability and operation, console and network. The run asserts no console error or warning and that no request ever reaches /api/v1/business-master, and that the update carries an X-Device-* header so a dropped signed:true would show. Two findings, neither a defect in this task's code: the first Tab does not land on the toggle because the layout has a header and sidebar ahead of it, so the test walks the tab order rather than assuming a position; and DEF-018 below. Limitation stated rather than glossed: the backend is mocked, so this proves the client's behaviour and the requests it emits, not the server's responses.",
+      "actor": "Harness agent via Playwright",
+      "observed_at": "2026-09-18T14:18:47+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-018 raised: Enter inside the shared password/reason dialog does not submit it",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "FAIL",
+      "source_ref": "Proved by probe rather than inferred. In PasswordReasonDialog.vue the confirm button sits in q-card-actions, outside the <q-form>, so the form contains two inputs and zero submit buttons -- the case where HTML implicit submission does not fire. A throwaway Playwright probe filled both fields and pressed Enter in the password field: 0 update requests, dialog still visible, 0 submit buttons inside the form, 2 inputs inside it. The probe was removed afterwards. Consequence: every high-risk action using promptPassword({requireReason:true}) -- supplier lifecycle, code change, delete, and now settings -- can only be confirmed by reaching the button, never by Enter. Keyboard operation is still possible, which is why this is LOW and not blocking, and the TASK-027 browser test walks to the button rather than asserting the current behaviour as correct. Not fixed here: client/src/framework/ui/** is outside the Supplier module's allowed_write_paths and the component is shared with Item Management, so it is routed to the framework owner.",
+      "actor": "Harness agent via Playwright",
+      "observed_at": "2026-09-18T14:18:47+08:00"
     }
   ],
   "pending_decisions": [
@@ -2378,7 +2411,11 @@
     "evidence/20260918T012919-ca8473d699f8/run.json",
     "evidence/20260918T033239-1e970877794b/run.json",
     "evidence/20260918T033242-b045bbca1386/run.json",
-    "evidence/20260918T033244-d2e5df347b08/run.json"
+    "evidence/20260918T033244-d2e5df347b08/run.json",
+    "evidence/20260918T061819-80d5db288252/run.json",
+    "evidence/20260918T061822-fba31d20a26f/run.json",
+    "evidence/20260918T061824-25f933698437/run.json",
+    "evidence/20260918T061827-0e5e558135ef/run.json"
   ],
   "defects": [
     {
@@ -2616,7 +2653,19 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-018",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "client/src/framework/ui/PasswordReasonDialog.vue",
+        "TASK-027",
+        "client/e2e/supplier-management/supplier-settings.spec.js"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-029 is DONE and merged at f7441c08 with its worktree and branches retired. TASK-027's dependency is now resolved: the Business Master management entry point exists and that module is ACCEPTED, and HD-022 settles how the Settings page reads provider readiness -- a Supplier-owned route under server/src/handlers/supplier-lookups/, with Business Master untouched. TASK-027's other dependencies, T04 and T26, are both DONE, so it is startable. Its scope now includes a server route that its 'Files likely touched' list does not mention; that list is advisory in the plan and the path is already inside the manifest's allowed_write_paths, so no plan or manifest edit is needed and no baseline moves. TASK-027 is client-facing, so the project UI testing standard applies and Playwright validation is required before it can be called done. TASK-030 unblocks after it. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-017 is OPEN and routed to Item Management; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-027 is implemented on codex/supplier-task-027 at 5fb3a4c with all developer checks and Playwright green. Next: push, open the PR, obtain required CI on the exact head and an independent review, then the Product Owner's merge decision. Not yet raised with the Product Owner and needed before or with that decision: the Playwright run writes client/test-results/ and a supplier-browser.xml at the repository root, neither of which is in .gitignore -- business-master has the same gap, and .gitignore is an approval_required_path so it was left alone and the artifacts were deleted rather than committed. DEF-018 is OPEN and routed to the framework owner; it does not block. TASK-030 unblocks once this merges. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-017 is OPEN and routed to Item Management; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }

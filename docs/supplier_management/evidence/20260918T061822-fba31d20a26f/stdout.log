@@ -1,0 +1,5 @@
+
+> @erp/client@0.1.0 test
+> vitest run test/pages/suppliers test/services/supplier.test.js --reporter=junit --outputFile=/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027/docs/supplier_management/evidence/20260918T061822-fba31d20a26f/supplier-phase-001-client.xml
+
+JUNIT report written to /Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027/docs/supplier_management/evidence/20260918T061822-fba31d20a26f/supplier-phase-001-client.xml
