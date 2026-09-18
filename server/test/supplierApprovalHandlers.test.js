@@ -168,7 +168,11 @@ test("the withdraw handler passes the route Supplier id into the command", async
   assert.equal(passed[0].supplierId, 7, "the route Supplier id must reach the service, or its scope guard never arms");
   assert.equal(passed[0].id, 11, "the request id comes from the body, not from the route");
   assert.equal(passed[0].actorId, 5);
-  assert.ok(!("requestId" in passed[0]) || passed[0].requestId === "req-1");
+  // REV-027 L-8：呢度本來寫成 `!("requestId" in x) || x.requestId === "req-1"`，
+  // 兩邊都真，永遠過。handler 由 body 抽走 requestId 再擺入 framework 嗰個，所以
+  // 呢個斷言真正守住嘅係：body 嘅 requestId 唔會蓋過 correlation id。
+  assert.equal(passed[0].requestId, "req-1");
+  assert.equal(passed[0].ip, "127.0.0.1");
 });
 
 test("withdraw refuses to run unscoped, so a lost caller line is loud", async () => {

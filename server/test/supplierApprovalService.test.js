@@ -7,7 +7,7 @@ function harness({
   requestStatus = "pending", requestVersion = 1, requestedBy = 1, assignedApproverId = 2,
   supplierStatus = "pending_approval", supplierVersion = 5, requestSupplierVersion = 5,
   actorId = 2, actorPermissions = ["supplier.approval"], approverActive = true,
-  approverPermissions = ["supplier.approval"], updateAffectedRows = 1
+  approverPermissions = ["supplier.approval"], updateAffectedRows = 1, requestMissing = false
 } = {}) {
   const events = [];
   const request = {
@@ -23,7 +23,7 @@ function harness({
   const connection = {
     async query(sql, params) {
       events.push(["query", sql, params]);
-      if (sql.includes("FROM supplier_activation_requests")) return [[request]];
+      if (sql.includes("FROM supplier_activation_requests")) return [requestMissing ? [] : [request]];
       if (sql.includes("FROM suppliers")) return [[supplier]];
       if (sql.includes("FROM users")) return [approverActive ? [{ id: params[0], username: "approver" }] : []];
       return [[]];
@@ -792,4 +792,31 @@ test("a user who holds the permission through two roles is listed once", async (
   await service.listEligibleApprovers({ ...reader });
   assert.match(queries.at(-1).sql, /SELECT DISTINCT/u,
     "user_roles x role_permissions can yield the same user more than once");
+});
+
+test("a missing approval request says so on every command, not that the Supplier is missing", async () => {
+  // REV-027 L-7：五條路入面有四條改咗，reassign 漏低咗。Public code 五條都一樣，
+  // 所以分別只喺人睇到嗰句 —— 呢個斷言就係守住嗰句。
+  const commands = [
+    ["approveRequest", { ...context, supplierId: undefined }],
+    ["rejectRequest", { ...context, reason: "拒絕原因夠長" }],
+    ["withdrawRequest", { ...context, supplierId: 7 }],
+    ["reassignRequest", { ...context, approverUserId: 3, reason: "重新指派原因" }]
+  ];
+  for (const [command, input] of commands) {
+    const { service } = harness({ requestMissing: true, requestedBy: 2 });
+    await assert.rejects(
+      () => service[command](input),
+      (error) => error.statusCode === 404
+        && error.publicCode === "SUPPLIER_NOT_FOUND"
+        && error.publicMessage === "找不到這個審批申請",
+      `${command} reported a missing approval request as a missing Supplier`
+    );
+  }
+  // 讀路徑係第五條。
+  const { service } = readHarness({ rows: [] });
+  await assert.rejects(
+    () => service.getRequest({ ...reader, id: 999 }),
+    (error) => error.publicMessage === "找不到這個審批申請"
+  );
 });

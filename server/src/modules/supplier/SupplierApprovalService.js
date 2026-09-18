@@ -493,7 +493,7 @@ export class SupplierApprovalService {
         "SELECT * FROM supplier_activation_requests WHERE id = ? FOR UPDATE",
         [input.id]
       );
-      if (!request) throw supplierNotFound(input.id);
+      if (!request) throw supplierApprovalRequestNotFound(input.id);
 
       // FR-APPROVAL-007：重送一個已經去到相同終態嘅決定，回現況，唔再 transition
       // 亦唔再寫 audit。相反或過時嘅轉換仍然係 conflict。
@@ -633,7 +633,7 @@ export class SupplierApprovalService {
         "SELECT * FROM supplier_activation_requests WHERE id = ? FOR UPDATE",
         [input.id]
       );
-      if (!request) throw supplierNotFound(input.id);
+      if (!request) throw supplierApprovalRequestNotFound(input.id);
       if (request.status !== OPEN_STATUS) {
         throw supplierConflict("APPROVAL_REQUEST_NOT_OPEN", "這個審批申請已經結案", { status: request.status });
       }
