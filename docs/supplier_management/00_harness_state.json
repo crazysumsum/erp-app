@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 129,
+  "revision": 135,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": null,
+  "current_task": "TASK-030",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "54180db28dc0adc16d77869907469352ae72e093",
-    "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+    "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-030",
     "default_commit": "54180db28dc0adc16d77869907469352ae72e093",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
@@ -21,9 +21,9 @@
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app (main); no supplier worktree is open",
+      "workspace": "erp-app-worktrees/supplier-task-030 (branch codex/supplier-task-030)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "NOT_ALLOCATED"
+      "web-port": "127.0.0.1:5203 (Playwright dev server)"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -57,7 +57,7 @@
     "TASK-027": "DONE",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
-    "TASK-030": "PENDING",
+    "TASK-030": "IN_PROGRESS",
     "TASK-031": "PENDING",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
@@ -1022,6 +1022,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-030",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-030 approval UI)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior involvement, reviewing 1cf40ca",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/26_rev_030_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-031",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-030 REV-030 remediation)",
+      "reviewer": "agent-skills:code-reviewer, the same agent as REV-030 resumed with its context, reviewing 3403cb6",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/27_rev_031_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1827,6 +1851,83 @@
       "source_ref": "gh pr view 113 reports state MERGED, mergedAt 2026-09-18T07:08:47Z, mergeCommit 54180db2. Pre-merge checks, observed rather than assumed: origin/main had not moved from 6899a02 since the branch was cut, mergeStateStatus CLEAN, and run 35316990841 attempt 1 green on the exact head cf4ade5 for all four required checks. Local main fast-forwarded. The source fingerprint observed on main after the merge is fa56305b, identical to the one measured on the branch at 9cd51a2, so the merge carried no content beyond what REV-029 approved and CI exercised. Merge authorised by the Product Owner on 2026-09-18. Review gate: REV-028 CHANGES_REQUESTED then REV-029 APPROVED, both by the same reviewer under HD-021's precedent, with every finding closed except L-5, a recorded exception under HD-023.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-18T15:09:21+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-030 developer checks on 1cf40ca: 562 client, 259 supplier server, and 18 mutations killed",
+      "code_commit": "1cf40ca230d60ca31275ee17c1913c6db2fc3685",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "bc8d0d32aab04b7b5a13326147475e6845fdd81d0e52157b4830a0227c52ff23",
+      "status": "PASS",
+      "source_ref": "Four DEVELOPER evidence records against fingerprint bc8d0d32aab0, all naming 1cf40ca rather than its parent: supplier-phase-001-server, supplier-phase-001-client, lint and client-build, all PASS. Separately the whole client suite ran 562/562 and the supplier server selection 259/259 with DB_INTEGRATION_TESTS=1 against the authorized erp_dev. Fourteen mutations were applied one at a time across the create page, the approver panel, the approvals page and the policy handler, and all fourteen died: sending an approver with the policy off, withholding one with it on, letting an approverless submit through, dropping the self-exclusion, showing the selector regardless of policy, approving a stale request, approving when not the assigned approver, dropping the request version, dropping reject's reason requirement, withdrawing through the request route instead of its Supplier, scope buttons that do not change the query, reassign that does not exclude the requester, a policy response carrying the whole settings row, and a policy read that takes the FOR SHARE lock. Four more were aimed at the browser cases alone and also died.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T15:19:28+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-030 Playwright validation: 15/15, and the run corrected two of my own mistakes",
+      "code_commit": "1cf40ca230d60ca31275ee17c1913c6db2fc3685",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "bc8d0d32aab04b7b5a13326147475e6845fdd81d0e52157b4830a0227c52ff23",
+      "status": "PASS",
+      "source_ref": "npx playwright test --project technical: 15 passed, the 6 new approval cases plus the 9 TASK-027 settings cases. Covered for T30: the queue opening on mine and switching to unassigned and all, a stale request showing the difference and disabling both decisions, approving by keyboard with the password and the request version, reject demanding a reason, the requester withdrawing through the Supplier route with no password while the approver has no such button, and reassigning an unassigned request with the requester excluded. It asserts no console error or warning and that nothing ever reaches /api/v1/business-master. Password dialogs are driven by tabbing to the confirm button, not Enter in a field, because of DEF-018. Two corrections, both to my own work rather than to the product: loading the reassign options on the select's focus event could not be reached from a test, which makes the load timing an unverifiable control, so it now loads when the detail opens; and the helper waiting for '提交時' was vacuous because the queue's own column is 提交時間, so it matched immediately and let a later assertion read state between two awaits -- that is what made the reassign case fail, and it now waits for the diff table itself. Limitation: the backend is mocked, so this proves the client's behaviour and the requests it emits, not the server's responses.",
+      "actor": "Harness agent via Playwright",
+      "observed_at": "2026-09-18T15:19:28+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-030 CHANGES_REQUESTED on 1cf40ca: no product defect, but the diff marking had no test that could fail",
+      "code_commit": "1cf40ca230d60ca31275ee17c1913c6db2fc3685",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "bc8d0d32aab04b7b5a13326147475e6845fdd81d0e52157b4830a0227c52ff23",
+      "status": "FAIL",
+      "source_ref": "REV-030 returned 0 Critical, 1 High, 2 Medium, 5 Low and 3 Nit after re-running everything and applying 24 mutations across 26 executions, of which 17 died and 7 survived. It was explicit that every behavioural claim in the commit message is true of the shipped code. H-1: the vitest assertion body.text() toContain 已變更 is satisfied by the stale chip's 提交後已變更 before the diff table is reached, so both deleting the marker and marking every field stayed green in both layers; it proved the control itself is correct by showing the shipped product passes a strengthened assertion that kills both mutants. M-1: five of six new error paths had no test, and replacing the panel's policy-read handler with 'unknown policy means no approval needed' -- what HD-024 and the code's own comment forbid -- left the create suite green, while the server half of the same rule was tested and died instantly. M-2: the create page's approver flow, the criterion HD-024 exists for, had no browser coverage, and one browser-only kill in its run (removing emit-value from a select: vitest green, Playwright red) shows what that layer sees and the unit layer cannot. Lows: reject was gated on stale although the service returns early for anything but approve, and a browser assertion had locked that divergence in; the two policy readers were the same SELECT twice; the FOR SHARE rationale had ended up above the function that deliberately does not lock; a field error was written but never rendered; and the commit message's '259 supplier server' reconciles with neither count it measured. The fingerprint here is 1cf40ca's, recovered from that commit's own evidence record rather than copied from the review's abbreviation.",
+      "actor": "agent-skills:code-reviewer (separate agent)",
+      "observed_at": "2026-09-18T15:33:34+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-030 remediated on 00900fe: all eleven findings closed and the reviewer's five key mutations now die",
+      "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "PASS",
+      "source_ref": "H-1 is the third instance in this module of an assertion that looks like a control and reaches it by a route that cannot discriminate, and the second that was mine. The marking assertion is now row-scoped in both layers and asserts the unchanged row is unmarked -- without that second half the 'mark everything' mutant still passes, which the reviewer demonstrated and I re-confirmed. The browser case keys on a data-field attribute because 名稱 is a substring of 顯示名稱. M-1: both halves of the policy-read rule are now tested; the mutant that treats an unreadable policy as no-approval-needed dies. M-2: two browser cases cover the create flow on and off, driving the real Quasar select rather than vm.$emit, and a create page that withholds the approver dies only in that layer. L-1 was a real divergence: the service's stale check returns early unless the command is approve, so refusing 拒絕 blocked something the service accepts, and a browser assertion had locked it in as intended -- reject is now gated on canDecide. L-2, L-3, L-4, N-1 and N-3 are closed. L-5 is a correction rather than a fix: 259 was wrong, the evidence contract is 305 and the narrow supplier selection is 251, both re-measured. N-2 is left as the reviewer recorded it: a preference the browser suite already covers. Verification on this commit: 566 client, 17/17 Playwright, lint and build clean, four evidence records naming 00900fe.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T15:33:34+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #114 required checks green on 3403cb6, first attempt, with no Item Management interference this time",
+      "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "PASS",
+      "source_ref": "Run 35320043450 attempt 1 on head 3403cb6: Test (server + client, MySQL integration) 4m9s, Lint 25s, Build frontend 18s, Dependency audit 21s, all pass, and the run's head_sha equals the PR head. The previous run on this branch was red on DEF-019's itemMigrationIdempotency case; it did not fire here, which is consistent with the recorded reading that its cause is deterministic while its appearance depends on which files interleave. Recorded as an observation about this candidate, not as evidence that DEF-019 is resolved -- it is not, and under HD-025 it stays with its own module.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-18T16:38:45+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-031 APPROVED: all eleven REV-030 findings closed, 24 of 24 mutations now die, Checkpoint J met",
+      "code_commit": "3403cb634802b702972dd69d009d216d678c4483",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "PASS",
+      "source_ref": "REV-031 returned APPROVED with 0 Critical, 0 High, 0 Medium, 1 Low and 2 Nit, and re-ran all 24 of its original mutations rather than only the 7 survivors: all now die, up from 17, with nothing revived. It probed the three product changes instead of reading them. L-1: driving SupplierApprovalService with a stale fixture, approve is refused APPROVAL_REQUEST_STALE while reject is accepted and lands the Supplier in draft, which is where FR-APPROVAL-004 and AC-011 put it; the other guards are intact, and it named a consequence in favour of the change -- with both buttons disabled an absent requester left a stale request in the queue permanently. L-2: it captured both readers' observable behaviour at this head and at 1cf40ca and diffed them -- identical, FOR SHARE included, the only difference being constructor.name AsyncFunction to Function, invisible to callers, with the two by-reference call sites still satisfying the identity assertion at supplierSettingsHandlers.test.js:46. It also confirmed the 「已建立」 wait is load-bearing by making created.value never set and watching the case fail, and that data-field is worth keeping because 名稱 really is a substring of 顯示名稱. Checkpoint J: all three bullets met, including the first it reported short last round. Its one Low: the L-4 field-error wiring works but is untested -- three mutations survive -- so a fix for 'written and never rendered' became 'rendered and never tested'. Non-blocking, and the same message still reaches the user through the tested summary path.",
+      "actor": "agent-skills:code-reviewer (same agent as REV-030, resumed)",
+      "observed_at": "2026-09-18T16:51:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-020 raised and deliberately not fixed before merge",
+      "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "FAIL",
+      "source_ref": "REV-031's only Low: the approver field-error wiring renders but has no test, so three mutations survive -- the page not passing :field-error, and the panel dropping either binding. The reviewer proved the control works and specified the three-line fix. I began writing it and stopped: the Product Owner had already authorised the merge and the reviewer had called it non-blocking, so adding a commit and another CI cycle was expanding past the instruction rather than serving it. Recorded as an open defect on this module rather than carried silently, with the fix already specified in the review report. It is the same family this module keeps meeting -- a control that exists and cannot fail a test -- which is the argument for closing it in the next supplier task rather than letting it age.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T16:51:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -2151,6 +2252,34 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-18: 同意 -- accepting the recommendation on both. L-4: authorised adding the two entries to .gitignore. L-5: leave the client suite filter as a recorded exception rather than move the plan baseline off a0d41e31 for a gate-completeness issue that CI's full run already covers; the three assertions in client/test/services/supplierSettings.test.js do execute in CI, they simply sit outside supplier-phase-001-client. L-4 was then closed WITHOUT using that authorisation: item-management's playwright config already defaults its run directory to /private/tmp, so the supplier config follows it and nothing reaches the working tree at all. .gitignore is untouched and the granted approval stays unspent. Verified as the finding was stated -- full technical suite 8/8, then git status showed only the config file. business-master still writes client/test-results/ and a root .xml the old way; out of scope here."
+    },
+    {
+      "id": "HD-024",
+      "impact": "MAJOR",
+      "question": "TASK-030's first acceptance criterion requires the create page to show an approver selector when the activation policy is on and to send no approver when it is off, but the page could not tell which. It is gated on supplier.mgmt, and requireActivationApproval was readable only through GET /api/v1/supplier-settings, which requires supplier.settings; design 4.3 states the permission catalogue has no implicit inheritance, so a creator cannot be assumed to hold it. Options put to the Product Owner: add a Supplier-owned lookup answering one boolean to any of mgmt/approval/settings; drive it from the error instead, submitting without an approver and showing the selector only after the server answers APPROVER_REQUIRED; or widen the settings read policy to accept supplier.mgmt, which also exposes version and updatedBy and shares its constant with the write route.",
+      "affected_ids": [
+        "TASK-030",
+        "AC-008",
+        "AC-009",
+        "docs/supplier_management/03_design_spec.md#7.4",
+        "server/src/handlers/supplier-lookups/activationPolicyHandler.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18: 加一條 supplier-lookups. GET /api/v1/supplier-lookups/activation-policy answers { requireActivationApproval } to any of supplier.mgmt, supplier.approval or supplier.settings, following the pattern HD-022 set for the Business Master readiness read. The server remains authoritative -- policy on without an approver is 400 APPROVER_REQUIRED, policy off with one is 400 APPROVER_NOT_REQUIRED -- so the lookup only spares the user a round trip. It reads without FOR SHARE, unlike getActivationPolicy beside it: that lock exists to freeze the answer inside a transaction, and reusing it would make a settings write wait behind a read-only page lookup. A missing settings row stays an error rather than 'no approval needed', because defaulting open on an unknown policy is silently skipping the approval requirement (SEC-007)."
+    },
+    {
+      "id": "HD-025",
+      "impact": "MINOR",
+      "question": "DEF-019, an Item Management test that deep-equals raw SHOW CREATE TABLE output including the AUTO_INCREMENT counter, has turned two supplier PRs red this phase (TASK-027 and TASK-030), each costing a CI cycle. The cause is visible in the test's own source and the fix is one line, stripping the counter before comparing. server/test/** is inside this module's allowed_write_paths, so the path permits a supplier branch to change it while the ownership does not -- the harness is explicit that a path check does not replace module ownership review. Options: fix it inline in the TASK-030 PR; fix it in its own PR, optionally with DEF-017; or leave it routed to the Item Management owner and keep re-running CI when it fires.",
+      "affected_ids": [
+        "DEF-019",
+        "DEF-017",
+        "TASK-030",
+        "server/test/integration/itemMigrationIdempotency.integration.test.js",
+        "item-management"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18: DEF-019 唔好郁. It stays routed to the Item Management owner and is not touched from a supplier branch, in this PR or a separate one. The recommendation of a separate PR was declined, so the standing cost is accepted: a supplier PR whose Test job fails on an item case should be checked against DEF-019 and DEF-017 before anyone concludes the branch is at fault, and re-run. DEF-017 is unaffected by this decision and also stays routed out."
     }
   ],
   "external_actions": [
@@ -2577,7 +2706,15 @@
     "evidence/20260918T065427-47693db4bfaf/run.json",
     "evidence/20260918T065430-3b1c2f7d9e26/run.json",
     "evidence/20260918T065432-4518dfad4efe/run.json",
-    "evidence/20260918T065435-112048660f69/run.json"
+    "evidence/20260918T065435-112048660f69/run.json",
+    "evidence/20260918T071904-a9595ae13204/run.json",
+    "evidence/20260918T071907-aa8f2f392d4f/run.json",
+    "evidence/20260918T071909-c019d72ac0d5/run.json",
+    "evidence/20260918T071912-6fcd1a2ac358/run.json",
+    "evidence/20260918T073310-f2a9fb35c09e/run.json",
+    "evidence/20260918T073314-820f8c627dbd/run.json",
+    "evidence/20260918T073316-fbf4ecfc3753/run.json",
+    "evidence/20260918T073319-7bba80ccfb53/run.json"
   ],
   "defects": [
     {
@@ -2840,7 +2977,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-020",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "client/src/pages/suppliers/SupplierCreatePage.vue",
+        "client/src/components/suppliers/SupplierApprovalPanel.vue",
+        "REV-031",
+        "TASK-030"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-027 is DONE and merged at 54180db2; the branch and worktree are retired and this entry is the merge record, so nothing is owed to the next session. PHASE-002 has one task left: TASK-030, the Approval UI. Its dependencies T11, T13, T27 and T29 are all DONE, so it is startable from a freshly fetched main, which has moved to 54180db2. It is a frontend task, so the project UI testing standard applies and Playwright validation is part of its Definition of Done; the config and spec naming convention are now in place under client/e2e/supplier-management, and a new spec must be named supplier-*.spec.js to be picked up. Worth raising with the Item Management owner as a pair rather than singly: DEF-017 and DEF-019 are both shared-database parallelism in that module's integration tests and both surfaced on supplier PRs during PHASE-002. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-030 is complete at 3403cb6 with required CI green on the exact head, first attempt. REV-031, the same reviewer re-verifying the REV-030 remediation under HD-021's precedent, is the outstanding gate; that remediation is not test-only, so it warrants the round -- it splits canApprove into canDecide, merges the two activation-policy readers used by create, activate and import paths outside this task, and adds a template test hook. After it: the Product Owner's merge decision, which has not been given, then mark TASK-030 DONE, retire the worktree and both branches, refresh the default baseline, and assess Checkpoint J across T28-T30. HD-025 settles DEF-019: it stays with Item Management and is not touched from a supplier branch, so a red Test job on an item case should be checked against DEF-019 and DEF-017 before blaming the branch. DEF-018 also remains OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }

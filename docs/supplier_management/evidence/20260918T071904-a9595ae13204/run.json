@@ -1,0 +1,95 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20260918T071904-a9595ae13204",
+  "suite_id": "supplier-phase-001-server",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+  "source_fingerprint": "bc8d0d32aab04b7b5a13326147475e6845fdd81d0e52157b4830a0227c52ff23",
+  "code_commit": "1cf40ca230d60ca31275ee17c1913c6db2fc3685",
+  "started_at": "2026-09-18T07:19:04.484688Z",
+  "ended_at": "2026-09-18T07:19:07.300182Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-030/docs/supplier_management/evidence/20260918T071904-a9595ae13204/supplier-phase-001-server.xml",
+    "server/test/supplier*.test.js",
+    "server/test/integration/supplier*.integration.test.js",
+    "server/test/businessMasterSupplierContract.test.js",
+    "server/test/business-master/consumer-contract/providerContract.test.js",
+    "server/test/business-master/http.integration.test.js",
+    "server/test/permissionCatalogueConventions.test.js",
+    "server/test/configuration.test.js",
+    "server/test/configSecrets.test.js",
+    "server/test/integration/migrations.integration.test.js",
+    "server/test/integration/itemImportMigrations.integration.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "7cdddaa614a029bb7956fd4005ef03a0220c8bf956558191a4bc9ee4a2eb5d19",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 305,
+    "passed": 305,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-012",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-020",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260918T071904-a9595ae13204/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260918T071904-a9595ae13204/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260918T071904-a9595ae13204/supplier-phase-001-server.xml",
+      "sha256": "c7558efebb217d5d8bcf6eaac0eb398163d35de1d601d4bc33cf7ee1a01f8f3a",
+      "bytes": 76185
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
