@@ -38,6 +38,7 @@ const readiness = ref(null);
 const loading = ref(true);
 const saving = ref(false);
 const readinessError = ref("");
+const settingsError = ref("");
 
 // 唯讀連結導向 Business Master，嗰邊自己閘 business_master.view。冇權限就唔扮有得
 // 㩒——設計 §7.7 講「唯讀連結**或**狀態提示」，所以呢度二選一。
@@ -70,15 +71,23 @@ async function loadReadiness() {
   }
 }
 
-onMounted(async () => {
+async function load() {
+  loading.value = true;
   try {
     await Promise.all([loadSettings(), loadReadiness()]);
+    settingsError.value = "";
   } catch (error) {
-    notifyError(error.message || "載入供應商設定失敗");
+    // 讀唔到設定唔可以淨係彈個 toast 就算：`settings` 會留喺 null，而下面個
+    // template 會即刻 dereference 佢，變成一個 raw TypeError 出街（REV-028 H-1）。
+    // 所以要有自己嘅狀態。
+    settingsError.value = error.message || "載入供應商設定失敗";
+    notifyError(settingsError.value);
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(load);
 
 async function toggleApproval(next) {
   const target = Boolean(next);
@@ -122,6 +131,15 @@ async function toggleApproval(next) {
 
     <div v-if="loading" class="q-pa-md">
       <q-spinner-dots size="2em" aria-label="載入中" />
+    </div>
+
+    <div v-else-if="!settings" class="q-pa-md">
+      <q-banner class="bg-negative text-white">
+        {{ settingsError || "載入供應商設定失敗" }}
+        <template #action>
+          <q-btn flat label="重新載入" @click="load" />
+        </template>
+      </q-banner>
     </div>
 
     <div v-else class="column q-gutter-md q-pa-md">

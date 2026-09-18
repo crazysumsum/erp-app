@@ -1,4 +1,5 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
+import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
 
 /**
@@ -61,8 +62,36 @@ export class GetSupplierBusinessMasterReadinessHandler extends BaseRequestHandle
     });
   }
 
+  /**
+   * REV-028 M-2：inspect() 喺計 schemaReady 之前就已經無條件查 currencies 同
+   * payment_terms，冇 try。所以「張表根本未建」—— schemaReady 變 false 最常見嗰個
+   * 原因 —— 實際上會出 ER_NO_SUCH_TABLE 變成 500，設定頁永遠顯示唔到
+   * 「資料表尚未建立或版本不符」。呢個 service 喺 Supplier 嘅寫入範圍外，改唔到，
+   * 所以喺呢度處理。
+   *
+   * 只捉「表唔存在」呢一種：嗰種情況下 schema 就係真係未 ready，報告佢係如實。
+   * 其他錯誤（連線斷、逾時、權限）照拋 —— 嗰啲情況我哋根本唔知 provider 就唔就緒，
+   * 報一個 NOT_READY 出去係講一個我哋未證實嘅嘢。
+   */
+  async inspect() {
+    try {
+      return await this.readiness.inspect();
+    } catch (error) {
+      if (error?.code !== "ER_NO_SUCH_TABLE" && error?.errno !== 1146) throw error;
+      return {
+        status: "NOT_READY",
+        providerContract: BusinessMasterProvider.contract,
+        schemaReady: false,
+        hkdReady: false,
+        permissionsReady: false,
+        activeCurrencyCount: 0,
+        activePaymentTermCount: 0
+      };
+    }
+  }
+
   async execute() {
-    const result = await this.readiness.inspect();
+    const result = await this.inspect();
     // 白名單投影：inspect() 仲回 checkerIds，嗰個係 server 內部組裝細節，唔關設定頁事。
     return this.response({
       status: result.status,

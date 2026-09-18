@@ -34,6 +34,9 @@ test("it requires exactly supplier.settings, the same permission as the page tha
   // 設計 §4.3：permission catalogue 冇隱式繼承，所以唔可以當 supplier.settings
   // 持有人順手有 supplier.view。
   const [policy] = GetSupplierBusinessMasterReadinessHandler.api.authorizationPolicies;
+  // REV-028 L-1：policy 個名打錯（hasPermissions）會令 registry 喺開機時拋，但呢個
+  // 檔案原本只睇 options，所以打錯字喺呢度係綠嘅。
+  assert.equal(policy.name, "hasPermission");
   assert.deepEqual(policy.options.permissions, ["supplier.settings"]);
   assert.equal(policy.options.match, undefined, "both-or-nothing is the default; do not relax it to any");
   assert.deepEqual(
@@ -79,4 +82,49 @@ test("every declared field survives the projection", async () => {
   for (const field of GetSupplierBusinessMasterReadinessHandler.api.responseSchema[200].required) {
     assert.ok(field in data, `${field} is required by the schema but never projected`);
   }
+});
+
+// ---- REV-028 M-2: the real readiness service, not a hand-written object -----
+
+/**
+ * 上面每個 case 都換走咗 handler.readiness，所以真正嗰個 service 由頭到尾冇行過。
+ * 呢兩個 case 行真嘅 BusinessMasterReadinessService，只係俾佢一個好似 MySQL 咁
+ * 失敗嘅 database double。
+ */
+async function realServiceHandler(fail) {
+  const { BusinessMasterReadinessService } = await import("../src/modules/businessMaster/BusinessMasterReadinessService.js");
+  const handler = new GetSupplierBusinessMasterReadinessHandler(services);
+  handler.readiness = new BusinessMasterReadinessService({
+    database: { async query() { throw fail(); } },
+    checkerIds: ["supplier"]
+  });
+  return handler;
+}
+
+test("absent Business Master tables read as NOT_READY, which is what the page must show", async () => {
+  // inspect() 查 currencies 係喺計 schemaReady 之前，而且冇 try。表未建 —— 即係
+  // schemaReady 應該係 false 嗰個最常見原因 —— 本來會變成 500，設定頁就永遠顯示
+  // 唔到「資料表尚未建立或版本不符」。
+  const handler = await realServiceHandler(() => {
+    const error = new Error("Table 'erp_dev.currencies' doesn't exist");
+    error.code = "ER_NO_SUCH_TABLE";
+    error.errno = 1146;
+    return error;
+  });
+  const { data } = await handler.execute();
+  assert.equal(data.status, "NOT_READY");
+  assert.equal(data.schemaReady, false);
+  assert.equal(data.activeCurrencyCount, 0);
+  assert.equal(data.providerContract, "business-master-currency-payment-term-provider/v1");
+});
+
+test("any other database failure is not dressed up as a readiness answer", async () => {
+  // 連線斷、逾時、權限 —— 嗰啲情況我哋根本唔知 provider 就唔就緒。報 NOT_READY
+  // 等於講一個未證實嘅嘢，所以要照拋。
+  const handler = await realServiceHandler(() => {
+    const error = new Error("Connection lost");
+    error.code = "PROTOCOL_CONNECTION_LOST";
+    return error;
+  });
+  await assert.rejects(() => handler.execute(), (error) => error.code === "PROTOCOL_CONNECTION_LOST");
 });

@@ -35,6 +35,7 @@ async function installApi(page, options = {}) {
     },
     readiness: options.readiness ?? READY,
     readinessFails: options.readinessFails ?? false,
+    settingsFails: options.settingsFails ?? false,
     user: options.user ?? SETTINGS_ADMIN,
     calls: []
   };
@@ -74,12 +75,15 @@ async function installApi(page, options = {}) {
       return ok(state.readiness);
     }
 
-    if (method === "GET" && path === "/api/v1/supplier-settings") return ok(state.settings);
+    if (method === "GET" && path === "/api/v1/supplier-settings") {
+      if (state.settingsFails) return fail(500, "INTERNAL_SERVER_ERROR", "Internal server error");
+      return ok(state.settings);
+    }
 
     if (method === "POST" && path === "/api/v1/supplier-settings/update") {
       if (options.conflictOnce && !state.conflicted) {
         state.conflicted = true;
-        // 服務器嗰邊已經變成 ON 咗，所以重載之後個開關要跟服務器。
+        // 服務器揸住 ON，而呢個請求要求 OFF。重載之後個開關要跟服務器，即係 ON。
         state.settings = { ...state.settings, requireActivationApproval: true, version: 9 };
         return fail(409, "VERSION_CONFLICT", "設定已被其他人修改，請重新載入");
       }
@@ -195,15 +199,19 @@ test("@technical the toggle is reachable and operable by keyboard alone", async 
   expect(state.calls.some((call) => call.path === "/api/v1/supplier-settings/update")).toBe(true);
 });
 
-test("@technical a version conflict reloads the server's value instead of retrying", async ({ page }) => {
-  const state = await installApi(page, { conflictOnce: true });
+test("@technical a version conflict shows the server's value, not the user's click", async ({ page }) => {
+  // REV-028 H-2：起手一定要係 ON。由 OFF 開始嘅話，使用者㩒去 ON、服務器又係 ON，
+  // 三個值一樣，個斷言分唔開「顯示服務器」同「顯示使用者㩒嗰個」——實測嗰個
+  // mutant（reload 完再覆蓋返 target）喺舊 fixture 之下 6/6 全綠。
+  const state = await installApi(page, { conflictOnce: true, approvalOn: true });
   await page.goto("/suppliers/settings");
+  await expect(page.locator(".q-toggle")).toHaveAttribute("aria-checked", "true");
 
+  // 使用者㩒去 OFF，服務器同時揸住 ON。
   await page.locator(".q-toggle").click();
   await confirmDialog(page, "與其他管理員同時修改", "browser-test-password");
 
   await expect(page.getByText("已重新載入目前值")).toBeVisible();
-  // 服務器嗰邊已經係 ON，所以重載之後要顯示 ON —— 唔可以顯示使用者啱啱㩒嗰個值。
   await expect(page.locator(".q-toggle")).toHaveAttribute("aria-checked", "true");
   expect(state.calls.filter((call) => call.path === "/api/v1/supplier-settings/update")).toHaveLength(1);
   expect(state.calls.filter((call) => call.path === "/api/v1/supplier-settings")).toHaveLength(2);
@@ -222,7 +230,15 @@ test("@technical the dependency panel is read-only and names what is missing", a
   await expect(page.getByRole("link", { name: /前往管理貨幣/u })).toHaveAttribute("href", "/system/business-master/currencies");
   await expect(page.getByRole("link", { name: /前往管理付款條款/u })).toHaveAttribute("href", "/system/business-master/payment-terms");
 
+  // REV-028 M-1：本來只禁 input／textarea／select，所以一個冇 href 嘅 q-btn
+  //（例如「新增貨幣」）行得過。vitest 嗰邊有呢個 loop，瀏覽器嗰邊冇——而 §9 話
+  // 瀏覽器結果先算數。
   const card = page.locator(".q-card").nth(1);
+  const controls = await card.locator("button, a").all();
+  expect(controls.length).toBeGreaterThan(0);
+  for (const control of controls) {
+    await expect(control).toHaveAttribute("href", /^\/system\/business-master\//u);
+  }
   await expect(card.locator("input, textarea, select")).toHaveCount(0);
   expect(problems).toEqual([]);
 });
@@ -236,4 +252,33 @@ test("@technical a failed readiness read does not disable the toggle", async ({ 
   await confirmDialog(page, "依賴狀態讀唔到都要改得到設定", "browser-test-password");
   await expect(page.locator(".q-toggle")).toHaveAttribute("aria-checked", "true");
   expect(state.calls.some((call) => call.path === "/api/v1/supplier-settings/update")).toBe(true);
+});
+
+test("@technical a failed settings read shows an error and recovers, instead of crashing", async ({ page }) => {
+  // REV-028 H-1：settings 留喺 null 而 template 照 dereference，使用者會見到一句
+  // raw TypeError。真瀏覽器先至睇得出——錯誤邊界接住之後成頁都冇埋。
+  const state = await installApi(page, { settingsFails: true });
+  await page.goto("/suppliers/settings");
+
+  await expect(page.getByText("重新載入")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("Cannot read propert");
+  await expect(page.locator(".q-toggle")).toHaveCount(0);
+
+  state.settingsFails = false;
+  await page.getByRole("button", { name: "重新載入" }).click();
+  await expect(page.locator(".q-toggle")).toHaveCount(1);
+});
+
+test("@technical a user without supplier.settings gets neither the menu entry nor the page", async ({ page }) => {
+  // AC 第一條：直接 URL 同 API 分別由 guard 同 server 拒絕。C1／C2 守住 metadata，
+  // 但之前冇任何瀏覽器 case 真係行過一個冇權限嘅使用者（REV-028 L-2）。
+  const state = await installApi(page, {
+    user: { ...SETTINGS_ADMIN, permissions: ["supplier.view", "business_master.view"] }
+  });
+  await page.goto("/suppliers/settings");
+
+  await expect(page).not.toHaveURL(/\/suppliers\/settings$/u);
+  await expect(page.locator(".q-toggle")).toHaveCount(0);
+  expect(state.calls.some((call) => call.path.startsWith("/api/v1/supplier-settings"))).toBe(false);
+  expect(state.calls.some((call) => call.path === "/api/v1/supplier-lookups/business-master")).toBe(false);
 });

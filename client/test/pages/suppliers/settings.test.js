@@ -28,9 +28,11 @@ async function mountPage({
   permissions = ["supplier.settings", "business_master.view"],
   settings = SETTINGS_OFF,
   readiness = READY,
-  readinessError = null
+  readinessError = null,
+  settingsError = null
 } = {}) {
-  supplierSettingsService.get.mockResolvedValue(settings);
+  if (settingsError) supplierSettingsService.get.mockRejectedValue(settingsError);
+  else supplierSettingsService.get.mockResolvedValue(settings);
   if (readinessError) supplierSettingsService.businessMasterReadiness.mockRejectedValue(readinessError);
   else supplierSettingsService.businessMasterReadiness.mockResolvedValue(readiness);
 
@@ -96,22 +98,47 @@ describe("pages/suppliers/SupplierSettingsPage.vue", () => {
     expect(supplierSettingsService.update).not.toHaveBeenCalled();
   });
 
-  it("a version conflict reloads the current value and asks for a fresh confirmation", async () => {
-    // AC：conflict 唔自動重試。重載之後個 toggle 要反映**服務器**嘅值，唔係使用者
-    // 啱啱㩒嗰個，否則佢會對住一個假狀態再確認一次。
+  it("a version conflict shows the server's value, not the one the user just clicked", async () => {
+    // AC：conflict 唔自動重試，重載之後要反映**服務器**嘅值。
+    //
+    // REV-028 H-2：呢個 case 本來由 OFF 開始、使用者㩒去 ON、而服務器嘅值又係 ON，
+    // 三個值一樣，所以 aria-checked === "true" 分唔開「服務器嘅值」同「使用者㩒嗰
+    // 個」。喺 loadSettings() 之後加返 `requireActivationApproval: target` —— 即係
+    // AC 明文禁止嗰種錯 —— 個 mutant 生還晒。而家起手係 ON、使用者㩒去 OFF、服務器
+    // 去咗 ON，兩個值唔同，斷言先至有鑑別力。
     promptPassword.mockResolvedValue({ reason: "公司開始要求覆核", password: "pw" });
     const conflict = Object.assign(new Error("設定已被其他人修改"), { code: "VERSION_CONFLICT" });
     supplierSettingsService.update.mockRejectedValue(conflict);
-    const { wrapper, body } = await mountPage();
+    const { wrapper, body } = await mountPage({ settings: { ...SETTINGS_OFF, requireActivationApproval: true } });
+    expect(toggle(wrapper).attributes("aria-checked")).toBe("true");
     supplierSettingsService.get.mockResolvedValue({ ...SETTINGS_OFF, requireActivationApproval: true, version: 9 });
 
     await toggle(wrapper).trigger("click");
     await flushPromises();
 
+    expect(supplierSettingsService.update).toHaveBeenCalledWith(
+      expect.objectContaining({ requireActivationApproval: false })
+    );
     expect(supplierSettingsService.get).toHaveBeenCalledTimes(2);
     expect(notifyError).toHaveBeenCalledWith(expect.stringContaining("重新載入"));
+    // 使用者㩒嘅係 OFF，服務器揸住 ON。顯示 OFF 就係顯示緊一個服務器冇嘅值。
+    expect(toggle(wrapper).attributes("aria-checked")).toBe("true");
     expect(body.text()).toContain("目前為");
-    expect(wrapper.find(".q-toggle").attributes("aria-checked")).toBe("true");
+  });
+
+  it("a failed settings read renders an error and a retry, not a crash", async () => {
+    // REV-028 H-1：settings 留喺 null 而 loading 又收咗掣，template 就會 dereference
+    // 佢，使用者見到嘅係一句 raw TypeError。
+    const { wrapper, body } = await mountPage({ settingsError: new Error("網路錯誤，請檢查連線") });
+    expect(body.text()).toContain("網路錯誤");
+    expect(body.text()).not.toMatch(/Cannot read propert/u);
+    expect(toggle(wrapper).exists()).toBe(false);
+    expect(notifyError).toHaveBeenCalled();
+
+    supplierSettingsService.get.mockResolvedValue(SETTINGS_OFF);
+    await body.findAll("button").find((button) => button.text().includes("重新載入")).trigger("click");
+    await flushPromises();
+    expect(toggle(wrapper).exists()).toBe(true);
   });
 
   it("shows Business Master readiness read-only, with no catalog write control", async () => {
