@@ -1,29 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 135,
+  "revision": 136,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-030",
+  "current_task": null,
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "00900fee4d04f9035bee008bddb08e73781b546b",
+    "code_commit": "2aa0965f1445095a3a9370069e31117722155977",
     "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-030",
-    "default_commit": "54180db28dc0adc16d77869907469352ae72e093",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "2aa0965f1445095a3a9370069e31117722155977",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-030 (branch codex/supplier-task-030)",
+      "workspace": "erp-app (main); no supplier worktree is open",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "127.0.0.1:5203 (Playwright dev server)"
+      "web-port": "NOT_ALLOCATED"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -57,7 +57,7 @@
     "TASK-027": "DONE",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
-    "TASK-030": "IN_PROGRESS",
+    "TASK-030": "DONE",
     "TASK-031": "PENDING",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
@@ -1928,6 +1928,17 @@
       "source_ref": "REV-031's only Low: the approver field-error wiring renders but has no test, so three mutations survive -- the page not passing :field-error, and the panel dropping either binding. The reviewer proved the control works and specified the three-line fix. I began writing it and stopped: the Product Owner had already authorised the merge and the reviewer had called it non-blocking, so adding a commit and another CI cycle was expanding past the instruction rather than serving it. Recorded as an open defect on this module rather than carried silently, with the fix already specified in the review report. It is the same family this module keeps meeting -- a control that exists and cannot fail a test -- which is the argument for closing it in the next supplier task rather than letting it age.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T16:51:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-030 merged to main via PR #114, completing PHASE-002's build work",
+      "code_commit": "2aa0965f1445095a3a9370069e31117722155977",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
+      "status": "PASS",
+      "source_ref": "gh pr view 114 reports state MERGED, mergedAt 2026-09-18T08:59:37Z, mergeCommit 2aa0965f. Pre-merge checks observed rather than assumed: origin/main had not moved from 9b47061 since the branch was cut, mergeStateStatus CLEAN, and run 35326490153 green on the exact head d04d040 for all four required checks. That run needed a rerun: its first attempt failed on DEF-019's itemMigrationIdempotency case against a commit that changed only two documentation files, which is the cleanest demonstration yet that the defect is unrelated to whatever branch it fires on. Review gate: REV-030 CHANGES_REQUESTED then REV-031 APPROVED, the same reviewer under HD-021's precedent, with all eleven findings closed and Checkpoint J judged met on all three bullets. Merge authorised by the Product Owner on 2026-09-18.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-18T17:00:05+08:00"
     }
   ],
   "pending_decisions": [
@@ -2674,6 +2685,22 @@
       "idempotency_key": "supplier-task-027-worktree-retire",
       "status": "CONFIRMED",
       "source_ref": "Performed by this session after the merge, checked before rather than after: the worktree was clean, had zero unpushed commits, and git branch --merged main listed the branch. The reviewer's probe file was gone by then, so nothing of theirs was destroyed. Worktree removed and pruned, local branch deleted with -d, remote branch deleted. git worktree list and git branch -a now show only main plus the unrelated customer-management-phase-001 and item-management-task-037 worktrees, left alone."
+    },
+    {
+      "id": "MERGE-010",
+      "kind": "MERGE_PR",
+      "target": "main from codex/supplier-task-030 via PR #114",
+      "idempotency_key": "supplier-task-030-merge-pr-114",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED at 2026-09-18T08:59:37Z, mergeCommit 2aa0965f. Required CI green on the merged head d04d040 (run 35326490153, after a rerun of a DEF-019 failure)."
+    },
+    {
+      "id": "WORKTREE-RETIRE-007",
+      "kind": "REMOVE_WORKTREE",
+      "target": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-030 and branch codex/supplier-task-030",
+      "idempotency_key": "supplier-task-030-worktree-retire",
+      "status": "CONFIRMED",
+      "source_ref": "Checked before removing, not after: the worktree was clean, had zero unpushed commits, and git branch --merged main listed the branch. Worktree removed and pruned, local branch deleted with -d, remote branch deleted. Only main and the unrelated customer-management-phase-001 and item-management-task-037 worktrees remain."
     }
   ],
   "evidence_files": [
@@ -2992,5 +3019,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-030 is complete at 3403cb6 with required CI green on the exact head, first attempt. REV-031, the same reviewer re-verifying the REV-030 remediation under HD-021's precedent, is the outstanding gate; that remediation is not test-only, so it warrants the round -- it splits canApprove into canDecide, merges the two activation-policy readers used by create, activate and import paths outside this task, and adds a template test hook. After it: the Product Owner's merge decision, which has not been given, then mark TASK-030 DONE, retire the worktree and both branches, refresh the default baseline, and assess Checkpoint J across T28-T30. HD-025 settles DEF-019: it stays with Item Management and is not touched from a supplier branch, so a red Test job on an item case should be checked against DEF-019 and DEF-017 before blaming the branch. DEF-018 also remains OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-030 is DONE and merged at 2aa0965f, and PHASE-002's build work is complete: TASK-025 through TASK-030 are all DONE. Checkpoint J across T28-T30 was judged met on all three bullets by REV-031, so the next step is a Phase-level decision rather than another task -- whether PHASE-002 closes here and what PHASE-003 opens with. That is the Product Owner's call and has not been asked. Open and routed out of this module, none of them blocking: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-019 having now turned three supplier CI runs red including one on a documentation-only commit, and HD-025 keeps both with their owner; DEF-018 is the shared PasswordReasonDialog never submitting on Enter, routed to the framework owner. Open inside this module: DEF-020, the approver field-error wiring that renders but has no test, with its three-line fix specified in 27_rev_031_independent_review.md -- worth closing in the next supplier task rather than letting it age. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
