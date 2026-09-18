@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 125,
+  "revision": 126,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1760,6 +1760,28 @@
       "source_ref": "The approval to edit .gitignore was given and deliberately not used. The repository already contained a better answer that TASK-027's first config had missed: client/e2e/item-management/playwright.config.js defaults its run directory outside the repository. The supplier config now does the same, so an approval_required_paths entry stays untouched and business-master's identical gap is recorded rather than papered over from another module's branch. Checked the way L-4 described the problem: the full technical suite ran 8/8 and git status afterwards showed only the config file itself, with no client/test-results/ and no supplier-browser.xml at the root. L-5 stands as a recorded exception; nothing about the test moves.",
       "actor": "Harness agent",
       "observed_at": "2026-09-18T14:42:02+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #113 CI red on 26d8a4c: a second Item Management test that cannot survive a shared database",
+      "code_commit": "26d8a4c1c9c8e257891a307de0a923baa5b5ab11",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "FAIL",
+      "source_ref": "Run 35316037250 on head 26d8a4c: Lint, Build frontend and Dependency audit passed; Test failed on one case, itemMigrationIdempotency.integration.test.js:93 TC-001. The diff is AUTO_INCREMENT=110 against 109 on item_brands and 118 against 117 on item_categories. Cause read out of the test rather than guessed: schemaSnapshot at :67-74 stores the raw SHOW CREATE TABLE text and the assertion deep-equals it, and SHOW CREATE TABLE includes the AUTO_INCREMENT counter. erp_dev is shared and node --test runs files in parallel, so any other item test inserting a brand or a category between the two snapshots moves a number that has nothing to do with migration idempotency. This is the second distinct Item Management case this session to fail on shared-database parallelism, by a different mechanism from DEF-017, so it is recorded as DEF-019 rather than folded into it. Not TASK-027: nothing on this branch reads or writes item tables, and the branch's own 254 server and 545 client tests plus 8 Playwright cases pass locally.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-18T14:47:11+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-019 raised: an idempotency snapshot compares a counter other tests move",
+      "code_commit": "8c3e252759c1a202b0475c667d970b0d12c7c3cf",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "FAIL",
+      "source_ref": "Deterministic in cause, intermittent in appearance: the test fails only when another file happens to insert between the two snapshots. Unlike DEF-017 this needs no hypothesis -- the mechanism is visible in the test's own source. The fix is one line, stripping the AUTO_INCREMENT clause before comparing, which would also make the test assert what its name claims rather than the state of a shared counter. Outside the Supplier module boundary, so routed to Item Management and not fixed here. It does not block this PR on the merits, but it does mean CI has to be re-run, and a re-run to green establishes non-determinism rather than innocence -- what separates it from TASK-027 is that no code on this branch touches item tables.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:47:11+08:00"
     }
   ],
   "pending_decisions": [
@@ -2740,7 +2762,20 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-019",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "server/test/integration/itemMigrationIdempotency.integration.test.js:67",
+        "server/test/integration/itemMigrationIdempotency.integration.test.js:93",
+        "GitHub Actions run 35316037250",
+        "item-management"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-027 is complete on the branch at 8c3e252. All nine REV-028 findings are now closed or dispositioned: seven fixed in code and tests, L-3 needs no change, L-4 closed by moving the browser output out of the repository, and L-5 left as a recorded exception under HD-023. No decision is open. Next: required CI on this new head, then the same reviewer re-verifying the remediation under HD-021's precedent, then the Product Owner's merge decision, which has not been given. Do not merge without it. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is then the only PHASE-002 task left. DEF-018 is OPEN and routed to the framework owner; DEF-017 is OPEN and routed to Item Management; neither blocks. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-027 is complete on the branch; REV-029 is re-verifying the remediation and required CI needs a green run on the final head. The last run was red on one Item Management case recorded as DEF-019, which no code on this branch can reach. Next: let CI run on the head this ledger entry creates, confirm the four required checks, then the Product Owner's merge decision, which has not been given. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is the last PHASE-002 task. Two Item Management defects are now open from this session's CI alone, DEF-017 and DEF-019, both shared-database parallelism in that module's integration tests; worth raising with its owner as a pair rather than singly. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
