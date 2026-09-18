@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 120,
+  "revision": 128,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": null,
+  "current_task": "TASK-027",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
-    "source_fingerprint": "a2e014cb26e459e674fdd9c7fd505804209a1467823789ed230d0799b2ae2cf7",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "code_commit": "9cd51a29b565d58b5f4b3ff02d33d6a98ec513ee",
+    "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027",
     "default_commit": "f7441c08a89a45080d0327415a86db0312568bf5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
@@ -21,9 +21,9 @@
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app (main); no supplier worktree is open",
+      "workspace": "erp-app-worktrees/supplier-task-027 (branch codex/supplier-task-027)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
-      "web-port": "NOT_ALLOCATED"
+      "web-port": "127.0.0.1:5203 (Playwright dev server; 5202 belongs to business-master)"
     },
     "lease_ref": "APPROVAL-HD-006-ERP-DEV"
   },
@@ -54,7 +54,7 @@
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
-    "TASK-027": "PENDING",
+    "TASK-027": "IN_PROGRESS",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
     "TASK-030": "PENDING",
@@ -998,6 +998,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-028",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-027 Settings UI and supplier-lookups)",
+      "reviewer": "agent-skills:code-reviewer, fresh separate agent with no prior involvement in this task, reviewing 5fb3a4c",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/24_rev_028_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-029",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-027 REV-028 remediation)",
+      "reviewer": "agent-skills:code-reviewer, the same agent as REV-028 resumed with its context, reviewing 26d8a4c",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/25_rev_029_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1671,6 +1695,127 @@
       "source_ref": "gh pr view 112 reports state MERGED, mergedAt 2026-09-18T03:44:06Z, mergeCommit f7441c08. Pre-merge checks, all observed rather than assumed: origin/main had not moved from 9588655 since the branch was cut, mergeStateStatus CLEAN, and run 35303703591 attempt 1 green on the exact head 8a6be63 for all four required checks. Local main was fast-forwarded to f7441c08. The source fingerprint observed on main after the merge is a2e014cb, identical to the one measured on the branch at 3f012f9, so the merge introduced no source content beyond what was reviewed and tested. Merge authorised by the Product Owner on 2026-09-18.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-18T11:45:04+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-027 developer checks on 5fb3a4c: 298 server, 49 client suite, full client 544, lint and build clean",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "PASS",
+      "source_ref": "run_check.py --execute wrote four DEVELOPER evidence records against fingerprint 8515273a, all naming 5fb3a4c rather than its parent: supplier-phase-001-server 298/298, supplier-phase-001-client 49/49, lint exit 0, client-build exit 0. Separately the whole client suite was run at 544/544 and the supplier server selection at 249/249 with DB_INTEGRATION_TESTS=1 against the authorized erp_dev. Seven targeted mutations were applied one at a time and all seven died: dropping requireReason from the confirmation, hardcoding the version instead of sending the loaded one, not reloading after VERSION_CONFLICT, rendering the Business Master link regardless of permission, adding a write control to the dependency card, dropping signed:true from the settings update, and spreading the readiness result instead of projecting it.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:18:47+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-027 Playwright validation: 6/6 technical browser cases pass, and the run found two things",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "PASS",
+      "source_ref": "npx playwright test --config client/e2e/supplier-management/playwright.config.js --project technical: 6 passed against a real Chromium and the real dev server, with the API mocked at the network layer. Covered: toggle ON then OFF with the real Quasar dialog, the non-retroactive wording, cancel writing nothing, VERSION_CONFLICT reloading the server's value rather than the user's click, the read-only dependency panel naming the missing part, a failed readiness read not disabling the toggle, keyboard reachability and operation, console and network. The run asserts no console error or warning and that no request ever reaches /api/v1/business-master, and that the update carries an X-Device-* header so a dropped signed:true would show. Two findings, neither a defect in this task's code: the first Tab does not land on the toggle because the layout has a header and sidebar ahead of it, so the test walks the tab order rather than assuming a position; and DEF-018 below. Limitation stated rather than glossed: the backend is mocked, so this proves the client's behaviour and the requests it emits, not the server's responses.",
+      "actor": "Harness agent via Playwright",
+      "observed_at": "2026-09-18T14:18:47+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-018 raised: Enter inside the shared password/reason dialog does not submit it",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "FAIL",
+      "source_ref": "Proved by probe rather than inferred. In PasswordReasonDialog.vue the confirm button sits in q-card-actions, outside the <q-form>, so the form contains two inputs and zero submit buttons -- the case where HTML implicit submission does not fire. A throwaway Playwright probe filled both fields and pressed Enter in the password field: 0 update requests, dialog still visible, 0 submit buttons inside the form, 2 inputs inside it. The probe was removed afterwards. Consequence: every high-risk action using promptPassword({requireReason:true}) -- supplier lifecycle, code change, delete, and now settings -- can only be confirmed by reaching the button, never by Enter. Keyboard operation is still possible, which is why this is LOW and not blocking, and the TASK-027 browser test walks to the button rather than asserting the current behaviour as correct. Not fixed here: client/src/framework/ui/** is outside the Supplier module's allowed_write_paths and the component is shared with Item Management, so it is routed to the framework owner.",
+      "actor": "Harness agent via Playwright",
+      "observed_at": "2026-09-18T14:18:47+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-028 CHANGES_REQUESTED on 5fb3a4c: one real defect, and one control this branch claimed to have tested and had not",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "FAIL",
+      "source_ref": "REV-028 returned 0 Critical, 2 High, 2 Medium, 5 Low after re-running everything and applying 29 mutations of its own (27 killed, 2 survived). H-1 is a real defect that shipped: a failed GET /api/v1/supplier-settings left settings null while loading went false, and the template dereferenced it -- the reviewer drove it in a real browser and the page was replaced by the framework error boundary showing 'Cannot read properties of null (reading requireActivationApproval)'. The readiness read had been handled carefully and the page's own primary read had not, and no test covered it. H-2 is a false claim rather than a defect: both version-conflict fixtures started OFF, had the user click ON, and had the server hold ON, so aria-checked === 'true' could not distinguish the server's value from the user's click; the reviewer's mutant, which reloads and then overwrites with the clicked value, survived vitest 9/9 and Playwright 6/6. M-1: the browser copy of the read-only dependency check banned only form fields, so a q-btn with no href survived there while vitest killed it. M-2: BusinessMasterReadinessService.inspect() queries currencies before computing schemaReady with no guard, so absent tables produce ER_NO_SUCH_TABLE and a 500, making the page's own '資料表尚未建立或版本不符' unreachable; proved against the real service with a throwing database double. Five Lows: a policy-name typo invisible to the new suite, no browser case for a denied user, the policy and empty schema redefined rather than imported, every Playwright run dirtying the tree, and the new service test sitting outside the module's declared client gate.",
+      "actor": "agent-skills:code-reviewer (separate agent)",
+      "observed_at": "2026-09-18T14:34:34+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "CORRECTION to the TASK-027 Playwright observation: the version-conflict claim recorded earlier was not true",
+      "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+      "status": "FAIL",
+      "source_ref": "The earlier observation at revision 122 listed 'VERSION_CONFLICT reloading the server's value rather than the user's click' among what the browser run covered, and the commit message for 5fb3a4c said the browser test pinned it. Neither was true. The fixture had the user click ON against a server that also held ON, so the assertion passed for either behaviour. Recorded as its own correction rather than by editing the earlier entry, so the mistake stays visible. This is the same failure family as REV-026 H-2 and my own earlier LIMIT 100 assertion: a test that looks like a control and reaches it by a route that cannot discriminate. The mutation I had run -- 'not reloading after VERSION_CONFLICT' -- is caught by the get call counts and was never the hard case.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:34:34+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-028 remediated on 50658a8: all five of the reviewer's mutations now die, in both layers",
+      "code_commit": "50658a8f0c80fde70abeffc883f316a686c72c01",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "99f6f0a837955c080786adc7c80efd6848596919ba1cd0a14d72329076ec815e",
+      "status": "PASS",
+      "source_ref": "Seven of nine findings are closed on the branch. H-1: the settings read has its own state, an error banner with retry, a vitest case and a browser case; removing the null guard again turns both red. H-2: both fixtures now start ON and click OFF against a server holding ON, and the reviewer's overwrite mutant dies in vitest and in Playwright. M-1: the vitest button/href loop is now in the spec, and a q-btn labelled 新增貨幣 dies in both. M-2: the handler catches ER_NO_SUCH_TABLE only and reports NOT_READY; a connection loss still propagates, because we would not know the provider is unready and reporting NOT_READY would assert something unproven -- narrower than the blanket catch the reviewer proposed. Two tests drive the real BusinessMasterReadinessService over a throwing double, since every other test here replaces it. L-1 and L-2 are closed by a policy-name assertion and a denied-user browser case. Verification on this commit: 254/254 supplier server selection, 545/545 full client, 8/8 Playwright technical, lint and build clean, and four evidence records naming 50658a8. L-3 needs no change: the reviewer recorded it rather than raising it, and a test already guards the duplication against drift. L-4 and L-5 are open under HD-023.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:34:34+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-023 closed: the browser run no longer dirties the tree, and .gitignore did not need touching",
+      "code_commit": "8c3e252759c1a202b0475c667d970b0d12c7c3cf",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "PASS",
+      "source_ref": "The approval to edit .gitignore was given and deliberately not used. The repository already contained a better answer that TASK-027's first config had missed: client/e2e/item-management/playwright.config.js defaults its run directory outside the repository. The supplier config now does the same, so an approval_required_paths entry stays untouched and business-master's identical gap is recorded rather than papered over from another module's branch. Checked the way L-4 described the problem: the full technical suite ran 8/8 and git status afterwards showed only the config file itself, with no client/test-results/ and no supplier-browser.xml at the root. L-5 stands as a recorded exception; nothing about the test moves.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:42:02+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #113 CI red on 26d8a4c: a second Item Management test that cannot survive a shared database",
+      "code_commit": "26d8a4c1c9c8e257891a307de0a923baa5b5ab11",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "FAIL",
+      "source_ref": "Run 35316037250 on head 26d8a4c: Lint, Build frontend and Dependency audit passed; Test failed on one case, itemMigrationIdempotency.integration.test.js:93 TC-001. The diff is AUTO_INCREMENT=110 against 109 on item_brands and 118 against 117 on item_categories. Cause read out of the test rather than guessed: schemaSnapshot at :67-74 stores the raw SHOW CREATE TABLE text and the assertion deep-equals it, and SHOW CREATE TABLE includes the AUTO_INCREMENT counter. erp_dev is shared and node --test runs files in parallel, so any other item test inserting a brand or a category between the two snapshots moves a number that has nothing to do with migration idempotency. This is the second distinct Item Management case this session to fail on shared-database parallelism, by a different mechanism from DEF-017, so it is recorded as DEF-019 rather than folded into it. Not TASK-027: nothing on this branch reads or writes item tables, and the branch's own 254 server and 545 client tests plus 8 Playwright cases pass locally.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-18T14:47:11+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-019 raised: an idempotency snapshot compares a counter other tests move",
+      "code_commit": "8c3e252759c1a202b0475c667d970b0d12c7c3cf",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "FAIL",
+      "source_ref": "Deterministic in cause, intermittent in appearance: the test fails only when another file happens to insert between the two snapshots. Unlike DEF-017 this needs no hypothesis -- the mechanism is visible in the test's own source. The fix is one line, stripping the AUTO_INCREMENT clause before comparing, which would also make the test assert what its name claims rather than the state of a shared counter. Outside the Supplier module boundary, so routed to Item Management and not fixed here. It does not block this PR on the merits, but it does mean CI has to be re-run, and a re-run to green establishes non-determinism rather than innocence -- what separates it from TASK-027 is that no code on this branch touches item tables.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:47:11+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-029 APPROVED: all nine REV-028 findings closed, 29 of 29 mutations now die, and the reviewer retracted two of its own claims",
+      "code_commit": "26d8a4c1c9c8e257891a307de0a923baa5b5ab11",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "5e79c3b190e6fe1b64c2c15d8d772b17b9296f68249f494e5d70cddb2e071a6f",
+      "status": "PASS",
+      "source_ref": "REV-029 returned APPROVED with 0 Critical, 0 High, 1 Medium, 2 Low and a Nit. It re-ran all 29 of its original mutations (all now die, against 26 that genuinely died before -- S4 had previously escaped the targeted suite and was caught only at boot) plus 10 new ones aimed at the remediation, of which 9 died and 1 was equivalent. It retracted two of its own positions after checking them: its blanket-catch proposal for M-2 would have reported 'Business Master is not ready' on a dropped connection and sent an admin to migrate a healthy schema, and its 'one-word change' description of L-5 was wrong -- it verified harness_core.py:307 hashes the profile into the plan baseline and that its own recommended edit moves it from a0d41e31 to abfe63dd. It verified L-4 the way it was asked to: all three env permutations land the XML correctly including the exact form harness_runner.py sets, git status is clean after every run, and the fix is load-bearing beyond tidiness because the old artifacts would have tripped CANDIDATE_DIRTY on formal runs. Counts re-run independently: 300/300 declared server gate, 50/50 declared client gate, 545/545 full client, 1746/1749 full server with the same two pre-existing Item environment failures, 8/8 Playwright, lint and build clean.",
+      "actor": "agent-skills:code-reviewer (same agent as REV-028, resumed)",
+      "observed_at": "2026-09-18T14:54:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-029's findings closed on 9cd51a2, and a stray-spec hole closed from an incident rather than a finding",
+      "code_commit": "9cd51a29b565d58b5f4b3ff02d33d6a98ec513ee",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "fa56305b335b1d2ecb3150de909d655aedef9ae7a7f76706d7b4ece3389dba6a",
+      "status": "PASS",
+      "source_ref": "M-1 was a real residue of H-1's fix: the conflict branch called loadSettings() directly, so a reload that itself failed escaped toggleApproval, fired no notification at all, and hit the same error boundary H-1 was raised about -- with H-1's banner suppressed because settings was non-null by then. Wrapped in try/catch rather than switching to load(), which would flip loading back to true and make the toggle vanish and return mid-conflict; covered in both layers and the wrapper's removal turns both red. L-1: 1054 ER_BAD_FIELD_ERROR joins 1146 in the schema-not-ready set, which is the 版本不符 half of the page's own label and the case inspect() is structurally blind to, since it SELECTs columns before running the schema inspector. The Nit is taken. Recorded honestly: the mutation aimed at that Nit survived, and correctly so -- reverting an assertion to a weaker form is a test-strength change, not a behaviour one, so it proves nothing; the reviewer had already said the companion assertions carry the case. Also hardened from an incident rather than a finding: testMatch was '*.spec.js', so any stray spec in that directory became this module's formal browser evidence, which is exactly what happened when my own git add -A swept a reviewer probe into 2dfba2c and turned CI lint red. It is now supplier-*.spec.js, and doc-recording commits name their paths. Verification on this commit: 546 client, 255 supplier server, 9/9 Playwright, lint and build clean, four evidence records naming 9cd51a2.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-18T14:54:51+08:00"
     }
   ],
   "pending_decisions": [
@@ -1980,6 +2125,21 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-18, after being shown the conflict: 改做 supplier-lookups. TASK-027 adds a Supplier-owned lookup route under server/src/handlers/supplier-lookups/ -- a path the Supplier manifest already lists in allowed_write_paths, so no manifest edit and no stranded approvals -- authorised with Supplier permissions and backed by the existing internal BusinessMasterLookupProvider, including the readiness projection the Settings page needs. Business Master is not modified at all. Consequently Supplier design 6.7's row describing the UI calling the Business Master endpoints directly is stale: it documents the approach DES-012 records as abandoned. It is recorded here as a standing exception rather than corrected in place, on the same reasoning as HD-018 and HD-019 -- editing 03_design_spec.md moves the DESIGN baseline e4083319 and strands every approval and review bound to it. Noted for TASK-027 but not decided here: SupplierBasicForm.vue and SupplierPaymentDefaults.vue already call the Business Master endpoints directly from the client, which deviates from DES-001 the same way; whether they move to the new route is a TASK-027 scoping question."
+    },
+    {
+      "id": "HD-023",
+      "impact": "MINOR",
+      "question": "REV-028's two remaining Lows both need a decision rather than an edit. L-4: every Playwright run leaves client/test-results/ and supplier-browser.xml untracked at the repository root, and .gitignore is an approval_required_paths entry, so they were deleted rather than committed and .gitignore was left alone. business-master has the identical gap, so this affects every future task that runs a browser suite under the project UI testing standard. L-5: the supplier-phase-001-client suite filters on 'test/services/supplier.test.js', which matches that file literally and not supplierSettings.test.js, so three assertions -- including the one holding signed:true -- sit outside the module's own gate, though CI's full run does execute them. The reviewer called L-5 a one-word change; it is not. 00_project_profile.json is hashed into the PLAN baseline (harness_core.Context.baselines: plan = digest of manifest, profile, traceability and specs), so widening that filter moves the plan baseline off a0d41e31 and strands every approval, review and observation bound to it -- the same cost HD-017 paid once already. Recorded as MINOR because the default action on both is to leave things as they are and neither Low blocks the merge. Option (b) for L-5 is the exception: choosing to move the plan baseline would itself be a MAJOR action and would have to be recorded as one, with every stranded approval, review and observation re-affirmed, exactly as HD-017 did. Options for each: leave as a recorded exception; or accept that cost deliberately.",
+      "affected_ids": [
+        "TASK-027",
+        ".gitignore",
+        "docs/supplier_management/00_project_profile.json",
+        "client/e2e/supplier-management/playwright.config.js",
+        "REV-028",
+        "APPROVAL-HD-004-PLAN"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-18: 同意 -- accepting the recommendation on both. L-4: authorised adding the two entries to .gitignore. L-5: leave the client suite filter as a recorded exception rather than move the plan baseline off a0d41e31 for a gate-completeness issue that CI's full run already covers; the three assertions in client/test/services/supplierSettings.test.js do execute in CI, they simply sit outside supplier-phase-001-client. L-4 was then closed WITHOUT using that authorisation: item-management's playwright config already defaults its run directory to /private/tmp, so the supplier config follows it and nothing reaches the working tree at all. .gitignore is untouched and the granted approval stays unspent. Verified as the finding was stated -- full technical suite 8/8, then git status showed only the config file. business-master still writes client/test-results/ and a root .xml the old way; out of scope here."
     }
   ],
   "external_actions": [
@@ -2378,7 +2538,19 @@
     "evidence/20260918T012919-ca8473d699f8/run.json",
     "evidence/20260918T033239-1e970877794b/run.json",
     "evidence/20260918T033242-b045bbca1386/run.json",
-    "evidence/20260918T033244-d2e5df347b08/run.json"
+    "evidence/20260918T033244-d2e5df347b08/run.json",
+    "evidence/20260918T061819-80d5db288252/run.json",
+    "evidence/20260918T061822-fba31d20a26f/run.json",
+    "evidence/20260918T061824-25f933698437/run.json",
+    "evidence/20260918T061827-0e5e558135ef/run.json",
+    "evidence/20260918T063406-f876081276f5/run.json",
+    "evidence/20260918T063409-1943b81907d9/run.json",
+    "evidence/20260918T063411-3ae5f10851a4/run.json",
+    "evidence/20260918T063414-f31150fe7a8f/run.json",
+    "evidence/20260918T065427-47693db4bfaf/run.json",
+    "evidence/20260918T065430-3b1c2f7d9e26/run.json",
+    "evidence/20260918T065432-4518dfad4efe/run.json",
+    "evidence/20260918T065435-112048660f69/run.json"
   ],
   "defects": [
     {
@@ -2616,7 +2788,32 @@
       ],
       "closure_evidence": [],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-018",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "client/src/framework/ui/PasswordReasonDialog.vue",
+        "TASK-027",
+        "client/e2e/supplier-management/supplier-settings.spec.js"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-019",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "source_ids": [
+        "server/test/integration/itemMigrationIdempotency.integration.test.js:67",
+        "server/test/integration/itemMigrationIdempotency.integration.test.js:93",
+        "GitHub Actions run 35316037250",
+        "item-management"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-029 is DONE and merged at f7441c08 with its worktree and branches retired. TASK-027's dependency is now resolved: the Business Master management entry point exists and that module is ACCEPTED, and HD-022 settles how the Settings page reads provider readiness -- a Supplier-owned route under server/src/handlers/supplier-lookups/, with Business Master untouched. TASK-027's other dependencies, T04 and T26, are both DONE, so it is startable. Its scope now includes a server route that its 'Files likely touched' list does not mention; that list is advisory in the plan and the path is already inside the manifest's allowed_write_paths, so no plan or manifest edit is needed and no baseline moves. TASK-027 is client-facing, so the project UI testing standard applies and Playwright validation is required before it can be called done. TASK-030 unblocks after it. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-017 is OPEN and routed to Item Management; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-027 is complete at 9cd51a2 and REV-029 is APPROVED, so the review gate is satisfied. Every finding across REV-028 and REV-029 is closed except L-5, a recorded exception under HD-023. No decision is open. Next: required CI green on this head -- the last two runs were red on Item Management defects DEF-017-style parallelism recorded as DEF-019, and on a lint error from a reviewer probe I committed by accident, which 86bfc35 untracked. Then the Product Owner's merge decision, which has not been given. After merge: mark TASK-027 DONE, retire the worktree and both branches, refresh the default baseline, and TASK-030 is the last PHASE-002 task. Worth raising with the Item Management owner as a pair rather than singly: DEF-017 and DEF-019 are both shared-database parallelism in that module's integration tests and both surfaced on supplier PRs. DEF-018 is OPEN and routed to the framework owner. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
