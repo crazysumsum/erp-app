@@ -567,3 +567,421 @@ integrationTest("the eligible approver lookup is decided by the real role and pe
   const excluded = await service.listEligibleApprovers({ ...reader, q: "supplier-approval-it-", excludeUserId: who.approverId });
   assert.ok(!excluded.items.some((item) => item.id === who.approverId), "excludeUserId must drop that user");
 });
+
+/**
+ * T31 起呢個檔案要覆蓋 SUP-CAP-02 嘅併發同安全出口，所以多咗兩件工具：
+ *
+ *   - `realAuthServiceOn` 用真正嘅 `assertActorFresh`。撤權測試用 stub 係證明唔到
+ *     嘢嘅 —— stub 就係「而家嘅權限」嘅答案本身，改咗 `user_roles` 佢都唔會知。
+ *   - `seedRole` / `grantRole` 種真嘅 role → permission → user 鏈，因為 `assertActorFresh`
+ *     同 `assertEligibleApprover` 都係行呢三張表，唔係行任何 claim。
+ */
+function realAuthServiceOn(connection) {
+  return new SupplierApprovalService({
+    database: {
+      query: (sql, params) => connection.query(sql, params),
+      async withTransaction(work) {
+        await connection.beginTransaction();
+        try {
+          const result = await work(connection);
+          await connection.commit();
+          return result;
+        } catch (error) {
+          await connection.rollback();
+          throw error;
+        }
+      }
+    },
+    logger: { warn() {} },
+    time: { nowMs: () => Date.now() },
+    // authorize／loadPermissions 都刻意唔傳：用 service 自己嘅預設，即係真嘢。
+    businessMaster: {
+      async assertSupplierDefaultsInTransaction() {
+        return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null };
+      }
+    }
+  });
+}
+
+async function seedRole(connection, suffix) {
+  const [[permission]] = await connection.query("SELECT id FROM permissions WHERE name = 'supplier.approval'");
+  assert.ok(permission, "migration 0034 must have seeded supplier.approval");
+  const [role] = await connection.execute(
+    "INSERT INTO roles (name, description, created_at) VALUES (?, '', ?)",
+    [`supplier-t31-it-${suffix}`, Date.now()]
+  );
+  const roleId = Number(role.insertId);
+  await connection.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
+  return roleId;
+}
+
+async function countAudit(connection, supplierId, action) {
+  const [[row]] = await connection.query(
+    "SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE supplier_id = ? AND action = ?",
+    [supplierId, action]
+  );
+  return Number(row.n);
+}
+
+/**
+ * AC-010／FR-APPROVAL-007：兩個人同時撳批准。設計靠 `suppliers` 嘅 FOR UPDATE 排序
+ * 佢哋，之後第二個先讀到已經批咗嘅 row 並且行重送分支。呢度要證嘅唔係「兩個都唔
+ * 死」，而係**只有一個 transition 同一筆 decision audit** —— 兩筆 audit 就係兩次
+ * 決定，即使最終狀態睇落一樣。
+ */
+integrationTest("two concurrent approves produce one transition and exactly one decision audit", async (t) => {
+  const first = await mysql.createConnection(config());
+  const second = await mysql.createConnection(config());
+  const setup = await mysql.createConnection(config());
+  let supplierId = null;
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(setup, supplierId);
+    await cleanupActors(setup, who);
+    await first.end(); await second.end(); await setup.end();
+  });
+
+  who = await seedActors(setup, randomUUID().slice(0, 8));
+  const seeded = await seed(setup, randomUUID().slice(0, 8), who);
+  supplierId = seeded.supplierId;
+
+  const decision = (connection) => serviceOn(connection, { actorId: who.approverId }).approveRequest({
+    actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"],
+    id: seeded.requestId, version: 1, reason: "併發批准原因", requestId: "req-race", ip: "127.0.0.1"
+  }).then((result) => ({ ok: true, result }), (error) => ({ ok: false, code: error.publicCode ?? error.code ?? error.message }));
+
+  const [a, b] = await Promise.all([decision(first), decision(second)]);
+  const outcomes = [a, b];
+  assert.ok(outcomes.every((o) => o.ok), `both calls must resolve; got ${JSON.stringify(outcomes)}`);
+  assert.ok(outcomes.every((o) => o.result.status === "approved"), "both callers must end up seeing the same terminal status");
+
+  const applied = outcomes.filter((o) => o.result.replayed === false);
+  const replayed = outcomes.filter((o) => o.result.replayed === true);
+  assert.equal(applied.length, 1, "exactly one call may perform the transition");
+  assert.equal(replayed.length, 1, "the loser must replay the terminal state, not transition again");
+
+  const [[request]] = await setup.query("SELECT status, version FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+  assert.equal(request.status, "approved");
+  assert.equal(Number(request.version), 2, "a second transition would have bumped the version again");
+  const [[supplier]] = await setup.query("SELECT status, version FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(supplier.status, "active");
+  assert.equal(await countAudit(setup, supplierId, "approval.approve"), 1, "one decision, one audit row");
+});
+
+/**
+ * AC-010／FR-APPROVAL-007：重送同一個決定。上面嗰個併發測試靠真實鎖排序，所以佢
+ * 邊一邊贏係唔固定嘅；呢個係確定性嘅控制 —— 同一個 version 送兩次，第二次一定要
+ * 行重送分支，唔可以再寫一筆 audit。
+ */
+integrationTest("resending the same decision is idempotent and writes no second audit row", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+
+  who = await seedActors(connection, randomUUID().slice(0, 8));
+  const seeded = await seed(connection, randomUUID().slice(0, 8), who);
+  supplierId = seeded.supplierId;
+
+  const service = serviceOn(connection, { actorId: who.approverId });
+  const decision = {
+    actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"],
+    id: seeded.requestId, version: 1, reason: "重送測試批准原因", requestId: "req-int", ip: "127.0.0.1"
+  };
+  const applied = await service.approveRequest(decision);
+  assert.equal(applied.replayed, false);
+  assert.equal(applied.version, 2);
+
+  const resent = await service.approveRequest(decision);
+  assert.equal(resent.replayed, true, "FR-APPROVAL-007: a resend returns the current state");
+  assert.equal(resent.status, "approved");
+  assert.equal(resent.version, 2, "the replay must report the stored version, not input.version + 1");
+
+  const [[request]] = await connection.query("SELECT version FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+  assert.equal(Number(request.version), 2, "the resend must not transition again");
+  assert.equal(await countAudit(connection, supplierId, "approval.approve"), 1, "a resend is not a second decision");
+});
+
+/**
+ * AC-012／設計 §4.5：批准撞正一個關鍵資料改動。呢度刻意令編輯方贏（佢先攞
+ * `suppliers` 鎖），因為咁樣先有確定性嘅斷言：一個 terminal 結果 = invalidated，
+ * 而唔係「approved 同 invalidated 兩樣都發生過」。
+ */
+integrationTest("an approve racing a significant edit yields one terminal result, not both", async (t) => {
+  const editor = await mysql.createConnection(config());
+  const approver = await mysql.createConnection(config());
+  const setup = await mysql.createConnection(config());
+  let supplierId = null;
+  let who = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(setup, supplierId);
+    await cleanupActors(setup, who);
+    await editor.end(); await approver.end(); await setup.end();
+  });
+
+  who = await seedActors(setup, randomUUID().slice(0, 8));
+  const suffix = randomUUID().slice(0, 8);
+  const seeded = await seed(setup, suffix, who);
+  supplierId = seeded.supplierId;
+
+  // 編輯方跟設計 2.6 嘅鎖序：suppliers 行先。
+  await editor.beginTransaction();
+  await editor.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [supplierId]);
+
+  const approving = serviceOn(approver, { actorId: who.approverId }).approveRequest({
+    actorId: who.approverId, claimedRoles: [], claimedPermissions: ["supplier.approval"],
+    id: seeded.requestId, version: 1, reason: "併發批准原因", requestId: "req-race", ip: "127.0.0.1"
+  }).then(() => ({ ok: true }), (error) => ({ ok: false, code: error.publicCode ?? error.code ?? error.message }));
+
+  // 俾批准方真係塞喺 suppliers 鎖度，唔係喺佢開始之前就完咗事。
+  await new Promise((resolve) => { setTimeout(resolve, 300); });
+  await editor.execute(
+    "UPDATE suppliers SET supplier_name = ?, supplier_name_key = ?, version = version + 1, updated_at = ? WHERE id = ?",
+    [`Renamed ${suffix}`, `renamed ${suffix}`, Date.now(), supplierId]
+  );
+  await serviceOn(editor, { actorId: who.requesterId }).invalidateOpenRequest(editor, {
+    supplierId, actorId: who.requesterId, actorUsername: "integration",
+    supplierCode: `APR-${suffix}`, changedFields: ["supplierName"], requestId: "req-race", ip: "127.0.0.1"
+  });
+  await editor.execute("UPDATE suppliers SET status = 'draft' WHERE id = ? AND status = 'pending_approval'", [supplierId]);
+  await editor.commit();
+
+  const outcome = await approving;
+  assert.equal(outcome.ok, false, "the edit won the Supplier lock, so the approve must not also succeed");
+  assert.equal(outcome.code, "APPROVAL_REQUEST_NOT_OPEN", `unexpected failure: ${outcome.code}`);
+
+  const [[request]] = await setup.query("SELECT status FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+  assert.equal(request.status, "invalidated", "exactly one terminal status, and it is the edit's");
+  const [[supplier]] = await setup.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(supplier.status, "draft", "a Supplier must never end up active on an invalidated request");
+  assert.equal(await countAudit(setup, supplierId, "approval.approve"), 0, "the losing decision must leave no audit");
+  assert.equal(await countAudit(setup, supplierId, "approval.invalidate"), 1);
+});
+
+/**
+ * SEC-004／設計 §4.5：token 派發之後先撤權。呢個測試唔用 stub authorize —— 用
+ * stub 嘅話「而家嘅權限」就係測試自己嗌出嚟嘅答案，改 `user_roles` 佢一無所知。
+ *
+ * 兩層都要證，因為佢哋擋嘅係兩件唔同嘅事：
+ *   - 第一層 `assertActorFresh` 擋「claim 同現況唔夾」，即係揸住舊 token 嘅人。
+ *   - 第二層 `#assertActorMayDecide` 擋「claim 同現況夾晒，但個人根本冇審批權」，
+ *     即係一個誠實地冇權嘅 caller。淨係有第一層嘅話，佢會直接批到。
+ */
+integrationTest("a decision made after the approver's permission is revoked fails at both guards", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  let who = null;
+  let roleId = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  roleId = await seedRole(connection, suffix);
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [who.approverId, roleId]);
+  const seeded = await seed(connection, suffix, who);
+  supplierId = seeded.supplierId;
+
+  const service = realAuthServiceOn(connection);
+  const decision = {
+    actorId: who.approverId, id: seeded.requestId, version: 1,
+    reason: "撤權測試批准原因", requestId: "req-int", ip: "127.0.0.1"
+  };
+
+  // 撤權：個 token 仲係講緊佢有 supplier.approval。
+  await connection.execute("DELETE FROM user_roles WHERE user_id = ? AND role_id = ?", [who.approverId, roleId]);
+  await assert.rejects(
+    () => service.approveRequest({ ...decision, claimedRoles: [`supplier-t31-it-${suffix}`], claimedPermissions: ["supplier.approval"] }),
+    (error) => error.publicCode === "PERMISSION_STALE",
+    "a stale token must be refused before the decision is considered"
+  );
+
+  // 同一個人，今次誠實地 claim 返佢而家真係有嘅嘢（乜都冇）。第一層過到 —— claim
+  // 同現況一致 —— 所以擋佢嘅一定要係第二層。
+  await assert.rejects(
+    () => service.approveRequest({ ...decision, claimedRoles: [], claimedPermissions: [] }),
+    (error) => error.publicCode === "APPROVAL_PERMISSION_LOST",
+    "an honest caller without supplier.approval must still be refused"
+  );
+
+  const [[request]] = await connection.query("SELECT status FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+  assert.equal(request.status, "pending", "neither refused call may have decided anything");
+  const [[supplier]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(supplier.status, "pending_approval");
+  assert.equal(await countAudit(connection, supplierId, "approval.approve"), 0);
+});
+
+/**
+ * BR-012／AC-008：審批人被停用。`assertEligibleApprover` 查嘅係 `status = 'active'`，
+ * 所以呢度要真嘅 users row 先證得到 —— 一個 stub loadPermissions 係唔會睇 status 嘅。
+ */
+integrationTest("a disabled user can neither receive a reassignment nor decide", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  let who = null;
+  let roleId = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  roleId = await seedRole(connection, suffix);
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [who.approverId, roleId]);
+  const seeded = await seed(connection, suffix, who);
+  supplierId = seeded.supplierId;
+
+  // 佢仲有 supplier.approval —— 唯一變咗嘅係個帳號停用咗。
+  await connection.execute("UPDATE users SET status = 'disabled' WHERE id = ?", [who.approverId]);
+
+  const service = realAuthServiceOn(connection);
+  await assert.rejects(
+    () => service.reassignRequest({
+      actorId: who.requesterId, claimedRoles: [], claimedPermissions: [],
+      id: seeded.requestId, version: 1, approverUserId: who.approverId,
+      reason: "重新指派俾停用帳號", requestId: "req-int", ip: "127.0.0.1"
+    }),
+    // reassign 第一關係 actor 自己要有 supplier.approval；requester 冇，所以佢會
+    // 喺到停低。呢個斷言鎖住嘅係「順序」：actor 檢查行先，唔會借 reassign 去
+    // 探測邊個帳號存在。
+    (error) => error.publicCode === "APPROVAL_PERMISSION_LOST",
+    "reassign must check the actor before it looks the target up"
+  );
+
+  // 用一個真係有權嘅 actor 再試一次，今次擋佢嘅一定要係 target 嘅 status。
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [who.requesterId, roleId]);
+  await assert.rejects(
+    () => service.reassignRequest({
+      actorId: who.requesterId, claimedRoles: [`supplier-t31-it-${suffix}`], claimedPermissions: ["supplier.approval"],
+      id: seeded.requestId, version: 1, approverUserId: who.approverId,
+      reason: "重新指派俾停用帳號", requestId: "req-int", ip: "127.0.0.1"
+    }),
+    (error) => error.publicCode === "APPROVER_NOT_ELIGIBLE",
+    "a disabled user must not be assignable"
+  );
+
+  // 而佢自己亦都批唔到：停用之後 assertActorFresh 讀返空集合。
+  await assert.rejects(
+    () => service.approveRequest({
+      actorId: who.approverId, claimedRoles: [], claimedPermissions: [],
+      id: seeded.requestId, version: 1, reason: "停用帳號批准原因", requestId: "req-int", ip: "127.0.0.1"
+    }),
+    (error) => error.publicCode === "APPROVAL_PERMISSION_LOST",
+    "a disabled approver must not be able to decide"
+  );
+
+  const [[request]] = await connection.query("SELECT status, assigned_approver_id FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+  assert.equal(request.status, "pending");
+  assert.equal(Number(request.assigned_approver_id), who.approverId, "no refused call may have moved the assignment");
+});
+
+/**
+ * 設計 §6.3／REV-026 H-1：撤回係一條 child route，所以 route 上面嘅 Supplier 同
+ * request 嘅 Supplier 要夾得返。呢度用真 row 證：借 Supplier B 條 route 去撤
+ * Supplier A 嘅申請，要當「搵唔到」處理，而且 A 嗰個申請要原封不動。
+ */
+integrationTest("withdrawing through another Supplier's route is refused and changes nothing", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let targetId = null;
+  let decoyId = null;
+  let who = null;
+  t.after(async () => {
+    if (targetId) await cleanup(connection, targetId);
+    if (decoyId) await cleanup(connection, decoyId);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+
+  who = await seedActors(connection, randomUUID().slice(0, 8));
+  const target = await seed(connection, randomUUID().slice(0, 8), who);
+  targetId = target.supplierId;
+  const decoy = await seed(connection, randomUUID().slice(0, 8), who);
+  decoyId = decoy.supplierId;
+
+  const service = serviceOn(connection, { actorId: who.requesterId });
+  await assert.rejects(
+    () => service.withdrawRequest({
+      actorId: who.requesterId, claimedRoles: [], claimedPermissions: ["supplier.mgmt"],
+      // 真嘅 request id，但係另一個 Supplier 嘅 route。
+      id: target.requestId, supplierId: decoyId,
+      reason: "IDOR 探測", requestId: "req-int", ip: "127.0.0.1"
+    }),
+    // publicCode 同「申請搵唔到」共用，所以只比 code 係分唔到嘅；分別喺人睇到嗰句。
+    (error) => error.publicCode === "SUPPLIER_NOT_FOUND" && error.publicMessage === "找不到這個供應商",
+    "a cross-Supplier withdraw must look like a missing Supplier, not a permission hint"
+  );
+
+  const [[request]] = await connection.query("SELECT status, version FROM supplier_activation_requests WHERE id = ?", [target.requestId]);
+  assert.equal(request.status, "pending", "the refused withdraw must not have touched the real request");
+  assert.equal(Number(request.version), 1);
+  assert.equal(await countAudit(connection, targetId, "approval.withdraw"), 0);
+});
+
+/**
+ * 設計 §6.4：一個冇指派審批人嘅申請。安全失敗（冇人批得到）同恢復（重新指派之後
+ * 批得返）係同一條規則嘅兩邊，所以喺同一個測試入面行晒。
+ */
+integrationTest("an unassigned request refuses every decision until a reassignment restores it", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  let who = null;
+  let roleId = null;
+  t.after(async () => {
+    if (supplierId) await cleanup(connection, supplierId);
+    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    await cleanupActors(connection, who);
+    await connection.end();
+  });
+
+  const suffix = randomUUID().slice(0, 8);
+  who = await seedActors(connection, suffix);
+  roleId = await seedRole(connection, suffix);
+  // 兩個人都真係有 supplier.approval：requester 攞嚟做重新指派嗰個 actor，
+  // approver 係被指派嘅目標。
+  await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?), (?, ?)",
+    [who.approverId, roleId, who.requesterId, roleId]);
+  const seeded = await seed(connection, suffix, who);
+  supplierId = seeded.supplierId;
+  await connection.execute("UPDATE supplier_activation_requests SET assigned_approver_id = NULL WHERE id = ?", [seeded.requestId]);
+
+  const service = realAuthServiceOn(connection);
+  const claims = { claimedRoles: [`supplier-t31-it-${suffix}`], claimedPermissions: ["supplier.approval"] };
+
+  await assert.rejects(
+    () => service.approveRequest({
+      ...claims, actorId: who.approverId, id: seeded.requestId, version: 1,
+      reason: "未指派批准原因", requestId: "req-int", ip: "127.0.0.1"
+    }),
+    // sameUser(null, id) 一定係 false，所以一個 NULL 指派唔可以等於「邊個都得」。
+    (error) => error.publicCode === "APPROVAL_NOT_ASSIGNED",
+    "nobody may decide an unassigned request"
+  );
+
+  const reassigned = await service.reassignRequest({
+    ...claims, actorId: who.requesterId, id: seeded.requestId, version: 1,
+    approverUserId: who.approverId, reason: "重新指派俾審批人", requestId: "req-int", ip: "127.0.0.1"
+  });
+  assert.equal(reassigned.assignedApproverId, who.approverId);
+  assert.equal(reassigned.version, 2);
+
+  const approved = await service.approveRequest({
+    ...claims, actorId: who.approverId, id: seeded.requestId, version: 2,
+    reason: "重新指派後批准原因", requestId: "req-int", ip: "127.0.0.1"
+  });
+  assert.equal(approved.status, "approved", "the reassignment must actually restore the decision path");
+  const [[supplier]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [supplierId]);
+  assert.equal(supplier.status, "active");
+  assert.equal(await countAudit(connection, supplierId, "approval.reassign"), 1);
+  assert.equal(await countAudit(connection, supplierId, "approval.approve"), 1);
+});

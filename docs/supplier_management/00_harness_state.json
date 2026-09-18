@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 136,
+  "revision": 138,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": null,
+  "current_task": "TASK-031",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "2aa0965f1445095a3a9370069e31117722155977",
-    "source_fingerprint": "1fccad77c70c37563b31495ea4a8bc3315c2db3b01e3d0a81de7ef77543936ab",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "code_commit": "a25e295ac43aff7d84024dff6b8beaea7a9b54e6",
+    "source_fingerprint": "9b14766b63c7c6029dd5e79de1598fd1d091188a3fc50f5fbc6d25150c8ad6de",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-031",
     "default_commit": "2aa0965f1445095a3a9370069e31117722155977",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
@@ -21,7 +21,7 @@
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app (main); no supplier worktree is open",
+      "workspace": "erp-app-worktrees/supplier-task-031 (codex/supplier-task-031, cut from main 860183a)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -58,7 +58,7 @@
     "TASK-028": "DONE",
     "TASK-029": "DONE",
     "TASK-030": "DONE",
-    "TASK-031": "PENDING",
+    "TASK-031": "IN_PROGRESS",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
@@ -1939,6 +1939,39 @@
       "source_ref": "gh pr view 114 reports state MERGED, mergedAt 2026-09-18T08:59:37Z, mergeCommit 2aa0965f. Pre-merge checks observed rather than assumed: origin/main had not moved from 9b47061 since the branch was cut, mergeStateStatus CLEAN, and run 35326490153 green on the exact head d04d040 for all four required checks. That run needed a rerun: its first attempt failed on DEF-019's itemMigrationIdempotency case against a commit that changed only two documentation files, which is the cleanest demonstration yet that the defect is unrelated to whatever branch it fires on. Review gate: REV-030 CHANGES_REQUESTED then REV-031 APPROVED, the same reviewer under HD-021's precedent, with all eleven findings closed and Checkpoint J judged met on all three bullets. Merge authorised by the Product Owner on 2026-09-18.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-18T17:00:05+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-031 opened; the revision 136 baseline was reconciled before any new work",
+      "code_commit": "a25e295ac43aff7d84024dff6b8beaea7a9b54e6",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9b14766b63c7c6029dd5e79de1598fd1d091188a3fc50f5fbc6d25150c8ad6de",
+      "status": "PASS",
+      "source_ref": "state_tool inspect at revision 136 reported COMMIT_CHANGED only: recorded 2aa0965f versus observed 860183a. The delta is the docs-only ledger commit 860183a that closed TASK-030, and the design and plan hashes both still matched, so no approval, review or evidence was stranded. origin/main was fetched and verified identical to local main at 860183a with zero divergence before the worktree was cut. Correction to the record: TASK-031 belongs to PHASE-002. 05_development_tasks.md:222 scopes PHASE-002 as TASK-025 through TASK-031, so revision 136's note that PHASE-002's build work was complete at TASK-030 understated the phase by one task. T31 is that phase's SUP-CAP-02 acceptance exit.",
+      "actor": "Harness agent via state_tool and git",
+      "observed_at": "2026-09-18T17:34:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-031 browser regression: the supplier Playwright suite on the T31 candidate",
+      "code_commit": "a25e295ac43aff7d84024dff6b8beaea7a9b54e6",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9b14766b63c7c6029dd5e79de1598fd1d091188a3fc50f5fbc6d25150c8ad6de",
+      "status": "PASS",
+      "source_ref": "npx playwright test --config client/e2e/supplier-management/playwright.config.js: 17 passed in 14.0s, covering both supplier-approvals.spec.js and supplier-settings.spec.js; each spec asserts its own collectConsole is empty. Run as regression only: TASK-031 changes no UI behaviour and adds no new spec. Recorded here rather than as suite evidence because supplier-uat-browser is a UAT-stage suite and this is a DEVELOPER-stage self-test.",
+      "actor": "Harness agent via Playwright CLI",
+      "observed_at": "2026-09-18T17:36:19+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-031 mutation campaign: all nine new server tests and all four client assertions discriminate",
+      "code_commit": "a25e295ac43aff7d84024dff6b8beaea7a9b54e6",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9b14766b63c7c6029dd5e79de1598fd1d091188a3fc50f5fbc6d25150c8ad6de",
+      "status": "PASS",
+      "source_ref": "Twelve mutations, each applied alone and reverted immediately. RED in every case, and in every case the tests that turned red were the intended ones: M1 remove the replay branch (concurrent approve + resend), M2 remove the decide-time supplier.approval check (revocation + disabled), M3 drop AND status='active' from assertEligibleApprover (disabled), M4 remove the cross-Supplier scope guard (IDOR), M5 treat a NULL assignment as anyone (unassigned), M6 remove the APPROVAL_REQUEST_NOT_OPEN conflict (approve vs edit), M7 drop FOR SHARE from getActivationPolicy (both lock directions), M8 make turning the policy off approve pending requests (the non-retroactivity case), R6b/R7/R7b the three DEF-020 mutations, N1 drop :data-field. Reported honestly: the first mutation script's restore path was broken (eval with a pipe) and left all four client mutations applied with none reverted. git status caught it, git diff confirmed the working tree held those four mutations and nothing else, client/src was restored with git checkout, and the four were rerun one at a time with a per-mutation revert. The recorded R6b/R7/R7b/N1 verdicts are from that rerun, not the broken pass. git diff against client/src and server/src was verified empty afterwards.",
+      "actor": "Harness agent via scripted mutation and targeted suites",
+      "observed_at": "2026-09-18T17:36:19+08:00"
     }
   ],
   "pending_decisions": [
@@ -2741,7 +2774,11 @@
     "evidence/20260918T073310-f2a9fb35c09e/run.json",
     "evidence/20260918T073314-820f8c627dbd/run.json",
     "evidence/20260918T073316-fbf4ecfc3753/run.json",
-    "evidence/20260918T073319-7bba80ccfb53/run.json"
+    "evidence/20260918T073319-7bba80ccfb53/run.json",
+    "evidence/20260918T093455-840b9265baaa/run.json",
+    "evidence/20260918T093502-b4be748ad34f/run.json",
+    "evidence/20260918T093507-4a2ef643ea2a/run.json",
+    "evidence/20260918T093510-90542a511e10/run.json"
   ],
   "defects": [
     {
@@ -3019,5 +3056,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-030 is DONE and merged at 2aa0965f, and PHASE-002's build work is complete: TASK-025 through TASK-030 are all DONE. Checkpoint J across T28-T30 was judged met on all three bullets by REV-031, so the next step is a Phase-level decision rather than another task -- whether PHASE-002 closes here and what PHASE-003 opens with. That is the Product Owner's call and has not been asked. Open and routed out of this module, none of them blocking: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-019 having now turned three supplier CI runs red including one on a documentation-only commit, and HD-025 keeps both with their owner; DEF-018 is the shared PasswordReasonDialog never submitting on Enter, routed to the framework owner. Open inside this module: DEF-020, the approver field-error wiring that renders but has no test, with its three-line fix specified in 27_rev_031_independent_review.md -- worth closing in the next supplier task rather than letting it age. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-031 is implemented on codex/supplier-task-031 at a25e295: four test files, no production code. All four DEVELOPER suites PASS with evidence, the 17-test supplier Playwright suite passes as regression, and every new assertion was mutation-tested. Still required before this can be called done: push, required CI green on the exact merge candidate, and an actual independent review. DEF-019 is expected to redden CI on this branch for reasons unrelated to it; HD-025 keeps that defect with Item Management, so the response is a rerun, not a change here."
 }

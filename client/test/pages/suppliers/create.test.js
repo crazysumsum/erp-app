@@ -194,7 +194,14 @@ describe("pages/suppliers/SupplierCreatePage.vue", () => {
     expect(supplierService.create).not.toHaveBeenCalled();
     expect(body.text()).toContain("請先選擇審批人");
 
+    // DEF-020／REV-031 L-1：上面嗰句係**摘要**訊息（SupplierCreatePage.vue:131）。
+    // 欄位錯誤係另一句「請選擇審批人」——請先 vs 請——所以摘要嗰句永遠去唔到個
+    // 控制項。冇呢三行嘅話，拆走 :field-error、:error 或者 :error-message 任何一個，
+    // 成個 client suite 都照綠：一個 render 咗但冇人測過嘅控制。
     const approver = wrapper.findAllComponents(QSelect).find((select) => select.props("label") === "審批人");
+    expect(approver.props("error")).toBe(true);
+    expect(approver.props("errorMessage")).toBe("請選擇審批人");
+
     approver.vm.$emit("update:modelValue", 2);
     await flushPromises();
 

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
+import { SupplierApprovalService } from "../../src/modules/supplier/SupplierApprovalService.js";
 import { SupplierAuditLogService } from "../../src/modules/supplier/SupplierAuditLogService.js";
 import { SupplierSettingsService, getActivationPolicy } from "../../src/modules/supplier/SupplierSettingsService.js";
 
@@ -185,4 +187,138 @@ integrationTest("the real audit recorder accepts a settings update and stores be
 
   const [[after]] = await connection.query("SELECT version FROM supplier_settings WHERE id = 1");
   assert.equal(Number(after.version), Number(before.version), "the rolled-back probe must leave no trace");
+});
+
+/**
+ * T31：設定同啟用之間嘅兩條併發規則。上面嗰個 `serviceFor` 用 begin/rollback 包住
+ * 自己嘅寫入，但落面嘅場景要喺**同一個交易**入面同時郁設定同審批申請 —— 喺一個
+ * 已經開咗嘅交易入面再 `beginTransaction()`，MySQL 會隱式 commit 咗前面嗰個，即係
+ * 將呢個測試嘅中間值放咗出去俾其他並行檔案見到。所以呢個 wrapper 只借用 caller
+ * 嘅交易，唔開新嘅，亦都唔 commit。
+ */
+function joiningDatabase(connection) {
+  return {
+    query: (sql, params) => connection.query(sql, params),
+    async withTransaction(work) { return work(connection); }
+  };
+}
+
+async function seedPendingApproval(connection, suffix) {
+  const now = Date.now();
+  const ids = [];
+  for (const role of ["requester", "approver"]) {
+    const [user] = await connection.execute(
+      "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      [`supplier-settings-it-${role}-${suffix}`, "not-used-by-this-test", `Settings IT ${role}`, now, now]
+    );
+    ids.push(Number(user.insertId));
+  }
+  const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+  const [supplier] = await connection.execute(
+    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+       default_currency_code, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'pending_approval', ?, ?)`,
+    [`SET-${suffix}`, `set-${suffix}`, `Settings ${suffix}`, `settings ${suffix}`, currency.code ?? currency.CODE, now, now]
+  );
+  const supplierId = Number(supplier.insertId);
+  const [[row]] = await connection.query("SELECT version FROM suppliers WHERE id = ?", [supplierId]);
+  const [request] = await connection.execute(
+    `INSERT INTO supplier_activation_requests (supplier_id, requested_by, assigned_approver_id,
+       supplier_version, summary, status, requested_at)
+     VALUES (?, ?, ?, ?, JSON_OBJECT(), 'pending', ?)`,
+    [supplierId, ids[0], ids[1], row.version, now]
+  );
+  return { requesterId: ids[0], approverId: ids[1], supplierId, requestId: Number(request.insertId) };
+}
+
+/**
+ * FR-SET-005／AC-013：關掉審批政策**唔係**一個批准動作。已經 pending 嘅申請要繼續
+ * pending，Supplier 要留喺 pending_approval，而佢仍然只可以由被指派嘅審批人決定。
+ *
+ * 呢個規則冇一段對應嘅程式碼 —— 佢係「冇任何一條路會咁做」。所以佢要用行為證：
+ * 真係關一次政策，然後睇住張申請。
+ */
+integrationTest("turning the approval policy off does not decide an already pending request", async (t) => {
+  const connection = await mysql.createConnection(config());
+  t.after(() => connection.end());
+
+  await connection.beginTransaction();
+  try {
+    const seeded = await seedPendingApproval(connection, randomUUID().slice(0, 8));
+
+    // 由「開」行到「關」，先至有嘢可以關。
+    await connection.execute("UPDATE supplier_settings SET require_activation_approval = 1, version = version + 1 WHERE id = 1");
+    const [[current]] = await connection.query("SELECT version FROM supplier_settings WHERE id = 1");
+
+    const settings = new SupplierSettingsService({
+      database: joiningDatabase(connection),
+      logger: { warn() {} },
+      time: { nowMs: () => Date.now() },
+      authorize: async () => ({ id: null, username: "integration" }),
+      audit: { async record() {} }
+    });
+    const off = await settings.updateSettings({ ...actor, version: Number(current.version), requireActivationApproval: false });
+    assert.equal(off.requireActivationApproval, false);
+    assert.equal(await getActivationPolicy(connection), false, "the policy really is off inside this transaction");
+
+    const [[request]] = await connection.query("SELECT status, version FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+    assert.equal(request.status, "pending", "BR-013: switching the policy off must not approve what is already pending");
+    assert.equal(Number(request.version), 1, "an untouched request keeps its version");
+    const [[supplier]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [seeded.supplierId]);
+    assert.equal(supplier.status, "pending_approval", "the Supplier must not drift to active on its own");
+
+    const approvals = new SupplierApprovalService({
+      database: joiningDatabase(connection),
+      logger: { warn() {} },
+      time: { nowMs: () => Date.now() },
+      authorize: async () => ({ id: null, username: "integration", permissions: ["supplier.approval"] }),
+      loadPermissions: async () => ["supplier.approval"],
+      businessMaster: { async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; } }
+    });
+    const decision = {
+      claimedRoles: [], claimedPermissions: ["supplier.approval"],
+      id: seeded.requestId, version: 1, reason: "政策關閉後批准原因", requestId: "req-int", ip: "127.0.0.1"
+    };
+    await assert.rejects(
+      () => approvals.approveRequest({ ...decision, actorId: seeded.requesterId }),
+      (error) => error.publicCode === "APPROVAL_NOT_ASSIGNED",
+      "with the policy off the request still belongs to its assigned approver"
+    );
+
+    // 而佢仲批得到：關政策只係停咗**新**提交要審批，唔係廢咗現有嘅隊列。
+    const approved = await approvals.approveRequest({ ...decision, actorId: seeded.approverId });
+    assert.equal(approved.status, "approved");
+    assert.equal(approved.replayed, false);
+  } finally {
+    await connection.rollback();
+  }
+});
+
+/**
+ * AC-013 嘅另一邊。上面嗰個測試證咗啟用讀住政策嗰陣，設定寫入要等佢；呢個證返轉頭
+ * ——設定寫入喺飛緊嗰陣，啟用讀唔可以越過佢攞一個就嚟過期嘅答案。兩邊夾埋先係
+ * 一個次序；淨係得一邊嘅話，個答案可以喺兩個方向之一被人喺中途換走。
+ */
+integrationTest("an in-flight settings write blocks a concurrent activation read until it finishes", async (t) => {
+  const writer = await mysql.createConnection(config());
+  const reader = await mysql.createConnection(config());
+  t.after(async () => { await writer.end(); await reader.end(); });
+
+  await writer.beginTransaction();
+  try {
+    await writer.query("SELECT version FROM supplier_settings WHERE id = 1 FOR UPDATE");
+    await reader.query("SET SESSION innodb_lock_wait_timeout = 1");
+    await reader.beginTransaction();
+    try {
+      await assert.rejects(
+        () => getActivationPolicy(reader),
+        (error) => error.code === "ER_LOCK_WAIT_TIMEOUT",
+        "an activation must not read a policy that a committing write is about to replace"
+      );
+    } finally {
+      await reader.rollback();
+    }
+  } finally {
+    await writer.rollback();
+  }
 });
