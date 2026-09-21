@@ -292,7 +292,7 @@ The aligned architecture is implementable, but the Human Design Gate is `CONDITI
 | 銀行安全基建 | 共用 encryption、masking、blind index、key ring、rotation 及安全檔案工具；Customer 與 Supplier 各自保有 service、table、permission 及 audit。 |
 | Supplier 是否為 Customer 前置 | 不是。Business Master 及 Sensitive Data foundation 可獨立部署；Customer 不 import Supplier module。 |
 | 設計交付範圍 | 完整設計 Phase 1～3；每個 Phase 仍能獨立驗收及部署。 |
-| Currency／Payment Term | 共用 `currencies`、`payment_terms`；Customer 本期只有 read contract。建表及最低 HKD seed 由 Business Master foundation 負責，不假設 Supplier migration 已先建立。 |
+| Currency／Payment Term | 共用 `currencies`、`payment_terms`；Customer 對 Business Master 只有 read contract。建表及最低 HKD seed 由 Business Master foundation 負責，不假設 Supplier migration 已先建立。HD-007 已批准 Customer 在 TASK-010 提供唯讀 impact checker，回報目前 Customer default 的彙總計數及 watermark；它不寫入 Business Master table，registry、token 與高風險決策仍由 Business Master 擁有。 |
 | Customer 分類目錄 | Category、Industry、Territory 採 Customer 專屬受控目錄表，使用 `customer.settings` 維護；不先造一個全 ERP 通用分類引擎。 |
 | UI／UX | 所有頁面與元件必須按 `docs/frontend-design.md` 實作；該文件是硬性前端規格。 |
 
@@ -378,7 +378,8 @@ flowchart LR
 
 | 模組／服務 | 責任 | 不負責 |
 | --- | --- | --- |
-| `businessMaster` | Currency、Payment Term 讀取及有效性驗證；foundation schema contract | 匯率、due-date calculation、Customer 設定 |
+| `businessMaster` | Currency、Payment Term 讀取及有效性驗證；foundation schema contract；impact checker registry、token 與高風險決策 | 匯率、due-date calculation、Customer 設定或 Customer data write |
+| `customer/CustomerBusinessMasterImpactChecker` | 以 Customer-owned `customers` table 唯讀彙總 Currency／Payment Term default 的 active/open counts 及變更 watermark | Business Master catalog write、registry/token、Customer record projection |
 | `sensitiveData`（technical service） | AES-256-GCM、AAD、masking、HMAC blind index、多 key read、rotation primitive | 認識 Customer／Supplier 權限或 table |
 | `customer/CustomerService` | root create／update、狀態機、code change、完整度、root version | 子資源 CRUD、銀行解密、交易計算 |
 | `customer/CustomerPartyService` | Address、Contact、Identifier 及 purpose/default 原子更新 | 通用 Party abstraction |

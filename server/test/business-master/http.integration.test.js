@@ -91,17 +91,17 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   const preview = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/impact-preview`, {
     method: "POST", token, key: randomUUID(), body: { operation: "DEACTIVATE", version: 1, proposedChange: {} }
   });
-  assert.equal(preview.status, 200);
+  assert.equal(preview.status, 200, JSON.stringify(preview.body));
   assert.equal(preview.body.data.results.length, 6);
   assert.deepEqual(
-    preview.body.data.results.map(({ checkerId, status }) => ({ checkerId, status })),
+    preview.body.data.results.map(({ checkerId, status, activeDefaultCount, openUseCount, historicalCount }) => ({ checkerId, status, activeDefaultCount, openUseCount, historicalCount })),
     [
-      { checkerId: "ap", status: "NOT_INSTALLED" },
-      { checkerId: "ar", status: "NOT_INSTALLED" },
-      { checkerId: "customer", status: "NOT_INSTALLED" },
-      { checkerId: "purchasing", status: "NOT_INSTALLED" },
-      { checkerId: "sales", status: "NOT_INSTALLED" },
-      { checkerId: "supplier", status: "READY" }
+      { checkerId: "ap", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "ar", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "customer", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "purchasing", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "sales", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
+      { checkerId: "supplier", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 }
     ]
   );
   const rejected = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {

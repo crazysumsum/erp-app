@@ -1,41 +1,41 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 16,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
-  "status": "PLANNED",
+  "revision": 91,
+  "mode": "FULL_LIFECYCLE",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": null,
-  "current_task": null,
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-010",
   "baseline": {
-    "design": "484247af6f600529bc2cd4c57e1f5d5bc65d4d8f99b781643594d095cda759cd",
-    "plan": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
-    "code_commit": "c89c03615c6a0d9265f927a6eaa2aed3ae1a6e0b",
-    "source_fingerprint": "2c859c5ecd673817af2e4b1a4a57f342fb57ac8bf44a50adbf67695cbc0ddcc3",
-    "worktree": "/private/tmp/erp-customer-hd001-risk-acceptance",
-    "default_commit": "b948c92fecc31555bdc4043feea26f8c72ddf7a2",
-    "mode_entry_commit": "0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7"
+    "design": "29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58",
+    "plan": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+    "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
+    "source_fingerprint": "aeb07f31806aa92f98b7a8bde28a7abd953c8d9c558592f85f55b8a7c705f6c7",
+    "worktree": "/private/tmp/erp-customer-management-phase-001/customer-management-phase-001",
+    "default_commit": "9c68059221098a17bfc4c3bd0638c17008305c4e",
+    "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
+    "instance_id": "CUSTOMER-PHASE-001-NO-ACTIVE-RUNTIME",
     "owner": "Primary harness agent",
     "resources": {
-      "workspace": "erp-customer-management-harness-v2-alignment"
+      "workspace": "/private/tmp/erp-customer-management-phase-001/customer-management-phase-001"
     },
     "lease_ref": null
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
-    "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
-    "TASK-007": "PENDING",
-    "TASK-008": "PENDING",
-    "TASK-009": "PENDING",
-    "TASK-010": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
+    "TASK-009": "DONE",
+    "TASK-010": "DONE",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -162,6 +162,343 @@
         "TC-045"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 同意 (TASK-002 Customer permission catalogue, migration and isolated non-production execution scope)",
+      "recorded_at": "2026-09-14T03:43:39Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
+      "code_commit": "118773d118f71ae1202a4c957b69580dfc2f3b30",
+      "scope": [
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-003",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 提前在 TASK-003 建立 customers equality-key 基礎 schema。",
+      "recorded_at": "2026-09-14T04:00:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a3d723db8ca0438fd7b4fa4cfa1edd44ff73448736419f4ae85a2238f67f43d1",
+      "code_commit": "748fc38dd1cfd17dc6daa80e62b3560eb415e61b",
+      "scope": [
+        "docs/customer_management/implementation/00_implementation_readiness.md",
+        "server/src/modules/customer/**",
+        "server/database/migrations/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004",
+      "recorded_at": "2026-09-15T01:12:44Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "131cf0a5016ecfbf184c06a51eb982e764cea5e54ae4237ad4241ef0ca397de8",
+      "code_commit": "f7fd95584e827f1bce112388fc2c196b5939671f",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004",
+      "recorded_at": "2026-09-15T01:12:44Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "f7fd95584e827f1bce112388fc2c196b5939671f",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-004",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004",
+      "recorded_at": "2026-09-15T01:12:44Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "f7fd95584e827f1bce112388fc2c196b5939671f",
+      "scope": [
+        "TASK-004",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/src/handlers/customer-settings/**",
+        "server/database/migrations/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-005",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批準",
+      "recorded_at": "2026-09-15T01:29:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "74a7650d5e2162f90849cd374d6b5efd815e7178",
+      "scope": [
+        "TASK-005",
+        "server/src/modules/customer/**",
+        "server/database/migrations/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-006",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 同意，後面沒有特別要我決定的問題就自動接著做下去，不用停下等我批",
+      "recorded_at": "2026-09-15T02:22:06Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "0b75889c9fd2f9eebca699653a63f5eca838df7c",
+      "scope": [
+        "TASK-006",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-007",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准 TASK-007",
+      "recorded_at": "2026-09-15T02:37:21Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "189b7af98df4c4a874a8a75b9ae3e7bbf2194a16",
+      "scope": [
+        "TASK-007",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-008",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Codex task user messages: 批准 TASK-008; 批准使用目前 UTC 時間作為 TASK-008 記錄時間. recorded_at is checkpoint-record creation time, not message-send time.",
+      "recorded_at": "2026-09-15T03:42:12Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "da52d5b195b451880b2d1b9aecd8c1539e4e05b62b5b852c7d0e5fffa1288c17",
+      "code_commit": "87161b85a88b3dfde0d64bad3694c5f8b06e9ddb",
+      "scope": [
+        "TASK-008",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-003",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN baseline 89cc44fe、PLAN baseline 96ed30c6，以及 TASK-009",
+      "recorded_at": "2026-09-15T07:43:53Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "89cc44fe192b81bf9f0c50782432db416aece8fe9c9358f0638efdfe63d648d5",
+      "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-003",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN baseline 89cc44fe、PLAN baseline 96ed30c6，以及 TASK-009",
+      "recorded_at": "2026-09-15T07:43:53Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
+      "scope": [
+        "customer-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-009",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN baseline 89cc44fe、PLAN baseline 96ed30c6，以及 TASK-009",
+      "recorded_at": "2026-09-15T07:43:53Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "688404119cdd8bd37f3c7d56f0f2c6ab9657058c",
+      "scope": [
+        "TASK-009",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-lookups/**",
+        "server/test/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-010",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-16 Codex task user: 批准 TASK-010",
+      "recorded_at": "2026-09-16T00:47:22Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "3fe9699956fd9c8c8c2d03a7cb7fe8c4b15639a1",
+      "scope": [
+        "TASK-010",
+        "server/test/performance/**",
+        "server/test-support/**",
+        "server/test/**",
+        "server/scripts/**",
+        "docs/customer_management/implementation/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-011",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-16 Codex task user: 修復 coverage",
+      "recorded_at": "2026-09-16T01:21:16Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "e553dded1a470a14839afabf6ace7ef403903e8e",
+      "scope": [
+        "TASK-010",
+        "server/test/**",
+        "server/test-support/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-012",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-16 Codex task user: 批准 HD-007：將 TASK-010 擴展為實作正式的 Customer impact checker",
+      "recorded_at": "2026-09-16T02:57:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "code_commit": "555c0a571bc8b0e4bf3585bc995ef49fdc8c8d5d",
+      "scope": [
+        "TASK-010",
+        "server/src/modules/customer/**",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-004",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-21 Codex task user: 批准 HD-008：DESIGN baseline 29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58、PLAN baseline 154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41，以及 PHASE-001 recovery scope",
+      "recorded_at": "2026-09-21T03:57:31Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58",
+      "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
+      "scope": [
+        "customer-management",
+        "PHASE-001"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-004",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-21 Codex task user: 批准 HD-008：DESIGN baseline 29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58、PLAN baseline 154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41，以及 PHASE-001 recovery scope",
+      "recorded_at": "2026-09-21T03:57:31Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
+      "scope": [
+        "customer-management",
+        "PHASE-001"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-013",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-21 Codex task user: 批准 HD-008：DESIGN baseline 29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58、PLAN baseline 154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41，以及 PHASE-001 recovery scope",
+      "recorded_at": "2026-09-21T03:57:31Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
+      "scope": [
+        "PHASE-001",
+        "server/database/migrations/**",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/modules/customer/**",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -188,9 +525,148 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": "APPROVAL-RISK-003"
+    },
+    {
+      "id": "REV-003",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-007 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "cf7a71f7a65accea7a89c9af046b5c669e8b17dbfd28246fa4188e8af79e34a6",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-004",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-008 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-009 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "b8dfde3ce84fe59ff81e72a7829566f71e7446cbd46c31344ba81a2496e89d58",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved TASK-010 scope",
+      "reviewer": "/root code-review-and-quality pass in the current active context",
+      "reviewed_baseline": "396f651986d7bc7817e176562db05c84d81ecd32d847c29895a1abb99e8648ce",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-007",
+      "method": "SELF_REVIEW",
+      "author": "/root implementation under approved HD-007 scope",
+      "reviewer": "/root code-review-and-quality five-axis pass in the current active context",
+      "reviewed_baseline": "699e15b48496397f5e0596b78127f31c91d0922f302770dd869ea14cdce56d82",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md#review-and-next-decision",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-008",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation and remediation under approved PHASE-001 scope",
+      "reviewer": "Aquinas (/root/customer_phase1_review), separate agent",
+      "reviewed_baseline": "29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md#review-and-next-decision",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-008 local server regression and isolated MySQL/HTTP verification",
+      "code_commit": "116fc30fbc35c9121ec70ea99eef3bb3dc37dde0",
+      "spec_baseline": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "source_fingerprint": "67e776c690d126e2817f778c8bc20a098c5c607800157a67eb9bf12e27b72522",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-15T04:09:15Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-009 local server regression and isolated MySQL lookup-contract verification",
+      "code_commit": "b9774e4a52605bd6d1c49e181b89d24b93daf887",
+      "spec_baseline": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "source_fingerprint": "b8dfde3ce84fe59ff81e72a7829566f71e7446cbd46c31344ba81a2496e89d58",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-15T08:07:05Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-010 PHASE-001 query-plan, real-MySQL integration, rollback and local regression verification",
+      "code_commit": "e553dded1a470a14839afabf6ace7ef403903e8e",
+      "spec_baseline": "96ed30c6c7a22fc53b9ca46b63f6426f039740225f2cd6bf2e188b6101d6c72e",
+      "source_fingerprint": "396f651986d7bc7817e176562db05c84d81ecd32d847c29895a1abb99e8648ce",
+      "status": "BLOCKED",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-16T01:21:16Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PHASE-001 latest-main recovery, migration 0038-0046, real-MySQL full regression and coverage verification",
+      "code_commit": "1a3588d26c2404a8cff1470adaba4e639a154f27",
+      "spec_baseline": "332c3507872a57b95e8ebf66597df17521d475d77abe0b09b0a6c1a47d6bfb33",
+      "source_fingerprint": "11948145654a08e6c840d23e159bb9eb45e4ed69f8ac2eb33ef7bdeb6254b130",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md#latest-main-recovery-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-21T02:57:20Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PHASE-001 independent-review remediation focused tests, lint, migration no-op and Customer HTTP integration",
+      "code_commit": "4c258b104d0c6004828b9d27708756eecf7d944e",
+      "spec_baseline": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "source_fingerprint": "d4b39a177120b2999e97599f8a799d9a470ea0d4493eb5b4587e399011d9cf11",
+      "status": "BLOCKED",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md#review-and-next-decision",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-21T03:40:00Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PHASE-001 integrated final-candidate full serial real-MySQL server coverage, per-file floors and lint",
+      "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
+      "spec_baseline": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "source_fingerprint": "aeb07f31806aa92f98b7a8bde28a7abd953c8d9c558592f85f55b8a7c705f6c7",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md#final-gate-result",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-21T03:49:00Z"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -240,6 +716,66 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/customer_management/04_design_review.md#7-independent-human-review-and-final-design-gate"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Approve the current Customer Management DESIGN/PLAN baselines after origin/main updated the Sales Order consumer-contract manifest reference, and approve TASK-009 execution against those baselines?",
+      "affected_ids": [
+        "customer-management",
+        "TASK-009"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-DESIGN-003; APPROVAL-PLAN-003; APPROVAL-SCOPE-009"
+    },
+    {
+      "id": "HD-005",
+      "impact": "MAJOR",
+      "question": "Approve TASK-010 execution against the current Customer Management DESIGN and PLAN baselines?",
+      "affected_ids": [
+        "TASK-010",
+        "PHASE-001"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-SCOPE-010"
+    },
+    {
+      "id": "HD-006",
+      "impact": "MAJOR",
+      "question": "The repository-wide server coverage gate reports 82.68% against its 92% threshold after all TASK-010 tests otherwise pass. Should PHASE-001 remain blocked while coverage is remediated, or does the Product Owner approve a documented exception for this baseline gate?",
+      "affected_ids": [
+        "TASK-010",
+        "PHASE-001",
+        "coverage"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-SCOPE-011"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "The full real-MySQL coverage command now meets its numeric thresholds but cannot pass because Business Master correctly fails closed when it discovers the installed Customer table without a registered Currency/Payment Term impact checker. May TASK-010 extend scope into a production Customer impact checker (Business Master integration), or should this existing cross-module gate remain a documented blocker until its planned consumer-adoption task?",
+      "affected_ids": [
+        "TASK-010",
+        "PHASE-001",
+        "Business Master impact checker",
+        "coverage"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-SCOPE-012"
+    },
+    {
+      "id": "HD-008",
+      "impact": "MAJOR",
+      "question": "Approve the refreshed Customer Management DESIGN and PLAN baselines after non-semantic manifest schema repair and contract-hash alignment, and approve the PHASE-001 recovery scope covering Customer migrations 0038-0046 and their shared integration points?",
+      "affected_ids": [
+        "customer-management",
+        "PHASE-001",
+        "server/database/migrations/**",
+        "server/src/modules/businessMaster/businessMasterFactory.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "APPROVAL-DESIGN-004; APPROVAL-PLAN-004; APPROVAL-SCOPE-013"
     }
   ],
   "external_actions": [
@@ -264,11 +800,262 @@
       "kind": "MERGE",
       "target": "github:crazysumsum/erp-app:main",
       "idempotency_key": "customer-hd001-risk-acceptance-merge-v1",
-      "status": "STARTED",
-      "source_ref": "https://github.com/crazysumsum/erp-app/pull/87"
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #87 merge observed: main contains 134c2722f92eae298da7ad1a1b01b6a75522550e"
+    },
+    {
+      "id": "MODE-CHANGE-17",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-17",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14 Codex task user: 進入IMPLEMENT階段"
+    },
+    {
+      "id": "EXT-MIGRATION-002",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_20260914",
+      "idempotency_key": "customer-phase001-permission-migration-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14: fresh isolated schema migration through 0027, full rerun no-op, six permission rows and system-admin matrix verified; erp_customer_phase001_20260914 dropped after verification"
+    },
+    {
+      "id": "EXT-MIGRATION-003",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task003_20260914",
+      "idempotency_key": "customer-phase001-task003-equality-key-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-14: isolated schema erp_customer_phase001_task003_20260914 migrated through 0028; full rerun no-op; real MySQL binary-collation and concurrent uniqueness tests passed; Customer fixtures were empty before the schema was dropped."
+    },
+    {
+      "id": "EXT-MIGRATION-004",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task004_20260915",
+      "idempotency_key": "customer-phase001-task004-classification-catalog-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0030; full rerun skipped every migration; HKD was ACTIVE with decimal_places=2; all three Customer classification code_key columns were utf8mb4_bin and their status/sort/name indexes matched; schema was dropped after verification."
+    },
+    {
+      "id": "EXT-MIGRATION-005",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task005_20260915",
+      "idempotency_key": "customer-phase001-task005-root-audit-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0032; full rerun skipped every migration; Customer root columns, catalog/user foreign keys, root indexes, audit JSON detail column and audit investigative indexes were verified; schema was dropped after verification."
+    },
+    {
+      "id": "MODE-CHANGE-29",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-29",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15 Codex task user: 請從main更新一下你的分支，Business Master 的 Currency／Payment Term provider應該已完成，可以繼續FULL Cycle的開發"
+    },
+    {
+      "id": "MODE-CHANGE-30",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-30",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15 Codex task user: 批准目前 Customer Management DESIGN、PLAN baseline，以及 TASK-004"
+    },
+    {
+      "id": "EXT-MIGRATION-006",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task006_20260915",
+      "idempotency_key": "customer-phase001-task006-operation-api-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schemas migrated through 0033; full rerun skipped every migration; operation-request column and index shape verified; isolated Customer HTTP create/replay/list/update/operation flow passed; schemas were dropped after verification."
+    },
+    {
+      "id": "EXT-MIGRATION-007",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task007_20260915",
+      "idempotency_key": "customer-phase001-task007-party-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0034; real MySQL concurrent default switching, cross-owner 404 and deactivate-default clearing passed; full migration rerun was a no-op; schema was dropped."
+    },
+    {
+      "id": "EXT-MIGRATION-008",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task007_http_20260915",
+      "idempotency_key": "customer-phase001-task007-party-http-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0034; real HTTP address create/update/deactivate flow and three matching audit rows passed; schema was dropped."
+    },
+    {
+      "id": "EXT-MIGRATION-009",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task007_final_20260915",
+      "idempotency_key": "customer-phase001-task007-final-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: fresh isolated schema migrated through 0034; first compatibility check exposed MySQL information_schema key casing and the retained schema was reconciled before retry; explicit aliases fixed the inspector; service concurrency/cross-owner/default-clearing and HTTP/audit tests passed; migration rerun was a no-op; schema deletion was confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-010",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task007_review_20260915",
+      "idempotency_key": "customer-phase001-task007-review-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: the first fresh-schema startup rejected a duplicate response-schema requirement and cleanup was confirmed; after the schema fix, a fresh isolated schema migrated through 0034; Address race/ownership and Contact multi-purpose/default/deactivate tests passed; HTTP party audit correlation passed; migration rerun was a no-op; schema deletion was confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-011",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task008_20260915",
+      "idempotency_key": "customer-phase001-task008-identifier-credit-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: sandbox-local TCP was initially denied before schema creation; after approved local access, a first migration attempt exposed and then fixed Currency FK collation, and a first HTTP attempt exposed and then fixed a request-only response-schema keyword. Each attempt used the fixed target, reconciled absence before retry, and confirmed trap cleanup. Final fresh schema migrated through 0036; full rerun skipped every migration; TC-021..TC-025 real MySQL and HTTP Identifier uniqueness, inactive-key retention, Credit null/zero/on_hold, create/clear CAS, inactive Currency rejection, authorization and audit redaction passed; final schema absence was observed."
+    },
+    {
+      "id": "EXT-MIGRATION-012",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task008_review_20260915",
+      "idempotency_key": "customer-phase001-task008-review-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: post-review fixed isolated schema was absent before execution; fresh migrations through 0036 passed, including the hardened credit Currency collation inspector; full migration rerun was a no-op; TC-021..TC-025 real MySQL and HTTP suite passed; trap cleanup and final schema absence were observed."
+    },
+    {
+      "id": "EXT-MIGRATION-013",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task009_20260915",
+      "idempotency_key": "customer-phase001-task009-lookup-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-15: the fixed schema was absent before execution; fresh migrations through 0036 passed; a complete rerun skipped every migration; TC-018 and TC-027 real MySQL status, minimal projection, credit, ownership, purpose and transaction-version assertions passed 1/1; trap cleanup and final schema absence were confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-014",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh schema migrated through 0036 and the complete rerun skipped every migration. The first TC-028 attempt failed before inserting any Customer fixture because the new fixture SQL omitted the required version value; the interrupted process left the fixed schema. Read-only reconciliation observed 39 migration rows and zero Customer rows, then the exact synthetic schema was dropped and final absence was confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-015",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-retry-v1",
+      "status": "FAILED",
+      "source_ref": "2026-09-16: corrected TASK-010 performance fixture retry was started after EXT-MIGRATION-014 reconciliation and fixed schema absence confirmation, but its terminal session ended without a retained result. Follow-up read-only verification could not connect because local MySQL was no longer listening on 127.0.0.1:3306; no performance result or cleanup claim is accepted from this attempt."
+    },
+    {
+      "id": "EXT-MIGRATION-016",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_perf_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-host-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: host-environment run freshly migrated through 0036 and a complete rerun skipped every migration. The harness test did not execute because it was invoked from repository root with a server-relative test path; trap cleanup dropped the exact synthetic schema and final absence query returned zero. No TC-028 result is claimed."
+    },
+    {
+      "id": "EXT-MIGRATION-017",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_perf_20260916",
+      "idempotency_key": "customer-phase001-task010-performance-host-retry-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration. Corrected TC-028 passed against 100,000 Customers, 10,000 addresses and 10,000 contacts at 50 concurrent workers x 5 operations: list/exact/address/contact p95 were 16.24/5.12/3.48/5.45ms (all below 2,000ms). EXPLAIN showed code and legal-name covering index range scans and the shipping EXISTS owner/status and primary-key lookups. Trap cleanup dropped the exact synthetic schema and final absence query returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-018",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_integration_20260916",
+      "idempotency_key": "customer-phase001-task010-integration-host-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration. Real MySQL/HTTP suites passed 6/6: TC-012 root create/replay/list/update, equality-key collation and concurrent canonical duplicate, TC-018..020 party defaults/owner isolation, TC-021..025 Identifier/Credit including redacted audit behavior, and TC-027 lookup purpose/status/version contracts. Trap cleanup dropped the exact isolated schema and final absence query returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-019",
+      "kind": "ROLLBACK_REHEARSAL",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_rollback_20260916",
+      "idempotency_key": "customer-phase001-task010-compatible-rollback-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: current candidate migrations applied successfully to the fresh isolated schema and cleanup removed both exact schema and disposable f7fd955 worktree (final schema absence zero). The old application could not load because its csv-stringify dependency was absent from the linked root node_modules; no rollback-health pass is claimed."
+    },
+    {
+      "id": "EXT-MIGRATION-020",
+      "kind": "ROLLBACK_REHEARSAL",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_task010_rollback_20260916",
+      "idempotency_key": "customer-phase001-task010-compatible-rollback-deps-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh isolated schema applied current candidate migrations through 0036. Disposable pre-PHASE-001 baseline f7fd955 started against that expanded schema and GET /api/v1/health returned 200. Exact temporary worktree and schema were removed; final schema absence query returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-021",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-real-db-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. The real-DB coverage measurements met 95.70% lines, 85.26% branches and 93.39% functions, but the command was not accepted because parallel integration files shared mutable permission fixtures and one legacy assertion incorrectly expected Customer bank permissions to be granted to system-admin."
+    },
+    {
+      "id": "EXT-MIGRATION-022",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-serial-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Serial execution preserved coverage above the thresholds (95.70% lines, 85.24% branches, 93.39% functions) but is not an accepted gate run: pre-existing integration tests incorrectly minted system-admin claims with the two Customer bank permissions that migration 0028 deliberately withholds. The run established the bounded correction and did not weaken any gate."
+    },
+    {
+      "id": "EXT-MIGRATION-023",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-corrected-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Corrected system-admin claims removed all stale-permission failures and coverage was 96.04% lines, 85.45% branches and 93.70% functions. The normal parallel profile is not accepted because concurrent test-file applications exhausted local shared MySQL/HTTP capacity, producing one 503 in the Business Master HTTP test; this is a test-runner resource-isolation issue, not a coverage deficit or production behavior claim."
+    },
+    {
+      "id": "EXT-MIGRATION-024",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-corrected-serial-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: fresh host-environment schema migrated through 0036 and a complete rerun skipped every migration; trap cleanup and final absence zero were confirmed. Corrected system-admin claims removed all stale-permission failures and the serial run measured 96.04% lines, 85.43% branches and 93.70% functions. It still failed exactly one Business Master HTTP assertion because the installed Customer table has no registered impact checker; businessMasterFactory deliberately reports this as IMPACT_CHECK_UNAVAILABLE (503). No test assertion, threshold or fail-closed behavior was weakened."
+    },
+    {
+      "id": "EXT-MIGRATION-025",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_hd007_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-hd007-v1",
+      "status": "FAILED",
+      "source_ref": "2026-09-16: HD-007-approved Customer impact checker full real-MySQL run migrated through 0036, reran migrations as no-ops, and cleaned up the exact schema with final absence zero. The new checker returned READY, but an outdated Business Master HTTP assertion still required every consumer to be NOT_INSTALLED. Coverage was 96.04% lines, 85.43% branches and 93.74% functions; no pass is claimed because the command failed on that assertion."
+    },
+    {
+      "id": "EXT-MIGRATION-026",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase001_coverage_hd007_retry_20260916",
+      "idempotency_key": "customer-phase001-task010-coverage-hd007-retry-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-16: corrected HD-007 full real-MySQL coverage run freshly migrated through 0036, reran every migration as a no-op, passed the complete server test:coverage command, and deleted the exact synthetic schema with final absence zero. Aggregate coverage was 96.13% lines, 85.42% branches and 94.05% functions; all repository thresholds and 34 high-risk per-file floors passed."
+    },
+    {
+      "id": "EXT-PUSH-002",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-management-phase-001",
+      "idempotency_key": "customer-phase001-publication-push-v1",
+      "status": "PLANNED",
+      "source_ref": "User has authorized push/PR/merge; HD-008 approval recorded 2026-09-21."
+    },
+    {
+      "id": "EXT-PR-002",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-management-phase-001",
+      "idempotency_key": "customer-phase001-publication-pr-v1",
+      "status": "PLANNED",
+      "source_ref": "User has authorized push/PR/merge; HD-008 approval recorded 2026-09-21."
+    },
+    {
+      "id": "EXT-MERGE-002",
+      "kind": "MERGE",
+      "target": "github:crazysumsum/erp-app:main",
+      "idempotency_key": "customer-phase001-publication-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "User has authorized push/PR/merge; merge remains conditional on exact-candidate CI and repository review gates."
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "docs/customer_management/implementation/00_implementation_readiness.md",
+    "docs/customer_management/implementation/phase-PHASE-001-report.md"
+  ],
   "defects": [],
-  "next_safe_action": "Merge confirmed-open and mergeable PR #87 to main, observe the merge commit, synchronize local main, and clean the merged branch/worktree without entering IMPLEMENT."
+  "next_safe_action": "Fetch and reconcile origin/main, commit the approved Customer publication ledger, push the exact candidate, create the planned PR, observe exact-candidate CI/review and merge only when every required gate passes."
 }
