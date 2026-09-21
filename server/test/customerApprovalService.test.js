@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { CustomerApprovalService } from "../src/modules/customer/CustomerApprovalService.js";
 
-function harness({ approvalEnabled = true, approverId = 9, approverPermissions = ["customer.approval"], customerStatus = "draft" } = {}) {
+function harness({ approvalEnabled = true, approverId = 9, approverPermissions = ["customer.approval"], customerStatus = "draft", duplicateSubmit = false } = {}) {
   const events = [];
   const customer = {
     id: 4, customer_code: "CUS-004", customer_code_key: "cus004", legal_name: "Demo Customer",
@@ -24,7 +24,10 @@ function harness({ approvalEnabled = true, approverId = 9, approverPermissions =
     },
     async execute(sql, params) {
       events.push(["execute", String(sql), params]);
-      if (String(sql).includes("INSERT INTO customer_activation_requests")) return [{ insertId: 8 }];
+      if (String(sql).includes("INSERT INTO customer_activation_requests")) {
+        if (duplicateSubmit) throw Object.assign(new Error("duplicate pending request"), { code: "ER_DUP_ENTRY" });
+        return [{ insertId: 8 }];
+      }
       return [{ affectedRows: 1 }];
     }
   };
@@ -68,6 +71,12 @@ test("approval submit rejects self, disabled and unauthorized approvers before c
     await assert.rejects(() => service.submit({ ...input, approverUserId: config.approverId ?? input.approverUserId }), (error) => /APPROVER|APPROVAL_REQUIRED/u.test(error.publicCode));
     assert.equal(events.some(([kind]) => kind === "execute"), false);
   }
+});
+
+test("concurrent second submit is a stable conflict and never changes Customer state", async () => {
+  const { service, events } = harness({ duplicateSubmit: true });
+  await assert.rejects(() => service.submit(input), (error) => error.publicCode === "APPROVAL_REQUEST_OPEN");
+  assert.equal(events.some(([kind, sql]) => kind === "execute" && sql.includes("UPDATE customers SET status")), false);
 });
 
 test("withdraw is scoped to the Customer and only the requester can return the pending request to Draft", async () => {

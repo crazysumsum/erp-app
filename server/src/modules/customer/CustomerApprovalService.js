@@ -82,14 +82,22 @@ export class CustomerApprovalService {
       );
       const critical = snapshot(customer, identifiers, credit);
       const nowMs = this.time.nowMs();
-      const [created] = await connection.execute(
-        `INSERT INTO customer_activation_requests
-          (customer_id, requested_by, assigned_approver_id, customer_version, critical_snapshot_hash, summary,
-           approval_setting_value, approval_setting_version, status, request_note, requested_at)
-         VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), 1, ?, 'pending', ?, ?)`,
-        [input.customerId, input.actorId, approver.id, Number(customer.version) + 1, hash(critical),
-          JSON.stringify(summary(customer, identifiers, credit)), Number(setting.version), requestNote, nowMs]
-      );
+      let created;
+      try {
+        [created] = await connection.execute(
+          `INSERT INTO customer_activation_requests
+            (customer_id, requested_by, assigned_approver_id, customer_version, critical_snapshot_hash, summary,
+             approval_setting_value, approval_setting_version, status, request_note, requested_at)
+           VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), 1, ?, 'pending', ?, ?)`,
+          [input.customerId, input.actorId, approver.id, Number(customer.version) + 1, hash(critical),
+            JSON.stringify(summary(customer, identifiers, credit)), Number(setting.version), requestNote, nowMs]
+        );
+      } catch (error) {
+        if (error?.code === "ER_DUP_ENTRY") {
+          throw customerApprovalConflict("APPROVAL_REQUEST_OPEN", "客戶已有待處理的審批申請");
+        }
+        throw error;
+      }
       const [updated] = await connection.execute(
         "UPDATE customers SET status = 'pending_approval', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?",
         [nowMs, input.actorId, input.customerId, customer.version]
