@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 162,
+  "revision": 163,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -2361,6 +2361,17 @@
       "source_ref": "Zero critical, zero high, one non-blocking M, three notes. REV-037's H-1 was verified two ways: the live two-flag race that previously produced a 500 leaking the driver's duplicate message now returns 409 with no leak on both flags, and restoring the broken single-constraint choice turns the new three-cell test red. The M is worth recording because of where it was: the integration double set its committed flag after awaiting commit, so a failed commit never reached it and the double rolled back -- the exact thing its own comment two lines above says it must not do, since the real code sets commitAttempted before the await. A fifth layer, inside the commit that wrote the rule about layers. Fixed by renaming to commitAttempted and moving it ahead of the await. The reviewer's mutation remains unkilled and that is stated rather than papered over: forcing a commit failure needs the real service, which is the recommendation below, and building a test suite for a double that should be deleted would be the wrong direction. The reviewer's amendment to this task's first practice is accepted and written into section 9: prefer deleting the double to improving it. Importing the real error class closed the divergence in the error value but not in the decisions around it, because the double still copies branches and copies drift. This integration test does not need a double at all -- it already talks to real MySQL, and a real MySqlDatabaseService over a real pool, about fifteen lines, would close thirteen divergences at once because there would be no second copy to be wrong. An enumerated rule will always be one property short of the next defect, which is what four rounds of this task demonstrate. It also confirmed the find/findLast equivalence argument and improved the method: an equivalent mutant and an untested branch both survive, and what separates them is whether a non-equivalent mutation on the same code goes red. Considering only constraints[0] turns two tests red, so the list's later elements are genuinely exercised.",
       "actor": "agent-skills:security-auditor (separate agent)",
       "observed_at": "2026-09-21T14:16:08+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Required CI green on the TASK-033 merge candidate after three DEF-019 failures",
+      "code_commit": "ffced961f311ddea95fb0131a9f13bc3ccc27b0e",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "e86a87ae72b6222e656ee9491855eb7ea786bf3c23a946d87825ddae5b4efbd6",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 35567780842, headSha ffced961, conclusion success on all four required checks. DEF-019's itemMigrationIdempotency failed on the first attempt and on the first rerun, passing only on the second rerun -- the first time in this session it has needed two reruns. Worth recording rather than shrugging at: main is green at 946f5982, so the defect is not deterministic, but two things changed around it. PR #120 merged customer-management, adding eight migrations, and this branch adds roughly thirty tests including nine integration tests that exercise a shared erp_dev. DEF-019 deep-equals SHOW CREATE TABLE output including the AUTO_INCREMENT counter, so it is sensitive to exactly the parallel interleaving that more concurrent integration work produces. This branch does not cause the defect and does not touch item tables, but it plausibly raises its hit rate, and the same will be true of every later supplier task. HD-025 keeps DEF-019 with Item Management, so nothing is changed here; the observation exists so the trend is on the record if reruns keep multiplying. Also resolved here: the migration-numbering hazard carried since TASK-032. codex/customer-management-phase-001 merged as PR #120 having renumbered to 0039 through 0046, clear of supplier's 0037, and a duplicate-number sweep over the migration directory returns nothing.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-21T14:31:11+08:00"
     }
   ],
   "pending_decisions": [
