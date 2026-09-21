@@ -8,6 +8,8 @@
   "scope": {
     "source_paths": [
       "server/src/modules/customer/**",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/src/handlers/customer-operations/**",
       "server/src/handlers/customers/**",
       "server/src/handlers/customer-approvals/**",
       "server/src/handlers/customer-settings/**",
@@ -29,6 +31,8 @@
     "allowed_write_paths": [
       "docs/customer_management/**",
       "server/src/modules/customer/**",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/src/handlers/customer-operations/**",
       "server/src/handlers/customers/**",
       "server/src/handlers/customer-approvals/**",
       "server/src/handlers/customer-settings/**",
@@ -47,6 +51,7 @@
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/src/modules/authorization/adminGuard.js",
       "server/config/**",
@@ -83,10 +88,19 @@
   "contracts": {
     "provided": [
       {
+        "id": "customer-business-master-impact-checker",
+        "version": "v1",
+        "source": "server/src/modules/customer/CustomerBusinessMasterImpactChecker.js",
+        "sha256": "4505cf74d770d8ff3f0ef14219aaf5f807a3f0575f9e38a29aafee8cf12544eb",
+        "consumers": [
+          "business-master"
+        ]
+      },
+      {
         "id": "customer-purpose-provider-contracts",
         "version": "aligned-design-2.0",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776",
+        "sha256": "42e440a43f82fa68507a203651cbba40155cd0e55ddf84e7dec37a209adc5117",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",
@@ -102,7 +116,7 @@
         "id": "business-master-currency-payment-term-provider",
         "version": "v1-design",
         "source": "docs/business_master/03_design_spec.md",
-        "sha256": "a9b3a1a99fd65b65732ed00f3b6e02f80d825a0f94bb21a58a88053de132c2b4",
+        "sha256": "27ff34d8008303fa7a077e9b27a90775699e9e1becc663d831a3b01b5c14569c",
         "regression_suites": [
           "customer-server-technical"
         ]

@@ -2,6 +2,7 @@ import { BusinessMasterAdminService } from "./BusinessMasterAdminService.js";
 import { BusinessMasterAuditLogService } from "./BusinessMasterAuditLogService.js";
 import { BusinessMasterImpactRegistry } from "./BusinessMasterImpactRegistry.js";
 import { BusinessMasterRepository } from "./BusinessMasterRepository.js";
+import { CustomerBusinessMasterImpactChecker } from "../customer/CustomerBusinessMasterImpactChecker.js";
 
 const CONSUMER_TABLES = Object.freeze({
   customer: "customers",
@@ -37,9 +38,11 @@ export function createBusinessMasterAdminService(services) {
   const logger = services.require("logging").logger;
   const repository = new BusinessMasterRepository();
   const supplierChecker = services.get?.("supplierBusinessMasterImpactChecker");
-  const checkers = Object.entries(CONSUMER_TABLES).map(([id, table]) =>
-    id === "supplier" && supplierChecker ? supplierChecker : readinessChecker(database, id, table)
-  );
+  const checkers = Object.entries(CONSUMER_TABLES).map(([id, table]) => {
+    if (id === "customer") return new CustomerBusinessMasterImpactChecker({ database });
+    if (id === "supplier" && supplierChecker) return supplierChecker;
+    return readinessChecker(database, id, table);
+  });
   const impactRegistry = new BusinessMasterImpactRegistry({ time, checkers, requiredCheckerIds: Object.keys(CONSUMER_TABLES) });
   return new BusinessMasterAdminService({
     database,

@@ -438,7 +438,7 @@ Complete Phase integration, query-plan, regression and controlled capability gat
 
 ### Approach
 
-Files/scope: integration/performance fixtures, metrics, Phase report. Dependencies: TASK-002 (PHASE-001)..TASK-009 (PHASE-001). Follow the linked requirements/designs and repository conventions without expanding scope.
+Files/scope: integration/performance fixtures, metrics, Phase report. Dependencies: TASK-002 (PHASE-001)..TASK-009 (PHASE-001). HD-007 approval additionally permits the minimal production Customer Currency／Payment Term impact checker and its Business Master registry registration; it is read-only over Customer-owned data and does not change Business Master ownership or high-risk policy.
 
 ### Acceptance criteria
 
