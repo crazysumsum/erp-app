@@ -47,6 +47,12 @@ function actor(req) {
 
 function command(req) {
   return {
+    // Body 擺**最前**，框架嗰啲擺後面，所以一個叫 `actorId`／`requestId`／`ip`／
+    // `supplierId` 嘅 body 欄位蓋唔到佢哋。今日冇 body 進得到呢度（五個 schema 都係
+    // `additionalProperties: false` 而且冇宣告呢啲名），但呢條 route 寫緊銀行嘅稽核
+    // 記錄 —— 稽核記錄入面邊個係「呼叫者講嘅」、邊個係「框架量到嘅」唔應該靠另一個
+    // 檔案嘅一行 schema 嚟分。同 `supplierApprovalWithdrawHandler.js:48` 同一個考慮。
+    ...req.input.body,
     ...actor(req),
     supplierId: Number(req.input.params.id),
     // 唔喺 params 嘅 route（create、list）冇 bankAccountId，所以唔可以無條件 Number()
@@ -56,8 +62,7 @@ function command(req) {
       ? {}
       : { bankAccountId: Number(req.input.params.bankAccountId) }),
     requestId: req.requestId,
-    ip: req.ip || req.socket?.remoteAddress || "",
-    ...req.input.body
+    ip: req.ip || req.socket?.remoteAddress || ""
   };
 }
 
@@ -188,19 +193,25 @@ export class RevealSupplierBankAccountHandler extends SupplierBankHandler {
   };
 
   /**
-   * 框架已經喺**每個** API JSON response 加 `Cache-Control: no-store`
-   * （`framework/http/apiResponse.js`）。呢度收窄佢，唔係重複佢：
+   * T34 個驗收條件寫住 reveal 要回 `Cache-Control: no-store, private`。**`private`
+   * 去唔到線上**，而呢度冇扮佢去到：`sendSuccess` 第一句就係
+   * `res.setHeader("Cache-Control", "no-store")`（`framework/http/apiResponse.js:21`，
+   * 錯誤路徑 `:46` 一樣），而 `setHeader` 係覆寫唔係附加，所以任何喺呢度設嘅
+   * `Cache-Control` 都會喺送出之前被抹走。REV-039 喺真 HTTP 上量到實際值係
+   * `no-store`。
    *
-   *   - `private` 明講唔止唔可以存，連共用快取（proxy、CDN）都唔可以掂。
-   *   - `Pragma: no-cache` 係俾只識 HTTP/1.0 快取語意嘅中間件 —— 今日好少，但一個
-   *     公司內部嘅舊 proxy 就係最有可能坐喺呢條 route 前面嗰種嘢。
+   * 呢個驗收條件因此**未達成**，而 Product Owner 2026-09-21 揀咗記錄偏離而唔係改框架：
+   * `no-store` 本身已經禁止任何快取（共用或私有）儲存個 response（RFC 9111 §5.2.2.5），
+   * 所以 `private` 喺實際安全上加唔到嘢，而為咗一個 token 去改一個**所有**模組都經
+   * 嘅 response 路徑，代價同收益唔成比例。偏離記錄喺 00_harness_state.json
+   * （DEV-T34-CACHE-PRIVATE）同實作報告。要真係達成，要改嘅係 `apiResponse.js`
+   * 令佢唔好覆寫一個已經更窄嘅 `Cache-Control` —— 嗰個喺本模組 allowed_write_paths 以外。
    *
-   * 設定 header 唔等於送出 response：`sendSuccess` 之後先送，所以喺呢度 setHeader
-   * 唔會撞到框架嗰個「handler 唔可以自己寫 response」嘅檢查。同
-   * `handlers/user/loginHandler.js` 設 `Retry-After` 係同一個做法。
+   * `Pragma: no-cache` 就真係設得到 —— 框架唔掂佢 —— 所以佢留低：係俾只識 HTTP/1.0
+   * 快取語意嘅中間件，今日好少，但一個公司內部嘅舊 proxy 就係最有可能坐喺呢條 route
+   * 前面嗰種嘢。同 `handlers/user/loginHandler.js` 設 `Retry-After` 係同一個做法。
    */
   async execute(req, res) {
-    res.setHeader("Cache-Control", "no-store, private");
     res.setHeader("Pragma", "no-cache");
     return this.response(await this.banks.reveal(command(req)));
   }

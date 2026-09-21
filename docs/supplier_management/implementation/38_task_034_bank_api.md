@@ -61,15 +61,36 @@ Reveal 係唯一講得出帳號嗰個，而佢淨係講得出三樣嘢。
 
 呢個測試同時證到一件 T34 先至存在嘅事：**個 app 起得到** —— 即係 HD-030 嗰個配置真係生效。
 
-## 4. 「Manual header check」自動化咗
+## 4. 「Manual header check」：`private` 未達成（DEV-T34-CACHE-PRIVATE）
 
 T34 驗收寫住「Manual header check：reveal 含 `Cache-Control: no-store, private` 及
-`Pragma: no-cache`」。人手檢查唔會每次都做，所以直接行個 handler 嘅 `execute`，用一個記住
-`setHeader` 嘅假 `res` 去斷言。
+`Pragma: no-cache`」。**呢個條件未達成，而我原本報告話達成咗。**
 
-框架本身已經喺每個 API JSON response 加 `Cache-Control: no-store`。呢度**收窄**佢：`private`
-明講連共用快取都唔可以掂，`Pragma` 係俾只識 HTTP/1.0 快取語意嘅中間件 —— 一個公司內部嘅
-舊 proxy 就係最有可能坐喺呢條 route 前面嗰種嘢。
+`private` 去唔到線上。`sendSuccess` 第一句就係
+`res.setHeader("Cache-Control", "no-store")`（`framework/http/apiResponse.js:21`，錯誤路徑
+`:46` 一樣），喺 handler 之後行，而 `setHeader` 係覆寫唔係附加。REV-039 喺真 HTTP 上量到
+實際值：
+
+```
+PROBE reveal(view+bank.view) : 200 | Cache-Control: "no-store" | Pragma: "no-cache"
+```
+
+我原本嗰個測試捉唔到，而且係**結構上**捉唔到：佢用一個假 `res` 直接行 `handler.execute`，
+停咗喺框架覆寫之前一步。即係一個特登寫嚟代替人手檢查嘅自動檢查，喺個 header 真係錯嘅時候
+**冇可能紅**。呢個同本模組反覆揾到嘅係同一類缺陷 —— 斷言「我打算做乜」而唔係「發生咗乜」。
+
+Product Owner 2026-09-21 揀咗**記錄偏離，唔掂框架**。理由：`no-store` 本身已經禁止任何快取
+（共用或私有）儲存個 response（RFC 9111 §5.2.2.5），`private` 只係「共用快取唔可以儲」，
+係較弱嗰個 —— 所以實際保護冇缺口；而為咗一個 token 去改一個**所有**模組都經嘅 response
+路徑，而嗰個路徑喺本模組 `allowed_write_paths` 以外，代價同收益唔成比例。
+
+已做嘅嘢：
+- Handler 唔再設一個會被抹走嘅 `Cache-Control` —— 一行冇作用嘅 code 本身就係個問題。
+  `Pragma: no-cache` 框架唔掂，所以留低。
+- 真正嘅斷言搬咗去整合測試嗰個成功 reveal，讀 `response.headers`：
+  `assert.equal(ok.headers.get("cache-control"), "no-store")`。用 `equal` 而唔用 `match`
+  係特登 —— 有一日有人改咗框架，佢會紅，而嗰陣個偏離應該係被人有意識咁收咗。
+- 偏離記錄喺 `00_harness_state.json`（`DEV-T34-CACHE-PRIVATE`），唔淨係喺呢份報告。
 
 ## 5. 一個記錄低嘅偏離
 
@@ -77,7 +98,11 @@ T34 驗收寫住「Manual header check：reveal 含 `Cache-Control: no-store, pr
 但實際上冇任何 server-side 狀態同佢對應 —— 明文淨係活喺嗰一個 response 入面。一個講緊一件
 冇發生嘅事嘅欄位，比冇嗰個欄位更差。UI 幾時清 component memory 係 T35 嘅事。
 
-## 6. PLAN baseline 移咗位
+REV-039 L-4 講得啱：呢個偏離原本淨係活喺呢份敘述文件度，讀 ledger 或者 traceability 嘅人
+唔會知 FR-BANK-006 個設計形狀冇照字面做。已經補咗一條 `DEV-T34-EXPIRES-IN` 落
+`00_harness_state.json`。
+
+## 6. Baseline 移位 —— 連我自己講錯咗嘅嗰句
 
 Harness 個 evidence runner 只傳 profile `env_keys` 列明嗰啲環境變數
 （`harness_runner.py:146`），而 supplier 嗰堆 suite 只列咗 `DB_*`。由呢個 task 起 app 冇
@@ -85,7 +110,29 @@ Bank key 就起唔到，**所以每一個 evidence run 都會 fail closed**。
 
 加四條 key 落 profile 就解決到，但 profile hash 落 PLAN baseline。移位嘅代價喺決定之前
 數清楚咗：**83 條 observation、6 條 approval（包括 HD-027 同 HD-030 自己）、78 份 evidence**
-綁嘅係舊 hash。Review 綁 design hash，唔受影響。
+綁嘅係舊 hash。
+
+> **更正（REV-039 H-1）。** 上一句原本仲有「Review 綁 design hash，唔受影響」。嗰句喺
+> profile 嗰次移位係啱嘅，但我跟住做咗第二次移位 —— 喺 manifest 嘅
+> `scope.approval_required_paths` 宣告 `.github/workflows/ci.yml` —— 而我當時話佢「機械性、
+> 同 design 無關」。**錯。** DESIGN digest =
+> `digest({module_id, requirements, design, scope, contracts, risk})`
+> （`harness_core.py:301-307`），而 `approval_required_paths` 就住喺 `scope` 裏面。嗰一行
+> 令 design hash 由 `e4083319…` 移到 `77ab26aa…`，而 `harness_checks.py:276-289` 用
+> **重算**嘅 design hash 去篩 review，所以 38 條 review 一次過全部落空 —— 包括把關 T33
+> merge 嗰條 REV-038，同唯一一條 DESIGN approval `APPROVAL-HD-017-DESIGN`。
+> `APPROVAL-HD-031-PLAN-FINAL` 個 `source_ref` 亦都寫住「No requirement, design, … changed」，
+> 同樣係假。
+>
+> 更正方式：Product Owner 2026-09-21 揀咗**取消嗰個 manifest 宣告**。design hash 返回
+> `e4083319…`，28 條 review 連 REV-038 繼續成立。代價係 boundary validator 會對
+> `.github/workflows/ci.yml` 報一個 `OUTSIDE_MODULE` —— 一個本機 path 一致性檢查嘅發現
+> （佢自己都寫明「Path consistency only」），而嗰個檔案 HD-030 已經明文批咗。用一個已知
+> 而且有 approval 管住嘅本機發現，換 28 條 review 嘅有效性。
+>
+> 兩條 `-FINAL` approval 綁嘅 `f701e9b0…` 隨住取消宣告而唔再存在，所以佢哋一併失效；
+> `APPROVAL-HD-031-PLAN` 綁嘅 `db5296…` 反而返嚟成為現行 PLAN baseline。原記錄全部保留
+> 冇改寫，superseding 關係寫喺新記錄度。
 
 Product Owner 按 HD-031 揀咗改 profile。舊記錄**冇改過** —— 佢哋內容全部仍然成立，只係名義上
 唔再指向現行 baseline，而呢件事記低咗而唔係等人自己發現。同一個模組喺 HD-017 做過同樣嘅事，
@@ -98,11 +145,46 @@ material**：掃過每個檔案揾 44 字元 base64，零命中。（第一次�
 
 ## 7. Developer self-test
 
+REV-039 remediation 之後喺最終 baseline（PLAN `ba636440…`）重跑咗一次：
+
 | Suite | 結果 | Evidence |
 | --- | --- | --- |
-| `supplier-phase-001-server` | **PASS** 392/392（原 377） | `evidence/20260921T084400-a77f159e6e84/run.json` |
-| `supplier-phase-001-client` | **PASS** 71/71 | `evidence/20260921T084405-8292f30ec573/run.json` |
-| `lint` | **PASS** | `evidence/20260921T084411-7bbcdc693840/run.json` |
-| `client-build` | **PASS** | `evidence/20260921T084415-e2ffcea635ab/run.json` |
+| `supplier-phase-001-server` | **PASS** 393/393（原 377） | `evidence/20260921T091202-bea5b02b8705/run.json` |
+| `supplier-phase-001-client` | **PASS** 71/71 | `evidence/20260921T091206-919d8226f564/run.json` |
+| `lint` | **PASS** | `evidence/20260921T091208-fc98e278c77e/run.json` |
+| `client-build` | **PASS** | `evidence/20260921T091211-51d49b3a7c34/run.json` |
+
+第一次嗰四份（`20260921T0844*`）**保留**咗，冇刪 —— 佢哋綁 `db5296…`，係 REV-039 H-2 講嗰批。
+
+**核實過四份新 evidence 冇任何 key material**：搵兩條測試 key 嘅字面值，同搵任何 43 字元
+base64 加 `=`，兩樣都零命中。而且今次**驗證過個 sweep 分辨得到** —— 種一條 key 落一個臨時
+檔案，同一條命令揾得返。一個從來未揾到過任何嘢嘅 sweep，證明唔到「揾唔到」。
 
 **冇跑 Playwright**：T34 淨係 server。Bank UI 喺 T35。
+
+## 8. REV-039 remediation
+
+REV-039（`agent-skills:security-auditor`，獨立，非作者）喺 `64ef1fc` 上報 CHANGES_REQUESTED：
+2 High、3 Medium、4 Low。**九條全部真**，冇一條係誤報。攻擊資料邊界嗰邊冇一個成功（N-1 到
+N-4），壞嘅係呢個改動**周圍嗰啲 baseline 簿記**，同埋兩個唔會紅嘅測試。
+
+| # | 收法 |
+| --- | --- |
+| **H-1** design baseline 被 manifest 一行推咗，而記錄講相反 | 取消嗰個 manifest 宣告（PO 決定）。design 返 `e4083319…`，28 條 review 連 REV-038 繼續成立。兩處假陳述已更正 —— 見 §6 同 ledger 嘅 `CORRECTION-REV-039-H1`。 |
+| **H-2** 四份 evidence 綁緊中間 PLAN hash | 取消宣告之後現行 PLAN hash 返回 `db5296…`，即係四份 evidence 一直綁住嗰個。但 source 之後又改過（M-2／M-3／L-1／L-2／L-3），所以四個 suite 照樣喺最終 commit 重跑咗一次 —— 見 §7。 |
+| **M-1** `Cache-Control: private` 過唔到線 | 驗收條件未達成，PO 揀咗記錄偏離。詳見 §4 同 `DEV-T34-CACHE-PRIVATE`。 |
+| **M-2** 403 分唔開「冇資格」同「錯密碼」（mutation 存活） | 斷言改為 `revealed.body.error.code === "Forbidden"`。REV-039 已經量過兩者過到線係分得開嘅（`Forbidden` vs `PASSWORD_INVALID`）。 |
+| **M-3** 冇任何測試喺 HTTP 上做過一次成功 reveal | 加咗第二個 principal（`supplier.view + supplier.bank.view`）同第二個 token，做真 200 reveal：斷言 `data.accountNumber === SECRET`、斷言**實際 wire header**、斷言啱啱一條 `supplier.bank.reveal` 稽核。AC-025／026 因為 `DEVICE_SIGNATURE_REQUIRED` 喺 authorization 之前擋住，HTTP 層依然去唔到 —— 記低咗，見下面「仲未覆蓋」。 |
+| **L-1** output validation 個 flag 冇人釘 | `supplierBankHandlers.test.js` 加咗兩句斷言釘住出貨設定。**驗證過佢分辨得到**：把 `validateInProduction` 改 false → 紅；改返 → 綠。 |
+| **L-2** `command(req)` 最後先 spread body | Body 搬去最前，框架量到嗰啲擺後面。今日冇 body 進得到（五個 schema 都 `additionalProperties: false`），但呢條 route 寫緊銀行稽核記錄。 |
+| **L-3** 兩個 browser suite 有 redaction 冇 `env_keys` | 揀咗**剝走嗰兩條 redaction**，唔係補 `env_keys`。今日冇 browser suite 起 Node app，補 `env_keys` 係一種「睇落已經 provision 咗」嘅假象 —— 而嗰個假象正正係 REV-039 指出嘅危害。T35 真係要嗰陣，佢會 fail closed 而唔係靜靜雞跑咗。 |
+| **L-4** `expiresInSeconds` 偏離淨係喺報告 | 補咗 `DEV-T34-EXPIRES-IN` 落 ledger。 |
+
+### 仲未覆蓋（記低，唔係靜靜雞漏低）
+
+AC-025／AC-026 喺 HTTP 層冇測試。一個持有三個寫入權限之中兩個嘅呼叫者，會喺
+`400 DEVICE_SIGNATURE_REQUIRED` 被 auth strategy 擋住，喺 authorization policy 行之前 ——
+即係要測呢個，要一個 device-bound client，而嗰個係 T35 嘅事。今日呢兩條 AC 由兩層守住：
+static metadata（`supplierBankHandlers.test.js` 宣告式釘住）同
+`SupplierBankService.#assertMay`（喺 transaction 入面對住 DB 再 check 一次）。兩層都真，
+但兩層都唔係 HTTP 層測試。

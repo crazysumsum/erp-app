@@ -522,7 +522,13 @@ integrationTest("the Bank routes answer over real HTTP, and the masked list leak
   const seedConnection = await mysql.createConnection(config());
   const seeded = await seedSupplier(seedConnection, suffix);
   supplierId = seeded.supplierId;
-  await serviceOn(seedConnection, { crypto: buildCrypto() }).create({
+  // 種資料要用**app 自己嗰組 key**，唔係一組新產生嘅 —— 否則個 row 加密咗之後
+  // app 解唔返，reveal 會（正確地）回 422。呢個係第一次寫嗰陣真係撞到嘅。
+  const appCrypto = new SupplierBankCrypto({
+    encryption: application.services.config.supplier.bankEncryption,
+    lookup: application.services.config.supplier.bankLookup
+  });
+  await serviceOn(seedConnection, { crypto: appCrypto }).create({
     ...actor, ...details, supplierId, accountNumber: SECRET, isDefault: true, reason: "HTTP 測試種一行"
   });
   await seedConnection.end();
@@ -561,6 +567,45 @@ integrationTest("the Bank routes answer over real HTTP, and the masked list leak
     headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify({ reason: "冇權限測試原因", password: PASSWORD })
   }).then(async (r) => ({ status: r.status, body: await r.json() }));
+  // REV-039 M-2：只斷言 403 係分辨唔到嘢嘅 —— `passwordReauth.js` 密碼唔啱一樣回
+  // 403，所以一個**根本去唔到授權層**嘅請求都會令呢句綠。要指名嗰個 code。
   assert.equal(revealed.status, 403, JSON.stringify(revealed.body));
+  assert.equal(revealed.body.error.code, "Forbidden",
+    "a wrong password also yields 403; this must be the authorization layer refusing, not the password check");
   assert.ok(!JSON.stringify(revealed.body).includes(SECRET));
+
+  // REV-039 M-3：要有一個**成功**嘅 reveal 行過真 HTTP，否則 AC-024 喺呢一層完全冇
+  // 覆蓋 —— 而嗰個空白正正就係 M-1（header 被框架蓋過）冇人察覺嘅原因。
+  const [[bankPermission]] = await db.query("SELECT id FROM permissions WHERE name = 'supplier.bank.view'");
+  await db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, bankPermission.id]);
+  const viewerToken = await jwt.issue(
+    { roles: [`bank-http-${suffix}`], permissions: ["supplier.view", "supplier.bank.view"] },
+    { subject: String(userId), version, authTime: Math.floor(now / 1000) }
+  );
+  const ok = await fetch(`${url}/api/v1/suppliers/${supplierId}/bank-accounts/${item.id}/reveal`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${viewerToken}`, "content-type": "application/json" },
+    body: JSON.stringify({ reason: "整合測試查看完整帳號", password: PASSWORD })
+  }).then(async (r) => ({ status: r.status, headers: r.headers, body: await r.json() }));
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  assert.equal(ok.body.data.accountNumber, SECRET, "AC-024: bank.view really does get the account");
+
+  // 而佢係唯一一個講得出帳號嘅 response，所以佢係唯一一個要 no-store 嘅。
+  //
+  // REV-039 M-1：呢度斷言**實際過到線嗰個值**，唔係 handler 設咗乜 —— 之前個測試
+  // 用假 res 直接行 execute，停咗喺框架覆寫之前一步，所以佢結構上捉唔到呢件事。
+  //
+  // 個值係 `no-store`，唔係 T34 驗收條件寫嘅 `no-store, private`：`sendSuccess`
+  // （framework/http/apiResponse.js:21）會喺 handler 之後覆寫。呢個偏離 Product Owner
+  // 批咗（DEV-T34-CACHE-PRIVATE）。用 equal 而唔用 match 係**特登**嘅 —— 如果有一日
+  // 有人改咗框架，呢條測試會紅，而嗰陣個偏離應該係被人有意識咁收咗，唔係靜靜雞飄走。
+  assert.equal(ok.headers.get("cache-control"), "no-store",
+    "見 DEV-T34-CACHE-PRIVATE：private 過唔到線；紅咗即係框架改咗，去收個偏離記錄");
+  assert.equal(ok.headers.get("pragma"), "no-cache", "呢個框架唔掂，所以 handler 設得到");
+
+  // 成功 reveal 之後一定要有一筆稽核 —— 呢個係 FR-BANK-006 喺 HTTP 層嘅出口。
+  const [audits] = await db.query(
+    "SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.reveal'", [supplierId]
+  );
+  assert.equal(audits.length, 1, "a reveal over HTTP leaves exactly one audit row");
 });

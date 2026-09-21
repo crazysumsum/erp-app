@@ -170,11 +170,19 @@ test("the child routes name the account in the path, so ownership is a route par
 });
 
 /**
- * T34 個驗收條件寫住「**Manual header check**：reveal 含 `Cache-Control: no-store,
- * private` 及 `Pragma: no-cache`」。人手做嘅檢查唔會每次都做，所以改成自動：直接行
- * 個 handler 嘅 execute，用一個記住 setHeader 嘅假 res。
+ * 呢度**只**斷言 `Pragma` —— 即係 handler 真正送得出嘅嗰個。
+ *
+ * 之前呢個測試仲斷言 handler 設咗 `Cache-Control: no-store, private`，而佢係綠嘅，
+ * 但個 header 去唔到線上：`sendSuccess` 會喺 handler 之後覆寫成 `no-store`。一個直接
+ * 行 `execute` 嘅測試**結構上**停喺覆寫之前一步，所以佢永遠捉唔到。REV-039 喺真
+ * HTTP 上量到實際值，而依家真正嘅 cache header 斷言喺
+ * `test/integration/supplierBank.integration.test.js` 嗰個成功 reveal 度 —— 讀
+ * `response.headers`，唔係讀 handler 嘅意圖。
+ *
+ * 教訓比呢個 header 本身重要：一個斷言「我打算做乜」嘅測試，唔係一個斷言「發生咗乜」
+ * 嘅測試。
  */
-test("reveal sets no-store and private headers, and the other routes do not need to", async () => {
+test("reveal sets the one cache header the framework does not overwrite", async () => {
   const headers = {};
   const res = { setHeader(name, value) { headers[name] = value; } };
   const handler = Object.create(RevealSupplierBankAccountHandler.prototype);
@@ -188,9 +196,21 @@ test("reveal sets no-store and private headers, and the other routes do not need
   }, res);
 
   assert.equal(result.accountNumber, "123");
-  assert.equal(headers["Cache-Control"], "no-store, private",
-    "the framework's blanket no-store is narrowed here: private also excludes shared caches");
   assert.equal(headers.Pragma, "no-cache", "for intermediaries that only speak HTTP/1.0 cache semantics");
+  assert.equal(headers["Cache-Control"], undefined,
+    "setting it here would be a no-op the framework discards; see the handler comment");
+});
+
+/**
+ * 上面所有 response schema 嘅斷言，靠嘅係 response validation 真係行緊 —— 
+ * `ResponseValidator.compile` 返回嘅 closure 第一句係 `if (!this.config.runtimeEnabled) return;`。
+ * 熄咗個 flag，每個遮罩 Bank response 就會變成 service 回乜就出乜。所以喺呢度釘住
+ * 出貨嘅設定值本身，唔淨係釘 normalizer 嘅行為。
+ */
+test("the shipped config leaves output validation on, including in production", async () => {
+  const { default: requestConfig } = await import("../config/request.js");
+  assert.equal(requestConfig.validation.output.enabled, true);
+  assert.equal(requestConfig.validation.output.validateInProduction, true);
 });
 
 test("a route without a bankAccountId does not invent one", async () => {

@@ -588,9 +588,7 @@
       ],
       "env_keys": [],
       "redaction_env_keys": [
-        "DB_PASSWORD",
-        "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "DB_PASSWORD"
       ]
     },
     {
@@ -925,9 +923,7 @@
       ],
       "env_keys": [],
       "redaction_env_keys": [
-        "DB_PASSWORD",
-        "SUPPLIER_BANK_ENCRYPTION_KEYS",
-        "SUPPLIER_BANK_LOOKUP_KEYS"
+        "DB_PASSWORD"
       ]
     }
   ],

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 171,
+  "revision": 173,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,9 +10,9 @@
   "current_task": "TASK-034",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
-    "plan": "f701e9b041707cd6ce0f2911f1090d1e4b387e067f1c90fb2fb212267025f467",
-    "code_commit": "dd3b29868b53508ca72b07a0293602466fb81ce1",
-    "source_fingerprint": "4ea061ee6638cae27e12529c0e6999fba64f51ae73056f1f4cae445ed2e52742",
+    "plan": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+    "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+    "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-034",
     "default_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -764,6 +764,47 @@
         "server/.env.example",
         "docs/supplier_management/00_project_profile.json",
         "docs/supplier_management/00_module_manifest.json",
+        "no production key material is committed by this approval"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-031-PLAN-REBIND",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-binds the HD-031 plan approval after REV-039 remediation moved the PLAN baseline twice more, in opposite directions. (1) The Product Owner's 2026-09-21 answer to REV-039 H-1 was to REVERT the manifest declaration of .github/workflows/ci.yml, which returns the DESIGN baseline to e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4 and the PLAN baseline to db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087. (2) Fixing REV-039 L-3 then edited the profile again, removing SUPPLIER_BANK_ENCRYPTION_KEYS and SUPPLIER_BANK_LOOKUP_KEYS from redaction_env_keys on supplier-client-ui and supplier-uat-browser, which had them without any env_keys and so looked provisioned while being unable to receive the variables at all. That moved PLAN to ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e. The underlying human decision is unchanged and is still HD-031: edit the profile and rebuild the baseline. Nothing here is a new authorisation. APPROVAL-HD-031-PLAN and APPROVAL-HD-031-PLAN-FINAL are retained unrewritten and are both superseded by this record; note that APPROVAL-HD-031-PLAN-FINAL's source_ref contains a false statement, corrected by the observation 'REV-039 H-1: a manifest edit moved the DESIGN baseline and two records said it did not'.",
+      "recorded_at": "2026-09-21T17:11:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "scope": [
+        "supplier-management",
+        "00_project_profile.json: SUPPLIER_BANK_* in env_keys on the eight DB-backed suites",
+        "00_project_profile.json: the two browser suites keep only DB_PASSWORD in redaction_env_keys",
+        "00_module_manifest.json: .github/workflows/ci.yml is NOT declared in approval_required_paths, by decision"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-030-SCOPE-REBIND",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-binds APPROVAL-HD-030-SCOPE to the current plan baseline after the REV-039 remediation moves. The underlying decision is unchanged: the Product Owner's 2026-09-21 answer to HD-030 named .github/workflows/ci.yml explicitly in the option chosen, and approved provisioning test-only generated keys there and in server/.env.example so the Bank capability can be deployed fail-closed. What DID change is how the boundary validator sees ci.yml: because the manifest declaration was reverted under REV-039 H-1, the validator now reports OUTSIDE_MODULE for that path instead of treating it as approval-required. The Product Owner chose that trade knowingly - a local path-consistency finding on a file they had already approved, in exchange for keeping 28 reviews including the REV-038 that gated the TASK-033 merge bound to a live design baseline. APPROVAL-HD-030-SCOPE and APPROVAL-HD-030-SCOPE-FINAL are retained unrewritten and superseded here.",
+      "recorded_at": "2026-09-21T17:11:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "scope": [
+        "supplier-management",
+        ".github/workflows/ci.yml",
+        "server/.env.example",
+        "docs/supplier_management/00_project_profile.json",
+        "docs/supplier_management/00_module_manifest.json",
+        "boundary validator reports OUTSIDE_MODULE for .github/workflows/ci.yml, accepted by decision",
         "no production key material is committed by this approval"
       ],
       "expires_at": null
@@ -2492,6 +2533,61 @@
       "source_ref": "The four evidence directories were swept for any 44-character base64 string and none was found, so the two secret-bearing variables added to redaction_env_keys are doing their job and nothing committed here carries key material. Recording the first attempt too, because it was the same failure this module keeps finding: the sweep grepped for $SUPPLIER_BANK_ENCRYPTION_KEYS in a shell where that variable had not been exported, so it searched for the empty string, matched every file, and reported four leaks that did not exist. A check that cannot fail and a check that always fails are the same kind of broken.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T16:45:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-039 H-1: a manifest edit moved the DESIGN baseline and two records said it did not",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "spec_baseline": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
+      "status": "PASS",
+      "source_ref": "Correction of my own records, not a new finding. I declared .github/workflows/ci.yml in the manifest's scope.approval_required_paths and described that edit as mechanical and design-neutral. It was not. The DESIGN digest is digest({module_id, requirements, design, scope, contracts, risk}) at harness_core.py:301-307, and approval_required_paths lives inside scope, so the edit moved design from e4083319 to 77ab26aa. harness_checks.py:276-289 filters reviews against a RECOMPUTED design hash, so all 38 reviews stopped counting at once, including REV-038, the APPROVED review that gated the TASK-033 merge, and APPROVAL-HD-017-DESIGN, the module's only DESIGN-kind approval. Two records asserted the opposite: implementation report 38 section 6 said 'Review binds the design hash, unaffected', and APPROVAL-HD-031-PLAN-FINAL's own source_ref said 'No requirement, design, phase, task, suite, test flag or suite argv changed.' Both false as recorded. Verified myself rather than taking the reviewer's word: state_tool.py inspect reported observed design 77ab26aa against recorded e4083319 with BASELINE_STALE, and 28 of 38 reviews bound to the recorded hash. Resolution: the Product Owner chose to revert the manifest declaration; design is back to e4083319 and state_tool.py no longer reports BASELINE_STALE on design. The report is corrected in place with the correction marked as such, and the false approval source_ref is superseded rather than rewritten. This is the fourth time this module has been bitten by a manifest edit stranding baseline-bound records; what is new is that this time the class of record affected was one I had explicitly told the Product Owner would not be affected.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-039",
+      "observed_at": "2026-09-21T17:11:55+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEV-T34-CACHE-PRIVATE: the reveal route's Cache-Control acceptance criterion is not met",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "spec_baseline": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
+      "status": "FAIL",
+      "source_ref": "Recorded deviation, approved by the Product Owner on 2026-09-21. TASK-034's verification criterion reads 'Manual header check: reveal contains Cache-Control: no-store, private and Pragma: no-cache'. The private token never reaches the wire: BaseRequestHandler.handle calls sendSuccess, whose first statement is res.setHeader('Cache-Control','no-store') at framework/http/apiResponse.js:21 (and :46 on the error path), and setHeader replaces rather than appends. REV-039 measured the actual value over real HTTP on a genuine 200 reveal: Cache-Control: no-store, Pragma: no-cache. My own test could not see this and could not have: it drove handler.execute directly with a fake res, stopping one call before the framework overwrites, so a test written specifically to replace a manual check was incapable of failing when the header was wrong. The Product Owner chose to record the deviation rather than change the framework, on the reasoning that RFC 9111 5.2.2.5 makes no-store strictly stronger than private - no cache of any kind may store the response - so the security property the criterion protects is already held, while meeting it literally would require editing a response path every module in the application goes through, outside this module's allowed_write_paths. Remediation: the handler no longer sets a Cache-Control it cannot deliver; Pragma stays because the framework does not touch it; and the integration test now asserts the real wire value with assert.equal rather than assert.match, deliberately, so that if anyone ever changes apiResponse.js the test goes red and this deviation is closed on purpose instead of drifting shut. Status FAIL is accurate and intended: the criterion is not met.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-039",
+      "observed_at": "2026-09-21T17:11:55+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEV-T34-EXPIRES-IN: design 6.6's reveal response includes expiresInSeconds and the implementation omits it",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "spec_baseline": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
+      "status": "FAIL",
+      "source_ref": "Recorded deviation, previously only in the narrative implementation report (REV-039 L-4). Design 6.6's reveal example carries expiresInSeconds: 30. BANK_REVEAL_RESPONSE_SCHEMA declares exactly {id, accountNumber, revealedAt} and is additionalProperties: false, so the field cannot appear. The reasoning: no server-side state corresponds to that number. The plaintext exists only inside that one response; nothing expires anywhere, and a field that implies a server-side lifetime which does not exist is worse than no field. When the UI clears it from component memory is TASK-035's concern and does not need a number from the server. REV-039 agreed with the decision and objected only to where it was written down - nothing reading the ledger or the traceability matrix knew FR-BANK-006's design shape was not implemented as written, so the next person would have re-derived it from a diff. Status FAIL records that the design shape is not implemented as written, which is the fact a reader needs; it is not an unresolved defect.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-039",
+      "observed_at": "2026-09-21T17:11:55+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-039 remediation: nine findings, all real, all addressed",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "spec_baseline": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
+      "status": "PASS",
+      "source_ref": "REV-039 was performed by agent-skills:security-auditor, independent and not the author, against 64ef1fc. Verdict CHANGES_REQUESTED with 2 High, 3 Medium, 4 Low. Every one was a true finding; none was a false positive. H-1 and H-2 were baseline bookkeeping around the change rather than the change itself: H-1 is recorded separately above, and H-2 dissolved when the manifest revert returned PLAN to db5296, the hash the four evidence runs already carried - but the source changed again during remediation, so all four suites were re-run at the final baseline anyway rather than relying on that coincidence. M-1 is the recorded cache-header deviation above. M-2: the new HTTP test asserted only status 403 on an unauthorised reveal, and the reviewer killed it by changing only the password - jwt-password runs assertPasswordConfirmed before the authorization policy and a rejected password is also 403, so the assertion could not tell apart the two outcomes it claimed to distinguish; it now asserts error.code === 'Forbidden'. M-3: no test performed a successful reveal or any write over HTTP, which is the direct cause of M-1; there is now a second principal holding supplier.view plus supplier.bank.view that performs a real 200 reveal and asserts the plaintext, the actual response headers and exactly one supplier.bank.reveal audit row. AC-025 and AC-026 remain uncovered at the HTTP layer because a caller holding two of the three write permissions is refused at 400 DEVICE_SIGNATURE_REQUIRED before authorization runs; that limitation is stated in the implementation report rather than left silent. L-1: the response-schema defence depends on validation.output.enabled, which nothing pinned; two assertions now pin the shipped config, and I verified they discriminate by flipping validateInProduction to false and watching the test go red. L-2: command(req) spread the request body last, over requestId, ip and the actor identity; on the route that writes the bank audit trail the body now goes first and the framework-derived fields last. L-3: two browser suites carried the secrets in redaction_env_keys with an empty env_keys, so they could never receive what they claimed to redact; the redaction entries were removed rather than env_keys added, because adding them would make an unprovisioned suite look provisioned, which is the hazard the reviewer named. L-4 is the expiresInSeconds deviation above.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-039",
+      "observed_at": "2026-09-21T17:11:55+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-039 remediation evidence carries no key material",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "spec_baseline": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
+      "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
+      "status": "PASS",
+      "source_ref": "The four re-run evidence directories were searched for the two literal test key values and for any 43-character base64 run followed by '=': zero hits of either. Unlike the first attempt at this check on the previous evidence set, the search used literal strings rather than an unexported shell variable, so it searched for what it meant to search for. Discriminating power verified rather than assumed: planting one of the two keys into a scratch file and running the identical commands finds it by both the literal search and the base64 pattern. A sweep that has never been shown to find anything proves nothing about finding nothing.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-039",
+      "observed_at": "2026-09-21T17:12:37+08:00"
     }
   ],
   "pending_decisions": [
@@ -3421,7 +3517,11 @@
     "evidence/20260921T084400-a77f159e6e84/run.json",
     "evidence/20260921T084405-8292f30ec573/run.json",
     "evidence/20260921T084411-7bbcdc693840/run.json",
-    "evidence/20260921T084415-e2ffcea635ab/run.json"
+    "evidence/20260921T084415-e2ffcea635ab/run.json",
+    "evidence/20260921T091202-bea5b02b8705/run.json",
+    "evidence/20260921T091206-919d8226f564/run.json",
+    "evidence/20260921T091208-fc98e278c77e/run.json",
+    "evidence/20260921T091211-51d49b3a7c34/run.json"
   ],
   "defects": [
     {
@@ -3721,5 +3821,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-034 is implemented on claude/supplier-task-034. The six Bank routes from design 6.6 exist, which means the Bank capability is now deployed and the two key rings are an unconditional startup requirement; that fail-closed behaviour was verified by removing the variables and watching the application refuse to start. CI carries four test-only generated keys under HD-030, and server/.env.example now says plainly that the values are no longer optional. The PLAN baseline moved under HD-031 because the profile had to declare those variables for evidence runs to work at all. 83 observations, 6 approvals and 78 evidence runs are bound to the old hash; their content still holds and none was rewritten. APPROVAL-HD-031-PLAN re-binds the plan approval to the new hash. Still required before this can be called done: required CI green on the exact merge candidate, and an actual independent review. Worth the reviewer's attention in particular: the five step-up schemas initially omitted password, which would have broken every write and reveal while every declarative assertion stayed green, and it was found by reading a neighbouring module's conventions rather than by a test. Closed here, carried since TASK-031: REV-032 M-4, the absence of any layer driving dispatcher to handler to service to MySQL over the wire. The new HTTP test does that and asserts the whole response body carries no account or crypto metadata. Recorded deviation: design 6.6's reveal example includes expiresInSeconds and this does not implement it, because no server-side state corresponds to it. Still open in PHASE-003: the Bank UI (T35), the two rotation scripts from design 2.6, and T36 and T37. Carried from REV-034 and REV-038: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, the knowingly unkilled commit-failure mutation, and the recommendation to rebuild the integration double on a real MySqlDatabaseService."
+  "next_safe_action": "TASK-034 is implemented on claude/supplier-task-034 and REV-039's nine findings are all remediated. The six Bank routes from design 6.6 exist, so the Bank capability is deployed and the two key rings are an unconditional startup requirement; that fail-closed behaviour was verified by removing the variables and watching the application refuse to start. Two things a reader should not have to re-derive. First, the DESIGN baseline is e4083319 and stays there: declaring .github/workflows/ci.yml in the manifest moved it, which silently invalidated all 38 reviews including the REV-038 that gated the TASK-033 merge, and the Product Owner chose to revert that declaration. The price is that the boundary validator reports OUTSIDE_MODULE for ci.yml, a local path-consistency finding on a file HD-030 already approved; APPROVAL-HD-030-SCOPE-REBIND records that trade. Second, two acceptance deviations are recorded as FAIL observations on purpose, not as defects: DEV-T34-CACHE-PRIVATE (the reveal route cannot deliver Cache-Control: private because the framework overwrites it after the handler, and no-store is strictly stronger) and DEV-T34-EXPIRES-IN (design 6.6's expiresInSeconds is not implemented because no server-side state corresponds to it). The PLAN baseline is ba636440 after the profile edits HD-031 authorised; 83 observations, 6 approvals and 78 earlier evidence runs are bound to older hashes, their content still holds, and none was rewritten. Still required before this can be called done: required CI green on the exact merge candidate, and an actual independent re-review (REV-040) of the remediation. Worth that reviewer's attention: whether removing the Cache-Control setHeader is the right reading of 'record the deviation', and whether the assert.equal on the wire header is a test that will age well. Not covered at the HTTP layer and stated rather than hidden: AC-025 and AC-026, because DEVICE_SIGNATURE_REQUIRED refuses a partially-permissioned caller before authorization runs, so reaching them needs a device-bound client, which is TASK-035. Still open in PHASE-003: the Bank UI (T35), the two rotation scripts from design 2.6, T36 and T37. Carried from REV-034 and REV-038: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, the knowingly unkilled commit-failure mutation, and the recommendation to rebuild the integration double on a real MySqlDatabaseService."
 }
