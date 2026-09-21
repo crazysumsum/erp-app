@@ -6,6 +6,7 @@ import { normalizeSupplierConfig } from "../src/modules/supplier/normalizeSuppli
 import { SupplierBankCrypto } from "../src/modules/supplier/SupplierBankCrypto.js";
 import { SupplierBankService } from "../src/modules/supplier/SupplierBankService.js";
 import { ApplicationError } from "../src/framework/errors/ApplicationError.js";
+import { MySqlDatabaseOperationError } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
 
 /**
  * 呢個檔案用假連線，所以佢證唔到 SQL 本身跑唔跑得 —— 嗰半喺
@@ -51,9 +52,12 @@ function wrappedDuplicate(constraint) {
   driver.code = "ER_DUP_ENTRY";
   driver.errno = 1062;
   driver.sqlMessage = driver.message;
-  const wrapped = new Error("MySQL database execute failed", { cause: driver });
-  wrapped.code = "DATABASE_OPERATION_FAILED";
-  return wrapped;
+  // REV-037：掟**真嗰個 class**，唔係自己描述一次。`MySqlDatabaseOperationError`
+  // 繼承 `ApplicationError`，所以佢帶住 statusCode 500 —— 一個 plain Error 唔係，
+  // 於是佢過唔到下面 withTransaction 嗰個 ApplicationError 測試，會再包多一層：
+  // 生產兩節，假嘢三節。今日冇嘢倚賴呢個分別，但兩個 double 同佢哋模仿嗰樣嘢住喺
+  // 同一個 repo 度，所以 import 返佢就冇得再漂移。
+  return new MySqlDatabaseOperationError("MySQL database execute failed", { cause: driver });
 }
 
 function harness({ row = bankRow(), duplicates = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
@@ -580,9 +584,11 @@ test("the duplicate translation reads the driver code through the wrapper, not o
   });
   await assert.rejects(
     () => other.service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "其他約束測試原因" }),
-    // 未經翻譯就會一路傳到 withTransaction 嗰層，變成 DATABASE_TRANSACTION_FAILED
-    // —— 即係一個 500，而嗰個係啱嘅：一個我哋唔識嘅約束唔應該扮成「重覆帳戶」。
-    (error) => error.code === "DATABASE_TRANSACTION_FAILED" && error.cause?.code === "DATABASE_OPERATION_FAILED",
+    // 未經翻譯就原樣上去 —— MySqlDatabaseOperationError 繼承 ApplicationError，所以
+    // withTransaction 唔會再包一層。生產嘅錯誤鏈係兩節：operation error → driver。
+    // 一個我哋唔識嘅約束唔應該扮成「重覆帳戶」，佢應該照樣係一個 500。
+    (error) => error.code === "DATABASE_OPERATION_FAILED" && error.statusCode === 500
+      && error.cause?.code === "ER_DUP_ENTRY",
     "an unrelated constraint must pass through untranslated"
   );
 });
@@ -611,4 +617,33 @@ test("an unreadable row logs its reason in the context slot, which is the whole 
   assert.equal(context.bankAccountId, 41);
   assert.match(context.reason, /failed authentication/u, "tampering and a missing key must read differently here");
   assert.ok(!JSON.stringify(warnings[0]).includes(NORMALIZED), "and the log must not carry the account");
+});
+
+
+test("an INSERT that can violate two constraints is asked about both", async () => {
+  // REV-037 H-1：邊條約束會爆係由**資料**決定，唔係由 caller 嘅意圖決定。一句帶
+  // is_default = 1 嘅 INSERT 兩條都違反得到，所以淨係問一條就會走甩另一條 —— 而
+  // 一個 Supplier 嘅第一個銀行帳戶通常就係剔住「設為預設」嘅，即係 create 最常見
+  // 嗰個形狀。四格全部要覆蓋，唔可以淨係對角線嗰兩格。
+  const cells = [
+    [false, "uq_supplier_bank_blind_index", "BANK_ACCOUNT_DUPLICATE"],
+    [true, "uq_supplier_bank_default", "BANK_ACCOUNT_DEFAULT_RACE"],
+    // 呢格就係壞咗嗰格：想做預設，但爆嘅係帳號重覆。
+    [true, "uq_supplier_bank_blind_index", "BANK_ACCOUNT_DUPLICATE"]
+  ];
+  for (const [isDefault, constraint, expected] of cells) {
+    const { service } = harness({
+      statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint }
+    });
+    let thrown = null;
+    try {
+      await service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, isDefault, reason: "雙約束測試原因" });
+    } catch (error) {
+      thrown = error;
+    }
+    assert.equal(thrown.publicCode, expected, `isDefault=${isDefault} violating ${constraint}`);
+    assert.equal(thrown.statusCode, 409);
+    assert.ok(!JSON.stringify({ m: thrown.message, c: String(thrown.cause?.message ?? "") }).includes("Duplicate entry"),
+      "the driver's message carries the raw blind index and must not travel with the domain error");
+  }
 });

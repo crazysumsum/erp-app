@@ -231,21 +231,30 @@ export class SupplierBankService {
   }
 
   /**
-   * 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤。
+   * 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤，
    * 所以兩者要講同一句 —— 一個輸咗競態嘅寫入唔應該變成 500。
+   *
+   * REV-037 H-1：收一個**清單**，唔係一條。一句帶 `is_default = 1` 嘅 INSERT 兩條
+   * 約束都違反得到，而爆邊條係由**資料**決定，唔係由 caller 嘅意圖決定。第一版用
+   * `wantsDefault ? A : B` 揀，於是「想做預設 + 帳號撞咗」嗰格就走甩 —— 而一個
+   * Supplier 嘅第一個銀行帳戶通常就係剔住「設為預設」嘅，即係 create 最常見嗰個形狀。
    */
-  static async #translatingDuplicates(work, { constraint }) {
+  static async #translatingDuplicates(work, { constraints }) {
     try {
       return await work();
     } catch (error) {
-      if (!SupplierBankService.#violates(error, constraint)) throw error;
-      if (constraint === "uq_supplier_bank_blind_index") {
+      // 一句 ER_DUP_ENTRY 只會點名**一條** key，而下面個 regex 錨定咗結尾嗰個單引號，
+      // 所以清單入面最多一條夾得到 —— `find` 同 `findLast` 係等價嘅（實測過，唔係
+      // 推理）。即係「first match」呢個講法唔帶任何次序意義，唔好靠佢。
+      const hit = constraints.find((constraint) => SupplierBankService.#violates(error, constraint));
+      if (!hit) throw error;
+      if (hit === "uq_supplier_bank_blind_index") {
         throw supplierConflict("BANK_ACCOUNT_DUPLICATE", "這個供應商已有相同的銀行帳戶");
       }
-      // REV-036 note：呢條分支**今日到唔到**。兩個並發嘅 create(isDefault) 或者
-      // setDefault 都會先攞 `suppliers FOR UPDATE`，所以佢哋已經被排晒隊，個 slot
-      // 撞唔到。留住佢係因為約束真係喺資料庫度，而唔係每個未來 writer 都一定會攞
-      // 嗰個鎖（輪替腳本、匯入）。呢個係一條冇測試覆蓋嘅分支，講明過。
+      // REV-036 note：呢條分支今日到唔到 —— 兩個並發嘅 create(isDefault) 或者
+      // setDefault 都會先攞 `suppliers FOR UPDATE`，所以已經排晒隊，個 slot 撞唔到。
+      // 留住佢係因為約束真係喺資料庫度，而唔係每個未來 writer 都一定會攞嗰個鎖
+      // （輪替腳本、匯入）。呢個係一條冇測試覆蓋嘅防守分支，講明過。
       throw supplierConflict("BANK_ACCOUNT_DEFAULT_RACE", "預設銀行帳戶剛被其他人變更，請重新載入");
     }
   }
@@ -338,7 +347,8 @@ export class SupplierBankService {
           sealed.ciphertext, sealed.iv, sealed.authTag, sealed.encryptionKeyId,
           sealed.blindIndex, sealed.blindIndexKeyId, sealed.lastFour, sealed.accountLength,
           wantsDefault ? 1 : 0, ACTIVE, nowMs, nowMs, input.actorId, input.actorId]
-      ), { constraint: wantsDefault ? "uq_supplier_bank_default" : "uq_supplier_bank_blind_index" });
+      // 兩條都要問：呢句 INSERT 兩條都違反得到，而爆邊條係由資料決定。
+      ), { constraints: wantsDefault ? ["uq_supplier_bank_blind_index", "uq_supplier_bank_default"] : ["uq_supplier_bank_blind_index"] });
       const bankAccountId = Number(result.insertId);
       const projected = await this.#project(connection, input.supplierId, bankAccountId);
       await this.audit.record(connection, {
@@ -409,7 +419,7 @@ export class SupplierBankService {
               sealed.blindIndex, sealed.blindIndexKeyId, sealed.lastFour, sealed.accountLength]
             : []),
           nowMs, input.actorId, input.bankAccountId, input.supplierId, input.version]
-      ), { constraint: "uq_supplier_bank_blind_index" });
+      ), { constraints: ["uq_supplier_bank_blind_index"] });
       if (updated.affectedRows === 0) {
         throw supplierConflict("VERSION_CONFLICT", "銀行帳戶已被其他人修改，請重新載入");
       }
@@ -455,7 +465,7 @@ export class SupplierBankService {
         `UPDATE supplier_bank_accounts SET is_default = 1, version = version + 1, updated_at = ?, updated_by = ?
           WHERE id = ? AND supplier_id = ? AND version = ?`,
         [nowMs, input.actorId, input.bankAccountId, input.supplierId, input.version]
-      ), { constraint: "uq_supplier_bank_default" });
+      ), { constraints: ["uq_supplier_bank_default"] });
       if (updated.affectedRows === 0) {
         throw supplierConflict("VERSION_CONFLICT", "銀行帳戶已被其他人修改，請重新載入");
       }

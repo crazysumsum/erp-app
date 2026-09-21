@@ -3,10 +3,12 @@ import test from "node:test";
 import { randomBytes, randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
+import { ApplicationError } from "../../src/framework/errors/ApplicationError.js";
 import { normalizeSupplierConfig } from "../../src/modules/supplier/normalizeSupplierConfig.js";
 import { SupplierAuditLogService } from "../../src/modules/supplier/SupplierAuditLogService.js";
 import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypto.js";
 import { SupplierBankService } from "../../src/modules/supplier/SupplierBankService.js";
+import { MySqlDatabaseOperationError } from "../../src/services/mysqldatabase/MySqlDatabaseService.js";
 
 /**
  * 假連線用 `sql.includes(...)` 派送，所以一個打錯咗嘅欄位名、一個唔啱嘅 binary 長度、
@@ -51,9 +53,10 @@ function executorLike(connection) {
     try {
       return await connection[method](sql, params);
     } catch (error) {
-      const wrapped = new Error(`MySQL database ${method} failed`, { cause: error });
-      wrapped.code = "DATABASE_OPERATION_FAILED";
-      throw wrapped;
+      // REV-037：掟真嗰個 class。佢繼承 ApplicationError，所以下面 withTransaction
+      // 會原樣放佢上去（生產兩節），而唔係當佢係普通錯誤再包多一層（三節）。
+      if (error instanceof MySqlDatabaseOperationError) throw error;
+      throw new MySqlDatabaseOperationError(`MySQL database ${method} failed`, { cause: error });
     }
   };
   return { query: wrap("query"), execute: wrap("execute") };
@@ -64,18 +67,25 @@ function serviceOn(connection, { crypto, permissions = ["supplier.view", "suppli
   const database = {
     query: (sql, params) => executor.query(sql, params),
     async withTransaction(work) {
+      // REV-037 M-2(j)：真嘅交易行 REPEATABLE READ，而呢個 task 花咗三輪 review 嘅
+      // 查重競態行為，正正倚賴嗰個隔離級別之下嘅 snapshot 時序。之前冇設，即係嗰個
+      // 倚賴冇釘住。
+      await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
       await connection.beginTransaction();
+      let committed = false;
       try {
         const result = await work(executor);
         await connection.commit();
+        committed = true;
         return result;
       } catch (error) {
-        await connection.rollback();
-        // 同 MySqlDatabaseService 一樣：ApplicationError 原樣上去，其餘包一層。
-        if (error?.statusCode) throw error;
-        const wrapped = new Error("MySQL database transaction failed", { cause: error });
-        wrapped.code = "DATABASE_TRANSACTION_FAILED";
-        throw wrapped;
+        // REV-037 M-2(m)：commit 失敗之後**唔可以** rollback —— 真嘅程式碼刻意唔做，
+        // 因為嗰陣個交易嘅結果係未知嘅，而 rollback 會扮成「肯定冇入到」。
+        if (!committed) await connection.rollback();
+        if (error instanceof ApplicationError) throw error;
+        throw new MySqlDatabaseOperationError("MySQL database transaction failed", {
+          code: "DATABASE_TRANSACTION_FAILED", cause: error
+        });
       }
     }
   };
