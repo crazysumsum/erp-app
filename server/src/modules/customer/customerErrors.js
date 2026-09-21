@@ -136,3 +136,17 @@ export function customerCatalogTaken() {
 export function customerCatalogStatusInvalid() {
   return customerError("Customer catalog status transition is invalid", { code: "CUSTOMER_CATALOG_STATUS_INVALID", statusCode: 409, publicMessage: "客戶分類目前不能停用" });
 }
+
+export function customerApprovalInvalid(code, publicMessage, publicDetails) {
+  return customerError("Customer approval input is invalid", { code, statusCode: 400, publicMessage, publicDetails });
+}
+
+export function customerApprovalConflict(code, publicMessage, publicDetails) {
+  return customerError("Customer approval state conflict", { code, statusCode: 409, publicMessage, publicDetails });
+}
+
+export function customerApprovalRequestNotFound(id) {
+  return customerError(`Customer approval request ${id} was not found`, {
+    code: "CUSTOMER_APPROVAL_REQUEST_NOT_FOUND", statusCode: 404, publicMessage: "找不到指定的客戶審批申請"
+  });
+}

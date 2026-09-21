@@ -19,7 +19,10 @@ const ACTIONS = new Set([
   "setting.update",
   "catalog.create",
   "catalog.update",
-  "catalog.deactivate"
+  "catalog.deactivate",
+  "approval.submit",
+  "approval.withdraw",
+  "approval.invalidate"
 ]);
 
 const ROOT_AUDIT_FIELDS = new Set([
@@ -69,7 +72,9 @@ const ROOT_AUDIT_FIELDS = new Set([
   "requireActivationApproval",
   "code",
   "description",
-  "sortOrder"
+  "sortOrder",
+  "assignedApproverId",
+  "customerVersion"
 ]);
 
 function allowlistedSnapshot(value) {

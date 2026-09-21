@@ -2,6 +2,7 @@ import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { CustomerService } from "../../modules/customer/CustomerService.js";
 import { CustomerPartyService } from "../../modules/customer/CustomerPartyService.js";
 import { CustomerCreditService } from "../../modules/customer/CustomerCreditService.js";
+import { CustomerApprovalService } from "../../modules/customer/CustomerApprovalService.js";
 import { CUSTOMER_ROUTE_POLICIES } from "../../modules/customer/customerPermissions.js";
 import {
   CUSTOMER_COMMAND_RESPONSE, CUSTOMER_DETAIL, CUSTOMER_ID_PARAMS, CUSTOMER_LIST_QUERY,
@@ -11,7 +12,8 @@ import {
   CUSTOMER_ADDRESS_PARAMS, CUSTOMER_CONTACT_PARAMS, CUSTOMER_IDENTIFIER_PARAMS,
   IDENTIFIER_CREATE, IDENTIFIER_UPDATE, IDENTIFIER_RESPONSE,
   CREDIT_POLICY_RESPONSE, CREDIT_POLICY_SAVE, CREDIT_POLICY_CLEAR, CUSTOMER_CHILD_LIST_QUERY,
-  CUSTOMER_ADDRESS_LIST_RESPONSE, CUSTOMER_CONTACT_LIST_RESPONSE, CUSTOMER_IDENTIFIER_LIST_RESPONSE
+  CUSTOMER_ADDRESS_LIST_RESPONSE, CUSTOMER_CONTACT_LIST_RESPONSE, CUSTOMER_IDENTIFIER_LIST_RESPONSE,
+  CUSTOMER_APPROVAL_RESPONSE, CUSTOMER_APPROVAL_SUBMIT, CUSTOMER_APPROVAL_WITHDRAW
 } from "./customerSchemas.js";
 
 const IDEMPOTENT = Object.freeze({ enabled: true });
@@ -36,6 +38,7 @@ class CustomerHandler extends BaseRequestHandler {
     this.customer = new CustomerService({ database: services.require("mysqldatabase"), time: services.require("time") });
     this.party = new CustomerPartyService({ database: services.require("mysqldatabase"), time: services.require("time") });
     this.credit = new CustomerCreditService({ database: services.require("mysqldatabase"), time: services.require("time") });
+    this.approvals = new CustomerApprovalService({ database: services.require("mysqldatabase"), time: services.require("time") });
   }
 }
 
@@ -85,6 +88,18 @@ export class UpdateCustomerHandler extends CustomerHandler {
   static handlerName = "updateCustomer";
   static api = { method: "POST", path: "/api/v1/customers/:id/update", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY, body: CUSTOMER_UPDATE_INPUT }, responseSchema: { 200: CUSTOMER_COMMAND_RESPONSE } };
   async execute(req) { return this.response(await this.customer.update({ ...commandInput(req), id: Number(req.input.params.id), ...req.input.body })); }
+}
+
+export class SubmitCustomerApprovalHandler extends CustomerHandler {
+  static handlerName = "submitCustomerApproval";
+  static api = { method: "POST", path: "/api/v1/customers/:id/approval/submit", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY, body: CUSTOMER_APPROVAL_SUBMIT }, responseSchema: { 200: CUSTOMER_APPROVAL_RESPONSE } };
+  async execute(req) { return this.response(await this.approvals.submit({ ...commandInput(req), customerId: Number(req.input.params.id), ...req.input.body })); }
+}
+
+export class WithdrawCustomerApprovalHandler extends CustomerHandler {
+  static handlerName = "withdrawCustomerApproval";
+  static api = { method: "POST", path: "/api/v1/customers/:id/approval/withdraw", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalManage], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY, body: CUSTOMER_APPROVAL_WITHDRAW }, responseSchema: { 200: CUSTOMER_APPROVAL_RESPONSE } };
+  async execute(req) { return this.response(await this.approvals.withdraw({ ...commandInput(req), customerId: Number(req.input.params.id), ...req.input.body })); }
 }
 
 export class CreateCustomerAddressHandler extends CustomerHandler {

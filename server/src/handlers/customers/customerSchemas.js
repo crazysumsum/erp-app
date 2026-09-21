@@ -171,6 +171,26 @@ export const CUSTOMER_COMMAND_RESPONSE = Object.freeze({
   properties: { customer: { anyOf: [CUSTOMER_DETAIL, { type: "null" }] }, operation: OPERATION }
 });
 
+export const CUSTOMER_APPROVAL_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "customerId", "customerStatus", "status", "version"],
+  properties: {
+    id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER,
+    customerStatus: { type: "string", enum: ["draft", "pending_approval"] },
+    status: { type: "string", enum: ["pending", "withdrawn"] }, version: POSITIVE_SAFE_INTEGER
+  }
+});
+
+export const CUSTOMER_APPROVAL_SUBMIT = Object.freeze({
+  type: "object", additionalProperties: false, required: ["approverUserId", "requestNote"],
+  properties: { approverUserId: POSITIVE_SAFE_INTEGER, requestNote: { type: "string", trim: true, maxLength: 500 } }
+});
+
+export const CUSTOMER_APPROVAL_WITHDRAW = Object.freeze({
+  type: "object", additionalProperties: false, required: ["approvalRequestId", "version"],
+  properties: { approvalRequestId: POSITIVE_SAFE_INTEGER, version: POSITIVE_SAFE_INTEGER }
+});
+
 export const CUSTOMER_LIST_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],
   properties: { items: { type: "array", items: CUSTOMER_SUMMARY }, total: { type: "integer", minimum: 0 }, page: { type: "integer", minimum: 1 }, pageSize: { type: "integer", minimum: 1 } }
