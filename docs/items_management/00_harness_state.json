@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 64,
+  "revision": 65,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "a5a30c6275a0a59969ea5bca4b075f584b122a74",
+    "code_commit": "708ff9d380256eee477173aa01fbc13d3d80e8bf",
     "source_fingerprint": "aa2e7f2cc7a3c9ca1f4e24657fbdfc387fac1dfd7c5954dc8709dbe73fd9b0d4",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
     "default_commit": "5d390d263e13fa113a77693ec9e3979da19f824e",
@@ -837,24 +837,24 @@
       "kind": "PUSH",
       "target": "origin/codex/item-management-closeout",
       "idempotency_key": "item-management-closeout-push-20260921",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work on 2026-09-21."
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: origin/codex/item-management-closeout points to candidate 708ff9d380256eee477173aa01fbc13d3d80e8bf."
     },
     {
       "id": "PR-CREATE-64",
       "kind": "PR_CREATE",
       "target": "codex/item-management-closeout into main",
       "idempotency_key": "item-management-closeout-pr-20260921",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work on 2026-09-21."
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: GitHub PR #117 targets main from codex/item-management-closeout."
     },
     {
       "id": "CI-65",
       "kind": "CI",
       "target": "required GitHub checks for the Item Management closeout candidate",
       "idempotency_key": "item-management-closeout-ci-20260921",
-      "status": "PLANNED",
-      "source_ref": "Repository policy requires all required checks to pass on the exact PR candidate before merge."
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub Actions run 35554493368 on 2026-09-21: Dependency audit, Lint, Build frontend, and Test (server + client, MySQL integration) all passed on candidate 708ff9d380256eee477173aa01fbc13d3d80e8bf. This evidence is superseded for merge after origin/main advanced."
     },
     {
       "id": "MERGE-66",
@@ -863,6 +863,22 @@
       "idempotency_key": "item-management-closeout-merge-20260921",
       "status": "PLANNED",
       "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work; merge remains gated on the exact candidate's required CI and mergeability."
+    },
+    {
+      "id": "BRANCH-SYNC-67",
+      "kind": "BRANCH_SYNC",
+      "target": "merge origin/main 5125f328dbdd7437208abade08bd8fe950a2ce38 into codex/item-management-closeout",
+      "idempotency_key": "item-management-closeout-sync-5125f32-20260921",
+      "status": "PLANNED",
+      "source_ref": "Independent review of PR #117 found the branch 12 commits behind current main; repository policy requires synchronization and exact-candidate CI before merge."
+    },
+    {
+      "id": "CI-68",
+      "kind": "CI",
+      "target": "required GitHub checks for the post-sync Item Management closeout candidate",
+      "idempotency_key": "item-management-closeout-post-sync-ci-20260921",
+      "status": "PLANNED",
+      "source_ref": "Required after BRANCH-SYNC-67 because prior run 35554493368 is not evidence for the refreshed candidate."
     }
   ],
   "evidence_files": [
