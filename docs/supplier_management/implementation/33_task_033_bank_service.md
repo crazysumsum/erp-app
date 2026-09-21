@@ -258,3 +258,67 @@ H-2 佢掃咗**成個** Unicode 範圍到 U+10FFFF（我只掃到 U+1FFFF），�
 
 376/376 server（原 372）、71/71 client、lint、build，四份 evidence 全部喺最終候選重新
 跑過。五個針對修補嘅變異全部 RED。
+
+## 9. REV-037 及一條應該留低嘅標準做法
+
+判 **CHANGES_REQUESTED**，一個 H。
+
+### H-1：上一輪嘅修正自己整咗一個同樣形狀嘅新洞
+
+`{ constraint: wantsDefault ? A : B }` —— 個約束由 caller 嘅**意圖**揀，但爆邊條係由
+**資料**決定。一句帶 `is_default = 1` 嘅 INSERT 兩條約束都違反得到，所以「想做預設 +
+帳號撞咗」嗰格走甩，變返 500 兼帶住 driver 嗰句（佢第一個成分就係重覆嗰個 blind index
+嘅原始 bytes）。而一個 Supplier 嘅第一個銀行帳戶通常就係剔住「設為預設」 —— 即係
+`create` 最常見嗰個形狀。
+
+我原本測咗對角線兩格（`isDefault` 冇設 + blind index、`isDefault: true` + default slot），
+啱啱好漏咗壞咗嗰格。改成收清單逐條問，三格全測。
+
+### 第四層 —— reviewer 直接答咗我問佢嗰條
+
+`MySqlDatabaseOperationError` **繼承 `ApplicationError`**，所以佢帶住 `statusCode: 500`。
+我兩個 double 掟嘅係 plain `Error`，於是過唔到 `withTransaction` 嗰個 ApplicationError
+測試，會**再包多一層**：
+
+```
+生產：   MySqlDatabaseOperationError(DATABASE_OPERATION_FAILED) → driver        兩節
+假嘢：   Error(DATABASE_TRANSACTION_FAILED) → Error(DATABASE_OPERATION_FAILED) → driver   三節
+```
+
+今日冇嘢倚賴呢個分別 —— 但我個新整合測試喺 `cause` **同** `cause.cause` 兩處揾 driver
+訊息，即係佢啱只係好彩，唔係設計。
+
+修法拆嘅係成個**類別**，唔係一個實例：兩個 double 同佢哋模仿嗰樣嘢住喺同一個 repo，
+所以直接 `import` 返真嗰個 class 掟，冇得再漂移。另外兩樣 reviewer 點名而我照做：兩個
+double 都冇設 `REPEATABLE READ`（而呢個 task 花咗三輪 review 嘅查重競態行為正正倚賴
+嗰個隔離級別之下嘅 snapshot 時序），同埋整合 double 喺 commit 失敗之後照 rollback，而
+真嘅程式碼刻意唔做 —— 嗰陣個交易結果係未知嘅，rollback 會扮成「肯定冇入到」。
+
+### 一個等價變異，唔係缺口
+
+`find` 換 `findLast` 存活。呢個**唔係**測試缺口：一句 `ER_DUP_ENTRY` 只會點名一條 key，
+而個 regex 錨定咗結尾嘅單引號，所以清單入面最多一條夾得到。實測確認過，並且喺註解講明
+「first match」唔帶任何次序意義。分得清「等價變異」同「測試睇唔到」係重要嘅 —— 前者
+唔應該逼一個扭曲嘅測試去殺佢。
+
+### 應該留低嘅標準做法
+
+呢個 task 一共**四次**出現「啱同錯喺測試眼中一模一樣」：
+
+1. `crypto_context` 嗰個 vacuous assertion —— 斷言喺兩邊都成立
+2. REV-035 H-1 —— 假 `withTransaction` 冇模仿真 wrapper 嘅錯誤轉換
+3. REV-036 H-1 —— 補咗嗰層之後，再下面一層仍然係假嘅
+4. REV-037 H-1 —— 修正本身缺一格，而 reviewer 將佢改到**啱**，60/60 照綠
+
+前三次係**假嘢唔夠似**。第四次唔係 —— 個 double 已經夠似，但個測試矩陣缺一格。所以
+兩條做法都要，唔可以只做一條：
+
+- **一個 double 要複製佢模仿嗰樣嘢真正交出乜。** 唔係「行為差唔多」，係「掟同一個
+  class、包同一層、設同一個隔離級別」。可以 import 返真嘢就唔好自己描述一次。
+- **一個修正加咗個判別式之後，將佢變異成「正確」嗰個實作，確認有嘢變紅。** 平時嘅變異
+  測試係將啱嘢改壞；呢一條係反方向 —— 如果將一個壞實作改到啱，成套測試照綠，咁佢由頭
+  到尾都冇喺度測嗰樣嘢。
+
+### 修補後重跑
+
+377/377 server、71/71 client、lint、build，四份 evidence 全部喺最終候選重新跑過。
