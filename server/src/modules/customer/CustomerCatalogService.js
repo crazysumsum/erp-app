@@ -48,7 +48,9 @@ function catalogInput(input) {
 }
 
 function requireReason(value) {
-  return boundedText(value, "reason", 500);
+  const reason = boundedText(value, "reason", 500);
+  if (reason.length < 5) throw customerCatalogInvalid({ field: "reason" });
+  return reason;
 }
 
 function projection(row) {

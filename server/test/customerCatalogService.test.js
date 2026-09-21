@@ -80,4 +80,8 @@ test("Customer catalog rejects unknown catalog values and stale writes without a
     () => service.update("categories", { ...actor, id: 4, code: "RETAIL", name: "Retail", description: "", sortOrder: 3, version: 2, reason: "更新零售分類資料" }),
     (error) => error.publicCode === "VERSION_CONFLICT"
   );
+  await assert.rejects(
+    () => service.create("categories", { ...actor, code: "RETAIL", name: "Retail", description: "", sortOrder: 3, reason: "no" }),
+    (error) => error.publicCode === "CUSTOMER_CATALOG_INVALID"
+  );
 });
