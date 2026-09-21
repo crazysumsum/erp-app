@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 151,
+  "revision": 152,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-032",
+  "current_task": null,
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "a34bb37295ebea8bec7ed5921ab924437a2c1189",
+    "code_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
     "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-032",
-    "default_commit": "d289154f2e310b58feb3abc68c30967b9a8e29e5",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-032 (claude/supplier-task-032, cut from main 087b268)",
+      "workspace": "erp-app (main); no supplier worktree is open",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -59,7 +59,7 @@
     "TASK-029": "DONE",
     "TASK-030": "DONE",
     "TASK-031": "DONE",
-    "TASK-032": "IN_PROGRESS",
+    "TASK-032": "DONE",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
@@ -2181,6 +2181,28 @@
       "source_ref": "338/338 server, 71/71 client, lint clean, all four DEVELOPER suites re-run on a34bb37 so the evidence covers the final candidate. Three mutations confirm the fixes discriminate: restoring the blanket toLowerCase, removing the plain-index coverage check, and removing the mask's full-mask branch all turn red. The M-1 probe is a table whose generation expression differs from the real one only in the case of a string literal.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T10:24:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Required CI green on the exact TASK-032 merge candidate",
+      "code_commit": "3c00a1eed0ceacf5a61bbf8c95c9140c89614283",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 35554092438, headSha 3c00a1eed0ceacf5a61bbf8c95c9140c89614283, conclusion success: Lint 24s, Dependency audit 20s, Build frontend 22s, Test (server + client, MySQL integration) 4m7s. The run's headSha was read back and compared against the PR's headRefOid rather than assumed. Earlier on this branch, at head c706629, run 35550985764 failed on a defect in this task's own test rather than on DEF-017 or DEF-019: a schema probe anchored on a COLLATE clause that CI's MySQL does not emit, so the replacement silently matched nothing. It passed locally every time. Neither of the Item Management defects fired on this branch at all.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-21T10:34:51+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-032 merged to main via PR #116, opening PHASE-003's build work",
+      "code_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
+      "status": "PASS",
+      "source_ref": "gh pr view 116 reports state MERGED, mergedAt 2026-09-21T02:34:24Z, mergeCommit 9f6fc43f. Pre-merge gates were observed, not assumed: origin/main was verified to be an ancestor of HEAD so there was nothing to merge in, the branch was 10 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head 3c00a1e, and run 35554092438 was green on that exact sha. REV-034 had returned APPROVED with 0 critical and 0 high, after REV-033 returned CHANGES_REQUESTED on the same task and all three of its H findings were fixed. After the merge, the source_fingerprint measured on main is 05dc388b, identical to the reviewed branch head's, so the merge carried no source the review and CI had not seen. Local main fast-forwarded to 9f6fc43, the worktree was removed and the local and remote claude/supplier-task-032 deleted after checking clean, zero unpushed and --merged main. First branch merged under the claude/ prefix.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-21T10:34:51+08:00"
     }
   ],
   "pending_decisions": [
@@ -3341,5 +3363,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-032 is implemented, independently reviewed twice and APPROVED. REV-033 returned CHANGES_REQUESTED with three H; all three were real, all were fixed, and REV-034 closed each by re-running the probe that found it rather than by reading the diff. REV-034's own M-1, L-1 and L-2 are fixed here. Required CI must be observed green on a34bb37 before merge, and the merge itself has not been authorised. DEF-021 is open and needs a Product Owner answer before T33 wires the write API: the account normalizer silently strips disallowed characters instead of rejecting, so three different typed strings can become one stored account -- the reviewer showed AB12345 with a ring above the A, with an umlaut, and with neither all storing B12345 and sharing one blind index -- and NFKC runs before the allowlist, so 46 codepoints inject pure digits, with one-half becoming 12. HD-028 answered which characters are kept and was never asked what happens to the rest. Triggering input is already invalid under IBAN and domestic formats and there are no callers until T33, which is why it is LOW and not blocking. Stated rather than closed: the trigger check in the compatibility assertion has no test, because erp_user lacks SUPER while binary logging is on; REV-034 verified that privilege claim itself and measured the gap at 338/338 green with the check deleted. Its suggestion, injecting a trigger list through the existing table seam, would cover the throw path without DDL privilege and is worth taking in T33. Also left: REV-034 L-3 (VIRTUAL accepted where the design says STORED), L-4 (CHECK constraints unread), L-6 (the decrypt catch now reports a configuration error as a data-integrity error, which misdirects an operator during rotation). Not in T32's scope and still to do in PHASE-003: wiring the Bank capability so the two key rings become an unconditional startup requirement, the two rotation scripts from design 2.6, and the Bank domain service (T33). Merge-ordering hazard unchanged: 0037 is the next free number on main, and codex/customer-management-phase-001 must renumber its own 0035 and 0036 regardless."
+  "next_safe_action": "TASK-032 is DONE and merged at 9f6fc43. PHASE-003 is open and TASK-033 through TASK-037 remain PENDING. T32 delivered only the table and the crypto primitives: migration 0037 creating supplier_bank_accounts exactly as design spec 5.8 defines it, approved under HD-027, and SupplierBankCrypto with AES-256-GCM, a per-row 96-bit IV, an AAD bound to supplierId and crypto_context encoded UTF-16LE, and an HMAC-SHA-256 blind index computed over the whole lookup ring. No production code imports SupplierBankCrypto yet; T33 is the Bank domain service. Open and needing a Product Owner answer before T33 wires the write API: DEF-021, the account normalizer silently strips disallowed characters instead of rejecting, so three different typed strings can become one stored account and NFKC injects digits ahead of the allowlist. HD-028 answered which characters are kept and was never asked what happens to the rest. Carried into T33 from REV-034, none blocking: the trigger check in the compatibility assertion has no test because erp_user lacks SUPER while binary logging is on, and the reviewer's suggestion of injecting a trigger list through the existing table seam would cover the throw path without DDL privilege; L-3 accepts VIRTUAL where the design says STORED; L-4 does not read CHECK constraints; L-6 means the decrypt catch now reports a configuration error as a data-integrity error, which misdirects an operator during rotation. Still to do in PHASE-003 beyond T33: wiring the Bank capability so the two key rings become an unconditional startup requirement once it deploys, and the two rotation scripts from design 2.6. SupplierBankCrypto's shape was built for them -- each row records its own encryption and blind-index key IDs, so rotation can advance row by row, be interrupted and resume. Merge-ordering hazard, now one step sharper: main carries 0037, so codex/customer-management-phase-001 collides with 0035 and 0036 and must renumber past 0037. Open and routed out of this module: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-018 is the shared PasswordReasonDialog never submitting on Enter; HD-025 keeps all three with their owners. Neither Item Management defect fired on this branch. Carried forward: DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493, accepted as a recorded exception under HD-026 and routed to Purchasing with the permission-catalogue drift in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
