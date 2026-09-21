@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 163,
+  "revision": 164,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-033",
+  "current_task": null,
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "a7472b77dccb23f5852fd0b67ad3cd4653fa33bf",
-    "source_fingerprint": "e86a87ae72b6222e656ee9491855eb7ea786bf3c23a946d87825ddae5b4efbd6",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-033",
-    "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
+    "code_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
+    "source_fingerprint": "9db31af09c59a794e096b714decea50b61029e930d4431147aaa990e0845c351",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-033 (claude/supplier-task-033, cut from main 5125f32)",
+      "workspace": "erp-app (main); no supplier worktree is open",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -60,7 +60,7 @@
     "TASK-030": "DONE",
     "TASK-031": "DONE",
     "TASK-032": "DONE",
-    "TASK-033": "IN_PROGRESS",
+    "TASK-033": "DONE",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
     "TASK-036": "PENDING",
@@ -2372,6 +2372,17 @@
       "source_ref": "GitHub Actions run 35567780842, headSha ffced961, conclusion success on all four required checks. DEF-019's itemMigrationIdempotency failed on the first attempt and on the first rerun, passing only on the second rerun -- the first time in this session it has needed two reruns. Worth recording rather than shrugging at: main is green at 946f5982, so the defect is not deterministic, but two things changed around it. PR #120 merged customer-management, adding eight migrations, and this branch adds roughly thirty tests including nine integration tests that exercise a shared erp_dev. DEF-019 deep-equals SHOW CREATE TABLE output including the AUTO_INCREMENT counter, so it is sensitive to exactly the parallel interleaving that more concurrent integration work produces. This branch does not cause the defect and does not touch item tables, but it plausibly raises its hit rate, and the same will be true of every later supplier task. HD-025 keeps DEF-019 with Item Management, so nothing is changed here; the observation exists so the trend is on the record if reruns keep multiplying. Also resolved here: the migration-numbering hazard carried since TASK-032. codex/customer-management-phase-001 merged as PR #120 having renumbered to 0039 through 0046, clear of supplier's 0037, and a duplicate-number sweep over the migration directory returns nothing.",
       "actor": "Harness agent via gh",
       "observed_at": "2026-09-21T14:31:11+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-033 merged to main via PR #118",
+      "code_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9db31af09c59a794e096b714decea50b61029e930d4431147aaa990e0845c351",
+      "status": "PASS",
+      "source_ref": "gh pr view 118 reports state MERGED, mergedAt 2026-09-21T06:42:04Z, mergeCommit ad21c1f2. Pre-merge gates observed, not assumed: origin/main was verified to be an ancestor of HEAD so there was nothing left to merge in, the branch was 14 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head 342fac4, and run 35568864081 was green on that exact sha. REV-038 had returned APPROVED with 0 critical and 0 high, after REV-035, REV-036 and REV-037 each returned CHANGES_REQUESTED and every finding proved real. One thing to state precisely rather than gloss: the source_fingerprint measured on main after the merge, 9db31af0, does NOT match the value the ledger carried at revision 163, e86a87ae. That is not drift in this task's work. The recorded value predates this branch merging origin/main at ffced96, which brought PR #120's customer-management source into the branch; the fingerprint covers server and client broadly, so it moved. The check that actually carries meaning was run instead: git diff between the reviewed and CI-green branch head 342fac4 and merged main ad21c1f, restricted to every supplier-owned source path plus server/test and client/test, is empty. The merge carried no supplier source the review and CI had not seen.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-21T14:42:39+08:00"
     }
   ],
   "pending_decisions": [
@@ -3570,5 +3581,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-033 is implemented and APPROVED by REV-038 at ef1ed7d, after REV-035, REV-036 and REV-037 each returned CHANGES_REQUESTED and every one of their findings proved real. The fifth-layer M from REV-038 is fixed on top. Required CI must be observed green on the final candidate before merge, and the merge itself has not been authorised. Carry into T34 and the remaining PHASE-003 tasks, in this order: prefer deleting a test double to improving it -- where the test already has the real dependency, the faithful double is the production object, and this task's integration test should be rebuilt on a real MySqlDatabaseService over a real pool, roughly fifteen lines with transactionTimeoutMs set, which closes thirteen recorded divergences at once; where a double is unavoidable, it must reproduce the real class, wrapping depth and isolation level and should import the real thing rather than re-describe it; and when a fix introduces a discriminator, mutate it to the correct implementation and require something to turn red, because ordinary mutation only breaks correct code and could not have caught REV-037's H-1. An equivalent mutant is not a gap: verify it, document it, and check that a non-equivalent mutation on the same code does go red. One mutation is knowingly unkilled: forcing a commit failure against the integration double needs the real service, so it is left for the rebuild rather than chased with a test for code that should be deleted. Deliberately not fixed: REV-035 M-3 (the advisory cross-Supplier warning), the reveal response shape from design 6.6 which belongs to the route task, BANK_ACCOUNT_DEFAULT_RACE which is unreachable today, and eleven further double divergences, all currently unobserved. Still open in PHASE-003: the six HTTP routes from design 6.6, so SupplierBankService still has no production caller; the Bank capability registry; the two rotation scripts; and the Bank UI in T35."
+  "next_safe_action": "TASK-033 is DONE and merged at ad21c1f2. PHASE-003 has TASK-034 through TASK-037 remaining, all PENDING. T32 and T33 together deliver the Bank table, the crypto primitives and the domain service; no production code imports SupplierBankService yet, because the six HTTP routes from design 6.6 are not written. Three practices came out of T33's four review rounds and should be applied to T34 onward. First, prefer deleting a test double to improving it: this task's integration test already talks to real MySQL and should be rebuilt on a real MySqlDatabaseService over a real pool, about fifteen lines with transactionTimeoutMs set, which closes thirteen recorded divergences at once because there is no second copy to be wrong. Second, where a double is unavoidable it must reproduce the real class, wrapping depth and isolation level, and should import the real thing rather than re-describe it. Third, when a fix introduces a discriminator, mutate it to the correct implementation and require something to turn red; ordinary mutation only breaks correct code and could not have caught REV-037's H-1. An equivalent mutant is not a gap -- verify it, document it, and confirm a non-equivalent mutation on the same code does go red. One mutation is knowingly unkilled and should be closed by the rebuild above: forcing a commit failure against the integration double needs the real service. Resolved during this task: the migration-numbering hazard carried since TASK-032. codex/customer-management-phase-001 merged as PR #120 having renumbered to 0039 through 0046, clear of supplier's 0037, and a duplicate-number sweep over the migration directory returns nothing. Worth watching: DEF-019 needed two reruns on this branch, the first time in this session it has needed more than one. Main is green, so it is not deterministic, but PR #120 added eight migrations and this branch added roughly thirty tests including nine that exercise a shared erp_dev, and DEF-019 deep-equals SHOW CREATE TABLE including the AUTO_INCREMENT counter. Supplier work does not cause it and does not touch item tables, but it plausibly raises its hit rate, and later supplier tasks will do the same. HD-025 keeps it with Item Management. Deliberately not fixed and carried forward: REV-035 M-3, the advisory cross-Supplier duplicate warning; the reveal response shape from design 6.6, which belongs to the route task; BANK_ACCOUNT_DEFAULT_RACE, unreachable today and documented as an uncovered defensive branch; eleven further double divergences, all currently unobserved; and from REV-034 the untested trigger check, VIRTUAL accepted where the design says STORED, and CHECK constraints unread. Also open, routed out of this module under HD-025: DEF-017, DEF-018 and DEF-019."
 }
