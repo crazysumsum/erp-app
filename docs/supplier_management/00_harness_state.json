@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 138,
+  "revision": 140,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "a25e295ac43aff7d84024dff6b8beaea7a9b54e6",
-    "source_fingerprint": "9b14766b63c7c6029dd5e79de1598fd1d091188a3fc50f5fbc6d25150c8ad6de",
+    "code_commit": "a3bf31e97331460a78788bd57b81ba1e8948574a",
+    "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-031",
     "default_commit": "2aa0965f1445095a3a9370069e31117722155977",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1046,6 +1046,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-032",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-031)",
+      "reviewer": "agent-skills:code-reviewer, a fresh agent reviewing 8953514",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/29_rev_032_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1972,6 +1984,28 @@
       "source_ref": "Twelve mutations, each applied alone and reverted immediately. RED in every case, and in every case the tests that turned red were the intended ones: M1 remove the replay branch (concurrent approve + resend), M2 remove the decide-time supplier.approval check (revocation + disabled), M3 drop AND status='active' from assertEligibleApprover (disabled), M4 remove the cross-Supplier scope guard (IDOR), M5 treat a NULL assignment as anyone (unassigned), M6 remove the APPROVAL_REQUEST_NOT_OPEN conflict (approve vs edit), M7 drop FOR SHARE from getActivationPolicy (both lock directions), M8 make turning the policy off approve pending requests (the non-retroactivity case), R6b/R7/R7b the three DEF-020 mutations, N1 drop :data-field. Reported honestly: the first mutation script's restore path was broken (eval with a pipe) and left all four client mutations applied with none reverted. git status caught it, git diff confirmed the working tree held those four mutations and nothing else, client/src was restored with git checkout, and the four were rerun one at a time with a per-mutation revert. The recorded R6b/R7/R7b/N1 verdicts are from that rerun, not the broken pass. git diff against client/src and server/src was verified empty afterwards.",
       "actor": "Harness agent via scripted mutation and targeted suites",
       "observed_at": "2026-09-18T17:36:19+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-032 APPROVED at 8953514 with four M findings; three fixed, M-4 documented as a stated limitation",
+      "code_commit": "8953514569af7be0ab13b2c5fe970b1b5498d820",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9b14766b63c7c6029dd5e79de1598fd1d091188a3fc50f5fbc6d25150c8ad6de",
+      "status": "PASS",
+      "source_ref": "The reviewer re-ran all twelve of the author's mutations independently (12/12 RED, the same tests red as claimed), invented six more, and one survived: X5, removing updateSettings' own FOR UPDATE, left all 25 integration tests green. That is M-3, and with L-5 it showed the author's second lock test was mutation-equivalent to the pre-existing one rather than covering a new direction. Fixed by driving that test's writer through the real updateSettings and pausing it between the FOR UPDATE read and the UPDATE; X5 is now RED and red only in the new test. M-1 and M-2 were both ledger accuracy errors by the author at revision 138: DEF-020 was reported fixed in the exit report while still recorded OPEN, and next_safe_action had silently dropped the entire carried-forward risk list from revision 136. Both are corrected here. M-4 is a real coverage gap that is not being closed in T31: T31's Description asks for HTTP flow verification and no layer in this module drives dispatcher to handler to service to MySQL over the wire, since the handler tests are declarative and both e2e specs mock the API. It is recorded as a stated limitation in section 7 of the exit report rather than papered over; the binding Acceptance criteria and Verification block do not require HTTP and all pass. L-1, L-2 and L-3 were also fixed. L-4 is pre-existing and the reviewer explicitly did not ask for it. The agent hit its session rate limit after writing the report but before returning it; the report on disk is complete, 801 lines, and carries an explicit verdict.",
+      "actor": "agent-skills:code-reviewer (separate agent)",
+      "observed_at": "2026-09-21T09:01:50+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-031 post-REV-032 remediation reverified",
+      "code_commit": "a3bf31e97331460a78788bd57b81ba1e8948574a",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
+      "status": "PASS",
+      "source_ref": "After the M-3, L-1, L-2 and L-3 fixes: supplierApproval + supplierSettings integration 25/25 PASS, client 71/71, lint clean, Playwright 17/17. Five key mutations re-run and all still RED: M1 (replay branch), M6 (closed-request conflict), XA (request read FOR UPDATE), M4 (cross-Supplier scope guard), M8 (policy-off auto-approve). X5 now RED where it previously survived. The racing test dropped from 333ms to 16ms once the 300ms sleep was shown not to be load-bearing. git diff against server/src and client/src verified empty after every mutation.",
+      "actor": "Harness agent via scripted mutation and targeted suites",
+      "observed_at": "2026-09-21T09:01:50+08:00"
     }
   ],
   "pending_decisions": [
@@ -2778,7 +2812,11 @@
     "evidence/20260918T093455-840b9265baaa/run.json",
     "evidence/20260918T093502-b4be748ad34f/run.json",
     "evidence/20260918T093507-4a2ef643ea2a/run.json",
-    "evidence/20260918T093510-90542a511e10/run.json"
+    "evidence/20260918T093510-90542a511e10/run.json",
+    "evidence/20260921T010213-3b69f0d54269/run.json",
+    "evidence/20260921T010217-eeda99b46cb6/run.json",
+    "evidence/20260921T010219-a4db622b360d/run.json",
+    "evidence/20260921T010222-87972ee3d9f8/run.json"
   ],
   "defects": [
     {
@@ -3056,5 +3094,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-031 is implemented on codex/supplier-task-031 at a25e295: four test files, no production code. All four DEVELOPER suites PASS with evidence, the 17-test supplier Playwright suite passes as regression, and every new assertion was mutation-tested. Still required before this can be called done: push, required CI green on the exact merge candidate, and an actual independent review. DEF-019 is expected to redden CI on this branch for reasons unrelated to it; HD-025 keeps that defect with Item Management, so the response is a rerun, not a change here."
+  "next_safe_action": "TASK-031 is implemented and independently reviewed on codex/supplier-task-031. REV-032 returned APPROVED at 8953514 with four M findings; M-1, M-2, M-3 and L-1/L-2/L-3/L-5 are fixed, and M-4 is recorded as a stated limitation rather than closed. Still required before DONE: required CI green on the exact new head, then merge. DEF-020's fix has landed on this branch and is verified discriminating (R6b/R7/R7b all RED), but it stays OPEN until this branch merges; close it with the merge, citing client/test/pages/suppliers/create.test.js and the client suite evidence. M-4 is the one piece of T31's Description left unproven: nothing in supplier_management drives an actual HTTP request through dispatcher to handler to service to MySQL, because the handler tests are declarative and both e2e specs mock the API. Worth scheduling against server/test/business-master/http.integration.test.js as the template; it is already in this suite's argv. REV-032 L-4 is left alone deliberately: cleanup()'s OR request_id IN ('req-int','req-race') is an unscoped global sweep, it is pre-existing, and T31 deepens the dependence on it without introducing it. DEF-019 and DEF-017 both redden this module's CI for reasons of their own; DEF-017 did so once on this branch with the same {200:1, 500:1} signature already recorded, and a rerun passed. HD-025 keeps both with Item Management, so the response is a rerun, not a change here. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
