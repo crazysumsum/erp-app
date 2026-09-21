@@ -291,8 +291,14 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
   const template = lines.join("\n");
 
   const probe = async (mutate, expected, what) => {
+    const ddl = mutate(template);
+    // 一個冇改到嘢嘅 mutation 會建出一張**啱**嘅表，然後喺 FK 檢查度死，而嗰個
+    // 錯誤同我哋期望嘅未必啱 —— 更差嘅情況係啱，咁就變成一個永遠綠嘅 case。
+    // CI 就係咁揾到嘅：本機 SHOW CREATE TABLE 帶住 COLLATE 子句而 CI 冇，所以
+    // 一個夾死 collation 嘅 anchor 靜靜哋冇替換到。
+    assert.notEqual(ddl, template, `the mutation must actually change the DDL: ${what}`);
     await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
-    await connection.query(mutate(template));
+    await connection.query(ddl);
     let thrown = null;
     try {
       await inspectSupplierBankAccountSchema(connection, { table });
@@ -306,11 +312,18 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
   // 對照組：一張完全照抄、只係冇 FK 嘅表。佢要**啱啱好**喺 FK 檢查度死，唔係早過
   // 亦唔係遲過。呢一句同時證兩件事：FK 名真係有人查，而下面每個 case 嘅紅係嚟自
   // 佢自己嗰個改動，唔係嚟自「複製表本身就過唔到」。
-  await probe(
-    (ddl) => ddl,
-    /Incompatible existing Supplier bank account FK: fk_supplier_bank_supplier/u,
-    "the FK names are checked, and a copy without them stops exactly there"
-  );
+  // 對照組唔經 probe()：佢刻意乜都唔改，所以過唔到上面嗰個「一定要改到嘢」守衛。
+  await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
+  await connection.query(template);
+  let control = null;
+  try {
+    await inspectSupplierBankAccountSchema(connection, { table });
+  } catch (error) {
+    control = error;
+  }
+  assert.ok(control, "a copy without the FK names must be rejected");
+  assert.match(control.message, /Incompatible existing Supplier bank account FK: fk_supplier_bank_supplier/u,
+    "the unmodified copy must stop exactly at the FK check, or every case below proves nothing");
 
   await probe(
     (ddl) => ddl.replace("`account_iv` binary(12)", "`account_iv` varchar(12)"),
@@ -338,8 +351,13 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
     "a same-named non-unique index enforces nothing"
   );
   await probe(
-    (ddl) => ddl.replace("`last_four` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,",
-      "`last_four` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `account_number` varchar(64) DEFAULT NULL,"),
+    // 逐行插入，唔夾 collation 子句：CI 同本機嘅 SHOW CREATE TABLE 輸出唔一定
+    // 一樣，而一個夾死咗嘅 anchor 會靜靜哋冇替換到。
+    (ddl) => ddl.split("\n")
+      .flatMap((line) => (line.trim().startsWith("`last_four`")
+        ? [line, "  `account_number` varchar(64) DEFAULT NULL,"]
+        : [line]))
+      .join("\n"),
     // 唔用 alternation：一個 `A|B` 嘅期望喺兩邊都過，即係佢乜都冇分辨到。擋住明文
     // 欄位嘅係上面嗰個集合相等比較，所以期望嘅就係佢嗰句。
     /Incompatible existing Supplier bank account schema: supplier_bank_accounts/u,
