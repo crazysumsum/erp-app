@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
+import { SupplierApprovalService } from "../../src/modules/supplier/SupplierApprovalService.js";
 import { SupplierAuditLogService } from "../../src/modules/supplier/SupplierAuditLogService.js";
 import { SupplierSettingsService, getActivationPolicy } from "../../src/modules/supplier/SupplierSettingsService.js";
 
@@ -185,4 +187,212 @@ integrationTest("the real audit recorder accepts a settings update and stores be
 
   const [[after]] = await connection.query("SELECT version FROM supplier_settings WHERE id = 1");
   assert.equal(Number(after.version), Number(before.version), "the rolled-back probe must leave no trace");
+});
+
+/**
+ * T31：設定同啟用之間嘅兩條併發規則。上面嗰個 `serviceFor` 用 begin/rollback 包住
+ * 自己嘅寫入，但落面嘅場景要喺**同一個交易**入面同時郁設定同審批申請 —— 喺一個
+ * 已經開咗嘅交易入面再 `beginTransaction()`，MySQL 會隱式 commit 咗前面嗰個，即係
+ * 將呢個測試嘅中間值放咗出去俾其他並行檔案見到。所以呢個 wrapper 只借用 caller
+ * 嘅交易，唔開新嘅，亦都唔 commit。
+ */
+function joiningDatabase(connection) {
+  return {
+    query: (sql, params) => connection.query(sql, params),
+    // REV-032 L-2：真嘅 wrapper 失敗時會 rollback，呢個借用交易嘅版本冇得 rollback
+    // 成個交易（佢唔屬於佢），所以用 savepoint 做返同一件事。今日呢個測試最外層一定
+    // rollback，所以睇唔出分別；但下一個借用呢個 helper、而又預期「失敗嘅指令唔會
+    // 留低半截寫入」嘅測試，就會靜靜哋錯。
+    async withTransaction(work) {
+      const savepoint = `join_${Math.random().toString(36).slice(2, 10)}`;
+      await connection.query(`SAVEPOINT ${savepoint}`);
+      try {
+        return await work(connection);
+      } catch (error) {
+        await connection.query(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+        throw error;
+      }
+    }
+  };
+}
+
+async function seedPendingApproval(connection, suffix) {
+  const now = Date.now();
+  const ids = [];
+  for (const role of ["requester", "approver"]) {
+    const [user] = await connection.execute(
+      "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+      [`supplier-settings-it-${role}-${suffix}`, "not-used-by-this-test", `Settings IT ${role}`, now, now]
+    );
+    ids.push(Number(user.insertId));
+  }
+  const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+  const [supplier] = await connection.execute(
+    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+       default_currency_code, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 'pending_approval', ?, ?)`,
+    [`SET-${suffix}`, `set-${suffix}`, `Settings ${suffix}`, `settings ${suffix}`, currency.code ?? currency.CODE, now, now]
+  );
+  const supplierId = Number(supplier.insertId);
+  const [[row]] = await connection.query("SELECT version FROM suppliers WHERE id = ?", [supplierId]);
+  const [request] = await connection.execute(
+    `INSERT INTO supplier_activation_requests (supplier_id, requested_by, assigned_approver_id,
+       supplier_version, summary, status, requested_at)
+     VALUES (?, ?, ?, ?, JSON_OBJECT(), 'pending', ?)`,
+    [supplierId, ids[0], ids[1], row.version, now]
+  );
+  return { requesterId: ids[0], approverId: ids[1], supplierId, requestId: Number(request.insertId) };
+}
+
+/**
+ * FR-SET-005／AC-013：關掉審批政策**唔係**一個批准動作。已經 pending 嘅申請要繼續
+ * pending，Supplier 要留喺 pending_approval，而佢仍然只可以由被指派嘅審批人決定。
+ *
+ * 呢個規則冇一段對應嘅程式碼 —— 佢係「冇任何一條路會咁做」。所以佢要用行為證：
+ * 真係關一次政策，然後睇住張申請。
+ */
+integrationTest("turning the approval policy off does not decide an already pending request", async (t) => {
+  const connection = await mysql.createConnection(config());
+  t.after(() => connection.end());
+
+  await connection.beginTransaction();
+  try {
+    const seeded = await seedPendingApproval(connection, randomUUID().slice(0, 8));
+
+    // 由「開」行到「關」，先至有嘢可以關。
+    await connection.execute("UPDATE supplier_settings SET require_activation_approval = 1, version = version + 1 WHERE id = 1");
+    const [[current]] = await connection.query("SELECT version FROM supplier_settings WHERE id = 1");
+
+    const settings = new SupplierSettingsService({
+      database: joiningDatabase(connection),
+      logger: { warn() {} },
+      time: { nowMs: () => Date.now() },
+      authorize: async () => ({ id: null, username: "integration" }),
+      audit: { async record() {} }
+    });
+    const off = await settings.updateSettings({ ...actor, version: Number(current.version), requireActivationApproval: false });
+    assert.equal(off.requireActivationApproval, false);
+    assert.equal(await getActivationPolicy(connection), false, "the policy really is off inside this transaction");
+
+    const [[request]] = await connection.query("SELECT status, version FROM supplier_activation_requests WHERE id = ?", [seeded.requestId]);
+    assert.equal(request.status, "pending", "BR-013: switching the policy off must not approve what is already pending");
+    assert.equal(Number(request.version), 1, "an untouched request keeps its version");
+    const [[supplier]] = await connection.query("SELECT status FROM suppliers WHERE id = ?", [seeded.supplierId]);
+    assert.equal(supplier.status, "pending_approval", "the Supplier must not drift to active on its own");
+
+    const approvals = new SupplierApprovalService({
+      database: joiningDatabase(connection),
+      logger: { warn() {} },
+      time: { nowMs: () => Date.now() },
+      authorize: async () => ({ id: null, username: "integration", permissions: ["supplier.approval"] }),
+      loadPermissions: async () => ["supplier.approval"],
+      businessMaster: { async assertSupplierDefaultsInTransaction() { return { currency: { code: "HKD", status: "ACTIVE" }, paymentTerm: null }; } }
+    });
+    const decision = {
+      claimedRoles: [], claimedPermissions: ["supplier.approval"],
+      id: seeded.requestId, version: 1, reason: "政策關閉後批准原因", requestId: "req-int", ip: "127.0.0.1"
+    };
+    await assert.rejects(
+      () => approvals.approveRequest({ ...decision, actorId: seeded.requesterId }),
+      (error) => error.publicCode === "APPROVAL_NOT_ASSIGNED",
+      "with the policy off the request still belongs to its assigned approver"
+    );
+
+    // 而佢仲批得到：關政策只係停咗**新**提交要審批，唔係廢咗現有嘅隊列。
+    const approved = await approvals.approveRequest({ ...decision, actorId: seeded.approverId });
+    assert.equal(approved.status, "approved");
+    assert.equal(approved.replayed, false);
+  } finally {
+    await connection.rollback();
+  }
+});
+
+/**
+ * AC-013 嘅另一邊，以及 REV-032 M-3。
+ *
+ * 呢個測試原本係寫成「設定寫入飛緊時，啟用讀要等」，但個 writer 係測試自己手寫嘅
+ * `SELECT … FOR UPDATE`。REV-032 指出咁樣證唔到新嘢：兩個鎖測試唯一掂到嘅 product
+ * code 都係 `getActivationPolicy` 嗰三個字，而 S 鎖同 X 鎖唔相容係 MySQL 嘅保證，
+ * 唔係應用層行為。實測亦都係咁 —— 拆走 `FOR SHARE` 兩個都紅，而拆走 `updateSettings`
+ * 自己嗰個 `FOR UPDATE`，兩個都照綠。
+ *
+ * 所以個 writer 改成行真嘅 `updateSettings`。咁樣先真係證到 AC-013 講嘅「toggle 側」：
+ * 設定寫入攞咗鎖之後，一個並發嘅啟用讀唔可以越過佢攞一個就嚟過期嘅答案。
+ */
+function deferred() {
+  let resolve;
+  const promise = new Promise((r) => { resolve = r; });
+  return { promise, resolve };
+}
+
+/**
+ * 喺 `FOR UPDATE` 讀返嚟之後即刻停低，鎖仲揸住手，未行到 UPDATE。呢個窗口就係
+ * 要測嘅嘢：再遲少少，`UPDATE` 自己嗰個 X 鎖會蓋過答案，拆走 `FOR UPDATE` 都睇唔出。
+ *
+ * 靠 SQL 文字認位係測試 harness 嘅妥協，但佢認嘅就係被測嗰個屬性本身：冇咗
+ * `FOR UPDATE`，呢度就唔會停，而個 writer 會一路行完 —— 下面用 race 收呢個情況。
+ */
+function pausingConnection(connection, { holding, release }) {
+  return {
+    query: async (sql, params) => {
+      const result = await connection.query(sql, params);
+      if (String(sql).includes("FOR UPDATE")) {
+        holding.resolve();
+        await release.promise;
+      }
+      return result;
+    },
+    execute: (sql, params) => connection.execute(sql, params)
+  };
+}
+
+integrationTest("an in-flight settings write blocks a concurrent activation read until it finishes", async (t) => {
+  const writer = await mysql.createConnection(config());
+  const reader = await mysql.createConnection(config());
+  t.after(async () => { await writer.end(); await reader.end(); });
+
+  const [[current]] = await writer.query("SELECT version FROM supplier_settings WHERE id = 1");
+  const holding = deferred();
+  const release = deferred();
+
+  const service = new SupplierSettingsService({
+    database: {
+      query: (sql, params) => writer.query(sql, params),
+      async withTransaction(work) {
+        await writer.beginTransaction();
+        try {
+          return await work(pausingConnection(writer, { holding, release }));
+        } finally {
+          // 呢個 suite 唔留低任何改動：service 已經做晒佢要做嘅寫入。
+          await writer.rollback();
+        }
+      }
+    },
+    logger: { warn() {} },
+    time: { nowMs: () => Date.now() },
+    authorize: async () => ({ id: null, username: "integration" }),
+    audit: { async record() {} }
+  });
+
+  const writing = service.updateSettings({
+    ...actor, version: Number(current.version), requireActivationApproval: true
+  }).then(() => "committed", (error) => error.publicCode ?? error.code ?? error.message);
+
+  // 個 writer 冇攞鎖嘅話，`holding` 永世唔會 resolve，所以同 `writing` 賽跑：嗰種
+  // 情況下佢會一路行完，而下面個讀會讀得到 —— 即係測試紅，唔係測試 hang。
+  await Promise.race([holding.promise, writing]);
+
+  await reader.query("SET SESSION innodb_lock_wait_timeout = 1");
+  await reader.beginTransaction();
+  try {
+    await assert.rejects(
+      () => getActivationPolicy(reader),
+      (error) => error.code === "ER_LOCK_WAIT_TIMEOUT",
+      "an activation must not read a policy that an in-flight settings write already holds"
+    );
+  } finally {
+    await reader.rollback();
+    release.resolve();
+    await writing;
+  }
 });

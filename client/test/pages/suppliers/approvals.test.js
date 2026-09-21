@@ -100,9 +100,11 @@ describe("pages/suppliers/SupplierApprovalsPage.vue", () => {
     // REV-030 H-1：`body.text()).toContain("已變更")` 由 stale chip 嘅「提交後已變更」
     // 滿足，行都未行到 diff table。所以要逐行睇，而且要睇埋「冇改嘅行冇標記」——
     // 少咗第二句，一個「乜都標記」嘅實作一樣過。
-    const rows = body.findAll("tbody tr");
-    const named = rows.find((row) => row.text().includes("名稱"));
-    const coded = rows.find((row) => row.text().includes("Supplier Code"));
+    // REV-031 N-1：`row.text().includes("名稱")` 只係因為「名稱」喺 FIELD_LABEL 入面
+    // 排喺「顯示名稱」前面先啱——即係靠 key 次序。`data-field` 已經 render 咗喺
+    // <tr> 上面，兩層（vitest 同 browser）用返同一個精確選擇器。
+    const named = body.find('[data-field="supplierName"]');
+    const coded = body.find('[data-field="supplierCode"]');
     expect(named.text()).toContain("已變更");
     expect(coded.text()).not.toContain("已變更");
   });
