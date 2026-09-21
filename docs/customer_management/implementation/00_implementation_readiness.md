@@ -2,14 +2,14 @@
 
 ## Status
 
-`BLOCKED` — PHASE-001 implementation and independent-review remediation are complete
-through commit `4c258b104d0c6004828b9d27708756eecf7d944e`. A non-semantic manifest schema
+`BLOCKED` — PHASE-001 implementation, remediation and final developer verification
+are complete through integrated candidate `1b78eb769cb69ecf1407d489f44e811477ef68de`.
+A non-semantic manifest schema
 repair refreshed DESIGN to
 `29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58` and PLAN to
 `154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41`; Product
-Owner baseline-bound approval is required after latest-main integration, full
-current-candidate verification and independent re-review, before publication and
-merge gates.
+Owner baseline-bound approval is required after the pending independent re-review,
+before publication and merge gates.
 
 ## Mode-entry baseline
 

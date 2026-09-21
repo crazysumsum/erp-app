@@ -3,7 +3,7 @@
 ## Scope and status
 
 - Candidate branch: `codex/customer-management-phase-001`.
-- Candidate code commit: `4c258b104d0c6004828b9d27708756eecf7d944e`.
+- Candidate code commit: `1b78eb769cb69ecf1407d489f44e811477ef68de`.
 - Refreshed DESIGN baseline (approval pending):
   `29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58`.
 - Refreshed PLAN baseline (approval pending):
@@ -65,11 +65,15 @@ Playwright evidence is not applicable to this Phase.
   the same mutable schema. The affected migration and Item schema-snapshot suites
   both passed when isolated, and the accepted full database run used the existing
   serial integration profile. No product code or assertion was weakened.
+- Refreshed `origin/main` again through `9c68059221098a17bfc4c3bd0638c17008305c4e`.
+  Those later commits changed only Item Management recovery code/tests and documents;
+  the merge was conflict-free and the complete final-candidate server verification
+  below was rerun after integration.
 
 ## Final gate result
 
-The final recovered real-MySQL server coverage command passed after the HD-007
-checker was registered: 95.28% lines, 84.71% branches and 92.96% functions, above
+The final integrated real-MySQL server coverage command passed after the HD-007
+checker was registered: 95.30% lines, 84.80% branches and 92.99% functions, above
 the repository thresholds of 92%/83%/90% and all 34 high-risk per-file floors. A
 fresh schema migrated through `0046`, a complete rerun was a no-op, and the exact
 synthetic schema was deleted with final absence confirmed. No threshold, assertion
@@ -90,8 +94,13 @@ The remediation-focused suite passed 20/20 and all Customer unit/contract tests
 passed 87/87. Repository lint passed. A fresh isolated MySQL schema migrated through
 `0046`, the complete rerun skipped every migration, and the Customer HTTP integration
 test passed including all three paginated child routes; the schema was dropped and
-final absence was confirmed. Full current-candidate coverage and independent
-re-review remain pending after latest-main integration.
+final absence was confirmed. After latest-main integration, the complete serial
+real-MySQL server coverage command passed at 95.30%/84.80%/92.99%, all 34 high-risk
+per-file floors passed, repository lint passed, and the exact schema was deleted with
+absence confirmed. Separate reviewer Aquinas (`/root/customer_phase1_review`)
+re-reviewed exact candidate `1b78eb7` against `origin/main` `9c68059` and returned
+`APPROVE` with no Critical, Required, Optional or Nit findings. The reviewer verified
+all three residual finding groups closed and reran the 87-test Customer focused suite.
 
 Developer verification is complete; publication remains blocked on the refreshed
 DESIGN/PLAN and PHASE-001 recovery-scope approval, then exact-candidate CI and PR
