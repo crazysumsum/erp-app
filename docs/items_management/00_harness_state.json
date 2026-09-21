@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 67,
+  "revision": 69,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,23 +11,23 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "6e6f80965f4f6db9b59bdbbe4a8717072a3506a5",
-    "source_fingerprint": "9deb91a0c803cd3338003d68b639b2503f759ede66a4413d8283bf6b0d857b17",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
-    "default_commit": "5125f328dbdd7437208abade08bd8fe950a2ce38",
-    "mode_entry_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca"
+    "code_commit": "ff3c5d1066bf18766acc375baeb44f944db2c1b4",
+    "source_fingerprint": "0fd3896bf170391404744b8ca010259feae55a7eaf0df9cb50f8f065d6a93658",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-tc016-provision",
+    "default_commit": "021b4b2bbc1da81bb023d1ad61f589f5f6a707a4",
+    "mode_entry_commit": "021b4b2bbc1da81bb023d1ad61f589f5f6a707a4"
   },
   "runtime": {
-    "instance_id": "ITEM-CLOSEOUT-LOCAL-20260921",
-    "owner": "Primary IMPLEMENT agent; PR #105 closeout reconciliation",
+    "instance_id": "ITEM-RECOVERY-TC016-PROVISION-20260921",
+    "owner": "Primary IMPLEMENT agent; TASK-044 recovery attestation and verification",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
-      "mysql-schema": "staging-like fixture source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1 on local MySQL 26.7.0; erp_dev preserved",
-      "media-root": "/private/tmp/item-recovery-restored-20260915/media",
-      "import-root": "/private/tmp/item-recovery-restored-20260915/imports",
+      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-tc016-provision",
+      "mysql-schema": "No live isolated recovery schema is currently verified; fresh provision awaits a secure local MySQL root login path. erp_dev is out of scope.",
+      "media-root": "No live restored media root is currently verified.",
+      "import-root": "No live restored import root is currently verified.",
       "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
-    "lease_ref": "ENV-PROVISION-55 completed under ERP Product Owner (Sam)'s local MySQL root authorization. The temporary item-recovery-root login path was removed after provisioning, so no root credential remains in repository artifacts or the task-specific MySQL login profile. An erp_dev clone was isolated as staging-like fixture source item_recovery_tc016_20260915; synthetic Item/SKU/media/import/audit evidence was added only there, then a consistent snapshot was restored to item_recovery_tc016_20260915_run1 with separate media/import roots. All 16 Item table counts matched source versus restore; erp_user SELECT succeeded under a schema-only SELECT grant; erp_dev Item/SKU/media/import counts remained unchanged at zero. Unsigned manifest SHA-256: 3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df."
+    "lease_ref": "The 2026-09-15 local recovery fixture is retained only as historical developer evidence; its restored roots and a usable MySQL login path are no longer present. On 2026-09-21, ERP Product Owner (Sam) approved a new isolated exercise and personal verification, but formal TC-016 remains blocked pending an independent Ed25519 attestation and a secure local root login path."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -443,6 +443,25 @@
       "code_commit": null,
       "scope": [
         "server/src/modules/authorization/adminGuard.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-024",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the fresh isolated local MySQL recovery exercise, sensitive server/config/itemRecoveryTrustPolicy.json scope, TEST_AND_VERIFY continuation, and personal verification on 2026-09-21. This approval does not replace the required independently controlled Ed25519 signature or expose any private key.",
+      "recorded_at": "2026-09-21T03:20:01Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
+      "code_commit": "138ea7b87f921f5569b6ef74899865eaa9d03f3a",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "server/config/itemRecoveryTrustPolicy.json"
       ],
       "expires_at": null
     }
@@ -873,8 +892,8 @@
       "kind": "MERGE",
       "target": "Item Management closeout PR into main",
       "idempotency_key": "item-management-closeout-merge-20260921",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work; merge remains gated on the exact candidate's required CI and mergeability."
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: PR #117 merged the Item Management closeout into main as 021b4b2bbc1da81bb023d1ad61f589f5f6a707a4 after required CI and review gates passed."
     },
     {
       "id": "BRANCH-SYNC-67",
@@ -897,16 +916,24 @@
       "kind": "PUSH",
       "target": "origin/codex/item-management-closeout final metadata candidate",
       "idempotency_key": "item-management-closeout-final-push-20260921",
-      "status": "PLANNED",
-      "source_ref": "Final metadata-only checkpoint records REV-014 and CI-68; push must precede the final exact-candidate CI gate."
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: the final Item Management closeout candidate was pushed before PR #117 merged; the topic branch and worktree were subsequently cleaned."
     },
     {
       "id": "CI-70",
       "kind": "CI",
       "target": "required GitHub checks for the final metadata-only PR #117 candidate",
       "idempotency_key": "item-management-closeout-final-ci-20260921",
-      "status": "PLANNED",
-      "source_ref": "Required because recording REV-014 and CI-68 produces the final metadata-only candidate; merge remains gated on its exact CI result."
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: required CI passed on the final PR #117 candidate before merge; the merged default-branch baseline is 021b4b2bbc1da81bb023d1ad61f589f5f6a707a4."
+    },
+    {
+      "id": "MODE-CHANGE-68",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-68",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved continued TASK-044 implementation and formal recovery verification prerequisites on 2026-09-21."
     }
   ],
   "evidence_files": [
@@ -1060,5 +1087,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Push the final metadata-only PR #117 candidate, require all CI checks to pass on that exact candidate, verify main has not moved, then merge and clean the closeout branch/worktree under REV-014. After closeout: TASK-043 remains dependency-blocked until a real downstream module owns a reference to item_skus; TASK-044 remains blocked on independent manifest signing, recovery public-key/trust-environment provisioning and approval, formal TC-016, and human acceptance/sign-offs."
+  "next_safe_action": "For TASK-044, use a secure local MySQL root login path to provision a fresh isolated source/restore fixture, obtain an independently controlled Ed25519 detached signature over its exact manifest bytes and the matching public key, commit the approved trust binding, then run formal TC-016 on that immutable candidate. TASK-043 remains dependency-blocked until a real downstream module owns a reference to item_skus."
 }
