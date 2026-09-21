@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 177,
+  "revision": 181,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
-    "source_fingerprint": "fff22d41a110b747920738afaca9a363f733540817e6779bc0cc161976c67a76",
+    "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
+    "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-034",
     "default_commit": "71616ec040a7558856083035801554dda940ab5e",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1313,7 +1313,7 @@
       "method": "SEPARATE_AGENT",
       "author": "Claude Opus 5 (TASK-034)",
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
-      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "reviewed_baseline": "77ab26aa3d4ca6037416ffdc37c1c3f7c0e7c89504515f87e1291c621bc3d061",
       "source_ref": "docs/supplier_management/implementation/39_rev_039_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
@@ -1330,6 +1330,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-041",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-034 REV-040 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 80bbb954d005133570936baa6311515791d3dc4b",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/41_rev_041_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -2686,6 +2698,72 @@
       "source_ref": "Re-run after the REV-039 L-3 profile edit was reverted, which returned the PLAN baseline to db5296. supplier-phase-001-server 393/393, supplier-phase-001-client 71/71, lint and client-build green, all four binding db5296 and the current source fingerprint. The four runs recorded at ba636440 are retained rather than deleted; they were real runs of a real tree and their only defect is that the baseline they bind no longer exists. Swept for key material the same way as before and with the same discriminating control: zero hits for either literal test key and zero hits for any 43-character base64 run followed by '=', while planting a key into a scratch file is found by both searches.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-040",
       "observed_at": "2026-09-21T17:26:53+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-039 CHANGES_REQUESTED 2 High / 3 Medium / 4 Low at 64ef1fc",
+      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+      "status": "PASS",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd. Report at docs/supplier_management/implementation/39_rev_039_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-041",
+      "observed_at": "2026-09-21T17:45:02+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-040 CHANGES_REQUESTED 1 High / 2 Medium / 5 Low at 1de07da",
+      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+      "status": "PASS",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 1de07da89a1fec2eb8a753f99cb9779b8f9d50cd. Report at docs/supplier_management/implementation/40_rev_040_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-041",
+      "observed_at": "2026-09-21T17:45:02+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-041 CHANGES_REQUESTED 0 High / 1 Medium / 4 Low at 80bbb95",
+      "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+      "status": "PASS",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 80bbb954d005133570936baa6311515791d3dc4b. Report at docs/supplier_management/implementation/41_rev_041_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-041",
+      "observed_at": "2026-09-21T17:45:02+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-041 M-1: I recorded REV-039 against a design hash it never reviewed",
+      "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+      "status": "PASS",
+      "source_ref": "Correction, and it is the same class as the finding it was closing. Closing REV-040 M-2 meant adding REV-039 to the reviews collection; I wrote reviewed_baseline e4083319, the current design hash. REV-039 reviewed 64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd, where the design digest was 77ab26aa3d4ca6037416ffdc37c1c3f7c0e7c89504515f87e1291c621bc3d061 - the stranded hash whose existence was REV-039's own H-1 finding. The record contradicted its own reviewer field, which names 64ef1fc. REV-040 had stated 77ab26aa explicitly and said why it mattered; I substituted a different value without saying so. Verified rather than accepted: recomputing Context.baselines()['design'] in a detached worktree at each head gives 77ab26aa at 64ef1fc, e4083319 at 1de07da and e4083319 at 80bbb95, so REV-039's entry is now 77ab26aa and REV-040's e4083319 was already right. Costs nothing at any gate - REV-039 is CHANGES_REQUESTED and was filtered out regardless, and REV-038 still satisfies the review gate - but it erased the machine-readable trace of the fact REV-039 found, and it inflated the review count that HD-032 cites as the consideration for the manifest revert. Ten older reviews carry their own era's hashes; the convention was unambiguous and I broke it.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-041",
+      "observed_at": "2026-09-21T17:45:02+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-041: one Medium and four Low, no High; the remediation introduced one new instance of a closed class",
+      "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+      "status": "PASS",
+      "source_ref": "REV-041 was performed by agent-skills:security-auditor, independent and not the author, against 80bbb95. Verdict CHANGES_REQUESTED, 0 Critical, 0 High, 1 Medium, 4 Low - the fourth round, and the first with no High. It verified the REV-040 M-1 revert independently, including the negative control I had not run (a key listed in redaction_env_keys but absent from the runner's environment produces no redaction), confirmed the profile diff against 64ef1fc is empty, and confirmed all three cited observation subjects match byte for byte. Six mutations, all killed, including a forced account-number leak through the masked projection that response validation refused with a 500 before the wire - the first time the schemas file's structural-defence claim has been measured in the leak direction - and a swallowed audit failure on reveal. Eleven HTTP probes at the reveal edge all refused, including every password shape and a body-injected supplierId. Full server suite 1937 with the three pre-existing items-module failures and no regression. CI run 35583404210 verified independently. Remediated here: M-1 above; the three missing PR_REVIEW observations; HD-032's claim that APPROVAL-HD-017-DESIGN is the module's only DESIGN approval, when there are seven and it is the only live one; the ci.yml comment calling the committed CI keys 'generated on the spot', which now says plainly that they are committed literals in a public repository, are therefore not secret, and must not be used anywhere else; and the shallow Object.freeze on the schemas, which left MASKED_BANK_SCHEMA.properties writable so an account field could be added to the masked projection at runtime - the schemas are deep-frozen now, pinned by a test that attempts exactly that assignment, and the freeze was confirmed to discriminate by removing the recursion and watching the test go red. An existing test that sorted params.required in place had to stop mutating a shared schema, which is a defect the freeze exposed rather than caused. REV-041 states what it did not check: the conversation behind HD-032 and HD-033, whether a runtime schema mutation actually widens a live response (marked PLAUSIBLE), the RFC 9111 reading, SupplierBankCrypto below the round-trip level, the client side, and AC-025/AC-026 at the HTTP layer, which section 8 of the implementation report already discloses as untested.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-041",
+      "observed_at": "2026-09-21T17:45:02+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-041 remediation evidence: 394/394 server, four suites green, no key material",
+      "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+      "status": "PASS",
+      "source_ref": "supplier-phase-001-server 394/394 (one more than the previous round: the test that attempts to add an account field to the deep-frozen masked schema), supplier-phase-001-client 71/71, lint and client-build green, all four binding db5296 and the current source fingerprint. Swept for key material: zero hits for either literal test key and zero for any 43-character base64 run followed by '='. The first attempt at this sweep passed the directory list through xargs -a, which is not a BSD option, so grep never ran and the zero it printed came from a failed command - the same shape of non-check this task has now produced twice, caught this time by reading the exit status rather than the count. Redone with the four paths named explicitly, and the control confirming both searches find a key planted in a scratch file.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-041",
+      "observed_at": "2026-09-21T17:46:24+08:00"
     }
   ],
   "pending_decisions": [
@@ -3125,7 +3203,7 @@
     {
       "id": "HD-032",
       "impact": "MAJOR",
-      "question": "REV-039 H-1 found that declaring .github/workflows/ci.yml in the module manifest's scope.approval_required_paths moved the DESIGN baseline, not only the PLAN baseline, because the DESIGN digest is computed over the manifest's scope object (harness_core.py:301-307) and approval_required_paths lives inside it. The consequence was quantified before the decision: harness_checks.py:276-289 filters reviews against a recomputed design hash, so all 38 reviews stopped counting at once, including REV-038, the APPROVED review that gated the TASK-033 merge, and APPROVAL-HD-017-DESIGN, the module's only DESIGN-kind approval. The agent had previously told the Product Owner this edit was mechanical and design-neutral, which was false. Options: revert the declaration, which returns design to e4083319 and keeps 28 reviews including REV-038 bound, at the cost of the boundary validator reporting OUTSIDE_MODULE for a file HD-030 already approved; or keep the declaration and record the design move with a fresh DESIGN approval, at the cost of stranding those 28 reviews and the REV-038 that gated the previous merge.",
+      "question": "REV-039 H-1 found that declaring .github/workflows/ci.yml in the module manifest's scope.approval_required_paths moved the DESIGN baseline, not only the PLAN baseline, because the DESIGN digest is computed over the manifest's scope object (harness_core.py:301-307) and approval_required_paths lives inside it. The consequence was quantified before the decision: harness_checks.py:276-289 filters reviews against a recomputed design hash, so all 38 reviews stopped counting at once, including REV-038, the APPROVED review that gated the TASK-033 merge, and APPROVAL-HD-017-DESIGN, the only one of the module's seven DESIGN-kind approvals bound to the live design baseline. The agent had previously told the Product Owner this edit was mechanical and design-neutral, which was false. Options: revert the declaration, which returns design to e4083319 and keeps 28 reviews including REV-038 bound, at the cost of the boundary validator reporting OUTSIDE_MODULE for a file HD-030 already approved; or keep the declaration and record the design move with a fresh DESIGN approval, at the cost of stranding those 28 reviews and the REV-038 that gated the previous merge.",
       "affected_ids": [
         "TASK-034",
         "00_module_manifest.json",
@@ -3135,7 +3213,7 @@
         "HD-030"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated both costs before the choice: 取消 manifest 宣告. Design returns to e4083319 and the 28 reviews including REV-038 stay bound. The cost accepted is stated more precisely in APPROVAL-HD-030-SCOPE-REBIND-2 following REV-040 L-5: it is not merely a cosmetic finding. validate_module_boundary goes from LOCAL_CHECKS_PASS to BLOCKED, check_boundary (harness_checks.py:118-124) consults approvals only for paths matching approval_required_paths so nothing in the toolchain reads APPROVAL-HD-030's scope entry for ci.yml any more, and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every one on this branch must be triaged by hand from here on. Recorded late: this decision was taken in conversation and the three records written from it asserted it without a pending_decisions entry existing, which REV-040 H-1 correctly flagged."
+      "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated both costs before the choice: 取消 manifest 宣告. Design returns to e4083319 and the 28 reviews including REV-038 stay bound. The cost accepted is stated more precisely in APPROVAL-HD-030-SCOPE-REBIND-2 following REV-040 L-5: it is not merely a cosmetic finding. validate_module_boundary goes from LOCAL_CHECKS_PASS to BLOCKED, check_boundary (harness_checks.py:118-124) consults approvals only for paths matching approval_required_paths so nothing in the toolchain reads APPROVAL-HD-030's scope entry for ci.yml any more, and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every one on this branch must be triaged by hand from here on. Recorded late: this decision was taken in conversation and the three records written from it asserted it without a pending_decisions entry existing, which REV-040 H-1 correctly flagged. Corrected after REV-041: this record originally called APPROVAL-HD-017-DESIGN 'the module's only DESIGN-kind approval'. There are seven; it is the only one bound to e4083319, the live baseline. The count of reviews the revert preserved was 28 when the decision was taken and is 29 now, because REV-040 was added to the ledger afterwards and legitimately binds e4083319; REV-039 binds 77ab26aa, the hash that was live at the head it actually reviewed."
     },
     {
       "id": "HD-033",
@@ -3652,7 +3730,11 @@
     "evidence/20260921T092633-da47e14aa790/run.json",
     "evidence/20260921T092637-72e0ac3dcc33/run.json",
     "evidence/20260921T092639-09636037d93f/run.json",
-    "evidence/20260921T092642-790c4d498704/run.json"
+    "evidence/20260921T092642-790c4d498704/run.json",
+    "evidence/20260921T094548-8fb42412bd2a/run.json",
+    "evidence/20260921T094552-24b27b1b6e54/run.json",
+    "evidence/20260921T094554-2c43113611be/run.json",
+    "evidence/20260921T094557-465f38289513/run.json"
   ],
   "defects": [
     {

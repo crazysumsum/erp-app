@@ -215,3 +215,30 @@ M-1 係我第二次**照單收下一個 reviewer 嘅推理，而冇去試佢建�
 H-1 嗰個 manifest 宣告 —— 我以為 design digest 唔包 manifest scope，冇查就寫落記錄。今次係
 `redact()` —— 我以為佢對住 child env 解 key，冇查就剝走保護。兩次都係「我讀得明佢講乜」
 當咗「我驗證過佢啱」。
+
+## 10. REV-041 remediation
+
+REV-041（`agent-skills:security-auditor`，獨立，非作者）喺 `80bbb95` 上報
+CHANGES_REQUESTED：**0 Critical、0 High、1 Medium、4 Low** —— 第四輪，第一輪冇 High。
+
+佢獨立驗過 REV-040 M-1 嗰個 revert，包括**我冇做嗰個 negative control**（一條列咗喺
+`redaction_env_keys` 但喺 runner 環境度唔存在嘅 key，唔會產生任何遮罩），確認 profile 對
+`64ef1fc` 嘅 diff 係空，三條引用嘅 observation subject 逐個 byte 對得上。六個 mutation
+全部殺到，包括迫個遮罩投影漏帳號（response validation 喺過線之前用 500 拒咗 —— schemas
+檔案嗰句「結構性防線」第一次真係喺漏嘅方向上量過）同埋食咗 reveal 嘅稽核失敗。十一個
+reveal 邊界 HTTP probe 全部被拒。Server suite 1937，三條 pre-existing items 模組失敗，
+冇 regression。CI `35583404210` 佢自己驗過。
+
+| # | 收法 |
+| --- | --- |
+| **M-1** 我把 REV-039 記咗喺一個佢從來冇 review 過嘅 design hash 上 | **同佢收緊嗰條係同一類。** 為咗收 REV-040 M-2，我加 REV-039 入 `reviews` 嗰陣寫咗 `e4083319`（現行）。REV-039 review 嘅係 `64ef1fc`，嗰度 design 係 `77ab26aa` —— 即係 REV-039 自己 H-1 揾到嗰個 stranded hash。條記錄同佢自己個 `reviewer` 欄互相矛盾。REV-040 明明白白寫過 `77ab26aa` 同點解緊要，我靜靜雞換咗個值。親手喺 detached worktree 逐個 head 重算確認：`64ef1fc`→`77ab26aa`、`1de07da`→`e4083319`、`80bbb95`→`e4083319`。改返 `77ab26aa`。 |
+| **L** 兩輪都冇 `PR_REVIEW` observation | REV-039／040／041 三條都補咗。`status: PASS` 意思係「review 真係做過、provenance 睇過」，唔係「批咗」—— 三條都冇批。 |
+| **L** HD-032 話 `APPROVAL-HD-017-DESIGN` 係「本模組唯一一條 DESIGN approval」 | 有七條，佢係唯一一條綁住現行 baseline 嗰條。改咗，並且喺 `answer_ref` 講明原文寫過乜。順帶更正個 review 數：決定嗰陣係 **28**，而家 **29**（REV-040 之後加，佢合法綁 `e4083319`）。 |
+| **L** `ci.yml` 個註解叫committed key 做「即場產生」 | 誤導。佢哋係**一次產生就 commit 咗**嘅字面值，住喺一個 public repo 入面，所以佢哋唔係 secret，亦都唔可以喺 CI 以外用。照咁寫返。 |
+| **L** Schema 淨係 shallow freeze | `MASKED_BANK_SCHEMA.properties.accountNumber = {...}` 喺 runtime 做得到 —— 即係打穿咗上面講嗰道「結構性防線」。改成逐層凍，並且用一條**真係試加一個帳號欄位落遮罩 schema** 嘅測試釘住。驗證過佢分辨得到：拆走 deepFreeze 個遞迴 → 紅。順帶揾到一條就地 `params.required.sort()` 嘅舊測試 —— 佢本來就唔應該改一個共用 schema，凍咗之後先暴露出嚟。 |
+
+### REV-041 講明佢冇查嘅嘢
+
+HD-032／HD-033 背後嗰段對話；一個 runtime schema mutation 會唔會真係放寬一個 live
+response（標咗 **PLAUSIBLE**）；RFC 9111 嗰個讀法；`SupplierBankCrypto` round-trip 以下
+嘅原語；client 側；同埋 AC-025／AC-026 喺 HTTP 層 —— 最後嗰樣 §8 已經自己講咗未覆蓋。

@@ -99,8 +99,10 @@ jobs:
       # startup fail closed，並且明文禁止「只關閉 bank endpoint 後照常啟動」——
       # 否則個失敗會拖到付款流程先至出現。
       #
-      # 呢兩條係**CI 專用、即場產生**嘅假 key，同任何環境嘅真 key 無關。設計 §1700：
-      # 開發／測試不得提交固定 production key。輪替佢哋唔需要任何協調。
+      # 呢兩條係**CI 專用嘅測試 key**，一次產生之後就 commit 咗落嚟，同任何環境嘅真
+      # key 無關。佢哋喺一個 public repo 入面，即係任何人都睇得到 —— 所以佢哋唔係
+      # secret，亦都唔可以喺 CI 以外任何地方用。設計 §1700：開發／測試不得提交固定
+      # production key。輪替佢哋唔需要任何協調：改咗就算。
       SUPPLIER_BANK_ACTIVE_KEY_ID: ci-enc-1
       SUPPLIER_BANK_ENCRYPTION_KEYS: '{"ci-enc-1":"R4EVice6+okHiRFgg4gm0rYpYKWA8HMxCVjxOlS9RQg="}'
       SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID: ci-look-1

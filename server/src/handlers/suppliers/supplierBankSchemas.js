@@ -11,11 +11,24 @@ import { SUPPLIER_ID_PARAMS_SCHEMA } from "./supplierSchemas.js";
  * 嘅結構性防線，唔係靠每個 handler 記得投影。
  */
 
-export const EMPTY_BANK_SCHEMA = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
+/**
+ * `Object.freeze` 係淺嘅：凍咗個 schema 物件唔代表凍咗佢個 `properties`。一個
+ * `MASKED_BANK_SCHEMA.properties.accountNumber = {type:"string"}` 喺 runtime 做得到，
+ * 而咁樣做就打穿咗上面講嗰道「結構性防線」。所以呢度逐層凍。（REV-041）
+ */
+function deepFreeze(value) {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const inner of Object.values(value)) deepFreeze(inner);
+  }
+  return value;
+}
+
+export const EMPTY_BANK_SCHEMA = deepFreeze({ type: "object", properties: {}, additionalProperties: false });
 
 export { SUPPLIER_ID_PARAMS_SCHEMA };
 
-export const BANK_ACCOUNT_PARAMS_SCHEMA = Object.freeze({
+export const BANK_ACCOUNT_PARAMS_SCHEMA = deepFreeze({
   type: "object",
   required: ["id", "bankAccountId"],
   additionalProperties: false,
@@ -29,7 +42,7 @@ export const BANK_ACCOUNT_PARAMS_SCHEMA = Object.freeze({
  * 設計 §6.6／AC-023：**所有人**只由 GET 攞到遮罩清單，`bank.view` 唔會自動 reveal。
  * 所以呢條係三個 policy 入面最闊嗰個 —— 得 `supplier.view`。
  */
-export const BANK_VIEW_POLICY = Object.freeze([Object.freeze({
+export const BANK_VIEW_POLICY = deepFreeze([Object.freeze({
   name: "hasPermission",
   options: Object.freeze({ permissions: Object.freeze(["supplier.view"]) })
 })]);
@@ -38,7 +51,7 @@ export const BANK_VIEW_POLICY = Object.freeze([Object.freeze({
  * 設計 §6.6：reveal 要 `supplier.view` ＋ `supplier.bank.view`。留意佢**唔要求**
  * `bank.mgmt` —— 睇同改係兩件事，一個只可以睇嘅稽核人員唔應該因為要睇而攞埋改嘅權。
  */
-export const BANK_REVEAL_POLICY = Object.freeze([Object.freeze({
+export const BANK_REVEAL_POLICY = deepFreeze([Object.freeze({
   name: "hasPermission",
   options: Object.freeze({ permissions: Object.freeze(["supplier.view", "supplier.bank.view"]) })
 })]);
@@ -49,14 +62,14 @@ export const BANK_REVEAL_POLICY = Object.freeze([Object.freeze({
  * 點解寫入都要 `bank.view`：一個改得到但睇唔到嘅人，改完之後核對唔到自己改咗乜，
  * 而遮罩清單本身就係佢唯一嘅反饋。設計 §7.4 個權限矩陣亦都係咁畫。
  */
-export const BANK_WRITE_POLICY = Object.freeze([Object.freeze({
+export const BANK_WRITE_POLICY = deepFreeze([Object.freeze({
   name: "hasPermission",
   options: Object.freeze({
     permissions: Object.freeze(["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"])
   })
 })]);
 
-const REASON_SCHEMA = Object.freeze({ type: "string", minLength: 5, maxLength: 500 });
+const REASON_SCHEMA = deepFreeze({ type: "string", minLength: 5, maxLength: 500 });
 
 /**
  * 每條 step-up route 嘅 body 都要**明文宣告** `password`。
@@ -66,15 +79,15 @@ const REASON_SCHEMA = Object.freeze({ type: "string", minLength: 5, maxLength: 5
  * `additionalProperties: false` 上面，而個錯誤會係一個講唔通嘅 400。同
  * `approvalSchemas.js` 同 `supplierSchemas.js` 嘅做法一致。
  */
-const PASSWORD_SCHEMA = Object.freeze({ type: "string", minLength: 1, maxLength: 1024 });
+const PASSWORD_SCHEMA = deepFreeze({ type: "string", minLength: 1, maxLength: 1024 });
 
 // 帳號本身。`minLength: 1` 淨係擋空字串；真正嘅字元規則喺
 // SupplierBankCrypto.bankAccountRejection，由 service 拋一個帶 field 嘅 400。
 // 唔喺 AJV 度寫 pattern，係因為嗰條規則有 NFC、全形折疊同排版剝除三步，
 // 一個 JSON Schema pattern 表達唔到，而寫一個近似嘅版本就會同 service 講唔同嘢。
-const ACCOUNT_NUMBER_SCHEMA = Object.freeze({ type: "string", minLength: 1, maxLength: 2048 });
+const ACCOUNT_NUMBER_SCHEMA = deepFreeze({ type: "string", minLength: 1, maxLength: 2048 });
 
-const BANK_DETAIL_PROPERTIES = Object.freeze({
+const BANK_DETAIL_PROPERTIES = deepFreeze({
   accountHolderName: { type: "string", minLength: 1, maxLength: 190 },
   bankName: { type: "string", minLength: 1, maxLength: 190 },
   bankCountryCode: { type: "string", pattern: "^[A-Za-z]{2}$" },
@@ -84,7 +97,7 @@ const BANK_DETAIL_PROPERTIES = Object.freeze({
   accountCurrencyCode: { type: "string", pattern: "^[A-Za-z]{3}$" }
 });
 
-export const BANK_CREATE_SCHEMA = Object.freeze({
+export const BANK_CREATE_SCHEMA = deepFreeze({
   type: "object",
   required: ["accountHolderName", "bankName", "accountNumber", "reason", "password"],
   additionalProperties: false,
@@ -97,7 +110,7 @@ export const BANK_CREATE_SCHEMA = Object.freeze({
   }
 });
 
-export const BANK_UPDATE_SCHEMA = Object.freeze({
+export const BANK_UPDATE_SCHEMA = deepFreeze({
   type: "object",
   required: ["accountHolderName", "bankName", "version", "reason", "password"],
   additionalProperties: false,
@@ -111,14 +124,14 @@ export const BANK_UPDATE_SCHEMA = Object.freeze({
   }
 });
 
-export const BANK_VERSIONED_SCHEMA = Object.freeze({
+export const BANK_VERSIONED_SCHEMA = deepFreeze({
   type: "object",
   required: ["version", "reason", "password"],
   additionalProperties: false,
   properties: { version: { type: "integer", minimum: 1 }, reason: REASON_SCHEMA, password: PASSWORD_SCHEMA }
 });
 
-export const BANK_REVEAL_SCHEMA = Object.freeze({
+export const BANK_REVEAL_SCHEMA = deepFreeze({
   type: "object",
   required: ["reason", "password"],
   additionalProperties: false,
@@ -130,7 +143,7 @@ export const BANK_REVEAL_SCHEMA = Object.freeze({
  * key ID —— key ID 唔係機密，但佢會講出邊行用緊邊條 key，即係縮窄咗一個攻擊者要試
  * 嘅範圍，而 UI 一個用途都冇。
  */
-export const MASKED_BANK_SCHEMA = Object.freeze({
+export const MASKED_BANK_SCHEMA = deepFreeze({
   type: "object",
   required: ["id", "bankName", "accountHolderName", "maskedAccountNumber", "status", "isDefault", "version"],
   additionalProperties: false,
@@ -153,7 +166,7 @@ export const MASKED_BANK_SCHEMA = Object.freeze({
  * 設計 §6.6：跨 Supplier 嘅重覆只回一個 warning，而佢**唔可以**回對方嘅帳號。
  * `supplierCodes` 係空陣列（冇 supplier.view）或者對方嘅 Supplier Code，俾人手判斷。
  */
-const BANK_WARNING_SCHEMA = Object.freeze({
+const BANK_WARNING_SCHEMA = deepFreeze({
   type: "object",
   required: ["code", "message", "supplierCodes"],
   additionalProperties: false,
@@ -164,7 +177,7 @@ const BANK_WARNING_SCHEMA = Object.freeze({
   }
 });
 
-export const MASKED_BANK_WITH_WARNINGS_SCHEMA = Object.freeze({
+export const MASKED_BANK_WITH_WARNINGS_SCHEMA = deepFreeze({
   ...MASKED_BANK_SCHEMA,
   properties: Object.freeze({
     ...MASKED_BANK_SCHEMA.properties,
@@ -172,7 +185,7 @@ export const MASKED_BANK_WITH_WARNINGS_SCHEMA = Object.freeze({
   })
 });
 
-export const BANK_LIST_RESPONSE_SCHEMA = Object.freeze({
+export const BANK_LIST_RESPONSE_SCHEMA = deepFreeze({
   type: "object",
   required: ["items"],
   additionalProperties: false,
@@ -195,7 +208,7 @@ export const BANK_LIST_RESPONSE_SCHEMA = Object.freeze({
  * subject 叫「DEV-T34-EXPIRES-IN: design 6.6's reveal response includes expiresInSeconds and
  * the implementation omits it」嘅 observation，同實作報告 §5。
  */
-export const BANK_REVEAL_RESPONSE_SCHEMA = Object.freeze({
+export const BANK_REVEAL_RESPONSE_SCHEMA = deepFreeze({
   type: "object",
   required: ["id", "accountNumber", "revealedAt"],
   additionalProperties: false,

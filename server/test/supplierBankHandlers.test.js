@@ -161,7 +161,8 @@ test("the child routes name the account in the path, so ownership is a route par
   for (const Handler of [UpdateSupplierBankAccountHandler, SetDefaultSupplierBankAccountHandler,
     DeactivateSupplierBankAccountHandler, RevealSupplierBankAccountHandler]) {
     const params = Handler.api.requestSchema.params;
-    assert.deepEqual(params.required.sort(), ["bankAccountId", "id"], Handler.handlerName);
+    // `.sort()` 就地改陣列 —— 而個陣列依家係凍嘅（見最尾嗰條測試）。排個副本。
+    assert.deepEqual([...params.required].sort(), ["bankAccountId", "id"], Handler.handlerName);
     for (const name of ["id", "bankAccountId"]) {
       assert.equal(params.properties[name].pattern, "^[1-9][0-9]{0,18}$",
         `${Handler.handlerName}.${name} must reject 0, negatives and anything non-numeric at the edge`);
@@ -227,4 +228,20 @@ test("a route without a bankAccountId does not invent one", async () => {
   });
   assert.equal(seen.supplierId, 7);
   assert.ok(!("bankAccountId" in seen), "a create must not carry a NaN bankAccountId");
+});
+
+/**
+ * `Object.freeze` 係淺嘅，所以「response schema 講唔出帳號」呢個結構性主張，本身要靠
+ * 個 schema 真係改唔到先成立。REV-041 指出 `MASKED_BANK_SCHEMA.properties` 當時仲係
+ * 寫得到嘅。呢條測試釘住修正 —— 而且係試**加一個帳號欄位落遮罩 schema**，即係真正
+ * 要擋嗰件事，唔係隨便試改一個屬性。
+ */
+test("the masked schema cannot have an account field added to it at runtime", () => {
+  assert.throws(
+    () => { "use strict"; MASKED_BANK_SCHEMA.properties.accountNumber = { type: "string" }; },
+    TypeError
+  );
+  assert.equal(MASKED_BANK_SCHEMA.properties.accountNumber, undefined);
+  assert.ok(Object.isFrozen(MASKED_BANK_SCHEMA.properties));
+  assert.ok(Object.isFrozen(BANK_REVEAL_RESPONSE_SCHEMA.properties));
 });
