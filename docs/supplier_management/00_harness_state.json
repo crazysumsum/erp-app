@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 140,
+  "revision": 141,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-031",
+  "current_task": null,
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "a3bf31e97331460a78788bd57b81ba1e8948574a",
+    "code_commit": "d289154f2e310b58feb3abc68c30967b9a8e29e5",
     "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-031",
-    "default_commit": "2aa0965f1445095a3a9370069e31117722155977",
+    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "default_commit": "d289154f2e310b58feb3abc68c30967b9a8e29e5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app-worktrees/supplier-task-031 (codex/supplier-task-031, cut from main 860183a)",
+      "workspace": "erp-app (main); no supplier worktree is open",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -58,7 +58,7 @@
     "TASK-028": "DONE",
     "TASK-029": "DONE",
     "TASK-030": "DONE",
-    "TASK-031": "IN_PROGRESS",
+    "TASK-031": "DONE",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
@@ -2006,6 +2006,28 @@
       "source_ref": "After the M-3, L-1, L-2 and L-3 fixes: supplierApproval + supplierSettings integration 25/25 PASS, client 71/71, lint clean, Playwright 17/17. Five key mutations re-run and all still RED: M1 (replay branch), M6 (closed-request conflict), XA (request read FOR UPDATE), M4 (cross-Supplier scope guard), M8 (policy-off auto-approve). X5 now RED where it previously survived. The racing test dropped from 333ms to 16ms once the 300ms sleep was shown not to be load-bearing. git diff against server/src and client/src verified empty after every mutation.",
       "actor": "Harness agent via scripted mutation and targeted suites",
       "observed_at": "2026-09-21T09:01:50+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Required CI green on the exact TASK-031 merge candidate",
+      "code_commit": "aff2ebf669d86103424b592a247ebb47d4991876",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 35549604245, headSha aff2ebf669d86103424b592a247ebb47d4991876, conclusion success: Lint 28s, Dependency audit 18s, Build frontend 16s, Test (server + client, MySQL integration) 4m8s. All four required checks, first attempt, no rerun. The run's headSha was read back and compared against the PR's headRefOid rather than assumed. Earlier on this branch, at head 8953514, run 35330466164 first failed on DEF-017's itemConcurrency 'Last-active race' with the same {200:1, 500:1} signature already recorded against commit 5fc3421, which is an Item Management defect with no supplier code in its path; a rerun of the failed job passed and the other three checks were green throughout.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-21T09:11:11+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-031 merged to main via PR #115, closing PHASE-002's build work",
+      "code_commit": "d289154f2e310b58feb3abc68c30967b9a8e29e5",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
+      "status": "PASS",
+      "source_ref": "gh pr view 115 reports state MERGED, mergedAt 2026-09-21T01:10:14Z, mergeCommit d289154f. Pre-merge gates were observed, not assumed: origin/main had not moved from 860183a since the branch was cut, the branch was 4 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head aff2ebf, and run 35549604245 was green on that exact sha. REV-032 had returned APPROVED with 0 critical and 0 high. After the merge, the source_fingerprint measured on main is 31ef4906, identical to the reviewed branch head's, so the merge carried no source the review and CI had not seen. Local main fast-forwarded to d289154, the worktree was removed and the local and remote codex/supplier-task-031 deleted after checking clean, zero unpushed and --merged main.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-21T09:11:11+08:00"
     }
   ],
   "pending_decisions": [
@@ -3083,16 +3105,20 @@
     {
       "id": "DEF-020",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "client/src/pages/suppliers/SupplierCreatePage.vue",
         "client/src/components/suppliers/SupplierApprovalPanel.vue",
         "REV-031",
         "TASK-030"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "client/test/pages/suppliers/create.test.js",
+        "docs/supplier_management/implementation/29_rev_032_independent_review.md",
+        "evidence/20260921T010217-eeda99b46cb6/run.json"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-031 is implemented and independently reviewed on codex/supplier-task-031. REV-032 returned APPROVED at 8953514 with four M findings; M-1, M-2, M-3 and L-1/L-2/L-3/L-5 are fixed, and M-4 is recorded as a stated limitation rather than closed. Still required before DONE: required CI green on the exact new head, then merge. DEF-020's fix has landed on this branch and is verified discriminating (R6b/R7/R7b all RED), but it stays OPEN until this branch merges; close it with the merge, citing client/test/pages/suppliers/create.test.js and the client suite evidence. M-4 is the one piece of T31's Description left unproven: nothing in supplier_management drives an actual HTTP request through dispatcher to handler to service to MySQL, because the handler tests are declarative and both e2e specs mock the API. Worth scheduling against server/test/business-master/http.integration.test.js as the template; it is already in this suite's argv. REV-032 L-4 is left alone deliberately: cleanup()'s OR request_id IN ('req-int','req-race') is an unscoped global sweep, it is pre-existing, and T31 deepens the dependence on it without introducing it. DEF-019 and DEF-017 both redden this module's CI for reasons of their own; DEF-017 did so once on this branch with the same {200:1, 500:1} signature already recorded, and a rerun passed. HD-025 keeps both with Item Management, so the response is a rerun, not a change here. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-031 is DONE and merged at d289154f, and PHASE-002 is now complete in full: 05_development_tasks.md:222 scopes it as TASK-025 through TASK-031 and all seven are DONE. REV-032 returned APPROVED and its M-1, M-2, M-3 and L-1/L-2/L-3/L-5 were fixed before the merge. DEF-020 is CLOSED by this merge. The next step is a Phase-level decision, not another task: whether PHASE-002 formally closes and what PHASE-003 opens with. TASK-032 through TASK-037 are PHASE-003 (Bank persistence and crypto), which needs a new migration, AES-256-GCM and two key rings as an unconditional startup requirement. That is the Product Owner's call and has not been asked. One acceptance gap is recorded rather than closed (REV-032 M-4): T31's Description asks for HTTP flow verification and no layer in supplier_management drives an actual request through dispatcher to handler to service to MySQL, because the handler tests are declarative and both e2e specs mock the API. The binding Acceptance criteria and Verification block do not require it and all pass. Template if it is scheduled: server/test/business-master/http.integration.test.js, already in this suite's argv. REV-032 L-4 is also left alone: cleanup()'s OR request_id IN ('req-int','req-race') is an unscoped global sweep, pre-existing, and T31 deepens the dependence on it without introducing it. Branch naming changed by user instruction on 2026-09-21: new worktrees use claude/<name>, not codex/<name>. Open and routed out of this module, none blocking: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-017 having reddened this branch once; DEF-018 is the shared PasswordReasonDialog never submitting on Enter. HD-025 keeps all of them with their owners, so the response to their CI failures is a rerun. Also observed on 2026-09-21: the two unrelated worktrees under /private/tmp (erp-customer-management-phase-001 and erp-item-management-task-037) were emptied by the OS tmp reaper during a three-day gap; their directories survive with zero files and no .git pointer, and .git/worktrees/ was already absent, so git worktree prune only cleared dangling entries. The branches codex/customer-management-phase-001 (3757d42) and codex/item-management-task-037 (03f7011) are intact in the repository; any uncommitted work those worktrees held is gone. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
