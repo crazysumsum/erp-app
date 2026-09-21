@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 164,
+  "revision": 171,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": null,
+  "current_task": "TASK-034",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
-    "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
-    "source_fingerprint": "9db31af09c59a794e096b714decea50b61029e930d4431147aaa990e0845c351",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "plan": "f701e9b041707cd6ce0f2911f1090d1e4b387e067f1c90fb2fb212267025f467",
+    "code_commit": "dd3b29868b53508ca72b07a0293602466fb81ce1",
+    "source_fingerprint": "4ea061ee6638cae27e12529c0e6999fba64f51ae73056f1f4cae445ed2e52742",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-034",
     "default_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
@@ -21,7 +21,7 @@
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app (main); no supplier worktree is open",
+      "workspace": "erp-app-worktrees/supplier-task-034 (claude/supplier-task-034, cut from main b1e3aa8)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -61,7 +61,7 @@
     "TASK-031": "DONE",
     "TASK-032": "DONE",
     "TASK-033": "DONE",
-    "TASK-034": "PENDING",
+    "TASK-034": "IN_PROGRESS",
     "TASK-035": "PENDING",
     "TASK-036": "PENDING",
     "TASK-037": "PENDING",
@@ -689,6 +689,82 @@
         "supplier_bank_accounts table as defined in 03_design_spec.md section 5.8",
         "erp_dev@127.0.0.1:3306 (test-only schema)",
         "forward-only new table; no existing rows and no other table altered"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-030-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User decision on 2026-09-21 answering HD-030, which named .github/workflows/ci.yml explicitly in the option the Product Owner chose.",
+      "recorded_at": "2026-09-21T15:05:04+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "code_commit": "b1e3aa86354d1538528010772a8cf2b359d58f9f",
+      "scope": [
+        ".github/workflows/ci.yml (four SUPPLIER_BANK_* environment variables, test-only generated keys)",
+        "server/.env.example (guidance that the Bank key rings are required once the capability is deployed)",
+        "no production key material is committed by this approval"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-031-PLAN",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "User decision on 2026-09-21 answering HD-031, which named 00_project_profile.json and quantified the stranded records before the choice was made.",
+      "recorded_at": "2026-09-21T16:43:37+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "b0b63fbf99e0f1dbbd6f725832826c0818a223af",
+      "scope": [
+        "supplier-management",
+        "00_project_profile.json: SUPPLIER_BANK_* added to env_keys on the eight DB-backed suites",
+        "the two secret-bearing variables added to redaction_env_keys",
+        "no change to any suite's argv, stages, min_tests or required checks"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-031-PLAN-FINAL",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-binds the HD-031 plan approval after a second, mechanical baseline move. HD-030 approved touching .github/workflows/ci.yml and HD-031 approved editing the profile and rebuilding the baseline; declaring ci.yml in the manifest's approval_required_paths is the consequence of those two decisions rather than a new one, and it is exactly what this module did for .gitignore under HD-017. The manifest is hashed into the PLAN baseline like the profile, so the hash moved a second time, from db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087 to f701e9b041707cd6ce0f2911f1090d1e4b387e067f1c90fb2fb212267025f467. APPROVAL-HD-031-PLAN is retained unrewritten and is superseded by this record. Nothing about any underlying decision changed; only the baseline the record binds to. No requirement, design, phase, task, suite, test flag or suite argv changed.",
+      "recorded_at": "2026-09-21T16:45:27+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f701e9b041707cd6ce0f2911f1090d1e4b387e067f1c90fb2fb212267025f467",
+      "code_commit": "dd3b29868b53508ca72b07a0293602466fb81ce1",
+      "scope": [
+        "supplier-management",
+        "00_project_profile.json: SUPPLIER_BANK_* in env_keys on the eight DB-backed suites, secrets in redaction_env_keys",
+        "00_module_manifest.json: .github/workflows/ci.yml declared in approval_required_paths"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-030-SCOPE-FINAL",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-binds APPROVAL-HD-030-SCOPE to the plan baseline after the two moves HD-031 authorised. The underlying decision is unchanged: the Product Owner's 2026-09-21 answer to HD-030 named .github/workflows/ci.yml explicitly in the option chosen, and approved provisioning test-only generated keys there so the Bank capability can be deployed fail-closed. The original record is retained unrewritten.",
+      "recorded_at": "2026-09-21T16:45:35+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f701e9b041707cd6ce0f2911f1090d1e4b387e067f1c90fb2fb212267025f467",
+      "code_commit": "dd3b29868b53508ca72b07a0293602466fb81ce1",
+      "scope": [
+        "supplier-management",
+        ".github/workflows/ci.yml",
+        "server/.env.example",
+        "docs/supplier_management/00_project_profile.json",
+        "docs/supplier_management/00_module_manifest.json",
+        "no production key material is committed by this approval"
       ],
       "expires_at": null
     }
@@ -2383,6 +2459,39 @@
       "source_ref": "gh pr view 118 reports state MERGED, mergedAt 2026-09-21T06:42:04Z, mergeCommit ad21c1f2. Pre-merge gates observed, not assumed: origin/main was verified to be an ancestor of HEAD so there was nothing left to merge in, the branch was 14 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head 342fac4, and run 35568864081 was green on that exact sha. REV-038 had returned APPROVED with 0 critical and 0 high, after REV-035, REV-036 and REV-037 each returned CHANGES_REQUESTED and every finding proved real. One thing to state precisely rather than gloss: the source_fingerprint measured on main after the merge, 9db31af0, does NOT match the value the ledger carried at revision 163, e86a87ae. That is not drift in this task's work. The recorded value predates this branch merging origin/main at ffced96, which brought PR #120's customer-management source into the branch; the fingerprint covers server and client broadly, so it moved. The check that actually carries meaning was run instead: git diff between the reviewed and CI-green branch head 342fac4 and merged main ad21c1f, restricted to every supplier-owned source path plus server/test and client/test, is empty. The merge carried no supplier source the review and CI had not seen.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-21T14:42:39+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "The PLAN baseline moved: the profile now declares the Bank key rings, which strands records bound to the old hash",
+      "code_commit": "b0b63fbf99e0f1dbbd6f725832826c0818a223af",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "4ea061ee6638cae27e12529c0e6999fba64f51ae73056f1f4cae445ed2e52742",
+      "status": "PASS",
+      "source_ref": "00_project_profile.json is hashed into the PLAN baseline, so adding the four SUPPLIER_BANK_* variables to env_keys moved it from a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154 to db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087. Recorded plainly rather than left for someone to notice: 83 of 112 observations and 6 approvals were bound to the old hash, namely APPROVAL-HD-017-PLAN, APPROVAL-HD-017-RISK, APPROVAL-HD-017-RISK-DEF012, APPROVAL-HD-017-SCOPE, APPROVAL-HD-027-SCHEMA, APPROVAL-HD-030-SCOPE, along with 78 evidence runs. Their content all still holds; what they no longer do is point at the current baseline. The old records are deliberately not rewritten. Reviews are unaffected because they bind to the design hash, which has not moved. The edit was not optional. harness_runner.py:146 forwards only the variables a suite lists in env_keys, and from this task the application refuses to start without the Bank key rings, so every evidence run would have failed closed. The two secret-bearing variables were added to redaction_env_keys at the same time, which is what that field exists for. Eight suites were updated, every one that already declared DB_HOST. The Product Owner was shown the exact cost before the edit and chose it over running the suites outside run_check, on the grounds that the environment contract genuinely changed under HD-030 and the profile is what describes that contract.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T16:43:12+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-034 fail-closed verified, and a real bug found before review",
+      "code_commit": "b0b63fbf99e0f1dbbd6f725832826c0818a223af",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "4ea061ee6638cae27e12529c0e6999fba64f51ae73056f1f4cae445ed2e52742",
+      "status": "PASS",
+      "source_ref": "Two things worth recording from building this task. First, the fail-closed behaviour HD-030 approved was verified rather than assumed: with the four environment variables removed, business-master/http.integration.test.js dies on 'SupplierBankCrypto requires both the bankEncryption and bankLookup key rings' -- the whole application refuses to start, which is what design section 1700 demands and is not the same as the bank routes failing. Second, all five step-up route body schemas initially omitted the password field. passwordReauth.js reads req.body.password before schema validation runs, so the omission would not have lost the password; it would have killed every write and reveal on additionalProperties: false with an unintelligible 400, while every declarative assertion in the handler test stayed green. It was found by checking the convention against approvalSchemas.js and supplierSchemas.js rather than by a test, and a test that pins it was added afterwards.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T16:43:12+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-034 evidence carries no key material, verified after a first check that was not checking",
+      "code_commit": "b0b63fbf99e0f1dbbd6f725832826c0818a223af",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "4ea061ee6638cae27e12529c0e6999fba64f51ae73056f1f4cae445ed2e52742",
+      "status": "PASS",
+      "source_ref": "The four evidence directories were swept for any 44-character base64 string and none was found, so the two secret-bearing variables added to redaction_env_keys are doing their job and nothing committed here carries key material. Recording the first attempt too, because it was the same failure this module keeps finding: the sweep grepped for $SUPPLIER_BANK_ENCRYPTION_KEYS in a shell where that variable had not been exported, so it searched for the empty string, matched every file, and reported four leaks that did not exist. A check that cannot fail and a check that always fails are the same kind of broken.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T16:45:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -2791,6 +2900,33 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-21: 剝排版，拒內容. Strip an explicit formatting set -- whitespace, Unicode format and invisible characters, Unicode dashes and the common printed separators -- and reject anything else outside [0-9A-Z] without rewriting it. The property that makes this work is that the formatting list being incomplete no longer matters in the dangerous direction: an unlisted separator is now loudly refused, which a user sees and can correct, rather than silently altering the account. The blocklist's incompleteness fails closed."
+    },
+    {
+      "id": "HD-030",
+      "impact": "MAJOR",
+      "question": "TASK-034 adds the six Bank routes, and adding them is what deploys the Bank capability. Handlers are constructed eagerly at startup (handlerRegistry.js:76) and SupplierBankService refuses to exist without a SupplierBankCrypto, which was verified: normalizeSupplierConfig({}) returns null for both rings and construction throws, so an unprovisioned environment would fail to start the whole application. Design section 1700 requires exactly that fail-closed behaviour and explicitly forbids the alternative of disabling the bank endpoints and starting anyway, because the failure would then surface during a payment instead. The practical problem is that CI defines no SUPPLIER_BANK_* variables, so merging T34 would turn the existing test that builds a real application red. Options: provision test-only key rings in CI and locally and keep the design's fail-closed behaviour; construct the crypto lazily so an unprovisioned environment starts with only the bank routes failing, which the design forbids and would need a recorded deviation; or ship only the masked list and hold the five command routes until keys are arranged.",
+      "affected_ids": [
+        "TASK-034",
+        ".github/workflows/ci.yml",
+        "server/.env.example",
+        "SupplierBankService.js",
+        "SUP-CAP-03"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21: CI 同本機注入測試用 key，照設計 fail-closed. The Bank capability is deployed by T34 and the two key rings become an unconditional startup requirement from that point. CI receives four SUPPLIER_BANK_* variables holding freshly generated test-only keys, per design section 1700's instruction that tests inject fixed fake keys and that no fixed production key is ever committed. The accepted cost, stated when the decision was taken: any environment without configured keys, including a colleague's laptop, will refuse to start after this merges, so the change needs announcing and server/.env.example must carry usable guidance."
+    },
+    {
+      "id": "HD-031",
+      "impact": "MAJOR",
+      "question": "The harness evidence runner forwards only the variables a suite declares in env_keys (harness_runner.py:146), and the supplier suites declared only DB_*. From TASK-034 the application refuses to start without the Bank key rings, which is the fail-closed behaviour HD-030 approved and which was verified, so every evidence run would have failed closed. Fixing it means adding the four SUPPLIER_BANK_* variables to the profile, and 00_project_profile.json is hashed into the PLAN baseline, so the edit moves that baseline and strands 83 of the observations, 6 approvals including HD-027 and HD-030 themselves, and 78 evidence runs. Reviews are unaffected because they bind to the design hash. Options: edit the profile and rebuild the baseline; keep the baseline and run T34's suites outside run_check, losing run.json evidence for them and meeting the same wall on every later Bank task; or withdraw the Bank command routes so the capability is not deployed and the profile need not change.",
+      "affected_ids": [
+        "TASK-034",
+        "00_project_profile.json",
+        "HD-030",
+        "PLAN baseline"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21: 改 profile，偵偵地重建基線. The exact cost -- 83 observations, 6 approvals, 78 evidence runs bound to the old hash -- was stated before the decision was taken. The reasoning given: the environment contract genuinely changed under HD-030, and describing that contract is what the profile is for. The old records are not to be rewritten; the move is to be recorded plainly instead."
     }
   ],
   "external_actions": [
@@ -3281,7 +3417,11 @@
     "evidence/20260921T061613-949b66f2c0ab/run.json",
     "evidence/20260921T061617-f9807d3807ac/run.json",
     "evidence/20260921T061619-b349bdbfa930/run.json",
-    "evidence/20260921T061623-8463eb8f2891/run.json"
+    "evidence/20260921T061623-8463eb8f2891/run.json",
+    "evidence/20260921T084400-a77f159e6e84/run.json",
+    "evidence/20260921T084405-8292f30ec573/run.json",
+    "evidence/20260921T084411-7bbcdc693840/run.json",
+    "evidence/20260921T084415-e2ffcea635ab/run.json"
   ],
   "defects": [
     {
@@ -3581,5 +3721,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-033 is DONE and merged at ad21c1f2. PHASE-003 has TASK-034 through TASK-037 remaining, all PENDING. T32 and T33 together deliver the Bank table, the crypto primitives and the domain service; no production code imports SupplierBankService yet, because the six HTTP routes from design 6.6 are not written. Three practices came out of T33's four review rounds and should be applied to T34 onward. First, prefer deleting a test double to improving it: this task's integration test already talks to real MySQL and should be rebuilt on a real MySqlDatabaseService over a real pool, about fifteen lines with transactionTimeoutMs set, which closes thirteen recorded divergences at once because there is no second copy to be wrong. Second, where a double is unavoidable it must reproduce the real class, wrapping depth and isolation level, and should import the real thing rather than re-describe it. Third, when a fix introduces a discriminator, mutate it to the correct implementation and require something to turn red; ordinary mutation only breaks correct code and could not have caught REV-037's H-1. An equivalent mutant is not a gap -- verify it, document it, and confirm a non-equivalent mutation on the same code does go red. One mutation is knowingly unkilled and should be closed by the rebuild above: forcing a commit failure against the integration double needs the real service. Resolved during this task: the migration-numbering hazard carried since TASK-032. codex/customer-management-phase-001 merged as PR #120 having renumbered to 0039 through 0046, clear of supplier's 0037, and a duplicate-number sweep over the migration directory returns nothing. Worth watching: DEF-019 needed two reruns on this branch, the first time in this session it has needed more than one. Main is green, so it is not deterministic, but PR #120 added eight migrations and this branch added roughly thirty tests including nine that exercise a shared erp_dev, and DEF-019 deep-equals SHOW CREATE TABLE including the AUTO_INCREMENT counter. Supplier work does not cause it and does not touch item tables, but it plausibly raises its hit rate, and later supplier tasks will do the same. HD-025 keeps it with Item Management. Deliberately not fixed and carried forward: REV-035 M-3, the advisory cross-Supplier duplicate warning; the reveal response shape from design 6.6, which belongs to the route task; BANK_ACCOUNT_DEFAULT_RACE, unreachable today and documented as an uncovered defensive branch; eleven further double divergences, all currently unobserved; and from REV-034 the untested trigger check, VIRTUAL accepted where the design says STORED, and CHECK constraints unread. Also open, routed out of this module under HD-025: DEF-017, DEF-018 and DEF-019."
+  "next_safe_action": "TASK-034 is implemented on claude/supplier-task-034. The six Bank routes from design 6.6 exist, which means the Bank capability is now deployed and the two key rings are an unconditional startup requirement; that fail-closed behaviour was verified by removing the variables and watching the application refuse to start. CI carries four test-only generated keys under HD-030, and server/.env.example now says plainly that the values are no longer optional. The PLAN baseline moved under HD-031 because the profile had to declare those variables for evidence runs to work at all. 83 observations, 6 approvals and 78 evidence runs are bound to the old hash; their content still holds and none was rewritten. APPROVAL-HD-031-PLAN re-binds the plan approval to the new hash. Still required before this can be called done: required CI green on the exact merge candidate, and an actual independent review. Worth the reviewer's attention in particular: the five step-up schemas initially omitted password, which would have broken every write and reveal while every declarative assertion stayed green, and it was found by reading a neighbouring module's conventions rather than by a test. Closed here, carried since TASK-031: REV-032 M-4, the absence of any layer driving dispatcher to handler to service to MySQL over the wire. The new HTTP test does that and asserts the whole response body carries no account or crypto metadata. Recorded deviation: design 6.6's reveal example includes expiresInSeconds and this does not implement it, because no server-side state corresponds to it. Still open in PHASE-003: the Bank UI (T35), the two rotation scripts from design 2.6, and T36 and T37. Carried from REV-034 and REV-038: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, the knowingly unkilled commit-failure mutation, and the recommendation to rebuild the integration double on a real MySqlDatabaseService."
 }
