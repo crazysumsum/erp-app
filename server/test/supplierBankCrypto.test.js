@@ -84,12 +84,20 @@ test("swapping the crypto context of two rows under one Supplier also fails", ()
 });
 
 test("the AAD cannot be forged by shifting the boundary between its two parts", () => {
-  // 純分隔符號嘅寫法入面，supplier "1" + context "2x" 同 supplier "1" + context "2"
-  // 加個 "x"，會 encode 成同一串 bytes。長度前綴就係為咗令呢個做唔到。
+  // 第一版呢個測試用 supplierId 1 / ctx "2x" 對 12 / "x"，而佢**過唔到**變異測試：
+  // 有個 `|ctx:` 分隔符號喺中間，所以嗰兩對根本唔會撞。真正嘅碰撞要值本身含住個
+  // 分隔符號 —— sup "1|ctx:2" + ctx "3" 同 sup "1" + ctx "2|ctx:3" 喺冇長度前綴嘅
+  // 寫法之下，兩邊都係 `sup:1|ctx:2|ctx:3`。
+  //
+  // 呢兩個輸入今日到唔到：supplierId 係數字，crypto_context 係 server 出嘅 UUID。
+  // 所以呢條測試證嘅係個格式本身冇歧義，唔係一條而家行得通嘅攻擊路徑。留住佢係
+  // 因為長度前綴真係喺碼入面，而一段冇人測過嘅防禦遲早會俾人「簡化」走。
   const crypto = cryptoWith();
-  const sealed = crypto.encryptAccountNumber({ supplierId: 1, cryptoContext: "2x", accountNumber: ACCOUNT });
+  const sealed = crypto.encryptAccountNumber({
+    supplierId: "1|ctx:2", cryptoContext: "3", accountNumber: ACCOUNT
+  });
   assert.throws(
-    () => crypto.decryptAccountNumber({ supplierId: 12, cryptoContext: "x", ...sealed }),
+    () => crypto.decryptAccountNumber({ supplierId: "1", cryptoContext: "2|ctx:3", ...sealed }),
     /failed authentication/
   );
 });
