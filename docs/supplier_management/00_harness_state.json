@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 152,
+  "revision": 154,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": null,
+  "current_task": "TASK-033",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
-    "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
-    "worktree": "/Users/sam/Documents/workspace/erp-app",
+    "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+    "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-033",
     "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
@@ -21,7 +21,7 @@
     "instance_id": "supplier-phase-001-local-mysql-v2",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-app (main); no supplier worktree is open",
+      "workspace": "erp-app-worktrees/supplier-task-033 (claude/supplier-task-033, cut from main 5125f32)",
       "mysql-schema": "erp_dev@127.0.0.1:3306 (test-only)",
       "web-port": "NOT_ALLOCATED"
     },
@@ -60,7 +60,7 @@
     "TASK-030": "DONE",
     "TASK-031": "DONE",
     "TASK-032": "DONE",
-    "TASK-033": "PENDING",
+    "TASK-033": "IN_PROGRESS",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
     "TASK-036": "PENDING",
@@ -2203,6 +2203,39 @@
       "source_ref": "gh pr view 116 reports state MERGED, mergedAt 2026-09-21T02:34:24Z, mergeCommit 9f6fc43f. Pre-merge gates were observed, not assumed: origin/main was verified to be an ancestor of HEAD so there was nothing to merge in, the branch was 10 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head 3c00a1e, and run 35554092438 was green on that exact sha. REV-034 had returned APPROVED with 0 critical and 0 high, after REV-033 returned CHANGES_REQUESTED on the same task and all three of its H findings were fixed. After the merge, the source_fingerprint measured on main is 05dc388b, identical to the reviewed branch head's, so the merge carried no source the review and CI had not seen. Local main fast-forwarded to 9f6fc43, the worktree was removed and the local and remote claude/supplier-task-032 deleted after checking clean, zero unpushed and --merged main. First branch merged under the claude/ prefix.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-21T10:34:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 opened on claude/supplier-task-033; DEF-021 closed first because T33 is the write API",
+      "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+      "status": "PASS",
+      "source_ref": "main and origin/main were both read as 5125f32 before the worktree was cut. DEF-021 was closed before the service was written, under HD-029, because T33 is the first caller and the normalized string is what gets encrypted, HMACed and measured -- changing it after rows exist means re-encrypting the table. The split was verified empirically against the reviewer's own cases before the tests were written: all ten of REV-033's formatting bypasses collapse, and the three inputs REV-034 showed collapsing into one stored account are now each refused. Three mutations confirm it discriminates: removing the reject step, widening the formatting set back to everything non-alphanumeric, and narrowing it to whitespace only.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T10:57:54+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 mutation campaign: fourteen mutations, one survived and was the author's own vacuous assertion",
+      "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+      "status": "PASS",
+      "source_ref": "Each applied alone, reverted immediately, git status asserted clean between runs. Thirteen RED first time. T11 survived: re-encrypting an account with a fresh crypto_context instead of the row's own left every test green, because the assertion checked that the UPDATE's bind parameters did not contain the old context -- and crypto_context is never in that UPDATE's SET list, so the parameters never contain any context at all. The assertion held on both sides, which is the same shape REV-030 and REV-034 kept finding. Replaced with the property that actually matters: the re-encrypted ciphertext must still decrypt under the context the row stores. A first attempt at that fix was also wrong -- the chosen test account was twelve characters and GCM ciphertext length equals plaintext byte length, so the ciphertext and the IV were both twelve bytes and the buffer picked was the wrong one. Fixed by choosing a length that does not collide. The other thirteen: reject step removed, formatting set widened back to everything non-alphanumeric, formatting set narrowed to whitespace, list using SELECT *, write permission check removed, duplicate check using only the active key, cross-Supplier duplicate blocking instead of warning, warning naming the other Supplier regardless of permission, update always re-encrypting, deactivate leaving is_default set, setDefault skipping the row lock, reveal swallowing an audit failure, and the crypto type check removed.",
+      "actor": "Harness agent via scripted mutation and targeted suites",
+      "observed_at": "2026-09-21T10:58:50+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 turns T33's manual DB plaintext check into an automated scan with its own control",
+      "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+      "status": "PASS",
+      "source_ref": "T33's Verification block asks for a manual DB check that the fixture plaintext appears zero times in the Bank table, the audit log and the system log. A manual check does not get done every time, so it is automated: the test reads the column list from information_schema and scans every row and every column of supplier_bank_accounts and supplier_audit_logs for a unique fixture account, reading binary columns as latin1 so a plaintext hidden in a BLOB would still be found. It runs after both a create and an update that re-encrypts. The test carries its own control -- after the two assertions it plants the plaintext into account_holder_name and requires the scanner to find it, so 'nowhere' is not just a broken scanner. The system-log half is not covered here: nothing in this service logs, and there is no log sink in the test environment to search.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T10:58:50+08:00"
     }
   ],
   "pending_decisions": [
@@ -2598,6 +2631,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-21: 字母數字白名單. NFKC, uppercase, keep only [0-9A-Z], reject when the result is empty or exceeds the bound. The allowlist holds because account identifiers are alphanumeric by definition (IBAN is specified as [0-9A-Z], domestic account numbers are digits), so any other character in a typed account number is formatting. Uppercasing follows from IBAN's letters being case-insensitive. A blocklist was rejected because its problem is not which ten characters it misses today but that the next new dash will miss too."
+    },
+    {
+      "id": "HD-029",
+      "impact": "MAJOR",
+      "question": "DEF-021, carried out of REV-034 M-2 and gating T33 because T33 is the write API. The account normalizer silently strips every character outside [0-9A-Z]. For formatting that is not merely right but required -- design 6.6's own create example is \"123-456789-001\" -- but for content characters it means three different typed strings become one stored account, and the stored value is what eventually gets paid. NFKC also runs before the allowlist, so one-half becomes 12. Options: define an explicit formatting set to strip and reject everything else non-alphanumeric; keep stripping silently and rely on T33's format validation; or defer until T33 is delivered.",
+      "affected_ids": [
+        "DEF-021",
+        "TASK-033",
+        "SupplierBankCrypto.js",
+        "REV-034"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21: 剝排版，拒內容. Strip an explicit formatting set -- whitespace, Unicode format and invisible characters, Unicode dashes and the common printed separators -- and reject anything else outside [0-9A-Z] without rewriting it. The property that makes this work is that the formatting list being incomplete no longer matters in the dangerous direction: an unlisted separator is now loudly refused, which a user sees and can correct, rather than silently altering the account. The blocklist's incompleteness fails closed."
     }
   ],
   "external_actions": [
@@ -3068,7 +3114,11 @@
     "evidence/20260921T022355-275a2ca82ae2/run.json",
     "evidence/20260921T022359-0f0fb8f9430d/run.json",
     "evidence/20260921T022402-51ab5d0c25a9/run.json",
-    "evidence/20260921T022405-4e4430a52eb8/run.json"
+    "evidence/20260921T022405-4e4430a52eb8/run.json",
+    "evidence/20260921T025754-3addc84b03e6/run.json",
+    "evidence/20260921T025758-273c5b3043d2/run.json",
+    "evidence/20260921T025802-2b5dbb2878bb/run.json",
+    "evidence/20260921T025806-2b462a3bf35f/run.json"
   ],
   "defects": [
     {
@@ -3352,16 +3402,20 @@
     {
       "id": "DEF-021",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "REV-034",
         "TASK-032",
         "server/src/modules/supplier/SupplierBankCrypto.js",
         "HD-028"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "server/src/modules/supplier/SupplierBankCrypto.js",
+        "server/test/supplierBankCrypto.test.js",
+        "HD-029"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-032 is DONE and merged at 9f6fc43. PHASE-003 is open and TASK-033 through TASK-037 remain PENDING. T32 delivered only the table and the crypto primitives: migration 0037 creating supplier_bank_accounts exactly as design spec 5.8 defines it, approved under HD-027, and SupplierBankCrypto with AES-256-GCM, a per-row 96-bit IV, an AAD bound to supplierId and crypto_context encoded UTF-16LE, and an HMAC-SHA-256 blind index computed over the whole lookup ring. No production code imports SupplierBankCrypto yet; T33 is the Bank domain service. Open and needing a Product Owner answer before T33 wires the write API: DEF-021, the account normalizer silently strips disallowed characters instead of rejecting, so three different typed strings can become one stored account and NFKC injects digits ahead of the allowlist. HD-028 answered which characters are kept and was never asked what happens to the rest. Carried into T33 from REV-034, none blocking: the trigger check in the compatibility assertion has no test because erp_user lacks SUPER while binary logging is on, and the reviewer's suggestion of injecting a trigger list through the existing table seam would cover the throw path without DDL privilege; L-3 accepts VIRTUAL where the design says STORED; L-4 does not read CHECK constraints; L-6 means the decrypt catch now reports a configuration error as a data-integrity error, which misdirects an operator during rotation. Still to do in PHASE-003 beyond T33: wiring the Bank capability so the two key rings become an unconditional startup requirement once it deploys, and the two rotation scripts from design 2.6. SupplierBankCrypto's shape was built for them -- each row records its own encryption and blind-index key IDs, so rotation can advance row by row, be interrupted and resume. Merge-ordering hazard, now one step sharper: main carries 0037, so codex/customer-management-phase-001 collides with 0035 and 0036 and must renumber past 0037. Open and routed out of this module: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-018 is the shared PasswordReasonDialog never submitting on Enter; HD-025 keeps all three with their owners. Neither Item Management defect fired on this branch. Carried forward: DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493, accepted as a recorded exception under HD-026 and routed to Purchasing with the permission-catalogue drift in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-033 is implemented on claude/supplier-task-033. DEF-021 was closed first, under HD-029, because T33 is the write API and the normalized string is what gets encrypted, HMACed and measured. The service provides masked list, create, update, setDefault, deactivate and reveal, with no delete. All four DEVELOPER suites PASS with evidence, 367 server tests up from 338. Fourteen mutations were run; the one that survived was the author's own vacuous assertion and was replaced. Still required before this can be called done: required CI green on the exact merge candidate, and an actual independent review. Not in T33's scope and still open in PHASE-003: the six HTTP routes from design 6.6, so this service has no production caller yet; wiring the Bank capability so the two key rings become an unconditional startup requirement; the two rotation scripts from design 2.6; and the Bank UI, which is T35. Carried from REV-034 and still open: the trigger check in the compatibility assertion has no test because erp_user lacks SUPER while binary logging is on, and the reviewer's suggestion of injecting a trigger list through the existing table seam would cover the throw path; L-3 accepts VIRTUAL where the design says STORED; L-4 does not read CHECK constraints; L-6 means the decrypt catch reports a configuration error as a data-integrity error, which misdirects an operator during rotation. One thing worth a look in review: maskBankAccount in SupplierBankCrypto and toMaskedBankResponse in supplierProjections now both implement the short-account masking rule, with different display characters. The service uses the projection, so maskBankAccount is reachable only from T32's tests. Two implementations of one rule can drift."
 }
