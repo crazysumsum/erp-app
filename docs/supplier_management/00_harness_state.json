@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 152,
+  "revision": 164,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
-    "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
+    "code_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
+    "source_fingerprint": "9db31af09c59a794e096b714decea50b61029e930d4431147aaa990e0845c351",
     "worktree": "/Users/sam/Documents/workspace/erp-app",
-    "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
+    "default_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -60,7 +60,7 @@
     "TASK-030": "DONE",
     "TASK-031": "DONE",
     "TASK-032": "DONE",
-    "TASK-033": "PENDING",
+    "TASK-033": "DONE",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
     "TASK-036": "PENDING",
@@ -1097,6 +1097,54 @@
       "reviewer": "agent-skills:security-auditor, the same agent as REV-033 resumed with its context, reviewing dda9a40",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/32_rev_034_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-035",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033)",
+      "reviewer": "agent-skills:security-auditor, a fresh agent reviewing 8718fa7",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/34_rev_035_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-036",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033 REV-035 remediation)",
+      "reviewer": "agent-skills:security-auditor, the same agent as REV-035 resumed with its context, reviewing aebb6cc",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/35_rev_036_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-037",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033 REV-036 remediation)",
+      "reviewer": "agent-skills:security-auditor, the same agent resumed with its context, reviewing 057f694",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/36_rev_037_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-038",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033 REV-037 remediation)",
+      "reviewer": "agent-skills:security-auditor, the same agent resumed with its context, reviewing ef1ed7d",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/37_rev_038_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2203,6 +2251,138 @@
       "source_ref": "gh pr view 116 reports state MERGED, mergedAt 2026-09-21T02:34:24Z, mergeCommit 9f6fc43f. Pre-merge gates were observed, not assumed: origin/main was verified to be an ancestor of HEAD so there was nothing to merge in, the branch was 10 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head 3c00a1e, and run 35554092438 was green on that exact sha. REV-034 had returned APPROVED with 0 critical and 0 high, after REV-033 returned CHANGES_REQUESTED on the same task and all three of its H findings were fixed. After the merge, the source_fingerprint measured on main is 05dc388b, identical to the reviewed branch head's, so the merge carried no source the review and CI had not seen. Local main fast-forwarded to 9f6fc43, the worktree was removed and the local and remote claude/supplier-task-032 deleted after checking clean, zero unpushed and --merged main. First branch merged under the claude/ prefix.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-21T10:34:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 opened on claude/supplier-task-033; DEF-021 closed first because T33 is the write API",
+      "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+      "status": "PASS",
+      "source_ref": "main and origin/main were both read as 5125f32 before the worktree was cut. DEF-021 was closed before the service was written, under HD-029, because T33 is the first caller and the normalized string is what gets encrypted, HMACed and measured -- changing it after rows exist means re-encrypting the table. The split was verified empirically against the reviewer's own cases before the tests were written: all ten of REV-033's formatting bypasses collapse, and the three inputs REV-034 showed collapsing into one stored account are now each refused. Three mutations confirm it discriminates: removing the reject step, widening the formatting set back to everything non-alphanumeric, and narrowing it to whitespace only.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T10:57:54+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 mutation campaign: fourteen mutations, one survived and was the author's own vacuous assertion",
+      "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+      "status": "PASS",
+      "source_ref": "Each applied alone, reverted immediately, git status asserted clean between runs. Thirteen RED first time. T11 survived: re-encrypting an account with a fresh crypto_context instead of the row's own left every test green, because the assertion checked that the UPDATE's bind parameters did not contain the old context -- and crypto_context is never in that UPDATE's SET list, so the parameters never contain any context at all. The assertion held on both sides, which is the same shape REV-030 and REV-034 kept finding. Replaced with the property that actually matters: the re-encrypted ciphertext must still decrypt under the context the row stores. A first attempt at that fix was also wrong -- the chosen test account was twelve characters and GCM ciphertext length equals plaintext byte length, so the ciphertext and the IV were both twelve bytes and the buffer picked was the wrong one. Fixed by choosing a length that does not collide. The other thirteen: reject step removed, formatting set widened back to everything non-alphanumeric, formatting set narrowed to whitespace, list using SELECT *, write permission check removed, duplicate check using only the active key, cross-Supplier duplicate blocking instead of warning, warning naming the other Supplier regardless of permission, update always re-encrypting, deactivate leaving is_default set, setDefault skipping the row lock, reveal swallowing an audit failure, and the crypto type check removed.",
+      "actor": "Harness agent via scripted mutation and targeted suites",
+      "observed_at": "2026-09-21T10:58:50+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-033 turns T33's manual DB plaintext check into an automated scan with its own control",
+      "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+      "status": "PASS",
+      "source_ref": "T33's Verification block asks for a manual DB check that the fixture plaintext appears zero times in the Bank table, the audit log and the system log. A manual check does not get done every time, so it is automated: the test reads the column list from information_schema and scans every row and every column of supplier_bank_accounts and supplier_audit_logs for a unique fixture account, reading binary columns as latin1 so a plaintext hidden in a BLOB would still be found. It runs after both a create and an update that re-encrypts. The test carries its own control -- after the two assertions it plants the plaintext into account_holder_name and requires the scanner to find it, so 'nowhere' is not just a broken scanner. The system-log half is not covered here: nothing in this service logs, and there is no log sink in the test environment to search.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T10:58:50+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-035 CHANGES_REQUESTED at 8718fa7; HD-029 was answered and neither half of the answer had shipped",
+      "code_commit": "9000bd5cd355770399d38a411f750463861880bb",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "f919b7b4138e6c4c195b8bebba5bf03a4bf0bfdd51d006beb7459b7d24aee38a",
+      "status": "PASS",
+      "source_ref": "Three H, four M, five L. The reviewer was precise about where they sit: the encryption, AAD, blind-index and lock-ordering work is sound, and all three blocking findings are at the boundary -- what the service rejects, how it normalizes, and what it tells the caller when it refuses. H-2 is the serious one and it reopens DEF-021: running NFKC before classification is compatibility folding, which turns a large class of content characters into pure [0-9A-Z] so they pass the reject step unseen. A sweep of U+0080 to U+1FFFF found 1225 such codepoints, and REV-034 M-2's collapse was not closed at all, only moved from the A-with-ring family to the modifier-letter and circled-letter families. Fixed by classifying on NFC and folding only the three fullwidth ASCII ranges explicitly; a re-sweep leaves two folded codepoints, both canonical equivalences, which is the intended behaviour. While fixing it the author found a second laundering path the reviewer had not reported: String.prototype.toUpperCase is not one-to-one and maps the sharp s to SS, so the case fold was narrowed to ASCII a-z. A record correction belongs with this: the half-symbol-to-12 example used in the code comment, the implementation report and HD-029's own question text does not reproduce -- NFKC maps it to one, fraction slash, two, and U+2044 is Sm, so it was always on the rejected side. The Product Owner was therefore shown an example that does not hold while the cases that do were never put to them. The decision itself stands and holds more strongly on the real cases, but the record was wrong and is corrected here. H-1: the rejection reached callers as a 500, because the crypto's TypeError was thrown inside withTransaction and the real database wrapper rethrows non-ApplicationErrors as DATABASE_TRANSACTION_FAILED -- and HD-029 was chosen on the property that a user sees the refusal and can correct it. The test missed it because the harness's fake withTransaction did not reproduce that translation. Making the fake faithful immediately exposed a second defect: a tampered row also produced an anonymous 500, so an operator could not distinguish altered data from a key missing from the ring. Now a named 422. H-3: the duplicate pre-check filtered on active status while the unique index has no status predicate, so deactivating an account and re-adding it -- the only retirement path FR-BANK-005 allows -- turned a clean 409 into an ER_DUP_ENTRY 500. Filter removed and ER_DUP_ENTRY translated, per design 2.5's statement that the database unique is the race-time backstop and the service pre-check exists only for a clearer message. M-1, M-2, M-4 and the L findings fixed. M-3 deliberately not fixed: a cross-Supplier duplicate warning is advisory by nature, the index is per-Supplier, and nothing serialises two creates under different Suppliers.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T11:19:04+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-035 remediation reverified on the final candidate",
+      "code_commit": "9000bd5cd355770399d38a411f750463861880bb",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "f919b7b4138e6c4c195b8bebba5bf03a4bf0bfdd51d006beb7459b7d24aee38a",
+      "status": "PASS",
+      "source_ref": "372/372 server tests up from 367, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate. Nine mutations confirm the fixes discriminate: reverting NFC to NFKC, restoring the unbounded toUpperCase, dropping the pre-transaction account validation, restoring the status filter on the duplicate check, removing the ER_DUP_ENTRY translation, removing the list permission check, making the projection mask unconditionally, returning the decrypt failure as an anonymous error again, and returning 409 instead of 403 for a missing permission. All nine RED.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T11:19:04+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-036 CHANGES_REQUESTED: a guard that provably never runs, and the same fake-fidelity failure for the third time",
+      "code_commit": "d161a6abbd230c99a26335d23621208620c3968b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "97ce4888c3ec8973d7717c2f8660273d1f9c625119c1c5414dfdcfaddf311ac9",
+      "status": "PASS",
+      "source_ref": "One H, three M, five notes. The H: the ER_DUP_ENTRY translation added for REV-035 H-3 never executes in production, because MySqlDatabaseExecutor.run wraps every statement error into MySqlDatabaseOperationError with code DATABASE_OPERATION_FAILED, leaving the driver code on error.cause.code, while the guard read only error.code. Concurrent same-Supplier creates therefore still produced a 500 whose error chain carried the raw blind-index bytes. The reviewer proved the suite could not tell the difference by mutating the guard to be correct and getting 56/56 green, because the unit harness threw a raw error carrying the driver code and the integration serviceOn passed a raw mysql2 connection. This is the third instance of one failure in this task: a fake that does not reproduce a layer hides defects in that layer. First the vacuous crypto_context assertion, then REV-035 H-1 where the fake withTransaction omitted the wrapper's error translation, now the layer below that. Both fakes were corrected and an integration test was added that makes real MySQL raise the real ER_DUP_ENTRY. M-3 was also right: branching on message.includes scans user-derived bytes, since the duplicated value is the message's first component, and the format is version-dependent; now errno 1062 plus an anchored constraint-name regex. M-2: only create's INSERT was wrapped, while the pre-check is exactly what loses races. M-1: logger.warn is (event, message, context) and was called with two arguments, so the payload landed in the message slot -- and the entire justification for the named 422 is that tampering and a missing key are distinguishable in the log, which nothing tested. The reviewer independently swept the full Unicode range to U+10FFFF, wider than the author's sweep to U+1FFFF, confirmed exactly one canonical fold remains and that the argument for keeping it is sound, and confirmed no third laundering path exists. It also confirmed REV-035 M-3's acceptance was the better trade.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T11:34:57+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-036 remediation reverified; the ledger's pre-merge commit carries identical supplier source",
+      "code_commit": "d161a6abbd230c99a26335d23621208620c3968b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "97ce4888c3ec8973d7717c2f8660273d1f9c625119c1c5414dfdcfaddf311ac9",
+      "status": "PASS",
+      "source_ref": "376/376 server tests up from 372, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate. Five mutations confirm the fixes discriminate: reading only the top-level error code, branching on message prose instead of the constraint name, unwrapping update's UPDATE, dropping logger.warn's context argument, and no longer recognising errno 1062. All five RED. Recording the reviewer's note about revision 156: it pinned code_commit 9000bd5, which predates the merge of main into the branch, while CI and REV-036 were at aebb6cc. That merge brought only docs/items_management changes from PR #117, so the supplier source was identical between the two and the record carried meaning -- but it should have said so rather than leaving a reader to verify it, which is what this observation now does.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T11:34:57+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-037: the previous fix introduced a new instance of the defect it closed, and the fourth fake-fidelity layer",
+      "code_commit": "6134836d7f0d458bef1bbccf23eb20e870c8b219",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "0e5ce6b5410025c96aa46a75305d2c5e7e270212cd2e31b074be66e878ac73b6",
+      "status": "PASS",
+      "source_ref": "One H, two M, three notes. The H: REV-036's M-2 fix passed a single constraint chosen from the caller's intent, but which constraint a statement violates is decided by the data. An INSERT carrying is_default = 1 can violate both the blind-index and the default-slot unique, so a blind-index collision on a create-as-default fell through untranslated to a 500 carrying the driver's message, whose first component is the raw blind index. That is the common shape of create, since a supplier's first bank account is normally made default. The author's tests covered the diagonal two cells and missed exactly the broken one; now a list of constraints and three cells. Answering the author's direct question about fake fidelity, the reviewer found the fourth layer: MySqlDatabaseOperationError extends ApplicationError and therefore carries statusCode 500, while both doubles threw a plain Error, so they failed their own ApplicationError check and re-wrapped -- production two links, doubles three. Nothing depended on it, but the new integration test happened to search both depths, which is luck rather than design. Fixed by importing and throwing the real class rather than re-describing it, which removes the class of divergence instead of the instance. Two further divergences were acted on from a list of thirteen the reviewer supplied: neither double set REPEATABLE READ, the isolation level the duplicate-race behaviour of the last three reviews depends on; and the integration double rolled back after a failed commit, which the real code deliberately refuses because the transaction's outcome is then unknown. One surviving mutation, find to findLast, was verified to be an equivalent mutant rather than a gap: an ER_DUP_ENTRY names exactly one key and the regex anchors on the closing quote, so at most one constraint can match. Confirmed empirically and noted in the code so no one later reads order into it.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T11:45:25+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Four times in TASK-033 a correct and a broken implementation were indistinguishable to the suite",
+      "code_commit": "6134836d7f0d458bef1bbccf23eb20e870c8b219",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "0e5ce6b5410025c96aa46a75305d2c5e7e270212cd2e31b074be66e878ac73b6",
+      "status": "PASS",
+      "source_ref": "Worth stating once, because it is the through-line of this task rather than four unrelated slips. The vacuous crypto_context assertion held on both sides. The fake withTransaction omitted the wrapper's error translation. The layer below it omitted the per-statement wrapping. And REV-037's H-1 was found by the reviewer mutating a fix to the CORRECT implementation and watching 60/60 stay green. The first three are one failure -- a double that does not reproduce what the real thing hands over -- and the fourth is a different one: the double was faithful enough by then, but the test matrix was missing a cell. Both practices are now written into the task document: a double reproduces the real class, wrapping and isolation level, importing the real thing wherever it can rather than re-describing it; and when a fix adds a discriminator, mutate it to the correct implementation and require something to go red, which is the reverse of ordinary mutation testing and catches the case where the suite never tested the thing at all. 377/377 server tests, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T11:45:25+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-038 APPROVED at ef1ed7d, the first of four rounds with no production defect",
+      "code_commit": "a7472b77dccb23f5852fd0b67ad3cd4653fa33bf",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "e86a87ae72b6222e656ee9491855eb7ea786bf3c23a946d87825ddae5b4efbd6",
+      "status": "PASS",
+      "source_ref": "Zero critical, zero high, one non-blocking M, three notes. REV-037's H-1 was verified two ways: the live two-flag race that previously produced a 500 leaking the driver's duplicate message now returns 409 with no leak on both flags, and restoring the broken single-constraint choice turns the new three-cell test red. The M is worth recording because of where it was: the integration double set its committed flag after awaiting commit, so a failed commit never reached it and the double rolled back -- the exact thing its own comment two lines above says it must not do, since the real code sets commitAttempted before the await. A fifth layer, inside the commit that wrote the rule about layers. Fixed by renaming to commitAttempted and moving it ahead of the await. The reviewer's mutation remains unkilled and that is stated rather than papered over: forcing a commit failure needs the real service, which is the recommendation below, and building a test suite for a double that should be deleted would be the wrong direction. The reviewer's amendment to this task's first practice is accepted and written into section 9: prefer deleting the double to improving it. Importing the real error class closed the divergence in the error value but not in the decisions around it, because the double still copies branches and copies drift. This integration test does not need a double at all -- it already talks to real MySQL, and a real MySqlDatabaseService over a real pool, about fifteen lines, would close thirteen divergences at once because there would be no second copy to be wrong. An enumerated rule will always be one property short of the next defect, which is what four rounds of this task demonstrate. It also confirmed the find/findLast equivalence argument and improved the method: an equivalent mutant and an untested branch both survive, and what separates them is whether a non-equivalent mutation on the same code goes red. Considering only constraints[0] turns two tests red, so the list's later elements are genuinely exercised.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T14:16:08+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Required CI green on the TASK-033 merge candidate after three DEF-019 failures",
+      "code_commit": "ffced961f311ddea95fb0131a9f13bc3ccc27b0e",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "e86a87ae72b6222e656ee9491855eb7ea786bf3c23a946d87825ddae5b4efbd6",
+      "status": "PASS",
+      "source_ref": "GitHub Actions run 35567780842, headSha ffced961, conclusion success on all four required checks. DEF-019's itemMigrationIdempotency failed on the first attempt and on the first rerun, passing only on the second rerun -- the first time in this session it has needed two reruns. Worth recording rather than shrugging at: main is green at 946f5982, so the defect is not deterministic, but two things changed around it. PR #120 merged customer-management, adding eight migrations, and this branch adds roughly thirty tests including nine integration tests that exercise a shared erp_dev. DEF-019 deep-equals SHOW CREATE TABLE output including the AUTO_INCREMENT counter, so it is sensitive to exactly the parallel interleaving that more concurrent integration work produces. This branch does not cause the defect and does not touch item tables, but it plausibly raises its hit rate, and the same will be true of every later supplier task. HD-025 keeps DEF-019 with Item Management, so nothing is changed here; the observation exists so the trend is on the record if reruns keep multiplying. Also resolved here: the migration-numbering hazard carried since TASK-032. codex/customer-management-phase-001 merged as PR #120 having renumbered to 0039 through 0046, clear of supplier's 0037, and a duplicate-number sweep over the migration directory returns nothing.",
+      "actor": "Harness agent via gh",
+      "observed_at": "2026-09-21T14:31:11+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-033 merged to main via PR #118",
+      "code_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "9db31af09c59a794e096b714decea50b61029e930d4431147aaa990e0845c351",
+      "status": "PASS",
+      "source_ref": "gh pr view 118 reports state MERGED, mergedAt 2026-09-21T06:42:04Z, mergeCommit ad21c1f2. Pre-merge gates observed, not assumed: origin/main was verified to be an ancestor of HEAD so there was nothing left to merge in, the branch was 14 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head 342fac4, and run 35568864081 was green on that exact sha. REV-038 had returned APPROVED with 0 critical and 0 high, after REV-035, REV-036 and REV-037 each returned CHANGES_REQUESTED and every finding proved real. One thing to state precisely rather than gloss: the source_fingerprint measured on main after the merge, 9db31af0, does NOT match the value the ledger carried at revision 163, e86a87ae. That is not drift in this task's work. The recorded value predates this branch merging origin/main at ffced96, which brought PR #120's customer-management source into the branch; the fingerprint covers server and client broadly, so it moved. The check that actually carries meaning was run instead: git diff between the reviewed and CI-green branch head 342fac4 and merged main ad21c1f, restricted to every supplier-owned source path plus server/test and client/test, is empty. The merge carried no supplier source the review and CI had not seen.",
+      "actor": "Harness agent via gh and git",
+      "observed_at": "2026-09-21T14:42:39+08:00"
     }
   ],
   "pending_decisions": [
@@ -2598,6 +2778,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-21: 字母數字白名單. NFKC, uppercase, keep only [0-9A-Z], reject when the result is empty or exceeds the bound. The allowlist holds because account identifiers are alphanumeric by definition (IBAN is specified as [0-9A-Z], domestic account numbers are digits), so any other character in a typed account number is formatting. Uppercasing follows from IBAN's letters being case-insensitive. A blocklist was rejected because its problem is not which ten characters it misses today but that the next new dash will miss too."
+    },
+    {
+      "id": "HD-029",
+      "impact": "MAJOR",
+      "question": "DEF-021, carried out of REV-034 M-2 and gating T33 because T33 is the write API. The account normalizer silently strips every character outside [0-9A-Z]. For formatting that is not merely right but required -- design 6.6's own create example is \"123-456789-001\" -- but for content characters it means three different typed strings become one stored account, and the stored value is what eventually gets paid. NFKC also runs before the allowlist, so one-half becomes 12. Options: define an explicit formatting set to strip and reject everything else non-alphanumeric; keep stripping silently and rely on T33's format validation; or defer until T33 is delivered.",
+      "affected_ids": [
+        "DEF-021",
+        "TASK-033",
+        "SupplierBankCrypto.js",
+        "REV-034"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21: 剝排版，拒內容. Strip an explicit formatting set -- whitespace, Unicode format and invisible characters, Unicode dashes and the common printed separators -- and reject anything else outside [0-9A-Z] without rewriting it. The property that makes this work is that the formatting list being incomplete no longer matters in the dangerous direction: an unlisted separator is now loudly refused, which a user sees and can correct, rather than silently altering the account. The blocklist's incompleteness fails closed."
     }
   ],
   "external_actions": [
@@ -3068,7 +3261,27 @@
     "evidence/20260921T022355-275a2ca82ae2/run.json",
     "evidence/20260921T022359-0f0fb8f9430d/run.json",
     "evidence/20260921T022402-51ab5d0c25a9/run.json",
-    "evidence/20260921T022405-4e4430a52eb8/run.json"
+    "evidence/20260921T022405-4e4430a52eb8/run.json",
+    "evidence/20260921T025754-3addc84b03e6/run.json",
+    "evidence/20260921T025758-273c5b3043d2/run.json",
+    "evidence/20260921T025802-2b5dbb2878bb/run.json",
+    "evidence/20260921T025806-2b462a3bf35f/run.json",
+    "evidence/20260921T031825-c27a76cb27c0/run.json",
+    "evidence/20260921T031828-ee7f0aecc365/run.json",
+    "evidence/20260921T031830-768ab43b9c0c/run.json",
+    "evidence/20260921T031833-0e8b9e490d7f/run.json",
+    "evidence/20260921T033421-55f62fe8f7aa/run.json",
+    "evidence/20260921T033425-ab7d1f079103/run.json",
+    "evidence/20260921T033428-d5a2e6fa185a/run.json",
+    "evidence/20260921T033431-833064b6272c/run.json",
+    "evidence/20260921T034446-0b8b275adfe6/run.json",
+    "evidence/20260921T034450-8124755dd85e/run.json",
+    "evidence/20260921T034452-3a2e5a3d1b8b/run.json",
+    "evidence/20260921T034455-36518b2c21b6/run.json",
+    "evidence/20260921T061613-949b66f2c0ab/run.json",
+    "evidence/20260921T061617-f9807d3807ac/run.json",
+    "evidence/20260921T061619-b349bdbfa930/run.json",
+    "evidence/20260921T061623-8463eb8f2891/run.json"
   ],
   "defects": [
     {
@@ -3352,16 +3565,21 @@
     {
       "id": "DEF-021",
       "severity": "LOW",
-      "status": "OPEN",
+      "status": "CLOSED",
       "source_ids": [
         "REV-034",
         "TASK-032",
         "server/src/modules/supplier/SupplierBankCrypto.js",
         "HD-028"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "server/src/modules/supplier/SupplierBankCrypto.js",
+        "server/test/supplierBankCrypto.test.js",
+        "HD-029",
+        "REV-035 H-2"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-032 is DONE and merged at 9f6fc43. PHASE-003 is open and TASK-033 through TASK-037 remain PENDING. T32 delivered only the table and the crypto primitives: migration 0037 creating supplier_bank_accounts exactly as design spec 5.8 defines it, approved under HD-027, and SupplierBankCrypto with AES-256-GCM, a per-row 96-bit IV, an AAD bound to supplierId and crypto_context encoded UTF-16LE, and an HMAC-SHA-256 blind index computed over the whole lookup ring. No production code imports SupplierBankCrypto yet; T33 is the Bank domain service. Open and needing a Product Owner answer before T33 wires the write API: DEF-021, the account normalizer silently strips disallowed characters instead of rejecting, so three different typed strings can become one stored account and NFKC injects digits ahead of the allowlist. HD-028 answered which characters are kept and was never asked what happens to the rest. Carried into T33 from REV-034, none blocking: the trigger check in the compatibility assertion has no test because erp_user lacks SUPER while binary logging is on, and the reviewer's suggestion of injecting a trigger list through the existing table seam would cover the throw path without DDL privilege; L-3 accepts VIRTUAL where the design says STORED; L-4 does not read CHECK constraints; L-6 means the decrypt catch now reports a configuration error as a data-integrity error, which misdirects an operator during rotation. Still to do in PHASE-003 beyond T33: wiring the Bank capability so the two key rings become an unconditional startup requirement once it deploys, and the two rotation scripts from design 2.6. SupplierBankCrypto's shape was built for them -- each row records its own encryption and blind-index key IDs, so rotation can advance row by row, be interrupted and resume. Merge-ordering hazard, now one step sharper: main carries 0037, so codex/customer-management-phase-001 collides with 0035 and 0036 and must renumber past 0037. Open and routed out of this module: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-018 is the shared PasswordReasonDialog never submitting on Enter; HD-025 keeps all three with their owners. Neither Item Management defect fired on this branch. Carried forward: DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493, accepted as a recorded exception under HD-026 and routed to Purchasing with the permission-catalogue drift in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "TASK-033 is DONE and merged at ad21c1f2. PHASE-003 has TASK-034 through TASK-037 remaining, all PENDING. T32 and T33 together deliver the Bank table, the crypto primitives and the domain service; no production code imports SupplierBankService yet, because the six HTTP routes from design 6.6 are not written. Three practices came out of T33's four review rounds and should be applied to T34 onward. First, prefer deleting a test double to improving it: this task's integration test already talks to real MySQL and should be rebuilt on a real MySqlDatabaseService over a real pool, about fifteen lines with transactionTimeoutMs set, which closes thirteen recorded divergences at once because there is no second copy to be wrong. Second, where a double is unavoidable it must reproduce the real class, wrapping depth and isolation level, and should import the real thing rather than re-describe it. Third, when a fix introduces a discriminator, mutate it to the correct implementation and require something to turn red; ordinary mutation only breaks correct code and could not have caught REV-037's H-1. An equivalent mutant is not a gap -- verify it, document it, and confirm a non-equivalent mutation on the same code does go red. One mutation is knowingly unkilled and should be closed by the rebuild above: forcing a commit failure against the integration double needs the real service. Resolved during this task: the migration-numbering hazard carried since TASK-032. codex/customer-management-phase-001 merged as PR #120 having renumbered to 0039 through 0046, clear of supplier's 0037, and a duplicate-number sweep over the migration directory returns nothing. Worth watching: DEF-019 needed two reruns on this branch, the first time in this session it has needed more than one. Main is green, so it is not deterministic, but PR #120 added eight migrations and this branch added roughly thirty tests including nine that exercise a shared erp_dev, and DEF-019 deep-equals SHOW CREATE TABLE including the AUTO_INCREMENT counter. Supplier work does not cause it and does not touch item tables, but it plausibly raises its hit rate, and later supplier tasks will do the same. HD-025 keeps it with Item Management. Deliberately not fixed and carried forward: REV-035 M-3, the advisory cross-Supplier duplicate warning; the reveal response shape from design 6.6, which belongs to the route task; BANK_ACCOUNT_DEFAULT_RACE, unreachable today and documented as an uncovered defensive branch; eleven further double divergences, all currently unobserved; and from REV-034 the untested trigger check, VIRTUAL accepted where the design says STORED, and CHECK constraints unread. Also open, routed out of this module under HD-025: DEF-017, DEF-018 and DEF-019."
 }
