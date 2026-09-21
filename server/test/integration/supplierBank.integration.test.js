@@ -72,16 +72,21 @@ function serviceOn(connection, { crypto, permissions = ["supplier.view", "suppli
       // 倚賴冇釘住。
       await connection.query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ");
       await connection.beginTransaction();
-      let committed = false;
+      // 名同真嘢一樣，係要嘅：`commitAttempted`，唔係 `committed`。REV-038 M 就係
+      // 呢兩個字嘅分別 —— 第一版叫 `committed` 而且喺 `await commit()` **之後**先
+      // 設，所以 commit 一失敗就永遠到唔到，個 double 照樣 rollback，即係做咗上面
+      // 註解話唔可以做嗰件事。真嘅程式碼喺 await **之前**設（MySqlDatabaseService
+      // :513）。一個講啱嘢嘅註解配一段做錯嘢嘅碼，係最難察覺嗰種。
+      let commitAttempted = false;
       try {
         const result = await work(executor);
+        commitAttempted = true;
         await connection.commit();
-        committed = true;
         return result;
       } catch (error) {
-        // REV-037 M-2(m)：commit 失敗之後**唔可以** rollback —— 真嘅程式碼刻意唔做，
-        // 因為嗰陣個交易嘅結果係未知嘅，而 rollback 會扮成「肯定冇入到」。
-        if (!committed) await connection.rollback();
+        // commit 一旦送出去就唔可以再 rollback：伺服器可能已經提交咗。喺一條啱啱
+        // commit 失敗嘅連線上再送 rollback，好一點係 no-op，差一點係第二次卡死。
+        if (!commitAttempted) await connection.rollback();
         if (error instanceof ApplicationError) throw error;
         throw new MySqlDatabaseOperationError("MySQL database transaction failed", {
           code: "DATABASE_TRANSACTION_FAILED", cause: error
