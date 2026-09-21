@@ -603,7 +603,13 @@ function realAuthServiceOn(connection) {
   });
 }
 
-async function seedRole(connection, suffix) {
+/**
+ * REV-032 L-1：`sink` 喺 `role_permissions` 寫入之前就要見得到個 role id。呢兩句
+ * 之間掟一個錯，個 role row 就冇人跟 —— 而 `erp_dev` 係共用嘅，`roleManagement`
+ * 嗰套喺同一個 suite 入面行。呢個唔係假設，實測過：喺兩個 INSERT 中間強制拋錯，
+ * 三個 run 各留低一行 orphan role。
+ */
+async function seedRole(connection, suffix, sink) {
   const [[permission]] = await connection.query("SELECT id FROM permissions WHERE name = 'supplier.approval'");
   assert.ok(permission, "migration 0034 must have seeded supplier.approval");
   const [role] = await connection.execute(
@@ -611,6 +617,7 @@ async function seedRole(connection, suffix) {
     [`supplier-t31-it-${suffix}`, Date.now()]
   );
   const roleId = Number(role.insertId);
+  sink.roleId = roleId;
   await connection.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
   return roleId;
 }
@@ -737,8 +744,11 @@ integrationTest("an approve racing a significant edit yields one terminal result
     id: seeded.requestId, version: 1, reason: "併發批准原因", requestId: "req-race", ip: "127.0.0.1"
   }).then(() => ({ ok: true }), (error) => ({ ok: false, code: error.publicCode ?? error.code ?? error.message }));
 
-  // 俾批准方真係塞喺 suppliers 鎖度，唔係喺佢開始之前就完咗事。
-  await new Promise((resolve) => { setTimeout(resolve, 300); });
+  // REV-032 L-3：呢度**唔係**靠等。編輯方喺批准方出發之前已經攞咗 suppliers 嘅鎖，
+  // 而 `#decide` 嘅 BEGIN 係喺第一個 await 之前同步派出，所以批准方嘅一致讀快照一定
+  // 早過編輯方 commit —— 排序由呢兩件事定，唔係由時間。實測 sleep 設成 0 仍然綠，
+  // 而且仍然殺到「拆走 request 讀嗰個 FOR UPDATE」嘅變異。讓出一個 tick 就夠。
+  await new Promise((resolve) => { setTimeout(resolve, 0); });
   await editor.execute(
     "UPDATE suppliers SET supplier_name = ?, supplier_name_key = ?, version = version + 1, updated_at = ? WHERE id = ?",
     [`Renamed ${suffix}`, `renamed ${suffix}`, Date.now(), supplierId]
@@ -775,17 +785,17 @@ integrationTest("a decision made after the approver's permission is revoked fail
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let who = null;
-  let roleId = null;
+  const tracked = { roleId: null };
   t.after(async () => {
     if (supplierId) await cleanup(connection, supplierId);
-    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    if (tracked.roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [tracked.roleId]);
     await cleanupActors(connection, who);
     await connection.end();
   });
 
   const suffix = randomUUID().slice(0, 8);
   who = await seedActors(connection, suffix);
-  roleId = await seedRole(connection, suffix);
+  const roleId = await seedRole(connection, suffix, tracked);
   await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [who.approverId, roleId]);
   const seeded = await seed(connection, suffix, who);
   supplierId = seeded.supplierId;
@@ -827,17 +837,17 @@ integrationTest("a disabled user can neither receive a reassignment nor decide",
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let who = null;
-  let roleId = null;
+  const tracked = { roleId: null };
   t.after(async () => {
     if (supplierId) await cleanup(connection, supplierId);
-    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    if (tracked.roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [tracked.roleId]);
     await cleanupActors(connection, who);
     await connection.end();
   });
 
   const suffix = randomUUID().slice(0, 8);
   who = await seedActors(connection, suffix);
-  roleId = await seedRole(connection, suffix);
+  const roleId = await seedRole(connection, suffix, tracked);
   await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [who.approverId, roleId]);
   const seeded = await seed(connection, suffix, who);
   supplierId = seeded.supplierId;
@@ -936,17 +946,17 @@ integrationTest("an unassigned request refuses every decision until a reassignme
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let who = null;
-  let roleId = null;
+  const tracked = { roleId: null };
   t.after(async () => {
     if (supplierId) await cleanup(connection, supplierId);
-    if (roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    if (tracked.roleId) await connection.execute("DELETE FROM roles WHERE id = ?", [tracked.roleId]);
     await cleanupActors(connection, who);
     await connection.end();
   });
 
   const suffix = randomUUID().slice(0, 8);
   who = await seedActors(connection, suffix);
-  roleId = await seedRole(connection, suffix);
+  const roleId = await seedRole(connection, suffix, tracked);
   // 兩個人都真係有 supplier.approval：requester 攞嚟做重新指派嗰個 actor，
   // approver 係被指派嘅目標。
   await connection.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?), (?, ?)",

@@ -35,9 +35,19 @@ Revision 136 嘅 `next_safe_action` 寫住「PHASE-002 嘅建置工作完成：T
 **之前有嘅：** `an in-flight activation read blocks a concurrent settings write until it
 finishes` —— 證咗其中一個方向。
 
-**缺口一：次序只證咗一半。** 加 `an in-flight settings write blocks a concurrent
-activation read until it finishes`。兩邊夾埋先算係一個次序：淨係得一邊嘅話，個答案
-仍然可以喺另一個方向被人喺中途換走。
+**缺口一：toggle 側嘅鎖冇人測。** 加 `an in-flight settings write blocks a concurrent
+activation read until it finishes`。
+
+呢一段第一版寫錯咗，照講：我原本嘅理由係「次序只證咗一半，要補返轉頭嗰邊」，而
+第一版嘅測試 writer 係手寫嘅 `SELECT … FOR UPDATE`。REV-032 M-3／L-5 指出咁樣證唔到
+新嘢 —— 兩個鎖測試唯一掂到嘅 product code 都係 `getActivationPolicy` 嗰三個字，而 S 鎖
+同 X 鎖唔相容係 MySQL 嘅保證，唔係應用層行為。佢用變異證咗：拆走 `FOR SHARE` 兩個都
+紅，而拆走 `updateSettings` **自己嗰個** `FOR UPDATE`，兩個都照綠 —— 即係 toggle 側嘅
+鎖根本冇人測。
+
+修正後個 writer 行真嘅 `updateSettings`，喺 `FOR UPDATE` 讀返嚟之後、行到 `UPDATE`
+之前停低（再遲少少，`UPDATE` 自己嗰個 X 鎖會蓋過答案）。而家 X5 變異紅，而且**只有**
+新嗰個測試紅，舊嗰個照綠 —— 兩個測試唔再係變異等價。
 
 **缺口二：「已 Pending 不被 OFF 自動批准」完全空白。** 呢條規則冇一段對應嘅程式碼 ——
 佢係「冇任何一條路會咁做」，所以只可以用行為證。新測試
@@ -150,6 +160,47 @@ MANUAL_TEST observation，唔當 DEVELOPER-stage 正式 suite evidence。
 
 ## 7. Checkpoint
 
-T31 係 PHASE-002 嘅 Exit criteria。三條 acceptance 全部有同 baseline 嘅實際證據，
-`SUP-CAP-02` 冇未處理 P0／P1。PHASE-002 嘅收線仍然要獨立 review 同 required CI
-核對同一個候選之後，先由 Product Owner 決定。
+T31 係 PHASE-002 嘅 Exit criteria。**三條 Acceptance criteria** 全部有同 baseline 嘅
+實際證據，`SUP-CAP-02` 冇未處理 P0／P1。
+
+**一個要明講嘅限制（REV-032 M-4）：** T31 嘅 **Description** 寫住「用真MySQL與
+**HTTP**／UI flow驗證」。新測試係 service 層打真 MySQL，**唔係**行 HTTP。REV-032 查過
+另外兩層：`server/test/supplierApprovalHandlers.test.js` 十五個測試全部係宣告式（比對
+route table、permission pair、schema closure），佢**唔會**起 server 亦唔會發 request；
+而兩個 e2e spec 都 `page.route` 全 mock 咗個 API。所以 `supplier_management` 入面冇一層
+係由 dispatcher → handler → service → MySQL 行足全程。
+
+點解唔當佢 blocking：`05_development_tasks.md` §2.3 明文講綁住嘅係 task 段落嘅實際
+**Acceptance criteria 或 Verification**，而三條 checkbox 冇一條講 HTTP，Verification 列
+嘅就係嗰兩個 integration 檔、兩個 client vitest 檔同 lint／build，全部過。殘餘風險亦都
+真係低：宣告式 handler 測試釘住 permission pair 同 schema closure，而通用 dispatcher
+測試（`apiDispatcher.test.js`、`security.test.js`、`requestValidator.test.js`）覆蓋執行。
+
+呢個缺口記錄喺度，唔係當佢唔存在。要收嘅話，repo 已經有現成樣板 ——
+`server/test/business-master/http.integration.test.js` 用 `createApplication({ port: 0 })`
+起真 app 再 `fetch` —— 而且佢已經喺呢個 suite 嘅 argv 入面。
+
+PHASE-002 嘅收線仍然要獨立 review 同 required CI 核對同一個候選之後，先由 Product
+Owner 決定。
+
+## 8. REV-032 及其修補
+
+獨立 review **REV-032** 判 **APPROVED**（head `8953514`），連四個 M。完整報告喺
+`29_rev_032_independent_review.md`。reviewer 獨立重跑咗我十二個變異（12/12 RED，紅嘅係
+同一批測試），再自己加六個，其中一個活咗 —— 就係下面 M-3。
+
+| findings | 處理 |
+| --- | --- |
+| **M-1** DEF-020 記住 OPEN 兼喺 `next_safe_action` 消失 | 已修：defect 記錄補 closure evidence，並喺 `next_safe_action` 講明喺 merge 收 |
+| **M-2** `next_safe_action` 丟失整個 carried-forward 風險清單 | 已修：重新接返 |
+| **M-3** `updateSettings` 自己嗰個 `FOR UPDATE` 冇人測（X5 變異存活） | 已修：見 §2 缺口一，X5 而家紅 |
+| **M-4** Description 要求 HTTP 驗證，冇一層行到 | 已喺 §7 明講缺口同理由；HTTP 測試未加 |
+| **L-1** `seedRole` 喺兩個 INSERT 中間拋錯會漏 role row | 已修：`sink` 喺 dependent insert 之前就俾 `t.after` 見到 |
+| **L-2** `joiningDatabase` 失敗時唔 rollback | 已修：改用 savepoint |
+| **L-3** 300ms sleep 唔係 load-bearing，但註解話係 | 已修：改 0 並更正註解（測試由 333ms 跌到 16ms） |
+| **L-4** `cleanup()` 個 `OR request_id IN (...)` 係全域掃 | **未郁** —— pre-existing，reviewer 亦都講明唔係呢個 task 嘅嘢 |
+| **L-5** 新嗰個鎖測試同舊嗰個變異等價 | 隨 M-3 一齊修好 |
+| **N-1…N-5** | reviewer 自己標明係 note，冇要求行動 |
+
+修補之後重跑：25/25 integration PASS、client 71/71、lint、Playwright 17/17，而 M1／M6／
+XA／M4／M8 五個關鍵變異全部仍然 RED。

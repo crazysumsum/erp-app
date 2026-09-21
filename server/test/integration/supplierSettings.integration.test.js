@@ -199,7 +199,20 @@ integrationTest("the real audit recorder accepts a settings update and stores be
 function joiningDatabase(connection) {
   return {
     query: (sql, params) => connection.query(sql, params),
-    async withTransaction(work) { return work(connection); }
+    // REV-032 L-2：真嘅 wrapper 失敗時會 rollback，呢個借用交易嘅版本冇得 rollback
+    // 成個交易（佢唔屬於佢），所以用 savepoint 做返同一件事。今日呢個測試最外層一定
+    // rollback，所以睇唔出分別；但下一個借用呢個 helper、而又預期「失敗嘅指令唔會
+    // 留低半截寫入」嘅測試，就會靜靜哋錯。
+    async withTransaction(work) {
+      const savepoint = `join_${Math.random().toString(36).slice(2, 10)}`;
+      await connection.query(`SAVEPOINT ${savepoint}`);
+      try {
+        return await work(connection);
+      } catch (error) {
+        await connection.query(`ROLLBACK TO SAVEPOINT ${savepoint}`);
+        throw error;
+      }
+    }
   };
 }
 
@@ -295,30 +308,91 @@ integrationTest("turning the approval policy off does not decide an already pend
 });
 
 /**
- * AC-013 嘅另一邊。上面嗰個測試證咗啟用讀住政策嗰陣，設定寫入要等佢；呢個證返轉頭
- * ——設定寫入喺飛緊嗰陣，啟用讀唔可以越過佢攞一個就嚟過期嘅答案。兩邊夾埋先係
- * 一個次序；淨係得一邊嘅話，個答案可以喺兩個方向之一被人喺中途換走。
+ * AC-013 嘅另一邊，以及 REV-032 M-3。
+ *
+ * 呢個測試原本係寫成「設定寫入飛緊時，啟用讀要等」，但個 writer 係測試自己手寫嘅
+ * `SELECT … FOR UPDATE`。REV-032 指出咁樣證唔到新嘢：兩個鎖測試唯一掂到嘅 product
+ * code 都係 `getActivationPolicy` 嗰三個字，而 S 鎖同 X 鎖唔相容係 MySQL 嘅保證，
+ * 唔係應用層行為。實測亦都係咁 —— 拆走 `FOR SHARE` 兩個都紅，而拆走 `updateSettings`
+ * 自己嗰個 `FOR UPDATE`，兩個都照綠。
+ *
+ * 所以個 writer 改成行真嘅 `updateSettings`。咁樣先真係證到 AC-013 講嘅「toggle 側」：
+ * 設定寫入攞咗鎖之後，一個並發嘅啟用讀唔可以越過佢攞一個就嚟過期嘅答案。
  */
+function deferred() {
+  let resolve;
+  const promise = new Promise((r) => { resolve = r; });
+  return { promise, resolve };
+}
+
+/**
+ * 喺 `FOR UPDATE` 讀返嚟之後即刻停低，鎖仲揸住手，未行到 UPDATE。呢個窗口就係
+ * 要測嘅嘢：再遲少少，`UPDATE` 自己嗰個 X 鎖會蓋過答案，拆走 `FOR UPDATE` 都睇唔出。
+ *
+ * 靠 SQL 文字認位係測試 harness 嘅妥協，但佢認嘅就係被測嗰個屬性本身：冇咗
+ * `FOR UPDATE`，呢度就唔會停，而個 writer 會一路行完 —— 下面用 race 收呢個情況。
+ */
+function pausingConnection(connection, { holding, release }) {
+  return {
+    query: async (sql, params) => {
+      const result = await connection.query(sql, params);
+      if (String(sql).includes("FOR UPDATE")) {
+        holding.resolve();
+        await release.promise;
+      }
+      return result;
+    },
+    execute: (sql, params) => connection.execute(sql, params)
+  };
+}
+
 integrationTest("an in-flight settings write blocks a concurrent activation read until it finishes", async (t) => {
   const writer = await mysql.createConnection(config());
   const reader = await mysql.createConnection(config());
   t.after(async () => { await writer.end(); await reader.end(); });
 
-  await writer.beginTransaction();
+  const [[current]] = await writer.query("SELECT version FROM supplier_settings WHERE id = 1");
+  const holding = deferred();
+  const release = deferred();
+
+  const service = new SupplierSettingsService({
+    database: {
+      query: (sql, params) => writer.query(sql, params),
+      async withTransaction(work) {
+        await writer.beginTransaction();
+        try {
+          return await work(pausingConnection(writer, { holding, release }));
+        } finally {
+          // 呢個 suite 唔留低任何改動：service 已經做晒佢要做嘅寫入。
+          await writer.rollback();
+        }
+      }
+    },
+    logger: { warn() {} },
+    time: { nowMs: () => Date.now() },
+    authorize: async () => ({ id: null, username: "integration" }),
+    audit: { async record() {} }
+  });
+
+  const writing = service.updateSettings({
+    ...actor, version: Number(current.version), requireActivationApproval: true
+  }).then(() => "committed", (error) => error.publicCode ?? error.code ?? error.message);
+
+  // 個 writer 冇攞鎖嘅話，`holding` 永世唔會 resolve，所以同 `writing` 賽跑：嗰種
+  // 情況下佢會一路行完，而下面個讀會讀得到 —— 即係測試紅，唔係測試 hang。
+  await Promise.race([holding.promise, writing]);
+
+  await reader.query("SET SESSION innodb_lock_wait_timeout = 1");
+  await reader.beginTransaction();
   try {
-    await writer.query("SELECT version FROM supplier_settings WHERE id = 1 FOR UPDATE");
-    await reader.query("SET SESSION innodb_lock_wait_timeout = 1");
-    await reader.beginTransaction();
-    try {
-      await assert.rejects(
-        () => getActivationPolicy(reader),
-        (error) => error.code === "ER_LOCK_WAIT_TIMEOUT",
-        "an activation must not read a policy that a committing write is about to replace"
-      );
-    } finally {
-      await reader.rollback();
-    }
+    await assert.rejects(
+      () => getActivationPolicy(reader),
+      (error) => error.code === "ER_LOCK_WAIT_TIMEOUT",
+      "an activation must not read a policy that an in-flight settings write already holds"
+    );
   } finally {
-    await writer.rollback();
+    await reader.rollback();
+    release.resolve();
+    await writing;
   }
 });
