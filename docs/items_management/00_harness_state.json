@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 65,
+  "revision": 66,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "708ff9d380256eee477173aa01fbc13d3d80e8bf",
-    "source_fingerprint": "aa2e7f2cc7a3c9ca1f4e24657fbdfc387fac1dfd7c5954dc8709dbe73fd9b0d4",
+    "code_commit": "d5c82028484ab771e82472a84d2e6e0f7d84e60b",
+    "source_fingerprint": "9deb91a0c803cd3338003d68b639b2503f759ede66a4413d8283bf6b0d857b17",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
-    "default_commit": "5d390d263e13fa113a77693ec9e3979da19f824e",
+    "default_commit": "5125f328dbdd7437208abade08bd8fe950a2ce38",
     "mode_entry_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca"
   },
   "runtime": {
@@ -869,8 +869,8 @@
       "kind": "BRANCH_SYNC",
       "target": "merge origin/main 5125f328dbdd7437208abade08bd8fe950a2ce38 into codex/item-management-closeout",
       "idempotency_key": "item-management-closeout-sync-5125f32-20260921",
-      "status": "PLANNED",
-      "source_ref": "Independent review of PR #117 found the branch 12 commits behind current main; repository policy requires synchronization and exact-candidate CI before merge."
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit d5c82028484ab771e82472a84d2e6e0f7d84e60b on 2026-09-21: origin/main 5125f328dbdd7437208abade08bd8fe950a2ce38 merged without conflicts; Item closeout changes were preserved."
     },
     {
       "id": "CI-68",
@@ -1032,5 +1032,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #105 and its required CI are complete; TASK-037 and TASK-038 are closed. TASK-043 is dependency-blocked until a real downstream module owns a reference to item_skus. TASK-044 remains blocked on independent signing of the retained recovery manifest, provisioning and approval of the recovery public key/trust environment, formal TC-016 execution, and the remaining human acceptance/sign-offs. Do not fabricate either dependency; resume TEST_AND_VERIFY only against an immutable candidate and the provisioned staging-like recovery environment."
+  "next_safe_action": "Push the post-sync PR #117 candidate, rerun all required CI on that exact candidate, obtain renewed independent approval, verify main has not moved, then merge and clean the closeout branch/worktree. After closeout: TASK-043 remains dependency-blocked until a real downstream module owns a reference to item_skus; TASK-044 remains blocked on independent manifest signing, recovery public-key/trust-environment provisioning and approval, formal TC-016, and human acceptance/sign-offs."
 }

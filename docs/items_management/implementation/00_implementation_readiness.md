@@ -6,7 +6,7 @@
 
 ## Baseline and isolation
 
-- Default branch / observed remote baseline: `origin/main` at `5d390d263e13fa113a77693ec9e3979da19f824e` (refreshed 2026-09-21).
+- Default branch / observed remote baseline: `origin/main` at `5125f328dbdd7437208abade08bd8fe950a2ce38` (refreshed 2026-09-21 and merged into the closeout branch as `d5c82028484ab771e82472a84d2e6e0f7d84e60b`).
 - Closeout branch / worktree: `codex/item-management-closeout` / `/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout`.
 - Integration result: PR `#105` merged candidate `39d779261e0230077130e35aa7ba991eef77f560` to `main` as `aa7d19276cb12c4375eecdf205b72051d7f03b65` on 2026-09-16 after all required CI checks passed.
 - Runtime: developer checks use local isolated resources only. TASK-044 uses source `item_recovery_tc016_20260915`, restored target `item_recovery_tc016_20260915_run1`, and separate restored media/import roots; `erp_dev` is preserved and no production data or deployment action is in scope.
