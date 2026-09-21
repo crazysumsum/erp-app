@@ -23,6 +23,7 @@ const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.s
 
 // 一個獨特到唔會撞任何嘢嘅明文，咁「掃唔掃到佢」先至有意義。
 const SECRET = `77${randomUUID().replace(/-/gu, "").slice(0, 14).toUpperCase()}`;
+const PASSWORD = "Bank-Http-Test-1!";
 
 function config() {
   return {
@@ -449,4 +450,117 @@ integrationTest("a real ER_DUP_ENTRY from the driver becomes a 409, not a 500 ca
   });
   assert.ok(!serialized.includes("Duplicate entry"), "the driver's message embeds the raw blind index bytes");
   assert.ok(!serialized.includes(SECRET));
+});
+
+/**
+ * 真 HTTP。呢個測試順帶收咗一個由 TASK-031 帶到而家嘅缺口：REV-032 M-4 指出
+ * `supplier_management` 入面**冇一層**係由 dispatcher → handler → service → MySQL
+ * 行足全程 —— handler 測試係宣告式嘅，而 e2e spec 全部 mock 咗個 API。呢度用返
+ * `business-master/http.integration.test.js` 嘅做法起一個真 app。
+ *
+ * 佢同時證到一件 T34 先至存在嘅事：**個 app 起得到**。由呢個 task 起，Bank
+ * capability 已經部署，所以兩組 key ring 係無條件嘅 startup requirement（設計
+ * §1700，HD-030）—— 一個起得成嘅 app 就係嗰個配置真係生效嘅證據。
+ */
+integrationTest("the Bank routes answer over real HTTP, and the masked list leaks nothing", async (t) => {
+  const { createApplication } = await import("../../src/framework/application/createApplication.js");
+  const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
+  const source = defaultConfigurationSource();
+  const application = await createApplication({
+    configurationSource: { ...source, application: { ...source.application, port: 0 } },
+    serviceDiscoveryOptions: {
+      additionalModuleUrls: [
+        // Supplier 嘅 provider 依賴 businessMaster，所以兩個都要發現到 —— 同
+        // business-master/http.integration.test.js 一樣。
+        new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href
+      ]
+    }
+  });
+  const db = application.services.require("mysqldatabase");
+  const now = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+  let supplierId = null;
+  let roleId = null;
+  let userId = null;
+  t.after(async () => {
+    if (supplierId) {
+      await db.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [supplierId]);
+      await db.execute("DELETE FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]);
+      await db.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
+    }
+    if (userId) {
+      await db.execute("DELETE FROM user_roles WHERE user_id = ?", [userId]);
+      await db.execute("DELETE FROM fr_token_versions WHERE subject = ?", [String(userId)]);
+      await db.execute("DELETE FROM users WHERE id = ?", [userId]);
+    }
+    if (roleId) await db.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    await application.shutdown("supplier_bank_http_test_complete");
+  });
+
+  const [role] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`bank-http-${suffix}`, now]);
+  roleId = Number(role.insertId);
+  for (const name of ["supplier.view"]) {
+    const [[permission]] = await db.query("SELECT id FROM permissions WHERE name = ?", [name]);
+    await db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
+  }
+  // 真嘅 hash：reveal 係 jwt-password，password re-auth 喺 authorization policy
+  // **之前**行。用一個假 hash 會令個請求死喺密碼比對度（500），咁就證唔到「佢過到
+  // 密碼，但冇資格」—— 而後者先係 AC-023 講嗰件事。
+  const { hashPassword } = await import("../../src/modules/user/passwordHash.js");
+  const passwordHash = await hashPassword(PASSWORD);
+  const [user] = await db.execute(
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    [`bank-http-${suffix}`, passwordHash, "Bank HTTP", now, now]
+  );
+  userId = Number(user.insertId);
+  await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
+
+  // 種資料用一條 raw mysql2 連線：`serviceOn` 個 wrapper 要 beginTransaction／commit，
+  // 而 app 嗰個 mysqldatabase service 係另一個介面。角色同使用者就用 app 嗰個，因為
+  // 佢要同 jwt／tokenRevocation 睇到同一個資料庫。
+  const seedConnection = await mysql.createConnection(config());
+  const seeded = await seedSupplier(seedConnection, suffix);
+  supplierId = seeded.supplierId;
+  await serviceOn(seedConnection, { crypto: buildCrypto() }).create({
+    ...actor, ...details, supplierId, accountNumber: SECRET, isDefault: true, reason: "HTTP 測試種一行"
+  });
+  await seedConnection.end();
+
+  const jwt = application.services.require("jwt");
+  const version = await application.services.require("tokenRevocation").currentVersion(String(userId));
+  const token = await jwt.issue(
+    { roles: [`bank-http-${suffix}`], permissions: ["supplier.view"] },
+    { subject: String(userId), version, authTime: Math.floor(now / 1000) }
+  );
+  const { url } = await application.start();
+  const get = (path, headers = {}) => fetch(`${url}${path}`, { headers })
+    .then(async (r) => ({ status: r.status, headers: r.headers, body: await r.json() }));
+
+  // 冇 token：401，而且唔會漏出任何嘢。
+  assert.equal((await get(`/api/v1/suppliers/${supplierId}/bank-accounts`)).status, 401);
+
+  const listed = await get(`/api/v1/suppliers/${supplierId}/bank-accounts`, { authorization: `Bearer ${token}` });
+  assert.equal(listed.status, 200, JSON.stringify(listed.body));
+  assert.equal(listed.body.data.items.length, 1);
+  const [item] = listed.body.data.items;
+  assert.match(item.maskedAccountNumber, /^••••\s/u);
+  assert.equal(item.isDefault, true);
+
+  // 成個 response body —— 唔係淨係嗰個 item —— 唔可以有帳號或者任何 crypto metadata。
+  const serialized = JSON.stringify(listed.body);
+  assert.ok(!serialized.includes(SECRET), "AC-023: a supplier.view holder never receives the account over HTTP");
+  for (const leak of ["ciphertext", "authTag", "blindIndex", "cryptoContext", "encryptionKeyId", "lastFour"]) {
+    assert.ok(!serialized.includes(leak), `${leak} must not cross the wire`);
+  }
+
+  // 一個只得 supplier.view 嘅人撳 reveal：403，而唔係 401 或者 404 —— 佢認到身分，
+  // 佢只係冇資格。而個拒絕本身唔可以講出帳號。
+  const revealed = await fetch(`${url}/api/v1/suppliers/${supplierId}/bank-accounts/${item.id}/reveal`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({ reason: "冇權限測試原因", password: PASSWORD })
+  }).then(async (r) => ({ status: r.status, body: await r.json() }));
+  assert.equal(revealed.status, 403, JSON.stringify(revealed.body));
+  assert.ok(!JSON.stringify(revealed.body).includes(SECRET));
 });

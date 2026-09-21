@@ -178,10 +178,16 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
-        "DB_PASSWORD"
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ]
     },
     {
@@ -370,7 +376,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -445,7 +455,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -514,7 +528,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -624,7 +642,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -682,7 +704,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -738,7 +764,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -796,7 +826,11 @@
         "DB_USER",
         "DB_PASSWORD",
         "DB_NAME",
-        "DB_INTEGRATION_TESTS"
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
