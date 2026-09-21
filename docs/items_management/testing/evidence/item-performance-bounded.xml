@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="T35 效能驗證：100k SKU／1M barcode／1M UOM，50 併發混合負載，10,000-row import KPI" time="9.199676" disabled="0" errors="0" tests="3" failures="0" skipped="0" timestamp="2026-09-14T09:31:10.675Z" hostname="samMacBook-Pro.local">
+		<testcase name="EXPLAIN：exact SKU code／barcode lookup 唔係 full table scan" time="0.004113" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/performance/itemManagement.performance.test.js"/>
+		<testcase name="50 併發混合負載：exact lookup／首頁／常用 filters p95 &lt; 2 秒" time="0.416617" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/performance/itemManagement.performance.test.js"/>
+		<testcase name="10000-row CSV import KPI：preflight＋execution 合計 ≤ 10 分鐘，執行期間 lookup p95 &lt; 2 秒" time="7.849044" classname="test" file="/private/tmp/erp-item-management-task-038/server/test/performance/itemManagement.performance.test.js"/>
+	</testsuite>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 4 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 9328.516625 -->
+</testsuites>

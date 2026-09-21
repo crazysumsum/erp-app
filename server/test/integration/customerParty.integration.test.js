@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { inspectCustomerPartySchema } from "../../database/migrations/0034_create_customer_party_tables.js";
+import { inspectCustomerPartySchema } from "../../database/migrations/0043_create_customer_party_tables.js";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { CustomerPartyService } from "../../src/modules/customer/CustomerPartyService.js";

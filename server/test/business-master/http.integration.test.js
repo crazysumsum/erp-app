@@ -26,7 +26,10 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
   const application = await createApplication({
     configurationSource: { ...source, application: { ...source.application, port: 0 } },
     serviceDiscoveryOptions: {
-      additionalModuleUrls: [new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href]
+      additionalModuleUrls: [
+        new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href
+      ]
     }
   });
   const db = application.services.require("mysqldatabase");
@@ -98,7 +101,7 @@ integrationTest("TC-012 real HTTP authentication and authorized admin flow", asy
       { checkerId: "customer", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "purchasing", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
       { checkerId: "sales", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 },
-      { checkerId: "supplier", status: "NOT_INSTALLED", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 }
+      { checkerId: "supplier", status: "READY", activeDefaultCount: 0, openUseCount: 0, historicalCount: 0 }
     ]
   );
   const rejected = await request(`${url}/api/v1/business-master/currencies/${currencyCode}/deactivate`, {

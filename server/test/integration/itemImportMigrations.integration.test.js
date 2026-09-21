@@ -52,10 +52,11 @@ async function seedUser(db, { username }) {
 function jobRow({ suffix, resultStoredName = null }) {
   const nowMs = Date.now();
   return {
+    // Keep schema-only fixtures non-claimable by the parallel import worker tests.
     sql: `INSERT INTO item_import_jobs
             (file_stored_name, result_stored_name, file_sha256, template_version, mode, status,
              created_at, updated_at)
-          VALUES (?, ?, ?, 'v1', 'create_only', 'uploaded', ?, ?)`,
+          VALUES (?, ?, ?, 'v1', 'create_only', 'ready', ?, ?)`,
     params: [`it-import-${suffix}.csv`, resultStoredName, "a".repeat(64), nowMs, nowMs]
   };
 }
@@ -122,7 +123,7 @@ test("item_import_jobs.created_by／confirmed_by：SET NULL，刪用戶唔會刪
     `INSERT INTO item_import_jobs
        (file_stored_name, file_sha256, template_version, mode, status, created_by, confirmed_by,
         created_at, updated_at)
-     VALUES (?, ?, 'v1', 'create_only', 'uploaded', ?, ?, ?, ?)`,
+     VALUES (?, ?, 'v1', 'create_only', 'ready', ?, ?, ?, ?)`,
     [`it-import-${suffix}.csv`, "b".repeat(64), userId, userId, nowMs, nowMs]
   );
   jobId = result.insertId;
@@ -141,7 +142,7 @@ async function seedJob(db, suffix) {
   const [result] = await db.query(
     `INSERT INTO item_import_jobs
        (file_stored_name, file_sha256, template_version, mode, status, created_at, updated_at)
-     VALUES (?, ?, 'v1', 'upsert', 'uploaded', ?, ?)`,
+     VALUES (?, ?, 'v1', 'upsert', 'ready', ?, ?)`,
     [`it-import-${suffix}.csv`, "c".repeat(64), nowMs, nowMs]
   );
   return result.insertId;

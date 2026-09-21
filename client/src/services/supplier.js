@@ -1,0 +1,123 @@
+import { httpClient } from "@/framework/http/HttpClient.js";
+
+export const service = { name: "supplier" };
+
+export default {
+  create(payload) {
+    return httpClient.post("/api/v1/suppliers/create", {
+      idempotent: true,
+      body: payload
+    });
+  },
+
+  checkDuplicates(payload) {
+    return httpClient.post("/api/v1/suppliers/duplicates/check", {
+      body: payload
+    });
+  },
+
+  list({
+    page, rowsPerPage, sortBy, descending, filter, status, currencyCode, paymentTermId,
+    updatedFrom, updatedTo, includeArchived
+  }) {
+    return httpClient.get("/api/v1/suppliers", {
+      params: {
+        page,
+        pageSize: rowsPerPage,
+        q: filter || undefined,
+        status: status || undefined,
+        currencyCode: currencyCode || undefined,
+        paymentTermId: paymentTermId || undefined,
+        updatedFrom,
+        updatedTo,
+        includeArchived,
+        sortBy: sortBy || undefined,
+        descending
+      }
+    }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
+  },
+
+  getById(id) {
+    return httpClient.get(`/api/v1/suppliers/${id}`);
+  },
+
+  completeness(id) {
+    return httpClient.get(`/api/v1/suppliers/${id}/completeness`);
+  },
+
+  update(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/update`, { body: payload });
+  },
+
+  changeCode(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/code/change`, { body: payload, signed: true });
+  },
+
+  activate(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/activate`, { body: payload });
+  },
+
+  suspend(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/suspend`, { body: payload });
+  },
+
+  reactivate(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/reactivate`, { body: payload });
+  },
+
+  block(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/block`, { body: payload, signed: true });
+  },
+
+  unblock(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/unblock`, { body: payload, signed: true });
+  },
+
+  archive(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/archive`, { body: payload });
+  },
+
+  restore(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/restore`, { body: payload });
+  },
+
+  deleteSupplier(id, payload) {
+    return httpClient.post(`/api/v1/suppliers/${id}/delete`, { body: payload, signed: true });
+  },
+
+  createAddress(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/create`, { body: payload });
+  },
+
+  updateAddress(supplierId, addressId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/update`, { body: payload });
+  },
+
+  deactivateAddress(supplierId, addressId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/addresses/${addressId}/deactivate`, { body: payload });
+  },
+
+  createContact(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/create`, { body: payload });
+  },
+
+  updateContact(supplierId, contactId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/update`, { body: payload });
+  },
+
+  deactivateContact(supplierId, contactId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/contacts/${contactId}/deactivate`, { body: payload });
+  },
+
+  createIdentifier(supplierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/create`, { body: payload });
+  },
+
+  updateIdentifier(supplierId, identifierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/${identifierId}/update`, { body: payload });
+  },
+
+  deleteIdentifier(supplierId, identifierId, payload) {
+    return httpClient.post(`/api/v1/suppliers/${supplierId}/identifiers/${identifierId}/delete`, { body: payload });
+  }
+};

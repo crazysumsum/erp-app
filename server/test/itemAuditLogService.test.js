@@ -30,7 +30,7 @@ function createService({ logger = collectingLogger() } = {}) {
   return { service, logger };
 }
 
-test("constructor requires database, logger and time", () => {
+test("ItemAuditLogService constructor requires database, logger and time", () => {
   assert.throws(() => new ItemAuditLogService({}), TypeError);
   assert.throws(() => new ItemAuditLogService({ database: {} }), TypeError);
 });

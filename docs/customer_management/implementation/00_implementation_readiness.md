@@ -56,8 +56,9 @@ merge claim.
 - Fresh isolated MySQL schema `erp_customer_phase001_task003_20260914`: the
   provisional equality-key migration at `0028` applied; a full rerun skipped every
   migration. That schema was then dropped. After integrating the Business Master
-  `0027` migration, the final sequence is `0028_seed_customer_permissions.js` then
-  `0029_create_customer_equality_key_foundation.js` and requires fresh verification.
+  current `main` migrations, the final sequence is `0037_seed_customer_permissions.js`
+  then `0038_create_customer_equality_key_foundation.js`; the recovery verification
+  below confirms that sequence.
 - Real MySQL tests proved both key columns are `utf8mb4_bin`, normalized duplicate
   inserts fail with `ER_DUP_ENTRY`, accent-distinct normalized keys coexist, and two
   concurrent same-key inserts produce exactly one winner.
@@ -75,7 +76,7 @@ merge claim.
   provider-contract tests: 9 passed.
 - Fresh isolated MySQL schema `erp_customer_phase001_task004_20260915`: complete
   framework and application migrations through
-  `0030_create_customer_classification_catalogs.js` applied successfully; a full
+  `0039_create_customer_classification_catalogs.js` applied successfully; a full
   rerun skipped every migration.
 - MySQL metadata verified the one Business Master-owned active `HKD` currency,
   `utf8mb4_bin` `code_key` columns and `(status,sort_order,name)` indexes on all
@@ -91,7 +92,7 @@ merge claim.
 - Focused Customer root migration, audit log, projection and public-error tests:
   9 passed; lint passed for all TASK-005 files.
 - Fresh isolated MySQL schema `erp_customer_phase001_task005_20260915`: complete
-  migrations through `0032_create_customer_audit_logs.js` applied successfully;
+  migrations through `0041_create_customer_audit_logs.js` applied successfully;
   a full rerun skipped every migration.
 - MySQL metadata verified Customer root binary normalized keys, active catalog
   foreign keys, root filter indexes, and the append-only audit table's JSON detail
@@ -104,14 +105,14 @@ merge claim.
 This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
 merge claim.
 
-- Added `0033_create_customer_operation_requests.js`: an actor-scoped durable
+- Added `0042_create_customer_operation_requests.js`: an actor-scoped durable
   Customer command outcome record with canonical payload hash, recovery lease,
   resource reference and terminal-result fields.  The migration shape test, service
   transaction test and handler contract test passed.
 - All server tests passed in a loopback-capable local environment: 1,267 passed,
   229 environment-gated tests skipped, 0 failed.  The sandbox-only no-socket run
   was not used as release evidence.
-- Fresh isolated schemas were migrated through `0033`; one full rerun skipped every
+- Fresh isolated schemas were migrated through `0042`; one full rerun skipped every
   migration. Metadata confirmed the actor/route/key unique constraint plus lease,
   resource and actor indexes. Both schemas were dropped after verification.
 - A real isolated-MySQL HTTP flow created a Draft Customer, replayed the identical
@@ -127,7 +128,7 @@ merge claim.
 This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
 merge claim.
 
-- Added `0034_create_customer_party_tables.js` for Customer-owned Address, Contact
+- Added `0043_create_customer_party_tables.js` for Customer-owned Address, Contact
   and purpose mappings. Composite owner foreign keys prevent cross-Customer child
   references; generated default slots and unique indexes enforce at most one
   default per Customer and purpose. The migration rejects partial or incompatible
@@ -145,7 +146,7 @@ merge claim.
   tests, 1,275 passed, 231 environment-gated tests skipped and 0 failed. CI was not
   run, as directed by the Product Owner. No frontend file changed, so browser and
   Playwright verification are not applicable to TASK-007.
-- Fresh isolated MySQL verification applied all migrations through `0034`, accepted
+- Fresh isolated MySQL verification applied all migrations through `0043`, accepted
   the resulting schema through its compatibility inspector and proved concurrent
   Address default switching, cross-owner safe-not-found behavior, default clearing,
   Contact multi-purpose/default replacement, preserved inactive mappings, exact
@@ -162,12 +163,12 @@ merge claim.
 This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
 merge claim.
 
-- Added `0035_create_customer_identifiers.js` with Customer ownership, binary
+- Added `0044_create_customer_identifiers.js` with Customer ownership, binary
   equality keys, lifecycle/version fields and a retained global uniqueness rule;
   deactivation therefore never releases an identifier for reuse. Added strict,
   idempotent create/update/deactivate contracts with owner-scoped reads, Customer
   locking, CAS writes and generic duplicate-conflict responses.
-- Added `0036_create_customer_credit_profiles.js` and `CustomerCreditService` for
+- Added `0045_create_customer_credit_profiles.js` and `CustomerCreditService` for
   exact `DECIMAL(19,4)` limit storage, Business Master-owned active Currency
   validation, explicit not-configured/zero/on-hold projections, first-write
   serialization, CAS updates and fresh-authenticated clearing. Raw identifier
@@ -177,7 +178,7 @@ merge claim.
   The post-review migration-inspector regression subset passed 10 tests. Static
   response-schema regression coverage also prevents request-only normalization
   keywords from entering response contracts.
-- Fresh isolated MySQL verification applied every migration through `0036`, then
+- Fresh isolated MySQL verification applied every migration through `0045`, then
   proved a complete rerun was a no-op. TC-021 through TC-025 passed against real
   MySQL and HTTP for identifier uniqueness/inactive-key retention, Credit
   null-versus-zero/on-hold behavior, create/update/clear concurrency control,
@@ -211,7 +212,7 @@ merge claim.
   `expectedVersion`, lock the selected row and return the Customer version snapshot.
 - Focused TC-018, TC-026 and TC-027 contract suites passed 14 tests. A fresh
   isolated MySQL schema `erp_customer_phase001_task009_20260915` migrated through
-  `0036`, a complete rerun skipped every migration, and the real lookup contract
+  `0045`, a complete rerun skipped every migration, and the real lookup contract
   test passed 1/1 for status handling, minimal projection, credit zero/on-hold,
   ownership, purpose and transaction-version checks. Trap cleanup completed and
   the final schema-absence query returned zero.

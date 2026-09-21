@@ -31,7 +31,13 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "customer.bank.mgmt", description: "管理客戶銀行資料及敏感附件" }),
   Object.freeze({ name: "customer.settings", description: "管理客戶設定及受控分類目錄" }),
   Object.freeze({ name: "business_master.view", description: "查看貨幣、付款條款與變更歷史" }),
-  Object.freeze({ name: "business_master.mgmt", description: "管理貨幣與付款條款主資料" })
+  Object.freeze({ name: "business_master.mgmt", description: "管理貨幣與付款條款主資料" }),
+  Object.freeze({ name: "supplier.view", description: "查看一般供應商資料與變更歷史" }),
+  Object.freeze({ name: "supplier.mgmt", description: "管理供應商一般主資料與一般狀態" }),
+  Object.freeze({ name: "supplier.approval", description: "審批供應商啟用及管理封鎖狀態" }),
+  Object.freeze({ name: "supplier.bank.view", description: "查看供應商完整銀行資料" }),
+  Object.freeze({ name: "supplier.bank.mgmt", description: "管理供應商銀行資料" }),
+  Object.freeze({ name: "supplier.settings", description: "管理供應商模組參數" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

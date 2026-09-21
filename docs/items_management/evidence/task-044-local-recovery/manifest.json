@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "environmentClass": "staging-like",
+  "environmentId": "local-item-recovery-staginglike",
+  "recoveryPoint": {
+    "id": "rp-item-recovery-tc016-20260915-run1",
+    "databaseBackupId": "mysql-consistent-snapshot-item-recovery-source-20260915-run1",
+    "mediaSnapshotId": "media-copy-item-recovery-source-20260915-run1",
+    "importSnapshotId": "import-copy-item-recovery-source-20260915-run1",
+    "backupCreatedAt": "2026-09-15T04:05:08.000Z",
+    "latestCommittedAt": "2026-09-15T04:05:38.541Z",
+    "restoreStartedAt": "2026-09-15T04:06:06.000Z",
+    "restoreCompletedAt": "2026-09-15T04:06:23.000Z"
+  },
+  "database": {
+    "schema": "item_recovery_tc016_20260915_run1",
+    "tableCounts": {
+      "item_categories": 3,
+      "item_brands": 1,
+      "item_uoms": 2,
+      "items": 1,
+      "item_skus": 1,
+      "item_sku_uoms": 0,
+      "item_sku_barcodes": 0,
+      "item_attribute_definitions": 2,
+      "item_attribute_options": 2,
+      "item_category_attributes": 0,
+      "item_attribute_values": 0,
+      "item_sku_attribute_values": 0,
+      "item_media": 1,
+      "item_audit_logs": 21,
+      "item_import_jobs": 1,
+      "item_import_rows": 0
+    },
+    "smokeSku": {
+      "skuCode": "RECOVERY-SKU-20260915",
+      "itemId": 9000001,
+      "skuId": 9000002
+    },
+    "smokeAudit": {
+      "id": 9000005,
+      "action": "item.update",
+      "targetType": "item",
+      "targetId": 9000001
+    }
+  },
+  "files": [
+    {
+      "area": "media",
+      "recordId": 9000003,
+      "path": "recovery-photo.txt",
+      "bytes": 29,
+      "sha256": "3d91d8fb7959f1a1999fd124818d9a4c6714b7239da14d6356ca5705c8299efc"
+    },
+    {
+      "area": "import",
+      "recordId": 9000004,
+      "fileKind": "source",
+      "path": "recovery-source.csv",
+      "bytes": 59,
+      "sha256": "9dfd3af459965e186d277116b653d78eb4f439c2c7ff534bfde607829445a722"
+    }
+  ]
+}

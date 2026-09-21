@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { up as createCustomerOperationRequests } from "../database/migrations/0033_create_customer_operation_requests.js";
+import { up as createCustomerOperationRequests } from "../database/migrations/0042_create_customer_operation_requests.js";
 import { CustomerOperationService } from "../src/modules/customer/CustomerOperationService.js";
 import { CustomerService } from "../src/modules/customer/CustomerService.js";
 

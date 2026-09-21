@@ -437,7 +437,7 @@ test("UOM 建立（code 建立後不可修改）、stale version 409、更新、
   );
 });
 
-test("只有 item.view 可讀 Catalog GET；只有 item.mgmt 而沒有 item.view 一律 403（沒有 permission inheritance）", { skip }, async (t) => {
+test("TC-010 item.view 可唯讀 Catalog；item.mgmt 可讀寫所有 Catalog API", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -475,6 +475,9 @@ test("只有 item.view 可讀 Catalog GET；只有 item.mgmt 而沒有 item.view
   for (const path of ["/api/v1/catalog/categories", "/api/v1/catalog/brands", "/api/v1/catalog/uoms"]) {
     const response = await fetch(`${url}${path}`, get(viewToken));
     assert.equal(response.status, 200, `item.view 應該讀得到 ${path}`);
+
+    const managerResponse = await fetch(`${url}${path}`, get(mgmtToken));
+    assert.equal(managerResponse.status, 200, `item.mgmt 應該讀得到 ${path}`);
   }
 
   const viewCreate = await fetch(
@@ -482,9 +485,6 @@ test("只有 item.view 可讀 Catalog GET；只有 item.mgmt 而沒有 item.view
     authed(viewToken, { name: `it-blocked-${randomUUID().slice(0, 8)}`, parentId: null, sortOrder: 0 })
   );
   assert.equal(viewCreate.status, 403, "item.view 不可以寫入");
-
-  const mgmtRead = await fetch(`${url}/api/v1/catalog/categories`, get(mgmtToken));
-  assert.equal(mgmtRead.status, 403, "只有 item.mgmt 而沒有 item.view 不可以讀 GET");
 
   const mgmtCreate = await fetch(
     `${url}/api/v1/catalog/categories/create`,
@@ -1012,4 +1012,90 @@ test("Category attribute assignment：expectedAttributeIds 過期時拒絕覆蓋
     [categoryId]
   );
   assert.equal(auditRows.length, 2);
+});
+
+test("TC-014 被 Item／SKU UOM／SKU 度量／屬性引用的 Brand／UOM 刪除回 CATALOG_IN_USE，資料與 audit 均不變", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-Referenced-Delete-1!";
+  const role = await seedItemManagerRole(db);
+  const actor = await seedUser(db, {
+    username: `it-catalog-ref-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: role.roleId
+  });
+  const catalog = await seedCatalog(db);
+  const nowMs = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+  const [itemResult] = await db.execute(
+    `INSERT INTO items
+       (name, category_id, brand_id, product_type, status, version, created_at, updated_at)
+     VALUES (?, ?, ?, 'standard', 'draft', 1, ?, ?)`,
+    [`it-referenced-item-${suffix}`, catalog.categoryId, catalog.brandId, nowMs, nowMs]
+  );
+  const [skuResult] = await db.execute(
+    `INSERT INTO item_skus
+       (item_id, sku_code, sku_name, net_content, net_content_uom_id, status, version, created_at, updated_at)
+     VALUES (?, ?, ?, '1.000000', ?, 'draft', 1, ?, ?)`,
+    [itemResult.insertId, `IT-REF-${suffix}`, `Referenced UOM SKU ${suffix}`, catalog.uomId, nowMs, nowMs]
+  );
+  await db.execute(
+    `INSERT INTO item_sku_uoms
+       (sku_id, uom_id, to_base_factor, is_base, is_default_sale, version, created_at, updated_at)
+     VALUES (?, ?, 1, 1, 1, 1, ?, ?)`,
+    [skuResult.insertId, catalog.uomId, nowMs, nowMs]
+  );
+  const [attributeResult] = await db.execute(
+    `INSERT INTO item_attribute_definitions
+       (code, name, data_type, uom_id, status, version, created_at, updated_at)
+     VALUES (?, ?, 'decimal', ?, 'active', 1, ?, ?)`,
+    [`REF${suffix}`, `Referenced UOM ${suffix}`, catalog.uomId, nowMs, nowMs]
+  );
+
+  t.after(async () => {
+    await db.execute("DELETE FROM item_attribute_definitions WHERE id = ?", [attributeResult.insertId]);
+    await db.execute("DELETE FROM items WHERE id = ?", [itemResult.insertId]);
+    await catalog.cleanup();
+    await cleanupUser(db, actor.userId);
+    await role.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, {
+    roles: [role.roleName],
+    permissions: ["item.view", "item.mgmt"]
+  });
+
+  const brandDelete = await fetch(
+    `${url}/api/v1/catalog/brands/${catalog.brandId}/delete`,
+    authed(token, { reason: "整合測試：被引用 Brand", version: 1, password })
+  );
+  const brandBody = await brandDelete.json();
+  assert.equal(brandDelete.status, 409, JSON.stringify(brandBody));
+  assert.equal(brandBody.error.code, "CATALOG_IN_USE");
+  assert.deepEqual(brandBody.error.details.referenceTypes, ["items"]);
+
+  const uomDelete = await fetch(
+    `${url}/api/v1/catalog/uoms/${catalog.uomId}/delete`,
+    authed(token, { reason: "整合測試：被引用 UOM", version: 1, password })
+  );
+  const uomBody = await uomDelete.json();
+  assert.equal(uomDelete.status, 409, JSON.stringify(uomBody));
+  assert.equal(uomBody.error.code, "CATALOG_IN_USE");
+  assert.deepEqual(uomBody.error.details.referenceTypes, ["sku_uoms", "sku_measurements", "attributes"]);
+
+  const [[brand]] = await db.query("SELECT id FROM item_brands WHERE id = ?", [catalog.brandId]);
+  const [[uom]] = await db.query("SELECT id FROM item_uoms WHERE id = ?", [catalog.uomId]);
+  assert.equal(Number(brand.id), catalog.brandId);
+  assert.equal(Number(uom.id), catalog.uomId);
+
+  const [[audit]] = await db.query(
+    `SELECT COUNT(*) AS total
+       FROM item_audit_logs
+      WHERE actor_user_id = ? AND action IN ('brand.delete', 'uom.delete')`,
+    [actor.userId]
+  );
+  assert.equal(Number(audit.total), 0);
 });

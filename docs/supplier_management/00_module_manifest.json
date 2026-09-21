@@ -45,16 +45,21 @@
       "client/e2e/**"
     ],
     "approval_required_paths": [
-      "server/database/migrations/**",
-      "server/src/modules/authorization/permissionCatalogue.js",
-      "server/config/**",
-      "server/package.json",
-      "package-lock.json",
+      ".gitignore",
       "client/config/menu.js",
       "client/src/framework/http/errorMessages.js",
-      "docs/items_management/**",
       "docs/customer_management/**",
-      "docs/purchasing_receiving_management/**"
+      "docs/items_management/**",
+      "docs/purchasing_receiving_management/**",
+      "package-lock.json",
+      "server/.env.example",
+      "server/config/**",
+      "server/database/migrations/**",
+      "server/package.json",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/src/index.js",
+      "server/src/modules/authorization/permissionCatalogue.js",
+      "server/src/modules/businessMaster/businessMasterFactory.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -79,7 +84,7 @@
         "id": "supplier-public-provider-contracts",
         "version": "design-1.0",
         "source": "docs/supplier_management/03_design_spec.md",
-        "sha256": "16031c0f63ce28baf333f02e65f68107a42d4d711baf2e9f55c77d60625859db",
+        "sha256": "a9f644939616f70c1099c2a9d9b82847394abfcc29de64730ec5247ad46697bc",
         "consumers": [
           "purchasing-receiving",
           "item-management",
@@ -94,7 +99,7 @@
         "id": "item-sku-uom-provider",
         "version": "aligned-design-v2",
         "source": "docs/items_management/03_design_spec.md",
-        "sha256": "6a01476bc89437946dcc635fc21a66d932609d2609a07f0bdee64465a016dd6a",
+        "sha256": "5c193e20a3e7fec1cd02f3ea76969d616af74a62cde599eac6202c468d8e8ecd",
         "regression_suites": [
           "supplier-server-integration"
         ]
@@ -153,11 +158,7 @@
   "required_suites": {
     "developer": [
       "lint",
-      "client-build",
-      "supplier-server-integration",
-      "supplier-bank-security",
-      "supplier-security",
-      "supplier-client-ui"
+      "client-build"
     ],
     "technical": [
       "supplier-server-integration",

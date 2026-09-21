@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 
-import { inspectCustomerIdentifierSchema } from "../../database/migrations/0035_create_customer_identifiers.js";
-import { inspectCustomerCreditSchema } from "../../database/migrations/0036_create_customer_credit_profiles.js";
+import { inspectCustomerIdentifierSchema } from "../../database/migrations/0044_create_customer_identifiers.js";
+import { inspectCustomerCreditSchema } from "../../database/migrations/0045_create_customer_credit_profiles.js";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";

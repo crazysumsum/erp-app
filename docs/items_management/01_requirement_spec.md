@@ -224,14 +224,14 @@ KPI 數值需由業務負責人及技術團隊在上線前確認。
 
 | 角色 | 主要責任 | 典型權限 |
 | --- | --- | --- |
-| 商品管理員 | 建立及維護商品、SKU、分類、品牌、條碼及包裝設定；資料完整時可直接啟用。 | `item.view`＋`item.mgmt` |
+| 商品管理員 | 建立及維護商品、SKU、分類、品牌、條碼及包裝設定；資料完整時可直接啟用。 | `item.mgmt`（包含 Item 管理 API 讀取） |
 | 採購人員 | 查閱商品、採購單位及效期要求。 | `item.view`；交易內查找另依採購權限 |
 | 庫存人員 | 查閱庫存單位及追蹤政策；不可任意修改主資料。 | `item.view`；交易內查找另依庫存權限 |
 | 銷售／POS 人員 | 以 SKU Code、條碼或名稱查找可銷售 SKU。 | 交易內查找 |
 | 財務／管理層 | 查閱商品狀態及報表分類。 | 按需要授予 `item.view` |
 | 系統管理員 | 配置角色權限、處理緊急資料修復及查看稽核資料。 | 預設 `item.view`＋`item.mgmt` |
 
-新增 `item.view` 及 `item.mgmt`：前者只允許查看商品列表、詳情、附件及變更歷史；後者允許建立、修改、狀態操作、匯入及受控刪除，並必須同時包含 `item.view`。其他業務模組在其正常流程中查找可用 SKU，仍以該模組自身權限控制，不因沒有 Item 管理權限而無法選擇商品。
+新增 `item.view` 及 `item.mgmt`：前者只允許查看商品列表、詳情、附件及變更歷史；後者允許完整讀寫所有 Item Management API（包括列表、詳情、catalog、media 與 audit），不必額外持有 `item.view`。其他業務模組在其正常流程中查找可用 SKU，仍以該模組自身權限控制，不因沒有 Item 管理權限而無法選擇商品。
 
 ---
 
@@ -600,7 +600,7 @@ Draft ──> Active ──> Inactive ──> Active
 | 編號 | 需求 |
 | --- | --- |
 | SEC-001 | 未登入使用者不可存取任何商品管理端點或頁面。 |
-| SEC-002 | `item.view` 允許查看商品列表、詳情、附件及稽核；只有同時具有 `item.mgmt` 的角色可建立、修改、停用、封存、刪除及匯入商品。 |
+| SEC-002 | `item.view` 允許唯讀查看商品列表、詳情、附件及稽核；`item.mgmt` 允許完整讀寫所有 Item Management API，不必同時持有 `item.view`。 |
 | SEC-003 | 下游業務角色可在其獲授權流程中搜尋可用 SKU，但不可藉此取得商品維護能力。 |
 | SEC-004 | 前端隱藏或停用按鈕不能取代後端授權檢查。 |
 | SEC-005 | 本期不保存成本或供應商條件；日後如納入敏感欄位，必須另行定義獨立查看及匯出權限。 |
@@ -859,6 +859,7 @@ Draft ──> Active ──> Inactive ──> Active
 | DEC-022 | 採用已確認的效能及容量基線。 | 最多 50 名同時在線使用者、每日 1,000 次商品資料變更、線上查詢 p95 少於 2 秒，10,000 列 CSV 系統處理時間合計不超過 10 分鐘。 |
 | DEC-023 | 採用商品及匯入資料保留基線。 | 主資料、工作摘要及稽核至少保留 7 年；匯入原始檔及結果檔保留 1 年；備份沿用 ERP 統一政策，正式上線前由合規核對。 |
 | DEC-024 | Item 狀態實際同步至受影響的子 SKU。 | 停用、停產及封存在同一交易同步 SKU；任一失敗全部回滾；Item 恢復時不自動恢復或啟用 SKU。 |
+| DEC-025 | `item.mgmt` 包含完整 Item Management API 讀取權。 | 商品管理員只持有 `item.mgmt` 時，仍可讀寫 Item、SKU、Catalog、Media 及 Audit API；`item.view` 保留唯讀角色使用。 |
 
 ### 18.2 上線前置工作
 
@@ -1783,7 +1784,7 @@ Invalid, unauthorized, conflicting or dependency-unknown operations fail closed 
 ## SEC-002 — SEC-002
 
 ### Statement
-`item.view` 允許查看商品列表、詳情、附件及稽核；只有同時具有 `item.mgmt` 的角色可建立、修改、停用、封存、刪除及匯入商品。 Provenance: `SEC-002` in the preserved requirement baseline.
+`item.view` 允許唯讀查看商品列表、詳情、附件及稽核；`item.mgmt` 允許完整讀寫所有 Item Management API，不必同時持有 `item.view`。 Provenance: `SEC-002` and Product Owner decision DEC-025.
 
 ### Acceptance criteria
 The behavior and threshold stated for `SEC-002` must be observable through the linked mandatory Technical Test and, where applicable, UAT in `08_traceability.json`; the detailed AC and business rules above remain controlling.

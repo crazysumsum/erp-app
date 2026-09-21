@@ -1,0 +1,71 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20260918T061822-fba31d20a26f",
+  "suite_id": "supplier-phase-001-client",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+  "source_fingerprint": "8515273a383fd263f60644430729e25c3b06de48307bca446f026cc998ca1e60",
+  "code_commit": "5fb3a4c2d7a3cd36586e3cb2556f95d5e75e895b",
+  "started_at": "2026-09-18T06:18:23.056661Z",
+  "ended_at": "2026-09-18T06:18:24.613640Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "test/pages/suppliers",
+    "test/services/supplier.test.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-027/docs/supplier_management/evidence/20260918T061822-fba31d20a26f/supplier-phase-001-client.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e6bcd6a43ebf97e337a46e8165741169bad3a6c94999fe4c9acbc6d9d79fc795",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 49,
+    "passed": 49,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260918T061822-fba31d20a26f/stdout.log",
+      "sha256": "3b1f1d70599a55092274bd2230d2ce12b8fc8186170b444e85abbff8c5feecdb",
+      "bytes": 466
+    },
+    {
+      "path": "evidence/20260918T061822-fba31d20a26f/stderr.log",
+      "sha256": "74cbdf360b3f9aed3cdb724aae80caebe43652d61cad4ce0dbf757bebd2158d7",
+      "bytes": 2040
+    },
+    {
+      "path": "evidence/20260918T061822-fba31d20a26f/supplier-phase-001-client.xml",
+      "sha256": "ba26fbef4a08915d0601cf0cfd4f02b4a8e59af0fa4797673fe803396abb1e17",
+      "bytes": 13142
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

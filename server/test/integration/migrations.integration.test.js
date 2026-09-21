@@ -118,7 +118,7 @@ test("0007 built user_audit_logs with the three indexes and an actor FK that doe
   assert.equal(constraints.length, 1, "user_audit_logs should have exactly one FK");
 });
 
-test("0028 seeds the Customer catalogue but does not grant bank permissions to system-admin", { skip }, async (t) => {
+test("0037 seeds the Customer catalogue but does not grant bank permissions to system-admin", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   // 只驗證目錄涵蓋這幾項，不驗證「剛好只有」這幾項：node --test 預設會跨檔案
@@ -173,6 +173,32 @@ test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip },
     held.map((row) => row.name).sort(),
     ["item.mgmt", "item.view"]
   );
+});
+
+test("0028 seeded all Supplier permissions and granted each to system-admin", { skip }, async (t) => {
+  const database = await withDatabase(t);
+  const expected = [
+    "supplier.approval",
+    "supplier.bank.mgmt",
+    "supplier.bank.view",
+    "supplier.mgmt",
+    "supplier.settings",
+    "supplier.view"
+  ];
+
+  const [permissions] = await database.query(
+    "SELECT name FROM permissions WHERE name LIKE 'supplier.%' ORDER BY name"
+  );
+  assert.deepEqual(permissions.map((row) => row.name), expected);
+
+  const [held] = await database.query(
+    `SELECT p.name FROM role_permissions rp
+       JOIN roles r ON r.id = rp.role_id
+       JOIN permissions p ON p.id = rp.permission_id
+      WHERE r.name = 'system-admin' AND p.name LIKE 'supplier.%'
+      ORDER BY p.name`
+  );
+  assert.deepEqual(held.map((row) => row.name), expected);
 });
 
 test("0011 built item_categories: a generated parent_scope_id blocks duplicate root names too", { skip }, async (t) => {
@@ -907,19 +933,20 @@ test("0024 built item_audit_logs with a non-cascading actor FK and no target FK"
 test("re-running all twelve migrations changes nothing", { skip }, async (t) => {
   const database = await withDatabase(t);
 
+  // `permissions` 只數本測試重跑嘅兩支 seed migration 所擁有嘅五個名稱，
   // `links` 只數 system-admin 自己嘅 role_permissions 列，不是整張表的
   // COUNT(*)：node --test 預設跨檔案平行跑，role_permissions 這種共用表隨時
   // 有別的 integration 測試檔案（roleManagement／userManagement／itemCatalog
-  // 等）在建立、刪除自己另外角色的權限連結——跟 0008／0010 那兩支「seeded
-  // exactly the catalogue」測試上面註解的理由一樣。`permissions` 表本身沒有
-  // 任何測試會寫入新列（其他檔案只用 SELECT 讀既有 id），維持整表 COUNT(*)
-  // 沒問題。0011–0017、0024 這八支純粹是 `CREATE TABLE IF NOT EXISTS`，不寫
+  // 等）在建立、刪除自己另外角色的權限連結；authFlow.integration.test.js 亦會
+  // 暫時建立一個獨立 permission，所以不能用 permissions 整表 COUNT(*) 判斷
+  // migration 冪等。0011–0017、0024 這八支純粹是 `CREATE TABLE IF NOT EXISTS`，不寫
   // 任何資料列（見各檔案開頭註解），所以「重跑不變」對它們而言驗的是表結構
   // 有沒有被動到，不是列數——列數本來就會被 itemCatalog.integration.test.js
   // 等同時在跑的測試改動，跟這幾支 migration 有沒有正確重跑無關。
   const countRows = async () => {
     const [[{ permissions }]] = await database.query(
-      "SELECT COUNT(*) AS permissions FROM permissions"
+      `SELECT COUNT(*) AS permissions FROM permissions
+        WHERE name IN ('user.mgmt', 'role.mgmt', 'device.mgmt', 'item.view', 'item.mgmt')`
     );
     const [[{ links }]] = await database.query(
       `SELECT COUNT(*) AS links FROM role_permissions rp

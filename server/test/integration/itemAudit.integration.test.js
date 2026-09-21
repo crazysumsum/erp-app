@@ -164,7 +164,7 @@ test("持有 item.view 可以讀 item audit，手動種的一列會出現在結�
   assert.deepEqual(entry.detail, { note: "seeded" });
 });
 
-test("只有 item.mgmt 而沒有 item.view 一律 403（跟 Catalog 讀 API 同一條規則，沒有 permission inheritance）", { skip }, async (t) => {
+test("只有 item.mgmt 亦可以讀取 Item audit", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");
   const issueToken = tokenIssuer(application);
@@ -190,7 +190,7 @@ test("只有 item.mgmt 而沒有 item.view 一律 403（跟 Catalog 讀 API 同�
   });
 
   const { status } = await listItemAuditLogs(url, token);
-  assert.equal(status, 403);
+  assert.equal(status, 200);
 });
 
 test("token 宣稱的權限與資料庫現況不符時回 403 PERMISSION_STALE", { skip }, async (t) => {
@@ -243,7 +243,11 @@ test("pageSize、action 與 targetType 篩選會收窄結果", { skip }, async (
   const marker = `filter-marker-${randomUUID().slice(0, 8)}`;
   const rows = [
     ["category.create", "category"],
-    ["brand.create", "brand"]
+    ["brand.create", "brand"],
+    ["attribute.create", "attribute"],
+    ["media.upload", "media"],
+    ["item.import", "import"],
+    ["item.export", "export"]
   ];
   for (const [action, targetType] of rows) {
     await db.execute(
@@ -280,7 +284,13 @@ test("pageSize、action 與 targetType 篩選會收窄結果", { skip }, async (
 
   const both = await listItemAuditLogs(url, token, { target: marker });
   assert.equal(both.status, 200);
-  assert.equal(both.body.data.total, 2);
+  assert.equal(both.body.data.total, rows.length);
+
+  for (const [action, targetType] of rows.slice(2)) {
+    const filtered = await listItemAuditLogs(url, token, { target: marker, action, targetType });
+    assert.equal(filtered.status, 200, `${action}/${targetType} should be a valid filter`);
+    assert.equal(filtered.body.data.total, 1);
+  }
 });
 
 test("from／to 依時間範圍篩選，actor 依 actor_username 篩選", { skip }, async (t) => {

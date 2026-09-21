@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { up as createCustomerEqualityKeyFoundation } from "../database/migrations/0029_create_customer_equality_key_foundation.js";
+import { up as createCustomerEqualityKeyFoundation } from "../database/migrations/0038_create_customer_equality_key_foundation.js";
 
 test("Customer equality-key foundation migration creates only the minimal additive customers table", async () => {
   const calls = [];

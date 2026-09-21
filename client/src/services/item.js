@@ -97,6 +97,12 @@ export default {
     return httpClient.get(`/api/v1/skus/${id}`);
   },
 
+  /** 為既有 Variant Item 新增一個 Draft SKU。建立 command 使用 framework
+   * idempotency，避免網路重送時重複建立同一個規格組合。 */
+  createSku(payload) {
+    return httpClient.post("/api/v1/skus/create", { idempotent: true, body: payload });
+  },
+
   /** 整組覆蓋（compare-and-set，連 UOM／Barcode 完整集合一齊），對應
    * `POST /api/v1/skus/:id/update`。冇 `skuCode`：readonly，特批修改係
    * 獨立、未建嘅高強度端點；冇 `variantValues`（T23）。 */

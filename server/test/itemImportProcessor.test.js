@@ -137,6 +137,19 @@ test("欄位超過長度上限：FIELD_TOO_LONG，但值會截斷唔會整份 cr
   assert.ok(result.rows[0].errors.some((e) => e.field === "skuCode" && e.code === "FIELD_TOO_LONG"));
 });
 
+test("Create 列 skuCode 含 ASCII 控制字元：沿用 API 的 SKU_CODE_INVALID domain 規則", async () => {
+  const csvText = csvFrom([createRow({ skuCode: "SKU\u0000BAD" })]);
+  const result = await parseAndValidateCsv({
+    csvText,
+    mode: "create_only",
+    connection: baseConnection(),
+    maxRows: 100
+  });
+
+  assert.equal(result.rows[0].status, "invalid");
+  assert.ok(result.rows[0].errors.some((e) => e.field === "skuCode" && e.code === "SKU_CODE_INVALID"));
+});
+
 test("categoryName／brandName／baseUomCode 查唔到：對應嘅 NOT_FOUND", async () => {
   const csvText = csvFrom([createRow({ categoryName: "唔存在嘅分類", brandName: "唔存在嘅品牌", baseUomCode: "ZZ" })]);
   const result = await parseAndValidateCsv({ csvText, mode: "create_only", connection: baseConnection(), maxRows: 100 });

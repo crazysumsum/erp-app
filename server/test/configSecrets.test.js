@@ -189,7 +189,18 @@ test("every logger profile redacts the same sensitive field names", async () => 
   for (const [name, profile] of profiles) {
     const redacted = profile.redactedFields.map((field) => field.toLowerCase());
 
-    for (const required of ["password", "secret", "token", "authorization"]) {
+    for (const required of [
+      "password",
+      "secret",
+      "token",
+      "authorization",
+      "accountnumber",
+      "iban",
+      "bankaccountnumber",
+      "accountnumberciphertext",
+      "bankencryptionkey",
+      "banklookupkey"
+    ]) {
       assert.ok(
         redacted.includes(required),
         `logger "${name}" 未遮蔽 ${required}`

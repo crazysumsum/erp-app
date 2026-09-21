@@ -71,6 +71,7 @@ async function mountPage({ permissions = ["item.view", "item.mgmt"], item = ITEM
     history: createMemoryHistory(),
     routes: [
       { path: page.path, name: page.name, component: ItemDetailPage },
+      { path: "/items/:itemId/skus/new", name: "skuCreate", component: { template: "<div>sku create</div>" } },
       { path: "/items/:itemId/skus/:skuId", name: "skuDetail", component: { template: "<div>sku detail</div>" } },
       { path: "/items", name: "items", component: { template: "<div>items list</div>" } }
     ]
@@ -101,6 +102,29 @@ describe("pages/items/ItemDetailPage.vue", () => {
     expect(body.findAll(".q-btn").some((btn) => btn.text() === "編輯")).toBe(false);
   });
 
+  it("顯示已保存的商品屬性值", async () => {
+    const { body } = await mountPage({
+      item: {
+        ...ITEM,
+        attributeValues: [
+          {
+            attributeId: 101,
+            code: "MATERIAL",
+            name: "材質",
+            dataType: "single_option",
+            value: "cotton",
+            option: { id: 301, value: "cotton", label: "棉" }
+          }
+        ]
+      }
+    });
+
+    const attributes = body.find('[data-testid="attribute-value-list"]');
+    expect(attributes.text()).toContain("商品屬性");
+    expect(attributes.text()).toContain("材質");
+    expect(attributes.text()).toContain("棉");
+  });
+
   it("item.mgmt：撳「編輯」先可以改欄位；儲存成功帶返 version", async () => {
     itemService.updateItem.mockResolvedValue({ ...ITEM, name: "改咗個名", version: 2 });
     const { body } = await mountPage();
@@ -118,7 +142,7 @@ describe("pages/items/ItemDetailPage.vue", () => {
     expect(body.text()).toContain("版本 2");
   });
 
-  it("VERSION_CONFLICT：唔會自動覆蓋用戶輸入，顯示提示，撳「重新載入」先攞新資料", async () => {
+  it("TC-011 VERSION_CONFLICT：唔會自動覆蓋用戶輸入，顯示提示，撳「重新載入」先攞新資料", async () => {
     const conflict = Object.assign(new Error("版本衝突"), { code: "VERSION_CONFLICT" });
     itemService.updateItem.mockRejectedValue(conflict);
     itemService.getItem.mockResolvedValueOnce(ITEM).mockResolvedValueOnce({ ...ITEM, name: "被人改咗", version: 5 });
@@ -148,6 +172,23 @@ describe("pages/items/ItemDetailPage.vue", () => {
     await flushPromises();
 
     expect(router.currentRoute.value.path).toBe("/items/1/skus/10");
+  });
+
+  it("Variant Item 的 manager 可以進入新增 SKU 流程；Standard 與 view-only 不顯示", async () => {
+    const variant = await mountPage({ item: { ...ITEM, productType: "variant" } });
+    const addButton = variant.body.findAll(".q-btn").find((btn) => btn.text() === "新增 SKU");
+    expect(addButton.exists()).toBe(true);
+    await addButton.trigger("click");
+    await flushPromises();
+    expect(variant.router.currentRoute.value.path).toBe("/items/1/skus/new");
+
+    document.body.innerHTML = "";
+    const standard = await mountPage();
+    expect(standard.body.findAll(".q-btn").some((btn) => btn.text() === "新增 SKU")).toBe(false);
+
+    document.body.innerHTML = "";
+    const viewOnly = await mountPage({ permissions: ["item.view"], item: { ...ITEM, productType: "variant" } });
+    expect(viewOnly.body.findAll(".q-btn").some((btn) => btn.text() === "新增 SKU")).toBe(false);
   });
 
   it("Active Item：顯示「停用」，唔顯示「啟用」／「封存」／「從封存恢復」", async () => {

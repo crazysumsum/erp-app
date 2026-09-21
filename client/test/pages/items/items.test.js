@@ -169,7 +169,7 @@ describe("pages/items/ItemsPage.vue", () => {
     expect(wrapper.findAll(".q-btn").some((btn) => btn.text().includes("新增商品"))).toBe(true);
   });
 
-  it("page／sort／view／q／status 可從 URL 還原", async () => {
+  it("TC-011 page／sort／view／q／status 可從 URL 還原", async () => {
     const { router } = await mountItemsPage({
       initialRoute: "/items?view=item&page=2&sortBy=name&descending=true&q=vitamin&status=inactive"
     });

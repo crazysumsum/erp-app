@@ -219,7 +219,7 @@ Accounts with item.view, item.mgmt and neither
 Execute representative read, write, import, audit and navigation actions
 
 ### Expected business result
-Viewer can read only; manager can perform approved actions; no-access user sees neither data nor restricted controls/routes
+Viewer can read only; manager can read and perform approved actions without an additional item.view grant; no-access user sees neither data nor restricted controls/routes
 
 ### Acceptance criteria
 Required evidence is complete and baseline-bound; the named business/control owner records PASS, FAIL, BLOCKED or accepted residual risk. Automation PASS never substitutes for business acceptance.

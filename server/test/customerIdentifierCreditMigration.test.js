@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { inspectCustomerIdentifierSchema, up as createCustomerIdentifiers } from "../database/migrations/0035_create_customer_identifiers.js";
-import { inspectCustomerCreditSchema, up as createCustomerCreditProfiles } from "../database/migrations/0036_create_customer_credit_profiles.js";
+import { inspectCustomerIdentifierSchema, up as createCustomerIdentifiers } from "../database/migrations/0044_create_customer_identifiers.js";
+import { inspectCustomerCreditSchema, up as createCustomerCreditProfiles } from "../database/migrations/0045_create_customer_credit_profiles.js";
 
 test("TC-021 creates globally unique, owner-scoped Customer identifiers", async () => {
   const sql = [];

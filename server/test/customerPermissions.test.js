@@ -4,7 +4,7 @@ import {
   CUSTOMER_PERMISSION_NAMES,
   CUSTOMER_ROUTE_POLICIES
 } from "../src/modules/customer/customerPermissions.js";
-import { up as seedCustomerPermissions } from "../database/migrations/0028_seed_customer_permissions.js";
+import { up as seedCustomerPermissions } from "../database/migrations/0037_seed_customer_permissions.js";
 import { PERMISSION_NAMES } from "../src/modules/authorization/permissionCatalogue.js";
 
 const CUSTOMER_PERMISSIONS = [

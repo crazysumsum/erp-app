@@ -1,0 +1,65 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20260914T093146-7574b753a291",
+  "suite_id": "item-uat-browser",
+  "stage": "UAT",
+  "result": "BLOCKED",
+  "spec_baseline": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+  "source_fingerprint": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
+  "code_commit": "49d487e876932e6684cbdbec46043312b3f730bd",
+  "started_at": "2026-09-14T09:31:47.011758Z",
+  "ended_at": "2026-09-14T09:31:47.620260Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "--config",
+    "client/e2e/item-management/playwright.config.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "8acba388d29a596904b8a2eaf3c744f14fb7891f38ca003d80f8e466e416863a",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260914T093146-7574b753a291/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260914T093146-7574b753a291/stderr.log",
+      "sha256": "25b8a73f640d255a3df64a2e16130891734189959cc3dec4446f8bd571c558df",
+      "bytes": 846
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "missing/fresh report required; symlink reports are refused: /private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260914T093146-7574b753a291/item-uat-browser.xml",
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: UAT-001, UAT-002, UAT-003, UAT-004, UAT-005, UAT-006, UAT-007, UAT-008, UAT-009, UAT-010, UAT-011, UAT-012, UAT-015",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

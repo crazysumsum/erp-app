@@ -12,7 +12,7 @@
  * DECIMAL(20,6) 的精度超過浮點數能安全表示的範圍一小步就會出事，而「這個字串
  * 是不是這個形狀」「是不是全部是零」都不需要真的做算術。
  */
-import { itemNotActivatable } from "./itemErrors.js";
+import { itemNotActivatable, skuCodeInvalid } from "./itemErrors.js";
 import { MONEY_DECIMAL, TRACKING_POLICIES, UOM_FACTOR_MAX, UOM_FACTOR_MIN } from "./itemConstants.js";
 
 /**
@@ -46,6 +46,18 @@ export function isPositiveDecimalString(value) {
  */
 export function isBoundedUomFactor(value) {
   return Number.isInteger(value) && value >= UOM_FACTOR_MIN && value <= UOM_FACTOR_MAX;
+}
+
+export function normalizeAndValidateSkuCode(value) {
+  const skuCode = String(value ?? "").trim();
+  const containsAsciiControlCharacter = [...skuCode].some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint <= 0x1f || codePoint === 0x7f;
+  });
+  if (!skuCode || containsAsciiControlCharacter || [...skuCode].length > 190) {
+    throw skuCodeInvalid("blank, contains control characters, or exceeds 190 characters");
+  }
+  return skuCode;
 }
 
 function addIssue(issues, field, code, message) {

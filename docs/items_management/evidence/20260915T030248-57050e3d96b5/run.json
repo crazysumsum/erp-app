@@ -1,0 +1,78 @@
+{
+  "schema_version": "2.0",
+  "module_id": "item-management",
+  "run_id": "20260915T030248-57050e3d96b5",
+  "suite_id": "item-client-technical",
+  "stage": "REGRESSION",
+  "result": "PASS",
+  "spec_baseline": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+  "source_fingerprint": "d29d33de8231c84a5e72c12aee4d27257f56fe570471604555ce3d08c61a58bd",
+  "code_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca",
+  "started_at": "2026-09-15T03:02:48.772649Z",
+  "ended_at": "2026-09-15T03:02:53.690338Z",
+  "environment_id": "item-isolated-test",
+  "runtime_instance_id": "ITEM-TASK044-LOCAL-20260914",
+  "data_reference": "Synthetic Item fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "--reporter=junit",
+    "--outputFile=/private/tmp/erp-item-management-task-038/docs/items_management/evidence/20260915T030248-57050e3d96b5/item-client-technical.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "3aab64f1e11788965f2bec72865bacc1e9bdbf7d371835270d796ebe600f6c36",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 492,
+    "passed": 492,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [
+    {
+      "id": "TC-011",
+      "status": "PASS"
+    },
+    {
+      "id": "TC-016",
+      "status": "PASS"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "evidence/20260915T030248-57050e3d96b5/stdout.log",
+      "sha256": "86feb890e65589d4f8d02947546b1f95bb35877b2ce6be7471b60bd50097c5ee",
+      "bytes": 350
+    },
+    {
+      "path": "evidence/20260915T030248-57050e3d96b5/stderr.log",
+      "sha256": "aeffc244007898a39af5d3d09ae7bc31f22ea5eda9fe6b45033b6c3aae5b205a",
+      "bytes": 6496
+    },
+    {
+      "path": "evidence/20260915T030248-57050e3d96b5/item-client-technical.xml",
+      "sha256": "f48c2298a9f91081c8894f6813c13e39996d030edad911ac8cabe1311f677cc1",
+      "bytes": 138624
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

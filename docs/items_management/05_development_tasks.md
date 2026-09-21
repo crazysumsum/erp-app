@@ -7,10 +7,10 @@
 | Execution mode | `REVIEW_AND_ALIGN` |
 | Legacy source | `tasks.md`, SHA-256 `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9` |
 | Original size | 1,533 lines; 303 checked boxes; 42 unchecked boxes |
-| Preservation | Full legacy body and every checkbox state retained verbatim below |
+| Preservation | Original source hash/count retained in inventory; the canonical body contains explicitly recorded in-place remediation updates, including the maintainer-authorized T23 index correction |
 | Product-code change | None |
 
-The legacy body is the authoritative development-progress record. Alignment adds aliases and remediation work but does not reinterpret an unchecked historical box as checked. In particular, the Task Index has T23 unchecked while its detailed section contains completed implementation evidence; this is recorded as `STATUS_INCONSISTENT`, not silently corrected.
+The legacy body remains the authoritative development-progress record. On 2026-09-14, ERP Product Owner (Sam) explicitly approved `TASK-042`: reconcile the T23 index omission as completed without erasing its original state. The frozen source remains identified by SHA-256 `a496a29dc97db9aa04f8f166d3d9d816e655e29a3bda2d2908b40a2783f7e5f9`; this canonical copy records the one checkbox correction and its evidence rather than silently rewriting history.
 
 ## Phase alignment
 
@@ -37,9 +37,9 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Objective/checkpoint: Attributes/Variants and Media.
 - Included: TASK-023 (PHASE-003) through TASK-026 (PHASE-003).
 - Requirements/design: FR-011, FR-012, FR-015, FR-018, FR-025; SEC-007, SEC-008, SEC-009; NFR-011, NFR-012; DES-004, DES-011, DES-014, DES-015.
-- Verification/evidence: developer records in legacy Checkpoint H and T25/T26. T23 status remains inconsistent.
+- Verification/evidence: developer records in legacy T23/Checkpoint H and T24–T26; TASK-042 reconciles the former T23 index omission to the detailed implementation and Git evidence.
 - Branch/PR/merge: already merged historically.
-- Exit/status: `COMPLETE_RECORDED_WITH_STATUS_INCONSISTENCY`.
+- Exit/status: `COMPLETE_RECORDED`; the former status inconsistency is resolved by maintainer decision under TASK-042.
 
 ### PHASE-004 — Bulk capabilities (legacy Phase D)
 
@@ -98,7 +98,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 | TASK-020 | PHASE-002 | T20 | COMPLETE_RECORDED |
 | TASK-021 | PHASE-002 | T21 | COMPLETE_RECORDED |
 | TASK-022 | PHASE-002 | T22 | COMPLETE_RECORDED |
-| TASK-023 | PHASE-003 | T23 | STATUS_INCONSISTENT: index unchecked; detailed evidence says completed |
+| TASK-023 | PHASE-003 | T23 | COMPLETE_RECORDED; index omission reconciled by TASK-042 |
 | TASK-024 | PHASE-003 | T24 | COMPLETE_RECORDED |
 | TASK-025 | PHASE-003 | T25 | COMPLETE_RECORDED |
 | TASK-026 | PHASE-003 | T26 | COMPLETE_RECORDED |
@@ -122,6 +122,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Requirement/design: FR-011, FR-012, FR-015, FR-018, FR-025; DES-004, DES-014, DES-015.
 - Components: ItemAdminService, item/sku response schemas, client services/pages and focused tests.
 - Acceptance: stored typed values are readable; schema no longer caps arrays at zero; Standard/Variant rules and ownership checks remain enforced.
+- Approved response contract (`HD-003`, 2026-09-14): Item values return `attributeId`, definition `code`/`name`, `dataType`, typed `value`, and nullable option `{ id, value, label }`; SKU Variant values use the same fields but remain the existing `single_option` domain with a required option. Both are stably ordered by Category Attribute `sort_order`, then attribute ID. Attribute writes and arbitrary typed SKU Variant values are out of scope.
 - Verification: unit/integration contract tests plus Playwright Item/SKU detail flow; lint and client build.
 - Dependencies: TASK-023 (PHASE-003), TASK-024 (PHASE-003). Risk: high data-visibility gap. Rollback: revert compatible projection/UI changes.
 - Definition of Done/status: tests and CI pass, review approved; `PLANNED`.
@@ -146,7 +147,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: authorized users can filter/read complete before/after/reason context; unauthorized users cannot infer records.
 - Verification: API regression and Playwright audit/403/empty/error flows; console/network clean; build/CI.
 - Dependencies: existing audit API. Risk: high compliance visibility gap. Rollback: revert UI route/client.
-- Definition of Done/status: acceptance evidence attached; `PLANNED`.
+- Definition of Done/status: implementation evidence attached (client unit/router tests, browser happy/empty/error flows, lint and build); `IMPLEMENTATION_COMPLETE`, with CI and formal acceptance still pending.
 
 ### TASK-040 — Normalize referenced Brand/UOM deletion errors
 
@@ -157,7 +158,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: referenced Brand/UOM delete returns documented conflict without partial delete/audit; unreferenced deletion still succeeds atomically.
 - Verification: service/integration race and rollback tests; full Item regression and CI.
 - Dependencies: current Item/SKU schema. Risk: high API correctness. Rollback: revert service error mapping.
-- Definition of Done/status: deterministic tests pass; `PLANNED`.
+- Definition of Done/status: direct and wrapped MySQL FK errors are mapped with actionable actual reference types; focused service tests, full server regression and true-MySQL rollback/no-audit verification pass; `IMPLEMENTATION_COMPLETE`, with CI and formal acceptance still pending.
 
 ### TASK-041 — Align CSV import with aggregate validation and transactional audit
 
@@ -168,18 +169,18 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: UI/API/import validation is equivalent; reason propagates; every imported create/update is auditable; injected failure rolls back data and audit together; 10,000-row bound remains measurable.
 - Verification: true-MySQL transaction, race, retry, failure-injection, audit and performance regression; required CI.
 - Dependencies: contract design before code. Risk: high data integrity/compliance. Rollback: disable import execution and revert code; no partial schema downgrade.
-- Definition of Done/status: independent P0/P1 cases pass; `PLANNED`.
+- Definition of Done/status: import execution uses a connection-aware Item domain contract with fresh `item.mgmt` authorization, shared SKU validation and same-transaction per-aggregate audit/reason propagation; success state commits with aggregate writes, failures roll back data and audit, and lease-owner fencing prevents stale workers from overwriting a recovered job. Focused unit, 21-case true-MySQL integration, full server regression and 10,000-row performance checks pass; independent implementation review is recorded in `REV-008`. `IMPLEMENTATION_COMPLETE`, with CI and formal acceptance still pending.
 
 ### TASK-042 — Reconcile historical T23/checkpoint status
 
 - Parent Phase: PHASE-006.
-- Goal: obtain maintainer confirmation for the contradictory T23 index and detailed record without altering history during this alignment.
+- Goal: reconcile the contradictory T23 index and detailed record through an explicit maintainer decision while preserving the original source baseline.
 - Requirement/design: documentation integrity for DES-016.
-- Components: this document only in a later authorized reconciliation.
+- Components: in-place task/status reconciliation and aligned governance references; no product-code change.
 - Acceptance: maintainer-approved status note explains whether the index was an omission; original commit evidence remains linked.
 - Verification: before/after checkbox count and Git history audit.
-- Dependencies: human maintainer decision. Risk: medium traceability ambiguity. Rollback: restore this preserved baseline.
-- Definition of Done/status: `PLANNED`.
+- Dependencies: human maintainer decision, supplied by ERP Product Owner (Sam) in the active Codex task on 2026-09-14. Risk: medium traceability ambiguity. Rollback: restore the canonical checkbox and reconciliation references while retaining the immutable original hash.
+- Definition of Done/status: T23 index corrected from unchecked to checked; pre/post canonical counts are 304/41 and 305/40; implementation commit `21a8be0093d52faa19a1c0f061083046dea2a9f1`, merge commit `45d686ce94c74f08499c35e1e6c3cdc09714480a`, and T24 follow-up commit `b153efac5ad8c36acddaf85b98c82d6d1e4622f5` verified from Git history. `DOCUMENTATION_COMPLETE`; no product behavior or formal acceptance status changed.
 
 ### TASK-043 — Integrate first real downstream reference guard
 
@@ -201,7 +202,7 @@ The legacy body is the authoritative development-progress record. Alignment adds
 - Acceptance: staging upgrade/re-run succeeds; formal QA/UAT is recorded; restore demonstrates RTO <= 4h and RPO <= 15m; business/Ops/compliance approve or residual risk is explicitly accepted.
 - Verification: `06_technical_test_cases.md` and `07_uat_test_cases.md` executed under `TEST_AND_VERIFY`, not this review.
 - Dependencies: remediation code merged and target environment available. Risk: release-critical evidence gap. Rollback: no production mutation without an approved exercise plan.
-- Definition of Done/status: signed evidence and traceability; `PLANNED`.
+- Definition of Done/status: verification-only adapter, repo-bound trust policy, detached Ed25519 attestation, fail-closed manifest contract and developer tests implemented on 2026-09-15. Under explicit Product Owner authorization, MySQL root then provisioned an isolated staging-like source, restored target and separate media/import roots; exact source/restore counts, smoke records and file hashes matched without mutating `erp_dev`. The retained manifest remains unsigned and the trust policy remains `UNPROVISIONED`; independent signing, public-key/environment approval, formal `TC-016`, CI and human sign-offs remain. `IN_PROGRESS`.
 
 ## Full canonical requirement coverage
 
@@ -209,7 +210,7 @@ FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, FR-007, FR-008, FR-009, FR-010, 
 
 ---
 
-# Preserved legacy body (verbatim; checkbox states are evidence)
+# Preserved legacy body with recorded in-place alignments
 
 # Item Management 開發任務分解
 
@@ -308,7 +309,9 @@ T01 migration freeze
 
 ### Phase C：零售消耗品擴充
 
-- [ ] T23 建立 Attribute schema、variant signature 與 domain 規則
+- [x] T23 建立 Attribute schema、variant signature 與 domain 規則
+
+> **TASK-042 reconciliation（2026-09-14，ERP Product Owner Sam 批准）：** 原始基線此格未勾，但下方 T23 詳細記錄、完整測試證據、實作 commit `21a8be0093d52faa19a1c0f061083046dea2a9f1` 及 merge commit `45d686ce94c74f08499c35e1e6c3cdc09714480a` 均表明 T23 已完成；唯一延後的 Attribute destructive-change criterion 已由 T24 commit `b153efac5ad8c36acddaf85b98c82d6d1e4622f5` 承接。本次將索引改為已完成，原始未勾狀態仍由 inventory 的 source SHA 與本註記保留。變更前 canonical 計數為 304 checked／41 unchecked；變更後為 305 checked／40 unchecked。
 - [x] T24 完成 Attribute／Variant API 與 UI
 - [x] T25 建立 Media schema、service、API 與孤兒檔清理
 - [x] T26 建立 Media UI 與檔案安全整合測試
@@ -448,7 +451,7 @@ T01 migration freeze
 **Acceptance criteria:**
 
 - [x] Tree 最大 8 層；拒絕 self／descendant cycle、inactive parent 及有 child／Item 的刪除。
-- [x] GET 使用 `item.view`，寫入使用 `item.mgmt`，archive／restore／delete 使用 `jwt-password`。
+- [x] GET 接受 `item.view` 或 `item.mgmt`，寫入使用 `item.mgmt`，archive／restore／delete 使用 `jwt-password`。
 - [x] 頁面可用 parent selector 移動，顯示 version conflict 及不可刪原因，後端仍獨立重驗。
 
 **Verification:**
@@ -476,7 +479,7 @@ T01 migration freeze
 **Acceptance criteria:**
 
 - [x] Brand 名稱及 UOM Code 的大小寫唯一衝突映射為穩定公開錯誤。
-- [ ] 被 Item、SKU UOM、Attribute 或 net content 使用時不可永久刪除——按 design_spec.md §8.4 的 reference-guard 延後原則，Item／SKU／Attribute 等表尚未建立，這部分保護要等對應表存在、T08 之後才能接上並驗證；本階段只完成 Brand／UOM 自身欄位（名稱、Code）唯一性保護。
+- [x] 被現有 Item、SKU UOM、Attribute，或 SKU 的 net content／weight／dimension UOM 外鍵引用時不可永久刪除；`TASK-040` 已把直接或 wrapped MySQL FK 錯誤映射為穩定 `CATALOG_IN_USE`，列出實際依賴類型，並以真 MySQL 驗證失敗時資料與 audit 均不變。尚未存在的跨模塊引用仍按 §8.4 在實際 consumer 出現時接入。
 - [x] Brands／UOM pages 正確處理只讀、管理、高風險認證及 empty／error state。
 
 **Verification:**
@@ -620,7 +623,7 @@ T01 migration freeze
 
 - [x] 寫入可接收 caller transaction connection，不能在業務 transaction 外另開 query（`record()` 早已於 T04 完成，本任務新增的 `list()` 讀路徑另外重讀操作者現況，見下一項）。
 - [x] Audit detail 不保存 password、token、device key、整份 CSV、檔案內容或未受限 body（同上，`record()` 呼叫端規則不變；本任務未新增任何 detail 寫入呼叫點）。
-- [x] `GET /api/v1/item-audit/logs` 只允許 `item.view`，固定排序（`occurred_at DESC, id DESC`）並支援規定 filters（page、pageSize、from、to、actor、target、action、targetType）。
+- [x] `GET /api/v1/item-audit/logs` 接受 `item.view` 或 `item.mgmt`，固定排序（`occurred_at DESC, id DESC`）並支援規定 filters（page、pageSize、from、to、actor、target、action、targetType）。
 
 **Verification:**
 
@@ -646,7 +649,7 @@ T01 migration freeze
 
 - [x] SKU exact Code／Barcode 優先，LIKE wildcard 被 escape，Item 查詢用 `EXISTS` 避免重複及錯誤 total。
 - [x] 回應只包含設計欄位，RRP 固定組成 HKD／`tax_not_applicable`，不直接 spread DB row（attribute values／media 兩個陣列固定回空——依賴的表要等 T23／T25 先建立，見 service 開頭註解）。
-- [x] 所有 GET 只接受 `item.view`；只有 `item.mgmt` 而沒有 view 仍回 403。
+- [x] 所有 Item Management GET 接受 `item.view` 或 `item.mgmt`；無兩者者仍回 403。
 
 **Verification:**
 
@@ -1257,12 +1260,12 @@ T01 migration freeze
 
 **⚠️ 範圍決定：上傳進度用「不確定進度」（indeterminate）唔係真正嘅百分比。** `fetch()`（`HttpClient` 用嘅底層 API）唔提供上傳位元組級別嘅進度事件，要攞到真正百分比需要換成 `XMLHttpRequest`，屬於對 `HttpClient` 更大嘅改動（成個 class 依賴嘅 abort／timeout／簽章邏輯都要重寫一次），唔喺呢個 task 嘅範圍。用忙碌指示（progress bar）＋取消按鈕滿足「使用者睇得到上傳緊、隨時可以中止」呢個核心需求。
 
-**⚠️ 範圍決定：面板本身唔做「無 view 權限就隱藏」嘅判斷。** `ItemDetailPage.vue`／`SkuDetailPage.vue` 兩個宿主頁面本身喺 route 層已經要求 `item.view`（`page.requires.permissions`），冇呢個權限連個 detail page 都進唔到，`ItemMediaPanel.vue` 根本冇機會喺冇 view 權限嘅情況下被 render——所以面板內部淨係用 `canManage` 一個 prop 決定顯示唔顯示上傳／primary／排序／刪除呢幾個管理動作，冇對「view」再做多一層判斷，避免一個永遠唔會被觸發嘅分支。
+**⚠️ 範圍決定：面板本身唔做「無 read 權限就隱藏」嘅判斷。** `ItemDetailPage.vue`／`SkuDetailPage.vue` 宿主頁面 route 層要求 `item.view` 或 `item.mgmt`，冇兩者連 detail page 都進唔到；`ItemMediaPanel.vue` 只用 `canManage` 決定顯示上傳／primary／排序／刪除，避免重複授權邏輯。
 
 **Acceptance criteria:**
 
 - [x] FormData 不手動設定 multipart boundary；boolean／integer／version 以後端明確可解析格式提交（`itemMedia.js` 嘅 `mediaFormData()` 將 `isPrimary` 序列化做完全等於 `"true"`／`"false"` 嘅字串，`sortOrder`／`version` 轉做十進位數字字串，對應 T25 嘅 multipart body schema）。
-- [x] 圖片安全 inline preview，PDF 只下載；無 view／mgmt 權限時分別隱藏或拒絕（圖片經 `HttpClient.getBlob()` 攞 blob 再用 `URL.createObjectURL()` 顯示；PDF 一律觸發瀏覽器下載，唔會 inline；`canManage=false` 時上傳／primary／排序／刪除全部唔顯示，但下載／預覽仍然可用——同後端 `item.view` 已經可以下載嘅權限矩陣一致）。
+- [x] 圖片安全 inline preview，PDF 只下載；`item.view` 或 `item.mgmt` 均可下載／預覽，無兩者則拒絕；`canManage=false` 時上傳／primary／排序／刪除全部唔顯示。
 - [x] Upload abort、超限、錯 signature、DB failure、delete unlink failure 均有可理解 UI／log 結果（`AbortController` 支援取消；`errorMessages.js` 新增成套 `UPLOAD_*` code 嘅中文翻譯——呢啲 code 一直未跟「英文 publicMessage 要喺呢個表覆蓋」嘅慣例，因為之前完全冇功能用到上傳；`MEDIA_KIND_MISMATCH`／`MEDIA_FILE_TOO_LARGE` 等 T25 自己嘅 code 本身已經係中文 publicMessage，唔使再覆蓋；delete unlink 失敗屬於後端 `item.media_delete_failed` 結構化 log 嘅範圍，前端睇到嘅始終係 200 成功——呢個係已知、刻意嘅設計，見 T25 段落）。
 
 **Verification:**

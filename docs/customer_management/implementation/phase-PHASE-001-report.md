@@ -30,14 +30,14 @@ Playwright evidence is not applicable to this Phase.
   summary projection by those IDs. The result ordering is reconstructed from the
   ID page; it does not join Customer child collections. TC-028 unit tests cover
   the two-step shape and the 190-character legal-name prefix boundary.
-- A fresh host-local MySQL schema migrated through `0036`; a complete rerun skipped
+- A fresh host-local MySQL schema migrated through `0045`; a complete rerun skipped
   every migration. The 100k TC-028 fixture seeded 100,000 Customers plus 10,000
   Addresses and 10,000 Contacts. Under 50 concurrent workers with five mixed
   operations each, p95 latency was 16.24ms (list), 5.12ms (exact lookup), 3.48ms
   (address lookup) and 5.45ms (contact lookup), each below the 2,000ms budget.
   EXPLAIN showed covering range scans for code and legal-name prefixes and indexed
   owner/status plus primary-key lookups for the shipping `EXISTS` filter.
-- A separate fresh schema migrated through `0036`, reran as a no-op and passed all
+- A separate fresh schema migrated through `0045`, reran as a no-op and passed all
   six real-MySQL/HTTP Customer integration tests: root API and idempotency,
   equality-key collation/concurrency, party ownership/default behavior,
   Identifier/Credit semantics and audit redaction, and lookup purpose/status/version
@@ -55,7 +55,7 @@ Playwright evidence is not applicable to this Phase.
 The corrected full real-MySQL server coverage command passed after the HD-007
 checker was registered: 96.13% lines, 85.42% branches and 94.05% functions, above
 the repository thresholds of 92%/83%/90% and all 34 high-risk per-file floors. A
-fresh schema migrated through `0036`, a complete rerun was a no-op, and the exact
+fresh schema migrated through `0045`, a complete rerun was a no-op, and the exact
 synthetic schema was deleted with final absence confirmed. No threshold, assertion
 or fail-closed behavior was weakened.
 

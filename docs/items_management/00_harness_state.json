@@ -1,29 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 5,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
+  "revision": 62,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
-  "resume_status": "DESIGNING",
-  "current_phase": null,
-  "current_task": null,
+  "resume_status": "READY_FOR_TESTING",
+  "current_phase": "PHASE-006",
+  "current_task": "TASK-044",
   "baseline": {
-    "design": "018bea0802000f1d991645c0a36fe0c8f98f96c2d591a784c8f2017f86c811ef",
-    "plan": "4123de335d328645819e7dda7f427b2b28af01d2f081387106cdfa028e99bada",
-    "code_commit": "36c9ee748bfb7948c21b2fcbf17a25eadd25684c",
-    "source_fingerprint": "a6553c39ffa3c5c2962784e9c38140b1abc230f73cb1a7763fc1d613c9bd15e8",
-    "worktree": "/private/tmp/erp-item-management-harness-v2-alignment",
-    "default_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a",
-    "mode_entry_commit": "fd8a4ddb27636aaeb47235f3d4976001fa7dfc7a"
+    "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
+    "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
+    "code_commit": "be9244ef9f51b6b6775fe916e22d0bd141a93fc2",
+    "source_fingerprint": "2b5f8a2a3255369b9313dc2fac6ab11eb9a08f6b3b51c0ded0c16be68c1f39d9",
+    "worktree": "/private/tmp/erp-item-management-task-038",
+    "default_commit": "e4aed631ce1d3eda34f4727a36d656462d7f0db4",
+    "mode_entry_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Primary Harness agent",
+    "instance_id": "ITEM-TASK044-LOCAL-20260914",
+    "owner": "Primary IMPLEMENT agent; TASK-044 adapter developer checks complete",
     "resources": {
-      "workspace": "erp-item-management-harness-v2-alignment"
+      "workspace": "/private/tmp/erp-item-management-task-038",
+      "mysql-schema": "staging-like fixture source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1 on local MySQL 26.7.0; erp_dev preserved",
+      "media-root": "/private/tmp/item-recovery-restored-20260915/media",
+      "import-root": "/private/tmp/item-recovery-restored-20260915/imports",
+      "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
-    "lease_ref": null
+    "lease_ref": "ENV-PROVISION-55 completed under ERP Product Owner (Sam)'s local MySQL root authorization. The temporary item-recovery-root login path was removed after provisioning, so no root credential remains in repository artifacts or the task-specific MySQL login profile. An erp_dev clone was isolated as staging-like fixture source item_recovery_tc016_20260915; synthetic Item/SKU/media/import/audit evidence was added only there, then a consistent snapshot was restored to item_recovery_tc016_20260915_run1 with separate media/import roots. All 16 Item table counts matched source versus restore; erp_user SELECT succeeded under a schema-only SELECT grant; erp_dev Item/SKU/media/import counts remained unchanged at zero. Unsigned manifest SHA-256: 3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -48,7 +52,7 @@
     "TASK-020": "DONE",
     "TASK-021": "DONE",
     "TASK-022": "DONE",
-    "TASK-023": "BLOCKED",
+    "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
@@ -62,16 +66,387 @@
     "TASK-034": "DONE",
     "TASK-035": "DONE",
     "TASK-036": "DONE",
-    "TASK-037": "PENDING",
-    "TASK-038": "PENDING",
-    "TASK-039": "PENDING",
-    "TASK-040": "PENDING",
-    "TASK-041": "PENDING",
-    "TASK-042": "PENDING",
+    "TASK-037": "IN_PROGRESS",
+    "TASK-038": "IN_PROGRESS",
+    "TASK-039": "DONE",
+    "TASK-040": "DONE",
+    "TASK-041": "DONE",
+    "TASK-042": "DONE",
     "TASK-043": "PENDING",
-    "TASK-044": "PENDING"
+    "TASK-044": "IN_PROGRESS"
   },
-  "approvals": [],
+  "approvals": [
+    {
+      "id": "APR-003",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: owner approved HD-003 detail-projection contract on 2026-09-14",
+      "recorded_at": "2026-09-14T03:47:11.768Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-037"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-004",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: owner authorized remaining Item Management implementation on 2026-09-14",
+      "recorded_at": "2026-09-14T03:47:11.768Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4cf9e1b4d6d29c42ef69a351865d867e86b1317f48462459d2e29540b30c1ffc",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-037"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner specified DEC-025, item.mgmt may fully read/write all Item Management APIs, on 2026-09-14",
+      "recorded_at": "2026-09-14T07:03:00Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-038",
+        "DEC-025"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed continuing the remaining Item Management work on 2026-09-14",
+      "recorded_at": "2026-09-14T07:03:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "bca0252148ccbf97de76efbf825fbf2c8e6ea658c9925a8642bec4fc4e00a616",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-038"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-007",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed continuing the remaining Item Management work on 2026-09-14, including existing TASK-039 design.",
+      "recorded_at": "2026-09-14T07:12:30Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-039"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-008",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed continuing the remaining Item Management work on 2026-09-14, including TASK-039.",
+      "recorded_at": "2026-09-14T07:12:30Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f3fb4aebb9cb367b748ae3067eecc3f1b4a1dd946b7399cc9cd68e878a5a03e9",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-039"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-009",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed starting TASK-040 development on 2026-09-14.",
+      "recorded_at": "2026-09-14T07:28:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f3fb4aebb9cb367b748ae3067eecc3f1b4a1dd946b7399cc9cd68e878a5a03e9",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-040"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-010",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed starting TASK-040 development on 2026-09-14 against the existing CATALOG_IN_USE design; the refreshed baseline records its completed alignment and actionable dependency details.",
+      "recorded_at": "2026-09-14T07:44:24Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-040",
+        "DES-009"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-011",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed starting TASK-040 development on 2026-09-14; the refreshed plan baseline records actual implementation evidence without granting CI or formal acceptance.",
+      "recorded_at": "2026-09-14T07:44:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ea0c5d49ee0408d46b78e3b2bc25fab877c046bee14cde23d48f72ebdaf7372c",
+      "code_commit": null,
+      "scope": [
+        "item-management",
+        "TASK-040"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-012",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly agreed on 2026-09-14 to reconcile the historical T23 index as completed while retaining original evidence.",
+      "recorded_at": "2026-09-14T09:02:27Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
+      "code_commit": "9f9c7464d3636cba73e0e976ef0c20ee9e47ef06",
+      "scope": [
+        "item-management",
+        "TASK-023",
+        "TASK-042"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-013",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed entry into TEST_AND_VERIFY against the current Item Management baseline on 2026-09-14.",
+      "recorded_at": "2026-09-14T09:10:34Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "code_commit": "89ae37faf19b9cd36b8979a28e8ec219deaafe9c",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-014",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner explicitly directed entry into TEST_AND_VERIFY and expansion of the remaining verification work on 2026-09-14.",
+      "recorded_at": "2026-09-14T09:10:34Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+      "code_commit": "89ae37faf19b9cd36b8979a28e8ec219deaafe9c",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-015",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed TEST_AND_VERIFY of the frozen current Item Management candidate; this supersedes APR-013 for the metadata-only candidate commit.",
+      "recorded_at": "2026-09-14T09:16:29Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "code_commit": "996072b24acb7daff4453f91da46d93c4613e4c6",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-016",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner directed TEST_AND_VERIFY and subsequent verification work; this supersedes APR-014 for the metadata-only candidate commit.",
+      "recorded_at": "2026-09-14T09:16:29Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+      "code_commit": "996072b24acb7daff4453f91da46d93c4613e4c6",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-017",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner authorized TEST_AND_VERIFY; this exact binding advances only to the committed mode-entry review/state metadata, with unchanged product source fingerprint and design baseline.",
+      "recorded_at": "2026-09-14T09:24:00Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "code_commit": "49d487e876932e6684cbdbec46043312b3f730bd",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-018",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: Product Owner authorized TEST_AND_VERIFY and subsequent verification work; this exact binding advances only to the committed mode-entry review/state metadata, with unchanged plan and product source fingerprint.",
+      "recorded_at": "2026-09-14T09:24:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "85253762f1aad08a605b0dc91f90dc0a8e524cd70b1ae1d2cbe567738e0fc3f3",
+      "code_commit": "49d487e876932e6684cbdbec46043312b3f730bd",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-019",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved PLAN de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91 bound to candidate 00ce7271b17f31383a9662754eab56c85ef98987 on 2026-09-15.",
+      "recorded_at": "2026-09-15T02:25:02Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-020",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly accepted deferral risk for DEF-103/TC-016 until a staging-like recovery environment is available on 2026-09-15.",
+      "recorded_at": "2026-09-15T02:25:02Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "code_commit": "00ce7271b17f31383a9662754eab56c85ef98987",
+      "scope": [
+        "item-management",
+        "DEF-103",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-021",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved formal retest under PLAN de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91 bound to candidate 5c620bdff8afa84e72d26187b942d46bb6d3e2ca, retaining APR-020 for DEF-103/TC-016, on 2026-09-15.",
+      "recorded_at": "2026-09-15T02:55:40Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "code_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-022",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved PLAN 73d116cc1c38cbc9a3a72d3077001550517559e9fd211ec2c839469c3f4d4984 bound to candidate 16414b9cc5fdb70c982277cc1f31de29496572ae on 2026-09-15; staging trust provisioning and TEST_AND_VERIFY entry remain separate prerequisites.",
+      "recorded_at": "2026-09-15T03:54:23Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "73d116cc1c38cbc9a3a72d3077001550517559e9fd211ec2c839469c3f4d4984",
+      "code_commit": "16414b9cc5fdb70c982277cc1f31de29496572ae",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "DEF-103",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-023",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly changed the specification so item.mgmt can fully read and write all Item-related APIs, then directed continuation of the remaining Item Management implementation work.",
+      "recorded_at": "2026-09-16T00:48:39Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
+      "code_commit": null,
+      "scope": [
+        "server/src/modules/authorization/adminGuard.js"
+      ],
+      "expires_at": null
+    }
+  ],
   "reviews": [
     {
       "id": "REV-001",
@@ -83,6 +458,126 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 5,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-002",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "6f8d2f674e624cd5311b644b9b466e74f465a1e2d1149ae2d1e2044f027470fc",
+      "source_ref": "docs/items_management/04_design_review.md#rev-002--separate-task-037-implementation-readiness-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "51c93c71143f0ad5f8723cd1966d41fb26f85c7359c93e2768fc8d154e84e771",
+      "source_ref": "docs/items_management/04_design_review.md#rev-005--separate-task-038-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "40d102072bb65a4910d98fafa08b720d4f0ecbfce13749afbbb32949306535dc",
+      "source_ref": "docs/items_management/04_design_review.md#rev-006--separate-task-039-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-007",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "fa34b7a4c43bf4c6d425f88e3a33ad95770876c617990dcf2356e57a85cd8b8b",
+      "source_ref": "docs/items_management/04_design_review.md#rev-007--separate-task-040-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-008",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "905b8478823c24e24f89af163c0d551edb42d616178572b1fd11dd64b04a3073",
+      "source_ref": "docs/items_management/04_design_review.md#rev-008--separate-task-041-implementation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-009",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "bf2d68787d0a0a15253c4e126dcbaec5f7ed4ca31ad7bcdd97e8f6898faf1ac9",
+      "source_ref": "docs/items_management/04_design_review.md#rev-009--separate-task-042-documentation-reconciliation-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-010",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "source_ref": "docs/items_management/04_design_review.md#rev-010--test-and-verify-entry-readiness-review",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-011",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "cdca7fa0e1861eda5f4e19d67701bcc58743ea4b022863f93c53e0df8d46ce4a",
+      "source_ref": "docs/items_management/04_design_review.md#rev-011--test_and_verify-entry-follow-up-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-012",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91",
+      "source_ref": "docs/items_management/04_design_review.md#rev-012--remediate_and_retest-independent-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-013",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_design_review",
+      "reviewed_baseline": "ac982ae8325ccaad6be80e726672a5a28831ff5263d2b8faa4084e139b311db9",
+      "source_ref": "docs/items_management/04_design_review.md#rev-013--task-044-recovery-adapter-independent-review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -203,10 +698,267 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/items_management/09_final_alignment_review.md#hd-002--accountable-item-management-module-owner"
+    },
+    {
+      "id": "HD-003",
+      "impact": "MAJOR",
+      "question": "Freeze the Attribute and Variant detail projection wire shape, ordering and scope for TASK-037.",
+      "affected_ids": [
+        "DES-004",
+        "DES-014",
+        "DES-015",
+        "TASK-037",
+        "TC-013"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/items_management/03_design_spec.md#hd-003--attribute-and-variant-detail-projection-contract"
+    },
+    {
+      "id": "HD-004",
+      "impact": "MAJOR",
+      "question": "Confirm whether the unchecked historical T23 task-index entry was an omission and may be reconciled to completed while retaining original evidence.",
+      "affected_ids": [
+        "TASK-023",
+        "TASK-042",
+        "DES-016",
+        "TC-013"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "docs/items_management/05_development_tasks.md#phase-c零售消耗品擴充"
     }
   ],
-  "external_actions": [],
-  "evidence_files": [],
-  "defects": [],
-  "next_safe_action": "Obtain a real independent review of the current DESIGN baseline before implementation authorization. TASK-038 remains pending under the retained HD-001 scope."
+  "external_actions": [
+    {
+      "id": "MODE-CHANGE-6",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-6",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized implementation on 2026-09-14"
+    },
+    {
+      "id": "MODE-CHANGE-30",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-30",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized TEST_AND_VERIFY and subsequent verification work on 2026-09-14"
+    },
+    {
+      "id": "MODE-CHANGE-31",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-31",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized TEST_AND_VERIFY and subsequent verification work; baseline advances only to committed mode-entry metadata with unchanged product source fingerprint on 2026-09-14"
+    },
+    {
+      "id": "MODE-CHANGE-33",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-33",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized REMEDIATE_AND_RETEST on 2026-09-15"
+    },
+    {
+      "id": "MODE-CHANGE-41",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-41",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved PLAN de36880e949c9d73391d3090324f071da1e1f9a4ad96599a68b782f68f186f91, accepted DEF-103/TC-016 deferral risk, and authorized continuation into formal TEST_AND_VERIFY on 2026-09-15."
+    },
+    {
+      "id": "MODE-CHANGE-45",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-45",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized REMEDIATE_AND_RETEST for DEF-106, limited to renaming four duplicate test titles and creating a new candidate; DEF-103/TC-016 remains BLOCKED_DEFERRED, on 2026-09-15."
+    },
+    {
+      "id": "MODE-CHANGE-49",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-49",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved formal retest under the unchanged PLAN bound to candidate 5c620bdff8afa84e72d26187b942d46bb6d3e2ca and retained APR-020 DEF-103/TC-016 deferral on 2026-09-15."
+    },
+    {
+      "id": "MODE-CHANGE-52",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-52",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly authorized starting TASK-044 recovery adapter development on 2026-09-15; local work must not claim staging DR acceptance."
+    },
+    {
+      "id": "ENV-PROVISION-55",
+      "kind": "ENVIRONMENT_PROVISION",
+      "target": "local MySQL staging-like source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1; preserve erp_dev",
+      "idempotency_key": "item-recovery-local-mysql-provision-20260915",
+      "status": "CONFIRMED",
+      "source_ref": "Observed local MySQL 26.7.0 provisioning on 2026-09-15: 40/40 total schemas tables and all 16 Item table counts matched source to item_recovery_tc016_20260915_run1; restored files matched 29/59 byte sizes and SHA-256; erp_user SELECT succeeded; erp_dev Item/SKU/media/import remained unchanged. Unsigned manifest: /private/tmp/item-recovery-restored-20260915/manifest.json (SHA-256 3badb73c88fae7aefdc40baeb404616e32c4b75cc89837df9b6d3951b50314df)."
+    },
+    {
+      "id": "BRANCH-SYNC-59",
+      "kind": "BRANCH_SYNC",
+      "target": "merge origin/main e4aed631ce1d3eda34f4727a36d656462d7f0db4 into codex/item-management-task-038",
+      "idempotency_key": "item-management-task-038-sync-e4aed631-20260916",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 9f4d5c9ba8a790a26da8c3e74d2d7d466633dd15 on 2026-09-16 after git fetch --prune: origin/main e4aed631ce1d3eda34f4727a36d656462d7f0db4 was merged without conflicts; Item work was preserved."
+    }
+  ],
+  "evidence_files": [
+    "evidence/20260914T092531-d37464deab2b/run.json",
+    "evidence/20260914T092606-54f0584eddea/run.json",
+    "evidence/20260914T092629-d4f1cf71d1e8/run.json",
+    "evidence/20260914T093142-11c20da04269/run.json",
+    "evidence/20260914T093146-7574b753a291/run.json",
+    "testing/evidence/remediation-client.xml",
+    "testing/evidence/remediation-item-uat-browser.xml",
+    "testing/evidence/remediation-performance-bounded.xml",
+    "testing/evidence/remediation-server-scoped.xml",
+    "evidence/20260915T022734-0e13fa08d720/run.json",
+    "evidence/20260915T022954-219f01eed099/run.json",
+    "evidence/20260915T023008-644114a5c002/run.json",
+    "evidence/20260915T023324-35fe8b579a91/run.json",
+    "evidence/20260915T025642-5a90557a2bfb/run.json",
+    "evidence/20260915T025743-3ff0b84153c9/run.json",
+    "evidence/20260915T025801-1f98c219d70a/run.json",
+    "evidence/20260915T030118-828741e0f9f4/run.json",
+    "evidence/20260915T030140-5f4671994278/run.json",
+    "evidence/20260915T030248-57050e3d96b5/run.json",
+    "evidence/20260915T030312-a6347c1d7274/run.json",
+    "evidence/20260915T030630-20d57aa8c7d5/run.json"
+  ],
+  "defects": [
+    {
+      "id": "DEF-101",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-013",
+        "TC-014",
+        "TC-015"
+      ],
+      "closure_evidence": [
+        "testing/evidence/remediation-server-scoped.junit.xml",
+        "testing/evidence/remediation-client.junit.xml"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-102",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-011",
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-015"
+      ],
+      "closure_evidence": [
+        "testing/evidence/remediation-server-scoped.junit.xml",
+        "testing/evidence/remediation-performance-bounded.junit.xml"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-103",
+      "severity": "HIGH",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TC-016"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APR-020"
+    },
+    {
+      "id": "DEF-104",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "UAT-001",
+        "UAT-002",
+        "UAT-003",
+        "UAT-004",
+        "UAT-005",
+        "UAT-006",
+        "UAT-007",
+        "UAT-008",
+        "UAT-009",
+        "UAT-010",
+        "UAT-011",
+        "UAT-012",
+        "UAT-015"
+      ],
+      "closure_evidence": [
+        "testing/evidence/remediation-item-uat-browser.junit.xml",
+        "testing/evidence/remediation-client.junit.xml"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-105",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-009",
+        "TC-015"
+      ],
+      "closure_evidence": [
+        "testing/evidence/item-import-targeted.xml",
+        "testing/evidence/remediation-server-scoped.junit.xml"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-106",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-013",
+        "TC-014",
+        "TC-015"
+      ],
+      "closure_evidence": [
+        "testing/evidence/def106-targeted.junit.xml",
+        "testing/evidence/def106-server-regression.junit.xml"
+      ],
+      "risk_approval_id": null
+    }
+  ],
+  "next_safe_action": "Commit the current TASK-044 developer-validation and module-boundary alignment, rerun traceability/boundary checks, and request exact Product Owner approval for the sensitive server/config/itemRecoveryTrustPolicy.json scope plus the resulting DESIGN/PLAN/candidate binding. Only then record push/PR external actions. TASK-043 remains dependency-blocked; independent manifest signing remains required before TC-016."
 }
