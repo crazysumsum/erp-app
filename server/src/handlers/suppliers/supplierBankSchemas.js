@@ -180,13 +180,20 @@ export const BANK_LIST_RESPONSE_SCHEMA = Object.freeze({
 });
 
 /**
- * Reveal 係唯一一個講得出帳號嘅 response，所以佢係唯一一個需要
- * `Cache-Control: no-store, private` 同 `Pragma: no-cache` 嘅 route。
+ * Reveal 係唯一一個講得出帳號嘅 response，所以佢係唯一一個需要收窄 cache header 嘅 route。
+ *
+ * 但實際過到線嘅淨係 `no-store`（框架加）同 `Pragma: no-cache`（handler 加）。驗收條件
+ * 寫嘅 `no-store, private` 入面個 `private` **去唔到線** —— `sendSuccess` 會喺 handler
+ * 之後覆寫 `Cache-Control`。呢個係一個批咗嘅偏離，記錄喺 00_harness_state.json 一條
+ * subject 叫「DEV-T34-CACHE-PRIVATE: the reveal route's Cache-Control acceptance criterion
+ * is not met」嘅 observation，理由喺 supplierBankHandlers.js 個 reveal handler 度寫齊。
  *
  * 設計 §6.6 個範例仲有 `expiresInSeconds`。呢度**冇**做：嗰個數字暗示伺服器會過期
  * 一啲嘢，但實際上冇任何 server-side 狀態同佢對應 —— 明文淨係活喺呢一個 response
  * 入面。一個講緊一件冇發生嘅事嘅欄位，比冇嗰個欄位更差。UI 自己幾時清 component
- * memory 係 T35 嘅事，唔需要伺服器俾個數字佢。呢個偏離記錄咗喺實作報告。
+ * memory 係 T35 嘅事，唔需要伺服器俾個數字佢。呢個偏離記錄喺 00_harness_state.json 一條
+ * subject 叫「DEV-T34-EXPIRES-IN: design 6.6's reveal response includes expiresInSeconds and
+ * the implementation omits it」嘅 observation，同實作報告 §5。
  */
 export const BANK_REVEAL_RESPONSE_SCHEMA = Object.freeze({
   type: "object",

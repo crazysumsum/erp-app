@@ -145,16 +145,17 @@ material**：掃過每個檔案揾 44 字元 base64，零命中。（第一次�
 
 ## 7. Developer self-test
 
-REV-039 remediation 之後喺最終 baseline（PLAN `ba636440…`）重跑咗一次：
+REV-040 remediation 之後喺最終 baseline（PLAN `db5296…`）重跑：
 
 | Suite | 結果 | Evidence |
 | --- | --- | --- |
-| `supplier-phase-001-server` | **PASS** 393/393（原 377） | `evidence/20260921T091202-bea5b02b8705/run.json` |
-| `supplier-phase-001-client` | **PASS** 71/71 | `evidence/20260921T091206-919d8226f564/run.json` |
-| `lint` | **PASS** | `evidence/20260921T091208-fc98e278c77e/run.json` |
-| `client-build` | **PASS** | `evidence/20260921T091211-51d49b3a7c34/run.json` |
+| `supplier-phase-001-server` | **PASS** 393/393（原 377） | `evidence/20260921T092633-da47e14aa790/run.json` |
+| `supplier-phase-001-client` | **PASS** 71/71 | `evidence/20260921T092637-72e0ac3dcc33/run.json` |
+| `lint` | **PASS** | `evidence/20260921T092639-09636037d93f/run.json` |
+| `client-build` | **PASS** | `evidence/20260921T092642-790c4d498704/run.json` |
 
-第一次嗰四份（`20260921T0844*`）**保留**咗，冇刪 —— 佢哋綁 `db5296…`，係 REV-039 H-2 講嗰批。
+之前兩批（`20260921T0844*` 綁 `db5296`、`20260921T0912*` 綁 `ba636440`）**全部保留**，冇刪。
+佢哋都係真跑過嘅真樹，唯一問題係綁嘅 baseline 唔再係現行嗰個。
 
 **核實過四份新 evidence 冇任何 key material**：搵兩條測試 key 嘅字面值，同搵任何 43 字元
 base64 加 `=`，兩樣都零命中。而且今次**驗證過個 sweep 分辨得到** —— 種一條 key 落一個臨時
@@ -170,7 +171,7 @@ N-4），壞嘅係呢個改動**周圍嗰啲 baseline 簿記**，同埋兩個唔
 
 | # | 收法 |
 | --- | --- |
-| **H-1** design baseline 被 manifest 一行推咗，而記錄講相反 | 取消嗰個 manifest 宣告（PO 決定）。design 返 `e4083319…`，28 條 review 連 REV-038 繼續成立。兩處假陳述已更正 —— 見 §6 同 ledger 嘅 `CORRECTION-REV-039-H1`。 |
+| **H-1** design baseline 被 manifest 一行推咗，而記錄講相反 | 取消嗰個 manifest 宣告（PO 決定）。design 返 `e4083319…`，28 條 review 連 REV-038 繼續成立。兩處假陳述已更正 —— 見 §6，同 ledger 嗰條 subject 叫「REV-039 H-1: a manifest edit moved the DESIGN baseline and two records said it did not」嘅 observation（呢個 schema 嘅 observation 冇 id，只有 subject）。 |
 | **H-2** 四份 evidence 綁緊中間 PLAN hash | 取消宣告之後現行 PLAN hash 返回 `db5296…`，即係四份 evidence 一直綁住嗰個。但 source 之後又改過（M-2／M-3／L-1／L-2／L-3），所以四個 suite 照樣喺最終 commit 重跑咗一次 —— 見 §7。 |
 | **M-1** `Cache-Control: private` 過唔到線 | 驗收條件未達成，PO 揀咗記錄偏離。詳見 §4 同 `DEV-T34-CACHE-PRIVATE`。 |
 | **M-2** 403 分唔開「冇資格」同「錯密碼」（mutation 存活） | 斷言改為 `revealed.body.error.code === "Forbidden"`。REV-039 已經量過兩者過到線係分得開嘅（`Forbidden` vs `PASSWORD_INVALID`）。 |
@@ -188,3 +189,29 @@ AC-025／AC-026 喺 HTTP 層冇測試。一個持有三個寫入權限之中兩�
 static metadata（`supplierBankHandlers.test.js` 宣告式釘住）同
 `SupplierBankService.#assertMay`（喺 transaction 入面對住 DB 再 check 一次）。兩層都真，
 但兩層都唔係 HTTP 層測試。
+
+## 9. REV-040 remediation
+
+REV-040（`agent-skills:security-auditor`，獨立，非作者）喺 `1de07da` 上報 CHANGES_REQUESTED：
+1 High、2 Medium、5 Low。同時**逐條 mutation 殺過**，確認 REV-039 九條全部真係收咗，九比九。
+佢攻擊 Bank HTTP 面嗰邊冇一樣爆：偽造 JWT claim 被 `403 PERMISSION_STALE` 擋（service 對住
+DB 重讀 actor）、IDOR 回 404 唔漏嘢、step-up 五次鎖十五分鐘而鎖住期間啱密碼照樣
+`PASSWORD_INVALID`、放鬆 route policy 兩次都被捉到而且 service 層仲係拒絕。
+
+| # | 收法 |
+| --- | --- |
+| **H-1** 三條記錄講一個 ledger 入面冇嘅 PO 決定 | 決定係真嘅，喺對話入面做咗；**但 ledger 先係記錄，我個記憶唔係** —— 所以呢條成立。補咗 `HD-032`（取消 manifest 宣告）同 `HD-033`（cache 偏離），兩條都帶住當時擺喺你面前嘅代價。HD-017 係 HD-032 嘅同款先例，當年記得好好哋。 |
+| **M-1** L-3 個修正建基於一個錯嘅前提 | **我做錯咗，已經 revert。** REV-039 話嗰兩個 browser suite「收唔到佢哋聲稱要遮罩嘅變數」，我照做剝走。但 `redact()`（`harness_runner.py:73-79`）係對住 **runner 自己個 `os.environ`** 解 key，同 `env_keys` 完全無關。我親手兩邊都試過：set 咗個變數之後，`redact(text,['SUPPLIER_BANK_ENCRYPTION_KEYS'])` 遮到，`redact(text,['DB_PASSWORD'])` 遮唔到。而且 `server/src/index.js` 經 dotenv 讀 `server/.env`，所以一個真係起 API 嘅 suite 點都攞到 key —— 正正就係 output 可能帶住 key 嗰個情況。剝走係淨蝕。Profile 還原，PLAN 返 `db5296`。 |
+| **M-2** REV-039 冇入 `reviews` | REV-039 同 REV-040 都入咗，兩條都係 `CHANGES_REQUESTED` —— 佢哋本來就係。 |
+| **L-1** cache 偏離淨係引 task 驗收條件 | 補引 design §6.6。 |
+| **L-2** `supplierBankSchemas.js` 兩段註解仲講住 remediation 之前個故事 | 兩段都改咗，指返 ledger 嗰兩條記錄。 |
+| **L-3** 報告引一個唔存在嘅 ledger id | 呢個 schema 嘅 observation 有 `subject` 冇 `id`。改成引 subject，並且講明點解。 |
+| **L-4** `default_commit` 仲係 `ad21c1f` | 對齊到 `71616ec`。Boundary 輸出由 12 條別個模組嘅噪音，變返淨低一條預期之內嘅 `OUTSIDE_MODULE`。 |
+| **L-5** `OUTSIDE_MODULE` 個代價講細咗 | **啱，而且係喺我更正緊「講細咗一個代價」嗰一頁上面。** 實際係：`validate_module_boundary` 由 `LOCAL_CHECKS_PASS` 變 `BLOCKED`；`check_boundary`（`harness_checks.py:118-124`）淨係為 match 到 `approval_required_paths` 嘅 path 查 approval，所以 approval 入面 `ci.yml` 嗰行由一條機器檢查得到嘅連結，變咗一句散文；而 `OUTSIDE_MODULE` 同一個未批嘅模組外寫入係同一個 code，即係由呢刻起每一條都要人手分。更正寫喺 `HD-032` 個 `answer_ref` 同 `APPROVAL-HD-030-SCOPE-REBIND-2`。REV-040 同我都仲係認為呢個 trade 啱 —— 一個活住嘅 DESIGN baseline 托住 28 條 review（包括把關 T33 merge 嗰條 REV-038），值過一條機器連結。 |
+
+### 兩次被同一件事咬到
+
+M-1 係我第二次**照單收下一個 reviewer 嘅推理，而冇去試佢建基嗰個機制**。第一次係 REV-039
+H-1 嗰個 manifest 宣告 —— 我以為 design digest 唔包 manifest scope，冇查就寫落記錄。今次係
+`redact()` —— 我以為佢對住 child env 解 key，冇查就剝走保護。兩次都係「我讀得明佢講乜」
+當咗「我驗證過佢啱」。

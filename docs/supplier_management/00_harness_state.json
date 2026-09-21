@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 173,
+  "revision": 177,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -10,11 +10,11 @@
   "current_task": "TASK-034",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
-    "plan": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
-    "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
-    "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
+    "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+    "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+    "source_fingerprint": "fff22d41a110b747920738afaca9a363f733540817e6779bc0cc161976c67a76",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-034",
-    "default_commit": "ad21c1f22cd027171791fa3a26a9b558ccc91086",
+    "default_commit": "71616ec040a7558856083035801554dda940ab5e",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -808,6 +808,47 @@
         "no production key material is committed by this approval"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-031-PLAN-REBIND-2",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-binds the HD-031 plan approval to db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087 after REV-040 M-1 caused the REV-039 L-3 profile edit to be reverted. The underlying human decision is unchanged and is still HD-031: declare the Bank key rings in the profile so evidence runs work at all. No new authorisation is claimed here. The PLAN baseline has now moved three times and returned: a0d41e31 to db5296 (HD-031, the profile edit), db5296 to f701e9b0 (the manifest declaration, reverted under HD-032), f701e9b0 to db5296 (that revert), db5296 to ba636440 (the REV-039 L-3 edit) and ba636440 back to db5296 (this revert). APPROVAL-HD-031-PLAN, APPROVAL-HD-031-PLAN-FINAL and APPROVAL-HD-031-PLAN-REBIND are all retained unrewritten and superseded by this record. APPROVAL-HD-031-PLAN-FINAL's source_ref contains a false statement about the design baseline, corrected by the observation whose subject begins 'REV-039 H-1'.",
+      "recorded_at": "2026-09-21T17:26:03+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "scope": [
+        "supplier-management",
+        "00_project_profile.json: SUPPLIER_BANK_* in env_keys on the eight DB-backed suites",
+        "00_project_profile.json: redaction_env_keys restored to their pre-REV-039-L-3 content",
+        "00_module_manifest.json: .github/workflows/ci.yml is NOT declared in approval_required_paths, per HD-032"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-030-SCOPE-REBIND-2",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Re-binds APPROVAL-HD-030-SCOPE to db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087. The underlying decision is HD-030, recorded there: the Product Owner's 2026-09-21 answer named .github/workflows/ci.yml explicitly in the option chosen and approved provisioning test-only generated keys in it and in server/.env.example so the Bank capability can be deployed fail-closed. This record exists to state the cost of HD-032 accurately, because the previous version understated it, which REV-040 L-5 flagged. What reverting the manifest declaration actually costs: validate_module_boundary goes from LOCAL_CHECKS_PASS to BLOCKED; check_boundary (harness_checks.py:118-124) consults approvals only for paths matching approval_required_paths, so a path outside both allowed_write_paths and approval_required_paths short-circuits to OUTSIDE_MODULE without any approval being examined, which means the scope entry below is prose and no longer a machine-checked link; and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every occurrence on this branch must be triaged by hand from here on. Calling this a local path-consistency finding, as the earlier record and the implementation report did, was an understatement. The trade is still judged correct by the Product Owner, by me and by REV-040: a live DESIGN baseline carrying 28 reviews including the REV-038 that gated the TASK-033 merge is worth more than one machine-checked path link. APPROVAL-HD-030-SCOPE, APPROVAL-HD-030-SCOPE-FINAL and APPROVAL-HD-030-SCOPE-REBIND are retained unrewritten and superseded by this record.",
+      "recorded_at": "2026-09-21T17:26:03+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "scope": [
+        "supplier-management",
+        ".github/workflows/ci.yml",
+        "server/.env.example",
+        "docs/supplier_management/00_project_profile.json",
+        "docs/supplier_management/00_module_manifest.json",
+        "the ci.yml entry above is prose: check_boundary no longer reads it, see this record's source_ref",
+        "no production key material is committed by this approval"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1265,6 +1306,30 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-039",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-034)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/39_rev_039_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-040",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-034 REV-039 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/40_rev_040_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
       "risk_approval_id": null
     }
   ],
@@ -2552,7 +2617,7 @@
       "spec_baseline": "ba6364404ec840eda4887caa6ef333c8b8dd17a4d3d1b304dadd6b6745a1d42e",
       "source_fingerprint": "63cc99cd68f11fff3bcefb0e3fbf9b704a3e3346d094b8b5db2f82490df526fc",
       "status": "FAIL",
-      "source_ref": "Recorded deviation, approved by the Product Owner on 2026-09-21. TASK-034's verification criterion reads 'Manual header check: reveal contains Cache-Control: no-store, private and Pragma: no-cache'. The private token never reaches the wire: BaseRequestHandler.handle calls sendSuccess, whose first statement is res.setHeader('Cache-Control','no-store') at framework/http/apiResponse.js:21 (and :46 on the error path), and setHeader replaces rather than appends. REV-039 measured the actual value over real HTTP on a genuine 200 reveal: Cache-Control: no-store, Pragma: no-cache. My own test could not see this and could not have: it drove handler.execute directly with a fake res, stopping one call before the framework overwrites, so a test written specifically to replace a manual check was incapable of failing when the header was wrong. The Product Owner chose to record the deviation rather than change the framework, on the reasoning that RFC 9111 5.2.2.5 makes no-store strictly stronger than private - no cache of any kind may store the response - so the security property the criterion protects is already held, while meeting it literally would require editing a response path every module in the application goes through, outside this module's allowed_write_paths. Remediation: the handler no longer sets a Cache-Control it cannot deliver; Pragma stays because the framework does not touch it; and the integration test now asserts the real wire value with assert.equal rather than assert.match, deliberately, so that if anyone ever changes apiResponse.js the test goes red and this deviation is closed on purpose instead of drifting shut. Status FAIL is accurate and intended: the criterion is not met.",
+      "source_ref": "Recorded deviation, approved by the Product Owner on 2026-09-21. TASK-034's verification criterion reads 'Manual header check: reveal contains Cache-Control: no-store, private and Pragma: no-cache', and design 6.6 states the same value in its reveal response example, so this is a design-level shape and not only a task checklist line (REV-040 L-1). The private token never reaches the wire: BaseRequestHandler.handle calls sendSuccess, whose first statement is res.setHeader('Cache-Control','no-store') at framework/http/apiResponse.js:21 (and :46 on the error path), and setHeader replaces rather than appends. REV-039 measured the actual value over real HTTP on a genuine 200 reveal: Cache-Control: no-store, Pragma: no-cache. My own test could not see this and could not have: it drove handler.execute directly with a fake res, stopping one call before the framework overwrites, so a test written specifically to replace a manual check was incapable of failing when the header was wrong. The Product Owner chose to record the deviation rather than change the framework, on the reasoning that RFC 9111 5.2.2.5 makes no-store strictly stronger than private - no cache of any kind may store the response - so the security property the criterion protects is already held, while meeting it literally would require editing a response path every module in the application goes through, outside this module's allowed_write_paths. Remediation: the handler no longer sets a Cache-Control it cannot deliver; Pragma stays because the framework does not touch it; and the integration test now asserts the real wire value with assert.equal rather than assert.match, deliberately, so that if anyone ever changes apiResponse.js the test goes red and this deviation is closed on purpose instead of drifting shut. Status FAIL is accurate and intended: the criterion is not met.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-039",
       "observed_at": "2026-09-21T17:11:55+08:00"
     },
@@ -2588,6 +2653,39 @@
       "source_ref": "The four re-run evidence directories were searched for the two literal test key values and for any 43-character base64 run followed by '=': zero hits of either. Unlike the first attempt at this check on the previous evidence set, the search used literal strings rather than an unexported shell variable, so it searched for what it meant to search for. Discriminating power verified rather than assumed: planting one of the two keys into a scratch file and running the identical commands finds it by both the literal search and the base64 pattern. A sweep that has never been shown to find anything proves nothing about finding nothing.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-039",
       "observed_at": "2026-09-21T17:12:37+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-040 M-1: the REV-039 L-3 fix rested on a false premise and has been reverted",
+      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "fff22d41a110b747920738afaca9a363f733540817e6779bc0cc161976c67a76",
+      "status": "PASS",
+      "source_ref": "Correction of a remediation, not of the original code. REV-039 L-3 observed that supplier-client-ui and supplier-uat-browser carried SUPPLIER_BANK_ENCRYPTION_KEYS and SUPPLIER_BANK_LOOKUP_KEYS in redaction_env_keys with an empty env_keys, and reasoned that they would never see the variables their redaction claimed to redact. I accepted that and removed the two entries. REV-040 showed the premise is wrong, and I verified it rather than taking the second reviewer's word either: redact() at harness_runner.py:73-79 resolves each key against os.environ, the RUNNER's environment, and never touches the child's env dict, so redaction is independent of env_keys entirely. Demonstrated with both cases, because a demonstration of only the true case proves nothing: with SUPPLIER_BANK_ENCRYPTION_KEYS set in the runner's environment, redact(text,['SUPPLIER_BANK_ENCRYPTION_KEYS']) replaces the value with [REDACTED] and redact(text,['DB_PASSWORD']) leaves it in the clear. It also matters because server/src/index.js loads server/.env through dotenv, so a suite that boots the API gets the keys whatever the profile says, which is exactly the case where captured output could carry one. Removing the two entries was therefore a small net loss of protection, justified in the ledger by a statement that was false. The profile is restored to its pre-remediation content and the PLAN baseline returns to db5296. Worth naming: this is the second time in this task that I acted on a reviewer's reasoning without testing the mechanism it rested on.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-040",
+      "observed_at": "2026-09-21T17:26:03+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-040: eight findings, all real; the High and both Mediums were bookkeeping, not product code",
+      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "fff22d41a110b747920738afaca9a363f733540817e6779bc0cc161976c67a76",
+      "status": "PASS",
+      "source_ref": "REV-040 was performed by agent-skills:security-auditor, independent and not the author, against 1de07da89a1fec2eb8a753f99cb9779b8f9d50cd. Verdict CHANGES_REQUESTED with 1 High, 2 Medium, 5 Low, and it confirmed all nine REV-039 findings genuinely remediated by killing each with a mutation rather than reading the diff. Nothing it attacked on the Bank HTTP surface broke: forged JWT claims are refused at 403 PERMISSION_STALE because the service re-reads the actor from the database, IDOR returns 404 with no leak, step-up brute force locks at five attempts for fifteen minutes and a correct password during the lock still returns PASSWORD_INVALID, and weakening the route policy was caught twice with the service layer still refusing. H-1: APPROVAL-HD-031-PLAN-REBIND, APPROVAL-HD-030-SCOPE-REBIND and the H-1 correction observation all asserted a Product Owner decision while no pending_decisions entry recorded it. The decisions were real and were taken in conversation, but the harness's premise is that the ledger is the record and my memory is not, so the finding is correct as stated: HD-032 and HD-033 now exist, with the costs as they were put to the Product Owner. HD-017 is the exact precedent for HD-032 and was recorded properly at the time. M-1 is the reverted L-3 fix recorded above. M-2: REV-039 was absent from the reviews collection although this branch commits its 691-line report; REV-039 and REV-040 are both recorded now, as CHANGES_REQUESTED, which is what they were. L-1 and L-2: the cache deviation now cites design 6.6 as well as the task criterion, and the two stale comments in supplierBankSchemas.js that still told the pre-remediation story now point at the ledger records. L-3: the implementation report cited a ledger id CORRECTION-REV-039-H1 that does not exist, because observations in this schema have a subject and no id; it now cites the subject and says so. L-4: baseline.default_commit was still ad21c1f from before main was merged, so check_boundary attributed twelve items_management files to this module; it is reconciled to 71616ec and the boundary output is now the single expected OUTSIDE_MODULE. L-5: the records described the ci.yml trade as a local path-consistency finding, which understates it, and the corrected description is in HD-032's answer_ref and APPROVAL-HD-030-SCOPE-REBIND-2. REV-040 states it still considers the trade correct; so do I, but the point stands that I understated a cost on the same page where I was correcting an understated cost.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-040",
+      "observed_at": "2026-09-21T17:26:03+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-040 remediation evidence: four suites green at the restored PLAN baseline, no key material",
+      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "fff22d41a110b747920738afaca9a363f733540817e6779bc0cc161976c67a76",
+      "status": "PASS",
+      "source_ref": "Re-run after the REV-039 L-3 profile edit was reverted, which returned the PLAN baseline to db5296. supplier-phase-001-server 393/393, supplier-phase-001-client 71/71, lint and client-build green, all four binding db5296 and the current source fingerprint. The four runs recorded at ba636440 are retained rather than deleted; they were real runs of a real tree and their only defect is that the baseline they bind no longer exists. Swept for key material the same way as before and with the same discriminating control: zero hits for either literal test key and zero hits for any 43-character base64 run followed by '=', while planting a key into a scratch file is found by both searches.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-040",
+      "observed_at": "2026-09-21T17:26:53+08:00"
     }
   ],
   "pending_decisions": [
@@ -3023,6 +3121,35 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-21: 改 profile，偵偵地重建基線. The exact cost -- 83 observations, 6 approvals, 78 evidence runs bound to the old hash -- was stated before the decision was taken. The reasoning given: the environment contract genuinely changed under HD-030, and describing that contract is what the profile is for. The old records are not to be rewritten; the move is to be recorded plainly instead."
+    },
+    {
+      "id": "HD-032",
+      "impact": "MAJOR",
+      "question": "REV-039 H-1 found that declaring .github/workflows/ci.yml in the module manifest's scope.approval_required_paths moved the DESIGN baseline, not only the PLAN baseline, because the DESIGN digest is computed over the manifest's scope object (harness_core.py:301-307) and approval_required_paths lives inside it. The consequence was quantified before the decision: harness_checks.py:276-289 filters reviews against a recomputed design hash, so all 38 reviews stopped counting at once, including REV-038, the APPROVED review that gated the TASK-033 merge, and APPROVAL-HD-017-DESIGN, the module's only DESIGN-kind approval. The agent had previously told the Product Owner this edit was mechanical and design-neutral, which was false. Options: revert the declaration, which returns design to e4083319 and keeps 28 reviews including REV-038 bound, at the cost of the boundary validator reporting OUTSIDE_MODULE for a file HD-030 already approved; or keep the declaration and record the design move with a fresh DESIGN approval, at the cost of stranding those 28 reviews and the REV-038 that gated the previous merge.",
+      "affected_ids": [
+        "TASK-034",
+        "00_module_manifest.json",
+        "DESIGN baseline",
+        "REV-038",
+        "APPROVAL-HD-017-DESIGN",
+        "HD-030"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated both costs before the choice: 取消 manifest 宣告. Design returns to e4083319 and the 28 reviews including REV-038 stay bound. The cost accepted is stated more precisely in APPROVAL-HD-030-SCOPE-REBIND-2 following REV-040 L-5: it is not merely a cosmetic finding. validate_module_boundary goes from LOCAL_CHECKS_PASS to BLOCKED, check_boundary (harness_checks.py:118-124) consults approvals only for paths matching approval_required_paths so nothing in the toolchain reads APPROVAL-HD-030's scope entry for ci.yml any more, and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every one on this branch must be triaged by hand from here on. Recorded late: this decision was taken in conversation and the three records written from it asserted it without a pending_decisions entry existing, which REV-040 H-1 correctly flagged."
+    },
+    {
+      "id": "HD-033",
+      "impact": "MAJOR",
+      "question": "REV-039 M-1 found that TASK-034's verification criterion -- reveal returns Cache-Control: no-store, private and Pragma: no-cache, also stated in design 6.6 -- is not met. BaseRequestHandler.handle calls sendSuccess, whose first statement is res.setHeader('Cache-Control','no-store') (framework/http/apiResponse.js:21, and :46 on the error path), and setHeader replaces rather than appends, so the private token is destroyed before the response is written; REV-039 measured no-store over real HTTP on a genuine 200 reveal. The agent's own test could not detect this and could not have, because it drove handler.execute directly with a fake res and stopped one call before the overwrite. Options: change framework/http/apiResponse.js so it does not clobber an already-narrower Cache-Control, which is outside this module's allowed_write_paths and changes the response path every module in the application goes through; or record the deviation, on the reasoning that RFC 9111 5.2.2.5 makes no-store strictly stronger than private.",
+      "affected_ids": [
+        "TASK-034",
+        "AC-024",
+        "FR-BANK-006",
+        "design 6.6",
+        "server/src/framework/http/apiResponse.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated the measured wire value and both options: 記低偏離，唔掂框架. The criterion is recorded as not met rather than quietly restated to match what was built; the deviation is the observation with subject 'DEV-T34-CACHE-PRIVATE: the reveal route's Cache-Control acceptance criterion is not met', status FAIL, deliberately. Recorded late, same as HD-032."
     }
   ],
   "external_actions": [
@@ -3521,7 +3648,11 @@
     "evidence/20260921T091202-bea5b02b8705/run.json",
     "evidence/20260921T091206-919d8226f564/run.json",
     "evidence/20260921T091208-fc98e278c77e/run.json",
-    "evidence/20260921T091211-51d49b3a7c34/run.json"
+    "evidence/20260921T091211-51d49b3a7c34/run.json",
+    "evidence/20260921T092633-da47e14aa790/run.json",
+    "evidence/20260921T092637-72e0ac3dcc33/run.json",
+    "evidence/20260921T092639-09636037d93f/run.json",
+    "evidence/20260921T092642-790c4d498704/run.json"
   ],
   "defects": [
     {
