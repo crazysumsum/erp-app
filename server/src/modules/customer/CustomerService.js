@@ -1,5 +1,6 @@
 import { CustomerAuditLogService } from "./CustomerAuditLogService.js";
 import { CustomerOperationService } from "./CustomerOperationService.js";
+import { CustomerApprovalService } from "./CustomerApprovalService.js";
 import {
   customerCodeTaken,
   customerLegalNameTaken,
@@ -115,7 +116,7 @@ function purposesByOwner(rows, ownerColumn) {
 }
 
 export class CustomerService {
-  constructor({ database, time, audit = new CustomerAuditLogService(), operations = new CustomerOperationService(), actorVerifier = assertActorFresh, businessMaster } = {}) {
+  constructor({ database, time, audit = new CustomerAuditLogService(), operations = new CustomerOperationService(), actorVerifier = assertActorFresh, businessMaster, approvals } = {}) {
     if (!database || !time) throw new TypeError("CustomerService requires database and time");
     this.database = database;
     this.time = time;
@@ -123,6 +124,7 @@ export class CustomerService {
     this.operations = operations;
     this.actorVerifier = actorVerifier;
     this.businessMaster = businessMaster ?? new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
+    this.approvals = approvals ?? new CustomerApprovalService({ database, time, audit });
   }
 
   async create({ actorId, claimedRoles, claimedPermissions, idempotencyKey, requestId, ip, ...input }) {
@@ -203,6 +205,9 @@ export class CustomerService {
         duplicate(error);
       }
       if (result.affectedRows !== 1) throw versionConflict(before.version);
+      if (before.legal_name_key !== customer.legalNameKey || before.default_currency_code !== customer.defaultCurrencyCode) {
+        await this.approvals.invalidateForCriticalChange(connection, { customer: before, actorId, actorUsername: actor.username, reason, requestId, ip });
+      }
       const updated = await this.#get(connection, id);
       await this.audit.record(connection, {
         occurredAt: nowMs, actorUserId: actorId, actorUsername: actor.username, action: "customer.update",
