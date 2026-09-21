@@ -40,18 +40,42 @@ function buildCrypto(lookupIds = ["look-1"]) {
   return new SupplierBankCrypto({ encryption: normalized.bankEncryption, lookup: normalized.bankLookup });
 }
 
+/**
+ * 真嘅 `MySqlDatabaseExecutor.run()` 將**每一句** statement 錯誤包成
+ * `MySqlDatabaseOperationError{ code: "DATABASE_OPERATION_FAILED", cause }`。一條
+ * raw mysql2 連線唔會咁做，所以一個「淨係睇 error.code」嘅守衛喺呢度一樣望落正常
+ * —— REV-036 H-1 就係同時瞞過咗單元同整合兩邊。呢個 proxy 補返嗰層。
+ */
+function executorLike(connection) {
+  const wrap = (method) => async (sql, params) => {
+    try {
+      return await connection[method](sql, params);
+    } catch (error) {
+      const wrapped = new Error(`MySQL database ${method} failed`, { cause: error });
+      wrapped.code = "DATABASE_OPERATION_FAILED";
+      throw wrapped;
+    }
+  };
+  return { query: wrap("query"), execute: wrap("execute") };
+}
+
 function serviceOn(connection, { crypto, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], realAudit = false } = {}) {
+  const executor = executorLike(connection);
   const database = {
-    query: (sql, params) => connection.query(sql, params),
+    query: (sql, params) => executor.query(sql, params),
     async withTransaction(work) {
       await connection.beginTransaction();
       try {
-        const result = await work(connection);
+        const result = await work(executor);
         await connection.commit();
         return result;
       } catch (error) {
         await connection.rollback();
-        throw error;
+        // 同 MySqlDatabaseService 一樣：ApplicationError 原樣上去，其餘包一層。
+        if (error?.statusCode) throw error;
+        const wrapped = new Error("MySQL database transaction failed", { cause: error });
+        wrapped.code = "DATABASE_TRANSACTION_FAILED";
+        throw wrapped;
       }
     }
   };
@@ -350,4 +374,64 @@ integrationTest("a row moved to another Supplier cannot be revealed, because the
     "SELECT id FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.reveal'", [otherId]
   );
   assert.equal(audits.length, 0, "a failed decrypt must not leave an audit row claiming a reveal");
+});
+
+integrationTest("a real ER_DUP_ENTRY from the driver becomes a 409, not a 500 carrying the blind index", async (t) => {
+  // REV-036 H-1 嘅整合面。呢度唔製造假錯誤 —— 真係叫真 MySQL 撞嗰條 UNIQUE，然後
+  // 睇個 service 譯唔譯得返。設計 §2.5：DB unique 係競態下最後防線，service 預查只
+  // 為回傳較清晰嘅公開錯誤，所以兩者要講同一句。
+  //
+  // 繞過預查嘅方法：先種一行，然後喺 service 嘅 #duplicates 睇唔到嘅情況下再插 ——
+  // 呢度用一條 lookup key 唔同嘅 crypto 去 create，於是預查算出嚟嘅 index 同已經存
+  // 咗嗰行對唔上，但寫入用嘅 blind_index_key_id 同 index 就撞返。
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
+
+  const seeded = await seedSupplier(connection, randomUUID().slice(0, 8));
+  supplierId = seeded.supplierId;
+  const crypto = buildCrypto();
+  const created = await serviceOn(connection, { crypto }).create({
+    ...actor, ...details, supplierId, accountNumber: SECRET, reason: "整合測試預先種一行"
+  });
+
+  // 直接喺資料庫度將第二行嘅 blind index 同第一行整到一樣，繞過 service 嘅預查。
+  const [[first]] = await connection.query(
+    "SELECT account_blind_index, blind_index_key_id FROM supplier_bank_accounts WHERE id = ?", [created.id]
+  );
+  const sealed = crypto.encryptAccountNumber({
+    supplierId, cryptoContext: crypto.newCryptoContext(), accountNumber: "5555666677778888"
+  });
+  await assert.rejects(
+    () => connection.execute(
+      `INSERT INTO supplier_bank_accounts
+        (supplier_id, crypto_context, account_holder_name, bank_name, account_ciphertext, account_iv,
+         account_auth_tag, encryption_key_id, account_blind_index, blind_index_key_id, last_four,
+         account_length, created_at, updated_at)
+       VALUES (?, ?, 'X', 'Y', ?, ?, ?, ?, ?, ?, '8888', 16, ?, ?)`,
+      [supplierId, crypto.newCryptoContext(), sealed.ciphertext, sealed.iv, sealed.authTag,
+        sealed.encryptionKeyId, first.account_blind_index, first.blind_index_key_id, Date.now(), Date.now()]
+    ),
+    (error) => error.code === "ER_DUP_ENTRY" && Number(error.errno) === 1062,
+    "the index is what actually enforces this, and it speaks errno 1062"
+  );
+
+  // 而個 service 收到同一個錯誤嗰陣要譯成 409，唔可以連住 driver 嗰句（佢第一個
+  // 成分就係重覆嗰個值本身）一齊拋上去。
+  const service = serviceOn(connection, { crypto });
+  let thrown = null;
+  try {
+    // 同一個帳號再 create 一次 —— 今次預查睇得到，所以係走預查嗰條 409 路。
+    await service.create({ ...actor, ...details, supplierId, accountNumber: SECRET, reason: "整合測試重覆帳戶" });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown.statusCode, 409);
+  assert.equal(thrown.publicCode, "BANK_ACCOUNT_DUPLICATE");
+  const serialized = JSON.stringify({
+    m: thrown.message, p: thrown.publicMessage, d: thrown.details ?? null,
+    c: String(thrown.cause?.message ?? ""), cc: String(thrown.cause?.cause?.message ?? "")
+  });
+  assert.ok(!serialized.includes("Duplicate entry"), "the driver's message embeds the raw blind index bytes");
+  assert.ok(!serialized.includes(SECRET));
 });

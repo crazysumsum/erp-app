@@ -234,18 +234,38 @@ export class SupplierBankService {
    * 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤。
    * 所以兩者要講同一句 —— 一個輸咗競態嘅寫入唔應該變成 500。
    */
-  static async #translatingDuplicates(work) {
+  static async #translatingDuplicates(work, { constraint }) {
     try {
       return await work();
     } catch (error) {
-      if (error?.code === "ER_DUP_ENTRY" && String(error.message).includes("uq_supplier_bank_blind_index")) {
+      if (!SupplierBankService.#violates(error, constraint)) throw error;
+      if (constraint === "uq_supplier_bank_blind_index") {
         throw supplierConflict("BANK_ACCOUNT_DUPLICATE", "這個供應商已有相同的銀行帳戶");
       }
-      if (error?.code === "ER_DUP_ENTRY" && String(error.message).includes("uq_supplier_bank_default")) {
-        throw supplierConflict("BANK_ACCOUNT_DEFAULT_RACE", "預設銀行帳戶剛被其他人變更，請重新載入");
-      }
-      throw error;
+      // REV-036 note：呢條分支**今日到唔到**。兩個並發嘅 create(isDefault) 或者
+      // setDefault 都會先攞 `suppliers FOR UPDATE`，所以佢哋已經被排晒隊，個 slot
+      // 撞唔到。留住佢係因為約束真係喺資料庫度，而唔係每個未來 writer 都一定會攞
+      // 嗰個鎖（輪替腳本、匯入）。呢個係一條冇測試覆蓋嘅分支，講明過。
+      throw supplierConflict("BANK_ACCOUNT_DEFAULT_RACE", "預設銀行帳戶剛被其他人變更，請重新載入");
     }
+  }
+
+  /**
+   * REV-036 H-1：`error.code` 唔夠。`MySqlDatabaseExecutor.run()` 將每一句 statement
+   * 錯誤包成 `MySqlDatabaseOperationError{ code: "DATABASE_OPERATION_FAILED", cause }`，
+   * 所以 driver 嗰個 code 跌咗落 `cause`。第一版淨係睇 `error.code`，即係**喺生產
+   * 環境永遠係 false** —— 而成套測試分辨唔到，因為兩個 fake 都冇做嗰層 wrapping。
+   *
+   * REV-036 M-3：唔可以用 `message.includes(...)` 揀分支。MySQL 嗰句嘅第一個成分係
+   * **重覆嗰個值本身**，即係用 `includes` 等於攞使用者資料嚟掃；而個格式仲要跟版本
+   * 唔同（5.7 `for key 'uq_…'`，8.0 `for key 'table.uq_…'`）。改用 errno 1062 加一個
+   * 錨定咗嘅 regex。
+   */
+  static #violates(error, constraint) {
+    const chain = [error, error?.cause, error?.cause?.cause].filter(Boolean);
+    const duplicate = chain.find((link) => Number(link.errno) === 1062 || link.code === "ER_DUP_ENTRY");
+    if (!duplicate) return false;
+    return new RegExp(`for key '(?:[^']*\\.)?${constraint}'`, "u").test(String(duplicate.sqlMessage ?? duplicate.message ?? ""));
   }
 
   #seal({ supplierId, cryptoContext, accountNumber }) {
@@ -318,7 +338,7 @@ export class SupplierBankService {
           sealed.ciphertext, sealed.iv, sealed.authTag, sealed.encryptionKeyId,
           sealed.blindIndex, sealed.blindIndexKeyId, sealed.lastFour, sealed.accountLength,
           wantsDefault ? 1 : 0, ACTIVE, nowMs, nowMs, input.actorId, input.actorId]
-      ));
+      ), { constraint: wantsDefault ? "uq_supplier_bank_default" : "uq_supplier_bank_blind_index" });
       const bankAccountId = Number(result.insertId);
       const projected = await this.#project(connection, input.supplierId, bankAccountId);
       await this.audit.record(connection, {
@@ -374,7 +394,7 @@ export class SupplierBankService {
       }
 
       const nowMs = this.time.nowMs();
-      const [updated] = await connection.execute(
+      const [updated] = await SupplierBankService.#translatingDuplicates(() => connection.execute(
         `UPDATE supplier_bank_accounts
             SET account_holder_name = ?, bank_name = ?, bank_country_code = ?,
                 bank_code = ?, branch_code = ?, swift_bic = ?, account_currency_code = ?,
@@ -389,7 +409,7 @@ export class SupplierBankService {
               sealed.blindIndex, sealed.blindIndexKeyId, sealed.lastFour, sealed.accountLength]
             : []),
           nowMs, input.actorId, input.bankAccountId, input.supplierId, input.version]
-      );
+      ), { constraint: "uq_supplier_bank_blind_index" });
       if (updated.affectedRows === 0) {
         throw supplierConflict("VERSION_CONFLICT", "銀行帳戶已被其他人修改，請重新載入");
       }
@@ -431,11 +451,11 @@ export class SupplierBankService {
           WHERE supplier_id = ? AND is_default = 1 AND id != ?`,
         [nowMs, input.actorId, input.supplierId, input.bankAccountId]
       );
-      const [updated] = await connection.execute(
+      const [updated] = await SupplierBankService.#translatingDuplicates(() => connection.execute(
         `UPDATE supplier_bank_accounts SET is_default = 1, version = version + 1, updated_at = ?, updated_by = ?
           WHERE id = ? AND supplier_id = ? AND version = ?`,
         [nowMs, input.actorId, input.bankAccountId, input.supplierId, input.version]
-      );
+      ), { constraint: "uq_supplier_bank_default" });
       if (updated.affectedRows === 0) {
         throw supplierConflict("VERSION_CONFLICT", "銀行帳戶已被其他人修改，請重新載入");
       }
@@ -535,7 +555,10 @@ export class SupplierBankService {
           encryptionKeyId: row.encryption_key_id
         });
       } catch (error) {
-        this.logger?.warn?.("supplier.bank.reveal.unreadable", {
+        // systemLogger 係 warn(event, message, context) —— 第一版傳兩個 argument，
+        // 個 payload 跌咗入 message 個位（REV-036 M-1）。而呢個 422 嘅全部理由就係
+        // 「竄改」同「條 key 唔喺 ring」喺日誌分得出，所以 context 唔可以走失。
+        this.logger?.warn?.("supplier.bank.reveal.unreadable", "Supplier bank account could not be read", {
           bankAccountId: Number(row.id), supplierId: Number(row.supplier_id),
           // 原因講得出，但唔帶密文、唔帶 key material。
           reason: error?.message ?? "unknown"

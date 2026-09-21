@@ -37,7 +37,26 @@ function bankRow(overrides = {}) {
   };
 }
 
-function harness({ row = bankRow(), duplicates = [], insertFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
+/**
+ * 模仿 `MySqlDatabaseExecutor.run()`：佢將**每一句** statement 錯誤包成
+ * `MySqlDatabaseOperationError{ code: "DATABASE_OPERATION_FAILED", cause }`，所以
+ * driver 嗰個 code 唔會留喺 `error.code`，佢跌咗落 `cause`。
+ *
+ * REV-036 H-1 就係喺呢度走甩嘅：個 fake 之前直接拋一個 `code: "ER_DUP_ENTRY"` 嘅
+ * raw error，於是一個「淨係睇 error.code」嘅守衛喺測試度望落好正常，而喺生產環境
+ * 永遠係 false。一個假嘢冇模仿到嘅嗰層，就係測試睇唔到嘅嗰層 —— 第二次。
+ */
+function wrappedDuplicate(constraint) {
+  const driver = new Error(`Duplicate entry '12553-look-1-\u00e2\u0013l' for key 'supplier_bank_accounts.${constraint}'`);
+  driver.code = "ER_DUP_ENTRY";
+  driver.errno = 1062;
+  driver.sqlMessage = driver.message;
+  const wrapped = new Error("MySQL database execute failed", { cause: driver });
+  wrapped.code = "DATABASE_OPERATION_FAILED";
+  return wrapped;
+}
+
+function harness({ row = bankRow(), duplicates = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
   const events = [];
   const current = row;
   const connection = {
@@ -57,14 +76,8 @@ function harness({ row = bankRow(), duplicates = [], insertFails = null, permiss
     },
     async execute(sql, params) {
       events.push(["execute", sql, params]);
-      if (sql.includes("INSERT INTO supplier_bank_accounts")) {
-        if (insertFails) {
-          const error = new Error(`Duplicate entry 'x' for key '${insertFails}'`);
-          error.code = "ER_DUP_ENTRY";
-          throw error;
-        }
-        return [{ insertId: 41, affectedRows: 1 }];
-      }
+      if (statementFails && sql.includes(statementFails.on)) throw wrappedDuplicate(statementFails.constraint);
+      if (sql.includes("INSERT INTO supplier_bank_accounts")) return [{ insertId: 41, affectedRows: 1 }];
       return [{ affectedRows: 1 }];
     }
   };
@@ -470,7 +483,7 @@ test("duplicate detection asks the same question as the unique index, inactive r
 test("a create that loses the race is a 409, not a 500 carrying the blind index", async () => {
   // 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤 ——
   // 所以兩者要講同一句。查重讀唔上鎖，所以兩個並發嘅 create 都可以讀到「冇重覆」。
-  const duplicate = harness({ insertFails: "uq_supplier_bank_blind_index" });
+  const duplicate = harness({ statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_blind_index" } });
   let thrown = null;
   try {
     await duplicate.service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "競態查重測試原因" });
@@ -483,7 +496,7 @@ test("a create that loses the race is a 409, not a 500 carrying the blind index"
     "the driver's message embeds the raw blind index; it must not travel with the domain error");
 
   // 撞到 default slot 嗰條就係另一件事，唔可以報成「重覆帳戶」。
-  const raced = harness({ insertFails: "uq_supplier_bank_default" });
+  const raced = harness({ statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_default" } });
   await assert.rejects(
     () => raced.service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, isDefault: true, reason: "預設競態測試原因" }),
     (error) => error.publicCode === "BANK_ACCOUNT_DEFAULT_RACE"
@@ -524,4 +537,78 @@ test("a bank account not found reports a well-formed code", async () => {
   assert.equal(thrown.publicCode, "SUPPLIER_BANK_NOT_FOUND");
   assert.ok(!thrown.publicCode.includes(" "));
   assert.match(thrown.publicMessage, /銀行帳戶/u, "and a label a person can read, not 子資料");
+});
+
+
+test("the duplicate translation covers update and setDefault, not just create", async () => {
+  // REV-036 M-2：預查正正就係輸競態嗰個，所以翻譯要蓋埋佢哋 —— 否則一個輸咗競態嘅
+  // update 或者 setDefault 一樣係 500。
+  const updating = harness({
+    statementFails: { on: "SET account_holder_name", constraint: "uq_supplier_bank_blind_index" }
+  });
+  await assert.rejects(
+    () => updating.service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, accountNumber: ACCOUNT, reason: "更新競態測試原因" }),
+    (error) => error.statusCode === 409 && error.publicCode === "BANK_ACCOUNT_DUPLICATE"
+  );
+
+  const defaulting = harness({
+    statementFails: { on: "SET is_default = 1", constraint: "uq_supplier_bank_default" }
+  });
+  await assert.rejects(
+    () => defaulting.service.setDefault({ ...actor, supplierId: 7, bankAccountId: 41, version: 1, reason: "預設競態測試原因" }),
+    (error) => error.statusCode === 409 && error.publicCode === "BANK_ACCOUNT_DEFAULT_RACE"
+  );
+});
+
+test("the duplicate translation reads the driver code through the wrapper, not off the top-level error", async () => {
+  // REV-036 H-1 嘅直接控制：個 fake 而家包一層，所以一個「淨係睇 error.code」嘅守衛
+  // 會喺呢度紅。少咗呢個測試，嗰個修正同一個壞守衛分辨唔出。
+  const { service } = harness({
+    statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_blind_index" }
+  });
+  let thrown = null;
+  try {
+    await service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "包裝錯誤測試原因" });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown.publicCode, "BANK_ACCOUNT_DUPLICATE",
+    "the driver code lives on error.cause once MySqlDatabaseExecutor has wrapped the statement");
+  // 而一個**唔同**約束嘅 duplicate 唔可以當成「重覆帳戶」。
+  const other = harness({
+    statementFails: { on: "INSERT INTO supplier_bank_accounts", constraint: "uq_supplier_bank_crypto_context" }
+  });
+  await assert.rejects(
+    () => other.service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "其他約束測試原因" }),
+    // 未經翻譯就會一路傳到 withTransaction 嗰層，變成 DATABASE_TRANSACTION_FAILED
+    // —— 即係一個 500，而嗰個係啱嘅：一個我哋唔識嘅約束唔應該扮成「重覆帳戶」。
+    (error) => error.code === "DATABASE_TRANSACTION_FAILED" && error.cause?.code === "DATABASE_OPERATION_FAILED",
+    "an unrelated constraint must pass through untranslated"
+  );
+});
+
+test("an unreadable row logs its reason in the context slot, which is the whole point of the 422", async () => {
+  // REV-036 M-1：systemLogger 係 warn(event, message, context)。第一版傳兩個
+  // argument，所以個 payload 跌咗入 message 個位 —— 而個 422 嘅全部理由就係「竄改」
+  // 同「條 key 唔喺 ring」喺日誌分得出。之前冇任何測試望過個 log。
+  const crypto = realCrypto();
+  const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+  const broken = Buffer.from(sealed.ciphertext);
+  broken[0] ^= 0x01;
+  const warnings = [];
+  const { service } = harness({
+    crypto,
+    sealRow: { account_ciphertext: broken, account_iv: sealed.iv, account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId }
+  });
+  service.logger = { warn: (...args) => warnings.push(args) };
+
+  await assert.rejects(() => service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "日誌測試原因" }));
+  assert.equal(warnings.length, 1);
+  const [event, message, context] = warnings[0];
+  assert.equal(warnings[0].length, 3, "warn takes (event, message, context); two arguments puts the payload in the message slot");
+  assert.equal(event, "supplier.bank.reveal.unreadable");
+  assert.equal(typeof message, "string");
+  assert.equal(context.bankAccountId, 41);
+  assert.match(context.reason, /failed authentication/u, "tampering and a missing key must read differently here");
+  assert.ok(!JSON.stringify(warnings[0]).includes(NORMALIZED), "and the log must not carry the account");
 });
