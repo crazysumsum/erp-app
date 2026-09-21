@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "environmentClass": "staging-like",
+  "environmentId": "item-recovery-staging-20260921",
+  "recoveryPoint": {
+    "id": "rp-item-recovery-tc016-20260921-run2",
+    "databaseBackupId": "mysql-consistent-snapshot-item-recovery-tc016-20260921",
+    "mediaSnapshotId": "media-snapshot-item-recovery-tc016-20260921",
+    "importSnapshotId": "import-snapshot-item-recovery-tc016-20260921",
+    "backupCreatedAt": "2026-09-21T04:03:06.000Z",
+    "latestCommittedAt": "2026-09-21T04:04:12.000Z",
+    "restoreStartedAt": "2026-09-21T04:07:08.929Z",
+    "restoreCompletedAt": "2026-09-21T04:07:09.105Z"
+  },
+  "database": {
+    "schema": "item_recovery_tc016_20260921_restore_run2",
+    "tableCounts": {
+      "item_categories": 0,
+      "item_brands": 0,
+      "item_uoms": 0,
+      "items": 1,
+      "item_skus": 1,
+      "item_sku_uoms": 0,
+      "item_sku_barcodes": 0,
+      "item_attribute_definitions": 0,
+      "item_attribute_options": 0,
+      "item_category_attributes": 0,
+      "item_attribute_values": 0,
+      "item_sku_attribute_values": 0,
+      "item_media": 1,
+      "item_audit_logs": 1,
+      "item_import_jobs": 1,
+      "item_import_rows": 0
+    },
+    "smokeSku": {
+      "skuCode": "RECOVERY-SKU-20260921",
+      "itemId": 9021001,
+      "skuId": 9021002
+    },
+    "smokeAudit": {
+      "id": 9021005,
+      "action": "item.update",
+      "targetType": "item",
+      "targetId": 9021001
+    }
+  },
+  "files": [
+    {
+      "area": "media",
+      "recordId": 9021003,
+      "path": "recovery-photo.txt",
+      "bytes": 30,
+      "sha256": "599127d28e7ff710a40a2e6eafcec3f689983d4b4d0ceebde3477154500ffbb7"
+    },
+    {
+      "area": "import",
+      "recordId": 9021004,
+      "fileKind": "source",
+      "path": "recovery-source.csv",
+      "bytes": 31,
+      "sha256": "f56ae0a0d13ad6a84b544bd3c5c3d2427b8a4a1b18774fae671af5fea2190281"
+    }
+  ]
+}

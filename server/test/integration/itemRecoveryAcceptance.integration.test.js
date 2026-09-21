@@ -129,6 +129,7 @@ test("TC-016 adapter verifies a separately restored schema through a read-only t
   const trustPolicy = {
     schemaVersion: 1,
     status: "APPROVED",
+    attestationMode: "INDEPENDENT",
     environmentId: "local-item-recovery-integration",
     schemaPrefix: "item_recovery_it_",
     attestationPublicKeyPem: "integration-test-only"

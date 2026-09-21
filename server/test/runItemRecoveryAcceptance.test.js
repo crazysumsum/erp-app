@@ -8,7 +8,7 @@ import test from "node:test";
 
 const execFileAsync = promisify(execFile);
 
-test("item recovery CLI emits NOT_RUN while the repository trust policy is unprovisioned", async (t) => {
+test("item recovery CLI fails closed when the manifest is absent", async (t) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "item-recovery-cli-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const output = path.join(directory, "report.json");
@@ -25,7 +25,7 @@ test("item recovery CLI emits NOT_RUN while the repository trust policy is unpro
     tests: [{
       name: "Item restored database, media and import reconciliation",
       id: "TC-016",
-      status: "NOT_RUN"
+      status: "FAIL"
     }]
   });
 });
