@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 62,
+  "revision": 63,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,17 +11,17 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "be9244ef9f51b6b6775fe916e22d0bd141a93fc2",
-    "source_fingerprint": "2b5f8a2a3255369b9313dc2fac6ab11eb9a08f6b3b51c0ded0c16be68c1f39d9",
-    "worktree": "/private/tmp/erp-item-management-task-038",
-    "default_commit": "e4aed631ce1d3eda34f4727a36d656462d7f0db4",
+    "code_commit": "5d390d263e13fa113a77693ec9e3979da19f824e",
+    "source_fingerprint": "aa2e7f2cc7a3c9ca1f4e24657fbdfc387fac1dfd7c5954dc8709dbe73fd9b0d4",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
+    "default_commit": "5d390d263e13fa113a77693ec9e3979da19f824e",
     "mode_entry_commit": "5c620bdff8afa84e72d26187b942d46bb6d3e2ca"
   },
   "runtime": {
-    "instance_id": "ITEM-TASK044-LOCAL-20260914",
-    "owner": "Primary IMPLEMENT agent; TASK-044 adapter developer checks complete",
+    "instance_id": "ITEM-CLOSEOUT-LOCAL-20260921",
+    "owner": "Primary IMPLEMENT agent; PR #105 closeout reconciliation",
     "resources": {
-      "workspace": "/private/tmp/erp-item-management-task-038",
+      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
       "mysql-schema": "staging-like fixture source item_recovery_tc016_20260915 and restored target item_recovery_tc016_20260915_run1 on local MySQL 26.7.0; erp_dev preserved",
       "media-root": "/private/tmp/item-recovery-restored-20260915/media",
       "import-root": "/private/tmp/item-recovery-restored-20260915/imports",
@@ -66,13 +66,13 @@
     "TASK-034": "DONE",
     "TASK-035": "DONE",
     "TASK-036": "DONE",
-    "TASK-037": "IN_PROGRESS",
-    "TASK-038": "IN_PROGRESS",
+    "TASK-037": "DONE",
+    "TASK-038": "DONE",
     "TASK-039": "DONE",
     "TASK-040": "DONE",
     "TASK-041": "DONE",
     "TASK-042": "DONE",
-    "TASK-043": "PENDING",
+    "TASK-043": "BLOCKED",
     "TASK-044": "IN_PROGRESS"
   },
   "approvals": [
@@ -807,6 +807,30 @@
       "idempotency_key": "item-management-task-038-sync-e4aed631-20260916",
       "status": "CONFIRMED",
       "source_ref": "Observed merge commit 9f4d5c9ba8a790a26da8c3e74d2d7d466633dd15 on 2026-09-16 after git fetch --prune: origin/main e4aed631ce1d3eda34f4727a36d656462d7f0db4 was merged without conflicts; Item work was preserved."
+    },
+    {
+      "id": "PR-CREATE-60",
+      "kind": "PR_CREATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/105",
+      "idempotency_key": "item-management-pr-105",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub observation on 2026-09-21: PR #105 was created at 2026-09-16T01:25:32Z from codex/item-management-task-038 and its final candidate was 39d779261e0230077130e35aa7ba991eef77f560."
+    },
+    {
+      "id": "CI-61",
+      "kind": "CI",
+      "target": "GitHub Actions run 35045144243 for PR #105 candidate 39d779261e0230077130e35aa7ba991eef77f560",
+      "idempotency_key": "item-management-pr-105-ci-35045144243",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub observation on 2026-09-21: Dependency audit, Lint, Build frontend, and Test (server + client, MySQL integration) all completed SUCCESS on 2026-09-16."
+    },
+    {
+      "id": "MERGE-62",
+      "kind": "MERGE",
+      "target": "PR #105 into main",
+      "idempotency_key": "item-management-pr-105-merge-aa7d192",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub and Git observations on 2026-09-21: PR #105 merged at 2026-09-16T01:53:20Z as aa7d19276cb12c4375eecdf205b72051d7f03b65; current main contains that merge."
     }
   ],
   "evidence_files": [
@@ -960,5 +984,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit the current TASK-044 developer-validation and module-boundary alignment, rerun traceability/boundary checks, and request exact Product Owner approval for the sensitive server/config/itemRecoveryTrustPolicy.json scope plus the resulting DESIGN/PLAN/candidate binding. Only then record push/PR external actions. TASK-043 remains dependency-blocked; independent manifest signing remains required before TC-016."
+  "next_safe_action": "PR #105 and its required CI are complete; TASK-037 and TASK-038 are closed. TASK-043 is dependency-blocked until a real downstream module owns a reference to item_skus. TASK-044 remains blocked on independent signing of the retained recovery manifest, provisioning and approval of the recovery public key/trust environment, formal TC-016 execution, and the remaining human acceptance/sign-offs. Do not fabricate either dependency; resume TEST_AND_VERIFY only against an immutable candidate and the provisioned staging-like recovery environment."
 }
