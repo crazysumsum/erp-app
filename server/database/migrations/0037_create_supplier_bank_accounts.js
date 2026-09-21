@@ -25,12 +25,6 @@ const BINARY_COLUMNS = Object.freeze({
   account_blind_index: { type: "binary", length: 32 }
 });
 
-// 呢啲名一旦出現喺表入面就係明文帳號。佢哋唔喺設計 5.8 嘅欄位清單度，而上面個
-// 長度比較已經擋咗「多咗一個欄位」，但呢個檢查係講俾讀者聽：唔可以有明文。
-const FORBIDDEN_COLUMNS = Object.freeze([
-  "account_number", "account_no", "bank_account_number", "iban", "account_plaintext"
-]);
-
 function value(row, lower, upper) {
   return row[lower] ?? row[upper];
 }
@@ -51,14 +45,14 @@ export async function inspectSupplierBankAccountSchema(connection, { table = "su
   );
   if (columns.length === 0) return false;
 
+  // 呢個比較係集合相等：數目一樣，而且每個預期欄位都喺度。所以佢已經擋死咗明文
+  // 帳號欄位 —— 多一個 account_number 就數目唔啱，改名做 account_number 就少咗個
+  // 預期欄位。之前呢度仲有一個 FORBIDDEN_COLUMNS 名單，但變異測試證明佢永遠行唔
+  // 到：任何帶住明文欄位嘅表都喺上面呢句就已經停低。一個永遠唔會觸發嘅守衛比冇
+  // 守衛更差，因為佢讀落似有保護。
   const actual = columns.map((row) => value(row, "column_name", "COLUMN_NAME"));
   if (actual.length !== COLUMNS.length || COLUMNS.some((name) => !actual.includes(name))) {
     throw new Error("Incompatible existing Supplier bank account schema: supplier_bank_accounts");
-  }
-  for (const name of FORBIDDEN_COLUMNS) {
-    if (actual.includes(name)) {
-      throw new Error(`Incompatible existing Supplier bank account schema: plaintext column ${name}`);
-    }
   }
 
   for (const [name, expected] of Object.entries(BINARY_COLUMNS)) {

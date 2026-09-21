@@ -340,7 +340,9 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
   await probe(
     (ddl) => ddl.replace("`last_four` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,",
       "`last_four` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `account_number` varchar(64) DEFAULT NULL,"),
-    /plaintext column account_number|Incompatible existing Supplier bank account schema/u,
+    // 唔用 alternation：一個 `A|B` 嘅期望喺兩邊都過，即係佢乜都冇分辨到。擋住明文
+    // 欄位嘅係上面嗰個集合相等比較，所以期望嘅就係佢嗰句。
+    /Incompatible existing Supplier bank account schema: supplier_bank_accounts/u,
     "a plaintext account column must never be tolerated"
   );
 });
