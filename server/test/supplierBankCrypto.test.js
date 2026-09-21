@@ -227,12 +227,12 @@ test("formatting differences in the same account collide, so a duplicate cannot 
   assert.equal(normalizeBankAccountNumber("１２３４-５６７８"), "12345678", "NFKC and separators");
   assert.equal(normalizeBankAccountNumber("  12 34 5678  "), "12345678");
 
-  // REV-033 H-1：斷言嘅係一個**負面集合** —— 全部呢啲字元都要塌埋 —— 而唔係淨係
-  // 嗰一兩個本來就啱嘅。原本嗰個黑名單喺呢啲字元度大部分都漏，其中幾個（U+00AD
-  // 軟連字號、U+200E LRM）仲係隱形嘅：兩行帳號喺畫面上同遮罩之後都一模一樣，但
-  // blind index 唔同，所以 UNIQUE 唔會擋。
+  // REV-033 H-1 / DEF-021：兩個集合，兩個方向。
+  //
+  // 排版字元要**塌埋** —— 少咗呢個，同一個帳號輸入兩次都查唔到重。原本嗰個黑名單
+  // 喺呢啲字元度大部分都漏，其中幾個（U+00AD 軟連字號、U+200E LRM）仲係隱形嘅。
   const formatting = [
-    " ", "\t", "-", ".", "/", "_", ",", ":", "*", "#",
+    " ", "\t", "-", ".", "/", "_", ",", ":",
     "\u00a0", "\u3000", "\u202f",
     "\u2010", "\u2011", "\u2212", "\uff0d",
     "\u00b7", "\u2027",
@@ -447,4 +447,61 @@ test("an account longer than the ciphertext column can hold is refused, not trun
     TypeError
   );
   assert.throws(() => crypto.blindIndex("9".repeat(513)), TypeError);
+});
+
+/**
+ * DEF-021／HD-029。正規化分兩步，而兩步嘅失敗方向唔同：排版字元剝走，其餘任何
+ * 非 [0-9A-Z] 嘅嘢**拒絕**。
+ *
+ * 之前兩步合埋做一步剝晒，結果三個唔同輸入存成同一個帳號。個儲存值就係最終會俾
+ * 錢嗰個，所以嗰條係錯收款人嘅路，唔淨係一個查重嘅怪癖。
+ */
+test("a character the normalizer cannot represent is refused, not silently deleted", () => {
+  const crypto = cryptoWith();
+  const context = crypto.newCryptoContext();
+
+  // REV-034 M-2 原封不動嗰三個：之前佢哋全部存成 "B12345" 兼共用一個 blind index。
+  for (const input of ["ÅB12345", "ÄB12345", "NØR12345"]) {
+    assert.throws(
+      () => crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: input }),
+      TypeError,
+      `${JSON.stringify(input)} must be refused rather than rewritten into a different account`
+    );
+    assert.throws(() => crypto.blindIndex(input), TypeError);
+  }
+  // 而剝走咗嗰啲字元之後嘅版本係一個**唔同**嘅帳號，所以佢照收 —— 呢句就係證明
+  // 上面三個唔係因為「B12345 本身有問題」而紅。
+  assert.equal(
+    crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: "B12345" }).accountLength,
+    6
+  );
+
+  // NFKC 喺白名單之前行，所以 ½ 會經 1⁄2 變成 12。個 fraction slash 唔喺排版集合
+  // 入面，所以佢落入第二步俾人拒絕，而唔係靜靜哋變成一個多咗兩個數字嘅帳號。
+  assert.throws(
+    () => crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: "1234½" }),
+    TypeError
+  );
+
+  // 未知字元 = fail closed。排版清單唔完整都冇所謂 —— 呢個先係重點：一個我列唔到
+  // 嘅新分隔符號會俾人大聲拒絕（用戶見到、改得到），而唔係靜靜哋改走個帳號。
+  for (const unknown of ["*", "#", "%", "⁄", "§"]) {
+    assert.throws(
+      () => crypto.blindIndex(`1234${unknown}5678`),
+      TypeError,
+      `an unlisted character must fail closed, not be stripped`
+    );
+  }
+
+  // 錯誤訊息唔可以帶住輸入 —— 設計 §6.6：validation error 同 details 都唔可以有
+  // accountNumber。
+  let thrown = null;
+  try {
+    crypto.blindIndex("ÅB12345");
+  } catch (error) {
+    thrown = error;
+  }
+  assert.ok(thrown);
+  assert.ok(!thrown.message.includes("ÅB12345") && !thrown.message.includes("B12345"),
+    "a validation error must never carry the account it rejected");
 });

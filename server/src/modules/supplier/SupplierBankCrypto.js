@@ -24,38 +24,49 @@ import { inspect } from "node:util";
  * 設計 5.8：帳號加密之前要正規化，否則「1234 5678」同「12345678」會計出兩個唔同嘅
  * blind index，即係同一個帳號輸入兩次都查唔到重。
  *
- * 用**白名單**（只保留 [0-9A-Z]），唔用「移除分隔符號」嘅黑名單。REV-033 H-1 就係
- * 黑名單嘅代價：原本嗰個字元類只覆蓋空白同 ASCII 連字號，reviewer 試十六個字元，
- * 十個繞得過 —— 包括 `.` `/` `_` `,`、三種 Unicode 連字號變體，同埋兩個**隱形**
- * 字元（U+00AD 軟連字號、U+200E LRM）。最後嗰兩個最麻煩：兩行帳號喺畫面上、喺遮罩
- * 之後都一模一樣，但 blind index 唔同，所以 UNIQUE 唔會擋，而 operator 見到同一個
- * 帳號出現兩次而冇任何解釋。一個黑名單下次一樣會漏。
+ * 分兩步，而兩步嘅**失敗方向唔同**，呢個係重點（DEF-021／HD-029）：
  *
- * 白名單成立係因為帳號本身就係字母數字：IBAN 明文定義成 [0-9A-Z]，而本地帳號號碼
- * 係純數字。任何其他字元喺一個打入嚟嘅帳號入面都係排版。轉大寫係因為 IBAN 嘅字母
- * 部分唔分大小寫 —— `gb29` 同 `GB29` 係同一個帳號。
+ *   1. 排版字元剝走。設計 §6.6 個 create 範例就係 `"123-456789-001"`，所以呢步
+ *      唔係方便，係必須。
+ *   2. 剝完之後仲有任何非 [0-9A-Z] 嘅嘢，**拒絕**，唔改寫。
  *
- * Product Owner 2026-09-21 揀咗呢個做法（HD-028）。改呢條規則唔係改一個函式：正規化
- * 之後嘅字串就係被加密、被 HMAC、被攞去計 last_four 同 account_length 嗰個，所以有咗
- * 行之後再改，就要成張表解密、重新加密、重算 index。
+ * 第二步就係 DEF-021。之前兩步合埋做一步剝晒，結果 `ÅB12345`、`ÄB12345` 同
+ * `B12345` 三個唔同輸入存成同一個帳號 —— 而個儲存值就係最終會俾錢嗰個，所以嗰條
+ * 係錯收款人嘅路，唔淨係一個查重嘅怪癖。NFKC 亦都喺白名單之前行，所以 `½` 會經
+ * `1⁄2` 變成 `12`。
+ *
+ * 排版清單唔完整都冇所謂 —— 呢個先係重點。一個我列唔到嘅新分隔符號會落入第二步
+ * 俾人**大聲拒絕**（用戶見到、改得到），而唔係靜靜哋改走個帳號。黑名單嘅不完整
+ * 而家 fail closed。
  */
-const ACCOUNT_DISALLOWED = /[^0-9A-Z]/gu;
-
-// 上限由欄位闊度嚟，唔係由一個對帳號格式嘅猜測嚟。GCM 係串流模式，密文長度等於
-// 明文 byte 數，而正規化之後全部係 ASCII，所以 512 個字元啱啱好填滿
-// VARBINARY(512)。REV-033 M-6：喺 STRICT_TRANS_TABLES 之下超長會 ER_DATA_TOO_LONG
-// fail closed，但喺非嚴格 sql_mode 之下會靜靜哋截短，而一行截短咗嘅密文永遠驗證
-// 唔到。業務層面嘅長度規則（IBAN 最長 34）屬於 domain service，唔喺呢度。
+// 空白、Unicode 格式／隱形字元（Cf：U+00AD 軟連字號、U+200E LRM、U+FEFF BOM）、
+// Unicode 連字號（Pd）、以及印刷帳號上常見嘅分隔符號。U+2212 MINUS SIGN 係 Sm
+// 唔係 Pd，所以要明寫。
+const FORMATTING = /[\s\p{Cf}\p{Pd}\u2212._/,\u00b7\u2027:]+/gu;
+const DISALLOWED = /[^0-9A-Z]/u;
 const MAX_ACCOUNT_LENGTH = 512;
 
+/** 第一步：剝走排版。呢個函式**唔會**拒絕任何嘢 —— 驗證喺 requireAccount。 */
 export function normalizeBankAccountNumber(value) {
-  return String(value ?? "").normalize("NFKC").toUpperCase().replace(ACCOUNT_DISALLOWED, "");
+  return String(value ?? "").normalize("NFKC").toUpperCase().replace(FORMATTING, "");
 }
 
+/**
+ * 第二步：驗證。錯誤訊息刻意**唔帶輸入** —— 設計 §6.6 明文講 request logging、
+ * validation error 同 ApplicationError.details 都唔可以包含 accountNumber。
+ *
+ * 上限由欄位闊度嚟，唔係由一個對帳號格式嘅猜測嚟。GCM 係串流模式，密文長度等於
+ * 明文 byte 數，而正規化之後全部係 ASCII，所以 512 個字元啱啱好填滿
+ * VARBINARY(512)。喺非嚴格 sql_mode 之下超長會靜靜哋截短，而一行截短咗嘅密文永遠
+ * 驗證唔到。業務層面嘅長度規則（IBAN 最長 34）屬於 domain service。
+ */
 function requireAccount(value, what) {
   const normalized = normalizeBankAccountNumber(value);
   if (!normalized) {
     throw new TypeError(`Supplier bank crypto cannot ${what} an empty account number`);
+  }
+  if (DISALLOWED.test(normalized)) {
+    throw new TypeError(`Supplier bank crypto cannot ${what} an account number containing characters it cannot represent`);
   }
   if (normalized.length > MAX_ACCOUNT_LENGTH) {
     throw new TypeError(`Supplier bank crypto cannot ${what} an account number longer than ${MAX_ACCOUNT_LENGTH} characters`);
