@@ -113,3 +113,9 @@ The profile now allows `ITEM_PERFORMANCE_TESTS` for the dedicated performance su
 ## TASK-044 local recovery provisioning update — 2026-09-15
 
 The previously missing isolated schema/storage portion is now provisioned: source `item_recovery_tc016_20260915`, restored target `item_recovery_tc016_20260915_run1`, and separate restored media/import roots. Source/restore table counts, smoke records and file hashes matched, and the exact unsigned manifest is retained under `evidence/task-044-local-recovery/`. This is developer preflight only. `TC-016` remains `BLOCKED_DEFERRED` because the manifest is not independently signed, the repository trust policy remains `UNPROVISIONED`, and no formal current-candidate recovery suite has run.
+
+## TASK-044 owner-waived recovery verification — 2026-09-21
+
+ERP Product Owner (Sam) approved `APR-025`, explicitly waiving signer independence for this exercise. The exact manifest signature verified against the repository-bound Ed25519 public key, and the isolated MySQL restored-copy run passed all 23 integrity, reconciliation, smoke, file and objective checks (RTO 176 ms; RPO 66,000 ms; no failed checks).
+
+Disposition is `PASS_WITH_OWNER_WAIVER`. The machine report retains `TC-016` as `NOT_RUN` and embeds the waiver disposition/approval in its name, so the original independent-attestation acceptance control cannot be credited as ordinary `PASS`. Evidence: `evidence/task-044-owner-waiver-20260921/`.

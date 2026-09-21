@@ -115,14 +115,33 @@ function approvedTrustPolicy(value) {
   if (value.schemaVersion !== 1) throw new TypeError("recovery trust policy schemaVersion must be 1");
   const environmentId = requiredString(value.environmentId, "recovery trust policy environmentId");
   const schemaPrefix = requiredString(value.schemaPrefix, "recovery trust policy schemaPrefix");
+  if (!["INDEPENDENT", "OWNER_WAIVER"].includes(value.attestationMode)) {
+    throw new TypeError("recovery trust policy attestationMode must be INDEPENDENT or OWNER_WAIVER");
+  }
+  const waiverApprovalId = value.attestationMode === "OWNER_WAIVER"
+    ? requiredString(value.waiverApprovalId, "recovery trust policy waiverApprovalId")
+    : undefined;
+  if (waiverApprovalId && !/^APR-[0-9]+$/.test(waiverApprovalId)) {
+    throw new TypeError("recovery trust policy waiverApprovalId must be an APR identifier");
+  }
   if (!/^[A-Za-z][A-Za-z0-9_]{2,63}_$/.test(schemaPrefix)) {
     throw new TypeError("recovery trust policy schemaPrefix must be a safe, non-empty prefix ending in underscore");
   }
   return {
     environmentId,
     schemaPrefix,
+    attestationMode: value.attestationMode,
+    waiverApprovalId,
     attestationPublicKeyPem: requiredString(value.attestationPublicKeyPem, "recovery trust policy attestationPublicKeyPem")
   };
+}
+
+export function itemRecoveryTestResult({ passed, trustPolicy } = {}) {
+  if (!passed) return { status: "FAIL", disposition: "FAIL" };
+  const trust = approvedTrustPolicy(trustPolicy);
+  return trust.attestationMode === "OWNER_WAIVER"
+    ? { status: "NOT_RUN", disposition: "PASS_WITH_OWNER_WAIVER", approvalId: trust.waiverApprovalId }
+    : { status: "PASS", disposition: "PASS" };
 }
 
 export function verifyItemRecoveryAttestation({ manifestBytes, signatureBase64, publicKeyPem } = {}) {

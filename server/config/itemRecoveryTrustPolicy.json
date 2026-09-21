@@ -1,6 +1,8 @@
 {
   "schemaVersion": 1,
   "status": "APPROVED",
+  "attestationMode": "OWNER_WAIVER",
+  "waiverApprovalId": "APR-025",
   "environmentId": "item-recovery-staging-20260921",
   "schemaPrefix": "item_recovery_",
   "attestationPublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAsTvYxOwQsdqC1NUUC2fU2DM5hGfXutxmGrA8OFB/vUk=\n-----END PUBLIC KEY-----\n"

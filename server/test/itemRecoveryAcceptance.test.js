@@ -7,6 +7,7 @@ import test from "node:test";
 
 import {
   ITEM_RECOVERY_TABLES,
+  itemRecoveryTestResult,
   parseItemRecoveryContext,
   verifyItemRecoveryAttestation,
   verifyItemRecovery
@@ -29,6 +30,7 @@ function validInput() {
     trustPolicy: {
       schemaVersion: 1,
       status: "APPROVED",
+      attestationMode: "INDEPENDENT",
       environmentId: "item-recovery-staging",
       schemaPrefix: "erp_item_restore_",
       attestationPublicKeyPem: "test-only-placeholder"
@@ -63,6 +65,22 @@ function validInput() {
     }
   };
 }
+
+test("owner-waived recovery cannot be reported as an ordinary PASS", () => {
+  const trustPolicy = validInput().trustPolicy;
+  trustPolicy.attestationMode = "OWNER_WAIVER";
+  trustPolicy.waiverApprovalId = "APR-025";
+
+  assert.deepEqual(itemRecoveryTestResult({ passed: true, trustPolicy }), {
+    status: "NOT_RUN",
+    disposition: "PASS_WITH_OWNER_WAIVER",
+    approvalId: "APR-025"
+  });
+  assert.deepEqual(itemRecoveryTestResult({ passed: false, trustPolicy }), {
+    status: "FAIL",
+    disposition: "FAIL"
+  });
+});
 
 test("recovery context fails closed for the ordinary local development schema", () => {
   const input = validInput();

@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 
 import databaseConfig from "../config/database.js";
 import {
+  itemRecoveryTestResult,
   parseItemRecoveryContext,
   verifyItemRecoveryAttestation,
   verifyItemRecovery
@@ -55,11 +56,17 @@ try {
   await connection.query("START TRANSACTION WITH CONSISTENT SNAPSHOT");
   const result = await verifyItemRecovery({ database: connection, context });
   await connection.rollback();
+  const testResult = itemRecoveryTestResult({ passed: result.passed, trustPolicy });
+  const reportedName = testResult.disposition === "PASS_WITH_OWNER_WAIVER"
+    ? `${testName} [${testResult.disposition}; ${testResult.approvalId}]`
+    : testName;
 
   report = {
-    tests: [{ name: testName, id: "TC-016", status: result.passed ? "PASS" : "FAIL" }]
+    tests: [{ name: reportedName, id: "TC-016", status: testResult.status }]
   };
   console.log(JSON.stringify({
+    disposition: testResult.disposition,
+    approvalId: testResult.approvalId,
     recoveryPointId: context.recoveryPoint.id,
     observedRtoMs: result.metrics.observedRtoMs,
     observedRpoMs: result.metrics.observedRpoMs,
