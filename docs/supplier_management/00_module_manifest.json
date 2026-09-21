@@ -45,6 +45,7 @@
       "client/e2e/**"
     ],
     "approval_required_paths": [
+      ".github/workflows/ci.yml",
       ".gitignore",
       "client/config/menu.js",
       "client/src/framework/http/errorMessages.js",
