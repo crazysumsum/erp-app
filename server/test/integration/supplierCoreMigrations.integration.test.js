@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
 import { up as createSuppliers } from "../../database/migrations/0029_create_suppliers.js";
 import { up as createSupplierNameGrams } from "../../database/migrations/0030_create_supplier_name_grams.js";
 import { up as createSupplierActivationRequests } from "../../database/migrations/0035_create_supplier_activation_requests.js";
 import { up as createSupplierSettings } from "../../database/migrations/0036_create_supplier_settings.js";
+import {
+  inspectSupplierBankAccountSchema,
+  up as createSupplierBankAccounts
+} from "../../database/migrations/0037_create_supplier_bank_accounts.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
@@ -168,4 +172,274 @@ integrationTest("0036 seeds the settings singleton once and a rerun neither dupl
   } finally {
     await connection.rollback();
   }
+});
+
+/**
+ * T32 AC4：Bank table 冇明文欄位、有兩組 key ID、有唯一 default 同查重約束，而且
+ * **既存 table 要通過完整 schema compatibility assertion**。
+ *
+ * 最後嗰句先係重點，亦都係一個純 DDL 讀取證明唔到嘅嘢：一張手改到唔啱嘅表要真係
+ * 俾人擋住。所以呢度除咗核實建出嚟嗰張表，仲會砌幾張刻意整歪嘅表，逐張要求
+ * inspect 拋錯 —— 否則個 assertion 就只係一個永遠回 true 嘅函式。
+ */
+integrationTest("0037 creates the Bank table with no plaintext column and converges on rerun", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  t.after(async () => {
+    if (supplierId !== null) {
+      await connection.execute("DELETE FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]);
+      await connection.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
+    }
+    await connection.end();
+  });
+  await createSupplierBankAccounts(connection);
+  await createSupplierBankAccounts(connection);
+  assert.equal(await inspectSupplierBankAccountSchema(connection), true);
+
+  const [columns] = await connection.query(
+    `SELECT column_name, data_type, character_maximum_length, extra
+       FROM information_schema.columns
+      WHERE table_schema = DATABASE() AND table_name = 'supplier_bank_accounts'`
+  );
+  const byName = new Map(columns.map((row) => [row.column_name ?? row.COLUMN_NAME, row]));
+
+  // REV-033 L-4：之前呢度有個 forbidden-name 名單，但佢查嘅係一張測試自己啱啱由
+  // 字面 DDL 建出嚟嘅表，同下面個 probe 對欄位集合相等嘅覆蓋重覆咗 —— 同 §3 S5
+  // 拆走嗰段死碼一模一樣嘅形狀，隔咗一個檔案。
+  //
+  // 帳號嘅三件密文組件要真係二進位：一個 VARCHAR 嘅 IV 會經 collation 比較同
+  // padding，仲會靜靜哋截短。
+  for (const [name, type, length] of [
+    ["account_ciphertext", "varbinary", 512], ["account_iv", "binary", 12],
+    ["account_auth_tag", "binary", 16], ["account_blind_index", "binary", 32]
+  ]) {
+    const row = byName.get(name);
+    assert.equal(String(row.data_type ?? row.DATA_TYPE).toLowerCase(), type, name);
+    assert.equal(Number(row.character_maximum_length ?? row.CHARACTER_MAXIMUM_LENGTH), length, name);
+  }
+  for (const name of ["encryption_key_id", "blind_index_key_id"]) {
+    assert.ok(byName.has(name), `${name} must exist so a row can be rotated independently`);
+  }
+  assert.match(String(byName.get("default_slot").extra ?? byName.get("default_slot").EXTRA).toUpperCase(), /GENERATED/u);
+
+  // 同 0035 一樣：個 slot 只有喺 UPDATE 都會重算嘅時候先執行到嘢，所以要用真行去試。
+  const suffix = randomUUID().slice(0, 8);
+  const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+  const now = Date.now();
+  const [supplier] = await connection.execute(
+    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+       default_currency_code, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [`BNK-${suffix}`, `bnk-${suffix}`, `Bank ${suffix}`, `bank ${suffix}`, currency.code ?? currency.CODE, now, now]
+  );
+  supplierId = supplier.insertId;
+
+  const insertAccount = ({ isDefault = 0, blindIndex, keyId = "look-1", context = randomUUID() } = {}) =>
+    connection.execute(
+      `INSERT INTO supplier_bank_accounts
+         (supplier_id, crypto_context, account_holder_name, bank_name,
+          account_ciphertext, account_iv, account_auth_tag, encryption_key_id,
+          account_blind_index, blind_index_key_id, last_four, account_length,
+          is_default, created_at, updated_at)
+       VALUES (?, ?, 'Holder', 'Bank', ?, ?, ?, 'enc-1', ?, ?, '0123', 13, ?, ?, ?)`,
+      [supplierId, context, randomBytes(64), randomBytes(12), randomBytes(16),
+       blindIndex ?? randomBytes(32), keyId, isDefault, Date.now(), Date.now()]
+    );
+
+  const [first] = await insertAccount({ isDefault: 1 });
+  await assert.rejects(() => insertAccount({ isDefault: 1 }), (error) => error.code === "ER_DUP_ENTRY",
+    "the database, not the service, guarantees at most one active default");
+
+  // 同一個 Supplier、同一條 lookup key、同一個 index = 重覆帳號。
+  const shared = randomBytes(32);
+  await insertAccount({ blindIndex: shared });
+  await assert.rejects(() => insertAccount({ blindIndex: shared }), (error) => error.code === "ER_DUP_ENTRY");
+  // 但換咗 key ID 就唔係同一條 index，輪替期間唔可以爆假 duplicate。
+  await insertAccount({ blindIndex: shared, keyId: "look-2" });
+
+  // 停用原本嗰個 default 之後個 slot 要放返出嚟，否則「換預設」永遠做唔到。
+  await connection.execute("UPDATE supplier_bank_accounts SET status = 'inactive' WHERE id = ?", [first.insertId]);
+  await insertAccount({ isDefault: 1 });
+  const [[slots]] = await connection.query(
+    "SELECT COUNT(default_slot) AS taken FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]
+  );
+  assert.equal(Number(slots.taken ?? slots.TAKEN), 1);
+});
+
+integrationTest("0037's compatibility assertion actually rejects a hand-divergent Bank table", async (t) => {
+  // 一個永遠回 true 嘅 assertion 同冇 assertion 係一樣嘅。呢度逐樣整歪一件嘢，每一樣
+  // 都要拋錯。全部喺一張 probe 表上面做 —— 將真表 RENAME 走再改返，喺共用嘅 erp_dev
+  // 上面會拆咗並行跑緊嘅其他檔案。
+  const connection = await mysql.createConnection(config());
+  const table = `bank_probe_${randomUUID().slice(0, 8).replace(/-/gu, "")}`;
+  t.after(async () => {
+    await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
+    await connection.end();
+  });
+
+  // 先由真表嘅 DDL 出發，咁每個 case 就只係差一樣嘢，唔係差成張表。FK 一定要拆走：
+  // MySQL 嘅 constraint name 喺一個 schema 入面係全域唯一，所以一張複製表冇可能
+  // 帶住同一批 FK 名。呢個限制反而俾到一個免費嘅對照組 —— 見下面。
+  const [[real]] = await connection.query("SHOW CREATE TABLE supplier_bank_accounts");
+  const lines = String(real["Create Table"] ?? real["create table"])
+    .replace("CREATE TABLE `supplier_bank_accounts`", `CREATE TABLE \`${table}\``)
+    .split("\n")
+    .filter((line) => !line.includes("CONSTRAINT `fk_supplier_bank_"));
+  // 拆走最後一條定義之後嗰個吊住嘅逗號。
+  const last = lines.findLastIndex((line) => line.trim().endsWith(","));
+  if (last >= 0 && lines[last + 1]?.startsWith(")")) lines[last] = lines[last].replace(/,\s*$/u, "");
+  const template = lines.join("\n");
+
+  const probe = async (mutate, expected, what) => {
+    const ddl = mutate(template);
+    // 一個冇改到嘢嘅 mutation 會建出一張**啱**嘅表，然後喺 FK 檢查度死，而嗰個
+    // 錯誤同我哋期望嘅未必啱 —— 更差嘅情況係啱，咁就變成一個永遠綠嘅 case。
+    // CI 就係咁揾到嘅：本機 SHOW CREATE TABLE 帶住 COLLATE 子句而 CI 冇，所以
+    // 一個夾死 collation 嘅 anchor 靜靜哋冇替換到。
+    assert.notEqual(ddl, template, `the mutation must actually change the DDL: ${what}`);
+    await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
+    await connection.query(ddl);
+    let thrown = null;
+    try {
+      await inspectSupplierBankAccountSchema(connection, { table });
+    } catch (error) {
+      thrown = error;
+    }
+    assert.ok(thrown, `an incompatible table must be rejected: ${what}`);
+    assert.match(thrown.message, expected, what);
+  };
+
+  // 對照組：一張完全照抄、只係冇 FK 嘅表。佢要**啱啱好**喺 FK 檢查度死，唔係早過
+  // 亦唔係遲過。呢一句同時證兩件事：FK 名真係有人查，而下面每個 case 嘅紅係嚟自
+  // 佢自己嗰個改動，唔係嚟自「複製表本身就過唔到」。
+  // 對照組唔經 probe()：佢刻意乜都唔改，所以過唔到上面嗰個「一定要改到嘢」守衛。
+  await connection.query(`DROP TABLE IF EXISTS \`${table}\``);
+  await connection.query(template);
+  let control = null;
+  try {
+    await inspectSupplierBankAccountSchema(connection, { table });
+  } catch (error) {
+    control = error;
+  }
+  assert.ok(control, "a copy without the FK names must be rejected");
+  assert.match(control.message, /Incompatible existing Supplier bank account FK: fk_supplier_bank_supplier/u,
+    "the unmodified copy must stop exactly at the FK check, or every case below proves nothing");
+
+  const replaceColumn = (name, definition) => (ddl) => ddl.split("\n")
+    // 逐行換欄位定義：好多欄位名亦都出現喺索引定義入面，一齊換就會整出一張建唔成
+    // 嘅表，而個生成運算式入面有巢狀括號，用 regex 夾唔實。
+    .map((line) => (line.trim().startsWith(`\`${name}\``) ? `  ${definition}` : line))
+    .join("\n");
+
+  await probe(
+    replaceColumn("account_iv", "`account_iv` varchar(12) NOT NULL,"),
+    /account_iv must be binary\(12\)/u,
+    "a VARCHAR IV silently truncates and compares by collation"
+  );
+  await probe(
+    replaceColumn("account_ciphertext", "`account_ciphertext` varbinary(256) NOT NULL,"),
+    /account_ciphertext must be varbinary\(512\)/u,
+    "a shorter ciphertext column truncates"
+  );
+  await probe(
+    replaceColumn("account_length", "`account_length` tinyint unsigned NOT NULL,"),
+    /account_length must be smallint unsigned/u,
+    "a narrower length column caps at 255 and silently rejects long accounts"
+  );
+  await probe(
+    replaceColumn("last_four", "`last_four` varchar(190) COLLATE utf8mb4_unicode_ci NOT NULL,"),
+    /last_four must be varchar\(4\)/u,
+    "a widened last_four can hold a whole account number"
+  );
+
+  // REV-033 H-2／G4：可 NULL 嘅密文組件會一路去到解密路徑先爆。
+  await probe(
+    replaceColumn("account_iv", "`account_iv` binary(12) DEFAULT NULL,"),
+    /account_iv must be NOT NULL/u,
+    "a NULLable IV produces an unauthenticatable row"
+  );
+  // REV-033 H-2／G6：status 嘅 ascii_bin 係 generated 運算式嘅一部分語意 ——
+  // 一個 case-insensitive collation 會令 'Active' 都佔住個 default slot。
+  await probe(
+    replaceColumn("status", "`status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active',"),
+    /status must collate ascii_bin/u,
+    "a case-insensitive status loosens the generated slot expression"
+  );
+  await probe(
+    replaceColumn("is_default", "`is_default` tinyint(1) NOT NULL DEFAULT '1',"),
+    /is_default default must be "0"/u,
+    "a flipped default makes every new account the default"
+  );
+
+  await probe(
+    replaceColumn("default_slot", "`default_slot` tinyint DEFAULT NULL,"),
+    /default_slot is not a generated column/u,
+    "a writable slot moves the one-default guarantee back into the application"
+  );
+  // REV-033 H-2／G1：呢個係最重要嗰個。佢仲係 generated，所以「有冇 GENERATED 字樣」
+  // 嗰個檢查照過，但個運算式永遠回 NULL，而 UNIQUE 唔比較 NULL —— 個唯一索引變咗
+  // 裝飾，一個 Supplier 可以有無限個同時生效嘅預設帳戶。
+  await probe(
+    replaceColumn("default_slot", "`default_slot` tinyint GENERATED ALWAYS AS (NULL) STORED,"),
+    /default_slot does not compute the documented slot/u,
+    "a neutered generated expression is indistinguishable from the real one at the EXTRA level"
+  );
+  await probe(
+    replaceColumn("default_slot", "`default_slot` tinyint GENERATED ALWAYS AS (1) STORED,"),
+    /default_slot does not compute the documented slot/u,
+    "an always-1 slot makes a second account collide instead of the second default"
+  );
+
+  // REV-034 M-1：呢個係第九類。個運算式喺 `status` 嗰個字面值度只差大小寫，而
+  // status 係 ascii_bin —— 所以 'ACTIVE' 永遠對唔到欄位個預設值，slot 永遠 NULL，
+  // UNIQUE 唔比較 NULL，G1 嗰個「無限個預設」又開返。Reviewer 喺真 MySQL 上面插到
+  // 五行同時生效嘅預設。
+  await probe(
+    replaceColumn("default_slot",
+      "`default_slot` tinyint GENERATED ALWAYS AS (if(((`is_default` = 1) and (`status` = 'ACTIVE')),1,NULL)) STORED,"),
+    /default_slot does not compute the documented slot/u,
+    "a literal differing only in case never matches an ascii_bin column's value"
+  );
+
+  await probe(
+    (ddl) => ddl.replace("UNIQUE KEY `uq_supplier_bank_default`", "KEY `uq_supplier_bank_default`"),
+    /uq_supplier_bank_default must be UNIQUE/u,
+    "a same-named non-unique index enforces nothing"
+  );
+  // REV-033 H-2／G3：crypto_context 係 AAD 一半，佢嘅唯一性就係「同一個 Supplier
+  // 兩行密文對調唔到」嘅唯一理由 —— 之前呢條索引只驗過個名。
+  await probe(
+    (ddl) => ddl.replace("UNIQUE KEY `uq_supplier_bank_crypto_context`", "KEY `uq_supplier_bank_crypto_context`"),
+    /uq_supplier_bank_crypto_context must be UNIQUE/u,
+    "without this uniqueness the AAD no longer separates two rows under one Supplier"
+  );
+  // REV-034 L-2：兩條非唯一索引之前只驗過個名。冇correctness 保證喺佢哋身上，但
+  // idx_supplier_bank_lookup 支撐住設計 §5.8 嘅跨 Supplier 重覆警告 —— 一條指錯
+  // 欄位嘅索引會令嗰個查詢變成全表掃描，而冇嘢會出聲。
+  await probe(
+    (ddl) => ddl.replace("KEY `idx_supplier_bank_lookup` (`blind_index_key_id`,`account_blind_index`)",
+      "KEY `idx_supplier_bank_lookup` (`id`)"),
+    /idx_supplier_bank_lookup must cover/u,
+    "an index on the wrong columns turns the rotation scan into a table scan"
+  );
+
+  await probe(
+    // 逐行插入，唔夾 collation 子句：CI 同本機嘅 SHOW CREATE TABLE 輸出唔一定一樣，
+    // 而一個夾死咗嘅 anchor 會靜靜哋冇替換到。
+    (ddl) => ddl.split("\n")
+      .flatMap((line) => (line.trim().startsWith("`last_four`")
+        ? [line, "  `account_number` varchar(64) DEFAULT NULL,"]
+        : [line]))
+      .join("\n"),
+    // 唔用 alternation：一個 `A|B` 嘅期望喺兩邊都過，即係佢乜都冇分辨到。擋住明文
+    // 欄位嘅係欄位集合相等比較，所以期望嘅就係佢嗰句。
+    /Incompatible existing Supplier bank account schema: supplier_bank_accounts/u,
+    "a plaintext account column must never be tolerated"
+  );
+
+  // 設計 §5.14 明文包括 trigger，而 inspect 真係查 information_schema.triggers。
+  // 但**呢個檢查喺度冇測到**，照講：`erp_user` 冇 SUPER，而個 instance 開住 binary
+  // logging，所以 CREATE TRIGGER 直接俾 MySQL 拒絕，probe 表起唔到個 trigger。
+  // 唔寫一個「攞唔到權限就靜靜哋跳過」嘅版本 —— 一個永遠行 skip 分支嘅測試，同冇
+  // 測試係一樣嘅，而且仲會扮成有覆蓋。呢個缺口記錄喺實作報告同 ledger 入面。
 });
