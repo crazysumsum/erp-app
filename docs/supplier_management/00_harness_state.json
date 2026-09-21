@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 149,
+  "revision": 151,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "3edfd7ae8829c76dca30a6527d8890d2c47a7a30",
-    "source_fingerprint": "af9220a67114032e187bf3aa5d4a03648593c06ac2287a9cf2c8474d3f58fb37",
+    "code_commit": "a34bb37295ebea8bec7ed5921ab924437a2c1189",
+    "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-032",
     "default_commit": "d289154f2e310b58feb3abc68c30967b9a8e29e5",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1089,6 +1089,18 @@
       "open_critical": 0,
       "open_high": 3,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-034",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-032 REV-033 remediation)",
+      "reviewer": "agent-skills:security-auditor, the same agent as REV-033 resumed with its context, reviewing dda9a40",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/32_rev_034_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2147,6 +2159,28 @@
       "source_ref": "338/338 server tests, up from 332; 71/71 client; lint clean; all four DEVELOPER suites re-run on 3edfd7a so the evidence covers the final candidate rather than an earlier commit, which was REV-033 M-5. Nine mutations re-run: the reviewer's three survivors (whole short account into last_four, unnormalized accountLength, SHA256(key||account) in place of HMAC) plus reverting the UTF-16LE AAD encoding, removing the key-length check, moving the decrypt setup back outside the try, reverting the allowlist to a blocklist, dropping the uppercase, and removing the length bound. All nine RED. Database residue swept: zero probe tables, zero bank rows.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T10:11:35+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-034 APPROVED at dda9a40; all three H closed by re-running the probes that found them",
+      "code_commit": "dda9a4030c12c3eb105f01b0ee0314951fa68580",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
+      "status": "PASS",
+      "source_ref": "The same reviewer, resumed with its REV-033 context, re-ran the attacks rather than reading the diff. H-1: zero under-detections where ten formatting characters had bypassed, including both invisible ones, and a 128,992-codepoint scan found the normalizer idempotent, which matters for a future reindex. H-2: eight of eight divergence classes now rejected where eight of eight had been accepted. H-3: all three previously surviving mutations now red. It also confirmed the author's correction that its own suggested M-1 fix, byte-length prefixing, would not have closed the AAD collision, because UTF-8 maps every lone surrogate to the same three bytes so both sides carry length three; UTF-16LE is the right fix. Two new M and six L, none blocking. M-1 was a ninth schema gap found by the reviewer and proved end to end against real MySQL, five simultaneous defaults on one supplier: normalizeExpression lowercased quoted literals, so a generation expression reading status = 'ACTIVE' compared equal to the documented one while never matching an ascii_bin column's 'active', leaving the slot permanently NULL. Fixed here along with L-1, where the mask's fail-safe direction was backwards, and L-2, plain-index coverage. M-2 is routed to the Product Owner and carried as DEF-021. The reviewer also accepted the stated trigger gap after reproducing the privilege error itself and quantifying the gap at 338/338 green with the check deleted.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T10:24:19+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-034 M-1, L-1 and L-2 fixed and reverified on the final candidate",
+      "code_commit": "a34bb37295ebea8bec7ed5921ab924437a2c1189",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "05dc388be3466fb3eb903f25ea0e80e39d6a0997ff20cde08f069dbd718bb228",
+      "status": "PASS",
+      "source_ref": "338/338 server, 71/71 client, lint clean, all four DEVELOPER suites re-run on a34bb37 so the evidence covers the final candidate. Three mutations confirm the fixes discriminate: restoring the blanket toLowerCase, removing the plain-index coverage check, and removing the mask's full-mask branch all turn red. The M-1 probe is a table whose generation expression differs from the real one only in the case of a string literal.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T10:24:19+08:00"
     }
   ],
   "pending_decisions": [
@@ -3008,7 +3042,11 @@
     "evidence/20260921T021056-292be6cf9b81/run.json",
     "evidence/20260921T021059-a674e9cb515d/run.json",
     "evidence/20260921T021102-be6ee244f2cb/run.json",
-    "evidence/20260921T021105-1e41fd3d6bba/run.json"
+    "evidence/20260921T021105-1e41fd3d6bba/run.json",
+    "evidence/20260921T022355-275a2ca82ae2/run.json",
+    "evidence/20260921T022359-0f0fb8f9430d/run.json",
+    "evidence/20260921T022402-51ab5d0c25a9/run.json",
+    "evidence/20260921T022405-4e4430a52eb8/run.json"
   ],
   "defects": [
     {
@@ -3288,7 +3326,20 @@
         "evidence/20260921T010217-eeda99b46cb6/run.json"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-021",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "REV-034",
+        "TASK-032",
+        "server/src/modules/supplier/SupplierBankCrypto.js",
+        "HD-028"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-032's REV-033 remediation is complete at 3edfd7a and awaiting re-review plus CI on that exact head. REV-033 returned CHANGES_REQUESTED with three H findings, all real and all fixed; H-1 required a Product Owner decision, recorded as HD-028, which chose an alphanumeric allowlist for account normalization. That choice is effectively permanent for stored rows: the normalized string is what gets encrypted, HMACed and measured, so changing it after rows exist means decrypting, re-encrypting and reindexing the table. The table is empty today. One gap is stated rather than closed: inspectSupplierBankAccountSchema checks information_schema.triggers, but that check has no test, because erp_user lacks SUPER while binary logging is on and a skip-on-privilege test would pose as coverage. Still not in T32's scope: wiring the Bank capability so the two key rings become an unconditional startup requirement, the two rotation scripts from design 2.6, and the Bank domain service (T33). Merge-ordering hazard unchanged: 0037 is the next free number on main, and codex/customer-management-phase-001 must renumber its own 0035 and 0036 regardless."
+  "next_safe_action": "TASK-032 is implemented, independently reviewed twice and APPROVED. REV-033 returned CHANGES_REQUESTED with three H; all three were real, all were fixed, and REV-034 closed each by re-running the probe that found it rather than by reading the diff. REV-034's own M-1, L-1 and L-2 are fixed here. Required CI must be observed green on a34bb37 before merge, and the merge itself has not been authorised. DEF-021 is open and needs a Product Owner answer before T33 wires the write API: the account normalizer silently strips disallowed characters instead of rejecting, so three different typed strings can become one stored account -- the reviewer showed AB12345 with a ring above the A, with an umlaut, and with neither all storing B12345 and sharing one blind index -- and NFKC runs before the allowlist, so 46 codepoints inject pure digits, with one-half becoming 12. HD-028 answered which characters are kept and was never asked what happens to the rest. Triggering input is already invalid under IBAN and domestic formats and there are no callers until T33, which is why it is LOW and not blocking. Stated rather than closed: the trigger check in the compatibility assertion has no test, because erp_user lacks SUPER while binary logging is on; REV-034 verified that privilege claim itself and measured the gap at 338/338 green with the check deleted. Its suggestion, injecting a trigger list through the existing table seam, would cover the throw path without DDL privilege and is worth taking in T33. Also left: REV-034 L-3 (VIRTUAL accepted where the design says STORED), L-4 (CHECK constraints unread), L-6 (the decrypt catch now reports a configuration error as a data-integrity error, which misdirects an operator during rotation). Not in T32's scope and still to do in PHASE-003: wiring the Bank capability so the two key rings become an unconditional startup requirement, the two rotation scripts from design 2.6, and the Bank domain service (T33). Merge-ordering hazard unchanged: 0037 is the next free number on main, and codex/customer-management-phase-001 must renumber its own 0035 and 0036 regardless."
 }
