@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 142,
+  "revision": 143,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": null,
+  "current_task": "TASK-032",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
@@ -59,7 +59,7 @@
     "TASK-029": "DONE",
     "TASK-030": "DONE",
     "TASK-031": "DONE",
-    "TASK-032": "PENDING",
+    "TASK-032": "IN_PROGRESS",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
@@ -2050,6 +2050,17 @@
       "source_ref": "PHASE-003's Entry criteria are a fresh worktree from the then-latest origin/main plus actual evidence for preceding-phase and this-phase provider, migration and security gates. Preceding phases: PHASE-001 and PHASE-002 are complete. Security gate: T32's dependencies T01, T02, T03, T18 and T24 are all DONE, and the key-ring validation they produced already exists and is enforced -- server/src/modules/supplier/normalizeSupplierConfig.js rejects a key ring that is not a JSON object, is empty, has an invalid key ID, decodes to anything other than 32 bytes, or whose activeKeyId is absent from the ring; server/config/supplier.js already reads all four SUPPLIER_BANK_* variables and server/.env.example already documents them. Migration gate: main carries 36 migrations ending at 0036_create_supplier_settings.js, so the next free number is 0037. The collision recorded in the carried-forward list is real and was verified: codex/customer-management-phase-001 also defines 0035 and 0036 for customer tables, so whichever of the two branches merges second must renumber, and a supplier Bank migration taking 0037 today inherits the same hazard against that branch. Deliberate deviation from the plan: PHASE-003's Git and merge plan clause says 一個獨立 codex/ 分支, but the Product Owner instructed on 2026-09-21 that branches be named claude/<name>. The instruction is followed and 05_development_tasks.md is NOT edited, because the plan document is hashed into the PLAN baseline and editing it would strand every approval, review and observation bound to that baseline.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T09:18:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-032 opened on claude/supplier-task-032 from a verified-fresh main",
+      "code_commit": "087b268027986712c26d8d9df58197e83895dc19",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
+      "status": "PASS",
+      "source_ref": "main and origin/main were both read as 087b268 before the worktree was cut, so the branch is not knowingly stale. First branch under the claude/ prefix per the Product Owner's 2026-09-21 instruction. Migration number confirmed against the tree rather than assumed: main carries 36 migrations ending at 0036_create_supplier_settings.js, so 0037 is the next free. The key-ring path that T32 depends on already exists and already fails closed: normalizeSupplierConfig returns null for both Bank groups when neither is configured and throws when only one of the two is, so an unprovisioned environment starts cleanly today and T32 must preserve that.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T09:20:15+08:00"
     }
   ],
   "pending_decisions": [
@@ -2416,6 +2427,21 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-21: 收002, 開003. PHASE-002 closes and PHASE-003 opens. The Purchasing pin is accepted as a recorded exception rather than a blocker, on these grounds: the pin's own version field reads planning-only-NOT_IMPLEMENTED, so nothing is running against the stale contract; the file belongs to the Purchasing module, not this one, and this module lists it as approval-required precisely so a supplier branch does not edit it; and the drift predates PHASE-002. It stays routed to the Purchasing owner together with the permission-catalogue drift in four manifests."
+    },
+    {
+      "id": "HD-027",
+      "impact": "MAJOR",
+      "question": "TASK-032 creates the supplier_bank_accounts table. CLAUDE.md section 8 requires the schema to be explained and explicitly approved before any migration is written, and this module's manifest lists server/database/migrations/** as approval-required. The proposed table is design spec section 5.8 verbatim: 22 columns, no plaintext account column, AES-256-GCM ciphertext with a per-row 96-bit IV and 128-bit tag, an HMAC-SHA-256 blind index, separate encryption and blind-index key IDs so both rings can rotate, last_four plus account_length so a short account's suffix cannot equal the whole value, and a generated stored default_slot. Five constraints: UNIQUE(crypto_context), UNIQUE(supplier_id, blind_index_key_id, account_blind_index), UNIQUE(supplier_id, default_slot), INDEX(blind_index_key_id, account_blind_index) and INDEX(supplier_id, status, id). New table, forward-only, no existing rows, no lock risk, no breaking change. Migration number 0037, the next free on main.",
+      "affected_ids": [
+        "TASK-032",
+        "DES-010",
+        "server/database/migrations/0037_create_supplier_bank_accounts.js",
+        "supplier_bank_accounts",
+        "SEC-010",
+        "SEC-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21: approved as designed, 照 design §5.8 批. No deviation from the approved design, so nothing here is a design change; the approval authorises writing migration 0037 and touching the approval-required path server/database/migrations/**."
     }
   ],
   "external_actions": [
