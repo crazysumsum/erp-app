@@ -221,11 +221,11 @@ export function parseItemRecoveryContext({ env, manifest, trustPolicy, nowMs = D
     files,
     recoveryPoint: { ...recoveryPoint },
     metrics: {
-      observedRtoMs: nowMs - restoreStartedAt,
+      observedRtoMs: restoreCompletedAt - restoreStartedAt,
       observedRpoMs: latestCommittedAt - backupCreatedAt,
       rtoObjectiveMs: RTO_OBJECTIVE_MS,
       rpoObjectiveMs: RPO_OBJECTIVE_MS,
-      rtoPassed: nowMs - restoreStartedAt <= RTO_OBJECTIVE_MS,
+      rtoPassed: restoreCompletedAt - restoreStartedAt <= RTO_OBJECTIVE_MS,
       rpoPassed: latestCommittedAt - backupCreatedAt <= RPO_OBJECTIVE_MS
     }
   };
