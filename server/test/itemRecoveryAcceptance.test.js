@@ -135,14 +135,14 @@ test("recovery context rejects unsafe or unlinked restored file evidence", () =>
   );
 });
 
-test("recovery context calculates the approved four-hour RTO and fifteen-minute RPO", () => {
+test("recovery context retains the restore-duration RTO when verification occurs later", () => {
   const context = parseItemRecoveryContext({
     ...validInput(),
-    nowMs: Date.parse("2026-09-15T02:05:00Z")
+    nowMs: Date.parse("2026-09-16T02:05:00Z")
   });
 
   assert.deepEqual(context.metrics, {
-    observedRtoMs: 35 * 60 * 1000,
+    observedRtoMs: 30 * 60 * 1000,
     observedRpoMs: 10 * 60 * 1000,
     rtoObjectiveMs: 4 * 60 * 60 * 1000,
     rpoObjectiveMs: 15 * 60 * 1000,
