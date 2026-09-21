@@ -24,74 +24,102 @@ import { inspect } from "node:util";
  * 設計 5.8：帳號加密之前要正規化，否則「1234 5678」同「12345678」會計出兩個唔同嘅
  * blind index，即係同一個帳號輸入兩次都查唔到重。
  *
- * 分兩步，而兩步嘅**失敗方向唔同**，呢個係重點（DEF-021／HD-029）：
+ * 分兩步，而兩步嘅**失敗方向唔同**（DEF-021／HD-029）：
  *
  *   1. 排版字元剝走。設計 §6.6 個 create 範例就係 `"123-456789-001"`，所以呢步
  *      唔係方便，係必須。
  *   2. 剝完之後仲有任何非 [0-9A-Z] 嘅嘢，**拒絕**，唔改寫。
  *
- * 第二步就係 DEF-021。之前兩步合埋做一步剝晒，結果 `ÅB12345`、`ÄB12345` 同
- * `B12345` 三個唔同輸入存成同一個帳號 —— 而個儲存值就係最終會俾錢嗰個，所以嗰條
- * 係錯收款人嘅路，唔淨係一個查重嘅怪癖。NFKC 亦都喺白名單之前行，所以 `½` 會經
- * `1⁄2` 變成 `12`。
+ * ## 點解唔用 NFKC（REV-035 H-2）
  *
- * 排版清單唔完整都冇所謂 —— 呢個先係重點。一個我列唔到嘅新分隔符號會落入第二步
- * 俾人**大聲拒絕**（用戶見到、改得到），而唔係靜靜哋改走個帳號。黑名單嘅不完整
- * 而家 fail closed。
+ * 第一版喺分類之前行 `NFKC`，而嗰個係一個洞：NFKC 係**相容性**折疊，佢會將一大堆
+ * 內容字元變成純 [0-9A-Z]，於是佢哋喺第二步望落好似冇問題咁過咗。實測 U+0080 到
+ * U+1FFFF 有 **1225 個碼位**係咁：
+ *
+ *     "12²345"   -> "122345"     多咗一個數字
+ *     "1②345"    -> "12345"      圈住嘅 2 變成普通 2
+ *     "ᴮ12345"   -> "B12345"     同 "B12345" 撞成同一個帳號
+ *     "Ⓑ12345"   -> "B12345"     同上
+ *     "ß…"       -> "SS…"        仲要變長
+ *
+ * 即係話 REV-034 M-2 嗰個「三個唔同輸入存成同一個帳號」根本冇收到 —— 佢只係由
+ * `Å`／`Ä` 呢批搬咗去 `ᴮ`／`Ⓑ` 呢批。而 HD-029 揀嗰個做法嘅**全部理由**就係「列唔到
+ * 嘅字元會大聲拒絕」，NFKC 令嗰 1225 個 fail open，正正係相反。
+ *
+ * 所以而家：`NFC`（只做標準組合，唔做相容性折疊），再**明確**折疊全形 ASCII 嗰三
+ * 段，其餘一律去到第二步。全形數字同字母係同一個字元嘅另一個闊度，折疊佢哋係
+ * 「同一個帳號」；上標、圈字、連字係**第二個字元**，唔係另一個闊度。
+ *
+ * 全域掃描（U+0080–U+1FFFF）之後淨低兩個會被折疊嘅碼位，兩個都係**標準等價**，
+ * 即係 Unicode 定義佢哋同目標字元本來就係同一個字元 —— 呢個正正係要嘅，兩種寫法
+ * 唔應該變成兩個帳號。記低係為咗下一個 reviewer 唔使再推一次：
+ *   - U+0387 GREEK ANO TELEIA 標準等價於 U+00B7 MIDDLE DOT（分隔符號，剝走）
+ *   - U+212A KELVIN SIGN 標準等價於 U+004B `K`（內容，保留）
+ *
+ * 一併更正一個記錄錯誤：第一版嘅註解、實作報告同 HD-029 嘅問題描述都用咗 `½ → 12`
+ * 做例子。嗰個例子**唔成立** —— `½` 喺 NFKC 之下變 `1⁄2`，而 U+2044 FRACTION SLASH
+ * 係 Sm，唔喺排版集合入面，所以佢一直都係被拒絕嗰邊。真正會漏嘅係上面嗰批。
  */
+
+// 全形 ASCII：數字、大寫、細寫。減 0xFEE0 就係佢哋對應嘅 ASCII。
+const FULLWIDTH_ASCII = /[\uff10-\uff19\uff21-\uff3a\uff41-\uff5a]/gu;
+
 // 空白、Unicode 格式／隱形字元（Cf：U+00AD 軟連字號、U+200E LRM、U+FEFF BOM）、
-// Unicode 連字號（Pd）、以及印刷帳號上常見嘅分隔符號。U+2212 MINUS SIGN 係 Sm
-// 唔係 Pd，所以要明寫。
+// Unicode 連字號（Pd，包括全形 U+FF0D）、以及印刷帳號上常見嘅分隔符號。
+// U+2212 MINUS SIGN 係 Sm 唔係 Pd，所以要明寫。
 const FORMATTING = /[\s\p{Cf}\p{Pd}\u2212._/,\u00b7\u2027:]+/gu;
 const DISALLOWED = /[^0-9A-Z]/u;
 const MAX_ACCOUNT_LENGTH = 512;
 
-/** 第一步：剝走排版。呢個函式**唔會**拒絕任何嘢 —— 驗證喺 requireAccount。 */
+/** 第一步：折疊闊度、剝走排版。呢個函式**唔會**拒絕任何嘢 —— 驗證喺下面。 */
 export function normalizeBankAccountNumber(value) {
-  return String(value ?? "").normalize("NFKC").toUpperCase().replace(FORMATTING, "");
+  return String(value ?? "")
+    .normalize("NFC")
+    .replace(FULLWIDTH_ASCII, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+    // 轉大寫**只限 ASCII a-z**。`String.prototype.toUpperCase` 唔係一對一：`ß` 會變
+    // 做 `SS`，即係一個內容字元自己漂白成兩個合法字元，然後過埋第二步 —— 同 NFKC
+    // 嗰個洞一模一樣，只係經另一條路。全域掃描落去，呢個係 NFKC 修好之後淨低嘅唯一
+    // 一個。IBAN 嘅字母部分唔分大小寫，而嗰啲字母本來就係 ASCII。
+    .replace(/[a-z]/gu, (char) => char.toUpperCase())
+    .replace(FORMATTING, "");
+}
+
+export const BANK_ACCOUNT_EMPTY = "EMPTY";
+export const BANK_ACCOUNT_UNREPRESENTABLE = "UNREPRESENTABLE";
+export const BANK_ACCOUNT_TOO_LONG = "TOO_LONG";
+
+/**
+ * 第二步：分類。回一個 reason 或者 null，唔拋錯 —— 因為**邊個層拋咩錯**係重要嘅。
+ *
+ * REV-035 H-1：第一版喺呢度直接拋 `TypeError`，而佢係喺 `withTransaction` 入面拋，
+ * 所以真嘅 database wrapper 會將佢重新包成 `DATABASE_TRANSACTION_FAILED` —— 使用者
+ * 收到一個 500。而 HD-029 揀呢個做法嘅理由係「用戶見到、改得到」，一個 500 兩樣都
+ * 唔係。所以而家由 service 喺開交易之前叫呢個函式，自己拋一個 400。
+ *
+ * `requireAccount` 保留拋 TypeError：佢擋嘅係「有人繞過 service 直接叫 crypto」，
+ * 嗰個係程式錯誤，唔係使用者輸入。
+ */
+export function bankAccountRejection(value) {
+  const normalized = normalizeBankAccountNumber(value);
+  if (!normalized) return BANK_ACCOUNT_EMPTY;
+  if (DISALLOWED.test(normalized)) return BANK_ACCOUNT_UNREPRESENTABLE;
+  if (normalized.length > MAX_ACCOUNT_LENGTH) return BANK_ACCOUNT_TOO_LONG;
+  return null;
 }
 
 /**
- * 第二步：驗證。錯誤訊息刻意**唔帶輸入** —— 設計 §6.6 明文講 request logging、
- * validation error 同 ApplicationError.details 都唔可以包含 accountNumber。
- *
- * 上限由欄位闊度嚟，唔係由一個對帳號格式嘅猜測嚟。GCM 係串流模式，密文長度等於
- * 明文 byte 數，而正規化之後全部係 ASCII，所以 512 個字元啱啱好填滿
- * VARBINARY(512)。喺非嚴格 sql_mode 之下超長會靜靜哋截短，而一行截短咗嘅密文永遠
- * 驗證唔到。業務層面嘅長度規則（IBAN 最長 34）屬於 domain service。
+ * 上限由欄位闊度嚟，唔係由一個對帳號格式嘅猜測嚟。GCM 係串流模式，密文長度等於明文
+ * byte 數，而正規化之後全部係 ASCII，所以 512 個字元啱啱好填滿 VARBINARY(512)。
+ * 喺非嚴格 sql_mode 之下超長會靜靜哋截短，而一行截短咗嘅密文永遠驗證唔到。
  */
 function requireAccount(value, what) {
-  const normalized = normalizeBankAccountNumber(value);
-  if (!normalized) {
-    throw new TypeError(`Supplier bank crypto cannot ${what} an empty account number`);
+  const rejection = bankAccountRejection(value);
+  if (rejection) {
+    // 訊息刻意唔帶輸入 —— 設計 §6.6：validation error 同 ApplicationError.details
+    // 都唔可以包含 accountNumber。
+    throw new TypeError(`Supplier bank crypto cannot ${what} this account number (${rejection})`);
   }
-  if (DISALLOWED.test(normalized)) {
-    throw new TypeError(`Supplier bank crypto cannot ${what} an account number containing characters it cannot represent`);
-  }
-  if (normalized.length > MAX_ACCOUNT_LENGTH) {
-    throw new TypeError(`Supplier bank crypto cannot ${what} an account number longer than ${MAX_ACCOUNT_LENGTH} characters`);
-  }
-  return normalized;
-}
-
-/**
- * 設計 5.8：短帳號唔可以用「尾四位」嚟遮 —— 一個四位嘅帳號，佢個尾四位就係成個
- * 帳號。所以長度 <= 4 全部星號，而 projection 亦都唔可以就咁輸出 last_four。
- *
- * 呢個函式**唔會**接觸密文或者 key：佢只係用已經存低嘅長度同尾碼砌一個顯示值，
- * 所以 masked list 唔使解密任何嘢。
- */
-export function maskBankAccount({ lastFour, accountLength }) {
-  const length = Number(accountLength);
-  if (!Number.isInteger(length) || length <= 0) return "";
-  if (length <= 4) return "*".repeat(length);
-  const suffix = String(lastFour ?? "");
-  // REV-033 L-1／REV-034 L-1：一行 last_four 長過 account_length 嘅資料唔應該令一個
-  // 讀路徑爆 RangeError —— 但「fail safe」對一個遮罩函式嚟講係遮**多啲**，唔係遮少
-  // 啲。第一版用 Math.max 加 slice，結果 {lastFour:"123456", accountLength:5} 會回
-  // 五個字元零粒星，即係一行壞資料反而漏得更多。呢種情況全部遮。
-  if (suffix.length >= length) return "*".repeat(length);
-  return `${"*".repeat(length - suffix.length)}${suffix}`;
+  return normalizeBankAccountNumber(value);
 }
 
 /**

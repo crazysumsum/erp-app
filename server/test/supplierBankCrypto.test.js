@@ -4,11 +4,8 @@ import { createHash, createHmac, randomBytes } from "node:crypto";
 import { inspect } from "node:util";
 
 import { normalizeSupplierConfig } from "../src/modules/supplier/normalizeSupplierConfig.js";
-import {
-  SupplierBankCrypto,
-  maskBankAccount,
-  normalizeBankAccountNumber
-} from "../src/modules/supplier/SupplierBankCrypto.js";
+import { SupplierBankCrypto, normalizeBankAccountNumber } from "../src/modules/supplier/SupplierBankCrypto.js";
+import { toMaskedBankResponse } from "../src/modules/supplier/supplierProjections.js";
 
 /**
  * 呢個檔案唔會出現真 key。每次跑都即場產生 —— 一條 commit 咗入 repo 嘅測試 key，
@@ -287,15 +284,31 @@ test("a crypto cannot be built from half a configuration", () => {
   assert.throws(() => new SupplierBankCrypto(), TypeError);
 });
 
-test("masking never reveals a short account, and never needs the ciphertext", () => {
-  // 一個四位嘅帳號，佢個「尾四位」就係成個帳號。
-  assert.equal(maskBankAccount({ lastFour: "", accountLength: 4 }), "****");
-  assert.equal(maskBankAccount({ lastFour: "", accountLength: 1 }), "*");
-  assert.equal(maskBankAccount({ lastFour: "0123", accountLength: 13 }), "*********0123");
-  assert.equal(maskBankAccount({ lastFour: "", accountLength: 0 }), "");
+/**
+ * REV-035 M-2：呢個測試本來測緊 `maskBankAccount`，而嗰個函式**冇任何 production
+ * caller** —— service 用嘅係 `toMaskedBankResponse`。即係短帳號嘅遮罩規則有兩個
+ * 實作（顯示字元仲要唔同），而有人用嗰個冇人測：reviewer 將 projection 嘅規則換成
+ * 無條件 `•••• ${last_four}`，成套測試照綠。
+ *
+ * 所以 `maskBankAccount` 拆咗（佢係我喺 T32 加嘅孤兒），而個規則喺真正用緊嗰度測。
+ */
+function masked(row) {
+  return toMaskedBankResponse({
+    id: 1, supplier_id: 7, bank_name: "B", account_holder_name: "H", bank_country_code: "HK",
+    account_currency_code: "HKD", status: "active", is_default: 0, version: 1, updated_at: 1, ...row
+  }).maskedAccountNumber;
+}
 
-  // 即使有人錯手將一個短帳號嘅全值放咗入 lastFour，遮罩都唔可以原樣吐返出嚟。
-  assert.equal(maskBankAccount({ lastFour: "1234", accountLength: 4 }), "****");
+test("masking never reveals a short account", () => {
+  // 一個四位嘅帳號，佢個「尾四位」就係成個帳號 —— 所以長度 <= 4 要全遮。
+  assert.equal(masked({ account_length: 13, last_four: "0123" }), "•••• 0123");
+  assert.equal(masked({ account_length: 5, last_four: "2345" }), "•••• 2345");
+  assert.equal(masked({ account_length: 4, last_four: "" }), "••••");
+  assert.equal(masked({ account_length: 1, last_four: "" }), "•");
+  assert.equal(masked({ account_length: 0, last_four: "" }), "");
+  // 即使有人錯手將一個短帳號嘅全值放咗入 last_four，遮罩都唔可以原樣吐返出嚟。
+  assert.equal(masked({ account_length: 4, last_four: "1234" }), "••••");
+  assert.equal(masked({ account_length: 3, last_four: "123" }), "•••");
 });
 
 test("the crypto redacts itself, so logging one cannot leak a key", () => {
@@ -323,11 +336,11 @@ test("the crypto redacts itself, so logging one cannot leak a key", () => {
 test("the writer, not just the renderer, respects the short-account boundary", () => {
   const crypto = cryptoWith();
   const cases = [
-    ["1234", 4, "", "****"],
-    ["1", 1, "", "*"],
-    ["12345", 5, "2345", "*2345"],
-    ["1234 5678", 8, "5678", "****5678"],
-    ["1234-5678-9012", 12, "9012", "********9012"]
+    ["1234", 4, "", "••••"],
+    ["1", 1, "", "•"],
+    ["12345", 5, "2345", "•••• 2345"],
+    ["1234 5678", 8, "5678", "•••• 5678"],
+    ["1234-5678-9012", 12, "9012", "•••• 9012"]
   ];
   for (const [input, length, lastFour, masked] of cases) {
     const sealed = crypto.encryptAccountNumber({
@@ -335,7 +348,10 @@ test("the writer, not just the renderer, respects the short-account boundary", (
     });
     assert.equal(sealed.accountLength, length, `accountLength for ${JSON.stringify(input)}`);
     assert.equal(sealed.lastFour, lastFour, `lastFour for ${JSON.stringify(input)}`);
-    assert.equal(maskBankAccount(sealed), masked, `mask for ${JSON.stringify(input)}`);
+    assert.equal(
+      toMaskedBankResponse({ account_length: sealed.accountLength, last_four: sealed.lastFour }).maskedAccountNumber,
+      masked, `mask for ${JSON.stringify(input)}`
+    );
   }
 });
 
@@ -404,13 +420,8 @@ test("a malformed row fails with the same message as a real authentication failu
 
 test("the read paths fail safe rather than throwing or passing on bad input", () => {
   // L-1：一行 last_four 長過 account_length 嘅壞資料唔應該令遮罩爆。
-  // REV-034 L-1：第一版呢度期望 "23456" —— 五個字元零粒星。一個遮罩函式 fail safe
-  // 係遮**多啲**，所以一行壞資料應該全遮，唔係反而漏得更多。個測試名同個斷言之前
-  // 講緊兩件唔同嘅事。
-  assert.equal(maskBankAccount({ lastFour: "123456", accountLength: 5 }), "*****",
-    "a suffix longer than the account masks everything rather than leaking more");
-  // 長度 <= 4 嗰條分支行先，所以呢個照樣全星 —— 短帳號永遠唔會漏。
-  assert.equal(maskBankAccount({ lastFour: "12345678", accountLength: 4 }), "****");
+
+
 
   // L-2：一個空 ring 會令查重揾唔到任何 candidate，即係每個寫入睇落都唔重覆。
   const secret = (value) => ({ reveal: () => value });

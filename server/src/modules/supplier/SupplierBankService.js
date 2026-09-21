@@ -1,7 +1,10 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
-import { SupplierBankCrypto } from "./SupplierBankCrypto.js";
-import { invalidSupplierInput, supplierChildNotFound, supplierConflict, supplierNotFound } from "./supplierErrors.js";
+import {
+  BANK_ACCOUNT_EMPTY, BANK_ACCOUNT_TOO_LONG, BANK_ACCOUNT_UNREPRESENTABLE,
+  bankAccountRejection, SupplierBankCrypto
+} from "./SupplierBankCrypto.js";
+import { invalidSupplierInput, supplierBankUnreadable, supplierChildNotFound, supplierConflict, supplierForbidden, supplierNotFound } from "./supplierErrors.js";
 import { toMaskedBankResponse } from "./supplierProjections.js";
 
 /**
@@ -59,7 +62,31 @@ function optionalCode(value, { field, length, message }) {
  * `accountNumber`。所以呢度每一個 throw 嘅 details 只講欄位名，唔講值 —— 包括嗰個
  * 「帳號本身唔合法」嘅 case，佢最容易手滑將輸入放埋落去。
  */
-function normalizeBankInput(input) {
+/**
+ * REV-035 H-1：帳號嘅驗證要喺**開交易之前**做，而且要拋一個 400。
+ *
+ * 第一版靠 crypto 入面嗰個 `TypeError`，但佢係喺 `withTransaction` 裡面拋，所以真嘅
+ * database wrapper 會將佢重新包成 `DATABASE_TRANSACTION_FAILED` —— 使用者收到一個
+ * 500。而 HD-029 揀嗰個做法嘅全部理由就係「用戶見到、改得到」；一個 500 兩樣都唔係。
+ *
+ * 個測試當時過到，係因為 harness 嘅假 `withTransaction` 直接 `return work(connection)`，
+ * 冇複製真 wrapper 嗰層錯誤轉換 —— 一個假嘢冇模仿到嘅行為，就係一個測試睇唔到嘅行為。
+ */
+const ACCOUNT_REJECTION_MESSAGES = Object.freeze({
+  [BANK_ACCOUNT_EMPTY]: "請填寫銀行帳號",
+  [BANK_ACCOUNT_UNREPRESENTABLE]: "銀行帳號只接受數字同英文字母，分隔符號會自動略過",
+  [BANK_ACCOUNT_TOO_LONG]: "銀行帳號太長"
+});
+
+function assertAccountNumber(value) {
+  const rejection = bankAccountRejection(value);
+  if (rejection) {
+    // details 只講欄位名 —— 設計 §6.6 明文禁止喺 validation error 入面帶 accountNumber。
+    throw invalidSupplierInput("BANK_ACCOUNT_INVALID", ACCOUNT_REJECTION_MESSAGES[rejection], { field: "accountNumber" });
+  }
+}
+
+function normalizeBankInput(input, { accountNumberRequired }) {
   const accountHolderName = String(input.accountHolderName ?? "").trim();
   const bankName = String(input.bankName ?? "").trim();
   if (!accountHolderName) {
@@ -67,6 +94,10 @@ function normalizeBankInput(input) {
   }
   if (!bankName) {
     throw invalidSupplierInput("BANK_ACCOUNT_INVALID", "請填寫銀行名稱", { field: "bankName" });
+  }
+  // create 一定要有帳號；update 冇帶就係「唔改帳號」，帶咗就要驗。
+  if (accountNumberRequired || (input.accountNumber !== undefined && input.accountNumber !== null)) {
+    assertAccountNumber(input.accountNumber);
   }
   return {
     accountHolderName,
@@ -84,10 +115,11 @@ function normalizeBankInput(input) {
 }
 
 export class SupplierBankService {
-  constructor({ database, logger, time, crypto, authorize = assertActorFresh, audit, references } = {}) {
+  constructor({ database, logger, time, crypto, authorize = assertActorFresh, audit } = {}) {
     if (!database || !logger || !time) {
       throw new TypeError("SupplierBankService requires database, logger and time");
     }
+    this.logger = logger;
     // crypto 係必需嘅，而且唔可以有一個「冇 key 就唔加密」嘅後備路徑：咁樣一個忘記
     // 配置 key ring 嘅環境會靜靜哋用明文寫入。設計 §5.8 fail closed。
     if (!(crypto instanceof SupplierBankCrypto)) {
@@ -97,13 +129,14 @@ export class SupplierBankService {
     this.time = time;
     this.crypto = crypto;
     this.authorize = authorize;
-    this.references = references;
     this.audit = audit ?? new SupplierAuditLogService({ database, logger, time });
   }
 
+  // REV-035 L：403 唔係 409。一個從來冇擁有過呢個權限嘅 caller 唔係撞到一個衝突，
+  // 佢係冇資格 —— 而 409 會叫佢「重新載入再試」，一個永遠唔會成功嘅建議。
   #assertMay(actor, permission, message) {
     if (!actor?.permissions?.includes(permission)) {
-      throw supplierConflict("BANK_PERMISSION_LOST", message);
+      throw supplierForbidden("BANK_PERMISSION_LOST", message);
     }
   }
 
@@ -138,7 +171,7 @@ export class SupplierBankService {
     );
     // 借另一個 Supplier 嘅 route 去攞一個唔屬於佢嘅帳戶，同「搵唔到」冇分別。設計
     // §6.3 對所有 child route 定咗同一條規矩。
-    if (!row) throw supplierChildNotFound("bank account");
+    if (!row) throw supplierChildNotFound("bank");
     return row;
   }
 
@@ -158,6 +191,16 @@ export class SupplierBankService {
    * 同一個 Supplier 重覆 → 擋。跨 Supplier → 只回一個 warning，因為兩間公司共用一
    * 個收款帳號係合法嘅業務情況。設計 §6.6：warning 唔可以回對方嘅帳號，但有
    * `supplier.view` 嘅話可以回對方 Supplier Code 俾人手判斷。
+   *
+   * REV-035 H-3：**唔可以**過濾 `status = 'active'`。設計 §5.8 嗰條
+   * `UNIQUE(supplier_id, blind_index_key_id, account_blind_index)` 冇 status 謂詞，
+   * 所以 service 過濾咗就會同資料庫唔同意 —— 而「停用咗，再加返同一個帳號」正正係
+   * 使用者會行嘅路（FR-BANK-005 令停用係唯一嘅退役方式），結果會由一個清楚嘅 409
+   * 變成一個 ER_DUP_ENTRY 500。而家兩邊講同一件事。
+   *
+   * 呢個查詢唔上鎖，所以兩個並發嘅 create 都可能讀到「冇重覆」。設計 §2.5 講明
+   * 「DB unique／FK 是競態下最後防線；service 預查只為回傳較清晰的公開錯誤」，所以
+   * 落去嗰個 INSERT 會捉 ER_DUP_ENTRY 再翻譯返做同一個 409。
    */
   async #duplicates(connection, { supplierId, candidates, excludeId = null, actor }) {
     const indexes = candidates.map((candidate) => candidate.index);
@@ -166,9 +209,9 @@ export class SupplierBankService {
       `SELECT b.id, b.supplier_id, s.supplier_code
          FROM supplier_bank_accounts b
          JOIN suppliers s ON s.id = b.supplier_id
-        WHERE b.account_blind_index IN (${placeholders}) AND b.status = ?
+        WHERE b.account_blind_index IN (${placeholders})
         ORDER BY b.id`,
-      [...indexes, ACTIVE]
+      indexes
     );
     const mine = rows.filter((row) => Number(row.supplier_id) === Number(supplierId)
       && Number(row.id) !== Number(excludeId));
@@ -187,6 +230,24 @@ export class SupplierBankService {
     }];
   }
 
+  /**
+   * 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤。
+   * 所以兩者要講同一句 —— 一個輸咗競態嘅寫入唔應該變成 500。
+   */
+  static async #translatingDuplicates(work) {
+    try {
+      return await work();
+    } catch (error) {
+      if (error?.code === "ER_DUP_ENTRY" && String(error.message).includes("uq_supplier_bank_blind_index")) {
+        throw supplierConflict("BANK_ACCOUNT_DUPLICATE", "這個供應商已有相同的銀行帳戶");
+      }
+      if (error?.code === "ER_DUP_ENTRY" && String(error.message).includes("uq_supplier_bank_default")) {
+        throw supplierConflict("BANK_ACCOUNT_DEFAULT_RACE", "預設銀行帳戶剛被其他人變更，請重新載入");
+      }
+      throw error;
+    }
+  }
+
   #seal({ supplierId, cryptoContext, accountNumber }) {
     const sealed = this.crypto.encryptAccountNumber({ supplierId, cryptoContext, accountNumber });
     const { index, keyId } = this.crypto.blindIndex(accountNumber);
@@ -198,7 +259,11 @@ export class SupplierBankService {
    * 呢個查詢明寫欄位，所以密文根本冇離開資料庫。
    */
   async list({ actorId, claimedRoles, claimedPermissions, supplierId, includeInactive = false } = {}) {
-    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const actor = await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    // REV-035 M-1：每條寫入路徑同 reveal 都有第二層檢查，唯獨呢條讀路徑冇。設計
+    // §6.6 要求 supplier.view —— 刻意唔係 bank.view，因為 AC-023 講明遮罩清單係
+    // 俾所有 supplier.view 睇嘅，bank.view 只係多咗 reveal。
+    this.#assertMay(actor, "supplier.view", "你目前沒有供應商查看權限");
     const [[supplier]] = await this.database.query("SELECT id FROM suppliers WHERE id = ?", [supplierId]);
     if (!supplier) throw supplierNotFound(supplierId);
     const [rows] = await this.database.query(
@@ -211,7 +276,7 @@ export class SupplierBankService {
   }
 
   async create(input) {
-    const details = normalizeBankInput(input);
+    const details = normalizeBankInput(input, { accountNumberRequired: true });
     const reason = requireReason(input.reason, "新增銀行帳戶必須填寫原因");
     // 明文喺呢度入嚟，喺呢個 method 結束之前唔再出現喺任何地方。
     const cryptoContext = this.crypto.newCryptoContext();
@@ -240,7 +305,7 @@ export class SupplierBankService {
           [nowMs, input.actorId, input.supplierId]
         );
       }
-      const [result] = await connection.execute(
+      const [result] = await SupplierBankService.#translatingDuplicates(() => connection.execute(
         `INSERT INTO supplier_bank_accounts
           (supplier_id, crypto_context, account_holder_name, bank_name, bank_country_code,
            bank_code, branch_code, swift_bic, account_currency_code,
@@ -253,7 +318,7 @@ export class SupplierBankService {
           sealed.ciphertext, sealed.iv, sealed.authTag, sealed.encryptionKeyId,
           sealed.blindIndex, sealed.blindIndexKeyId, sealed.lastFour, sealed.accountLength,
           wantsDefault ? 1 : 0, ACTIVE, nowMs, nowMs, input.actorId, input.actorId]
-      );
+      ));
       const bankAccountId = Number(result.insertId);
       const projected = await this.#project(connection, input.supplierId, bankAccountId);
       await this.audit.record(connection, {
@@ -275,7 +340,7 @@ export class SupplierBankService {
    * 而改個銀行名唔應該睇落似改過帳號。
    */
   async update(input) {
-    const details = normalizeBankInput(input);
+    const details = normalizeBankInput(input, { accountNumberRequired: false });
     const reason = requireReason(input.reason, "修改銀行帳戶必須填寫原因");
     const changingAccount = input.accountNumber !== undefined && input.accountNumber !== null;
     return this.database.withTransaction(async (connection) => {
@@ -452,16 +517,31 @@ export class SupplierBankService {
            FROM supplier_bank_accounts WHERE id = ? AND supplier_id = ?`,
         [input.bankAccountId, input.supplierId]
       );
-      if (!row) throw supplierChildNotFound("bank account");
+      if (!row) throw supplierChildNotFound("bank");
 
-      const revealed = this.crypto.decryptAccountNumber({
-        supplierId: row.supplier_id,
-        cryptoContext: row.crypto_context,
-        ciphertext: row.account_ciphertext,
-        iv: row.account_iv,
-        authTag: row.account_auth_tag,
-        encryptionKeyId: row.encryption_key_id
-      });
+      // 解密失敗要係一個**具名**錯誤。第一版就咁俾 crypto 嗰個 Error 拋上去，而佢
+      // 唔係 ApplicationError，所以真嘅 database wrapper 會將佢包成
+      // DATABASE_TRANSACTION_FAILED —— 一個匿名 500，日誌入面分唔出「資料被改過」
+      // 同「條 key 唔喺 ring 入面」。兩件事都唔係 caller 修得到，但佢哋要分得出。
+      // 呢個 bug 係喺測試 harness 開始模仿真 wrapper 之後先浮出嚟。
+      let revealed = null;
+      try {
+        revealed = this.crypto.decryptAccountNumber({
+          supplierId: row.supplier_id,
+          cryptoContext: row.crypto_context,
+          ciphertext: row.account_ciphertext,
+          iv: row.account_iv,
+          authTag: row.account_auth_tag,
+          encryptionKeyId: row.encryption_key_id
+        });
+      } catch (error) {
+        this.logger?.warn?.("supplier.bank.reveal.unreadable", {
+          bankAccountId: Number(row.id), supplierId: Number(row.supplier_id),
+          // 原因講得出，但唔帶密文、唔帶 key material。
+          reason: error?.message ?? "unknown"
+        });
+        throw supplierBankUnreadable("這個銀行帳戶目前無法讀取，請聯絡系統管理員");
+      }
 
       await this.audit.record(connection, {
         actorUserId: input.actorId, actorUsername: actor?.username ?? "",

@@ -169,12 +169,17 @@ integrationTest("the plaintext account appears in no column of the Bank table or
     "and no column of the audit log either");
 
   // 對照組：個掃描器要真係揾得到嘢，否則上面兩句係空話。
+  //
+  // REV-035 M-4：種落 **VARBINARY** 嗰條分支，唔係文字欄位。成個驗收倚賴嘅係「密文
+  // 欄位入面冇明文」，而如果個掃描器對 Buffer 嗰條路壞咗，種落文字欄位嘅對照組一樣
+  // 會綠 —— 即係對照組結構上證唔到最重要嗰半。
   await connection.execute(
-    "UPDATE supplier_bank_accounts SET account_holder_name = ? WHERE id = ?", [SECRET, created.id]
+    "UPDATE supplier_bank_accounts SET account_ciphertext = ?, account_holder_name = ? WHERE id = ?",
+    [Buffer.from(SECRET, "utf8"), SECRET, created.id]
   );
-  assert.deepEqual(await scan("supplier_bank_accounts", "supplier_id = ?", [supplierId]),
-    ["supplier_bank_accounts.account_holder_name"],
-    "the scanner finds a planted plaintext, so the two assertions above are not vacuous");
+  assert.deepEqual((await scan("supplier_bank_accounts", "supplier_id = ?", [supplierId])).sort(),
+    ["supplier_bank_accounts.account_ciphertext", "supplier_bank_accounts.account_holder_name"],
+    "the scanner finds a planted plaintext in both a binary and a text column, so the assertions above are not vacuous");
 });
 
 integrationTest("the database refuses a second active default even if the service is bypassed", async (t) => {
@@ -335,9 +340,11 @@ integrationTest("a row moved to another Supplier cannot be revealed, because the
   const created = await service.create({ ...actor, ...details, supplierId, accountNumber: SECRET, reason: "整合測試搬移前建立" });
 
   await connection.execute("UPDATE supplier_bank_accounts SET supplier_id = ? WHERE id = ?", [otherId, created.id]);
+  // REV-035：解密失敗要係一個具名 422，唔係一個匿名 500 —— 日誌要分得出「資料被改
+  // 過」同「條 key 唔喺 ring 入面」。
   await assert.rejects(
     () => service.reveal({ ...actor, supplierId: otherId, bankAccountId: created.id, reason: "整合測試搬移後查看" }),
-    /failed authentication/
+    (error) => error.statusCode === 422 && error.publicCode === "BANK_ACCOUNT_UNREADABLE"
   );
   const [audits] = await connection.query(
     "SELECT id FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.reveal'", [otherId]

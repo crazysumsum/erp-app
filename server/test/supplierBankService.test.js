@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { normalizeSupplierConfig } from "../src/modules/supplier/normalizeSupplierConfig.js";
 import { SupplierBankCrypto } from "../src/modules/supplier/SupplierBankCrypto.js";
 import { SupplierBankService } from "../src/modules/supplier/SupplierBankService.js";
+import { ApplicationError } from "../src/framework/errors/ApplicationError.js";
 
 /**
  * 呢個檔案用假連線，所以佢證唔到 SQL 本身跑唔跑得 —— 嗰半喺
@@ -36,7 +37,7 @@ function bankRow(overrides = {}) {
   };
 }
 
-function harness({ row = bankRow(), duplicates = [], permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
+function harness({ row = bankRow(), duplicates = [], insertFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
   const events = [];
   const current = row;
   const connection = {
@@ -56,14 +57,34 @@ function harness({ row = bankRow(), duplicates = [], permissions = ["supplier.vi
     },
     async execute(sql, params) {
       events.push(["execute", sql, params]);
-      if (sql.includes("INSERT INTO supplier_bank_accounts")) return [{ insertId: 41, affectedRows: 1 }];
+      if (sql.includes("INSERT INTO supplier_bank_accounts")) {
+        if (insertFails) {
+          const error = new Error(`Duplicate entry 'x' for key '${insertFails}'`);
+          error.code = "ER_DUP_ENTRY";
+          throw error;
+        }
+        return [{ insertId: 41, affectedRows: 1 }];
+      }
       return [{ affectedRows: 1 }];
     }
   };
   const audited = [];
   const service = new SupplierBankService({
     database: {
-      async withTransaction(work) { return work(connection); },
+      // 同 MySqlDatabaseService 一樣：ApplicationError 原樣傳上去，其餘一律重新包成
+      // DATABASE_TRANSACTION_FAILED（即係使用者收到 500）。REV-035 H-1 就係因為呢
+      // 層之前冇模仿到而走甩咗。
+      async withTransaction(work) {
+        try {
+          return await work(connection);
+        } catch (error) {
+          if (error instanceof ApplicationError) throw error;
+          const wrapped = new Error("MySQL database transaction failed", { cause: error });
+          wrapped.code = "DATABASE_TRANSACTION_FAILED";
+          wrapped.statusCode = 500;
+          throw wrapped;
+        }
+      },
       query: (...args) => connection.query(...args)
     },
     logger: { warn() {} },
@@ -317,10 +338,18 @@ test("a reveal whose audit fails returns no account at all", async () => {
     }
   });
   service.audit = { async record() { throw new Error("audit store unavailable"); } };
-  await assert.rejects(
-    () => service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "稽核失敗測試原因" }),
-    /audit store unavailable/
-  );
+  let thrown = null;
+  try {
+    await service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "稽核失敗測試原因" });
+  } catch (error) {
+    thrown = error;
+  }
+  // 稽核儲存壞咗係 server 自己嘅問題，所以佢確實應該係 500 —— 重點係**冇帳號**
+  // 走出去，唔係個狀態碼。
+  assert.ok(thrown, "a reveal whose audit fails must not resolve");
+  assert.equal(thrown.code, "DATABASE_TRANSACTION_FAILED");
+  assert.ok(!JSON.stringify({ m: thrown.message, c: String(thrown.cause?.message ?? "") }).includes(NORMALIZED),
+    "and the failure must not carry the account it was about to return");
 });
 
 test("a reveal of a tampered row fails instead of returning something", async () => {
@@ -337,10 +366,18 @@ test("a reveal of a tampered row fails instead of returning something", async ()
       account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId
     }
   });
-  await assert.rejects(
-    () => service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "竄改資料測試原因" }),
-    /failed authentication/
-  );
+  // REV-035：一個竄改咗嘅行要係一個**具名** 422，唔係匿名 500 —— 日誌要分得出
+  // 「資料被改過」同「條 key 唔喺 ring 入面」，兩者嘅處理方法完全唔同。
+  let thrown = null;
+  try {
+    await service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "竄改資料測試原因" });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.ok(thrown);
+  assert.equal(thrown.statusCode, 422);
+  assert.equal(thrown.publicCode, "BANK_ACCOUNT_UNREADABLE");
+  assert.ok(!thrown.publicMessage.includes(NORMALIZED));
   assert.equal(audited.length, 0, "no audit row may claim a reveal that never produced an account");
 });
 
@@ -355,8 +392,28 @@ test("an account the normalizer cannot represent is refused, and the error does 
     thrown = error;
   }
   assert.ok(thrown, "a character the normalizer cannot represent must not be silently deleted");
+  // REV-035 H-1：HD-029 揀呢個做法嘅理由係「用戶見到、改得到」。一個 500 兩樣都唔係，
+  // 所以個 contract 係 400 加一個具名 code，唔淨係「有拋嘢」。
+  assert.equal(thrown.statusCode, 400, "a rejected account is the caller's input problem, not a server fault");
+  assert.equal(thrown.publicCode, "BANK_ACCOUNT_INVALID");
+  assert.deepEqual(thrown.publicDetails ?? thrown.details, { field: "accountNumber" });
   assert.ok(!JSON.stringify({ message: thrown.message, details: thrown.details ?? null }).includes("B12345"),
     "a validation error must never echo the account it rejected");
+
+  // REV-035 H-2 嗰批：NFKC 之前會將佢哋洗白成純 [0-9A-Z]，所以佢哋一定要行到呢度。
+  for (const laundered of ["12\u00b2345", "1\u2461345", "\u1d2e12345", "\u24b712345", "\u00df12345"]) {
+    await assert.rejects(
+      () => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: laundered, reason: "相容性折疊測試原因" }),
+      (error) => error.statusCode === 400 && error.publicCode === "BANK_ACCOUNT_INVALID",
+      `${JSON.stringify(laundered)} must not be folded into a different account`
+    );
+  }
+
+  // 而一個完全冇帳號嘅 create 亦都係 400，唔係 500 —— 之前佢一路行到 crypto 先死。
+  await assert.rejects(
+    () => service.create({ ...actor, ...bankDetails, supplierId: 7, reason: "缺少帳號測試原因" }),
+    (error) => error.statusCode === 400 && error.publicCode === "BANK_ACCOUNT_INVALID"
+  );
 });
 
 test("every write demands a reason, because the audit is useless without one", async () => {
@@ -392,4 +449,79 @@ test("an inactive account cannot be updated, defaulted or deactivated again", as
   ]) {
     await assert.rejects(() => call(service), (error) => error.publicCode === "BANK_ACCOUNT_INACTIVE");
   }
+});
+
+
+test("duplicate detection asks the same question as the unique index, inactive rows included", async () => {
+  // REV-035 H-3：個 UNIQUE(supplier_id, blind_index_key_id, account_blind_index) 冇
+  // status 謂詞，所以 service 過濾 status = 'active' 就會同資料庫唔同意。而「停用咗，
+  // 再加返同一個帳號」正正係使用者會行嘅路（FR-BANK-005 令停用係唯一嘅退役方式），
+  // 結果會由一個清楚嘅 409 變成一個 ER_DUP_ENTRY 500。
+  const { service, events } = harness({ duplicates: [{ id: 40, supplier_id: 7, supplier_code: "SUP-007" }] });
+  await assert.rejects(
+    () => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "查重範圍測試原因" }),
+    (error) => error.publicCode === "BANK_ACCOUNT_DUPLICATE"
+  );
+  const lookup = events.find(([kind, sql]) => kind === "query" && sql.includes("JOIN suppliers s"));
+  assert.ok(!lookup[1].includes("b.status"),
+    "filtering by status makes the service disagree with the index that actually enforces the rule");
+});
+
+test("a create that loses the race is a 409, not a 500 carrying the blind index", async () => {
+  // 設計 §2.5：DB unique 係競態下最後防線，service 預查只為回傳較清晰嘅公開錯誤 ——
+  // 所以兩者要講同一句。查重讀唔上鎖，所以兩個並發嘅 create 都可以讀到「冇重覆」。
+  const duplicate = harness({ insertFails: "uq_supplier_bank_blind_index" });
+  let thrown = null;
+  try {
+    await duplicate.service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "競態查重測試原因" });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown.statusCode, 409);
+  assert.equal(thrown.publicCode, "BANK_ACCOUNT_DUPLICATE");
+  assert.ok(!JSON.stringify({ m: thrown.message, c: String(thrown.cause?.message ?? "") }).includes("Duplicate entry"),
+    "the driver's message embeds the raw blind index; it must not travel with the domain error");
+
+  // 撞到 default slot 嗰條就係另一件事，唔可以報成「重覆帳戶」。
+  const raced = harness({ insertFails: "uq_supplier_bank_default" });
+  await assert.rejects(
+    () => raced.service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, isDefault: true, reason: "預設競態測試原因" }),
+    (error) => error.publicCode === "BANK_ACCOUNT_DEFAULT_RACE"
+  );
+});
+
+test("the masked list is gated on supplier.view", async () => {
+  // REV-035 M-1：每條寫入路徑同 reveal 都有第二層檢查，唯獨呢條讀路徑冇。
+  const { service } = harness({ permissions: ["supplier.bank.view", "supplier.bank.mgmt"] });
+  await assert.rejects(
+    () => service.list({ ...actor, supplierId: 7 }),
+    (error) => error.publicCode === "BANK_PERMISSION_LOST" && error.statusCode === 403
+  );
+  const allowed = harness({ permissions: ["supplier.view"] });
+  const result = await allowed.service.list({ ...actor, supplierId: 7 });
+  assert.equal(result.items.length, 1, "supplier.view alone is enough for the masked list (AC-023)");
+});
+
+test("a caller who never had the permission gets 403, not a conflict", async () => {
+  // 409 會叫佢「重新載入再試」，一個永遠唔會成功嘅建議。
+  const { service } = harness({ permissions: ["supplier.view"] });
+  await assert.rejects(
+    () => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "權限測試原因" }),
+    (error) => error.statusCode === 403
+  );
+});
+
+test("a bank account not found reports a well-formed code", async () => {
+  // supplierChildNotFound("bank account") 會砌出 SUPPLIER_BANK ACCOUNT_NOT_FOUND ——
+  // 一個帶住空格嘅 error code，client 上面對唔到任何嘢。
+  const { service } = harness({ row: null });
+  let thrown = null;
+  try {
+    await service.setDefault({ ...actor, supplierId: 8, bankAccountId: 41, version: 1, reason: "找不到測試原因" });
+  } catch (error) {
+    thrown = error;
+  }
+  assert.equal(thrown.publicCode, "SUPPLIER_BANK_NOT_FOUND");
+  assert.ok(!thrown.publicCode.includes(" "));
+  assert.match(thrown.publicMessage, /銀行帳戶/u, "and a label a person can read, not 子資料");
 });
