@@ -68,9 +68,9 @@ test("TC-028 Customer list accepts a maximum-length legal-name prefix without no
 
   assert.deepEqual(result.items, []);
   assert.doesNotMatch(queries[0].sql, /customer_code_key LIKE/);
-  assert.equal(queries[0].params.length, 11);
-  assert.equal(queries[0].params[2], `${"L".repeat(190)}%`);
-  assert.ok(queries[0].params.filter((_, index) => index !== 2).every((value) => value === `${"l".repeat(190)}%`));
+  assert.equal(queries[0].params.length, 13);
+  assert.equal(queries[0].params[4], `${"L".repeat(190)}%`);
+  assert.ok(queries[0].params.filter((_, index) => index !== 4).every((value) => value === `${"l".repeat(190)}%`));
 });
 
 test("TC-012/013 Customer list applies the approved search, filter, missing-data and ranking contract", async () => {
@@ -97,6 +97,8 @@ test("TC-012/013 Customer list applies the approved search, filter, missing-data
   const countSql = queries[0].sql;
   const pageSql = queries[1].sql;
   assert.match(countSql, /trading_name_key LIKE/);
+  assert.match(countSql, /general_phone LIKE/);
+  assert.match(countSql, /general_email LIKE/);
   assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_identifiers/);
   assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_contacts/);
   assert.match(countSql, /EXISTS \(SELECT 1 FROM customer_addresses/);
@@ -112,6 +114,91 @@ test("TC-012/013 Customer list applies the approved search, filter, missing-data
   assert.match(countSql, /updated_at <= \?/);
   assert.match(pageSql, /CASE WHEN customer_code_key = \? THEN 0 WHEN legal_name_key = \? THEN 1 ELSE 2 END/);
   assert.match(pageSql, /account_manager_user_id ASC/);
+});
+
+test("TC-013 Customer list rejects Phase 1 filters whose resources are not delivered", async () => {
+  const service = new CustomerService({
+    database: { async query() { throw new Error("database query must not run"); } },
+    time: { nowMs: () => 1 }, actorVerifier: async () => ({ username: "list-test" })
+  });
+
+  await assert.rejects(
+    () => service.list({ actorId: 1, claimedRoles: [], claimedPermissions: [], missing: ["bank"] }),
+    /missing value is not supported: bank/
+  );
+});
+
+for (const [method, table, item] of [
+  ["listAddresses", "customer_addresses", { id: 11, customer_id: 9, label: "HQ", recipient_company_department: "", address_line1: "1 Main", address_line2: "", address_line3: "", city: "", state_region: "", postal_code: "", country_code: null, phone: "", notes: "", sort_order: 0, status: "active", version: 1 }],
+  ["listContacts", "customer_contacts", { id: 12, customer_id: 9, name: "Sam", job_title: "", department: "", email: "", phone: "", mobile: "", preferred_language: "", notes: "", sort_order: 0, status: "active", version: 1 }],
+  ["listIdentifiers", "customer_identifiers", { id: 13, customer_id: 9, identifier_type: "tax", issuer_country_code: "HK", identifier_value: "123", valid_from: null, expires_at: null, notes: "", status: "active", version: 1 }]
+]) {
+  test(`TC-013 ${method} returns a stable server-paginated projection`, async () => {
+    const root = { ...rowsById[9], website: "", notes: "", ever_activated_at: null, created_at: 1, created_by: 1, updated_by: 1 };
+    const database = {
+      async query(sql, params) {
+        const text = String(sql);
+        if (text.includes("FROM customers WHERE id")) return [[root]];
+        if (text.includes(`COUNT(*) AS total FROM ${table}`)) return [[{ total: 1 }]];
+        if (text.includes(`FROM ${table}`)) {
+          assert.deepEqual(params, [9, 10, 10]);
+          return [[item]];
+        }
+        if (text.includes("FROM customer_address_purposes")) return [[{ address_id: 11, purpose_code: "shipping", is_default: 1 }]];
+        if (text.includes("FROM customer_contact_purposes")) return [[{ contact_id: 12, purpose_code: "general", is_default: 1 }]];
+        throw new Error(`Unexpected query: ${text}`);
+      }
+    };
+    const service = new CustomerService({ database, time: { nowMs: () => 1 }, actorVerifier: async () => ({ username: "list-test" }) });
+
+    const result = await service[method]({ actorId: 1, claimedRoles: [], claimedPermissions: [], id: 9, page: 2, pageSize: 10 });
+
+    assert.equal(result.total, 1);
+    assert.equal(result.page, 2);
+    assert.equal(result.pageSize, 10);
+    assert.equal(result.items[0].id, item.id);
+  });
+}
+
+test("TC-013 Customer detail caps inline children at 100 and loads purposes only for those rows", async () => {
+  const root = {
+    ...rowsById[9], website: "", notes: "", ever_activated_at: null,
+    created_at: 1, created_by: 1, updated_by: 1
+  };
+  const addresses = Array.from({ length: 100 }, (_, index) => ({
+    id: index + 1, customer_id: 9, label: `Address ${index + 1}`,
+    recipient_company_department: "", address_line1: "1 Main", address_line2: "", address_line3: "",
+    city: "", state_region: "", postal_code: "", country_code: null, phone: "", notes: "",
+    sort_order: index, status: "active", version: 1
+  }));
+  const queries = [];
+  const database = {
+    async query(sql, params = []) {
+      const text = String(sql);
+      queries.push({ sql: text, params });
+      if (text.includes("FROM customers WHERE id")) return [[root]];
+      if (text.includes("FROM customer_addresses")) return [addresses];
+      if (text.includes("FROM customer_contacts")) return [[]];
+      if (text.includes("FROM customer_identifiers")) return [[]];
+      if (text.includes("FROM customer_credit_profiles")) return [[]];
+      if (text.includes("FROM customer_address_purposes")) return [[
+        { address_id: 100, purpose_code: "shipping", is_default: 1 }
+      ]];
+      throw new Error(`Unexpected query: ${text}`);
+    }
+  };
+  const service = new CustomerService({ database, time: { nowMs: () => 1 }, actorVerifier: async () => ({ username: "detail-test" }) });
+
+  const detail = await service.get({ actorId: 1, claimedRoles: [], claimedPermissions: [], id: 9 });
+
+  assert.equal(detail.addresses.length, 100);
+  assert.deepEqual(detail.addresses[99].purposes, [{ code: "shipping", isDefault: true }]);
+  const addressRead = queries.find(({ sql }) => sql.includes("FROM customer_addresses"));
+  const purposeRead = queries.find(({ sql }) => sql.includes("FROM customer_address_purposes"));
+  assert.match(addressRead.sql, /LIMIT 100/);
+  assert.doesNotMatch(addressRead.sql, /LIMIT 101/);
+  assert.match(purposeRead.sql, /address_id IN \(/);
+  assert.deepEqual(purposeRead.params, [9, ...Array.from({ length: 100 }, (_, index) => index + 1)]);
 });
 
 test("TC-012 Customer detail includes bounded party, identifier and credit projections", async () => {

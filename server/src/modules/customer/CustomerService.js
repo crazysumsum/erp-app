@@ -183,9 +183,9 @@ export class CustomerService {
         actorId, routeKey: "customer.update", idempotencyKey, payload: { id: Number(id), version: Number(version), reason, ...customer }, nowMs
       });
       if (started.replay) return this.#replayedCustomer(connection, started.replay);
-      await this.#assertNewDefaults(connection, customer);
       const before = await this.#get(connection, id, { forUpdate: true });
       if (!before) throw customerNotFound(id);
+      await this.#assertNewDefaults(connection, customer, before);
       let result;
       try {
         [result] = await connection.execute(
@@ -218,27 +218,39 @@ export class CustomerService {
     await this.actorVerifier(this.database, { actorId, claimedRoles, claimedPermissions });
     const row = await this.#get(this.database, id);
     if (!row) throw customerNotFound(id);
-    const [addresses, addressPurposes, contacts, contactPurposes, identifiers, creditRows] = await Promise.all([
+    const [addresses, contacts, identifiers, creditRows] = await Promise.all([
       this.database.query(`SELECT id, customer_id, label, recipient_company_department, address_line1, address_line2,
           address_line3, city, state_region, postal_code, country_code, phone, notes, sort_order, status, version
-        FROM customer_addresses WHERE customer_id = ? ORDER BY sort_order ASC, id ASC LIMIT 101`, [id]),
-      this.database.query(`SELECT address_id, purpose_code, is_default FROM customer_address_purposes
-        WHERE customer_id = ? ORDER BY address_id ASC, purpose_code ASC LIMIT 601`, [id]),
+        FROM customer_addresses WHERE customer_id = ? ORDER BY sort_order ASC, id ASC LIMIT 100`, [id]),
       this.database.query(`SELECT id, customer_id, name, job_title, department, email, phone, mobile,
           preferred_language, notes, sort_order, status, version
-        FROM customer_contacts WHERE customer_id = ? ORDER BY sort_order ASC, id ASC LIMIT 101`, [id]),
-      this.database.query(`SELECT contact_id, purpose_code, is_default FROM customer_contact_purposes
-        WHERE customer_id = ? ORDER BY contact_id ASC, purpose_code ASC LIMIT 601`, [id]),
+        FROM customer_contacts WHERE customer_id = ? ORDER BY sort_order ASC, id ASC LIMIT 100`, [id]),
       this.database.query(`SELECT id, customer_id, identifier_type, issuer_country_code, identifier_value,
           valid_from, expires_at, notes, status, version
-        FROM customer_identifiers WHERE customer_id = ? ORDER BY id ASC LIMIT 101`, [id]),
+        FROM customer_identifiers WHERE customer_id = ? ORDER BY id ASC LIMIT 100`, [id]),
       this.database.query(`SELECT credit_limit, credit_currency_code, credit_status, version
         FROM customer_credit_profiles WHERE customer_id = ?`, [id])
     ]);
+    const [addressPurposes, contactPurposes] = await Promise.all([
+      this.#purposes("address", id, addresses[0]),
+      this.#purposes("contact", id, contacts[0])
+    ]);
     return toCustomerDetail(row, this.#detailRelations({
-      addresses: addresses[0], addressPurposes: addressPurposes[0], contacts: contacts[0],
-      contactPurposes: contactPurposes[0], identifiers: identifiers[0], credit: creditRows[0][0]
+      addresses: addresses[0], addressPurposes, contacts: contacts[0],
+      contactPurposes, identifiers: identifiers[0], credit: creditRows[0][0]
     }));
+  }
+
+  async listAddresses(input) {
+    return this.#listChildren("address", input);
+  }
+
+  async listContacts(input) {
+    return this.#listChildren("contact", input);
+  }
+
+  async listIdentifiers(input) {
+    return this.#listChildren("identifier", input);
   }
 
   async list({
@@ -259,6 +271,8 @@ export class CustomerService {
       const identifierPrefix = prefix(normalizeIdentifierValue(search).key);
       const childConditions = [
         "trading_name_key LIKE ? ESCAPE '!'",
+        "general_phone LIKE ? ESCAPE '!'",
+        "general_email LIKE ? ESCAPE '!'",
         `EXISTS (SELECT 1 FROM customer_identifiers ci WHERE ci.customer_id = customers.id AND ci.status = 'active' AND ci.identifier_value_key LIKE ? ESCAPE '!')`,
         `EXISTS (SELECT 1 FROM customer_contacts cc WHERE cc.customer_id = customers.id AND cc.status = 'active'
           AND (cc.name LIKE ? ESCAPE '!' OR cc.email LIKE ? ESCAPE '!' OR cc.phone LIKE ? ESCAPE '!' OR cc.mobile LIKE ? ESCAPE '!'))`,
@@ -268,11 +282,11 @@ export class CustomerService {
       if ([...search].length <= 64 && [...normalizedSearch].length <= 64) {
         const code = normalizeCustomerCode(search).key;
         conditions.push(`(customer_code_key LIKE ? ESCAPE '!' OR legal_name_key LIKE ? ESCAPE '!' OR ${childConditions.join(" OR ")})`);
-        params.push(prefix(code), namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
+        params.push(prefix(code), namePrefix, namePrefix, namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
         exactOrder = [code, name];
       } else {
         conditions.push(`(legal_name_key LIKE ? ESCAPE '!' OR ${childConditions.join(" OR ")})`);
-        params.push(namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
+        params.push(namePrefix, namePrefix, namePrefix, namePrefix, identifierPrefix, ...Array(8).fill(namePrefix));
       }
     }
     const statuses = list(status);
@@ -291,6 +305,11 @@ export class CustomerService {
       params.push(creditStatus);
     }
     const missingValues = new Set(list(missing));
+    for (const value of missingValues) {
+      if (!["shippingDefault", "billingDefault", "contactDefault", "paymentTerm", "credit"].includes(value)) {
+        throw new TypeError(`missing value is not supported: ${value}`);
+      }
+    }
     if (missingValues.has("shippingDefault")) conditions.push("NOT EXISTS (SELECT 1 FROM customer_address_purposes cap WHERE cap.customer_id = customers.id AND cap.purpose_code = 'shipping' AND cap.is_default = 1)");
     if (missingValues.has("billingDefault")) conditions.push("NOT EXISTS (SELECT 1 FROM customer_address_purposes cap WHERE cap.customer_id = customers.id AND cap.purpose_code = 'billing' AND cap.is_default = 1)");
     if (missingValues.has("contactDefault")) conditions.push("NOT EXISTS (SELECT 1 FROM customer_contact_purposes ccp WHERE ccp.customer_id = customers.id AND ccp.purpose_code = 'general' AND ccp.is_default = 1)");
@@ -350,26 +369,85 @@ export class CustomerService {
     return rows[0] ?? null;
   }
 
-  async #assertNewDefaults(connection, customer) {
-    if (customer.defaultCurrencyCode) {
+  async #assertNewDefaults(connection, customer, before = null) {
+    if (customer.defaultCurrencyCode && customer.defaultCurrencyCode !== before?.default_currency_code) {
       await this.businessMaster.assertCurrencyUsableInTransaction(connection, {
         code: customer.defaultCurrencyCode, purpose: "new_assignment"
       });
     }
-    if (customer.defaultPaymentTermId) {
+    if (customer.defaultPaymentTermId && customer.defaultPaymentTermId !== nullableNumber(before?.default_payment_term_id)) {
       await this.businessMaster.assertPaymentTermUsableInTransaction(connection, {
         id: customer.defaultPaymentTermId, purpose: "new_assignment"
       });
     }
-    for (const [field, table] of [["categoryId", "customer_categories"], ["industryId", "customer_industries"], ["territoryId", "customer_territories"]]) {
-      if (!customer[field]) continue;
+    for (const [field, column, table] of [["categoryId", "category_id", "customer_categories"], ["industryId", "industry_id", "customer_industries"], ["territoryId", "territory_id", "customer_territories"]]) {
+      if (!customer[field] || customer[field] === nullableNumber(before?.[column])) continue;
       const [[row]] = await connection.query(`SELECT id FROM ${table} WHERE id = ? AND status = 'active'`, [customer[field]]);
       if (!row) throw customerReferenceNotUsable(field);
     }
-    if (customer.accountManagerUserId) {
+    if (customer.accountManagerUserId && customer.accountManagerUserId !== nullableNumber(before?.account_manager_user_id)) {
       const [[row]] = await connection.query("SELECT id FROM users WHERE id = ? AND status = 'active'", [customer.accountManagerUserId]);
       if (!row) throw customerReferenceNotUsable("accountManagerUserId");
     }
+  }
+
+  async #listChildren(type, { actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20 }) {
+    await this.actorVerifier(this.database, { actorId, claimedRoles, claimedPermissions });
+    if (!await this.#get(this.database, id)) throw customerNotFound(id);
+    const safePage = Math.max(1, Number(page) || 1);
+    const safePageSize = [10, 20, 50, 100].includes(Number(pageSize)) ? Number(pageSize) : 20;
+    const offset = (safePage - 1) * safePageSize;
+    const definitions = {
+      address: {
+        table: "customer_addresses",
+        order: "sort_order ASC, id ASC",
+        columns: `id, customer_id, label, recipient_company_department, address_line1, address_line2,
+          address_line3, city, state_region, postal_code, country_code, phone, notes, sort_order, status, version`
+      },
+      contact: {
+        table: "customer_contacts",
+        order: "sort_order ASC, id ASC",
+        columns: `id, customer_id, name, job_title, department, email, phone, mobile,
+          preferred_language, notes, sort_order, status, version`
+      },
+      identifier: {
+        table: "customer_identifiers",
+        order: "id ASC",
+        columns: `id, customer_id, identifier_type, issuer_country_code, identifier_value,
+          valid_from, expires_at, notes, status, version`
+      }
+    };
+    const definition = definitions[type];
+    const [countResult, rowsResult] = await Promise.all([
+      this.database.query(`SELECT COUNT(*) AS total FROM ${definition.table} WHERE customer_id = ?`, [id]),
+      this.database.query(`SELECT ${definition.columns} FROM ${definition.table}
+        WHERE customer_id = ? ORDER BY ${definition.order} LIMIT ? OFFSET ?`, [id, safePageSize, offset])
+    ]);
+    const total = countResult[0][0].total;
+    const rows = rowsResult[0];
+    const relations = this.#detailRelations({
+      addresses: type === "address" ? rows : [],
+      addressPurposes: type === "address" ? await this.#purposes("address", id, rows) : [],
+      contacts: type === "contact" ? rows : [],
+      contactPurposes: type === "contact" ? await this.#purposes("contact", id, rows) : [],
+      identifiers: type === "identifier" ? rows : []
+    });
+    const key = `${type}${type === "address" ? "es" : "s"}`;
+    return { items: relations[key], total: Number(total), page: safePage, pageSize: safePageSize };
+  }
+
+  async #purposes(type, customerId, rows) {
+    if (rows.length === 0) return [];
+    const owner = `${type}_id`;
+    const table = `customer_${type}_purposes`;
+    const ids = rows.map((row) => Number(row.id));
+    const [purposes] = await this.database.query(
+      `SELECT ${owner}, purpose_code, is_default FROM ${table}
+        WHERE customer_id = ? AND ${owner} IN (${ids.map(() => "?").join(",")})
+        ORDER BY ${owner} ASC, purpose_code ASC`,
+      [customerId, ...ids]
+    );
+    return purposes;
   }
 
   #detailRelations({ addresses, addressPurposes, contacts, contactPurposes, identifiers, credit }) {

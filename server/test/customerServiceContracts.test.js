@@ -129,6 +129,67 @@ test("TC-016 update maps a wrapped legal-name duplicate to the stable 409", asyn
   );
 });
 
+test("TC-014 update preserves unchanged inactive references", async () => {
+  const before = {
+    id: 1, customer_code: "CUS-001", legal_name: "Example Limited", trading_name: "",
+    default_currency_code: "HKD", default_payment_term_id: 2, account_manager_user_id: 3,
+    category_id: 4, industry_id: 5, territory_id: 6, website: "", general_phone: "",
+    general_email: "", notes: "", status: "draft", ever_activated_at: null, version: 1,
+    created_at: 1, updated_at: 1, created_by: 9, updated_by: 9
+  };
+  let reads = 0;
+  const connection = {
+    async query(sql) {
+      if (!String(sql).includes("FROM customers WHERE id")) throw new Error("unchanged references must not be revalidated");
+      reads += 1;
+      return [[{ ...before, version: reads === 1 ? 1 : 2 }]];
+    },
+    async execute(sql) {
+      if (!String(sql).startsWith("UPDATE customers SET")) throw new Error(`Unexpected write: ${sql}`);
+      return [{ affectedRows: 1 }];
+    }
+  };
+  const service = new CustomerService({
+    database: { withTransaction: async (work) => work(connection) },
+    time: { nowMs: () => 2 }, actorVerifier: async () => ({ username: "sam" }), operations,
+    audit: { async record() {} },
+    businessMaster: {
+      async assertCurrencyUsableInTransaction() { throw new Error("unchanged currency must not be revalidated"); },
+      async assertPaymentTermUsableInTransaction() { throw new Error("unchanged payment term must not be revalidated"); }
+    }
+  });
+
+  const result = await service.update(input({
+    id: 1, version: 1, reason: "metadata correction", defaultCurrencyCode: "HKD",
+    defaultPaymentTermId: 2, accountManagerUserId: 3, categoryId: 4, industryId: 5, territoryId: 6
+  }));
+
+  assert.equal(result.customer.version, 2);
+});
+
+test("TC-014 update rejects a changed inactive reference", async () => {
+  const before = {
+    id: 1, customer_code: "CUS-001", legal_name: "Example Limited", trading_name: "",
+    default_currency_code: null, default_payment_term_id: null, account_manager_user_id: null,
+    category_id: 4, industry_id: null, territory_id: null, website: "", general_phone: "",
+    general_email: "", notes: "", status: "draft", ever_activated_at: null, version: 1,
+    created_at: 1, updated_at: 1, created_by: 9, updated_by: 9
+  };
+  const connection = {
+    async query(sql) {
+      if (String(sql).includes("FROM customers WHERE id")) return [[before]];
+      if (String(sql).includes("FROM customer_categories")) return [[]];
+      throw new Error(`Unexpected query: ${sql}`);
+    },
+    async execute() { throw new Error("write must not run"); }
+  };
+
+  await assert.rejects(
+    () => serviceWithConnection(connection).update(input({ id: 1, version: 1, reason: "category correction", categoryId: 7 })),
+    (error) => error.code === "CUSTOMER_REFERENCE_NOT_USABLE" && error.statusCode === 400
+  );
+});
+
 test("TC-012 root validation rejects non-HTTP websites and malformed email addresses before database work", async () => {
   const service = new CustomerService({
     database: { async withTransaction() { throw new Error("database must not run"); } },

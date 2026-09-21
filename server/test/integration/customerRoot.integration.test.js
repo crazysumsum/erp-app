@@ -114,6 +114,16 @@ integrationTest("TC-012 Customer HTTP create, replay, list, update and operation
   assert.deepEqual(detail.body.data.contacts, []);
   assert.deepEqual(detail.body.data.identifiers, []);
   assert.equal(detail.body.data.credit.status, "not_configured");
+  const listedAddresses = await request(`${url}/api/v1/customers/${customerId}/addresses?page=1&pageSize=10`, { token });
+  assert.equal(listedAddresses.status, 200, JSON.stringify(listedAddresses.body));
+  assert.equal(listedAddresses.body.data.items[0].id, addressId);
+  assert.equal(listedAddresses.body.data.total, 1);
+  const listedContacts = await request(`${url}/api/v1/customers/${customerId}/contacts`, { token });
+  assert.equal(listedContacts.status, 200, JSON.stringify(listedContacts.body));
+  assert.deepEqual(listedContacts.body.data.items, []);
+  const listedIdentifiers = await request(`${url}/api/v1/customers/${customerId}/identifiers`, { token });
+  assert.equal(listedIdentifiers.status, 200, JSON.stringify(listedIdentifiers.body));
+  assert.deepEqual(listedIdentifiers.body.data.items, []);
   const addressUpdate = await request(`${url}/api/v1/customers/${customerId}/addresses/${addressId}/update`, { method: "POST", token, key: randomUUID(), body: { ...addressBody, label: "Main Warehouse", version: 1, reason: "label correction" } });
   assert.equal(addressUpdate.status, 200, JSON.stringify(addressUpdate.body));
   assert.equal(addressUpdate.body.data.version, 2);

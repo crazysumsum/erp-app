@@ -10,7 +10,8 @@ import {
   PARTY_UPDATED, DEACTIVATE_PARTY, PARTY_DEACTIVATED, CUSTOMER_PARENT_PARAMS,
   CUSTOMER_ADDRESS_PARAMS, CUSTOMER_CONTACT_PARAMS, CUSTOMER_IDENTIFIER_PARAMS,
   IDENTIFIER_CREATE, IDENTIFIER_UPDATE, IDENTIFIER_RESPONSE,
-  CREDIT_POLICY_RESPONSE, CREDIT_POLICY_SAVE, CREDIT_POLICY_CLEAR
+  CREDIT_POLICY_RESPONSE, CREDIT_POLICY_SAVE, CREDIT_POLICY_CLEAR, CUSTOMER_CHILD_LIST_QUERY,
+  CUSTOMER_ADDRESS_LIST_RESPONSE, CUSTOMER_CONTACT_LIST_RESPONSE, CUSTOMER_IDENTIFIER_LIST_RESPONSE
 } from "./customerSchemas.js";
 
 const IDEMPOTENT = Object.freeze({ enabled: true });
@@ -48,6 +49,24 @@ export class GetCustomerHandler extends CustomerHandler {
   static handlerName = "getCustomer";
   static api = { method: "GET", path: "/api/v1/customers/:id", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: CUSTOMER_ID_PARAMS, query: EMPTY }, responseSchema: { 200: CUSTOMER_DETAIL } };
   async execute(req) { return this.response(await this.customer.get({ ...actorInput(req), id: Number(req.input.params.id) })); }
+}
+
+export class ListCustomerAddressesHandler extends CustomerHandler {
+  static handlerName = "listCustomerAddresses";
+  static api = { method: "GET", path: "/api/v1/customers/:id/addresses", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: CUSTOMER_ID_PARAMS, query: CUSTOMER_CHILD_LIST_QUERY }, responseSchema: { 200: CUSTOMER_ADDRESS_LIST_RESPONSE } };
+  async execute(req) { return this.response(await this.customer.listAddresses({ ...actorInput(req), id: Number(req.input.params.id), ...req.input.query })); }
+}
+
+export class ListCustomerContactsHandler extends CustomerHandler {
+  static handlerName = "listCustomerContacts";
+  static api = { method: "GET", path: "/api/v1/customers/:id/contacts", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: CUSTOMER_ID_PARAMS, query: CUSTOMER_CHILD_LIST_QUERY }, responseSchema: { 200: CUSTOMER_CONTACT_LIST_RESPONSE } };
+  async execute(req) { return this.response(await this.customer.listContacts({ ...actorInput(req), id: Number(req.input.params.id), ...req.input.query })); }
+}
+
+export class ListCustomerIdentifiersHandler extends CustomerHandler {
+  static handlerName = "listCustomerIdentifiers";
+  static api = { method: "GET", path: "/api/v1/customers/:id/identifiers", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.generalRead], requestSchema: { params: CUSTOMER_ID_PARAMS, query: CUSTOMER_CHILD_LIST_QUERY }, responseSchema: { 200: CUSTOMER_IDENTIFIER_LIST_RESPONSE } };
+  async execute(req) { return this.response(await this.customer.listIdentifiers({ ...actorInput(req), id: Number(req.input.params.id), ...req.input.query })); }
 }
 
 export class CheckCustomerDuplicatesHandler extends CustomerHandler {
@@ -140,6 +159,6 @@ export class ClearCustomerCreditPolicyHandler extends CustomerHandler {
   async execute(req) { return this.response(await this.credit.clear({ ...commandInput(req), customerId: Number(req.input.params.id), version: req.input.body.version, reason: req.input.body.reason })); }
 }
 
-for (const Handler of [ListCustomersHandler, GetCustomerHandler, CheckCustomerDuplicatesHandler, CreateCustomerHandler, UpdateCustomerHandler, CreateCustomerAddressHandler, CreateCustomerContactHandler, UpdateCustomerAddressHandler, DeactivateCustomerAddressHandler, UpdateCustomerContactHandler, DeactivateCustomerContactHandler, CreateCustomerIdentifierHandler, UpdateCustomerIdentifierHandler, DeactivateCustomerIdentifierHandler, GetCustomerCreditPolicyHandler, SaveCustomerCreditPolicyHandler, ClearCustomerCreditPolicyHandler]) {
+for (const Handler of [ListCustomersHandler, GetCustomerHandler, ListCustomerAddressesHandler, ListCustomerContactsHandler, ListCustomerIdentifiersHandler, CheckCustomerDuplicatesHandler, CreateCustomerHandler, UpdateCustomerHandler, CreateCustomerAddressHandler, CreateCustomerContactHandler, UpdateCustomerAddressHandler, DeactivateCustomerAddressHandler, UpdateCustomerContactHandler, DeactivateCustomerContactHandler, CreateCustomerIdentifierHandler, UpdateCustomerIdentifierHandler, DeactivateCustomerIdentifierHandler, GetCustomerCreditPolicyHandler, SaveCustomerCreditPolicyHandler, ClearCustomerCreditPolicyHandler]) {
   Handler.api.description = `${Handler.handlerName} endpoint.`;
 }

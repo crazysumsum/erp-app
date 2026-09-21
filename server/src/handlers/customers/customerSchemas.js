@@ -62,10 +62,18 @@ export const CUSTOMER_LIST_QUERY = Object.freeze({
     accountManagerUserId: POSITIVE_SAFE_INTEGER, categoryId: POSITIVE_SAFE_INTEGER,
     industryId: POSITIVE_SAFE_INTEGER, territoryId: POSITIVE_SAFE_INTEGER,
     creditStatus: { type: "string", enum: ["normal", "on_hold"] },
-    missing: { type: "array", uniqueItems: true, items: { type: "string", enum: ["shippingDefault", "billingDefault", "contactDefault", "paymentTerm", "credit", "bank", "attachment"] } },
+    missing: { type: "array", uniqueItems: true, items: { type: "string", enum: ["shippingDefault", "billingDefault", "contactDefault", "paymentTerm", "credit"] } },
     createdFrom: NONNEGATIVE_SAFE_INTEGER, createdTo: NONNEGATIVE_SAFE_INTEGER,
     updatedFrom: NONNEGATIVE_SAFE_INTEGER, updatedTo: NONNEGATIVE_SAFE_INTEGER,
     includeArchived: { type: "boolean", default: false }
+  }
+});
+
+export const CUSTOMER_CHILD_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    page: { ...POSITIVE_SAFE_INTEGER, default: 1 },
+    pageSize: { type: "integer", enum: [10, 20, 50, 100], default: 20 }
   }
 });
 
@@ -110,7 +118,7 @@ export const CUSTOMER_SUMMARY = Object.freeze({
   }
 });
 
-const DETAIL_ADDRESS = Object.freeze({
+export const DETAIL_ADDRESS = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "customerId", "label", "recipientCompanyDepartment", "addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone", "notes", "sortOrder", "status", "version", "purposes"],
   properties: {
@@ -124,7 +132,7 @@ const DETAIL_ADDRESS = Object.freeze({
   }
 });
 
-const DETAIL_CONTACT = Object.freeze({
+export const DETAIL_CONTACT = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "customerId", "name", "jobTitle", "department", "email", "phone", "mobile", "preferredLanguage", "notes", "sortOrder", "status", "version", "purposes"],
   properties: {
@@ -167,6 +175,15 @@ export const CUSTOMER_LIST_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],
   properties: { items: { type: "array", items: CUSTOMER_SUMMARY }, total: { type: "integer", minimum: 0 }, page: { type: "integer", minimum: 1 }, pageSize: { type: "integer", minimum: 1 } }
 });
+
+const childListResponse = (item) => Object.freeze({
+  type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],
+  properties: { items: { type: "array", items: item }, total: { type: "integer", minimum: 0 }, page: POSITIVE_SAFE_INTEGER, pageSize: POSITIVE_SAFE_INTEGER }
+});
+
+export const CUSTOMER_ADDRESS_LIST_RESPONSE = childListResponse(DETAIL_ADDRESS);
+export const CUSTOMER_CONTACT_LIST_RESPONSE = childListResponse(DETAIL_CONTACT);
+export const CUSTOMER_IDENTIFIER_LIST_RESPONSE = childListResponse(IDENTIFIER_RESPONSE);
 
 export const DUPLICATE_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["code", "legalName", "tradingName"],

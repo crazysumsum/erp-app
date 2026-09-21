@@ -6,7 +6,7 @@ import { GetCustomerOperationHandler } from "../src/handlers/customer-operations
 
 test("TC-012 Customer root APIs use strict schemas, route permissions and framework idempotency", () => {
   const values = [...Object.values(handlers), GetCustomerOperationHandler].filter((value) => typeof value === "function" && value.api);
-  assert.equal(values.length, 18);
+  assert.equal(values.length, 21);
   for (const Handler of values) {
     for (const schema of Object.values(Handler.api.requestSchema)) {
       assert.equal(schema.additionalProperties, false, Handler.handlerName);
@@ -20,6 +20,16 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
   assert.equal(handlers.UpdateCustomerHandler.api.requestSchema.body.properties.customerCode, undefined);
   assert.equal(handlers.GetCustomerHandler.api.requestSchema.params.properties.id.type, "integer");
   assert.equal(handlers.GetCustomerHandler.api.requestSchema.params.properties.id.maximum, Number.MAX_SAFE_INTEGER);
+  for (const [name, path] of [
+    ["ListCustomerAddressesHandler", "/api/v1/customers/:id/addresses"],
+    ["ListCustomerContactsHandler", "/api/v1/customers/:id/contacts"],
+    ["ListCustomerIdentifiersHandler", "/api/v1/customers/:id/identifiers"]
+  ]) {
+    assert.equal(handlers[name].api.path, path);
+    assert.equal(handlers[name].api.requestSchema.query.properties.pageSize.default, 20);
+    assert.deepEqual(handlers[name].api.authorizationPolicies[0].options.permissions, ["customer.view"]);
+  }
+  assert.doesNotMatch(JSON.stringify(handlers.ListCustomersHandler.api.requestSchema.query.properties.missing), /bank|attachment/);
   assert.equal(handlers.CreateCustomerHandler.api.requestSchema.body.properties.website.pattern, "^(?:$|https?://)");
   assert.equal(handlers.CreateCustomerHandler.api.requestSchema.body.properties.generalEmail.anyOf[1].format, "email");
   assert.equal(handlers.CreateCustomerAddressHandler.api.responseSchema[201].properties.version.minimum, 1);
