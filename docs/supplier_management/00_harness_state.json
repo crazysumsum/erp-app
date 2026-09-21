@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 146,
+  "revision": 147,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "56ae08f28147a6e20f42762a8d32c83b73accedc",
+    "code_commit": "1a4c8d5981d6d7f0675164b88329bb4c20885e18",
     "source_fingerprint": "814ee47570570d3996710363248e477d0bc61bf5673746329a69cd7b70f7048a",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-032",
     "default_commit": "d289154f2e310b58feb3abc68c30967b9a8e29e5",
@@ -2102,6 +2102,17 @@
       "source_ref": "npm run migrate applied 0037 to erp_dev and reported it once, with 0001 through 0036 skipped as already applied. SHOW CREATE TABLE was read back and compared line by line against design spec 5.8: 26 columns, no plaintext account column, VARBINARY(512) ciphertext, BINARY(12) IV, BINARY(16) tag, BINARY(32) blind index, both key-ID columns, default_slot generated stored, and all five constraints present. A second run converged without change. Separately verified that an unprovisioned environment is unaffected: normalizeSupplierConfig({}) returns null for both Bank key groups and does not throw, so nothing in T32 makes the server refuse to start without Bank keys. No Playwright run: T32 changes no client file and adds no browser-reachable behaviour, so there is nothing for a browser to exercise. Bank UI is T35. This is recorded rather than left silent because CLAUDE.md section 9 requires browser validation whenever a change does affect the frontend.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T09:27:16+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "CI found a defect in TASK-032's own test that every local run had missed",
+      "code_commit": "c706629f36c5c923f8548278a0ab46edfa67e8b1",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "814ee47570570d3996710363248e477d0bc61bf5673746329a69cd7b70f7048a",
+      "status": "FAIL",
+      "source_ref": "GitHub Actions run 35550985764 on head c706629 failed two cases. One is DEF-019, the Item Management migration-idempotency test, unrelated and owned elsewhere under HD-025. The other was this task's own: the schema probe that inserts a plaintext column anchored on the literal string '`last_four` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,'. CI's MySQL returns SHOW CREATE TABLE without that COLLATE clause, so the replacement silently matched nothing, the probe built a correct table, inspection stopped at the FK check instead, and the expectation did not match. It passed locally every time. This is precisely the failure mode the module's own review history keeps surfacing, a check that is not checking, and it is worth recording that a local run could not have caught it: the difference is in the database server's configuration, not in the code. Fixed two ways: the probe helper now asserts that a mutation actually changes the DDL, so a no-op fails loudly rather than posing as a passing case, and the plaintext insertion is done line by line without depending on a collation clause. The new guard was itself verified by forcing a no-op, which turned it red.",
+      "actor": "GitHub Actions, read via gh run view --log-failed",
+      "observed_at": "2026-09-21T09:32:39+08:00"
     }
   ],
   "pending_decisions": [
