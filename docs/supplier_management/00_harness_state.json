@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 160,
+  "revision": 162,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "6134836d7f0d458bef1bbccf23eb20e870c8b219",
-    "source_fingerprint": "0e5ce6b5410025c96aa46a75305d2c5e7e270212cd2e31b074be66e878ac73b6",
+    "code_commit": "a7472b77dccb23f5852fd0b67ad3cd4653fa33bf",
+    "source_fingerprint": "e86a87ae72b6222e656ee9491855eb7ea786bf3c23a946d87825ddae5b4efbd6",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-033",
     "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1136,6 +1136,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-038",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033 REV-037 remediation)",
+      "reviewer": "agent-skills:security-auditor, the same agent resumed with its context, reviewing ef1ed7d",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/37_rev_038_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -2338,6 +2350,17 @@
       "source_ref": "Worth stating once, because it is the through-line of this task rather than four unrelated slips. The vacuous crypto_context assertion held on both sides. The fake withTransaction omitted the wrapper's error translation. The layer below it omitted the per-statement wrapping. And REV-037's H-1 was found by the reviewer mutating a fix to the CORRECT implementation and watching 60/60 stay green. The first three are one failure -- a double that does not reproduce what the real thing hands over -- and the fourth is a different one: the double was faithful enough by then, but the test matrix was missing a cell. Both practices are now written into the task document: a double reproduces the real class, wrapping and isolation level, importing the real thing wherever it can rather than re-describing it; and when a fix adds a discriminator, mutate it to the correct implementation and require something to go red, which is the reverse of ordinary mutation testing and catches the case where the suite never tested the thing at all. 377/377 server tests, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T11:45:25+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-038 APPROVED at ef1ed7d, the first of four rounds with no production defect",
+      "code_commit": "a7472b77dccb23f5852fd0b67ad3cd4653fa33bf",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "e86a87ae72b6222e656ee9491855eb7ea786bf3c23a946d87825ddae5b4efbd6",
+      "status": "PASS",
+      "source_ref": "Zero critical, zero high, one non-blocking M, three notes. REV-037's H-1 was verified two ways: the live two-flag race that previously produced a 500 leaking the driver's duplicate message now returns 409 with no leak on both flags, and restoring the broken single-constraint choice turns the new three-cell test red. The M is worth recording because of where it was: the integration double set its committed flag after awaiting commit, so a failed commit never reached it and the double rolled back -- the exact thing its own comment two lines above says it must not do, since the real code sets commitAttempted before the await. A fifth layer, inside the commit that wrote the rule about layers. Fixed by renaming to commitAttempted and moving it ahead of the await. The reviewer's mutation remains unkilled and that is stated rather than papered over: forcing a commit failure needs the real service, which is the recommendation below, and building a test suite for a double that should be deleted would be the wrong direction. The reviewer's amendment to this task's first practice is accepted and written into section 9: prefer deleting the double to improving it. Importing the real error class closed the divergence in the error value but not in the decisions around it, because the double still copies branches and copies drift. This integration test does not need a double at all -- it already talks to real MySQL, and a real MySqlDatabaseService over a real pool, about fifteen lines, would close thirteen divergences at once because there would be no second copy to be wrong. An enumerated rule will always be one property short of the next defect, which is what four rounds of this task demonstrate. It also confirmed the find/findLast equivalence argument and improved the method: an equivalent mutant and an untested branch both survive, and what separates them is whether a non-equivalent mutation on the same code goes red. Considering only constraints[0] turns two tests red, so the list's later elements are genuinely exercised.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T14:16:08+08:00"
     }
   ],
   "pending_decisions": [
@@ -3232,7 +3255,11 @@
     "evidence/20260921T034446-0b8b275adfe6/run.json",
     "evidence/20260921T034450-8124755dd85e/run.json",
     "evidence/20260921T034452-3a2e5a3d1b8b/run.json",
-    "evidence/20260921T034455-36518b2c21b6/run.json"
+    "evidence/20260921T034455-36518b2c21b6/run.json",
+    "evidence/20260921T061613-949b66f2c0ab/run.json",
+    "evidence/20260921T061617-f9807d3807ac/run.json",
+    "evidence/20260921T061619-b349bdbfa930/run.json",
+    "evidence/20260921T061623-8463eb8f2891/run.json"
   ],
   "defects": [
     {
@@ -3532,5 +3559,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-033's REV-037 remediation is complete and awaiting re-review plus CI on the final candidate. Three review rounds have all returned CHANGES_REQUESTED and every finding was real; the encryption, AAD, blind index and locking have been sound throughout, and every defect has been at a boundary or in the tests. Two practices came out of this task and are written into its implementation document; they are worth applying to the remaining PHASE-003 tasks. First, a test double reproduces what the real dependency actually hands over -- the same error class, the same wrapping depth, the same isolation level -- and imports the real thing rather than re-describing it wherever the double lives in the same repository. Second, when a fix introduces a discriminator, mutate it to the correct implementation and require something to turn red; if a broken implementation and a correct one are both green, the suite never tested that thing. Ordinary mutation testing only breaks correct code and would not have caught REV-037's H-1. Also carried: an equivalent mutant is not a test gap, and should be verified and documented rather than chased with a contorted test. Deliberately not fixed: REV-035 M-3 (the advisory cross-Supplier warning), the reveal response shape from design 6.6 which belongs to the route task, and BANK_ACCOUNT_DEFAULT_RACE which is unreachable today and documented as an uncovered defensive branch. Eleven of the thirteen double divergences the reviewer listed are also unacted, all currently unobserved. Still open in PHASE-003: the six HTTP routes from design 6.6, so SupplierBankService still has no production caller; the Bank capability registry; the two rotation scripts; and the Bank UI in T35."
+  "next_safe_action": "TASK-033 is implemented and APPROVED by REV-038 at ef1ed7d, after REV-035, REV-036 and REV-037 each returned CHANGES_REQUESTED and every one of their findings proved real. The fifth-layer M from REV-038 is fixed on top. Required CI must be observed green on the final candidate before merge, and the merge itself has not been authorised. Carry into T34 and the remaining PHASE-003 tasks, in this order: prefer deleting a test double to improving it -- where the test already has the real dependency, the faithful double is the production object, and this task's integration test should be rebuilt on a real MySqlDatabaseService over a real pool, roughly fifteen lines with transactionTimeoutMs set, which closes thirteen recorded divergences at once; where a double is unavoidable, it must reproduce the real class, wrapping depth and isolation level and should import the real thing rather than re-describe it; and when a fix introduces a discriminator, mutate it to the correct implementation and require something to turn red, because ordinary mutation only breaks correct code and could not have caught REV-037's H-1. An equivalent mutant is not a gap: verify it, document it, and check that a non-equivalent mutation on the same code does go red. One mutation is knowingly unkilled: forcing a commit failure against the integration double needs the real service, so it is left for the rebuild rather than chased with a test for code that should be deleted. Deliberately not fixed: REV-035 M-3 (the advisory cross-Supplier warning), the reveal response shape from design 6.6 which belongs to the route task, BANK_ACCOUNT_DEFAULT_RACE which is unreachable today, and eleven further double divergences, all currently unobserved. Still open in PHASE-003: the six HTTP routes from design 6.6, so SupplierBankService still has no production caller; the Bank capability registry; the two rotation scripts; and the Bank UI in T35."
 }
