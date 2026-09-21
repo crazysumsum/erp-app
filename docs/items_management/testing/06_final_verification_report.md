@@ -92,6 +92,10 @@ Keep the candidate frozen and review this evidence. If approved, transition expl
 
 `BLOCKED`
 
+## TASK-044 owner-waiver update — 2026-09-21
+
+The isolated restored-copy verification completed with 23/23 checks passing, RTO 176 ms and RPO 66,000 ms. ERP Product Owner (Sam) approved `APR-025`, accepting that the executing agent generated the Ed25519 signature. The result is therefore `PASS_WITH_OWNER_WAIVER`, while the machine-readable TC-016 status remains `NOT_RUN`; no unqualified claim is made that the original independent-signer control passed.
+
 ## Interim remediation status — 2026-09-15
 
 `REMEDIATE_AND_RETEST` has repaired the executable server command, canonical JUnit mapping, Item Playwright project and shared-schema scheduling contract. Developer retests pass: server 459/459, client 492/492, bounded performance 4/4, browser 11 pass with 2 explicit external-condition skips; lint and build pass.

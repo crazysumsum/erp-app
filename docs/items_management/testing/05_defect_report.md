@@ -59,6 +59,13 @@
 - Status: DEFERRED (signing/approval-blocked; adapter and local environment provisioning complete)
 - Residual Risk / Notes: provisioning and focused adapter tests are developer evidence only. APR-020 still does not grant `TC-016` PASS, and self-signing would defeat the independent-attestation control.
 
+### DEF-103 owner-waiver disposition — 2026-09-21
+
+- Superseding approval: `APR-025`, ERP Product Owner (Sam), explicitly accepts agent-generated signing instead of the original independent signer.
+- Retest: exact signed manifest against isolated schema `item_recovery_tc016_20260921_restore_run2`; 23/23 checks passed, RTO 176 ms and RPO 66,000 ms.
+- Status: `CLOSED_WITH_OWNER_WAIVER` for TASK-044 delivery; the original independent-attestation control remains unsatisfied and is never reported as ordinary `PASS`.
+- Evidence: `docs/items_management/evidence/task-044-owner-waiver-20260921/`.
+
 ## DEF-104 — Configured Item UAT Playwright project is absent
 
 - Source Test/Finding: formal `item-uat-browser`, run `20260914T093146-7574b753a291`
