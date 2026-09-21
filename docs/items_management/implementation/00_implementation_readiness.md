@@ -6,16 +6,16 @@
 
 ## Baseline and isolation
 
-- Default branch / observed remote baseline: `origin/main` at `e4aed631ce1d3eda34f4727a36d656462d7f0db4` (refreshed 2026-09-16).
-- Topic branch / worktree: `codex/item-management-task-038` / `/private/tmp/erp-item-management-task-038`.
-- Branch synchronization: merge commit `9f4d5c9ba8a790a26da8c3e74d2d7d466633dd15` incorporates that exact `origin/main` without conflicts.
+- Default branch / observed remote baseline: `origin/main` at `5125f328dbdd7437208abade08bd8fe950a2ce38` (refreshed 2026-09-21 and merged into the closeout branch as `d5c82028484ab771e82472a84d2e6e0f7d84e60b`).
+- Closeout branch / worktree: `codex/item-management-closeout` / `/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout`.
+- Integration result: PR `#105` merged candidate `39d779261e0230077130e35aa7ba991eef77f560` to `main` as `aa7d19276cb12c4375eecdf205b72051d7f03b65` on 2026-09-16 after all required CI checks passed.
 - Runtime: developer checks use local isolated resources only. TASK-044 uses source `item_recovery_tc016_20260915`, restored target `item_recovery_tc016_20260915_run1`, and separate restored media/import roots; `erp_dev` is preserved and no production data or deployment action is in scope.
 
 ## Task readiness
 
 `TASK-037` is implementation-complete: dependencies TASK-023/TASK-024 are recorded complete, Owner decision `HD-003` defines the public projection contract, and `REV-003` has reviewed the code. Server/client tests, lint, production client build, and browser validation passed. Owner-authorized local MySQL execution of TC-013 passed multi-row ordering and cross-owner option exclusion; `REV-004` confirmed that evidence.
 
-`TASK-038` remains in implementation pending the Harness state reconciliation and merge gates. The new `POST /api/v1/skus/create` contract is idempotent, creates Draft SKU records atomically with audit, accepts only Variant Items, and relies on the existing database uniqueness guard for combinations. Current-candidate checks passed: local MySQL Item create/high-risk integration (49 tests), server suite (1,211 pass; 227 explicit DB skips), client suite (467 tests), lint, production client build and manager-only Playwright read/create flows. Independent review found no open P0/P1; CI and merge remain separate gates.
+`TASK-038` is implementation-complete. The new `POST /api/v1/skus/create` contract is idempotent, creates Draft SKU records atomically with audit, accepts only Variant Items, and relies on the existing database uniqueness guard for combinations. Local MySQL Item create/high-risk integration, server/client suites, lint, production client build and manager-only Playwright read/create flows passed; independent review found no open P0/P1, and PR `#105` completed the CI and merge gates.
 
 `TASK-039` and `TASK-040` have current developer implementation evidence. The Audit UI has unit, build and browser evidence. Referenced Brand/UOM deletion now maps MySQL FK failures to actionable `CATALOG_IN_USE` dependency details; focused service tests cover direct, wrapped and raced-away reference errors, and owner-authorized local MySQL TC-014 evidence confirms all existing local reference types plus rollback with no delete audit. `REV-007` found no remaining P0/P1/P2; CI and formal acceptance remain separate gates.
 
@@ -27,6 +27,6 @@
 
 - Item-level Attribute write/update and arbitrary typed SKU Variant values remain outside TASK-037.
 - TASK-042 documentation reconciliation is complete by maintainer decision: T23's index omission now matches its detailed implementation/Git evidence while retaining the original source hash and pre/post counts.
-- TASK-043 remains dependency-blocked: refreshed `origin/main` contains no real downstream module that owns a reference to `item_skus`, so an honest provider/registry integration cannot yet be implemented. TASK-044 remains in progress only for independent signing, trust-policy approval, formal `TC-016`, CI and human sign-offs.
+- TASK-043 remains dependency-blocked: refreshed `origin/main` contains no real downstream module that owns a reference to `item_skus`, so an honest provider/registry integration cannot yet be implemented. TASK-044 remains in progress only for independent manifest signing, recovery public-key/trust-environment provisioning and approval, formal `TC-016`, and human acceptance/sign-offs; its implementation CI and merge gates are complete.
 - `DEC-025` (Product Owner Sam, 2026-09-14): `item.mgmt` now explicitly grants complete Item Management API read/write access. Read policies accept `item.view` or `item.mgmt`; write policies remain `item.mgmt`. This resolves the earlier SKU-create page/read-projection conflict without a write-only alternate UX.
-- The current candidate has developer self-test evidence and existing independent Item source review (`REV-013`); current CI, PR review and exact-baseline Product Owner approval remain required before formal verification or merge.
+- PR `#105` has merged the reviewed recovery adapter and its required CI is green. Formal recovery verification remains blocked until the retained manifest is independently signed and the staging-like trust environment is provisioned and approved; the existing developer evidence must not be promoted to formal `TC-016` acceptance.
