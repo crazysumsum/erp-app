@@ -16,7 +16,10 @@ const ACTIONS = new Set([
   "customer.credit.create",
   "customer.credit.update",
   "customer.credit.clear",
-  "setting.update"
+  "setting.update",
+  "catalog.create",
+  "catalog.update",
+  "catalog.deactivate"
 ]);
 
 const ROOT_AUDIT_FIELDS = new Set([
@@ -63,7 +66,10 @@ const ROOT_AUDIT_FIELDS = new Set([
   "currencyCode",
   "creditStatus",
   "policyVersion",
-  "requireActivationApproval"
+  "requireActivationApproval",
+  "code",
+  "description",
+  "sortOrder"
 ]);
 
 function allowlistedSnapshot(value) {
