@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   inspectCustomerClassificationCatalogSchema,
   up as createCustomerClassificationCatalogs
-} from "../database/migrations/0039_create_customer_classification_catalogs.js";
+} from "../database/migrations/0040_create_customer_classification_catalogs.js";
 
 const TABLES = ["customer_categories", "customer_industries", "customer_territories"];
 

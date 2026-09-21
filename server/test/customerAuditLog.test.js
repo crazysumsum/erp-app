@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { up as createCustomerAuditLog } from "../database/migrations/0041_create_customer_audit_logs.js";
+import { up as createCustomerAuditLog } from "../database/migrations/0042_create_customer_audit_logs.js";
 import { CustomerAuditLogService } from "../src/modules/customer/CustomerAuditLogService.js";
 
 test("TC-009 creates the append-only Customer audit table with investigative indexes", async () => {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { inspectCustomerPartySchema, up as createCustomerPartyTables } from "../database/migrations/0043_create_customer_party_tables.js";
+import { inspectCustomerPartySchema, up as createCustomerPartyTables } from "../database/migrations/0044_create_customer_party_tables.js";
 
 test("TC-018 creates party ownership and database-enforced single-purpose defaults", async () => {
   const sql = [];

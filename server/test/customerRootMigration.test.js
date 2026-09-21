@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { up as extendCustomerRoot } from "../database/migrations/0040_extend_customer_root.js";
+import { up as extendCustomerRoot } from "../database/migrations/0041_extend_customer_root.js";
 
 const FOUNDATION_COLUMNS = [
   ["id", "bigint unsigned", "NO", null],

@@ -118,7 +118,7 @@ test("0007 built user_audit_logs with the three indexes and an actor FK that doe
   assert.equal(constraints.length, 1, "user_audit_logs should have exactly one FK");
 });
 
-test("0037 seeds the Customer catalogue but does not grant bank permissions to system-admin", { skip }, async (t) => {
+test("0038 seeds the Customer catalogue but does not grant bank permissions to system-admin", { skip }, async (t) => {
   const database = await withDatabase(t);
 
   // 只驗證目錄涵蓋這幾項，不驗證「剛好只有」這幾項：node --test 預設會跨檔案

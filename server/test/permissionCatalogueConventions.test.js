@@ -128,7 +128,7 @@ const PERMISSION_SEED_MIGRATIONS = [
   "../database/migrations/0010_seed_item_management_permissions.js",
   "../database/migrations/0027_create_business_master.js",
   "../database/migrations/0028_seed_supplier_management_permissions.js",
-  "../database/migrations/0037_seed_customer_permissions.js"
+  "../database/migrations/0038_seed_customer_permissions.js"
 ];
 
 test("every seed migration only lists permissions that exist in the catalogue, with a matching description", async () => {
