@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 63,
+  "revision": 64,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "5d390d263e13fa113a77693ec9e3979da19f824e",
+    "code_commit": "a5a30c6275a0a59969ea5bca4b075f584b122a74",
     "source_fingerprint": "aa2e7f2cc7a3c9ca1f4e24657fbdfc387fac1dfd7c5954dc8709dbe73fd9b0d4",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
     "default_commit": "5d390d263e13fa113a77693ec9e3979da19f824e",
@@ -831,6 +831,38 @@
       "idempotency_key": "item-management-pr-105-merge-aa7d192",
       "status": "CONFIRMED",
       "source_ref": "GitHub and Git observations on 2026-09-21: PR #105 merged at 2026-09-16T01:53:20Z as aa7d19276cb12c4375eecdf205b72051d7f03b65; current main contains that merge."
+    },
+    {
+      "id": "PUSH-63",
+      "kind": "PUSH",
+      "target": "origin/codex/item-management-closeout",
+      "idempotency_key": "item-management-closeout-push-20260921",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work on 2026-09-21."
+    },
+    {
+      "id": "PR-CREATE-64",
+      "kind": "PR_CREATE",
+      "target": "codex/item-management-closeout into main",
+      "idempotency_key": "item-management-closeout-pr-20260921",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work on 2026-09-21."
+    },
+    {
+      "id": "CI-65",
+      "kind": "CI",
+      "target": "required GitHub checks for the Item Management closeout candidate",
+      "idempotency_key": "item-management-closeout-ci-20260921",
+      "status": "PLANNED",
+      "source_ref": "Repository policy requires all required checks to pass on the exact PR candidate before merge."
+    },
+    {
+      "id": "MERGE-66",
+      "kind": "MERGE",
+      "target": "Item Management closeout PR into main",
+      "idempotency_key": "item-management-closeout-merge-20260921",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) agreed to expand the scoped Item Management next work; merge remains gated on the exact candidate's required CI and mergeability."
     }
   ],
   "evidence_files": [
