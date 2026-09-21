@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 156,
+  "revision": 158,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "9000bd5cd355770399d38a411f750463861880bb",
-    "source_fingerprint": "f919b7b4138e6c4c195b8bebba5bf03a4bf0bfdd51d006beb7459b7d24aee38a",
+    "code_commit": "d161a6abbd230c99a26335d23621208620c3968b",
+    "source_fingerprint": "97ce4888c3ec8973d7717c2f8660273d1f9c625119c1c5414dfdcfaddf311ac9",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-033",
     "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1112,6 +1112,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-036",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033 REV-035 remediation)",
+      "reviewer": "agent-skills:security-auditor, the same agent as REV-035 resumed with its context, reviewing aebb6cc",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/35_rev_036_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
       "risk_approval_id": null
     }
   ],
@@ -2270,6 +2282,28 @@
       "source_ref": "372/372 server tests up from 367, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate. Nine mutations confirm the fixes discriminate: reverting NFC to NFKC, restoring the unbounded toUpperCase, dropping the pre-transaction account validation, restoring the status filter on the duplicate check, removing the ER_DUP_ENTRY translation, removing the list permission check, making the projection mask unconditionally, returning the decrypt failure as an anonymous error again, and returning 409 instead of 403 for a missing permission. All nine RED.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T11:19:04+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-036 CHANGES_REQUESTED: a guard that provably never runs, and the same fake-fidelity failure for the third time",
+      "code_commit": "d161a6abbd230c99a26335d23621208620c3968b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "97ce4888c3ec8973d7717c2f8660273d1f9c625119c1c5414dfdcfaddf311ac9",
+      "status": "PASS",
+      "source_ref": "One H, three M, five notes. The H: the ER_DUP_ENTRY translation added for REV-035 H-3 never executes in production, because MySqlDatabaseExecutor.run wraps every statement error into MySqlDatabaseOperationError with code DATABASE_OPERATION_FAILED, leaving the driver code on error.cause.code, while the guard read only error.code. Concurrent same-Supplier creates therefore still produced a 500 whose error chain carried the raw blind-index bytes. The reviewer proved the suite could not tell the difference by mutating the guard to be correct and getting 56/56 green, because the unit harness threw a raw error carrying the driver code and the integration serviceOn passed a raw mysql2 connection. This is the third instance of one failure in this task: a fake that does not reproduce a layer hides defects in that layer. First the vacuous crypto_context assertion, then REV-035 H-1 where the fake withTransaction omitted the wrapper's error translation, now the layer below that. Both fakes were corrected and an integration test was added that makes real MySQL raise the real ER_DUP_ENTRY. M-3 was also right: branching on message.includes scans user-derived bytes, since the duplicated value is the message's first component, and the format is version-dependent; now errno 1062 plus an anchored constraint-name regex. M-2: only create's INSERT was wrapped, while the pre-check is exactly what loses races. M-1: logger.warn is (event, message, context) and was called with two arguments, so the payload landed in the message slot -- and the entire justification for the named 422 is that tampering and a missing key are distinguishable in the log, which nothing tested. The reviewer independently swept the full Unicode range to U+10FFFF, wider than the author's sweep to U+1FFFF, confirmed exactly one canonical fold remains and that the argument for keeping it is sound, and confirmed no third laundering path exists. It also confirmed REV-035 M-3's acceptance was the better trade.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T11:34:57+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-036 remediation reverified; the ledger's pre-merge commit carries identical supplier source",
+      "code_commit": "d161a6abbd230c99a26335d23621208620c3968b",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "97ce4888c3ec8973d7717c2f8660273d1f9c625119c1c5414dfdcfaddf311ac9",
+      "status": "PASS",
+      "source_ref": "376/376 server tests up from 372, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate. Five mutations confirm the fixes discriminate: reading only the top-level error code, branching on message prose instead of the constraint name, unwrapping update's UPDATE, dropping logger.warn's context argument, and no longer recognising errno 1062. All five RED. Recording the reviewer's note about revision 156: it pinned code_commit 9000bd5, which predates the merge of main into the branch, while CI and REV-036 were at aebb6cc. That merge brought only docs/items_management changes from PR #117, so the supplier source was identical between the two and the record carried meaning -- but it should have said so rather than leaving a reader to verify it, which is what this observation now does.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T11:34:57+08:00"
     }
   ],
   "pending_decisions": [
@@ -3156,7 +3190,11 @@
     "evidence/20260921T031825-c27a76cb27c0/run.json",
     "evidence/20260921T031828-ee7f0aecc365/run.json",
     "evidence/20260921T031830-768ab43b9c0c/run.json",
-    "evidence/20260921T031833-0e8b9e490d7f/run.json"
+    "evidence/20260921T031833-0e8b9e490d7f/run.json",
+    "evidence/20260921T033421-55f62fe8f7aa/run.json",
+    "evidence/20260921T033425-ab7d1f079103/run.json",
+    "evidence/20260921T033428-d5a2e6fa185a/run.json",
+    "evidence/20260921T033431-833064b6272c/run.json"
   ],
   "defects": [
     {
@@ -3456,5 +3494,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-033's REV-035 remediation is complete and awaiting re-review plus CI on the final candidate. REV-035 returned CHANGES_REQUESTED with three H; all three were real and are fixed. H-2 reopened DEF-021: NFKC ran before classification, so 1225 codepoints were laundered into [0-9A-Z] and REV-034 M-2's collapse had only moved families. Now classified on NFC with an explicit fullwidth fold and an ASCII-only case fold. A correction that outlives this task: the half-symbol example used when HD-029 was put to the Product Owner does not reproduce, so the decision was taken on a false illustration. The decision stands on the real cases and the record is corrected in the ledger and the implementation report. Not fixed, deliberately: REV-035 M-3, the cross-Supplier duplicate warning disappears under concurrency, because a warning is advisory and the index is per-Supplier; and the reveal response's expiresInSeconds and revealedAt shape from design 6.6, which belong to the HTTP contract and therefore to whichever task adds the six routes. Still open in PHASE-003: the six HTTP routes from design 6.6, so SupplierBankService still has no production caller; the Bank capability registry; the two rotation scripts; and the Bank UI in T35. Carried from REV-034: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, and the decrypt catch misdirecting during rotation -- that last one is partly addressed now, since an unreadable row is a named 422 rather than an anonymous 500."
+  "next_safe_action": "TASK-033's REV-036 remediation is complete and awaiting re-review plus CI on the final candidate. REV-035 and REV-036 both returned CHANGES_REQUESTED; every finding was real. The through-line worth carrying into later tasks: three separate defects in this task were hidden by test doubles that did not reproduce a layer of the real stack -- a vacuous assertion, then a fake withTransaction missing the wrapper's error translation, then the per-statement wrapping below it. When a service inspects anything the infrastructure produces, the double has to reproduce what the infrastructure actually hands over. Both fakes now do, and an integration test raises a real ER_DUP_ENTRY from real MySQL. Deliberately not fixed: REV-035 M-3, the advisory cross-Supplier duplicate warning, which the reviewer agreed is the better trade; the reveal response shape from design 6.6, which belongs to the route task; and BANK_ACCOUNT_DEFAULT_RACE, which is unreachable today because suppliers FOR UPDATE serialises its writers and is kept as a documented, uncovered defensive branch. Still open in PHASE-003: the six HTTP routes from design 6.6, so SupplierBankService still has no production caller; the Bank capability registry; the two rotation scripts; and the Bank UI in T35. Carried from REV-034: the untested trigger check, VIRTUAL accepted where the design says STORED, and CHECK constraints unread."
 }

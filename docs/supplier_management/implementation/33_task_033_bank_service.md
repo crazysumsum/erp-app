@@ -210,3 +210,51 @@ Service 過濾 `status = 'active'`，但設計 §5.8 嗰條 UNIQUE 冇 status �
 
 372/372 server（原 367）、71/71 client、lint、build，四份 evidence 全部喺最終候選重新
 跑過。九個針對修補嘅變異全部 RED。
+
+## 8. REV-036（覆驗）及其修補
+
+判 **CHANGES_REQUESTED**，一個 H —— 而佢係**同一個形狀嘅第三次**。
+
+### H-1：個守衛喺生產環境永遠唔會行
+
+`MySqlDatabaseExecutor.run()` 將**每一句** statement 錯誤包成
+`MySqlDatabaseOperationError{ code: "DATABASE_OPERATION_FAILED", cause }`，所以 driver
+嗰個 code 跌咗落 `error.cause.code`。我個守衛淨係睇 `error.code` —— 一個恆假嘅條件。
+兩個並發 create 喺生產之下仍然係 500，而 driver 嗰句嘅第一個成分就係**重覆嗰個 blind
+index 嘅原始 bytes**。
+
+**而成套測試分辨唔到。** Reviewer 將守衛改到**啱**，56/56 照綠：單元 harness 直接拋一個
+`code: "ER_DUP_ENTRY"` 嘅 raw error，而整合嗰個 `serviceOn` 傳緊一條 raw mysql2 連線。
+兩個 fake 都冇做嗰層 per-statement wrapping。
+
+**呢個係同一句話嘅第三次：一個假嘢冇模仿到嘅嗰層，就係測試睇唔到嘅嗰層。**
+
+1. T33 原本嗰個 vacuous assertion —— `crypto_context` 唔喺 SET 清單，所以斷言兩邊都成立。
+2. REV-035 H-1 —— 假 `withTransaction` 冇模仿真 wrapper 嘅錯誤轉換。
+3. REV-036 H-1 —— 補咗嗰層之後，**再下面一層**仍然係假嘅。
+
+修補：兩個 fake 都補（單元加 `wrappedDuplicate`，整合加 `executorLike` proxy），另加
+一個整合測試叫真 MySQL 真係撞嗰條 UNIQUE，確認 errno 1062 出得嚟、而個 service 譯得返
+409 兼唔帶走 driver 嗰句。
+
+### 其餘
+
+| findings | 處理 |
+| --- | --- |
+| **M-3** `message.includes()` 揀分支 | 已修：MySQL 嗰句第一個成分係**重覆嗰個值本身**，用 `includes` 等於攞使用者資料嚟掃；格式仲要跟版本唔同。改用 errno 1062 加錨定 regex |
+| **M-2** 只有 create 個 INSERT 包咗 | 已修：預查正正就係輸競態嗰個，所以 update 同 setDefault 嘅 UPDATE 一樣要蓋 |
+| **M-1** `logger.warn` arity 錯，payload 跌咗入 message 個位 | 已修，並且加咗第一個真係望個 log 嘅測試 —— 個 422 嘅全部理由就係「喺日誌分得出」 |
+| **note** `BANK_ACCOUNT_DEFAULT_RACE` 今日到唔到 | 留住並且喺註解講明佢係一條冇覆蓋嘅防守分支（`suppliers FOR UPDATE` 已經排晒隊，但唔係每個未來 writer 都會攞嗰個鎖） |
+
+### Reviewer 確認咗嘅嘢
+
+H-2 佢掃咗**成個** Unicode 範圍到 U+10FFFF（我只掃到 U+1FFFF），確認除咗全形三段之外
+淨低一個會折疊嘅碼位 U+212A，而佢同意嗰個標準等價論點：拒絕佢反而會將一個帳號變成
+兩個，正正係 HD-029 要避免嗰件事嘅反面。**冇第三條漂白路徑** —— 佢用三個方向試過（組合
+符號、完全消失嘅字元、操作次序）全部負面。佢亦都確認 `ß → SS` 係佢 REV-035 漏咗嘅一條
+真路徑，同埋 REV-035 M-3（跨 Supplier warning）唔改係啱嘅取捨。
+
+### 修補後重跑
+
+376/376 server（原 372）、71/71 client、lint、build，四份 evidence 全部喺最終候選重新
+跑過。五個針對修補嘅變異全部 RED。
