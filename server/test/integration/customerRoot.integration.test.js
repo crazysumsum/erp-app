@@ -88,6 +88,9 @@ integrationTest("TC-012 Customer HTTP create, replay, list, update and operation
   const listed = await request(`${url}/api/v1/customers?q=${encodeURIComponent(customerCode.slice(0, 7))}`, { token });
   assert.equal(listed.status, 200, JSON.stringify(listed.body));
   assert.equal(listed.body.data.items[0].id, customerId);
+  const filtered = await request(`${url}/api/v1/customers?status[]=draft&missing[]=credit&missing[]=contactDefault&createdFrom=0&sortBy=accountManager&sortDirection=asc`, { token });
+  assert.equal(filtered.status, 200, JSON.stringify(filtered.body));
+  assert.ok(filtered.body.data.items.some((item) => item.id === customerId));
 
   const updateBody = {
     legalName: "Acme Customer Limited", tradingName: "Acme Updated", defaultCurrencyCode: null,
@@ -104,6 +107,13 @@ integrationTest("TC-012 Customer HTTP create, replay, list, update and operation
   assert.equal(address.status, 201, JSON.stringify(address.body));
   const addressId = address.body.data.id;
   assert.equal(address.body.data.version, 1);
+  const detail = await request(`${url}/api/v1/customers/${customerId}`, { token });
+  assert.equal(detail.status, 200, JSON.stringify(detail.body));
+  assert.equal(detail.body.data.addresses[0].id, addressId);
+  assert.deepEqual(detail.body.data.addresses[0].purposes, [{ code: "shipping", isDefault: true }]);
+  assert.deepEqual(detail.body.data.contacts, []);
+  assert.deepEqual(detail.body.data.identifiers, []);
+  assert.equal(detail.body.data.credit.status, "not_configured");
   const addressUpdate = await request(`${url}/api/v1/customers/${customerId}/addresses/${addressId}/update`, { method: "POST", token, key: randomUUID(), body: { ...addressBody, label: "Main Warehouse", version: 1, reason: "label correction" } });
   assert.equal(addressUpdate.status, 200, JSON.stringify(addressUpdate.body));
   assert.equal(addressUpdate.body.data.version, 2);

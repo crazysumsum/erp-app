@@ -1,23 +1,27 @@
 export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
 
+const POSITIVE_SAFE_INTEGER = Object.freeze({ type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
+const NONNEGATIVE_SAFE_INTEGER = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
+
 export const CUSTOMER_ID_PARAMS = Object.freeze({
   type: "object", required: ["id"], additionalProperties: false,
-  properties: { id: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } }
+  properties: { id: POSITIVE_SAFE_INTEGER }
 });
 
-export const CUSTOMER_ADDRESS_PARAMS = Object.freeze({ type: "object", required: ["customerId", "addressId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }, addressId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
-export const CUSTOMER_CONTACT_PARAMS = Object.freeze({ type: "object", required: ["customerId", "contactId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }, contactId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
-export const CUSTOMER_IDENTIFIER_PARAMS = Object.freeze({ type: "object", required: ["customerId", "identifierId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" }, identifierId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
-export const CUSTOMER_PARENT_PARAMS = Object.freeze({ type: "object", required: ["customerId"], additionalProperties: false, properties: { customerId: { type: "string", pattern: "^[1-9][0-9]{0,18}$" } } });
+export const CUSTOMER_ADDRESS_PARAMS = Object.freeze({ type: "object", required: ["customerId", "addressId"], additionalProperties: false, properties: { customerId: POSITIVE_SAFE_INTEGER, addressId: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_CONTACT_PARAMS = Object.freeze({ type: "object", required: ["customerId", "contactId"], additionalProperties: false, properties: { customerId: POSITIVE_SAFE_INTEGER, contactId: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_IDENTIFIER_PARAMS = Object.freeze({ type: "object", required: ["customerId", "identifierId"], additionalProperties: false, properties: { customerId: POSITIVE_SAFE_INTEGER, identifierId: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_PARENT_PARAMS = Object.freeze({ type: "object", required: ["customerId"], additionalProperties: false, properties: { customerId: POSITIVE_SAFE_INTEGER } });
 
 export const OPERATION_ID_PARAMS = Object.freeze({
   type: "object", required: ["operationId"], additionalProperties: false,
   properties: { operationId: { type: "string", pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" } }
 });
 
-const NULLABLE_ID = Object.freeze({ type: ["integer", "null"], minimum: 1 });
+const NULLABLE_ID = Object.freeze({ type: ["integer", "null"], minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
 const NULLABLE_CURRENCY = Object.freeze({ type: ["string", "null"], pattern: "^[A-Z]{3}$" });
 const TEXT = (maxLength) => Object.freeze({ type: "string", trim: true, maxLength });
+const EMAIL = Object.freeze({ type: "string", trim: true, maxLength: 254, anyOf: [{ type: "string", maxLength: 0 }, { type: "string", format: "email" }] });
 
 export const CUSTOMER_ROOT_INPUT = Object.freeze({
   type: "object", additionalProperties: false,
@@ -26,8 +30,8 @@ export const CUSTOMER_ROOT_INPUT = Object.freeze({
     customerCode: TEXT(64), legalName: TEXT(190), tradingName: TEXT(190),
     defaultCurrencyCode: NULLABLE_CURRENCY, defaultPaymentTermId: NULLABLE_ID,
     accountManagerUserId: NULLABLE_ID, categoryId: NULLABLE_ID, industryId: NULLABLE_ID,
-    territoryId: NULLABLE_ID, website: TEXT(500), generalPhone: TEXT(50),
-    generalEmail: TEXT(254), notes: TEXT(2000)
+    territoryId: NULLABLE_ID, website: { ...TEXT(500), pattern: "^(?:$|https?://)" }, generalPhone: TEXT(50),
+    generalEmail: EMAIL, notes: TEXT(2000)
   }
 });
 
@@ -37,8 +41,8 @@ export const CUSTOMER_UPDATE_INPUT = Object.freeze({
   properties: {
     legalName: TEXT(190), tradingName: TEXT(190), defaultCurrencyCode: NULLABLE_CURRENCY,
     defaultPaymentTermId: NULLABLE_ID, accountManagerUserId: NULLABLE_ID, categoryId: NULLABLE_ID,
-    industryId: NULLABLE_ID, territoryId: NULLABLE_ID, website: TEXT(500), generalPhone: TEXT(50),
-    generalEmail: TEXT(254), notes: TEXT(2000), version: { type: "integer", minimum: 1 },
+    industryId: NULLABLE_ID, territoryId: NULLABLE_ID, website: { ...TEXT(500), pattern: "^(?:$|https?://)" }, generalPhone: TEXT(50),
+    generalEmail: EMAIL, notes: TEXT(2000), version: POSITIVE_SAFE_INTEGER,
     reason: { type: "string", trim: true, minLength: 5, maxLength: 500 }
   }
 });
@@ -46,10 +50,22 @@ export const CUSTOMER_UPDATE_INPUT = Object.freeze({
 export const CUSTOMER_LIST_QUERY = Object.freeze({
   type: "object", additionalProperties: false,
   properties: {
-    q: TEXT(190), page: { type: "integer", minimum: 1, default: 1 },
+    q: TEXT(190), page: { ...POSITIVE_SAFE_INTEGER, default: 1 },
     pageSize: { type: "integer", enum: [10, 20, 50, 100], default: 20 },
-    sortBy: { type: "string", enum: ["code", "legalName", "status", "updatedAt"], default: "updatedAt" },
-    descending: { type: "boolean", default: true }, status: { type: "string", enum: ["draft", "pending", "active", "suspended", "blocked", "archived"] }
+    sortBy: { type: "string", enum: ["code", "legalName", "accountManager", "status", "updatedAt"], default: "updatedAt" },
+    sortDirection: { type: "string", enum: ["asc", "desc"], default: "desc" },
+    status: { anyOf: [
+      { type: "string", enum: ["draft", "pending_approval", "active", "suspended", "blocked", "archived"] },
+      { type: "array", minItems: 1, uniqueItems: true, items: { type: "string", enum: ["draft", "pending_approval", "active", "suspended", "blocked", "archived"] } }
+    ] },
+    currencyCode: { type: "string", pattern: "^[A-Z]{3}$" }, paymentTermId: POSITIVE_SAFE_INTEGER,
+    accountManagerUserId: POSITIVE_SAFE_INTEGER, categoryId: POSITIVE_SAFE_INTEGER,
+    industryId: POSITIVE_SAFE_INTEGER, territoryId: POSITIVE_SAFE_INTEGER,
+    creditStatus: { type: "string", enum: ["normal", "on_hold"] },
+    missing: { type: "array", uniqueItems: true, items: { type: "string", enum: ["shippingDefault", "billingDefault", "contactDefault", "paymentTerm", "credit", "bank", "attachment"] } },
+    createdFrom: NONNEGATIVE_SAFE_INTEGER, createdTo: NONNEGATIVE_SAFE_INTEGER,
+    updatedFrom: NONNEGATIVE_SAFE_INTEGER, updatedTo: NONNEGATIVE_SAFE_INTEGER,
+    includeArchived: { type: "boolean", default: false }
   }
 });
 
@@ -83,23 +99,52 @@ export const CREDIT_POLICY_CLEAR = Object.freeze({ type: "object", required: ["r
 
 export const CUSTOMER_SUMMARY = Object.freeze({
   type: "object", additionalProperties: false,
-  required: ["id", "code", "legalName", "displayName", "generalPhone", "generalEmail", "defaultCurrencyCode", "defaultPaymentTermId", "accountManagerUserId", "categoryId", "industryId", "territoryId", "status", "version", "updatedAt"],
+  required: ["id", "code", "legalName", "displayName", "generalPhone", "generalEmail", "defaultCurrencyCode", "defaultPaymentTermId", "accountManagerUserId", "categoryId", "industryId", "territoryId", "creditStatus", "status", "version", "updatedAt"],
   properties: {
     id: { type: "integer", minimum: 1 }, code: { type: "string" }, legalName: { type: "string" },
     displayName: { type: "string" }, generalPhone: { type: "string" }, generalEmail: { type: "string" },
     defaultCurrencyCode: NULLABLE_CURRENCY, defaultPaymentTermId: NULLABLE_ID, accountManagerUserId: NULLABLE_ID,
     categoryId: NULLABLE_ID, industryId: NULLABLE_ID, territoryId: NULLABLE_ID,
+    creditStatus: { type: "string", enum: ["not_configured", "normal", "on_hold"] },
     status: { type: "string" }, version: { type: "integer", minimum: 1 }, updatedAt: { type: "integer", minimum: 0 }
+  }
+});
+
+const DETAIL_ADDRESS = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "customerId", "label", "recipientCompanyDepartment", "addressLine1", "addressLine2", "addressLine3", "city", "stateRegion", "postalCode", "countryCode", "phone", "notes", "sortOrder", "status", "version", "purposes"],
+  properties: {
+    id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER, label: { type: "string" },
+    recipientCompanyDepartment: { type: "string" }, addressLine1: { type: "string" }, addressLine2: { type: "string" },
+    addressLine3: { type: "string" }, city: { type: "string" }, stateRegion: { type: "string" },
+    postalCode: { type: "string" }, countryCode: { type: ["string", "null"], pattern: "^[A-Z]{2}$" },
+    phone: { type: "string" }, notes: { type: "string" }, sortOrder: { type: "integer", minimum: 0 },
+    status: { type: "string", enum: ["active", "inactive"] }, version: POSITIVE_SAFE_INTEGER,
+    purposes: { type: "array", items: PURPOSE }
+  }
+});
+
+const DETAIL_CONTACT = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "customerId", "name", "jobTitle", "department", "email", "phone", "mobile", "preferredLanguage", "notes", "sortOrder", "status", "version", "purposes"],
+  properties: {
+    id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER, name: { type: "string" }, jobTitle: { type: "string" },
+    department: { type: "string" }, email: { type: "string" }, phone: { type: "string" }, mobile: { type: "string" },
+    preferredLanguage: { type: "string" }, notes: { type: "string" }, sortOrder: { type: "integer", minimum: 0 },
+    status: { type: "string", enum: ["active", "inactive"] }, version: POSITIVE_SAFE_INTEGER,
+    purposes: { type: "array", items: PURPOSE }
   }
 });
 
 export const CUSTOMER_DETAIL = Object.freeze({
   type: "object", additionalProperties: false,
-  required: [...CUSTOMER_SUMMARY.required, "tradingName", "website", "notes", "everActivatedAt", "createdAt", "createdBy", "updatedBy"],
+  required: [...CUSTOMER_SUMMARY.required, "tradingName", "website", "notes", "everActivatedAt", "createdAt", "createdBy", "updatedBy", "addresses", "contacts", "identifiers", "credit"],
   properties: {
     ...CUSTOMER_SUMMARY.properties, tradingName: { type: "string" }, website: { type: "string" }, notes: { type: "string" },
     everActivatedAt: { type: ["integer", "null"], minimum: 0 }, createdAt: { type: "integer", minimum: 0 },
-    createdBy: NULLABLE_ID, updatedBy: NULLABLE_ID
+    createdBy: NULLABLE_ID, updatedBy: NULLABLE_ID,
+    addresses: { type: "array", items: DETAIL_ADDRESS }, contacts: { type: "array", items: DETAIL_CONTACT },
+    identifiers: { type: "array", items: IDENTIFIER_RESPONSE }, credit: CREDIT_POLICY_RESPONSE
   }
 });
 

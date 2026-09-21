@@ -34,6 +34,15 @@ export function customerLegalNameTaken() {
   });
 }
 
+export function customerReferenceNotUsable(field) {
+  return customerError(`Customer reference is missing or inactive: ${field}`, {
+    code: "CUSTOMER_REFERENCE_NOT_USABLE",
+    statusCode: 400,
+    publicMessage: "指定的客戶參考資料不存在或未啟用",
+    publicDetails: { field }
+  });
+}
+
 export function customerIdempotencyConflict() {
   return customerError("Customer operation idempotency key was reused with a different payload", {
     code: "IDEMPOTENCY_CONFLICT",

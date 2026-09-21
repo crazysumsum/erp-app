@@ -49,6 +49,7 @@ test("Customer summary is a stable allowlist with no internal or sensitive field
     categoryId: 2,
     industryId: 4,
     territoryId: 6,
+    creditStatus: "not_configured",
     status: "draft",
     version: 2,
     updatedAt: 2

@@ -20,21 +20,32 @@ export function toCustomerSummary(row) {
     categoryId: numberOrNull(row.category_id),
     industryId: numberOrNull(row.industry_id),
     territoryId: numberOrNull(row.territory_id),
+    creditStatus: row.credit_status ?? "not_configured",
     status: row.status,
     version: Number(row.version),
     updatedAt: Number(row.updated_at)
   };
 }
 
-export function toCustomerDetail(row) {
+export function toCustomerDetail(row, { addresses = [], contacts = [], identifiers = [], credit } = {}) {
   return {
-    ...toCustomerSummary(row),
+    ...toCustomerSummary({ ...row, credit_status: row.credit_status ?? credit?.status }),
     tradingName: row.trading_name,
     website: row.website,
     notes: row.notes,
     everActivatedAt: numberOrNull(row.ever_activated_at),
     createdAt: Number(row.created_at),
     createdBy: numberOrNull(row.created_by),
-    updatedBy: numberOrNull(row.updated_by)
+    updatedBy: numberOrNull(row.updated_by),
+    addresses,
+    contacts,
+    identifiers,
+    credit: credit ?? {
+      configured: false,
+      creditLimit: null,
+      currencyCode: null,
+      status: "not_configured",
+      policyVersion: null
+    }
   };
 }

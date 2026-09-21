@@ -18,6 +18,10 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
   }
   assert.equal(handlers.ListCustomersHandler.api.authorizationPolicies[0].options.permissions[0], "customer.view");
   assert.equal(handlers.UpdateCustomerHandler.api.requestSchema.body.properties.customerCode, undefined);
+  assert.equal(handlers.GetCustomerHandler.api.requestSchema.params.properties.id.type, "integer");
+  assert.equal(handlers.GetCustomerHandler.api.requestSchema.params.properties.id.maximum, Number.MAX_SAFE_INTEGER);
+  assert.equal(handlers.CreateCustomerHandler.api.requestSchema.body.properties.website.pattern, "^(?:$|https?://)");
+  assert.equal(handlers.CreateCustomerHandler.api.requestSchema.body.properties.generalEmail.anyOf[1].format, "email");
   assert.equal(handlers.CreateCustomerAddressHandler.api.responseSchema[201].properties.version.minimum, 1);
   assert.equal(handlers.UpdateCustomerAddressHandler.api.requestSchema.body.properties.reason.minLength, 5);
   for (const name of ["UpdateCustomerAddressHandler", "DeactivateCustomerAddressHandler", "UpdateCustomerContactHandler", "DeactivateCustomerContactHandler"]) {
