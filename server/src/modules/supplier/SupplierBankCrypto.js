@@ -20,14 +20,47 @@ import { inspect } from "node:util";
  * 可以續跑 —— 冇一個「全部行完先生效」嘅時刻。
  */
 
-// 設計 5.8：帳號加密之前要正規化，否則「1234 5678」同「12345678」會計出兩個唔同
-// 嘅 blind index，即係同一個帳號輸入兩次都查唔到重。NFKC 收窄全形數字等變體；
-// 空白同常見分隔符號一律移除，因為佢哋喺帳號入面係排版，唔係資料。
-const SEPARATORS = /[\s\u00a0\u2000-\u200b\u2060\ufeff-]+/gu;
+/**
+ * 設計 5.8：帳號加密之前要正規化，否則「1234 5678」同「12345678」會計出兩個唔同嘅
+ * blind index，即係同一個帳號輸入兩次都查唔到重。
+ *
+ * 用**白名單**（只保留 [0-9A-Z]），唔用「移除分隔符號」嘅黑名單。REV-033 H-1 就係
+ * 黑名單嘅代價：原本嗰個字元類只覆蓋空白同 ASCII 連字號，reviewer 試十六個字元，
+ * 十個繞得過 —— 包括 `.` `/` `_` `,`、三種 Unicode 連字號變體，同埋兩個**隱形**
+ * 字元（U+00AD 軟連字號、U+200E LRM）。最後嗰兩個最麻煩：兩行帳號喺畫面上、喺遮罩
+ * 之後都一模一樣，但 blind index 唔同，所以 UNIQUE 唔會擋，而 operator 見到同一個
+ * 帳號出現兩次而冇任何解釋。一個黑名單下次一樣會漏。
+ *
+ * 白名單成立係因為帳號本身就係字母數字：IBAN 明文定義成 [0-9A-Z]，而本地帳號號碼
+ * 係純數字。任何其他字元喺一個打入嚟嘅帳號入面都係排版。轉大寫係因為 IBAN 嘅字母
+ * 部分唔分大小寫 —— `gb29` 同 `GB29` 係同一個帳號。
+ *
+ * Product Owner 2026-09-21 揀咗呢個做法（HD-028）。改呢條規則唔係改一個函式：正規化
+ * 之後嘅字串就係被加密、被 HMAC、被攞去計 last_four 同 account_length 嗰個，所以有咗
+ * 行之後再改，就要成張表解密、重新加密、重算 index。
+ */
+const ACCOUNT_DISALLOWED = /[^0-9A-Z]/gu;
+
+// 上限由欄位闊度嚟，唔係由一個對帳號格式嘅猜測嚟。GCM 係串流模式，密文長度等於
+// 明文 byte 數，而正規化之後全部係 ASCII，所以 512 個字元啱啱好填滿
+// VARBINARY(512)。REV-033 M-6：喺 STRICT_TRANS_TABLES 之下超長會 ER_DATA_TOO_LONG
+// fail closed，但喺非嚴格 sql_mode 之下會靜靜哋截短，而一行截短咗嘅密文永遠驗證
+// 唔到。業務層面嘅長度規則（IBAN 最長 34）屬於 domain service，唔喺呢度。
+const MAX_ACCOUNT_LENGTH = 512;
 
 export function normalizeBankAccountNumber(value) {
-  const text = String(value ?? "").normalize("NFKC").replace(SEPARATORS, "");
-  return text;
+  return String(value ?? "").normalize("NFKC").toUpperCase().replace(ACCOUNT_DISALLOWED, "");
+}
+
+function requireAccount(value, what) {
+  const normalized = normalizeBankAccountNumber(value);
+  if (!normalized) {
+    throw new TypeError(`Supplier bank crypto cannot ${what} an empty account number`);
+  }
+  if (normalized.length > MAX_ACCOUNT_LENGTH) {
+    throw new TypeError(`Supplier bank crypto cannot ${what} an account number longer than ${MAX_ACCOUNT_LENGTH} characters`);
+  }
+  return normalized;
 }
 
 /**
@@ -42,7 +75,9 @@ export function maskBankAccount({ lastFour, accountLength }) {
   if (!Number.isInteger(length) || length <= 0) return "";
   if (length <= 4) return "*".repeat(length);
   const suffix = String(lastFour ?? "");
-  return `${"*".repeat(length - suffix.length)}${suffix}`;
+  // REV-033 L-1：Math.max 唔係裝飾。一行 last_four 長過 account_length 嘅資料會令
+  // repeat() 拋 RangeError，而遮罩係一個讀路徑 —— 佢應該照樣遮得到，唔係爆。
+  return `${"*".repeat(Math.max(0, length - suffix.length))}${suffix.slice(-length)}`;
 }
 
 /**
@@ -62,15 +97,40 @@ function additionalData({ supplierId, cryptoContext }) {
   if (!supplier || !context) {
     throw new TypeError("Supplier bank crypto requires both supplierId and cryptoContext for its AAD");
   }
-  return Buffer.from(`sup:${supplier.length}:${supplier}|ctx:${context.length}:${context}`, "utf8");
+  // 兩件事令呢個編碼 injective。
+  //
+  // 一：長度前綴數 byte，唔數 String.length，所以邊界移唔到。
+  // 二：用 **UTF-16LE** 而唔係 UTF-8 編碼兩個身分。UTF-8 唔係 lossless —— 佢將每個
+  //     孤兒代理碼位 map 成同一串 EF BF BD，所以 `"\uD800"` 同 `"\uDC00"` 編碼之後
+  //     完全一樣，兩個唔同身分砌得出同一個 AAD，而長度前綴救唔到（兩邊都係 3 bytes）。
+  //     REV-033 M-1 實測到跨身分解密成功。UTF-16LE 對任何 JS 字串都係一對一。
+  //
+  // 呢兩個輸入今日到唔到（supplierId 係 BIGINT，crypto_context 係 server 出嘅 UUID），
+  // 但一個 AAD 編碼應該本身 injective，唔應該靠 call site 嘅巧合。
+  const supplierBytes = Buffer.from(supplier, "utf16le");
+  const contextBytes = Buffer.from(context, "utf16le");
+  return Buffer.concat([
+    Buffer.from(`sup:${supplierBytes.length}:`, "utf8"), supplierBytes,
+    Buffer.from(`|ctx:${contextBytes.length}:`, "utf8"), contextBytes
+  ]);
 }
+
+const KEY_BYTES = 32;
 
 function keyBuffer(secret) {
-  // normalizeSupplierConfig 已經驗過每條 key 都 decode 到啱啱 32 bytes，所以呢度
-  // 唔重複驗長度；佢驗唔到嘅嘢呢度亦都驗唔到。
-  return Buffer.from(secret.reveal(), "base64");
+  const key = Buffer.from(secret.reveal(), "base64");
+  // REV-033 M-2：之前呢度靠 normalizeSupplierConfig 驗過長度。嗰句對**設定**嗰條路
+  // 啱，但 constructor 收任何 { activeKeyId, keyRing } 形狀而唔重新驗證。而兩條路
+  // 嘅失敗方向唔同：createCipheriv 幫 AES-256 擋住短 key，createHmac 乜長度都收，
+  // 包括零 —— 即係加密 fail closed 而 blind index fail open。實測過一條 0-byte key
+  // 計得出 index。呢度係兩條路唯一嘅交匯點，所以驗證放喺呢度。
+  if (key.length !== KEY_BYTES) {
+    throw new TypeError(`Supplier bank crypto requires a ${KEY_BYTES}-byte key`);
+  }
+  return key;
 }
 
+const INDEX_BYTES = 32;
 const REDACTED = "[REDACTED SupplierBankCrypto]";
 
 export class SupplierBankCrypto {
@@ -110,10 +170,7 @@ export class SupplierBankCrypto {
    * 明文異或值同埋 authentication key，所以呢度唔可以用 counter 或者由資料衍生。
    */
   encryptAccountNumber({ supplierId, cryptoContext, accountNumber }) {
-    const normalized = normalizeBankAccountNumber(accountNumber);
-    if (!normalized) {
-      throw new TypeError("Supplier bank crypto cannot encrypt an empty account number");
-    }
+    const normalized = requireAccount(accountNumber, "encrypt");
     const keyId = this.#encryption.activeKeyId;
     const iv = randomBytes(12);
     const cipher = createCipheriv("aes-256-gcm", keyBuffer(this.#encryption.keyRing[keyId]), iv);
@@ -140,10 +197,14 @@ export class SupplierBankCrypto {
     if (!secret) {
       throw new Error("Supplier bank account cannot be decrypted: its encryption key is not in the configured ring");
     }
-    const decipher = createDecipheriv("aes-256-gcm", keyBuffer(secret), Buffer.from(iv));
-    decipher.setAAD(additionalData({ supplierId, cryptoContext }));
-    decipher.setAuthTag(Buffer.from(authTag));
+    // REV-033 M-3：呢三句本來喺 try 外面，所以一個截短咗嘅 tag 或者一個 NULL IV 會
+    // 用原始 TypeError（ERR_CRYPTO_INVALID_AUTH_TAG／ERR_INVALID_ARG_TYPE）穿出去，
+    // 即係失敗類別分得出，而一個 raw TypeError 過咗安全邊界之後上游會 render 成
+    // 帶 stack 嘅 500。統一喺同一句訊息死。
     try {
+      const decipher = createDecipheriv("aes-256-gcm", keyBuffer(secret), Buffer.from(iv));
+      decipher.setAAD(additionalData({ supplierId, cryptoContext }));
+      decipher.setAuthTag(Buffer.from(authTag));
       return Buffer.concat([decipher.update(Buffer.from(ciphertext)), decipher.final()]).toString("utf8");
     } catch {
       // GCM 嘅 final() 喺 tag 對唔上嗰陣拋錯。原錯誤唔會向上傳：佢帶住 OpenSSL 嘅
@@ -171,25 +232,27 @@ export class SupplierBankCrypto {
    * 5.8 就係為咗堵住呢個而要求用晒成個 ring 查。
    */
   candidateBlindIndexes(accountNumber) {
-    return Object.keys(this.#lookup.keyRing).map((keyId) => ({
-      index: this.#index(accountNumber, keyId),
-      keyId
-    }));
+    const keyIds = Object.keys(this.#lookup.keyRing);
+    // REV-033 L-2：一個空清單會令查重揾唔到任何 candidate，即係每個寫入睇落都唔
+    // 重覆。一個重覆控制嘅失敗方向唔可以係 open。
+    if (keyIds.length === 0) {
+      throw new TypeError("Supplier bank crypto cannot check for duplicates with an empty lookup ring");
+    }
+    return keyIds.map((keyId) => ({ index: this.#index(accountNumber, keyId), keyId }));
   }
 
   /** 兩個 index 比較用常數時間，唔用 Buffer.equals 以外嘅短路比較。 */
   static sameIndex(left, right) {
-    const a = Buffer.from(left ?? []);
-    const b = Buffer.from(right ?? []);
-    if (a.length !== b.length || a.length === 0) return false;
-    return timingSafeEqual(a, b);
+    // REV-033 L-3：只收 Buffer。Buffer.from 會靜靜哋收字串，所以之前
+    // sameIndex("abc", Buffer.from("abc")) 係 true —— 一個比較函式唔應該自己決定
+    // 兩種唔同型別嘅嘢算唔算同一樣嘢。長度固定 32，所以長度檢查唔洩漏任何嘢。
+    if (!Buffer.isBuffer(left) || !Buffer.isBuffer(right)) return false;
+    if (left.length !== INDEX_BYTES || right.length !== INDEX_BYTES) return false;
+    return timingSafeEqual(left, right);
   }
 
   #index(accountNumber, keyId) {
-    const normalized = normalizeBankAccountNumber(accountNumber);
-    if (!normalized) {
-      throw new TypeError("Supplier bank crypto cannot index an empty account number");
-    }
+    const normalized = requireAccount(accountNumber, "index");
     return createHmac("sha256", keyBuffer(this.#lookup.keyRing[keyId])).update(normalized, "utf8").digest();
   }
 

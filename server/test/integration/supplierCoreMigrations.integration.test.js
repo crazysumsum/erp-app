@@ -203,11 +203,11 @@ integrationTest("0037 creates the Bank table with no plaintext column and conver
   );
   const byName = new Map(columns.map((row) => [row.column_name ?? row.COLUMN_NAME, row]));
 
-  // 明文帳號唔可以以任何常見名出現。
-  for (const forbidden of ["account_number", "account_no", "bank_account_number", "iban"]) {
-    assert.ok(!byName.has(forbidden), `the Bank table must not carry a ${forbidden} column`);
-  }
-  // 而帳號嘅三件密文組件要真係二進位：一個 VARCHAR 嘅 IV 會經 collation 比較同
+  // REV-033 L-4：之前呢度有個 forbidden-name 名單，但佢查嘅係一張測試自己啱啱由
+  // 字面 DDL 建出嚟嘅表，同下面個 probe 對欄位集合相等嘅覆蓋重覆咗 —— 同 §3 S5
+  // 拆走嗰段死碼一模一樣嘅形狀，隔咗一個檔案。
+  //
+  // 帳號嘅三件密文組件要真係二進位：一個 VARCHAR 嘅 IV 會經 collation 比較同
   // padding，仲會靜靜哋截短。
   for (const [name, type, length] of [
     ["account_ciphertext", "varbinary", 512], ["account_iv", "binary", 12],
@@ -325,42 +325,101 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
   assert.match(control.message, /Incompatible existing Supplier bank account FK: fk_supplier_bank_supplier/u,
     "the unmodified copy must stop exactly at the FK check, or every case below proves nothing");
 
+  const replaceColumn = (name, definition) => (ddl) => ddl.split("\n")
+    // 逐行換欄位定義：好多欄位名亦都出現喺索引定義入面，一齊換就會整出一張建唔成
+    // 嘅表，而個生成運算式入面有巢狀括號，用 regex 夾唔實。
+    .map((line) => (line.trim().startsWith(`\`${name}\``) ? `  ${definition}` : line))
+    .join("\n");
+
   await probe(
-    (ddl) => ddl.replace("`account_iv` binary(12)", "`account_iv` varchar(12)"),
-    /account_iv must be BINARY\(12\)/u,
+    replaceColumn("account_iv", "`account_iv` varchar(12) NOT NULL,"),
+    /account_iv must be binary\(12\)/u,
     "a VARCHAR IV silently truncates and compares by collation"
   );
   await probe(
-    (ddl) => ddl.replace("`account_ciphertext` varbinary(512)", "`account_ciphertext` varbinary(256)"),
-    /account_ciphertext must be VARBINARY\(512\)/u,
+    replaceColumn("account_ciphertext", "`account_ciphertext` varbinary(256) NOT NULL,"),
+    /account_ciphertext must be varbinary\(512\)/u,
     "a shorter ciphertext column truncates"
   );
   await probe(
-    // 個生成運算式入面有巢狀括號，所以逐行換成一個普通可寫欄位，唔用 regex 夾。
-    (ddl) => ddl.split("\n")
-      // 只換欄位定義嗰行：`default_slot` 亦都出現喺 uq_supplier_bank_default 嗰條
-      // 索引定義入面，一齊換就會整出一張建唔成嘅表。
-      .map((line) => (line.trim().startsWith("`default_slot`") ? "  `default_slot` tinyint DEFAULT NULL," : line))
-      .join("\n"),
+    replaceColumn("account_length", "`account_length` tinyint unsigned NOT NULL,"),
+    /account_length must be smallint unsigned/u,
+    "a narrower length column caps at 255 and silently rejects long accounts"
+  );
+  await probe(
+    replaceColumn("last_four", "`last_four` varchar(190) COLLATE utf8mb4_unicode_ci NOT NULL,"),
+    /last_four must be varchar\(4\)/u,
+    "a widened last_four can hold a whole account number"
+  );
+
+  // REV-033 H-2／G4：可 NULL 嘅密文組件會一路去到解密路徑先爆。
+  await probe(
+    replaceColumn("account_iv", "`account_iv` binary(12) DEFAULT NULL,"),
+    /account_iv must be NOT NULL/u,
+    "a NULLable IV produces an unauthenticatable row"
+  );
+  // REV-033 H-2／G6：status 嘅 ascii_bin 係 generated 運算式嘅一部分語意 ——
+  // 一個 case-insensitive collation 會令 'Active' 都佔住個 default slot。
+  await probe(
+    replaceColumn("status", "`status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active',"),
+    /status must collate ascii_bin/u,
+    "a case-insensitive status loosens the generated slot expression"
+  );
+  await probe(
+    replaceColumn("is_default", "`is_default` tinyint(1) NOT NULL DEFAULT '1',"),
+    /is_default default must be "0"/u,
+    "a flipped default makes every new account the default"
+  );
+
+  await probe(
+    replaceColumn("default_slot", "`default_slot` tinyint DEFAULT NULL,"),
     /default_slot is not a generated column/u,
     "a writable slot moves the one-default guarantee back into the application"
   );
+  // REV-033 H-2／G1：呢個係最重要嗰個。佢仲係 generated，所以「有冇 GENERATED 字樣」
+  // 嗰個檢查照過，但個運算式永遠回 NULL，而 UNIQUE 唔比較 NULL —— 個唯一索引變咗
+  // 裝飾，一個 Supplier 可以有無限個同時生效嘅預設帳戶。
   await probe(
-    (ddl) => ddl.replace(`UNIQUE KEY \`uq_supplier_bank_default\``, `KEY \`uq_supplier_bank_default\``),
+    replaceColumn("default_slot", "`default_slot` tinyint GENERATED ALWAYS AS (NULL) STORED,"),
+    /default_slot does not compute the documented slot/u,
+    "a neutered generated expression is indistinguishable from the real one at the EXTRA level"
+  );
+  await probe(
+    replaceColumn("default_slot", "`default_slot` tinyint GENERATED ALWAYS AS (1) STORED,"),
+    /default_slot does not compute the documented slot/u,
+    "an always-1 slot makes a second account collide instead of the second default"
+  );
+
+  await probe(
+    (ddl) => ddl.replace("UNIQUE KEY `uq_supplier_bank_default`", "KEY `uq_supplier_bank_default`"),
     /uq_supplier_bank_default must be UNIQUE/u,
     "a same-named non-unique index enforces nothing"
   );
+  // REV-033 H-2／G3：crypto_context 係 AAD 一半，佢嘅唯一性就係「同一個 Supplier
+  // 兩行密文對調唔到」嘅唯一理由 —— 之前呢條索引只驗過個名。
   await probe(
-    // 逐行插入，唔夾 collation 子句：CI 同本機嘅 SHOW CREATE TABLE 輸出唔一定
-    // 一樣，而一個夾死咗嘅 anchor 會靜靜哋冇替換到。
+    (ddl) => ddl.replace("UNIQUE KEY `uq_supplier_bank_crypto_context`", "KEY `uq_supplier_bank_crypto_context`"),
+    /uq_supplier_bank_crypto_context must be UNIQUE/u,
+    "without this uniqueness the AAD no longer separates two rows under one Supplier"
+  );
+
+  await probe(
+    // 逐行插入，唔夾 collation 子句：CI 同本機嘅 SHOW CREATE TABLE 輸出唔一定一樣，
+    // 而一個夾死咗嘅 anchor 會靜靜哋冇替換到。
     (ddl) => ddl.split("\n")
       .flatMap((line) => (line.trim().startsWith("`last_four`")
         ? [line, "  `account_number` varchar(64) DEFAULT NULL,"]
         : [line]))
       .join("\n"),
     // 唔用 alternation：一個 `A|B` 嘅期望喺兩邊都過，即係佢乜都冇分辨到。擋住明文
-    // 欄位嘅係上面嗰個集合相等比較，所以期望嘅就係佢嗰句。
+    // 欄位嘅係欄位集合相等比較，所以期望嘅就係佢嗰句。
     /Incompatible existing Supplier bank account schema: supplier_bank_accounts/u,
     "a plaintext account column must never be tolerated"
   );
+
+  // 設計 §5.14 明文包括 trigger，而 inspect 真係查 information_schema.triggers。
+  // 但**呢個檢查喺度冇測到**，照講：`erp_user` 冇 SUPER，而個 instance 開住 binary
+  // logging，所以 CREATE TRIGGER 直接俾 MySQL 拒絕，probe 表起唔到個 trigger。
+  // 唔寫一個「攞唔到權限就靜靜哋跳過」嘅版本 —— 一個永遠行 skip 分支嘅測試，同冇
+  // 測試係一樣嘅，而且仲會扮成有覆蓋。呢個缺口記錄喺實作報告同 ledger 入面。
 });
