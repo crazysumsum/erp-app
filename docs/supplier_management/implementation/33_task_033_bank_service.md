@@ -137,3 +137,76 @@ vacuous assertion 係同一個形狀。改成證真正嘅性質：**重新加密
 - **輪替腳本**（`supplier:bank:rotate-encryption`、`supplier:bank:reindex-lookup`）。
 - REV-034 帶落嚟嘅 L-3（`VIRTUAL` 收咗）、L-4（`CHECK` 冇讀）、L-6（解密 catch 將設定
   錯誤報成資料完整性錯誤），同埋 trigger 檢查冇測試嗰個缺口 —— 全部仍然開住。
+
+## 7. REV-035 及其修補
+
+獨立 security review **REV-035** 判 **CHANGES_REQUESTED**（head `8718fa7`）：三個 H、
+四個 M、五個 L。完整報告喺 `34_rev_035_independent_review.md`。
+
+Reviewer 講得好準：加密、AAD、blind index 同鎖序本身冇問題，三個 H 全部喺**邊界** ——
+service 拒絕啲乜、佢點樣正規化、以及佢拒絕嗰陣同 caller 講乜。
+
+### H-2 係最重要嗰個，而且佢令 §0 寫錯咗
+
+分類之前行 `NFKC` 係**相容性**折疊，佢會將一大堆內容字元變成純 `[0-9A-Z]`，於是佢哋
+喺第二步望落好似冇問題咁過咗。實測 U+0080–U+1FFFF：**1225 個碼位**係咁。
+
+```
+"12²345" -> "122345"    多咗一個數字
+"ᴮ12345" -> "B12345"    同 "B12345" 撞成同一個帳號
+"Ⓑ12345" -> "B12345"    同上
+"ß…"     -> "SS…"       仲要變長
+```
+
+即係 REV-034 M-2 嗰個「三個唔同輸入存成同一個帳號」**根本冇收到** —— 佢只係由 `Å`／`Ä`
+嗰批搬咗去 `ᴮ`／`Ⓑ` 嗰批。而 HD-029 揀嗰個做法嘅全部理由就係「列唔到嘅字元會大聲
+拒絕」，NFKC 令嗰 1225 個做咗**相反**嘅事。
+
+改成 `NFC`（只做標準組合）再明確折疊全形 ASCII 三段。全域重掃之後淨低兩個會被折疊嘅
+碼位，兩個都係**標準等價**（U+0387 → U+00B7、U+212A → `K`），即係 Unicode 定義佢哋同
+目標本來就係同一個字元 —— 呢個正正係要嘅。
+
+順帶捉到一個 reviewer 都冇提嘅：`toUpperCase()` 自己都會漂白，`ß` 變 `SS`。轉大寫收窄
+到只限 ASCII `a-z`。
+
+**一個要明講嘅記錄錯誤。** 上面 §0、`SupplierBankCrypto.js` 嘅註解、同 HD-029 喺 ledger
+入面嘅問題描述，三個地方都用咗 `½ → 12` 做例子。**嗰個例子唔成立** —— `½` 喺 NFKC 之下
+變 `1⁄2`，而 U+2044 FRACTION SLASH 係 `Sm`，唔喺排版集合入面，所以佢一直都喺被拒絕
+嗰邊。即係我當時攞咗一個唔成立嘅例子去問 Product Owner，而真正會漏嗰批（`²`、`②`、
+全形）冇擺出嚟過。決定本身仍然成立 —— 而且喺真例子之下更加成立 —— 但個記錄要更正。
+
+### H-1：拒絕變成 500，而個測試睇唔到
+
+`requireAccount` 拋 raw `TypeError`，而佢喺 `withTransaction` 入面拋，所以真嘅 database
+wrapper 會包成 `DATABASE_TRANSACTION_FAILED`。HD-029 嘅理由係「用戶見到、改得到」；一個
+500 兩樣都唔係。而且帳號欄位喺 service 層根本冇驗過 —— 連「完全冇帶帳號」都係 500。
+
+**個測試當時過到，係因為 harness 嘅假 `withTransaction` 冇模仿真 wrapper 嗰層錯誤轉換。**
+而家模仿咗，而佢即刻又揾到第二件事：一個竄改咗嘅行本來都係匿名 500，日誌分唔出「資料
+被改過」同「條 key 唔喺 ring 入面」—— 兩者處理方法完全唔同。改成具名 422
+`BANK_ACCOUNT_UNREADABLE`。
+
+一個假嘢冇模仿到嘅行為，就係測試睇唔到嘅行為。
+
+### H-3：查重同 unique index 講唔同嘢
+
+Service 過濾 `status = 'active'`，但設計 §5.8 嗰條 UNIQUE 冇 status 謂詞。而「停用咗，
+再加返同一個帳號」正正係使用者會行嘅路（FR-BANK-005 令停用係唯一嘅退役方式），結果由
+一個清楚嘅 409 變成 `ER_DUP_ENTRY` 500。拆走個過濾；再按設計 §2.5 捉 `ER_DUP_ENTRY`
+翻譯返做 409，順帶分開 default slot 撞車嗰條。
+
+### 其餘
+
+| findings | 處理 |
+| --- | --- |
+| **M-1** `list` 完全冇 permission 檢查 | 已修：加返 `supplier.view`（刻意唔係 `bank.view`，AC-023） |
+| **M-2** `maskBankAccount` 冇 production caller，規則重覆實作 | 已修：拆走我嗰個孤兒，規則喺 `toMaskedBankResponse` 度測 |
+| **M-3** 跨 Supplier warning 喺併發下消失 | **唔改**：佢本質上就係 advisory —— 一個 warning 唔係一條規則，而個 index 係 per-Supplier，冇嘢會 serialise 佢。記錄低 |
+| **M-4** 掃描器對照組種落文字欄位，證唔到 binary 分支 | 已修：種落 `account_ciphertext` |
+| **L** 403 唔係 409、帶空格嘅 error code、冇讀過嘅 `references` | 已修 |
+| **L** `reveal` 冇 `expiresInSeconds`、`revealedAt` 喺 commit 之後先蓋 | **未改**：屬於 §6.6 嘅 HTTP contract，而 route 唔喺 T33 scope |
+
+### 修補後重跑
+
+372/372 server（原 367）、71/71 client、lint、build，四份 evidence 全部喺最終候選重新
+跑過。九個針對修補嘅變異全部 RED。

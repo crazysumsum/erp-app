@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 154,
+  "revision": 156,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
-    "code_commit": "fef38b209d145b92b7696e2b54c22c376f80a1ea",
-    "source_fingerprint": "6708320ada99cf600b82065ba0e6b9a7aa3ec8728b7347fbec0161f01191ce8f",
+    "code_commit": "9000bd5cd355770399d38a411f750463861880bb",
+    "source_fingerprint": "f919b7b4138e6c4c195b8bebba5bf03a4bf0bfdd51d006beb7459b7d24aee38a",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-033",
     "default_commit": "9f6fc43f3800e722b7d3e7a048956a637ace6fa6",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1100,6 +1100,18 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-035",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-033)",
+      "reviewer": "agent-skills:security-auditor, a fresh agent reviewing 8718fa7",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/34_rev_035_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
       "risk_approval_id": null
     }
   ],
@@ -2236,6 +2248,28 @@
       "source_ref": "T33's Verification block asks for a manual DB check that the fixture plaintext appears zero times in the Bank table, the audit log and the system log. A manual check does not get done every time, so it is automated: the test reads the column list from information_schema and scans every row and every column of supplier_bank_accounts and supplier_audit_logs for a unique fixture account, reading binary columns as latin1 so a plaintext hidden in a BLOB would still be found. It runs after both a create and an update that re-encrypts. The test carries its own control -- after the two assertions it plants the plaintext into account_holder_name and requires the scanner to find it, so 'nowhere' is not just a broken scanner. The system-log half is not covered here: nothing in this service logs, and there is no log sink in the test environment to search.",
       "actor": "Harness agent",
       "observed_at": "2026-09-21T10:58:50+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-035 CHANGES_REQUESTED at 8718fa7; HD-029 was answered and neither half of the answer had shipped",
+      "code_commit": "9000bd5cd355770399d38a411f750463861880bb",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "f919b7b4138e6c4c195b8bebba5bf03a4bf0bfdd51d006beb7459b7d24aee38a",
+      "status": "PASS",
+      "source_ref": "Three H, four M, five L. The reviewer was precise about where they sit: the encryption, AAD, blind-index and lock-ordering work is sound, and all three blocking findings are at the boundary -- what the service rejects, how it normalizes, and what it tells the caller when it refuses. H-2 is the serious one and it reopens DEF-021: running NFKC before classification is compatibility folding, which turns a large class of content characters into pure [0-9A-Z] so they pass the reject step unseen. A sweep of U+0080 to U+1FFFF found 1225 such codepoints, and REV-034 M-2's collapse was not closed at all, only moved from the A-with-ring family to the modifier-letter and circled-letter families. Fixed by classifying on NFC and folding only the three fullwidth ASCII ranges explicitly; a re-sweep leaves two folded codepoints, both canonical equivalences, which is the intended behaviour. While fixing it the author found a second laundering path the reviewer had not reported: String.prototype.toUpperCase is not one-to-one and maps the sharp s to SS, so the case fold was narrowed to ASCII a-z. A record correction belongs with this: the half-symbol-to-12 example used in the code comment, the implementation report and HD-029's own question text does not reproduce -- NFKC maps it to one, fraction slash, two, and U+2044 is Sm, so it was always on the rejected side. The Product Owner was therefore shown an example that does not hold while the cases that do were never put to them. The decision itself stands and holds more strongly on the real cases, but the record was wrong and is corrected here. H-1: the rejection reached callers as a 500, because the crypto's TypeError was thrown inside withTransaction and the real database wrapper rethrows non-ApplicationErrors as DATABASE_TRANSACTION_FAILED -- and HD-029 was chosen on the property that a user sees the refusal and can correct it. The test missed it because the harness's fake withTransaction did not reproduce that translation. Making the fake faithful immediately exposed a second defect: a tampered row also produced an anonymous 500, so an operator could not distinguish altered data from a key missing from the ring. Now a named 422. H-3: the duplicate pre-check filtered on active status while the unique index has no status predicate, so deactivating an account and re-adding it -- the only retirement path FR-BANK-005 allows -- turned a clean 409 into an ER_DUP_ENTRY 500. Filter removed and ER_DUP_ENTRY translated, per design 2.5's statement that the database unique is the race-time backstop and the service pre-check exists only for a clearer message. M-1, M-2, M-4 and the L findings fixed. M-3 deliberately not fixed: a cross-Supplier duplicate warning is advisory by nature, the index is per-Supplier, and nothing serialises two creates under different Suppliers.",
+      "actor": "agent-skills:security-auditor (separate agent)",
+      "observed_at": "2026-09-21T11:19:04+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-035 remediation reverified on the final candidate",
+      "code_commit": "9000bd5cd355770399d38a411f750463861880bb",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "f919b7b4138e6c4c195b8bebba5bf03a4bf0bfdd51d006beb7459b7d24aee38a",
+      "status": "PASS",
+      "source_ref": "372/372 server tests up from 367, 71/71 client, lint clean, all four DEVELOPER suites re-run on the final candidate. Nine mutations confirm the fixes discriminate: reverting NFC to NFKC, restoring the unbounded toUpperCase, dropping the pre-transaction account validation, restoring the status filter on the duplicate check, removing the ER_DUP_ENTRY translation, removing the list permission check, making the projection mask unconditionally, returning the decrypt failure as an anonymous error again, and returning 409 instead of 403 for a missing permission. All nine RED.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T11:19:04+08:00"
     }
   ],
   "pending_decisions": [
@@ -3118,7 +3152,11 @@
     "evidence/20260921T025754-3addc84b03e6/run.json",
     "evidence/20260921T025758-273c5b3043d2/run.json",
     "evidence/20260921T025802-2b5dbb2878bb/run.json",
-    "evidence/20260921T025806-2b462a3bf35f/run.json"
+    "evidence/20260921T025806-2b462a3bf35f/run.json",
+    "evidence/20260921T031825-c27a76cb27c0/run.json",
+    "evidence/20260921T031828-ee7f0aecc365/run.json",
+    "evidence/20260921T031830-768ab43b9c0c/run.json",
+    "evidence/20260921T031833-0e8b9e490d7f/run.json"
   ],
   "defects": [
     {
@@ -3412,10 +3450,11 @@
       "closure_evidence": [
         "server/src/modules/supplier/SupplierBankCrypto.js",
         "server/test/supplierBankCrypto.test.js",
-        "HD-029"
+        "HD-029",
+        "REV-035 H-2"
       ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-033 is implemented on claude/supplier-task-033. DEF-021 was closed first, under HD-029, because T33 is the write API and the normalized string is what gets encrypted, HMACed and measured. The service provides masked list, create, update, setDefault, deactivate and reveal, with no delete. All four DEVELOPER suites PASS with evidence, 367 server tests up from 338. Fourteen mutations were run; the one that survived was the author's own vacuous assertion and was replaced. Still required before this can be called done: required CI green on the exact merge candidate, and an actual independent review. Not in T33's scope and still open in PHASE-003: the six HTTP routes from design 6.6, so this service has no production caller yet; wiring the Bank capability so the two key rings become an unconditional startup requirement; the two rotation scripts from design 2.6; and the Bank UI, which is T35. Carried from REV-034 and still open: the trigger check in the compatibility assertion has no test because erp_user lacks SUPER while binary logging is on, and the reviewer's suggestion of injecting a trigger list through the existing table seam would cover the throw path; L-3 accepts VIRTUAL where the design says STORED; L-4 does not read CHECK constraints; L-6 means the decrypt catch reports a configuration error as a data-integrity error, which misdirects an operator during rotation. One thing worth a look in review: maskBankAccount in SupplierBankCrypto and toMaskedBankResponse in supplierProjections now both implement the short-account masking rule, with different display characters. The service uses the projection, so maskBankAccount is reachable only from T32's tests. Two implementations of one rule can drift."
+  "next_safe_action": "TASK-033's REV-035 remediation is complete and awaiting re-review plus CI on the final candidate. REV-035 returned CHANGES_REQUESTED with three H; all three were real and are fixed. H-2 reopened DEF-021: NFKC ran before classification, so 1225 codepoints were laundered into [0-9A-Z] and REV-034 M-2's collapse had only moved families. Now classified on NFC with an explicit fullwidth fold and an ASCII-only case fold. A correction that outlives this task: the half-symbol example used when HD-029 was put to the Product Owner does not reproduce, so the decision was taken on a false illustration. The decision stands on the real cases and the record is corrected in the ledger and the implementation report. Not fixed, deliberately: REV-035 M-3, the cross-Supplier duplicate warning disappears under concurrency, because a warning is advisory and the index is per-Supplier; and the reveal response's expiresInSeconds and revealedAt shape from design 6.6, which belong to the HTTP contract and therefore to whichever task adds the six routes. Still open in PHASE-003: the six HTTP routes from design 6.6, so SupplierBankService still has no production caller; the Bank capability registry; the two rotation scripts; and the Bank UI in T35. Carried from REV-034: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, and the decrypt catch misdirecting during rotation -- that last one is partly addressed now, since an unreadable row is a named 422 rather than an anonymous 500."
 }
