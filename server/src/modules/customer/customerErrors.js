@@ -99,3 +99,20 @@ export function versionConflict(currentVersion) {
     publicDetails: { currentVersion: Number(currentVersion) }
   });
 }
+
+export function customerSettingsMissing() {
+  return customerError("Customer settings singleton is missing", {
+    code: "CUSTOMER_SETTINGS_MISSING",
+    statusCode: 409,
+    publicMessage: "客戶設定尚未初始化"
+  });
+}
+
+export function customerSettingInvalid(code, publicMessage, publicDetails) {
+  return customerError("Customer settings input is invalid", {
+    code,
+    statusCode: 400,
+    publicMessage,
+    publicDetails
+  });
+}

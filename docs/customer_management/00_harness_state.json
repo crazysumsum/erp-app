@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 91,
+  "revision": 92,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-010",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-012",
   "baseline": {
     "design": "29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58",
     "plan": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
-    "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
+    "code_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
     "source_fingerprint": "aeb07f31806aa92f98b7a8bde28a7abd953c8d9c558592f85f55b8a7c705f6c7",
-    "worktree": "/private/tmp/erp-customer-management-phase-001/customer-management-phase-001",
-    "default_commit": "9c68059221098a17bfc4c3bd0638c17008305c4e",
+    "worktree": "/private/tmp/erp-customer-management-phase-002",
+    "default_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
@@ -37,7 +37,7 @@
     "TASK-009": "DONE",
     "TASK-010": "DONE",
     "TASK-011": "PENDING",
-    "TASK-012": "PENDING",
+    "TASK-012": "IN_PROGRESS",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
@@ -496,6 +496,30 @@
         "server/src/modules/customer/**",
         "server/src/modules/businessMaster/businessMasterFactory.js",
         "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-014",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-21 Codex task user: 開始下一步工作; prior standing instruction authorizes automatic continuation unless a material decision is required.",
+      "recorded_at": "2026-09-21T06:17:02Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "code_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
+      "scope": [
+        "PHASE-002",
+        "TASK-012",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-settings/**",
+        "client/src/**",
+        "server/test/**",
+        "client/test/**",
         "docs/customer_management/**"
       ],
       "expires_at": null
@@ -1032,24 +1056,24 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-management-phase-001",
       "idempotency_key": "customer-phase001-publication-push-v1",
-      "status": "PLANNED",
-      "source_ref": "User has authorized push/PR/merge; HD-008 approval recorded 2026-09-21."
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-21: pushed codex/customer-management-phase-001 before PR #120; branch was deleted after the merged PR was reconciled."
     },
     {
       "id": "EXT-PR-002",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-management-phase-001",
       "idempotency_key": "customer-phase001-publication-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "User has authorized push/PR/merge; HD-008 approval recorded 2026-09-21."
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/120"
     },
     {
       "id": "EXT-MERGE-002",
       "kind": "MERGE",
       "target": "github:crazysumsum/erp-app:main",
       "idempotency_key": "customer-phase001-publication-merge-v1",
-      "status": "PLANNED",
-      "source_ref": "User has authorized push/PR/merge; merge remains conditional on exact-candidate CI and repository review gates."
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #120 merged at 2026-09-21T04:08:21Z; main merge commit 946f59820a8eeef2d6d0b0de17f59818aab9fd04 after exact-candidate CI passed."
     }
   ],
   "evidence_files": [
@@ -1057,5 +1081,5 @@
     "docs/customer_management/implementation/phase-PHASE-001-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Fetch and reconcile origin/main, commit the approved Customer publication ledger, push the exact candidate, create the planned PR, observe exact-candidate CI/review and merge only when every required gate passes."
+  "next_safe_action": "Implement TASK-012 from the refreshed PHASE-002 worktree, then record focused developer evidence before proceeding to TASK-013."
 }
