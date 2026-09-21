@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 73,
+  "revision": 74,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
   "current_phase": "PHASE-006",
-  "current_task": "TASK-044",
+  "current_task": "TASK-043",
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
-    "plan": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
-    "code_commit": "4c84174e8399815ea0a1e7c9fa1055ebb952adf7",
+    "plan": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+    "code_commit": "513a0bf8100b60384354a576db1172fac59eb60e",
     "source_fingerprint": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-tc016-exercise",
-    "default_commit": "b1e3aa86354d1538528010772a8cf2b359d58f9f",
+    "default_commit": "513a0bf8100b60384354a576db1172fac59eb60e",
     "mode_entry_commit": "4c84174e8399815ea0a1e7c9fa1055ebb952adf7"
   },
   "runtime": {
@@ -22,12 +22,12 @@
     "owner": "Primary TEST_AND_VERIFY agent; TASK-044 owner-waived recovery verification",
     "resources": {
       "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-tc016-exercise",
-      "mysql-schema": "isolated source item_recovery_tc016_20260921_source and restored target item_recovery_tc016_20260921_restore_run2; erp_dev preserved",
-      "media-root": "/private/tmp/item-recovery-tc016-20260921/restored-run2-media",
-      "import-root": "/private/tmp/item-recovery-tc016-20260921/restored-run2-import",
+      "mysql-schema": "exercise schemas removed after retained evidence was merged; erp_dev preserved",
+      "media-root": "exercise root removed after retained evidence was merged",
+      "import-root": "exercise root removed after retained evidence was merged",
       "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
     },
-    "lease_ref": "Fresh isolated recovery run2 completed on 2026-09-21 with manifest SHA-256 4bdf46c63c98b2183c29f2e81ab8a5b2e3360949ee423efc8182d6e529dc606e. ERP Product Owner (Sam) explicitly waived independent-signer separation and authorized the agent-generated temporary Ed25519 key; any result must be PASS_WITH_OWNER_WAIVER."
+    "lease_ref": "Recovery exercise completed and evidence merged in PR #121. All three isolated schemas, restored roots, temporary private key and dedicated encrypted MySQL login path were removed; erp_dev remained unchanged."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -73,7 +73,7 @@
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "BLOCKED",
-    "TASK-044": "IN_PROGRESS"
+    "TASK-044": "DONE"
   },
   "approvals": [
     {
@@ -690,6 +690,25 @@
         "server/config/itemRecoveryTrustPolicy.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-037",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved all required owner-waiver records and completion workflow; this binds the documentation-only TASK-044 closeout after PR #121 merged.",
+      "recorded_at": "2026-09-21T07:20:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "513a0bf8100b60384354a576db1172fac59eb60e",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1222,12 +1241,44 @@
       "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized continued verification and all required owner-waiver records; independent review approved candidate 4c84174."
     },
     {
-      "id": "MODE-CHANGE-73",
-      "kind": "MODE_CHANGE",
-      "target": "TEST_AND_VERIFY",
-      "idempotency_key": "mode-change-73",
+      "id": "PUSH-74",
+      "kind": "PUSH",
+      "target": "origin/codex/item-management-tc016-exercise",
+      "idempotency_key": "item-tc016-push-20260921",
       "status": "CONFIRMED",
-      "source_ref": "MODE-CHANGE-73"
+      "source_ref": "Observed on 2026-09-21: candidate 444d402 was pushed to the Item recovery topic branch."
+    },
+    {
+      "id": "PR-75",
+      "kind": "PR",
+      "target": "GitHub PR #121 into main",
+      "idempotency_key": "item-tc016-pr-121",
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub PR #121 for the Item recovery owner-waiver candidate."
+    },
+    {
+      "id": "CI-76",
+      "kind": "CI",
+      "target": "required GitHub checks for PR #121",
+      "idempotency_key": "item-tc016-ci-35570486593",
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub Actions run 35570486593: Dependency audit, Lint, Build frontend, and Test (server + client, MySQL integration) all passed."
+    },
+    {
+      "id": "MERGE-77",
+      "kind": "MERGE",
+      "target": "PR #121 into main",
+      "idempotency_key": "item-tc016-merge-121",
+      "status": "CONFIRMED",
+      "source_ref": "Observed PR #121 merged on 2026-09-21 as 513a0bf8100b60384354a576db1172fac59eb60e."
+    },
+    {
+      "id": "CLEANUP-78",
+      "kind": "ENV_CLEANUP",
+      "target": "TC-016 isolated MySQL schemas, restored roots, temporary signing key and encrypted login path",
+      "idempotency_key": "item-tc016-cleanup-20260921",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: all three exact exercise schemas and temporary files/login path were removed; erp_dev item_skus remained zero."
     }
   ],
   "evidence_files": [
@@ -1388,5 +1439,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Push candidate through required CI and PR review, merge only after gates pass, then clean the branch/worktree. TASK-043 remains blocked until a real downstream SKU reference exists."
+  "next_safe_action": "TASK-043 remains blocked until Purchasing, Inventory or Sales introduces a real downstream item_skus reference. Do not implement a speculative provider or registry."
 }
