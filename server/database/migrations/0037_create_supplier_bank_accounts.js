@@ -52,8 +52,14 @@ const UNIQUE_INDEXES = Object.freeze({
   uq_supplier_bank_blind_index: "supplier_id,blind_index_key_id,account_blind_index",
   uq_supplier_bank_default: "supplier_id,default_slot"
 });
-const INDEXES = new Set(["PRIMARY", ...Object.keys(UNIQUE_INDEXES),
-  "idx_supplier_bank_lookup", "idx_supplier_bank_owner_status"]);
+// REV-034 L-2：非唯一索引亦都要驗覆蓋欄位。佢哋唔執行任何 correctness 保證，但
+// idx_supplier_bank_lookup 支撐住設計 §5.8 嘅跨 Supplier 重覆警告同輪替時嘅 reindex
+// 掃描 —— 一條指錯欄位嘅索引會令嗰啲查詢變成全表掃描，而冇嘢會出聲。
+const PLAIN_INDEXES = Object.freeze({
+  idx_supplier_bank_lookup: "blind_index_key_id,account_blind_index",
+  idx_supplier_bank_owner_status: "supplier_id,status,id"
+});
+const INDEXES = new Set(["PRIMARY", ...Object.keys(UNIQUE_INDEXES), ...Object.keys(PLAIN_INDEXES)]);
 
 // FK 連引用邊張表同 delete rule 一齊驗：一個名叫 fk_supplier_bank_supplier 但指住
 // 第二張表、或者由 CASCADE 改成 NO ACTION 嘅 FK，名單檢查完全睇唔出。
@@ -74,8 +80,14 @@ function normalizeExpression(value) {
     .replace(/\\'/gu, "'")
     .replace(/_[a-z0-9]+'/gu, "'")
     .replace(/[`\s]/gu, "")
-    .toLowerCase();
+    // REV-034 M-1：轉細階要**避開引號入面嘅字面值**。`status` 係 ascii_bin，即係
+    // 'ACTIVE' 同 'active' 對資料庫嚟講唔同 —— 一個寫住 status = 'ACTIVE' 嘅運算式
+    // 永遠對唔到欄位個預設值，個 slot 會永遠係 NULL，而 UNIQUE 唔比較 NULL，即係
+    // G1 嗰個「無限個預設」又開返。而 toLowerCase 本身係要嘅：information_schema
+    // 出 NULL 係大階，所以唔可以就咁拆走。
+    .replace(/'[^']*'|[A-Z]+/gu, (match) => (match.startsWith("'") ? match : match.toLowerCase()));
 }
+
 
 function value(row, lower, upper) {
   return row[lower] ?? row[upper];
@@ -162,6 +174,21 @@ export async function inspectSupplierBankAccountSchema(connection, { table = "su
     const covered = rows.map((row) => value(row, "column_name", "COLUMN_NAME")).join(",");
     if (!unique || covered !== expected) {
       throw new Error(`Incompatible existing Supplier bank account index: ${name} must be UNIQUE (${expected.split(",").join(", ")})`);
+    }
+  }
+
+  for (const [name, expected] of Object.entries(PLAIN_INDEXES)) {
+    const [rows] = await connection.query(
+      `SELECT column_name AS column_name
+         FROM information_schema.statistics
+        WHERE table_schema = DATABASE() AND table_name = ?
+          AND index_name = ?
+        ORDER BY seq_in_index`,
+      [table, name]
+    );
+    const covered = rows.map((row) => value(row, "column_name", "COLUMN_NAME")).join(",");
+    if (covered !== expected) {
+      throw new Error(`Incompatible existing Supplier bank account index: ${name} must cover (${expected.split(",").join(", ")})`);
     }
   }
 

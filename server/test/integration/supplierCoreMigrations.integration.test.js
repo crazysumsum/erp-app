@@ -390,6 +390,17 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
     "an always-1 slot makes a second account collide instead of the second default"
   );
 
+  // REV-034 M-1：呢個係第九類。個運算式喺 `status` 嗰個字面值度只差大小寫，而
+  // status 係 ascii_bin —— 所以 'ACTIVE' 永遠對唔到欄位個預設值，slot 永遠 NULL，
+  // UNIQUE 唔比較 NULL，G1 嗰個「無限個預設」又開返。Reviewer 喺真 MySQL 上面插到
+  // 五行同時生效嘅預設。
+  await probe(
+    replaceColumn("default_slot",
+      "`default_slot` tinyint GENERATED ALWAYS AS (if(((`is_default` = 1) and (`status` = 'ACTIVE')),1,NULL)) STORED,"),
+    /default_slot does not compute the documented slot/u,
+    "a literal differing only in case never matches an ascii_bin column's value"
+  );
+
   await probe(
     (ddl) => ddl.replace("UNIQUE KEY `uq_supplier_bank_default`", "KEY `uq_supplier_bank_default`"),
     /uq_supplier_bank_default must be UNIQUE/u,
@@ -401,6 +412,15 @@ integrationTest("0037's compatibility assertion actually rejects a hand-divergen
     (ddl) => ddl.replace("UNIQUE KEY `uq_supplier_bank_crypto_context`", "KEY `uq_supplier_bank_crypto_context`"),
     /uq_supplier_bank_crypto_context must be UNIQUE/u,
     "without this uniqueness the AAD no longer separates two rows under one Supplier"
+  );
+  // REV-034 L-2：兩條非唯一索引之前只驗過個名。冇correctness 保證喺佢哋身上，但
+  // idx_supplier_bank_lookup 支撐住設計 §5.8 嘅跨 Supplier 重覆警告 —— 一條指錯
+  // 欄位嘅索引會令嗰個查詢變成全表掃描，而冇嘢會出聲。
+  await probe(
+    (ddl) => ddl.replace("KEY `idx_supplier_bank_lookup` (`blind_index_key_id`,`account_blind_index`)",
+      "KEY `idx_supplier_bank_lookup` (`id`)"),
+    /idx_supplier_bank_lookup must cover/u,
+    "an index on the wrong columns turns the rotation scan into a table scan"
   );
 
   await probe(

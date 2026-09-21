@@ -75,9 +75,12 @@ export function maskBankAccount({ lastFour, accountLength }) {
   if (!Number.isInteger(length) || length <= 0) return "";
   if (length <= 4) return "*".repeat(length);
   const suffix = String(lastFour ?? "");
-  // REV-033 L-1：Math.max 唔係裝飾。一行 last_four 長過 account_length 嘅資料會令
-  // repeat() 拋 RangeError，而遮罩係一個讀路徑 —— 佢應該照樣遮得到，唔係爆。
-  return `${"*".repeat(Math.max(0, length - suffix.length))}${suffix.slice(-length)}`;
+  // REV-033 L-1／REV-034 L-1：一行 last_four 長過 account_length 嘅資料唔應該令一個
+  // 讀路徑爆 RangeError —— 但「fail safe」對一個遮罩函式嚟講係遮**多啲**，唔係遮少
+  // 啲。第一版用 Math.max 加 slice，結果 {lastFour:"123456", accountLength:5} 會回
+  // 五個字元零粒星，即係一行壞資料反而漏得更多。呢種情況全部遮。
+  if (suffix.length >= length) return "*".repeat(length);
+  return `${"*".repeat(length - suffix.length)}${suffix}`;
 }
 
 /**

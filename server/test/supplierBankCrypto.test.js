@@ -404,8 +404,11 @@ test("a malformed row fails with the same message as a real authentication failu
 
 test("the read paths fail safe rather than throwing or passing on bad input", () => {
   // L-1：一行 last_four 長過 account_length 嘅壞資料唔應該令遮罩爆。
-  assert.equal(maskBankAccount({ lastFour: "123456", accountLength: 5 }), "23456",
-    "a suffix longer than the account is truncated, not repeated into a RangeError");
+  // REV-034 L-1：第一版呢度期望 "23456" —— 五個字元零粒星。一個遮罩函式 fail safe
+  // 係遮**多啲**，所以一行壞資料應該全遮，唔係反而漏得更多。個測試名同個斷言之前
+  // 講緊兩件唔同嘅事。
+  assert.equal(maskBankAccount({ lastFour: "123456", accountLength: 5 }), "*****",
+    "a suffix longer than the account masks everything rather than leaking more");
   // 長度 <= 4 嗰條分支行先，所以呢個照樣全星 —— 短帳號永遠唔會漏。
   assert.equal(maskBankAccount({ lastFour: "12345678", accountLength: 4 }), "****");
 
