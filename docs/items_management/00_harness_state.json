@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 66,
+  "revision": 67,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "d5c82028484ab771e82472a84d2e6e0f7d84e60b",
+    "code_commit": "6e6f80965f4f6db9b59bdbbe4a8717072a3506a5",
     "source_fingerprint": "9deb91a0c803cd3338003d68b639b2503f759ede66a4413d8283bf6b0d857b17",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-closeout",
     "default_commit": "5125f328dbdd7437208abade08bd8fe950a2ce38",
@@ -579,6 +579,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-014",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_pr117_review",
+      "reviewed_baseline": "5f70451306bccddd38542911d7ce249ba11d8fa0f14d83491ac46fa3a38f73d7",
+      "source_ref": "Active Codex task: independent reviewer re-reviewed PR #117 after BRANCH-SYNC-67 and returned APPROVE on 2026-09-21; Item-only diff, task statuses, traceability and boundary had no blocking findings.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [],
@@ -877,8 +889,24 @@
       "kind": "CI",
       "target": "required GitHub checks for the post-sync Item Management closeout candidate",
       "idempotency_key": "item-management-closeout-post-sync-ci-20260921",
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub Actions run 35555615334 on 2026-09-21: Dependency audit, Lint, Build frontend, and Test (server + client, MySQL integration) all passed on reviewed candidate 6e6f80965f4f6db9b59bdbbe4a8717072a3506a5."
+    },
+    {
+      "id": "PUSH-69",
+      "kind": "PUSH",
+      "target": "origin/codex/item-management-closeout final metadata candidate",
+      "idempotency_key": "item-management-closeout-final-push-20260921",
       "status": "PLANNED",
-      "source_ref": "Required after BRANCH-SYNC-67 because prior run 35554493368 is not evidence for the refreshed candidate."
+      "source_ref": "Final metadata-only checkpoint records REV-014 and CI-68; push must precede the final exact-candidate CI gate."
+    },
+    {
+      "id": "CI-70",
+      "kind": "CI",
+      "target": "required GitHub checks for the final metadata-only PR #117 candidate",
+      "idempotency_key": "item-management-closeout-final-ci-20260921",
+      "status": "PLANNED",
+      "source_ref": "Required because recording REV-014 and CI-68 produces the final metadata-only candidate; merge remains gated on its exact CI result."
     }
   ],
   "evidence_files": [
@@ -1032,5 +1060,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Push the post-sync PR #117 candidate, rerun all required CI on that exact candidate, obtain renewed independent approval, verify main has not moved, then merge and clean the closeout branch/worktree. After closeout: TASK-043 remains dependency-blocked until a real downstream module owns a reference to item_skus; TASK-044 remains blocked on independent manifest signing, recovery public-key/trust-environment provisioning and approval, formal TC-016, and human acceptance/sign-offs."
+  "next_safe_action": "Push the final metadata-only PR #117 candidate, require all CI checks to pass on that exact candidate, verify main has not moved, then merge and clean the closeout branch/worktree under REV-014. After closeout: TASK-043 remains dependency-blocked until a real downstream module owns a reference to item_skus; TASK-044 remains blocked on independent manifest signing, recovery public-key/trust-environment provisioning and approval, formal TC-016, and human acceptance/sign-offs."
 }
