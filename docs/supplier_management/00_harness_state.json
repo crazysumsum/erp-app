@@ -1,12 +1,12 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 141,
+  "revision": 142,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-002",
+  "current_phase": "PHASE-003",
   "current_task": null,
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
@@ -2028,6 +2028,28 @@
       "source_ref": "gh pr view 115 reports state MERGED, mergedAt 2026-09-21T01:10:14Z, mergeCommit d289154f. Pre-merge gates were observed, not assumed: origin/main had not moved from 860183a since the branch was cut, the branch was 4 ahead and 0 behind, the working tree was clean, mergeStateStatus CLEAN and mergeable MERGEABLE, the PR head equalled the local head aff2ebf, and run 35549604245 was green on that exact sha. REV-032 had returned APPROVED with 0 critical and 0 high. After the merge, the source_fingerprint measured on main is 31ef4906, identical to the reviewed branch head's, so the merge carried no source the review and CI had not seen. Local main fast-forwarded to d289154, the worktree was removed and the local and remote codex/supplier-task-031 deleted after checking clean, zero unpushed and --merged main.",
       "actor": "Harness agent via gh and git",
       "observed_at": "2026-09-21T09:11:11+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PHASE-002 exit gate checked against its own three criteria before closing",
+      "code_commit": "e6ef483000000000000000000000000000000000",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
+      "status": "PASS",
+      "source_ref": "Verified rather than assumed. TASK-025 through TASK-031 all read DONE, which matches 05_development_tasks.md:222's scope for PHASE-002. Each was merged with required CI observed green on the exact candidate sha and an independent review recorded: REV-026 through REV-032. SUP-CAP-02 has no open P0/P1; DEF-020 is CLOSED, and DEF-017, DEF-018 and DEF-019 are MEDIUM and owned by Item Management and the framework under HD-025. Dependency reconciliation is the one criterion not clean: docs/purchasing_receiving_management/00_module_manifest.json pins supplier-purchasing-contract at 983f351f, while shasum -a 256 of docs/supplier_management/03_design_spec.md returns a9f64493, which is what this module's own manifest already records. Accepted as an exception under HD-026 rather than waved through.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T09:18:51+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PHASE-003 entry criteria checked; two gates are open and one plan clause is deliberately deviated from",
+      "code_commit": "e6ef483000000000000000000000000000000000",
+      "spec_baseline": "a0d41e31d887447d669d0f8252991e43fcdd273eb9eadcbe0d211468092bd154",
+      "source_fingerprint": "31ef4906006ef30fb4327cdd9e991be11caa598c6aad6aafa2355d0e7843e753",
+      "status": "PASS",
+      "source_ref": "PHASE-003's Entry criteria are a fresh worktree from the then-latest origin/main plus actual evidence for preceding-phase and this-phase provider, migration and security gates. Preceding phases: PHASE-001 and PHASE-002 are complete. Security gate: T32's dependencies T01, T02, T03, T18 and T24 are all DONE, and the key-ring validation they produced already exists and is enforced -- server/src/modules/supplier/normalizeSupplierConfig.js rejects a key ring that is not a JSON object, is empty, has an invalid key ID, decodes to anything other than 32 bytes, or whose activeKeyId is absent from the ring; server/config/supplier.js already reads all four SUPPLIER_BANK_* variables and server/.env.example already documents them. Migration gate: main carries 36 migrations ending at 0036_create_supplier_settings.js, so the next free number is 0037. The collision recorded in the carried-forward list is real and was verified: codex/customer-management-phase-001 also defines 0035 and 0036 for customer tables, so whichever of the two branches merges second must renumber, and a supplier Bank migration taking 0037 today inherits the same hazard against that branch. Deliberate deviation from the plan: PHASE-003's Git and merge plan clause says 一個獨立 codex/ 分支, but the Product Owner instructed on 2026-09-21 that branches be named claude/<name>. The instruction is followed and 05_development_tasks.md is NOT edited, because the plan document is hashed into the PLAN baseline and editing it would strand every approval, review and observation bound to that baseline.",
+      "actor": "Harness agent",
+      "observed_at": "2026-09-21T09:18:51+08:00"
     }
   ],
   "pending_decisions": [
@@ -2380,6 +2402,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-18: DEF-019 唔好郁. It stays routed to the Item Management owner and is not touched from a supplier branch, in this PR or a separate one. The recommendation of a separate PR was declined, so the standing cost is accepted: a supplier PR whose Test job fails on an item case should be checked against DEF-019 and DEF-017 before anyone concludes the branch is at fault, and re-run. DEF-017 is unaffected by this decision and also stays routed out."
+    },
+    {
+      "id": "HD-026",
+      "impact": "MAJOR",
+      "question": "PHASE-002's Exit criteria are three: no unhandled P0/P1 in the Phase Gate, dependency reconciliation consistent, and the PR candidate consistent with its evidence. Two are met outright -- TASK-025 through TASK-031 are all DONE and merged with required CI green on each exact candidate and an independent review on each, and SUP-CAP-02 carries no open P0/P1 now that DEF-020 is CLOSED. The third is not clean: Purchasing's manifest pins Supplier's provided contract at 983f351f while Supplier's 03_design_spec.md actually hashes to a9f64493, verified by hashing the file. That drift has been on the record since REV-009 and PHASE-002 did not introduce it. Options: hold PHASE-002 open until the pin is reconciled; close PHASE-002 and route the pin to Purchasing as a recorded exception; or reconcile it from a supplier branch, which would mean editing docs/purchasing_receiving_management/00_module_manifest.json, a path this module lists as approval-required and does not own.",
+      "affected_ids": [
+        "PHASE-002",
+        "PHASE-003",
+        "supplier-purchasing-contract",
+        "purchasing-receiving",
+        "docs/purchasing_receiving_management/00_module_manifest.json"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-21: 收002, 開003. PHASE-002 closes and PHASE-003 opens. The Purchasing pin is accepted as a recorded exception rather than a blocker, on these grounds: the pin's own version field reads planning-only-NOT_IMPLEMENTED, so nothing is running against the stale contract; the file belongs to the Purchasing module, not this one, and this module lists it as approval-required precisely so a supplier branch does not edit it; and the drift predates PHASE-002. It stays routed to the Purchasing owner together with the permission-catalogue drift in four manifests."
     }
   ],
   "external_actions": [
@@ -3120,5 +3156,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-031 is DONE and merged at d289154f, and PHASE-002 is now complete in full: 05_development_tasks.md:222 scopes it as TASK-025 through TASK-031 and all seven are DONE. REV-032 returned APPROVED and its M-1, M-2, M-3 and L-1/L-2/L-3/L-5 were fixed before the merge. DEF-020 is CLOSED by this merge. The next step is a Phase-level decision, not another task: whether PHASE-002 formally closes and what PHASE-003 opens with. TASK-032 through TASK-037 are PHASE-003 (Bank persistence and crypto), which needs a new migration, AES-256-GCM and two key rings as an unconditional startup requirement. That is the Product Owner's call and has not been asked. One acceptance gap is recorded rather than closed (REV-032 M-4): T31's Description asks for HTTP flow verification and no layer in supplier_management drives an actual request through dispatcher to handler to service to MySQL, because the handler tests are declarative and both e2e specs mock the API. The binding Acceptance criteria and Verification block do not require it and all pass. Template if it is scheduled: server/test/business-master/http.integration.test.js, already in this suite's argv. REV-032 L-4 is also left alone: cleanup()'s OR request_id IN ('req-int','req-race') is an unscoped global sweep, pre-existing, and T31 deepens the dependence on it without introducing it. Branch naming changed by user instruction on 2026-09-21: new worktrees use claude/<name>, not codex/<name>. Open and routed out of this module, none blocking: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-017 having reddened this branch once; DEF-018 is the shared PasswordReasonDialog never submitting on Enter. HD-025 keeps all of them with their owners, so the response to their CI failures is a rerun. Also observed on 2026-09-21: the two unrelated worktrees under /private/tmp (erp-customer-management-phase-001 and erp-item-management-task-037) were emptied by the OS tmp reaper during a three-day gap; their directories survive with zero files and no .git pointer, and .git/worktrees/ was already absent, so git worktree prune only cleared dangling entries. The branches codex/customer-management-phase-001 (3757d42) and codex/item-management-task-037 (03f7011) are intact in the repository; any uncommitted work those worktrees held is gone. Carried forward, none introduced here: 0035 and 0036 are also claimed by the unmerged codex/customer-management-phase-001 branch, so it must renumber; DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; Purchasing pins the Supplier provided contract at 983f351f against the actual a9f64493; permission-catalogue drifted in four manifests; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
+  "next_safe_action": "PHASE-002 is CLOSED and PHASE-003 is OPEN by Product Owner decision HD-026 on 2026-09-21. PHASE-003 is TASK-032 through TASK-037, SUP-CAP-03 Bank Security. Nothing has been implemented yet. Before TASK-032 writes anything, three things need the Product Owner: (1) schema sign-off for supplier_bank_accounts, which CLAUDE.md section 8 requires before any migration is written, and which is fully specified already in design spec section 5.8 so the sign-off is on the approved design rather than on a new invention; (2) the migration number, 0037 today, against the known collision with codex/customer-management-phase-001; (3) how the two Bank key rings are provisioned for local and CI runs, given that once the Bank capability deploys they are an unconditional startup requirement. server/database/migrations/**, server/config/** and server/.env.example are all in this module's approval_required_paths, so TASK-032 cannot touch them without that approval. Branch naming: claude/<name>, not codex/<name>, by the same instruction; 05_development_tasks.md's codex/ clause is deliberately not edited because the plan document is hashed into the PLAN baseline. Accepted as a recorded exception under HD-026, routed to Purchasing: that module's manifest pins the Supplier provided contract at 983f351f against the actual a9f64493, its version field reads planning-only-NOT_IMPLEMENTED, and the file is not this module's to edit. The permission-catalogue drift in four manifests travels with it. Open and routed out of this module, none blocking: DEF-017 and DEF-019 are Item Management shared-database parallelism, DEF-018 is the shared PasswordReasonDialog never submitting on Enter. HD-025 keeps all three with their owners, so the response to their CI failures is a rerun. Recorded rather than closed in TASK-031 (REV-032 M-4): nothing in supplier_management drives an actual HTTP request through dispatcher to handler to service to MySQL. Template if scheduled: server/test/business-master/http.integration.test.js. REV-032 L-4 likewise left alone: cleanup()'s OR request_id IN ('req-int','req-race') is an unscoped global sweep, pre-existing. The two worktrees under /private/tmp were emptied by the OS tmp reaper during a three-day gap; branches codex/customer-management-phase-001 (3757d42) and codex/item-management-task-037 (03f7011) are intact but any uncommitted work those worktrees held is gone. Do not place new worktrees under /private/tmp. Carried forward: DEF-016 OPEN; DEF-013 OPEN for TASK-038; DEF-004 deferred under APPROVAL-HD-017-RISK; six SCOPE approvals already stale; DEF-003/004/005/006/007/008/010/012 remain DEFERRED; DEF-014 and DEF-015 remain open."
 }
