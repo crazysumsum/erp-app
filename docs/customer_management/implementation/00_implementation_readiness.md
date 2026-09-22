@@ -353,3 +353,28 @@ merge claim.
   visible default labels, the credit-override warning, authoritative completeness
   and actionable child/credit conflict recovery were corrected and independently
   revalidated.
+
+## TASK-018 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added permission-aware Customer lifecycle commands, activation-to-approval,
+  approval queue/detail decisions, the prospective activation setting and
+  Category/Industry/Territory administration. High-risk operations retain password,
+  approved-device and reason requirements; reference blockers and version conflicts
+  remain visible and actionable.
+- Approval detail shows the submitted/current diff, identifier count, requester,
+  assigned approver and request time. Stale requests cannot be approved; reassignment
+  and withdrawal follow their distinct permission contracts.
+- Client coverage passed 603/603 tests. Repository ESLint, client production build,
+  `git diff --check`, traceability approval validation and the Customer module-boundary
+  check passed. The build reported only the existing >500 kB chunk advisory.
+- Playwright ran the actual Vite UI and passed 9/9 Customer flows, including role
+  boundaries, version conflict recovery, stale approval, activation approver
+  selection, named reference blockers, reassignment, withdrawal and signed settings
+  and catalog writes, with no relevant unexpected console failure. CI was not run,
+  as directed by the Product Owner.
+- Independent review by Jason initially found seven required contract/coverage gaps.
+  After remediation, the same separate reviewer reran focused Vitest 10/10 and
+  Playwright 9/9 and returned `APPROVE` with every finding closed.

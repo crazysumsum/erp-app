@@ -4,20 +4,21 @@ export const page = { name: "customer-detail", path: "/customers/:id", title: "�
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
-import { onBeforeRouteLeave, useRoute } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import CustomerAddressPanel from "@/components/customers/CustomerAddressPanel.vue";
 import CustomerCompletenessBanner from "@/components/customers/CustomerCompletenessBanner.vue";
 import CustomerContactPanel from "@/components/customers/CustomerContactPanel.vue";
 import CustomerCreditPanel from "@/components/customers/CustomerCreditPanel.vue";
 import CustomerIdentifierPanel from "@/components/customers/CustomerIdentifierPanel.vue";
+import CustomerStatusActions from "@/components/customers/CustomerStatusActions.vue";
 import { can } from "@/framework/authorization/can.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import customerService from "@/services/customer.js";
 import { useSessionStore } from "@/stores/session.js";
 
 const STATUS = Object.freeze({ draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停", blocked: "已封鎖", archived: "已封存" });
-const route = useRoute(); const session = useSessionStore(); const canManage = computed(() => can(session, { permissions: ["customer.mgmt"] }));
+const route = useRoute(); const router = useRouter(); const session = useSessionStore(); const canManage = computed(() => can(session, { permissions: ["customer.mgmt"] })); const canApprove = computed(() => can(session, { permissions: ["customer.approval"] }));
 const customer = ref(null); const loading = ref(true); const error = ref(null); const editing = ref(false); const submitting = ref(false); const editError = ref(""); const stale = ref(false);
 const completeness = ref({ issues: [], warnings: [] });
 const tab = ref("overview");
@@ -39,7 +40,7 @@ onMounted(load);
       <q-skeleton v-if="loading" type="rect" height="180px" aria-label="載入客戶詳情" />
       <q-banner v-else-if="error" class="bg-negative text-white" role="alert">{{ error.message || '載入客戶失敗' }}<template #action><q-btn v-if="error.code === 'CUSTOMER_NOT_FOUND'" flat label="返回客戶列表" to="/customers" /><q-btn v-else flat label="重試" @click="load" /></template></q-banner>
       <template v-else-if="customer">
-        <div class="row items-center q-gutter-sm q-mb-md"><q-badge :color="customer.status === 'active' ? 'positive' : 'warning'" :label="STATUS[customer.status] ?? customer.status" /><span class="text-caption text-grey-7">版本 {{ customer.version }}</span><q-btn v-if="canManage && !editing && customer.status !== 'archived'" color="primary" label="編輯一般資料" aria-label="編輯一般資料" @click="startEdit" /></div>
+        <div class="row items-center q-gutter-sm q-mb-md"><q-badge :color="customer.status === 'active' ? 'positive' : 'warning'" :label="STATUS[customer.status] ?? customer.status" /><span class="text-caption text-grey-7">版本 {{ customer.version }}</span><q-btn v-if="canManage && !editing && customer.status !== 'archived'" color="primary" label="編輯一般資料" aria-label="編輯一般資料" @click="startEdit" /><CustomerStatusActions v-if="!editing" :customer="customer" :can-manage="canManage" :can-approve="canApprove" :user-id="session.user?.id" :username="session.user?.username" @refresh="load" @deleted="router.push('/customers')" /></div>
         <q-banner v-if="editError" class="bg-negative text-white q-mb-md" role="alert">{{ editError }}<template v-if="stale" #action><q-btn flat label="載入最新資料" @click="reloadLatest" /></template></q-banner>
         <CustomerCompletenessBanner v-if="!editing" :completeness="completeness" />
         <q-tabs v-if="!editing" v-model="tab" align="left" dense active-color="primary"><q-tab name="overview" label="概覽" /><q-tab name="addresses" :label="`地址 (${customer.addresses.length})`" /><q-tab name="contacts" :label="`聯絡人 (${customer.contacts.length})`" /><q-tab name="identifiers" :label="`識別資料 (${customer.identifiers.length})`" /><q-tab name="credit" label="信用政策" /></q-tabs>
