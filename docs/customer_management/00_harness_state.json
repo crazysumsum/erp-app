@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 112,
+  "revision": 117,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,19 +9,20 @@
   "current_phase": "PHASE-003",
   "current_task": "TASK-021",
   "baseline": {
-    "design": "6a0c0f97eb5c09207e507ac03b92fefcc90ce0605c30cc04c6fa155adaf6bc08",
-    "plan": "cf1fb08d3c97351e49dfd099c12335f2bed85316545d70c357e047da52ec43b6",
-    "code_commit": "15096aeba1f333a7829e7427647e0bcde3138500",
-    "source_fingerprint": "a38f3a6247f9601751f342fe4e19b6c0d40b33d12c34823eb4c4f0924ca59d38",
+    "design": "064ec74eeef3bcb5a4f7db7fbf6450b969e352c935909428f562f93fbe2818c3",
+    "plan": "17d1d6ac0f354afb934d352672158204970b9fb4c7d79fb6d9fbed6f5f8f517d",
+    "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+    "source_fingerprint": "dabb0a7dbb084e8fe846901da53b745a521d1db309385df8ec38da8e687a92ad",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "CUSTOMER-PHASE-001-NO-ACTIVE-RUNTIME",
+    "instance_id": "customer-phase003-task021-20260922",
     "owner": "Primary harness agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-management-phase-001/customer-management-phase-001"
+      "workspace": "/private/tmp/erp-customer-management-phase-003",
+      "database": "mysql://127.0.0.1:3306/erp_customer_task021"
     },
     "lease_ref": null
   },
@@ -899,6 +900,190 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-008",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer designs are directly approved and work continues automatically; applied only to manifest inventory alignment for design-listed TASK-021 configuration paths.",
+      "recorded_at": "2026-09-22T06:41:55Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "2cce09d9ab3914f3c09a59a8e7cd68408e49d231a25556e381c65bdebc3bbda7",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-021",
+        "module-boundary inventory alignment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-008",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer designs are directly approved and work continues automatically; applied only to manifest inventory alignment for TASK-021.",
+      "recorded_at": "2026-09-22T06:41:55Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "47492ac1048ff96440b70ffdd6ed05f5bef3401d00549f6bac63dc16bc06655d",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-021",
+        "module-boundary inventory alignment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-025",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 standing instruction to continue without stopping; automatic continuation to TASK-021 under the approved PHASE-003 plan and HD-003 security assurance.",
+      "recorded_at": "2026-09-22T06:41:55Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "47492ac1048ff96440b70ffdd6ed05f5bef3401d00549f6bac63dc16bc06655d",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "PHASE-003",
+        "TASK-021",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/config/customer.js",
+        "server/.env.example",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-009",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer designs are directly approved and work continues automatically. Applied to the TASK-021 security correction replacing unsafe NFKC compatibility folding with explicit NFC/fullwidth-ASCII normalization and fail-closed rejection, aligned with the independently hardened shared Supplier bank primitive.",
+      "recorded_at": "2026-09-22T07:16:10Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "1a933a3244113500e03f2e6bb0b7ad9fb14631c0022dff1d9a536b953da40cef",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-021",
+        "bank-account normalization security semantics"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-009",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer designs are directly approved and work continues automatically. Current-plan successor after the TASK-021 bank-normalization security correction; task scope and acceptance criteria otherwise remain unchanged.",
+      "recorded_at": "2026-09-22T07:16:10Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7c4a9b2b9e7a07805a69fdd81f1973339dbb9f3a0cb75a44eac01ba305b9af97",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-021"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-026",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current-baseline successor to APPROVAL-SCOPE-025 after the approved TASK-021 bank-normalization security correction.",
+      "recorded_at": "2026-09-22T07:16:10Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "7c4a9b2b9e7a07805a69fdd81f1973339dbb9f3a0cb75a44eac01ba305b9af97",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "PHASE-003",
+        "TASK-021",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/config/customer.js",
+        "server/.env.example",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-010",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current-baseline successor to APPROVAL-DESIGN-009 after updating the manifest fingerprint for the already-approved Customer design document; no further design semantics changed.",
+      "recorded_at": "2026-09-22T07:16:10Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "064ec74eeef3bcb5a4f7db7fbf6450b969e352c935909428f562f93fbe2818c3",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-021",
+        "design contract fingerprint reconciliation"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-010",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current-baseline successor to APPROVAL-PLAN-009 after non-semantic manifest contract-fingerprint reconciliation.",
+      "recorded_at": "2026-09-22T07:16:10Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "17d1d6ac0f354afb934d352672158204970b9fb4c7d79fb6d9fbed6f5f8f517d",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-021"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-027",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Current-baseline successor to APPROVAL-SCOPE-026 after non-semantic manifest contract-fingerprint reconciliation.",
+      "recorded_at": "2026-09-22T07:16:10Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "17d1d6ac0f354afb934d352672158204970b9fb4c7d79fb6d9fbed6f5f8f517d",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "scope": [
+        "PHASE-003",
+        "TASK-021",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/config/customer.js",
+        "server/.env.example",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1328,6 +1513,39 @@
       "source_ref": "REV-018",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-22T06:39:54Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-021 Customer bank schema, cryptography and fail-closed configuration developer verification",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "spec_baseline": "47492ac1048ff96440b70ffdd6ed05f5bef3401d00549f6bac63dc16bc06655d",
+      "source_fingerprint": "cd512d1212a8929c8da4ff0af4310dc26890eae450934823a8626ccfdfc0787d",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-021-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T07:02:37Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-021 exact-source shared key-ring and duplicate-key remediation verification",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "spec_baseline": "47492ac1048ff96440b70ffdd6ed05f5bef3401d00549f6bac63dc16bc06655d",
+      "source_fingerprint": "3339f23e34ab7d21fc2ef0e3df0935e5aa0fd54a8023285f2c8cbac92dc494d7",
+      "status": "PASS",
+      "source_ref": "2026-09-22: focused Customer bank/configuration/MySQL suite passed 18/18 after enforcing exact duplicate key-ID rejection and the design-required shared Customer/Supplier rings with owner-separated AAD. The full serial real-MySQL server coverage gate then passed at 94.90% lines, 83.89% branches and 91.96% functions; all 34 high-risk floors passed.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T07:09:00Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-021 approved normalization and one-sided shared-key-ring fail-closed verification",
+      "code_commit": "c6628caba1df56f89eb00e5b1474ca9fab1ed05f",
+      "spec_baseline": "7c4a9b2b9e7a07805a69fdd81f1973339dbb9f3a0cb75a44eac01ba305b9af97",
+      "source_fingerprint": "dabb0a7dbb084e8fe846901da53b745a521d1db309385df8ec38da8e687a92ad",
+      "status": "PASS",
+      "source_ref": "2026-09-22: focused Customer bank/configuration/MySQL suite passed 18/18 after explicitly rejecting one-sided Customer/Supplier bank enablement and binding the implementation to the approved NFC/fullwidth-ASCII normalization semantics. Repository ESLint and diff checks passed.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T07:16:10Z"
     }
   ],
   "pending_decisions": [
@@ -1777,6 +1995,14 @@
       "idempotency_key": "customer-phase003-task020-review-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-22: fresh schema migrated through 0048; role/user HTTP suites passed 16/16 including both Customer bank permissions, both protected-admin self-escalation paths, distinct-recipient delegation and CAS replay denial; complete migration rerun was a no-op; exact schema deletion and final absence zero were confirmed."
+    },
+    {
+      "id": "EXT-MIGRATION-032",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_task021",
+      "idempotency_key": "customer-phase003-task021-bank-foundation-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: a fresh isolated schema migrated through 0049 and a complete rerun skipped every migration. Focused Customer bank MySQL constraints passed, followed by the full serial real-MySQL server coverage gate at 94.89% lines, 83.89% branches and 91.95% functions; all 34 high-risk per-file floors passed. Cleanup remains pending exact-candidate independent review."
     }
   ],
   "evidence_files": [
@@ -1785,5 +2011,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-021 Customer bank schema, AES-GCM/AAD crypto, masking, key-ring configuration and startup fail-closed checks using the existing Supplier bank foundation where it is genuinely shared."
+  "next_safe_action": "Commit the TASK-021 candidate, obtain separate security/database review against its exact source fingerprint, remediate any finding, then mark TASK-021 DONE and start TASK-022."
 }

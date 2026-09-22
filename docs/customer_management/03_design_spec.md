@@ -464,7 +464,7 @@ Deadlock／lock timeout 回可重試的 `409 CONCURRENT_OPERATION`; service 最�
 
 ### 3.4 銀行密碼學及檔案安全
 
-- Account number 先 Unicode NFKC、移除被批准的分隔字元、保留字母數字並 uppercase；顯示值不由 normalized value猜回格式。
+- Account number 先 Unicode NFC，僅明確折疊全形 ASCII，再移除被批准的分隔字元、保留 ASCII 字母數字並只對 ASCII lowercase 作 uppercase；不使用會將上標、圈字或連字轉成另一個合法帳號的 NFKC compatibility fold，其餘字元拒絕。顯示值不由 normalized value猜回格式。
 - 每列用 AES-256-GCM、隨機 12-byte IV、16-byte auth tag。AAD 固定版本化為 `erp-bank:v1:<ownerType>:<customerId>:<cryptoContext>`，防止密文搬到另一 owner 解密。
 - Duplicate blind index 用 HMAC-SHA-256；scope input 為 country／bank／branch／normalized account。Write 使用 active lookup key；read／duplicate 在 rotation window 使用全部 read keys。
 - Encryption key ring 與 blind-index key ring 分離，key material只來自 secret config；key ID 可存 DB，key value 不存 DB／log。

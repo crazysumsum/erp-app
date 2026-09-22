@@ -427,3 +427,24 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   standing direction and accepted risk.
 - Independent re-review approved the exact remediated candidate after independently
   rerunning the focused 76/76 unit suite; no blocking TASK-020 finding remains.
+
+## TASK-021 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added the exact `customer_bank_accounts` contract with no plaintext account-number
+  column, owner-scoped blind-index uniqueness, cross-owner lookup support, one active
+  default per Customer, exact foreign keys and a fail-closed adoption inspector.
+- Added Customer-only AES-256-GCM with random 96-bit IVs, owner/context-bound injective
+  AAD, HMAC-SHA-256 blind indexes across the whole lookup ring, safe normalization and
+  masking. Encryption and lookup key material must be separate, valid 32-byte keys;
+  missing, partial, malformed or retired key configuration fails closed without
+  serializing key material.
+- Focused unit/configuration tests passed 18/18. The real-MySQL schema test passed the
+  no-plaintext scan, same-owner duplicate constraint, legal cross-owner duplicate and
+  active-default constraint. A fresh schema migrated through `0049`, and a complete
+  rerun skipped every migration.
+- The full serial real-MySQL server coverage gate passed at 94.90% lines, 83.89%
+  branches and 91.96% functions; all 34 high-risk per-file floors passed. Repository
+  ESLint and `git diff --check` passed. CI was not run under the Product Owner's
+  standing direction and accepted risk.
