@@ -47,6 +47,11 @@ const loadError = ref("");
 // 明文。`remaining` 係俾倒數顯示用。
 const revealed = reactive({ id: null, accountNumber: "", remaining: 0 });
 let countdown = null;
+// 喺 `forgetPlaintext()` **之前**宣告：佢讀寫呢個變數，而 `let` 唔會 hoist 到可以讀。
+// 今日安全（冇 watcher 係 immediate、setup 期間冇人叫呢啲 function），但一個
+// `{ immediate: true }` 就會令一個安全控制喺 mount 嗰陣掟 TDZ ReferenceError。
+// REV-046 I-1、REV-047 §6.5、REV-048 I-1 —— 問咗三次，而家做。
+let revealGeneration = 0;
 
 /**
  * 每次「唔好再攞住明文」都行呢度，而佢會**撳大 generation**。
@@ -75,6 +80,16 @@ function forgetPlaintext() {
  * 同 `form.password` 一樣係使用者打落去嘅明文，而佢哋會喺新嗰個 URL 底下繼續
  * render。（REV-045 F-M1：我上一版個註解講咗五個觸發點全部覆蓋呢兩個欄位，
  * 但實情係route change 同 session 失效兩個都冇掂過佢哋。）
+ */
+/**
+ * 留意：寫入 form 嗰兩個祕密有**三個**互相冗餘嘅清除機制 —— 下面呢個 call、
+ * dialog 個 `@hide="forgetFormSecrets"`、同埋 `openCreate()` 每次開嗰陣重設。
+ * 任何**兩個**都夠，所以單獨拆走其中一個係一個 equivalent mutant，測試分辨唔到
+ * （REV-047 同 REV-048 都揾到呢點，而我第一次數錯咗，當咗佢被殺）。
+ *
+ * 三個一齊拆走，測試就會紅 —— 即係「換咗 Supplier 之後 form state 冇咗啲祕密」
+ * 呢個**性質**係釘住咗嘅，冇釘住嘅係邊一個機制做嘅。三個都保留：安全控制唔會
+ * 因為「而家有另外兩個」就簡化走。
  */
 function forgetEverything() {
   forgetPlaintext();
@@ -116,7 +131,6 @@ function holdPlaintext(id, accountNumber) {
   countdown = setInterval(tick, 1000);
 }
 
-let revealGeneration = 0;
 onUnmounted(forgetEverything);
 /**
  * Route change 要**兩個** guard，唔係一個。

@@ -298,7 +298,9 @@ F-M1 route update: reveal only  SURVIVED   595 passed (595)
 再用咗兩輪先至整啱嘅 guard —— 佢嘅覆蓋率俾我一行「修正」遮走咗。§10 嗰句「十二個
 mutant，十二個殺到」喺 `551e249` 係真嘅，喺呢個 merge candidate 就唔係。
 
-（REV-047 話 `M-2b` 都生還；我實測佢仍然 KILLED。照實記，唔跟。）
+（REV-047 話 `M-2b` 都生還；我當時實測 KILLED 就照記低咗「唔跟」。**我錯，佢啱** ——
+見 §12。我度嘅係另一個 mutant：我掏空咗 `forgetFormSecrets` 個 function body，佢拆嘅係
+`forgetEverything()` 入面嗰個 **call**。兩個唔同，而佢嗰個生還。）
 
 收法：
 - **刪走個 watcher。** 佢唔係安全控制，而佢唔存在喺程式度呢點係實測過嘅。
@@ -342,3 +344,59 @@ F-M1  route update: reveal only KILLED  ← 之前生還
 我度量咗一件真嘢（`list()` 冇叫過 8），但係喺一個同程式唔同嘅宿主入面度。個修正因此
 修緊一個唔存在嘅問題，而副作用係遮走咗一個真守衛嘅覆蓋率。**下次喺加修正之前，
 先喺真嘅組合度重現一次。**
+
+## 12. REV-048 remediation
+
+REV-048 報 CHANGES_REQUESTED：**0 Critical、0 High**、1 Medium、2 Low、5 Info，並且確認
+REV-047 個 High 真係收咗（佢重跑咗成張 mutation 表：`H-1` 而家紅 4 條、`F-M1` 紅 2 條，
+上一輪兩個都係 595/595 生還）。**八輪以嚟第一輪，remediation 冇整出下一個 finding。**
+
+### 兩件佢判我錯，而我覆核之後確認佢啱
+
+**一、`M-2b` 生還，而我 §11 記咗「十三個殺到」。** 我當時度嘅係**另一個 mutant** ——
+我掏空 `forgetFormSecrets` 個 body，佢拆嘅係 `forgetEverything()` 入面嗰個 **call**。
+我自己重做佢個版本：**597/597 全綠**。所以係**十二個殺到，唔係十三個**。
+
+再查落去：嗰兩個祕密有**三個互相冗餘**嘅清除機制（呢個 call、dialog 個 `@hide`、
+同 `openCreate()` 重設）。任何兩個都夠，所以單獨拆一個係 equivalent mutant。
+**三個一齊拆走，測試就紅** —— 即係「換咗 Supplier 之後 form state 冇咗啲祕密」呢個
+**性質**係釘住嘅，冇釘住嘅係邊個機制做。三個都留低，並且寫咗落註解，免得下一個人
+見到「反正有另外兩個」就逐個清走。
+
+（我第一次嘅修法係「重開個 dialog 再睇欄位」—— 一樣分辨唔到，因為 `openCreate()`
+自己就會重設。試咗先知，冇當佢得咗。）
+
+**二、`bank.test.js` 個註解講反咗。** 我寫咗個 `onBeforeRouteUpdate` 係「縱深防禦
+（unmount 已經清咗）」、守住「有一日個 panel 真係被重用」。**兩句都錯。**
+
+我 instrument 咗個 guard 再行真頁面：**`PANEL onBeforeRouteUpdate fired: 1 times`**。
+佢喺 production 跑緊，而且喺**路由確認之前**跑 —— 即係喺 `route.params.id` 變之前、
+喺 page 拆走個子樹之前。清明文嗰個係佢，unmount 先係冗餘嗰層。REV-048 量到嘅次序係
+`guardUpdate:SupplierDetailPage → guardUpdate:SupplierBankPanel → list:8`。
+
+呢個係我喺呢個 task 入面**第四次**把一句未執行過嘅機制陳述寫成肯定句。註解已經改返，
+連埋量到嘅次序，等下一個人唔使再推一次。
+
+### Medium：target 郁咗 24 個 commit，而且入面有一個新 CI gate
+
+`origin/main` 由 merge base 起郁咗 **24 個 commit**，從來冇 merge 入嚟，而
+`baseline.default_commit` 指住一個呢條分支根本冇嘅 commit。入面有兩樣直接打中呢條分支：
+
+- 一個新 CI job **`Browser tests (Playwright)`**，令**本 task 自己條 `supplier-bank.spec.js`
+  變成 per-PR blocking gate**。呢個 head 之前嗰個「四個 check 全綠」，係對住一個而家要
+  五個 check 嘅 target 講嘅。
+- `playwright.config.js` 由寫死 `/private/tmp` 改成 `os.tmpdir()` —— 而嗰個 fix 存在
+  嘅原因就係前者喺 Linux 上面 EACCES。即係冇呢個 merge，新嗰個 job 喺 CI 上面會炸。
+
+已經 merge：**乾淨、冇衝突**。`634/634` unit、`23/23` 瀏覽器（用 CI 自己嗰條
+`npm run e2e:supplier-management`）、lint 乾淨。
+
+### 兩條問咗三次先做嘅嘢
+
+| # | |
+| --- | --- |
+| **I-1** | `let revealGeneration = 0;` 本來宣告喺 `forgetPlaintext()` **之後**，而後者讀寫佢。今日安全，但一個 `{ immediate: true }` 就會令一個安全控制喺 mount 掟 TDZ `ReferenceError`。移咗上去 |
+| **I-2** | 註解寫住 `advanceTimersToNextTimer()`，而 code 係 `vi.advanceTimersByTime(1000)`。改返 |
+
+REV-046 同 REV-047 都問過，而我兩次都靜靜雞跳過咗 —— 連「唔做，因為……」都冇寫。
+REV-048 講得啱：**silently skipped twice is how a note becomes permanent。**

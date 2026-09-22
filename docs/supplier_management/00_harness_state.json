@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 210,
+  "revision": 213,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "c4efd7fcc793741cdbb331fffe28289704456a9f",
-    "source_fingerprint": "f62d381ac33591d2705478bdc959cc3b49379d5f8c9c76252b010434c5b0f255",
+    "code_commit": "61c9079ddf13e94196406a380c25ef6f1b26b7d9",
+    "source_fingerprint": "c929498bf22c260e3d4e72e8110dac9656bbc9ac8d0befa9e09f4021b2c42b0e",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
-    "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
+    "default_commit": "38e1542eed8ac6fe98ce307868390b6e98181788",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -2953,6 +2953,17 @@
       "source_ref": "REV-047 returned CHANGES_REQUESTED with 1 High, 2 Medium and 3 Low. The High is about the watcher I added while merging main. I had measured, correctly, that list() was called once with 7 and never with 8 - but I measured it in bank.test.js's host, which binds $route.params.id to the prop and keeps the instance alive. The real SupplierDetailPage does not: its load() sets loading = true first, and the template is v-if=loading / v-else-if=supplier, so the whole subtree including the panel is torn down and rebuilt. I drove the real page myself before accepting the finding: panel instance uid 48 to 77, and list() called with 7 and then 8. With the watcher deleted the real page still calls list(8) and still never shows supplier 7's rows, so the watcher never ran in the application at all. What it did do was run in the test host, where it cleared everything first and therefore masked the guard: onBeforeRouteUpdate could be deleted outright with all 595 tests green - the guard REV-044 found missing and that took two rounds to shape. My section 10 claim of twelve mutants twelve killed was true at 551e249 and false at the merge candidate. Remediation: the watcher is gone, the host-bound test that pinned it is gone, a replacement test drives the real SupplierDetailPage, and bank.test.js now states in its comment that its host deliberately differs from the application and why. Thirteen mutants, thirteen killed, including the two that had been surviving. One correction to the report: it lists M-2b as surviving too and I measure it as killed; recorded as measured rather than as received. F-L1 and F-L2 were unasserted lines, both now pinned - F-L1 needed both clicks in one tick, because an await between them lets Vue re-render and Quasar's loading state swallows the second click, which is why my first attempt at that test left the mutant alive. F-M2, a page that hangs on a non-numeric id, is already on main via PR #127 and the reviewer said it should not block this PR; a follow-up task was opened instead. 597/597 client vitest, 23/23 browser across the whole technical project, lint clean, evidence re-run at this head as F-L3 asked.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-047",
       "observed_at": "2026-09-22T14:13:16+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-048: first round in eight where the remediation did not open the next finding; two of my claims settled against me",
+      "code_commit": "61c9079ddf13e94196406a380c25ef6f1b26b7d9",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c929498bf22c260e3d4e72e8110dac9656bbc9ac8d0befa9e09f4021b2c42b0e",
+      "status": "PASS",
+      "source_ref": "REV-048 returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 2 Low and 5 Info, and confirmed REV-047's High is genuinely closed by reproducing the whole mutation table rather than reading it. Two of my own claims were settled against me and I verified both before accepting them. First, M-2b: I had recorded thirteen of thirteen killed and explicitly overridden REV-047 on that entry. I had measured a different mutant - I gutted forgetFormSecrets's body, they dropped the call to it from forgetEverything - and theirs survives 597/597. It is twelve of thirteen. Investigating further, the two form secrets have three mutually redundant clearing mechanisms (that call, the dialog's @hide, and openCreate's reset); any two suffice, so dropping one alone is an equivalent mutant, while dropping all three turns the test red. So the property is pinned and the mechanism is not, which is worth stating precisely rather than either claiming a kill or calling it a hole. My first attempted fix for this - reopen the dialog and assert the fields - also failed to discriminate, because openCreate resets them; I found that by running it rather than by assuming it worked. Second, the comment I wrote claiming the panel's onBeforeRouteUpdate is defence-in-depth because unmount already cleared: backwards. I instrumented the guard and drove the real page - it fires once, in production, before the route is confirmed and therefore before the teardown. It is the primary clear and the unmount is the redundant layer. That is the fourth time in this task I have written an unexecuted mechanism claim as a statement of fact. The blocking Medium was process, not code: origin/main had moved 24 commits and was never merged, baseline.default_commit pointed at a commit this branch did not contain, and among those commits is a new CI job that makes this task's own supplier-bank.spec.js a per-PR blocking gate, plus the os.tmpdir() fix to the Playwright config that exists because the hardcoded /private/tmp EACCESes on Linux - so without the merge the new job would have failed on this branch's own spec. Merged clean: 634/634 unit, 23/23 browser via the same npm script CI runs, lint clean. Also done, after being asked twice by two reviewers and silently skipped both times: revealGeneration is declared before the function that reads it (a TDZ hazard one { immediate: true } away from throwing out of a security control at mount), and a stale comment naming advanceTimersToNextTimer now names what the code does.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-048",
+      "observed_at": "2026-09-22T16:44:47+08:00"
     }
   ],
   "pending_decisions": [
@@ -3956,7 +3967,11 @@
     "evidence/20260922T061254-274ba32589bd/run.json",
     "evidence/20260922T061256-6eb9b064ebbc/run.json",
     "evidence/20260922T061300-e8ab3abeed8e/run.json",
-    "evidence/20260922T061303-2538727217ca/run.json"
+    "evidence/20260922T061303-2538727217ca/run.json",
+    "evidence/20260922T084426-667d216d5432/run.json",
+    "evidence/20260922T084428-c5dbb6236b32/run.json",
+    "evidence/20260922T084432-32fe69b6728f/run.json",
+    "evidence/20260922T084435-1cad5f4d183a/run.json"
   ],
   "defects": [
     {

@@ -37,10 +37,22 @@ const FULL = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"];
  * instance，所以換 param 嗰陣個 panel **唔會** unmount。真嘅 `SupplierDetailPage`
  * 會拆走成個子樹再起過（`loading` 一 true，`v-else-if="supplier"` 就唔 render）。
  *
- * 保住 instance 係為咗令 `onBeforeRouteUpdate` 嗰個 guard 有嘢測 —— 喺今日嘅頁面
- * 組合入面佢係縱深防禦（unmount 已經清咗），但佢守住嘅係「有一日個 panel 真係被
- * 重用」。分別要講明，因為 REV-047 F-H1 就係喺呢個分別度出事：我曾經照住呢個宿主
- * 嘅度量加咗一個 watcher，而嗰個 watcher 喺程式入面根本冇行過。
+ * 保住 instance 係為咗令 `onBeforeRouteUpdate` 嗰個 guard 有嘢測。
+ *
+ * **嗰個 guard 喺 production 係跑緊嘅，而且係第一個跑。** 我上一版喺呢度寫佢係
+ * 「縱深防禦（unmount 已經清咗）」、守住「有一日個 panel 真係被重用」—— 兩句都錯，
+ * 而且錯同一個方向。實測（真 `SupplierDetailPage`、真 router、明文展開住、倒數行緊）：
+ *
+ *   guardUpdate:SupplierDetailPage → guardUpdate:SupplierBankPanel → list:8
+ *
+ * 個 guard 喺**路由確認之前**行，即係喺 `route.params.id` 變之前、喺 page 個 watcher
+ * set `loading = true` 拆走個子樹之前。所以清明文嗰個係佢，unmount 先係冗餘嗰層。
+ * （`framework/routing/router.js` 得一個全域 `beforeEach`、冇 `beforeResolve`，而
+ * `beforeEach` 跑喺 component guard 之前，所以個 guard 清完之後冇嘢可以再中止導航。）
+ *
+ * 呢個分別要講明，因為呢個註解嘅唯一作用就係阻止下一個人刪咗個 guard —— 而佢之前
+ * 講緊嗰句係「呢個 guard 係揣測性嘅」。同 REV-047 F-H1 係同一個品種嘅錯：一句關於
+ * 程式嘅陳述，由推理得出而唔係由執行得出。（REV-048 F-L2）
  */
 async function mountPanel({ permissions = FULL, rows = ROWS } = {}) {
   supplierBankService.list.mockResolvedValue(rows);
@@ -164,8 +176,8 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
    *
    * 呢條測節流：背景 tab 嘅 `setInterval` 會被瀏覽器拖到幾秒先一次，所以要模擬
    * 「時鐘行咗好多，但 interval 只行過一次」。`advanceTimersByTime` 兩樣一齊推，
-   * 推唔出呢個情況 —— 所以直接搬 `performance.now`，再用
-   * `advanceTimersToNextTimer()` 只放一個 tick 出去。
+   * 推唔出呢個情況 —— 所以直接搬 `performance.now`，再用 `advanceTimersByTime(1000)`
+   * 放**一個** tick 出去（個 interval 週期就係 1000ms）。(REV-046 I-2)
    */
   it("clears on elapsed time even if the tab was throttled to one tick", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
@@ -319,6 +331,16 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     await flushPromises();
     expect(document.body.innerHTML, "a half-typed account must not survive a Supplier change").not.toContain(SECRET);
     expect(document.body.innerHTML).not.toContain("Correct-Horse-1!");
+    // REV-048 F-L1：淨係睇 DOM 唔夠 —— 閂咗個 dialog 就會令佢成立，所以拆走
+    // `forgetFormSecrets()` 個 call 都照綠。要斷言嘅係 component 自己嗰份 state
+    // 冇咗啲祕密：重開個 dialog（`openCreate()` 唔會清，佢淨係設 open）再睇欄位。
+    await byText(body, "新增銀行帳戶").trigger("click");
+    await flushPromises();
+    expect(field(body, "帳號").find("input").element.value,
+      "the account number must be gone from form state, not merely unrendered").toBe("");
+    expect(field(body, "密碼").find("input").element.value).toBe("");
+    await byText(body, "取消").trigger("click");
+    await flushPromises();
 
     await byText(body, "新增銀行帳戶").trigger("click");
     await flushPromises();
