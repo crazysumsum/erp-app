@@ -31,7 +31,7 @@ function creditInput(input) {
     creditLimit,
     currencyCode,
     creditStatus: input.creditStatus,
-    creditNotes: text(input.creditNotes, 1000),
+    creditNotes: Object.hasOwn(input, "creditNotes") ? text(input.creditNotes, 1000) : undefined,
     reason: reasonText(input.reason)
   };
 }
@@ -97,18 +97,19 @@ export class CustomerCreditService {
              (customer_id, credit_limit, credit_currency_code, credit_status, credit_notes, last_change_reason,
               created_at, updated_at, created_by, updated_by)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [customerId, value.creditLimit, value.currencyCode, value.creditStatus, value.creditNotes, value.reason, nowMs, nowMs, actorId, actorId]
+          [customerId, value.creditLimit, value.currencyCode, value.creditStatus, value.creditNotes ?? "", value.reason, nowMs, nowMs, actorId, actorId]
         );
-        after = { customer_id: customerId, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: value.creditNotes, version: 1 };
+        after = { customer_id: customerId, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: value.creditNotes ?? "", version: 1 };
       } else {
+        const creditNotes = value.creditNotes ?? before.credit_notes;
         const [result] = await connection.execute(
           `UPDATE customer_credit_profiles SET credit_limit = ?, credit_currency_code = ?, credit_status = ?,
              credit_notes = ?, last_change_reason = ?, version = version + 1, updated_at = ?, updated_by = ?
            WHERE customer_id = ? AND version = ?`,
-          [value.creditLimit, value.currencyCode, value.creditStatus, value.creditNotes, value.reason, nowMs, actorId, customerId, version]
+          [value.creditLimit, value.currencyCode, value.creditStatus, creditNotes, value.reason, nowMs, actorId, customerId, version]
         );
         if (result.affectedRows !== 1) throw versionConflict(before.version);
-        after = { ...before, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: value.creditNotes, version: Number(version) + 1 };
+        after = { ...before, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: creditNotes, version: Number(version) + 1 };
       }
       if ((before?.credit_status ?? "not_configured") !== value.creditStatus) {
         await this.approvals.invalidateForCriticalChange(connection, { customer, actorId, actorUsername: actor.username, reason: value.reason, requestId, ip });

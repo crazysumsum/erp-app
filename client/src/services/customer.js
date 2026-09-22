@@ -12,6 +12,7 @@ export default {
     }).then(({ items, total }) => ({ rows: items, rowsNumber: total }));
   },
   getById(id, { signal } = {}) { return httpClient.get(`/api/v1/customers/${id}`, { signal }); },
+  completeness(id, { signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/completeness`, { signal }); },
   getOperation(operationId, { signal } = {}) { return httpClient.get(`/api/v1/customer-operations/${operationId}`, { signal }); },
   addresses(id, { page, rowsPerPage, signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/addresses`, { params: { page, pageSize: rowsPerPage }, signal }); },
   contacts(id, { page, rowsPerPage, signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/contacts`, { params: { page, pageSize: rowsPerPage }, signal }); },

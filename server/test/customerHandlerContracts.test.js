@@ -8,7 +8,7 @@ import { GetCustomerOperationHandler } from "../src/handlers/customer-operations
 
 test("TC-012 Customer root APIs use strict schemas, route permissions and framework idempotency", () => {
   const values = [...Object.values(handlers), ...Object.values(approvalHandlers), ListCustomerApproversHandler, GetCustomerOperationHandler].filter((value) => typeof value === "function" && value.api);
-  assert.equal(values.length, 38);
+  assert.equal(values.length, 39);
   for (const Handler of values) {
     for (const schema of Object.values(Handler.api.requestSchema)) {
       assert.equal(schema.additionalProperties, false, Handler.handlerName);
@@ -24,6 +24,7 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
   assert.equal(handlers.UpdateCustomerHandler.api.requestSchema.body.properties.customerCode, undefined);
   assert.equal(handlers.GetCustomerHandler.api.requestSchema.params.properties.id.type, "integer");
   assert.equal(handlers.GetCustomerHandler.api.requestSchema.params.properties.id.maximum, Number.MAX_SAFE_INTEGER);
+  assert.equal(handlers.GetCustomerCompletenessHandler.api.path, "/api/v1/customers/:id/completeness");
   for (const [name, path] of [
     ["ListCustomerAddressesHandler", "/api/v1/customers/:id/addresses"],
     ["ListCustomerContactsHandler", "/api/v1/customers/:id/contacts"],
@@ -45,6 +46,7 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
   assert.equal(handlers.CreateCustomerIdentifierHandler.api.requestSchema.body.properties.identifierValue.maxLength, 190);
   assert.equal(handlers.UpdateCustomerIdentifierHandler.api.requestSchema.body.properties.reason.minLength, 5);
   assert.equal(handlers.SaveCustomerCreditPolicyHandler.api.requestSchema.body.properties.creditLimit.pattern, "^(?:0|[1-9][0-9]{0,14})\\.[0-9]{4}$");
+  assert.ok(!handlers.SaveCustomerCreditPolicyHandler.api.requestSchema.body.required.includes("creditNotes"));
   assert.deepEqual(handlers.GetCustomerCreditPolicyHandler.api.authorizationPolicies[0].options.permissions, ["customer.view"]);
   assert.equal(handlers.ClearCustomerCreditPolicyHandler.api.authType, "jwt-password");
   assert.ok(handlers.ClearCustomerCreditPolicyHandler.api.requestSchema.body.required.includes("password"));

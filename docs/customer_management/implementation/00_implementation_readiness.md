@@ -321,3 +321,35 @@ merge claim.
 - Independent review by Jason reached `APPROVE` after command-response envelope
   handling and the server's `APPROVER_REQUIRED` activation code were corrected;
   unit and browser mocks now exercise those exact contracts.
+
+## TASK-017 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added Customer Address, Contact, Identifier and Credit editors with multi-purpose
+  defaults, inactive-row restrictions, reason/version handling, explicit conflict
+  reload, focusable errors and keyboard-operable dialogs. Purpose/default labels
+  remain visible without opening each editor.
+- Added the authoritative Customer completeness endpoint and UI. Blocking issues
+  use the current Business Master Currency status; child/default, identifier,
+  payment-term and credit gaps remain explicitly non-blocking. Credit UI preserves
+  null versus `0.0000` versus On Hold and states that Customer maintenance is not a
+  transaction credit override.
+- Corrected credit-note update semantics so an editor that cannot read private notes
+  omits the field and the server preserves the stored value; an explicitly supplied
+  note still replaces it. The general read projection continues to exclude private
+  credit notes.
+- Focused server tests passed 19/19 across completeness, credit, handler contracts,
+  handler conventions and Customer detail/list regressions. Focused client service,
+  page and component tests passed 18/18. Repository ESLint, client production build,
+  `git diff --check`, traceability approval validation and the Customer module-boundary
+  check passed. The build reported only the existing >500 kB chunk advisory.
+- Playwright ran the actual Vite UI and passed 3/3 list/detail, Draft-create and
+  keyboard Address-create flows with no relevant page, console or network failure.
+  The new completeness SQL also executed successfully as a read-only query against
+  local MySQL. CI was not run, as directed by the Product Owner.
+- Independent review by Jason reached `APPROVE` after private-note preservation,
+  visible default labels, the credit-override warning, authoritative completeness
+  and actionable child/credit conflict recovery were corrected and independently
+  revalidated.

@@ -275,6 +275,38 @@ export class CustomerService {
     }));
   }
 
+  async getCompleteness({ actorId, claimedRoles, claimedPermissions, id }) {
+    await this.actorVerifier(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[customer]] = await this.database.query(
+      "SELECT id, customer_code, legal_name, default_currency_code, default_payment_term_id FROM customers WHERE id = ?",
+      [id]
+    );
+    if (!customer) throw customerNotFound(id);
+    const [[presence]] = await this.database.query(
+      `SELECT
+         EXISTS(SELECT 1 FROM customer_address_purposes p JOIN customer_addresses a ON a.id = p.address_id AND a.customer_id = p.customer_id WHERE p.customer_id = ? AND p.purpose_code = 'billing' AND p.is_default = 1 AND a.status = 'active') AS billing_default,
+         EXISTS(SELECT 1 FROM customer_address_purposes p JOIN customer_addresses a ON a.id = p.address_id AND a.customer_id = p.customer_id WHERE p.customer_id = ? AND p.purpose_code = 'shipping' AND p.is_default = 1 AND a.status = 'active') AS shipping_default,
+         EXISTS(SELECT 1 FROM customer_contact_purposes p JOIN customer_contacts c ON c.id = p.contact_id AND c.customer_id = p.customer_id WHERE p.customer_id = ? AND p.purpose_code = 'general' AND p.is_default = 1 AND c.status = 'active') AS contact_default,
+         EXISTS(SELECT 1 FROM customer_identifiers i WHERE i.customer_id = ? AND i.status = 'active') AS identifier,
+         EXISTS(SELECT 1 FROM customer_credit_profiles cp WHERE cp.customer_id = ?) AS credit_policy`,
+      [id, id, id, id, id]
+    );
+    let currency = null;
+    try { if (customer.default_currency_code) currency = await this.businessMaster.getCurrencyHistory(customer.default_currency_code); } catch { currency = null; }
+    const issues = [];
+    if (!String(customer.customer_code ?? "").trim()) issues.push({ field: "customerCode", code: "CUSTOMER_CODE_REQUIRED", message: "必須填寫客戶代碼" });
+    if (!String(customer.legal_name ?? "").trim()) issues.push({ field: "legalName", code: "CUSTOMER_LEGAL_NAME_REQUIRED", message: "必須填寫法定名稱" });
+    if (!currency || currency.status !== "ACTIVE") issues.push({ field: "defaultCurrencyCode", code: "CURRENCY_NOT_ACTIVE", message: "啟用前必須設定有效的預設貨幣" });
+    const warnings = [];
+    if (!presence.billing_default) warnings.push({ field: "addresses", code: "BILLING_DEFAULT_MISSING", message: "尚未設定預設帳單地址" });
+    if (!presence.shipping_default) warnings.push({ field: "addresses", code: "SHIPPING_DEFAULT_MISSING", message: "尚未設定預設送貨地址" });
+    if (!presence.contact_default) warnings.push({ field: "contacts", code: "CONTACT_DEFAULT_MISSING", message: "尚未設定預設一般聯絡人" });
+    if (!presence.identifier) warnings.push({ field: "identifiers", code: "IDENTIFIER_MISSING", message: "尚未設定客戶識別資料" });
+    if (!customer.default_payment_term_id) warnings.push({ field: "defaultPaymentTermId", code: "PAYMENT_TERM_MISSING", message: "尚未設定預設付款條款" });
+    if (!presence.credit_policy) warnings.push({ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" });
+    return { customerId: Number(customer.id), issues, warnings };
+  }
+
   async listAddresses(input) {
     return this.#listChildren("address", input);
   }

@@ -5,7 +5,7 @@ import { RouterView, createMemoryHistory, createRouter } from "vue-router";
 import { h } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/services/customer.js", () => ({ default: { getById: vi.fn(), update: vi.fn() }, service: { name: "customer" } }));
+vi.mock("@/services/customer.js", () => ({ default: { getById: vi.fn(), completeness: vi.fn(), update: vi.fn() }, service: { name: "customer" } }));
 vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 import customerService from "@/services/customer.js";
@@ -16,6 +16,7 @@ const CUSTOMER = { id: 7, code: "CUS-007", legalName: "Evergreen Customer", disp
 const Host = { render: () => h(RouterView) };
 async function mountPage() {
   customerService.getById.mockResolvedValue(CUSTOMER);
+  customerService.completeness.mockResolvedValue({ customerId: 7, issues: [], warnings: [] });
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: CustomerDetailPage }, { path: "/customers", component: { template: "<div>customers</div>" } }] });
   await router.push("/customers/7"); await router.isReady();
   useSessionStore().user = { id: 1, permissions: ["customer.view", "customer.mgmt"], roles: [] };

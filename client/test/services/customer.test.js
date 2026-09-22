@@ -74,4 +74,10 @@ describe("customer service", () => {
       params: { page: 2, pageSize: 50 }, signal
     });
   });
+
+  it("reads authoritative Customer completeness", async () => {
+    const signal = new AbortController().signal;
+    await customerService.completeness(7, { signal });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/customers/7/completeness", { signal });
+  });
 });

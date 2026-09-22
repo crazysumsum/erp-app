@@ -5,6 +5,7 @@ const customer = { id: 7, code: "CUS-007", legalName: "Evergreen Customer", disp
 
 async function installApi(page) {
   const calls = [];
+  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null } };
   await page.addInitScript((sessionUser) => {
     localStorage.setItem("erp.token", "browser-test-token");
     localStorage.setItem("erp.token.deadline", String(Date.now() + 3_600_000));
@@ -18,10 +19,12 @@ async function installApi(page) {
     const ok = (data) => route.fulfill({ status: 200, headers, body: JSON.stringify({ success: true, data, meta: { requestId: "customer-browser" } }) });
     if (path === "/api/v1/user/me") return ok(user);
     if (request.method() === "GET" && path === "/api/v1/customers") return ok({ items: [customer], total: 1 });
-    if (request.method() === "GET" && path === "/api/v1/customers/7") return ok({ ...customer, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2 });
+    if (request.method() === "GET" && path === "/api/v1/customers/7") return ok({ ...customer, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state });
+    if (request.method() === "GET" && path === "/api/v1/customers/7/completeness") return ok({ customerId: 7, issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
     if (request.method() === "GET" && path === "/api/v1/business-master/currencies") return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar" }], total: 1 });
     if (request.method() === "POST" && path === "/api/v1/customers/duplicates/check") return ok({ code: [], legalName: [], tradingName: [] });
     if (request.method() === "POST" && path === "/api/v1/customers/create") return ok({ customer: { ...customer, id: 41, code: body.customerCode, legalName: body.legalName, status: body.activate ? "active" : "draft" }, operation: { id: "op-41" } });
+    if (request.method() === "POST" && path === "/api/v1/customers/7/addresses/create") { state.addresses.push({ id: 9, customerId: 7, ...body, status: "active", version: 1 }); return ok({ id: 9, customerId: 7, status: "active", version: 1, purposes: body.purposes }); }
     return route.fulfill({ status: 404, headers, body: JSON.stringify({ success: false, error: { code: "NOT_FOUND", message: `${request.method()} ${path}` } }) });
   });
   return calls;
@@ -54,5 +57,19 @@ test("@technical a manager creates a Draft through the visible form", async ({ p
   await page.getByRole("button", { name: "儲存 Draft" }).click();
   await expect(page.getByText("客戶 CUS-041 已建立；狀態：草稿")).toBeVisible();
   expect(calls.find((call) => call.path === "/api/v1/customers/create")?.body).toMatchObject({ customerCode: "CUS-041", legalName: "New Customer", activate: false });
+  expect(problems).toEqual([]);
+});
+
+test("@technical a manager adds an address from the customer detail", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page);
+  await page.goto("/customers/7");
+  await page.getByRole("tab", { name: "地址 (0)" }).focus(); await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "新增地址" }).focus(); await page.keyboard.press("Enter");
+  await expect(page.getByLabel("地址標籤 *")).toBeFocused();
+  await page.getByLabel("地址標籤 *").fill("總部");
+  await page.getByLabel("地址行 1 *").fill("皇后大道中 1 號");
+  await page.getByRole("button", { name: "儲存地址" }).focus(); await page.keyboard.press("Enter");
+  await expect(page.getByText("皇后大道中 1 號")).toBeVisible();
+  expect(calls.find((call) => call.path.endsWith("/addresses/create"))?.body).toMatchObject({ label: "總部", addressLine1: "皇后大道中 1 號", purposes: [] });
   expect(problems).toEqual([]);
 });
