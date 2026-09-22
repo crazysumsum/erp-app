@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 79,
+  "revision": 80,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -1435,16 +1435,16 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/item-management-uat-closeout",
       "idempotency_key": "item-uat-closeout-push-20260922",
-      "status": "PLANNED",
-      "source_ref": "ERP Product Owner Sam explicitly requested push, PR creation, merge to main and Item branch/worktree cleanup in the active Codex task."
+      "status": "CONFIRMED",
+      "source_ref": "Observed Git push response on 2026-09-22: origin/codex/item-management-uat-closeout was created and configured as the upstream branch."
     },
     {
       "id": "PR-CREATE-90",
       "kind": "PR_CREATE",
       "target": "codex/item-management-uat-closeout -> main",
       "idempotency_key": "item-uat-closeout-pr-20260922",
-      "status": "PLANNED",
-      "source_ref": "ERP Product Owner Sam explicitly requested push, PR creation, merge to main and Item branch/worktree cleanup in the active Codex task."
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub PR #126 OPEN at https://github.com/crazysumsum/erp-app/pull/126."
     },
     {
       "id": "PR-MERGE-91",
