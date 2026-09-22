@@ -150,23 +150,45 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   });
 
   /**
-   * REV-044 L-1：背景 tab 嘅 setInterval 會被瀏覽器節流到幾秒先至一次，所以「數 30
-   * 個 tick」可以係真實世界幾分鐘。呢度模擬節流 —— 時鐘跳 60 秒，但只俾佢行一個
-   * tick。對住時鐘計就會即刻清；數 tick 就會仲剩 29 秒。
+   * REV-044 L-1 / REV-045 F-L1：個倒數對住**單調**時鐘計，唔係數 tick，亦都唔係
+   * 跟系統時鐘。
+   *
+   * 呢條測節流：背景 tab 嘅 `setInterval` 會被瀏覽器拖到幾秒先一次，所以要模擬
+   * 「時鐘行咗好多，但 interval 只行過一次」。`advanceTimersByTime` 兩樣一齊推，
+   * 推唔出呢個情況 —— 所以直接搬 `performance.now`，再用
+   * `advanceTimersToNextTimer()` 只放一個 tick 出去。
    */
-  it("clears on wall-clock time, not on a count of ticks", async () => {
+  it("clears on elapsed time even if the tab was throttled to one tick", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { body } = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(body);
     expect(body.text()).toContain(SECRET);
 
-    vi.setSystemTime(Date.now() + 60_000);
+    const real = performance.now.bind(performance);
+    const jumped = vi.spyOn(performance, "now").mockImplementation(() => real() + 60_000);
+    // 只放**一個** tick 出去，而個單調時鐘已經跳咗 60 秒 —— 即係節流嘅形狀。
     vi.advanceTimersByTime(1000);
     await flushPromises();
+    jumped.mockRestore();
     expect(document.body.innerHTML,
       "a throttled tab must still clear once the deadline has passed").not.toContain(SECRET);
-    // 唔可以淨係隱藏 —— 個節點要冇咗，唔係 display:none 收埋住明文。
-    expect(document.body.innerHTML).not.toContain(SECRET);
+  });
+
+  /**
+   * REV-045 F-L1：系統時鐘向後跳（NTP 校正、使用者改時間、VM 由 snapshot 醒返）
+   * 唔可以延長個窗口。用 `Date.now()` 計嘅話，向後跳一個鐘就會令 `deadline - now`
+   * 變返一個好大嘅正數 —— 明文攞足一個鐘，而介面會顯示「3629 秒後自動隱藏」。
+   */
+  it("is not extended by the system clock jumping backwards", async () => {
+    supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+    const { body } = await mountPanel({ permissions: VIEW_BANK });
+    await revealRow(body);
+
+    vi.setSystemTime(Date.now() - 3_600_000);
+    vi.advanceTimersByTime(31_000);
+    await flushPromises();
+    expect(document.body.innerHTML,
+      "a backwards clock step must not hold the account open").not.toContain(SECRET);
   });
 
   it("keeps the plaintext out of Pinia, storage, the URL and notifications", async () => {
@@ -244,6 +266,57 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     expect(document.body.innerHTML).not.toContain(SECRET);
     expect(armed, "a late reveal must not arm a countdown on a dead component").not.toHaveBeenCalled();
     armed.mockRestore();
+  });
+
+  /**
+   * REV-045 F-H1。上一輪加咗個 `gone` flag，但佢淨係喺 `onUnmounted` set ——
+   * `onBeforeRouteUpdate` 同 session watch 都唔會 set，所以一個仲喺路上嘅 reveal
+   * 會喺換咗 param 之後**畫返** 7 號嘅帳號出嚟喺 8 號嘅畫面度，附送一個新倒數。
+   * 兩個 fix 各自啱，夾埋唔掂。依家所有清除觸發點都撳大一個 generation，而
+   * `confirmReveal` 返嚟之後對返。
+   */
+  it("drops a reveal that lands after the Supplier has changed", async () => {
+    let resolveReveal;
+    supplierBankService.reveal.mockReturnValue(new Promise((resolve) => { resolveReveal = resolve; }));
+    const { router, body } = await mountPanel({ permissions: VIEW_BANK });
+    await byText(body, "查看完整帳號").trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    await field(body, "查看原因").find("textarea").setValue("核對付款帳號");
+    await byText(body, "確認查看").trigger("click");
+
+    await router.push("/suppliers/8");
+    await flushPromises();
+    resolveReveal({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+    await flushPromises();
+    expect(document.body.innerHTML,
+      "supplier 7's account must not be painted onto supplier 8's screen").not.toContain(SECRET);
+  });
+
+  /**
+   * REV-045 F-M1：`form.accountNumber` 同 `form.password` 一樣係使用者打落去嘅
+   * 明文，而 route change 同 session 失效之前兩個都冇清 —— 個 dialog 會繼續開住、
+   * 繼續 render 喺新嗰個 URL 底下。
+   */
+  it("wipes a half-typed write dialog on a Supplier change and on session expiry", async () => {
+    const { router, body } = await mountPanel();
+    await byText(body, "新增銀行帳戶").trigger("click");
+    await flushPromises();
+    await field(body, "帳號").find("input").setValue(SECRET);
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    expect(document.body.innerHTML).toContain(SECRET);
+
+    await router.push("/suppliers/8");
+    await flushPromises();
+    expect(document.body.innerHTML, "a half-typed account must not survive a Supplier change").not.toContain(SECRET);
+    expect(document.body.innerHTML).not.toContain("Correct-Horse-1!");
+
+    await byText(body, "新增銀行帳戶").trigger("click");
+    await flushPromises();
+    await field(body, "帳號").find("input").setValue(SECRET);
+    useSessionStore().user = null;
+    await flushPromises();
+    expect(document.body.innerHTML, "nor a session expiry").not.toContain(SECRET);
   });
 
   it("clears the plaintext when the user navigates away", async () => {

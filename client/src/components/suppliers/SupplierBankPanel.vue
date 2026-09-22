@@ -48,36 +48,68 @@ const loadError = ref("");
 const revealed = reactive({ id: null, accountNumber: "", remaining: 0 });
 let countdown = null;
 
+/**
+ * 每次「唔好再攞住明文」都行呢度，而佢會**撳大 generation**。
+ *
+ * 點解要個 counter 而唔係逐個 guard 加 flag：`reveal` 係 async，所以一個 in-flight
+ * 嘅請求可以喺任何一個清除觸發點之後先 resolve，然後把明文放返出嚟。REV-045 F-H1
+ * 就係咁 —— 我上一輪加咗個 `gone` flag，但佢淨係喺 `onUnmounted` set，而
+ * `onBeforeRouteUpdate` 同 session watch 都唔會 set 佢，所以由 7 號去 8 號嗰陣，
+ * 一個仲喺路上嘅 reveal 會把 7 號嘅帳號**畫返出嚟**喺 8 號嘅畫面度，仲附送一個新
+ * 嘅 30 秒倒數。
+ *
+ * 一個 generation counter 收嘅係成類問題而唔係嗰一個 instance：所有觸發點本來就
+ * 已經全部經過呢度，所以將來加多個觸發點都唔使記得去 set 多個 flag。
+ */
 function forgetPlaintext() {
+  revealGeneration += 1;
   if (countdown) { clearInterval(countdown); countdown = null; }
   revealed.id = null;
   revealed.accountNumber = "";
   revealed.remaining = 0;
 }
 
+/**
+ * 連埋寫入 form 一齊清。Route change 同 session 失效要用呢個，唔係淨係
+ * `forgetPlaintext()` —— 一個開住嘅新增／編輯 dialog 入面，`form.accountNumber`
+ * 同 `form.password` 一樣係使用者打落去嘅明文，而佢哋會喺新嗰個 URL 底下繼續
+ * render。（REV-045 F-M1：我上一版個註解講咗五個觸發點全部覆蓋呢兩個欄位，
+ * 但實情係route change 同 session 失效兩個都冇掂過佢哋。）
+ */
+function forgetEverything() {
+  forgetPlaintext();
+  forgetFormSecrets();
+  form.open = false;
+  revealDialog.open = false;
+  revealDialog.password = "";
+  confirm.open = false;
+  confirm.password = "";
+}
+
 function holdPlaintext(id, accountNumber) {
   forgetPlaintext();
-  // 一個已經 unmount 咗嘅 component 唔可以再攞住明文：reveal 係 async，所以佢可以
-  // 喺使用者走咗之後先 resolve。冇呢個掣，嗰個 response 會喺一個死咗嘅 component
-  // 上面重新揸住個帳號，仲會開多個 30 秒 interval 出嚟。（REV-044 M-1）
-  if (gone) return;
   revealed.id = id;
   revealed.accountNumber = accountNumber;
   // 用 deadline 而唔係數 tick：背景 tab 嘅 setInterval 會被瀏覽器節流到幾秒一次，
-  // 咁樣「30 個 tick」可以係真實世界幾分鐘。對住時鐘計，節流極都只會遲一個 tick
-  // 先清，而唔係遲幾分鐘。（REV-044 L-1）
-  const deadline = Date.now() + REVEAL_SECONDS * 1000;
+  // 咁樣「30 個 tick」可以係真實世界幾分鐘。
+  //
+  // 用 `performance.now()` 而唔係 `Date.now()`：前者係單調嘅，後者跟系統時鐘。
+  // 系統時鐘可以向後跳（NTP 校正、使用者改時間、VM 由 snapshot 醒返），而
+  // `Date.now()` 一向後跳，`deadline - now` 就會變返一個好大嘅正數 —— 個明文會
+  // 一直攞住，而個介面會顯示「3629 秒後自動隱藏」。（REV-045 F-L1）
+  const clock = () => (globalThis.performance?.now?.() ?? Date.now());
+  const deadline = clock() + REVEAL_SECONDS * 1000;
   const tick = () => {
-    const left = Math.ceil((deadline - Date.now()) / 1000);
+    const left = Math.ceil((deadline - clock()) / 1000);
     if (left <= 0) forgetPlaintext();
-    else revealed.remaining = left;
+    else revealed.remaining = Math.min(left, REVEAL_SECONDS);
   };
   revealed.remaining = REVEAL_SECONDS;
   countdown = setInterval(tick, 1000);
 }
 
-let gone = false;
-onUnmounted(() => { gone = true; forgetPlaintext(); });
+let revealGeneration = 0;
+onUnmounted(forgetEverything);
 /**
  * Route change 要**兩個** guard，唔係一個。
  *
@@ -95,11 +127,11 @@ onUnmounted(() => { gone = true; forgetPlaintext(); });
  * `onBeforeRouteLeave` 留返：佢守嘅係去另一個 record 嗰條路。嗰條路今日一定會
  * unmount，所以佢係冗餘，但冗餘同錯係兩件事。
  */
-onBeforeRouteLeave(() => { forgetPlaintext(); });
-onBeforeRouteUpdate(() => { forgetPlaintext(); });
+onBeforeRouteLeave(() => { forgetEverything(); });
+onBeforeRouteUpdate(() => { forgetEverything(); });
 // Session 失效（token 過期、被撤銷、登出）都要即刻清 —— 一個已經唔再係佢嘅畫面
 // 唔應該仲留住個帳號喺度。
-watch(() => session.isAuthenticated, (authenticated) => { if (!authenticated) forgetPlaintext(); });
+watch(() => session.isAuthenticated, (authenticated) => { if (!authenticated) forgetEverything(); });
 
 async function load() {
   loading.value = true;
@@ -126,10 +158,15 @@ async function confirmReveal() {
   if (revealDialog.busy) return;
   revealDialog.busy = true;
   revealDialog.error = "";
+  // 攞住個 generation 落去，返嚟之後對返。任何一個清除觸發點（unmount、route
+  // change、session 失效、手動收起、倒數到）都會撳大佢，所以一個「出發嗰陣仲啱、
+  // 返到嚟已經唔啱」嘅 response 會喺呢度俾人丟咗，而唔係畫返出嚟。
+  const generation = revealGeneration;
   try {
     const result = await supplierBankService.reveal(props.supplierId, revealDialog.row.id, {
       password: revealDialog.password, reason: revealDialog.reason.trim()
     });
+    if (generation !== revealGeneration) return;
     holdPlaintext(result.id, result.accountNumber);
     revealDialog.open = false;
   } catch (error) {

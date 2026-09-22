@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 200,
+  "revision": 203,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "4a876547e41f63f78f4333f188ab99dfbbcf7558",
-    "source_fingerprint": "7b3d5616e7156e4a661a9f0b449d287cd266794ab201e4c7e5bc344680b0d761",
+    "code_commit": "0379ccc9c955ec4c1de1e60d4c1f6f0870ae1e7c",
+    "source_fingerprint": "a03ba3db23ef2a3520bf63204f0bd2e993f8f4ba2a351a9fe7a2effa23158fac",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
     "default_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -2909,6 +2909,17 @@
       "source_ref": "REV-044 returned CHANGES_REQUESTED with 1 High, 2 Medium, 2 Low and 2 Info, and every finding was real. H-1 is the one that matters and it corrects me: Vue Router runs onBeforeRouteUpdate, not onBeforeRouteLeave, when only a param changes on a reused instance, so the guard I kept specifically for the /suppliers/7 to /suppliers/8 case never fired there and the leak was open. I reproduced it before changing anything - red at 4a87654, green with onBeforeRouteUpdate added. My history.pushState probe was correctly diagnosed as non-discriminating; the error was concluding from one failed probe that nothing could discriminate, and then writing that conclusion into a code comment and a report section as a statement of fact. That is the third time in this module I have asserted a mechanism without executing it, after the design digest and redact() cases. M-1: a reveal resolving after unmount re-held the plaintext and armed a fresh interval on a dead component; guarded with a flag. M-2: three clearing assertions were DOM-shaped and survived mutation. M-3: the per-row edit, set-default and deactivate controls had no permission assertion at all. L-1: the countdown counted ticks rather than consulting a clock, so a throttled background tab would hold the plaintext far longer than thirty seconds. Worth recording separately: after my FIRST round of fixes I re-ran all seven mutations and four still survived. The new assertions were watching the DOM or counting total timers, and both of those become true on their own when a component unmounts or a dialog closes. Only spying on the specific setInterval and clearInterval calls, and moving the form-clearing assertion onto the warning path where the dialog stays open, actually discriminated. Final: H-1, M-1, M-2a, M-2b, M-3 and L-1 all KILLED; the v-if to v-show mutant cannot run under jsdom at all because it breaks template compilation, and it is killed by the browser suite instead. 585/585 client vitest, 3/3 browser, lint clean.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-044",
       "observed_at": "2026-09-22T11:00:56+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-045: the H-1 and M-1 fixes did not compose, and the leak came back through another door",
+      "code_commit": "0379ccc9c955ec4c1de1e60d4c1f6f0870ae1e7c",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "a03ba3db23ef2a3520bf63204f0bd2e993f8f4ba2a351a9fe7a2effa23158fac",
+      "status": "PASS",
+      "source_ref": "REV-045 returned CHANGES_REQUESTED with 1 High, 1 Medium and 1 Low, and all three were real. It also re-ran my whole mutation table rather than reading it, and confirmed all seven. F-H1: the gone flag I added for REV-044 M-1 was set in exactly one place, onUnmounted. The onBeforeRouteUpdate guard I added for REV-044 H-1 clears the plaintext but does not set it, and neither does the session watch, so a reveal still in flight when the param changed re-rendered supplier 7's account number on supplier 8's screen with a fresh thirty-second countdown. I reproduced it before changing anything: not in the DOM before the late resolve, in the DOM after it. That is the same leak REV-044 refused to merge, reached through a different door, and the fifth consecutive round in this module where one round's remediation opened the next round's finding. The fix follows REV-045's shape rather than patching each guard: every clearing trigger already funnels through forgetPlaintext, so that function bumps a revealGeneration and confirmReveal compares the value it left with after its await. That closes the class instead of the instance. F-M1: my own section 1 claimed all five triggers cleared form.accountNumber; route change and session expiry cleared neither it nor the typed password, and the dialog kept rendering under the new URL. Clearing is now two layers, forgetPlaintext and forgetEverything, and the report says which trigger uses which. F-L1: the deadline used Date.now() when REV-044 had already prescribed performance.now() and given the reason; a backwards system clock step would hold the plaintext for an hour and display 3629 seconds remaining. Now monotonic, with the displayed value clamped. Nine mutants, nine killed, including four aimed at the new code. The two clock tests had to be split because vi.advanceTimersByTime moves both clocks while vi.setSystemTime moves only the system one - measured, not assumed. 588/588 client vitest, 3/3 browser, lint clean.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-045",
+      "observed_at": "2026-09-22T11:16:15+08:00"
     }
   ],
   "pending_decisions": [
@@ -3900,7 +3911,11 @@
     "evidence/20260922T030038-198767667407/run.json",
     "evidence/20260922T030040-3f2896cb6d8d/run.json",
     "evidence/20260922T030044-9df60959cbd6/run.json",
-    "evidence/20260922T030047-5e60f2b683fd/run.json"
+    "evidence/20260922T030047-5e60f2b683fd/run.json",
+    "evidence/20260922T031624-a7aae1d777b5/run.json",
+    "evidence/20260922T031626-a4fc7122010a/run.json",
+    "evidence/20260922T031630-4c71fdeeeb65/run.json",
+    "evidence/20260922T031634-74b28bf6519f/run.json"
   ],
   "defects": [
     {

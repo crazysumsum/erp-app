@@ -12,8 +12,16 @@
 `form.accountNumber`（寫）。**唔入** Pinia、唔入 localStorage／sessionStorage、唔入 URL、
 唔入 toast、唔入驗證訊息。
 
-清除有五個觸發點，全部行同一個 `forgetPlaintext()`：手動收起、30 秒到、unmount、
-route change、session 失效。
+清除有兩層，**唔係**之前寫嗰句「五個觸發點全部行同一個 `forgetPlaintext()`」——
+嗰句講得闊過實情（REV-045 F-M1）：
+
+- `forgetPlaintext()` —— 收起已展開嗰個帳號。手動收起、倒數到、以及下面嗰個。
+- `forgetEverything()` —— 連埋**寫入 form** 入面打咗一半嘅帳號同密碼，同埋閂晒三個
+  dialog。unmount、route change（兩個 guard）、session 失效行呢個。
+
+點解要分：一個開住嘅新增／編輯 dialog 入面，`form.accountNumber` 一樣係使用者打落去
+嘅明文。之前 route change 同 session 失效兩個都淨係行 `forgetPlaintext()`，即係個
+dialog 會繼續開住、繼續 render 喺新嗰個 URL 底下。
 
 展開用 `v-if` **唔係** `v-show`。呢個唔係風格問題：`v-show` 會留低一個
 `display: none` 嘅節點，即係明文仲喺頁面度，devtools、screen reader、`innerHTML`
@@ -154,3 +162,59 @@ Could not find 'server/test/supplier-management/security'
 加埋 `supplier-client-ui` 指住嘅 `client/test/supplier-management.vitest.config.js`，
 四條路徑一條都唔存在。即係 profile 宣告咗一整棵從來未起過嘅 technical／regression
 測試樹，佢哋唔係「stage 唔夾」，係**根本跑唔到**。呢個缺口而家照實記咗落 ledger。
+
+## 9. REV-045 remediation
+
+REV-045 報 CHANGES_REQUESTED：0 Critical、1 High、1 Medium、1 Low、3 Info。三條全部真。
+佢亦都逐個重跑咗我 §8 嗰張 mutation 表（唔係讀），確認七個都準。
+
+### F-H1 —— 兩個 fix 各自啱，夾埋唔掂
+
+`gone` flag 淨係喺 `onUnmounted` set。`onBeforeRouteUpdate` 同 session watch 都會清明文，
+但**唔會** set 佢。所以一個仲喺路上嘅 `reveal`，喺換咗 param 之後 resolve，會把 7 號嘅
+帳號**畫返出嚟**喺 8 號嘅畫面度，仲附送一個新嘅 30 秒倒數。
+
+我改之前自己重現咗：
+
+```
+before late resolve: false   ← guard 做咗嘢
+AFTER late resolve : true    ← 然後俾個遲到嘅 response 推翻
+```
+
+呢個就係 REV-044 唔肯 merge 嗰個漏洞，由另一道門入返嚟 —— **第五次**一個 remediation
+自己開出下一個 finding。
+
+修法用 REV-045 建議嗰個形狀，唔係逐個 guard 補 flag：所有清除觸發點本來就已經全部經過
+`forgetPlaintext()`，所以喺嗰度撳大一個 `revealGeneration`，而 `confirmReveal` 攞住出發
+嗰陣個號碼、返嚟之後對返。咁樣收嘅係成類問題 —— 將來加多個觸發點，唔使記得去 set 多個
+flag。
+
+### F-M1 / F-L1
+
+- **F-M1**：§1 之前寫住五個觸發點全部覆蓋 `form.accountNumber`。**唔係。** 見 §1 改咗嘅
+  版本，同上面個 `forgetEverything()`。又一次係「把一個機制寫得闊過實情」。
+- **F-L1**：個 deadline 用咗 `Date.now()`，而 REV-044 本來就講明要 `performance.now()`
+  同埋點解。系統時鐘向後跳一個鐘（NTP、使用者改時間、VM snapshot），`deadline - now`
+  會變返一個大正數 —— 明文攞足一個鐘，介面顯示「3629 秒後自動隱藏」。改成單調時鐘，
+  並且 `Math.min(left, REVEAL_SECONDS)` 封住個顯示值。
+
+### Mutation：九個，九個殺到
+
+```
+F-H1  drop the generation check        KILLED
+F-H1b generation never bumped          KILLED
+F-M1  route update clears reveal only  KILLED
+F-M1b session watch clears reveal only KILLED
+F-L1  use the system clock             KILLED
+H-1   drop onBeforeRouteUpdate         KILLED
+M-2a  drop onUnmounted clear           KILLED
+M-2b  drop forgetFormSecrets           KILLED
+M-3   widen row controls               KILLED
+```
+
+兩條新時鐘測試要分開寫，因為 `vi.advanceTimersByTime` 會**同時**推單調時鐘同系統時鐘，
+而 `vi.setSystemTime` 只推系統時鐘（實測：advance 5000 → perf +5000／date +5000；
+setSystemTime +60000 → perf +0／date +60000）。所以節流嗰條要搬 `performance.now`
+再放一個 tick，倒退時鐘嗰條要 `setSystemTime` 向後跳。
+
+588/588 client vitest、3/3 瀏覽器、lint 乾淨。
