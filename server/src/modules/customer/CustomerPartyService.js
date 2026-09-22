@@ -1,5 +1,6 @@
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { CustomerAuditLogService } from "./CustomerAuditLogService.js";
+import { CustomerApprovalService } from "./CustomerApprovalService.js";
 import { customerNotFound, customerPartyInactive, customerPartyNotFound, identifierTaken, versionConflict } from "./customerErrors.js";
 import { normalizeIdentifierValue } from "./customerNormalization.js";
 
@@ -114,9 +115,10 @@ function mapIdentifierDuplicate(error) {
 }
 
 export class CustomerPartyService {
-  constructor({ database, time, actorVerifier = assertActorFresh, audit = new CustomerAuditLogService() } = {}) {
+  constructor({ database, time, actorVerifier = assertActorFresh, audit = new CustomerAuditLogService(), approvals } = {}) {
     if (!database || !time) throw new TypeError("CustomerPartyService requires database and time");
     this.database = database; this.time = time; this.actorVerifier = actorVerifier; this.audit = audit;
+    this.approvals = approvals ?? new CustomerApprovalService({ database, time, audit });
   }
 
   async create({ type, customerId, actorId, claimedRoles, claimedPermissions, requestId = "", ip = "", ...input }) {
@@ -181,8 +183,9 @@ export class CustomerPartyService {
     const value = normalizedIdentifier(input);
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
-      const [[customer]] = await connection.query("SELECT id, customer_code FROM customers WHERE id = ? FOR UPDATE", [customerId]);
+      const [[customer]] = await connection.query("SELECT id, customer_code, status FROM customers WHERE id = ? FOR UPDATE", [customerId]);
       if (!customer) throw customerNotFound(customerId);
+      await this.approvals.invalidateForCriticalChange(connection, { customer, actorId, actorUsername: actor.username, reason: "識別資料變更", requestId, ip });
       const nowMs = this.time.nowMs();
       let id;
       try {
@@ -207,8 +210,9 @@ export class CustomerPartyService {
     const safeReason = requiredReason(reason);
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
-      const [[customer]] = await connection.query("SELECT id, customer_code FROM customers WHERE id = ? FOR UPDATE", [customerId]);
+      const [[customer]] = await connection.query("SELECT id, customer_code, status FROM customers WHERE id = ? FOR UPDATE", [customerId]);
       if (!customer) throw customerNotFound(customerId);
+      await this.approvals.invalidateForCriticalChange(connection, { customer, actorId, actorUsername: actor.username, reason: safeReason, requestId, ip });
       const [[before]] = await connection.query("SELECT * FROM customer_identifiers WHERE id = ? AND customer_id = ? FOR UPDATE", [identifierId, customerId]);
       if (!before) throw customerPartyNotFound("identifier", identifierId);
       if (before.status !== "active") throw customerPartyInactive();
@@ -233,8 +237,9 @@ export class CustomerPartyService {
     const safeReason = requiredReason(reason);
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
-      const [[customer]] = await connection.query("SELECT id, customer_code FROM customers WHERE id = ? FOR UPDATE", [customerId]);
+      const [[customer]] = await connection.query("SELECT id, customer_code, status FROM customers WHERE id = ? FOR UPDATE", [customerId]);
       if (!customer) throw customerNotFound(customerId);
+      await this.approvals.invalidateForCriticalChange(connection, { customer, actorId, actorUsername: actor.username, reason: safeReason, requestId, ip });
       const [[before]] = await connection.query("SELECT * FROM customer_identifiers WHERE id = ? AND customer_id = ? FOR UPDATE", [identifierId, customerId]);
       if (!before) throw customerPartyNotFound("identifier", identifierId);
       if (before.status !== "active") throw customerPartyInactive();

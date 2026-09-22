@@ -31,7 +31,8 @@ export const CUSTOMER_ROOT_INPUT = Object.freeze({
     defaultCurrencyCode: NULLABLE_CURRENCY, defaultPaymentTermId: NULLABLE_ID,
     accountManagerUserId: NULLABLE_ID, categoryId: NULLABLE_ID, industryId: NULLABLE_ID,
     territoryId: NULLABLE_ID, website: { ...TEXT(500), pattern: "^(?:$|https?://)" }, generalPhone: TEXT(50),
-    generalEmail: EMAIL, notes: TEXT(2000)
+    generalEmail: EMAIL, notes: TEXT(2000), activate: { type: "boolean" },
+    approverUserId: POSITIVE_SAFE_INTEGER, requestNote: { type: "string", trim: true, maxLength: 500 }
   }
 });
 
@@ -102,8 +103,11 @@ export const IDENTIFIER_RESPONSE = Object.freeze({ type: "object", required: ["i
 const CREDIT_LIMIT = Object.freeze({ type: ["string", "null"], pattern: "^(?:0|[1-9][0-9]{0,14})\\.[0-9]{4}$" });
 const CREDIT_CURRENCY = Object.freeze({ type: ["string", "null"], pattern: "^[A-Z]{3}$" });
 export const CREDIT_POLICY_RESPONSE = Object.freeze({ type: "object", required: ["configured", "creditLimit", "currencyCode", "status", "policyVersion"], additionalProperties: false, properties: { configured: { type: "boolean" }, creditLimit: CREDIT_LIMIT, currencyCode: CREDIT_CURRENCY, status: { type: "string", enum: ["not_configured", "normal", "on_hold"] }, policyVersion: { type: ["integer", "null"], minimum: 1 } } });
-export const CREDIT_POLICY_SAVE = Object.freeze({ type: "object", required: ["creditLimit", "creditCurrencyCode", "creditStatus", "creditNotes", "reason", "version"], additionalProperties: false, properties: { creditLimit: CREDIT_LIMIT, creditCurrencyCode: CREDIT_CURRENCY, creditStatus: { type: "string", enum: ["normal", "on_hold"] }, creditNotes: TEXT(1000), reason: { type: "string", trim: true, minLength: 5, maxLength: 500 }, version: { type: ["integer", "null"], minimum: 1 } } });
+export const CREDIT_POLICY_SAVE = Object.freeze({ type: "object", required: ["creditLimit", "creditCurrencyCode", "creditStatus", "reason", "version"], additionalProperties: false, properties: { creditLimit: CREDIT_LIMIT, creditCurrencyCode: CREDIT_CURRENCY, creditStatus: { type: "string", enum: ["normal", "on_hold"] }, creditNotes: TEXT(1000), reason: { type: "string", trim: true, minLength: 5, maxLength: 500 }, version: { type: ["integer", "null"], minimum: 1 } } });
 export const CREDIT_POLICY_CLEAR = Object.freeze({ type: "object", required: ["reason", "version", "password"], additionalProperties: false, properties: { reason: { type: "string", trim: true, minLength: 5, maxLength: 500 }, version: { type: "integer", minimum: 1 }, password: { type: "string", minLength: 1, maxLength: 1024 } } });
+
+const COMPLETENESS_ITEM = Object.freeze({ type: "object", required: ["field", "code", "message"], additionalProperties: false, properties: { field: { type: "string" }, code: { type: "string" }, message: { type: "string" } } });
+export const CUSTOMER_COMPLETENESS_RESPONSE = Object.freeze({ type: "object", required: ["customerId", "issues", "warnings"], additionalProperties: false, properties: { customerId: POSITIVE_SAFE_INTEGER, issues: { type: "array", items: COMPLETENESS_ITEM }, warnings: { type: "array", items: COMPLETENESS_ITEM } } });
 
 export const CUSTOMER_SUMMARY = Object.freeze({
   type: "object", additionalProperties: false,
@@ -170,6 +174,79 @@ export const CUSTOMER_COMMAND_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["customer", "operation"],
   properties: { customer: { anyOf: [CUSTOMER_DETAIL, { type: "null" }] }, operation: OPERATION }
 });
+
+export const CUSTOMER_APPROVAL_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "customerId", "customerStatus", "status", "version"],
+  properties: {
+    id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER,
+    customerStatus: { type: "string", enum: ["draft", "pending_approval"] },
+    status: { type: "string", enum: ["pending", "withdrawn"] }, version: POSITIVE_SAFE_INTEGER
+  }
+});
+
+export const CUSTOMER_APPROVAL_SUBMIT = Object.freeze({
+  type: "object", additionalProperties: false, required: ["approverUserId", "requestNote"],
+  properties: { approverUserId: POSITIVE_SAFE_INTEGER, requestNote: { type: "string", trim: true, maxLength: 500 } }
+});
+
+export const CUSTOMER_APPROVAL_WITHDRAW = Object.freeze({
+  type: "object", additionalProperties: false, required: ["approvalRequestId", "version"],
+  properties: { approvalRequestId: POSITIVE_SAFE_INTEGER, version: POSITIVE_SAFE_INTEGER }
+});
+
+const APPROVAL_USER = Object.freeze({ type: ["object", "null"], additionalProperties: false, required: ["id", "username", "displayName"], properties: { id: POSITIVE_SAFE_INTEGER, username: { type: "string" }, displayName: { type: "string" } } });
+const APPROVAL_STATUS = Object.freeze({ type: "string", enum: ["pending", "approved", "rejected", "withdrawn", "invalidated"] });
+export const CUSTOMER_APPROVAL_ID_PARAMS = Object.freeze({ type: "object", required: ["id"], additionalProperties: false, properties: { id: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_APPROVAL_QUEUE_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: { scope: { type: "string", enum: ["mine", "all", "unassigned"], default: "mine" }, status: { ...APPROVAL_STATUS, default: "pending" }, requesterId: POSITIVE_SAFE_INTEGER, requestedFrom: NONNEGATIVE_SAFE_INTEGER, requestedTo: NONNEGATIVE_SAFE_INTEGER, page: { ...POSITIVE_SAFE_INTEGER, default: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 } }
+});
+const APPROVAL_SUMMARY = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "customerId", "customerCode", "legalName", "customerStatus", "status", "requester", "assignedApprover", "requestNote", "requestedAt", "decidedAt", "version"],
+  properties: { id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER, customerCode: { type: "string" }, legalName: { type: "string" }, customerStatus: { type: "string", enum: ["draft", "pending_approval", "active", "suspended", "blocked", "archived"] }, status: APPROVAL_STATUS, requester: APPROVAL_USER, assignedApprover: APPROVAL_USER, requestNote: { type: "string" }, requestedAt: NONNEGATIVE_SAFE_INTEGER, decidedAt: { type: ["integer", "null"], minimum: 0 }, version: POSITIVE_SAFE_INTEGER }
+});
+export const CUSTOMER_APPROVAL_LIST_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"], properties: { items: { type: "array", items: APPROVAL_SUMMARY }, total: { type: "integer", minimum: 0 }, page: POSITIVE_SAFE_INTEGER, pageSize: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_APPROVAL_DETAIL = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [...APPROVAL_SUMMARY.required, "decidedBy", "decisionReason", "customerVersion", "currentCustomerVersion", "stale", "submitted", "current", "changedFields"],
+  properties: { ...APPROVAL_SUMMARY.properties, decidedBy: APPROVAL_USER, decisionReason: { type: "string" }, customerVersion: POSITIVE_SAFE_INTEGER, currentCustomerVersion: POSITIVE_SAFE_INTEGER, stale: { type: "boolean" }, submitted: { type: "object" }, current: { type: "object" }, changedFields: { type: "array", items: { type: "string" } } }
+});
+const APPROVAL_DECISION_FIELDS = Object.freeze({ password: { type: "string", minLength: 1, maxLength: 1024 }, version: POSITIVE_SAFE_INTEGER });
+export const CUSTOMER_APPROVAL_APPROVE = Object.freeze({ type: "object", additionalProperties: false, required: ["password", "version"], properties: { ...APPROVAL_DECISION_FIELDS, reason: { type: "string", trim: true, maxLength: 500 } } });
+export const CUSTOMER_APPROVAL_REJECT = Object.freeze({ type: "object", additionalProperties: false, required: ["password", "version", "reason"], properties: { ...APPROVAL_DECISION_FIELDS, reason: { type: "string", trim: true, minLength: 5, maxLength: 500 } } });
+export const CUSTOMER_APPROVAL_REASSIGN = Object.freeze({ type: "object", additionalProperties: false, required: ["password", "version", "approverUserId", "reason"], properties: { ...APPROVAL_DECISION_FIELDS, approverUserId: POSITIVE_SAFE_INTEGER, reason: { type: "string", trim: true, minLength: 5, maxLength: 500 } } });
+export const CUSTOMER_APPROVAL_DECISION_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["id", "customerId", "customerStatus", "status", "version", "replayed"], properties: { id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER, customerStatus: { type: "string", enum: ["draft", "active", "pending_approval"] }, status: APPROVAL_STATUS, version: POSITIVE_SAFE_INTEGER, replayed: { type: "boolean" } } });
+export const CUSTOMER_APPROVAL_REASSIGN_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["id", "assignedApproverId", "version", "replayed"], properties: { id: POSITIVE_SAFE_INTEGER, assignedApproverId: POSITIVE_SAFE_INTEGER, version: POSITIVE_SAFE_INTEGER, replayed: { type: "boolean" } } });
+export const CUSTOMER_APPROVER_QUERY = Object.freeze({ type: "object", additionalProperties: false, properties: { q: TEXT(190), excludeUserId: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_APPROVER_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["items"], properties: { items: { type: "array", maxItems: 100, items: { type: "object", additionalProperties: false, required: ["id", "username", "displayName"], properties: { id: POSITIVE_SAFE_INTEGER, username: { type: "string" }, displayName: { type: "string" } } } } } });
+
+const REASON = Object.freeze({ type: "string", trim: true, minLength: 5, maxLength: 500 });
+const PASSWORD = Object.freeze({ type: "string", minLength: 1, maxLength: 1024 });
+
+export const CUSTOMER_ACTIVATE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["version"],
+  properties: { version: POSITIVE_SAFE_INTEGER, approverUserId: POSITIVE_SAFE_INTEGER, requestNote: { type: "string", trim: true, maxLength: 500 } }
+});
+
+export const CUSTOMER_LIFECYCLE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["version", "reason", "password"],
+  properties: { version: POSITIVE_SAFE_INTEGER, reason: REASON, password: PASSWORD }
+});
+
+export const CUSTOMER_CODE_CHANGE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["customerCode", "version", "reason", "password"],
+  properties: { customerCode: TEXT(64), version: POSITIVE_SAFE_INTEGER, reason: REASON, password: PASSWORD }
+});
+
+export const CUSTOMER_DELETE = CUSTOMER_LIFECYCLE;
+
+export const CUSTOMER_DELETE_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id"], properties: { id: POSITIVE_SAFE_INTEGER }
+});
+
+export const CUSTOMER_ACTIVATION_RESPONSE = Object.freeze({ anyOf: [CUSTOMER_DETAIL, CUSTOMER_APPROVAL_RESPONSE] });
 
 export const CUSTOMER_LIST_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],

@@ -73,6 +73,21 @@ test("TC-023 maps inactive or missing Business Master currency to the stable cre
   await assert.rejects(() => credit.save({ customerId: 4, actorId: 2, version: null, creditLimit: "1.0000", creditCurrencyCode: "ZZZ", creditStatus: "normal", creditNotes: "", reason: "new policy" }), (error) => error.code === "CREDIT_POLICY_INVALID" && !error.message.includes("private"));
 });
 
+test("TC-022 an update that cannot read private credit notes preserves them", async () => {
+  const calls = [];
+  const connection = {
+    async query(sql) {
+      if (String(sql).includes("FROM customers")) return [[{ id: 4, customer_code: "CUS-004" }]];
+      if (String(sql).includes("FROM customer_credit_profiles")) return [[{ customer_id: 4, credit_limit: "10.0000", credit_currency_code: "HKD", credit_status: "normal", credit_notes: "private", version: 3 }]];
+      return [[]];
+    },
+    async execute(sql, params) { calls.push({ sql: String(sql), params }); return [{ affectedRows: 1 }]; }
+  };
+  await createService(connection).save({ customerId: 4, actorId: 2, version: 3, creditLimit: "20.0000", creditCurrencyCode: "HKD", creditStatus: "normal", reason: "raise limit" });
+  const update = calls.find((call) => call.sql.includes("UPDATE customer_credit_profiles"));
+  assert.equal(update.params[3], "private");
+});
+
 test("TC-024 clear uses policy CAS, removes the optional row and retains a redacted before audit", async () => {
   const calls = [];
   const audits = [];

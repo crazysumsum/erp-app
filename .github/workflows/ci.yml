@@ -18,8 +18,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 四個 job 互相沒有 needs 依賴，並行跑：依賴掃描、lint、前端建置都不需要
-  # 資料庫，沒理由跟著需要 MySQL 的 test job 排隊。
+  # 五個 job 互相沒有 needs 依賴，並行跑：依賴掃描、lint、前端建置、瀏覽器測試
+  # 都不需要資料庫，沒理由跟著需要 MySQL 的 test job 排隊。
   audit:
     name: Dependency audit
     runs-on: ubuntu-latest
@@ -57,6 +57,38 @@ jobs:
 
       - name: Lint (server + client, including .vue)
         run: npm run lint
+
+  # CLAUDE.md §9 要求每個前端改動都要做真瀏覽器驗證。在這個 job 出現之前，那件事
+  # 只發生在誰記得跑它的機器上——PR 全綠從來不代表 e2e 跑過。
+  #
+  # 只跑 e2e:mocked。那一組（business-master、supplier-management）在 network 層
+  # 假扮 API，只需要 client dev server，所以不必資料庫、跑得快、適合每個 PR 擋。
+  # item-management 那一組是 executable UAT：它起真 server、連真 MySQL、要先跑
+  # migration。把它塞進每個 PR 的 gate 是另一件事——成本和語意都不同，UAT 也不該
+  # 是 per-PR gate——所以留給 harness 的正式驗收流程跑。
+  e2e:
+    name: Browser tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      # 只裝 chromium：兩份 config 都用 devices["Desktop Chrome"]，裝齊三個瀏覽器
+      # 是白等。--with-deps 補上 Linux runner 缺的系統函式庫。
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser tests (network-mocked suites)
+        run: npm run e2e:mocked
 
   test:
     name: Test (server + client, MySQL integration)
