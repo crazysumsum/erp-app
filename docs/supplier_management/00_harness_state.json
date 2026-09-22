@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 181,
+  "revision": 186,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
-    "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
+    "code_commit": "70344c590aab758acb7446977e3f20759a0783de",
+    "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-034",
     "default_commit": "71616ec040a7558856083035801554dda940ab5e",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1339,6 +1339,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 80bbb954d005133570936baa6311515791d3dc4b",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/41_rev_041_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-042",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-034 REV-041 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 70344c590aab758acb7446977e3f20759a0783de",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/42_rev_042_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -2702,22 +2714,22 @@
     {
       "kind": "PR_REVIEW",
       "subject": "REV-039 CHANGES_REQUESTED 2 High / 3 Medium / 4 Low at 64ef1fc",
-      "code_commit": "64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd",
+      "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
       "status": "PASS",
-      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd. Report at docs/supplier_management/implementation/39_rev_039_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report.",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 64ef1fc94346a930f516f4ddc0c5c3dc0a88dccd. Report at docs/supplier_management/implementation/39_rev_039_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report. Corrected after REV-042 M-1: this record originally carried the reviewed head in code_commit while spec_baseline and source_fingerprint described the moment of writing, which is a triple that was true at no point in this repository's history. The five prior PR_REVIEW observations all name the observing commit and carry the reviewed head in the subject and here, so that is the convention followed now. The reviewed head is stated at the top of this field and in the subject.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-041",
       "observed_at": "2026-09-21T17:45:02+08:00"
     },
     {
       "kind": "PR_REVIEW",
       "subject": "REV-040 CHANGES_REQUESTED 1 High / 2 Medium / 5 Low at 1de07da",
-      "code_commit": "1de07da89a1fec2eb8a753f99cb9779b8f9d50cd",
+      "code_commit": "80bbb954d005133570936baa6311515791d3dc4b",
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
       "status": "PASS",
-      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 1de07da89a1fec2eb8a753f99cb9779b8f9d50cd. Report at docs/supplier_management/implementation/40_rev_040_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report.",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 1de07da89a1fec2eb8a753f99cb9779b8f9d50cd. Report at docs/supplier_management/implementation/40_rev_040_independent_review.md. Recorded late: REV-041 found that neither REV-039 nor REV-040 had a PR_REVIEW observation although sixteen prior reviews carry both halves, and the ledger asserted REV-040's M-2 was closed by the reviews entry alone. Status PASS records that the review was genuinely performed and its provenance observed; it does not mean the review approved anything, and none of these three did. The verdict is in the subject and the counts are in the report. Corrected after REV-042 M-1: this record originally carried the reviewed head in code_commit while spec_baseline and source_fingerprint described the moment of writing, which is a triple that was true at no point in this repository's history. The five prior PR_REVIEW observations all name the observing commit and carry the reviewed head in the subject and here, so that is the convention followed now. The reviewed head is stated at the top of this field and in the subject.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-041",
       "observed_at": "2026-09-21T17:45:02+08:00"
     },
@@ -2750,7 +2762,7 @@
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "c9b9fe38bd986e342e197febf6f184764824dbc6cc3a6490924dc8fcbc8baed7",
       "status": "PASS",
-      "source_ref": "REV-041 was performed by agent-skills:security-auditor, independent and not the author, against 80bbb95. Verdict CHANGES_REQUESTED, 0 Critical, 0 High, 1 Medium, 4 Low - the fourth round, and the first with no High. It verified the REV-040 M-1 revert independently, including the negative control I had not run (a key listed in redaction_env_keys but absent from the runner's environment produces no redaction), confirmed the profile diff against 64ef1fc is empty, and confirmed all three cited observation subjects match byte for byte. Six mutations, all killed, including a forced account-number leak through the masked projection that response validation refused with a 500 before the wire - the first time the schemas file's structural-defence claim has been measured in the leak direction - and a swallowed audit failure on reveal. Eleven HTTP probes at the reveal edge all refused, including every password shape and a body-injected supplierId. Full server suite 1937 with the three pre-existing items-module failures and no regression. CI run 35583404210 verified independently. Remediated here: M-1 above; the three missing PR_REVIEW observations; HD-032's claim that APPROVAL-HD-017-DESIGN is the module's only DESIGN approval, when there are seven and it is the only live one; the ci.yml comment calling the committed CI keys 'generated on the spot', which now says plainly that they are committed literals in a public repository, are therefore not secret, and must not be used anywhere else; and the shallow Object.freeze on the schemas, which left MASKED_BANK_SCHEMA.properties writable so an account field could be added to the masked projection at runtime - the schemas are deep-frozen now, pinned by a test that attempts exactly that assignment, and the freeze was confirmed to discriminate by removing the recursion and watching the test go red. An existing test that sorted params.required in place had to stop mutating a shared schema, which is a defect the freeze exposed rather than caused. REV-041 states what it did not check: the conversation behind HD-032 and HD-033, whether a runtime schema mutation actually widens a live response (marked PLAUSIBLE), the RFC 9111 reading, SupplierBankCrypto below the round-trip level, the client side, and AC-025/AC-026 at the HTTP layer, which section 8 of the implementation report already discloses as untested.",
+      "source_ref": "REV-041 was performed by agent-skills:security-auditor, independent and not the author, against 80bbb95. Verdict CHANGES_REQUESTED, 0 Critical, 0 High, 1 Medium, 4 Low - the fourth round, and the first with no High. It verified the REV-040 M-1 revert independently, including the negative control I had not run (a key listed in redaction_env_keys but absent from the runner's environment produces no redaction), confirmed the profile diff against 64ef1fc is empty, and confirmed all three cited observation subjects match byte for byte. Six mutations, all killed, including a forced account-number leak through the masked projection that response validation refused with a 500 before the wire - the first time the schemas file's structural-defence claim has been measured in the leak direction - and a swallowed audit failure on reveal. Eleven HTTP probes at the reveal edge all refused, including every password shape and a body-injected supplierId. Full server suite 1937 with the three pre-existing items-module failures and no regression. CI run 35583404210 verified independently. Remediated here: M-1 above; the three missing PR_REVIEW observations; HD-032's claim that APPROVAL-HD-017-DESIGN is the module's only DESIGN approval, when there are seven and it is the only live one; the ci.yml comment calling the committed CI keys 'generated on the spot', which now says plainly that they are committed literals in a public repository, are therefore not secret, and must not be used anywhere else; and the shallow Object.freeze on the schemas, which left MASKED_BANK_SCHEMA.properties writable so an account field could be added to the masked projection at runtime. REV-042 measured the window that protects, which REV-041 marked PLAUSIBLE and did not run: ResponseValidator.compile calls ajv.compile(schema) once per route during registration (apiDispatcher.js:296-299), so widening a schema AFTER registration is completely inert, while widening it BEFORE registration does reach the wire. The freeze therefore defends module load through createApplication and nothing later; saying it stops runtime mutation without qualification, as this record originally did, overstates it - the schemas are deep-frozen now, pinned by a test that attempts exactly that assignment, and the freeze was confirmed to discriminate by removing the recursion and watching the test go red. An existing test that sorted params.required in place had to stop mutating a shared schema, which is a defect the freeze exposed rather than caused. REV-041 states what it did not check: the conversation behind HD-032 and HD-033, whether a runtime schema mutation actually widens a live response (marked PLAUSIBLE), the RFC 9111 reading, SupplierBankCrypto below the round-trip level, the client side, and AC-025/AC-026 at the HTTP layer, which section 8 of the implementation report already discloses as untested.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-041",
       "observed_at": "2026-09-21T17:45:02+08:00"
     },
@@ -2764,6 +2776,39 @@
       "source_ref": "supplier-phase-001-server 394/394 (one more than the previous round: the test that attempts to add an account field to the deep-frozen masked schema), supplier-phase-001-client 71/71, lint and client-build green, all four binding db5296 and the current source fingerprint. Swept for key material: zero hits for either literal test key and zero for any 43-character base64 run followed by '='. The first attempt at this sweep passed the directory list through xargs -a, which is not a BSD option, so grep never ran and the zero it printed came from a failed command - the same shape of non-check this task has now produced twice, caught this time by reading the exit status rather than the count. Redone with the four paths named explicitly, and the control confirming both searches find a key planted in a scratch file.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-041",
       "observed_at": "2026-09-21T17:46:24+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-042 CHANGES_REQUESTED 0 High / 1 Medium / 4 Low at 70344c5",
+      "code_commit": "70344c590aab758acb7446977e3f20759a0783de",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+      "status": "PASS",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against 70344c590aab758acb7446977e3f20759a0783de, the merge candidate. Report at docs/supplier_management/implementation/42_rev_042_independent_review.md. code_commit names the commit at which this was observed, per the convention of the five prior PR_REVIEW records and REV-042 M-1; the reviewed head is named in the subject and above. Status PASS records that the review happened and its provenance was observed, not that it approved: it did not.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-042",
+      "observed_at": "2026-09-22T09:28:08+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-042: five findings, no High; the fifth consecutive round to find a defect the previous round's remediation introduced",
+      "code_commit": "70344c590aab758acb7446977e3f20759a0783de",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+      "status": "PASS",
+      "source_ref": "REV-042 reviewed the merge candidate 70344c5 and returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 4 Low. It confirmed all five REV-041 remediations hold, recomputing the design digest at every head rather than reading it, and it ran the step REV-041 had marked PLAUSIBLE and declined. M-1: closing REV-041's missing-PR_REVIEW finding produced three observations, two of which carried the reviewed head in code_commit while spec_baseline and source_fingerprint described the moment of writing - a triple true at no point in this repository's history, and the same class as the REV-041 M-1 being corrected four lines above it in the same commit, about the same two reviews. The five prior PR_REVIEW records all name the observing commit and carry the reviewed head in the subject; both records now follow that, with the deviation stated in each. The reviewer verified this cost nothing at any gate, because _observation requires all three fields to equal the current candidate's and those two commits will never be current again, and noted the deviation made the gate stricter rather than looser. L-1: the count corrected under REV-041 said 29 and had already been overtaken by REV-041's own reviews entry in the same commit; the record now carries only 28, the figure that was in front of the Product Owner, and states that the live count moves every round and is not tracked. L-2: that same correction had edited HD-032's question text in place, in a module whose practice is to supersede and retain unrewritten - 34 superseded approvals still say what they said. The question is restored as recorded and both corrections now live in answer_ref alone. L-3: deepFreeze guarded on Object.isFrozen, which short-circuited on the one explicitly pre-frozen properties literal in the file and so never reached MASKED_BANK_WITH_WARNINGS_SCHEMA.properties.warnings - the node describing the cross-Supplier duplicate warning. The guard is now a WeakSet, which stops cycles without hiding unfrozen children of a frozen node, the redundant inner freeze is gone, and the test no longer names individual nodes but walks every export at every depth. Verified it discriminates against the exact defect: restoring both the old guard and the inner freeze makes the test fail naming MASKED_BANK_WITH_WARNINGS_SCHEMA.properties.warnings. The previous test passed with that hole open, which is how it survived. L-4: REV-042 measured what the freeze actually defends and the ledger and the code comment both overstated it; both now say that ajv.compile at route registration makes post-registration widening inert and that the freeze covers module load through createApplication only.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-042",
+      "observed_at": "2026-09-22T09:28:08+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-042 remediation evidence: four suites green at 70344c5, no key material",
+      "code_commit": "70344c590aab758acb7446977e3f20759a0783de",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+      "status": "PASS",
+      "source_ref": "supplier-phase-001-server 394/394, supplier-phase-001-client 71/71, lint and client-build green, all four binding db5296, the current source fingerprint and code_commit 70344c5. Swept for key material with the four directories named explicitly and the exit status read rather than the output count: grep exit 1 for both literal test keys and exit 1 for any 43-character base64 run followed by '='. Control confirms both searches find a key planted in a scratch file.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-042",
+      "observed_at": "2026-09-22T09:29:17+08:00"
     }
   ],
   "pending_decisions": [
@@ -3203,7 +3248,7 @@
     {
       "id": "HD-032",
       "impact": "MAJOR",
-      "question": "REV-039 H-1 found that declaring .github/workflows/ci.yml in the module manifest's scope.approval_required_paths moved the DESIGN baseline, not only the PLAN baseline, because the DESIGN digest is computed over the manifest's scope object (harness_core.py:301-307) and approval_required_paths lives inside it. The consequence was quantified before the decision: harness_checks.py:276-289 filters reviews against a recomputed design hash, so all 38 reviews stopped counting at once, including REV-038, the APPROVED review that gated the TASK-033 merge, and APPROVAL-HD-017-DESIGN, the only one of the module's seven DESIGN-kind approvals bound to the live design baseline. The agent had previously told the Product Owner this edit was mechanical and design-neutral, which was false. Options: revert the declaration, which returns design to e4083319 and keeps 28 reviews including REV-038 bound, at the cost of the boundary validator reporting OUTSIDE_MODULE for a file HD-030 already approved; or keep the declaration and record the design move with a fresh DESIGN approval, at the cost of stranding those 28 reviews and the REV-038 that gated the previous merge.",
+      "question": "REV-039 H-1 found that declaring .github/workflows/ci.yml in the module manifest's scope.approval_required_paths moved the DESIGN baseline, not only the PLAN baseline, because the DESIGN digest is computed over the manifest's scope object (harness_core.py:301-307) and approval_required_paths lives inside it. The consequence was quantified before the decision: harness_checks.py:276-289 filters reviews against a recomputed design hash, so all 38 reviews stopped counting at once, including REV-038, the APPROVED review that gated the TASK-033 merge, and APPROVAL-HD-017-DESIGN, the module's only DESIGN-kind approval. The agent had previously told the Product Owner this edit was mechanical and design-neutral, which was false. Options: revert the declaration, which returns design to e4083319 and keeps 28 reviews including REV-038 bound, at the cost of the boundary validator reporting OUTSIDE_MODULE for a file HD-030 already approved; or keep the declaration and record the design move with a fresh DESIGN approval, at the cost of stranding those 28 reviews and the REV-038 that gated the previous merge.",
       "affected_ids": [
         "TASK-034",
         "00_module_manifest.json",
@@ -3213,7 +3258,7 @@
         "HD-030"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated both costs before the choice: 取消 manifest 宣告. Design returns to e4083319 and the 28 reviews including REV-038 stay bound. The cost accepted is stated more precisely in APPROVAL-HD-030-SCOPE-REBIND-2 following REV-040 L-5: it is not merely a cosmetic finding. validate_module_boundary goes from LOCAL_CHECKS_PASS to BLOCKED, check_boundary (harness_checks.py:118-124) consults approvals only for paths matching approval_required_paths so nothing in the toolchain reads APPROVAL-HD-030's scope entry for ci.yml any more, and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every one on this branch must be triaged by hand from here on. Recorded late: this decision was taken in conversation and the three records written from it asserted it without a pending_decisions entry existing, which REV-040 H-1 correctly flagged. Corrected after REV-041: this record originally called APPROVAL-HD-017-DESIGN 'the module's only DESIGN-kind approval'. There are seven; it is the only one bound to e4083319, the live baseline. The count of reviews the revert preserved was 28 when the decision was taken and is 29 now, because REV-040 was added to the ledger afterwards and legitimately binds e4083319; REV-039 binds 77ab26aa, the hash that was live at the head it actually reviewed."
+      "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated both costs before the choice: 取消 manifest 宣告. Design returns to e4083319 and the 28 reviews including REV-038 stay bound. The cost accepted is stated more precisely in APPROVAL-HD-030-SCOPE-REBIND-2 following REV-040 L-5: it is not merely a cosmetic finding. validate_module_boundary goes from LOCAL_CHECKS_PASS to BLOCKED, check_boundary (harness_checks.py:118-124) consults approvals only for paths matching approval_required_paths so nothing in the toolchain reads APPROVAL-HD-030's scope entry for ci.yml any more, and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every one on this branch must be triaged by hand from here on. Recorded late: this decision was taken in conversation and the three records written from it asserted it without a pending_decisions entry existing, which REV-040 H-1 correctly flagged. Two corrections to this record, both carried here rather than in the question, because the question is the record of what was put to the Product Owner and this module supersedes rather than rewrites. First: the question calls APPROVAL-HD-017-DESIGN 'the module's only DESIGN-kind approval'. There are seven; it is the only one bound to e4083319, the live design baseline, which is the property that mattered to the decision. That sentence stands as asked and is wrong as written. (REV-041, then REV-042 L-2 on the method: an earlier remediation edited the question text in place, which has been undone.) Second, the review count: 28 reviews bound to e4083319 at the time this decision was taken. That is the figure that was in front of the Product Owner and the only one this record should carry. The live count moves every time a review is added - it was 29 when REV-040 was recorded and 30 once REV-041 was - so it is not tracked here. REV-039 binds 77ab26aa, the hash live at the head it actually reviewed. (REV-042 L-1: the previous correction to this field said 29 and had already been overtaken by REV-041 in the same commit.)"
     },
     {
       "id": "HD-033",
@@ -3734,7 +3779,11 @@
     "evidence/20260921T094548-8fb42412bd2a/run.json",
     "evidence/20260921T094552-24b27b1b6e54/run.json",
     "evidence/20260921T094554-2c43113611be/run.json",
-    "evidence/20260921T094557-465f38289513/run.json"
+    "evidence/20260921T094557-465f38289513/run.json",
+    "evidence/20260922T012844-5be061f2d852/run.json",
+    "evidence/20260922T012848-f585ff545ff9/run.json",
+    "evidence/20260922T012851-d9eafd790e89/run.json",
+    "evidence/20260922T012854-50fa1af9858f/run.json"
   ],
   "defects": [
     {

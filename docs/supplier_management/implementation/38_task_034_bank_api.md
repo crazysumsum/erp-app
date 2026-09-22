@@ -233,7 +233,9 @@ reveal 邊界 HTTP probe 全部被拒。Server suite 1937，三條 pre-existing 
 | --- | --- |
 | **M-1** 我把 REV-039 記咗喺一個佢從來冇 review 過嘅 design hash 上 | **同佢收緊嗰條係同一類。** 為咗收 REV-040 M-2，我加 REV-039 入 `reviews` 嗰陣寫咗 `e4083319`（現行）。REV-039 review 嘅係 `64ef1fc`，嗰度 design 係 `77ab26aa` —— 即係 REV-039 自己 H-1 揾到嗰個 stranded hash。條記錄同佢自己個 `reviewer` 欄互相矛盾。REV-040 明明白白寫過 `77ab26aa` 同點解緊要，我靜靜雞換咗個值。親手喺 detached worktree 逐個 head 重算確認：`64ef1fc`→`77ab26aa`、`1de07da`→`e4083319`、`80bbb95`→`e4083319`。改返 `77ab26aa`。 |
 | **L** 兩輪都冇 `PR_REVIEW` observation | REV-039／040／041 三條都補咗。`status: PASS` 意思係「review 真係做過、provenance 睇過」，唔係「批咗」—— 三條都冇批。 |
-| **L** HD-032 話 `APPROVAL-HD-017-DESIGN` 係「本模組唯一一條 DESIGN approval」 | 有七條，佢係唯一一條綁住現行 baseline 嗰條。改咗，並且喺 `answer_ref` 講明原文寫過乜。順帶更正個 review 數：決定嗰陣係 **28**，而家 **29**（REV-040 之後加，佢合法綁 `e4083319`）。 |
+| **L** HD-032 話 `APPROVAL-HD-017-DESIGN` 係「本模組唯一一條 DESIGN approval」 | 有七條，佢係唯一一條綁住現行 baseline 嗰條。改咗，並且喺 `answer_ref` 講明原文寫過乜。順帶更正個 review 數：決定嗰陣係 **28** —— 而呢個先係應該記低嗰個數。（我第一次更正寫咗
+「而家 29」，但 REV-041 自己條 review 喺同一個 commit 加咗落去，即刻變 30。REV-042 L-1 捉到。
+一個每輪都會郁嘅數唔應該住喺一條決定記錄度。） |
 | **L** `ci.yml` 個註解叫committed key 做「即場產生」 | 誤導。佢哋係**一次產生就 commit 咗**嘅字面值，住喺一個 public repo 入面，所以佢哋唔係 secret，亦都唔可以喺 CI 以外用。照咁寫返。 |
 | **L** Schema 淨係 shallow freeze | `MASKED_BANK_SCHEMA.properties.accountNumber = {...}` 喺 runtime 做得到 —— 即係打穿咗上面講嗰道「結構性防線」。改成逐層凍，並且用一條**真係試加一個帳號欄位落遮罩 schema** 嘅測試釘住。驗證過佢分辨得到：拆走 deepFreeze 個遞迴 → 紅。順帶揾到一條就地 `params.required.sort()` 嘅舊測試 —— 佢本來就唔應該改一個共用 schema，凍咗之後先暴露出嚟。 |
 
@@ -242,3 +244,27 @@ reveal 邊界 HTTP probe 全部被拒。Server suite 1937，三條 pre-existing 
 HD-032／HD-033 背後嗰段對話；一個 runtime schema mutation 會唔會真係放寬一個 live
 response（標咗 **PLAUSIBLE**）；RFC 9111 嗰個讀法；`SupplierBankCrypto` round-trip 以下
 嘅原語；client 側；同埋 AC-025／AC-026 喺 HTTP 層 —— 最後嗰樣 §8 已經自己講咗未覆蓋。
+
+## 11. REV-042 remediation
+
+REV-042（`agent-skills:security-auditor`，獨立，非作者）喺 merge candidate `70344c5` 上報
+CHANGES_REQUESTED：**0 Critical、0 High、1 Medium、4 Low**。五條全部真。
+
+佢確認咗 REV-041 五條全部收得啱（design digest 喺每個 head 重算過，唔係讀），而且**行咗
+REV-041 標咗 PLAUSIBLE 又冇行嗰一步** —— 把一個放寬咗嘅 response schema 真係推過一個 HTTP
+response。結論見下面 L-4。
+
+| # | 收法 |
+| --- | --- |
+| **M-1** 三條新 `PR_REVIEW` observation 裏面兩條綁一個從來未存在過嘅 triple | **同我喺同一個 commit 上面四行更正緊嗰條，係同一類。** 我喺 `code_commit` 寫咗被 review 嘅 head（`64ef1fc`／`1de07da`），但 `spec_baseline` 同 `source_fingerprint` 寫嘅係落筆嗰刻嘅值。`64ef1fc` 嗰陣 plan 係 `f701e9b0`、fingerprint 係 `acaa7efb`，所以呢個組合喺 repo 歷史上**任何一刻都唔成立**。之前五條 `PR_REVIEW` 全部係記「觀察嗰刻」嘅 commit，被 review 嗰個 head 擺喺 `subject` 同 `source_ref` —— 照返個 convention，兩條記錄各自寫明改過。REV-042 自己驗過呢個偏差喺任何 gate 上都唔使錢（`_observation` 要三個欄位一齊等於現行候選，而嗰兩個 commit 唔會再係現行），而且方向係令 gate **更嚴**唔係更鬆。 |
+| **L-1** 更正完個 review 數又係錯 | 寫咗「而家 29」，但 REV-041 自己條 review 喺同一個 commit 加咗，即刻係 30。依家淨係記 **28** —— 你做決定嗰陣嗰個數 —— 並且寫明個 live count 每輪都郁，唔喺度追。 |
+| **L-2** 我就地改咗 `HD-032` 個 `question` | 呢個模組嘅做法係 **supersede，唔 rewrite**（34 條被取代嘅 approval 全部原文留住）。`question` 係「當時擺咗乜喺你面前」嘅記錄，改佢就係削弱 `answer_ref` 唯一嘅憑據。原文還原，兩個更正全部放返 `answer_ref`。 |
+| **L-3** `deepFreeze` 仲有一個節點凍唔到，而且就係跨 Supplier 披露嗰個 | 舊個守衛係 `!Object.isFrozen(value)`，撞正檔案裏面唯一一個**事先 `Object.freeze` 咗**嘅 `properties` 就短路，下面個 `MASKED_BANK_WITH_WARNINGS_SCHEMA.properties.warnings` 永遠掃唔到 —— 即係嗰個「**唔可以**回對方帳號」嘅 warning 元素。守衛改成 `WeakSet`（擋循環，但唔會遮住已凍節點下面未凍嘅仔），多餘嗰個內層 freeze 刪走。測試亦都唔再逐個節點點名，改成**行勻每個 export 每一層**。驗證過佢分辨得到：把舊守衛同內層 freeze 一齊放返，測試紅，而且直接叫出 `MASKED_BANK_WITH_WARNINGS_SCHEMA.properties.warnings`。舊測試喺個窿開住嘅時候係綠嘅，所以佢先走得甩。 |
+| **L-4** 個 freeze 守住嘅範圍，比我個註解同 ledger 講嘅窄 | REV-042 量咗：`ResponseValidator.compile` 喺 route 註冊嗰陣 `ajv.compile(schema)` 一次（`apiDispatcher.js:296-299`），所以**註冊之後**改個 schema 完全冇作用；**註冊之前**改就真係漏得到落線上（佢喺真 HTTP 上量過）。即係個 freeze 守住嘅係 module load 到 `createApplication` 之間，唔係「runtime」。註解同 ledger 兩邊都照咁寫返。 |
+
+### 第五輪，第五次
+
+五輪入面每一輪都揾到**上一輪 remediation 自己整出嚟**嘅嘢。今次係 M-1：我一邊喺
+`reviews` 度更正一個被錯置嘅 baseline，一邊喺隔籬 `observations` 度用另一個形式再犯一次，
+同一個 commit，同兩條 review。走勢係 2H/3M/4L → 1H/2M/5L → 0H/1M/4L → 0H/1M/4L，
+High 已經清咗兩輪，但係「記錄嘅形狀」呢一類仲未收斂。

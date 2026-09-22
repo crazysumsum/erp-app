@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import * as schemas from "../src/handlers/suppliers/supplierBankSchemas.js";
+
 import {
   CreateSupplierBankAccountHandler,
   DeactivateSupplierBankAccountHandler,
@@ -242,6 +244,20 @@ test("the masked schema cannot have an account field added to it at runtime", ()
     TypeError
   );
   assert.equal(MASKED_BANK_SCHEMA.properties.accountNumber, undefined);
-  assert.ok(Object.isFrozen(MASKED_BANK_SCHEMA.properties));
-  assert.ok(Object.isFrozen(BANK_REVEAL_RESPONSE_SCHEMA.properties));
+
+  // REV-042 L-3：上面兩句喺 `warnings` 個窿開住嘅時候一樣綠 —— 佢哋淨係掃到頂兩層。
+  // 所以唔好逐個節點點名，行勻每一個 export 嘅每一層。呢個係唯一捉得到「守衛喺中間
+  // 某層短路」嗰類錯嘅寫法。
+  const unfrozen = [];
+  const walk = (value, path) => {
+    if (!value || typeof value !== "object") return;
+    if (!Object.isFrozen(value)) unfrozen.push(path);
+    for (const [key, inner] of Object.entries(value)) walk(inner, `${path}.${key}`);
+  };
+  for (const [name, schema] of Object.entries(schemas)) {
+    // supplierSchemas.js 嘅嘢，唔屬呢個檔案管。
+    if (name === "SUPPLIER_ID_PARAMS_SCHEMA") continue;
+    walk(schema, name);
+  }
+  assert.deepEqual(unfrozen, [], "every node of every Bank schema must be frozen at every depth");
 });

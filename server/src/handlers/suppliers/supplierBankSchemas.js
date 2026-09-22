@@ -13,14 +13,25 @@ import { SUPPLIER_ID_PARAMS_SCHEMA } from "./supplierSchemas.js";
 
 /**
  * `Object.freeze` 係淺嘅：凍咗個 schema 物件唔代表凍咗佢個 `properties`。一個
- * `MASKED_BANK_SCHEMA.properties.accountNumber = {type:"string"}` 喺 runtime 做得到，
- * 而咁樣做就打穿咗上面講嗰道「結構性防線」。所以呢度逐層凍。（REV-041）
+ * `MASKED_BANK_SCHEMA.properties.accountNumber = {type:"string"}` 喺 runtime 做得到。
+ * 所以呢度逐層凍。
+ *
+ * **佢守住嘅窗口要講清楚**（REV-042 L-4 量過）：`ResponseValidator.compile` 喺 route
+ * 註冊嗰陣 `ajv.compile(schema)` 一次（`apiDispatcher.js:296-299`），之後個 compiled
+ * validator 先係防線，個 schema 物件唔再被讀。即係註冊之後改個 schema 係**完全冇作用**
+ * 嘅；凍佢守住嘅係 module load 到 `createApplication` 之間 —— 註冊**之前**改，係真係
+ * 漏得到落線上，REV-042 喺真 HTTP 上量過。呢個窗口細，但唔係零，而凍佢成本係零。
+ *
+ * 用 `seen` 而唔用 `Object.isFrozen` 做守衛：REV-042 L-3 揾到後者會喺一個已經凍咗嘅
+ * 中間層短路，令下面嗰層永遠掃唔到 —— 當時 `MASKED_BANK_WITH_WARNINGS_SCHEMA` 個
+ * `warnings` 就係咁走甩。一個「見過就唔再入」嘅守衛擋到循環，但唔會擋住已凍節點下面
+ * 未凍嘅仔。
  */
-function deepFreeze(value) {
-  if (value && typeof value === "object" && !Object.isFrozen(value)) {
-    Object.freeze(value);
-    for (const inner of Object.values(value)) deepFreeze(inner);
-  }
+function deepFreeze(value, seen = new WeakSet()) {
+  if (!value || typeof value !== "object" || seen.has(value)) return value;
+  seen.add(value);
+  Object.freeze(value);
+  for (const inner of Object.values(value)) deepFreeze(inner, seen);
   return value;
 }
 
@@ -179,10 +190,12 @@ const BANK_WARNING_SCHEMA = deepFreeze({
 
 export const MASKED_BANK_WITH_WARNINGS_SCHEMA = deepFreeze({
   ...MASKED_BANK_SCHEMA,
-  properties: Object.freeze({
+  // 呢度冇 Object.freeze —— 交俾 deepFreeze 一次過搞掂。之前寫住個 Object.freeze，
+  // 反而令舊個 isFrozen 守衛喺呢一層短路，`warnings` 掃唔到。（REV-042 L-3）
+  properties: {
     ...MASKED_BANK_SCHEMA.properties,
     warnings: { type: "array", items: BANK_WARNING_SCHEMA }
-  })
+  }
 });
 
 export const BANK_LIST_RESPONSE_SCHEMA = deepFreeze({
