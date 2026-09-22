@@ -1,0 +1,68 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20260922T012851-d9eafd790e89",
+  "suite_id": "lint",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+  "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+  "code_commit": "70344c590aab758acb7446977e3f20759a0783de",
+  "started_at": "2026-09-22T01:28:51.461298Z",
+  "ended_at": "2026-09-22T01:28:54.572376Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "lint"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "e1648dfbf26899c99d8097ff1a68d4c984454fb5d4fbd8adcf31c46fb8dc61b8",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260922T012851-d9eafd790e89/stdout.log",
+      "sha256": "6bb1ee595ad4a18e79d4765b8d4ac46297b3f844e713cdf91411b06c8ede59e2",
+      "bytes": 34
+    },
+    {
+      "path": "evidence/20260922T012851-d9eafd790e89/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "npm",
+        "--version"
+      ],
+      "output": "11.18.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

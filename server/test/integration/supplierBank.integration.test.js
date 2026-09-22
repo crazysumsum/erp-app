@@ -23,6 +23,7 @@ const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.s
 
 // 一個獨特到唔會撞任何嘢嘅明文，咁「掃唔掃到佢」先至有意義。
 const SECRET = `77${randomUUID().replace(/-/gu, "").slice(0, 14).toUpperCase()}`;
+const PASSWORD = "Bank-Http-Test-1!";
 
 function config() {
   return {
@@ -449,4 +450,269 @@ integrationTest("a real ER_DUP_ENTRY from the driver becomes a 409, not a 500 ca
   });
   assert.ok(!serialized.includes("Duplicate entry"), "the driver's message embeds the raw blind index bytes");
   assert.ok(!serialized.includes(SECRET));
+});
+
+/**
+ * 真 HTTP。呢個測試順帶收咗一個由 TASK-031 帶到而家嘅缺口：REV-032 M-4 指出
+ * `supplier_management` 入面**冇一層**係由 dispatcher → handler → service → MySQL
+ * 行足全程 —— handler 測試係宣告式嘅，而 e2e spec 全部 mock 咗個 API。呢度用返
+ * `business-master/http.integration.test.js` 嘅做法起一個真 app。
+ *
+ * 佢同時證到一件 T34 先至存在嘅事：**個 app 起得到**。由呢個 task 起，Bank
+ * capability 已經部署，所以兩組 key ring 係無條件嘅 startup requirement（設計
+ * §1700，HD-030）—— 一個起得成嘅 app 就係嗰個配置真係生效嘅證據。
+ */
+integrationTest("the Bank routes answer over real HTTP, and the masked list leaks nothing", async (t) => {
+  const { createApplication } = await import("../../src/framework/application/createApplication.js");
+  const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
+  const source = defaultConfigurationSource();
+  const application = await createApplication({
+    configurationSource: { ...source, application: { ...source.application, port: 0 } },
+    serviceDiscoveryOptions: {
+      additionalModuleUrls: [
+        // Supplier 嘅 provider 依賴 businessMaster，所以兩個都要發現到 —— 同
+        // business-master/http.integration.test.js 一樣。
+        new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href
+      ]
+    }
+  });
+  const db = application.services.require("mysqldatabase");
+  const now = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+  let supplierId = null;
+  let roleId = null;
+  let userId = null;
+  t.after(async () => {
+    if (supplierId) {
+      await db.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [supplierId]);
+      await db.execute("DELETE FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]);
+      await db.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
+    }
+    if (userId) {
+      await db.execute("DELETE FROM user_roles WHERE user_id = ?", [userId]);
+      await db.execute("DELETE FROM fr_token_versions WHERE subject = ?", [String(userId)]);
+      await db.execute("DELETE FROM users WHERE id = ?", [userId]);
+    }
+    if (roleId) await db.execute("DELETE FROM roles WHERE id = ?", [roleId]);
+    await application.shutdown("supplier_bank_http_test_complete");
+  });
+
+  const [role] = await db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`bank-http-${suffix}`, now]);
+  roleId = Number(role.insertId);
+  for (const name of ["supplier.view"]) {
+    const [[permission]] = await db.query("SELECT id FROM permissions WHERE name = ?", [name]);
+    await db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
+  }
+  // 真嘅 hash：reveal 係 jwt-password，password re-auth 喺 authorization policy
+  // **之前**行。用一個假 hash 會令個請求死喺密碼比對度（500），咁就證唔到「佢過到
+  // 密碼，但冇資格」—— 而後者先係 AC-023 講嗰件事。
+  const { hashPassword } = await import("../../src/modules/user/passwordHash.js");
+  const passwordHash = await hashPassword(PASSWORD);
+  const [user] = await db.execute(
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    [`bank-http-${suffix}`, passwordHash, "Bank HTTP", now, now]
+  );
+  userId = Number(user.insertId);
+  await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
+
+  // 種資料用一條 raw mysql2 連線：`serviceOn` 個 wrapper 要 beginTransaction／commit，
+  // 而 app 嗰個 mysqldatabase service 係另一個介面。角色同使用者就用 app 嗰個，因為
+  // 佢要同 jwt／tokenRevocation 睇到同一個資料庫。
+  const seedConnection = await mysql.createConnection(config());
+  const seeded = await seedSupplier(seedConnection, suffix);
+  supplierId = seeded.supplierId;
+  // 種資料要用**app 自己嗰組 key**，唔係一組新產生嘅 —— 否則個 row 加密咗之後
+  // app 解唔返，reveal 會（正確地）回 422。呢個係第一次寫嗰陣真係撞到嘅。
+  const appCrypto = new SupplierBankCrypto({
+    encryption: application.services.config.supplier.bankEncryption,
+    lookup: application.services.config.supplier.bankLookup
+  });
+  await serviceOn(seedConnection, { crypto: appCrypto }).create({
+    ...actor, ...details, supplierId, accountNumber: SECRET, isDefault: true, reason: "HTTP 測試種一行"
+  });
+  await seedConnection.end();
+
+  const jwt = application.services.require("jwt");
+  const version = await application.services.require("tokenRevocation").currentVersion(String(userId));
+  const token = await jwt.issue(
+    { roles: [`bank-http-${suffix}`], permissions: ["supplier.view"] },
+    { subject: String(userId), version, authTime: Math.floor(now / 1000) }
+  );
+  const { url } = await application.start();
+  const get = (path, headers = {}) => fetch(`${url}${path}`, { headers })
+    .then(async (r) => ({ status: r.status, headers: r.headers, body: await r.json() }));
+
+  // 冇 token：401，而且唔會漏出任何嘢。
+  assert.equal((await get(`/api/v1/suppliers/${supplierId}/bank-accounts`)).status, 401);
+
+  const listed = await get(`/api/v1/suppliers/${supplierId}/bank-accounts`, { authorization: `Bearer ${token}` });
+  assert.equal(listed.status, 200, JSON.stringify(listed.body));
+  assert.equal(listed.body.data.items.length, 1);
+  const [item] = listed.body.data.items;
+  assert.match(item.maskedAccountNumber, /^••••\s/u);
+  assert.equal(item.isDefault, true);
+
+  // 成個 response body —— 唔係淨係嗰個 item —— 唔可以有帳號或者任何 crypto metadata。
+  const serialized = JSON.stringify(listed.body);
+  assert.ok(!serialized.includes(SECRET), "AC-023: a supplier.view holder never receives the account over HTTP");
+  for (const leak of ["ciphertext", "authTag", "blindIndex", "cryptoContext", "encryptionKeyId", "lastFour"]) {
+    assert.ok(!serialized.includes(leak), `${leak} must not cross the wire`);
+  }
+
+  // 一個只得 supplier.view 嘅人撳 reveal：403，而唔係 401 或者 404 —— 佢認到身分，
+  // 佢只係冇資格。而個拒絕本身唔可以講出帳號。
+  const revealed = await fetch(`${url}/api/v1/suppliers/${supplierId}/bank-accounts/${item.id}/reveal`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+    body: JSON.stringify({ reason: "冇權限測試原因", password: PASSWORD })
+  }).then(async (r) => ({ status: r.status, body: await r.json() }));
+  // REV-039 M-2：只斷言 403 係分辨唔到嘢嘅 —— `passwordReauth.js` 密碼唔啱一樣回
+  // 403，所以一個**根本去唔到授權層**嘅請求都會令呢句綠。要指名嗰個 code。
+  assert.equal(revealed.status, 403, JSON.stringify(revealed.body));
+  assert.equal(revealed.body.error.code, "Forbidden",
+    "a wrong password also yields 403; this must be the authorization layer refusing, not the password check");
+  assert.ok(!JSON.stringify(revealed.body).includes(SECRET));
+
+  // REV-039 M-3：要有一個**成功**嘅 reveal 行過真 HTTP，否則 AC-024 喺呢一層完全冇
+  // 覆蓋 —— 而嗰個空白正正就係 M-1（header 被框架蓋過）冇人察覺嘅原因。
+  const [[bankPermission]] = await db.query("SELECT id FROM permissions WHERE name = 'supplier.bank.view'");
+  await db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, bankPermission.id]);
+  const viewerToken = await jwt.issue(
+    { roles: [`bank-http-${suffix}`], permissions: ["supplier.view", "supplier.bank.view"] },
+    { subject: String(userId), version, authTime: Math.floor(now / 1000) }
+  );
+  const ok = await fetch(`${url}/api/v1/suppliers/${supplierId}/bank-accounts/${item.id}/reveal`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${viewerToken}`, "content-type": "application/json" },
+    body: JSON.stringify({ reason: "整合測試查看完整帳號", password: PASSWORD })
+  }).then(async (r) => ({ status: r.status, headers: r.headers, body: await r.json() }));
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  assert.equal(ok.body.data.accountNumber, SECRET, "AC-024: bank.view really does get the account");
+
+  // 而佢係唯一一個講得出帳號嘅 response，所以佢係唯一一個要 no-store 嘅。
+  //
+  // REV-039 M-1：呢度斷言**實際過到線嗰個值**，唔係 handler 設咗乜 —— 之前個測試
+  // 用假 res 直接行 execute，停咗喺框架覆寫之前一步，所以佢結構上捉唔到呢件事。
+  //
+  // 個值係 `no-store`，唔係 T34 驗收條件寫嘅 `no-store, private`：`sendSuccess`
+  // （framework/http/apiResponse.js:21）會喺 handler 之後覆寫。呢個偏離 Product Owner
+  // 批咗（DEV-T34-CACHE-PRIVATE）。用 equal 而唔用 match 係**特登**嘅 —— 如果有一日
+  // 有人改咗框架，呢條測試會紅，而嗰陣個偏離應該係被人有意識咁收咗，唔係靜靜雞飄走。
+  assert.equal(ok.headers.get("cache-control"), "no-store",
+    "見 DEV-T34-CACHE-PRIVATE：private 過唔到線；紅咗即係框架改咗，去收個偏離記錄");
+  assert.equal(ok.headers.get("pragma"), "no-cache", "呢個框架唔掂，所以 handler 設得到");
+
+  // 成功 reveal 之後一定要有一筆稽核 —— 呢個係 FR-BANK-006 喺 HTTP 層嘅出口。
+  const [audits] = await db.query(
+    "SELECT action FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.reveal'", [supplierId]
+  );
+  assert.equal(audits.length, 1, "a reveal over HTTP leaves exactly one audit row");
+});
+
+/**
+ * 跨 Supplier 擁有權 —— 呢條 invariant 係本模組後果最大嗰條，而佢一直**冇嘢釘住**。
+ *
+ * REV-043 L-1：把 `#rowForUpdate` 嘅 `AND supplier_id = ?` 拆走，339 條 supplier 測試
+ * 全綠。而喺嗰個 mutation 之下，`reveal` 會經一條借返嚟嘅 route 回**另一個 Supplier
+ * 嘅解密帳號** —— 因為 AAD 係用 `row.supplier_id`（行自己個擁有者）砌嘅，唔係用
+ * caller 聲稱嗰個，所以 AAD 攔唔到佢。即係話呢個 `WHERE` 謂詞就係**唯一**防線。
+ *
+ * 所以呢條測試唔係「試下 404」。佢逐條路徑打：`reveal` 有佢自己嗰句 query，三條寫入
+ * route 共用 `#rowForUpdate`，`list` 又係另一句。四個地方分開拆走個謂詞都要有嘢紅。
+ *
+ * 而且唔淨止斷言拒絕 —— 仲要斷言**受害人嗰行冇被郁過**同**冇明文出過嚟**，因為一個
+ * 「拒絕咗但順手改咗 version」嘅實作一樣係壞嘅。
+ *
+ * ## 四個謂詞，三個殺得到
+ *
+ * 逐個拆走再跑：`reveal` 自己嗰句、`#rowForUpdate`、`list` —— 三個都紅。
+ *
+ * 第四個 `#project` **殺唔到，而佢係一個 equivalent mutant，唔係一個 coverage 窿**。
+ * 佢四個 caller 入面，`create` 嗰個用啱啱 INSERT 咗（帶住 `input.supplierId`）嘅
+ * `insertId`，另外三個（update／setDefault／deactivate）全部喺 `#rowForUpdate` 已經
+ * 攔咗之後先行到。即係話喺**任何到得到嘅路徑**上面，個 id 早就驗過屬於嗰個 Supplier，
+ * 所以 `#project` 個謂詞係冗餘嘅縱深防禦 —— 拆咗佢，行為一模一樣。
+ *
+ * 唔為佢砌一條測試：要砌就要直接叫一個 private method，或者砌一個到唔到嘅狀態，
+ * 而咁樣嘅測試釘住嘅係實作形狀，唔係行為。記低咗，唔係扮咗。
+ */
+integrationTest("no Bank route reaches another Supplier's row, and the refusal changes nothing", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let victimId = null;
+  let attackerId = null;
+  t.after(async () => { await cleanup(connection, [victimId, attackerId]); await connection.end(); });
+
+  const victim = await seedSupplier(connection, randomUUID().slice(0, 8));
+  victimId = victim.supplierId;
+  const attacker = await seedSupplier(connection, randomUUID().slice(0, 8));
+  attackerId = attacker.supplierId;
+
+  const service = serviceOn(connection, { crypto: buildCrypto(), realAudit: true });
+  const owned = await service.create({
+    ...actor, ...details, supplierId: victimId, accountNumber: SECRET,
+    isDefault: true, reason: "整合測試建立受害者帳戶"
+  });
+  // 攻擊者自己都有一行，咁 list 嗰條斷言先有意義 —— 一個空清單自動「唔含」受害者。
+  await service.create({
+    ...actor, ...details, supplierId: attackerId, accountNumber: `88${SECRET.slice(2)}`,
+    reason: "整合測試建立攻擊者自己嘅帳戶"
+  });
+
+  const [[before]] = await connection.query(
+    "SELECT supplier_id, version, status, is_default, account_ciphertext FROM supplier_bank_accounts WHERE id = ?",
+    [owned.id]
+  );
+
+  const notFound = (error) => error.statusCode === 404 && error.publicCode === "SUPPLIER_BANK_NOT_FOUND";
+  const borrowed = { ...actor, supplierId: attackerId, bankAccountId: owned.id };
+
+  // reveal：自己一句 query。呢條係四條入面唯一一條，過咗就直接見到明文。
+  await assert.rejects(
+    () => service.reveal({ ...borrowed, reason: "借另一個 Supplier 嘅 route 查看" }),
+    notFound,
+    "reveal must not read a row it does not own"
+  );
+  // update / setDefault / deactivate：共用 #rowForUpdate。
+  await assert.rejects(
+    () => service.update({ ...borrowed, ...details, version: before.version, reason: "借另一個 Supplier 嘅 route 修改" }),
+    notFound,
+    "update must not reach a row it does not own"
+  );
+  await assert.rejects(
+    () => service.setDefault({ ...borrowed, version: before.version, reason: "借另一個 Supplier 嘅 route 設預設" }),
+    notFound,
+    "setDefault must not reach a row it does not own"
+  );
+  await assert.rejects(
+    () => service.deactivate({ ...borrowed, version: before.version, reason: "借另一個 Supplier 嘅 route 停用" }),
+    notFound,
+    "deactivate must not reach a row it does not own"
+  );
+
+  // list：又係另一句 query，而佢係唯一一條唔會拋錯、只會多回嘢嘅路徑。
+  const listed = await service.list({ ...actor, supplierId: attackerId });
+  assert.equal(listed.items.length, 1, "the attacker sees exactly their own one account");
+  assert.ok(
+    listed.items.every((item) => item.id !== owned.id),
+    "another Supplier's account must not appear in this Supplier's list"
+  );
+
+  // 四次拒絕之後，受害人嗰行要同之前**逐個欄位一樣**。
+  const [[after]] = await connection.query(
+    "SELECT supplier_id, version, status, is_default, account_ciphertext FROM supplier_bank_accounts WHERE id = ?",
+    [owned.id]
+  );
+  assert.deepEqual(
+    { ...after, account_ciphertext: after.account_ciphertext.toString("base64") },
+    { ...before, account_ciphertext: before.account_ciphertext.toString("base64") },
+    "a refused cross-Supplier call must leave the row untouched, version included"
+  );
+
+  // 亦都唔可以留低任何稽核 —— 尤其係一條會令人以為「有人睇過」嘅 reveal 紀錄。
+  const [audits] = await connection.query(
+    "SELECT action FROM supplier_audit_logs WHERE supplier_id IN (?, ?) AND action = 'supplier.bank.reveal'",
+    [victimId, attackerId]
+  );
+  assert.equal(audits.length, 0, "a refused reveal must not leave a record claiming one happened");
 });
