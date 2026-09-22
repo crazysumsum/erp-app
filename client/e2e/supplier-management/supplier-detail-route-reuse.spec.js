@@ -92,9 +92,18 @@ function collectConsole(page) {
 
 // 由頁面裡叫 app 自己那個 router，模擬一個「下一個供應商」連結會做的事。
 // history.pushState 做不到這件事：它不會驅動 Vue Router，push 完什麼都不會發生。
+//
+// 一定要 await 那個 promise：唔 await 嘅話 evaluate 會喺導航仲未完成就返，而 test
+// 就去 assert DOM——冷 dev server 慢少少就會間歇性紅。呢個 flake 真係咬過我一次。
+//
+// 順便回傳 NavigationFailure：vue-router 嘅 push 被 guard 擋住係 *resolve* 一個
+// failure object，唔係 reject。回傳出嚟，「行到／被擋」就變成明確斷言，唔使靠
+// 畫面反推。
 async function pushInApp(page, path) {
-  await page.evaluate((target) => {
-    document.getElementById("app").__vue_app__.config.globalProperties.$router.push(target);
+  return page.evaluate(async (target) => {
+    const router = document.getElementById("app").__vue_app__.config.globalProperties.$router;
+    const failure = await router.push(target);
+    return { aborted: Boolean(failure), type: failure?.type ?? null };
   }, path);
 }
 
@@ -108,7 +117,7 @@ test("@technical a router.push between two supplier ids refetches on the reused 
   // sentinel：只要整頁重載過，這個變數就會消失，而測試綠的原因就會變成重新掛載。
   await page.evaluate(() => { window.__sameDocument = true; });
 
-  await pushInApp(page, "/suppliers/8");
+  expect(await pushInApp(page, "/suppliers/8")).toMatchObject({ aborted: false });
 
   await expect(page.getByRole("heading", { name: /SUP-008/ })).toBeVisible();
   await expect(page.getByText("Northwind Supply", { exact: true })).toBeVisible();
@@ -148,7 +157,7 @@ test("@technical a half-edited form does not survive the move to another supplie
   await startEditWithDraft(page);
 
   await page.evaluate(() => { window.__sameDocument = true; });
-  await pushInApp(page, "/suppliers/8");
+  expect(await pushInApp(page, "/suppliers/8")).toMatchObject({ aborted: false });
 
   await expect(page.getByRole("heading", { name: /SUP-008/ })).toBeVisible();
   expect(await page.evaluate(() => window.__sameDocument)).toBe(true);
@@ -168,7 +177,8 @@ test("@technical refusing the prompt keeps both the supplier and the draft", asy
   await page.goto("/suppliers/7");
   await startEditWithDraft(page);
 
-  await pushInApp(page, "/suppliers/8");
+  // 撳「取消」之後，push 要回報導航被中止——唔係靜靜地當冇事發生。
+  expect(await pushInApp(page, "/suppliers/8")).toMatchObject({ aborted: true });
 
   expect(dialogs).toHaveLength(1);
   await expect(page.getByRole("heading", { name: /SUP-007/ })).toBeVisible();
