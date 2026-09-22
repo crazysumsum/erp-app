@@ -60,6 +60,20 @@ describe("CustomerBankPanel", () => {
     expect(body.text()).not.toContain("123456789001");
   });
 
+  it("clears revealed plaintext and reloads when the customer changes", async () => {
+    promptPassword.mockResolvedValue({ reason: "核對退款銀行帳戶", password: "pw" });
+    customerService.revealBankAccount.mockResolvedValue({ id: 9, accountNumber: "123456789001", revealedAt: 1, expiresInSeconds: 30 });
+    customerService.bankAccounts.mockResolvedValueOnce({ items: [BANK] }).mockResolvedValueOnce({ items: [{ ...BANK, id: 10, customerId: 8, bankName: "Second Bank", maskedAccountNumber: "••••0022" }] });
+    const { wrapper, body } = await mounted();
+    await body.find('button[aria-label="查看 Example Bank 完整帳號"]').trigger("click"); await flushPromises();
+    expect(body.text()).toContain("123456789001");
+    await wrapper.setProps({ customerId: 8 });
+    expect(body.text()).not.toContain("123456789001");
+    await flushPromises();
+    expect(body.text()).toContain("Second Bank");
+    expect(customerService.bankAccounts).toHaveBeenLastCalledWith(8);
+  });
+
   it("clears an unsaved account number before the page enters browser history cache", async () => {
     const { body } = await mounted();
     await body.findAll("button").find((button) => button.text() === "新增銀行帳戶").trigger("click");

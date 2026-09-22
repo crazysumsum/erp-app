@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 122,
+  "revision": 124,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "7d9fd9589c10e173916157aed6a71c587b9cef4ab89dcefc0da6c53961a7bf1e",
     "plan": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
-    "code_commit": "628f88d631f2acb237a72083aeaac80a3de3ead9",
-    "source_fingerprint": "8d60a59b71cbe7838029461145ea9287d89786146d0ceff528051c43d97b89e3",
+    "code_commit": "b32d1ea6c2c202a2a843f1a4dcd11e96fd304b65",
+    "source_fingerprint": "4da6950e6824166d66fbc8dc9fdeec01e6d8799c3eb1e03a335a972e25cf8861",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -1418,6 +1418,18 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-021",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-022 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "4da6950e6824166d66fbc8dc9fdeec01e6d8799c3eb1e03a335a972e25cf8861",
+      "source_ref": "2026-09-22 independent security review requested changes: reveal response idempotency durably cached plaintext and bypassed fresh re-auth/audit; reused Customer routes retained revealed plaintext and stale data; maintenance CLI bypassed application-level shared bank key-ring validation. Static syntax and diff checks otherwise passed.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 1,
+      "open_high": 2,
       "risk_approval_id": null
     }
   ],

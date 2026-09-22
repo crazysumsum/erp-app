@@ -19,6 +19,8 @@ test("Customer bank routes enforce exact step-up authentication and permission p
     handlers.RevealCustomerBankAccountHandler.api.authorizationPolicies[0].options.permissions,
     ["customer.view", "customer.bank.view"]
   );
+  assert.equal(handlers.RevealCustomerBankAccountHandler.api.idempotency, undefined,
+    "plaintext reveal must never enter the durable idempotency response cache");
 });
 
 test("Customer masked Bank response schemas structurally exclude plaintext and crypto metadata", () => {

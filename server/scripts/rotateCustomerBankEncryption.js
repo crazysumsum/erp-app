@@ -1,10 +1,8 @@
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
-import { normalizeDatabaseConfig } from "../src/framework/configuration/normalizeDatabaseConfig.js";
 import { CustomerBankCrypto } from "../src/modules/customer/CustomerBankCrypto.js";
 import { CustomerBankMaintenanceService } from "../src/modules/customer/CustomerBankMaintenanceService.js";
-import { normalizeCustomerConfig } from "../src/modules/customer/normalizeCustomerConfig.js";
 
 dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
 
@@ -25,14 +23,13 @@ export function parseArguments(argv) {
 
 export async function runCustomerBankMaintenance(operation, argv = process.argv.slice(2)) {
   const options = parseArguments(argv);
-  const [{ default: databaseConfig }, { default: customerSource }, { createMySqlDatabasePool }] = await Promise.all([
-    import("../config/database.js"),
-    import("../config/customer.js"),
+  const [{ defaultConfigurationSource, validateApplicationConfiguration }, { createMySqlDatabasePool }] = await Promise.all([
+    import("../src/framework/configuration/applicationConfiguration.js"),
     import("../src/services/mysqldatabase/connection.js")
   ]);
-  const customer = normalizeCustomerConfig(customerSource);
+  const { customer, database: databaseConfig } = validateApplicationConfiguration(defaultConfigurationSource());
   if (!customer.bankEncryption) throw new Error("Customer bank key rings are not configured");
-  const pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
+  const pool = createMySqlDatabasePool(databaseConfig);
   const database = {
     query: (...args) => pool.query(...args),
     async withTransaction(work) {

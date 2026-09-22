@@ -19,9 +19,9 @@ async function installApi(page, { sessionUser = user, customerStatus = "draft" }
     const ok = (data) => route.fulfill({ status: 200, headers, body: JSON.stringify({ success: true, data, meta: { requestId: "customer-browser" } }) });
     if (path === "/api/v1/user/me") return ok(sessionUser);
     if (request.method() === "GET" && path === "/api/v1/customers") return ok({ items: [{ ...customer, status: customerStatus }], total: 1 });
-    if (request.method() === "GET" && path === "/api/v1/customers/7") return ok({ ...customer, status: customerStatus, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state });
-    if (request.method() === "GET" && path === "/api/v1/customers/7/completeness") return ok({ customerId: 7, issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
-    if (request.method() === "GET" && path === "/api/v1/customers/7/bank-accounts") return ok({ items: state.banks });
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)$/u.test(path)) { const id = Number(path.split("/").at(-1)); return ok({ ...customer, id, code: `CUS-00${id}`, legalName: id === 8 ? "Second Customer" : customer.legalName, status: customerStatus, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state }); }
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/completeness$/u.test(path)) return ok({ customerId: Number(path.split("/")[4]), issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/bank-accounts$/u.test(path)) { const customerId = Number(path.split("/")[4]); return ok({ items: state.banks.map((bank) => ({ ...bank, customerId, bankName: customerId === 8 ? "Second Bank" : bank.bankName })) }); }
     if (request.method() === "POST" && path === "/api/v1/customers/7/bank-accounts/9/reveal") return ok({ id: 9, accountNumber: "123456789001", revealedAt: Date.now(), expiresInSeconds: 30 });
     if (request.method() === "GET" && path === "/api/v1/business-master/currencies") return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar" }], total: 1 });
     if (request.method() === "POST" && path === "/api/v1/customers/duplicates/check") return ok({ code: [], legalName: [], tradingName: [] });
@@ -131,7 +131,15 @@ test("@technical bank reveal stays masked by default and clears plaintext after 
   await expect(page.getByText("123456789001")).toBeVisible();
   await page.clock.runFor(30_000);
   await expect(page.getByText("123456789001")).toHaveCount(0);
-  expect(calls.filter((call) => call.path.endsWith("/bank-accounts/9/reveal"))).toHaveLength(2);
+  await page.getByRole("button", { name: "查看 Example Bank 完整帳號" }).click();
+  await page.getByLabel("原因").fill("切換客戶前再次查看帳戶");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "查看", exact: true }).last().click();
+  await expect(page.getByText("123456789001")).toBeVisible();
+  await page.evaluate(() => { history.pushState({}, "", "/customers/8"); window.dispatchEvent(new PopStateEvent("popstate")); });
+  await expect(page.getByRole("heading", { name: "CUS-008 — Second Customer" })).toBeVisible();
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  expect(calls.filter((call) => call.path.endsWith("/bank-accounts/9/reveal"))).toHaveLength(3);
   expect(problems).toEqual([]);
 });
 

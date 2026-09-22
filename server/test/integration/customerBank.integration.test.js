@@ -120,14 +120,24 @@ integrationTest("Customer bank service stores no plaintext, confirms cross-owner
     ...actor, customerId: customerIds[0], bankAccountId: first.id, reason: "整合測試查看完整帳號"
   });
   assert.equal(revealed.accountNumber, SECRET);
+  const repeated = await banks.reveal({
+    ...actor, requestId: "req-customer-bank-repeat", customerId: customerIds[0], bankAccountId: first.id,
+    reason: "再次驗證查看完整帳號"
+  });
+  assert.equal(repeated.accountNumber, SECRET);
 
-  const [[audit]] = await connection.query(
-    "SELECT action, detail FROM customer_audit_logs WHERE customer_id = ? AND action = 'bank.reveal' ORDER BY id DESC LIMIT 1",
+  const [audits] = await connection.query(
+    "SELECT action, detail FROM customer_audit_logs WHERE customer_id = ? AND action = 'bank.reveal' ORDER BY id",
     [customerIds[0]]
   );
-  assert.equal(audit.action, "bank.reveal");
+  assert.equal(audits.length, 2, "every reveal must execute fresh authorization and audit instead of replaying plaintext");
+  const [[cached]] = await connection.query(
+    "SELECT COUNT(*) AS count FROM fr_idempotency_keys WHERE response LIKE ?",
+    [`%${SECRET}%`]
+  );
+  assert.equal(Number(cached.count), 0, "the durable idempotency store must never contain a full account number");
   const [rows] = await connection.query("SELECT * FROM customer_bank_accounts WHERE customer_id IN (?, ?)", customerIds);
-  const serialized = JSON.stringify({ audit, rows }, (_key, value) => Buffer.isBuffer(value) ? value.toString("base64") : value);
+  const serialized = JSON.stringify({ audits, rows }, (_key, value) => Buffer.isBuffer(value) ? value.toString("base64") : value);
   assert.equal(serialized.includes(SECRET), false);
 });
 

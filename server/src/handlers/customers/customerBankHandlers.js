@@ -69,7 +69,7 @@ export class DeactivateCustomerBankAccountHandler extends CustomerBankHandler {
 
 export class RevealCustomerBankAccountHandler extends CustomerBankHandler {
   static handlerName = "revealCustomerBankAccount";
-  static api = { method: "POST", path: "/api/v1/customers/:id/bank-accounts/:bankId/reveal", description: "重新驗證後查看完整客戶銀行帳號。", authType: "jwt-password", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.bankReveal], idempotency: IDEMPOTENT, requestSchema: { params: CUSTOMER_BANK_PARAMS, query: CUSTOMER_BANK_EMPTY, body: CUSTOMER_BANK_REVEAL }, responseSchema: { 200: CUSTOMER_BANK_REVEAL_RESPONSE } };
+  static api = { method: "POST", path: "/api/v1/customers/:id/bank-accounts/:bankId/reveal", description: "重新驗證後查看完整客戶銀行帳號。", authType: "jwt-password", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.bankReveal], requestSchema: { params: CUSTOMER_BANK_PARAMS, query: CUSTOMER_BANK_EMPTY, body: CUSTOMER_BANK_REVEAL }, responseSchema: { 200: CUSTOMER_BANK_REVEAL_RESPONSE } };
   async execute(req, res) {
     res.setHeader("Pragma", "no-cache");
     return this.response(await this.requireBanks().reveal({ ...actor(req), customerId: Number(req.input.params.id), bankAccountId: Number(req.input.params.bankId), ...req.input.body }));

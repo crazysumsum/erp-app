@@ -80,6 +80,7 @@ async function reveal(item) {
 }
 function onVisibility() { if (document.hidden) clearSensitive(); }
 watch(() => [props.canReveal, session.user?.id], ([allowed, userId]) => { if (!allowed || !userId) clearSecret(); });
+watch(() => props.customerId, () => { clearSensitive(); resetForm(); editing.value = false; items.value = []; void load(); });
 onMounted(() => { window.addEventListener("pagehide", clearSensitive); document.addEventListener("visibilitychange", onVisibility); load(); });
 onBeforeUnmount(() => { clearSensitive(); window.removeEventListener("pagehide", clearSensitive); document.removeEventListener("visibilitychange", onVisibility); });
 </script>

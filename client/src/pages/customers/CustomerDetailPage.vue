@@ -3,7 +3,7 @@ export const page = { name: "customer-detail", path: "/customers/:id", title: "�
 </script>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import CustomerAddressPanel from "@/components/customers/CustomerAddressPanel.vue";
@@ -29,11 +29,12 @@ const form = reactive({ legalName: "", tradingName: "", defaultCurrencyCode: nul
 const dirty = computed(() => editing.value && Object.entries(form).some(([key, value]) => key !== "reason" && value !== customer.value?.[key]));
 onBeforeRouteLeave(() => !dirty.value || window.confirm("有未儲存的變更，確定要離開這一頁嗎？"));
 function loadForm(value) { Object.assign(form, { legalName: value.legalName, tradingName: value.tradingName, defaultCurrencyCode: value.defaultCurrencyCode, defaultPaymentTermId: value.defaultPaymentTermId, accountManagerUserId: value.accountManagerUserId, categoryId: value.categoryId, industryId: value.industryId, territoryId: value.territoryId, generalPhone: value.generalPhone, generalEmail: value.generalEmail, website: value.website, notes: value.notes, reason: "" }); }
-async function load() { loading.value = true; error.value = null; try { [customer.value, completeness.value] = await Promise.all([customerService.getById(Number(route.params.id)), customerService.completeness(Number(route.params.id))]); loadForm(customer.value); } catch (loadError) { error.value = loadError; } finally { loading.value = false; } }
+async function load() { const id = Number(route.params.id); loading.value = true; error.value = null; try { const [nextCustomer, nextCompleteness] = await Promise.all([customerService.getById(id), customerService.completeness(id)]); if (id !== Number(route.params.id)) return; customer.value = nextCustomer; completeness.value = nextCompleteness; loadForm(nextCustomer); } catch (loadError) { if (id === Number(route.params.id)) error.value = loadError; } finally { if (id === Number(route.params.id)) loading.value = false; } }
 function startEdit() { loadForm(customer.value); editError.value = ""; stale.value = false; editing.value = true; }
 async function reloadLatest() { try { customer.value = await customerService.getById(Number(route.params.id)); loadForm(customer.value); stale.value = false; editError.value = ""; } catch (reloadError) { editError.value = reloadError.message || "載入最新資料失敗"; notifyError(editError.value); } }
 async function save() { if (submitting.value || stale.value || form.reason.trim().length < 5) return; submitting.value = true; editError.value = ""; try { customer.value = (await customerService.update(customer.value.id, { ...form, reason: form.reason.trim(), version: customer.value.version })).customer; loadForm(customer.value); editing.value = false; notifySuccess(`客戶 ${customer.value.code} 的一般資料已更新`); } catch (saveError) { if (saveError.code === "VERSION_CONFLICT") { stale.value = true; editError.value = "此客戶已被其他人修改；你的輸入仍保留，請載入最新資料後再提交。"; } else editError.value = saveError.message || "更新失敗"; notifyError(editError.value); } finally { submitting.value = false; } }
 onMounted(load);
+watch(() => route.params.id, () => { editing.value = false; submitting.value = false; editError.value = ""; stale.value = false; tab.value = "overview"; customer.value = null; void load(); });
 </script>
 
 <template>
