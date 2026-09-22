@@ -1,5 +1,44 @@
 # Item Management non-TASK-043 UAT closeout — 2026-09-22
 
+## Acceptance supersession — approved isolated execution
+
+This section supersedes the earlier `BLOCKED / PENDING` conclusions below. ERP Product Owner Sam subsequently:
+
+- approved the first catalogue shape and authorized synthetic Brand/Internal Barcode fixtures;
+- approved `DEC-023` (master data, audit and import summaries at least seven years; import source/result files one year, with longer applicable legal periods taking precedence);
+- designated the isolated local MySQL environment as staging-like for this UAT and accepted its differences from deployed staging;
+- declared authority to accept the Product, Security, Operations and Compliance outcomes while accepting the consolidated-owner risk; and
+- retained the existing recovery `PASS_WITH_OWNER_WAIVER` limitation.
+
+The exact synthetic values were Brand `UAT驗收品牌-20260922` and Internal Barcode `INT-UAT-20260922-000001`. They existed only in schema `erp_item_uat_acceptance_20260922`; `erp_dev` was not used by this acceptance run.
+
+| UAT | Technical result | Business acceptance | Final disposition |
+| --- | --- | --- | --- |
+| UAT-014 | PASS | ACCEPTED | The approved Category hierarchy, Brand, EA/BOX UOM, Capacity/Flavor attributes, `BOX = 24 EA`, internal Barcode, ownership and zero-duplicate checks passed in UI and MySQL. |
+| UAT-015 | PASS | ACCEPTED | Playwright completed create → Barcode find → edit → activate/deactivate → audit → CSV upload/preflight/confirm/execute/result download; the imported SKU was searchable afterward. |
+| UAT-016 | PASS | ACCEPTED_WITH_RECORDED_RISK | The delegated role surface passed; full-scale performance and retention evidence passed; recovery remains explicitly owner-waived rather than ordinary independent-signer PASS. |
+
+Observed acceptance data after the passing journey:
+
+- The UI-created Item was updated to `UAT 樽裝飲品 20260922（已覆核）`, and both Item and SKU ended `inactive` after the lifecycle exercise.
+- The import job completed with one successful row and zero failures; `UAT-IMPORT-20260922-001` was created and searchable.
+- Audit contained Item create/update/activate/deactivate/import and matching SKU create/activate/deactivate actions.
+- Category, Brand, UOM and Attribute duplicate counts were all zero.
+- Browser console, request-failure and HTTP 5xx assertions were clean on the passing acceptance cases.
+
+Acceptance evidence:
+
+- `evidence/20260922T030500-item-uat015-pass-uat014-attempt3/item-uat-acceptance.xml` — `UAT-015` PASS on the clean isolated dataset; `UAT-014` stopped afterward only because the temporary locator required a unique Brand text while the table intentionally renders name and official name.
+- `evidence/20260922T031500-item-uat-acceptance-targeted-retest/item-uat-acceptance.xml` — corrected targeted `UAT-014` and `UAT-016`, 2/2 PASS on the same unchanged dataset.
+- `evidence/20260922T023000-item-uat016-performance/item-uat016-performance.xml` — full-scale performance assertions PASS on the same product source fingerprint.
+- `evidence/task-044-owner-waiver-20260921/` — recovery 23/23 checks, RTO 176 ms and RPO 66 seconds, retained as `PASS_WITH_OWNER_WAIVER`.
+
+The first two acceptance attempts were test-harness locator mistakes (wrong update endpoint wait, then a non-unique audit-reason locator). They are retained under `evidence/20260922T024500-item-uat-acceptance-attempt1/` and `evidence/20260922T025500-item-uat-acceptance-attempt2/`; neither exposed a product defect. `UAT-014`, `UAT-015` and `UAT-016` now have no remaining acceptance blocker. Overall module status remains `BLOCKED` only for the separately excluded `TASK-043` / `UAT-005` / `UAT-013` dependency.
+
+After evidence capture, the exact isolated schema and storage directory were removed, its advisory lock was released, and verification found no acceptance markers in `erp_dev`.
+
+## Initial execution snapshot (superseded by the acceptance section above)
+
 ## Scope and baseline
 
 - Scope: execute the remaining UAT that does not depend on `TASK-043`: `UAT-014`, `UAT-015` and `UAT-016`.

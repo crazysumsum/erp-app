@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 76,
+  "revision": 78,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -11,23 +11,23 @@
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
     "plan": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
-    "code_commit": "71616ec040a7558856083035801554dda940ab5e",
+    "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
     "source_fingerprint": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
     "worktree": "/private/tmp/erp-item-management-uat-closeout",
     "default_commit": "71616ec040a7558856083035801554dda940ab5e",
     "mode_entry_commit": "71616ec040a7558856083035801554dda940ab5e"
   },
   "runtime": {
-    "instance_id": "ITEM-UAT-CLOSEOUT-20260922",
-    "owner": "Primary TEST_AND_VERIFY agent; non-TASK-043 UAT closeout",
+    "instance_id": "ITEM-UAT-ACCEPTANCE-20260922",
+    "owner": "Primary TEST_AND_VERIFY agent; approved UAT-014/UAT-015/UAT-016 acceptance execution",
     "resources": {
       "workspace": "/private/tmp/erp-item-management-uat-closeout",
-      "mysql-schema": "authorized local erp_dev with unique synthetic UAT fixtures; no production data",
-      "media-root": "test-owned path resolved by the existing Item configuration",
-      "import-root": "test-owned path resolved by the existing Item configuration",
-      "web-port": "server 3000 and client 4173 reserved for serialized Playwright execution"
+      "mysql-schema": "acceptance schema erp_item_uat_acceptance_20260922 removed after evidence capture; erp_dev had zero acceptance markers",
+      "media-root": "acceptance media root removed after evidence capture",
+      "import-root": "acceptance import root removed after evidence capture",
+      "web-port": "server 3000 and client 4173 released; no listeners remained after Playwright"
     },
-    "lease_ref": "MySQL advisory lock erp-item-uat-closeout-20260922 was released after cleanup; IS_FREE_LOCK returned 1 and ports 3000/4173 had no listeners."
+    "lease_ref": "MySQL advisory lock erp-item-uat-acceptance-20260922 released after evidence capture; IS_FREE_LOCK returned 1, schema count returned 0 and the dedicated grant was revoked."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -728,6 +728,49 @@
         "UAT-016"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-039",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam), acting with declared Product/Security/Operations/Compliance authority",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task on 2026-09-22: Sam approved DEC-023, designated an isolated local MySQL environment as staging-like for this UAT while accepting environment differences, accepted consolidated Product/Security/Operations/Compliance authority risk, and retained the existing recovery owner waiver.",
+      "recorded_at": "2026-09-22T02:33:20Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
+      "scope": [
+        "item-management",
+        "DEC-023",
+        "UAT-014",
+        "UAT-015",
+        "UAT-016",
+        "local-staging-like-environment",
+        "consolidated-control-owner",
+        "recovery-owner-waiver"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-040",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task on 2026-09-22: Sam approved the first catalogue shape and authorized generation of synthetic Brand/Internal Barcode data for isolated UAT execution.",
+      "recorded_at": "2026-09-22T02:33:20Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
+      "scope": [
+        "item-management",
+        "UAT-014",
+        "UAT-015",
+        "UAT-016",
+        "synthetic-catalog-fixtures"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1346,6 +1389,46 @@
       "idempotency_key": "item-uat-closeout-review-71616ec-20260922",
       "status": "CONFIRMED",
       "source_ref": "docs/items_management/testing/08_uat_closeout_20260922.md records all three cases as BLOCKED with business acceptance PENDING; no product defect was found, fixtures were removed and the advisory lock was released."
+    },
+    {
+      "id": "ENV-PROVISION-84",
+      "kind": "ENV_PROVISION",
+      "target": "isolated local schema erp_item_uat_acceptance_20260922 and dedicated media/import roots",
+      "idempotency_key": "item-uat-acceptance-env-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-22: a fresh migrated schema and isolated storage roots were used with advisory locking; fixtures were synthetic and erp_dev remained free of all acceptance markers."
+    },
+    {
+      "id": "UAT-RUN-85",
+      "kind": "UAT_EXECUTION",
+      "target": "UAT-015 approved staging-like browser journey",
+      "idempotency_key": "item-uat015-acceptance-bbb4066-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed Playwright execution on 2026-09-22: create, Barcode find, edit, activate/deactivate, audit, CSV upload/preflight/confirm/execute/result download and imported-SKU search all passed on the isolated dataset."
+    },
+    {
+      "id": "UAT-RUN-86",
+      "kind": "UAT_EXECUTION",
+      "target": "UAT-014 and UAT-016 targeted acceptance retest",
+      "idempotency_key": "item-uat014-016-acceptance-bbb4066-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed Playwright/MySQL targeted retest on 2026-09-22: 2/2 passed, covering approved Catalog UI/data, zero duplicates, BOX=24 EA, internal Barcode ownership and the delegated item.mgmt control surface with clean browser network/console checks."
+    },
+    {
+      "id": "UAT-ACCEPT-87",
+      "kind": "UAT_ACCEPTANCE",
+      "target": "UAT-014/UAT-015/UAT-016",
+      "idempotency_key": "item-uat014-016-business-acceptance-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "ERP Product Owner Sam's active-task approval, recorded as APR-039/APR-040, accepted DEC-023, the isolated local staging-like environment, consolidated Product/Security/Operations/Compliance authority risk and the retained recovery owner waiver; passing evidence is recorded in testing/08_uat_closeout_20260922.md."
+    },
+    {
+      "id": "CLEANUP-88",
+      "kind": "ENV_CLEANUP",
+      "target": "erp_item_uat_acceptance_20260922, dedicated roots, grant, advisory lock and web ports",
+      "idempotency_key": "item-uat-acceptance-cleanup-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed after acceptance: schema count 0, IS_FREE_LOCK=1, dedicated schema grant absent, exact storage root removed, ports 3000/4173 unused and erp_dev acceptance-marker counts all zero."
     }
   ],
   "evidence_files": [
@@ -1506,5 +1589,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Obtain named Business/Compliance approval for the production catalogue and DEC-023, execute/accept UAT-015 in a staging-like release environment, and record Security/Operations/Compliance decisions for UAT-016; retain TASK-043/UAT-005/UAT-013 as dependency-blocked."
+  "next_safe_action": "UAT-014, UAT-015 and UAT-016 are PASS/accepted with recorded risks. TASK-043 remains the only Item Management dependency-blocked task; do not fabricate a downstream item_skus consumer."
 }
