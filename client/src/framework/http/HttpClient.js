@@ -241,9 +241,12 @@ function buildUrl(baseUrl, path, params) {
 
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      if (value !== undefined && value !== null) {
-        url.searchParams.set(key, value);
+      if (value === undefined || value === null) continue;
+      if (Array.isArray(value)) {
+        for (const item of value) url.searchParams.append(key, item);
+        continue;
       }
+      url.searchParams.set(key, value);
     }
   }
 

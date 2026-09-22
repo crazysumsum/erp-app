@@ -277,3 +277,25 @@ merge claim.
   dual-audit, durable-operation and original-outcome replay findings were fixed.
   The full server suite remains blocked by sandbox loopback-listen restrictions and
   unrelated Customer-catalog handler metadata; neither is changed by this task.
+
+## TASK-015 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added Customer root, approval, settings and catalog client services. Customer
+  mutations preserve framework idempotency, accept a caller retry key without
+  leaking it into strict request bodies, and sign only device-password routes.
+  Reads accept an `AbortSignal`; root and approval queries preserve server filter,
+  pagination and stable sort contracts.
+- Corrected shared query serialization so array filters use repeated URL keys,
+  preserving the server's typed `status` and `missing` arrays instead of turning
+  them into invalid comma-delimited values.
+- Focused client service and HttpClient regression tests passed 35/35. Repository
+  ESLint, client production build, `git diff --check`, traceability validation and
+  the Customer module-boundary check passed. The Vite build reported the existing
+  >500 kB chunk advisory only.
+- Independent review by Jason reached `APPROVE` after child-pagination, approval
+  queue time-filter and caller-supplied idempotency-key findings were fixed. No UI
+  component or route changed, so Playwright validation is not applicable to this
+  service-only task.
