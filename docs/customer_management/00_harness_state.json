@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 103,
+  "revision": 105,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "ea31124799179515d04833320334a3be89987c15ea6b2b1d124cd1cc4defeb3c",
     "plan": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
-    "code_commit": "67ad2cb276113c5efc504f4c3295e29b78bf4670",
-    "source_fingerprint": "3a582e6a880fefb3f06bc1a14ad086861325f390d2eae282f0e05b1e7c93aa9d",
+    "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+    "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
     "worktree": "/private/tmp/erp-customer-management-phase-002",
     "default_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -44,7 +44,7 @@
     "TASK-016": "DONE",
     "TASK-017": "DONE",
     "TASK-018": "DONE",
-    "TASK-019": "PENDING",
+    "TASK-019": "DONE",
     "TASK-020": "PENDING",
     "TASK-021": "PENDING",
     "TASK-022": "PENDING",
@@ -776,6 +776,45 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-022",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 繼續，未完成之前不要停下來; exact-candidate continuation after freshness merge of origin/main fd615e5 and the independent-review-required mobile sticky-action evidence correction.",
+      "recorded_at": "2026-09-22T05:54:05Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "scope": [
+        "PHASE-002",
+        "TASK-019",
+        "client/e2e/customer-management/customer-root.spec.js",
+        "docs/customer_management/**",
+        "freshness integration of origin/main fd615e5"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-004",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准推送建立PR，合併到main, 不用跑CI; Product Owner 身分接受風險. Reconfirmed for PHASE-002 publication by the standing instruction to continue automatically and APPROVAL-SCOPE-019.",
+      "recorded_at": "2026-09-22T05:59:51Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "scope": [
+        "PHASE-002 publication",
+        "TASK-019",
+        "CI not run",
+        "PR merge to main after local gates and independent review"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -942,6 +981,30 @@
       "reviewer": "Jason (/root/customer_task011_review), separate agent",
       "reviewed_baseline": "72deaba4724c90a138e9a996b710484672990d169eb8262b27bbaa43662cd692",
       "source_ref": "2026-09-22 independent code review: all seven required findings for settings authorization, classification administration, approval diff data, withdraw authorization, blocker shape, request time and browser coverage were closed; focused Vitest passed 10/10 and real-browser Playwright passed 9/9; final verdict APPROVE with no blocking finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-015",
+      "method": "SEPARATE_AGENT",
+      "author": "/root PHASE-002/TASK-019 candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "3a582e6a880fefb3f06bc1a14ad086861325f390d2eae282f0e05b1e7c93aa9d",
+      "source_ref": "2026-09-22 independent exact-candidate review requested changes: reconcile the final commit/fingerprint after latest-main freshness integration and assert plus activate the sticky Customer detail action at 375px. No additional product correctness, security, API or migration issue was found.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-016",
+      "method": "SEPARATE_AGENT",
+      "author": "/root PHASE-002/TASK-019 remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+      "source_ref": "2026-09-22 independent exact-candidate re-review: commit 94e41d3/source fingerprint 7d11bd0 reconciled; state, traceability, module-boundary and diff checks passed; the 375px sticky detail action is in viewport, activated, and lands on an in-viewport detail heading. Focused catalog metadata test passed. The reviewer accepted the supplied exact-candidate Playwright 10/10 evidence after node_modules cleanup prevented a redundant independent rerun. Final verdict APPROVE with no remaining product, security, API, migration or test-validity finding.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1113,6 +1176,28 @@
       "source_ref": "docs/customer_management/implementation/phase-PHASE-002-report.md#task-019-developer-gate",
       "actor": "/root local developer verification",
       "observed_at": "2026-09-22T05:38:17Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-019 latest-main-integrated exact-candidate developer gate",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "spec_baseline": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-002-report.md#task-019-developer-gate",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T05:54:05Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-019 latest-main-integrated exact-candidate independent review",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "spec_baseline": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+      "status": "PASS",
+      "source_ref": "REV-016",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-22T05:59:51Z"
     }
   ],
   "pending_decisions": [
@@ -1522,6 +1607,14 @@
       "idempotency_key": "customer-phase002-task019-full-gate-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-22: fresh schema migrated through 0048, a complete rerun skipped every migration, full serial real-MySQL coverage passed 1917 tests with zero failures and all coverage floors, rollback commit 946f598 returned healthy/connected against the expanded schema, and the exact schema was dropped with final absence zero."
+    },
+    {
+      "id": "EXT-MIGRATION-030",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase002_gate_20260922",
+      "idempotency_key": "customer-phase002-task019-integrated-gate-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: after merging origin/main fd615e5, a fresh schema migrated through 0048 and reran fully as no-op; with latest-main-required temporary Supplier Bank test key rings, 1974 server tests passed with zero failures, coverage was 94.97/83.91/91.87 and all 34 high-risk floors passed. The exact schema was dropped with final absence zero."
     }
   ],
   "evidence_files": [
@@ -1530,5 +1623,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Run exact-candidate independent review and freshness checks, finalize TASK-019 evidence, then push, open and merge the Product Owner-approved PHASE-002 PR without CI."
+  "next_safe_action": "Publish the independently approved PHASE-002 candidate by PR and merge it to main without CI under APPROVAL-RISK-004, then hand off Customer Management to TEST_AND_VERIFY without claiming formal acceptance."
 }
