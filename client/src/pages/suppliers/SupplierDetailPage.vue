@@ -8,8 +8,8 @@ export const page = {
 </script>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
-import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
@@ -98,7 +98,12 @@ const editValid = computed(() => {
 });
 const hasEditErrors = computed(() => editError.value || Object.keys(fieldErrors.value).length > 0);
 
-onBeforeRouteLeave(() => !dirty.value || window.confirm("有未儲存的變更，確定要離開這一頁嗎？"));
+// 兩個 guard 同一個問法：`onBeforeRouteLeave` 唔會喺同一條 route record 換 param
+// 嗰陣行（`/suppliers/7` 去 `/suppliers/8` 行嘅係 update 嗰個），所以淨係掛 leave
+// 嘅話，換供應商就會靜靜地食咗個未存嘅草稿。
+const confirmDiscard = () => !dirty.value || window.confirm("有未儲存的變更，確定要離開這一頁嗎？");
+onBeforeRouteLeave(confirmDiscard);
+onBeforeRouteUpdate(confirmDiscard);
 function beforeUnload(event) {
   if (!dirty.value) return;
   event.preventDefault();
@@ -106,20 +111,26 @@ function beforeUnload(event) {
 }
 
 async function load() {
+  // 整個 load 用同一個 id：中途換了供應商的話，這一次的回應已經不屬於畫面上那個
+  // URL，寫下去就是「8 號的網址配 7 號的資料」——正是這個 watcher 要修的那個錯。
+  const id = Number(route.params.id);
+  const superseded = () => id !== Number(route.params.id);
   loading.value = true;
   error.value = null;
   try {
     const [detail, status] = await Promise.all([
-      supplierService.getById(Number(route.params.id)),
-      supplierService.completeness(Number(route.params.id))
+      supplierService.getById(id),
+      supplierService.completeness(id)
     ]);
+    if (superseded()) return;
     supplier.value = detail;
     completeness.value = status;
     if (!editing.value) loadForm(detail);
   } catch (loadError) {
+    if (superseded()) return;
     error.value = loadError;
   } finally {
-    loading.value = false;
+    if (!superseded()) loading.value = false;
   }
 }
 
@@ -265,6 +276,32 @@ async function submitCodeChange() {
     codeSubmitting.value = false;
   }
 }
+
+/**
+ * `/suppliers/:id` 是同一條 route record：`/suppliers/7` 去 `/suppliers/8` 不會 unmount
+ * 這個 component，`onMounted` 的 load 也不會再跑一次。沒有這個 watcher，畫面留著的是
+ * 7 號的資料，而網址已經是 8 號。
+ *
+ * 重載之外還要清狀態：半完成的編輯草稿如果留著，`saveEdit` 會拿 `supplier.value.id`
+ * ——那時已經是 8 號——把 7 號的輸入提交上去。同樣理由清掉 code 修正 dialog：它持有
+ * 密碼，而那是為了 7 號才輸入的。
+ *
+ * 今日沒有任何頁面連到這裡（唯一入口是列表，而經列表一定 unmount 過），一個「下一個
+ * 供應商」或重複候選連結就會令這條路存在。
+ */
+watch(() => route.params.id, () => {
+  editing.value = false;
+  submitting.value = false;
+  fieldErrors.value = {};
+  editError.value = "";
+  staleNotice.value = false;
+  duplicateCandidates.value = [];
+  showCodeDialog.value = false;
+  codeError.value = "";
+  codeStale.value = false;
+  Object.assign(codeForm, { supplierCode: "", reason: "", password: "" });
+  void load();
+});
 </script>
 
 <template>

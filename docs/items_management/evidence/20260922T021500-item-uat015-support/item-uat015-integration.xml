@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="Create-only CSV 全部合法：job 轉 ready，row 逐列寫入，counts 正確" time="0.355315" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="有一列 invalid：整個 job 轉 invalid，唔會擋住其他合法列寫入" time="0.202019" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="Upsert 更新一粒真嘅 SKU：用 skuId＋version 配對，SKU Code 唔一致得返 warning" time="0.183890" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="冇任何 uploaded job：claimed 係 false，唔會拋錯" time="0.172251" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="已經驗證完嘅 job 唔會被重新揀中" time="0.175021" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="來源檔案喺受控目錄搵唔到：job 轉 invalid，error_summary 記低原因，唔會拋錯令 worker 卡住" time="0.167116" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="下載 template：帶齊已知欄位嘅 header row" time="0.282721" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="上傳、list、get 全部經真實 HTTP：job 建立後可以查到，list 支援狀態篩選" time="0.298548" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="結果 CSV：skuCode 開頭係 =／+／-／@ 會加單引號，防試算表當公式執行（CSV injection）" time="0.295876" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="TC-009 Confirm＋execution 全流程：create-only job 完成後真係建咗一個 Item＋SKU，結果 CSV 下載得到" time="0.410944" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="執行中 SKU Code race：preflight 之後、execution 之前俾第三者搶咗個 code，整批 rollback，該 row 標 failed" time="0.410164" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="Upsert 更新一粒真嘅 SKU：confirm＋execution 之後 SKU 欄位同 version 都變咗" time="0.411530" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="TC-015 逐項 audit 寫入失敗：同一 execution transaction 內嘅 Item、SKU、UOM、audit 全部 rollback" time="0.402707" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="commit 前 failure injection：已寫入的 aggregate、audit 與 completed 狀態一併 rollback" time="0.395483" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="confirm 後 item.mgmt 被撤銷：execution 重新授權並拒絕套用任何 aggregate 資料" time="0.394271" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="running job lease 過期：另一 worker 可安全接管並只套用一次" time="0.399416" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="舊 worker 租約過期後恢復：不可覆寫新 owner 已完成的 job 或重複套用 aggregate" time="0.401050" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="Cancel：ready job 取消之後唔會被 execution 揀中" time="0.294989" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="Confirm：唔係 ready 狀態就 409 IMPORT_NOT_READY，version 唔啱就 409 IMPORT_STATE_CONFLICT，密碼錯就 403" time="0.585033" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="冇 item.mgmt：upload／list／get／confirm／cancel／result 一律 403；完全冇 token：401" time="0.271277" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="結果檔已經被 retention 清理（files_purged_at 有值）：下載回 410，job summary 仍然查得到" time="0.283163" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemImport.integration.test.js"/>
+	<testcase name="端到端：Catalog → Item＋兩個 SKU → 搜尋 → 更新 → 生命週期 → audit → cleanup" time="1.029299" classname="test" file="/private/tmp/erp-item-management-uat-closeout/server/test/integration/itemManagement.integration.test.js"/>
+	<!-- tests 22 -->
+	<!-- suites 0 -->
+	<!-- pass 22 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 8088.247 -->
+</testsuites>

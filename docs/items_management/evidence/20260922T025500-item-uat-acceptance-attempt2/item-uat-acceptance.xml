@@ -1,0 +1,79 @@
+<testsuites id="" name="" tests="3" failures="1" skipped="2" errors="0" time="5.898026">
+<testsuite name=".tmp-uat-acceptance.spec.js" timestamp="2026-09-22T02:43:51.600Z" hostname="" tests="3" failures="1" skipped="2" time="2.751" errors="0">
+<testcase name="Approved Item Management acceptance › UAT-015 approved staging-like create-find-edit-lifecycle-audit-import journey" classname=".tmp-uat-acceptance.spec.js" time="2.751">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/test-failed-1.png]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  .tmp-uat-acceptance.spec.js:166:3 › Approved Item Management acceptance › UAT-015 approved staging-like create-find-edit-lifecycle-audit-import journey
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('UAT 完成資料覆核並啟用', { exact: true })
+    Expected: visible
+    Error: strict mode violation: getByText('UAT 完成資料覆核並啟用', { exact: true }) resolved to 2 elements:
+        1) <span class="ellipsis">…</span> aka getByText('UAT 完成資料覆核並啟用').first()
+        2) <span class="ellipsis">…</span> aka getByText('UAT 完成資料覆核並啟用').nth(1)
+
+    Call log:
+      - Expect "toBeVisible" getByText('UAT 完成資料覆核並啟用', { exact: true }) with timeout 15000ms
+      - waiting for getByText('UAT 完成資料覆核並啟用', { exact: true })
+
+
+      244 |       await expect(page.getByText(action, { exact: true }).first()).toBeVisible();
+      245 |     }
+    > 246 |     await expect(page.getByText("UAT 完成資料覆核並啟用", { exact: true })).toBeVisible();
+          |                                                                    ^
+      247 |     await expect(page.getByText("UAT 生命週期停用覆核", { exact: true })).toBeVisible();
+      248 |
+      249 |     await page.goto("/items/imports");
+        at /private/tmp/erp-item-management-uat-closeout/client/e2e/item-management/.tmp-uat-acceptance.spec.js:246:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md
+
+    Error Context: ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="Approved Item Management acceptance › UAT-014 approved catalogue, ownership, uniqueness, UOM conversion and internal Barcode" classname=".tmp-uat-acceptance.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Approved Item Management acceptance › UAT-016 delegated Product Security Operations Compliance acceptance surface" classname=".tmp-uat-acceptance.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

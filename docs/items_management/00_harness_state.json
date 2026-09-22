@@ -1,33 +1,33 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 69,
-  "mode": "IMPLEMENT",
-  "active_mode": "IMPLEMENT",
+  "revision": 80,
+  "mode": "TEST_AND_VERIFY",
+  "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
   "resume_status": "READY_FOR_TESTING",
   "current_phase": "PHASE-006",
-  "current_task": "TASK-044",
+  "current_task": "TASK-043",
   "baseline": {
     "design": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
-    "plan": "d9032118a1d172851f178a4bf71fe36039b2d1fb41c06ff9951d57c3c9e322e4",
-    "code_commit": "ff3c5d1066bf18766acc375baeb44f944db2c1b4",
-    "source_fingerprint": "0fd3896bf170391404744b8ca010259feae55a7eaf0df9cb50f8f065d6a93658",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-tc016-provision",
-    "default_commit": "021b4b2bbc1da81bb023d1ad61f589f5f6a707a4",
-    "mode_entry_commit": "021b4b2bbc1da81bb023d1ad61f589f5f6a707a4"
+    "plan": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+    "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
+    "source_fingerprint": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
+    "worktree": "/private/tmp/erp-item-management-uat-closeout",
+    "default_commit": "71616ec040a7558856083035801554dda940ab5e",
+    "mode_entry_commit": "71616ec040a7558856083035801554dda940ab5e"
   },
   "runtime": {
-    "instance_id": "ITEM-RECOVERY-TC016-PROVISION-20260921",
-    "owner": "Primary IMPLEMENT agent; TASK-044 recovery attestation and verification",
+    "instance_id": "ITEM-UAT-ACCEPTANCE-20260922",
+    "owner": "Primary TEST_AND_VERIFY agent; approved UAT-014/UAT-015/UAT-016 acceptance execution",
     "resources": {
-      "workspace": "/Users/sam/Documents/workspace/erp-app-worktrees/item-management-tc016-provision",
-      "mysql-schema": "No live isolated recovery schema is currently verified; fresh provision awaits a secure local MySQL root login path. erp_dev is out of scope.",
-      "media-root": "No live restored media root is currently verified.",
-      "import-root": "No live restored import root is currently verified.",
-      "web-port": "reserved free ports: server 3000, client 4173; ephemeral ports remain test-owned"
+      "workspace": "/private/tmp/erp-item-management-uat-closeout",
+      "mysql-schema": "acceptance schema erp_item_uat_acceptance_20260922 removed after evidence capture; erp_dev had zero acceptance markers",
+      "media-root": "acceptance media root removed after evidence capture",
+      "import-root": "acceptance import root removed after evidence capture",
+      "web-port": "server 3000 and client 4173 released; no listeners remained after Playwright"
     },
-    "lease_ref": "The 2026-09-15 local recovery fixture is retained only as historical developer evidence; its restored roots and a usable MySQL login path are no longer present. On 2026-09-21, ERP Product Owner (Sam) approved a new isolated exercise and personal verification, but formal TC-016 remains blocked pending an independent Ed25519 attestation and a secure local root login path."
+    "lease_ref": "MySQL advisory lock erp-item-uat-acceptance-20260922 released after evidence capture; IS_FREE_LOCK returned 1, schema count returned 0 and the dedicated grant was revoked."
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -73,7 +73,7 @@
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "BLOCKED",
-    "TASK-044": "IN_PROGRESS"
+    "TASK-044": "DONE"
   },
   "approvals": [
     {
@@ -464,6 +464,313 @@
         "server/config/itemRecoveryTrustPolicy.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-025",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) explicitly approved agent-generated Ed25519 signing and persistent trust-policy binding on 2026-09-21, accepting the signer-independence waiver. The result must be reported as PASS_WITH_OWNER_WAIVER and may not be represented as unqualified compliance with the original independent-signer control.",
+      "recorded_at": "2026-09-21T06:25:29Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "655a1905b4c9f02e88f6547c231087be4c5a0af2",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "DEF-103",
+        "server/config/itemRecoveryTrustPolicy.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-026",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the owner-waiver implementation approach on 2026-09-21; this records the unchanged Item design baseline and binds the exact implementation candidate.",
+      "recorded_at": "2026-09-21T06:37:34Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
+      "code_commit": "655a1905b4c9f02e88f6547c231087be4c5a0af2",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-027",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the owner-waiver implementation approach on 2026-09-21; this binds the current plan and exact implementation candidate for verification and PR/CI completion.",
+      "recorded_at": "2026-09-21T06:37:34Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "655a1905b4c9f02e88f6547c231087be4c5a0af2",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-028",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the owner-waiver approach and previously approved the sensitive trust-policy scope; this current-candidate record supersedes APR-024's independent-signer condition for this exercise only.",
+      "recorded_at": "2026-09-21T06:37:34Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "655a1905b4c9f02e88f6547c231087be4c5a0af2",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "server/config/itemRecoveryTrustPolicy.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-029",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam)'s approved owner-waiver approach is rebound after merging unrelated origin/main supplier changes; Item behavior and waiver terms are unchanged.",
+      "recorded_at": "2026-09-21T06:50:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "69fe25909c0d621d15a6e48833f0f80ef36c149f",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "DEF-103"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-030",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: current Item design approval rebound after conflict-free origin/main synchronization; no Item design changed.",
+      "recorded_at": "2026-09-21T06:50:00Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
+      "code_commit": "69fe25909c0d621d15a6e48833f0f80ef36c149f",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-031",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: current Item plan approval rebound after conflict-free origin/main synchronization; no Item plan changed.",
+      "recorded_at": "2026-09-21T06:50:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "69fe25909c0d621d15a6e48833f0f80ef36c149f",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-032",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: sensitive Item recovery trust-policy scope rebound after conflict-free origin/main synchronization; this continues to supersede APR-024 for the owner-waived exercise only.",
+      "recorded_at": "2026-09-21T06:50:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "69fe25909c0d621d15a6e48833f0f80ef36c149f",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "server/config/itemRecoveryTrustPolicy.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-033",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the owner-waiver approach and all required records; current candidate binding follows independent APPROVE on 4c84174.",
+      "recorded_at": "2026-09-21T07:10:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "4c84174e8399815ea0a1e7c9fa1055ebb952adf7",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "DEF-103"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-034",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the owner-waiver design and all required records; current candidate binding follows independent APPROVE on 4c84174.",
+      "recorded_at": "2026-09-21T07:10:00Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "97e16e92ba15700bc2ced6338d3adb0437dde0e92fe3a77d9ec2439ea176368a",
+      "code_commit": "4c84174e8399815ea0a1e7c9fa1055ebb952adf7",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-035",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the owner-waiver plan and all required records; current candidate binding follows independent APPROVE on 4c84174.",
+      "recorded_at": "2026-09-21T07:10:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "4c84174e8399815ea0a1e7c9fa1055ebb952adf7",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-036",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved the sensitive trust-policy scope and all required records; current candidate binding follows independent APPROVE on 4c84174.",
+      "recorded_at": "2026-09-21T07:10:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "3f564282ef779d3d38b4bf404acbd2e8511fc0cd8ca17e59673bfec8ddb2e314",
+      "code_commit": "4c84174e8399815ea0a1e7c9fa1055ebb952adf7",
+      "scope": [
+        "item-management",
+        "TASK-044",
+        "TC-016",
+        "server/config/itemRecoveryTrustPolicy.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-037",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) approved all required owner-waiver records and completion workflow; this binds the documentation-only TASK-044 closeout after PR #121 merged.",
+      "recorded_at": "2026-09-21T07:20:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "513a0bf8100b60384354a576db1172fac59eb60e",
+      "scope": [
+        "item-management",
+        "PHASE-006",
+        "TASK-044",
+        "TC-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-038",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) directed execution and recording of all incomplete Item Management UAT that does not depend on TASK-043 on 2026-09-22.",
+      "recorded_at": "2026-09-22T01:46:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "71616ec040a7558856083035801554dda940ab5e",
+      "scope": [
+        "item-management",
+        "UAT-014",
+        "UAT-015",
+        "UAT-016"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-039",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam), acting with declared Product/Security/Operations/Compliance authority",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task on 2026-09-22: Sam approved DEC-023, designated an isolated local MySQL environment as staging-like for this UAT while accepting environment differences, accepted consolidated Product/Security/Operations/Compliance authority risk, and retained the existing recovery owner waiver.",
+      "recorded_at": "2026-09-22T02:33:20Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
+      "scope": [
+        "item-management",
+        "DEC-023",
+        "UAT-014",
+        "UAT-015",
+        "UAT-016",
+        "local-staging-like-environment",
+        "consolidated-control-owner",
+        "recovery-owner-waiver"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-040",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task on 2026-09-22: Sam approved the first catalogue shape and authorized generation of synthetic Brand/Internal Barcode data for isolated UAT execution.",
+      "recorded_at": "2026-09-22T02:33:20Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ad2dc754c4b25f7f0acf12ad21354ec3a03d1bd6a8879176917c3f1998416b92",
+      "code_commit": "bbb4066a2e492fb718c4154c36e2b065fc653da7",
+      "scope": [
+        "item-management",
+        "UAT-014",
+        "UAT-015",
+        "UAT-016",
+        "synthetic-catalog-fixtures"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -610,6 +917,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-015",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_pr117_review",
+      "reviewed_baseline": "874fd40674d4a7e84cfe8cfaf1e48a4408fecfaf93f0262b79a9c9d2fdd00cf3",
+      "source_ref": "Active Codex task: independent reviewer checked candidate 655a190 on 2026-09-21. Code, signature, public-key binding, private-key deletion and waiver-aware NOT_RUN semantics passed; canonical-state reconciliation was requested before approval.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-016",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_pr117_review",
+      "reviewed_baseline": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
+      "source_ref": "Active Codex task: independent reviewer checked synchronized candidate e8bf646 on 2026-09-21. Owner-waiver state and implementation were correct; reviewer requested only restoration of accidentally changed DEF-101 status.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-017",
+      "method": "SEPARATE_AGENT",
+      "author": "/root",
+      "reviewer": "/root/item_pr117_review",
+      "reviewed_baseline": "ffbda80ecae8cd5d9d18be7423b49750cc2d38e6aeadf5014145784a262b58bd",
+      "source_ref": "Active Codex task: independent reviewer returned APPROVE for candidate 4c84174 on 2026-09-21 after DEF-101 was restored; no critical or high findings remain.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-033"
     }
   ],
   "observations": [],
@@ -934,6 +1277,190 @@
       "idempotency_key": "mode-change-68",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task: ERP Product Owner (Sam) approved continued TASK-044 implementation and formal recovery verification prerequisites on 2026-09-21."
+    },
+    {
+      "id": "ENV-PROVISION-71",
+      "kind": "ENV_PROVISION",
+      "target": "item_recovery_tc016_20260921_restore_run2 and restored media/import roots",
+      "idempotency_key": "item-tc016-recovery-run2-20260921",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: fresh isolated database and file restore completed; 16 Item table counts, SKU/audit smoke records and file hashes reconciled; erp_dev item_skus remained unchanged at zero."
+    },
+    {
+      "id": "BRANCH-SYNC-72",
+      "kind": "BRANCH_SYNC",
+      "target": "merge origin/main b1e3aa86354d1538528010772a8cf2b359d58f9f into codex/item-management-tc016-exercise",
+      "idempotency_key": "item-tc016-sync-b1e3aa8-20260921",
+      "status": "CONFIRMED",
+      "source_ref": "Observed merge commit 69fe25909c0d621d15a6e48833f0f80ef36c149f on 2026-09-21: latest origin/main merged without conflicts; Item changes were preserved."
+    },
+    {
+      "id": "MODE-CHANGE-73",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-73",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized continued verification and all required owner-waiver records; independent review approved candidate 4c84174."
+    },
+    {
+      "id": "PUSH-74",
+      "kind": "PUSH",
+      "target": "origin/codex/item-management-tc016-exercise",
+      "idempotency_key": "item-tc016-push-20260921",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: candidate 444d402 was pushed to the Item recovery topic branch."
+    },
+    {
+      "id": "PR-75",
+      "kind": "PR",
+      "target": "GitHub PR #121 into main",
+      "idempotency_key": "item-tc016-pr-121",
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub PR #121 for the Item recovery owner-waiver candidate."
+    },
+    {
+      "id": "CI-76",
+      "kind": "CI",
+      "target": "required GitHub checks for PR #121",
+      "idempotency_key": "item-tc016-ci-35570486593",
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub Actions run 35570486593: Dependency audit, Lint, Build frontend, and Test (server + client, MySQL integration) all passed."
+    },
+    {
+      "id": "MERGE-77",
+      "kind": "MERGE",
+      "target": "PR #121 into main",
+      "idempotency_key": "item-tc016-merge-121",
+      "status": "CONFIRMED",
+      "source_ref": "Observed PR #121 merged on 2026-09-21 as 513a0bf8100b60384354a576db1172fac59eb60e."
+    },
+    {
+      "id": "CLEANUP-78",
+      "kind": "ENV_CLEANUP",
+      "target": "TC-016 isolated MySQL schemas, restored roots, temporary signing key and encrypted login path",
+      "idempotency_key": "item-tc016-cleanup-20260921",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-21: all three exact exercise schemas and temporary files/login path were removed; erp_dev item_skus remained zero."
+    },
+    {
+      "id": "UAT-AUTH-79",
+      "kind": "UAT_EXECUTION",
+      "target": "current-main non-TASK-043 Item Management UAT",
+      "idempotency_key": "item-uat-closeout-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized execution and recording of UAT-014, UAT-015 and UAT-016 while TASK-043/UAT-005/UAT-013 remain excluded."
+    },
+    {
+      "id": "MODE-CHANGE-75",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-75",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task: ERP Product Owner (Sam) authorized current-main non-TASK-043 UAT execution on 2026-09-22."
+    },
+    {
+      "id": "UAT-RUN-80",
+      "kind": "UAT_EXECUTION",
+      "target": "current-main Item browser UAT",
+      "idempotency_key": "item-uat-browser-main-71616ec-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed Playwright execution on 2026-09-22: 11 passed, 0 failed and 2 expected skips; UAT-005 remained TASK-043-blocked and UAT-015 retained its staging/human-signoff gate."
+    },
+    {
+      "id": "UAT-RUN-81",
+      "kind": "UAT_EXECUTION",
+      "target": "UAT-015 supporting true-MySQL journeys",
+      "idempotency_key": "item-uat015-mysql-71616ec-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed true-MySQL execution on 2026-09-22: 22/22 integration cases passed, covering the continuous Item lifecycle/audit journey and import upload through result paths."
+    },
+    {
+      "id": "UAT-RUN-82",
+      "kind": "UAT_EXECUTION",
+      "target": "UAT-016 release-scale performance",
+      "idempotency_key": "item-uat016-performance-71616ec-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed release-scale execution on 2026-09-22: 100k SKU/1M Barcode/1M UOM, 50-worker mixed load and 10k-row import passed all thresholds; slowest query p95 1479.0 ms and import total 6937 ms."
+    },
+    {
+      "id": "UAT-REVIEW-83",
+      "kind": "UAT_REVIEW",
+      "target": "UAT-014/UAT-015/UAT-016 closeout",
+      "idempotency_key": "item-uat-closeout-review-71616ec-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "docs/items_management/testing/08_uat_closeout_20260922.md records all three cases as BLOCKED with business acceptance PENDING; no product defect was found, fixtures were removed and the advisory lock was released."
+    },
+    {
+      "id": "ENV-PROVISION-84",
+      "kind": "ENV_PROVISION",
+      "target": "isolated local schema erp_item_uat_acceptance_20260922 and dedicated media/import roots",
+      "idempotency_key": "item-uat-acceptance-env-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed on 2026-09-22: a fresh migrated schema and isolated storage roots were used with advisory locking; fixtures were synthetic and erp_dev remained free of all acceptance markers."
+    },
+    {
+      "id": "UAT-RUN-85",
+      "kind": "UAT_EXECUTION",
+      "target": "UAT-015 approved staging-like browser journey",
+      "idempotency_key": "item-uat015-acceptance-bbb4066-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed Playwright execution on 2026-09-22: create, Barcode find, edit, activate/deactivate, audit, CSV upload/preflight/confirm/execute/result download and imported-SKU search all passed on the isolated dataset."
+    },
+    {
+      "id": "UAT-RUN-86",
+      "kind": "UAT_EXECUTION",
+      "target": "UAT-014 and UAT-016 targeted acceptance retest",
+      "idempotency_key": "item-uat014-016-acceptance-bbb4066-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed Playwright/MySQL targeted retest on 2026-09-22: 2/2 passed, covering approved Catalog UI/data, zero duplicates, BOX=24 EA, internal Barcode ownership and the delegated item.mgmt control surface with clean browser network/console checks."
+    },
+    {
+      "id": "UAT-ACCEPT-87",
+      "kind": "UAT_ACCEPTANCE",
+      "target": "UAT-014/UAT-015/UAT-016",
+      "idempotency_key": "item-uat014-016-business-acceptance-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "ERP Product Owner Sam's active-task approval, recorded as APR-039/APR-040, accepted DEC-023, the isolated local staging-like environment, consolidated Product/Security/Operations/Compliance authority risk and the retained recovery owner waiver; passing evidence is recorded in testing/08_uat_closeout_20260922.md."
+    },
+    {
+      "id": "CLEANUP-88",
+      "kind": "ENV_CLEANUP",
+      "target": "erp_item_uat_acceptance_20260922, dedicated roots, grant, advisory lock and web ports",
+      "idempotency_key": "item-uat-acceptance-cleanup-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed after acceptance: schema count 0, IS_FREE_LOCK=1, dedicated schema grant absent, exact storage root removed, ports 3000/4173 unused and erp_dev acceptance-marker counts all zero."
+    },
+    {
+      "id": "PUSH-89",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/item-management-uat-closeout",
+      "idempotency_key": "item-uat-closeout-push-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed Git push response on 2026-09-22: origin/codex/item-management-uat-closeout was created and configured as the upstream branch."
+    },
+    {
+      "id": "PR-CREATE-90",
+      "kind": "PR_CREATE",
+      "target": "codex/item-management-uat-closeout -> main",
+      "idempotency_key": "item-uat-closeout-pr-20260922",
+      "status": "CONFIRMED",
+      "source_ref": "Observed GitHub PR #126 OPEN at https://github.com/crazysumsum/erp-app/pull/126."
+    },
+    {
+      "id": "PR-MERGE-91",
+      "kind": "PR_MERGE",
+      "target": "Item Management UAT closeout PR -> main",
+      "idempotency_key": "item-uat-closeout-merge-20260922",
+      "status": "PLANNED",
+      "source_ref": "Merge only after the actual GitHub candidate satisfies required checks and review policy."
+    },
+    {
+      "id": "BRANCH-CLEANUP-92",
+      "kind": "GIT_CLEANUP",
+      "target": "Item Management UAT worktree and local/remote topic branches",
+      "idempotency_key": "item-uat-closeout-git-cleanup-20260922",
+      "status": "PLANNED",
+      "source_ref": "Cleanup is authorized after the PR is observed merged and the worktree is confirmed clean."
     }
   ],
   "evidence_files": [
@@ -957,7 +1484,10 @@
     "evidence/20260915T030140-5f4671994278/run.json",
     "evidence/20260915T030248-57050e3d96b5/run.json",
     "evidence/20260915T030312-a6347c1d7274/run.json",
-    "evidence/20260915T030630-20d57aa8c7d5/run.json"
+    "evidence/20260915T030630-20d57aa8c7d5/run.json",
+    "evidence/task-044-owner-waiver-20260921/manifest.json",
+    "evidence/task-044-owner-waiver-20260921/manifest.sig",
+    "evidence/task-044-owner-waiver-20260921/tc016-owner-waiver-report.json"
   ],
   "defects": [
     {
@@ -1015,12 +1545,16 @@
     {
       "id": "DEF-103",
       "severity": "HIGH",
-      "status": "DEFERRED",
+      "status": "CLOSED",
       "source_ids": [
         "TC-016"
       ],
-      "closure_evidence": [],
-      "risk_approval_id": "APR-020"
+      "closure_evidence": [
+        "evidence/task-044-owner-waiver-20260921/tc016-owner-waiver-report.json",
+        "evidence/task-044-owner-waiver-20260921/manifest.json",
+        "evidence/task-044-owner-waiver-20260921/manifest.sig"
+      ],
+      "risk_approval_id": "APR-033"
     },
     {
       "id": "DEF-104",
@@ -1087,5 +1621,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "For TASK-044, use a secure local MySQL root login path to provision a fresh isolated source/restore fixture, obtain an independently controlled Ed25519 detached signature over its exact manifest bytes and the matching public key, commit the approved trust binding, then run formal TC-016 on that immutable candidate. TASK-043 remains dependency-blocked until a real downstream module owns a reference to item_skus."
+  "next_safe_action": "Push the reviewed Item UAT evidence branch, create its PR, require the actual candidate checks before merge, then remove only the merged Item worktree and branches. TASK-043 remains dependency-blocked."
 }
