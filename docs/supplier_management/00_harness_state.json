@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 192,
+  "revision": 196,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-034",
+  "current_task": "TASK-035",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
-    "source_fingerprint": "53ed7a883979b865060f6a6e4dd38c183b9d273f2fb5d0c80086657043d1015a",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bank-idor",
-    "default_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
+    "code_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
+    "source_fingerprint": "c8977888183fedf5450b6ad6d725d5b4e60c3952f531aea9f29a0205f9027392",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
+    "default_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -2876,6 +2876,17 @@
       "source_ref": "supplier-phase-001-server 395/395 - one more than the merged TASK-034 count, the new cross-Supplier ownership test - plus supplier-phase-001-client 71/71, lint and client-build green, all binding db5296 and the current fingerprint. Swept for key material with the four directories named explicitly and the exit status read rather than the output count: grep exit 1 for both literal test keys and exit 1 for any 43-character base64 run followed by '='.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-22T10:15:43+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-035 developer evidence, and why four DEVELOPER-stage suites are BLOCKED rather than green",
+      "code_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "c8977888183fedf5450b6ad6d725d5b4e60c3952f531aea9f29a0205f9027392",
+      "status": "PASS",
+      "source_ref": "Four suites PASS and are TASK-035's developer evidence: supplier-phase-001-client 84/84 (that suite is the supplier subset, not the whole client suite; the full client vitest run is 582/582 locally), supplier-phase-001-server, lint and client-build. Four more are recorded BLOCKED and are registered here rather than left out, because leaving them out would make the evidence set look hand-picked. They are supplier-client-ui, supplier-server-integration, supplier-bank-security and supplier-security, and none of them is a TASK-035 failure: each declares required_case_ids covering the module's whole formal catalogue (UI-001 to UI-007 for the first, TC-001 onward for the second, TC-062 onward for the third, TC-111 onward for the fourth), all of which are still NOT RUN because they are TECHNICAL and REGRESSION stage cases belonging to TASK-037 and later. supplier-client-ui additionally points at client/test/supplier-management.vitest.config.js, which does not exist in the repository - a profile entry that has never been runnable. That is a pre-existing gap, carried by every task since the profile was written, and TASK-034 registered only the same four passing suites for the same reason. Not fixed here: changing the profile moves the PLAN baseline, and doing that to make a suite for someone else's stage run is not this task's business.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T10:44:59+08:00"
     }
   ],
   "pending_decisions": [
@@ -3854,7 +3865,16 @@
     "evidence/20260922T021507-870e7179b369/run.json",
     "evidence/20260922T021511-0c2033126cc3/run.json",
     "evidence/20260922T021515-0a3c8c19bf45/run.json",
-    "evidence/20260922T021519-cff36cb34b19/run.json"
+    "evidence/20260922T021519-cff36cb34b19/run.json",
+    "evidence/20260922T024325-ba84acad575d/run.json",
+    "evidence/20260922T024327-d465987adeb0/run.json",
+    "evidence/20260922T024331-3bf826929656/run.json",
+    "evidence/20260922T024334-c4ad32cc1a1a/run.json",
+    "evidence/20260922T024351-6d4e210380c6/run.json",
+    "evidence/20260922T024352-8258a797d269/run.json",
+    "evidence/20260922T024353-6e7fee6e7c53/run.json",
+    "evidence/20260922T024353-fb8fa3320e64/run.json",
+    "evidence/20260922T024358-ae15986b9939/run.json"
   ],
   "defects": [
     {

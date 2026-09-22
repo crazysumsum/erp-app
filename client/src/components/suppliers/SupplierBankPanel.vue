@@ -1,0 +1,406 @@
+<script setup>
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { onBeforeRouteLeave } from "vue-router";
+import { can } from "@/framework/authorization/can.js";
+import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
+import supplierBankService from "@/services/supplierBank.js";
+import { useSessionStore } from "@/stores/session.js";
+
+/**
+ * Bank panel。設計 §7.5、FR-BANK-001～007、AC-023～AC-026。
+ *
+ * ## 明文住喺邊
+ *
+ * 帳號明文淨係住喺呢個 component 兩個 local ref 度：`revealed.accountNumber`（睇）
+ * 同 `form.accountNumber`（寫）。**冇**入 Pinia、冇入 localStorage／sessionStorage、
+ * 冇入 URL、冇入 toast、冇入驗證訊息。清除有五個觸發點，全部指向同一個
+ * `forgetPlaintext()`：手動收起、30 秒到、unmount、route change、session 失效。
+ *
+ * 展開用 `v-if` 而唔係 `v-show`：`v-show` 會留返個節點喺 DOM 度（`display: none`），
+ * 即係明文仲喺頁面入面，一個 devtools、一個 screen reader、一個 `innerHTML` 都攞得返。
+ *
+ * ## 30 秒係客戶端嘅數
+ *
+ * 伺服器 reveal 回 `{ id, accountNumber, revealedAt }`，**冇** `expiresInSeconds`：
+ * 佢冇任何 server-side 狀態同一個到期時間對應（ledger 嘅 DEV-T34-EXPIRES-IN），
+ * 所以一個伺服器俾嘅數字會係一句講緊一件冇發生過嘅事嘅說話。幾時清係呢度嘅責任。
+ */
+const props = defineProps({
+  supplierId: { type: Number, required: true },
+  supplierCode: { type: String, required: true }
+});
+const emit = defineEmits(["refresh"]);
+
+const REVEAL_SECONDS = 30;
+const session = useSessionStore();
+// AC-023：遮罩清單得 supplier.view；bank.view 只係多咗 reveal，唔係自動明文。
+const canReveal = computed(() => can(session, { permissions: ["supplier.view", "supplier.bank.view"] }));
+// 設計 §6.6：寫入要三個一齊有，同 route policy 一樣。
+const canManage = computed(() => can(session, {
+  permissions: ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"]
+}));
+
+const rows = ref([]);
+const loading = ref(true);
+const loadError = ref("");
+
+// 明文。`remaining` 係俾倒數顯示用。
+const revealed = reactive({ id: null, accountNumber: "", remaining: 0 });
+let countdown = null;
+
+function forgetPlaintext() {
+  if (countdown) { clearInterval(countdown); countdown = null; }
+  revealed.id = null;
+  revealed.accountNumber = "";
+  revealed.remaining = 0;
+}
+
+function holdPlaintext(id, accountNumber) {
+  forgetPlaintext();
+  revealed.id = id;
+  revealed.accountNumber = accountNumber;
+  revealed.remaining = REVEAL_SECONDS;
+  countdown = setInterval(() => {
+    revealed.remaining -= 1;
+    if (revealed.remaining <= 0) forgetPlaintext();
+  }, 1000);
+}
+
+onUnmounted(forgetPlaintext);
+/**
+ * Route change：今日**每一條**離開呢一頁嘅路徑都會 unmount 個 panel，所以上面嗰個
+ * `onUnmounted` 已經清咗。我試過拆走下面呢一行再跑瀏覽器測試 —— 全部照綠，即係佢
+ * 係一個 equivalent mutant，唔係一個測試窿。
+ *
+ * 留返佢，因為佢守嘅唔係今日條路，係 Vue Router 重用 component instance 嗰條：
+ * `/suppliers/7` 去 `/suppliers/8` 係同一個 route record，唔會 unmount。今日冇任何
+ * 頁面連結去嗰度（唯一去 `/suppliers/:id` 嘅入口係列表，而經列表就一定 unmount 過），
+ * 所以我寫唔出一個殺得到佢嘅測試，而我試過嗰個「以為殺到」嘅測試其實係用
+ * `history.pushState` —— 嗰個唔會驅動 Vue Router，所以佢乜都冇測到，已經刪咗。
+ *
+ * 一個「下一個供應商」掣就會令呢條路存在，而嗰陣個漏洞係 7 號嘅帳號明文留喺一個
+ * URL 已經寫住 8 號嘅畫面上面。一行安全控制換呢個風險，唔值得慳。
+ */
+onBeforeRouteLeave(() => { forgetPlaintext(); });
+// Session 失效（token 過期、被撤銷、登出）都要即刻清 —— 一個已經唔再係佢嘅畫面
+// 唔應該仲留住個帳號喺度。
+watch(() => session.isAuthenticated, (authenticated) => { if (!authenticated) forgetPlaintext(); });
+
+async function load() {
+  loading.value = true;
+  loadError.value = "";
+  try {
+    rows.value = await supplierBankService.list(props.supplierId);
+  } catch (error) {
+    loadError.value = error.message || "載入銀行資料失敗";
+  } finally {
+    loading.value = false;
+  }
+}
+onMounted(load);
+
+// ---- Reveal ----------------------------------------------------------------
+
+const revealDialog = reactive({ open: false, row: null, password: "", reason: "", error: "", busy: false });
+
+function openReveal(row) {
+  Object.assign(revealDialog, { open: true, row, password: "", reason: "", error: "", busy: false });
+}
+
+async function confirmReveal() {
+  if (revealDialog.busy) return;
+  revealDialog.busy = true;
+  revealDialog.error = "";
+  try {
+    const result = await supplierBankService.reveal(props.supplierId, revealDialog.row.id, {
+      password: revealDialog.password, reason: revealDialog.reason.trim()
+    });
+    holdPlaintext(result.id, result.accountNumber);
+    revealDialog.open = false;
+  } catch (error) {
+    revealDialog.error = error.code === "PASSWORD_INVALID"
+      ? "密碼不正確，請重新輸入。"
+      : error.message || "無法查看完整帳號";
+  } finally {
+    // 密碼唔留低，成功失敗都一樣。
+    revealDialog.password = "";
+    revealDialog.busy = false;
+  }
+}
+
+// ---- Writes ----------------------------------------------------------------
+
+const form = reactive({
+  open: false, editing: null, busy: false, error: "", warnings: [],
+  accountHolderName: "", bankName: "", bankCountryCode: "", bankCode: "", branchCode: "",
+  swiftBic: "", accountCurrencyCode: "", accountNumber: "", isDefault: false,
+  reason: "", password: ""
+});
+
+function forgetFormSecrets() {
+  form.accountNumber = "";
+  form.password = "";
+}
+
+function openCreate() {
+  Object.assign(form, {
+    open: true, editing: null, busy: false, error: "", warnings: [],
+    accountHolderName: "", bankName: "", bankCountryCode: "", bankCode: "", branchCode: "",
+    swiftBic: "", accountCurrencyCode: "", accountNumber: "", isDefault: false, reason: "", password: ""
+  });
+}
+
+function openEdit(row) {
+  Object.assign(form, {
+    open: true, editing: row, busy: false, error: "", warnings: [],
+    accountHolderName: row.accountHolderName ?? "", bankName: row.bankName ?? "",
+    bankCountryCode: row.bankCountryCode ?? "", bankCode: row.bankCode ?? "",
+    branchCode: row.branchCode ?? "", swiftBic: row.swiftBic ?? "",
+    accountCurrencyCode: row.accountCurrencyCode ?? "",
+    // 帳號唔會由伺服器帶返落嚟（遮罩投影根本講唔出佢），留空就係「唔改帳號」。
+    accountNumber: "", isDefault: Boolean(row.isDefault), reason: "", password: ""
+  });
+}
+
+function writeBody() {
+  const body = {
+    accountHolderName: form.accountHolderName.trim(),
+    bankName: form.bankName.trim(),
+    reason: form.reason.trim(),
+    password: form.password
+  };
+  for (const key of ["bankCountryCode", "bankCode", "branchCode", "swiftBic", "accountCurrencyCode"]) {
+    const value = form[key].trim();
+    if (value) body[key] = key.endsWith("CountryCode") || key.endsWith("CurrencyCode") ? value.toUpperCase() : value;
+  }
+  // 空白 = 唔改帳號（設計 §6.6）。create 嗰邊一定有值，schema 會擋。
+  if (form.accountNumber) body.accountNumber = form.accountNumber;
+  if (form.editing) body.version = form.editing.version;
+  else if (form.isDefault) body.isDefault = true;
+  return body;
+}
+
+async function submitWrite() {
+  if (form.busy) return;
+  form.busy = true;
+  form.error = "";
+  form.warnings = [];
+  try {
+    const body = writeBody();
+    const saved = form.editing
+      ? await supplierBankService.update(props.supplierId, form.editing.id, body)
+      : await supplierBankService.create(props.supplierId, body);
+    // 成功即刻清 —— 呢兩個係 form state 入面唯一兩個唔可以留嘅值（設計 §7.5）。
+    forgetFormSecrets();
+    form.warnings = saved.warnings ?? [];
+    // 訊息淨係講得出銀行名同 Supplier Code，永遠唔會覆述帳號。
+    notifySuccess(`供應商 ${props.supplierCode} 的銀行帳戶「${saved.bankName}」已${form.editing ? "更新" : "新增"}`);
+    if (!form.warnings.length) form.open = false;
+    await load();
+    emit("refresh");
+  } catch (error) {
+    // 唔用 error.details：伺服器嘅 validation detail 帶 field path，而我哋唔想
+    // 喺任何錯誤面板度重播使用者啱啱打嗰個帳號（設計 §7.5 禁 validation summary）。
+    form.error = error.code === "VERSION_CONFLICT"
+      ? "這個銀行帳戶已被其他人修改，請關閉後重新載入再試。"
+      : error.message || "儲存銀行帳戶失敗";
+    notifyError(form.error);
+    // 密碼唔留低；帳號留返俾人改，但一 submit 成功就清。
+    form.password = "";
+  } finally {
+    form.busy = false;
+  }
+}
+
+// ---- Confirmations (default / deactivate) ----------------------------------
+
+const confirm = reactive({ open: false, kind: null, row: null, password: "", reason: "", error: "", busy: false });
+
+function openConfirm(kind, row) {
+  Object.assign(confirm, { open: true, kind, row, password: "", reason: "", error: "", busy: false });
+}
+
+const confirmTitle = computed(() => (confirm.kind === "default" ? "設為預設銀行帳戶" : "停用銀行帳戶"));
+
+async function submitConfirm() {
+  if (confirm.busy) return;
+  confirm.busy = true;
+  confirm.error = "";
+  try {
+    const body = { version: confirm.row.version, reason: confirm.reason.trim(), password: confirm.password };
+    if (confirm.kind === "default") await supplierBankService.setDefault(props.supplierId, confirm.row.id, body);
+    else await supplierBankService.deactivate(props.supplierId, confirm.row.id, body);
+    notifySuccess(`供應商 ${props.supplierCode} 的銀行帳戶「${confirm.row.bankName}」已${confirm.kind === "default" ? "設為預設" : "停用"}`);
+    confirm.open = false;
+    await load();
+    emit("refresh");
+  } catch (error) {
+    confirm.error = error.code === "VERSION_CONFLICT"
+      ? "這個銀行帳戶已被其他人修改，請關閉後重新載入再試。"
+      : error.message || "操作失敗";
+    notifyError(confirm.error);
+  } finally {
+    confirm.password = "";
+    confirm.busy = false;
+  }
+}
+</script>
+
+<template>
+  <section aria-labelledby="supplier-bank-heading">
+    <div class="row items-center justify-between q-mb-md">
+      <h2 id="supplier-bank-heading" class="text-h6 q-ma-none">銀行資料</h2>
+      <q-btn v-if="canManage" color="primary" flat icon="add" label="新增銀行帳戶" @click="openCreate" />
+    </div>
+
+    <q-banner v-if="loadError" class="bg-negative text-white q-mb-md" role="alert">{{ loadError }}</q-banner>
+    <div v-else-if="loading" class="text-grey-7">載入中…</div>
+    <div v-else-if="!rows.length" class="text-grey-7">尚未設定銀行資料</div>
+
+    <q-list v-else bordered separator>
+      <q-item v-for="row in rows" :key="row.id">
+        <q-item-section>
+          <q-item-label>
+            {{ row.bankName }}
+            <q-badge v-if="row.isDefault" class="q-ml-sm" label="預設" />
+            <q-badge v-if="row.status !== 'active'" class="q-ml-sm" color="grey" label="已停用" />
+          </q-item-label>
+          <q-item-label caption>{{ row.accountHolderName }}</q-item-label>
+          <!--
+            v-if 而唔係 v-show：收起之後個節點要真係冇咗，唔可以留一個
+            display:none 嘅節點收埋住明文。
+          -->
+          <q-item-label v-if="revealed.id === row.id" caption>
+            <span data-test="bank-plaintext" class="text-weight-medium">{{ revealed.accountNumber }}</span>
+            <span data-test="bank-reveal-countdown" class="q-ml-sm text-grey-7">{{ revealed.remaining }} 秒後自動隱藏</span>
+            <q-btn flat dense size="sm" label="收起" class="q-ml-sm" @click="forgetPlaintext" />
+          </q-item-label>
+          <q-item-label v-else caption>{{ row.maskedAccountNumber }}</q-item-label>
+        </q-item-section>
+        <q-item-section side top class="row items-center">
+          <q-btn
+            v-if="canReveal && revealed.id !== row.id" flat dense size="sm" label="查看完整帳號"
+            :aria-label="`查看完整帳號 ${row.bankName}`" @click="openReveal(row)"
+          />
+          <template v-if="canManage">
+            <q-btn flat dense icon="edit" :aria-label="`編輯 ${row.bankName}`" @click="openEdit(row)" />
+            <q-btn
+              v-if="!row.isDefault && row.status === 'active'" flat dense icon="star"
+              :aria-label="`設為預設 ${row.bankName}`" @click="openConfirm('default', row)"
+            />
+            <q-btn
+              v-if="row.status === 'active'" flat dense color="negative" icon="block"
+              :aria-label="`停用 ${row.bankName}`" @click="openConfirm('deactivate', row)"
+            />
+          </template>
+        </q-item-section>
+      </q-item>
+    </q-list>
+
+    <!-- Reveal：主動動作，要當場再打密碼（AC-024） -->
+    <q-dialog v-model="revealDialog.open" persistent @hide="revealDialog.password = ''">
+      <q-card style="width: min(520px, 96vw); max-width: 520px">
+        <q-card-section><h3 class="text-h6 q-ma-none">查看完整帳號</h3></q-card-section>
+        <q-card-section class="q-pt-none">
+          <p class="text-grey-8">
+            即將查看「{{ revealDialog.row?.bankName }}」的完整帳號，顯示 {{ REVEAL_SECONDS }} 秒後自動隱藏，並會留下稽核紀錄。
+          </p>
+          <q-banner v-if="revealDialog.error" class="bg-negative text-white q-mb-md" role="alert">{{ revealDialog.error }}</q-banner>
+          <q-input
+            v-model="revealDialog.password" label="密碼 *" type="password"
+            autocomplete="current-password" outlined dense maxlength="1024"
+          />
+          <q-input v-model="revealDialog.reason" class="q-mt-md" label="查看原因 *" type="textarea" outlined dense maxlength="500" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="取消" v-close-popup />
+          <q-btn
+            color="primary" label="確認查看" :loading="revealDialog.busy"
+            :disable="!revealDialog.password || revealDialog.reason.trim().length < 5" @click="confirmReveal"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Create / update：device + password（設計 §6.6 jwt-device-password） -->
+    <q-dialog v-model="form.open" persistent @hide="forgetFormSecrets">
+      <q-card style="width: min(720px, 96vw); max-width: 720px">
+        <q-card-section><h3 class="text-h6 q-ma-none">{{ form.editing ? "編輯銀行帳戶" : "新增銀行帳戶" }}</h3></q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-banner v-if="form.error" class="bg-negative text-white q-mb-md" role="alert">{{ form.error }}</q-banner>
+          <q-banner
+            v-for="warning in form.warnings" :key="warning.code" data-test="bank-duplicate-warning"
+            class="bg-warning text-dark q-mb-md"
+          >
+            {{ warning.message }}
+            <template v-if="warning.supplierCodes?.length">（{{ warning.supplierCodes.join("、") }}）</template>
+          </q-banner>
+          <div class="row q-col-gutter-md">
+            <q-input v-model="form.accountHolderName" class="col-12 col-sm-6" label="帳戶名稱 *" outlined dense maxlength="190" />
+            <q-input v-model="form.bankName" class="col-12 col-sm-6" label="銀行名稱 *" outlined dense maxlength="190" />
+            <q-input v-model="form.bankCountryCode" class="col-12 col-sm-4" label="銀行國家／地區" outlined dense maxlength="2" />
+            <q-input v-model="form.accountCurrencyCode" class="col-12 col-sm-4" label="帳戶幣別" outlined dense maxlength="3" />
+            <q-input v-model="form.swiftBic" class="col-12 col-sm-4" label="SWIFT/BIC" outlined dense maxlength="11" />
+            <q-input v-model="form.bankCode" class="col-12 col-sm-6" label="銀行代碼" outlined dense maxlength="50" />
+            <q-input v-model="form.branchCode" class="col-12 col-sm-6" label="分行代碼" outlined dense maxlength="50" />
+            <!--
+              autocomplete="off"：帳號唔可以入瀏覽器嘅表單記憶。
+              編輯時留空即係唔改帳號 —— 遮罩投影根本講唔出原值，所以冇得預填。
+            -->
+            <q-input
+              v-model="form.accountNumber" class="col-12" :label="form.editing ? '帳號（留空即不修改）' : '帳號 *'"
+              autocomplete="off" spellcheck="false" outlined dense maxlength="2048"
+            />
+            <q-toggle v-if="!form.editing" v-model="form.isDefault" class="col-12" label="設為預設銀行帳戶" />
+            <q-input
+              v-model="form.reason" class="col-12" :label="form.editing ? '修改原因 *' : '新增原因 *'"
+              type="textarea" outlined dense maxlength="500"
+            />
+            <q-input
+              v-model="form.password" class="col-12" label="密碼 *" type="password"
+              autocomplete="current-password" outlined dense maxlength="1024"
+              hint="此操作需要已核准的裝置並重新確認密碼"
+            />
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="取消" v-close-popup />
+          <q-btn
+            color="primary" label="儲存" :loading="form.busy"
+            :disable="!form.accountHolderName.trim() || !form.bankName.trim() || !form.password
+              || form.reason.trim().length < 5 || (!form.editing && !form.accountNumber)"
+            @click="submitWrite"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="confirm.open" persistent @hide="confirm.password = ''">
+      <q-card style="width: min(560px, 96vw); max-width: 560px">
+        <q-card-section><h3 class="text-h6 q-ma-none">{{ confirmTitle }}</h3></q-card-section>
+        <q-card-section class="q-pt-none">
+          <!-- 設計 §7.5：切換預設要明講舊 default 會被取消。 -->
+          <p v-if="confirm.kind === 'default'" class="text-grey-8">
+            將「{{ confirm.row?.bankName }}」設為預設之後，原本嘅預設銀行帳戶會**同時被取消**，之後嘅付款會用新嘅預設。
+          </p>
+          <p v-else class="text-grey-8">
+            停用「{{ confirm.row?.bankName }}」之後就唔會再揀得到；已經引用咗佢嘅單據仍然保留。停用係唯一嘅退役方式，冇得刪除。
+          </p>
+          <q-banner v-if="confirm.error" class="bg-negative text-white q-mb-md" role="alert">{{ confirm.error }}</q-banner>
+          <q-input
+            v-model="confirm.password" label="密碼 *" type="password"
+            autocomplete="current-password" outlined dense maxlength="1024"
+          />
+          <q-input v-model="confirm.reason" class="q-mt-md" label="原因 *" type="textarea" outlined dense maxlength="500" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="取消" v-close-popup />
+          <q-btn
+            color="primary" label="確認" :loading="confirm.busy"
+            :disable="!confirm.password || confirm.reason.trim().length < 5" @click="submitConfirm"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </section>
+</template>

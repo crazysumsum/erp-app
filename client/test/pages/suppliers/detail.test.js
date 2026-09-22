@@ -8,8 +8,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/services/supplier.js", () => ({
   default: { getById: vi.fn(), completeness: vi.fn() }, service: { name: "supplier" }
 }));
+vi.mock("@/services/supplierBank.js", () => ({
+  default: { list: vi.fn(), create: vi.fn(), update: vi.fn(), setDefault: vi.fn(), deactivate: vi.fn(), reveal: vi.fn() },
+  service: { name: "supplierBank" }
+}));
 
 import supplierService from "@/services/supplier.js";
+import supplierBankService from "@/services/supplierBank.js";
 import SupplierDetailPage, { page } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -18,7 +23,11 @@ const DETAIL = {
   defaultCurrencyCode: "HKD", defaultPaymentTermId: null, status: "suspended", version: 2,
   website: "", generalPhone: "2123 4567", generalEmail: "orders@example.test", notes: "",
   createdAt: 100, updatedAt: 200, addresses: [], contacts: [], identifiers: [],
-  bankAccounts: [{ id: 4, bankName: "Test Bank", maskedAccountNumber: "•••• 6789", status: "active", isDefault: true }],
+  // 呢個欄位伺服器永遠唔會填 —— toSupplierDetailResponse 個 `bankAccounts` 有一個
+  // default `[]` 而冇任何 caller 傳嘢俾佢。留返喺度係因為 response schema 要求佢
+  // 存在，但任何斷言都唔可以靠佢：真嘅遮罩清單由 SupplierBankPanel 自己叫
+  // GET /suppliers/:id/bank-accounts 攞。
+  bankAccounts: [],
   warnings: [{ field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" }]
 };
 
@@ -26,6 +35,10 @@ async function mountPage({ permissions = ["supplier.view"], detail = DETAIL } = 
   if (detail instanceof Error) supplierService.getById.mockRejectedValue(detail);
   else supplierService.getById.mockResolvedValue(detail);
   supplierService.completeness.mockResolvedValue({ supplierId: 7, issues: [], warnings: detail?.warnings ?? [] });
+  supplierBankService.list.mockResolvedValue([
+    { id: 4, bankName: "Test Bank", accountHolderName: "Evergreen Trading", maskedAccountNumber: "•••• 6789",
+      status: "active", isDefault: true, version: 1 }
+  ]);
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: SupplierDetailPage }] });
   await router.push("/suppliers/7"); await router.isReady();
   useSessionStore().user = { id: 1, permissions, roles: [] };
@@ -46,8 +59,11 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     expect(body.text()).toContain("尚未設定採購用途地址");
     await body.findAll(".q-tab").find((item) => item.text().includes("銀行資料")).trigger("click");
     await flushPromises();
+    expect(supplierBankService.list).toHaveBeenCalledWith(7);
     expect(body.text()).toContain("•••• 6789");
     expect(body.text()).not.toContain("accountNumber");
+    // 開個 tab 唔等於攞明文：AC-023。
+    expect(supplierBankService.reveal).not.toHaveBeenCalled();
   });
 
   it("distinguishes not-found and generic loading failures", async () => {
