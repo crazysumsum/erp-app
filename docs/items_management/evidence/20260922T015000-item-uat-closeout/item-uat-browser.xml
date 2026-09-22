@@ -1,0 +1,163 @@
+<testsuites id="" name="" tests="13" failures="1" skipped="2" errors="0" time="9.174027">
+<testsuite name="item-management.spec.js" timestamp="2026-09-22T01:48:25.953Z" hostname="" tests="13" failures="1" skipped="2" time="5.53" errors="0">
+<testcase name="Item Management executable UAT › UAT-001 search state survives refresh and empty results remain usable" classname="item-management.spec.js" time="1.139">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-002 audit history shows actor, target, reason and change detail" classname="item-management.spec.js" time="0.163">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-003 invalid Standard Item create is rejected with focused actionable errors" classname="item-management.spec.js" time="0.195">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-004 existing Variant Item can add one unique SKU and reject duplicates" classname="item-management.spec.js" time="0.901">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-005 concurrent editors and real downstream SKU references protect history" classname="item-management.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+<property name="skip" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-006 unreferenced Brand can be created and permanently deleted with audit reason" classname="item-management.spec.js" time="1.572">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-007 UOM entry enforces code, name and symbol fields in a usable catalogue flow" classname="item-management.spec.js" time="0.64">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-008 price entry communicates fixed HKD and tax-not-applicable semantics" classname="item-management.spec.js" time="0.206">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-009 template and filtered SKU export complete as browser downloads" classname="item-management.spec.js" time="0.239">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-010 audit search exposes the Item manager&apos;s catalog changes" classname="item-management.spec.js" time="0.159">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-011 item.mgmt-only role can reach every Item surface and no User Management surface" classname="item-management.spec.js" time="0.033">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-012 keyboard focus, dirty-state protection, console and network remain usable" classname="item-management.spec.js" time="0.283">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/test-failed-1.png]]
+
+[[ATTACHMENT|playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/error-context.md]]
+
+[[ATTACHMENT|playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(received).toEqual(expected) // deep equality" type="expect.toEqual">
+<![CDATA[  item-management.spec.js:347:3 › Item Management executable UAT › UAT-012 keyboard focus, dirty-state protection, console and network remain usable
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 26
+
+    - Array []
+    + Array [
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNcIhQ8tQ.woff2",
+    +   "GET http://127.0.0.1:4173/@fs/Users/sam/Documents/workspace/erp-app/node_modules/@quasar/extras/exports/material-icons/web-font/flUhRq6tzZclQEJ-Vdg-IuiaDsNa.woff",
+    + ]
+
+      354 |     await page.getByRole("link", { name: "商品與 SKU" }).click();
+      355 |     await expect(page).toHaveURL(/\/items(?:\?|$)/);
+    > 356 |     expect(failedRequests).toEqual([]);
+          |                            ^
+      357 |     expect(serverErrors).toEqual([]);
+      358 |     expect(unexpectedConsoleErrors).toEqual([]);
+      359 |   });
+        at /private/tmp/erp-item-management-uat-closeout/client/e2e/item-management/item-management.spec.js:356:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../docs/items_management/evidence/20260922T015000-item-uat-closeout/playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../docs/items_management/evidence/20260922T015000-item-uat-closeout/playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/error-context.md
+
+    Error Context: ../../../docs/items_management/evidence/20260922T015000-item-uat-closeout/playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../docs/items_management/evidence/20260922T015000-item-uat-closeout/playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../docs/items_management/evidence/20260922T015000-item-uat-closeout/playwright-artifacts/item-management-Item-Manag-7c914-e-and-network-remain-usable/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-015 staging release journey and owner sign-off" classname="item-management.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+<property name="skip" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

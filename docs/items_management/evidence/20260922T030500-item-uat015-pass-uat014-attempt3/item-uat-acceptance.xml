@@ -1,0 +1,77 @@
+<testsuites id="" name="" tests="3" failures="1" skipped="1" errors="0" time="18.307444">
+<testsuite name=".tmp-uat-acceptance.spec.js" timestamp="2026-09-22T02:45:57.133Z" hostname="" tests="3" failures="1" skipped="1" time="15.468" errors="0">
+<testcase name="Approved Item Management acceptance › UAT-015 approved staging-like create-find-edit-lifecycle-audit-import journey" classname=".tmp-uat-acceptance.spec.js" time="15.164">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Approved Item Management acceptance › UAT-014 approved catalogue, ownership, uniqueness, UOM conversion and internal Barcode" classname=".tmp-uat-acceptance.spec.js" time="0.304">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/test-failed-1.png]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/error-context.md]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/error-context.md]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/trace.zip]]
+]]>
+</system-out>
+<failure message="expect(locator).toBeVisible() failed" type="expect.toBeVisible">
+<![CDATA[  .tmp-uat-acceptance.spec.js:284:3 › Approved Item Management acceptance › UAT-014 approved catalogue, ownership, uniqueness, UOM conversion and internal Barcode
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByText('UAT驗收品牌-20260922', { exact: true })
+    Expected: visible
+    Error: strict mode violation: getByText('UAT驗收品牌-20260922', { exact: true }) resolved to 2 elements:
+        1) <span class="ellipsis">…</span> aka getByText('UAT驗收品牌-').first()
+        2) <span class="ellipsis">…</span> aka getByText('UAT驗收品牌-').nth(1)
+
+    Call log:
+      - Expect "toBeVisible" getByText('UAT驗收品牌-20260922', { exact: true }) with timeout 15000ms
+      - waiting for getByText('UAT驗收品牌-20260922', { exact: true })
+
+
+      286 |     for (const value of ["食品", "飲品", "樽裝飲品"]) await expect(page.getByText(value, { exact: true })).toBeVisible();
+      287 |     await page.goto("/items/brands");
+    > 288 |     await expect(page.getByText(BRAND, { exact: true })).toBeVisible();
+          |                                                          ^
+      289 |     await page.goto("/items/uoms");
+      290 |     for (const value of ["EA", "BOX", "件", "箱"]) await expect(page.getByText(value, { exact: true }).first()).toBeVisible();
+      291 |     await page.goto("/items/attributes");
+        at /private/tmp/erp-item-management-uat-closeout/client/e2e/item-management/.tmp-uat-acceptance.spec.js:288:58
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/error-context.md
+
+    Error Context: ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-4d046-ersion-and-internal-Barcode/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</failure>
+</testcase>
+<testcase name="Approved Item Management acceptance › UAT-016 delegated Product Security Operations Compliance acceptance surface" classname=".tmp-uat-acceptance.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>
