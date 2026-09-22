@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 109,
+  "revision": 112,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-020",
+  "current_task": "TASK-021",
   "baseline": {
     "design": "6a0c0f97eb5c09207e507ac03b92fefcc90ce0605c30cc04c6fa155adaf6bc08",
     "plan": "cf1fb08d3c97351e49dfd099c12335f2bed85316545d70c357e047da52ec43b6",
-    "code_commit": "0633125c331a296f6e099795a3666b428af6a402",
-    "source_fingerprint": "3147402df6ba106672e58c65157982f11147d5f43bf1f108c5152c70c38e039d",
+    "code_commit": "15096aeba1f333a7829e7427647e0bcde3138500",
+    "source_fingerprint": "a38f3a6247f9601751f342fe4e19b6c0d40b33d12c34823eb4c4f0924ca59d38",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -45,8 +45,8 @@
     "TASK-017": "DONE",
     "TASK-018": "DONE",
     "TASK-019": "DONE",
-    "TASK-020": "IN_PROGRESS",
-    "TASK-021": "PENDING",
+    "TASK-020": "DONE",
+    "TASK-021": "IN_PROGRESS",
     "TASK-022": "PENDING",
     "TASK-023": "PENDING",
     "TASK-024": "PENDING",
@@ -1093,6 +1093,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-017",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-020 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "3147402df6ba106672e58c65157982f11147d5f43bf1f108c5152c70c38e039d",
+      "source_ref": "2026-09-22 independent security review requested changes: the protected-admin exception could self-escalate through a bank-bearing user role or a custom role already held by the actor. Both paths must be denied and covered for both Customer bank permissions. Fresh-role, device/password, reason, audit and CAS controls otherwise passed review.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 1,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-018",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-020 remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "a38f3a6247f9601751f342fe4e19b6c0d40b33d12c34823eb4c4f0924ca59d38",
+      "source_ref": "2026-09-22 independent re-review: fresh database-derived roles gate the exception; held-role and actor-target user assignment self-escalation are denied; both paths and both Customer bank permissions have real-HTTP coverage. Reviewer independently reran focused unit tests 76/76 and confirmed state, traceability, boundary and diff checks. Final verdict APPROVE.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1282,6 +1306,28 @@
       "source_ref": "REV-016",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-22T05:59:51Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-020 protected Customer bank delegation and self-escalation remediation",
+      "code_commit": "15096aeba1f333a7829e7427647e0bcde3138500",
+      "spec_baseline": "cf1fb08d3c97351e49dfd099c12335f2bed85316545d70c357e047da52ec43b6",
+      "source_fingerprint": "a38f3a6247f9601751f342fe4e19b6c0d40b33d12c34823eb4c4f0924ca59d38",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-020-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T06:38:24Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-020 protected Customer bank delegation independent re-review",
+      "code_commit": "15096aeba1f333a7829e7427647e0bcde3138500",
+      "spec_baseline": "cf1fb08d3c97351e49dfd099c12335f2bed85316545d70c357e047da52ec43b6",
+      "source_fingerprint": "a38f3a6247f9601751f342fe4e19b6c0d40b33d12c34823eb4c4f0924ca59d38",
+      "status": "PASS",
+      "source_ref": "REV-018",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-22T06:39:54Z"
     }
   ],
   "pending_decisions": [
@@ -1723,6 +1769,14 @@
       "idempotency_key": "customer-phase002-publication-merge-v1",
       "status": "CONFIRMED",
       "source_ref": "GitHub PR #129 merged at 2026-09-22T06:08:31Z; main merge commit 0633125c331a296f6e099795a3666b428af6a402. The remote and local PHASE-002 branches and dedicated worktree were removed after reconciliation."
+    },
+    {
+      "id": "EXT-MIGRATION-031",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase003_task020_review_20260922",
+      "idempotency_key": "customer-phase003-task020-review-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: fresh schema migrated through 0048; role/user HTTP suites passed 16/16 including both Customer bank permissions, both protected-admin self-escalation paths, distinct-recipient delegation and CAS replay denial; complete migration rerun was a no-op; exact schema deletion and final absence zero were confirmed."
     }
   ],
   "evidence_files": [
@@ -1731,5 +1785,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Complete TASK-020 red-green implementation for the approved narrow protected-admin Customer bank delegation path, run focused authorization/service tests, obtain independent review, and keep unrelated permission escalation denied."
+  "next_safe_action": "Implement TASK-021 Customer bank schema, AES-GCM/AAD crypto, masking, key-ring configuration and startup fail-closed checks using the existing Supplier bank foundation where it is genuinely shared."
 }

@@ -425,3 +425,5 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   permissions and both paths are covered by unit and real-HTTP regression checks, so
   delegation does not grant route access. CI was not run under the Product Owner's
   standing direction and accepted risk.
+- Independent re-review approved the exact remediated candidate after independently
+  rerunning the focused 76/76 unit suite; no blocking TASK-020 finding remains.
