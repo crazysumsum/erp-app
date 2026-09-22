@@ -89,3 +89,16 @@ test("Customer bank masking never reveals a complete short account", () => {
   assert.equal(maskCustomerBankAccount({ lastFour: "1234", accountLength: 4 }), "••••");
   assert.equal(maskCustomerBankAccount({ lastFour: "5678", accountLength: 10 }), "••••••5678");
 });
+
+test("Customer cross-owner confirmation tokens bind actor, target, normalized scope and expiry", () => {
+  const crypto = buildCrypto({ lookupIds: ["lookup-1", "lookup-2"], lookupActive: "lookup-2" });
+  const input = { countryCode: "hk", bankCode: "001", branchCode: "002", accountNumber: "1234-5678" };
+  const token = crypto.issueConfirmationToken({ actorId: 3, customerId: 7, input, expiresAt: 10_000 });
+
+  assert.equal(crypto.verifyConfirmationToken(token, { actorId: 3, customerId: 7, input, nowMs: 9_999 }), true);
+  assert.equal(crypto.verifyConfirmationToken(token, { actorId: 4, customerId: 7, input, nowMs: 9_999 }), false);
+  assert.equal(crypto.verifyConfirmationToken(token, { actorId: 3, customerId: 8, input, nowMs: 9_999 }), false);
+  assert.equal(crypto.verifyConfirmationToken(token, { actorId: 3, customerId: 7, input: { ...input, branchCode: "003" }, nowMs: 9_999 }), false);
+  assert.equal(crypto.verifyConfirmationToken(token, { actorId: 3, customerId: 7, input, nowMs: 10_001 }), false);
+  assert.equal(JSON.stringify(token).includes("12345678"), false);
+});

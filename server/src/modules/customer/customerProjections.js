@@ -49,3 +49,23 @@ export function toCustomerDetail(row, { addresses = [], contacts = [], identifie
     }
   };
 }
+
+export function toMaskedCustomerBank(row, mask) {
+  return {
+    id: Number(row.id),
+    customerId: Number(row.customer_id),
+    accountHolderName: row.account_holder_name,
+    bankName: row.bank_name,
+    bankCountryCode: row.bank_country_code,
+    bankCode: row.bank_code,
+    branchCode: row.branch_code,
+    swiftBic: row.swift_bic,
+    accountCurrencyCode: row.account_currency_code,
+    purposeCode: row.purpose_code,
+    maskedAccountNumber: mask({ lastFour: row.last_four, accountLength: row.account_length }),
+    isDefault: Boolean(row.is_default),
+    status: row.status,
+    version: Number(row.version),
+    updatedAt: Number(row.updated_at)
+  };
+}

@@ -80,4 +80,23 @@ describe("customer service", () => {
     await customerService.completeness(7, { signal });
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/customers/7/completeness", { signal });
   });
+
+  it("uses exact bank routes and signs only device-password writes", async () => {
+    const payload = { version: 2, reason: "reviewed bank change", password: "pw" };
+    await customerService.bankAccounts(7);
+    await customerService.createBankAccount(7, payload);
+    await customerService.updateBankAccount(7, 9, payload);
+    await customerService.setDefaultBankAccount(7, 9, payload);
+    await customerService.deactivateBankAccount(7, 9, payload);
+    await customerService.revealBankAccount(7, 9, payload);
+
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/customers/7/bank-accounts", undefined);
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/customers/7/bank-accounts/create", { idempotent: true, signed: true, body: payload }],
+      ["/api/v1/customers/7/bank-accounts/9/update", { idempotent: true, signed: true, body: payload }],
+      ["/api/v1/customers/7/bank-accounts/9/default", { idempotent: true, signed: true, body: payload }],
+      ["/api/v1/customers/7/bank-accounts/9/deactivate", { idempotent: true, signed: true, body: payload }],
+      ["/api/v1/customers/7/bank-accounts/9/reveal", { idempotent: true, body: payload }]
+    ]);
+  });
 });

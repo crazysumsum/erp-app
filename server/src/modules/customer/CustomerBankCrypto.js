@@ -77,11 +77,22 @@ export class CustomerBankCrypto {
 
   newCryptoContext() { return randomUUID(); }
 
+  get activeEncryptionKeyId() { return this.#encryption.activeKeyId; }
+
+  get activeLookupKeyId() { return this.#lookup.activeKeyId; }
+
   encrypt({ customerId, cryptoContext, accountNumber }) {
+    return this.encryptWithKeyId({
+      customerId, cryptoContext, accountNumber, encryptionKeyId: this.#encryption.activeKeyId
+    });
+  }
+
+  encryptWithKeyId({ customerId, cryptoContext, accountNumber, encryptionKeyId }) {
     const normalized = account(accountNumber);
-    const encryptionKeyId = this.#encryption.activeKeyId;
+    const secret = this.#encryption.keyRing[String(encryptionKeyId ?? "")];
+    if (!secret) throw new Error("Customer bank account encryption key is unavailable");
     const iv = randomBytes(12);
-    const cipher = createCipheriv("aes-256-gcm", key(this.#encryption.keyRing[encryptionKeyId]), iv);
+    const cipher = createCipheriv("aes-256-gcm", key(secret), iv);
     cipher.setAAD(aad(customerId, cryptoContext));
     const ciphertext = Buffer.concat([cipher.update(normalized, "utf8"), cipher.final()]);
     return {
@@ -116,6 +127,41 @@ export class CustomerBankCrypto {
     const keyIds = Object.keys(this.#lookup.keyRing);
     if (keyIds.length === 0) throw new TypeError("Customer bank lookup key ring is empty");
     return keyIds.map((keyId) => ({ index: this.#index(input, keyId), keyId }));
+  }
+
+  issueConfirmationToken({ actorId, customerId, input, expiresAt }) {
+    const keyId = this.#lookup.activeKeyId;
+    const payload = Buffer.from(JSON.stringify({
+      actorId: String(actorId),
+      customerId: String(customerId),
+      expiresAt: Number(expiresAt),
+      scope: this.#index(input, keyId).toString("base64url"),
+      keyId
+    }), "utf8").toString("base64url");
+    const signature = createHmac("sha256", key(this.#lookup.keyRing[keyId]))
+      .update(framed(["customer-bank-confirm", payload]))
+      .digest("base64url");
+    return `${payload}.${signature}`;
+  }
+
+  verifyConfirmationToken(token, { actorId, customerId, input, nowMs }) {
+    try {
+      const [payload, signature, extra] = String(token ?? "").split(".");
+      if (!payload || !signature || extra !== undefined) return false;
+      const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+      const secret = this.#lookup.keyRing[parsed.keyId];
+      if (!secret || parsed.actorId !== String(actorId) || parsed.customerId !== String(customerId) ||
+          !Number.isSafeInteger(parsed.expiresAt) || parsed.expiresAt < Number(nowMs)) return false;
+      const expectedScope = this.#index(input, parsed.keyId).toString("base64url");
+      if (parsed.scope !== expectedScope) return false;
+      const expected = createHmac("sha256", key(secret))
+        .update(framed(["customer-bank-confirm", payload]))
+        .digest();
+      const supplied = Buffer.from(signature, "base64url");
+      return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+    } catch {
+      return false;
+    }
   }
 
   #index(input, keyId) {

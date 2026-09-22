@@ -158,3 +158,7 @@ export function customerLifecycleInvalid(code, publicMessage, publicDetails) {
 export function customerLifecycleConflict(code, publicMessage, publicDetails) {
   return customerError("Customer lifecycle state conflict", { code, statusCode: 409, publicMessage, publicDetails });
 }
+
+export function customerBankError(code, statusCode, publicMessage, publicDetails) {
+  return customerError("Customer bank operation failed", { code, statusCode, publicMessage, publicDetails });
+}

@@ -30,6 +30,7 @@ describe("pages/customers/CustomerDetailPage.vue", () => {
     expect(page.requires.permissions).toEqual(["customer.view"]);
     const { body } = await mountPage();
     expect(body.text()).toContain("CUS-007"); expect(body.text()).toContain("草稿");
+    expect(body.text()).toContain("銀行帳戶");
     await body.find('button[aria-label="編輯一般資料"]').trigger("click"); await flushPromises();
     expect(body.find('button[aria-label="儲存一般資料"]').exists()).toBe(true);
   });

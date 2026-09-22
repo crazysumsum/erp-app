@@ -18,6 +18,7 @@ export default {
   contacts(id, { page, rowsPerPage, signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/contacts`, { params: { page, pageSize: rowsPerPage }, signal }); },
   identifiers(id, { page, rowsPerPage, signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/identifiers`, { params: { page, pageSize: rowsPerPage }, signal }); },
   creditPolicy(id, { signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/credit-policy`, { signal }); },
+  bankAccounts(id, options) { return httpClient.get(`/api/v1/customers/${id}/bank-accounts`, options); },
   checkDuplicates(payload) { return write("/api/v1/customers/duplicates/check", payload); },
   create(payload) { return write("/api/v1/customers/create", payload); },
   update(id, payload) { return write(`/api/v1/customers/${id}/update`, payload); },
@@ -42,5 +43,10 @@ export default {
   updateIdentifier(id, identifierId, payload) { return write(`/api/v1/customers/${id}/identifiers/${identifierId}/update`, payload); },
   deactivateIdentifier(id, identifierId, payload) { return write(`/api/v1/customers/${id}/identifiers/${identifierId}/deactivate`, payload); },
   saveCreditPolicy(id, payload) { return write(`/api/v1/customers/${id}/credit-policy/save`, payload); },
-  clearCreditPolicy(id, payload) { return write(`/api/v1/customers/${id}/credit-policy/clear`, payload); }
+  clearCreditPolicy(id, payload) { return write(`/api/v1/customers/${id}/credit-policy/clear`, payload); },
+  createBankAccount(id, payload) { return write(`/api/v1/customers/${id}/bank-accounts/create`, payload, { signed: true }); },
+  updateBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/update`, payload, { signed: true }); },
+  setDefaultBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/default`, payload, { signed: true }); },
+  deactivateBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/deactivate`, payload, { signed: true }); },
+  revealBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/reveal`, payload); }
 };

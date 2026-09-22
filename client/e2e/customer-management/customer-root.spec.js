@@ -5,7 +5,7 @@ const customer = { id: 7, code: "CUS-007", legalName: "Evergreen Customer", disp
 
 async function installApi(page, { sessionUser = user, customerStatus = "draft" } = {}) {
   const calls = [];
-  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null } };
+  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null }, banks: [{ id: 9, customerId: 7, accountHolderName: "Evergreen Customer", bankName: "Example Bank", bankCountryCode: "HK", bankCode: "001", branchCode: "002", swiftBic: "EXAMPLHH", accountCurrencyCode: "HKD", purposeCode: "general", maskedAccountNumber: "••••••••9001", isDefault: true, status: "active", version: 2, updatedAt: 1 }] };
   await page.addInitScript((sessionUser) => {
     localStorage.setItem("erp.token", "browser-test-token");
     localStorage.setItem("erp.token.deadline", String(Date.now() + 3_600_000));
@@ -15,12 +15,14 @@ async function installApi(page, { sessionUser = user, customerStatus = "draft" }
   await page.route("http://localhost:3000/api/v1/**", async (route) => {
     const request = route.request(); const url = new URL(request.url()); const path = url.pathname; const body = request.postDataJSON?.() ?? null;
     calls.push({ method: request.method(), path, body, query: Object.fromEntries(url.searchParams) });
-    const headers = { "content-type": "application/json", "access-control-allow-origin": "http://127.0.0.1:5204" };
+    const headers = { "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "http://127.0.0.1:5204" };
     const ok = (data) => route.fulfill({ status: 200, headers, body: JSON.stringify({ success: true, data, meta: { requestId: "customer-browser" } }) });
     if (path === "/api/v1/user/me") return ok(sessionUser);
     if (request.method() === "GET" && path === "/api/v1/customers") return ok({ items: [{ ...customer, status: customerStatus }], total: 1 });
     if (request.method() === "GET" && path === "/api/v1/customers/7") return ok({ ...customer, status: customerStatus, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state });
     if (request.method() === "GET" && path === "/api/v1/customers/7/completeness") return ok({ customerId: 7, issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
+    if (request.method() === "GET" && path === "/api/v1/customers/7/bank-accounts") return ok({ items: state.banks });
+    if (request.method() === "POST" && path === "/api/v1/customers/7/bank-accounts/9/reveal") return ok({ id: 9, accountNumber: "123456789001", revealedAt: Date.now(), expiresInSeconds: 30 });
     if (request.method() === "GET" && path === "/api/v1/business-master/currencies") return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar" }], total: 1 });
     if (request.method() === "POST" && path === "/api/v1/customers/duplicates/check") return ok({ code: [], legalName: [], tradingName: [] });
     if (request.method() === "POST" && path === "/api/v1/customers/create") return ok({ customer: { ...customer, id: 41, code: body.customerCode, legalName: body.legalName, status: body.activate ? "active" : "draft" }, operation: { id: "op-41" } });
@@ -104,6 +106,47 @@ test("@technical a manager adds an address from the customer detail", async ({ p
   await page.getByRole("button", { name: "儲存地址" }).focus(); await page.keyboard.press("Enter");
   await expect(page.getByText("皇后大道中 1 號")).toBeVisible();
   expect(calls.find((call) => call.path.endsWith("/addresses/create"))?.body).toMatchObject({ label: "總部", addressLine1: "皇后大道中 1 號", purposes: [] });
+  expect(problems).toEqual([]);
+});
+
+test("@technical bank reveal stays masked by default and clears plaintext after its timeout", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page, { sessionUser: { ...user, permissions: ["customer.view", "customer.bank.view", "customer.bank.mgmt"] } });
+  await page.clock.install();
+  await page.goto("/customers/7");
+  await page.getByRole("tab", { name: "銀行帳戶" }).click();
+  await expect(page.getByText("••••••••9001")).toBeVisible();
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  await page.getByRole("button", { name: "查看 Example Bank 完整帳號" }).click();
+  await page.getByLabel("原因").fill("核對退款銀行帳戶");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "查看", exact: true }).last().click();
+  await expect(page.getByText("123456789001")).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage }, url: location.href, history: history.state }))).not.toContain("123456789001");
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  await page.getByRole("button", { name: "查看 Example Bank 完整帳號" }).click();
+  await page.getByLabel("原因").fill("再次核對退款銀行帳戶");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "查看", exact: true }).last().click();
+  await expect(page.getByText("123456789001")).toBeVisible();
+  await page.clock.runFor(30_000);
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  expect(calls.filter((call) => call.path.endsWith("/bank-accounts/9/reveal"))).toHaveLength(2);
+  expect(problems).toEqual([]);
+});
+
+test("@technical bank controls remain usable at approved viewport widths", async ({ page }) => {
+  const problems = collectConsole(page);
+  await installApi(page, { sessionUser: { ...user, permissions: ["customer.view", "customer.bank.view", "customer.bank.mgmt"] } });
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/customers/7");
+    await page.getByRole("tab", { name: "銀行帳戶" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("••••••••9001")).toBeInViewport();
+    await expect(page.getByRole("button", { name: "新增銀行帳戶" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  }
   expect(problems).toEqual([]);
 });
 

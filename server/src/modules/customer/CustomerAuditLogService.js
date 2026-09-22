@@ -25,6 +25,13 @@ const ACTIONS = new Set([
   "customer.credit.create",
   "customer.credit.update",
   "customer.credit.clear",
+  "bank.create",
+  "bank.update",
+  "bank.default",
+  "bank.deactivate",
+  "bank.reveal",
+  "bank.key_rotated",
+  "bank.reindexed",
   "setting.update",
   "catalog.create",
   "catalog.update",
@@ -87,7 +94,12 @@ const ROOT_AUDIT_FIELDS = new Set([
   "sortOrder",
   "assignedApproverId",
   "customerVersion",
-  "requestStatus"
+  "requestStatus",
+  "maskedAccountNumber",
+  "isDefault",
+  "revealed",
+  "keyRotationCount",
+  "reindexCount"
 ]);
 
 function allowlistedSnapshot(value) {
