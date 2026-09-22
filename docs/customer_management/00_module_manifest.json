@@ -13,6 +13,7 @@
       "server/src/handlers/customers/**",
       "server/src/handlers/customer-approvals/**",
       "server/src/handlers/customer-approvers/**",
+      "server/src/handlers/customer-catalog/**",
       "server/src/handlers/customer-settings/**",
       "server/src/handlers/customer-lookups/**",
       "server/src/handlers/customer-imports/**",
@@ -22,7 +23,8 @@
       "server/src/services/customerFile/**",
       "client/src/pages/customers/**",
       "client/src/components/customers/**",
-      "client/src/services/customer*.js"
+      "client/src/services/customer*.js",
+      "client/src/framework/http/HttpClient.js"
     ],
     "test_paths": [
       "server/test/**",
@@ -37,6 +39,7 @@
       "server/src/handlers/customers/**",
       "server/src/handlers/customer-approvals/**",
       "server/src/handlers/customer-approvers/**",
+      "server/src/handlers/customer-catalog/**",
       "server/src/handlers/customer-settings/**",
       "server/src/handlers/customer-lookups/**",
       "server/src/handlers/customer-imports/**",
@@ -47,6 +50,7 @@
       "client/src/pages/customers/**",
       "client/src/components/customers/**",
       "client/src/services/customer*.js",
+      "client/src/framework/http/HttpClient.js",
       "server/test/**",
       "client/test/**",
       "client/e2e/customer-management/**"
@@ -61,6 +65,7 @@
       "client/package.json",
       "package-lock.json",
       "client/config/menu.js",
+      "client/src/framework/http/HttpClient.js",
       "client/src/framework/http/errorMessages.js",
       "docs/sales_order_management/**",
       "docs/fulfillment_shipping_management/**",

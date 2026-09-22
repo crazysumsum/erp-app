@@ -378,3 +378,24 @@ merge claim.
 - Independent review by Jason initially found seven required contract/coverage gaps.
   After remediation, the same separate reviewer reran focused Vitest 10/10 and
   Playwright 9/9 and returned `APPROVE` with every finding closed.
+
+## TASK-019 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT or a release claim.
+
+- The complete serial real-MySQL server gate passed 1,917 tests with zero failures;
+  only the two declared release-performance suites were skipped. Coverage was 94.93%
+  lines, 83.95% branches and 91.82% functions, and all 34 high-risk per-file floors
+  passed.
+- A fresh isolated schema migrated through `0048`, reran entirely as no-op and was
+  removed with final absence confirmed. The full gate found and closed a Customer
+  catalog handler-discovery defect by adding the framework-required API descriptions
+  and a regression assertion.
+- Client coverage passed 603/603 tests; repository ESLint and the production build
+  passed. Customer Playwright passed 10/10, including console/network monitoring,
+  keyboard behavior and core-action reachability at 375/768/1024/1440 widths.
+- The pre-PHASE-002 application commit `946f598` started against the forward-expanded
+  schema and returned healthy/connected, proving compatible application rollback.
+- CI is intentionally not run under the Product Owner's explicit publication
+  direction and accepted risk. Exact-candidate local checks and independent review
+  remain required before merge.
