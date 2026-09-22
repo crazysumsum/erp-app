@@ -1,28 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 124,
+  "revision": 126,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-022",
+  "current_task": "TASK-023",
   "baseline": {
     "design": "7d9fd9589c10e173916157aed6a71c587b9cef4ab89dcefc0da6c53961a7bf1e",
     "plan": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
-    "code_commit": "b32d1ea6c2c202a2a843f1a4dcd11e96fd304b65",
-    "source_fingerprint": "4da6950e6824166d66fbc8dc9fdeec01e6d8799c3eb1e03a335a972e25cf8861",
+    "code_commit": "d74d7fc5c155de0a13c80452a0100ad150dfc187",
+    "source_fingerprint": "51523f3b75598bbc78e955ea8eecc22816aeaa815c0783d3a8e6b0f815c894d1",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase003-task022-20260922",
+    "instance_id": "customer-phase003-task023-20260922",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-003",
-      "database": "mysql://127.0.0.1:3306/erp_customer_task022"
+      "database": "mysql://127.0.0.1:3306/erp_customer_task023",
+      "file_root": "/private/tmp/erp-customer-task023-files"
     },
     "lease_ref": null
   },
@@ -48,8 +49,8 @@
     "TASK-019": "DONE",
     "TASK-020": "DONE",
     "TASK-021": "DONE",
-    "TASK-022": "IN_PROGRESS",
-    "TASK-023": "PENDING",
+    "TASK-022": "DONE",
+    "TASK-023": "IN_PROGRESS",
     "TASK-024": "PENDING",
     "TASK-025": "PENDING",
     "TASK-026": "PENDING",
@@ -1177,6 +1178,31 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-030",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 standing instruction approving required Customer Management designs and automatic continuation without waiting when no material decision is required; TASK-023 follows the approved PHASE-003 plan after TASK-022 independent approval.",
+      "recorded_at": "2026-09-22T09:33:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
+      "code_commit": "d74d7fc5c155de0a13c80452a0100ad150dfc187",
+      "scope": [
+        "PHASE-003",
+        "TASK-023",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/services/customerFile/**",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/config/customer.js",
+        "server/.env.example",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1430,6 +1456,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 1,
       "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-022",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-022 remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "51523f3b75598bbc78e955ea8eecc22816aeaa815c0783d3a8e6b0f815c894d1",
+      "source_ref": "2026-09-22 independent exact-candidate re-review confirmed all prior blockers closed: reveal plaintext is never idempotency-cached/replayed, Customer route changes clear sensitive state, and maintenance uses full shared-key-ring validation. State, traceability, boundary, diff and independent focused server 20/20 plus client 17/17 passed. Final verdict APPROVE with no remaining finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -1697,6 +1735,28 @@
       "source_ref": "REV-020",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-22T07:25:38Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-022 Customer bank APIs, reveal lifecycle, maintenance and UI developer verification",
+      "code_commit": "d74d7fc5c155de0a13c80452a0100ad150dfc187",
+      "spec_baseline": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
+      "source_fingerprint": "51523f3b75598bbc78e955ea8eecc22816aeaa815c0783d3a8e6b0f815c894d1",
+      "status": "PASS",
+      "source_ref": "2026-09-22: focused Customer server 20/20 and complete Customer-pattern server tests passed; real MySQL bank integration passed 3/3 including two fresh reveal audits and zero plaintext in durable idempotency storage; full client 614/614, client build, repository lint and Customer Playwright 12/12 passed. Validated rotate/reindex CLIs both reported processed=0/remaining=0 under full shared-ring application validation. Repository-wide server run retains seven pre-existing SupplierBankCrypto null-config baseline failures only.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T09:33:46Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-022 Customer bank security/API/UI independent re-review",
+      "code_commit": "d74d7fc5c155de0a13c80452a0100ad150dfc187",
+      "spec_baseline": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
+      "source_fingerprint": "51523f3b75598bbc78e955ea8eecc22816aeaa815c0783d3a8e6b0f815c894d1",
+      "status": "PASS",
+      "source_ref": "REV-022",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-22T09:33:46Z"
     }
   ],
   "pending_decisions": [
@@ -2161,7 +2221,7 @@
       "target": "mysql://127.0.0.1:3306/erp_customer_task022",
       "idempotency_key": "customer-phase003-task022-bank-api-v1",
       "status": "CONFIRMED",
-      "source_ref": "2026-09-22: exact schema was created for TASK-022; fresh migrations through 0049 passed and a complete rerun skipped every migration. Cleanup remains pending TASK-022 completion."
+      "source_ref": "2026-09-22: exact schema was created for TASK-022; fresh migrations through 0049 and a complete no-op rerun passed. Real MySQL bank integration passed 3/3, rotate/reindex zero-old proofs passed, then the exact schema was dropped after independent approval and final absence returned zero."
     }
   ],
   "evidence_files": [
@@ -2170,5 +2230,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-022 bank APIs, reveal/session, rotation/reindex and UI with server, real-MySQL and Playwright coverage, then obtain independent review."
+  "next_safe_action": "Implement TASK-023 attachment schema, encrypted private storage pipeline and bounded finalize recovery with signature/scan/path/hash fault-injection coverage, then obtain independent review."
 }
