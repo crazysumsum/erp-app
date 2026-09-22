@@ -609,3 +609,110 @@ integrationTest("the Bank routes answer over real HTTP, and the masked list leak
   );
   assert.equal(audits.length, 1, "a reveal over HTTP leaves exactly one audit row");
 });
+
+/**
+ * 跨 Supplier 擁有權 —— 呢條 invariant 係本模組後果最大嗰條，而佢一直**冇嘢釘住**。
+ *
+ * REV-043 L-1：把 `#rowForUpdate` 嘅 `AND supplier_id = ?` 拆走，339 條 supplier 測試
+ * 全綠。而喺嗰個 mutation 之下，`reveal` 會經一條借返嚟嘅 route 回**另一個 Supplier
+ * 嘅解密帳號** —— 因為 AAD 係用 `row.supplier_id`（行自己個擁有者）砌嘅，唔係用
+ * caller 聲稱嗰個，所以 AAD 攔唔到佢。即係話呢個 `WHERE` 謂詞就係**唯一**防線。
+ *
+ * 所以呢條測試唔係「試下 404」。佢逐條路徑打：`reveal` 有佢自己嗰句 query，三條寫入
+ * route 共用 `#rowForUpdate`，`list` 又係另一句。四個地方分開拆走個謂詞都要有嘢紅。
+ *
+ * 而且唔淨止斷言拒絕 —— 仲要斷言**受害人嗰行冇被郁過**同**冇明文出過嚟**，因為一個
+ * 「拒絕咗但順手改咗 version」嘅實作一樣係壞嘅。
+ *
+ * ## 四個謂詞，三個殺得到
+ *
+ * 逐個拆走再跑：`reveal` 自己嗰句、`#rowForUpdate`、`list` —— 三個都紅。
+ *
+ * 第四個 `#project` **殺唔到，而佢係一個 equivalent mutant，唔係一個 coverage 窿**。
+ * 佢四個 caller 入面，`create` 嗰個用啱啱 INSERT 咗（帶住 `input.supplierId`）嘅
+ * `insertId`，另外三個（update／setDefault／deactivate）全部喺 `#rowForUpdate` 已經
+ * 攔咗之後先行到。即係話喺**任何到得到嘅路徑**上面，個 id 早就驗過屬於嗰個 Supplier，
+ * 所以 `#project` 個謂詞係冗餘嘅縱深防禦 —— 拆咗佢，行為一模一樣。
+ *
+ * 唔為佢砌一條測試：要砌就要直接叫一個 private method，或者砌一個到唔到嘅狀態，
+ * 而咁樣嘅測試釘住嘅係實作形狀，唔係行為。記低咗，唔係扮咗。
+ */
+integrationTest("no Bank route reaches another Supplier's row, and the refusal changes nothing", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let victimId = null;
+  let attackerId = null;
+  t.after(async () => { await cleanup(connection, [victimId, attackerId]); await connection.end(); });
+
+  const victim = await seedSupplier(connection, randomUUID().slice(0, 8));
+  victimId = victim.supplierId;
+  const attacker = await seedSupplier(connection, randomUUID().slice(0, 8));
+  attackerId = attacker.supplierId;
+
+  const service = serviceOn(connection, { crypto: buildCrypto(), realAudit: true });
+  const owned = await service.create({
+    ...actor, ...details, supplierId: victimId, accountNumber: SECRET,
+    isDefault: true, reason: "整合測試建立受害者帳戶"
+  });
+  // 攻擊者自己都有一行，咁 list 嗰條斷言先有意義 —— 一個空清單自動「唔含」受害者。
+  await service.create({
+    ...actor, ...details, supplierId: attackerId, accountNumber: `88${SECRET.slice(2)}`,
+    reason: "整合測試建立攻擊者自己嘅帳戶"
+  });
+
+  const [[before]] = await connection.query(
+    "SELECT supplier_id, version, status, is_default, account_ciphertext FROM supplier_bank_accounts WHERE id = ?",
+    [owned.id]
+  );
+
+  const notFound = (error) => error.statusCode === 404 && error.publicCode === "SUPPLIER_BANK_NOT_FOUND";
+  const borrowed = { ...actor, supplierId: attackerId, bankAccountId: owned.id };
+
+  // reveal：自己一句 query。呢條係四條入面唯一一條，過咗就直接見到明文。
+  await assert.rejects(
+    () => service.reveal({ ...borrowed, reason: "借另一個 Supplier 嘅 route 查看" }),
+    notFound,
+    "reveal must not read a row it does not own"
+  );
+  // update / setDefault / deactivate：共用 #rowForUpdate。
+  await assert.rejects(
+    () => service.update({ ...borrowed, ...details, version: before.version, reason: "借另一個 Supplier 嘅 route 修改" }),
+    notFound,
+    "update must not reach a row it does not own"
+  );
+  await assert.rejects(
+    () => service.setDefault({ ...borrowed, version: before.version, reason: "借另一個 Supplier 嘅 route 設預設" }),
+    notFound,
+    "setDefault must not reach a row it does not own"
+  );
+  await assert.rejects(
+    () => service.deactivate({ ...borrowed, version: before.version, reason: "借另一個 Supplier 嘅 route 停用" }),
+    notFound,
+    "deactivate must not reach a row it does not own"
+  );
+
+  // list：又係另一句 query，而佢係唯一一條唔會拋錯、只會多回嘢嘅路徑。
+  const listed = await service.list({ ...actor, supplierId: attackerId });
+  assert.equal(listed.items.length, 1, "the attacker sees exactly their own one account");
+  assert.ok(
+    listed.items.every((item) => item.id !== owned.id),
+    "another Supplier's account must not appear in this Supplier's list"
+  );
+
+  // 四次拒絕之後，受害人嗰行要同之前**逐個欄位一樣**。
+  const [[after]] = await connection.query(
+    "SELECT supplier_id, version, status, is_default, account_ciphertext FROM supplier_bank_accounts WHERE id = ?",
+    [owned.id]
+  );
+  assert.deepEqual(
+    { ...after, account_ciphertext: after.account_ciphertext.toString("base64") },
+    { ...before, account_ciphertext: before.account_ciphertext.toString("base64") },
+    "a refused cross-Supplier call must leave the row untouched, version included"
+  );
+
+  // 亦都唔可以留低任何稽核 —— 尤其係一條會令人以為「有人睇過」嘅 reveal 紀錄。
+  const [audits] = await connection.query(
+    "SELECT action FROM supplier_audit_logs WHERE supplier_id IN (?, ?) AND action = 'supplier.bank.reveal'",
+    [victimId, attackerId]
+  );
+  assert.equal(audits.length, 0, "a refused reveal must not leave a record claiming one happened");
+});

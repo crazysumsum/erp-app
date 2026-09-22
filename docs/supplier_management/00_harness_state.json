@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 187,
+  "revision": 192,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "70344c590aab758acb7446977e3f20759a0783de",
-    "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-034",
-    "default_commit": "71616ec040a7558856083035801554dda940ab5e",
+    "code_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
+    "source_fingerprint": "53ed7a883979b865060f6a6e4dd38c183b9d273f2fb5d0c80086657043d1015a",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-bank-idor",
+    "default_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -2843,6 +2843,39 @@
       "source_ref": "REV-043 L-1, and I reproduced it rather than taking the report's word. Removing the ownership predicate from SupplierBankService.#rowForUpdate - the shared row fetch behind reveal, update, setDefault and deactivate - by rewriting 'WHERE id = ? AND supplier_id = ?' to 'WHERE id = ? AND ? IS NOT NULL' leaves all 339 supplier tests green. With that mutation, reveal returns another Supplier's decrypted account number through a borrowed route. The shipped code is CORRECT: the reviewer drove all four child routes cross-supplier over real HTTP and every one refused with SUPPLIER_BANK_NOT_FOUND, and the new integration test in this branch asserts the 404 on reveal. What is missing is a test that would catch a regression of the predicate itself, on the single highest-consequence invariant in the module. Not introduced or regressed by this branch: SupplierBankService.js is unchanged by it and has been on main since TASK-033, which git diff main...HEAD confirms is empty for that file. Status FAIL records the coverage gap, not a live defect. The fix is roughly 30 lines and 28 ms and belongs against main rather than in this candidate, because adding it here would change the source the APPROVED REV-043 binds.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-22T09:56:31+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-034 merged to main via PR #123 after six independent review rounds",
+      "code_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+      "status": "PASS",
+      "source_ref": "PR #123 merged at 2026-09-22T02:06:01Z, merge commit 333fc41b166e5b07fa8e75bafcc7143f437f9b85, candidate 457eb1974a8785b997e78dbe5d6e722d888e6b71. Required CI green on that exact head: run 35677661604, four checks, one run, no reruns. REV-043 APPROVED the candidate at b9a6610661c7f409f5eeda940ffeae8587f52aa6; the commit merged is one commit later and is docs-only, with the non-docs diff against b9a6610 empty and the source fingerprint identical at b13f672c, so the source REV-043 approved and the source merged are byte for byte the same. Worth recording about the process rather than the outcome: six rounds were needed, and four of them found a defect introduced by the previous round's remediation. Three of those were mine, and all three were the same mistake - treating 'I understand what the reviewer said' as 'I verified the mechanism it rests on'. Branch claude/supplier-task-034 and its worktree were removed after the merge.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T10:14:42+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-CANDIDATE closed: cross-Supplier ownership is now pinned on three of four predicates, the fourth stated as equivalent",
+      "code_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "53ed7a883979b865060f6a6e4dd38c183b9d273f2fb5d0c80086657043d1015a",
+      "status": "PASS",
+      "source_ref": "Closes the gap REV-043 L-1 found and I reproduced: removing the ownership predicate from SupplierBankService left all 339 supplier tests green while reveal would return another Supplier's decrypted account number through a borrowed route. The new integration test drives reveal, update, setDefault and deactivate cross-Supplier, asserts each refuses with SUPPLIER_BANK_NOT_FOUND, asserts the attacker's list contains only their own row, and then asserts the victim's row is field-for-field identical afterwards including version and ciphertext, and that no supplier.bank.reveal audit row exists for either party - because an implementation that refuses but still bumps a version is also broken. Verified by mutation on all four places the predicate appears, run one at a time with the service restored between each: reveal's own query KILLED, #rowForUpdate KILLED, list KILLED, #project SURVIVED. #project is an equivalent mutant rather than a coverage gap and this was established by reading every caller, not assumed: its four callers are create, which passes the insertId of a row just written with input.supplierId, and update/setDefault/deactivate, all three of which run only after #rowForUpdate has already refused. On every reachable path the id is already known to belong to that Supplier, so the predicate is redundant defence-in-depth and removing it changes no behaviour. No test was written for it: reaching it would mean calling a private method or constructing an unreachable state, and such a test pins implementation shape rather than behaviour. Recorded rather than faked. The service itself was not modified by this change - it has been on main since TASK-033 - and git status was clean before and after every mutation.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T10:14:50+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "IDOR regression branch evidence: 395/395 server, four suites green, no key material",
+      "code_commit": "333fc41b166e5b07fa8e75bafcc7143f437f9b85",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "53ed7a883979b865060f6a6e4dd38c183b9d273f2fb5d0c80086657043d1015a",
+      "status": "PASS",
+      "source_ref": "supplier-phase-001-server 395/395 - one more than the merged TASK-034 count, the new cross-Supplier ownership test - plus supplier-phase-001-client 71/71, lint and client-build green, all binding db5296 and the current fingerprint. Swept for key material with the four directories named explicitly and the exit status read rather than the output count: grep exit 1 for both literal test keys and exit 1 for any 43-character base64 run followed by '='.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T10:15:43+08:00"
     }
   ],
   "pending_decisions": [
@@ -3817,7 +3850,11 @@
     "evidence/20260922T012844-5be061f2d852/run.json",
     "evidence/20260922T012848-f585ff545ff9/run.json",
     "evidence/20260922T012851-d9eafd790e89/run.json",
-    "evidence/20260922T012854-50fa1af9858f/run.json"
+    "evidence/20260922T012854-50fa1af9858f/run.json",
+    "evidence/20260922T021507-870e7179b369/run.json",
+    "evidence/20260922T021511-0c2033126cc3/run.json",
+    "evidence/20260922T021515-0a3c8c19bf45/run.json",
+    "evidence/20260922T021519-cff36cb34b19/run.json"
   ],
   "defects": [
     {
@@ -4117,5 +4154,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-034 is implemented on claude/supplier-task-034 and REV-039's nine findings are all remediated. The six Bank routes from design 6.6 exist, so the Bank capability is deployed and the two key rings are an unconditional startup requirement; that fail-closed behaviour was verified by removing the variables and watching the application refuse to start. Two things a reader should not have to re-derive. First, the DESIGN baseline is e4083319 and stays there: declaring .github/workflows/ci.yml in the manifest moved it, which silently invalidated all 38 reviews including the REV-038 that gated the TASK-033 merge, and the Product Owner chose to revert that declaration. The price is that the boundary validator reports OUTSIDE_MODULE for ci.yml, a local path-consistency finding on a file HD-030 already approved; APPROVAL-HD-030-SCOPE-REBIND records that trade. Second, two acceptance deviations are recorded as FAIL observations on purpose, not as defects: DEV-T34-CACHE-PRIVATE (the reveal route cannot deliver Cache-Control: private because the framework overwrites it after the handler, and no-store is strictly stronger) and DEV-T34-EXPIRES-IN (design 6.6's expiresInSeconds is not implemented because no server-side state corresponds to it). The PLAN baseline is ba636440 after the profile edits HD-031 authorised; 83 observations, 6 approvals and 78 earlier evidence runs are bound to older hashes, their content still holds, and none was rewritten. Still required before this can be called done: required CI green on the exact merge candidate, and an actual independent re-review (REV-040) of the remediation. Worth that reviewer's attention: whether removing the Cache-Control setHeader is the right reading of 'record the deviation', and whether the assert.equal on the wire header is a test that will age well. Not covered at the HTTP layer and stated rather than hidden: AC-025 and AC-026, because DEVICE_SIGNATURE_REQUIRED refuses a partially-permissioned caller before authorization runs, so reaching them needs a device-bound client, which is TASK-035. Still open in PHASE-003: the Bank UI (T35), the two rotation scripts from design 2.6, T36 and T37. Carried from REV-034 and REV-038: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, the knowingly unkilled commit-failure mutation, and the recommendation to rebuild the integration double on a real MySqlDatabaseService."
+  "next_safe_action": "TASK-034 is merged to main (PR #123, merge commit 333fc41) and PHASE-003's Bank API is deployed. The six Bank routes exist, so the Bank capability is live and the two key rings are an unconditional startup requirement; that fail-closed behaviour was verified by removing the variables and watching the application refuse to start. REV-043 APPROVED the candidate after five CHANGES_REQUESTED rounds. Things a reader should not have to re-derive. The DESIGN baseline is e4083319 and stays there: declaring .github/workflows/ci.yml in the manifest moved it and silently invalidated all 38 reviews including the REV-038 that gated the TASK-033 merge, so HD-032 reverted that declaration; the price is a permanent OUTSIDE_MODULE finding on ci.yml that must be triaged by hand from here on, recorded in APPROVAL-HD-030-SCOPE-REBIND-2. Two acceptance deviations are recorded as FAIL observations on purpose and are not defects: DEV-T34-CACHE-PRIVATE (the reveal route cannot deliver Cache-Control: private because the framework overwrites it after the handler, and no-store is strictly stronger) and DEV-T34-EXPIRES-IN (design 6.6's expiresInSeconds is not implemented because no server-side state corresponds to it). Open work in PHASE-003: TASK-035 (Bank UI), the two rotation scripts from design 2.6, TASK-036 and TASK-037. Known gaps stated rather than hidden: AC-025 and AC-026 have no HTTP-layer test because DEVICE_SIGNATURE_REQUIRED refuses a partially-permissioned caller before authorization runs, so reaching them needs a device-bound client and that is TASK-035; and REV-043 L-2, that command()'s body-spread ordering is unpinned. Carried from REV-034 and REV-038: the untested trigger check, VIRTUAL accepted where the design says STORED, CHECK constraints unread, the knowingly unkilled commit-failure mutation, and the recommendation to rebuild the integration double on a real MySqlDatabaseService. Two items belong against main rather than any supplier task, from REV-043 N-1: two observations bind a padded abbreviation e6ef4830 followed by 32 zeros that resolves to no commit, introduced by 087b268."
 }
