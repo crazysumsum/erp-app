@@ -10,6 +10,7 @@ import {
 
 test("Customer classification catalog routes have fixed catalog enums, closed schemas and high-risk writes", () => {
   const handlers = [ListCustomerCatalogHandler, CreateCustomerCatalogHandler, UpdateCustomerCatalogHandler, DeactivateCustomerCatalogHandler];
+  for (const Handler of handlers) assert.match(Handler.api.description, /endpoint\.$/);
   for (const Handler of handlers.slice(1)) {
     assert.deepEqual(Handler.api.authorizationPolicies[0].options.permissions, ["customer.view", "customer.settings"]);
     for (const schema of Object.values(Handler.api.requestSchema)) assert.equal(schema.additionalProperties, false);

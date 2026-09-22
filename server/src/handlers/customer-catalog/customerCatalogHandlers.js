@@ -40,3 +40,7 @@ export class DeactivateCustomerCatalogHandler extends CustomerCatalogHandler {
   static api = { method: "POST", path: "/api/v1/customer-catalog/:catalog/:id/deactivate", authType: "jwt-device-password", authorizationPolicies: [CUSTOMER_ROUTE_POLICIES.settings], requestSchema: { params: CATALOG_ID_PARAMS, query: EMPTY_OBJECT_SCHEMA, body: CATALOG_DEACTIVATE }, responseSchema: { 200: CATALOG_ITEM } };
   async execute(req) { return this.response(await this.catalogs.deactivate(req.input.params.catalog, { ...actorContext(req), ...req.input.body, id: Number(req.input.params.id), requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || "" })); }
 }
+
+for (const Handler of [ListCustomerCatalogHandler, CreateCustomerCatalogHandler, UpdateCustomerCatalogHandler, DeactivateCustomerCatalogHandler]) {
+  Handler.api.description = `${Handler.handlerName} endpoint.`;
+}

@@ -64,6 +64,19 @@ test("@technical list keeps the query in the URL and opens a customer detail", a
   expect(problems).toEqual([]);
 });
 
+test("@technical core customer actions remain reachable at approved viewport widths", async ({ page }) => {
+  const problems = collectConsole(page);
+  await installApi(page);
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/customers");
+    await expect(page.getByRole("heading", { name: "客戶" })).toBeInViewport();
+    await expect(page.getByRole("link", { name: "新增客戶" })).toBeInViewport();
+    await expect(page.getByRole("link", { name: "查看 CUS-007 詳情" })).toBeVisible();
+  }
+  expect(problems).toEqual([]);
+});
+
 test("@technical a manager creates a Draft through the visible form", async ({ page }) => {
   const problems = collectConsole(page); const calls = await installApi(page);
   await page.goto("/customers/new");
