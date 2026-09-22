@@ -1,9 +1,10 @@
 import { randomBytes } from "node:crypto";
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { defineConfig, devices } from "@playwright/test";
 
-const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || "/private/tmp/item-management-playwright");
+const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || path.join(os.tmpdir(), "item-management-playwright"));
 const resultPath = path.resolve(
   process.cwd(),
   process.env.HARNESS_RESULT_PATH || `${runDirectory}/item-uat-browser.xml`

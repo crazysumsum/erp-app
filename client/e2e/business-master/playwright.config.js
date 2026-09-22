@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -16,7 +17,7 @@ const isUatOnly = process.argv.includes("uat");
  * Harness runner 照舊用 HARNESS_RUN_DIR / HARNESS_RESULT_PATH 覆寫去自己個
  * evidence 目錄，行為冇變。
  */
-const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || "/private/tmp/business-master-playwright");
+const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || path.join(os.tmpdir(), "business-master-playwright"));
 const reportOutput = process.env.HARNESS_RESULT_PATH
   || path.join(runDirectory, isUatOnly ? "business-master-uat-browser.xml" : "business-master-browser.xml");
 
