@@ -436,6 +436,29 @@ test("assignPermissions denies an actor granting a permission they do not hold",
   assert.equal(database.state.rolePermissions.has(`${STAFF.id}:101`), false);
 });
 
+test("assignPermissions lets a fresh protected admin delegate Customer bank permissions without receiving them", async () => {
+  const database = seedWithAdmin({
+    permissions: [
+      { id: 100, name: "user.mgmt", description: "" },
+      { id: 101, name: "role.mgmt", description: "" },
+      { id: 102, name: "device.mgmt", description: "" },
+      { id: 103, name: "customer.bank.view", description: "" }
+    ]
+  });
+  const { service } = createService({ database });
+
+  await service.assignPermissions({
+    ...ADMIN_ACTOR,
+    id: STAFF.id,
+    permissionIds: [103],
+    expectedPermissionIds: [],
+    reason: "委派銀行資料查閱職責"
+  });
+
+  assert.ok(database.state.rolePermissions.has(`${STAFF.id}:103`));
+  assert.equal(ADMIN_ACTOR.claimedPermissions.includes("customer.bank.view"), false);
+});
+
 test("assignPermissions refuses to touch system-admin's permissions", async () => {
   const database = seedWithAdmin();
   const { service } = createService({ database });

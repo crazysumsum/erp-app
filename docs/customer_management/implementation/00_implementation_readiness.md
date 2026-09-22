@@ -401,3 +401,23 @@ This is developer evidence only, not Technical Acceptance, UAT or a release clai
 - CI is intentionally not run under the Product Owner's explicit publication
   direction and accepted risk. Exact-candidate local checks and independent review
   remain required before merge.
+
+## TASK-020 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added the approved narrow delegation exception: only an actor whose fresh database
+  roles include protected `system-admin` may delegate `customer.bank.view` or
+  `customer.bank.mgmt` without holding those route permissions. Every unrelated
+  unheld permission remains `PERMISSION_ESCALATION_DENIED`.
+- Role-permission, user-role and initial-user role assignment all pass the fresh
+  database role set into the shared guard. Existing `jwt-device-password`, required
+  reason, audit transaction and compare-and-set behavior remain the enforcement for
+  approved device, current password, auditability and replay rejection.
+- Focused authorization and service tests passed 73/73 and repository ESLint passed.
+  A fresh isolated MySQL schema migrated through `0048`, the real role/user HTTP
+  suites passed 16/16 including the protected delegation and replay scenario, the
+  complete migration rerun was a no-op, and final schema absence was confirmed.
+- The delegating administrator remained absent from the Customer bank permission
+  assignment, so delegation does not grant route access. CI was not run under the
+  Product Owner's standing direction and accepted risk.

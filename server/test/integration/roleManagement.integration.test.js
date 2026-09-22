@@ -274,6 +274,92 @@ test("an actor holding only role.mgmt cannot grant a role the user.mgmt permissi
   assert.equal(held.c, 0, "the escalation must not have taken effect");
 });
 
+test("protected admin delegates Customer bank access through role and user paths without receiving it", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const issueToken = tokenIssuer(application);
+  const password = "Integration-Test-Pass-20!";
+  const adminRoleId = await systemAdminRoleId(db);
+  const actor = await seedUser(db, {
+    username: `it-protected-${randomUUID().slice(0, 8)}`,
+    password,
+    roleId: adminRoleId
+  });
+  const target = await seedUser(db, {
+    username: `it-bank-target-${randomUUID().slice(0, 8)}`,
+    password
+  });
+  const bankRole = await seedRole(db);
+  const device = await createTestDevice();
+  await seedApprovedDevice(db, { userId: actor.userId, device });
+
+  t.after(async () => {
+    await cleanupUser(db, target.userId);
+    await cleanupUser(db, actor.userId);
+    await bankRole.cleanup();
+    await application.shutdown("integration_test_complete");
+  });
+
+  const { url } = await application.start();
+  const token = await issueToken(actor.userId, {
+    roles: ["system-admin"],
+    permissions: ADMIN_PERMISSIONS,
+    did: device.deviceId
+  });
+  const bankPermissionId = await permissionId(db, "customer.bank.view");
+
+  const rolePath = `/api/v1/roles/${bankRole.roleId}/permissions/assign`;
+  const roleResponse = await fetch(
+    `${url}${rolePath}`,
+    await signedAuthed(device, token, {
+      path: rolePath,
+      body: {
+        permissionIds: [bankPermissionId],
+        expectedPermissionIds: [],
+        reason: "委派客戶銀行資料查閱職責",
+        password
+      }
+    })
+  );
+  assert.equal(roleResponse.status, 200, JSON.stringify(await roleResponse.json()));
+
+  const userPath = `/api/v1/users/${target.userId}/roles/assign`;
+  const userResponse = await fetch(
+    `${url}${userPath}`,
+    await signedAuthed(device, token, {
+      path: userPath,
+      body: {
+        roleIds: [bankRole.roleId],
+        expectedRoleIds: [],
+        reason: "委派客戶銀行資料查閱職責",
+        password
+      }
+    })
+  );
+  assert.equal(userResponse.status, 200, JSON.stringify(await userResponse.json()));
+
+  const replay = await fetch(
+    `${url}${userPath}`,
+    await signedAuthed(device, token, {
+      path: userPath,
+      body: {
+        roleIds: [bankRole.roleId],
+        expectedRoleIds: [],
+        reason: "重播舊的角色指派",
+        password
+      }
+    })
+  );
+  assert.equal(replay.status, 409);
+  assert.equal((await replay.json()).error.code, "ASSIGNMENT_STALE");
+
+  const [[adminBank]] = await db.query(
+    "SELECT 1 AS held FROM role_permissions WHERE role_id = ? AND permission_id = ?",
+    [adminRoleId, bankPermissionId]
+  );
+  assert.equal(adminBank, undefined, "delegation must not grant route access to the admin");
+});
+
 test("assigning permissions with a stale expected set returns ASSIGNMENT_STALE", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");

@@ -104,6 +104,40 @@ test("assertNoPermissionEscalation denies self-assigning system-admin with only 
   assert.deepEqual(error.details.permissions.sort(), ["device.mgmt", "role.mgmt"]);
 });
 
+test("protected system-admin may delegate only Customer bank permissions it does not hold", () => {
+  assert.doesNotThrow(() =>
+    assertNoPermissionEscalation({
+      actorRoles: ["system-admin"],
+      actorPermissions: ["role.mgmt"],
+      grantedPermissions: ["customer.bank.view", "customer.bank.mgmt"]
+    })
+  );
+});
+
+test("ordinary admin may not delegate Customer bank permissions it does not hold", () => {
+  assert.equal(
+    code(() =>
+      assertNoPermissionEscalation({
+        actorRoles: ["security-admin"],
+        actorPermissions: ["role.mgmt"],
+        grantedPermissions: ["customer.bank.view"]
+      })
+    ),
+    "PERMISSION_ESCALATION_DENIED"
+  );
+});
+
+test("protected system-admin exception does not cover unrelated permissions", () => {
+  const error = captureError(() =>
+    assertNoPermissionEscalation({
+      actorRoles: ["system-admin"],
+      actorPermissions: ["role.mgmt"],
+      grantedPermissions: ["customer.bank.view", "supplier.bank.view"]
+    })
+  );
+  assert.deepEqual(error.details.permissions, ["supplier.bank.view"]);
+});
+
 test("assertNoPermissionEscalation allows system-admin to grant anything", () => {
   assert.doesNotThrow(() =>
     assertNoPermissionEscalation({

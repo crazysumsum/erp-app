@@ -223,7 +223,11 @@ export class UserAdminService {
       const roles = await this.#rolesByIds(connection, roleIds);
       const nextPermissionNames = await this.#permissionNamesForRoleIds(connection, roleIds);
       const granted = newlyGrantedPermissions([], nextPermissionNames);
-      assertNoPermissionEscalation({ actorPermissions: actor.permissions, grantedPermissions: granted });
+      assertNoPermissionEscalation({
+        actorRoles: actor.roles,
+        actorPermissions: actor.permissions,
+        grantedPermissions: granted
+      });
 
       const passwordHash = await hashPassword(normalizedPassword);
       const nowMs = this.time.nowMs();
@@ -502,7 +506,11 @@ export class UserAdminService {
       );
       const nextPermissionNames = await this.#permissionNamesForRoleIds(connection, roleIds);
       const granted = newlyGrantedPermissions(currentPermissionNames, nextPermissionNames);
-      assertNoPermissionEscalation({ actorPermissions: actor.permissions, grantedPermissions: granted });
+      assertNoPermissionEscalation({
+        actorRoles: actor.roles,
+        actorPermissions: actor.permissions,
+        grantedPermissions: granted
+      });
 
       const otherActiveAdminCount = await this.#otherActiveAdminCount(connection, id);
       assertLastActiveAdminPreserved({ currentRoleNames, nextRoleNames, otherActiveAdminCount });

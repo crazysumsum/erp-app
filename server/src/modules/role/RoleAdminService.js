@@ -256,7 +256,11 @@ export class RoleAdminService {
       const currentPermissionNames = await this.#permissionNamesByIds(connection, currentPermissionIds);
 
       const granted = newlyGrantedPermissions(currentPermissionNames, nextPermissionNames);
-      assertNoPermissionEscalation({ actorPermissions: actor.permissions, grantedPermissions: granted });
+      assertNoPermissionEscalation({
+        actorRoles: actor.roles,
+        actorPermissions: actor.permissions,
+        grantedPermissions: granted
+      });
 
       await connection.execute("DELETE FROM role_permissions WHERE role_id = ?", [id]);
       for (const permissionId of permissionIds) {
