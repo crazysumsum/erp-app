@@ -268,3 +268,48 @@ response。結論見下面 L-4。
 `reviews` 度更正一個被錯置嘅 baseline，一邊喺隔籬 `observations` 度用另一個形式再犯一次，
 同一個 commit，同兩條 review。走勢係 2H/3M/4L → 1H/2M/5L → 0H/1M/4L → 0H/1M/4L，
 High 已經清咗兩輪，但係「記錄嘅形狀」呢一類仲未收斂。
+
+## 12. REV-043 — APPROVED
+
+REV-043（`agent-skills:security-auditor`，獨立，非作者）喺 merge candidate `b9a6610` 上
+**APPROVED**：0 Critical、0 High、0 Medium、2 Low、4 Info。**冇嘢擋住。**
+
+呢個係 T34 第一條 APPROVED review，亦都係六輪入面第一輪**冇揾到上一輪 remediation
+自己整出嚟嘅嘢** —— 佢係按指示第一件事就去揾嗰個 pattern 嘅，而且唔係讀 text diff，
+係**逐條記錄對**兩個 ledger：delta 啱啱好係四個就地修改加三個 append，每一個都對應
+REV-042 一條 finding，`approvals`／`defects`／`external_actions` 一律冇郁。
+
+五條 remediation 佢全部獨立驗過：喺**八個** detached worktree 重算 baseline 同
+fingerprint；用 `sha256` 對 `HD-032` 還原咗嘅 `question` 同佢喺 `80bbb95` 嗰陣嘅文字，
+byte 對 byte 一樣；用佢自己嗰個 cycle guard 行勻每個 schema export 每一層，零個未凍；
+直接喺 `ResponseValidator` 度量註冊後放寬個 schema 係咪真係冇作用。CI `35675946352`
+佢自己核過：`headSha` 等於候選、success、`attempt: 1`、一個 run、四個 check 綠。
+
+### 兩條 Low，兩條都係本身就有，都唔擋住
+
+**L-1 —— 跨 Supplier 擁有權係啱嘅，但冇嘢釘住佢。** 我親手重現過，冇淨係信份報告：
+把 `SupplierBankService.#rowForUpdate`（reveal／update／setDefault／deactivate 共用嗰個
+取行）嘅 `WHERE id = ? AND supplier_id = ?` 改成 `WHERE id = ? AND ? IS NOT NULL`，
+**339 條 supplier 測試全綠**。而喺嗰個 mutation 之下，reveal 會經一條借返嚟嘅 route
+回另一個 Supplier 嘅解密帳號。
+
+**出貨嗰份 code 係啱嘅** —— reviewer 四條 child route 全部跨 Supplier 行過，每一條都
+`SUPPLIER_BANK_NOT_FOUND`，而本分支條新整合測試亦都斷言咗 reveal 嗰個 404。缺嘅係一條
+**擋 regression** 嘅測試，而佢守嘅係本模組最高後果嗰條 invariant。
+
+**唔係本分支整出嚟或者搞衰咗嘅**：`SupplierBankService.js` 本分支冇郁過，
+`git diff main...HEAD` 對佢係空，佢由 TASK-033 開始已經喺 `main`。修法大約 30 行、28ms，
+而佢**應該落喺 `main`，唔係落喺呢個候選** —— 因為改咗就會換走 APPROVED 嗰條 REV-043
+綁住嘅 source。記低咗做 `DEF-CANDIDATE`。
+
+**L-2 —— `command()` 個 body spread 次序冇釘住。** 掉轉返轉頭，25/25 照綠。主防線
+（`additionalProperties: false`）本身有測試而且分辨得到，所以要兩個獨立 regression 先出事;
+但個註解明明寫住唔應該靠另一個檔案。
+
+### Info 入面兩件要記住嘅
+
+- **N-1**：兩條 observation 綁住 `e6ef4830…` 加 32 個零 —— 一個補零補到解唔返嘅縮寫。
+  由 `087b268` 帶入，已經喺 `main`，永久 inert。應該開 ticket 打 `main`，唔係打呢個 PR。
+- **N-4**：REV-042 為個 `PR_REVIEW` convention 畀嘅**理由**其實推廣唔到 —— 之前三條之所以
+  喺自己 commit 上自洽，係因為 `fingerprint()` 唔計 `docs_path` 而嗰幾個 commit 淨係改 docs。
+  佢個**結論**啱，佢個**檢驗**唔啱。REV-043 特登寫低，等第七輪唔好又「揾到」呢三條當係缺陷。

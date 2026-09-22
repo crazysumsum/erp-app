@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 186,
+  "revision": 187,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -61,7 +61,7 @@
     "TASK-031": "DONE",
     "TASK-032": "DONE",
     "TASK-033": "DONE",
-    "TASK-034": "IN_PROGRESS",
+    "TASK-034": "DONE",
     "TASK-035": "PENDING",
     "TASK-036": "PENDING",
     "TASK-037": "PENDING",
@@ -1352,6 +1352,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/42_rev_042_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-043",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-034 REV-042 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing b9a6610661c7f409f5eeda940ffeae8587f52aa6",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/43_rev_043_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -2809,6 +2821,28 @@
       "source_ref": "supplier-phase-001-server 394/394, supplier-phase-001-client 71/71, lint and client-build green, all four binding db5296, the current source fingerprint and code_commit 70344c5. Swept for key material with the four directories named explicitly and the exit status read rather than the output count: grep exit 1 for both literal test keys and exit 1 for any 43-character base64 run followed by '='. Control confirms both searches find a key planted in a scratch file.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-042",
       "observed_at": "2026-09-22T09:29:17+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-043 APPROVED 0 High / 0 Medium / 2 Low / 4 Info at b9a6610",
+      "code_commit": "b9a6610661c7f409f5eeda940ffeae8587f52aa6",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+      "status": "PASS",
+      "source_ref": "Review performed by agent-skills:security-auditor, independent of the author, against b9a6610661c7f409f5eeda940ffeae8587f52aa6, the merge candidate. Report at docs/supplier_management/implementation/43_rev_043_independent_review.md. APPROVED: 0 Critical, 0 High, 0 Medium, 2 Low, 4 Info, nothing blocking. The first APPROVED review TASK-034 has had, and the first round in six that did not find a defect introduced by the previous round's remediation - the reviewer looked for that pattern first, at the Product Owner's instruction, and compared the two ledgers record by record rather than by text: the delta is exactly four in-place edits and three appends, each one the subject of a REV-042 finding, with approvals, defects and external_actions untouched. All five REV-042 remediations verified independently, including recomputing baselines and fingerprints in eight detached worktrees, a byte-exact sha256 comparison of HD-032's restored question against its text at 80bbb95, an independent walk of every exported schema node with the reviewer's own cycle guard, and measuring post-registration schema widening at ResponseValidator directly. CI run 35675946352 verified: headSha equals the candidate, success, attempt 1, one run for the commit, four checks green.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T09:56:31+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEF-CANDIDATE: cross-supplier ownership on the Bank child routes is correct but pinned by nothing",
+      "code_commit": "b9a6610661c7f409f5eeda940ffeae8587f52aa6",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "b13f672cc0ee42a433207e13518879bc6b189d98dc388a343c8818db751ee246",
+      "status": "FAIL",
+      "source_ref": "REV-043 L-1, and I reproduced it rather than taking the report's word. Removing the ownership predicate from SupplierBankService.#rowForUpdate - the shared row fetch behind reveal, update, setDefault and deactivate - by rewriting 'WHERE id = ? AND supplier_id = ?' to 'WHERE id = ? AND ? IS NOT NULL' leaves all 339 supplier tests green. With that mutation, reveal returns another Supplier's decrypted account number through a borrowed route. The shipped code is CORRECT: the reviewer drove all four child routes cross-supplier over real HTTP and every one refused with SUPPLIER_BANK_NOT_FOUND, and the new integration test in this branch asserts the 404 on reveal. What is missing is a test that would catch a regression of the predicate itself, on the single highest-consequence invariant in the module. Not introduced or regressed by this branch: SupplierBankService.js is unchanged by it and has been on main since TASK-033, which git diff main...HEAD confirms is empty for that file. Status FAIL records the coverage gap, not a live defect. The fix is roughly 30 lines and 28 ms and belongs against main rather than in this candidate, because adding it here would change the source the APPROVED REV-043 binds.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T09:56:31+08:00"
     }
   ],
   "pending_decisions": [
