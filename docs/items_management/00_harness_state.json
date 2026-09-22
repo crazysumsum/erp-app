@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "item-management",
-  "revision": 78,
+  "revision": 79,
   "mode": "TEST_AND_VERIFY",
   "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
@@ -1429,6 +1429,38 @@
       "idempotency_key": "item-uat-acceptance-cleanup-20260922",
       "status": "CONFIRMED",
       "source_ref": "Observed after acceptance: schema count 0, IS_FREE_LOCK=1, dedicated schema grant absent, exact storage root removed, ports 3000/4173 unused and erp_dev acceptance-marker counts all zero."
+    },
+    {
+      "id": "PUSH-89",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/item-management-uat-closeout",
+      "idempotency_key": "item-uat-closeout-push-20260922",
+      "status": "PLANNED",
+      "source_ref": "ERP Product Owner Sam explicitly requested push, PR creation, merge to main and Item branch/worktree cleanup in the active Codex task."
+    },
+    {
+      "id": "PR-CREATE-90",
+      "kind": "PR_CREATE",
+      "target": "codex/item-management-uat-closeout -> main",
+      "idempotency_key": "item-uat-closeout-pr-20260922",
+      "status": "PLANNED",
+      "source_ref": "ERP Product Owner Sam explicitly requested push, PR creation, merge to main and Item branch/worktree cleanup in the active Codex task."
+    },
+    {
+      "id": "PR-MERGE-91",
+      "kind": "PR_MERGE",
+      "target": "Item Management UAT closeout PR -> main",
+      "idempotency_key": "item-uat-closeout-merge-20260922",
+      "status": "PLANNED",
+      "source_ref": "Merge only after the actual GitHub candidate satisfies required checks and review policy."
+    },
+    {
+      "id": "BRANCH-CLEANUP-92",
+      "kind": "GIT_CLEANUP",
+      "target": "Item Management UAT worktree and local/remote topic branches",
+      "idempotency_key": "item-uat-closeout-git-cleanup-20260922",
+      "status": "PLANNED",
+      "source_ref": "Cleanup is authorized after the PR is observed merged and the worktree is confirmed clean."
     }
   ],
   "evidence_files": [
@@ -1589,5 +1621,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "UAT-014, UAT-015 and UAT-016 are PASS/accepted with recorded risks. TASK-043 remains the only Item Management dependency-blocked task; do not fabricate a downstream item_skus consumer."
+  "next_safe_action": "Push the reviewed Item UAT evidence branch, create its PR, require the actual candidate checks before merge, then remove only the merged Item worktree and branches. TASK-043 remains dependency-blocked."
 }
