@@ -459,6 +459,32 @@ test("assignPermissions lets a fresh protected admin delegate Customer bank perm
   assert.equal(ADMIN_ACTOR.claimedPermissions.includes("customer.bank.view"), false);
 });
 
+test("assignPermissions refuses the protected exception for a role the admin already holds", async () => {
+  const database = seedWithAdmin({
+    permissions: [
+      { id: 100, name: "user.mgmt", description: "" },
+      { id: 101, name: "role.mgmt", description: "" },
+      { id: 102, name: "device.mgmt", description: "" },
+      { id: 103, name: "customer.bank.view", description: "" }
+    ],
+    userRoles: [[10, SYSTEM_ADMIN.id], [10, STAFF.id]]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    () => service.assignPermissions({
+      actorId: 10,
+      claimedRoles: ["system-admin", "staff"],
+      claimedPermissions: ADMIN_ACTOR.claimedPermissions,
+      id: STAFF.id,
+      permissionIds: [103],
+      expectedPermissionIds: [],
+      reason: "不得藉委派替自己加權"
+    }),
+    { code: "PERMISSION_ESCALATION_DENIED" }
+  );
+});
+
 test("assignPermissions refuses to touch system-admin's permissions", async () => {
   const database = seedWithAdmin();
   const { service } = createService({ database });

@@ -414,10 +414,14 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   database role set into the shared guard. Existing `jwt-device-password`, required
   reason, audit transaction and compare-and-set behavior remain the enforcement for
   approved device, current password, auditability and replay rejection.
-- Focused authorization and service tests passed 73/73 and repository ESLint passed.
+- Focused authorization and service tests passed 76/76 and repository ESLint passed.
   A fresh isolated MySQL schema migrated through `0048`, the real role/user HTTP
   suites passed 16/16 including the protected delegation and replay scenario, the
   complete migration rerun was a no-op, and final schema absence was confirmed.
 - The delegating administrator remained absent from the Customer bank permission
-  assignment, so delegation does not grant route access. CI was not run under the
-  Product Owner's standing direction and accepted risk.
+  assignment. Independent review identified and the implementation then closed both
+  possible self-escalation paths: assigning a bank-bearing role to the acting user,
+  and adding bank permissions to any custom role already held by that user. Both bank
+  permissions and both paths are covered by unit and real-HTTP regression checks, so
+  delegation does not grant route access. CI was not run under the Product Owner's
+  standing direction and accepted risk.

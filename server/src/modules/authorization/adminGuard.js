@@ -78,14 +78,19 @@ export function newlyGrantedPermissions(currentPermissionNames, nextPermissionNa
 export function assertNoPermissionEscalation({
   actorRoles = [],
   actorPermissions,
-  grantedPermissions
+  grantedPermissions,
+  delegationTargetIsActor = false
 }) {
   const actor = new Set(actorPermissions);
   const protectedAdmin = actorRoles.includes(SYSTEM_ADMIN_ROLE);
   const disallowed = grantedPermissions.filter(
     (permission) =>
       !actor.has(permission) &&
-      !(protectedAdmin && PROTECTED_ADMIN_DELEGATABLE_PERMISSIONS.has(permission))
+      !(
+        protectedAdmin &&
+        !delegationTargetIsActor &&
+        PROTECTED_ADMIN_DELEGATABLE_PERMISSIONS.has(permission)
+      )
   );
 
   if (disallowed.length > 0) {

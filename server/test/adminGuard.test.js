@@ -138,6 +138,20 @@ test("protected system-admin exception does not cover unrelated permissions", ()
   assert.deepEqual(error.details.permissions, ["supplier.bank.view"]);
 });
 
+test("protected system-admin may not use the delegation exception on itself", () => {
+  assert.equal(
+    code(() =>
+      assertNoPermissionEscalation({
+        actorRoles: ["system-admin"],
+        actorPermissions: ["role.mgmt"],
+        grantedPermissions: ["customer.bank.view"],
+        delegationTargetIsActor: true
+      })
+    ),
+    "PERMISSION_ESCALATION_DENIED"
+  );
+});
+
 test("assertNoPermissionEscalation allows system-admin to grant anything", () => {
   assert.doesNotThrow(() =>
     assertNoPermissionEscalation({

@@ -290,6 +290,11 @@ test("protected admin delegates Customer bank access through role and user paths
     password
   });
   const bankRole = await seedRole(db);
+  const heldRole = await seedRole(db);
+  await db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [
+    actor.userId,
+    heldRole.roleId
+  ]);
   const device = await createTestDevice();
   await seedApprovedDevice(db, { userId: actor.userId, device });
 
@@ -297,16 +302,36 @@ test("protected admin delegates Customer bank access through role and user paths
     await cleanupUser(db, target.userId);
     await cleanupUser(db, actor.userId);
     await bankRole.cleanup();
+    await heldRole.cleanup();
     await application.shutdown("integration_test_complete");
   });
 
   const { url } = await application.start();
   const token = await issueToken(actor.userId, {
-    roles: ["system-admin"],
+    roles: ["system-admin", heldRole.roleName],
     permissions: ADMIN_PERMISSIONS,
     did: device.deviceId
   });
-  const bankPermissionId = await permissionId(db, "customer.bank.view");
+  const bankPermissionIds = [
+    await permissionId(db, "customer.bank.view"),
+    await permissionId(db, "customer.bank.mgmt")
+  ];
+
+  const heldRolePath = `/api/v1/roles/${heldRole.roleId}/permissions/assign`;
+  const heldRoleResponse = await fetch(
+    `${url}${heldRolePath}`,
+    await signedAuthed(device, token, {
+      path: heldRolePath,
+      body: {
+        permissionIds: bankPermissionIds,
+        expectedPermissionIds: [],
+        reason: "不得藉已持有角色替自己加權",
+        password
+      }
+    })
+  );
+  assert.equal(heldRoleResponse.status, 403);
+  assert.equal((await heldRoleResponse.json()).error.code, "PERMISSION_ESCALATION_DENIED");
 
   const rolePath = `/api/v1/roles/${bankRole.roleId}/permissions/assign`;
   const roleResponse = await fetch(
@@ -314,7 +339,7 @@ test("protected admin delegates Customer bank access through role and user paths
     await signedAuthed(device, token, {
       path: rolePath,
       body: {
-        permissionIds: [bankPermissionId],
+        permissionIds: bankPermissionIds,
         expectedPermissionIds: [],
         reason: "委派客戶銀行資料查閱職責",
         password
@@ -338,6 +363,21 @@ test("protected admin delegates Customer bank access through role and user paths
   );
   assert.equal(userResponse.status, 200, JSON.stringify(await userResponse.json()));
 
+  const selfResponse = await fetch(
+    `${url}/api/v1/users/${actor.userId}/roles/assign`,
+    await signedAuthed(device, token, {
+      path: `/api/v1/users/${actor.userId}/roles/assign`,
+      body: {
+        roleIds: [adminRoleId, heldRole.roleId, bankRole.roleId],
+        expectedRoleIds: [adminRoleId, heldRole.roleId],
+        reason: "不得藉角色指派替自己加權",
+        password
+      }
+    })
+  );
+  assert.equal(selfResponse.status, 403);
+  assert.equal((await selfResponse.json()).error.code, "PERMISSION_ESCALATION_DENIED");
+
   const replay = await fetch(
     `${url}${userPath}`,
     await signedAuthed(device, token, {
@@ -355,7 +395,7 @@ test("protected admin delegates Customer bank access through role and user paths
 
   const [[adminBank]] = await db.query(
     "SELECT 1 AS held FROM role_permissions WHERE role_id = ? AND permission_id = ?",
-    [adminRoleId, bankPermissionId]
+    [adminRoleId, bankPermissionIds[0]]
   );
   assert.equal(adminBank, undefined, "delegation must not grant route access to the admin");
 });

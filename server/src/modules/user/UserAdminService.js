@@ -509,7 +509,8 @@ export class UserAdminService {
       assertNoPermissionEscalation({
         actorRoles: actor.roles,
         actorPermissions: actor.permissions,
-        grantedPermissions: granted
+        grantedPermissions: granted,
+        delegationTargetIsActor: Number(id) === Number(actorId)
       });
 
       const otherActiveAdminCount = await this.#otherActiveAdminCount(connection, id);

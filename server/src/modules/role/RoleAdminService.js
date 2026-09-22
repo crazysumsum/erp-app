@@ -259,7 +259,8 @@ export class RoleAdminService {
       assertNoPermissionEscalation({
         actorRoles: actor.roles,
         actorPermissions: actor.permissions,
-        grantedPermissions: granted
+        grantedPermissions: granted,
+        delegationTargetIsActor: actor.roles.includes(target.name)
       });
 
       await connection.execute("DELETE FROM role_permissions WHERE role_id = ?", [id]);

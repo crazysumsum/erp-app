@@ -458,6 +458,34 @@ test("assignRoles lets a fresh protected admin delegate a Customer bank role wit
   assert.equal(ADMIN_ACTOR.claimedPermissions.includes("customer.bank.view"), false);
 });
 
+test("assignRoles refuses the protected exception when the admin targets themselves", async () => {
+  const bankRole = { id: 3, name: "customer-bank-viewer" };
+  const database = seedWithAdmin({
+    roles: [SYSTEM_ADMIN, STAFF, bankRole],
+    permissions: [
+      { id: 100, name: "user.mgmt" },
+      { id: 101, name: "role.mgmt" },
+      { id: 102, name: "device.mgmt" },
+      { id: 103, name: "customer.bank.view" }
+    ],
+    rolePermissions: [
+      [SYSTEM_ADMIN.id, 100], [SYSTEM_ADMIN.id, 101], [SYSTEM_ADMIN.id, 102], [bankRole.id, 103]
+    ]
+  });
+  const { service } = createService({ database });
+
+  await assert.rejects(
+    () => service.assignRoles({
+      ...ADMIN_ACTOR,
+      id: 10,
+      roleIds: [SYSTEM_ADMIN.id, bankRole.id],
+      expectedRoleIds: [SYSTEM_ADMIN.id],
+      reason: "不得藉委派替自己加權"
+    }),
+    { code: "PERMISSION_ESCALATION_DENIED" }
+  );
+});
+
 test("create writes exactly one audit row on success, and none on failure", async () => {
   const database = seedWithAdmin();
   const { service } = createService({ database });
