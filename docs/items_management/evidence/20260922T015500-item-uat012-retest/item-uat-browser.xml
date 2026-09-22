@@ -1,0 +1,10 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="5.47766">
+<testsuite name="item-management.spec.js" timestamp="2026-09-22T01:49:19.111Z" hostname="" tests="1" failures="0" skipped="0" time="0.208" errors="0">
+<testcase name="Item Management executable UAT › UAT-012 keyboard focus, dirty-state protection, console and network remain usable" classname="item-management.spec.js" time="0.208">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>
