@@ -72,7 +72,12 @@ test("@technical core customer actions remain reachable at approved viewport wid
     await page.goto("/customers");
     await expect(page.getByRole("heading", { name: "客戶" })).toBeInViewport();
     await expect(page.getByRole("link", { name: "新增客戶" })).toBeInViewport();
-    await expect(page.getByRole("link", { name: "查看 CUS-007 詳情" })).toBeVisible();
+    const detailLink = page.getByRole("link", { name: "查看 CUS-007 詳情" });
+    await expect(detailLink).toBeInViewport();
+    if (width === 375) {
+      await detailLink.click();
+      await expect(page.getByRole("heading", { name: "CUS-007 — Evergreen Customer" })).toBeInViewport();
+    }
   }
   expect(problems).toEqual([]);
 });
