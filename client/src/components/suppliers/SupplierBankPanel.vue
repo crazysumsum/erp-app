@@ -155,16 +155,23 @@ async function load() {
 onMounted(load);
 
 /**
- * `supplierId` 變咗就要重攞。`/suppliers/7` 去 `/suppliers/8` 係同一個 route record，
- * Vue Router 會重用呢個 instance，所以 `onMounted` 唔會再行 —— 冇呢個 watcher 嘅話，
- * 7 號嘅遮罩清單會留喺 8 號嘅 URL 底下。
+ * **冇** `watch(props.supplierId)`，而個原因值得寫低。
  *
- * 呢個係 merge `main` 之後先至到得到嘅：PR #127（我自己開嗰個 task）令 detail page
- * 真係會喺換 id 嗰陣重載，而喺嗰之前根本冇任何入口行得到呢條路。兩邊各自啱，夾埋
- * 先出事 —— 同 REV-045 F-H1 同一類，所以 merge 完要當佢係一個新組合去試，唔係當
- * 「兩邊測試都綠就冇事」。
+ * 我 merge `main` 嗰陣加咗一個，因為 `bank.test.js` 度量到 `list()` 叫咗 7 就冇再叫
+ * 8。嗰個度量係啱嘅，但佢度嘅係**測試宿主**唔係個程式：宿主綁 `$route.params.id`
+ * 落個 prop 度並且保住同一個 instance，而真嘅 `SupplierDetailPage` 唔係咁 ——
+ * 佢個 `load()` 一開頭就 `loading.value = true`，而 template 係
+ * `v-if="loading"` / `v-else-if="supplier"`，所以成個子樹（連呢個 panel）會拆走再
+ * 起過。實測：panel instance uid 48 → 77，而 `list()` 叫咗 7 同 8。
+ *
+ * 即係嗰個 watcher 喺程式入面由頭到尾冇行過 —— 但佢喺測試宿主入面行，而佢一行就
+ * 會搶先清晒嘢，令 `onBeforeRouteUpdate` 嗰個 guard 變成冇嘢測到：拆走個 guard，
+ * 595 條測試全部照綠。一個守衛用咗兩輪 review 先至整啱，就係咁樣俾一行「修正」
+ * 遮走咗覆蓋率。（REV-047 F-H1）
+ *
+ * 換 Supplier 之後重攞遮罩清單，由 `onMounted` 負責 —— 因為個 panel 真係會重新
+ * mount。呢個由一條行真 `SupplierDetailPage` 嘅測試釘住，唔係由呢度。
  */
-watch(() => props.supplierId, () => { forgetEverything(); void load(); });
 
 // ---- Reveal ----------------------------------------------------------------
 

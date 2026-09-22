@@ -94,6 +94,39 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     expect(supplierBankService.reveal).not.toHaveBeenCalled();
   });
 
+  /**
+   * REV-047 F-H1 嘅替代測試，而且係度**個程式**唔係度個測試宿主。
+   *
+   * 換 Supplier 之後個銀行 tab 要顯示新嗰個 Supplier 嘅遮罩清單。機制係：`load()`
+   * 一開頭 `loading = true`，template 嘅 `v-else-if="supplier"` 就唔 render，成個
+   * 子樹（連 SupplierBankPanel）拆走再起過，所以 panel 嘅 `onMounted` 會帶住新
+   * 個 id 再叫一次 `list()`。
+   *
+   * 呢條測試特登行真 `SupplierDetailPage` —— `bank.test.js` 個宿主保住同一個
+   * instance，同呢度唔同，而嗰個分別正正就係 F-H1 出事嘅地方。
+   */
+  it("shows the new Supplier's bank rows after the route id changes", async () => {
+    const { body, router } = await mountPage();
+    supplierService.getById.mockImplementation((id) => Promise.resolve({ ...DETAIL, id, supplierCode: `SUP-${id}` }));
+    await body.findAll(".q-tab").find((item) => item.text().includes("銀行資料")).trigger("click");
+    await flushPromises();
+    expect(supplierBankService.list).toHaveBeenCalledWith(7);
+    expect(body.text()).toContain("•••• 6789");
+
+    // mountPage 已經幫第一次 load 定咗回應，所以第二個 Supplier 嘅資料喺呢度先換。
+    supplierBankService.list.mockResolvedValue([{
+      id: 80, bankName: "Bank of Eight", accountHolderName: "Other Holder",
+      maskedAccountNumber: "•••• 8888", status: "active", isDefault: true, version: 1
+    }]);
+    await router.push("/suppliers/8");
+    await flushPromises();
+    await body.findAll(".q-tab").find((item) => item.text().includes("銀行資料")).trigger("click");
+    await flushPromises();
+    expect(supplierBankService.list, "the Bank panel must ask again for the new Supplier").toHaveBeenCalledWith(8);
+    expect(body.text(), "supplier 7's rows must not stay under supplier 8's URL").not.toContain("•••• 6789");
+    expect(body.text()).toContain("Bank of Eight");
+  });
+
   it("distinguishes not-found and generic loading failures", async () => {
     const missing = Object.assign(new Error("找不到這個供應商"), { code: "SUPPLIER_NOT_FOUND" });
     const { body } = await mountPage({ detail: missing });

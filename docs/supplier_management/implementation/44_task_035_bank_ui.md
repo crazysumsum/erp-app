@@ -101,11 +101,11 @@ route 定義用 `/suppliers/:id` —— 一個冇 param 嘅 `"/"` route 係測�
 
 | Suite | 結果 | Evidence |
 | --- | --- | --- |
-| `supplier-phase-001-client` | **PASS** 87/87（呢個 suite 係 supplier 子集，唔係成個 client） | 最新一次喺 REV-044 remediation 之後重跑 |
-| `supplier-phase-001-server` | **PASS** 395/395 | `evidence/20260922T024327-d465987adeb0/run.json` |
-| `lint` | **PASS** | `evidence/20260922T024331-3bf826929656/run.json` |
-| `client-build` | **PASS** | `evidence/20260922T024334-c4ad32cc1a1a/run.json` |
-| 成個 client vitest | **PASS** 585/585 | 本機，唔係 profile suite |
+| `supplier-phase-001-client` | **PASS**（呢個 suite 係 supplier 子集，唔係成個 client） | 最新一次見 §11 |
+| `supplier-phase-001-server` | **PASS** 395/395 | 見 §11 |
+| `lint` | **PASS** | 見 §11 |
+| `client-build` | **PASS** | 見 §11 |
+| 成個 client vitest | **PASS** | 本機，唔係 profile suite；最新數字見 §11 |
 | Playwright `supplier-bank.spec.js` | **PASS** 3/3 | §4 |
 
 另外四個 DEVELOPER-stage suite 記錄咗 **BLOCKED**，而且**照樣註冊咗**落 ledger ——
@@ -270,4 +270,75 @@ F-H1b generation never bumped        KILLED      M-3   widen row controls       
 要求 merge 之前 fetch target、郁咗就先 merge 返入嚟。已經做咗 —— 檔案集合完全唔相交
 （嗰邊全部 `docs/items_management/**`），冇衝突。`baseline.default_commit` 一併更新。
 
-590/590 client vitest、3/3 瀏覽器、lint 乾淨。
+最新數字見 §11。
+
+## 11. REV-047 remediation，同一個我自己整出嚟嘅覆蓋率黑洞
+
+REV-047 報 CHANGES_REQUESTED：0 Critical、1 High、2 Medium、3 Low、7 Info。
+
+### F-H1 —— 我 merge 嗰陣加嘅 watcher，喺程式入面由頭到尾冇行過，仲遮住咗三個 mutant
+
+Merge `main` 之後我加咗 `watch(() => props.supplierId, ...)`，理由係 `bank.test.js` 度到
+`list()` 叫咗 7 就冇再叫 8。**嗰個度量係啱嘅，但佢度嘅係測試宿主，唔係個程式。**
+
+真嘅 `SupplierDetailPage` 個 `load()` 一開頭就 `loading.value = true`，而 template 係
+`v-if="loading"` ／ `v-else-if="supplier"` —— 即係成個子樹（連個 panel）會拆走再起過。
+我自己行真頁面度過：**panel instance uid 48 → 77**（重新 mount 咗），而 `list()` 叫咗
+**7 同 8**。拆走個 watcher，真頁面照樣叫 `list(8)`，照樣冇顯示過 7 號嘅行。
+
+而個 watcher 喺測試宿主入面**會**行（嗰個宿主綁 `$route.params.id` 落 prop 並且保住
+同一個 instance），一行就搶先清晒嘢。後果：
+
+```
+H-1 drop onBeforeRouteUpdate    SURVIVED   595 passed (595)
+F-M1 route update: reveal only  SURVIVED   595 passed (595)
+```
+
+**`onBeforeRouteUpdate` 可以整條刪走，595 條全綠。** 嗰個就係 REV-044 揾到漏咗、
+再用咗兩輪先至整啱嘅 guard —— 佢嘅覆蓋率俾我一行「修正」遮走咗。§10 嗰句「十二個
+mutant，十二個殺到」喺 `551e249` 係真嘅，喺呢個 merge candidate 就唔係。
+
+（REV-047 話 `M-2b` 都生還；我實測佢仍然 KILLED。照實記，唔跟。）
+
+收法：
+- **刪走個 watcher。** 佢唔係安全控制，而佢唔存在喺程式度呢點係實測過嘅。
+- **刪走綁住個宿主嗰條測試**，換成一條**行真 `SupplierDetailPage`** 嘅測試，斷言換咗
+  id 之後個銀行 tab 顯示新 Supplier 嘅遮罩清單。度個程式，唔度個宿主。
+- `bank.test.js` 個宿主**特登同真程式唔同**呢一點，寫咗落個註解度：保住 instance 係
+  為咗令 `onBeforeRouteUpdate` 有嘢測（今日佢係縱深防禦，因為 unmount 已經清咗），
+  而嗰個分別正正就係呢次出事嘅地方。
+
+### 其餘
+
+| # | 收法 |
+| --- | --- |
+| **F-M1** watcher 個 `load()` 冇 supersede guard | 隨住 watcher 一齊刪走 |
+| **F-M2** `/suppliers/<非數字>` 永遠留喺 loading skeleton（`NaN !== NaN` 令 `superseded()` 永遠 true） | **唔喺呢個 PR 修** —— 佢已經喺 `main`（PR #127 帶入），REV-047 自己都話唔應該擋住呢個 PR。開咗一個 task |
+| **F-L1** reveal 嘅重入 guard 冇嘢斷言 | 加咗測試。**注意**：兩下撳要喺同一個 tick 發 —— 中間 `await` 一次 Vue 就會 re-render，個掣 `:loading` 之後 Quasar 攔住第二下，個測試就分辨唔到。第一次寫錯咗，mutant 生還，改成同 tick 之後先殺到 |
+| **F-L2** `submitConfirm` `finally` 入面個 `confirm.password = ""` 冇嘢斷言（錯誤路徑個 dialog 係開住嘅） | 加咗測試 |
+| **F-L3** ledger 最新嘅 evidence 比 remediation 同 merge 都舊；§7 數字過時 | §7 唔再寫死數字，evidence 喺最終 head 重跑 |
+
+### Mutation：十三個，十三個殺到
+
+```
+REV-046 M  silent discard       KILLED    F-M1b session watch: reveal only  KILLED
+REV-046 X5 confirm secrets      KILLED    H-1   drop onBeforeRouteUpdate    KILLED  ← 之前生還
+REV-046 X11 system-clock        KILLED    M-2a  drop onUnmounted clear      KILLED
+REV-046 X12 bogus handle        KILLED    M-2b  drop forgetFormSecrets      KILLED
+F-H1  drop generation check     KILLED    M-3   widen row controls          KILLED
+F-H1b generation never bumped   KILLED    NEW   page stops reloading on id  KILLED
+F-M1  route update: reveal only KILLED  ← 之前生還
+```
+
+加埋 `Y6`（reveal 重入 guard）同 `Y7`（confirm password）兩個新嘅，兩個都殺到。
+
+### 驗證
+
+**597/597** client vitest、**23/23** 瀏覽器（成個 `technical` project，包括 merge 帶入
+嗰條 `supplier-detail-route-reuse.spec.js` —— 兩條 spec 唔會互相干擾）、lint 乾淨。
+
+### 一句總結呢次出錯嘅形狀
+
+我度量咗一件真嘢（`list()` 冇叫過 8），但係喺一個同程式唔同嘅宿主入面度。個修正因此
+修緊一個唔存在嘅問題，而副作用係遮走咗一個真守衛嘅覆蓋率。**下次喺加修正之前，
+先喺真嘅組合度重現一次。**

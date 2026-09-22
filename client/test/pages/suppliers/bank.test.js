@@ -32,6 +32,15 @@ const FULL = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"];
  * 真係要有個 router：`onBeforeRouteLeave` 淨係喺一個 render 喺 <router-view>
  * 入面嘅 component 度先註冊得到。冇 router 就掛住個 guard 都唔會行，而
  * 「route change 要清明文」呢條 AC 就會變成一條冇人測過嘅說話。
+ *
+ * **呢個宿主特登同真程式唔同**：佢綁 `$route.params.id` 落個 prop 並且保住同一個
+ * instance，所以換 param 嗰陣個 panel **唔會** unmount。真嘅 `SupplierDetailPage`
+ * 會拆走成個子樹再起過（`loading` 一 true，`v-else-if="supplier"` 就唔 render）。
+ *
+ * 保住 instance 係為咗令 `onBeforeRouteUpdate` 嗰個 guard 有嘢測 —— 喺今日嘅頁面
+ * 組合入面佢係縱深防禦（unmount 已經清咗），但佢守住嘅係「有一日個 panel 真係被
+ * 重用」。分別要講明，因為 REV-047 F-H1 就係喺呢個分別度出事：我曾經照住呢個宿主
+ * 嘅度量加咗一個 watcher，而嗰個 watcher 喺程式入面根本冇行過。
  */
 async function mountPanel({ permissions = FULL, rows = ROWS } = {}) {
   supplierBankService.list.mockResolvedValue(rows);
@@ -269,28 +278,6 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   });
 
   /**
-   * Merge `main` 之後先至到得到嘅路：PR #127 令 detail page 喺換 id 嗰陣真係重載，
-   * 而個 panel 本來只喺 `onMounted` 攞過一次 —— 即係 7 號嘅遮罩清單會留喺 8 號嘅
-   * URL 底下。唔係明文外洩，但係錯 Supplier 嘅資料配住啱 Supplier 嘅網址。
-   */
-  it("refetches the masked list when the Supplier changes under it", async () => {
-    const { router, body } = await mountPanel({ permissions: VIEW_BANK });
-    expect(supplierBankService.list).toHaveBeenCalledWith(7);
-    expect(body.text()).toContain("Test Bank");
-
-    // mountPanel 已經幫第一次 load 定咗回應，所以第二個 Supplier 嘅資料喺呢度先換。
-    supplierBankService.list.mockResolvedValue([{
-      id: 80, bankName: "Bank of Eight", accountHolderName: "Other Holder",
-      maskedAccountNumber: "•••• 8888", status: "active", isDefault: true, version: 1
-    }]);
-    await router.push("/suppliers/8");
-    await flushPromises();
-    expect(supplierBankService.list, "the panel must ask again for the new Supplier").toHaveBeenCalledWith(8);
-    expect(body.text(), "supplier 7's rows must not stay on supplier 8's page").not.toContain("•••• 1234");
-    expect(body.text()).toContain("Bank of Eight");
-  });
-
-  /**
    * REV-045 F-H1。上一輪加咗個 `gone` flag，但佢淨係喺 `onUnmounted` set ——
    * `onBeforeRouteUpdate` 同 session watch 都唔會 set，所以一個仲喺路上嘅 reveal
    * 會喺換咗 param 之後**畫返** 7 號嘅帳號出嚟喺 8 號嘅畫面度，附送一個新倒數。
@@ -364,6 +351,32 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     useSessionStore().user = null;
     await flushPromises();
     expect(document.body.innerHTML, "nor a session expiry").not.toContain("Correct-Horse-1!");
+  });
+
+  /**
+   * REV-047 F-L1。`revealDialog.busy` 攔住重入 —— REV-046 探過話成立，但**冇嘢
+   * 斷言佢**，拆走佢 595 條照綠。冇咗佢，撳兩下「確認查看」會發兩個
+   * `POST …/reveal`，而 TASK-034 會為一次意圖上嘅披露寫**兩條**稽核。
+   *
+   * 呢個同上面嗰條係同一個擔憂嘅兩邊：一個令稽核少講咗，一個令稽核多講咗。兩邊
+   * 之間唔可以只得一條斷言。
+   */
+  it("issues one reveal for a double-clicked confirm, because each one writes an audit row", async () => {
+    supplierBankService.reveal.mockReturnValue(new Promise(() => {}));
+    const { body } = await mountPanel({ permissions: VIEW_BANK });
+    await byText(body, "查看完整帳號").trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    await field(body, "查看原因").find("textarea").setValue("核對付款帳號");
+    // 兩下撳要喺**同一個 tick** 入面發 —— 中間 await 一次，Vue 就會 re-render，
+    // 而個掣 `:loading` 之後 Quasar 會攔住第二下，令個測試分辨唔到有冇個 guard。
+    // 真實嘅雙擊就係喺 re-render 之前到達嘅。
+    const confirmButton = byText(body, "確認查看");
+    confirmButton.trigger("click");
+    confirmButton.trigger("click");
+    await flushPromises();
+    expect(supplierBankService.reveal,
+      "a second click must not buy a second audit row").toHaveBeenCalledTimes(1);
   });
 
   /**
@@ -534,6 +547,29 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     await byText(body, "確認").trigger("click");
     await flushPromises();
     expect(supplierBankService.setDefault).toHaveBeenCalledWith(7, 42, expect.objectContaining({ version: 3 }));
+  });
+
+  /**
+   * REV-047 F-L2。失敗嗰條路個 dialog 係**開住**嘅 —— 成功路徑由 `@hide` 清、
+   * route change 同 session 失效由 `forgetEverything()` 清，唯獨錯誤路徑淨係靠
+   * `submitConfirm` 個 `finally`，而嗰行本來冇嘢斷言：拆走佢 595 條照綠，而打咗
+   * 嘅 step-up 密碼會留喺一個 render 緊嘅 input 度直到使用者自己閂。
+   */
+  it("wipes the confirm password even when the dialog stays open on an error", async () => {
+    supplierBankService.setDefault.mockRejectedValue(
+      Object.assign(new Error("這個銀行帳戶已被其他人修改"), { code: "VERSION_CONFLICT" })
+    );
+    const { body } = await mountPanel();
+    await body.find('[aria-label="設為預設 Other Bank"]').trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    await field(body, "原因").find("textarea").setValue("轉出糧戶口");
+    await byText(body, "確認").trigger("click");
+    await flushPromises();
+
+    expect(body.find('[role="alert"]').exists(), "the dialog stays open to show the conflict").toBe(true);
+    expect(document.body.innerHTML,
+      "a typed step-up password must not survive a failed attempt").not.toContain("Correct-Horse-1!");
   });
 
   it("deactivates with a version and a reason", async () => {
