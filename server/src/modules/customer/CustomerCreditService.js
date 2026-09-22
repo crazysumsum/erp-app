@@ -2,6 +2,7 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { BusinessMasterProvider } from "../businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../businessMaster/BusinessMasterRepository.js";
 import { CustomerAuditLogService } from "./CustomerAuditLogService.js";
+import { CustomerApprovalService } from "./CustomerApprovalService.js";
 import { creditPolicyInvalid, customerNotFound, versionConflict } from "./customerErrors.js";
 
 const MONEY_PATTERN = /^(?:0|[1-9][0-9]{0,14})\.[0-9]{4}$/;
@@ -30,7 +31,7 @@ function creditInput(input) {
     creditLimit,
     currencyCode,
     creditStatus: input.creditStatus,
-    creditNotes: text(input.creditNotes, 1000),
+    creditNotes: Object.hasOwn(input, "creditNotes") ? text(input.creditNotes, 1000) : undefined,
     reason: reasonText(input.reason)
   };
 }
@@ -52,13 +53,14 @@ function auditSnapshot(row) {
 }
 
 export class CustomerCreditService {
-  constructor({ database, time, actorVerifier = assertActorFresh, audit = new CustomerAuditLogService(), businessMaster } = {}) {
+  constructor({ database, time, actorVerifier = assertActorFresh, audit = new CustomerAuditLogService(), businessMaster, approvals } = {}) {
     if (!database || !time) throw new TypeError("CustomerCreditService requires database and time");
     this.database = database;
     this.time = time;
     this.actorVerifier = actorVerifier;
     this.audit = audit;
     this.businessMaster = businessMaster ?? new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
+    this.approvals = approvals ?? new CustomerApprovalService({ database, time, audit });
   }
 
   async get({ customerId, actorId, claimedRoles, claimedPermissions }) {
@@ -74,7 +76,7 @@ export class CustomerCreditService {
     if (version !== null && (!Number.isSafeInteger(version) || version < 1)) throw creditPolicyInvalid();
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
-      const [[customer]] = await connection.query("SELECT id, customer_code FROM customers WHERE id = ? FOR UPDATE", [customerId]);
+      const [[customer]] = await connection.query("SELECT id, customer_code, status FROM customers WHERE id = ? FOR UPDATE", [customerId]);
       if (!customer) throw customerNotFound(customerId);
       const [[before]] = await connection.query("SELECT * FROM customer_credit_profiles WHERE customer_id = ? FOR UPDATE", [customerId]);
       if ((version === null && before) || (version !== null && !before)) throw versionConflict(before?.version ?? 0);
@@ -95,18 +97,22 @@ export class CustomerCreditService {
              (customer_id, credit_limit, credit_currency_code, credit_status, credit_notes, last_change_reason,
               created_at, updated_at, created_by, updated_by)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [customerId, value.creditLimit, value.currencyCode, value.creditStatus, value.creditNotes, value.reason, nowMs, nowMs, actorId, actorId]
+          [customerId, value.creditLimit, value.currencyCode, value.creditStatus, value.creditNotes ?? "", value.reason, nowMs, nowMs, actorId, actorId]
         );
-        after = { customer_id: customerId, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: value.creditNotes, version: 1 };
+        after = { customer_id: customerId, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: value.creditNotes ?? "", version: 1 };
       } else {
+        const creditNotes = value.creditNotes ?? before.credit_notes;
         const [result] = await connection.execute(
           `UPDATE customer_credit_profiles SET credit_limit = ?, credit_currency_code = ?, credit_status = ?,
              credit_notes = ?, last_change_reason = ?, version = version + 1, updated_at = ?, updated_by = ?
            WHERE customer_id = ? AND version = ?`,
-          [value.creditLimit, value.currencyCode, value.creditStatus, value.creditNotes, value.reason, nowMs, actorId, customerId, version]
+          [value.creditLimit, value.currencyCode, value.creditStatus, creditNotes, value.reason, nowMs, actorId, customerId, version]
         );
         if (result.affectedRows !== 1) throw versionConflict(before.version);
-        after = { ...before, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: value.creditNotes, version: Number(version) + 1 };
+        after = { ...before, credit_limit: value.creditLimit, credit_currency_code: value.currencyCode, credit_status: value.creditStatus, credit_notes: creditNotes, version: Number(version) + 1 };
+      }
+      if ((before?.credit_status ?? "not_configured") !== value.creditStatus) {
+        await this.approvals.invalidateForCriticalChange(connection, { customer, actorId, actorUsername: actor.username, reason: value.reason, requestId, ip });
       }
       await this.#finish(connection, { customer, customerId, actorId, actor, nowMs, action: before ? "update" : "create", reason: value.reason, before: before ? auditSnapshot(before) : undefined, after: auditSnapshot(after), requestId, ip });
       return projection(after);
@@ -118,13 +124,14 @@ export class CustomerCreditService {
     if (!Number.isSafeInteger(version) || version < 1) throw creditPolicyInvalid();
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
-      const [[customer]] = await connection.query("SELECT id, customer_code FROM customers WHERE id = ? FOR UPDATE", [customerId]);
+      const [[customer]] = await connection.query("SELECT id, customer_code, status FROM customers WHERE id = ? FOR UPDATE", [customerId]);
       if (!customer) throw customerNotFound(customerId);
       const [[before]] = await connection.query("SELECT * FROM customer_credit_profiles WHERE customer_id = ? FOR UPDATE", [customerId]);
       if (!before) throw versionConflict(0);
       const nowMs = this.time.nowMs();
       const [result] = await connection.execute("DELETE FROM customer_credit_profiles WHERE customer_id = ? AND version = ?", [customerId, version]);
       if (result.affectedRows !== 1) throw versionConflict(before.version);
+      await this.approvals.invalidateForCriticalChange(connection, { customer, actorId, actorUsername: actor.username, reason: safeReason, requestId, ip });
       await this.#finish(connection, { customer, customerId, actorId, actor, nowMs, action: "clear", reason: safeReason, before: auditSnapshot(before), after: auditSnapshot(null), requestId, ip });
       return projection(null);
     });

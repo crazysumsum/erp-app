@@ -111,6 +111,16 @@ describe("HttpClient", () => {
     expect(url).toBe("http://localhost:3000/api/v1/orders?page=2&status=open");
   });
 
+  it("array query params keep repeated values instead of becoming a comma-delimited scalar", async () => {
+    fetchImpl.mockResolvedValue(jsonResponse({ success: true, data: [], meta: {} }));
+    const client = new HttpClient({ fetchImpl, baseUrl: "http://localhost:3000", getToken: () => null });
+
+    await client.get("/api/v1/customers", { params: { status: ["active", "blocked"], missing: ["credit", "paymentTerm"] } });
+
+    const [url] = fetchImpl.mock.calls[0];
+    expect(url).toBe("http://localhost:3000/api/v1/customers?status=active&status=blocked&missing=credit&missing=paymentTerm");
+  });
+
   it("後端回 success:false 就拋 ApiError，帶埋 code/message/details/requestId", async () => {
     fetchImpl.mockResolvedValue(
       jsonResponse(

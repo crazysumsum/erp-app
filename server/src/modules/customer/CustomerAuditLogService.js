@@ -3,6 +3,15 @@ const MAX_DETAIL_BYTES = 8192;
 const ACTIONS = new Set([
   "customer.create",
   "customer.update",
+  "customer.code_change",
+  "customer.activate",
+  "customer.suspend",
+  "customer.reactivate",
+  "customer.archive",
+  "customer.restore",
+  "customer.delete",
+  "customer.block",
+  "customer.unblock",
   "customer.status",
   "customer.address.create",
   "customer.address.update",
@@ -15,7 +24,17 @@ const ACTIONS = new Set([
   "customer.identifier.deactivate",
   "customer.credit.create",
   "customer.credit.update",
-  "customer.credit.clear"
+  "customer.credit.clear",
+  "setting.update",
+  "catalog.create",
+  "catalog.update",
+  "catalog.deactivate",
+  "approval.submit",
+  "approval.withdraw",
+  "approval.invalidate",
+  "approval.approve",
+  "approval.reject",
+  "approval.reassign"
 ]);
 
 const ROOT_AUDIT_FIELDS = new Set([
@@ -61,7 +80,14 @@ const ROOT_AUDIT_FIELDS = new Set([
   "creditLimit",
   "currencyCode",
   "creditStatus",
-  "policyVersion"
+  "policyVersion",
+  "requireActivationApproval",
+  "code",
+  "description",
+  "sortOrder",
+  "assignedApproverId",
+  "customerVersion",
+  "requestStatus"
 ]);
 
 function allowlistedSnapshot(value) {

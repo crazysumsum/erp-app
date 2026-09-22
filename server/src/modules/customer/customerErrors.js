@@ -99,3 +99,62 @@ export function versionConflict(currentVersion) {
     publicDetails: { currentVersion: Number(currentVersion) }
   });
 }
+
+export function customerSettingsMissing() {
+  return customerError("Customer settings singleton is missing", {
+    code: "CUSTOMER_SETTINGS_MISSING",
+    statusCode: 409,
+    publicMessage: "客戶設定尚未初始化"
+  });
+}
+
+export function customerSettingInvalid(code, publicMessage, publicDetails) {
+  return customerError("Customer settings input is invalid", {
+    code,
+    statusCode: 400,
+    publicMessage,
+    publicDetails
+  });
+}
+
+export function customerCatalogInvalid(publicDetails) {
+  return customerError("Customer catalog input is invalid", { code: "CUSTOMER_CATALOG_INVALID", statusCode: 400, publicMessage: "客戶分類目錄資料無效", publicDetails });
+}
+
+export function customerCatalogForbidden() {
+  return customerError("Customer catalog inactive values require settings permission", { code: "CUSTOMER_CATALOG_FORBIDDEN", statusCode: 403, publicMessage: "沒有查看停用分類的權限" });
+}
+
+export function customerCatalogNotFound() {
+  return customerError("Customer catalog entry was not found", { code: "CUSTOMER_CATALOG_NOT_FOUND", statusCode: 404, publicMessage: "找不到指定的客戶分類" });
+}
+
+export function customerCatalogTaken() {
+  return customerError("Customer catalog code uniqueness conflict", { code: "CUSTOMER_CATALOG_CODE_TAKEN", statusCode: 409, publicMessage: "客戶分類代碼已被使用" });
+}
+
+export function customerCatalogStatusInvalid() {
+  return customerError("Customer catalog status transition is invalid", { code: "CUSTOMER_CATALOG_STATUS_INVALID", statusCode: 409, publicMessage: "客戶分類目前不能停用" });
+}
+
+export function customerApprovalInvalid(code, publicMessage, publicDetails) {
+  return customerError("Customer approval input is invalid", { code, statusCode: 400, publicMessage, publicDetails });
+}
+
+export function customerApprovalConflict(code, publicMessage, publicDetails) {
+  return customerError("Customer approval state conflict", { code, statusCode: 409, publicMessage, publicDetails });
+}
+
+export function customerApprovalRequestNotFound(id) {
+  return customerError(`Customer approval request ${id} was not found`, {
+    code: "CUSTOMER_APPROVAL_REQUEST_NOT_FOUND", statusCode: 404, publicMessage: "找不到指定的客戶審批申請"
+  });
+}
+
+export function customerLifecycleInvalid(code, publicMessage, publicDetails) {
+  return customerError("Customer lifecycle input is invalid", { code, statusCode: 400, publicMessage, publicDetails });
+}
+
+export function customerLifecycleConflict(code, publicMessage, publicDetails) {
+  return customerError("Customer lifecycle state conflict", { code, statusCode: 409, publicMessage, publicDetails });
+}

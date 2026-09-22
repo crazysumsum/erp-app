@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 91,
+  "revision": 107,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-010",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-019",
   "baseline": {
-    "design": "29d41a152667965c1182207f86bc71d0e2ea12abce7256d319f1c99607020a58",
-    "plan": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
-    "code_commit": "1b78eb769cb69ecf1407d489f44e811477ef68de",
-    "source_fingerprint": "aeb07f31806aa92f98b7a8bde28a7abd953c8d9c558592f85f55b8a7c705f6c7",
-    "worktree": "/private/tmp/erp-customer-management-phase-001/customer-management-phase-001",
-    "default_commit": "9c68059221098a17bfc4c3bd0638c17008305c4e",
+    "design": "ea31124799179515d04833320334a3be89987c15ea6b2b1d124cd1cc4defeb3c",
+    "plan": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+    "code_commit": "5fea529628df7e1a0e7fc97d2bac8d8b23bf2678",
+    "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+    "worktree": "/private/tmp/erp-customer-management-phase-002",
+    "default_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
@@ -36,15 +36,15 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "PENDING",
-    "TASK-012": "PENDING",
-    "TASK-013": "PENDING",
-    "TASK-014": "PENDING",
-    "TASK-015": "PENDING",
-    "TASK-016": "PENDING",
-    "TASK-017": "PENDING",
-    "TASK-018": "PENDING",
-    "TASK-019": "PENDING",
+    "TASK-011": "DONE",
+    "TASK-012": "DONE",
+    "TASK-013": "DONE",
+    "TASK-014": "DONE",
+    "TASK-015": "DONE",
+    "TASK-016": "DONE",
+    "TASK-017": "DONE",
+    "TASK-018": "DONE",
+    "TASK-019": "DONE",
     "TASK-020": "PENDING",
     "TASK-021": "PENDING",
     "TASK-022": "PENDING",
@@ -499,6 +499,322 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-014",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-21 Codex task user: 開始下一步工作; prior standing instruction authorizes automatic continuation unless a material decision is required.",
+      "recorded_at": "2026-09-21T06:17:02Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "code_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
+      "scope": [
+        "PHASE-002",
+        "TASK-012",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-settings/**",
+        "client/src/**",
+        "server/test/**",
+        "client/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 同意 (DESIGN baseline f8ea96788c30bab61bb7c6ae418a5d8b43880e4dd16defa038a9b2085debe0a7, PLAN baseline 896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c, and TASK-014).",
+      "recorded_at": "2026-09-22T02:16:33Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "f8ea96788c30bab61bb7c6ae418a5d8b43880e4dd16defa038a9b2085debe0a7",
+      "code_commit": "120dc5a1253b0f586559dc266451b126c9526edc",
+      "scope": [
+        "customer-management",
+        "PHASE-002"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-005",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 同意 (DESIGN baseline f8ea96788c30bab61bb7c6ae418a5d8b43880e4dd16defa038a9b2085debe0a7, PLAN baseline 896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c, and TASK-014).",
+      "recorded_at": "2026-09-22T02:16:33Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "120dc5a1253b0f586559dc266451b126c9526edc",
+      "scope": [
+        "customer-management",
+        "PHASE-002"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-015",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 批准 customer-approvers handler directory exception; 同意 (DESIGN baseline f8ea96788c30bab61bb7c6ae418a5d8b43880e4dd16defa038a9b2085debe0a7, PLAN baseline 896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c, and TASK-014).",
+      "recorded_at": "2026-09-22T02:16:33Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "120dc5a1253b0f586559dc266451b126c9526edc",
+      "scope": [
+        "TASK-014",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-approvals/**",
+        "server/src/handlers/customer-approvers/**",
+        "server/src/handlers/customers/**",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-016",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 同意，後面沒有特別要我決定的問題就自動接著做下去，不用停下等我批; automatic continuation applied to TASK-015 under the approved current baselines.",
+      "recorded_at": "2026-09-22T02:28:21Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "024379d5a121d10c5ebf57edbfa7937f7454215a",
+      "scope": [
+        "TASK-015",
+        "client/src/framework/http/HttpClient.js",
+        "client/src/services/customer*.js",
+        "client/test/framework/http/HttpClient.test.js",
+        "client/test/services/customer*.test.js",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-017",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 同意，後面沒有特別要我決定的問題就自動接著做下去，不用停下等我批; automatic continuation applied to TASK-016 under the approved current baselines.",
+      "recorded_at": "2026-09-22T02:58:24Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "7d116ae080741e27514859685f8233f64bd2e7c9",
+      "scope": [
+        "TASK-016",
+        "client/config/menu.js",
+        "client/e2e/customer-management/**",
+        "client/src/pages/customers/**",
+        "client/test/pages/customers/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-018",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 同意，後面沒有特別要我決定的問題就自動接著做下去，不用停下等我批; automatic continuation applied to TASK-017 and its required data-loss/security-safe remediation under the approved current baselines.",
+      "recorded_at": "2026-09-22T04:37:01Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "c2a393991b3f9152436658b92f84552a32ef5d30",
+      "scope": [
+        "TASK-017",
+        "client/src/components/customers/**",
+        "client/src/pages/customers/CustomerDetailPage.vue",
+        "client/src/services/customer.js",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "server/src/handlers/customers/**",
+        "server/src/modules/customer/CustomerCreditService.js",
+        "server/src/modules/customer/CustomerService.js",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-019",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 繼續，未完成之前不要停下來; automatic continuation applied to TASK-019 under the approved current baselines. The prior explicit Product Owner direction to merge without CI remains the publication exception.",
+      "recorded_at": "2026-09-22T05:17:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "13a92dee6afe3523ac66dfe6757a8d9eae31c2c1",
+      "scope": [
+        "TASK-019",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-020",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 繼續，未完成之前不要停下來; together with the standing instruction to continue automatically and record required approvals, this confirms the exact PHASE-002 candidate and reconciles its previously approved shared-path entries without adding product scope.",
+      "recorded_at": "2026-09-22T05:38:17Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "code_commit": "67ad2cb276113c5efc504f4c3295e29b78bf4670",
+      "scope": [
+        "PHASE-002",
+        "TASK-011",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "server/database/migrations/0047_create_customer_settings.js",
+        "server/database/migrations/0048_create_customer_activation_requests.js",
+        "server/src/handlers/customer-catalog/**",
+        "client/config/menu.js",
+        "client/src/framework/http/HttpClient.js",
+        "client/src/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-*/**",
+        "server/src/handlers/customers/**",
+        "server/test/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-006",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 所有需要批準的設計都紀錄由我直接批準; 繼續，未完成之前不要停下來. Applied to the PHASE-002 boundary-inventory reconciliation only; no product requirement or runtime design changed.",
+      "recorded_at": "2026-09-22T05:40:33Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "ea31124799179515d04833320334a3be89987c15ea6b2b1d124cd1cc4defeb3c",
+      "code_commit": "67ad2cb276113c5efc504f4c3295e29b78bf4670",
+      "scope": [
+        "customer-management",
+        "PHASE-002",
+        "module-boundary inventory reconciliation"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 所有需要批準的設計都紀錄由我直接批準; 繼續，未完成之前不要停下來. Applied to the PHASE-002 boundary-inventory reconciliation only; TASK-011 through TASK-019 and their acceptance criteria are unchanged.",
+      "recorded_at": "2026-09-22T05:40:33Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "code_commit": "67ad2cb276113c5efc504f4c3295e29b78bf4670",
+      "scope": [
+        "customer-management",
+        "PHASE-002",
+        "TASK-011",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-021",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 繼續，未完成之前不要停下來; current-baseline successor to APPROVAL-SCOPE-020 after the non-semantic module-boundary inventory reconciliation.",
+      "recorded_at": "2026-09-22T05:40:33Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "code_commit": "67ad2cb276113c5efc504f4c3295e29b78bf4670",
+      "scope": [
+        "PHASE-002",
+        "server/database/migrations/0047_create_customer_settings.js",
+        "server/database/migrations/0048_create_customer_activation_requests.js",
+        "server/src/handlers/customer-catalog/**",
+        "client/config/menu.js",
+        "client/src/framework/http/HttpClient.js",
+        "client/src/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-*/**",
+        "server/src/handlers/customers/**",
+        "server/test/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-022",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-22 Codex task user: 繼續，未完成之前不要停下來; exact-candidate continuation after freshness merge of origin/main fd615e5 and the independent-review-required mobile sticky-action evidence correction.",
+      "recorded_at": "2026-09-22T05:54:05Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "scope": [
+        "PHASE-002",
+        "TASK-019",
+        "client/e2e/customer-management/customer-root.spec.js",
+        "docs/customer_management/**",
+        "freshness integration of origin/main fd615e5"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-RISK-004",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-14 Codex task user: 批准推送建立PR，合併到main, 不用跑CI; Product Owner 身分接受風險. Reconfirmed for PHASE-002 publication by the standing instruction to continue automatically and APPROVAL-SCOPE-019.",
+      "recorded_at": "2026-09-22T05:59:51Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "scope": [
+        "PHASE-002 publication",
+        "TASK-019",
+        "CI not run",
+        "PR merge to main after local gates and independent review"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -597,6 +913,102 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-009",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation under approved TASK-011 scope",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "c9f9fe3a68e453e2b03c9e549706149a42920c13acefe91eab0a19aff331af5d",
+      "source_ref": "2026-09-22 independent code review: reference checks moved before Customer locks; lifecycle/create idempotency and approval/direct replay findings remediated and retested; no blocking issue remains.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-010",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation under approved TASK-014 scope",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "6d25c96246156b555d3d2d226205cdd778af429f923ec14016ce41169933a4c9",
+      "source_ref": "2026-09-22 independent code review: approval queue/detail, stale critical snapshots, dual audits, durable operations and original-outcome replay reviewed; final verdict APPROVE with no blocking finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-011",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation under approved TASK-015 scope",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "eac73033d006fe470804495581c12aea5eedc939099569d197a8314a5414201b",
+      "source_ref": "2026-09-22 independent code review: array query serialization, child pagination, approval queue time filters, idempotency-key retry forwarding, routes and auth reviewed; final verdict APPROVE with no blocking finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-012",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation under approved TASK-016 scope",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "296abeef5e6379aec0ed9a4eca32a3d55e4a8bab0e38ab5980ad49926334d7b2",
+      "source_ref": "2026-09-22 independent code review: command response envelopes and APPROVER_REQUIRED activation fallback corrected and regression-tested; final verdict APPROVE with no required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-013",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation and remediation under approved TASK-017 scope",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "7fe31b39a34517e208e13a37edd706eb0b3b233f230ab6ae49f73687393463f1",
+      "source_ref": "2026-09-22 independent code review: private credit-note preservation, purpose/default visibility, credit-override warning, authoritative completeness and actionable version-conflict reload were remediated; independent focused server/client tests and Playwright passed; final verdict APPROVE with no blocking finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-014",
+      "method": "SEPARATE_AGENT",
+      "author": "/root implementation and remediation under approved TASK-018 scope",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "72deaba4724c90a138e9a996b710484672990d169eb8262b27bbaa43662cd692",
+      "source_ref": "2026-09-22 independent code review: all seven required findings for settings authorization, classification administration, approval diff data, withdraw authorization, blocker shape, request time and browser coverage were closed; focused Vitest passed 10/10 and real-browser Playwright passed 9/9; final verdict APPROVE with no blocking finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-015",
+      "method": "SEPARATE_AGENT",
+      "author": "/root PHASE-002/TASK-019 candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "3a582e6a880fefb3f06bc1a14ad086861325f390d2eae282f0e05b1e7c93aa9d",
+      "source_ref": "2026-09-22 independent exact-candidate review requested changes: reconcile the final commit/fingerprint after latest-main freshness integration and assert plus activate the sticky Customer detail action at 375px. No additional product correctness, security, API or migration issue was found.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-016",
+      "method": "SEPARATE_AGENT",
+      "author": "/root PHASE-002/TASK-019 remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+      "source_ref": "2026-09-22 independent exact-candidate re-review: commit 94e41d3/source fingerprint 7d11bd0 reconciled; state, traceability, module-boundary and diff checks passed; the 375px sticky detail action is in viewport, activated, and lands on an in-viewport detail heading. Focused catalog metadata test passed. The reviewer accepted the supplied exact-candidate Playwright 10/10 evidence after node_modules cleanup prevented a redundant independent rerun. Final verdict APPROVE with no remaining product, security, API, migration or test-validity finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -665,6 +1077,127 @@
       "source_ref": "docs/customer_management/implementation/phase-PHASE-001-report.md#final-gate-result",
       "actor": "/root local developer verification",
       "observed_at": "2026-09-21T03:49:00Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-012 Customer settings and classification catalog developer verification",
+      "code_commit": "db4404e1e5eadcd57a8ac54bf63cc602bb42d8e4",
+      "spec_baseline": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "source_fingerprint": "3ac8f3d7a0d7070b30a3b37b82def5b2f52fc9fc0da3e8f0f9f88691ba4de473",
+      "status": "PASS",
+      "source_ref": "2026-09-21: lint and 14 focused Customer server tests passed; isolated MySQL fresh migration through 0047, full rerun no-op, settings singleton OFF seed/schema verification, and final schema absence confirmed.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-21T06:42:18Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-013 Customer activation request submit, withdraw and critical-change invalidation developer verification",
+      "code_commit": "07e2d75b3238e53aa9b278847b581e99a2b90745",
+      "spec_baseline": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "source_fingerprint": "ddcea42fa47c087ddeb90161b4bc7b7e704a36851dd021137435db46a9808a4c",
+      "status": "PASS",
+      "source_ref": "2026-09-21: lint and 31 focused Customer tests passed; isolated MySQL fresh migration through 0048 and full rerun passed; the 17-column activation-request schema, generated pending slot, unique one-pending behavior, retained terminal history, and final schema removal were verified.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-21T09:07:20Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-011 Customer lifecycle developer verification",
+      "code_commit": "8e5f5fd4af6707f35142a28f6d3ffa26e084bfe3",
+      "spec_baseline": "154cb7c161948955e6502efec8c219157bd45fe5b20ff23402007c45403c3c41",
+      "source_fingerprint": "c9f9fe3a68e453e2b03c9e549706149a42920c13acefe91eab0a19aff331af5d",
+      "status": "PASS",
+      "source_ref": "2026-09-22: 31 focused Customer tests, repository lint, diff check, traceability and module-boundary checks passed. Independent review remediated lifecycle durable-replay findings. Archive/delete fail closed because no out-of-scope downstream provider is registered; repository-wide server coverage remains blocked by unrelated baseline failures.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T00:00:00Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-014 Customer approval decisions and block/unblock developer verification",
+      "code_commit": "120dc5a1253b0f586559dc266451b126c9526edc",
+      "spec_baseline": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "source_fingerprint": "6d25c96246156b555d3d2d226205cdd778af429f923ec14016ce41169933a4c9",
+      "status": "PASS",
+      "source_ref": "2026-09-22: 41 focused Customer tests, repository ESLint, diff check, traceability and module-boundary checks passed. Independent review approved after stale-snapshot, dual-audit, durable-operation and original-outcome replay fixes. Full server suite remains blocked by sandbox loopback restrictions and unrelated Customer-catalog handler metadata.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T02:16:33Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-015 Customer client service and stable error-mapping developer verification",
+      "code_commit": "024379d5a121d10c5ebf57edbfa7937f7454215a",
+      "spec_baseline": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "source_fingerprint": "eac73033d006fe470804495581c12aea5eedc939099569d197a8314a5414201b",
+      "status": "PASS",
+      "source_ref": "2026-09-22: 35 focused client service and HttpClient tests, repository ESLint, client build, diff check, traceability and module-boundary checks passed. Independent review remediated array query serialization, child pagination, queue time-filter and durable retry-key findings. The Vite >500 kB chunk advisory is unchanged and non-blocking.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T02:28:21Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-016 Customer root UI developer verification",
+      "code_commit": "7d116ae080741e27514859685f8233f64bd2e7c9",
+      "spec_baseline": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "source_fingerprint": "296abeef5e6379aec0ed9a4eca32a3d55e4a8bab0e38ab5980ad49926334d7b2",
+      "status": "PASS",
+      "source_ref": "2026-09-22: 33 focused Customer page and route-metadata tests, repository ESLint, client build, diff check and traceability checks passed. Playwright ran actual Vite UI list/detail navigation and Draft creation 2/2 with network contracts and no page errors or console warnings. Independent review approved after command-envelope and approval-code corrections. The Vite >500 kB chunk advisory is unchanged and non-blocking.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T02:58:24Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-017 Customer party, identifier, credit and completeness UI developer verification",
+      "code_commit": "c2a393991b3f9152436658b92f84552a32ef5d30",
+      "spec_baseline": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "source_fingerprint": "7fe31b39a34517e208e13a37edd706eb0b3b233f230ab6ae49f73687393463f1",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-017-developer-verification",
+      "actor": "/root local developer verification with Jason independent review",
+      "observed_at": "2026-09-22T04:37:01Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-018 lifecycle, approval and settings UI developer verification",
+      "code_commit": "13a92dee6afe3523ac66dfe6757a8d9eae31c2c1",
+      "spec_baseline": "896d5a6a7991d73978e20cc61800f52d7febc47bfad3521d141ea09760841d9c",
+      "source_fingerprint": "72deaba4724c90a138e9a996b710484672990d169eb8262b27bbaa43662cd692",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-018-developer-verification",
+      "actor": "/root developer verification and Jason independent review",
+      "observed_at": "2026-09-22T05:17:09Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-019 PHASE-002 full local developer gate and rollback rehearsal",
+      "code_commit": "67ad2cb276113c5efc504f4c3295e29b78bf4670",
+      "spec_baseline": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "source_fingerprint": "3a582e6a880fefb3f06bc1a14ad086861325f390d2eae282f0e05b1e7c93aa9d",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-002-report.md#task-019-developer-gate",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T05:38:17Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-019 latest-main-integrated exact-candidate developer gate",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "spec_baseline": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-002-report.md#task-019-developer-gate",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-22T05:54:05Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-019 latest-main-integrated exact-candidate independent review",
+      "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+      "spec_baseline": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
+      "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
+      "status": "PASS",
+      "source_ref": "REV-016",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-22T05:59:51Z"
     }
   ],
   "pending_decisions": [
@@ -1032,30 +1565,87 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-management-phase-001",
       "idempotency_key": "customer-phase001-publication-push-v1",
-      "status": "PLANNED",
-      "source_ref": "User has authorized push/PR/merge; HD-008 approval recorded 2026-09-21."
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-21: pushed codex/customer-management-phase-001 before PR #120; branch was deleted after the merged PR was reconciled."
     },
     {
       "id": "EXT-PR-002",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-management-phase-001",
       "idempotency_key": "customer-phase001-publication-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "User has authorized push/PR/merge; HD-008 approval recorded 2026-09-21."
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/120"
     },
     {
       "id": "EXT-MERGE-002",
       "kind": "MERGE",
       "target": "github:crazysumsum/erp-app:main",
       "idempotency_key": "customer-phase001-publication-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub PR #120 merged at 2026-09-21T04:08:21Z; main merge commit 946f59820a8eeef2d6d0b0de17f59818aab9fd04 after exact-candidate CI passed."
+    },
+    {
+      "id": "EXT-MIGRATION-027",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase002_task012_20260921",
+      "idempotency_key": "customer-phase002-task012-settings-catalog-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-21: exact isolated schema was absent before creation; fresh migrations through 0047 passed, full rerun skipped every migration, customer_settings row id=1 was OFF/version1 with the five specified columns, and Customer classification catalogs retained zero invented seed rows. The schema was dropped and absence checked."
+    },
+    {
+      "id": "EXT-MIGRATION-028",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_task013_20260921",
+      "idempotency_key": "customer-phase002-task013-activation-request-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-21: fresh migrations through 0048 and a full no-op rerun passed; generated pending_slot enforced one pending request while a terminal row allowed retained history. The isolated schema was dropped and absence returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-029",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase002_gate_20260922",
+      "idempotency_key": "customer-phase002-task019-full-gate-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: fresh schema migrated through 0048, a complete rerun skipped every migration, full serial real-MySQL coverage passed 1917 tests with zero failures and all coverage floors, rollback commit 946f598 returned healthy/connected against the expanded schema, and the exact schema was dropped with final absence zero."
+    },
+    {
+      "id": "EXT-MIGRATION-030",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_phase002_gate_20260922",
+      "idempotency_key": "customer-phase002-task019-integrated-gate-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: after merging origin/main fd615e5, a fresh schema migrated through 0048 and reran fully as no-op; with latest-main-required temporary Supplier Bank test key rings, 1974 server tests passed with zero failures, coverage was 94.97/83.91/91.87 and all 34 high-risk floors passed. The exact schema was dropped with final absence zero."
+    },
+    {
+      "id": "EXT-PUSH-003",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-management-phase-002",
+      "idempotency_key": "customer-phase002-publication-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: pushed codex/customer-management-phase-002 at 5fea529628df7e1a0e7fc97d2bac8d8b23bf2678."
+    },
+    {
+      "id": "EXT-PR-003",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-management-phase-002",
+      "idempotency_key": "customer-phase002-publication-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/129"
+    },
+    {
+      "id": "EXT-MERGE-003",
+      "kind": "MERGE",
+      "target": "github:crazysumsum/erp-app:main",
+      "idempotency_key": "customer-phase002-publication-merge-v1",
       "status": "PLANNED",
-      "source_ref": "User has authorized push/PR/merge; merge remains conditional on exact-candidate CI and repository review gates."
+      "source_ref": "2026-09-22: PR #129 is approved for merge without CI under APPROVAL-RISK-004; confirmation must be observed from GitHub before this action is marked CONFIRMED."
     }
   ],
   "evidence_files": [
     "docs/customer_management/implementation/00_implementation_readiness.md",
-    "docs/customer_management/implementation/phase-PHASE-001-report.md"
+    "docs/customer_management/implementation/phase-PHASE-001-report.md",
+    "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Fetch and reconcile origin/main, commit the approved Customer publication ledger, push the exact candidate, create the planned PR, observe exact-candidate CI/review and merge only when every required gate passes."
+  "next_safe_action": "Publish the independently approved PHASE-002 candidate by PR and merge it to main without CI under APPROVAL-RISK-004, then hand off Customer Management to TEST_AND_VERIFY without claiming formal acceptance."
 }

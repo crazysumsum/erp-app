@@ -232,3 +232,172 @@ merge claim.
   search independently of the 64-character code limit, and repaired five earlier
   Customer integration-fixture lint findings without weakening teardown safety.
   No Critical or High issue remains.
+
+## TASK-011 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added named activation, code-correction, suspend, reactivate, archive, restore
+  and qualified-Draft delete commands.  Their high-risk authentication, reason,
+  version/CAS, first-activation, state-transition and atomic-audit rules are
+  enforced in the Customer aggregate.
+- Each high-risk lifecycle command now records a durable Customer operation with a
+  canonical password-free payload.  Reusing a key with a different lifecycle or
+  create-activation input fails as an idempotency conflict; a known terminal
+  outcome is reconciled without repeating the write.
+- Archive/delete run the bounded downstream reference check before acquiring a
+  Customer row lock and fail closed for `REFERENCE` or `UNKNOWN`.  No downstream
+  consumer provider is registered in this Customer-only scope, so these two
+  destructive commands remain intentionally unavailable (`CUSTOMER_REFERENCE_CHECK_UNAVAILABLE`) until PHASE-004 consumer providers are delivered; no clear result is inferred.
+- Focused lifecycle, operation, approval, root-service, settings and provider
+  registry suites passed 31 tests. Repository ESLint, `git diff --check`,
+  traceability validation and the Customer module-boundary check passed. The
+  repository-wide server coverage gate remains blocked by pre-existing unrelated
+  coverage debt and an out-of-scope Customer-catalog handler metadata failure;
+  neither was changed by this task.
+
+## TASK-014 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added the Customer approval queue, detail, eligible-approver lookup, approve,
+  reject and reassign contracts. Decisions lock the Customer and request in a
+  fixed order, reject stale critical snapshots, revalidate activation dependencies,
+  and create both approval and Customer-status audit records atomically.
+- Added durable idempotency for approve, reject and reassign, including replay of
+  the original terminal outcome after later Customer lifecycle changes. Added the
+  approved `customer-approvers` handler directory exception and Customer
+  `block`/`unblock` lifecycle commands.
+- Focused service, lifecycle, operation, handler-contract, handler-convention and
+  startup-guard suites, plus repository ESLint, passed. `git diff --check`,
+  traceability validation and the Customer module-boundary check also passed.
+- Independent review by Jason reached `APPROVE` after the stale-snapshot,
+  dual-audit, durable-operation and original-outcome replay findings were fixed.
+  The full server suite remains blocked by sandbox loopback-listen restrictions and
+  unrelated Customer-catalog handler metadata; neither is changed by this task.
+
+## TASK-015 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added Customer root, approval, settings and catalog client services. Customer
+  mutations preserve framework idempotency, accept a caller retry key without
+  leaking it into strict request bodies, and sign only device-password routes.
+  Reads accept an `AbortSignal`; root and approval queries preserve server filter,
+  pagination and stable sort contracts.
+- Corrected shared query serialization so array filters use repeated URL keys,
+  preserving the server's typed `status` and `missing` arrays instead of turning
+  them into invalid comma-delimited values.
+- Focused client service and HttpClient regression tests passed 35/35. Repository
+  ESLint, client production build, `git diff --check`, traceability validation and
+  the Customer module-boundary check passed. The Vite build reported the existing
+  >500 kB chunk advisory only.
+- Independent review by Jason reached `APPROVE` after child-pagination, approval
+  queue time-filter and caller-supplied idempotency-key findings were fixed. No UI
+  component or route changed, so Playwright validation is not applicable to this
+  service-only task.
+
+## TASK-016 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added the Customer list, create and root-detail pages on the existing route,
+  permission, shared table and Customer-service boundaries. The list keeps query,
+  status, sorting and pagination state in the URL; the create flow allows Drafts
+  and asks for an approver only after the server requires one.
+- Edit state is guarded on navigation; a version conflict keeps the user draft
+  visible and requires explicitly loading the latest server state before retrying.
+- Focused page and route-metadata tests passed 32/32. Repository ESLint, client
+  production build and `git diff --check` passed; the build reported only the
+  existing >500 kB chunk advisory.
+- Browser validation used Playwright against the actual Vite application with
+  network-layer API contracts: URL-preserving list/detail navigation and visible
+  Draft creation passed 2/2 with no page errors or console warnings. CI was not
+  run, as directed by the Product Owner.
+- Independent review by Jason reached `APPROVE` after command-response envelope
+  handling and the server's `APPROVER_REQUIRED` activation code were corrected;
+  unit and browser mocks now exercise those exact contracts.
+
+## TASK-017 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added Customer Address, Contact, Identifier and Credit editors with multi-purpose
+  defaults, inactive-row restrictions, reason/version handling, explicit conflict
+  reload, focusable errors and keyboard-operable dialogs. Purpose/default labels
+  remain visible without opening each editor.
+- Added the authoritative Customer completeness endpoint and UI. Blocking issues
+  use the current Business Master Currency status; child/default, identifier,
+  payment-term and credit gaps remain explicitly non-blocking. Credit UI preserves
+  null versus `0.0000` versus On Hold and states that Customer maintenance is not a
+  transaction credit override.
+- Corrected credit-note update semantics so an editor that cannot read private notes
+  omits the field and the server preserves the stored value; an explicitly supplied
+  note still replaces it. The general read projection continues to exclude private
+  credit notes.
+- Focused server tests passed 19/19 across completeness, credit, handler contracts,
+  handler conventions and Customer detail/list regressions. Focused client service,
+  page and component tests passed 18/18. Repository ESLint, client production build,
+  `git diff --check`, traceability approval validation and the Customer module-boundary
+  check passed. The build reported only the existing >500 kB chunk advisory.
+- Playwright ran the actual Vite UI and passed 3/3 list/detail, Draft-create and
+  keyboard Address-create flows with no relevant page, console or network failure.
+  The new completeness SQL also executed successfully as a read-only query against
+  local MySQL. CI was not run, as directed by the Product Owner.
+- Independent review by Jason reached `APPROVE` after private-note preservation,
+  visible default labels, the credit-override warning, authoritative completeness
+  and actionable child/credit conflict recovery were corrected and independently
+  revalidated.
+
+## TASK-018 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added permission-aware Customer lifecycle commands, activation-to-approval,
+  approval queue/detail decisions, the prospective activation setting and
+  Category/Industry/Territory administration. High-risk operations retain password,
+  approved-device and reason requirements; reference blockers and version conflicts
+  remain visible and actionable.
+- Approval detail shows the submitted/current diff, identifier count, requester,
+  assigned approver and request time. Stale requests cannot be approved; reassignment
+  and withdrawal follow their distinct permission contracts.
+- Client coverage passed 603/603 tests. Repository ESLint, client production build,
+  `git diff --check`, traceability approval validation and the Customer module-boundary
+  check passed. The build reported only the existing >500 kB chunk advisory.
+- Playwright ran the actual Vite UI and passed 9/9 Customer flows, including role
+  boundaries, version conflict recovery, stale approval, activation approver
+  selection, named reference blockers, reassignment, withdrawal and signed settings
+  and catalog writes, with no relevant unexpected console failure. CI was not run,
+  as directed by the Product Owner.
+- Independent review by Jason initially found seven required contract/coverage gaps.
+  After remediation, the same separate reviewer reran focused Vitest 10/10 and
+  Playwright 9/9 and returned `APPROVE` with every finding closed.
+
+## TASK-019 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT or a release claim.
+
+- The latest-main-integrated serial real-MySQL server gate passed 1,974 tests with
+  zero failures; only the two declared release-performance suites were skipped.
+  Coverage was 94.97% lines, 83.91% branches and 91.87% functions, and all 34
+  high-risk per-file floors
+  passed.
+- A fresh isolated schema migrated through `0048`, reran entirely as no-op and was
+  removed with final absence confirmed. The full gate found and closed a Customer
+  catalog handler-discovery defect by adding the framework-required API descriptions
+  and a regression assertion.
+- Client coverage passed 607/607 tests; repository ESLint and the production build
+  passed. Customer Playwright passed 10/10, including console/network monitoring,
+  keyboard behavior and core-action reachability at 375/768/1024/1440 widths. The
+  375px sticky detail action was both in the viewport and activated.
+- The pre-PHASE-002 application commit `946f598` started against the forward-expanded
+  schema and returned healthy/connected, proving compatible application rollback.
+- CI is intentionally not run under the Product Owner's explicit publication
+  direction and accepted risk. Exact-candidate local checks and independent review
+  remain required before merge.
