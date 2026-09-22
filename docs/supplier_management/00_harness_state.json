@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 203,
+  "revision": 206,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "0379ccc9c955ec4c1de1e60d4c1f6f0870ae1e7c",
-    "source_fingerprint": "a03ba3db23ef2a3520bf63204f0bd2e993f8f4ba2a351a9fe7a2effa23158fac",
+    "code_commit": "bef992cc5f4fdb8b232d1e30c1ba907789a7d1a5",
+    "source_fingerprint": "21ba586a378dc41d4715d4ddc8887ef79d207387ffa4ec3f98f9b689bd5075f8",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
-    "default_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
+    "default_commit": "fd615e539bc339ceada1b6541949db7046ed160c",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -2920,6 +2920,17 @@
       "source_ref": "REV-045 returned CHANGES_REQUESTED with 1 High, 1 Medium and 1 Low, and all three were real. It also re-ran my whole mutation table rather than reading it, and confirmed all seven. F-H1: the gone flag I added for REV-044 M-1 was set in exactly one place, onUnmounted. The onBeforeRouteUpdate guard I added for REV-044 H-1 clears the plaintext but does not set it, and neither does the session watch, so a reveal still in flight when the param changed re-rendered supplier 7's account number on supplier 8's screen with a fresh thirty-second countdown. I reproduced it before changing anything: not in the DOM before the late resolve, in the DOM after it. That is the same leak REV-044 refused to merge, reached through a different door, and the fifth consecutive round in this module where one round's remediation opened the next round's finding. The fix follows REV-045's shape rather than patching each guard: every clearing trigger already funnels through forgetPlaintext, so that function bumps a revealGeneration and confirmReveal compares the value it left with after its await. That closes the class instead of the instance. F-M1: my own section 1 claimed all five triggers cleared form.accountNumber; route change and session expiry cleared neither it nor the typed password, and the dialog kept rendering under the new URL. Clearing is now two layers, forgetPlaintext and forgetEverything, and the report says which trigger uses which. F-L1: the deadline used Date.now() when REV-044 had already prescribed performance.now() and given the reason; a backwards system clock step would hold the plaintext for an hour and display 3629 seconds remaining. Now monotonic, with the displayed value clamped. Nine mutants, nine killed, including four aimed at the new code. The two clock tests had to be split because vi.advanceTimersByTime moves both clocks while vi.setSystemTime moves only the system one - measured, not assumed. 588/588 client vitest, 3/3 browser, lint clean.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-045",
       "observed_at": "2026-09-22T11:16:15+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-046: no High for the first time in six rounds; the new defect fails closed but corrupts an audit correspondence",
+      "code_commit": "bef992cc5f4fdb8b232d1e30c1ba907789a7d1a5",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "21ba586a378dc41d4715d4ddc8887ef79d207387ffa4ec3f98f9b689bd5075f8",
+      "status": "PASS",
+      "source_ref": "REV-046 returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 3 Low and 7 Info. The cross-Supplier plaintext leak that drove the previous two rounds is closed on every path the reviewer could reach: it attacked the generation counter from six directions and exercised the four other async paths - create, update, setDefault, deactivate and load - that were the obvious place the class would still be open, and none of them lands state on the wrong Supplier. It reproduced all nine of my previous mutants rather than reading the table. The streak of a remediation opening the next round's finding did continue, for a sixth round, but on a different axis and failing closed: forgetPlaintext bumps the generation and the countdown tick also calls it, so one row's thirty-second expiry landing inside another row's reveal round-trip silently discarded a reveal the server had already decrypted and written a supplier.bank.reveal audit row for. No plaintext and no error - which means the audit log records a disclosure that never reached a screen, and that audit is what FR-BANK-006 leans on. It now says so explicitly and names the audit. Three Lows, all of them about what my tests could not see: the confirm dialog's password had no assertion at all and removing its two clearing lines left the whole suite green while a typed step-up password survived both a Supplier change and a session expiry; the '?? Date.now()' fallback I wrote was literally the behaviour twice rejected in the two previous rounds, a silent degradation to the broken version exactly when it would matter, so it is gone rather than kept; and my clearInterval spy asserted only that the function had been called, so clearing an unrelated handle passed while the real countdown leaked. Twelve mutants now, twelve killed. The v-if to v-show mutant cannot run under jsdom and REV-046 stated honestly that its own environment broke before it could verify that one in the browser, so I ran it myself: red under the mutant, green restored. origin/main had moved to bd8cc21 while this branch was in review; merged in per CLAUDE.md section 6, file sets disjoint, no conflict, and baseline.default_commit refreshed. 590/590 client vitest, 3/3 browser, lint clean.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-046",
+      "observed_at": "2026-09-22T11:40:26+08:00"
     }
   ],
   "pending_decisions": [
@@ -3915,7 +3926,11 @@
     "evidence/20260922T031624-a7aae1d777b5/run.json",
     "evidence/20260922T031626-a4fc7122010a/run.json",
     "evidence/20260922T031630-4c71fdeeeb65/run.json",
-    "evidence/20260922T031634-74b28bf6519f/run.json"
+    "evidence/20260922T031634-74b28bf6519f/run.json",
+    "evidence/20260922T034035-c52085b898b3/run.json",
+    "evidence/20260922T034037-9cb24cfea832/run.json",
+    "evidence/20260922T034040-9f44b132f2d4/run.json",
+    "evidence/20260922T034043-c72312dded1e/run.json"
   ],
   "defects": [
     {

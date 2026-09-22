@@ -218,3 +218,56 @@ setSystemTime +60000 → perf +0／date +60000）。所以節流嗰條要搬 `pe
 再放一個 tick，倒退時鐘嗰條要 `setSystemTime` 向後跳。
 
 588/588 client vitest、3/3 瀏覽器、lint 乾淨。
+
+## 10. REV-046 remediation
+
+REV-046 報 CHANGES_REQUESTED：**0 Critical、0 High**、1 Medium、3 Low、7 Info。
+
+**條連勝喺最緊要嗰條軸上面斷咗。** 跨 Supplier 明文外洩，喺佢去得到嘅每一條路上面
+都關咗。佢由六個方向攻擊個新 generation counter，亦都行過我冇諗過去查嗰四條 async
+路徑（`create`／`update`／`setDefault`／`deactivate`／`load`）—— 冇一條會把資料落錯
+Supplier。我上一輪九個 mutation 佢逐個重現，全部喺我聲稱嗰條斷言度死。
+
+### Medium：靜靜雞丟棄一個伺服器已經稽核咗嘅 reveal
+
+呢一輪**仲係**整出咗一個新缺陷（第六次），但今次佢係 **fail closed**。
+
+`forgetPlaintext()` 撳大 generation，而**倒數 tick 都會叫佢**。所以另一行嘅 30 秒啱啱
+喺另一個 reveal 嘅來回中間到期，就會令一次完全正常嘅 reveal 落到「丟棄」嗰條路：冇
+明文、**冇錯誤訊息**、dialog 開住。而伺服器嗰邊已經解咗密、已經寫咗一條
+`supplier.bank.reveal` 稽核。
+
+即係個稽核紀錄會對應住一次**根本冇出現過喺螢幕上**嘅披露 —— 而嗰條稽核正正係呢個功能
+嘅設計所倚靠嘅嘢（FR-BANK-006）。修法：唔再 bare `return`，改為講返俾使用者知，並且
+明講「呢次查看已經記錄咗稽核」。
+
+### 三條 Low，三條都係「個測試睇唔到嘅嘢」
+
+| # | 收法 |
+| --- | --- |
+| **X5** 第三個 dialog（設為預設／停用）嘅密碼**一個斷言都冇** —— 由 `forgetEverything()` 剝走嗰兩行，19 條全綠，而打咗一半嘅密碼會跨 Supplier 同跨 session 留低 | 加咗兩邊都試嘅測試 |
+| **X11 / X7** `?? Date.now()` 個 fallback 嘅內容，就係啱啱先俾人拒絕咗**兩次**嗰個行為；而個 `Math.min` clamp 冇測試，佢唯一嘅作用係喺倒數卡住嗰陣用一個安詳嘅「30 秒」遮住佢 | Fallback 剝走（`performance.now` 由 IE10 起都有；真係冇就寧願即刻爆 —— 爆咗睇得見，靜靜雞退化做壞版本睇唔見）。Clamp 剝走 |
+| **X12** 清一個**唔相干**嘅 handle，19 條照樣全綠 —— 即係我個 `clearInterval` spy 根本冇盯住佢聲稱盯住嗰個 handle | 改成喺 arm 嗰陣記低真個 handle，再斷言 `clearInterval` 收過**佢** |
+
+### Mutation：十二個，十二個殺到
+
+```
+REV-046 M  silent discard            KILLED      F-M1  route update: reveal only  KILLED
+REV-046 X5 confirm secrets kept      KILLED      F-M1b session watch: reveal only KILLED
+REV-046 X11 system-clock fallback    KILLED      H-1   drop onBeforeRouteUpdate   KILLED
+REV-046 X12 clear a bogus handle     KILLED      M-2a  drop onUnmounted clear     KILLED
+F-H1  drop the generation check      KILLED      M-2b  drop forgetFormSecrets     KILLED
+F-H1b generation never bumped        KILLED      M-3   widen row controls         KILLED
+```
+
+`v-if` → `v-show` 喺 jsdom 編譯唔到，要靠瀏覽器殺。REV-046 老實講咗佢今輪因為自己個
+環境爛咗（mutation hot-reload 入咗 live Vite server、兩個 run 爭同一個 outputDir）
+驗唔到呢個，所以**我自己行返一次**：改成 `v-show` → 紅；還原 → 綠（32.4s）。
+
+### main 郁咗
+
+`origin/main` 去咗 `bd8cc21`（PR #126，item-management UAT closeout）。CLAUDE.md §6
+要求 merge 之前 fetch target、郁咗就先 merge 返入嚟。已經做咗 —— 檔案集合完全唔相交
+（嗰邊全部 `docs/items_management/**`），冇衝突。`baseline.default_commit` 一併更新。
+
+590/590 client vitest、3/3 瀏覽器、lint 乾淨。

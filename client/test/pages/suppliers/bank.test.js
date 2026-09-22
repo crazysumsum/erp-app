@@ -319,6 +319,67 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     expect(document.body.innerHTML, "nor a session expiry").not.toContain(SECRET);
   });
 
+  /**
+   * REV-046 X5：第三個 dialog（設為預設／停用）嘅密碼本來**一個斷言都冇** ——
+   * 由 `forgetEverything()` 度剝走佢兩行，19 條測試照樣全綠，而一個打咗一半嘅
+   * 密碼就會跨 Supplier 同跨 session 留低。
+   */
+  it("wipes the confirm dialog's password on a Supplier change and on session expiry", async () => {
+    const { router, body } = await mountPanel();
+    await body.find('[aria-label="設為預設 Other Bank"]').trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    expect(document.body.innerHTML).toContain("Correct-Horse-1!");
+
+    await router.push("/suppliers/8");
+    await flushPromises();
+    expect(document.body.innerHTML,
+      "a typed step-up password must not survive a Supplier change").not.toContain("Correct-Horse-1!");
+
+    await body.find('[aria-label="停用 Other Bank"]').trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    useSessionStore().user = null;
+    await flushPromises();
+    expect(document.body.innerHTML, "nor a session expiry").not.toContain("Correct-Horse-1!");
+  });
+
+  /**
+   * REV-046 個 Medium。`forgetPlaintext()` 撳大 generation，而**倒數 tick 都會叫佢**
+   * —— 所以另一行嘅 30 秒啱啱喺呢個來回中間到期，就會令一次完全正常嘅 reveal 落到
+   * 丟棄嗰條路。伺服器嗰邊已經解咗密、已經寫咗一條「有人睇過」嘅稽核。靜靜雞丟
+   * 就會令嗰條稽核對應住一次根本冇出現過喺螢幕上嘅披露。
+   */
+  it("says so when a reveal is discarded, because the server already audited it", async () => {
+    // 第一行：正常展開，個 30 秒倒數開始行。
+    supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: "OTHER-ACCOUNT-99", revealedAt: 1 });
+    const { body } = await mountPanel({ permissions: VIEW_BANK });
+    await revealRow(body);
+    expect(body.text()).toContain("OTHER-ACCOUNT-99");
+
+    // 第二行：開始 reveal，但個 response 仲未返到。
+    let resolveReveal;
+    supplierBankService.reveal.mockReturnValue(new Promise((resolve) => { resolveReveal = resolve; }));
+    await body.find('[aria-label="查看完整帳號 Other Bank"]').trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    await field(body, "查看原因").find("textarea").setValue("核對第二個帳號");
+    await byText(body, "確認查看").trigger("click");
+
+    // 第一行嘅 30 秒啱啱喺呢個來回中間到期 —— `forgetPlaintext()` 撳大 generation。
+    vi.advanceTimersByTime(31_000);
+    await flushPromises();
+    expect(document.body.innerHTML).not.toContain("OTHER-ACCOUNT-99");
+
+    resolveReveal({ id: 42, accountNumber: SECRET, revealedAt: 1000 });
+    await flushPromises();
+
+    expect(document.body.innerHTML, "a discarded reveal must not show the account").not.toContain(SECRET);
+    expect(body.find('[role="alert"]').exists(),
+      "a discarded reveal must not be silent: the server audited a disclosure that never reached the screen").toBe(true);
+    expect(body.find('[role="alert"]').text()).toMatch(/稽核|重新查看/u);
+  });
+
   it("clears the plaintext when the user navigates away", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { router, body } = await mountPanel({ permissions: VIEW_BANK });
@@ -332,14 +393,20 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   it("clears the plaintext on unmount and on session expiry", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     let result = await mountPanel({ permissions: VIEW_BANK });
+    // REV-046 X12：斷言「clearInterval 有被叫過」唔夠 —— 清一個**唔相干**嘅 handle
+    // 一樣過關，而真個倒數照樣漏住。所以先記低個倒數真正攞到嗰個 handle。
+    const armed = vi.spyOn(globalThis, "setInterval");
     await revealRow(result.body);
+    const countdownHandle = armed.mock.results.at(-1).value;
+    armed.mockRestore();
     // Unmount 本身就會拆走個節點，所以單睇 DOM 係一個**唔會失敗**嘅斷言 ——
     // 拆走 onUnmounted(forgetPlaintext) 佢一樣綠（REV-044 M-2）。數總 timer 數一樣
     // 唔得：unmount 會清埋 Quasar 自己嗰堆，個數點都會跌。要盯住嘅係**嗰一個**
     // handle 有冇被 clearInterval 收過。
     const cleared = vi.spyOn(globalThis, "clearInterval");
     result.wrapper.unmount();
-    expect(cleared, "unmount must clear the countdown, not just remove the node").toHaveBeenCalled();
+    expect(cleared.mock.calls.map((call) => call[0]),
+      "unmount must clear the countdown's own handle, not merely call clearInterval").toContain(countdownHandle);
     cleared.mockRestore();
     expect(document.body.innerHTML).not.toContain(SECRET);
 

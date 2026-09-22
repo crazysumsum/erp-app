@@ -97,12 +97,20 @@ function holdPlaintext(id, accountNumber) {
   // 系統時鐘可以向後跳（NTP 校正、使用者改時間、VM 由 snapshot 醒返），而
   // `Date.now()` 一向後跳，`deadline - now` 就會變返一個好大嘅正數 —— 個明文會
   // 一直攞住，而個介面會顯示「3629 秒後自動隱藏」。（REV-045 F-L1）
-  const clock = () => (globalThis.performance?.now?.() ?? Date.now());
+  //
+  // **冇** `?? Date.now()` fallback：嗰個 fallback 嘅內容就係上面啱啱拒絕咗兩次
+  // 嗰個行為，即係一個「喺最需要佢嗰陣退化返做壞版本」嘅後備。`performance.now`
+  // 由 IE10 起每個瀏覽器都有，而如果真係冇，寧願即刻爆 —— 一個爆咗嘅倒數睇得見，
+  // 一個靜靜雞用緊系統時鐘嘅倒數睇唔見。（REV-046）
+  const clock = () => performance.now();
   const deadline = clock() + REVEAL_SECONDS * 1000;
   const tick = () => {
     const left = Math.ceil((deadline - clock()) / 1000);
+    // 唔再 clamp：個 clamp 唯一嘅作用係喺個倒數卡住嗰陣，用一個安詳嘅「30 秒」
+    // 遮住佢。而家個鐘係單調嘅，`left` 本來就唔會大過 REVEAL_SECONDS，所以一個
+    // 大過佢嘅數字係一個真訊號，唔應該收埋。（REV-046）
     if (left <= 0) forgetPlaintext();
-    else revealed.remaining = Math.min(left, REVEAL_SECONDS);
+    else revealed.remaining = left;
   };
   revealed.remaining = REVEAL_SECONDS;
   countdown = setInterval(tick, 1000);
@@ -166,7 +174,17 @@ async function confirmReveal() {
     const result = await supplierBankService.reveal(props.supplierId, revealDialog.row.id, {
       password: revealDialog.password, reason: revealDialog.reason.trim()
     });
-    if (generation !== revealGeneration) return;
+    if (generation !== revealGeneration) {
+      // 丟咗個 response，但**唔可以靜靜雞丟**。伺服器已經解咗密、已經寫咗一條
+      // `supplier.bank.reveal` 稽核 —— 一條「有人睇過」嘅紀錄。如果呢度乜都唔講
+      // 就 return，個稽核紀錄就會對應住一次根本冇出現過喺螢幕上嘅披露，而個稽核
+      // 紀錄正正係呢個功能嘅設計所倚靠嘅嘢。（REV-046）
+      //
+      // 最窄嗰個窗口係另一行嘅 30 秒倒數啱啱喺呢個來回中間到期：`forgetPlaintext()`
+      // 亦都會撳大 generation，所以一次完全正常嘅 reveal 都會落到呢度。
+      revealDialog.error = "畫面喺查看期間更新咗，所以冇顯示帳號。呢次查看已經記錄咗稽核，請重新查看。";
+      return;
+    }
     holdPlaintext(result.id, result.accountNumber);
     revealDialog.open = false;
   } catch (error) {
