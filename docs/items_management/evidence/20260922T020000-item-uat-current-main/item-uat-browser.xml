@@ -1,0 +1,90 @@
+<testsuites id="" name="" tests="13" failures="0" skipped="2" errors="0" time="8.338272000000002">
+<testsuite name="item-management.spec.js" timestamp="2026-09-22T01:49:36.735Z" hostname="" tests="13" failures="0" skipped="2" time="5.53" errors="0">
+<testcase name="Item Management executable UAT › UAT-001 search state survives refresh and empty results remain usable" classname="item-management.spec.js" time="1.124">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-002 audit history shows actor, target, reason and change detail" classname="item-management.spec.js" time="0.162">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-003 invalid Standard Item create is rejected with focused actionable errors" classname="item-management.spec.js" time="0.198">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-004 existing Variant Item can add one unique SKU and reject duplicates" classname="item-management.spec.js" time="0.944">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-005 concurrent editors and real downstream SKU references protect history" classname="item-management.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+<property name="skip" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-006 unreferenced Brand can be created and permanently deleted with audit reason" classname="item-management.spec.js" time="1.573">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-007 UOM entry enforces code, name and symbol fields in a usable catalogue flow" classname="item-management.spec.js" time="0.637">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-008 price entry communicates fixed HKD and tax-not-applicable semantics" classname="item-management.spec.js" time="0.205">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-009 template and filtered SKU export complete as browser downloads" classname="item-management.spec.js" time="0.241">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-010 audit search exposes the Item manager&apos;s catalog changes" classname="item-management.spec.js" time="0.162">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-011 item.mgmt-only role can reach every Item surface and no User Management surface" classname="item-management.spec.js" time="0.034">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-012 keyboard focus, dirty-state protection, console and network remain usable" classname="item-management.spec.js" time="0.25">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Item Management executable UAT › UAT-015 staging release journey and owner sign-off" classname="item-management.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+<property name="skip" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,0 +1,70 @@
+<testsuites id="" name="" tests="3" failures="0" skipped="2" errors="1" time="93.01978299999999">
+<testsuite name=".tmp-uat-acceptance.spec.js" timestamp="2026-09-22T02:39:51.770Z" hostname="" tests="3" failures="0" skipped="2" time="90.041" errors="1">
+<testcase name="Approved Item Management acceptance › UAT-015 approved staging-like create-find-edit-lifecycle-audit-import journey" classname=".tmp-uat-acceptance.spec.js" time="90.041">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/test-failed-1.png]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md]]
+
+[[ATTACHMENT|../../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/trace.zip]]
+]]>
+</system-out>
+<error message="Test timeout of 90000ms exceeded." type="Error">
+<![CDATA[  .tmp-uat-acceptance.spec.js:166:3 › Approved Item Management acceptance › UAT-015 approved staging-like create-find-edit-lifecycle-audit-import journey
+
+    Test timeout of 90000ms exceeded.
+
+    Error: page.waitForResponse: Target page, context or browser has been closed
+
+      212 |     await page.getByRole("button", { name: "編輯" }).click();
+      213 |     await page.getByLabel("商品名稱 *").fill(UPDATED_ITEM_NAME);
+    > 214 |     const updateResponse = page.waitForResponse(
+          |                                 ^
+      215 |       (response) => response.url().endsWith(`/api/v1/items/${itemId}`) && response.request().method() === "PUT"
+      216 |     );
+      217 |     await page.getByRole("button", { name: "儲存", exact: true }).click();
+        at /private/tmp/erp-item-management-uat-closeout/client/e2e/item-management/.tmp-uat-acceptance.spec.js:214:33
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md
+
+    Error Context: ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/trace.zip
+    Usage:
+
+        npx playwright show-trace ../../../../erp-item-uat-acceptance-20260922/playwright-artifacts/.tmp-uat-acceptance-Approv-93ecf-ecycle-audit-import-journey/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+]]>
+</error>
+</testcase>
+<testcase name="Approved Item Management acceptance › UAT-014 approved catalogue, ownership, uniqueness, UOM conversion and internal Barcode" classname=".tmp-uat-acceptance.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Approved Item Management acceptance › UAT-016 delegated Product Security Operations Compliance acceptance surface" classname=".tmp-uat-acceptance.spec.js">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>

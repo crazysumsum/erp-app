@@ -1,0 +1,16 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="3.392962">
+<testsuite name=".tmp-uat-acceptance-targeted.spec.js" timestamp="2026-09-22T02:48:56.403Z" hostname="" tests="2" failures="0" skipped="0" time="0.744" errors="0">
+<testcase name="Approved Item Management acceptance targeted retest › UAT-014 approved catalogue, ownership, uniqueness, UOM conversion and internal Barcode" classname=".tmp-uat-acceptance-targeted.spec.js" time="0.589">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+<testcase name="Approved Item Management acceptance targeted retest › UAT-016 delegated Product Security Operations Compliance acceptance surface" classname=".tmp-uat-acceptance-targeted.spec.js" time="0.155">
+<properties>
+<property name="serial" value="">
+</property>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>
