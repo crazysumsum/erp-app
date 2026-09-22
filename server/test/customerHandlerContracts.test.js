@@ -6,7 +6,7 @@ import { GetCustomerOperationHandler } from "../src/handlers/customer-operations
 
 test("TC-012 Customer root APIs use strict schemas, route permissions and framework idempotency", () => {
   const values = [...Object.values(handlers), GetCustomerOperationHandler].filter((value) => typeof value === "function" && value.api);
-  assert.equal(values.length, 21);
+  assert.equal(values.length, 30);
   for (const Handler of values) {
     for (const schema of Object.values(Handler.api.requestSchema)) {
       assert.equal(schema.additionalProperties, false, Handler.handlerName);
@@ -44,5 +44,14 @@ test("TC-012 Customer root APIs use strict schemas, route permissions and framew
   assert.deepEqual(handlers.GetCustomerCreditPolicyHandler.api.authorizationPolicies[0].options.permissions, ["customer.view"]);
   assert.equal(handlers.ClearCustomerCreditPolicyHandler.api.authType, "jwt-password");
   assert.ok(handlers.ClearCustomerCreditPolicyHandler.api.requestSchema.body.required.includes("password"));
+  assert.equal(handlers.ChangeCustomerCodeHandler.api.authType, "jwt-device-password");
+  assert.equal(handlers.DeleteCustomerHandler.api.authType, "jwt-device-password");
+  for (const name of ["SuspendCustomerHandler", "ReactivateCustomerHandler", "ArchiveCustomerHandler", "RestoreCustomerHandler"]) {
+    assert.equal(handlers[name].api.authType, "jwt-password", name);
+    assert.ok(handlers[name].api.requestSchema.body.required.includes("password"), name);
+  }
+  assert.equal(handlers.ActivateCustomerHandler.api.path, "/api/v1/customers/:id/activate");
+  assert.equal(handlers.CreateCustomerHandler.api.requestSchema.body.properties.activate.type, "boolean");
+  assert.ok(handlers.CreateCustomerHandler.api.requestSchema.body.properties.approverUserId);
   for (const Handler of values) assert.doesNotMatch(JSON.stringify(Handler.api.responseSchema), /"trim"/, Handler.handlerName);
 });

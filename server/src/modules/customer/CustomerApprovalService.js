@@ -59,59 +59,63 @@ export class CustomerApprovalService {
   }
 
   async submit(input) {
-    const requestNote = note(input.requestNote);
     return this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, input);
-      const [[setting]] = await connection.query("SELECT require_activation_approval, version FROM customer_settings WHERE id = 1 FOR SHARE");
-      if (!setting || Number(setting.require_activation_approval) !== 1) {
-        throw customerApprovalConflict("APPROVAL_REQUIRED", "目前設定不需要啟用審批");
-      }
-      const [[customer]] = await connection.query("SELECT * FROM customers WHERE id = ? FOR UPDATE", [input.customerId]);
-      if (!customer) throw customerNotFound(input.customerId);
-      if (customer.status !== "draft") {
-        throw customerApprovalConflict("CUSTOMER_NOT_DRAFT", "只有草稿客戶可提交審批", { status: customer.status });
-      }
-      const approver = await this.#eligibleApprover(connection, input.approverUserId, input.actorId);
-      const [identifiers] = await connection.query(
-        "SELECT identifier_type, issuer_country_code, identifier_value_key FROM customer_identifiers WHERE customer_id = ? AND status = 'active' ORDER BY identifier_type, issuer_country_code, identifier_value_key FOR UPDATE",
-        [input.customerId]
-      );
-      const [[credit]] = await connection.query(
-        "SELECT credit_status FROM customer_credit_profiles WHERE customer_id = ? FOR UPDATE",
-        [input.customerId]
-      );
-      const critical = snapshot(customer, identifiers, credit);
-      const nowMs = this.time.nowMs();
-      let created;
-      try {
-        [created] = await connection.execute(
-          `INSERT INTO customer_activation_requests
-            (customer_id, requested_by, assigned_approver_id, customer_version, critical_snapshot_hash, summary,
-             approval_setting_value, approval_setting_version, status, request_note, requested_at)
-           VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), 1, ?, 'pending', ?, ?)`,
-          [input.customerId, input.actorId, approver.id, Number(customer.version) + 1, hash(critical),
-            JSON.stringify(summary(customer, identifiers, credit)), Number(setting.version), requestNote, nowMs]
-        );
-      } catch (error) {
-        if (error?.code === "ER_DUP_ENTRY") {
-          throw customerApprovalConflict("APPROVAL_REQUEST_OPEN", "客戶已有待處理的審批申請");
-        }
-        throw error;
-      }
-      const [updated] = await connection.execute(
-        "UPDATE customers SET status = 'pending_approval', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?",
-        [nowMs, input.actorId, input.customerId, customer.version]
-      );
-      if (updated.affectedRows !== 1) throw versionConflict(customer.version);
-      await this.audit.record(connection, {
-        occurredAt: nowMs, actorUserId: input.actorId, actorUsername: actor.username, action: "approval.submit",
-        targetType: "approval", targetId: Number(created.insertId), customerId: input.customerId,
-        targetLabel: customer.customer_code, reason: requestNote,
-        detail: { after: { status: PENDING, assignedApproverId: approver.id, customerVersion: Number(customer.version) + 1 } },
-        requestId: input.requestId, ip: input.ip
-      });
-      return { id: Number(created.insertId), customerId: Number(input.customerId), customerStatus: "pending_approval", status: PENDING, version: 1 };
+      return this.submitInTransaction(connection, input);
     });
+  }
+
+  async submitInTransaction(connection, input, { actor: suppliedActor, setting: suppliedSetting, customer: suppliedCustomer } = {}) {
+    const requestNote = note(input.requestNote);
+    const actor = suppliedActor ?? await this.authorize(connection, input);
+    const setting = suppliedSetting ?? (await connection.query("SELECT require_activation_approval, version FROM customer_settings WHERE id = 1 FOR SHARE"))[0][0];
+    if (!setting || Number(setting.require_activation_approval) !== 1) {
+      throw customerApprovalConflict("APPROVAL_REQUIRED", "目前設定不需要啟用審批");
+    }
+    const customer = suppliedCustomer ?? (await connection.query("SELECT * FROM customers WHERE id = ? FOR UPDATE", [input.customerId]))[0][0];
+    if (!customer) throw customerNotFound(input.customerId);
+    if (customer.status !== "draft") {
+      throw customerApprovalConflict("CUSTOMER_NOT_DRAFT", "只有草稿客戶可提交審批", { status: customer.status });
+    }
+    const approver = await this.#eligibleApprover(connection, input.approverUserId, input.actorId);
+    const [identifiers] = await connection.query(
+      "SELECT identifier_type, issuer_country_code, identifier_value_key FROM customer_identifiers WHERE customer_id = ? AND status = 'active' ORDER BY identifier_type, issuer_country_code, identifier_value_key FOR UPDATE",
+      [input.customerId]
+    );
+    const [[credit]] = await connection.query(
+      "SELECT credit_status FROM customer_credit_profiles WHERE customer_id = ? FOR UPDATE",
+      [input.customerId]
+    );
+    const critical = snapshot(customer, identifiers, credit);
+    const nowMs = this.time.nowMs();
+    let created;
+    try {
+      [created] = await connection.execute(
+        `INSERT INTO customer_activation_requests
+          (customer_id, requested_by, assigned_approver_id, customer_version, critical_snapshot_hash, summary,
+           approval_setting_value, approval_setting_version, status, request_note, requested_at)
+         VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), 1, ?, 'pending', ?, ?)`,
+        [input.customerId, input.actorId, approver.id, Number(customer.version) + 1, hash(critical),
+          JSON.stringify(summary(customer, identifiers, credit)), Number(setting.version), requestNote, nowMs]
+      );
+    } catch (error) {
+      if (error?.code === "ER_DUP_ENTRY") {
+        throw customerApprovalConflict("APPROVAL_REQUEST_OPEN", "客戶已有待處理的審批申請");
+      }
+      throw error;
+    }
+    const [updated] = await connection.execute(
+      "UPDATE customers SET status = 'pending_approval', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?",
+      [nowMs, input.actorId, input.customerId, customer.version]
+    );
+    if (updated.affectedRows !== 1) throw versionConflict(customer.version);
+    await this.audit.record(connection, {
+      occurredAt: nowMs, actorUserId: input.actorId, actorUsername: actor.username, action: "approval.submit",
+      targetType: "approval", targetId: Number(created.insertId), customerId: input.customerId,
+      targetLabel: customer.customer_code, reason: requestNote,
+      detail: { after: { status: PENDING, assignedApproverId: approver.id, customerVersion: Number(customer.version) + 1 } },
+      requestId: input.requestId, ip: input.ip
+    });
+    return { id: Number(created.insertId), customerId: Number(input.customerId), customerStatus: "pending_approval", status: PENDING, version: 1 };
   }
 
   async withdraw(input) {

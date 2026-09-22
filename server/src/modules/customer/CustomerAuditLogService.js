@@ -3,6 +3,13 @@ const MAX_DETAIL_BYTES = 8192;
 const ACTIONS = new Set([
   "customer.create",
   "customer.update",
+  "customer.code_change",
+  "customer.activate",
+  "customer.suspend",
+  "customer.reactivate",
+  "customer.archive",
+  "customer.restore",
+  "customer.delete",
   "customer.status",
   "customer.address.create",
   "customer.address.update",

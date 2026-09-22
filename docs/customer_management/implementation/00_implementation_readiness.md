@@ -232,3 +232,27 @@ merge claim.
   search independently of the 64-character code limit, and repaired five earlier
   Customer integration-fixture lint findings without weakening teardown safety.
   No Critical or High issue remains.
+
+## TASK-011 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added named activation, code-correction, suspend, reactivate, archive, restore
+  and qualified-Draft delete commands.  Their high-risk authentication, reason,
+  version/CAS, first-activation, state-transition and atomic-audit rules are
+  enforced in the Customer aggregate.
+- Each high-risk lifecycle command now records a durable Customer operation with a
+  canonical password-free payload.  Reusing a key with a different lifecycle or
+  create-activation input fails as an idempotency conflict; a known terminal
+  outcome is reconciled without repeating the write.
+- Archive/delete run the bounded downstream reference check before acquiring a
+  Customer row lock and fail closed for `REFERENCE` or `UNKNOWN`.  No downstream
+  consumer provider is registered in this Customer-only scope, so these two
+  destructive commands remain intentionally unavailable (`CUSTOMER_REFERENCE_CHECK_UNAVAILABLE`) until PHASE-004 consumer providers are delivered; no clear result is inferred.
+- Focused lifecycle, operation, approval, root-service, settings and provider
+  registry suites passed 31 tests. Repository ESLint, `git diff --check`,
+  traceability validation and the Customer module-boundary check passed. The
+  repository-wide server coverage gate remains blocked by pre-existing unrelated
+  coverage debt and an out-of-scope Customer-catalog handler metadata failure;
+  neither was changed by this task.

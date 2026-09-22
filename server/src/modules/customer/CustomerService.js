@@ -1,8 +1,11 @@
 import { CustomerAuditLogService } from "./CustomerAuditLogService.js";
 import { CustomerOperationService } from "./CustomerOperationService.js";
 import { CustomerApprovalService } from "./CustomerApprovalService.js";
+import { CustomerReferenceProviderRegistry } from "./CustomerReferenceProviderRegistry.js";
 import {
   customerCodeTaken,
+  customerLifecycleConflict,
+  customerLifecycleInvalid,
   customerLegalNameTaken,
   customerNotFound,
   customerReferenceNotUsable,
@@ -19,12 +22,12 @@ import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { BusinessMasterProvider } from "../businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterRepository } from "../businessMaster/BusinessMasterRepository.js";
 
-const CUSTOMER_COLUMNS = `id, customer_code, legal_name, trading_name, default_currency_code,
+const CUSTOMER_COLUMNS = `id, customer_code, customer_code_key, legal_name, legal_name_key, trading_name, trading_name_key, default_currency_code,
   default_payment_term_id, account_manager_user_id, category_id, industry_id, territory_id,
   website, general_phone, general_email, notes, status, ever_activated_at, version,
   created_at, updated_at, created_by, updated_by`;
 
-const DUPLICATE_COLUMNS = `${CUSTOMER_COLUMNS}, customer_code_key, legal_name_key, trading_name_key`;
+const DUPLICATE_COLUMNS = CUSTOMER_COLUMNS;
 
 const SORT_COLUMNS = Object.freeze({
   code: "customer_code_key",
@@ -116,7 +119,7 @@ function purposesByOwner(rows, ownerColumn) {
 }
 
 export class CustomerService {
-  constructor({ database, time, audit = new CustomerAuditLogService(), operations = new CustomerOperationService(), actorVerifier = assertActorFresh, businessMaster, approvals } = {}) {
+  constructor({ database, time, audit = new CustomerAuditLogService(), operations = new CustomerOperationService(), actorVerifier = assertActorFresh, businessMaster, approvals, references = new CustomerReferenceProviderRegistry() } = {}) {
     if (!database || !time) throw new TypeError("CustomerService requires database and time");
     this.database = database;
     this.time = time;
@@ -125,9 +128,11 @@ export class CustomerService {
     this.actorVerifier = actorVerifier;
     this.businessMaster = businessMaster ?? new BusinessMasterProvider({ database, repository: new BusinessMasterRepository() });
     this.approvals = approvals ?? new CustomerApprovalService({ database, time, audit });
+    this.references = references;
   }
 
-  async create({ actorId, claimedRoles, claimedPermissions, idempotencyKey, requestId, ip, ...input }) {
+  async create({ actorId, claimedRoles, claimedPermissions, idempotencyKey, requestId, ip, activate = false, approverUserId, requestNote, ...input }) {
+    if (typeof activate !== "boolean") throw new TypeError("activate must be a boolean");
     const customer = customerInput(input);
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
@@ -136,10 +141,18 @@ export class CustomerService {
         actorId,
         routeKey: "customer.create",
         idempotencyKey,
-        payload: customer,
+        payload: { customer, activate, approverUserId: approverUserId ?? null, requestNote: requestNote ?? "" },
         nowMs
       });
       if (started.replay) return this.#replayedCustomer(connection, started.replay);
+
+      const setting = activate
+        ? (await connection.query("SELECT require_activation_approval, version FROM customer_settings WHERE id = 1 FOR SHARE"))[0][0]
+        : null;
+      if (activate && !setting) throw customerLifecycleConflict("CUSTOMER_SETTINGS_MISSING", "客戶設定尚未初始化");
+      if (activate && Number(setting.require_activation_approval) !== 1 && approverUserId !== undefined && approverUserId !== null) {
+        throw customerLifecycleInvalid("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
+      }
 
       await this.#assertNewDefaults(connection, customer);
 
@@ -168,11 +181,27 @@ export class CustomerService {
         targetType: "customer", targetId: id, customerId: id, targetLabel: created.customer_code,
         detail: { after: this.#auditSnapshot(created) }, requestId, ip
       });
+      let completed = created;
+      if (activate) {
+        await this.#assertActivatable(connection, created);
+        if (Number(setting.require_activation_approval) === 1) {
+          await this.approvals.submitInTransaction(connection, {
+            actorId, claimedRoles, claimedPermissions, customerId: id, approverUserId, requestNote, requestId, ip
+          }, { actor, setting, customer: created });
+          completed = await this.#get(connection, id);
+        } else {
+          await this.#transitionLocked(connection, {
+            input: { actorId, id, version: Number(created.version), requestId, ip }, actor, before: created,
+            status: "active", action: "customer.activate"
+          });
+          completed = await this.#get(connection, id);
+        }
+      }
       await this.operations.succeed(connection, {
         operationId: started.operationId, resourceType: "customer", resourceId: id,
-        resultVersion: Number(created.version), nowMs
+        resultVersion: Number(completed.version), nowMs
       });
-      return { customer: toCustomerDetail(created), operation: { operationId: started.operationId, status: "succeeded", resourceType: "customer", resourceId: id, resultVersion: Number(created.version), errorCode: null } };
+      return { customer: toCustomerDetail(completed), operation: { operationId: started.operationId, status: "succeeded", resourceType: "customer", resourceId: id, resultVersion: Number(completed.version), errorCode: null } };
     });
   }
 
@@ -369,6 +398,197 @@ export class CustomerService {
     return this.operations.getForActor(this.database, { actorId, operationId });
   }
 
+  async changeCode({ actorId, claimedRoles, claimedPermissions, id, version, customerCode, reason, requestId, ip, idempotencyKey }) {
+    const code = normalizeCustomerCode(customerCode);
+    const changeReason = this.#reason(reason);
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+      const started = await this.operations.begin(connection, {
+        actorId, routeKey: "customer.code_change", idempotencyKey,
+        payload: { id: Number(id), version: Number(version), customerCode: code.value, reason: changeReason }, nowMs
+      });
+      if (started.replay) return this.#replayedLifecycle(connection, started.replay);
+      const before = await this.#get(connection, id, { forUpdate: true });
+      if (!before) throw customerNotFound(id);
+      if (Number(before.version) !== Number(version)) throw versionConflict(before.version);
+      if (before.customer_code_key === code.key) throw customerLifecycleConflict("CUSTOMER_CODE_UNCHANGED", "新客戶代碼必須與目前代碼不同");
+      try {
+        const [updated] = await connection.execute(
+          "UPDATE customers SET customer_code = ?, customer_code_key = ?, version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?",
+          [code.value, code.key, nowMs, actorId, id, version]
+        );
+        if (updated.affectedRows !== 1) throw versionConflict(before.version);
+      } catch (error) {
+        duplicate(error);
+      }
+      await this.approvals.invalidateForCriticalChange?.(connection, { customer: before, actorId, actorUsername: actor.username, reason: changeReason, requestId, ip });
+      const after = await this.#get(connection, id);
+      await this.audit.record(connection, {
+        occurredAt: nowMs, actorUserId: actorId, actorUsername: actor.username, action: "customer.code_change",
+        targetType: "customer", targetId: Number(id), customerId: Number(id), targetLabel: after.customer_code,
+        reason: changeReason, detail: { before: this.#auditSnapshot(before), after: this.#auditSnapshot(after) }, requestId, ip
+      });
+      await this.operations.succeed(connection, {
+        operationId: started.operationId, resourceType: "customer", resourceId: Number(id), resultVersion: Number(after.version), nowMs
+      });
+      return toCustomerDetail(after);
+    });
+  }
+
+  async activate(input) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.actorVerifier(connection, input);
+      const nowMs = this.time.nowMs();
+      const started = await this.operations.begin(connection, {
+        actorId: input.actorId, routeKey: "customer.activate", idempotencyKey: input.idempotencyKey,
+        payload: { id: Number(input.id), version: Number(input.version), approverUserId: input.approverUserId ?? null, requestNote: input.requestNote ?? "" }, nowMs
+      });
+      if (started.replay) return this.#replayedLifecycle(connection, started.replay);
+      const [[setting]] = await connection.query("SELECT require_activation_approval, version FROM customer_settings WHERE id = 1 FOR SHARE");
+      if (!setting) throw customerLifecycleConflict("CUSTOMER_SETTINGS_MISSING", "客戶設定尚未初始化");
+      const before = await this.#get(connection, input.id, { forUpdate: true });
+      if (!before) throw customerNotFound(input.id);
+      if (Number(before.version) !== Number(input.version)) throw versionConflict(before.version);
+      if (!["draft", "suspended"].includes(before.status)) {
+        throw customerLifecycleConflict("STATUS_TRANSITION_INVALID", "客戶目前不能啟用", { status: before.status });
+      }
+      await this.#assertActivatable(connection, before);
+      if (before.status === "draft" && Number(setting.require_activation_approval) !== 1 && input.approverUserId !== undefined && input.approverUserId !== null) {
+        throw customerLifecycleInvalid("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
+      }
+      if (before.status === "draft" && Number(setting.require_activation_approval) === 1) {
+        const resultVersion = Number(before.version) + 1;
+        const approval = await this.approvals.submitInTransaction(connection, { ...input, customerId: Number(input.id) }, { actor, setting, customer: before });
+        await this.operations.succeed(connection, {
+          operationId: started.operationId, resourceType: "customer_activation_approval", resourceId: Number(input.id), resultVersion, nowMs
+        });
+        return approval;
+      }
+      const result = await this.#transitionLocked(connection, { input, actor, before, status: "active", action: "customer.activate" });
+      await this.operations.succeed(connection, {
+        operationId: started.operationId, resourceType: "customer", resourceId: Number(input.id), resultVersion: Number(result.version), nowMs
+      });
+      return result;
+    });
+  }
+
+  suspend(input) { return this.#transition(input, { from: ["active"], status: "suspended", action: "customer.suspend" }); }
+
+  reactivate(input) { return this.#transition(input, { from: ["suspended"], status: "active", action: "customer.reactivate", activationCheck: true }); }
+
+  archive(input) { return this.#transition(input, { from: ["draft", "active", "suspended"], status: "archived", action: "customer.archive", referenceCheck: true }); }
+
+  restore(input) { return this.#transition(input, { from: ["archived"], status: "suspended", action: "customer.restore" }); }
+
+  async deleteDraft({ actorId, claimedRoles, claimedPermissions, id, version, reason, requestId, ip, idempotencyKey }) {
+    const deleteReason = this.#reason(reason);
+    const references = await this.#checkReferences(id);
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.actorVerifier(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+      const started = await this.operations.begin(connection, {
+        actorId, routeKey: "customer.delete", idempotencyKey,
+        payload: { id: Number(id), version: Number(version), reason: deleteReason }, nowMs
+      });
+      if (started.replay) return this.#replayedLifecycle(connection, started.replay, { deleted: true });
+      const before = await this.#get(connection, id, { forUpdate: true });
+      if (!before) throw customerNotFound(id);
+      if (Number(before.version) !== Number(version)) throw versionConflict(before.version);
+      if (before.status !== "draft" || before.ever_activated_at !== null) {
+        throw customerLifecycleConflict("CUSTOMER_DELETE_NOT_ALLOWED", "只有從未啟用的草稿客戶可永久刪除");
+      }
+      this.#assertUnreferenced(references);
+      const [[approval]] = await connection.query("SELECT id FROM customer_activation_requests WHERE customer_id = ? LIMIT 1 FOR UPDATE", [id]);
+      if (approval) throw customerLifecycleConflict("CUSTOMER_DELETE_NOT_ALLOWED", "已有審批歷史的客戶不可永久刪除");
+      await this.audit.record(connection, {
+        occurredAt: nowMs, actorUserId: actorId, actorUsername: actor.username, action: "customer.delete",
+        targetType: "customer", targetId: Number(id), customerId: Number(id), targetLabel: before.customer_code,
+        reason: deleteReason, detail: { before: this.#auditSnapshot(before) }, requestId, ip
+      });
+      const [deleted] = await connection.execute("DELETE FROM customers WHERE id = ? AND version = ?", [id, version]);
+      if (deleted.affectedRows !== 1) throw versionConflict(before.version);
+      await this.operations.succeed(connection, {
+        operationId: started.operationId, resourceType: "customer", resourceId: Number(id), resultVersion: null, nowMs
+      });
+      return { id: Number(id) };
+    });
+  }
+
+  async #transition(input, { from, status, action, activationCheck = false, referenceCheck = false }) {
+    const reason = this.#reason(input.reason);
+    const references = referenceCheck ? await this.#checkReferences(input.id) : null;
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.actorVerifier(connection, input);
+      const nowMs = this.time.nowMs();
+      const started = await this.operations.begin(connection, {
+        actorId: input.actorId, routeKey: action, idempotencyKey: input.idempotencyKey,
+        payload: { id: Number(input.id), version: Number(input.version), reason }, nowMs
+      });
+      if (started.replay) return this.#replayedLifecycle(connection, started.replay);
+      const before = await this.#get(connection, input.id, { forUpdate: true });
+      if (!before) throw customerNotFound(input.id);
+      if (Number(before.version) !== Number(input.version)) throw versionConflict(before.version);
+      if (!from.includes(before.status)) {
+        throw customerLifecycleConflict("STATUS_TRANSITION_INVALID", "客戶目前不能執行這項狀態操作", { status: before.status });
+      }
+      if (activationCheck) await this.#assertActivatable(connection, before);
+      if (referenceCheck) this.#assertUnreferenced(references);
+      const result = await this.#transitionLocked(connection, { input: { ...input, reason }, actor, before, status, action });
+      await this.operations.succeed(connection, {
+        operationId: started.operationId, resourceType: "customer", resourceId: Number(input.id), resultVersion: Number(result.version), nowMs
+      });
+      return result;
+    });
+  }
+
+  async #transitionLocked(connection, { input, actor, before, status, action }) {
+    const nowMs = this.time.nowMs();
+    const [updated] = await connection.execute(
+      `UPDATE customers SET status = ?, ever_activated_at = ${status === "active" ? "COALESCE(ever_activated_at, ?)" : "ever_activated_at"}, version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?`,
+      status === "active"
+        ? [status, nowMs, nowMs, input.actorId, input.id, input.version]
+        : [status, nowMs, input.actorId, input.id, input.version]
+    );
+    if (updated.affectedRows !== 1) throw versionConflict(before.version);
+    const after = await this.#get(connection, input.id);
+    await this.audit.record(connection, {
+      occurredAt: nowMs, actorUserId: input.actorId, actorUsername: actor.username, action,
+      targetType: "customer", targetId: Number(input.id), customerId: Number(input.id), targetLabel: after.customer_code,
+      reason: String(input.reason ?? ""), detail: { before: this.#auditSnapshot(before), after: this.#auditSnapshot(after) }, requestId: input.requestId, ip: input.ip
+    });
+    return toCustomerDetail(after);
+  }
+
+  async #assertActivatable(connection, customer) {
+    if (!String(customer.customer_code ?? "").trim() || !String(customer.legal_name ?? "").trim() || !customer.default_currency_code) {
+      throw customerLifecycleInvalid("CUSTOMER_ACTIVATION_INCOMPLETE", "啟用客戶需要客戶代碼、法定名稱及有效預設幣別");
+    }
+    await this.businessMaster.assertCurrencyUsableInTransaction(connection, { code: customer.default_currency_code, purpose: "new_assignment" });
+  }
+
+  async #checkReferences(customerId) {
+    let result;
+    try { result = await this.references.checkCustomerReferences(Number(customerId)); } catch { result = null; }
+    return result;
+  }
+
+  #assertUnreferenced(result) {
+    if (result?.status === "NO_REFERENCE") return;
+    if (result?.status === "REFERENCE") {
+      throw customerLifecycleConflict("CUSTOMER_REFERENCED", "客戶已有下游引用，不能執行這項操作", { providers: result.providers });
+    }
+    throw customerLifecycleConflict("CUSTOMER_REFERENCE_CHECK_UNAVAILABLE", "客戶引用檢查暫時不可用，為保障資料不能執行這項操作");
+  }
+
+  #reason(value) {
+    const reason = String(value ?? "").trim();
+    if (reason.length < 5 || reason.length > 500) {
+      throw customerLifecycleInvalid("CUSTOMER_REASON_REQUIRED", "這項操作必須填寫原因", { field: "reason" });
+    }
+    return reason;
+  }
+
   async #get(connection, id, { forUpdate = false } = {}) {
     const [rows] = await connection.query(`SELECT ${CUSTOMER_COLUMNS} FROM customers WHERE id = ?${forUpdate ? " FOR UPDATE" : ""}`, [id]);
     return rows[0] ?? null;
@@ -492,6 +712,24 @@ export class CustomerService {
     const row = await this.#get(connection, operation.resourceId);
     if (!row) return { customer: null, operation: { ...operation, status: "unknown" } };
     return { customer: toCustomerDetail(row), operation };
+  }
+
+  async #replayedLifecycle(connection, operation, { deleted = false } = {}) {
+    if (operation.status !== "succeeded" || !["customer", "customer_activation_approval"].includes(operation.resourceType) || !operation.resourceId) {
+      throw customerLifecycleConflict("CUSTOMER_OPERATION_PENDING", "客戶操作尚未完成，請以原 Idempotency-Key 或操作狀態查詢確認結果");
+    }
+    if (deleted) return { id: operation.resourceId };
+    if (operation.resourceType === "customer_activation_approval") {
+      const [[request]] = await connection.query(
+        "SELECT id FROM customer_activation_requests WHERE customer_id = ? AND customer_version = ?",
+        [operation.resourceId, operation.resultVersion]
+      );
+      if (!request) throw customerLifecycleConflict("CUSTOMER_OPERATION_UNKNOWN", "客戶操作結果無法確認，請以操作狀態查詢確認結果");
+      return { id: Number(request.id), customerId: operation.resourceId, customerStatus: "pending_approval", status: "pending", version: 1 };
+    }
+    const row = await this.#get(connection, operation.resourceId);
+    if (!row) throw customerLifecycleConflict("CUSTOMER_OPERATION_UNKNOWN", "客戶操作結果無法確認，請以操作狀態查詢確認結果");
+    return toCustomerDetail(row);
   }
 
   #auditSnapshot(row) {

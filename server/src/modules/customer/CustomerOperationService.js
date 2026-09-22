@@ -2,7 +2,10 @@ import { createHash, randomUUID } from "node:crypto";
 
 import { customerIdempotencyConflict } from "./customerErrors.js";
 
-const ROUTES = new Set(["customer.create", "customer.update"]);
+const ROUTES = new Set([
+  "customer.create", "customer.update", "customer.code_change", "customer.activate",
+  "customer.suspend", "customer.reactivate", "customer.archive", "customer.restore", "customer.delete"
+]);
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize);

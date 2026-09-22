@@ -62,3 +62,7 @@ export class UpdateCustomerSettingsHandler extends CustomerSettingsHandler {
     }));
   }
 }
+
+for (const Handler of [GetCustomerSettingsHandler, UpdateCustomerSettingsHandler]) {
+  Handler.api.description = `${Handler.handlerName} endpoint.`;
+}

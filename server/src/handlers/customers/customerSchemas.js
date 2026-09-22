@@ -31,7 +31,8 @@ export const CUSTOMER_ROOT_INPUT = Object.freeze({
     defaultCurrencyCode: NULLABLE_CURRENCY, defaultPaymentTermId: NULLABLE_ID,
     accountManagerUserId: NULLABLE_ID, categoryId: NULLABLE_ID, industryId: NULLABLE_ID,
     territoryId: NULLABLE_ID, website: { ...TEXT(500), pattern: "^(?:$|https?://)" }, generalPhone: TEXT(50),
-    generalEmail: EMAIL, notes: TEXT(2000)
+    generalEmail: EMAIL, notes: TEXT(2000), activate: { type: "boolean" },
+    approverUserId: POSITIVE_SAFE_INTEGER, requestNote: { type: "string", trim: true, maxLength: 500 }
   }
 });
 
@@ -190,6 +191,32 @@ export const CUSTOMER_APPROVAL_WITHDRAW = Object.freeze({
   type: "object", additionalProperties: false, required: ["approvalRequestId", "version"],
   properties: { approvalRequestId: POSITIVE_SAFE_INTEGER, version: POSITIVE_SAFE_INTEGER }
 });
+
+const REASON = Object.freeze({ type: "string", trim: true, minLength: 5, maxLength: 500 });
+const PASSWORD = Object.freeze({ type: "string", minLength: 1, maxLength: 1024 });
+
+export const CUSTOMER_ACTIVATE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["version"],
+  properties: { version: POSITIVE_SAFE_INTEGER, approverUserId: POSITIVE_SAFE_INTEGER, requestNote: { type: "string", trim: true, maxLength: 500 } }
+});
+
+export const CUSTOMER_LIFECYCLE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["version", "reason", "password"],
+  properties: { version: POSITIVE_SAFE_INTEGER, reason: REASON, password: PASSWORD }
+});
+
+export const CUSTOMER_CODE_CHANGE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["customerCode", "version", "reason", "password"],
+  properties: { customerCode: TEXT(64), version: POSITIVE_SAFE_INTEGER, reason: REASON, password: PASSWORD }
+});
+
+export const CUSTOMER_DELETE = CUSTOMER_LIFECYCLE;
+
+export const CUSTOMER_DELETE_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id"], properties: { id: POSITIVE_SAFE_INTEGER }
+});
+
+export const CUSTOMER_ACTIVATION_RESPONSE = Object.freeze({ anyOf: [CUSTOMER_DETAIL, CUSTOMER_APPROVAL_RESPONSE] });
 
 export const CUSTOMER_LIST_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],

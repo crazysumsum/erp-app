@@ -150,3 +150,11 @@ export function customerApprovalRequestNotFound(id) {
     code: "CUSTOMER_APPROVAL_REQUEST_NOT_FOUND", statusCode: 404, publicMessage: "找不到指定的客戶審批申請"
   });
 }
+
+export function customerLifecycleInvalid(code, publicMessage, publicDetails) {
+  return customerError("Customer lifecycle input is invalid", { code, statusCode: 400, publicMessage, publicDetails });
+}
+
+export function customerLifecycleConflict(code, publicMessage, publicDetails) {
+  return customerError("Customer lifecycle state conflict", { code, statusCode: 409, publicMessage, publicDetails });
+}
