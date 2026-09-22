@@ -269,6 +269,28 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   });
 
   /**
+   * Merge `main` 之後先至到得到嘅路：PR #127 令 detail page 喺換 id 嗰陣真係重載，
+   * 而個 panel 本來只喺 `onMounted` 攞過一次 —— 即係 7 號嘅遮罩清單會留喺 8 號嘅
+   * URL 底下。唔係明文外洩，但係錯 Supplier 嘅資料配住啱 Supplier 嘅網址。
+   */
+  it("refetches the masked list when the Supplier changes under it", async () => {
+    const { router, body } = await mountPanel({ permissions: VIEW_BANK });
+    expect(supplierBankService.list).toHaveBeenCalledWith(7);
+    expect(body.text()).toContain("Test Bank");
+
+    // mountPanel 已經幫第一次 load 定咗回應，所以第二個 Supplier 嘅資料喺呢度先換。
+    supplierBankService.list.mockResolvedValue([{
+      id: 80, bankName: "Bank of Eight", accountHolderName: "Other Holder",
+      maskedAccountNumber: "•••• 8888", status: "active", isDefault: true, version: 1
+    }]);
+    await router.push("/suppliers/8");
+    await flushPromises();
+    expect(supplierBankService.list, "the panel must ask again for the new Supplier").toHaveBeenCalledWith(8);
+    expect(body.text(), "supplier 7's rows must not stay on supplier 8's page").not.toContain("•••• 1234");
+    expect(body.text()).toContain("Bank of Eight");
+  });
+
+  /**
    * REV-045 F-H1。上一輪加咗個 `gone` flag，但佢淨係喺 `onUnmounted` set ——
    * `onBeforeRouteUpdate` 同 session watch 都唔會 set，所以一個仲喺路上嘅 reveal
    * 會喺換咗 param 之後**畫返** 7 號嘅帳號出嚟喺 8 號嘅畫面度，附送一個新倒數。

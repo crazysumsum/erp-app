@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 206,
+  "revision": 207,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "bef992cc5f4fdb8b232d1e30c1ba907789a7d1a5",
-    "source_fingerprint": "21ba586a378dc41d4715d4ddc8887ef79d207387ffa4ec3f98f9b689bd5075f8",
+    "code_commit": "551e2492789f06e98f2688830009074d4ea13250",
+    "source_fingerprint": "bfc09cc6eaa0830b35927cff76643c01e661c86d23a96df823e37eabb1649c4e",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
     "default_commit": "fd615e539bc339ceada1b6541949db7046ed160c",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -2926,11 +2926,22 @@
       "subject": "REV-046: no High for the first time in six rounds; the new defect fails closed but corrupts an audit correspondence",
       "code_commit": "bef992cc5f4fdb8b232d1e30c1ba907789a7d1a5",
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-      "source_fingerprint": "21ba586a378dc41d4715d4ddc8887ef79d207387ffa4ec3f98f9b689bd5075f8",
+      "source_fingerprint": "bfc09cc6eaa0830b35927cff76643c01e661c86d23a96df823e37eabb1649c4e",
       "status": "PASS",
       "source_ref": "REV-046 returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 3 Low and 7 Info. The cross-Supplier plaintext leak that drove the previous two rounds is closed on every path the reviewer could reach: it attacked the generation counter from six directions and exercised the four other async paths - create, update, setDefault, deactivate and load - that were the obvious place the class would still be open, and none of them lands state on the wrong Supplier. It reproduced all nine of my previous mutants rather than reading the table. The streak of a remediation opening the next round's finding did continue, for a sixth round, but on a different axis and failing closed: forgetPlaintext bumps the generation and the countdown tick also calls it, so one row's thirty-second expiry landing inside another row's reveal round-trip silently discarded a reveal the server had already decrypted and written a supplier.bank.reveal audit row for. No plaintext and no error - which means the audit log records a disclosure that never reached a screen, and that audit is what FR-BANK-006 leans on. It now says so explicitly and names the audit. Three Lows, all of them about what my tests could not see: the confirm dialog's password had no assertion at all and removing its two clearing lines left the whole suite green while a typed step-up password survived both a Supplier change and a session expiry; the '?? Date.now()' fallback I wrote was literally the behaviour twice rejected in the two previous rounds, a silent degradation to the broken version exactly when it would matter, so it is gone rather than kept; and my clearInterval spy asserted only that the function had been called, so clearing an unrelated handle passed while the real countdown leaked. Twelve mutants now, twelve killed. The v-if to v-show mutant cannot run under jsdom and REV-046 stated honestly that its own environment broke before it could verify that one in the browser, so I ran it myself: red under the mutant, green restored. origin/main had moved to bd8cc21 while this branch was in review; merged in per CLAUDE.md section 6, file sets disjoint, no conflict, and baseline.default_commit refreshed. 590/590 client vitest, 3/3 browser, lint clean.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-046",
       "observed_at": "2026-09-22T11:40:26+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Merging main opened a path this branch had never been able to reach, and the panel was wrong on it",
+      "code_commit": "551e2492789f06e98f2688830009074d4ea13250",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "bfc09cc6eaa0830b35927cff76643c01e661c86d23a96df823e37eabb1649c4e",
+      "status": "PASS",
+      "source_ref": "While REV-046's remediation was in review, origin/main moved twice. The second move was PR #127, which is the follow-up task I spawned myself from this work: it makes SupplierDetailPage watch route.params.id and reload, and it adds onBeforeRouteUpdate for the unsaved-draft prompt. The merge conflicted only on the mock list at the top of detail.test.js, where both sides had added mocks and both were kept. What did not conflict, and what no test on either side covered, is the combination: SupplierBankPanel fetched its masked list in onMounted only, and /suppliers/7 to /suppliers/8 reuses the instance, so after PR #127 made that navigation actually work, supplier 7's masked rows stayed on supplier 8's page. Not a plaintext disclosure - the list is masked - but the wrong Supplier's data under the right Supplier's URL. Found by probing the combination rather than trusting two green suites: list() was called once with 7 and never with 8. Fixed with a watcher on props.supplierId that clears and reloads, and pinned by a test verified to fail when the watcher is removed. Both branches were individually correct; only the pair was wrong, which is the same shape as REV-045 F-H1 and is worth stating as a rule: after a merge, re-derive the combination instead of reading two green suites as evidence about their union. 595/595 client vitest, 3/3 browser, lint clean.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-22T12:03:59+08:00"
     }
   ],
   "pending_decisions": [

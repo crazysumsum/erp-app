@@ -154,6 +154,18 @@ async function load() {
 }
 onMounted(load);
 
+/**
+ * `supplierId` 變咗就要重攞。`/suppliers/7` 去 `/suppliers/8` 係同一個 route record，
+ * Vue Router 會重用呢個 instance，所以 `onMounted` 唔會再行 —— 冇呢個 watcher 嘅話，
+ * 7 號嘅遮罩清單會留喺 8 號嘅 URL 底下。
+ *
+ * 呢個係 merge `main` 之後先至到得到嘅：PR #127（我自己開嗰個 task）令 detail page
+ * 真係會喺換 id 嗰陣重載，而喺嗰之前根本冇任何入口行得到呢條路。兩邊各自啱，夾埋
+ * 先出事 —— 同 REV-045 F-H1 同一類，所以 merge 完要當佢係一個新組合去試，唔係當
+ * 「兩邊測試都綠就冇事」。
+ */
+watch(() => props.supplierId, () => { forgetEverything(); void load(); });
+
 // ---- Reveal ----------------------------------------------------------------
 
 const revealDialog = reactive({ open: false, row: null, password: "", reason: "", error: "", busy: false });
