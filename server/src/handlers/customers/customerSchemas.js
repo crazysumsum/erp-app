@@ -192,6 +192,33 @@ export const CUSTOMER_APPROVAL_WITHDRAW = Object.freeze({
   properties: { approvalRequestId: POSITIVE_SAFE_INTEGER, version: POSITIVE_SAFE_INTEGER }
 });
 
+const APPROVAL_USER = Object.freeze({ type: ["object", "null"], additionalProperties: false, required: ["id", "username", "displayName"], properties: { id: POSITIVE_SAFE_INTEGER, username: { type: "string" }, displayName: { type: "string" } } });
+const APPROVAL_STATUS = Object.freeze({ type: "string", enum: ["pending", "approved", "rejected", "withdrawn", "invalidated"] });
+export const CUSTOMER_APPROVAL_ID_PARAMS = Object.freeze({ type: "object", required: ["id"], additionalProperties: false, properties: { id: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_APPROVAL_QUEUE_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: { scope: { type: "string", enum: ["mine", "all", "unassigned"], default: "mine" }, status: { ...APPROVAL_STATUS, default: "pending" }, requesterId: POSITIVE_SAFE_INTEGER, requestedFrom: NONNEGATIVE_SAFE_INTEGER, requestedTo: NONNEGATIVE_SAFE_INTEGER, page: { ...POSITIVE_SAFE_INTEGER, default: 1 }, pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 } }
+});
+const APPROVAL_SUMMARY = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "customerId", "customerCode", "legalName", "customerStatus", "status", "requester", "assignedApprover", "requestNote", "requestedAt", "decidedAt", "version"],
+  properties: { id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER, customerCode: { type: "string" }, legalName: { type: "string" }, customerStatus: { type: "string", enum: ["draft", "pending_approval", "active", "suspended", "blocked", "archived"] }, status: APPROVAL_STATUS, requester: APPROVAL_USER, assignedApprover: APPROVAL_USER, requestNote: { type: "string" }, requestedAt: NONNEGATIVE_SAFE_INTEGER, decidedAt: { type: ["integer", "null"], minimum: 0 }, version: POSITIVE_SAFE_INTEGER }
+});
+export const CUSTOMER_APPROVAL_LIST_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"], properties: { items: { type: "array", items: APPROVAL_SUMMARY }, total: { type: "integer", minimum: 0 }, page: POSITIVE_SAFE_INTEGER, pageSize: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_APPROVAL_DETAIL = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [...APPROVAL_SUMMARY.required, "decidedBy", "decisionReason", "customerVersion", "currentCustomerVersion", "stale", "submitted", "current", "changedFields"],
+  properties: { ...APPROVAL_SUMMARY.properties, decidedBy: APPROVAL_USER, decisionReason: { type: "string" }, customerVersion: POSITIVE_SAFE_INTEGER, currentCustomerVersion: POSITIVE_SAFE_INTEGER, stale: { type: "boolean" }, submitted: { type: "object" }, current: { type: "object" }, changedFields: { type: "array", items: { type: "string" } } }
+});
+const APPROVAL_DECISION_FIELDS = Object.freeze({ password: { type: "string", minLength: 1, maxLength: 1024 }, version: POSITIVE_SAFE_INTEGER });
+export const CUSTOMER_APPROVAL_APPROVE = Object.freeze({ type: "object", additionalProperties: false, required: ["password", "version"], properties: { ...APPROVAL_DECISION_FIELDS, reason: { type: "string", trim: true, maxLength: 500 } } });
+export const CUSTOMER_APPROVAL_REJECT = Object.freeze({ type: "object", additionalProperties: false, required: ["password", "version", "reason"], properties: { ...APPROVAL_DECISION_FIELDS, reason: { type: "string", trim: true, minLength: 5, maxLength: 500 } } });
+export const CUSTOMER_APPROVAL_REASSIGN = Object.freeze({ type: "object", additionalProperties: false, required: ["password", "version", "approverUserId", "reason"], properties: { ...APPROVAL_DECISION_FIELDS, approverUserId: POSITIVE_SAFE_INTEGER, reason: { type: "string", trim: true, minLength: 5, maxLength: 500 } } });
+export const CUSTOMER_APPROVAL_DECISION_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["id", "customerId", "customerStatus", "status", "version", "replayed"], properties: { id: POSITIVE_SAFE_INTEGER, customerId: POSITIVE_SAFE_INTEGER, customerStatus: { type: "string", enum: ["draft", "active", "pending_approval"] }, status: APPROVAL_STATUS, version: POSITIVE_SAFE_INTEGER, replayed: { type: "boolean" } } });
+export const CUSTOMER_APPROVAL_REASSIGN_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["id", "assignedApproverId", "version", "replayed"], properties: { id: POSITIVE_SAFE_INTEGER, assignedApproverId: POSITIVE_SAFE_INTEGER, version: POSITIVE_SAFE_INTEGER, replayed: { type: "boolean" } } });
+export const CUSTOMER_APPROVER_QUERY = Object.freeze({ type: "object", additionalProperties: false, properties: { q: TEXT(190), excludeUserId: POSITIVE_SAFE_INTEGER } });
+export const CUSTOMER_APPROVER_RESPONSE = Object.freeze({ type: "object", additionalProperties: false, required: ["items"], properties: { items: { type: "array", maxItems: 100, items: { type: "object", additionalProperties: false, required: ["id", "username", "displayName"], properties: { id: POSITIVE_SAFE_INTEGER, username: { type: "string" }, displayName: { type: "string" } } } } } });
+
 const REASON = Object.freeze({ type: "string", trim: true, minLength: 5, maxLength: 500 });
 const PASSWORD = Object.freeze({ type: "string", minLength: 1, maxLength: 1024 });
 

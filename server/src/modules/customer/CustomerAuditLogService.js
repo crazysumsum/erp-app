@@ -10,6 +10,8 @@ const ACTIONS = new Set([
   "customer.archive",
   "customer.restore",
   "customer.delete",
+  "customer.block",
+  "customer.unblock",
   "customer.status",
   "customer.address.create",
   "customer.address.update",
@@ -29,7 +31,10 @@ const ACTIONS = new Set([
   "catalog.deactivate",
   "approval.submit",
   "approval.withdraw",
-  "approval.invalidate"
+  "approval.invalidate",
+  "approval.approve",
+  "approval.reject",
+  "approval.reassign"
 ]);
 
 const ROOT_AUDIT_FIELDS = new Set([
@@ -81,7 +86,8 @@ const ROOT_AUDIT_FIELDS = new Set([
   "description",
   "sortOrder",
   "assignedApproverId",
-  "customerVersion"
+  "customerVersion",
+  "requestStatus"
 ]);
 
 function allowlistedSnapshot(value) {

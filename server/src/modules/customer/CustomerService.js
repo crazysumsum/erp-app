@@ -477,6 +477,10 @@ export class CustomerService {
 
   reactivate(input) { return this.#transition(input, { from: ["suspended"], status: "active", action: "customer.reactivate", activationCheck: true }); }
 
+  block(input) { return this.#transition(input, { from: ["active", "suspended"], status: "blocked", action: "customer.block", requireApproval: true }); }
+
+  unblock(input) { return this.#transition(input, { from: ["blocked"], status: "suspended", action: "customer.unblock", requireApproval: true }); }
+
   archive(input) { return this.#transition(input, { from: ["draft", "active", "suspended"], status: "archived", action: "customer.archive", referenceCheck: true }); }
 
   restore(input) { return this.#transition(input, { from: ["archived"], status: "suspended", action: "customer.restore" }); }
@@ -515,11 +519,14 @@ export class CustomerService {
     });
   }
 
-  async #transition(input, { from, status, action, activationCheck = false, referenceCheck = false }) {
+  async #transition(input, { from, status, action, activationCheck = false, referenceCheck = false, requireApproval = false }) {
     const reason = this.#reason(input.reason);
     const references = referenceCheck ? await this.#checkReferences(input.id) : null;
     return this.database.withTransaction(async (connection) => {
       const actor = await this.actorVerifier(connection, input);
+      if (requireApproval && !actor.permissions?.includes("customer.approval")) {
+        throw customerLifecycleConflict("APPROVAL_PERMISSION_LOST", "你目前沒有審批權限");
+      }
       const nowMs = this.time.nowMs();
       const started = await this.operations.begin(connection, {
         actorId: input.actorId, routeKey: action, idempotencyKey: input.idempotencyKey,

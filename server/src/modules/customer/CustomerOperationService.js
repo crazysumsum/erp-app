@@ -4,7 +4,9 @@ import { customerIdempotencyConflict } from "./customerErrors.js";
 
 const ROUTES = new Set([
   "customer.create", "customer.update", "customer.code_change", "customer.activate",
-  "customer.suspend", "customer.reactivate", "customer.archive", "customer.restore", "customer.delete"
+  "customer.suspend", "customer.reactivate", "customer.archive", "customer.restore", "customer.delete",
+  "customer.block", "customer.unblock", "customer.approval.approve", "customer.approval.reject",
+  "customer.approval.reassign"
 ]);
 
 function canonicalize(value) {

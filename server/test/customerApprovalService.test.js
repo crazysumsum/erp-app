@@ -1,15 +1,16 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 
 import { CustomerApprovalService } from "../src/modules/customer/CustomerApprovalService.js";
 
-function harness({ approvalEnabled = true, approverId = 9, approverPermissions = ["customer.approval"], customerStatus = "draft", duplicateSubmit = false } = {}) {
+function harness({ approvalEnabled = true, approverId = 9, assignedApproverId = approverId, approverPermissions = ["customer.approval"], actorId = 2, actorPermissions = ["customer.view", "customer.mgmt"], customerStatus = "draft", duplicateSubmit = false } = {}) {
   const events = [];
   const customer = {
     id: 4, customer_code: "CUS-004", customer_code_key: "cus004", legal_name: "Demo Customer",
     legal_name_key: "democustomer", default_currency_code: "HKD", status: customerStatus, version: 3
   };
-  const request = { id: 8, customer_id: 4, requested_by: 2, assigned_approver_id: approverId, status: "pending", version: 1 };
+  const request = { id: 8, customer_id: 4, requested_by: 2, assigned_approver_id: assignedApproverId, status: "pending", version: 1 };
   const connection = {
     async query(sql, params) {
       const text = String(sql);
@@ -18,7 +19,7 @@ function harness({ approvalEnabled = true, approverId = 9, approverPermissions =
       if (text.includes("FROM customers")) return [[customer]];
       if (text.includes("FROM customer_identifiers")) return [[{ identifier_type: "tax", issuer_country_code: "HK", identifier_value_key: "HK123" }]];
       if (text.includes("FROM customer_credit_profiles")) return [[{ credit_status: "on_hold" }]];
-      if (text.includes("FROM users")) return [[{ id: approverId, username: "approver" }]];
+      if (text.includes("FROM users")) return [[{ id: params?.[0] ?? approverId, username: "approver" }]];
       if (text.includes("FROM customer_activation_requests")) return [[request]];
       return [[]];
     },
@@ -33,7 +34,7 @@ function harness({ approvalEnabled = true, approverId = 9, approverPermissions =
   };
   const service = new CustomerApprovalService({
     database: { withTransaction: (work) => work(connection) }, time: { nowMs: () => 100 },
-    authorize: async () => ({ id: 2, username: "requester", permissions: ["customer.view", "customer.mgmt"] }),
+    authorize: async () => ({ id: actorId, username: "requester", permissions: actorPermissions }),
     loadPermissions: async () => approverPermissions,
     audit: { async record(_connection, input) { events.push(["audit", input]); } }
   });
@@ -42,7 +43,7 @@ function harness({ approvalEnabled = true, approverId = 9, approverPermissions =
 
 const input = {
   actorId: 2, claimedRoles: [], claimedPermissions: ["customer.view", "customer.mgmt"], customerId: 4,
-  approverUserId: 9, requestNote: "請覆核客戶啟用", requestId: "req-1", ip: "127.0.0.1"
+  approverUserId: 9, requestNote: "請覆核客戶啟用", requestId: "req-1", ip: "127.0.0.1", idempotencyKey: "approval-8"
 };
 
 test("approval submit locks settings then Customer, records an immutable safe snapshot and moves Draft to pending", async () => {
@@ -95,4 +96,63 @@ test("critical edits invalidate the only pending request and return the locked C
   }), true);
   assert.equal(events.find(([kind]) => kind === "audit")[1].action, "approval.invalidate");
   assert.ok(events.some(([kind, sql]) => kind === "execute" && sql.includes("status = 'draft'")));
+});
+
+test("TC-034 approval locks Customer before request, revalidates the currency, and permits one outcome", async () => {
+  const events = [];
+  const customer = { id: 4, customer_code: "CUS-004", customer_code_key: "cus004", legal_name: "Demo Customer", legal_name_key: "democustomer", default_currency_code: "HKD", status: "pending_approval", version: 4, ever_activated_at: null };
+  const request = { id: 8, customer_id: 4, requested_by: 2, assigned_approver_id: 9, customer_version: 4, critical_snapshot_hash: createHash("sha256").update(JSON.stringify({ customerCodeKey: "cus004", legalNameKey: "democustomer", defaultCurrencyCode: "HKD", identifiers: [], creditStatus: "not_configured" })).digest(), status: "pending", version: 1 };
+  const connection = {
+    async query(sql) {
+      const text = String(sql); events.push(["query", text]);
+      if (text.startsWith("SELECT customer_id")) return [[{ customer_id: 4 }]];
+      if (text.includes("FROM customers")) return [[customer]];
+      if (text.includes("FROM customer_activation_requests")) return [[request]];
+      return [[]];
+    },
+    async execute(sql, params) { events.push(["execute", String(sql), params]); return [{ affectedRows: 1 }]; }
+  };
+  const service = new CustomerApprovalService({
+    database: { withTransaction: (work) => work(connection) }, time: { nowMs: () => 100 },
+    authorize: async () => ({ username: "approver", permissions: ["customer.approval"] }),
+    audit: { async record(_connection, event) { events.push(["audit", event]); } },
+    businessMaster: { async assertCurrencyUsableInTransaction(_connection, input) { events.push(["currency", input]); } }
+  });
+  const result = await service.approve({ actorId: 9, claimedRoles: [], claimedPermissions: ["customer.approval"], id: 8, version: 1, idempotencyKey: "approve-8", requestId: "req-8", ip: "127.0.0.1" });
+  assert.deepEqual(result, { id: 8, customerId: 4, customerStatus: "active", status: "approved", version: 2, replayed: false });
+  const queries = events.filter(([kind]) => kind === "query").map(([, sql]) => sql);
+  assert.ok(queries.findIndex((sql) => sql.includes("FROM customers") && sql.includes("FOR UPDATE")) < queries.findIndex((sql) => sql.includes("customer_activation_requests") && sql.includes("FOR UPDATE")));
+  assert.equal(events.find(([kind]) => kind === "currency")[1].code, "HKD");
+  assert.equal(events.find(([kind]) => kind === "audit")[1].action, "approval.approve");
+  request.critical_snapshot_hash = Buffer.alloc(32);
+  await assert.rejects(() => service.approve({ actorId: 9, claimedRoles: [], claimedPermissions: ["customer.approval"], id: 8, version: 1, idempotencyKey: "approve-8-stale", requestId: "req-8", ip: "127.0.0.1" }), (error) => error.publicCode === "APPROVAL_REQUEST_STALE");
+});
+
+test("TC-037 a current approval holder can reassign but never to the requester", async () => {
+  const { service, events } = harness({ customerStatus: "pending_approval", actorId: 8, actorPermissions: ["customer.approval"], approverId: 10, assignedApproverId: 9 });
+  const result = await service.reassign({ ...input, actorId: 8, id: 8, version: 1, approverUserId: 10, reason: "改派給另一位審批人" });
+  assert.deepEqual(result, { id: 8, assignedApproverId: 10, version: 2, replayed: false });
+  assert.equal(events.find(([kind]) => kind === "audit")[1].action, "approval.reassign");
+  await assert.rejects(() => service.reassign({ ...input, actorId: 8, id: 8, version: 1, approverUserId: 2, reason: "不可改派給提交人", idempotencyKey: "approval-8-self" }), (error) => error.publicCode === "APPROVER_MUST_DIFFER");
+});
+
+test("TC-036 reassign replays its durable Customer operation outcome", async () => {
+  const service = new CustomerApprovalService({
+    database: { withTransaction: (work) => work({}) }, time: { nowMs: () => 100 },
+    authorize: async () => ({ username: "approver", permissions: ["customer.approval"] }),
+    operations: { async begin() { return { operationId: "operation-8", replay: { status: "succeeded", resourceType: "customer_activation_request_assignment", resourceId: 10, resultVersion: 2 } }; } }
+  });
+  const result = await service.reassign({ ...input, actorId: 8, id: 8, version: 1, approverUserId: 10, reason: "改派給另一位審批人" });
+  assert.deepEqual(result, { id: 8, assignedApproverId: 10, version: 2, replayed: true });
+});
+
+test("TC-036 approval replay returns its original terminal outcome after a later lifecycle change", async () => {
+  const connection = { async query(sql) { return String(sql).includes("customer_activation_requests") ? [[{ customer_id: 4, status: "approved", version: 2 }]] : [[{ id: 4 }]]; } };
+  const service = new CustomerApprovalService({
+    database: { withTransaction: (work) => work(connection) }, time: { nowMs: () => 100 },
+    authorize: async () => ({ username: "approver", permissions: ["customer.approval"] }),
+    operations: { async begin() { return { operationId: "operation-8", replay: { status: "succeeded", resourceType: "customer_activation_request_decision", resourceId: 8, resultVersion: 2 } }; } }
+  });
+  const result = await service.approve({ ...input, actorId: 9, id: 8, version: 1 });
+  assert.deepEqual(result, { id: 8, customerId: 4, customerStatus: "active", status: "approved", version: 2, replayed: true });
 });

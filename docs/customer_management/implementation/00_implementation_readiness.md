@@ -256,3 +256,24 @@ merge claim.
   repository-wide server coverage gate remains blocked by pre-existing unrelated
   coverage debt and an out-of-scope Customer-catalog handler metadata failure;
   neither was changed by this task.
+
+## TASK-014 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added the Customer approval queue, detail, eligible-approver lookup, approve,
+  reject and reassign contracts. Decisions lock the Customer and request in a
+  fixed order, reject stale critical snapshots, revalidate activation dependencies,
+  and create both approval and Customer-status audit records atomically.
+- Added durable idempotency for approve, reject and reassign, including replay of
+  the original terminal outcome after later Customer lifecycle changes. Added the
+  approved `customer-approvers` handler directory exception and Customer
+  `block`/`unblock` lifecycle commands.
+- Focused service, lifecycle, operation, handler-contract, handler-convention and
+  startup-guard suites, plus repository ESLint, passed. `git diff --check`,
+  traceability validation and the Customer module-boundary check also passed.
+- Independent review by Jason reached `APPROVE` after the stale-snapshot,
+  dual-audit, durable-operation and original-outcome replay findings were fixed.
+  The full server suite remains blocked by sandbox loopback-listen restrictions and
+  unrelated Customer-catalog handler metadata; neither is changed by this task.

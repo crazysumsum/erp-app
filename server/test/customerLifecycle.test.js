@@ -48,7 +48,7 @@ function harness({ approval = false, status = "draft", referenceStatus = "NO_REF
   };
   const service = new CustomerService({
     database: { withTransaction: async (work) => work(connection) }, time: { nowMs: () => 100 },
-    actorVerifier: async () => ({ username: "sam" }), audit: { async record(_connection, input) { events.push(["audit", input]); } },
+    actorVerifier: async () => ({ username: "sam", permissions: ["customer.view", "customer.mgmt", "customer.approval"] }), audit: { async record(_connection, input) { events.push(["audit", input]); } },
     businessMaster: { async assertCurrencyUsableInTransaction(_connection, input) { events.push(["currency", input]); } },
     approvals,
     operations: {
@@ -147,6 +147,16 @@ test("TC-011 restore never restores an Archived Customer straight to Active", as
   const { service } = harness({ status: "archived" });
   const result = await service.restore({ ...input, reason: "重新開放維護" });
   assert.equal(result.status, "suspended");
+});
+
+test("TC-038 block requires current approval permission and unblocks only to Suspended", async () => {
+  const { service, customer, events } = harness({ status: "active" });
+  const blocked = await service.block({ ...input, reason: "暫時停止交易" });
+  assert.equal(blocked.status, "blocked");
+  const unblocked = await service.unblock({ ...input, version: 4, reason: "解除交易限制" });
+  assert.equal(unblocked.status, "suspended");
+  assert.equal(events.find(([kind, detail]) => kind === "audit" && detail.action === "customer.block")[1].action, "customer.block");
+  assert.equal(customer.status, "suspended");
 });
 
 test("TC-011 code correction is versioned, audited, and only available as a named command", async () => {
