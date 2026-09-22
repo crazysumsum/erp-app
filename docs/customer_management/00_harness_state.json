@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 105,
+  "revision": 107,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "ea31124799179515d04833320334a3be89987c15ea6b2b1d124cd1cc4defeb3c",
     "plan": "5e7b94a035852b877aa8ab46fe04a384d52a4304546625295db4874eae56bb83",
-    "code_commit": "94e41d3d5046beedf0da26c7a20379b7ed3a4d54",
+    "code_commit": "5fea529628df7e1a0e7fc97d2bac8d8b23bf2678",
     "source_fingerprint": "7d11bd01346d4599429a85a8e9ecc21b91e5eec723470c8c96790206727a585b",
     "worktree": "/private/tmp/erp-customer-management-phase-002",
     "default_commit": "946f59820a8eeef2d6d0b0de17f59818aab9fd04",
@@ -1615,6 +1615,30 @@
       "idempotency_key": "customer-phase002-task019-integrated-gate-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-22: after merging origin/main fd615e5, a fresh schema migrated through 0048 and reran fully as no-op; with latest-main-required temporary Supplier Bank test key rings, 1974 server tests passed with zero failures, coverage was 94.97/83.91/91.87 and all 34 high-risk floors passed. The exact schema was dropped with final absence zero."
+    },
+    {
+      "id": "EXT-PUSH-003",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-management-phase-002",
+      "idempotency_key": "customer-phase002-publication-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-22: pushed codex/customer-management-phase-002 at 5fea529628df7e1a0e7fc97d2bac8d8b23bf2678."
+    },
+    {
+      "id": "EXT-PR-003",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-management-phase-002",
+      "idempotency_key": "customer-phase002-publication-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/129"
+    },
+    {
+      "id": "EXT-MERGE-003",
+      "kind": "MERGE",
+      "target": "github:crazysumsum/erp-app:main",
+      "idempotency_key": "customer-phase002-publication-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "2026-09-22: PR #129 is approved for merge without CI under APPROVAL-RISK-004; confirmation must be observed from GitHub before this action is marked CONFIRMED."
     }
   ],
   "evidence_files": [
