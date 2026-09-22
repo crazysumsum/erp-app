@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { onBeforeRouteLeave } from "vue-router";
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import { can } from "@/framework/authorization/can.js";
 import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import supplierBankService from "@/services/supplierBank.js";
@@ -57,31 +57,46 @@ function forgetPlaintext() {
 
 function holdPlaintext(id, accountNumber) {
   forgetPlaintext();
+  // 一個已經 unmount 咗嘅 component 唔可以再攞住明文：reveal 係 async，所以佢可以
+  // 喺使用者走咗之後先 resolve。冇呢個掣，嗰個 response 會喺一個死咗嘅 component
+  // 上面重新揸住個帳號，仲會開多個 30 秒 interval 出嚟。（REV-044 M-1）
+  if (gone) return;
   revealed.id = id;
   revealed.accountNumber = accountNumber;
+  // 用 deadline 而唔係數 tick：背景 tab 嘅 setInterval 會被瀏覽器節流到幾秒一次，
+  // 咁樣「30 個 tick」可以係真實世界幾分鐘。對住時鐘計，節流極都只會遲一個 tick
+  // 先清，而唔係遲幾分鐘。（REV-044 L-1）
+  const deadline = Date.now() + REVEAL_SECONDS * 1000;
+  const tick = () => {
+    const left = Math.ceil((deadline - Date.now()) / 1000);
+    if (left <= 0) forgetPlaintext();
+    else revealed.remaining = left;
+  };
   revealed.remaining = REVEAL_SECONDS;
-  countdown = setInterval(() => {
-    revealed.remaining -= 1;
-    if (revealed.remaining <= 0) forgetPlaintext();
-  }, 1000);
+  countdown = setInterval(tick, 1000);
 }
 
-onUnmounted(forgetPlaintext);
+let gone = false;
+onUnmounted(() => { gone = true; forgetPlaintext(); });
 /**
- * Route change：今日**每一條**離開呢一頁嘅路徑都會 unmount 個 panel，所以上面嗰個
- * `onUnmounted` 已經清咗。我試過拆走下面呢一行再跑瀏覽器測試 —— 全部照綠，即係佢
- * 係一個 equivalent mutant，唔係一個測試窿。
+ * Route change 要**兩個** guard，唔係一個。
  *
- * 留返佢，因為佢守嘅唔係今日條路，係 Vue Router 重用 component instance 嗰條：
- * `/suppliers/7` 去 `/suppliers/8` 係同一個 route record，唔會 unmount。今日冇任何
- * 頁面連結去嗰度（唯一去 `/suppliers/:id` 嘅入口係列表，而經列表就一定 unmount 過），
- * 所以我寫唔出一個殺得到佢嘅測試，而我試過嗰個「以為殺到」嘅測試其實係用
- * `history.pushState` —— 嗰個唔會驅動 Vue Router，所以佢乜都冇測到，已經刪咗。
+ * `onBeforeRouteLeave` 淨係喺去一個唔同嘅 route record 嗰陣行。由 `/suppliers/7`
+ * 去 `/suppliers/8` 係**同一個** record 淨係換咗 param，Vue Router 會重用同一個
+ * component instance，行嘅係 `onBeforeRouteUpdate` —— 唔 unmount，亦都唔會行
+ * `onBeforeRouteLeave`。
  *
- * 一個「下一個供應商」掣就會令呢條路存在，而嗰陣個漏洞係 7 號嘅帳號明文留喺一個
- * URL 已經寫住 8 號嘅畫面上面。一行安全控制換呢個風險，唔值得慳。
+ * 呢個係我上一版寫錯咗嘅嘢：我留低咗 `onBeforeRouteLeave` 並且喺註解度講明佢守嘅
+ * 就係 7 → 8 嗰條路，但佢根本唔會喺嗰度行。REV-044 用十一行 `router.push` 重現咗
+ * 個漏洞 —— 7 號嘅帳號明文留喺一個 URL 已經寫住 8 號嘅畫面上面。我之前話「寫唔出
+ * 一個殺得到佢嘅測試」，錯嘅唔係嗰個 `history.pushState` 探針（佢的確唔驅動 Vue
+ * Router），係我由「呢個探針證唔到」跳去「冇嘢證得到」。
+ *
+ * `onBeforeRouteLeave` 留返：佢守嘅係去另一個 record 嗰條路。嗰條路今日一定會
+ * unmount，所以佢係冗餘，但冗餘同錯係兩件事。
  */
 onBeforeRouteLeave(() => { forgetPlaintext(); });
+onBeforeRouteUpdate(() => { forgetPlaintext(); });
 // Session 失效（token 過期、被撤銷、登出）都要即刻清 —— 一個已經唔再係佢嘅畫面
 // 唔應該仲留住個帳號喺度。
 watch(() => session.isAuthenticated, (authenticated) => { if (!authenticated) forgetPlaintext(); });

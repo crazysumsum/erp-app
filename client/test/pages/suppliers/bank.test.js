@@ -39,11 +39,16 @@ async function mountPanel({ permissions = FULL, rows = ROWS } = {}) {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: "/", component: { render: () => h(SupplierBankPanel, { supplierId: 7, supplierCode: "SUP-007" }) } },
+      // `:id` 喺 path 度：咁樣由 /suppliers/7 去 /suppliers/8 先至係**同一個 route
+      // record 換 param**，即係 Vue Router 會重用同一個 instance —— 嗰個就係
+      // onBeforeRouteUpdate 守嗰條路。用一個冇 param 嘅 "/" 係測唔到佢嘅。
+      { path: "/suppliers/:id", component: {
+        render() { return h(SupplierBankPanel, { supplierId: Number(this.$route.params.id), supplierCode: "SUP-007" }); }
+      } },
       { path: "/elsewhere", component: { render: () => h("div", "elsewhere") } }
     ]
   });
-  router.push("/");
+  router.push("/suppliers/7");
   await router.isReady();
   const wrapper = mount({ render: () => h(RouterView) }, {
     global: { plugins: [Quasar, router] }, attachTo: document.body
@@ -108,6 +113,18 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     result = await mountPanel({ permissions: VIEW_BANK });
     expect(byText(result.body, "查看完整帳號")).toBeDefined();
     expect(byText(result.body, "新增銀行帳戶"), "bank.view alone must not buy write controls").toBeUndefined();
+    // REV-044 M-3：之前淨係斷言最頂嗰個「新增」掣。每一行仲有三個寫入掣，而佢哋
+    // 當時冇任何斷言 —— 把佢哋嘅 gate 放寬到 canReveal 都冇嘢會紅。
+    for (const label of ["編輯 Test Bank", "設為預設 Other Bank", "停用 Test Bank"]) {
+      expect(result.body.find(`[aria-label="${label}"]`).exists(), `${label} needs bank.mgmt`).toBe(false);
+    }
+    result.wrapper.unmount();
+    document.body.innerHTML = "";
+
+    result = await mountPanel({ permissions: FULL });
+    for (const label of ["編輯 Test Bank", "設為預設 Other Bank", "停用 Test Bank"]) {
+      expect(result.body.find(`[aria-label="${label}"]`).exists(), `${label} must appear with bank.mgmt`).toBe(true);
+    }
   });
 
   // AC-024 + 設計 §7.5：主動輸入密碼之後只展開**嗰一筆** 30 秒，並且顯示倒數。
@@ -130,6 +147,24 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     vi.advanceTimersByTime(16_000);
     await flushPromises();
     expect(body.text()).not.toContain(SECRET);
+  });
+
+  /**
+   * REV-044 L-1：背景 tab 嘅 setInterval 會被瀏覽器節流到幾秒先至一次，所以「數 30
+   * 個 tick」可以係真實世界幾分鐘。呢度模擬節流 —— 時鐘跳 60 秒，但只俾佢行一個
+   * tick。對住時鐘計就會即刻清；數 tick 就會仲剩 29 秒。
+   */
+  it("clears on wall-clock time, not on a count of ticks", async () => {
+    supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+    const { body } = await mountPanel({ permissions: VIEW_BANK });
+    await revealRow(body);
+    expect(body.text()).toContain(SECRET);
+
+    vi.setSystemTime(Date.now() + 60_000);
+    vi.advanceTimersByTime(1000);
+    await flushPromises();
+    expect(document.body.innerHTML,
+      "a throttled tab must still clear once the deadline has passed").not.toContain(SECRET);
     // 唔可以淨係隱藏 —— 個節點要冇咗，唔係 display:none 收埋住明文。
     expect(document.body.innerHTML).not.toContain(SECRET);
   });
@@ -165,6 +200,52 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     expect(document.body.innerHTML).not.toContain(SECRET);
   });
 
+  /**
+   * REV-044 H-1。`onBeforeRouteLeave` **唔會**喺淨係換 param 嗰陣行 —— 嗰個係
+   * `onBeforeRouteUpdate`。我上一版留低咗前者並且喺註解度講明佢守呢條路，而佢根本
+   * 唔會喺呢度行，所以 7 號嘅明文會留喺一個 URL 已經寫住 8 號嘅畫面上面。
+   *
+   * 呢條就係我當時話「寫唔出」嗰條測試。
+   */
+  it("clears the plaintext when only the :id changes and the panel is reused", async () => {
+    supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+    const { router, body } = await mountPanel({ permissions: VIEW_BANK });
+    await revealRow(body);
+    expect(body.text()).toContain(SECRET);
+
+    await router.push("/suppliers/8");
+    await flushPromises();
+    expect(document.body.innerHTML, "supplier 7's account must not survive into supplier 8's page").not.toContain(SECRET);
+  });
+
+  /**
+   * REV-044 M-1：reveal 係 async，所以佢可以喺使用者走咗之後先 resolve。嗰陣
+   * `holdPlaintext` 會喺一個死咗嘅 component 上面重新揸住個帳號，仲會開多個
+   * 30 秒 interval。斷言 timer 數目，因為個 DOM 已經冇咗 —— 淨係睇 DOM 係捉唔到
+   * 一個 leak 咗嘅 interval 嘅。
+   */
+  it("does not re-hold the account if reveal resolves after the panel is gone", async () => {
+    let resolveReveal;
+    supplierBankService.reveal.mockReturnValue(new Promise((resolve) => { resolveReveal = resolve; }));
+    const { wrapper, body } = await mountPanel({ permissions: VIEW_BANK });
+    await byText(body, "查看完整帳號").trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    await field(body, "查看原因").find("textarea").setValue("核對付款帳號");
+    await byText(body, "確認查看").trigger("click");
+
+    wrapper.unmount();
+    // 數總 timer 數係捉唔到嘅：unmount 會順手清埋 Quasar 自己嗰堆，所以個數點都會跌。
+    // 要斷言嘅係「有冇**再**開一個」。
+    const armed = vi.spyOn(globalThis, "setInterval");
+    resolveReveal({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+    await flushPromises();
+
+    expect(document.body.innerHTML).not.toContain(SECRET);
+    expect(armed, "a late reveal must not arm a countdown on a dead component").not.toHaveBeenCalled();
+    armed.mockRestore();
+  });
+
   it("clears the plaintext when the user navigates away", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { router, body } = await mountPanel({ permissions: VIEW_BANK });
@@ -179,7 +260,14 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     let result = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(result.body);
+    // Unmount 本身就會拆走個節點，所以單睇 DOM 係一個**唔會失敗**嘅斷言 ——
+    // 拆走 onUnmounted(forgetPlaintext) 佢一樣綠（REV-044 M-2）。數總 timer 數一樣
+    // 唔得：unmount 會清埋 Quasar 自己嗰堆，個數點都會跌。要盯住嘅係**嗰一個**
+    // handle 有冇被 clearInterval 收過。
+    const cleared = vi.spyOn(globalThis, "clearInterval");
     result.wrapper.unmount();
+    expect(cleared, "unmount must clear the countdown, not just remove the node").toHaveBeenCalled();
+    cleared.mockRestore();
     expect(document.body.innerHTML).not.toContain(SECRET);
 
     document.body.innerHTML = "";
@@ -262,6 +350,14 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     expect(warning.exists()).toBe(true);
     expect(warning.text()).toContain("SUP-009");
     expect(warning.text()).not.toContain(SECRET);
+
+    // REV-044 M-2：成功路徑上面個 dialog 會閂，而 `@hide` 本身就會清欄位 —— 所以
+    // 喺嗰度斷言「DOM 度搵唔到」捉唔到 forgetFormSecrets() 有冇行過。**呢條** warning
+    // 路徑個 dialog 係開住嘅，即係 forgetFormSecrets() 係唯一嘅機制。
+    expect(field(body, "帳號").find("input").element.value,
+      "a successful write must wipe the account number even when the dialog stays open").toBe("");
+    expect(field(body, "密碼").find("input").element.value).toBe("");
+    expect(warning.html()).not.toContain(SECRET);
   });
 
   // 設計 §7.5：切換預設要明講舊 default 會被取消。

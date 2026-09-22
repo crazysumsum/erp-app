@@ -57,23 +57,30 @@ jsdom 證唔到呢啲：佢喺 `about:blank` 係 opaque origin 冇真 storage、
 - `v-if` → `v-show`（明文隱藏但留喺 DOM）：**紅**。個測試真係分得開「睇唔到」同「冇咗」。
 - `onBeforeRouteLeave` 拆走：**綠** —— 見下面。
 
-## 5. 一個我殺唔到嘅 mutant，記低咗冇扮
+## 5. 一個我殺唔到嘅 mutant —— 而佢根本唔係 mutant，係一個真漏洞
 
-拆走 `onBeforeRouteLeave(() => { forgetPlaintext(); })` 之後，**全部瀏覽器測試照綠**。
+**呢一節之前寫錯咗，而且錯得幾緊要。**
 
-原因：今日每一條離開呢一頁嘅路徑都會 unmount 個 panel，而 `onUnmounted` 已經清咗。
-佢守嘅唔係嗰條路，係 Vue Router **重用 component instance** 嗰條 —— `/suppliers/7` 去
-`/suppliers/8` 係同一個 route record，唔會 unmount。今日冇任何頁面連結去嗰度（唯一去
-`/suppliers/:id` 嘅入口係列表，而經列表就一定 unmount 過），所以我寫唔出一個殺得到佢
-嘅測試。
+原本寫住：拆走 `onBeforeRouteLeave` 之後全部測試照綠，所以佢係一個 equivalent mutant；
+佢守嘅係 Vue Router 重用 instance 嗰條（`/suppliers/7` → `/suppliers/8`）；我寫唔出一個
+殺得到佢嘅測試。
 
-我試過一個，用 `history.pushState` 扮 route change —— **嗰個唔會驅動 Vue Router**，
-所以佢乜都冇測到，而佢喺 mutant 之下一樣綠。已經刪咗：一個斷言唔到自己標題嗰件事嘅
-測試，比冇嗰條測試更差。
+**錯。** Vue Router 喺淨係換 param、重用同一個 instance 嗰陣行嘅係
+**`onBeforeRouteUpdate`**，唔係 `onBeforeRouteLeave`。即係話我留低嗰個 guard，喺我親手
+寫落註解嗰個場景入面**根本唔會行**。個漏洞係開住嘅：7 號供應商嘅帳號明文會留喺一個
+URL 已經寫住 8 號嘅畫面上面。
 
-**留返個 guard。** CLAUDE.md 講明安全控制唔可以因為「而家用唔著」就簡化走，而一個
-「下一個供應商」掣就會令呢條路存在 —— 嗰陣個漏洞係 7 號嘅帳號明文留喺一個 URL 已經
-寫住 8 號嘅畫面上面。一行換呢個，唔值得慳。
+REV-044 用十一行 `router.push("/suppliers/8")` 重現咗。我自己再驗一次先改：喺呢個 head
+上面紅，加一行 `onBeforeRouteUpdate` 之後綠。
+
+我個 `history.pushState` 探針**的確**唔驅動 Vue Router —— 嗰個診斷係啱嘅。錯嘅係我由
+「呢個探針證唔到」跳去「冇嘢證得到」，然後把一個未驗證嘅機制寫成註解同報告裏面一句
+肯定句。同一個模組入面，呢個係我第三次犯：頭兩次係 design digest 包唔包 manifest
+`scope`、同 `redact()` 對住邊個 environment 解 key。
+
+修法：兩個 guard 一齊要。`onBeforeRouteLeave` 留返（佢守去另一個 record 嗰條路，今日
+冗餘，但冗餘同錯係兩件事），加 `onBeforeRouteUpdate`。測試搬咗入 `bank.test.js`，
+route 定義用 `/suppliers/:id` —— 一個冇 param 嘅 `"/"` route 係測唔到重用嗰條路嘅。
 
 ## 6. 順手揾到、**冇**喺度改嘅嘢
 
@@ -86,11 +93,11 @@ jsdom 證唔到呢啲：佢喺 `about:blank` 係 opaque origin 冇真 storage、
 
 | Suite | 結果 | Evidence |
 | --- | --- | --- |
-| `supplier-phase-001-client` | **PASS** 84/84（呢個 suite 係 supplier 子集，唔係成個 client） | `evidence/20260922T024325-ba84acad575d/run.json` |
+| `supplier-phase-001-client` | **PASS** 87/87（呢個 suite 係 supplier 子集，唔係成個 client） | 最新一次喺 REV-044 remediation 之後重跑 |
 | `supplier-phase-001-server` | **PASS** 395/395 | `evidence/20260922T024327-d465987adeb0/run.json` |
 | `lint` | **PASS** | `evidence/20260922T024331-3bf826929656/run.json` |
 | `client-build` | **PASS** | `evidence/20260922T024334-c4ad32cc1a1a/run.json` |
-| 成個 client vitest | **PASS** 582/582 | 本機，唔係 profile suite |
+| 成個 client vitest | **PASS** 585/585 | 本機，唔係 profile suite |
 | Playwright `supplier-bank.spec.js` | **PASS** 3/3 | §4 |
 
 另外四個 DEVELOPER-stage suite 記錄咗 **BLOCKED**，而且**照樣註冊咗**落 ledger ——
@@ -102,3 +109,48 @@ TC-111 起），全部仍然 NOT RUN，因為嗰啲係 TECHNICAL／REGRESSION st
 entry。呢個係既有缺口，T34 亦都係同一個原因淨係註冊嗰四個。**冇喺度修**：改 profile 會
 再推 PLAN baseline，而為咗令一個唔屬呢個 stage 嘅 suite 跑到而去推 baseline，唔係
 呢個 task 嘅事。
+
+## 8. REV-044 remediation
+
+REV-044（`agent-skills:security-auditor`，獨立，非作者）報 CHANGES_REQUESTED：
+0 Critical、1 High、2 Medium、2 Low、2 Info。六條全部真。
+
+| # | 收法 |
+| --- | --- |
+| **H-1** `onBeforeRouteLeave` 唔會喺 param-only change 行 | 見 §5。加 `onBeforeRouteUpdate`，測試搬入 `bank.test.js` 並且用 `/suppliers/:id` route。 |
+| **M-1** reveal 喺 unmount 之後 resolve 會重新揸住明文兼開多個 interval | 加一個 `gone` flag，`holdPlaintext` 見到就唔做。 |
+| **M-2** 三條清除斷言係 DOM 形狀，mutation 之下照綠 | 三條全部改成盯住**機制**：unmount 嗰條 spy `clearInterval`；late-reveal 嗰條 spy `setInterval`（數總 timer 數係捉唔到嘅 —— unmount 會清埋 Quasar 自己嗰堆，個數點都會跌）；`forgetFormSecrets` 嗰條搬咗去 **warning 路徑**，因為成功路徑個 dialog 會閂而 `@hide` 本身就會清欄位。 |
+| **M-3** 每行嘅 edit／set-default／deactivate 掣冇任何權限斷言 | 加咗：`bank.view` 之下三個都要唔存在，`bank.mgmt` 之下三個都要存在。 |
+| **L-1** 30 秒係 30 個 tick，唔係 30 秒 | 改成對住時鐘計 deadline。背景 tab 嘅 `setInterval` 會被節流到幾秒一次，數 tick 可以變成真實世界幾分鐘。測試用 `vi.setSystemTime` 跳 60 秒但只行一個 tick 去模擬節流。 |
+| **L-2** ledger 講咗個靚啲但唔啱嘅理由 | 見下。 |
+
+### Mutation：七個，六個殺到
+
+```
+H-1 drop onBeforeRouteUpdate     KILLED
+M-1 drop the unmount flag        KILLED
+M-2a drop onUnmounted clear      KILLED
+M-2b drop forgetFormSecrets      KILLED
+M-3 widen row controls           KILLED
+L-1 count ticks not the clock    KILLED
+v-if -> v-show                   （jsdom 編譯唔到，由瀏覽器測試殺 —— 見 §4）
+```
+
+第一次改完之後我再跑一次呢七個，**四個仲係生還**。當時我以為「加咗斷言」就等於
+「斷言得到」，而嗰四條新斷言全部都係喺度睇 DOM 或者數 timer 總數 —— 兩樣都會因為
+unmount／閂 dialog 而自動成立。改成 spy 住真正嗰個 call 之後先至殺得到。
+
+### L-2：我個理由靚過事實
+
+我原本寫四個 BLOCKED suite 純粹係 stage 唔夾（佢哋要嘅係 T37 之後先跑嘅正式案例）。
+**呢個係真，但唔係佢哋第一樣衰嘅嘢。** 讀 stderr 唔讀 summary 就見到：
+
+```
+Could not find 'server/test/supplier-management'
+Could not find 'server/test/supplier-management/bank'
+Could not find 'server/test/supplier-management/security'
+```
+
+加埋 `supplier-client-ui` 指住嘅 `client/test/supplier-management.vitest.config.js`，
+四條路徑一條都唔存在。即係 profile 宣告咗一整棵從來未起過嘅 technical／regression
+測試樹，佢哋唔係「stage 唔夾」，係**根本跑唔到**。呢個缺口而家照實記咗落 ledger。

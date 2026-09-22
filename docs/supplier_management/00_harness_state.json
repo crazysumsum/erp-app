@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 196,
+  "revision": 200,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
-    "source_fingerprint": "c8977888183fedf5450b6ad6d725d5b4e60c3952f531aea9f29a0205f9027392",
+    "code_commit": "4a876547e41f63f78f4333f188ab99dfbbcf7558",
+    "source_fingerprint": "7b3d5616e7156e4a661a9f0b449d287cd266794ab201e4c7e5bc344680b0d761",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
     "default_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -2887,6 +2887,28 @@
       "source_ref": "Four suites PASS and are TASK-035's developer evidence: supplier-phase-001-client 84/84 (that suite is the supplier subset, not the whole client suite; the full client vitest run is 582/582 locally), supplier-phase-001-server, lint and client-build. Four more are recorded BLOCKED and are registered here rather than left out, because leaving them out would make the evidence set look hand-picked. They are supplier-client-ui, supplier-server-integration, supplier-bank-security and supplier-security, and none of them is a TASK-035 failure: each declares required_case_ids covering the module's whole formal catalogue (UI-001 to UI-007 for the first, TC-001 onward for the second, TC-062 onward for the third, TC-111 onward for the fourth), all of which are still NOT RUN because they are TECHNICAL and REGRESSION stage cases belonging to TASK-037 and later. supplier-client-ui additionally points at client/test/supplier-management.vitest.config.js, which does not exist in the repository - a profile entry that has never been runnable. That is a pre-existing gap, carried by every task since the profile was written, and TASK-034 registered only the same four passing suites for the same reason. Not fixed here: changing the profile moves the PLAN baseline, and doing that to make a suite for someone else's stage run is not this task's business.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-22T10:44:59+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Correction: four profile suites point at paths that do not exist, which my earlier record did not say",
+      "code_commit": "4a876547e41f63f78f4333f188ab99dfbbcf7558",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "7b3d5616e7156e4a661a9f0b449d287cd266794ab201e4c7e5bc344680b0d761",
+      "status": "FAIL",
+      "source_ref": "REV-044 L-2. My earlier observation explained the four BLOCKED suites purely as a stage mismatch - their required_case_ids are TECHNICAL and REGRESSION cases belonging to TASK-037 and later. That is true but it is not the first thing that goes wrong, and by giving only that reason I hid a carried gap. I read the stderr rather than the summary this time: supplier-server-integration dies on \"Could not find 'server/test/supplier-management'\", supplier-bank-security on \"Could not find 'server/test/supplier-management/bank'\", and supplier-security on \"Could not find 'server/test/supplier-management/security'\". supplier-client-ui points at client/test/supplier-management.vitest.config.js. None of those four paths exists in the repository. So the profile declares an entire technical and regression test tree that has never been created, and four of its thirteen suites cannot run at all rather than merely being out of stage. Status FAIL records the gap. Not fixed here for the same reason as before - creating that tree is TASK-037's work and editing the profile moves the PLAN baseline - but the gap is now recorded accurately instead of behind a reason that sounds tidier than the truth.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-044",
+      "observed_at": "2026-09-22T11:00:01+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-044 remediation: six of seven mutants killed, after a first attempt where four survived",
+      "code_commit": "4a876547e41f63f78f4333f188ab99dfbbcf7558",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "7b3d5616e7156e4a661a9f0b449d287cd266794ab201e4c7e5bc344680b0d761",
+      "status": "PASS",
+      "source_ref": "REV-044 returned CHANGES_REQUESTED with 1 High, 2 Medium, 2 Low and 2 Info, and every finding was real. H-1 is the one that matters and it corrects me: Vue Router runs onBeforeRouteUpdate, not onBeforeRouteLeave, when only a param changes on a reused instance, so the guard I kept specifically for the /suppliers/7 to /suppliers/8 case never fired there and the leak was open. I reproduced it before changing anything - red at 4a87654, green with onBeforeRouteUpdate added. My history.pushState probe was correctly diagnosed as non-discriminating; the error was concluding from one failed probe that nothing could discriminate, and then writing that conclusion into a code comment and a report section as a statement of fact. That is the third time in this module I have asserted a mechanism without executing it, after the design digest and redact() cases. M-1: a reveal resolving after unmount re-held the plaintext and armed a fresh interval on a dead component; guarded with a flag. M-2: three clearing assertions were DOM-shaped and survived mutation. M-3: the per-row edit, set-default and deactivate controls had no permission assertion at all. L-1: the countdown counted ticks rather than consulting a clock, so a throttled background tab would hold the plaintext far longer than thirty seconds. Worth recording separately: after my FIRST round of fixes I re-ran all seven mutations and four still survived. The new assertions were watching the DOM or counting total timers, and both of those become true on their own when a component unmounts or a dialog closes. Only spying on the specific setInterval and clearInterval calls, and moving the form-clearing assertion onto the warning path where the dialog stays open, actually discriminated. Final: H-1, M-1, M-2a, M-2b, M-3 and L-1 all KILLED; the v-if to v-show mutant cannot run under jsdom at all because it breaks template compilation, and it is killed by the browser suite instead. 585/585 client vitest, 3/3 browser, lint clean.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-044",
+      "observed_at": "2026-09-22T11:00:56+08:00"
     }
   ],
   "pending_decisions": [
@@ -3874,7 +3896,11 @@
     "evidence/20260922T024352-8258a797d269/run.json",
     "evidence/20260922T024353-6e7fee6e7c53/run.json",
     "evidence/20260922T024353-fb8fa3320e64/run.json",
-    "evidence/20260922T024358-ae15986b9939/run.json"
+    "evidence/20260922T024358-ae15986b9939/run.json",
+    "evidence/20260922T030038-198767667407/run.json",
+    "evidence/20260922T030040-3f2896cb6d8d/run.json",
+    "evidence/20260922T030044-9df60959cbd6/run.json",
+    "evidence/20260922T030047-5e60f2b683fd/run.json"
   ],
   "defects": [
     {
