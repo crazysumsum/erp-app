@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 207,
+  "revision": 210,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "551e2492789f06e98f2688830009074d4ea13250",
-    "source_fingerprint": "bfc09cc6eaa0830b35927cff76643c01e661c86d23a96df823e37eabb1649c4e",
+    "code_commit": "c4efd7fcc793741cdbb331fffe28289704456a9f",
+    "source_fingerprint": "f62d381ac33591d2705478bdc959cc3b49379d5f8c9c76252b010434c5b0f255",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
-    "default_commit": "fd615e539bc339ceada1b6541949db7046ed160c",
+    "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -2942,6 +2942,17 @@
       "source_ref": "While REV-046's remediation was in review, origin/main moved twice. The second move was PR #127, which is the follow-up task I spawned myself from this work: it makes SupplierDetailPage watch route.params.id and reload, and it adds onBeforeRouteUpdate for the unsaved-draft prompt. The merge conflicted only on the mock list at the top of detail.test.js, where both sides had added mocks and both were kept. What did not conflict, and what no test on either side covered, is the combination: SupplierBankPanel fetched its masked list in onMounted only, and /suppliers/7 to /suppliers/8 reuses the instance, so after PR #127 made that navigation actually work, supplier 7's masked rows stayed on supplier 8's page. Not a plaintext disclosure - the list is masked - but the wrong Supplier's data under the right Supplier's URL. Found by probing the combination rather than trusting two green suites: list() was called once with 7 and never with 8. Fixed with a watcher on props.supplierId that clears and reloads, and pinned by a test verified to fail when the watcher is removed. Both branches were individually correct; only the pair was wrong, which is the same shape as REV-045 F-H1 and is worth stating as a rule: after a merge, re-derive the combination instead of reading two green suites as evidence about their union. 595/595 client vitest, 3/3 browser, lint clean.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-22T12:03:59+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-047: I measured a real thing in a host that is not the program, and the fix hid a real guard",
+      "code_commit": "c4efd7fcc793741cdbb331fffe28289704456a9f",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "f62d381ac33591d2705478bdc959cc3b49379d5f8c9c76252b010434c5b0f255",
+      "status": "PASS",
+      "source_ref": "REV-047 returned CHANGES_REQUESTED with 1 High, 2 Medium and 3 Low. The High is about the watcher I added while merging main. I had measured, correctly, that list() was called once with 7 and never with 8 - but I measured it in bank.test.js's host, which binds $route.params.id to the prop and keeps the instance alive. The real SupplierDetailPage does not: its load() sets loading = true first, and the template is v-if=loading / v-else-if=supplier, so the whole subtree including the panel is torn down and rebuilt. I drove the real page myself before accepting the finding: panel instance uid 48 to 77, and list() called with 7 and then 8. With the watcher deleted the real page still calls list(8) and still never shows supplier 7's rows, so the watcher never ran in the application at all. What it did do was run in the test host, where it cleared everything first and therefore masked the guard: onBeforeRouteUpdate could be deleted outright with all 595 tests green - the guard REV-044 found missing and that took two rounds to shape. My section 10 claim of twelve mutants twelve killed was true at 551e249 and false at the merge candidate. Remediation: the watcher is gone, the host-bound test that pinned it is gone, a replacement test drives the real SupplierDetailPage, and bank.test.js now states in its comment that its host deliberately differs from the application and why. Thirteen mutants, thirteen killed, including the two that had been surviving. One correction to the report: it lists M-2b as surviving too and I measure it as killed; recorded as measured rather than as received. F-L1 and F-L2 were unasserted lines, both now pinned - F-L1 needed both clicks in one tick, because an await between them lets Vue re-render and Quasar's loading state swallows the second click, which is why my first attempt at that test left the mutant alive. F-M2, a page that hangs on a non-numeric id, is already on main via PR #127 and the reviewer said it should not block this PR; a follow-up task was opened instead. 597/597 client vitest, 23/23 browser across the whole technical project, lint clean, evidence re-run at this head as F-L3 asked.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-047",
+      "observed_at": "2026-09-22T14:13:16+08:00"
     }
   ],
   "pending_decisions": [
@@ -3941,7 +3952,11 @@
     "evidence/20260922T034035-c52085b898b3/run.json",
     "evidence/20260922T034037-9cb24cfea832/run.json",
     "evidence/20260922T034040-9f44b132f2d4/run.json",
-    "evidence/20260922T034043-c72312dded1e/run.json"
+    "evidence/20260922T034043-c72312dded1e/run.json",
+    "evidence/20260922T061254-274ba32589bd/run.json",
+    "evidence/20260922T061256-6eb9b064ebbc/run.json",
+    "evidence/20260922T061300-e8ab3abeed8e/run.json",
+    "evidence/20260922T061303-2538727217ca/run.json"
   ],
   "defects": [
     {
