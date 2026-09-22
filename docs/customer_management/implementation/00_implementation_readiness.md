@@ -299,3 +299,25 @@ merge claim.
   queue time-filter and caller-supplied idempotency-key findings were fixed. No UI
   component or route changed, so Playwright validation is not applicable to this
   service-only task.
+
+## TASK-016 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI, PR review or a
+merge claim.
+
+- Added the Customer list, create and root-detail pages on the existing route,
+  permission, shared table and Customer-service boundaries. The list keeps query,
+  status, sorting and pagination state in the URL; the create flow allows Drafts
+  and asks for an approver only after the server requires one.
+- Edit state is guarded on navigation; a version conflict keeps the user draft
+  visible and requires explicitly loading the latest server state before retrying.
+- Focused page and route-metadata tests passed 32/32. Repository ESLint, client
+  production build and `git diff --check` passed; the build reported only the
+  existing >500 kB chunk advisory.
+- Browser validation used Playwright against the actual Vite application with
+  network-layer API contracts: URL-preserving list/detail navigation and visible
+  Draft creation passed 2/2 with no page errors or console warnings. CI was not
+  run, as directed by the Product Owner.
+- Independent review by Jason reached `APPROVE` after command-response envelope
+  handling and the server's `APPROVER_REQUIRED` activation code were corrected;
+  unit and browser mocks now exercise those exact contracts.
