@@ -1,36 +1,43 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 15,
-  "mode": "DESIGN_AND_PLAN",
-  "active_mode": "DESIGN_AND_PLAN",
-  "status": "PLANNED",
-  "resume_status": null,
-  "current_phase": null,
-  "current_task": null,
+  "revision": 23,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-005",
   "baseline": {
     "design": "f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41",
     "plan": "b9a4a3874e84e70b1025b0d2fb9d06ff7f80bd66b5ff3aa4e1bc8fa93dc84bb9",
-    "code_commit": "42ea51142c2484bc055a06e32ba8eda9a57f6021",
-    "source_fingerprint": "553d36d390584a5f4468e75bfcfaf357c6e8401ff8e7178ca2972a850781dfa9",
+    "code_commit": "b62273c165999dc7674f73b2c6107e9d1e000205",
+    "source_fingerprint": "6908ab3ea16d0eff328af70f76984394901b2b9c601219ac3a0bd355a68e2ea0",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
-    "default_commit": "3e53f7dcf47a7e31ec3290a852914afe9335b9e7",
-    "mode_entry_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec"
+    "default_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
+    "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
   },
   "runtime": {
-    "instance_id": "DESIGN-ONLY-NO-RUNTIME",
+    "instance_id": "INVENTORY-P0-MYSQL-2670",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-inventory-p0-foundation"
+      "workspace": "/private/tmp/erp-inventory-p0-foundation",
+      "mysql-schema": "erp_inventory_p0",
+      "mysql-port": "3307",
+      "mysql-socket": "/private/tmp/erp-inventory-p0-mysql-2670.dA2Off/mysql.sock",
+      "mysql-datadir": "/private/tmp/erp-inventory-p0-mysql-2670.dA2Off/data",
+      "mysql-version": "26.7.0",
+      "web-port": "4174",
+      "opening-file-root": "/private/tmp/erp-inventory-p0-opening"
     },
-    "lease_ref": null
+    "lease_ref": "/private/tmp/erp-inventory-p0-mysql-2670.dA2Off/mysql.pid"
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
-    "TASK-005": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "DONE",
+    "TASK-005": "IN_PROGRESS",
     "TASK-006": "PENDING",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
@@ -465,6 +472,24 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/inventory_management/09_final_alignment_review.md#hd-006--mysql-server-2670-baseline"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "May the migration allocation be revised to split operation requests from movements and place operation/audit DDL before P1 master/stock DDL?",
+      "affected_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-007",
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-23 approving migration allocation 0054-0063 and return to DESIGN_AND_PLAN"
     }
   ],
   "external_actions": [
@@ -563,9 +588,17 @@
       "idempotency_key": "mode-change-12",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task user decision on 2026-09-23: 改以 26.7.0 為基線"
+    },
+    {
+      "id": "MODE-CHANGE-16",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-16",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23: resume Inventory Management IMPLEMENT on approved 0.4 baseline"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Ask Sam whether to resume IMPLEMENT on the approved Inventory 0.4 baseline; if authorized, allocate an isolated MySQL Server 26.7.0 runtime and start TASK-001 by reconciling CI/runtime version without modifying existing migrations."
+  "next_safe_action": "Pause TASK-005. Revise the migration allocation in an isolated DESIGN_AND_PLAN documentation worktree, obtain fresh DESIGN and PLAN hash approvals, merge the docs-only PR to main, then reconcile this implementation branch before resuming."
 }
