@@ -187,6 +187,21 @@ test("Customer and Supplier bank capabilities use the same owner-separated key r
   );
 });
 
+test("Customer attachment orphan cleanup grace exceeds the complete request budget", () => {
+  const source = defaultConfigurationSource();
+  const bankEncryption = { activeKeyId: "enc", keyRing: { enc: randomBytes(32).toString("base64") } };
+  const bankLookup = { activeKeyId: "lookup", keyRing: { lookup: randomBytes(32).toString("base64") } };
+  const attachment = {
+    generalRoot: "/private/tmp/customer-general", bankSensitiveRoot: "/private/tmp/customer-bank",
+    tempRoot: "/private/tmp/customer-temp", orphanGraceMs: 20000,
+    malwareScanner: { mode: "clamd", host: "127.0.0.1", port: 3310, timeoutMs: 15000 }
+  };
+  assert.throws(() => validateApplicationConfiguration({
+    ...source, customer: { bankEncryption, bankLookup, attachment },
+    supplier: { ...source.supplier, bankEncryption, bankLookup }
+  }), /must exceed application.requestTimeoutMs/u);
+});
+
 test("every environment requires JWT_SECRET, not just production", () => {
   const source = defaultConfigurationSource();
   // 沒有 JWT_SECRET 時，config/jwt.js 的 secret 就是 undefined。

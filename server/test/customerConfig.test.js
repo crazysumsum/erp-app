@@ -10,8 +10,27 @@ const key = () => randomBytes(32).toString("base64");
 test("Customer bank capability is disabled when both key rings are absent", () => {
   assert.deepEqual(normalizeCustomerConfig({}), {
     bankEncryption: null,
-    bankLookup: null
+    bankLookup: null,
+    attachment: null
   });
+});
+
+test("Customer attachment config requires isolated absolute roots, encryption and scanner", () => {
+  const bankEncryption = { activeKeyId: "enc", keyRing: { enc: key() } };
+  const bankLookup = { activeKeyId: "lookup", keyRing: { lookup: key() } };
+  const attachment = {
+    generalRoot: "/private/tmp/customer-general", bankSensitiveRoot: "/private/tmp/customer-bank",
+    tempRoot: "/private/tmp/customer-temp", maxFileBytes: 1024, orphanGraceMs: 20000,
+    malwareScanner: { mode: "clamd", host: "127.0.0.1", port: 3310, timeoutMs: 15000 }
+  };
+  const normalized = normalizeCustomerConfig({ bankEncryption, bankLookup, attachment });
+  assert.equal(normalized.attachment.maxFileBytes, 1024);
+  assert.deepEqual(normalized.attachment.allowedMimeTypes, ["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+  assert.throws(() => normalizeCustomerConfig({ bankEncryption, bankLookup, attachment: { ...attachment, tempRoot: "/private/tmp/customer-general/temp" } }), /non-overlapping/u);
+  assert.throws(() => normalizeCustomerConfig({ attachment }), /requires the Customer encryption key ring/u);
+  assert.throws(() => normalizeCustomerConfig({ bankEncryption, bankLookup, attachment: { ...attachment, malwareScanner: null } }), /requires a clamd/u);
+  assert.throws(() => normalizeCustomerConfig({ bankEncryption, bankLookup, attachment: { ...attachment, orphanGraceMs: 15000 } }), /must exceed/u);
+  assert.throws(() => normalizeCustomerConfig({ bankEncryption, bankLookup, attachment: { ...attachment, malwareScanner: { ...attachment.malwareScanner, port: 65536 } } }), /at most 65535/u);
 });
 
 test("Customer config validates independent key rings and redacts their material", () => {

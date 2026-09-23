@@ -62,7 +62,7 @@ test("TC-010 reuses only a matching actor-scoped operation payload", async () =>
 test("TC-011 accepts the approved high-risk lifecycle route keys", async () => {
   const operations = new CustomerOperationService();
   const connection = { async execute() { return [{}]; } };
-  for (const routeKey of ["customer.code_change", "customer.activate", "customer.suspend", "customer.reactivate", "customer.archive", "customer.restore", "customer.delete"]) {
+  for (const routeKey of ["customer.code_change", "customer.activate", "customer.suspend", "customer.reactivate", "customer.archive", "customer.restore", "customer.delete", "customer.attachment.upload"]) {
     await operations.begin(connection, { actorId: 9, routeKey, idempotencyKey: routeKey, payload: { id: 42 }, nowMs: 1 });
   }
 });

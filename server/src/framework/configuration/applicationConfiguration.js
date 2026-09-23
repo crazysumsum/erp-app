@@ -140,6 +140,13 @@ function crossSectionChecks(normalized, details, { heapLimitBytes }) {
   checkRevocationRefreshScheduled(scheduler, details);
   checkSharedBankKeyRings(customer, supplier, details);
 
+  if (application && customer?.attachment && customer.attachment.orphanGraceMs <= application.requestTimeoutMs) {
+    details.push({
+      section: "customer",
+      message: `attachment.orphanGraceMs (${customer.attachment.orphanGraceMs}ms) must exceed application.requestTimeoutMs (${application.requestTimeoutMs}ms) so cleanup cannot delete a file from a live upload request.`
+    });
+  }
+
   if (!application || !database) {
     return;
   }

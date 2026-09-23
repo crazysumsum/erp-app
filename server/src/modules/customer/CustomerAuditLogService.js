@@ -32,6 +32,12 @@ const ACTIONS = new Set([
   "bank.reveal",
   "bank.key_rotated",
   "bank.reindexed",
+  "attachment.upload",
+  "attachment.view",
+  "attachment.download",
+  "attachment.update",
+  "attachment.deactivate",
+  "attachment.delete",
   "setting.update",
   "catalog.create",
   "catalog.update",
@@ -99,7 +105,14 @@ const ROOT_AUDIT_FIELDS = new Set([
   "isDefault",
   "revealed",
   "keyRotationCount",
-  "reindexCount"
+  "reindexCount",
+  "displayName",
+  "documentType",
+  "sensitivity",
+  "mimeType",
+  "sizeBytes",
+  "storageClass",
+  "scanStatus"
 ]);
 
 function allowlistedSnapshot(value) {

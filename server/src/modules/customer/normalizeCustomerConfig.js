@@ -1,4 +1,5 @@
 import { revealSecret, secretValue } from "../../framework/configuration/SecretValue.js";
+import path from "node:path";
 
 const KEY_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
 
@@ -54,6 +55,61 @@ function normalizeGroup(group, name) {
   return Object.freeze({ activeKeyId, keyRing });
 }
 
+function hasAttachmentMaterial(source) {
+  return Boolean(source && [source.generalRoot, source.bankSensitiveRoot, source.tempRoot,
+    source.maxFileBytes, source.orphanGraceMs, source.malwareScanner?.mode,
+    source.malwareScanner?.host, source.malwareScanner?.port, source.malwareScanner?.timeoutMs]
+    .some((value) => String(value ?? "").trim()));
+}
+
+function positiveInteger(value, name, fallback, maximum = Number.MAX_SAFE_INTEGER) {
+  const number = Number(value ?? fallback);
+  if (!Number.isSafeInteger(number) || number <= 0 || number > maximum) throw new Error(`Customer config "attachment.${name}" must be a positive integer at most ${maximum}`);
+  return number;
+}
+
+function inside(parent, child) {
+  const relative = path.relative(parent, child);
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== "..");
+}
+
+function normalizeAttachment(source, bankEncryption) {
+  if (!hasAttachmentMaterial(source)) return null;
+  const roots = ["generalRoot", "bankSensitiveRoot", "tempRoot"].map((name) => {
+    const root = String(source?.[name] ?? "").trim();
+    if (!root || !path.isAbsolute(root)) throw new Error(`Customer config "attachment.${name}" must be an absolute path`);
+    return path.resolve(root);
+  });
+  for (let left = 0; left < roots.length; left += 1) {
+    for (let right = left + 1; right < roots.length; right += 1) {
+      if (inside(roots[left], roots[right]) || inside(roots[right], roots[left])) {
+        throw new Error("Customer attachment roots must be distinct and non-overlapping");
+      }
+    }
+  }
+  if (!bankEncryption) throw new Error("Customer attachment capability requires the Customer encryption key ring");
+  const scanner = source?.malwareScanner;
+  if (String(scanner?.mode ?? "").trim() !== "clamd" || !String(scanner?.host ?? "").trim()) {
+    throw new Error("Customer attachment capability requires a clamd malware scanner");
+  }
+  const timeoutMs = positiveInteger(scanner.timeoutMs, "malwareScanner.timeoutMs", 15000);
+  const orphanGraceMs = positiveInteger(source.orphanGraceMs, "orphanGraceMs", 24 * 60 * 60 * 1000);
+  if (orphanGraceMs <= timeoutMs) {
+    throw new Error("Customer config \"attachment.orphanGraceMs\" must exceed the malware scanner timeout");
+  }
+  return Object.freeze({
+    generalRoot: roots[0], bankSensitiveRoot: roots[1], tempRoot: roots[2],
+    maxFileBytes: positiveInteger(source.maxFileBytes, "maxFileBytes", 20 * 1024 * 1024, 20 * 1024 * 1024),
+    orphanGraceMs,
+    allowedMimeTypes: Object.freeze(["application/pdf", "image/png", "image/jpeg", "image/webp"]),
+    malwareScanner: Object.freeze({
+      mode: "clamd", host: String(scanner.host).trim(),
+      port: positiveInteger(scanner.port, "malwareScanner.port", 3310, 65535),
+      timeoutMs
+    })
+  });
+}
+
 export function normalizeCustomerConfig(source = {}) {
   if (!source || typeof source !== "object" || Array.isArray(source)) {
     throw new TypeError("Customer config must be an object");
@@ -73,5 +129,6 @@ export function normalizeCustomerConfig(source = {}) {
       throw new Error("Customer bank encryption and lookup must use independent key material");
     }
   }
-  return Object.freeze({ bankEncryption, bankLookup });
+  const attachment = normalizeAttachment(source.attachment, bankEncryption);
+  return Object.freeze({ bankEncryption, bankLookup, attachment });
 }
