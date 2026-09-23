@@ -38,6 +38,12 @@ const ACTIONS = new Set([
   "attachment.update",
   "attachment.deactivate",
   "attachment.delete",
+  "import.upload",
+  "import.precheck",
+  "import.confirm",
+  "import.complete",
+  "import.cancel",
+  "import.result_download",
   "setting.update",
   "catalog.create",
   "catalog.update",
@@ -114,7 +120,13 @@ const ROOT_AUDIT_FIELDS = new Set([
   "storageClass",
   "scanStatus",
   "status",
-  "errorCode"
+  "errorCode",
+  "mode",
+  "templateVersion",
+  "totalCount",
+  "validCount",
+  "warningCount",
+  "invalidCount"
 ]);
 
 function allowlistedSnapshot(value) {

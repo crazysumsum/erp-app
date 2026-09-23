@@ -166,3 +166,7 @@ export function customerBankError(code, statusCode, publicMessage, publicDetails
 export function customerAttachmentError(code, statusCode, publicMessage, publicDetails) {
   return customerError("Customer attachment operation failed", { code, statusCode, publicMessage, publicDetails });
 }
+
+export function customerImportError(code, statusCode, publicMessage, publicDetails) {
+  return customerError("Customer import operation failed", { code, statusCode, publicMessage, publicDetails });
+}

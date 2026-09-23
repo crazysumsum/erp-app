@@ -19,6 +19,13 @@ const customerConfig = {
       port: process.env.CUSTOMER_MALWARE_SCANNER_PORT || undefined,
       timeoutMs: process.env.CUSTOMER_MALWARE_SCANNER_TIMEOUT_MS || undefined
     }
+  },
+  import: {
+    root: process.env.CUSTOMER_IMPORT_ROOT || undefined,
+    maxFileBytes: process.env.CUSTOMER_IMPORT_MAX_FILE_BYTES || undefined,
+    maxRows: process.env.CUSTOMER_IMPORT_MAX_ROWS || undefined,
+    rowBatchSize: process.env.CUSTOMER_IMPORT_ROW_BATCH_SIZE || undefined,
+    resultRetentionDays: process.env.CUSTOMER_IMPORT_RESULT_RETENTION_DAYS || undefined
   }
 };
 

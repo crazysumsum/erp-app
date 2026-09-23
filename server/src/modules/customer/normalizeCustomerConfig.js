@@ -64,7 +64,7 @@ function hasAttachmentMaterial(source) {
 
 function positiveInteger(value, name, fallback, maximum = Number.MAX_SAFE_INTEGER) {
   const number = Number(value ?? fallback);
-  if (!Number.isSafeInteger(number) || number <= 0 || number > maximum) throw new Error(`Customer config "attachment.${name}" must be a positive integer at most ${maximum}`);
+  if (!Number.isSafeInteger(number) || number <= 0 || number > maximum) throw new Error(`Customer config "${name}" must be a positive integer at most ${maximum}`);
   return number;
 }
 
@@ -92,21 +92,34 @@ function normalizeAttachment(source, bankEncryption) {
   if (String(scanner?.mode ?? "").trim() !== "clamd" || !String(scanner?.host ?? "").trim()) {
     throw new Error("Customer attachment capability requires a clamd malware scanner");
   }
-  const timeoutMs = positiveInteger(scanner.timeoutMs, "malwareScanner.timeoutMs", 15000);
-  const orphanGraceMs = positiveInteger(source.orphanGraceMs, "orphanGraceMs", 24 * 60 * 60 * 1000);
+  const timeoutMs = positiveInteger(scanner.timeoutMs, "attachment.malwareScanner.timeoutMs", 15000);
+  const orphanGraceMs = positiveInteger(source.orphanGraceMs, "attachment.orphanGraceMs", 24 * 60 * 60 * 1000);
   if (orphanGraceMs <= timeoutMs) {
     throw new Error("Customer config \"attachment.orphanGraceMs\" must exceed the malware scanner timeout");
   }
   return Object.freeze({
     generalRoot: roots[0], bankSensitiveRoot: roots[1], tempRoot: roots[2],
-    maxFileBytes: positiveInteger(source.maxFileBytes, "maxFileBytes", 20 * 1024 * 1024, 20 * 1024 * 1024),
+    maxFileBytes: positiveInteger(source.maxFileBytes, "attachment.maxFileBytes", 20 * 1024 * 1024, 20 * 1024 * 1024),
     orphanGraceMs,
     allowedMimeTypes: Object.freeze(["application/pdf", "image/png", "image/jpeg", "image/webp"]),
     malwareScanner: Object.freeze({
       mode: "clamd", host: String(scanner.host).trim(),
-      port: positiveInteger(scanner.port, "malwareScanner.port", 3310, 65535),
+      port: positiveInteger(scanner.port, "attachment.malwareScanner.port", 3310, 65535),
       timeoutMs
     })
+  });
+}
+
+function normalizeImport(source) {
+  if (!source || !Object.values(source).some((value) => String(value ?? "").trim())) return null;
+  const root = String(source.root ?? "").trim();
+  if (!root || !path.isAbsolute(root)) throw new Error('Customer config "import.root" must be an absolute path');
+  return Object.freeze({
+    root: path.resolve(root),
+    maxFileBytes: positiveInteger(source.maxFileBytes, "import.maxFileBytes", 20 * 1024 * 1024, 20 * 1024 * 1024),
+    maxRows: positiveInteger(source.maxRows, "import.maxRows", 10_000, 10_000),
+    rowBatchSize: positiveInteger(source.rowBatchSize, "import.rowBatchSize", 100, 1000),
+    resultRetentionDays: positiveInteger(source.resultRetentionDays, "import.resultRetentionDays", 365, 3650)
   });
 }
 
@@ -130,5 +143,13 @@ export function normalizeCustomerConfig(source = {}) {
     }
   }
   const attachment = normalizeAttachment(source.attachment, bankEncryption);
-  return Object.freeze({ bankEncryption, bankLookup, attachment });
+  const customerImport = normalizeImport(source.import);
+  if (attachment && customerImport) {
+    for (const root of [attachment.generalRoot, attachment.bankSensitiveRoot, attachment.tempRoot]) {
+      if (inside(root, customerImport.root) || inside(customerImport.root, root)) {
+        throw new Error("Customer import and attachment roots must be distinct and non-overlapping");
+      }
+    }
+  }
+  return Object.freeze({ bankEncryption, bankLookup, attachment, import: customerImport });
 }

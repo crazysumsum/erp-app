@@ -7,11 +7,12 @@ import { normalizeCustomerConfig } from "../src/modules/customer/normalizeCustom
 
 const key = () => randomBytes(32).toString("base64");
 
-test("Customer bank capability is disabled when both key rings are absent", () => {
+test("Customer bank and import capabilities are disabled when their config is absent", () => {
   assert.deepEqual(normalizeCustomerConfig({}), {
     bankEncryption: null,
     bankLookup: null,
-    attachment: null
+    attachment: null,
+    import: null
   });
 });
 
