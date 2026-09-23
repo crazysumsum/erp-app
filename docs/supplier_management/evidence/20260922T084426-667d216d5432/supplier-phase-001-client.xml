@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="99" failures="0" errors="0" time="1.379542417">
+    <testsuite name="test/services/supplier.test.js" timestamp="2026-09-22T08:44:27.781Z" hostname="samMacBook-Pro.local" tests="10" failures="0" errors="0" skipped="0" time="0.004347416">
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; declares its discovery name" time="0.000978792">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; creates a supplier with framework idempotency" time="0.000814416">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; checks duplicate candidates without marking a read as idempotent" time="0.000191208">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps paged Supplier results to DataTable shape" time="0.000745333">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; loads detail and completeness by Supplier id" time="0.000209208">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Address routes" time="0.000134041">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped versioned Contact routes" time="0.000133292">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses ownership-scoped reasoned Identifier routes" time="0.000114166">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; uses normal Supplier update and a signed controlled Code correction" time="0.000140208">
+        </testcase>
+        <testcase classname="test/services/supplier.test.js" name="supplier service &gt; maps lifecycle commands to their required password and device-signature levels" time="0.000170375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/address.test.js" timestamp="2026-09-22T08:44:27.782Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.069457209">
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; shows purpose/primary text and hides all writes from view-only users" time="0.013775458">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; creates an Address and emits refresh with a Supplier-identifying success message" time="0.028136208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.019219375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/address.test.js" name="SupplierAddressPanel &gt; deactivates only after confirmation and inactive rows expose no write actions" time="0.007740875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/approvals.test.js" timestamp="2026-09-22T08:44:27.782Z" hostname="samMacBook-Pro.local" tests="15" failures="0" errors="0" skipped="0" time="0.191681959">
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; guards on the same pair of permissions the API demands" time="0.001907125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; opens on the actor&apos;s own pending queue" time="0.034466959">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; switches between mine, all and unassigned" time="0.021476917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; shows the submitted snapshot beside the current Supplier and marks what changed" time="0.01899075">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; refuses to approve a stale request, which is the same rule the service enforces" time="0.009968125">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; only the assigned approver may decide" time="0.00880925">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; approving asks for the password and sends the request version" time="0.016923834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; rejecting demands a reason as well as the password" time="0.011653875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; cancelling a decision sends nothing" time="0.008433167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; the requester sees withdraw, and the approver does not" time="0.019074">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a version conflict reloads instead of retrying" time="0.0126205">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; reassigning excludes the requester and demands a reason" time="0.010994167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; reassigning without a target sends nothing" time="0.007025292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a failed detail read reports the failure instead of showing a half-open detail" time="0.003706292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/approvals.test.js" name="pages/suppliers/SupplierApprovalsPage.vue &gt; a failed approver lookup leaves the reassign list empty rather than stale" time="0.004797333">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/bank.test.js" timestamp="2026-09-22T08:44:27.782Z" hostname="samMacBook-Pro.local" tests="23" failures="0" errors="0" skipped="0" time="0.273634209">
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; renders masked rows on load and never calls reveal by itself" time="0.020075167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; offers no reveal without bank.view and no write controls without bank.mgmt" time="0.0245265">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; reveals one row for thirty seconds with a countdown, then clears it from the DOM" time="0.03085025">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears on elapsed time even if the tab was throttled to one tick" time="0.015471375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; is not extended by the system clock jumping backwards" time="0.014438292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; keeps the plaintext out of Pinia, storage, the URL and notifications" time="0.009316917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the plaintext when the row is closed by hand" time="0.010479875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the plaintext when only the :id changes and the panel is reused" time="0.011057667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; does not re-hold the account if reveal resolves after the panel is gone" time="0.010485875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; drops a reveal that lands after the Supplier has changed" time="0.009201042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes a half-typed write dialog on a Supplier change and on session expiry" time="0.019545042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes the confirm dialog&apos;s password on a Supplier change and on session expiry" time="0.010774708">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; issues one reveal for a double-clicked confirm, because each one writes an audit row" time="0.004828292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; says so when a reveal is discarded, because the server already audited it" time="0.01090825">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the plaintext when the user navigates away" time="0.0053385">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the plaintext on unmount and on session expiry" time="0.010874833">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; clears the account number and password fields after a successful create" time="0.009982">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; marks the account and password inputs so browsers do not autofill or store them" time="0.006310791">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; blocks a same-Supplier duplicate and makes a cross-Supplier duplicate an explicit confirmation" time="0.0134755">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; says the previous default will be cancelled before switching" time="0.008020917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; wipes the confirm password even when the dialog stays open on an error" time="0.004998417">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; deactivates with a version and a reason" time="0.007561291">
+        </testcase>
+        <testcase classname="test/pages/suppliers/bank.test.js" name="components/suppliers/SupplierBankPanel.vue &gt; surfaces a wrong password as a password problem, not a permission one" time="0.004307209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/contact.test.js" timestamp="2026-09-22T08:44:27.783Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.080456375">
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; shows purpose/primary and contact details while hiding writes from view-only users" time="0.012329709">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; creates a Contact and emits refresh with a Supplier-identifying success message" time="0.026763834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; keeps the edit dialog and draft open on VERSION_CONFLICT" time="0.021722667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/contact.test.js" name="SupplierContactPanel &gt; surfaces server validation accessibly and deactivates only after confirmation" time="0.019087292">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/coreFlow.test.js" timestamp="2026-09-22T08:44:27.784Z" hostname="samMacBook-Pro.local" tests="1" failures="0" errors="0" skipped="0" time="0.062945583">
+        <testcase classname="test/pages/suppliers/coreFlow.test.js" name="Supplier Core client smoke flow &gt; lets a view-only user move from the bounded list projection to detail without exposing write actions" time="0.062467625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/create.test.js" timestamp="2026-09-22T08:44:27.784Z" hostname="samMacBook-Pro.local" tests="9" failures="0" errors="0" skipped="0" time="0.152804083">
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires supplier.mgmt even when opened by direct URL" time="0.001742292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; saves a draft with only Code, Name and an active Currency" time="0.052992625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; requires explicit confirmation before creating a possible duplicate" time="0.016210583">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; prompts before leaving a dirty form" time="0.019996167">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; does not offer an approver, or send one, when the policy is off" time="0.01336525">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; offers an approver selector that excludes the actor when the policy is on" time="0.008387542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; sends the chosen approver, and refuses to submit without one" time="0.019576208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; an unreadable policy hides the selector and never assumes no approval is needed" time="0.009764459">
+        </testcase>
+        <testcase classname="test/pages/suppliers/create.test.js" name="pages/suppliers/SupplierCreatePage.vue &gt; a failed approver lookup tells the user instead of offering an empty list silently" time="0.0100175">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/detail.test.js" timestamp="2026-09-22T08:44:27.784Z" hostname="samMacBook-Pro.local" tests="7" failures="0" errors="0" skipped="0" time="0.139689">
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; requires supplier.view and shows status, completeness and masked bank data" time="0.040041334">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; shows the new Supplier&apos;s bank rows after the route id changes" time="0.020637667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; distinguishes not-found and generic loading failures" time="0.003796417">
+            <system-err>
+[VUE_ROUTER_R0004] No match found for location with path &quot;/suppliers&quot;
+├▶ fix: Add a route matching this path or check for typos in the location.
+╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; refetches and renders the new supplier when the route id changes on a reused instance" time="0.012732042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; drops a half-edited form instead of carrying it onto the next supplier" time="0.031539875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; keeps the user on the current supplier when they refuse to discard the draft" time="0.01889775">
+        </testcase>
+        <testcase classname="test/pages/suppliers/detail.test.js" name="pages/suppliers/SupplierDetailPage.vue &gt; ignores a load response that a newer navigation has superseded" time="0.0113045">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/editor.test.js" timestamp="2026-09-22T08:44:27.785Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.123639667">
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; updates editable root fields while keeping Supplier Code outside the normal payload" time="0.061720292">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; keeps the user&apos;s draft visible when a stale update reloads the latest Supplier" time="0.023263208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; uses a separate password-and-reason flow for controlled Supplier Code correction" time="0.019401083">
+        </testcase>
+        <testcase classname="test/pages/suppliers/editor.test.js" name="Supplier general editor &gt; prompts before leaving a dirty general editor" time="0.01858975">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/identifier.test.js" timestamp="2026-09-22T08:44:27.785Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.073781791">
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; renders type/country/value, hides writes from viewers and hides delete for referenced rows" time="0.018771541">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; creates an Identifier and emits refresh with a Supplier-identifying success message" time="0.023020375">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; requires a reason for updates and preserves the draft on unique/version conflicts" time="0.021372542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/identifier.test.js" name="SupplierIdentifierPanel &gt; collects a reason before confirmed deletion" time="0.010024167">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/lifecycle.test.js" timestamp="2026-09-22T08:44:27.785Z" hostname="samMacBook-Pro.local" tests="4" failures="0" errors="0" skipped="0" time="0.048899125">
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; shows only state-valid actions allowed by management and approval permissions" time="0.014810542">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; requires reason and password for Block and explains the approved-device requirement" time="0.021154834">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; keeps a lifecycle dialog open and requests refresh after VERSION_CONFLICT" time="0.009186666">
+        </testcase>
+        <testcase classname="test/pages/suppliers/lifecycle.test.js" name="Supplier lifecycle actions &gt; Draft activation needs confirmation but no password and controlled delete does" time="0.003061584">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/list.test.js" timestamp="2026-09-22T08:44:27.785Z" hostname="samMacBook-Pro.local" tests="3" failures="0" errors="0" skipped="0" time="0.0789905">
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; is the permission-filtered Supplier menu entry and renders explicit status text" time="0.049450917">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; shows create only to supplier.mgmt users" time="0.020011625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/list.test.js" name="pages/suppliers/SuppliersPage.vue &gt; restores filters and paging from URL and keeps the query shareable" time="0.008841">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/pages/suppliers/settings.test.js" timestamp="2026-09-22T08:44:27.786Z" hostname="samMacBook-Pro.local" tests="11" failures="0" errors="0" skipped="0" time="0.0792155">
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; is gated on supplier.settings alone and sits in the supplier menu" time="0.001909625">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; shows the stored value, the default and the non-retroactive wording" time="0.021907042">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; saving the toggle demands a reason and a password, and sends the loaded version" time="0.010929208">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; cancelling the confirmation writes nothing" time="0.0051785">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a version conflict shows the server&apos;s value, not the one the user just clicked" time="0.007106">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a failed settings read renders an error and a retry, not a crash" time="0.010112041">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; shows Business Master readiness read-only, with no catalog write control" time="0.003960875">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; names what is missing when the provider is not ready" time="0.002785084">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; links to Business Master only when the actor may open it" time="0.006730667">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a readiness failure does not take the toggle down with it" time="0.002664">
+        </testcase>
+        <testcase classname="test/pages/suppliers/settings.test.js" name="pages/suppliers/SupplierSettingsPage.vue &gt; a failed reload after a version conflict still tells the user, instead of losing the page" time="0.005128542">
+        </testcase>
+    </testsuite>
+</testsuites>

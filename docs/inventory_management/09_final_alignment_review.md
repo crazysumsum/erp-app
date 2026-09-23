@@ -2,19 +2,19 @@
 
 ## Outcome
 
-**CANONICAL CONTENT ALIGNED; DESIGN/PLAN APPROVED; IMPLEMENT DEFERRED.** Sam completed the required independent human review, approved the current requirement/design baseline and P0→P5 plan, and answered all recorded material planning decisions. Product implementation, test execution, UAT, business acceptance, Go-Live and release approval did not occur. The user explicitly directed this run to remain in `REVIEW_AND_ALIGN` and not enter `IMPLEMENT`.
+**0.4 DATABASE BASELINE AND PLAN APPROVED; IMPLEMENT PAUSED.** Sam approved the final 0.4 requirement/design and P0→P5 plan hashes with exact MySQL Server 26.7.0 on 2026-09-23. No product implementation, migration execution, test execution, UAT, Go-Live or release occurred; resuming `IMPLEMENT` remains a separate decision.
 
 ## Mode, module and baselines
 
 | Item | Observed value |
 | --- | --- |
-| Mode | `REVIEW_AND_ALIGN` |
+| Mode | `DESIGN_AND_PLAN` |
 | Module / output | `inventory-management` / `docs/inventory_management` |
 | Mode-entry commit / recovery point | `0996cb7e85e377981121d2d9b0fd7e99ff8eb1a7`; all four legacy inputs were clean at entry |
 | First alignment PR / merge | [PR #85](https://github.com/crazysumsum/erp-app/pull/85) / `87601a08e6f6d2d51a853f86f76f5bfa0cc1d268` |
 | Decision-alignment PR | [PR #88](https://github.com/crazysumsum/erp-app/pull/88); created from `codex/inventory-decision-alignment` for `main` under Sam's merge authorization |
 | Default for decision alignment / pre-delivery refresh | `b948c92fecc31555bdc4043feea26f8c72ddf7a2` / `134c2722f92eae298da7ad1a1b01b6a75522550e`; intervening changes were limited to out-of-scope `customer_management` documents |
-| Current topic branch / worktree | `codex/inventory-decision-alignment` / `/private/tmp/erp-inventory-decision-alignment` |
+| Current topic branch / worktree | `codex/inventory-p0-foundation` / `/private/tmp/erp-inventory-p0-foundation`; retained temporarily for the planning correction because no product code was started |
 | Product-code changes | None |
 | Formal tests / CI / UAT | `NOT_RUN`; no acceptance result claimed |
 
@@ -49,6 +49,8 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 | HD-002 | ANSWERED | `DEC-014` through `DEC-019` approved as written. |
 | HD-003 | ANSWERED | MySQL 8.0 selected as the supported production and CI compatibility baseline. |
 | HD-004 | ANSWERED | Serial fail-closed/Go-Live guard; `receiving.expiry.override`; Customer Return→`QUARANTINED`; fixed Adjustment reasons; Data Freeze and Go-Live responsibilities; DB-account separation and backup/restore rehearsal. |
+| HD-005 | ANSWERED | Sam authorized entry to `IMPLEMENT` on 2026-09-23; execution was later paused by the material baseline change. |
+| HD-006 | ANSWERED | Exact MySQL Server 26.7.0 supersedes the earlier MySQL 8.0 production/CI/developer integration baseline; patch upgrades are not implicit, and Sam approved the resulting 0.4 design/plan baseline. |
 
 ## HD-001 — Accountable owner
 
@@ -81,16 +83,29 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 - Cutover:採明確Data Freeze，凍結後舊系統不得再寫庫存；Warehouse／Operations Lead負責對賬，Sam負責最終Go-Live簽核；實際時間及Opening資料在P5提供。
 - Database: Production application與migration DB accounts分離；Go-Live前完成backup／restore rehearsal。
 
+## HD-005 — IMPLEMENT authorization
+
+- Answer source: user response in the active Codex task on 2026-09-23: “Inventory Management 切換到 IMPLEMENT”.
+- Recorded interpretation: P0 implementation was authorized against the then-approved 0.3 baseline.
+- Boundary: the later `HD-006` material compatibility change invalidated the affected baseline approval and paused implementation before product work began.
+
+## HD-006 — MySQL Server 26.7.0 baseline
+
+- Answer source: user response in the active Codex task on 2026-09-23: “那就改以26.7.0為基線”.
+- Recorded interpretation: production, CI and developer integration environments must report exactly MySQL Server 26.7.0; this supersedes `HD-003` but preserves it as history.
+- Scope: DDL, constraints, generated columns, locking, migrations and all database integration evidence for Inventory.
+- Boundary: 26.7 is the Calendar Versioning Innovation track under MySQL's [official release model](https://dev.mysql.com/doc/refman/26.7/en/mysql-releases.html); the [26.7 release notes](https://dev.mysql.com/doc/relnotes/mysql/26.7/en/) list 26.7.0 and later patches. A later patch such as 26.7.1 is not silently accepted; changing the exact version requires compatibility review. Current CI remains `mysql:8.0` until P0 changes and verifies it.
+
 ## Independent review and baseline approval
 
 - Reviewer / method: Sam / `HUMAN`.
-- Decision: approved the current requirement/design baseline and P0→P5 plan/order after the above decisions were propagated.
+- Historical decision: approved the 0.3 requirement/design baseline and P0→P5 plan/order after `HD-001`–`HD-004` were propagated.
 - Binding: design `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`; plan `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`. Later requirement/design/plan changes invalidate the affected approval and require re-review.
-- Mode boundary: Sam explicitly instructed “先不要進入implement”; approval is a planning gate only.
+- Current decision: Sam independently approved design `f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41` and plan `b9a4a3874e84e70b1025b0d2fb9d06ff7f80bd66b5ff3aa4e1bc8fa93dc84bb9` on 2026-09-23. Resuming `IMPLEMENT` remains a separate explicit decision.
 
 ## Readiness and next safe action
 
-- Design/review: `APPROVED` planning baseline; 0 open CRITICAL/HIGH review findings after human disposition.
-- Implementation readiness: `PLANNED`, but execution is not authorized; every Task remains `PENDING`.
+- Design/review: final 0.4 planning baseline approved with zero open CRITICAL/HIGH review findings; CI/runtime alignment is an accepted P0 prerequisite.
+- Implementation readiness: `PLANNED`; every Task remains `PENDING` and no product code has started.
 - Business/release: not accepted and not approved.
-- Next safe action: merge this decision-alignment documentation PR, then stop. On a future explicit `IMPLEMENT` request, refresh `origin/main`, reconcile state/baselines and create the approved P0 worktree; Technical Acceptance/UAT still requires `TEST_AND_VERIFY` against an immutable implemented baseline.
+- Next safe action: separately ask Sam whether to resume `IMPLEMENT`; if confirmed, P0 first reconciles CI and the isolated local runtime to exact MySQL Server 26.7.0 before migration verification.
