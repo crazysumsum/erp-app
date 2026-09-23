@@ -15,6 +15,7 @@ export class ConfirmCustomerImportHandler extends BaseRequestHandler {
   async execute(req) {
     return this.response(await requireCustomerImport(this.customerImport).confirm({
       ...customerImportActor(req), id: req.input.params.id, ...req.input.body,
+      idempotencyKey: req.get("Idempotency-Key"),
       requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || ""
     }));
   }

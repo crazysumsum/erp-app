@@ -123,6 +123,7 @@ const ROOT_AUDIT_FIELDS = new Set([
   "errorCode",
   "mode",
   "templateVersion",
+  "recovered",
   "totalCount",
   "validCount",
   "warningCount",

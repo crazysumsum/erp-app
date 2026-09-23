@@ -38,3 +38,16 @@ test("Customer import route contract keeps static template ahead of parameter de
   assert.equal(CancelCustomerImportHandler.api.path, "/api/v1/customer-imports/:id/cancel");
   assert.equal(DownloadCustomerImportResultHandler.api.path, "/api/v1/customer-imports/:id/result");
 });
+
+test("Customer import confirm forwards the durable idempotency key", async () => {
+  let received;
+  const handler = Object.create(ConfirmCustomerImportHandler.prototype);
+  handler.customerImport = { async confirm(input) { received = input; return { id: 11 }; } };
+  await handler.execute({
+    auth: { claims: { sub: "3", roles: [], permissions: [] } },
+    input: { params: { id: 11 }, body: { version: 4, activationMode: "draft" } },
+    get(name) { return name === "Idempotency-Key" ? "confirm-11" : undefined; },
+    requestId: "request-1", ip: "127.0.0.1"
+  });
+  assert.equal(received.idempotencyKey, "confirm-11");
+});

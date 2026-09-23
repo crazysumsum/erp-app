@@ -244,19 +244,27 @@ export class CustomerImportService {
     });
   }
 
-  async confirm({ actorId, claimedRoles, claimedPermissions, id, version, activationMode, approverUserId, requestId = "", ip = "" }) {
+  async confirm({ actorId, claimedRoles, claimedPermissions, id, version, activationMode, approverUserId, idempotencyKey, requestId = "", ip = "" }) {
     if (!["draft", "activate"].includes(activationMode) || !Number.isSafeInteger(version) || version < 1) {
       throw customerImportError("CUSTOMER_IMPORT_INVALID", 400, "匯入確認資料無效");
     }
     return this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const nowMs = this.time.nowMs();
+      const started = await this.operations.begin(connection, {
+        actorId, routeKey: "customer.import.confirm", idempotencyKey,
+        payload: { id: positiveInteger(id, "id"), version, activationMode, approverUserId: approverUserId ?? null }, nowMs
+      });
+      if (started.replay) {
+        if (started.replay.status !== "succeeded" || started.replay.resourceType !== "import" || started.replay.resourceId !== Number(id)) {
+          throw customerImportError("CUSTOMER_IMPORT_OPERATION_CONFLICT", 409, "匯入確認操作尚未完成或狀態不一致");
+        }
+        const replayed = await this.#get(connection, Number(id));
+        if (!replayed) throw customerImportError("CUSTOMER_IMPORT_STATE_CONFLICT", 409, "匯入工作狀態不一致");
+        return jobSummary(replayed);
+      }
       const [[job]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [id]);
       if (!job) throw customerImportError("CUSTOMER_IMPORT_NOT_FOUND", 404, "找不到指定的匯入工作");
-      if (["queued", "running", "completed", "completed_with_errors"].includes(job.status) &&
-          Number(job.confirmed_by) === actorId && job.activation_mode === activationMode &&
-          (job.approver_user_id === null ? null : Number(job.approver_user_id)) === (approverUserId ?? null)) {
-        return jobSummary(job);
-      }
       if (!["ready", "ready_with_errors"].includes(job.status) || Number(job.version) !== version) {
         throw customerImportError("CUSTOMER_IMPORT_STATE_CONFLICT", 409, "匯入工作狀態或版本已變更");
       }
@@ -275,7 +283,6 @@ export class CustomerImportService {
       } else if (approverUserId !== undefined && approverUserId !== null) {
         throw customerImportError("CUSTOMER_IMPORT_APPROVER_INVALID", 422, "目前匯入模式不需要審批人");
       }
-      const nowMs = this.time.nowMs();
       const [updated] = await connection.execute(
         `UPDATE customer_import_jobs SET activation_mode = ?, approver_user_id = ?, approval_setting_value = ?,
            approval_setting_version = ?, status = 'queued', confirmed_by = ?, confirmed_at = ?, updated_at = ?,
@@ -289,7 +296,12 @@ export class CustomerImportService {
         targetType: "import", targetId: Number(id), customerId: null, targetLabel: `import-${id}`,
         detail: { after: { activationMode, totalCount: Number(job.total_count), invalidCount: Number(job.invalid_count) } }, requestId, ip
       });
-      return jobSummary(await this.#get(connection, id));
+      const confirmed = await this.#get(connection, id);
+      await this.operations.succeed(connection, {
+        operationId: started.operationId, resourceType: "import", resourceId: Number(id),
+        resultVersion: Number(confirmed.version), nowMs
+      });
+      return jobSummary(confirmed);
     });
   }
 
@@ -420,25 +432,36 @@ export class CustomerImportService {
 
   async finalizeExecution({ jobId, leaseOwner }) {
     if (!Number.isSafeInteger(jobId) || jobId < 1 || !String(leaseOwner ?? "").trim()) throw new TypeError("Customer import finalization input is invalid");
-    const job = await this.database.withTransaction(async (connection) => {
+    const prepared = await this.database.withTransaction(async (connection) => {
       const nowMs = this.time.nowMs();
       const [[locked]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
-      if (locked?.status === "completed" || locked?.status === "completed_with_errors") return locked;
+      if (locked?.status === "completed" || locked?.status === "completed_with_errors") return { job: locked, revoked: false };
       assertExecutionLease(locked, leaseOwner, nowMs);
+      if (!(await this.#executionActor(connection, locked))) {
+        return { job: await this.#failExecutionAuthorization(connection, locked, nowMs), revoked: true };
+      }
       const [[remaining]] = await connection.query(
         "SELECT COUNT(*) AS total FROM customer_import_rows WHERE job_id = ? AND status IN ('valid','warning','invalid')", [jobId]
       );
       if (Number(remaining.total) !== 0) throw customerImportError("CUSTOMER_IMPORT_ROWS_PENDING", 409, "匯入仍有資料列尚未處理");
-      return locked;
+      return { job: locked, revoked: false };
     });
+    const job = prepared.job;
+    if (prepared.revoked) {
+      if (job.result_stored_name) await this.storage.discardStaged(job.result_stored_name);
+      return jobSummary(job);
+    }
     if (["completed", "completed_with_errors"].includes(job.status)) return jobSummary(job);
 
     const staged = await this.storage.stageResult({ operationId: job.operation_id, source: this.#resultCsv(jobId) });
-    await this.database.withTransaction(async (connection) => {
+    const registered = await this.database.withTransaction(async (connection) => {
       const nowMs = this.time.nowMs();
       const [[locked]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
-      if (["completed", "completed_with_errors"].includes(locked?.status)) return;
+      if (["completed", "completed_with_errors"].includes(locked?.status)) return { job: locked, revoked: false };
       assertExecutionLease(locked, leaseOwner, nowMs);
+      if (!(await this.#executionActor(connection, locked))) {
+        return { job: await this.#failExecutionAuthorization(connection, locked, nowMs), revoked: true };
+      }
       if (locked.result_storage_status === "processing" &&
           (locked.result_stored_name !== staged.storedName || !Buffer.from(locked.result_sha256).equals(staged.sha256))) {
         throw customerImportError("CUSTOMER_IMPORT_RESULT_CONFLICT", 409, "匯入結果檔案狀態不一致");
@@ -450,13 +473,21 @@ export class CustomerImportService {
           [staged.storedName, staged.sha256, nowMs, jobId]
         );
       }
+      return { job: locked, revoked: false };
     });
+    if (registered.revoked) {
+      await this.storage.discardStaged(staged.storedName);
+      return jobSummary(registered.job);
+    }
     await this.storage.finalizeResult(staged);
     return this.database.withTransaction(async (connection) => {
       const nowMs = this.time.nowMs();
       const [[locked]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
       if (["completed", "completed_with_errors"].includes(locked?.status) && locked.result_storage_status === "active") return jobSummary(locked);
       assertExecutionLease(locked, leaseOwner, nowMs);
+      if (!(await this.#executionActor(connection, locked))) {
+        return jobSummary(await this.#failExecutionAuthorization(connection, locked, nowMs));
+      }
       const [counts] = await connection.query(
         `SELECT COUNT(*) AS total,
                 SUM(status = 'applied') AS success_count,
@@ -530,21 +561,11 @@ export class CustomerImportService {
     for (const item of sources) {
       try {
         await this.storage.finalizeSource({ storedName: item.source_stored_name, sha256: Buffer.from(item.source_sha256) });
-        await this.database.execute(
-          `UPDATE customer_import_jobs SET source_storage_status = 'active', updated_at = ?, version = version + 1
-            WHERE id = ? AND source_storage_status = 'processing'`, [this.time.nowMs(), item.id]
-        );
-        recovered += 1;
       } catch {
-        const nowMs = this.time.nowMs();
-        await this.database.execute(
-          `UPDATE customer_import_jobs SET source_storage_status = 'storage_error', status = 'failed',
-             last_error_code = 'SOURCE_STORAGE_ERROR', error_summary = '匯入來源檔案無法恢復',
-             updated_at = ?, completed_at = ?, version = version + 1
-           WHERE id = ? AND source_storage_status = 'processing'`, [nowMs, nowMs, item.id]
-        );
-        failed += 1;
+        (await this.#failRecoveredSource(item.id)) ? recovered += 1 : failed += 1;
+        continue;
       }
+      (await this.#completeRecoveredSource(item.id)) ? recovered += 1 : failed += 1;
     }
     for (const item of results) {
       try {
@@ -635,5 +656,66 @@ export class CustomerImportService {
   async #getByOperation(connection, operationId) {
     const [rows] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE operation_id = ?`, [operationId]);
     return rows[0] ?? null;
+  }
+
+  async #completeRecoveredSource(jobId) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
+      if (!job || job.source_storage_status !== "processing") return job?.source_storage_status === "active";
+      const nowMs = this.time.nowMs();
+      await connection.execute(
+        `UPDATE customer_import_jobs SET source_storage_status = 'active', updated_at = ?, version = version + 1
+          WHERE id = ? AND source_storage_status = 'processing'`, [nowMs, jobId]
+      );
+      const active = await this.#get(connection, jobId);
+      const [[user]] = await connection.query("SELECT username FROM users WHERE id = ?", [job.created_by]);
+      await this.audit.record(connection, {
+        occurredAt: nowMs, actorUserId: job.created_by, actorUsername: user?.username ?? "", action: "import.upload",
+        targetType: "import", targetId: Number(jobId), customerId: null, targetLabel: `import-${jobId}`,
+        detail: { after: { mode: job.mode, templateVersion: job.template_version, recovered: true } }
+      });
+      await this.operations.succeed(connection, {
+        operationId: job.operation_id, resourceType: "import", resourceId: Number(jobId),
+        resultVersion: Number(active.version), nowMs
+      });
+      return true;
+    });
+  }
+
+  async #failRecoveredSource(jobId) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
+      if (!job || job.source_storage_status !== "processing") return job?.source_storage_status === "active";
+      const nowMs = this.time.nowMs();
+      await connection.execute(
+        `UPDATE customer_import_jobs SET source_storage_status = 'storage_error', status = 'failed',
+           last_error_code = 'SOURCE_STORAGE_ERROR', error_summary = '匯入來源檔案無法恢復',
+           updated_at = ?, completed_at = ?, version = version + 1
+         WHERE id = ? AND source_storage_status = 'processing'`, [nowMs, nowMs, jobId]
+      );
+      await this.operations.fail(connection, { operationId: job.operation_id, errorCode: "SOURCE_STORAGE_ERROR", nowMs });
+      return false;
+    });
+  }
+
+  async #executionActor(connection, job) {
+    const [[actor]] = await connection.query("SELECT id, username FROM users WHERE id = ? AND status = 'active'", [job.confirmed_by]);
+    if (!actor) return null;
+    const permissions = await this.loadPermissions(connection, Number(job.confirmed_by));
+    return permissions.includes("customer.view") && permissions.includes("customer.mgmt")
+      ? { id: Number(actor.id), username: actor.username, permissions }
+      : null;
+  }
+
+  async #failExecutionAuthorization(connection, job, nowMs) {
+    await connection.execute(
+      `UPDATE customer_import_jobs SET status = 'failed',
+         result_storage_status = IF(result_storage_status = 'processing', 'storage_error', result_storage_status),
+         lease_owner = '', lease_until = NULL, last_error_code = 'AUTHORIZATION_REVOKED',
+         error_summary = '確認人的客戶管理權限已失效', updated_at = ?, completed_at = ?, version = version + 1
+       WHERE id = ? AND status = 'running'`,
+      [nowMs, nowMs, job.id]
+    );
+    return this.#get(connection, job.id);
   }
 }

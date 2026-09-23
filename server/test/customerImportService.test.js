@@ -182,7 +182,7 @@ test("Customer import list and detail expose paged safe projections", async () =
 
 test("Customer import confirm snapshots approval policy and queues once", async () => {
   const row = job({ status: "ready_with_errors", source_storage_status: "active", version: 4 });
-  const audits = [];
+  const audits = []; const operationId = randomUUID(); let operationStarts = 0; let operationSuccesses = 0;
   const connection = {
     async query(sql) {
       const text = String(sql);
@@ -202,16 +202,27 @@ test("Customer import confirm snapshots approval policy and queues once", async 
   const service = new CustomerImportService({
     database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 300 }, storage: {},
     authorize: async () => ({ username: "sam" }), loadPermissions: async () => ["customer.approval"],
-    audit: { async record(_connection, input) { audits.push(input); } }
+    audit: { async record(_connection, input) { audits.push(input); } },
+    operations: {
+      async begin() {
+        operationStarts += 1;
+        return operationStarts === 1
+          ? { operationId, replay: null }
+          : { operationId, replay: { status: "succeeded", resourceType: "import", resourceId: 11, resultVersion: 5 } };
+      },
+      async succeed() { operationSuccesses += 1; }
+    }
   });
-  const result = await service.confirm({ actorId: 3, id: 11, version: 4, activationMode: "activate", approverUserId: 9 });
+  const input = { actorId: 3, id: 11, version: 4, activationMode: "activate", approverUserId: 9, idempotencyKey: "confirm-11" };
+  const result = await service.confirm(input);
   assert.equal(result.status, "queued");
   assert.equal(result.activationMode, "activate");
   assert.equal(row.approval_setting_version, 7);
   assert.equal(audits[0].action, "import.confirm");
-  const replay = await service.confirm({ actorId: 3, id: 11, version: 4, activationMode: "activate", approverUserId: 9 });
+  const replay = await service.confirm(input);
   assert.equal(replay.status, "queued");
   assert.equal(audits.length, 1);
+  assert.equal(operationSuccesses, 1);
 });
 
 test("Customer import cancel rejects running work and closes queued work", async () => {
@@ -324,6 +335,7 @@ test("Customer import finalization publishes only a safe row result before compl
   };
   const service = new CustomerImportService({
     database, time: { nowMs: () => 100 },
+    loadPermissions: async () => ["customer.view", "customer.mgmt"],
     storage: {
       async stageResult({ source: resultSource }) {
         let csv = ""; for await (const chunk of resultSource) csv += chunk; csvRuns.push(csv);
@@ -340,6 +352,50 @@ test("Customer import finalization publishes only a safe row result before compl
   assert.match(csvRuns[1], /1,create,applied,91,,"?'=FORMULA/u);
   assert.doesNotMatch(csvRuns[1], /secret payload/u);
   assert.deepEqual(events, ["finalized", "import.complete"]);
+});
+
+test("Customer import finalization fails closed when confirmer permission is revoked after result finalize", async () => {
+  const source = job({
+    status: "running", lease_owner: "worker-1", lease_until: 500, confirmed_by: 3,
+    result_stored_name: null, result_sha256: null, result_storage_status: null
+  });
+  let permissionChecks = 0; let finalized = 0;
+  const connection = {
+    async query(sql) {
+      const text = String(sql);
+      if (text.includes("COUNT(*) AS total") && text.includes("status IN")) return [[{ total: 0 }]];
+      if (text.includes("FROM users")) return [[{ id: 3, username: "sam" }]];
+      return [[source]];
+    },
+    async execute(sql, params) {
+      const text = String(sql);
+      if (text.includes("result_storage_status = 'processing'")) {
+        source.result_stored_name = params[0]; source.result_sha256 = params[1]; source.result_storage_status = "processing";
+      }
+      if (text.includes("AUTHORIZATION_REVOKED")) {
+        source.status = "failed"; source.result_storage_status = "storage_error";
+        source.last_error_code = "AUTHORIZATION_REVOKED"; source.version += 1;
+      }
+      return [{ affectedRows: 1 }];
+    }
+  };
+  const service = new CustomerImportService({
+    database: {
+      async withTransaction(work) { return work(connection); },
+      async query() { return [[]]; }
+    },
+    time: { nowMs: () => 100 },
+    loadPermissions: async () => ++permissionChecks < 3 ? ["customer.view", "customer.mgmt"] : ["customer.view"],
+    storage: {
+      async stageResult() { return { storedName: "b".repeat(64), sha256: Buffer.alloc(32, 2) }; },
+      async finalizeResult() { finalized += 1; }
+    }
+  });
+  const result = await service.finalizeExecution({ jobId: 11, leaseOwner: "worker-1" });
+  assert.equal(finalized, 1);
+  assert.equal(result.status, "failed");
+  assert.equal(result.lastErrorCode, "AUTHORIZATION_REVOKED");
+  assert.equal(result.resultStorageStatus, "storage_error");
 });
 
 test("Customer import execution claim skips invalid rows and fails closed after permission revocation", async () => {
@@ -419,22 +475,48 @@ test("Customer import result download is audited and expired files return 410", 
 });
 
 test("Customer import file recovery finalizes durable files or records explicit storage errors", async () => {
-  const sourceRows = [{ id: 1, source_stored_name: "a".repeat(64), source_sha256: Buffer.alloc(32, 1) }, { id: 2, source_stored_name: "b".repeat(64), source_sha256: Buffer.alloc(32, 2) }];
+  const sourceJobs = new Map([
+    [1, job({ id: 1, operation_id: randomUUID(), source_stored_name: "a".repeat(64), source_sha256: Buffer.alloc(32, 1), created_by: 3 })],
+    [2, job({ id: 2, operation_id: randomUUID(), source_stored_name: "b".repeat(64), source_sha256: Buffer.alloc(32, 2), created_by: 3 })]
+  ]);
+  const sourceRows = [...sourceJobs.values()].map(({ id, source_stored_name, source_sha256 }) => ({ id, source_stored_name, source_sha256 }));
   const resultRows = [{ id: 3, result_stored_name: "c".repeat(64), result_sha256: Buffer.alloc(32, 3) }];
-  const statements = [];
+  const statements = []; const operationOutcomes = []; const audits = [];
+  const connection = {
+    async query(sql, params) {
+      if (String(sql).includes("FROM users")) return [[{ username: "sam" }]];
+      return [[sourceJobs.get(Number(params[0]))]];
+    },
+    async execute(sql, params) {
+      const text = String(sql); statements.push(text);
+      const source = sourceJobs.get(Number(params.at(-1)));
+      if (source && text.includes("source_storage_status = 'active'")) { source.source_storage_status = "active"; source.version += 1; }
+      if (source && text.includes("source_storage_status = 'storage_error'")) { source.source_storage_status = "storage_error"; source.status = "failed"; source.version += 1; }
+      return [{ affectedRows: 1 }];
+    }
+  };
   const database = {
     async query(sql) { return String(sql).includes("source_storage_status") ? [sourceRows] : [resultRows]; },
-    async execute(sql) { statements.push(String(sql)); return [{ affectedRows: 1 }]; }
+    async execute(sql) { statements.push(String(sql)); return [{ affectedRows: 1 }]; },
+    async withTransaction(work) { return work(connection); }
   };
   const service = new CustomerImportService({
     database, time: { nowMs: () => 200 },
     storage: {
       async finalizeSource(metadata) { if (metadata.storedName.startsWith("b")) throw new Error("missing"); },
       async finalizeResult() {}
+    },
+    audit: { async record(_connection, input) { audits.push(input); } },
+    operations: {
+      async succeed(_connection, input) { operationOutcomes.push([input.operationId, "succeeded"]); },
+      async fail(_connection, input) { operationOutcomes.push([input.operationId, "failed"]); }
     }
   });
   assert.deepEqual(await service.recoverFiles({ staleBefore: 100, limit: 10 }), { recovered: 2, failed: 1 });
   assert.ok(statements.some((sql) => sql.includes("source_storage_status = 'active'")));
   assert.ok(statements.some((sql) => sql.includes("SOURCE_STORAGE_ERROR")));
   assert.ok(statements.some((sql) => sql.includes("result_storage_status = 'processing'")));
+  assert.deepEqual(operationOutcomes, [[sourceJobs.get(1).operation_id, "succeeded"], [sourceJobs.get(2).operation_id, "failed"]]);
+  assert.equal(audits.length, 1);
+  assert.equal(audits[0].detail.after.recovered, true);
 });
