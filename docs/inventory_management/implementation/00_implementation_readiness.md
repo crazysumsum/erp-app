@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — `PHASE-001 / TASK-001` and `TASK-002` are complete; `TASK-003` is active on the approved exact MySQL Server 26.7.0 baseline. No migration has been executed.
+`IMPLEMENTING` — `PHASE-001 / TASK-001` through `TASK-003` are complete; `TASK-004` is active on the approved exact MySQL Server 26.7.0 baseline. No migration has been executed.
 
 ## Baseline
 
@@ -48,6 +48,13 @@ This preserves the approved FK order. Existing migration filenames and contents 
 - `identityScope` now treats every non-public authenticated strategy as actor-scoped while retaining the existing `jwt:` key namespace; public and unauthenticated requests retain IP scope.
 - `idempotencyService`, dispatcher, memory-store and MySQL-store regressions passed: 91 tests, 0 failures. The dispatcher suite required local loopback permission; no database or migration was used.
 
+## TASK-003 developer verification
+
+- Added the five independent Inventory permissions and the idempotent `0054` seed without granting them implicitly to `system-admin`.
+- Added typed Inventory configuration with fixed business rules excluded, seven-year retention floors, bounded page/opening limits and lease-renewal validation.
+- Added frozen status, command and Audit allowlists plus stable server/client error mappings.
+- Focused server checks passed 16/16, client checks passed 1/1, and the repository ESLint check passed. Migration behaviour was tested with a fake connection only; no database migration was executed.
+
 ## Boundaries
 
 - No migration execution, production access, deployment, CI merge, Technical Acceptance or UAT has occurred.
@@ -55,4 +62,4 @@ This preserves the approved FK order. Existing migration filenames and contents 
 
 ## Next safe action
 
-Implement TASK-003 permissions, config, constants and public errors; creating the allocated `0054` seed migration is allowed, but executing migrations remains separately authorized.
+Verify and complete TASK-004's ItemLookup transaction contract without executing migrations.
