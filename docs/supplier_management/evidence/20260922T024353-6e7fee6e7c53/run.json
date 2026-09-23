@@ -1,0 +1,75 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20260922T024353-6e7fee6e7c53",
+  "suite_id": "supplier-bank-security",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+  "source_fingerprint": "c8977888183fedf5450b6ad6d725d5b4e60c3952f531aea9f29a0205f9027392",
+  "code_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
+  "started_at": "2026-09-22T02:43:53.313083Z",
+  "ended_at": "2026-09-22T02:43:53.550785Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035/docs/supplier_management/evidence/20260922T024353-6e7fee6e7c53/supplier-bank-security.xml",
+    "server/test/supplier-management/bank"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "36cfd935b367ed465b7492cee4ae79648e40d2da7bc00b1ed33754e776031e2c",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260922T024353-6e7fee6e7c53/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260922T024353-6e7fee6e7c53/stderr.log",
+      "sha256": "0e6054f858074739eaac6d3b50088838add67843108e1b8169c7b950a12d838a",
+      "bytes": 54
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "missing/fresh report required; symlink reports are refused: /Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035/docs/supplier_management/evidence/20260922T024353-6e7fee6e7c53/supplier-bank-security.xml",
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: TC-062, TC-063, TC-064, TC-065, TC-066, TC-067, TC-068, TC-069, TC-070, TC-071, TC-072, TC-073, TC-074, TC-075, TC-076, TC-077",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
