@@ -1,4 +1,6 @@
 export const CUSTOMER_IMPORT_TEMPLATE_VERSION = "v1";
+export const CUSTOMER_IMPORT_TEMPLATE_DESCRIPTION_PREFIX = "__CUSTOMER_IMPORT_TEMPLATE_V1_DESCRIPTION__";
+export const CUSTOMER_IMPORT_TEMPLATE_EXAMPLE_MARKER = "__CUSTOMER_IMPORT_TEMPLATE_V1_EXAMPLE__";
 
 const column = (name, description, example = "") => Object.freeze({ name, description, example });
 
@@ -16,7 +18,7 @@ export const CUSTOMER_IMPORT_COLUMNS = Object.freeze([
   column("website", "HTTP or HTTPS website", "https://example.com"),
   column("generalPhone", "General phone number", "+852 2123 4567"),
   column("generalEmail", "General email address", "sales@example.com"),
-  column("notes", "General Customer notes; do not include bank or secret data", "Imported from approved onboarding form"),
+  column("notes", "General Customer notes; public operational context only", "Imported from approved onboarding form"),
   column("addressLabel", "Address label", "Head office"),
   column("addressRecipientCompanyDepartment", "Recipient company or department", "Accounts Payable"),
   column("addressLine1", "Address line 1", "1 Example Road"),
@@ -58,6 +60,11 @@ function csvCell(value) {
 
 export function buildCustomerImportTemplate() {
   const header = CUSTOMER_IMPORT_COLUMN_NAMES.map(csvCell).join(",");
-  const example = CUSTOMER_IMPORT_COLUMNS.map(({ example }) => csvCell(example)).join(",");
-  return `\uFEFF${header}\r\n${example}\r\n`;
+  const descriptions = CUSTOMER_IMPORT_COLUMNS.map(({ name, description }, index) =>
+    csvCell(`${index === 0 ? `${CUSTOMER_IMPORT_TEMPLATE_DESCRIPTION_PREFIX} ` : ""}${name}: ${description}`)
+  ).join(",");
+  const example = CUSTOMER_IMPORT_COLUMNS.map(({ example }, index) =>
+    csvCell(index === 0 ? CUSTOMER_IMPORT_TEMPLATE_EXAMPLE_MARKER : example)
+  ).join(",");
+  return `\uFEFF${header}\r\n${descriptions}\r\n${example}\r\n`;
 }

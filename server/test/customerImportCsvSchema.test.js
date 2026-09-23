@@ -12,6 +12,12 @@ test("Customer import v1 template is versioned, documented and excludes sensitiv
   assert.equal(new Set(CUSTOMER_IMPORT_COLUMN_NAMES).size, CUSTOMER_IMPORT_COLUMN_NAMES.length);
   const template = buildCustomerImportTemplate();
   assert.ok(template.startsWith("\uFEFFcustomerId,customerCode,"));
-  assert.match(template, /\r\n[^\r\n]+\r\n$/u);
+  const lines = template.slice(1).trimEnd().split("\r\n");
+  assert.equal(lines.length, 3);
+  assert.match(lines[1], /CUSTOMER_IMPORT_TEMPLATE_V1_DESCRIPTION/u);
+  assert.match(lines[2], /CUSTOMER_IMPORT_TEMPLATE_V1_EXAMPLE/u);
+  for (const { name, description } of CUSTOMER_IMPORT_COLUMNS) {
+    assert.ok(lines[1].includes(`${name}: ${description}`));
+  }
   assert.doesNotMatch(template.toLowerCase(), /bankaccount|iban|swift|attachment|creditnotes|password|secret/u);
 });

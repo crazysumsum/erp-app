@@ -5,7 +5,11 @@ import { parse } from "csv-parse";
 import {
   normalizeCustomerCode, normalizeIdentifierValue, normalizeLegalName, normalizeTradingName
 } from "../customerNormalization.js";
-import { CUSTOMER_IMPORT_COLUMN_NAMES } from "./customerCsvSchema.js";
+import {
+  CUSTOMER_IMPORT_COLUMN_NAMES,
+  CUSTOMER_IMPORT_TEMPLATE_DESCRIPTION_PREFIX,
+  CUSTOMER_IMPORT_TEMPLATE_EXAMPLE_MARKER
+} from "./customerCsvSchema.js";
 
 const DEFAULT_MAX_ROWS = 10_000;
 const DEFAULT_MAX_BYTES = 20 * 1024 * 1024;
@@ -72,14 +76,21 @@ async function* decodeUtf8(source, maxBytes) {
   }
 }
 
-async function readCsv(source, { maxRows, maxBytes }) {
+function isTemplateMetadata(values, headerIndex) {
+  const marker = String(values[headerIndex.get("customerId")] ?? "");
+  return marker.startsWith(CUSTOMER_IMPORT_TEMPLATE_DESCRIPTION_PREFIX) || marker === CUSTOMER_IMPORT_TEMPLATE_EXAMPLE_MARKER;
+}
+
+async function readCsv(source, { maxRows, maxBytes, batchSize, onBatch }) {
   const parser = parse({ bom: true, skip_empty_lines: true, relax_column_count: false, max_record_size: 65_536 });
   const completed = pipeline(Readable.from(decodeUtf8(source, maxBytes)), parser);
   let headers;
   let headerIndex;
   let headerError;
   let sensitive = false;
-  const records = [];
+  let rowCount = 0;
+  let batch = [];
+  let callbackError;
   try {
     for await (const values of parser) {
       if (!headers) {
@@ -94,22 +105,30 @@ async function readCsv(source, { maxRows, maxBytes }) {
         headerIndex = new Map(headers.map((name, index) => [name, index]));
         continue;
       }
-      if (!headerError && records.length <= maxRows) {
-        records.push(Object.fromEntries(CUSTOMER_IMPORT_COLUMN_NAMES.map((name) => [name, String(values[headerIndex.get(name)] ?? "")])));
+      if (headerError || isTemplateMetadata(values, headerIndex)) continue;
+      rowCount += 1;
+      if (rowCount <= maxRows) {
+        batch.push(Object.fromEntries(CUSTOMER_IMPORT_COLUMN_NAMES.map((name) => [name, String(values[headerIndex.get(name)] ?? "")])));
+        if (batch.length === batchSize) {
+          try { await onBatch(batch, sensitive); } catch (error) { callbackError = error; throw error; }
+          batch = [];
+        }
       }
     }
     await completed;
   } catch (error) {
     try { await completed; } catch { /* preserve the first safe classification */ }
+    if (callbackError) throw callbackError;
     if (error.code === "CSV_FILE_TOO_LARGE") return jobError("CSV_FILE_TOO_LARGE", "CSV 檔案超過大小上限");
     if (error.code === "CSV_UTF8_INVALID") return jobError("CSV_UTF8_INVALID", "CSV 必須使用有效 UTF-8 編碼");
     return jobError("CSV_MALFORMED", "CSV 格式不符合 RFC 4180");
   }
   if (!headers) return jobError("CSV_EMPTY", "CSV 沒有 header 或資料列");
   if (headerError) return headerError;
-  if (records.length === 0) return jobError("CSV_EMPTY", "CSV 沒有資料列");
-  if (records.length > maxRows) return jobError("CSV_TOO_MANY_ROWS", `CSV 超過 ${maxRows} 列上限`);
-  return { records, sensitive };
+  if (rowCount === 0) return jobError("CSV_EMPTY", "CSV 沒有資料列");
+  if (rowCount > maxRows) return jobError("CSV_TOO_MANY_ROWS", `CSV 超過 ${maxRows} 列上限`);
+  if (batch.length) await onBatch(batch, sensitive);
+  return {};
 }
 
 function text(record, field, maxLength, errors, { required = false } = {}) {
@@ -344,11 +363,11 @@ function creditPayload(record, operation, lookups, errors) {
   };
 }
 
-function buildRows(records, mode, lookups, sensitive) {
-  const rows = []; const seenTargets = new Map(); const seenCodes = new Map(); const seenLegalNames = new Map();
-  const seenTradingNames = new Map(); const seenIdentifiers = new Map();
+function buildRows(records, mode, lookups, sensitive, seen, rowOffset) {
+  const rows = [];
+  const { seenTargets, seenCodes, seenLegalNames, seenTradingNames, seenIdentifiers } = seen;
   for (const [index, record] of records.entries()) {
-    const rowNumber = index + 1; const errors = []; const warnings = [];
+    const rowNumber = rowOffset + index + 1; const errors = []; const warnings = [];
     if (sensitive) issue(errors, "header", "IMPORT_SENSITIVE_FIELD_FORBIDDEN", "CSV 不可包含銀行、附件、憑證或內部備註欄位");
     const customerId = positiveInteger(record, "customerId", errors);
     let code;
@@ -400,20 +419,31 @@ function buildRows(records, mode, lookups, sensitive) {
 }
 
 export async function parseAndPrecheckCustomerCsv({
-  source, mode, connection, maxRows = DEFAULT_MAX_ROWS, maxBytes = DEFAULT_MAX_BYTES
+  source, mode, connection, maxRows = DEFAULT_MAX_ROWS, maxBytes = DEFAULT_MAX_BYTES,
+  batchSize = 100, onRows
 } = {}) {
   if (!connection?.query || !["create_only", "upsert"].includes(mode)) throw new TypeError("Customer import precheck requires a database connection and valid mode");
-  if (!Number.isSafeInteger(maxRows) || maxRows < 1 || !Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new TypeError("Customer import limits are invalid");
-  const parsed = await readCsv(source, { maxRows, maxBytes });
-  if (parsed.jobLevelError) return parsed;
-  const lookups = await loadLookups(connection, parsed.records);
-  const rows = buildRows(parsed.records, mode, lookups, parsed.sensitive);
-  return {
-    rows,
-    counts: {
-      total: rows.length, valid: rows.filter(({ status }) => status === "valid").length,
-      warning: rows.filter(({ status }) => status === "warning").length,
-      invalid: rows.filter(({ status }) => status === "invalid").length
-    }
+  if (!Number.isSafeInteger(maxRows) || maxRows < 1 || !Number.isSafeInteger(maxBytes) || maxBytes < 1 ||
+      !Number.isSafeInteger(batchSize) || batchSize < 1 || onRows !== undefined && typeof onRows !== "function") {
+    throw new TypeError("Customer import limits are invalid");
+  }
+  const collected = onRows ? null : [];
+  const counts = { total: 0, valid: 0, warning: 0, invalid: 0 };
+  const seen = {
+    seenTargets: new Map(), seenCodes: new Map(), seenLegalNames: new Map(),
+    seenTradingNames: new Map(), seenIdentifiers: new Map()
   };
+  let rowOffset = 0;
+  const parsed = await readCsv(source, {
+    maxRows, maxBytes, batchSize: Math.min(batchSize, maxRows),
+    async onBatch(records, sensitive) {
+      const lookups = await loadLookups(connection, records);
+      const rows = buildRows(records, mode, lookups, sensitive, seen, rowOffset);
+      rowOffset += rows.length;
+      for (const row of rows) { counts.total += 1; counts[row.status] += 1; }
+      if (onRows) await onRows(rows); else collected.push(...rows);
+    }
+  });
+  if (parsed.jobLevelError) return parsed;
+  return { ...(collected ? { rows: collected } : {}), counts };
 }

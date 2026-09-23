@@ -42,10 +42,10 @@ const JOB_SELECT = `id, idempotency_key, template_version, operation_id, source_
   last_error_code, error_summary, created_by, confirmed_by, created_at, updated_at, confirmed_at,
   completed_at, version`;
 
-function chunks(values, size) {
-  const result = [];
-  for (let index = 0; index < values.length; index += size) result.push(values.slice(index, index + size));
-  return result;
+function assertPrecheckLease(job, leaseOwner) {
+  if (!job || job.status !== "validating" || job.lease_owner !== leaseOwner) {
+    throw customerImportError("CUSTOMER_IMPORT_LEASE_LOST", 409, "匯入預檢工作已由其他程序接手");
+  }
 }
 
 export class CustomerImportService {
@@ -152,13 +152,46 @@ export class CustomerImportService {
     return this.storage.streamSource({ storedName: job.sourceStoredName, sha256: job.sourceSha256 });
   }
 
-  async recordPrecheck({ jobId, leaseOwner, rows = [], counts, jobLevelError, rowBatchSize = 100 }) {
+  async preparePrecheck({ jobId, leaseOwner }) {
     return this.database.withTransaction(async (connection) => {
       const [[job]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
-      if (!job || job.status !== "validating" || job.lease_owner !== leaseOwner) throw customerImportError("CUSTOMER_IMPORT_LEASE_LOST", 409, "匯入預檢工作已由其他程序接手");
+      assertPrecheckLease(job, leaseOwner);
       await connection.execute("DELETE FROM customer_import_rows WHERE job_id = ?", [jobId]);
+    });
+  }
+
+  async appendPrecheckRows({ jobId, leaseOwner, leaseDurationMs, rows }) {
+    if (!Array.isArray(rows) || rows.length < 1 || rows.length > 1000 || !Number.isSafeInteger(leaseDurationMs) || leaseDurationMs < 1) {
+      throw new TypeError("Customer import precheck batch is invalid");
+    }
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
+      assertPrecheckLease(job, leaseOwner);
+      const placeholders = rows.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?)").join(",");
+      const params = rows.flatMap((row) => [
+        jobId, row.rowNumber, row.operation, row.matchCustomerId, row.expectedCustomerVersion,
+        JSON.stringify(row.normalizedPayload), row.status, JSON.stringify(row.errors), JSON.stringify(row.warnings)
+      ]);
+      await connection.execute(
+        `INSERT INTO customer_import_rows
+           (job_id,\`row_number\`,operation,match_customer_id,expected_customer_version,normalized_payload,status,errors,warnings)
+         VALUES ${placeholders}`, params
+      );
+      const nowMs = this.time.nowMs();
+      await connection.execute(
+        "UPDATE customer_import_jobs SET lease_until = ?, updated_at = ?, version = version + 1 WHERE id = ?",
+        [nowMs + leaseDurationMs, nowMs, jobId]
+      );
+    });
+  }
+
+  async recordPrecheck({ jobId, leaseOwner, counts, jobLevelError }) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(`SELECT ${JOB_SELECT} FROM customer_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
+      assertPrecheckLease(job, leaseOwner);
       const nowMs = this.time.nowMs();
       if (jobLevelError) {
+        await connection.execute("DELETE FROM customer_import_rows WHERE job_id = ?", [jobId]);
         await connection.execute(
           `UPDATE customer_import_jobs SET status = 'failed', total_count = 0, valid_count = 0,
              warning_count = 0, invalid_count = 0, lease_owner = '', lease_until = NULL,
@@ -167,18 +200,6 @@ export class CustomerImportService {
           [String(jobLevelError.code).slice(0, 80), String(jobLevelError.message).slice(0, 500), nowMs, nowMs, jobId]
         );
       } else {
-        for (const batch of chunks(rows, rowBatchSize)) {
-          const placeholders = batch.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?)").join(",");
-          const params = batch.flatMap((row) => [
-            jobId, row.rowNumber, row.operation, row.matchCustomerId, row.expectedCustomerVersion,
-            JSON.stringify(row.normalizedPayload), row.status, JSON.stringify(row.errors), JSON.stringify(row.warnings)
-          ]);
-          await connection.execute(
-            `INSERT INTO customer_import_rows
-               (job_id,\`row_number\`,operation,match_customer_id,expected_customer_version,normalized_payload,status,errors,warnings)
-             VALUES ${placeholders}`, params
-          );
-        }
         const status = counts.invalid > 0 ? "ready_with_errors" : "ready";
         await connection.execute(
           `UPDATE customer_import_jobs SET status = ?, total_count = ?, valid_count = ?, warning_count = ?,

@@ -72,9 +72,13 @@ test("Customer import precheck persists only import rows and summary under its l
     database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 200 }, storage: {},
     audit: { async record() {} }
   });
+  await service.preparePrecheck({ jobId: 11, leaseOwner: "worker-1" });
+  await service.appendPrecheckRows({
+    jobId: 11, leaseOwner: "worker-1", leaseDurationMs: 1000,
+    rows: [{ rowNumber: 1, operation: "create", matchCustomerId: null, expectedCustomerVersion: null, normalizedPayload: { root: { customerCode: "C-1" } }, status: "valid", errors: [], warnings: [] }]
+  });
   const result = await service.recordPrecheck({
-    jobId: 11, leaseOwner: "worker-1", rowBatchSize: 100,
-    rows: [{ rowNumber: 1, operation: "create", matchCustomerId: null, expectedCustomerVersion: null, normalizedPayload: { root: { customerCode: "C-1" } }, status: "valid", errors: [], warnings: [] }],
+    jobId: 11, leaseOwner: "worker-1",
     counts: { total: 1, valid: 1, warning: 0, invalid: 0 }
   });
   assert.equal(result.status, "ready");
@@ -149,6 +153,7 @@ test("Customer import precheck records safe job-level failures without row inser
   assert.equal(result.status, "failed");
   assert.equal(result.lastErrorCode, "CSV_MALFORMED");
   assert.equal(statements.some((sql) => sql.includes("INSERT INTO customer_import_rows")), false);
+  assert.equal(statements.some((sql) => sql.includes("DELETE FROM customer_import_rows")), true);
 });
 
 test("Customer import list and detail expose paged safe projections", async () => {

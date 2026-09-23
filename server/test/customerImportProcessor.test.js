@@ -3,11 +3,15 @@ import { Readable } from "node:stream";
 import test from "node:test";
 
 import { parseAndPrecheckCustomerCsv } from "../src/modules/customer/import/CustomerImportProcessor.js";
-import { CUSTOMER_IMPORT_COLUMN_NAMES } from "../src/modules/customer/import/customerCsvSchema.js";
+import { buildCustomerImportTemplate, CUSTOMER_IMPORT_COLUMN_NAMES } from "../src/modules/customer/import/customerCsvSchema.js";
+
+function csvRow(row, headers = CUSTOMER_IMPORT_COLUMN_NAMES) {
+  const cell = (value) => /[",\r\n]/u.test(String(value ?? "")) ? `"${String(value ?? "").replaceAll('"', '""')}"` : String(value ?? "");
+  return headers.map((name) => cell(row[name])).join(",");
+}
 
 function csv(rows, headers = CUSTOMER_IMPORT_COLUMN_NAMES) {
-  const cell = (value) => /[",\r\n]/u.test(String(value ?? "")) ? `"${String(value ?? "").replaceAll('"', '""')}"` : String(value ?? "");
-  return Buffer.from(`\uFEFF${headers.join(",")}\r\n${rows.map((row) => headers.map((name) => cell(row[name])).join(",")).join("\r\n")}\r\n`, "utf8");
+  return Buffer.from(`\uFEFF${headers.join(",")}\r\n${rows.map((row) => csvRow(row, headers)).join("\r\n")}\r\n`, "utf8");
 }
 
 function database(rows = {}) {
@@ -58,6 +62,28 @@ test("Customer CSV precheck streams RFC4180/BOM input and never writes Customer 
   assert.equal(result.rows[0].normalizedPayload.root.defaultPaymentTermId, 8);
   assert.equal(result.rows[0].normalizedPayload.address.purposes.length, 2);
   assert.equal(db.writes, 0);
+});
+
+test("Customer CSV precheck emits bounded normalized batches without retaining all rows", async () => {
+  const rows = Array.from({ length: 23 }, (_, index) => ({
+    ...validCreate, customerCode: `C-${String(index + 1).padStart(3, "0")}`,
+    legalName: `Customer ${index + 1}`, identifierValue: String(1000 + index)
+  }));
+  const batches = [];
+  const result = await parseAndPrecheckCustomerCsv({
+    source: csv(rows), mode: "upsert", connection: database(lookupRows), batchSize: 5,
+    async onRows(batch) { batches.push(batch.length); }
+  });
+  assert.deepEqual(batches, [5, 5, 5, 5, 3]);
+  assert.equal(result.rows, undefined);
+  assert.deepEqual(result.counts, { total: 23, valid: 23, warning: 0, invalid: 0 });
+});
+
+test("Customer CSV precheck skips the template description and example rows", async () => {
+  const source = Buffer.from(`${buildCustomerImportTemplate()}${csvRow(validCreate)}\r\n`);
+  const result = await parseAndPrecheckCustomerCsv({ source, mode: "upsert", connection: database(lookupRows) });
+  assert.equal(result.rows.length, 1);
+  assert.equal(result.rows[0].normalizedPayload.root.customerCode, validCreate.customerCode);
 });
 
 test("Customer CSV precheck rejects invalid UTF-8, duplicate, unknown and oversized input deterministically", async () => {

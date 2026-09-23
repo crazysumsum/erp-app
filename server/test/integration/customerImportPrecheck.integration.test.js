@@ -72,9 +72,13 @@ integrationTest("TC-059 real MySQL Customer precheck persists evidence without c
   });
   jobId = uploaded.id;
   const claimed = await service.claimForPrecheck({ leaseOwner: "tc-059", leaseDurationMs: 30_000 });
+  await service.preparePrecheck({ jobId, leaseOwner: "tc-059" });
   const source = await service.readSource(claimed);
-  const result = await parseAndPrecheckCustomerCsv({ source, mode: claimed.mode, connection: database });
-  const summary = await service.recordPrecheck({ jobId, leaseOwner: "tc-059", rowBatchSize: 100, ...result });
+  const result = await parseAndPrecheckCustomerCsv({
+    source, mode: claimed.mode, connection: database, batchSize: 100,
+    onRows: (rows) => service.appendPrecheckRows({ jobId, leaseOwner: "tc-059", leaseDurationMs: 30_000, rows })
+  });
+  const summary = await service.recordPrecheck({ jobId, leaseOwner: "tc-059", ...result });
   const [[after]] = await connection.query("SELECT COUNT(*) AS count FROM customers");
   assert.equal(Number(after.count), Number(before.count));
   assert.equal(summary.totalCount, 1);
