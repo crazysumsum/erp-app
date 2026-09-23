@@ -9,6 +9,7 @@ import { customerAttachmentStoredName } from "../../services/customerFile/Custom
 
 const DOCUMENT_TYPES = new Set(["business_certificate", "credit_application", "contract", "bank_proof", "other"]);
 const SENSITIVITIES = new Set(["general", "bank_sensitive"]);
+const ATTACHMENT_ACTIONS = new Set(["attachment.upload", "attachment.view", "attachment.download", "attachment.update", "attachment.deactivate", "attachment.delete"]);
 
 function text(value, field, maxLength, { required = true } = {}) {
   const result = String(value ?? "").trim();
@@ -38,6 +39,24 @@ function normalizeMetadata(input) {
   };
 }
 
+function normalizeUpdate(input, sensitivity) {
+  const documentType = String(input.documentType ?? "").trim();
+  if (!DOCUMENT_TYPES.has(documentType) || (documentType === "bank_proof" && sensitivity !== "bank_sensitive")) {
+    throw customerAttachmentError("CUSTOMER_ATTACHMENT_INVALID", 400, "附件類型無效", { field: "documentType" });
+  }
+  const sortOrder = Number(input.sortOrder ?? 0);
+  const version = Number(input.version);
+  if (!Number.isSafeInteger(sortOrder) || sortOrder < 0 || !Number.isSafeInteger(version) || version < 1) {
+    throw customerAttachmentError("CUSTOMER_ATTACHMENT_INVALID", 400, "附件版本或排序無效");
+  }
+  const reason = text(input.reason, "reason", 500);
+  if (reason.length < 5) throw customerAttachmentError("CUSTOMER_ATTACHMENT_INVALID", 400, "附件操作原因最少需要 5 個字元", { field: "reason" });
+  return {
+    displayName: text(input.displayName, "displayName", 190), documentType,
+    notes: text(input.notes, "notes", 500, { required: false }), sortOrder, version, reason
+  };
+}
+
 function projection(row) {
   return {
     id: Number(row.id), customerId: Number(row.customer_id), displayName: row.display_name,
@@ -48,19 +67,108 @@ function projection(row) {
   };
 }
 
+async function hasUnregisteredAttachmentReferences(connection) {
+  const [rows] = await connection.query(
+    `SELECT table_name FROM information_schema.key_column_usage
+      WHERE referenced_table_schema = DATABASE() AND referenced_table_name = 'customer_attachments'
+        AND referenced_column_name = 'id' LIMIT 1`
+  );
+  return rows.length > 0;
+}
+
 export class CustomerAttachmentService {
-  constructor({ database, time, storage, authorize = assertActorFresh, audit = new CustomerAuditLogService(), operations = new CustomerOperationService() } = {}) {
+  constructor({ database, time, storage, accessTokens = null, isReferenced = hasUnregisteredAttachmentReferences, authorize = assertActorFresh, audit = new CustomerAuditLogService(), operations = new CustomerOperationService() } = {}) {
     if (!database || !time || !storage) throw new TypeError("CustomerAttachmentService requires database, time and storage");
-    this.database = database; this.time = time; this.storage = storage; this.authorize = authorize; this.audit = audit; this.operations = operations;
+    this.database = database; this.time = time; this.storage = storage; this.accessTokens = accessTokens; this.isReferenced = isReferenced; this.authorize = authorize; this.audit = audit; this.operations = operations;
   }
 
-  #assert(actor, sensitivity) {
+  #assertManage(actor, sensitivity) {
     const required = sensitivity === "bank_sensitive"
       ? ["customer.view", "customer.bank.view", "customer.bank.mgmt"]
       : ["customer.view", "customer.mgmt"];
     if (!required.every((permission) => actor?.permissions?.includes(permission))) {
       throw customerAttachmentError("CUSTOMER_ATTACHMENT_PERMISSION_LOST", 403, "你目前沒有維護這項附件的權限");
     }
+  }
+
+  #assertView(actor, sensitivity) {
+    const required = sensitivity === "bank_sensitive"
+      ? ["customer.view", "customer.bank.view"]
+      : ["customer.view"];
+    if (!required.every((permission) => actor?.permissions?.includes(permission))) {
+      throw customerAttachmentError("CUSTOMER_ATTACHMENT_PERMISSION_LOST", 403, "你目前沒有查看這項附件的權限");
+    }
+  }
+
+  async #row(connection, input, { lock = false } = {}) {
+    const [[row]] = await connection.query(
+      `SELECT * FROM customer_attachments WHERE id = ? AND customer_id = ?${lock ? " FOR UPDATE" : ""}`,
+      [input.attachmentId, input.customerId]
+    );
+    if (!row) throw customerAttachmentError("CUSTOMER_ATTACHMENT_NOT_FOUND", 404, "找不到指定的附件");
+    return row;
+  }
+
+  async list(input) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      this.#assertView(actor, "general");
+      const [[customer]] = await connection.query("SELECT id,customer_code FROM customers WHERE id = ?", [input.customerId]);
+      if (!customer) throw customerNotFound(input.customerId);
+      const [rows] = await connection.query(
+        "SELECT * FROM customer_attachments WHERE customer_id = ? AND status IN ('active','inactive') ORDER BY sort_order,id",
+        [input.customerId]
+      );
+      const canViewSensitive = actor.permissions.includes("customer.bank.view");
+      const items = rows.filter((row) => row.sensitivity !== "bank_sensitive" || canViewSensitive).map(projection);
+      const restrictedCount = rows.length - items.length;
+      await this.audit.record(connection, {
+        occurredAt: this.time.nowMs(), actorUserId: input.actorId, actorUsername: actor.username,
+        action: "attachment.view", targetType: "customer", targetId: Number(input.customerId),
+        customerId: Number(input.customerId), targetLabel: customer.customer_code, reason: "view customer attachments",
+        detail: { after: { status: "listed", count: items.length, restrictedCount } }, requestId: input.requestId, ip: input.ip
+      });
+      return { items, restrictedCount };
+    });
+  }
+
+  async auditFailure(input) {
+    if (!ATTACHMENT_ACTIONS.has(input.action)) throw new TypeError("Unsupported Customer attachment failure audit action");
+    const customerId = Number(input.customerId); const attachmentId = Number(input.attachmentId);
+    const validCustomerId = Number.isSafeInteger(customerId) && customerId > 0;
+    const validAttachmentId = Number.isSafeInteger(attachmentId) && attachmentId > 0;
+    const requestedSensitivity = SENSITIVITIES.has(input.sensitivity) ? input.sensitivity : "unknown";
+    const errorCode = /^[A-Z0-9_]{1,80}$/u.test(String(input.errorCode ?? "")) ? String(input.errorCode) : "REQUEST_FAILED";
+    await this.database.withTransaction(async (connection) => {
+      const [[customer]] = validCustomerId
+        ? await connection.query("SELECT id FROM customers WHERE id = ?", [customerId])
+        : [[]];
+      const [[attachment]] = customer && validAttachmentId
+        ? await connection.query("SELECT id,sensitivity FROM customer_attachments WHERE id = ? AND customer_id = ?", [attachmentId, customerId])
+        : [[]];
+      await this.audit.record(connection, {
+        occurredAt: this.time.nowMs(), actorUserId: input.actorId, actorUsername: "", action: input.action,
+        targetType: validAttachmentId ? "attachment" : "customer", targetId: validAttachmentId ? attachmentId : (customer?.id ?? null),
+        customerId: customer?.id ?? null, targetLabel: "", reason: `${input.action} attempt failed`,
+        detail: { after: { sensitivity: attachment?.sensitivity ?? requestedSensitivity, status: "failed", errorCode } },
+        requestId: input.requestId, ip: input.ip
+      });
+    });
+  }
+
+  async issueUploadSession(input) {
+    if (!this.accessTokens || !/^[0-9a-f]{64}$/u.test(String(input.contentSha256 ?? ""))) {
+      throw customerAttachmentError("CUSTOMER_ATTACHMENT_SESSION_INVALID", 400, "附件上傳授權資料無效");
+    }
+    const value = normalizeMetadata(input);
+    if (value.sensitivity !== "bank_sensitive") throw customerAttachmentError("CUSTOMER_ATTACHMENT_SESSION_INVALID", 400, "一般附件不需要敏感上傳授權");
+    await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      this.#assertManage(actor, value.sensitivity);
+      const [[customer]] = await connection.query("SELECT id FROM customers WHERE id = ?", [input.customerId]);
+      if (!customer) throw customerNotFound(input.customerId);
+    });
+    return this.accessTokens.issue({ purpose: "upload", actorId: Number(input.actorId), customerId: Number(input.customerId), binding: input.binding });
   }
 
   async create(input) {
@@ -76,7 +184,13 @@ export class CustomerAttachmentService {
     try {
       reserved = await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
-        this.#assert(actor, value.sensitivity);
+        this.#assertManage(actor, value.sensitivity);
+        if (value.sensitivity === "bank_sensitive") {
+          if (!this.accessTokens) throw customerAttachmentError("CUSTOMER_ATTACHMENT_SESSION_INVALID", 503, "敏感附件功能目前無法使用");
+          this.accessTokens.verify(input.sessionToken, {
+            purpose: "upload", actorId: Number(input.actorId), customerId: Number(input.customerId), binding: input.binding
+          });
+        }
         const operation = await this.operations.begin(connection, {
           actorId: input.actorId, routeKey: "customer.attachment.upload", idempotencyKey: input.idempotencyKey,
           payload, nowMs: this.time.nowMs()
@@ -132,7 +246,7 @@ export class CustomerAttachmentService {
     try {
       created = await this.database.withTransaction(async (connection) => {
         const freshActor = await this.authorize(connection, input);
-        this.#assert(freshActor, value.sensitivity);
+        this.#assertManage(freshActor, value.sensitivity);
         const [[operation]] = await connection.query("SELECT status FROM customer_operation_requests WHERE id = ? FOR UPDATE", [operationId]);
         if (operation?.status !== "processing") {
           throw customerAttachmentError("CUSTOMER_ATTACHMENT_OPERATION_CONFLICT", 409, "附件操作狀態不一致，請使用新的請求識別碼");
@@ -182,6 +296,143 @@ export class CustomerAttachmentService {
     }
   }
 
+  async update(input) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      const row = await this.#row(connection, input, { lock: true });
+      this.#assertManage(actor, row.sensitivity);
+      if (row.status !== "active") throw customerAttachmentError("CUSTOMER_ATTACHMENT_INACTIVE", 409, "已停用的附件不能修改");
+      const value = normalizeUpdate(input, row.sensitivity);
+      if (Number(row.version) !== value.version) throw customerAttachmentError("VERSION_CONFLICT", 409, "資料已被修改，請重新載入後再試", { currentVersion: Number(row.version) });
+      const now = this.time.nowMs();
+      const [result] = await connection.execute(
+        "UPDATE customer_attachments SET display_name=?,document_type=?,sort_order=?,notes=?,version=version+1,updated_at=?,updated_by=? WHERE id=? AND customer_id=? AND status='active' AND version=?",
+        [value.displayName, value.documentType, value.sortOrder, value.notes, now, input.actorId, input.attachmentId, input.customerId, value.version]
+      );
+      if (Number(result.affectedRows) !== 1) throw customerAttachmentError("VERSION_CONFLICT", 409, "資料已被修改，請重新載入後再試");
+      await this.audit.record(connection, {
+        occurredAt: now, actorUserId: input.actorId, actorUsername: actor.username, action: "attachment.update",
+        targetType: "attachment", targetId: Number(row.id), customerId: Number(input.customerId), targetLabel: "",
+        reason: value.reason, detail: { before: { displayName: row.display_name, documentType: row.document_type, sortOrder: Number(row.sort_order), notes: row.notes }, after: { displayName: value.displayName, documentType: value.documentType, sortOrder: value.sortOrder, notes: value.notes } }, requestId: input.requestId, ip: input.ip
+      });
+      return projection({ ...row, display_name: value.displayName, document_type: value.documentType, sort_order: value.sortOrder, notes: value.notes, version: value.version + 1, updated_at: now });
+    });
+  }
+
+  async deactivate(input) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      const row = await this.#row(connection, input, { lock: true });
+      this.#assertManage(actor, row.sensitivity);
+      const version = Number(input.version); const reason = text(input.reason, "reason", 500);
+      if (reason.length < 5 || version !== Number(row.version) || row.status !== "active") {
+        throw customerAttachmentError("VERSION_CONFLICT", 409, "附件狀態已變更，請重新載入後再試", { currentVersion: Number(row.version) });
+      }
+      const now = this.time.nowMs();
+      const [result] = await connection.execute(
+        "UPDATE customer_attachments SET status='inactive',version=version+1,updated_at=?,updated_by=? WHERE id=? AND customer_id=? AND status='active' AND version=?",
+        [now, input.actorId, input.attachmentId, input.customerId, version]
+      );
+      if (Number(result.affectedRows) !== 1) throw customerAttachmentError("VERSION_CONFLICT", 409, "附件狀態已變更，請重新載入後再試");
+      await this.audit.record(connection, {
+        occurredAt: now, actorUserId: input.actorId, actorUsername: actor.username, action: "attachment.deactivate",
+        targetType: "attachment", targetId: Number(row.id), customerId: Number(input.customerId), targetLabel: "",
+        reason, detail: { before: { status: row.status }, after: { status: "inactive" } }, requestId: input.requestId, ip: input.ip
+      });
+      return projection({ ...row, status: "inactive", version: version + 1, updated_at: now });
+    });
+  }
+
+  async issueDownloadSession(input) {
+    if (!this.accessTokens) throw customerAttachmentError("CUSTOMER_ATTACHMENT_SESSION_INVALID", 503, "敏感附件功能目前無法使用");
+    const mode = input.mode === "preview" ? "preview" : "download";
+    const reason = text(input.reason, "reason", 500);
+    if (reason.length < 5) throw customerAttachmentError("CUSTOMER_ATTACHMENT_INVALID", 400, "查看原因最少需要 5 個字元");
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      const row = await this.#row(connection, input);
+      if (row.sensitivity !== "bank_sensitive" || !["active", "inactive"].includes(row.status)) {
+        throw customerAttachmentError("CUSTOMER_ATTACHMENT_NOT_FOUND", 404, "找不到指定的附件");
+      }
+      this.#assertView(actor, row.sensitivity);
+      await this.audit.record(connection, {
+        occurredAt: this.time.nowMs(), actorUserId: input.actorId, actorUsername: actor.username,
+        action: mode === "preview" ? "attachment.view" : "attachment.download", targetType: "attachment",
+        targetId: Number(row.id), customerId: Number(input.customerId), targetLabel: "", reason,
+        detail: { after: { sensitivity: row.sensitivity, status: "authorized" } }, requestId: input.requestId, ip: input.ip
+      });
+      return this.accessTokens.issue({ purpose: "download", mode, actorId: Number(input.actorId), customerId: Number(input.customerId), attachmentId: Number(row.id) });
+    });
+  }
+
+  async read(input) {
+    const mode = input.mode === "preview" ? "preview" : "download";
+    const row = await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      const found = await this.#row(connection, input);
+      if (!["active", "inactive"].includes(found.status)) throw customerAttachmentError("CUSTOMER_ATTACHMENT_NOT_FOUND", 404, "找不到指定的附件");
+      this.#assertView(actor, found.sensitivity);
+      if (found.sensitivity === "bank_sensitive") {
+        if (!this.accessTokens) throw customerAttachmentError("CUSTOMER_ATTACHMENT_SESSION_INVALID", 503, "敏感附件功能目前無法使用");
+        this.accessTokens.verify(input.sessionToken, { purpose: "download", mode, actorId: Number(input.actorId), customerId: Number(input.customerId), attachmentId: Number(found.id) });
+      } else {
+        await this.audit.record(connection, {
+          occurredAt: this.time.nowMs(), actorUserId: input.actorId, actorUsername: actor.username,
+          action: mode === "preview" ? "attachment.view" : "attachment.download", targetType: "attachment",
+          targetId: Number(found.id), customerId: Number(input.customerId), targetLabel: "", reason: `${mode} general attachment`,
+          detail: { after: { sensitivity: found.sensitivity, status: "authorized" } }, requestId: input.requestId, ip: input.ip
+        });
+      }
+      return found;
+    });
+    if (mode === "preview" && !["application/pdf", "image/png", "image/jpeg", "image/webp"].includes(row.mime_type)) {
+      throw customerAttachmentError("CUSTOMER_ATTACHMENT_PREVIEW_UNSUPPORTED", 415, "此附件格式不支援預覽");
+    }
+    return { attachment: projection(row), content: await this.storage.read({
+      operationId: row.operation_id, customerId: row.customer_id, storedName: row.stored_name,
+      sensitivity: row.sensitivity, sizeBytes: row.size_bytes, sha256: row.sha256
+    }) };
+  }
+
+  async delete(input) {
+    let row;
+    await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, input);
+      const [[customer]] = await connection.query("SELECT id,status,ever_activated_at FROM customers WHERE id = ? FOR UPDATE", [input.customerId]);
+      if (!customer) throw customerNotFound(input.customerId);
+      row = await this.#row(connection, input, { lock: true });
+      this.#assertManage(actor, row.sensitivity);
+      const reason = text(input.reason, "reason", 500);
+      if (reason.length < 5 || Number(input.version) !== Number(row.version) || customer.status !== "draft" || customer.ever_activated_at !== null || row.status === "processing" || await this.isReferenced(connection, Number(row.id))) {
+        throw customerAttachmentError("CUSTOMER_ATTACHMENT_DELETE_NOT_ALLOWED", 409, "此附件仍須保留，不能永久刪除");
+      }
+      const now = this.time.nowMs();
+      const [result] = await connection.execute(
+        "UPDATE customer_attachments SET status='deleting',version=version+1,updated_at=?,updated_by=? WHERE id=? AND customer_id=? AND version=? AND status<>'processing'",
+        [now, input.actorId, input.attachmentId, input.customerId, input.version]
+      );
+      if (Number(result.affectedRows) !== 1) throw customerAttachmentError("VERSION_CONFLICT", 409, "附件狀態已變更，請重新載入後再試");
+      await this.audit.record(connection, {
+        occurredAt: now, actorUserId: input.actorId, actorUsername: actor.username, action: "attachment.delete",
+        targetType: "attachment", targetId: Number(row.id), customerId: Number(input.customerId), targetLabel: "", reason,
+        detail: { before: { status: row.status, sensitivity: row.sensitivity }, after: { status: "deleting" } }, requestId: input.requestId, ip: input.ip
+      });
+    });
+    try { await this.storage.delete({ storedName: row.stored_name, sensitivity: row.sensitivity }); }
+    catch {
+      await this.database.withTransaction((connection) => connection.execute(
+        "UPDATE customer_attachments SET status='delete_failed',updated_at=? WHERE id=? AND customer_id=? AND status='deleting'",
+        [this.time.nowMs(), input.attachmentId, input.customerId]
+      ));
+      throw customerAttachmentError("CUSTOMER_ATTACHMENT_DELETE_FAILED", 503, "附件刪除尚未完成，系統會自動重試");
+    }
+    await this.database.withTransaction((connection) => connection.execute(
+      "DELETE FROM customer_attachments WHERE id=? AND customer_id=? AND status='deleting'",
+      [input.attachmentId, input.customerId]
+    ));
+    return { deleted: true };
+  }
+
   async #abortStage(operationId, storedName, errorCode) {
     let discarded = false;
     try { await this.storage.discardTemp({ storedName }); discarded = true; }
@@ -207,7 +458,7 @@ export class CustomerAttachmentService {
     return this.database.withTransaction(async (connection) => {
       if (input.reauthorize) {
         const freshActor = await this.authorize(connection, input);
-        this.#assert(freshActor, input.value.sensitivity);
+        this.#assertManage(freshActor, input.value.sensitivity);
         input.actorUsername = freshActor.username;
       }
       const now = this.time.nowMs();
@@ -377,5 +628,27 @@ export class CustomerAttachmentRecoveryService {
       });
     }
     return { failed };
+  }
+
+  async retryDeletes({ cutoffMs = 0, batchSize = 100 } = {}) {
+    const limit = Number(batchSize); const cutoff = Number(cutoffMs);
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 1000 || !Number.isSafeInteger(cutoff) || cutoff < 0) throw new TypeError("Customer attachment delete retry cutoff or batch size is invalid");
+    const [rows] = await this.database.query(
+      "SELECT id,customer_id,stored_name,sensitivity,status,version FROM customer_attachments WHERE status='delete_failed' OR (status='deleting' AND updated_at<=?) ORDER BY updated_at,id LIMIT ?",
+      [cutoff, limit]
+    );
+    let deleted = 0; let failed = 0;
+    for (const row of rows) {
+      try { await this.storage.delete({ storedName: row.stored_name, sensitivity: row.sensitivity }); }
+      catch { failed += 1; continue; }
+      await this.database.withTransaction(async (connection) => {
+        const [result] = await connection.execute(
+          "DELETE FROM customer_attachments WHERE id=? AND customer_id=? AND status=? AND version=?",
+          [row.id, row.customer_id, row.status, row.version]
+        );
+        deleted += Number(result.affectedRows) === 1 ? 1 : 0;
+      });
+    }
+    return { processed: rows.length, deleted, failed };
   }
 }

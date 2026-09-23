@@ -201,6 +201,18 @@ export class CustomerAttachmentStorage {
     return this.#readObject(path.join(this.#root(metadata.sensitivity), validStoredName(metadata.storedName)), metadata);
   }
 
+  async delete(metadata) {
+    await this.#ensureRoots();
+    const filePath = path.join(this.#root(metadata.sensitivity), validStoredName(metadata.storedName));
+    try {
+      const info = await lstat(filePath);
+      if (!info.isFile() || info.isSymbolicLink()) throw new Error("Customer attachment object is not a regular file");
+      await unlink(filePath);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+
   async recover(metadata) {
     try { await this.finalize(metadata); return "active"; }
     catch { return "storage_error"; }

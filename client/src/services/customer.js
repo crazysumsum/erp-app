@@ -4,6 +4,11 @@ export const service = { name: "customer" };
 
 const write = (path, { idempotencyKey, ...body } = {}, options = {}) => httpClient.post(path, { idempotent: true, idempotencyKey, body, ...options });
 
+async function sha256Hex(file) {
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 export default {
   list({ page, rowsPerPage, sortBy, sortDirection, descending, filter, status, currencyCode, paymentTermId, accountManagerUserId, categoryId, industryId, territoryId, creditStatus, missing, createdFrom, createdTo, updatedFrom, updatedTo, includeArchived, signal } = {}) {
     return httpClient.get("/api/v1/customers", {
@@ -19,6 +24,7 @@ export default {
   identifiers(id, { page, rowsPerPage, signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/identifiers`, { params: { page, pageSize: rowsPerPage }, signal }); },
   creditPolicy(id, { signal } = {}) { return httpClient.get(`/api/v1/customers/${id}/credit-policy`, { signal }); },
   bankAccounts(id, options) { return httpClient.get(`/api/v1/customers/${id}/bank-accounts`, options); },
+  attachments(id, options) { return httpClient.get(`/api/v1/customers/${id}/attachments`, options); },
   checkDuplicates(payload) { return write("/api/v1/customers/duplicates/check", payload); },
   create(payload) { return write("/api/v1/customers/create", payload); },
   update(id, payload) { return write(`/api/v1/customers/${id}/update`, payload); },
@@ -48,5 +54,27 @@ export default {
   updateBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/update`, payload, { signed: true }); },
   setDefaultBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/default`, payload, { signed: true }); },
   deactivateBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/deactivate`, payload, { signed: true }); },
-  revealBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/reveal`, payload); }
+  revealBankAccount(id, bankId, payload) { return write(`/api/v1/customers/${id}/bank-accounts/${bankId}/reveal`, payload); },
+  async uploadAttachment(id, { file, password, ...metadata }) {
+    const idempotencyKey = crypto.randomUUID();
+    let sessionToken;
+    if (metadata.sensitivity === "bank_sensitive") {
+      const session = await httpClient.post(`/api/v1/customers/${id}/attachments/upload-session`, {
+        signed: true,
+        body: { ...metadata, originalFilename: file.name, mimeType: file.type, contentSha256: await sha256Hex(file), password }
+      });
+      sessionToken = session.token;
+    }
+    const form = new FormData();
+    form.append("file", file, file.name);
+    for (const [key, value] of Object.entries({ ...metadata, sessionToken })) {
+      if (value !== undefined && value !== null) form.append(key, String(value));
+    }
+    return httpClient.post(`/api/v1/customers/${id}/attachments/upload`, { idempotent: true, idempotencyKey, body: form });
+  },
+  updateAttachment(id, attachmentId, payload) { return write(`/api/v1/customers/${id}/attachments/${attachmentId}/update`, payload); },
+  deactivateAttachment(id, attachmentId, payload) { return write(`/api/v1/customers/${id}/attachments/${attachmentId}/deactivate`, payload); },
+  deleteAttachment(id, attachmentId, payload) { return write(`/api/v1/customers/${id}/attachments/${attachmentId}/delete`, payload, { signed: true }); },
+  authorizeAttachmentDownload(id, attachmentId, payload) { return httpClient.post(`/api/v1/customers/${id}/attachments/${attachmentId}/download-session`, { body: payload }); },
+  attachmentContent(id, attachmentId, mode, options) { return httpClient.getBlob(`/api/v1/customers/${id}/attachments/${attachmentId}/${mode}`, options); }
 };

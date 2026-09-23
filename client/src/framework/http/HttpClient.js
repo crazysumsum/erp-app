@@ -177,13 +177,15 @@ export class HttpClient {
    * 唔可以直接指向下載端點嘅 URL——一定要用 fetch 先攞到 blob，先再用
    * `URL.createObjectURL()` 俾 `<img>` 顯示或者觸發下載。
    */
-  async getBlob(path, { signal } = {}) {
+  async getBlob(path, { signal, sessionToken, range } = {}) {
     const url = buildUrl(this.baseUrl, path);
     const headers = {};
     const token = this.getToken();
     if (token) {
       headers[this.authHeaderName] = `${this.authScheme} ${token}`;
     }
+    if (sessionToken) headers["X-Customer-Attachment-Session"] = sessionToken;
+    if (range) headers.Range = range;
 
     const timeoutController = new AbortController();
     const timeoutId = setTimeout(() => timeoutController.abort(), this.timeoutMs);

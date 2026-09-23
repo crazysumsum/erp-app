@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/framework/http/HttpClient.js", () => ({
-  httpClient: { get: vi.fn(), post: vi.fn() }
+  httpClient: { get: vi.fn(), post: vi.fn(), getBlob: vi.fn() }
 }));
 
 import { httpClient } from "@/framework/http/HttpClient.js";
@@ -98,5 +98,23 @@ describe("customer service", () => {
       ["/api/v1/customers/7/bank-accounts/9/deactivate", { idempotent: true, signed: true, body: payload }],
       ["/api/v1/customers/7/bank-accounts/9/reveal", { idempotent: true, body: payload }]
     ]);
+  });
+
+  it("reauthenticates a sensitive upload, then keeps password out of multipart content", async () => {
+    httpClient.post.mockResolvedValueOnce({ token: "upload-session" }).mockResolvedValueOnce({ id: 5 });
+    const file = new File(["attachment"], "proof.pdf", { type: "application/pdf" });
+
+    await customerService.uploadAttachment(7, {
+      file, password: "pw", displayName: "Bank proof", documentType: "bank_proof",
+      sensitivity: "bank_sensitive", sortOrder: 0, notes: "", reason: "upload bank proof"
+    });
+
+    expect(httpClient.post.mock.calls[0][0]).toBe("/api/v1/customers/7/attachments/upload-session");
+    expect(httpClient.post.mock.calls[0][1]).toMatchObject({ signed: true, body: { password: "pw", contentSha256: expect.stringMatching(/^[0-9a-f]{64}$/) } });
+    const [path, options] = httpClient.post.mock.calls[1];
+    expect(path).toBe("/api/v1/customers/7/attachments/upload");
+    expect(options).toMatchObject({ idempotent: true, idempotencyKey: expect.any(String), body: expect.any(FormData) });
+    expect(options.body.get("sessionToken")).toBe("upload-session");
+    expect(options.body.get("password")).toBeNull();
   });
 });

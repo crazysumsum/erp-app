@@ -1,11 +1,15 @@
 import { expect, test } from "@playwright/test";
+import { Buffer } from "node:buffer";
 
 const user = { id: 1, username: "customer-manager", displayName: "Customer Manager", roles: [], permissions: ["customer.view", "customer.mgmt"] };
 const customer = { id: 7, code: "CUS-007", legalName: "Evergreen Customer", displayName: "Evergreen", defaultCurrencyCode: "HKD", status: "draft", updatedAt: "2026-09-22T00:00:00.000Z" };
 
 async function installApi(page, { sessionUser = user, customerStatus = "draft" } = {}) {
   const calls = [];
-  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null }, banks: [{ id: 9, customerId: 7, accountHolderName: "Evergreen Customer", bankName: "Example Bank", bankCountryCode: "HK", bankCode: "001", branchCode: "002", swiftBic: "EXAMPLHH", accountCurrencyCode: "HKD", purposeCode: "general", maskedAccountNumber: "••••••••9001", isDefault: true, status: "active", version: 2, updatedAt: 1 }] };
+  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null }, banks: [{ id: 9, customerId: 7, accountHolderName: "Evergreen Customer", bankName: "Example Bank", bankCountryCode: "HK", bankCode: "001", branchCode: "002", swiftBic: "EXAMPLHH", accountCurrencyCode: "HKD", purposeCode: "general", maskedAccountNumber: "••••••••9001", isDefault: true, status: "active", version: 2, updatedAt: 1 }], attachments: [
+    { id: 4, customerId: 7, displayName: "Customer contract", documentType: "contract", sensitivity: "general", originalFilename: "contract.pdf", mimeType: "application/pdf", extension: "pdf", sizeBytes: 20, storageClass: "general_private", scanStatus: "clean", status: "active", sortOrder: 0, notes: "", version: 1, updatedAt: 1 },
+    { id: 5, customerId: 7, displayName: "Bank proof image", documentType: "bank_proof", sensitivity: "bank_sensitive", originalFilename: "bank-proof.png", mimeType: "image/png", extension: "png", sizeBytes: 20, storageClass: "bank_sensitive_private", scanStatus: "clean", status: "active", sortOrder: 1, notes: "", version: 1, updatedAt: 1 }
+  ] };
   await page.addInitScript((sessionUser) => {
     localStorage.setItem("erp.token", "browser-test-token");
     localStorage.setItem("erp.token.deadline", String(Date.now() + 3_600_000));
@@ -22,6 +26,9 @@ async function installApi(page, { sessionUser = user, customerStatus = "draft" }
     if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)$/u.test(path)) { const id = Number(path.split("/").at(-1)); return ok({ ...customer, id, code: `CUS-00${id}`, legalName: id === 8 ? "Second Customer" : customer.legalName, status: customerStatus, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state }); }
     if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/completeness$/u.test(path)) return ok({ customerId: Number(path.split("/")[4]), issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
     if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/bank-accounts$/u.test(path)) { const customerId = Number(path.split("/")[4]); return ok({ items: state.banks.map((bank) => ({ ...bank, customerId, bankName: customerId === 8 ? "Second Bank" : bank.bankName })) }); }
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/attachments$/u.test(path)) { const allowed = sessionUser.permissions.includes("customer.bank.view"); return ok({ items: state.attachments.filter((item) => item.sensitivity === "general" || allowed), restrictedCount: allowed ? 0 : 1 }); }
+    if (request.method() === "POST" && path === "/api/v1/customers/7/attachments/5/download-session") return ok({ token: "browser-attachment-session", expiresAt: Date.now() + 60_000 });
+    if (request.method() === "GET" && path === "/api/v1/customers/7/attachments/5/preview") return route.fulfill({ status: request.headers()["x-customer-attachment-session"] === "browser-attachment-session" ? 200 : 403, headers: { "content-type": "image/png", "cache-control": "private, no-store", pragma: "no-cache", "x-content-type-options": "nosniff", "content-security-policy": "sandbox; default-src 'none'", "access-control-allow-origin": "http://127.0.0.1:5204" }, body: Buffer.from("89504e470d0a1a0a0000000049454e44ae426082", "hex") });
     if (request.method() === "POST" && path === "/api/v1/customers/7/bank-accounts/9/reveal") return ok({ id: 9, accountNumber: "123456789001", revealedAt: Date.now(), expiresInSeconds: 30 });
     if (request.method() === "GET" && path === "/api/v1/business-master/currencies") return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar" }], total: 1 });
     if (request.method() === "POST" && path === "/api/v1/customers/duplicates/check") return ok({ code: [], legalName: [], tradingName: [] });
@@ -155,6 +162,33 @@ test("@technical bank controls remain usable at approved viewport widths", async
     await expect(page.getByRole("button", { name: "新增銀行帳戶" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   }
+  expect(problems).toEqual([]);
+});
+
+test("@technical sensitive attachment preview is reauthenticated and cleared from browser state", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page, { sessionUser: { ...user, permissions: ["customer.view", "customer.mgmt", "customer.bank.view", "customer.bank.mgmt"] } });
+  await page.goto("/customers/7");
+  await page.getByRole("tab", { name: "附件" }).click();
+  await expect(page.getByText("Bank proof image")).toBeVisible();
+  await page.getByRole("button", { name: "預覽 Bank proof image" }).click();
+  await page.getByLabel("原因").fill("核對銀行證明附件");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "預覽", exact: true }).last().click();
+  await expect(page.getByRole("heading", { name: "預覽：Bank proof image" })).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage }, url: location.href, history: history.state }))).not.toContain("browser-attachment-session");
+  expect(calls.find((call) => call.path.endsWith("/download-session"))?.body).toMatchObject({ mode: "preview", reason: "核對銀行證明附件", password: "browser-secret" });
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  await expect(page.getByRole("heading", { name: "預覽：Bank proof image" })).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("@technical unauthorized attachment list exposes only a restricted count", async ({ page }) => {
+  const problems = collectConsole(page); await installApi(page);
+  await page.goto("/customers/7"); await page.getByRole("tab", { name: "附件" }).click();
+  await expect(page.getByText("另有 1 份受限制文件")).toBeVisible();
+  await expect(page.getByText("Customer contract")).toBeVisible();
+  await expect(page.getByText("Bank proof image")).toHaveCount(0);
+  await expect(page.getByText("bank-proof.png")).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 

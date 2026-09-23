@@ -25,12 +25,24 @@ function collect(stream, limitBytes, onLimit) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     let size = 0;
+    let settled = false;
+    const wipeChunks = () => {
+      for (const chunk of chunks) chunk.fill(0);
+      chunks.length = 0;
+    };
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      wipeChunks();
+      reject(error);
+    };
 
     stream.on("data", (chunk) => {
       size += chunk.length;
 
       if (size > limitBytes) {
         // 立刻停止讀取，不把超限內容繼續收進記憶體或磁碟。
+        wipeChunks();
         onLimit();
         return;
       }
@@ -38,8 +50,11 @@ function collect(stream, limitBytes, onLimit) {
       chunks.push(chunk);
     });
     stream.on("limit", onLimit);
-    stream.on("error", reject);
+    stream.on("error", fail);
+    stream.on("close", () => fail(new UploadError("UPLOAD_ABORTED", "Upload ended before the file was fully received", 400)));
     stream.on("end", () => {
+      if (settled) return;
+      settled = true;
       // concat 之後 chunks 仍被上面的 data 監聽器閉包參照著，而閉包活到 stream
       // 本身被回收為止——於是同一份內容有兩份拷貝並存，一份是要用的 buffer，
       // 一份是純粹的垃圾。並行上傳時這會讓實際佔用逼近 api.upload_budget 所
@@ -153,6 +168,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     const fields = Object.create(null);
     const pending = [];
     const accepted = [];
+    const collectedBuffers = new Set();
     let failure = null;
     let settled = false;
     let requestBytes = 0;
@@ -162,6 +178,10 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     // 消耗時就不會發出 close，請求會一路掛到 request timeout。
     const fail = (error) => {
       failure = failure || error;
+    };
+    const wipeCollectedBuffers = () => {
+      for (const buffer of collectedBuffers) buffer.fill(0);
+      collectedBuffers.clear();
     };
 
     // 客戶端在 body 送完之前斷線時 busboy 永遠不會發出 close。少了這個收尾，
@@ -177,6 +197,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
       releaseSlot();
       req.unpipe(parser);
       parser.destroy();
+      void Promise.allSettled(pending).then(wipeCollectedBuffers);
       next(
         new UploadError(
           "UPLOAD_ABORTED",
@@ -203,6 +224,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
       releaseSlot();
       req.unpipe(parser);
       parser.destroy();
+      void Promise.allSettled(pending).then(wipeCollectedBuffers);
       next(
         new UploadError(
           "UPLOAD_REQUEST_TOO_LARGE",
@@ -242,6 +264,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
       pending.push(
         collect(stream, config.maxFileSizeBytes, onLimit).then(
           ({ buffer, size }) => {
+            collectedBuffers.add(buffer);
             if (limitExceeded) {
               fail(
                 new UploadError(
@@ -349,6 +372,20 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
           }
 
           const files = accepted;
+          if (config.memoryOnly) {
+            req.files = Object.freeze(files.map((file) => Object.freeze({ ...file })));
+            collectedBuffers.clear();
+            req.body = { ...fields };
+            void logger?.info?.("upload.accepted", "Multipart upload accepted", {
+              requestId: req.requestId || null,
+              fileCount: files.length,
+              requestBytes,
+              totalFileBytes: acceptedFileBytes,
+              files: files.map(({ mimeType, size }) => ({ mimeType, size }))
+            });
+            next();
+            return;
+          }
           await mkdir(config.directory, {
             recursive: true,
             mode: config.directoryMode
@@ -397,6 +434,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
           }
 
           req.files = Object.freeze(stored);
+          wipeCollectedBuffers();
           req.body = { ...fields };
 
           void logger?.info?.("upload.accepted", "Multipart upload accepted", {
@@ -413,6 +451,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
           next();
         })
         .catch((error) => {
+          wipeCollectedBuffers();
           const uploadError =
             error instanceof ApplicationError
               ? error

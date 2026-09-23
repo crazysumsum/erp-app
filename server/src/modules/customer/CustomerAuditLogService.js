@@ -112,7 +112,9 @@ const ROOT_AUDIT_FIELDS = new Set([
   "mimeType",
   "sizeBytes",
   "storageClass",
-  "scanStatus"
+  "scanStatus",
+  "status",
+  "errorCode"
 ]);
 
 function allowlistedSnapshot(value) {

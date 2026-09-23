@@ -293,3 +293,108 @@ test("Customer attachment recovery rechecks metadata under the operation lock be
   assert.deepEqual(await service.failAbandonedOperations({ cutoffMs: 100 }), { failed: 0 });
   assert.equal(failed, 0);
 });
+
+test("Customer attachment list hides every sensitive metadata field without bank.view", async () => {
+  const rows = [
+    { id: 1, customer_id: 7, display_name: "Contract", document_type: "contract", sensitivity: "general", original_filename: "contract.pdf", mime_type: "application/pdf", extension: "pdf", size_bytes: 8, storage_class: "general_private", scan_status: "clean", status: "active", sort_order: 0, notes: "", version: 1, updated_at: 1 },
+    { id: 2, customer_id: 7, display_name: "Secret bank proof", document_type: "bank_proof", sensitivity: "bank_sensitive", original_filename: "secret.pdf", mime_type: "application/pdf", extension: "pdf", size_bytes: 9, storage_class: "bank_sensitive_private", scan_status: "clean", status: "active", sort_order: 1, notes: "", version: 1, updated_at: 1 }
+  ];
+  const audits = [];
+  const connection = { async query(sql) { return String(sql).includes("FROM customers") ? [[{ id: 7, customer_code: "CUS-7" }]] : [rows]; } };
+  const service = new CustomerAttachmentService({
+    database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 1 }, storage: {},
+    authorize: async () => ({ username: "viewer", permissions: ["customer.view"] }),
+    audit: { async record(_connection, value) { audits.push(value); } }
+  });
+
+  const result = await service.list(input());
+  assert.deepEqual(result.items.map(({ id }) => id), [1]);
+  assert.equal(result.restrictedCount, 1);
+  assert.doesNotMatch(JSON.stringify(result), /secret|bank_proof|secret\.pdf/u);
+  assert.equal(audits[0].action, "attachment.view");
+});
+
+test("Customer attachment failure audits are owner-safe and contain no attachment metadata", async () => {
+  const audits = [];
+  const connection = { async query(sql) {
+    if (String(sql).includes("FROM customers")) return [[{ id: 7 }]];
+    return [[]];
+  } };
+  const service = new CustomerAttachmentService({
+    database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 1 }, storage: {},
+    audit: { async record(_connection, value) { audits.push(value); } }
+  });
+
+  await service.auditFailure({ ...input(), action: "attachment.download", attachmentId: 999, sensitivity: "bank_sensitive", errorCode: "CUSTOMER_ATTACHMENT_NOT_FOUND" });
+
+  assert.deepEqual(audits[0].detail, { after: { sensitivity: "bank_sensitive", status: "failed", errorCode: "CUSTOMER_ATTACHMENT_NOT_FOUND" } });
+  assert.equal(audits[0].customerId, 7);
+  assert.doesNotMatch(JSON.stringify(audits[0]), /filename|stored|path|token|password/iu);
+});
+
+test("Customer attachment read commits its audit before opening general content", async () => {
+  const events = [];
+  const row = { id: 9, customer_id: 7, operation_id: randomUUID(), stored_name: "a".repeat(64), display_name: "Contract", document_type: "contract", sensitivity: "general", original_filename: "contract.pdf", mime_type: "application/pdf", extension: "pdf", size_bytes: PDF.length, sha256: Buffer.alloc(32), storage_class: "general_private", scan_status: "clean", status: "active", sort_order: 0, notes: "", version: 1, updated_at: 1 };
+  const connection = { async query() { return [[row]]; } };
+  const service = new CustomerAttachmentService({
+    database: { async withTransaction(work) { events.push("begin"); const value = await work(connection); events.push("commit"); return value; } },
+    time: { nowMs: () => 1 }, authorize: async () => ({ username: "viewer", permissions: ["customer.view"] }),
+    audit: { async record() { events.push("audit"); } }, storage: { async read() { events.push("read"); return PDF; } }
+  });
+
+  assert.deepEqual((await service.read({ ...input(), attachmentId: 9, mode: "download" })).content, PDF);
+  assert.deepEqual(events, ["begin", "audit", "commit", "read"]);
+});
+
+test("Sensitive attachment sessions are audited once and bound before file reads", async () => {
+  const events = [];
+  const row = { id: 9, customer_id: 7, operation_id: randomUUID(), stored_name: "a".repeat(64), display_name: "Proof", document_type: "bank_proof", sensitivity: "bank_sensitive", original_filename: "proof.pdf", mime_type: "application/pdf", extension: "pdf", size_bytes: PDF.length, sha256: Buffer.alloc(32), storage_class: "bank_sensitive_private", scan_status: "clean", status: "active", sort_order: 0, notes: "", version: 1, updated_at: 1 };
+  const connection = { async query() { return [[row]]; } };
+  const accessTokens = {
+    issue(claims) { events.push("issue"); return { token: "signed", expiresAt: 2, claims }; },
+    verify(token, expected) { events.push("verify"); assert.equal(token, "signed"); assert.equal(expected.attachmentId, 9); }
+  };
+  const service = new CustomerAttachmentService({
+    database: { async withTransaction(work) { events.push("begin"); const value = await work(connection); events.push("commit"); return value; } },
+    time: { nowMs: () => 1 }, accessTokens,
+    authorize: async () => ({ username: "bank", permissions: ["customer.view", "customer.bank.view"] }),
+    audit: { async record() { events.push("audit"); } }, storage: { async read() { events.push("read"); return PDF; } }
+  });
+
+  await service.issueDownloadSession({ ...input(), attachmentId: 9, mode: "preview" });
+  await service.read({ ...input(), attachmentId: 9, mode: "preview", sessionToken: "signed" });
+  assert.deepEqual(events, ["begin", "audit", "issue", "commit", "begin", "verify", "commit", "read"]);
+});
+
+test("Customer attachment delete marks and audits before deleting bytes, then removes metadata", async () => {
+  const events = [];
+  const row = { id: 9, customer_id: 7, stored_name: "a".repeat(64), sensitivity: "general", status: "inactive", version: 2 };
+  const connection = {
+    async query(sql) {
+      if (String(sql).includes("FROM customers")) return [[{ id: 7, status: "draft", ever_activated_at: null }]];
+      return [[row]];
+    },
+    async execute(sql) { events.push(String(sql).startsWith("DELETE") ? "metadata-delete" : "mark-deleting"); return [{ affectedRows: 1 }]; }
+  };
+  const service = new CustomerAttachmentService({
+    database: { async withTransaction(work) { events.push("begin"); const value = await work(connection); events.push("commit"); return value; } },
+    time: { nowMs: () => 1 }, authorize: async () => ({ username: "manager", permissions: ["customer.view", "customer.mgmt"] }),
+    isReferenced: async () => false, audit: { async record() { events.push("audit"); } },
+    storage: { async delete() { events.push("file-delete"); } }
+  });
+
+  assert.deepEqual(await service.delete({ ...input(), attachmentId: 9, version: 2 }), { deleted: true });
+  assert.deepEqual(events, ["begin", "mark-deleting", "audit", "commit", "file-delete", "begin", "metadata-delete", "commit"]);
+});
+
+test("Customer attachment delete retry never removes metadata when physical deletion fails", async () => {
+  let metadataDeletes = 0;
+  const service = new CustomerAttachmentRecoveryService({
+    database: {
+      async query() { return [[{ id: 9, customer_id: 7, stored_name: "a".repeat(64), sensitivity: "general", status: "delete_failed", version: 3 }]]; },
+      async withTransaction(work) { return work({ async execute() { metadataDeletes += 1; return [{ affectedRows: 1 }]; } }); }
+    }, time: { nowMs: () => 1 }, storage: { async delete() { throw new Error("disk unavailable"); } }
+  });
+  assert.deepEqual(await service.retryDeletes(), { processed: 1, deleted: 0, failed: 1 });
+  assert.equal(metadataDeletes, 0);
+});

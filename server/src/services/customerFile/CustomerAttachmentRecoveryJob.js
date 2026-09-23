@@ -37,14 +37,16 @@ export class CustomerAttachmentRecoveryJob extends BaseService {
   async initialize() { this.scheduler.register(this); }
 
   async run(signal) {
-    if (!this.recovery || signal?.aborted) return { processed: 0, activated: 0, failed: 0, lastId: 0, stageProcessed: 0, stageCleaned: 0, stageFailed: 0, abandonedOperations: 0 };
+    if (!this.recovery || signal?.aborted) return { processed: 0, activated: 0, failed: 0, lastId: 0, stageProcessed: 0, stageCleaned: 0, stageFailed: 0, abandonedOperations: 0, deleteProcessed: 0, deleteCompleted: 0, deleteFailed: 0 };
     const cutoffMs = this.time.nowMs() - this.graceMs;
     const recovered = await this.recovery.recoverBatch({ batchSize: 100, staleBeforeMs: cutoffMs });
     const stages = await this.recovery.cleanupStaleStages({ cutoffMs, batchSize: 100 });
     const operations = await this.recovery.failAbandonedOperations({ cutoffMs, batchSize: 100 });
+    const deletes = await this.recovery.retryDeletes({ cutoffMs, batchSize: 100 });
     return {
       ...recovered, stageProcessed: stages.processed, stageCleaned: stages.cleaned,
-      stageFailed: stages.failed, abandonedOperations: operations.failed
+      stageFailed: stages.failed, abandonedOperations: operations.failed,
+      deleteProcessed: deletes.processed, deleteCompleted: deletes.deleted, deleteFailed: deletes.failed
     };
   }
 }
