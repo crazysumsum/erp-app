@@ -126,7 +126,10 @@ const ROOT_AUDIT_FIELDS = new Set([
   "totalCount",
   "validCount",
   "warningCount",
-  "invalidCount"
+  "invalidCount",
+  "successCount",
+  "failedCount",
+  "skippedCount"
 ]);
 
 function allowlistedSnapshot(value) {

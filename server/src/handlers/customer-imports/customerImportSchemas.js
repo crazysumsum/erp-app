@@ -14,6 +14,17 @@ export const CUSTOMER_IMPORT_UPLOAD_BODY = deepFreeze({
   type: "object", required: ["mode"], additionalProperties: false,
   properties: { mode: { type: "string", enum: ["create_only", "upsert"] } }
 });
+export const CUSTOMER_IMPORT_CONFIRM_BODY = deepFreeze({
+  type: "object", required: ["version", "activationMode"], additionalProperties: false,
+  properties: {
+    version: { type: "integer", minimum: 1 }, activationMode: { type: "string", enum: ["draft", "activate"] },
+    approverUserId: { type: ["integer", "null"], minimum: 1 }
+  }
+});
+export const CUSTOMER_IMPORT_CANCEL_BODY = deepFreeze({
+  type: "object", required: ["version"], additionalProperties: false,
+  properties: { version: { type: "integer", minimum: 1 } }
+});
 const JOB_STATUS = { type: "string", enum: ["uploaded", "validating", "ready", "ready_with_errors", "queued", "running", "completed", "completed_with_errors", "failed", "cancelled"] };
 const ROW_STATUS = { type: "string", enum: ["valid", "warning", "invalid", "applied", "failed", "skipped"] };
 export const CUSTOMER_IMPORT_LIST_QUERY = deepFreeze({

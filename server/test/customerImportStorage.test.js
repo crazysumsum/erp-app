@@ -43,6 +43,20 @@ test("Customer import storage enforces expected hashes and idempotent staged cle
   await storage.discardStaged(metadata.storedName);
 });
 
+test("Customer import storage streams and atomically finalizes a safe result", async (t) => {
+  const { config, storage } = await fixture(t);
+  const operationId = randomUUID();
+  async function* csv() { yield "rowNumber,status\r\n"; yield "1,applied\r\n"; }
+  const metadata = await storage.stageResult({ operationId, source: csv() });
+  assert.deepEqual(await storage.stageResult({ operationId, source: csv() }), metadata);
+  assert.equal(metadata.storedName, customerImportStoredName(operationId, "result"));
+  assert.equal(metadata.sizeBytes, 29);
+  await storage.finalizeResult(metadata);
+  await storage.finalizeResult(metadata);
+  assert.equal((await storage.readResult(metadata)).toString("utf8"), "rowNumber,status\r\n1,applied\r\n");
+  assert.equal((await lstat(path.join(config.root, "result", metadata.storedName))).mode & 0o777, 0o600);
+});
+
 test("Customer import storage rejects tamper, traversal names and symlink roots", async (t) => {
   const { parent, config, storage } = await fixture(t);
   const metadata = await storage.stageSource({ operationId: randomUUID(), content: Buffer.from("a,b\r\n1,2\r\n") });

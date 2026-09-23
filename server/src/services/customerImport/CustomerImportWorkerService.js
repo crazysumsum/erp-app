@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { BaseService } from "../../framework/services/BaseService.js";
 import { CustomerImportService } from "../../modules/customer/CustomerImportService.js";
+import { CustomerService } from "../../modules/customer/CustomerService.js";
 import { CustomerImportStorage } from "./CustomerImportStorage.js";
 import { precheckCustomerImportJob } from "./jobs/precheckCustomerImportJob.js";
 
@@ -13,6 +14,10 @@ export class CustomerImportWorkerService extends BaseService {
 
   static jobs = Object.freeze([{
     name: "customer.import.precheck", method: "runPrecheck", intervalMs: 5_000, timeoutMs: 120_000
+  }, {
+    name: "customer.import.execute", method: "runExecution", intervalMs: 5_000, timeoutMs: 600_000
+  }, {
+    name: "customer.import.fileRecovery", method: "runFileRecovery", intervalMs: 300_000, timeoutMs: 120_000
   }]);
 
   constructor({ config, services, options = {} } = {}) {
@@ -23,6 +28,7 @@ export class CustomerImportWorkerService extends BaseService {
     this.importService = this.config ? new CustomerImportService({
       database: this.database, time: this.time, storage: new CustomerImportStorage({ config: this.config })
     }) : null;
+    this.customerService = this.config ? new CustomerService({ database: this.database, time: this.time }) : null;
   }
 
   async initialize() { this.scheduler.register(this); }
@@ -34,5 +40,30 @@ export class CustomerImportWorkerService extends BaseService {
       leaseOwner: this.leaseOwner, leaseDurationMs: 150_000,
       maxRows: this.config.maxRows, maxBytes: this.config.maxFileBytes, rowBatchSize: this.config.rowBatchSize
     });
+  }
+
+  async runExecution(signal) {
+    if (!this.importService || signal?.aborted) return { claimed: false };
+    const leaseDurationMs = 660_000;
+    const job = await this.importService.claimForExecution({ leaseOwner: this.leaseOwner, leaseDurationMs });
+    if (!job) return { claimed: false };
+    let applied = 0; let failed = 0;
+    while (!signal?.aborted) {
+      const row = await this.importService.processNextRow({
+        jobId: job.id, leaseOwner: this.leaseOwner, leaseDurationMs,
+        applyRow: (connection, context) => this.customerService.applyImportRowInTransaction(connection, context)
+      });
+      if (!row) {
+        const result = await this.importService.finalizeExecution({ jobId: job.id, leaseOwner: this.leaseOwner });
+        return { claimed: true, jobId: job.id, applied, failed, status: result.status };
+      }
+      if (row.status === "applied") applied += 1; else if (row.status === "failed") failed += 1;
+    }
+    return { claimed: true, jobId: job.id, applied, failed, status: "running" };
+  }
+
+  async runFileRecovery(signal) {
+    if (!this.importService || signal?.aborted) return { recovered: 0, failed: 0 };
+    return this.importService.recoverFiles({ staleBefore: this.time.nowMs() - 300_000, limit: 10 });
   }
 }

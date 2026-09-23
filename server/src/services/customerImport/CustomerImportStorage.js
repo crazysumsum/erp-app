@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { chmod, lstat, mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, open, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 function framed(parts) {
@@ -74,25 +74,34 @@ export class CustomerImportStorage {
   }
 
   async finalizeSource(metadata) {
+    return this.#finalize("source", metadata);
+  }
+
+  async #finalize(kind, metadata) {
     await this.#ensureRoot();
-    const target = this.#path("source", metadata.storedName);
+    const target = this.#path(kind, metadata.storedName);
     try {
       await regularFile(target);
       const existing = await readFile(target);
-      if (!createHash("sha256").update(existing).digest().equals(Buffer.from(metadata.sha256))) throw new Error("Customer import source integrity check failed");
+      if (!createHash("sha256").update(existing).digest().equals(Buffer.from(metadata.sha256))) throw new Error(`Customer import ${kind} integrity check failed`);
+      await unlink(this.#staging(metadata.storedName)).catch((stagingError) => { if (stagingError.code !== "ENOENT") throw stagingError; });
       return;
     } catch (error) { if (error.code !== "ENOENT") throw error; }
     await rename(this.#staging(metadata.storedName), target);
     await chmod(target, 0o600);
-    await this.readSource(metadata);
+    await this.#read(kind, metadata);
   }
 
   async readSource(metadata) {
+    return this.#read("source", metadata);
+  }
+
+  async #read(kind, metadata) {
     await this.#ensureRoot();
-    const target = this.#path("source", metadata.storedName);
+    const target = this.#path(kind, metadata.storedName);
     await regularFile(target);
     const content = await readFile(target);
-    if (!createHash("sha256").update(content).digest().equals(Buffer.from(metadata.sha256))) throw new Error("Customer import source integrity check failed");
+    if (!createHash("sha256").update(content).digest().equals(Buffer.from(metadata.sha256))) throw new Error(`Customer import ${kind} integrity check failed`);
     return content;
   }
 
@@ -114,4 +123,47 @@ export class CustomerImportStorage {
     try { await regularFile(this.#staging(storedName)); await unlink(this.#staging(storedName)); }
     catch (error) { if (error.code !== "ENOENT") throw error; }
   }
+
+  async stageResult({ operationId, source }) {
+    await this.#ensureRoot();
+    const storedName = customerImportStoredName(operationId, "result");
+    const staged = this.#staging(storedName);
+    let handle;
+    try {
+      handle = await open(staged, "wx", 0o600);
+    } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+      const existing = await readFile(staged);
+      const expected = createHash("sha256"); let sizeBytes = 0;
+      for await (const value of source) {
+        const chunk = Buffer.isBuffer(value) ? value : Buffer.from(String(value), "utf8");
+        sizeBytes += chunk.length; expected.update(chunk);
+        if (sizeBytes > this.config.maxFileBytes) throw new Error("Customer import result size is invalid");
+      }
+      const sha256 = createHash("sha256").update(existing).digest();
+      if (sizeBytes !== existing.length || !expected.digest().equals(sha256)) throw new Error("Customer import staged result integrity check failed");
+      return { storedName, sha256, sizeBytes };
+    }
+    const hash = createHash("sha256");
+    let sizeBytes = 0;
+    try {
+      for await (const value of source) {
+        const chunk = Buffer.isBuffer(value) ? value : Buffer.from(String(value), "utf8");
+        sizeBytes += chunk.length;
+        if (sizeBytes > this.config.maxFileBytes) throw new Error("Customer import result size is invalid");
+        hash.update(chunk);
+        await handle.write(chunk);
+      }
+      await handle.close(); handle = null;
+      return { storedName, sha256: hash.digest(), sizeBytes };
+    } catch (error) {
+      if (handle) await handle.close().catch(() => {});
+      await unlink(staged).catch(() => {});
+      throw error;
+    }
+  }
+
+  async finalizeResult(metadata) { return this.#finalize("result", metadata); }
+
+  async readResult(metadata) { return this.#read("result", metadata); }
 }
