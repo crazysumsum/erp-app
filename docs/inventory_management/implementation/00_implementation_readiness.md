@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — `PHASE-001 / TASK-001` through `TASK-003` are complete; `TASK-004` is active on the approved exact MySQL Server 26.7.0 baseline. No migration has been executed.
+`IMPLEMENTING` — `PHASE-001 / TASK-001` through `TASK-004` are complete; `TASK-005` is next on the approved exact MySQL Server 26.7.0 baseline. No migration has been executed.
 
 ## Baseline
 
@@ -55,6 +55,13 @@ This preserves the approved FK order. Existing migration filenames and contents 
 - Added frozen status, command and Audit allowlists plus stable server/client error mappings.
 - Focused server checks passed 16/16, client checks passed 1/1, and the repository ESLint check passed. Migration behaviour was tested with a fake connection only; no database migration was executed.
 
+## TASK-004 developer verification
+
+- Extended the Item-owned lookup service with transaction-bound Inventory profile and UOM resolution methods; neither method opens or uses the service's database connection.
+- The Inventory profile is an explicit whitelist containing lifecycle eligibility, tracking policy, shelf/minimum-life data and Base UOM. Serial remains visible so Inventory can reject it fail closed.
+- UOM resolution accepts only an active SKU UOM with an integer factor from 1 to 1,000,000 and requires Base UOM factor 1.
+- Item lookup checks passed 33/33 and ESLint passed. The existing real-MySQL suite loaded successfully but its 11 cases remained skipped because migration execution has not been authorized.
+
 ## Boundaries
 
 - No migration execution, production access, deployment, CI merge, Technical Acceptance or UAT has occurred.
@@ -62,4 +69,4 @@ This preserves the approved FK order. Existing migration filenames and contents 
 
 ## Next safe action
 
-Verify and complete TASK-004's ItemLookup transaction contract without executing migrations.
+Resolve the TASK-005 physical migration dependency before writing Domain Operation and Audit DDL; do not execute migrations.
