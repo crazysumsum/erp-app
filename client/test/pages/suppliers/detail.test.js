@@ -27,12 +27,12 @@ const DETAIL = {
   warnings: [{ field: "addresses", code: "ORDERING_ADDRESS_MISSING", message: "尚未設定採購用途地址" }]
 };
 
-async function mountPage({ permissions = ["supplier.view"], detail = DETAIL } = {}) {
+async function mountPage({ permissions = ["supplier.view"], detail = DETAIL, path = "/suppliers/7" } = {}) {
   if (detail instanceof Error) supplierService.getById.mockRejectedValue(detail);
   else supplierService.getById.mockResolvedValue(detail);
   supplierService.completeness.mockResolvedValue({ supplierId: 7, issues: [], warnings: detail?.warnings ?? [] });
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: SupplierDetailPage }] });
-  await router.push("/suppliers/7"); await router.isReady();
+  await router.push(path); await router.isReady();
   useSessionStore().user = { id: 1, permissions, roles: [] };
   const wrapper = mount({ render: () => h(RouterView) }, { global: { plugins: [Quasar, router] }, attachTo: document.body });
   await flushPromises();
@@ -83,6 +83,17 @@ describe("pages/suppliers/SupplierDetailPage.vue", () => {
     const { body } = await mountPage({ detail: missing });
     expect(body.text()).toContain("找不到這個供應商");
     expect(body.text()).toContain("返回供應商列表");
+  });
+
+  // `/suppliers/:id` 乜都收：打錯網址、跟住條舊 link 都會行到呢度。id 唔係數字嘅話
+  // 唔可以淨係吊喺骨架度——冇資料、又冇錯誤，用家連撳咩都唔知。
+  it("shows a not-found error instead of an endless skeleton for a non-numeric id", async () => {
+    const { body } = await mountPage({ path: "/suppliers/abc" });
+
+    expect(body.find("[aria-label='載入供應商詳情']").exists()).toBe(false);
+    expect(body.find("[role='alert']").exists()).toBe(true);
+    expect(body.text()).toContain("返回供應商列表");
+    expect(supplierService.getById).not.toHaveBeenCalled();
   });
 
   // `/suppliers/:id` 是一條 route record：換 param 時 Vue Router 重用同一個 component

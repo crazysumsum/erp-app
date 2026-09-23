@@ -117,6 +117,14 @@ async function load() {
   const superseded = () => id !== Number(route.params.id);
   loading.value = true;
   error.value = null;
+  // `:id` 收得任何字串。非數字 id 一 coerce 就變 NaN，而 `NaN !== NaN` 恆真——
+  // `superseded()` 會次次答「已經過時」，連 `finally` 都收唔到工，頁面就永遠吊喺骨架。
+  // 打錯網址／舊 link 本來就係「搵唔到」，喺呢度截住，唔好餵 NaN 落去。
+  if (!Number.isInteger(id) || id <= 0) {
+    error.value = Object.assign(new Error("找不到這個供應商"), { code: "SUPPLIER_NOT_FOUND" });
+    loading.value = false;
+    return;
+  }
   try {
     const [detail, status] = await Promise.all([
       supplierService.getById(id),
