@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 213,
+  "revision": 216,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "61c9079ddf13e94196406a380c25ef6f1b26b7d9",
-    "source_fingerprint": "c929498bf22c260e3d4e72e8110dac9656bbc9ac8d0befa9e09f4021b2c42b0e",
+    "code_commit": "c83ae86f0508ec3e12f9f222e65c89b6276a190f",
+    "source_fingerprint": "519ba469a034d538474b1955b194d284d21666dbd1da67b88cc453e54bbdb38e",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
     "default_commit": "38e1542eed8ac6fe98ce307868390b6e98181788",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -2964,6 +2964,17 @@
       "source_ref": "REV-048 returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 2 Low and 5 Info, and confirmed REV-047's High is genuinely closed by reproducing the whole mutation table rather than reading it. Two of my own claims were settled against me and I verified both before accepting them. First, M-2b: I had recorded thirteen of thirteen killed and explicitly overridden REV-047 on that entry. I had measured a different mutant - I gutted forgetFormSecrets's body, they dropped the call to it from forgetEverything - and theirs survives 597/597. It is twelve of thirteen. Investigating further, the two form secrets have three mutually redundant clearing mechanisms (that call, the dialog's @hide, and openCreate's reset); any two suffice, so dropping one alone is an equivalent mutant, while dropping all three turns the test red. So the property is pinned and the mechanism is not, which is worth stating precisely rather than either claiming a kill or calling it a hole. My first attempted fix for this - reopen the dialog and assert the fields - also failed to discriminate, because openCreate resets them; I found that by running it rather than by assuming it worked. Second, the comment I wrote claiming the panel's onBeforeRouteUpdate is defence-in-depth because unmount already cleared: backwards. I instrumented the guard and drove the real page - it fires once, in production, before the route is confirmed and therefore before the teardown. It is the primary clear and the unmount is the redundant layer. That is the fourth time in this task I have written an unexecuted mechanism claim as a statement of fact. The blocking Medium was process, not code: origin/main had moved 24 commits and was never merged, baseline.default_commit pointed at a commit this branch did not contain, and among those commits is a new CI job that makes this task's own supplier-bank.spec.js a per-PR blocking gate, plus the os.tmpdir() fix to the Playwright config that exists because the hardcoded /private/tmp EACCESes on Linux - so without the merge the new job would have failed on this branch's own spec. Merged clean: 634/634 unit, 23/23 browser via the same npm script CI runs, lint clean. Also done, after being asked twice by two reviewers and silently skipped both times: revealGeneration is declared before the function that reads it (a TDZ hazard one { immediate: true } away from throwing out of a security control at mount), and a stale comment naming advanceTimersToNextTimer now names what the code does.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-048",
       "observed_at": "2026-09-22T16:44:47+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-049: the resolution I offered last round was a rationalisation, and the assertion I called impossible took six lines",
+      "code_commit": "c83ae86f0508ec3e12f9f222e65c89b6276a190f",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "519ba469a034d538474b1955b194d284d21666dbd1da67b88cc453e54bbdb38e",
+      "status": "PASS",
+      "source_ref": "REV-049 returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 3 Low and 6 Info, and confirmed all four REV-048 items including pulling the CI browser job's log to show it ran this task's three supplier-bank tests by name on ubuntu-latest. The Medium is mine and it is three errors stacked. First, I said the mechanism-level assertion could not be written and settled for 'the property is pinned, the mechanism is not'; the reviewer wrote it in six lines by reading component state through the test wrapper's vm. I had assumed script-setup internals were unreachable from a test and never tried. Second, my argument for that settlement was itself wrong: I claimed dropping all three clearing mechanisms turned the test red and that this proved the property was covered, but it went red because my mutation also stopped openCreate from resetting - so I had pinned the wrong mechanism. Only two mechanisms actually cover that path, and dropping just those two leaves 634 tests green. Third, the comment I wrote into the test saying openCreate does not clear is simply false; its Object.assign sets accountNumber and password to empty, and three other places in the same commit say so. All three secrets - the create form's account number and password, the reveal dialog's password and the confirm dialog's password - are now asserted against component state, which is the only observation a closed dialog or a reopened one cannot satisfy. Two findings nobody had raised in nine rounds: both step-up passwords survived a session expiry in component state, where the panel is not unmounted; and holdPlaintext's leading forgetPlaintext was unasserted because revealing a second row was never tested, leaving the first row's interval orphaned. My first attempt at that second one also failed to discriminate - asserting the countdown value cannot see an orphan, because two intervals each compute from their own deadline and the later writer wins within a tick - so it now spies the clearInterval call. Four mutants, four killed. 636/636 client vitest, 23/23 browser via the CI script, lint clean. One process note worth keeping: I again read a pipeline's exit status as 'cmd | tail; echo $?', which reports tail's status, and briefly recorded lint as clean while it had a no-unused-vars error. Same shell trap, twice in this session.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-049",
+      "observed_at": "2026-09-23T09:06:12+08:00"
     }
   ],
   "pending_decisions": [
@@ -3971,7 +3982,11 @@
     "evidence/20260922T084426-667d216d5432/run.json",
     "evidence/20260922T084428-c5dbb6236b32/run.json",
     "evidence/20260922T084432-32fe69b6728f/run.json",
-    "evidence/20260922T084435-1cad5f4d183a/run.json"
+    "evidence/20260922T084435-1cad5f4d183a/run.json",
+    "evidence/20260923T010540-2a69af96b046/run.json",
+    "evidence/20260923T010542-61deceb1e2ab/run.json",
+    "evidence/20260923T010546-81b50bc1702a/run.json",
+    "evidence/20260923T010549-b472da6c416d/run.json"
   ],
   "defects": [
     {
