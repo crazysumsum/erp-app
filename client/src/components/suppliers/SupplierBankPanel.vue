@@ -82,14 +82,17 @@ function forgetPlaintext() {
  * 但實情係route change 同 session 失效兩個都冇掂過佢哋。）
  */
 /**
- * 留意：寫入 form 嗰兩個祕密有**三個**互相冗餘嘅清除機制 —— 下面呢個 call、
- * dialog 個 `@hide="forgetFormSecrets"`、同埋 `openCreate()` 每次開嗰陣重設。
- * 任何**兩個**都夠，所以單獨拆走其中一個係一個 equivalent mutant，測試分辨唔到
- * （REV-047 同 REV-048 都揾到呢點，而我第一次數錯咗，當咗佢被殺）。
+ * 下面個 `forgetFormSecrets()` 係 route change 同 session 失效嗰陣**唯一一個同步**
+ * 清除 —— 佢唔係冗餘。
  *
- * 三個一齊拆走，測試就會紅 —— 即係「換咗 Supplier 之後 form state 冇咗啲祕密」
- * 呢個**性質**係釘住咗嘅，冇釘住嘅係邊一個機制做嘅。三個都保留：安全控制唔會
- * 因為「而家有另外兩個」就簡化走。
+ * 之前呢度（同實作報告三處）寫住佢同 dialog 個 `@hide` 係兩個互相覆蓋嘅機制，
+ * 所以單獨拆一個捉唔到。**實測係相反**：單獨拆呢個 call → **紅**；單獨拆
+ * `@hide` → 綠。原因係 `@hide` 要等 Quasar 個 leave transition 行完先至觸發
+ * （約 400ms），而 `forgetEverything()` 一設 `open = false` 就返咗，中間嗰段時間
+ * 兩個祕密仲喺 component state 度。（REV-050 F-L2）
+ *
+ * `openCreate()` 每次開嗰陣亦都會重設 —— 但佢只覆蓋「下次再開」，唔覆蓋「而家
+ * 即刻唔記得」，所以佢唔係呢條路上面嘅防線。
  */
 function forgetEverything() {
   forgetPlaintext();
@@ -153,7 +156,24 @@ onBeforeRouteLeave(() => { forgetEverything(); });
 onBeforeRouteUpdate(() => { forgetEverything(); });
 // Session 失效（token 過期、被撤銷、登出）都要即刻清 —— 一個已經唔再係佢嘅畫面
 // 唔應該仲留住個帳號喺度。
-watch(() => session.isAuthenticated, (authenticated) => { if (!authenticated) forgetEverything(); });
+/**
+ * 睇**權限**，唔淨係睇「仲有冇登入」。
+ *
+ * `session.refresh()`（由 session watchdog 自動行）係 `this.user = result.user` ——
+ * 換一個新 object，所以 `isAuthenticated` 由頭到尾都係 `true`，一個淨係睇佢嘅
+ * watch 永遠唔會行。即係一次撤走 `supplier.bank.view` 嘅 refresh 之後，明文仲會
+ * 留喺畫面上，倒數照行。（REV-050 F-L3）
+ *
+ * `canReveal` 同 `canManage` 係 computed，會跟住新嗰個 permissions 陣列變，所以
+ * 呢度一齊睇埋。登出／token 失效嗰條路照樣覆蓋 —— `can()` 對一個未認證嘅 session
+ * 一律回 false。
+ */
+watch(() => [session.isAuthenticated, canReveal.value, canManage.value],
+  ([authenticated, mayReveal, mayManage]) => {
+    if (!authenticated || !mayReveal) forgetPlaintext();
+    if (!authenticated || !mayManage) forgetFormSecrets();
+    if (!authenticated) forgetEverything();
+  });
 
 async function load() {
   loading.value = true;

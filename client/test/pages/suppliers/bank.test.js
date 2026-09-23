@@ -357,6 +357,29 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   });
 
   /**
+   * REV-050 F-L3：`session.refresh()` 係 `this.user = result.user` —— 換一個新
+   * object，所以 `isAuthenticated` 一路都係 true。一個淨係睇佢嘅 watch 永遠唔會
+   * 行，即係一次撤走 `supplier.bank.view` 嘅 refresh 之後，明文仲會留喺畫面。
+   *
+   * 呢個係十輪以嚟冇人接過嘅第六個「資格結束」觸發點。
+   */
+  it("forgets the plaintext when a session refresh revokes the entitlement", async () => {
+    supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+    const { wrapper, body } = await mountPanel({ permissions: VIEW_BANK });
+    const panelVm = wrapper.findComponent(SupplierBankPanel).vm;
+    await revealRow(body);
+    expect(body.text()).toContain(SECRET);
+
+    // 同 refresh() 做嘅嘢一樣：換一個新 user object，仲係登入緊，但冇咗 bank.view。
+    useSessionStore().user = { id: 1, permissions: ["supplier.view"], roles: [] };
+    await flushPromises();
+    expect(useSessionStore().isAuthenticated, "still signed in — that is the point").toBe(true);
+    expect(panelVm.revealed.accountNumber,
+      "losing bank.view must forget the plaintext, not merely hide the button").toBe("");
+    expect(document.body.innerHTML).not.toContain(SECRET);
+  });
+
+  /**
    * REV-049 Z16／Z17：兩個 step-up dialog 各自嗰個密碼有同一個窿 —— 拆走
    * `@hide` 同 `forgetEverything()` 入面嗰行，634 條照綠，而密碼喺 session 失效
    * 之後仲留喺 component state 度（嗰陣個 panel 冇 unmount）。REV-046 個 X5 淨係
@@ -398,21 +421,31 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     await revealRow(body);
     expect(panelVm.revealed.id).toBe(41);
 
-    // 斷言第一行嗰個 handle 俾人收咗。斷言 `revealed.remaining` 係捉唔到嘅：
-    // 兩個 interval 各自由自己個 deadline 計，同一個 tick 入面後寫嗰個贏，所以
-    // 個數字睇落可以完全正常，而嗰個孤兒 interval 照樣存在。
-    const cleared = vi.spyOn(globalThis, "clearInterval");
+    // 第一行展開之後行 5 秒，令兩個 deadline 明顯唔同。
+    vi.advanceTimersByTime(5000);
+    await flushPromises();
     await body.find('[aria-label="查看完整帳號 Other Bank"]').trigger("click");
     await flushPromises();
     await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
     await field(body, "查看原因").find("textarea").setValue("核對第二個帳號");
     await byText(body, "確認查看").trigger("click");
     await flushPromises();
-    expect(cleared, "revealing a second row must clear the first row's countdown").toHaveBeenCalled();
-    cleared.mockRestore();
+
 
     expect(panelVm.revealed.id, "the second row replaces the first").toBe(42);
     expect(document.body.innerHTML, "the first row's account must be gone").not.toContain("ACCOUNT-41");
+
+    // 第一行嗰個 deadline 而家到期。如果佢個 interval 仲係孤兒咁行緊，佢會叫
+    // `forgetPlaintext()`，而第二行嘅明文就會**早 5 秒**消失。
+    //
+    // 斷言 `clearInterval` 俾人叫過係唔夠嘅（REV-050 F-L1）：一個「照樣叫
+    // clearInterval，但叫錯 handle」嘅實作一樣過關，而個孤兒照樣行。呢度改成睇
+    // 行為 —— 第二行夠唔夠命行完佢自己嗰 30 秒。
+    vi.advanceTimersByTime(26_000);
+    await flushPromises();
+    expect(panelVm.revealed.id,
+      "the first row's orphaned countdown must not cut the second row short").toBe(42);
+    expect(document.body.innerHTML).toContain("ACCOUNT-42");
   });
 
   /**

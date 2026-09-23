@@ -357,8 +357,18 @@ REV-047 個 High 真係收咗（佢重跑咗成張 mutation 表：`H-1` 而家�
 我掏空 `forgetFormSecrets` 個 body，佢拆嘅係 `forgetEverything()` 入面嗰個 **call**。
 我自己重做佢個版本：**597/597 全綠**。所以係**十二個殺到，唔係十三個**。
 
-再查落去：嗰兩個祕密有**三個互相冗餘**嘅清除機制（呢個 call、dialog 個 `@hide`、
-同 `openCreate()` 重設）。我當時嘅結論係「**性質**釘住咗，**機制**冇」。
+再查落去：嗰兩個祕密有**三個**清除機制（呢個 call、dialog 個 `@hide`、同
+`openCreate()` 重設），而我當時叫佢哋「互相冗餘」，結論係「**性質**釘住咗，
+**機制**冇」。
+
+> **再更正（REV-050 F-L2）。** 「互相冗餘」本身都係錯 —— 而且錯嘅方向令我低估咗
+> 自己個 code。實測：單獨拆嗰個 **call** → **紅**；單獨拆 `@hide` → **綠**。
+> 原因係 `@hide` 要等 Quasar 個 leave transition 行完先觸發（約 400ms），而
+> `forgetEverything()` 一設 `open = false` 就返咗 —— 中間嗰段時間，兩個祕密仲喺
+> component state 度。所以 route change 同 session 失效嗰陣，**個 call 係唯一一個
+> 同步清除**，唔係三個之一。`openCreate()` 只覆蓋「下次再開」，唔係呢條路上面嘅防線。
+>
+> 同一句「兩個機制覆蓋呢條路」我喺三份文件度寫過。全部更正咗。
 
 > **更正（REV-049）。** 嗰個結論係一個**合理化**。REV-049 用六行就寫到嗰個機制層
 > 嘅斷言 —— 直接讀 component state（`wrapper.findComponent(...).vm.form`）。我之前
@@ -454,3 +464,54 @@ Z   holdPlaintext leading forget    KILLED（第一次嘅寫法生還，見上�
 （順帶：我今次又用咗 `cmd | tail; echo $?` 去睇 lint 結果 —— 嗰個 `$?` 係 `tail` 嘅，
 唔係 lint 嘅，所以我一度報咗「lint 乾淨」而其實有一個 `no-unused-vars` error。
 同一個 shell 陷阱我喺呢個 session 入面踩過兩次。已經修咗，而且今次係直接睇輸出。）
+
+## 14. REV-050 — APPROVED
+
+REV-050 判 **APPROVED**：0 Critical、0 High、0 Medium、4 Low、5 Info。**T35 第一條
+APPROVED**，亦都係佢講嘅「四輪以嚟 product code 冇缺陷」同「作者嘅記錄四輪以嚟第一次
+準確」。佢重現咗 §13 四個 mutation，四個都喺我講嗰條斷言度死。
+
+批准條件係 `git merge origin/main` 再跑一次 CI —— 流程，唔係內容。
+
+### 四條 Low，兩條係我自己
+
+**F-L1 —— 我個 `clearInterval` spy 釘錯咗嘢。** 佢的確殺到 `Z10`（孤兒，冇叫
+`clearInterval`），亦都唔係靠其他原因過關。但 **`Z10b`（照樣叫 `clearInterval`，
+不過叫錯 handle）就生還**。我自己重現咗：生還。
+
+而我上一輪寫嘅理由（「睇 `revealed.remaining` 捉唔到」）本身係真嘅，但 REV-049
+**根本冇提議過**嗰個斷言 —— 佢提議嘅係一條**行為**探針：展開 A、行 5 秒、展開 B、
+再行 26 秒、斷言 B 仲喺度。嗰條四行，**兩個變體都殺到**。又一次：我由一個「reviewer
+冇提議過」嘅變體，推論到「冇嘢做得到」。
+
+改咗用行為探針。實測 `Z10` 同 `Z10b` 而家都 KILLED。
+
+**F-L2 —— 我個註解而家係可量度咁錯，而且方向係低估咗自己個 code。** 見上面 §12
+嘅再更正：單獨拆個 call 會紅，單獨拆 `@hide` 會綠，因為 `@hide` 要等 Quasar 個
+leave transition（約 400ms）。即係嗰個 call 係**唯一嘅同步清除**。我喺三份文件
+講過「兩個機制覆蓋呢條路」，三處全部更正。
+
+### F-L3 —— 十輪以嚟冇人接過嘅第六個觸發點
+
+`session.refresh()`（由 session watchdog 自動行）係 `this.user = result.user` ——
+**換一個新 object**，所以 `isAuthenticated` 一路都係 `true`，而我個 watch 永遠唔會行。
+REV-050 量到：一次撤走 `supplier.bank.*` 嘅 refresh 之後，**明文仲喺畫面、倒數照行**，
+開住嘅寫入 dialog 仲揸住帳號同 step-up 密碼。
+
+範圍：同一個使用者、冇提權、30 秒封頂，而且伺服器每個請求都會重新驗
+（`SupplierBankService.authorize` 對住 DB 重讀）。所以係 UI 同 client 記憶體陳舊，
+唔係授權繞過。
+
+呢度**收窄咗個 watch 去睇權限而唔係淨係睇登入狀態** —— 一行，而佢守嘅係本模組最敏感
+嗰個表面。驗證過會紅（改返去只睇 `isAuthenticated` → 測試失敗）。但 REV-050 講得啱：
+**冇一個頁面**喺 refresh 之後重新評估授權，所以個通用修法喺框架層。開咗 task。
+
+### F-L4 —— `main` 又郁咗
+
+`1ba8fb6`（PR #130，dev server `fs.allow`），只掂 `client/vite.config.js`。已經 merge，
+冇衝突。
+
+### 驗證
+
+**637/637** client vitest、**23/23** 瀏覽器、lint exit 0 —— 今次三樣都係**讀個
+process 自己個 exit status**，唔係讀 pipeline 尾嗰個。
