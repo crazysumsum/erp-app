@@ -2,7 +2,7 @@
 
 ## Review result
 
-`APPROVED` as a planning baseline by human independent reviewer Sam on 2026-09-14. The accountable owner, `DEC-014`–`DEC-026`, MySQL 8.0 baseline and P0→P5 order are confirmed. This review explicitly does not authorize entry to `IMPLEMENT`, test execution, UAT, Go-Live or release.
+`APPROVED` as the final 0.4 planning baseline by human independent reviewer Sam on 2026-09-23. The exact MySQL Server 26.7.0 compatibility baseline and updated P0→P5 plan hashes are approved. This review does not itself resume `IMPLEMENT`, execute tests, accept UAT or authorize release.
 
 ## Reviewer provenance
 
@@ -12,8 +12,9 @@
 | Independent `review_method` | `HUMAN` |
 | `author` | Existing Inventory design authorship is not authenticated in repository metadata |
 | `reviewer` | Sam, named by the user in the active Codex task |
-| `reviewed_baseline` | `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273` |
-| Independent review | Completed and approved on 2026-09-14 |
+| Historical 0.3 `reviewed_baseline` | `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273` |
+| Independent review | 0.3 approved on 2026-09-14; final 0.4 hashes approved by Sam on 2026-09-23 |
+| Final 0.4 design baseline | `f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41` |
 | Product implementation / tests | Not performed |
 
 ## Review dimensions
@@ -35,7 +36,8 @@
 | DR-05 | HIGH | RESOLVED | Integration decisions | Serial, low-life override, Returns status, Adjustment reasons and cutover constraints were open. | Resolved by `HD-004` / `DEC-021`–`DEC-026` and propagated to requirements, design, plan and tests. |
 | DR-06 | HIGH | RESOLVED | Review provenance | A separate human reviewer was missing. | Sam identified himself as the independent human reviewer and approved the resulting design/plan baseline. |
 | DR-07 | HIGH | ACCEPTED_PLANNED | Browser acceptance | No Inventory UI or Playwright Inventory suite exists. | Expected before implementation; Playwright remains mandatory for later UI Phase verification and no PASS is claimed now. |
+| DR-08 | HIGH | ACCEPTED_P0 | Compatibility baseline change | `HD-006` supersedes the MySQL 8.0 choice with exact MySQL Server 26.7.0; Sam approved the updated baseline while `.github/workflows/ci.yml` still declares `mysql:8.0`. | P0 must pin CI and local integration runtime to 26.7.0 and verify actual server version before migration work. |
 
 ## Decision
 
-The aligned design and P0→P5 plan are approved planning baselines with zero open CRITICAL/HIGH review findings. All implementation gaps remain unstarted Tasks, all tests remain `NOT_RUN`, and the user has explicitly deferred `IMPLEMENT` authorization.
+The final 0.4 design and P0→P5 plan are approved planning baselines with zero open CRITICAL/HIGH review findings. `DR-08` is an accepted P0 prerequisite, all Tasks remain `PENDING`, all tests remain `NOT_RUN`, and no product or CI work starts until Sam separately resumes `IMPLEMENT`.

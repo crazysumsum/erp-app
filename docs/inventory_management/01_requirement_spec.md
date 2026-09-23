@@ -5,9 +5,9 @@
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Inventory Management 業務需求書 |
-| 文件版本 | 0.3 Approved Planning Baseline |
-| 文件日期 | 2026-09-07 |
-| 文件狀態 | Product Owner／獨立評審人Sam已批准目前需求、設計及P0～P5計畫基線；尚未授權進入IMPLEMENT |
+| 文件版本 | 0.4 Approved Planning Baseline |
+| 文件日期 | 2026-09-23 |
+| 文件狀態 | Product Owner／獨立評審人Sam已批准MySQL Server 26.7.0需求、設計及P0～P5計畫基線；是否恢復IMPLEMENT仍待另行確認 |
 | 適用系統 | ERP App |
 | 適用組織 | 單一公司；中小企業 |
 | 營運規模 | 5個以內倉庫；不設硬性系統上限 |
@@ -48,6 +48,7 @@ Inventory Management 將成為所有實際庫存數量及位置的唯一事實�
 
 | 版本 | 日期 | 摘要 |
 | --- | --- | --- |
+| 0.4 Approved Planning Baseline | 2026-09-23 | Sam批准以MySQL Server 26.7.0取代MySQL 8.0的需求、設計及P0～P5計畫基線；CI對齊保留為P0工作。 |
 | 0.3 Approved Planning Baseline | 2026-09-14 | Sam完成獨立人工評審並批准設計／計畫；確認Serial、低效期Override、Returns、Adjustment、Data Freeze、Go-Live責任及DB帳號分離決策；明確暫不進入IMPLEMENT。 |
 | 0.2 Draft | 2026-09-14 | Harness 2.0原位對齊；Product Owner批准DEC-014～019，技術基線另採MySQL 8.0。 |
 | 0.1 Draft | 2026-09-07 | 根據訪談建立面向中小企業、以Warehouse／Bin／SKU／Lot為核心的精簡庫存需求。 |
@@ -892,7 +893,7 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 
 ### 18.1 決策紀錄及來源
 
-`DEC-001～012`及`DEC-020`來自原需求訪談的明確確認；`DEC-013`沿用已核准的Item Management數量政策；`DEC-014～019`原為保持簡單與資料一致而提出的BA基線，已由Product Owner（Sam）於2026-09-14逐項批准。`DEC-021～026`來自同日的逐題解釋與人工確認。Sam其後以獨立人工評審人身分批准目前設計及P0～P5計畫基線，但明確暫不授權進入`IMPLEMENT`。
+`DEC-001～012`及`DEC-020`來自原需求訪談的明確確認；`DEC-013`沿用已核准的Item Management數量政策；`DEC-014～019`原為保持簡單與資料一致而提出的BA基線，已由Product Owner（Sam）於2026-09-14逐項批准。`DEC-021～026`來自同日的逐題解釋與人工確認。`DEC-027`來自Sam於2026-09-23在進入P0前作出的資料庫基線變更，並已納入同日重新批准的0.4需求、設計及P0～P5計畫基線；恢復`IMPLEMENT`仍須另行確認。
 
 | 編號 | 決策 | 需求影響 |
 | --- | --- | --- |
@@ -922,6 +923,7 @@ Draft ──> Counting ──> Ready to Post ──> Posted
 | DEC-024 | Adjustment reason固定為`COUNT_GAIN, COUNT_LOSS, DAMAGE, EXPIRY, DATA_CORRECTION, TRANSFER_VARIANCE, OTHER`。 | `OTHER`必須附更詳細說明；分類不取代`inventory.adjust`、強認證及Audit。 |
 | DEC-025 | Warehouse／Operations Lead負責舊系統對賬，Sam負責最終Go-Live簽核；切換採明確Data Freeze，凍結後舊系統不得再寫庫存。 | P5填寫實際凍結時間、Opening資料並完成對賬後，才可執行不可逆Go-Live。 |
 | DEC-026 | Production application DB account與migration account分離，Go-Live前必須完成backup／restore rehearsal。 | App帳號維持最小日常DML權限，不得執行schema migration；migration帳號只在受控部署使用。 |
+| DEC-027 | Production、CI及開發整合測試的資料庫相容性基線固定為MySQL Server 26.7.0，取代HD-003所記錄的MySQL 8.0技術選擇；不得靜默升級至其他patch。 | DDL、constraint、locking及migration須以26.7.0驗證；CI現有`mysql:8.0`服務須在P0改為可重現的26.7.0並通過相容性驗證，任何版本變更均須重新評估。 |
 
 ### 18.2 已確認實作與上線約束
 

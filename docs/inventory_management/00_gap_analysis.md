@@ -80,6 +80,8 @@
 - Human clarification required: YES
 - Status: RESOLVED by `HD-003`; canonical documents now use MySQL 8.0.
 
+Historical note: `HD-006` superseded this compatibility decision on 2026-09-23; see `GAP-DES-006`.
+
 ### GAP-DES-003 — Inventory product implementation is absent
 - Area: DESIGN
 - Severity: HIGH
@@ -129,3 +131,13 @@
 - Proposed action: create the approved Playwright suite during implementation and execute it only in `TEST_AND_VERIFY`.
 - Human clarification required: NO
 - Status: OPEN.
+
+### GAP-DES-006 — MySQL Server 26.7.0 baseline is not yet reflected in CI
+- Area: DESIGN
+- Severity: HIGH
+- Type: COMPATIBILITY_GAP
+- Evidence: Sam selected exact MySQL Server 26.7.0 and independently approved the final 0.4 design/plan hashes on 2026-09-23, while `.github/workflows/ci.yml` still declares `mysql:8.0`.
+- Impact: current CI cannot establish compatibility with the selected production baseline; migration, constraint and locking behavior would otherwise be tested against the wrong server line.
+- Proposed action: in P0 pin CI and the isolated local integration runtime to exact 26.7.0 and assert the actual server version before executing migration tests.
+- Human clarification required: NO — `HD-006` selected the version and Sam approved the baseline-bound 0.4 design/plan on 2026-09-23.
+- Status: OPEN implementation gap; accepted for P0 and still blocks migration verification until CI/runtime alignment is proven.

@@ -67,9 +67,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "approved-planning-v3",
+        "version": "approved-planning-v4",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "sha256": "f3adeee0f9f46b22f457fe1e962f33e44299757ddb2146ea3c790ddbe4c8a74a",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
