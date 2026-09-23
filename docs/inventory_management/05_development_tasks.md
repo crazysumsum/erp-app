@@ -4,14 +4,14 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 0.3 Approved Planning Baseline |
-| 文件日期 | 2026-09-08 |
-| Requirement | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
-| Design | `docs/inventory_management/03_design_spec.md` 0.3 Approved Planning Baseline |
-| 任務狀態 | 設計及P0～P5計畫已由Sam獨立人工評審並批准；所有Task仍為PENDING，且尚未授權進入IMPLEMENT |
+| 文件版本 | 0.4 Approved Planning Baseline |
+| 文件日期 | 2026-09-23 |
+| Requirement | `docs/inventory_management/01_requirement_spec.md` 0.4 Approved Planning Baseline |
+| Design | `docs/inventory_management/03_design_spec.md` 0.4 Approved Planning Baseline |
+| 任務狀態 | Sam已批准MySQL Server 26.7.0設計及P0～P5計畫；所有Task仍為PENDING，是否恢復IMPLEMENT仍待另行確認 |
 | Task list target | 本文件；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模型 | 6 個獨立 Phase；每個 Phase 使用一個 worktree、分支、PR 及一次完整 Phase 測試 |
-| 技術基線 | Node.js 26、Express 5、MySQL 8.0、Vue 3、Quasar 2 |
+| 技術基線 | Node.js 26、Express 5、MySQL Server 26.7.0、Vue 3、Quasar 2 |
 
 本文件同時承載 implementation plan 與可執行 task checklist。每個 Task 是一個單一成果的 focused work unit；Task 內須同步建立相應測試，但正式測試證據在該 Phase 全部 Tasks 完成後，以一次完整 Phase verification cycle 產出。不得把未通過 Phase Gate 的 PR 合併至 `main`。
 
@@ -73,7 +73,8 @@ Phase P0 開始前：
 - [ ] Item Management T18～T22 已合併；`ItemLookupService` 已提供 `purchase`、`sale`、`inventory` purpose，且 Item／SKU lifecycle 語意已有 contract tests。
 - [ ] 已 fetch 最新 main 並重新盤點所有 migration 檔；不得沿用文件中的假設號碼，也不得修改任何已套用 migration。
 - [x] `03_design_spec.md` §14.2 第 1 項 Serial衝突處置已批准：本期不實作Serial Tracking，Inventory對`serial` fail closed；P5另須以實際掃描證明上線資料沒有Active inventory-tracked Serial SKU。
-- [ ] Phase 測試使用明確標記、與CI及production相同major版本的專用 MySQL 8.0 DB；不得對開發者日常資料或正式資料執行 destructive integration tests。
+- [ ] Phase 測試使用明確標記、與CI及production完全相同的專用MySQL Server 26.7.0 DB；不得對開發者日常資料或正式資料執行 destructive integration tests。
+- [ ] P0先把`.github/workflows/ci.yml`的`mysql:8.0`服務改為可重現的26.7.0 runtime，確認映像／發行來源可固定且健康檢查可用，才執行migration相容性驗證。
 
 只阻擋相關整合／P5 Go-Live、不阻擋 P0～P4 核心開發的輸入：
 
@@ -202,7 +203,7 @@ Phase P0 開始前：
 
 ### P0-T01：凍結 migration 編號與前置 contract
 
-**Description：** Fetch 最新 main，盤點實際 migration 與 Item/Supplier/Customer 尚未合併的配額；確認 Item T18～T22 及 Inventory `serial` fail-closed 前置，產出本 Phase 使用的實際 migration allocation，不修改既有檔案。
+**Description：** Fetch 最新 main，盤點實際 migration 與 Item/Supplier/Customer 尚未合併的配額；確認 Item T18～T22、Inventory `serial` fail-closed前置及MySQL Server 26.7.0可重現runtime，產出本 Phase 使用的實際 migration allocation，不修改既有migration。
 
 **Traceability：** Design §§1.3、4.23、8.5、12.1；BR-011、BR-040、NFR-009。
 
@@ -211,6 +212,7 @@ Phase P0 開始前：
 - [ ] 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
 - [ ] Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
 - [ ] Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
+- [ ] `.github/workflows/ci.yml`不再使用`mysql:8.0`；CI及本機整合測試均固定到MySQL Server 26.7.0，並以實際server version assertion防止漂移。
 
 **Verification（納入 P0-GATE）：** migration file inventory、跨文件編號搜尋及 Technical Lead 人工確認。
 
@@ -602,7 +604,7 @@ Phase P0 開始前：
 
 - [ ] Reservation 保存 original/consumed/released/outstanding；Allocation保存 allocated/consumed/released/outstanding，所有欄位使用 unsigned Base UOM integer。
 - [ ] Create operation、Warehouse、SKU、Reservation、Balance及 actor FK delete rules符合歷史保留要求。
-- [ ] Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；MySQL 8.0 CHECK只作row-local第二層保護，不取代service的跨row invariant。
+- [ ] Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；MySQL Server 26.7.0 CHECK只作row-local第二層保護，不取代service的跨row invariant。
 
 **Verification（納入 P2-GATE）：** 真 MySQL migration、FK、index、rerun及直接非法資料寫入測試。
 
@@ -1344,7 +1346,7 @@ Phase 內每完成2～3項 Tasks做一次只讀 code review checkpoint。Checkpo
 
 ## 5. 每個 Phase 的一次完整測試
 
-所有命令均在該 Phase獨立 worktree執行。Integration tests只可使用與CI及production相同major版本的專用 MySQL 8.0測試 DB及專案既有安全 guard。命令若因實作後 test file名稱調整，可更新精確路徑，但不可縮小覆蓋範圍。
+所有命令均在該 Phase獨立 worktree執行。Integration tests只可使用與CI及production完全相同的專用MySQL Server 26.7.0測試 DB及專案既有安全 guard。命令若因實作後 test file名稱調整，可更新精確路徑，但不可縮小覆蓋範圍。
 
 ### 5.1 P0 Foundation test cycle
 
@@ -1490,8 +1492,9 @@ P5另須執行非一般 unit command可取代的受控驗證：
 - [x] Product Owner Sam確認6個Phase的業務結果與P0→P5順序。
 - [x] 獨立人工評審人Sam批准目前transaction、lock、migration、PR邊界、Phase測試／evidence範圍，以及high-risk auth、immutable ledger、least privilege、Opening fencing與backup／restore gates。
 - [x] Sam批准目前Design及Plan baseline；批准記錄須綁定當次重新計算的hash。
-- [ ] 明確`IMPLEMENT`模式授權；Sam已指示本輪只提交文件，先不要進入IMPLEMENT。
-- [ ] 收到後續`IMPLEMENT`授權並刷新`origin/main`後，才建立P0 worktree並開始實作；目前所有Task保持`PENDING`。
+- [x] Sam曾於2026-09-23明確授權進入`IMPLEMENT`，但其後的MySQL Server 26.7.0重大基線變更使原設計／計畫批准失效。
+- [x] Sam已重新批准更新後Design及Plan baseline。
+- [ ] Sam另行確認恢復`IMPLEMENT`後，才重新開始P0；目前所有Task保持`PENDING`。
 
 <!-- HARNESS_V2_FORMAL_DEFINITIONS -->
 
@@ -1640,7 +1643,7 @@ The Phase PR has current mandatory CI and actual required review, and merge occu
 ## TASK-001 — 凍結 migration 編號與前置 contract (legacy P0-T01)
 
 ### Goal
-Fetch 最新 main，盤點實際 migration 與 Item/Supplier/Customer 尚未合併的配額；確認 Item T18～T22 及 Inventory serial fail-closed 前置，產出本 Phase 使用的實際 migration allocation，不修改既有檔案
+Fetch 最新 main，盤點實際 migration 與 Item/Supplier/Customer 尚未合併的配額；確認 Item T18～T22、Inventory serial fail-closed前置及MySQL Server 26.7.0可重現runtime，產出本 Phase 使用的實際 migration allocation，不修改既有migration
 
 ### Approach
 Implement only the scope and dependencies of legacy task `P0-T01` inside `PHASE-001` using the design decisions mapped in `08_traceability.json`.
@@ -1649,6 +1652,7 @@ Implement only the scope and dependencies of legacy task `P0-T01` inside `PHASE-
 - 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
 - Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
 - Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
+- `.github/workflows/ci.yml`不再使用`mysql:8.0`；CI及本機整合測試均固定到MySQL Server 26.7.0，並以實際server version assertion防止漂移。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
@@ -1936,7 +1940,7 @@ Implement only the scope and dependencies of legacy task `P2-T01` inside `PHASE-
 ### Acceptance criteria
 - Reservation 保存 original/consumed/released/outstanding；Allocation保存 allocated/consumed/released/outstanding，所有欄位使用 unsigned Base UOM integer。
 - Create operation、Warehouse、SKU、Reservation、Balance及 actor FK delete rules符合歷史保留要求。
-- Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；MySQL 8.0 CHECK只作row-local第二層保護，不取代service的跨row invariant。
+- Warehouse＋SKU＋status與 Reservation＋Balance 查詢有穩定 index；MySQL Server 26.7.0 CHECK只作row-local第二層保護，不取代service的跨row invariant。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.

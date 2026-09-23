@@ -5,12 +5,12 @@
 | 項目 | 內容 |
 | --- | --- |
 | 文件名稱 | Inventory Management 系統設計規格 |
-| 文件版本 | 0.3 Approved Planning Baseline |
-| 文件日期 | 2026-09-07 |
-| 上游文件 | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
+| 文件版本 | 0.4 Approved Planning Baseline |
+| 文件日期 | 2026-09-23 |
+| 上游文件 | `docs/inventory_management/01_requirement_spec.md` 0.4 Approved Planning Baseline |
 | 適用系統 | ERP App；單一公司；中小企業；主要營運規模為5個以內Warehouse |
-| 技術基線 | Node.js 26＋Express 5＋MySQL 8.0＋Vue 3＋Quasar 2 |
-| 文件狀態 | Sam以獨立人工評審人身分批准目前設計及P0～P5計畫；尚未授權進入IMPLEMENT |
+| 技術基線 | Node.js 26＋Express 5＋MySQL Server 26.7.0＋Vue 3＋Quasar 2 |
+| 文件狀態 | Sam以獨立人工評審人身分批准MySQL Server 26.7.0設計及P0～P5計畫；是否恢復IMPLEMENT仍待另行確認 |
 
 ### 0.1 文件目的
 
@@ -383,7 +383,7 @@ DRAFT ──start──> COUNTING ──complete counts──> READY_TO_POST ─
 - 時間點使用epoch milliseconds的`BIGINT UNSIGNED`，由Time Service提供；Expiry／Manufacture／First Receipt使用`DATE`，沒有時區轉換。
 - Quantity使用`BIGINT UNSIGNED`正整數；Movement方向分欄保存，不使用負unsigned或JavaScript浮點數。
 - Mutable aggregate使用`version INT UNSIGNED NOT NULL DEFAULT 1`及`UPDATE ... WHERE id=? AND version=?`。
-- MySQL 8.0須執行可安全表達的row-local `CHECK` constraints；enum、字串長度與所有跨row／跨aggregate規則仍由service在持鎖transaction內驗證，DB另以UNSIGNED、FK、UNIQUE、NOT NULL、CHECK及generated column作第二層保護。
+- MySQL Server 26.7.0須執行可安全表達的row-local `CHECK` constraints；enum、字串長度與所有跨row／跨aggregate規則仍由service在持鎖transaction內驗證，DB另以UNSIGNED、FK、UNIQUE、NOT NULL、CHECK及generated column作第二層保護。
 - Foreign key預設`ON DELETE RESTRICT`。Actor FK可`SET NULL`，同時保存username snapshot；歷史、Movement、Audit及operation不可cascade刪除。
 - 代碼另存normalized欄位並以binary/case-stable值作唯一索引；service執行trim、case fold及控制字元檢查。
 - 所有大量列表以覆蓋主要filter及穩定tie-breaker `id`的index支援；不得允許任意client sort column。
@@ -513,7 +513,7 @@ Indexes／constraints：
 - `INDEX idx_inventory_stock_sku(warehouse_id,sku_id,stock_status,lot_id,bin_id,id)`支援ATP。
 - `INDEX idx_inventory_stock_fifo(warehouse_id,sku_id,stock_status,fifo_anchor_date,bin_id,id)`支援無Lot FIFO候選。
 - `INDEX idx_inventory_stock_bin(bin_id,sku_id,lot_id,stock_status,id)`支援Bin inquiry／Stocktake snapshot。
-- `INDEX idx_inventory_stock_nonzero(sku_id,on_hand_quantity,id)`只作一般篩選；MySQL 8.0沒有partial index，query必須同時限制scope。
+- `INDEX idx_inventory_stock_nonzero(sku_id,on_hand_quantity,id)`只作一般篩選；MySQL Server 26.7.0沒有partial index，query必須同時限制scope。
 - `CHECK (allocated_quantity <= on_hand_quantity)`提供row-local第二層保護；service仍須在持鎖transaction內驗證同一條件及所有跨row Reservation／Allocation不變量。
 
 ### 4.8 `inventory_operation_requests`
@@ -1438,7 +1438,7 @@ server/test-support/inventoryFixtures.js
 
 ### 10.1 真MySQL Migration／Constraint Integration
 
-`server/test/integration/inventoryMigrations.integration.test.js`使用與CI及production相同major版本的專用MySQL 8.0驗證：
+`server/test/integration/inventoryMigrations.integration.test.js`使用與CI及production完全相同的MySQL Server 26.7.0驗證：
 
 - 全新DB及既有schema兩種路徑均可apply；重跑skip安全。
 - 所有FK、unique、generated columns及indexes實際存在。
@@ -1757,6 +1757,7 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 | `DEC-014～016` | Atomic Bin Move、two-stage Transfer、no partial，§§3.6、5.4、5.6。 |
 | `DEC-017～019` | Persistent Bin lock、pre-Go-Live Opening、無雙人審批，§§3.7、4.16、4.18、6.2。 |
 | `DEC-020` | Inventory只接受正式source及internal contracts，§§2.7、5.4、5.11。 |
+| `DEC-027` | Production、CI及開發整合測試精確固定MySQL Server 26.7.0；P0先把現有CI的`mysql:8.0`服務改為可重現的26.7.0並驗證DDL、constraint、locking及migration，§§4.1、10.1、14.2。 |
 
 ---
 
@@ -1778,8 +1779,9 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 4. Adjustment reason category固定為`COUNT_GAIN,COUNT_LOSS,DAMAGE,EXPIRY,DATA_CORRECTION,TRANSFER_VARIANCE,OTHER`，其中`OTHER`須有更詳細說明。
 5. P5提供首批Warehouse／Bin master、Opening CSV及實際Data Freeze時間；凍結後舊系統不得再寫庫存。Warehouse／Operations Lead負責對賬，Sam負責不可逆Go-Live最終簽核。
 6. Production app DB account與migration account分離，並在Go-Live前完成backup／restore rehearsal。
+7. 資料庫相容性基線精確固定為MySQL Server 26.7.0。26.7屬Calendar Versioning的Innovation track；不得因有較新patch而靜默升級。P0須先確認CI可取得並固定26.7.0 runtime，再以同版驗證DDL、constraint、locking及migration。
 
-以上決策已由Sam逐項確認；實際資料、時間及rehearsal evidence仍在相應Phase gate提供。這些約束不應促使開發建立通用設定平台。Sam已批准目前設計及P0～P5計畫基線，但明確暫不授權進入`IMPLEMENT`。
+以上業務決策及MySQL Server 26.7.0基線已由Sam逐項確認，0.4設計及P0～P5計畫亦已重新批准；實際資料、時間及rehearsal evidence仍在相應Phase gate提供。這些約束不應促使開發建立通用設定平台。是否恢復`IMPLEMENT`仍須另行確認。
 
 ### 14.3 規格變更控制
 

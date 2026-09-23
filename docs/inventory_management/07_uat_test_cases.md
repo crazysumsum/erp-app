@@ -4,12 +4,12 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 需求來源 | `docs/inventory_management/01_requirement_spec.md` 0.3 Approved Planning Baseline |
-| 設計來源 | `docs/inventory_management/03_design_spec.md` 0.3 Approved Planning Baseline |
+| 需求來源 | `docs/inventory_management/01_requirement_spec.md` 0.4 Approved Planning Baseline |
+| 設計來源 | `docs/inventory_management/03_design_spec.md` 0.4 Approved Planning Baseline |
 | UI／UX基準 | `docs/frontend-design.md` |
-| 文件日期 | 2026-09-08 |
+| 文件日期 | 2026-09-23 |
 | 測試類型 | User Acceptance Testing（UAT）測試設計 |
-| 測試狀態 | 尚未執行；所有案例初始狀態均為 `NOT RUN` |
+| 測試狀態 | 0.4設計／計畫已批准；所有案例均未執行且保持 `NOT RUN` |
 | 目標環境 | 待執行前填寫；須為隔離測試環境及測試專用資料庫 |
 | Build／Commit | 待執行前填寫 |
 
