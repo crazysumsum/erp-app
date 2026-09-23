@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 216,
+  "revision": 219,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "c83ae86f0508ec3e12f9f222e65c89b6276a190f",
-    "source_fingerprint": "519ba469a034d538474b1955b194d284d21666dbd1da67b88cc453e54bbdb38e",
+    "code_commit": "93f4097b970c125e907599b7dca0b3d049d260b4",
+    "source_fingerprint": "6c147834441b0275eb7a746ba81b60bb73c2254d9f65dce8d52cb7af951f8809",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
-    "default_commit": "38e1542eed8ac6fe98ce307868390b6e98181788",
+    "default_commit": "1ba8fb63bd06d0409ee29b27315cd12a76cb16f2",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -1363,6 +1363,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing b9a6610661c7f409f5eeda940ffeae8587f52aa6",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/43_rev_043_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-050",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-035 REV-049 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 51bcff85555a80ae483f62a3f7fb3e1441a2ee73",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/51_rev_050_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2975,6 +2987,28 @@
       "source_ref": "REV-049 returned CHANGES_REQUESTED with 0 Critical, 0 High, 1 Medium, 3 Low and 6 Info, and confirmed all four REV-048 items including pulling the CI browser job's log to show it ran this task's three supplier-bank tests by name on ubuntu-latest. The Medium is mine and it is three errors stacked. First, I said the mechanism-level assertion could not be written and settled for 'the property is pinned, the mechanism is not'; the reviewer wrote it in six lines by reading component state through the test wrapper's vm. I had assumed script-setup internals were unreachable from a test and never tried. Second, my argument for that settlement was itself wrong: I claimed dropping all three clearing mechanisms turned the test red and that this proved the property was covered, but it went red because my mutation also stopped openCreate from resetting - so I had pinned the wrong mechanism. Only two mechanisms actually cover that path, and dropping just those two leaves 634 tests green. Third, the comment I wrote into the test saying openCreate does not clear is simply false; its Object.assign sets accountNumber and password to empty, and three other places in the same commit say so. All three secrets - the create form's account number and password, the reveal dialog's password and the confirm dialog's password - are now asserted against component state, which is the only observation a closed dialog or a reopened one cannot satisfy. Two findings nobody had raised in nine rounds: both step-up passwords survived a session expiry in component state, where the panel is not unmounted; and holdPlaintext's leading forgetPlaintext was unasserted because revealing a second row was never tested, leaving the first row's interval orphaned. My first attempt at that second one also failed to discriminate - asserting the countdown value cannot see an orphan, because two intervals each compute from their own deadline and the later writer wins within a tick - so it now spies the clearInterval call. Four mutants, four killed. 636/636 client vitest, 23/23 browser via the CI script, lint clean. One process note worth keeping: I again read a pipeline's exit status as 'cmd | tail; echo $?', which reports tail's status, and briefly recorded lint as clean while it had a no-unused-vars error. Same shell trap, twice in this session.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-049",
       "observed_at": "2026-09-23T09:06:12+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "REV-050 APPROVED 0 High / 0 Medium / 4 Low at 51bcff8",
+      "code_commit": "93f4097b970c125e907599b7dca0b3d049d260b4",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "6c147834441b0275eb7a746ba81b60bb73c2254d9f65dce8d52cb7af951f8809",
+      "status": "PASS",
+      "source_ref": "Review by agent-skills:security-auditor, independent of the author, against 51bcff85555a80ae483f62a3f7fb3e1441a2ee73. Report at docs/supplier_management/implementation/51_rev_050_independent_review.md. APPROVED: 0 Critical, 0 High, 0 Medium, 4 Low, 5 Info - the first APPROVED review TASK-035 has had, on its seventh round. code_commit names the commit at which this was observed, per the convention of the earlier PR_REVIEW records; the reviewed head is named above. The approval was conditional on merging origin/main and re-running CI, which is done.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-23T09:39:38+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-050: APPROVED, and two more of my claims corrected - including one that undersold the code",
+      "code_commit": "93f4097b970c125e907599b7dca0b3d049d260b4",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "6c147834441b0275eb7a746ba81b60bb73c2254d9f65dce8d52cb7af951f8809",
+      "status": "PASS",
+      "source_ref": "REV-050 APPROVED with four Lows and reported that my record was accurate for the first time in four rounds - it reproduced all four mutants section 13 claims and each died at the named assertion. Two of the Lows are still mine. F-L1: the clearInterval spy I wrote pins the wrong thing. It kills the orphan mutant that makes no call at all, but an orphan that still calls clearInterval with the wrong handle survives 636 tests; I reproduced that. My stated reason for the spy - that asserting the countdown value cannot see an orphan - is true, but REV-049 never proposed that assertion. It proposed a behavioural probe: reveal A, advance five seconds, reveal B, advance twenty-six more, assert B is still shown. Four lines, and it kills both variants; verified. That is the third time I have reasoned from a variant the reviewer did not propose to the conclusion that nothing could discriminate. F-L2 runs the other way and is worth noting for that reason: my comment called the forgetFormSecrets call one of three mutually redundant mechanisms, and the truth is that dropping it alone turns the suite red while dropping the dialog's @hide alone does not - because @hide waits for Quasar's leave transition, roughly 400ms, while forgetEverything returns as soon as it sets open=false. So that call is the only synchronous clear on the route-change and session-expiry paths, and my own records undersold it in three separate documents, all now corrected. F-L3 is a sixth entitlement-ending trigger nobody had wired in ten rounds: session.refresh() assigns a new user object, so isAuthenticated never changes and a watch on it never fires; after a refresh revoking supplier.bank.*, the plaintext stayed on screen with its countdown running. Narrowed the panel's watch to the computed permissions, verified it fails when widened back. The general case belongs at framework level because no page in this application re-evaluates authorization on refresh, and a follow-up task was opened; the bound on severity is that it is the same authenticated user with no escalation and the server re-reads entitlements on every request. F-L4 was origin/main moving again, now merged. 637/637 client vitest, 23/23 browser, lint exit 0, each read from the process's own exit status rather than the end of a pipeline.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-050",
+      "observed_at": "2026-09-23T09:39:38+08:00"
     }
   ],
   "pending_decisions": [
@@ -3986,7 +4020,11 @@
     "evidence/20260923T010540-2a69af96b046/run.json",
     "evidence/20260923T010542-61deceb1e2ab/run.json",
     "evidence/20260923T010546-81b50bc1702a/run.json",
-    "evidence/20260923T010549-b472da6c416d/run.json"
+    "evidence/20260923T010549-b472da6c416d/run.json",
+    "evidence/20260923T013856-66c42b913e13/run.json",
+    "evidence/20260923T013859-211ff36d36b0/run.json",
+    "evidence/20260923T013904-929e0591f4cf/run.json",
+    "evidence/20260923T013908-609318975f35/run.json"
   ],
   "defects": [
     {
