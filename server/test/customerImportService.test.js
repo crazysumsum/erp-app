@@ -397,13 +397,17 @@ test("Customer import row failure rolls back the aggregate then records a safe t
 test("Customer import result download is audited and expired files return 410", async () => {
   const source = job({ status: "completed", result_storage_status: "active", result_stored_name: "b".repeat(64), result_sha256: Buffer.alloc(32, 2) });
   const audits = [];
+  let inTransaction = false;
   const service = new CustomerImportService({
     database: {
-      async withTransaction(work) { return work(this); },
+      async withTransaction(work) {
+        inTransaction = true;
+        try { return await work(this); } finally { inTransaction = false; }
+      },
       async query() { return [[source]]; }
     },
     time: { nowMs: () => 100 }, authorize: async () => ({ username: "sam" }),
-    storage: { async readResult() { return Buffer.from("safe"); } },
+    storage: { async readResult() { assert.equal(inTransaction, false); return Buffer.from("safe"); } },
     audit: { async record(_connection, input) { audits.push(input.action); } }
   });
   const downloaded = await service.downloadResult({ actorId: 3, id: 11 });

@@ -485,22 +485,31 @@ export class CustomerImportService {
   }
 
   async downloadResult({ actorId, claimedRoles, claimedPermissions, id, requestId = "", ip = "" }) {
-    return this.database.withTransaction(async (connection) => {
-      const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
-      const job = await this.#get(connection, positiveInteger(id, "id"));
+    const jobId = positiveInteger(id, "id");
+    const metadata = await this.database.withTransaction(async (connection) => {
+      await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const job = await this.#get(connection, jobId);
       if (!job) throw customerImportError("CUSTOMER_IMPORT_NOT_FOUND", 404, "找不到指定的匯入工作");
       if (job.result_storage_status === "purged") throw customerImportError("CUSTOMER_IMPORT_RESULT_EXPIRED", 410, "匯入結果檔案已過期");
       if (job.result_storage_status !== "active" || !job.result_stored_name || !job.result_sha256) {
         throw customerImportError("CUSTOMER_IMPORT_RESULT_NOT_READY", 409, "匯入結果檔案尚未可用");
       }
-      const buffer = await this.storage.readResult({ storedName: job.result_stored_name, sha256: Buffer.from(job.result_sha256) });
+      return { storedName: job.result_stored_name, sha256: Buffer.from(job.result_sha256) };
+    });
+    const buffer = await this.storage.readResult(metadata);
+    await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const job = await this.#get(connection, jobId);
+      if (job?.result_storage_status !== "active" || job.result_stored_name !== metadata.storedName || !job.result_sha256 || !Buffer.from(job.result_sha256).equals(metadata.sha256)) {
+        throw customerImportError("CUSTOMER_IMPORT_RESULT_EXPIRED", 410, "匯入結果檔案已過期");
+      }
       const nowMs = this.time.nowMs();
       await this.audit.record(connection, {
         occurredAt: nowMs, actorUserId: actorId, actorUsername: actor.username, action: "import.result_download",
-        targetType: "import", targetId: Number(job.id), customerId: null, targetLabel: `import-${job.id}`, requestId, ip
+        targetType: "import", targetId: jobId, customerId: null, targetLabel: `import-${jobId}`, requestId, ip
       });
-      return { buffer, fileName: `customer-import-${job.id}-result.csv` };
     });
+    return { buffer, fileName: `customer-import-${jobId}-result.csv` };
   }
 
   async recoverFiles({ staleBefore, limit = 10 }) {
