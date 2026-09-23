@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 219,
+  "revision": 220,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "93f4097b970c125e907599b7dca0b3d049d260b4",
+    "code_commit": "2d1355afb02dc4b6a6075d51243b3a65de3e1f87",
     "source_fingerprint": "6c147834441b0275eb7a746ba81b60bb73c2254d9f65dce8d52cb7af951f8809",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035",
-    "default_commit": "1ba8fb63bd06d0409ee29b27315cd12a76cb16f2",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t35-closeout",
+    "default_commit": "2d1355afb02dc4b6a6075d51243b3a65de3e1f87",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -62,7 +62,7 @@
     "TASK-032": "DONE",
     "TASK-033": "DONE",
     "TASK-034": "DONE",
-    "TASK-035": "PENDING",
+    "TASK-035": "DONE",
     "TASK-036": "PENDING",
     "TASK-037": "PENDING",
     "TASK-038": "PENDING",
@@ -3009,6 +3009,17 @@
       "source_ref": "REV-050 APPROVED with four Lows and reported that my record was accurate for the first time in four rounds - it reproduced all four mutants section 13 claims and each died at the named assertion. Two of the Lows are still mine. F-L1: the clearInterval spy I wrote pins the wrong thing. It kills the orphan mutant that makes no call at all, but an orphan that still calls clearInterval with the wrong handle survives 636 tests; I reproduced that. My stated reason for the spy - that asserting the countdown value cannot see an orphan - is true, but REV-049 never proposed that assertion. It proposed a behavioural probe: reveal A, advance five seconds, reveal B, advance twenty-six more, assert B is still shown. Four lines, and it kills both variants; verified. That is the third time I have reasoned from a variant the reviewer did not propose to the conclusion that nothing could discriminate. F-L2 runs the other way and is worth noting for that reason: my comment called the forgetFormSecrets call one of three mutually redundant mechanisms, and the truth is that dropping it alone turns the suite red while dropping the dialog's @hide alone does not - because @hide waits for Quasar's leave transition, roughly 400ms, while forgetEverything returns as soon as it sets open=false. So that call is the only synchronous clear on the route-change and session-expiry paths, and my own records undersold it in three separate documents, all now corrected. F-L3 is a sixth entitlement-ending trigger nobody had wired in ten rounds: session.refresh() assigns a new user object, so isAuthenticated never changes and a watch on it never fires; after a refresh revoking supplier.bank.*, the plaintext stayed on screen with its countdown running. Narrowed the panel's watch to the computed permissions, verified it fails when widened back. The general case belongs at framework level because no page in this application re-evaluates authorization on refresh, and a follow-up task was opened; the bound on severity is that it is the same authenticated user with no escalation and the server re-reads entitlements on every request. F-L4 was origin/main moving again, now merged. 637/637 client vitest, 23/23 browser, lint exit 0, each read from the process's own exit status rather than the end of a pipeline.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-050",
       "observed_at": "2026-09-23T09:39:38+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-035 merged to main via PR #125 after seven independent review rounds",
+      "code_commit": "2d1355afb02dc4b6a6075d51243b3a65de3e1f87",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "6c147834441b0275eb7a746ba81b60bb73c2254d9f65dce8d52cb7af951f8809",
+      "status": "PASS",
+      "source_ref": "PR #125 merged at 2026-09-23T02:24:47Z, merge commit 2d1355afb02dc4b6a6075d51243b3a65de3e1f87, candidate 3d8ca1f85568fb629d54bc7447d19ac1192af4e8. Five required CI checks green on that exact head (run 35809859789, attempt 1, single run), including the Browser tests (Playwright) job that runs this task's own supplier-bank.spec.js on Linux. REV-050 APPROVED at 51bcff8 with four Lows, all remediated before merge. Recorded about the process, because it is the useful part: seven rounds, of which the first three found eight live defects in the Bank UI and the last four found none. Every finding in rounds four through seven was about my own records and assertions - mutants I recorded as killed that survived, assertions I declared impossible that took a reviewer six lines, comments that contradicted the code, and once a comment that undersold a control I had written correctly. Three times I concluded 'no test can discriminate this' from a variant the reviewer had not proposed. Also recorded: main moved under this branch three separate times during review, and twice the moving commit was a follow-up task this work had itself spawned, touching the same file. Neither produced a textual conflict and the first of them produced a real integration defect, so the union was exercised by hand before this merge rather than inferred from two green suites: revealing on supplier 7, navigating to 8, and then to a non-numeric id, all verified together. TASK-035 was left PENDING in this ledger at merge time and is closed here.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-23T10:25:57+08:00"
     }
   ],
   "pending_decisions": [
