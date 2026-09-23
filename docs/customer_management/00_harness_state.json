@@ -1,24 +1,24 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 133,
+  "revision": 134,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-026",
+  "current_task": "TASK-027",
   "baseline": {
     "design": "8f2cfcef298b2641da1aad6bb5637d94536d7681e039336c84a701d860610e77",
     "plan": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
-    "code_commit": "044c33e893b1726e9e81b3a0eac3a28c77625921",
-    "source_fingerprint": "e8327606037701364db8185159c4a2d54c8e2f77dca6eb8410ea81c6e1abcbe5",
+    "code_commit": "9d955fe9b1b7142145f837fdbc51086e1bca2dcc",
+    "source_fingerprint": "efbfd539aab7d025c9c1843efdab6d512446ccc43c5785b85aeb91d8609ddcfa",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
-    "default_commit": "da222e2ac547606015f9e78b85ab8dff536b031a",
+    "default_commit": "487bec1f273de48de2a161e881e740bab118b41e",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase003-task026-20260923",
+    "instance_id": "customer-phase003-task027-20260923",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-003",
@@ -53,8 +53,8 @@
     "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
-    "TASK-026": "IN_PROGRESS",
-    "TASK-027": "PENDING",
+    "TASK-026": "DONE",
+    "TASK-027": "IN_PROGRESS",
     "TASK-028": "PENDING",
     "TASK-029": "PENDING",
     "TASK-030": "PENDING",
@@ -1343,6 +1343,37 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-035",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-23 standing instruction to continue automatically until the Customer Management goal is complete; TASK-027 follows the approved PHASE-003 plan after TASK-026 independent approval.",
+      "recorded_at": "2026-09-23T07:22:58Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "code_commit": "9d955fe9b1b7142145f837fdbc51086e1bca2dcc",
+      "scope": [
+        "PHASE-003",
+        "TASK-027",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-imports/**",
+        "server/src/handlers/customer-exports/**",
+        "server/src/services/customerImport/**",
+        "server/src/services/customerExport/**",
+        "server/test/**",
+        "client/src/services/customer.js",
+        "client/src/services/customerImport.js",
+        "client/src/components/customers/**",
+        "client/src/pages/customers/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1705,6 +1736,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-031",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-026 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "551ba50e849ec19283746995dda7098e4c7271b0381a0724f5ba0b88f872dfce",
+      "source_ref": "2026-09-23 independent review required durable confirm idempotency/outcome, source-recovery reconciliation of the upload operation and audit, and fresh confirmer permission checks at result-finalization commit points.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-032",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-026 remediated candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "efbfd539aab7d025c9c1843efdab6d512446ccc43c5785b85aeb91d8609ddcfa",
+      "source_ref": "2026-09-23 exact-candidate re-review confirmed all three Required findings closed: confirm has an atomic durable operation outcome; source recovery reconciles job, audit and operation under lock; result publication rechecks current permissions at every commit boundary. Independent focused tests passed 28/28; final verdict APPROVED.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2059,6 +2114,28 @@
       "source_ref": "REV-030",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-23T06:19:23Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-026 Customer import execution, recovery and durable outcome developer verification",
+      "code_commit": "9d955fe9b1b7142145f837fdbc51086e1bca2dcc",
+      "spec_baseline": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "source_fingerprint": "efbfd539aab7d025c9c1843efdab6d512446ccc43c5785b85aeb91d8609ddcfa",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-026-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-23T07:22:58Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-026 Customer import execution/recovery independent re-review",
+      "code_commit": "9d955fe9b1b7142145f837fdbc51086e1bca2dcc",
+      "spec_baseline": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "source_fingerprint": "efbfd539aab7d025c9c1843efdab6d512446ccc43c5785b85aeb91d8609ddcfa",
+      "status": "PASS",
+      "source_ref": "REV-032",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-23T07:22:58Z"
     }
   ],
   "pending_decisions": [
@@ -2564,6 +2641,22 @@
       "idempotency_key": "customer-phase003-task025-main-reconcile-v2",
       "status": "CONFIRMED",
       "source_ref": "2026-09-23: merged current origin/main as 044c33e893b1726e9e81b3a0eac3a28c77625921 with no conflict; upstream changes were Supplier documentation only and Customer DESIGN/PLAN hashes remained unchanged."
+    },
+    {
+      "id": "EXT-MAIN-RECONCILE-003",
+      "kind": "GIT_FETCH_MERGE",
+      "target": "github:crazysumsum/erp-app:origin/main@487bec1f273de48de2a161e881e740bab118b41e",
+      "idempotency_key": "customer-phase003-task026-main-reconcile-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: merged current origin/main 487bec1f273de48de2a161e881e740bab118b41e as merge commit 7c363498b28200d2c99b012334fcc02788bd32dc with no conflicts; upstream changed an Item migration idempotency test only and Customer DESIGN/PLAN hashes remained unchanged."
+    },
+    {
+      "id": "EXT-MYSQL-037",
+      "kind": "DATABASE_TEST",
+      "target": "mysql://127.0.0.1:3306/erp_dev",
+      "idempotency_key": "customer-phase003-task026-execution-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: real-MySQL TC-060..TC-063 passed commit-unknown reconciliation, terminal-row non-replay, aggregate/children/credit atomicity and safe result publication; test rows and private temporary files were removed by the test cleanup."
     }
   ],
   "evidence_files": [
@@ -2572,5 +2665,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-026 confirm/cancel execution, per-row atomic Customer aggregate+audit+terminal state, lease-safe resume, safe result finalization/download and retention purge; verify crash/commit-unknown recovery without replaying terminal rows."
+  "next_safe_action": "Implement TASK-027 bounded formula-safe Customer export and the import/export UI, including filter/permission reconciliation, owner-safe download/expiry and Playwright/API/export checks."
 }

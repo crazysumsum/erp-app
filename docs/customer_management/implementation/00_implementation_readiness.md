@@ -448,3 +448,24 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   branches and 91.96% functions; all 34 high-risk per-file floors passed. Repository
   ESLint and `git diff --check` passed. CI was not run under the Product Owner's
   standing direction and accepted risk.
+
+## TASK-026 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Import confirmation now records a durable actor/route/payload-bound operation in
+  the same transaction as the queued job and audit. Each valid/warning row applies
+  its Customer aggregate, audit and terminal row marker atomically; commit-unknown
+  reconciliation does not replay terminal rows.
+- Result generation is bounded and formula-safe, contains only row/status/error-code
+  projections, finalizes outside database transactions and rechecks the confirmer's
+  current permissions before every publish commit. Source recovery atomically
+  reconciles job state, upload audit and the original operation outcome.
+- Focused import/lifecycle/operation tests passed 59/59; real-MySQL TC-060..TC-063
+  passed; repository ESLint and `git diff --check` passed. The full server regression
+  ran 2,103 tests (1,785 pass, 311 skip) and retained only the same seven inherited,
+  non-Customer Supplier bank-configuration failures.
+- Independent review first found three required durability/authorization races. The
+  exact remediated candidate `9d955fe9b1b7142145f837fdbc51086e1bca2dcc`
+  was independently retested (28/28) and approved with every finding closed. Under
+  HD-002, no automatic destructive retention purge is enabled in this release.
