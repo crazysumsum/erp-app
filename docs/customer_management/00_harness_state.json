@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 131,
+  "revision": 132,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "8f2cfcef298b2641da1aad6bb5637d94536d7681e039336c84a701d860610e77",
     "plan": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
-    "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
-    "source_fingerprint": "ca66796c946e296e37ae39f00dfaef3de41506eef048da133554a0cd9a670557",
+    "code_commit": "5d5d21ecd8c2dde7318647dec790c5aa3019e329",
+    "source_fingerprint": "93c7cf55b61b392f98800a0771a667c5d4e4ee91fdcc0f57c3c4fc4a5781500b",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -2472,6 +2472,14 @@
       "idempotency_key": "customer-phase003-task024-attachment-api-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-23: reused the isolated attachment schema without mutation; real MySQL upload/list/read/update/deactivate/controlled-delete lifecycle passed and the encrypted object was physically removed only after the durable deleting audit state committed."
+    },
+    {
+      "id": "EXT-MAIN-RECONCILE-001",
+      "kind": "GIT_FETCH_MERGE",
+      "target": "github:crazysumsum/erp-app:origin/main@1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
+      "idempotency_key": "customer-phase003-task025-main-reconcile-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: fetched origin and merged current main 1a47b65570ed7757b79cdabb1cdea20daadfdbbe as merge commit 5d5d21ecd8c2dde7318647dec790c5aa3019e329 with no conflicts. Customer design/plan hashes and TASK-024 product paths remained unchanged; the source fingerprint changed only because the approved module manifest includes shared server tests added by main."
     }
   ],
   "evidence_files": [
