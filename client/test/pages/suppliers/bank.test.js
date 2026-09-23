@@ -320,7 +320,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
    * 繼續 render 喺新嗰個 URL 底下。
    */
   it("wipes a half-typed write dialog on a Supplier change and on session expiry", async () => {
-    const { router, body } = await mountPanel();
+    const { wrapper, router, body } = await mountPanel();
     await byText(body, "新增銀行帳戶").trigger("click");
     await flushPromises();
     await field(body, "帳號").find("input").setValue(SECRET);
@@ -331,23 +331,88 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     await flushPromises();
     expect(document.body.innerHTML, "a half-typed account must not survive a Supplier change").not.toContain(SECRET);
     expect(document.body.innerHTML).not.toContain("Correct-Horse-1!");
-    // REV-048 F-L1：淨係睇 DOM 唔夠 —— 閂咗個 dialog 就會令佢成立，所以拆走
-    // `forgetFormSecrets()` 個 call 都照綠。要斷言嘅係 component 自己嗰份 state
-    // 冇咗啲祕密：重開個 dialog（`openCreate()` 唔會清，佢淨係設 open）再睇欄位。
-    await byText(body, "新增銀行帳戶").trigger("click");
-    await flushPromises();
-    expect(field(body, "帳號").find("input").element.value,
+    // REV-049：淨係睇 DOM 唔夠（閂咗 dialog 就成立），而「重開 dialog 再睇欄位」
+    // 一樣唔夠 —— `openCreate()` **會**重設嗰兩個欄位（`Object.assign`），所以
+    // 嗰個斷言係佢滿足嘅，唔係清除機制滿足嘅。我上一版喺註解度寫「openCreate
+    // 唔會清」，嗰句係錯，而且同 panel 自己個註解對唔上。
+    //
+    // 直接睇 component 自己嗰份 state。呢個係唯一一個唔會被「唔再 render」或者
+    // 「重開時重設」滿足嘅斷言。
+    const panelVm = wrapper.findComponent(SupplierBankPanel).vm;
+    expect(panelVm.form.accountNumber,
       "the account number must be gone from form state, not merely unrendered").toBe("");
-    expect(field(body, "密碼").find("input").element.value).toBe("");
-    await byText(body, "取消").trigger("click");
-    await flushPromises();
+    expect(panelVm.form.password).toBe("");
 
     await byText(body, "新增銀行帳戶").trigger("click");
     await flushPromises();
     await field(body, "帳號").find("input").setValue(SECRET);
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
     useSessionStore().user = null;
     await flushPromises();
     expect(document.body.innerHTML, "nor a session expiry").not.toContain(SECRET);
+    // Session 失效嗰陣個 panel **唔會** unmount，所以 component state 係唯一
+    // 講得出「真係唔記得咗」同「淨係唔再畫」嘅分別嘅地方。
+    expect(panelVm.form.accountNumber, "session expiry must forget, not merely stop rendering").toBe("");
+    expect(panelVm.form.password).toBe("");
+  });
+
+  /**
+   * REV-049 Z16／Z17：兩個 step-up dialog 各自嗰個密碼有同一個窿 —— 拆走
+   * `@hide` 同 `forgetEverything()` 入面嗰行，634 條照綠，而密碼喺 session 失效
+   * 之後仲留喺 component state 度（嗰陣個 panel 冇 unmount）。REV-046 個 X5 淨係
+   * 捉到「兩句一齊拆」嗰個變體。
+   */
+  it("forgets both step-up passwords from component state, not just from the DOM", async () => {
+    const { wrapper, router, body } = await mountPanel();
+    const panelVm = wrapper.findComponent(SupplierBankPanel).vm;
+
+    // Reveal dialog
+    await byText(body, "查看完整帳號").trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Reveal-Password-1!");
+    expect(panelVm.revealDialog.password).toBe("Reveal-Password-1!");
+    await router.push("/suppliers/8");
+    await flushPromises();
+    expect(panelVm.revealDialog.password, "a Supplier change must forget the reveal password").toBe("");
+
+    // Confirm dialog
+    await body.find('[aria-label="設為預設 Other Bank"]').trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Confirm-Password-1!");
+    expect(panelVm.confirm.password).toBe("Confirm-Password-1!");
+    useSessionStore().user = null;
+    await flushPromises();
+    expect(panelVm.confirm.password, "a session expiry must forget the confirm password").toBe("");
+  });
+
+  /**
+   * REV-049：`holdPlaintext()` 第一句 `forgetPlaintext()` 冇嘢斷言 —— 展開第二行
+   * 從來冇測過。拆走佢，第一行嗰個 interval 變成孤兒，永遠行落去，而第二行嘅
+   * 30 秒會俾佢一路扣落去（量到 30 → 25）。
+   */
+  it("replaces the first row's countdown when a second row is revealed", async () => {
+    supplierBankService.reveal.mockImplementation((_s, id) =>
+      Promise.resolve({ id, accountNumber: `ACCOUNT-${id}`, revealedAt: 1 }));
+    const { wrapper, body } = await mountPanel({ permissions: VIEW_BANK });
+    const panelVm = wrapper.findComponent(SupplierBankPanel).vm;
+    await revealRow(body);
+    expect(panelVm.revealed.id).toBe(41);
+
+    // 斷言第一行嗰個 handle 俾人收咗。斷言 `revealed.remaining` 係捉唔到嘅：
+    // 兩個 interval 各自由自己個 deadline 計，同一個 tick 入面後寫嗰個贏，所以
+    // 個數字睇落可以完全正常，而嗰個孤兒 interval 照樣存在。
+    const cleared = vi.spyOn(globalThis, "clearInterval");
+    await body.find('[aria-label="查看完整帳號 Other Bank"]').trigger("click");
+    await flushPromises();
+    await field(body, "密碼").find("input").setValue("Correct-Horse-1!");
+    await field(body, "查看原因").find("textarea").setValue("核對第二個帳號");
+    await byText(body, "確認查看").trigger("click");
+    await flushPromises();
+    expect(cleared, "revealing a second row must clear the first row's countdown").toHaveBeenCalled();
+    cleared.mockRestore();
+
+    expect(panelVm.revealed.id, "the second row replaces the first").toBe(42);
+    expect(document.body.innerHTML, "the first row's account must be gone").not.toContain("ACCOUNT-41");
   });
 
   /**

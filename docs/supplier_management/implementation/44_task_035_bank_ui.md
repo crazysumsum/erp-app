@@ -358,13 +358,19 @@ REV-047 個 High 真係收咗（佢重跑咗成張 mutation 表：`H-1` 而家�
 我自己重做佢個版本：**597/597 全綠**。所以係**十二個殺到，唔係十三個**。
 
 再查落去：嗰兩個祕密有**三個互相冗餘**嘅清除機制（呢個 call、dialog 個 `@hide`、
-同 `openCreate()` 重設）。任何兩個都夠，所以單獨拆一個係 equivalent mutant。
-**三個一齊拆走，測試就紅** —— 即係「換咗 Supplier 之後 form state 冇咗啲祕密」呢個
-**性質**係釘住嘅，冇釘住嘅係邊個機制做。三個都留低，並且寫咗落註解，免得下一個人
-見到「反正有另外兩個」就逐個清走。
+同 `openCreate()` 重設）。我當時嘅結論係「**性質**釘住咗，**機制**冇」。
 
-（我第一次嘅修法係「重開個 dialog 再睇欄位」—— 一樣分辨唔到，因為 `openCreate()`
-自己就會重設。試咗先知，冇當佢得咗。）
+> **更正（REV-049）。** 嗰個結論係一個**合理化**。REV-049 用六行就寫到嗰個機制層
+> 嘅斷言 —— 直接讀 component state（`wrapper.findComponent(...).vm.form`）。我之前
+> 以為 `<script setup>` 攞唔到，冇試過。
+>
+> 而且我嗰個「三個一齊拆就紅」嘅論證本身都係錯嘅：佢紅，係因為我順手改咗
+> `openCreate()` 令佢唔再重設 —— 即係我釘住咗**錯嗰個機制**。真正覆蓋呢條路嘅只有
+> 兩個（call 同 `@hide`），而**淨係拆嗰兩個，634 條照綠**。
+>
+> 仲有，我當時寫落測試註解嘅「`openCreate()` 唔會清」係**假**嘅 —— 佢
+> `Object.assign` 入面就有 `accountNumber: ""` 同 `password: ""`，而同一個 commit
+> 入面另外三處（commit message、§12、panel 自己個註解）都同佢矛盾。
 
 **二、`bank.test.js` 個註解講反咗。** 我寫咗個 `onBeforeRouteUpdate` 係「縱深防禦
 （unmount 已經清咗）」、守住「有一日個 panel 真係被重用」。**兩句都錯。**
@@ -400,3 +406,51 @@ REV-047 個 High 真係收咗（佢重跑咗成張 mutation 表：`H-1` 而家�
 
 REV-046 同 REV-047 都問過，而我兩次都靜靜雞跳過咗 —— 連「唔做，因為……」都冇寫。
 REV-048 講得啱：**silently skipped twice is how a note becomes permanent。**
+
+## 13. REV-049 remediation
+
+REV-049 報 CHANGES_REQUESTED：**0 Critical、0 High**、1 Medium、3 Low、6 Info，並且確認
+REV-048 四項全部做咗（佢自己拉咗個 browser job 嘅 log 落嚟，見到佢喺 `ubuntu-latest`
+上面逐條點名跑咗本 task 三條 `supplier-bank.spec.js` 測試，`23 passed (59.8s)` ——
+REV-048 對 Linux 嘅疑問用證據收咗）。
+
+### Medium：我上一輪嗰個「性質釘住咗，機制冇」係合理化
+
+三件事一次過：
+
+1. **我做唔到嘅嘢，佢六行就做到。** 直接讀 component state
+   （`wrapper.findComponent(SupplierBankPanel).vm.form.accountNumber`）。我之前假設
+   `<script setup>` 攞唔到內部 state —— **冇試過**。
+2. **我個論證本身錯。** 我話「三個一齊拆就紅」證明個性質有釘住。佢紅係因為我順手令
+   `openCreate()` 唔再重設 —— 即係我釘住咗**錯嗰個機制**。真正覆蓋呢條路嘅只有兩個
+   （`forgetEverything` 入面個 call 同 dialog 個 `@hide`），而**淨係拆嗰兩個，634 條
+   照綠**。
+3. **我寫落註解嗰句「`openCreate()` 唔會清」係假嘅**，而且同一個 commit 入面另外三處
+   都同佢矛盾。
+
+修法：三個祕密（`form` 兩個、`revealDialog.password`、`confirm.password`）全部改成
+斷言 component state。
+
+### 兩條九輪以嚟冇人提過嘅
+
+| # | |
+| --- | --- |
+| **Z16／Z17** | 兩個 step-up dialog 各自嗰個密碼有同一個窿：拆走 `@hide` 同 `forgetEverything()` 嗰行，634 條照綠，而密碼喺 **session 失效之後仍然留喺 component state**（嗰陣個 panel 冇 unmount，所以 state 係唯一睇得出分別嘅地方）。REV-046 個 `X5` 淨係捉到「兩句一齊拆」嗰個變體 |
+| **`holdPlaintext` 第一句** | 展開第二行從來冇測過。拆走佢，第一行個 interval 變孤兒。**我第一次寫嘅斷言（睇 `revealed.remaining`）捉唔到** —— 兩個 interval 各自由自己個 deadline 計，同一個 tick 內後寫嗰個贏，所以個數字可以完全正常而孤兒照樣存在。改成 spy 住 `clearInterval` 先至殺到 |
+
+### Mutation
+
+```
+M   form secrets: call + @hide      KILLED
+Z16 reveal password: both           KILLED
+Z17 confirm password: both          KILLED
+Z   holdPlaintext leading forget    KILLED（第一次嘅寫法生還，見上）
+```
+
+### 驗證
+
+**636/636** client vitest、**23/23** 瀏覽器（CI 自己嗰條 script）、lint 乾淨。
+
+（順帶：我今次又用咗 `cmd | tail; echo $?` 去睇 lint 結果 —— 嗰個 `$?` 係 `tail` 嘅，
+唔係 lint 嘅，所以我一度報咗「lint 乾淨」而其實有一個 `no-unused-vars` error。
+同一個 shell 陷阱我喺呢個 session 入面踩過兩次。已經修咗，而且今次係直接睇輸出。）
