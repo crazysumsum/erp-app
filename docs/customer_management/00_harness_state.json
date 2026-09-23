@@ -1,24 +1,24 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 126,
+  "revision": 130,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-023",
+  "current_task": "TASK-024",
   "baseline": {
     "design": "7d9fd9589c10e173916157aed6a71c587b9cef4ab89dcefc0da6c53961a7bf1e",
     "plan": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
-    "code_commit": "d74d7fc5c155de0a13c80452a0100ad150dfc187",
-    "source_fingerprint": "51523f3b75598bbc78e955ea8eecc22816aeaa815c0783d3a8e6b0f815c894d1",
+    "code_commit": "ccee3020bd8229c384cd45b8c3d69b5787254c02",
+    "source_fingerprint": "ce933eb2ae8857516a601a5d79bb4563a04ee8afb5601b936abbe71a3188d7f8",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase003-task023-20260922",
+    "instance_id": "customer-phase003-task024-20260923",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-003",
@@ -50,8 +50,8 @@
     "TASK-020": "DONE",
     "TASK-021": "DONE",
     "TASK-022": "DONE",
-    "TASK-023": "IN_PROGRESS",
-    "TASK-024": "PENDING",
+    "TASK-023": "DONE",
+    "TASK-024": "IN_PROGRESS",
     "TASK-025": "PENDING",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
@@ -1203,6 +1203,33 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-031",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-23 standing instruction to continue automatically until the Customer Management goal is complete; TASK-024 follows the approved PHASE-003 plan after TASK-023 independent approval.",
+      "recorded_at": "2026-09-23T02:06:52Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
+      "code_commit": "ccee3020bd8229c384cd45b8c3d69b5787254c02",
+      "scope": [
+        "PHASE-003",
+        "TASK-024",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/src/services/customerFile/**",
+        "server/test/**",
+        "client/src/services/customer.js",
+        "client/src/components/customers/**",
+        "client/src/pages/customers/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1465,6 +1492,42 @@
       "reviewer": "Jason (/root/customer_task011_review), separate agent",
       "reviewed_baseline": "51523f3b75598bbc78e955ea8eecc22816aeaa815c0783d3a8e6b0f815c894d1",
       "source_ref": "2026-09-22 independent exact-candidate re-review confirmed all prior blockers closed: reveal plaintext is never idempotency-cached/replayed, Customer route changes clear sensitive state, and maintenance uses full shared-key-ring validation. State, traceability, boundary, diff and independent focused server 20/20 plus client 17/17 passed. Final verdict APPROVE with no remaining finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-023",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-023 bounded-recovery candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "7627d7b5631ef05d6a02e40c2e1fa814a749606f5d4880490d79d62fb06cd9e0",
+      "source_ref": "2026-09-23 independent review required replacing per-shard readdir recovery because one shard could still grow without a hard traversal bound. The remediation introduced a durable DB-indexed attachment-stage registry and removed directory enumeration.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-024",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-023 durable-stage remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "9deddf3adda0239b2ef0a59cde3bdf2ca95bcf59f44a271bb170f3c4147aaf8b",
+      "source_ref": "2026-09-23 independent review confirmed bounded DB-indexed recovery but required the 0051 inspector to reject an incorrectly unique recovery index. A fail-closed non_unique check and malformed-schema regression were added.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-025",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-023 final remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "ce933eb2ae8857516a601a5d79bb4563a04ee8afb5601b936abbe71a3188d7f8",
+      "source_ref": "2026-09-23 independent exact-candidate re-review confirmed the durable stage registry closes unbounded filesystem traversal, storage I/O stays outside transactions, lock/failure recovery is coherent, and the migration inspector rejects a unique recovery index. Focused review tests passed 27/27; final verdict APPROVED with no Required finding.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1757,6 +1820,28 @@
       "source_ref": "REV-022",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-22T09:33:46Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-023 Customer attachment storage foundation and recovery developer verification",
+      "code_commit": "ccee3020bd8229c384cd45b8c3d69b5787254c02",
+      "spec_baseline": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
+      "source_fingerprint": "ce933eb2ae8857516a601a5d79bb4563a04ee8afb5601b936abbe71a3188d7f8",
+      "status": "PASS",
+      "source_ref": "2026-09-23: Customer-pattern server suite passed 176/176; focused attachment tests, ESLint and diff checks passed; local MySQL migrations through 0051 and a complete no-op rerun passed; attachment migration/service integration passed 2/2. Full server coverage reached existing non-Customer SupplierBankCrypto null-config failures only, matching the documented baseline and not weakening any gate.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-23T02:06:52Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-023 Customer attachment storage/recovery independent re-review",
+      "code_commit": "ccee3020bd8229c384cd45b8c3d69b5787254c02",
+      "spec_baseline": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
+      "source_fingerprint": "ce933eb2ae8857516a601a5d79bb4563a04ee8afb5601b936abbe71a3188d7f8",
+      "status": "PASS",
+      "source_ref": "REV-025",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-23T02:06:52Z"
     }
   ],
   "pending_decisions": [
@@ -2222,6 +2307,14 @@
       "idempotency_key": "customer-phase003-task022-bank-api-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-22: exact schema was created for TASK-022; fresh migrations through 0049 and a complete no-op rerun passed. Real MySQL bank integration passed 3/3, rotate/reindex zero-old proofs passed, then the exact schema was dropped after independent approval and final absence returned zero."
+    },
+    {
+      "id": "EXT-MIGRATION-034",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_task023",
+      "idempotency_key": "customer-phase003-task023-attachment-foundation-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: the isolated TASK-023 schema migrated through 0051; a complete rerun skipped every migration. Real MySQL attachment schema/service integration passed 2/2, including encrypted durable replay, terminal operation state and bounded stale-stage recovery."
     }
   ],
   "evidence_files": [
@@ -2230,5 +2323,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-023 attachment schema, encrypted private storage pipeline and bounded finalize recovery with signature/scan/path/hash fault-injection coverage, then obtain independent review."
+  "next_safe_action": "Implement TASK-024 attachment APIs/UI, actor-bound sensitive download sessions and cleanup; verify the full role/IDOR/header/audit/retry matrix plus real-browser Playwright flows."
 }
