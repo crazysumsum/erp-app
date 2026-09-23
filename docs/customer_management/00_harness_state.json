@@ -1,24 +1,24 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 132,
+  "revision": 133,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-025",
+  "current_task": "TASK-026",
   "baseline": {
     "design": "8f2cfcef298b2641da1aad6bb5637d94536d7681e039336c84a701d860610e77",
     "plan": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
-    "code_commit": "5d5d21ecd8c2dde7318647dec790c5aa3019e329",
-    "source_fingerprint": "93c7cf55b61b392f98800a0771a667c5d4e4ee91fdcc0f57c3c4fc4a5781500b",
+    "code_commit": "044c33e893b1726e9e81b3a0eac3a28c77625921",
+    "source_fingerprint": "e8327606037701364db8185159c4a2d54c8e2f77dca6eb8410ea81c6e1abcbe5",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
-    "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
+    "default_commit": "da222e2ac547606015f9e78b85ab8dff536b031a",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase003-task025-20260923",
+    "instance_id": "customer-phase003-task026-20260923",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-003",
@@ -52,8 +52,8 @@
     "TASK-022": "DONE",
     "TASK-023": "DONE",
     "TASK-024": "DONE",
-    "TASK-025": "IN_PROGRESS",
-    "TASK-026": "PENDING",
+    "TASK-025": "DONE",
+    "TASK-026": "IN_PROGRESS",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
     "TASK-029": "PENDING",
@@ -1321,6 +1321,28 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-034",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer Management designs are directly approved and work continues automatically unless a material decision is required; TASK-026 is the next approved PHASE-003 task.",
+      "recorded_at": "2026-09-23T06:19:23Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "code_commit": "044c33e893b1726e9e81b3a0eac3a28c77625921",
+      "scope": [
+        "PHASE-003",
+        "TASK-026",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-imports/**",
+        "server/src/services/customerImport/**",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1659,6 +1681,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-029",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-025 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "ace7e3551c37ebc572a389afc87e61562aef1545b01a77b5398b478ef5b0b857",
+      "source_ref": "2026-09-23 independent review required bounded streaming instead of retaining all parsed/normalized rows, and required the downloaded CSV to contain its v1 identity, field descriptions and examples.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-030",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-025 remediated candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "e8327606037701364db8185159c4a2d54c8e2f77dca6eb8410ea81c6e1abcbe5",
+      "source_ref": "2026-09-23 exact-candidate re-review confirmed both Required findings closed: the worker persists fixed-size normalized batches under lease and clears partial rows on job-level failure; the reusable CSV embeds v1 descriptions/examples and skips only exact template metadata markers. Final verdict APPROVED with no Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1991,6 +2037,28 @@
       "source_ref": "REV-028",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-23T03:27:04Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-025 Customer import schema, streaming precheck and template developer verification",
+      "code_commit": "044c33e893b1726e9e81b3a0eac3a28c77625921",
+      "spec_baseline": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "source_fingerprint": "e8327606037701364db8185159c4a2d54c8e2f77dca6eb8410ea81c6e1abcbe5",
+      "status": "PASS",
+      "source_ref": "2026-09-23: focused import suite passed 26/26; real MySQL TC-059 passed 1/1 and proved no Customer aggregate write; migrations 0052/0053 applied and a complete rerun was a no-op; ESLint and diff checks passed. Full server regression ran 2086 tests (1769 pass, 310 skip) with only the same seven inherited non-Customer SupplierBankCrypto configuration failures in applicationFactory/shutdownResources; no gate was weakened.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-23T06:19:23Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-025 Customer import streaming/security independent re-review",
+      "code_commit": "044c33e893b1726e9e81b3a0eac3a28c77625921",
+      "spec_baseline": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "source_fingerprint": "e8327606037701364db8185159c4a2d54c8e2f77dca6eb8410ea81c6e1abcbe5",
+      "status": "PASS",
+      "source_ref": "REV-030",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-23T06:19:23Z"
     }
   ],
   "pending_decisions": [
@@ -2480,6 +2548,22 @@
       "idempotency_key": "customer-phase003-task025-main-reconcile-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-23: fetched origin and merged current main 1a47b65570ed7757b79cdabb1cdea20daadfdbbe as merge commit 5d5d21ecd8c2dde7318647dec790c5aa3019e329 with no conflicts. Customer design/plan hashes and TASK-024 product paths remained unchanged; the source fingerprint changed only because the approved module manifest includes shared server tests added by main."
+    },
+    {
+      "id": "EXT-MIGRATION-036",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_task023",
+      "idempotency_key": "customer-phase003-task025-import-precheck-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: isolated local schema migrated through 0053, complete rerun skipped every migration, and TC-059 upload-to-streaming-precheck passed with Customer count unchanged."
+    },
+    {
+      "id": "EXT-MAIN-RECONCILE-002",
+      "kind": "GIT_FETCH_MERGE",
+      "target": "github:crazysumsum/erp-app:origin/main@da222e2ac547606015f9e78b85ab8dff536b031a",
+      "idempotency_key": "customer-phase003-task025-main-reconcile-v2",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: merged current origin/main as 044c33e893b1726e9e81b3a0eac3a28c77625921 with no conflict; upstream changes were Supplier documentation only and Customer DESIGN/PLAN hashes remained unchanged."
     }
   ],
   "evidence_files": [
@@ -2488,5 +2572,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Fetch and reconcile current main, allocate the next free migration sequence, then implement TASK-025 Customer import job/row schema, streaming RFC4180 precheck and versioned safe template without writing Customer aggregates."
+  "next_safe_action": "Implement TASK-026 confirm/cancel execution, per-row atomic Customer aggregate+audit+terminal state, lease-safe resume, safe result finalization/download and retention purge; verify crash/commit-unknown recovery without replaying terminal rows."
 }
