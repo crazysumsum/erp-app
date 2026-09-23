@@ -1,24 +1,24 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 130,
+  "revision": 131,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-024",
+  "current_task": "TASK-025",
   "baseline": {
-    "design": "7d9fd9589c10e173916157aed6a71c587b9cef4ab89dcefc0da6c53961a7bf1e",
-    "plan": "0cef5a4aea07b2adc03f4ed538c6d7bd04bba4d1176b51a66651068218c09ecd",
-    "code_commit": "ccee3020bd8229c384cd45b8c3d69b5787254c02",
-    "source_fingerprint": "ce933eb2ae8857516a601a5d79bb4563a04ee8afb5601b936abbe71a3188d7f8",
+    "design": "8f2cfcef298b2641da1aad6bb5637d94536d7681e039336c84a701d860610e77",
+    "plan": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+    "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+    "source_fingerprint": "ca66796c946e296e37ae39f00dfaef3de41506eef048da133554a0cd9a670557",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "0633125c331a296f6e099795a3666b428af6a402",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase003-task024-20260923",
+    "instance_id": "customer-phase003-task025-20260923",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-003",
@@ -51,8 +51,8 @@
     "TASK-021": "DONE",
     "TASK-022": "DONE",
     "TASK-023": "DONE",
-    "TASK-024": "IN_PROGRESS",
-    "TASK-025": "PENDING",
+    "TASK-024": "DONE",
+    "TASK-025": "IN_PROGRESS",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
@@ -1230,6 +1230,97 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-012",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer Management designs are directly approved. This current-baseline successor records the non-semantic module-boundary alignment for the shared HTTP/blob and upload/dispatcher primitives required by TASK-024.",
+      "recorded_at": "2026-09-23T03:27:04Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "8f2cfcef298b2641da1aad6bb5637d94536d7681e039336c84a701d860610e77",
+      "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-024",
+        "shared attachment request and memory-safety primitives"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-012",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner approval of the Customer Management PLAN baseline and automatic continuation; current successor after TASK-024 module-boundary alignment.",
+      "recorded_at": "2026-09-23T03:27:04Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-024",
+        "TASK-025"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-032",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction approving required Customer changes and automatic continuation. This successor explicitly covers the shared, security-reviewed TASK-024 dispatcher/upload/blob extensions.",
+      "recorded_at": "2026-09-23T03:27:04Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+      "scope": [
+        "PHASE-003",
+        "TASK-024",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customers/**",
+        "server/src/services/customerFile/**",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/upload/**",
+        "client/src/framework/http/HttpClient.js",
+        "client/src/services/customer.js",
+        "client/src/components/customers/**",
+        "client/src/pages/customers/**",
+        "server/test/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-033",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "2026-09-23 standing instruction to continue automatically until the Customer Management goal is complete; TASK-025 follows the approved PHASE-003 plan after TASK-024 independent approval.",
+      "recorded_at": "2026-09-23T03:27:04Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+      "scope": [
+        "PHASE-003",
+        "TASK-025",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-imports/**",
+        "server/src/services/customerImport/**",
+        "server/test/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1528,6 +1619,42 @@
       "reviewer": "Jason (/root/customer_task011_review), separate agent",
       "reviewed_baseline": "ce933eb2ae8857516a601a5d79bb4563a04ee8afb5601b936abbe71a3188d7f8",
       "source_ref": "2026-09-23 independent exact-candidate re-review confirmed the durable stage registry closes unbounded filesystem traversal, storage I/O stays outside transactions, lock/failure recovery is coherent, and the migration inspector rejects a unique recovery index. Focused review tests passed 27/27; final verdict APPROVED with no Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-026",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-024 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "acef14b6954ecb66643ef9e968891327719272a51463a9b96e6fbf50a56e3445",
+      "source_ref": "2026-09-23 independent review required in-flight Customer route guards for sensitive previews, safe failure-attempt audit coverage, and immediate wiping of failed memory-only upload buffers.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-027",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-024 first remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "08b019e3038aa383f77a4b75064be7d25ab41105f11baee23e37b8ce69054489",
+      "source_ref": "2026-09-23 independent re-review closed the original findings but required generation/customer capture before password or reason confirmations dispatch preview, deactivate or delete operations.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-028",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-024 final remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "ca66796c946e296e37ae39f00dfaef3de41506eef048da133554a0cd9a670557",
+      "source_ref": "2026-09-23 exact-candidate re-review confirmed every prior Required finding closed: attachment confirmations and responses are generation-bound, safe failure audits cover dispatcher validation/authorization/service errors, and multipart buffers/chunks are wiped on failure, abort and disk completion. Final verdict APPROVED with no Required finding.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1842,6 +1969,28 @@
       "source_ref": "REV-025",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-23T02:06:52Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-024 Customer attachment APIs, sessions, cleanup and UI developer verification",
+      "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+      "spec_baseline": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "source_fingerprint": "ca66796c946e296e37ae39f00dfaef3de41506eef048da133554a0cd9a670557",
+      "status": "PASS",
+      "source_ref": "2026-09-23: focused attachment/upload/dispatcher server checks passed, API dispatcher HTTP suite 17/17, real MySQL attachment lifecycle 1/1, full client 622/622, client coverage, production build, ESLint/diff checks and Customer Playwright 14/14 passed. Repository-wide server coverage retains only documented non-Customer Supplier/configuration and refresh-token floor baselines; no gate was weakened.",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-23T03:27:04Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-024 Customer attachment security/API/UI independent re-review",
+      "code_commit": "4ea7ee500bdbfee7690cb441ec395751c524039c",
+      "spec_baseline": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
+      "source_fingerprint": "ca66796c946e296e37ae39f00dfaef3de41506eef048da133554a0cd9a670557",
+      "status": "PASS",
+      "source_ref": "REV-028",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-23T03:27:04Z"
     }
   ],
   "pending_decisions": [
@@ -2315,6 +2464,14 @@
       "idempotency_key": "customer-phase003-task023-attachment-foundation-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-23: the isolated TASK-023 schema migrated through 0051; a complete rerun skipped every migration. Real MySQL attachment schema/service integration passed 2/2, including encrypted durable replay, terminal operation state and bounded stale-stage recovery."
+    },
+    {
+      "id": "EXT-MIGRATION-035",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_customer_task023",
+      "idempotency_key": "customer-phase003-task024-attachment-api-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-23: reused the isolated attachment schema without mutation; real MySQL upload/list/read/update/deactivate/controlled-delete lifecycle passed and the encrypted object was physically removed only after the durable deleting audit state committed."
     }
   ],
   "evidence_files": [
@@ -2323,5 +2480,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-024 attachment APIs/UI, actor-bound sensitive download sessions and cleanup; verify the full role/IDOR/header/audit/retry matrix plus real-browser Playwright flows."
+  "next_safe_action": "Fetch and reconcile current main, allocate the next free migration sequence, then implement TASK-025 Customer import job/row schema, streaming RFC4180 precheck and versioned safe template without writing Customer aggregates."
 }
