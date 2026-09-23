@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 23,
+  "revision": 24,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-005",
   "baseline": {
-    "design": "f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41",
-    "plan": "b9a4a3874e84e70b1025b0d2fb9d06ff7f80bd66b5ff3aa4e1bc8fa93dc84bb9",
-    "code_commit": "b62273c165999dc7674f73b2c6107e9d1e000205",
-    "source_fingerprint": "6908ab3ea16d0eff328af70f76984394901b2b9c601219ac3a0bd355a68e2ea0",
+    "design": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+    "plan": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
+    "code_commit": "5ac7d081165aa782c0352c63c2a7dc8039134dca",
+    "source_fingerprint": "25441b2ee28088147a47d43160b9c6c96a05353487566a22e68a7b17702f2412",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
-    "default_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
+    "default_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
     "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
   },
   "runtime": {
@@ -167,6 +167,47 @@
         "UAT-001 through UAT-113"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving Inventory 0.5 DESIGN hash",
+      "recorded_at": "2026-09-23T14:52:41+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-028"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving Inventory 0.5 PLAN hash",
+      "recorded_at": "2026-09-23T15:01:49+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -213,6 +254,30 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41",
       "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SELF_REVIEW",
+      "author": "/root migration-order correction author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "HUMAN",
+      "author": "/root migration-order correction author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving Inventory 0.5 DESIGN hash",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -490,6 +555,22 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user confirmation on 2026-09-23 approving migration allocation 0054-0063 and return to DESIGN_AND_PLAN"
+    },
+    {
+      "id": "HD-008",
+      "impact": "MAJOR",
+      "question": "Should the approved Inventory contract baseline adopt TASK-004's transaction-aware ItemLookupService contract, or should TASK-004 be reverted until Item Management publishes that contract separately?",
+      "affected_ids": [
+        "DES-002",
+        "DES-010",
+        "PHASE-001",
+        "TASK-004",
+        "TASK-005",
+        "TC-003",
+        "TC-010"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -596,9 +677,65 @@
       "idempotency_key": "mode-change-16",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task user confirmation on 2026-09-23: resume Inventory Management IMPLEMENT on approved 0.4 baseline"
+    },
+    {
+      "id": "EXT-011",
+      "kind": "LOCAL_WORKTREE_CREATE",
+      "target": "/private/tmp/erp-inventory-migration-plan-correction on codex/inventory-migration-plan-correction from da222e2ef4e2b9cf7278878b7badc1b52203bb12",
+      "idempotency_key": "inventory-migration-plan-correction-worktree-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving migration allocation 0054-0063 and return to DESIGN_AND_PLAN"
+    },
+    {
+      "id": "EXT-012",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-push-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/tree/codex/inventory-migration-plan-correction"
+    },
+    {
+      "id": "EXT-013",
+      "kind": "PR_CREATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/139 (main<-codex/inventory-migration-plan-correction)",
+      "idempotency_key": "inventory-migration-plan-correction-pr-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/139"
+    },
+    {
+      "id": "EXT-014",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/139 -> main",
+      "idempotency_key": "inventory-migration-plan-correction-merge-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/139 (merged as b142bfd9f78ec46a1c36d75b78f0e885c9357ed9)"
+    },
+    {
+      "id": "EXT-015",
+      "kind": "CI_CANCEL",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/35830256994",
+      "idempotency_key": "inventory-migration-plan-correction-ci-cancel-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub run 35830256994 concluded cancelled; two short jobs completed before cancellation"
+    },
+    {
+      "id": "EXT-016",
+      "kind": "REMOTE_BRANCH_DELETE",
+      "target": "origin/codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-remote-cleanup-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful git push --delete after PR #139 merge"
+    },
+    {
+      "id": "EXT-017",
+      "kind": "LOCAL_WORKTREE_BRANCH_CLEANUP",
+      "target": "/private/tmp/erp-inventory-migration-plan-correction and codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-local-cleanup-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Observed clean worktree removal and non-force local branch deletion after PR #139 merge"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Pause TASK-005. Revise the migration allocation in an isolated DESIGN_AND_PLAN documentation worktree, obtain fresh DESIGN and PLAN hash approvals, merge the docs-only PR to main, then reconcile this implementation branch before resuming."
+  "next_safe_action": "Resolve HD-008: the manifest pins the pre-TASK-004 ItemLookupService hash 6aff6504..., while the implemented transaction-aware contract is ca31b00f.... Keep TASK-005 and all migration execution blocked until Sam chooses contract adoption with fresh DESIGN/PLAN approval or TASK-004 reversion."
 }

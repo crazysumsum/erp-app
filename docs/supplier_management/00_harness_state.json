@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 220,
+  "revision": 221,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -3020,6 +3020,17 @@
       "source_ref": "PR #125 merged at 2026-09-23T02:24:47Z, merge commit 2d1355afb02dc4b6a6075d51243b3a65de3e1f87, candidate 3d8ca1f85568fb629d54bc7447d19ac1192af4e8. Five required CI checks green on that exact head (run 35809859789, attempt 1, single run), including the Browser tests (Playwright) job that runs this task's own supplier-bank.spec.js on Linux. REV-050 APPROVED at 51bcff8 with four Lows, all remediated before merge. Recorded about the process, because it is the useful part: seven rounds, of which the first three found eight live defects in the Bank UI and the last four found none. Every finding in rounds four through seven was about my own records and assertions - mutants I recorded as killed that survived, assertions I declared impossible that took a reviewer six lines, comments that contradicted the code, and once a comment that undersold a control I had written correctly. Three times I concluded 'no test can discriminate this' from a variant the reviewer had not proposed. Also recorded: main moved under this branch three separate times during review, and twice the moving commit was a follow-up task this work had itself spawned, touching the same file. Neither produced a textual conflict and the first of them produced a real integration defect, so the union was exercised by hand before this merge rather than inferred from two green suites: revealing on supplier 7, navigating to 8, and then to a non-numeric id, all verified together. TASK-035 was left PENDING in this ledger at merge time and is closed here.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-23T10:25:57+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-022 (REV-047 F-M2) remediated: a non-numeric /suppliers/:id no longer hangs on the loading skeleton",
+      "code_commit": "a264d41e402c0adc3caf05555034755f54e7abbf",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "234b1e75bacf926f43faa41d7f01cbc49431d8bfd3ec84f33aa2aed963b63c40",
+      "status": "PASS",
+      "actor": "Claude Opus 5 (Claude Code session)",
+      "observed_at": "2026-09-23T05:55:47Z",
+      "source_ref": "PR #131 merged at 2026-09-23T02:11:48Z, merge commit a264d41, from commits da14c8b (guard + vitest) and ef1f9a1 (Playwright regression). Five required CI checks green on that head (run 35807241232), including Browser tests (Playwright). Mechanism confirmed before fixing and matches REV-047 probe P-B: Number(route.params.id) is NaN, so superseded() is NaN !== NaN and always true, leaving loading set and error unset. Both new tests were verified to discriminate by removing the guard and observing red; the skeleton hang was also reproduced and re-cleared in a real browser. REV-047 left open whether other Number(route.params...) sites share the shape: grepped at this commit, SupplierDetailPage is the only page with a supersede guard, and the other four sites (CustomerDetailPage x2, SkuDetailPage x2, SkuCreatePage, ItemDetailPage) clear loading unconditionally, so they surface a backend error instead of hanging. No manifest, design or plan baseline was touched; baseline drift fields were deliberately left unreconciled."
     }
   ],
   "pending_decisions": [
@@ -4331,6 +4342,24 @@
         "server/test/supplierBankCrypto.test.js",
         "HD-029",
         "REV-035 H-2"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-022",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "REV-047 F-M2",
+        "client/src/pages/suppliers/SupplierDetailPage.vue",
+        "PR #127",
+        "TASK-035"
+      ],
+      "closure_evidence": [
+        "client/src/pages/suppliers/SupplierDetailPage.vue",
+        "client/test/pages/suppliers/detail.test.js",
+        "client/e2e/supplier-management/supplier-detail-route-reuse.spec.js",
+        "PR #131 merge commit a264d41e402c0adc3caf05555034755f54e7abbf"
       ],
       "risk_approval_id": null
     }

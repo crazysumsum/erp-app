@@ -74,7 +74,7 @@ Capability ID沿用已確認需求書，不另改名：
 - 權限正本是`server/src/modules/authorization/permissionCatalogue.js`，migration只是資料庫投影。
 - 前端page及service分別由`import.meta.glob`自動發現；頁面metadata決定route、menu及permission。
 - 測試使用Node.js built-in test runner及Vitest；不新增測試框架。
-- Migration runner按檔名排序且MySQL DDL會implicit commit。實作時必須fetch最新main，再使用當時下一個可用連續編號，不採用本文中的假設固定號碼。
+- Migration runner按檔名排序且MySQL DDL會implicit commit。`HD-007`固定Inventory使用`0054`～`0063`；每支尚未建立的migration動工前必須fetch最新main並驗證配額，碰撞時停止並重新批准，不自行改號或修改既有migration。
 - 現有`IdempotencyService.identityScope()`只把`auth.type === "jwt"`視為authenticated；`jwt-password`／`jwt-device-password`會錯誤退回IP scope。Phase 0必須先作§8.1的最小framework修正，否則高風險Inventory routes不可啟用framework idempotency。
 - Item設計中預期的Inventory lookup contract目前尚未實作；Phase 0由Item module提供`ItemLookupService`，Inventory不可複製Item資格邏輯。
 
@@ -838,21 +838,22 @@ Indexes：`idx_inventory_audit_time(occurred_at,id)`、`idx_inventory_audit_targ
 
 ### 4.23 FK建立順序與Migration切片
 
-建議logical migration切片如下；檔名前綴在實作時依最新main重新編排：
+`HD-007`把原本混合 operation／movement 的切片拆開，並固定目前已核准的實體配置。Operation與Audit屬P0基礎，不能依賴P1才建立的master／stock tables；Movement則保留到P1，在master與stock之後建立。
 
-| Logical migration | 內容 |
-| --- | --- |
-| `create_inventory_permissions` | 五項permission seed；可重跑且與catalogue一致。 |
-| `create_inventory_master` | warehouses、bins。 |
-| `create_inventory_stock` | lots、stock_controls、stock_balances。 |
-| `create_inventory_operations_and_movements` | operation requests、movements、immutable triggers。 |
-| `create_inventory_reservations` | reservations、allocations。 |
-| `create_inventory_transfers` | transfer headers／lines；補Movement optional FKs。 |
-| `create_inventory_stocktakes` | headers／bins／locks／lines；補Movement optional FKs。 |
-| `create_inventory_opening` | control singleton、opening jobs／rows。 |
-| `create_inventory_audit` | audit及immutable triggers；必須在第一個business write部署前完成。 |
+| Prefix | Logical migration | Phase／Task | 內容 |
+| --- | --- | --- | --- |
+| `0054` | `seed_inventory_permissions` | P0-T03 | 五項permission seed；可重跑且與catalogue一致。 |
+| `0055` | `create_inventory_operations` | P0-T05 | Domain operation requests及source tuple唯一鍵；不依賴Inventory master／stock。 |
+| `0056` | `create_inventory_audit` | P0-T05 | Audit及immutable triggers；在第一個business write前完成。 |
+| `0057` | `create_inventory_master` | P1-T01 | Warehouses、bins。 |
+| `0058` | `create_inventory_stock` | P1-T05 | Lots、stock_controls、stock_balances。 |
+| `0059` | `create_inventory_movements` | P1-T05 | Movements及immutable triggers；依賴master與stock。 |
+| `0060` | `create_inventory_reservations` | P2-T01 | Reservations、allocations。 |
+| `0061` | `create_inventory_transfers` | P3-T01 | Transfer headers／lines；補Movement optional FKs。 |
+| `0062` | `create_inventory_stocktakes` | P4-T01 | Headers／bins／locks／lines；補Movement optional FKs。 |
+| `0063` | `create_inventory_opening` | P5-T01 | Control singleton、opening jobs／rows。 |
 
-DDL依賴順序比章節展示順序優先。若optional FK造成cycle，先建nullable欄位與index，待兩端table存在後用後續`ALTER TABLE`補FK；不移除關聯欄位或改用無約束自由文字逃避依賴。
+`0054`已在未合併的P0實作分支建立；`0055`～`0063`在寫入前仍須重新檢查最新main及其他已批准配額。若任何編號已被占用，停止並回到設計／計畫重新配置，不改寫已存在migration。DDL依賴順序比章節展示順序優先。若optional FK造成cycle，先建nullable欄位與index，待兩端table存在後用後續`ALTER TABLE`補FK；不移除關聯欄位或改用無約束自由文字逃避依賴。
 
 ---
 
@@ -1328,20 +1329,21 @@ client/src/composables/inventory/useInventoryFilters.js
 ### 8.5 新增Migrations與Test Support
 
 ```text
-server/database/migrations/<next>_seed_inventory_permissions.js
-server/database/migrations/<next>_create_inventory_master.js
-server/database/migrations/<next>_create_inventory_stock.js
-server/database/migrations/<next>_create_inventory_operations_and_movements.js
-server/database/migrations/<next>_create_inventory_reservations.js
-server/database/migrations/<next>_create_inventory_transfers.js
-server/database/migrations/<next>_create_inventory_stocktakes.js
-server/database/migrations/<next>_create_inventory_opening.js
-server/database/migrations/<next>_create_inventory_audit.js
+server/database/migrations/0054_seed_inventory_permissions.js
+server/database/migrations/0055_create_inventory_operations.js
+server/database/migrations/0056_create_inventory_audit.js
+server/database/migrations/0057_create_inventory_master.js
+server/database/migrations/0058_create_inventory_stock.js
+server/database/migrations/0059_create_inventory_movements.js
+server/database/migrations/0060_create_inventory_reservations.js
+server/database/migrations/0061_create_inventory_transfers.js
+server/database/migrations/0062_create_inventory_stocktakes.js
+server/database/migrations/0063_create_inventory_opening.js
 server/test-support/fakeInventoryDatabase.js
 server/test-support/inventoryFixtures.js
 ```
 
-`<next>`不是字面檔名。開始實作前fetch main並檢查全部migration filenames與`fr_schema_migrations`，再連續編排；不得重用空缺或與其他worktree預留碰撞的號碼。
+這是`HD-007`核准的實體配置，不是可自行平移的示例。每支尚未建立的migration開始前仍要fetch main並檢查全部migration filenames、`fr_schema_migrations`及其他worktree配額；碰撞時停止並重新批准配置，不得重用空缺或修改已套用migration。
 
 ---
 
@@ -1758,6 +1760,7 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 | `DEC-017～019` | Persistent Bin lock、pre-Go-Live Opening、無雙人審批，§§3.7、4.16、4.18、6.2。 |
 | `DEC-020` | Inventory只接受正式source及internal contracts，§§2.7、5.4、5.11。 |
 | `DEC-027` | Production、CI及開發整合測試精確固定MySQL Server 26.7.0；P0先把現有CI的`mysql:8.0`服務改為可重現的26.7.0並驗證DDL、constraint、locking及migration，§§4.1、10.1、14.2。 |
+| `DEC-028` | Migration固定為`0054`～`0063`；P0先建立permissions、operations、audit，P1再依序建立master、stock、movements，避免P0 DDL依賴P1 tables，§§4.23、8.5。 |
 
 ---
 
