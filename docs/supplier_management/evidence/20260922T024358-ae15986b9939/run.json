@@ -1,0 +1,69 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20260922T024358-ae15986b9939",
+  "suite_id": "supplier-client-ui",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+  "source_fingerprint": "c8977888183fedf5450b6ad6d725d5b4e60c3952f531aea9f29a0205f9027392",
+  "code_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
+  "started_at": "2026-09-22T02:43:59.033219Z",
+  "ended_at": "2026-09-22T02:43:59.473501Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "test",
+    "--workspace",
+    "client",
+    "--",
+    "--config",
+    "test/supplier-management.vitest.config.js",
+    "--reporter=junit",
+    "--outputFile=/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035/docs/supplier_management/evidence/20260922T024358-ae15986b9939/supplier-client-ui.xml"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "766189773c438513300ff9ce33cb57e9209c2794410d4eb755bc45f21309d3a4",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260922T024358-ae15986b9939/stdout.log",
+      "sha256": "d45de62bf1979a7834edba5b44e302ed92976206cc4e785ec48cf2d3fc5e40cb",
+      "bytes": 274
+    },
+    {
+      "path": "evidence/20260922T024358-ae15986b9939/stderr.log",
+      "sha256": "916bd3f62804adc4cba79b5c87d24a4f82bdc5f17fb7b5e49eca5583145f221b",
+      "bytes": 2610
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "missing/fresh report required; symlink reports are refused: /Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035/docs/supplier_management/evidence/20260922T024358-ae15986b9939/supplier-client-ui.xml",
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: TC-121, TC-122, TC-123, TC-124, TC-125, TC-126, TC-127",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

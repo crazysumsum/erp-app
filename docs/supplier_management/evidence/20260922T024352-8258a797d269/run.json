@@ -1,0 +1,75 @@
+{
+  "schema_version": "2.0",
+  "module_id": "supplier-management",
+  "run_id": "20260922T024352-8258a797d269",
+  "suite_id": "supplier-server-integration",
+  "stage": "DEVELOPER",
+  "result": "BLOCKED",
+  "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+  "source_fingerprint": "c8977888183fedf5450b6ad6d725d5b4e60c3952f531aea9f29a0205f9027392",
+  "code_commit": "cc1d74b401613d854ccd1ef748c5cddf14ecc137",
+  "started_at": "2026-09-22T02:43:52.685123Z",
+  "ended_at": "2026-09-22T02:43:52.945899Z",
+  "environment_id": "supplier-isolated-test",
+  "runtime_instance_id": "supplier-phase-001-local-mysql-v2",
+  "data_reference": "Synthetic Supplier fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035/docs/supplier_management/evidence/20260922T024352-8258a797d269/supplier-server-integration.xml",
+    "server/test/supplier-management"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "969e3ebe0803af096f89c83e0da434f984567476aeb4762e8947706745cdd6c4",
+  "exit_code": 1,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260922T024352-8258a797d269/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260922T024352-8258a797d269/stderr.log",
+      "sha256": "06450d4d052104be8be739f4cbaea04047be89e9716c342aff2569173e46a67b",
+      "bytes": 49
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    },
+    {
+      "argv": [
+        "mysql",
+        "--version"
+      ],
+      "output": "mysql  Ver 26.7.0 for macos15 on arm64 (MySQL Community Server - GPL)\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "missing/fresh report required; symlink reports are refused: /Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-035/docs/supplier_management/evidence/20260922T024352-8258a797d269/supplier-server-integration.xml",
+    "Executed test count / skipped / not-run contract was not satisfied.",
+    "Required cases not passed: TC-001, TC-002, TC-003, TC-004, TC-005, TC-006, TC-007, TC-008, TC-009, TC-010, TC-011, TC-012, TC-013, TC-014, TC-015, TC-016, TC-017, TC-018, TC-019, TC-020, TC-021, TC-022, TC-023, TC-024, TC-025, TC-026, TC-027, TC-028, TC-029, TC-030, TC-031, TC-032, TC-033, TC-034, TC-035, TC-036, TC-037, TC-038, TC-039, TC-040, TC-041, TC-042, TC-043, TC-044, TC-045, TC-046, TC-047, TC-048, TC-049, TC-050, TC-051, TC-052, TC-053, TC-054, TC-055, TC-056, TC-057, TC-058, TC-059, TC-060, TC-061, TC-078, TC-079, TC-080, TC-081, TC-082, TC-083, TC-084, TC-085, TC-086, TC-087, TC-088, TC-089, TC-090, TC-091, TC-092, TC-093, TC-094, TC-095, TC-096, TC-097, TC-098, TC-099, TC-100, TC-101, TC-102, TC-103, TC-104, TC-105, TC-106, TC-107, TC-108, TC-109, TC-110",
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

@@ -12,6 +12,7 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import PageHeader from "@/framework/layout/PageHeader.vue";
 import SupplierAddressPanel from "@/components/suppliers/SupplierAddressPanel.vue";
+import SupplierBankPanel from "@/components/suppliers/SupplierBankPanel.vue";
 import SupplierCompletenessBanner from "@/components/suppliers/SupplierCompletenessBanner.vue";
 import SupplierContactPanel from "@/components/suppliers/SupplierContactPanel.vue";
 import SupplierIdentifierPanel from "@/components/suppliers/SupplierIdentifierPanel.vue";
@@ -346,7 +347,12 @@ watch(() => route.params.id, () => {
           <q-tab name="addresses" :label="`地址 (${supplier.addresses.length})`" />
           <q-tab name="contacts" :label="`聯絡人 (${supplier.contacts.length})`" />
           <q-tab name="identifiers" :label="`識別資料 (${supplier.identifiers.length})`" />
-          <q-tab name="bank" :label="`銀行資料 (${supplier.bankAccounts.length})`" />
+          <!--
+            冇數字：supplier detail 個 bankAccounts 恒空（toSupplierDetailResponse
+            嗰個 default `[]` 冇人填），所以之前個 "(0)" 由頭到尾都係假嘅。真實數量
+            由 SupplierBankPanel 自己叫 GET /suppliers/:id/bank-accounts 攞。
+          -->
+          <q-tab name="bank" label="銀行資料" />
         </q-tabs>
 
         <q-tab-panels v-model="tab" animated>
@@ -433,13 +439,7 @@ watch(() => route.params.id, () => {
             />
           </q-tab-panel>
           <q-tab-panel name="bank">
-            <div v-if="!supplier.bankAccounts.length" class="text-grey-7">尚未設定銀行資料</div>
-            <q-list v-else bordered separator>
-              <q-item v-for="bank in supplier.bankAccounts" :key="bank.id">
-                <q-item-section><q-item-label>{{ bank.bankName }}</q-item-label><q-item-label caption>{{ bank.maskedAccountNumber }}</q-item-label></q-item-section>
-                <q-item-section side><q-badge v-if="bank.isDefault" label="預設" /></q-item-section>
-              </q-item>
-            </q-list>
+            <SupplierBankPanel :supplier-id="supplier.id" :supplier-code="supplier.supplierCode" @refresh="load" />
           </q-tab-panel>
         </q-tab-panels>
       </template>
