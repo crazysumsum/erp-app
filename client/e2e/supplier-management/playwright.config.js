@@ -1,3 +1,4 @@
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -13,12 +14,15 @@ const isUatOnly = process.argv.includes("uat");
  * 兩個都唔喺 .gitignore，所以每次跑完 git status 都會多兩項 —— 而 CLAUDE.md §9
  * 要求每個前端改動都跑瀏覽器驗證，即係每個 supplier task 都會撞到。
  *
- * 呢度跟返 item-management 嗰份嘅做法（佢預設寫去 /private/tmp/…），因為咁樣
- * 根本冇嘢落到 working tree，亦都唔使改 .gitignore —— 而 .gitignore 係 manifest
- * 嘅 approval_required_paths。Harness runner 照樣可以用 HARNESS_RUN_DIR 同
- * HARNESS_RESULT_PATH 覆寫去佢自己個 evidence 目錄。
+ * 所以預設寫去系統 temp 目錄：咁樣根本冇嘢落到 working tree，亦都唔使改忽略
+ * 清單 —— 而嗰個檔案係 manifest 嘅 approval_required_paths。Harness runner 照樣
+ * 可以用 HARNESS_RUN_DIR 同 HARNESS_RESULT_PATH 覆寫去佢自己個 evidence 目錄。
+ *
+ * 用 os.tmpdir() 而唔係寫死 /private/tmp：後者係 macOS 專有，Linux 上面 /private
+ * 唔存在，Playwright 會喺根目錄 mkdir 然後 EACCES 收場。呢一點一直冇人發現，因為
+ * 呢啲 suite 從來冇喺 CI 跑過；加咗 Browser tests job 之後第一次跑就即刻爆。
  */
-const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || "/private/tmp/supplier-management-playwright");
+const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || path.join(os.tmpdir(), "supplier-management-playwright"));
 const reportOutput = process.env.HARNESS_RESULT_PATH
   || path.join(runDirectory, isUatOnly ? "supplier-uat-browser.xml" : "supplier-browser.xml");
 

@@ -188,3 +188,22 @@ test("@technical refusing the prompt keeps both the supplier and the draft", asy
   await expect(page.getByLabel("Supplier Name")).toHaveValue("Evergreen Trading (draft)");
   expect(problems).toEqual([]);
 });
+
+// `/suppliers/:id` 收得任何字串，打錯網址或者跟住條舊 link 就到得呢度。coerce 成
+// NaN 之後 `NaN !== NaN` 令 supersede 判斷次次答「已經過時」：`loading` 清唔到、
+// `error` 又寫唔入，頁面就永遠吊喺骨架——冇資料、冇錯誤、冇得撳。
+//
+// 要喺真瀏覽器釘埋 network 嗰半邊：短路咗之後連一個 NaN id 嘅請求都唔應該發出。
+// 淨係睇畫面嘅話，一個「照發請求、等後端 404」嘅寫法一樣會綠。
+test("@technical a non-numeric id lands on not-found instead of an endless skeleton", async ({ page }) => {
+  const problems = collectConsole(page);
+  const calls = await installApi(page);
+
+  await page.goto("/suppliers/abc");
+
+  await expect(page.getByRole("alert")).toContainText("找不到這個供應商");
+  await expect(page.getByRole("link", { name: "返回供應商列表" })).toBeVisible();
+  await expect(page.getByLabel("載入供應商詳情")).toHaveCount(0);
+  expect(calls.filter((call) => call.path.startsWith("/api/v1/suppliers"))).toEqual([]);
+  expect(problems).toEqual([]);
+});
