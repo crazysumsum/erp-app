@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 20,
+  "revision": 21,
   "mode": "DESIGN_AND_PLAN",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "PLANNED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
     "plan": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
-    "code_commit": "7a415e514677dd80a75992dd7d904901582dd81d",
-    "source_fingerprint": "a9a710ad07644ec0098b0574d8a2ca054ec549d852eb01b07d3f65dbc8f08149",
+    "code_commit": "c233d693df12050bc7c3cb24a56f1b691311157e",
+    "source_fingerprint": "385cde8e437a08d9b811bf6c322bd7a585ec2edf4cb801f215a0a7ea598094b1",
     "worktree": "/private/tmp/erp-inventory-migration-plan-correction",
-    "default_commit": "487bec1f273de48de2a161e881e740bab118b41e",
+    "default_commit": "dd8e238755a8685182e32397c05552774fd74adc",
     "mode_entry_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec"
   },
   "runtime": {
@@ -660,21 +660,21 @@
       "kind": "GIT_PUSH",
       "target": "origin/codex/inventory-migration-plan-correction",
       "idempotency_key": "inventory-migration-plan-correction-push-20260923",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/tree/codex/inventory-migration-plan-correction"
     },
     {
       "id": "EXT-013",
       "kind": "PR_CREATE",
-      "target": "main<-codex/inventory-migration-plan-correction",
+      "target": "https://github.com/crazysumsum/erp-app/pull/139 (main<-codex/inventory-migration-plan-correction)",
       "idempotency_key": "inventory-migration-plan-correction-pr-20260923",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/139"
     },
     {
       "id": "EXT-014",
       "kind": "PR_MERGE",
-      "target": "main<-codex/inventory-migration-plan-correction",
+      "target": "https://github.com/crazysumsum/erp-app/pull/139 -> main",
       "idempotency_key": "inventory-migration-plan-correction-merge-20260923",
       "status": "PLANNED",
       "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
@@ -682,5 +682,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Re-run the approved hash, PLAN_READY, traceability and docs-only boundary checks against origin/main 487bec1f273de48de2a161e881e740bab118b41e; if unchanged, push and create the authorized no-CI PR."
+  "next_safe_action": "Re-run approved hashes, PLAN_READY, traceability and docs-only boundary checks against origin/main dd8e238755a8685182e32397c05552774fd74adc; push the refreshed head, confirm CI cancellation, then merge PR #139 without waiting for checks."
 }
