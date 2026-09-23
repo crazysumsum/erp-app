@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 224,
+  "revision": 227,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
-    "source_fingerprint": "6d3479cf129556a62790cb6cf34dbcea550b16991f54c8ae0b125d1e7c99b126",
+    "code_commit": "18c16dacc7a831707bdbcf5510ec9bfa276eb2d2",
+    "source_fingerprint": "1042a0baded54e580654178ca5cf252b59dc24f97dfb8bd6bb768dca2f524a59",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
-    "default_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
+    "default_commit": "da222e2ef4e2b9cf7278878b7badc1b52203bb12",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -3062,6 +3062,17 @@
       "actor": "Claude Opus 5 (Claude Code session)",
       "observed_at": "2026-09-23T05:55:47Z",
       "source_ref": "PR #131 merged at 2026-09-23T02:11:48Z, merge commit a264d41, from commits da14c8b (guard + vitest) and ef1f9a1 (Playwright regression). Five required CI checks green on that head (run 35807241232), including Browser tests (Playwright). Mechanism confirmed before fixing and matches REV-047 probe P-B: Number(route.params.id) is NaN, so superseded() is NaN !== NaN and always true, leaving loading set and error unset. Both new tests were verified to discriminate by removing the guard and observing red; the skeleton hang was also reproduced and re-cleared in a real browser. REV-047 left open whether other Number(route.params...) sites share the shape: grepped at this commit, SupplierDetailPage is the only page with a supersede guard, and the other four sites (CustomerDetailPage x2, SkuDetailPage x2, SkuCreatePage, ItemDetailPage) clear loading unconditionally, so they surface a backend error instead of hanging. No manifest, design or plan baseline was touched; baseline drift fields were deliberately left unreconciled."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-051: a blind index was leaking through MySQL's duplicate-key message, and my scan could not have seen it",
+      "code_commit": "18c16dacc7a831707bdbcf5510ec9bfa276eb2d2",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "1042a0baded54e580654178ca5cf252b59dc24f97dfb8bd6bb768dca2f524a59",
+      "status": "PASS",
+      "source_ref": "REV-051 returned CHANGES_REQUESTED with 0 Critical, 0 High, 3 Medium, 7 Low and 5 Info; all three Mediums were real. F-M1 is the one that matters. I forwarded error.message into the failure report, justified by 'crypto's messages carry no ciphertext or key' - true of crypto, whose seven throw sites the reviewer checked, but the same catch also wraps connection.execute, and MySQL embeds the offending key value in an ER_DUP_ENTRY message. For uq_supplier_bank_blind_index that value is the blind index. I reproduced the shape on real MySQL before accepting it. My own secret scan could not have found it: it searched for base64 and 43-character base64, and the leak arrives byte-escaped as backslash-x-C0 and so on. The scan was sound and its negative control did discriminate; the conclusion I drew from it was narrower than I stated. Failure reasons are now classified - DUPLICATE_KEY plus the constraint name, which is schema rather than data, or a fixed identifier, or UNKNOWN - and no driver message is forwarded. F-M2: --limit bounded successes rather than work, because processed only increments on success, so a limit-2 probe over failing rows would scan the whole table; there is now an attempted counter. F-M3: the concurrency guard in the UPDATE's WHERE clause is correct and load-bearing - the reviewer landed a real concurrent write against real MySQL and the guard held - but both vacuous-guard mutants survived, because my fake database parsed SET and ignored WHERE, and the two things this task's safety rests on both live in WHERE. Worth recording that my first fix for that still did not discriminate: the fake's SELECT returned live references into its own table, so a test simulating a concurrent change also mutated the row the rotation was holding, and the guard passed whether it was correct or not. Real MySQL returns detached rows. After making the fake return copies the encryption mutant died and the lookup one did not, because the test only covered one kind; both are covered now. Two further record inaccuracies the reviewer caught: my 'ring limit off by one KILLED' held for some variants but > to >= survived, since no test built a ring of exactly three - the design's permitted maximum and the normal mid-transition state - and deleting the lookup half of ringWarnings entirely also survived. Eleven mutants now, eleven killed. 356/356 supplier server suite, lint exit 0, boundary still exactly three OUTSIDE_MODULE in server/scripts/.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-051",
+      "observed_at": "2026-09-23T14:25:18+08:00"
     }
   ],
   "pending_decisions": [
@@ -4109,7 +4120,11 @@
     "evidence/20260923T055825-609eaefb67e2/run.json",
     "evidence/20260923T055829-1cf9b69d433e/run.json",
     "evidence/20260923T055834-e32af7560204/run.json",
-    "evidence/20260923T055837-050da53eebeb/run.json"
+    "evidence/20260923T055837-050da53eebeb/run.json",
+    "evidence/20260923T062434-8ffdbd0731f3/run.json",
+    "evidence/20260923T062439-75c8055ea9ec/run.json",
+    "evidence/20260923T062441-09f05abc5e6a/run.json",
+    "evidence/20260923T062444-ad20928e31ba/run.json"
   ],
   "defects": [
     {
