@@ -28,7 +28,16 @@ function crypto({ encActive = "e2", encRing = { e1: KEY_A, e2: KEY_B }, lookActi
  * 就係「揀舊 key 而且 id 大過 X 嘅行」同「更新一行」。真 MySQL 嗰邊由
  * `test/integration/supplierBankRotation.integration.test.js` 負責。
  */
-function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set() } = {}) {
+/** 一個同 mysql2 同形狀嘅重覆鍵錯誤 —— 連 MySQL 會嵌落去嗰個 key 值都有。 */
+function duplicateKeyError(indexBytes) {
+  const escaped = [...indexBytes].map((byte) => `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`).join("");
+  return Object.assign(new Error(
+    `Duplicate entry '${escaped}' for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'`
+  ), { errno: 1062, code: "ER_DUP_ENTRY", sqlMessage:
+    `Duplicate entry '${escaped}' for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'` });
+}
+
+function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), duplicateOn = new Map() } = {}) {
   const table = rows.map((row) => ({ ...row }));
   const db = {
     table,
@@ -39,7 +48,12 @@ function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set() } =
       }
       const column = sql.includes("WHERE encryption_key_id") ? "encryption_key_id" : "blind_index_key_id";
       const limit = Number(/LIMIT (\d+)/u.exec(sql)[1]);
-      return [table.filter((r) => r[column] === params[0] && r.id > params[1]).sort((a, b) => a.id - b.id).slice(0, limit)];
+      // **回副本**，唔回 live reference。真 MySQL 回嘅係一份已經脫離咗表嘅資料，
+      // 而呢個分別唔係學術嘅：靠 reference 嘅話，一個模擬並發嘅測試改個 table 就
+      // 連手上嗰行都改埋，於是個 guard 無論啱定錯都會「通過」，兩個 mutant 一齊
+      // 生還。（REV-051 F-M3 嘅第一次修法就係咁樣測唔到嘢。）
+      return [table.filter((r) => r[column] === params[0] && r.id > params[1])
+        .sort((a, b) => a.id - b.id).slice(0, limit).map((r) => ({ ...r }))];
     },
     async withTransaction(work) {
       return work({
@@ -52,15 +66,34 @@ function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set() } =
          */
         async execute(sql, params) {
           const setClause = /SET ([\s\S]*?)\s+WHERE/u.exec(sql)[1];
-          const assignments = setClause.split(",").map((part) => part.trim());
-          const row = table.find((r) => r.id === params[params.length - 2]);
+          const whereClause = /WHERE ([\s\S]*)$/u.exec(sql)[1];
           const next = {};
           let cursor = 0;
-          for (const assignment of assignments) {
+          for (const assignment of setClause.split(",").map((part) => part.trim())) {
             const [column, value] = assignment.split("=").map((part) => part.trim());
             // 右邊唔係 `?` 就係「寫返自己」，即係冇變 —— 同真 SQL 一樣。
             if (value === "?") next[column] = params[cursor++];
           }
+          /**
+           * `WHERE` 一樣要跟住行，唔係靠 `params` 尾二個當作 id。
+           *
+           * 之前呢度淨係 parse `SET`，而呢個 task 兩樣最要緊嘅嘢 —— 續跑用嘅
+           * `encryption_key_id = ?` 過濾，同防並發覆寫嗰個 guard —— **兩個都住喺
+           * `WHERE` 入面**。即係我可以把個 guard 改成 `OR 1 = 1` 而成套測試照綠。
+           * （REV-051 F-M3）
+           */
+          const predicates = whereClause.split(/\s+AND\s+/u).map((part) => part.trim());
+          const wanted = {};
+          for (const predicate of predicates) {
+            const [column, value] = predicate.split("=").map((part) => part.trim());
+            if (value === "?") wanted[column] = params[cursor++];
+            else if (column === "1" && value === "1") continue; // `OR 1 = 1` 類嘅恆真
+          }
+          const row = table.find((candidate) =>
+            Object.entries(wanted).every(([column, value]) => candidate[column] === value));
+          // 冇行 match 就係 affectedRows 0 —— 唔係錯，但亦都唔係寫入。
+          if (!row) return [{ affectedRows: 0 }];
+          if (duplicateOn.has(row.id)) throw duplicateKeyError(duplicateOn.get(row.id));
           if (failOn.has(row.id)) throw new Error("simulated row failure");
           Object.assign(row, next);
           // 寫咗之後先死 —— 例如 commit 階段出事。呢個係唯一一種「舊 key 已經冇
@@ -195,6 +228,78 @@ test("a failure that lands after the write still blocks removing the old key", a
     "remaining === 0 is not sufficient: a run with an unexplained failure must not authorise removing the key");
 });
 
+/**
+ * REV-051 F-M1。MySQL 喺 `ER_DUP_ENTRY` 嘅訊息入面會嵌住撞咗嗰個 key 嘅值，而對
+ * `uq_supplier_bank_blind_index` 嚟講，嗰個值**就係 blind index**。轉發
+ * `error.message` 就等於把半個 HMAC 印落 report。
+ */
+test("a duplicate key failure reports the constraint, never the index MySQL echoes back", async () => {
+  const oldCrypto = crypto({ lookActive: "l1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 })];
+  const index = c.blindIndex(`${ACCOUNT}1`).index;
+  const db = fakeDatabase(rows, { duplicateOn: new Map([[1, index]]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2" });
+
+  assert.equal(report.failed, 1);
+  assert.equal(report.failures[0].reason, "DUPLICATE_KEY");
+  assert.equal(report.failures[0].constraint, "uq_supplier_bank_blind_index",
+    "the constraint name is schema, not data, and it is what an operator needs");
+
+  const serialised = JSON.stringify(report);
+  // MySQL 用 `\xAB` 咁嘅形式嵌住佢 —— base64 掃描係捉唔到嘅，所以要照佢個形式掃。
+  const escaped = [...index].map((byte) => `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`).join("");
+  assert.ok(!serialised.includes(escaped.slice(0, 24)), "no escaped index bytes may reach the report");
+  assert.ok(!serialised.includes("Duplicate entry"), "no driver message may be forwarded verbatim");
+  assert.ok(!serialised.includes(index.toString("hex").slice(0, 16)), "nor the index in hex");
+});
+
+// REV-051 F-M2：`--limit` 限嘅係做幾多行，唔係成功幾多行。
+test("--limit bounds the work attempted, not just the rows that succeed", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const db = fakeDatabase(ids.map((id) => seed(oldCrypto, { id })), { failOn: new Set(ids) });
+
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", limit: 2
+  });
+
+  assert.equal(report.processed, 0, "every row fails");
+  assert.equal(report.attempted, 2, "but a --limit=2 run must still stop after two");
+  assert.equal(report.failed, 2,
+    "a cautious probe must not turn into a full table scan just because the rows fail");
+});
+
+// REV-051 F-M3：防並發覆寫嗰個 guard 住喺 WHERE 入面。
+for (const [kind, fromKey, toKey, keyColumn, witness] of [
+  [ROTATION_KINDS.ENCRYPTION, "e1", "e2", "encryption_key_id", "account_ciphertext"],
+  [ROTATION_KINDS.LOOKUP, "l1", "l2", "blind_index_key_id", "account_blind_index"]
+]) {
+  test(`${kind}: a row whose key changed under us is not overwritten`, async () => {
+    const oldCrypto = crypto(kind === ROTATION_KINDS.ENCRYPTION ? { encActive: "e1" } : { lookActive: "l1" });
+    const c = crypto();
+    const db = fakeDatabase([seed(oldCrypto, { id: 1 }), seed(oldCrypto, { id: 2 })]);
+    const before = db.table[0][witness];
+
+    // 模擬另一個 process 喺 SELECT 同 UPDATE 之間換走咗第一行嘅 key。
+    const originalQuery = db.query.bind(db);
+    db.query = async (sql, params) => {
+      const result = await originalQuery(sql, params);
+      if (sql.includes(`WHERE ${keyColumn}`)) db.table[0][keyColumn] = toKey;
+      return result;
+    };
+
+    const report = await runRotation({ database: db, crypto: c, kind, from: fromKey, to: toKey });
+
+    assert.deepEqual(db.table[0][witness], before,
+      "the guard must refuse to write a row whose key id no longer matches the one we read");
+    assert.equal(db.table[1][keyColumn], toKey, "the untouched row still rotates");
+    assert.equal(report.remaining, 0);
+  });
+}
+
 // `--to` 係確認唔係選擇器。
 test("refuses a --to that is not the active key, instead of silently using the active one", async () => {
   const c = crypto();
@@ -241,6 +346,13 @@ test("warns when the ring grows past three keys or the transition runs past thir
 
   assert.deepEqual(codes(ringWarnings({ crypto: big })), ["RING_TOO_LARGE"]);
   assert.deepEqual(codes(ringWarnings({ crypto: crypto() })), [], "a healthy ring warns about nothing");
+  // 邊界：啱啱三條係設計容許嘅上限，亦都係過渡期嘅正常狀態 —— 唔可以警告。
+  // 冇呢句，一個 `>` 改 `>=` 嘅 mutant 會生還。（REV-051）
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto({ encRing: { e1: KEY_A, e2: KEY_B, e3: KEY_C } }) })), [],
+    "exactly three keys is the permitted maximum");
+  // Lookup 嗰半一樣要有嘢釘住 —— 拆走佢之前冇任何測試會紅。
+  assert.deepEqual(ringWarnings({ crypto: crypto({ lookRing: { l1: KEY_A, l2: KEY_B, l3: KEY_C, l4: KEY_A } }) })
+    .map((w) => w.kind), ["lookup"]);
 
   const now = Date.UTC(2026, 0, 31);
   assert.deepEqual(codes(ringWarnings({ crypto: crypto(), transitionStartedAt: Date.UTC(2025, 11, 1), now })),

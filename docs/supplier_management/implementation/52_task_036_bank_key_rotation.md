@@ -111,7 +111,70 @@ reindex-lookup（續跑）         → processed 2, remaining 0, safeToRemove tr
 Report 有嘅係 `kind`、`from`／`to` 嘅 key **id**、數量、失敗行嘅 **id** 同 reason。
 Key id 唔係祕密 —— 佢一行行寫咗喺 `encryption_key_id` 同 `blind_index_key_id` 度。
 
-## 7. 順帶加咗兩個 getter
+## 7. REV-051 remediation
+
+REV-051 報 0 Critical、0 High、**3 Medium**、7 Low、5 Info。三條 Medium 全部真，
+而第一條我原本個掃描**結構上捉唔到**。
+
+### F-M1 —— blind index 經 MySQL 嘅錯誤訊息漏入 report
+
+我轉發咗 `error.message`，理由寫住「crypto 拋嘅訊息唔含密文或者 key」。**嗰句對
+crypto 係啱嘅**（七個 throw site 都查過），但個 `catch` 同時包住 `connection.execute`
+—— 而 MySQL 喺 `ER_DUP_ENTRY` 嘅訊息入面會**嵌住撞咗嗰個 key 嘅值**。對
+`uq_supplier_bank_blind_index` 嚟講，嗰個值就係 **blind index**。
+
+我自己喺真 MySQL 上重現咗個形狀：
+
+```
+Duplicate entry '\xC0\x18\x83D\xAA\xBB\xCC\xDD…' for key 'dup_probe.uq_k'
+```
+
+**而我個掃描係捉唔到嘅** —— 佢揾 base64 同 43 字元 base64，而呢個係逐 byte 轉義
+走出嚟。個掃描本身冇錯（負控制證過佢揾得返種落去嘅 key），錯嘅係我由佢推出嚟嗰個
+結論窄過事實：「掃唔到 base64」唔等於「冇祕密」。
+
+修法：唔轉發任何驅動程式訊息。新嘅 `safeReason()` 只出 `DUPLICATE_KEY` ＋
+**constraint 名**（schema，唔係資料）、或者一個固定識別碼、或者 `UNKNOWN`。
+
+### F-M2 —— `--limit` 限成功數而唔係工作量
+
+`processed` 只喺成功先加，所以 `room` 永遠唔縮而 `lastId` 照行 —— `--limit=2` 落去
+一張全部會失敗嘅表，會掃晒成張表，每行一條 `failures`。一個謹慎嘅試探性 run 唔應該
+咁樣變成全表掃描。加咗 `attempted`。
+
+### F-M3 —— 防並發覆寫嗰個 guard 係啱嘅、要緊嘅，但冇嘢測
+
+`WHERE ... AND encryption_key_id = ?` 擋住「SELECT 同 UPDATE 之間有人改咗嗰行」。
+REV-051 喺真 MySQL 上證明咗佢真係做嘢；但**兩個 `OR 1 = 1` mutant 喺單元同整合
+suite 都生還**。原因：我個 double 讀咗 `SET` 但**冇讀 `WHERE`** —— 而呢個 task
+兩樣最要緊嘅嘢（續跑嘅過濾、同呢個 guard）**兩個都住喺 `WHERE` 入面**。
+
+**而我第一次修都仲係測唔到。** 我加咗個並發測試，但個 double 個 `SELECT` 回嘅係
+**live reference**，所以我改 table 就連手上嗰行都改埋，個 guard 無論啱定錯都會通過。
+真 MySQL 回嘅係脫離咗表嘅資料。改成回副本之後，encryption 嗰個 mutant 死;
+lookup 嗰個仲生還，因為我個測試淨係試咗 encryption 一邊 —— 兩邊都補咗先兩個都死。
+
+### 另外兩個記錄唔準
+
+- 「ring limit off by one KILLED」對 `3→4` 同 `> n+1` 係真，但 **`>` 改 `>=` 生還**
+  —— 冇測試砌過一個**啱啱三條** key 嘅 ring，而嗰個正正係設計容許嘅上限同過渡期
+  嘅正常狀態。我喺 30／31 日嗰度收咗呢條邊界，喺呢度冇。
+- 拆走 `ringWarnings` 個 **lookup 半邊**，成套測試照綠。
+
+### Mutation：十一個，十一個殺到
+
+```
+F-M1 forward the driver message   KILLED   drop the from-key filter       KILLED
+F-M2 limit counts successes       KILLED   safeToRemove ignores failures  KILLED
+F-M3 encryption guard vacuous     KILLED   --to not validated             KILLED
+F-M3b lookup guard vacuous        KILLED   transition limit off by one    KILLED
+ring limit > becomes >=           KILLED   reindex: key id not written    KILLED
+drop the lookup half of warnings  KILLED
+```
+
+356/356 supplier server suite、lint exit 0。
+
+## 8. 順帶加咗兩個 getter
 
 `SupplierBankCrypto` 加咗 `encryptionKeyIds` 同 `lookupKeyIds`（ring 大細警告要用）。
 回 **id** 唔回 material；`toJSON` 同 inspect 仍然係 `[REDACTED]`，驗過。

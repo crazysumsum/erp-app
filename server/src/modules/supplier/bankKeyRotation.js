@@ -26,6 +26,41 @@
  * 一半嘅 run 喺呢個查詢眼中係同一件事。
  */
 
+/**
+ * 把一個錯誤變成一個可以印出嚟嘅理由。
+ *
+ * **唔可以**直接用 `error.message`。我上一版咁做，理由係「crypto 拋嘅訊息唔含密文
+ * 或者 key」—— 嗰句對 crypto 嚟講係啱嘅（七個 throw site 都查過），但個 `catch`
+ * 同時包住 `connection.execute`，而 MySQL 喺 `ER_DUP_ENTRY` 嘅訊息入面會**嵌住
+ * 撞咗嗰個 key 嘅值**：
+ *
+ *   Duplicate entry '\xC0\x18\x83D\xAA\xBB…' for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'
+ *
+ * 而對嗰條 UNIQUE 嚟講，撞咗嗰個值**就係 blind index**。即係一個重覆就會把半個
+ * HMAC 連同 supplier_id 印落 report 度。T36 AC3 冇條件咁禁止呢件事。（REV-051 F-M1）
+ *
+ * 我原本個掃描亦都捉唔到：佢揾 base64 同 43 字元 base64，而呢個係
+ * `\xC0\x18\x83D` 咁樣走出嚟嘅。掃描本身冇錯，係我由佢推出嚟嗰個結論窄過事實。
+ *
+ * 所以呢度**唔轉發任何驅動程式訊息**。Constraint 名同 errno 唔係祕密，照出；
+ * 其餘一律收成一個固定字串。
+ */
+function safeReason(error) {
+  const chain = [error, error?.cause, error?.cause?.cause].filter(Boolean);
+  const duplicate = chain.find((link) => Number(link.errno) === 1062 || link.code === "ER_DUP_ENTRY");
+  if (duplicate) {
+    // 淨係抽 constraint 名 —— 佢係 schema 嘅一部分，唔係資料。
+    const constraint = /for key '(?:[^'.]*\.)?([A-Za-z0-9_]+)'/u.exec(
+      String(duplicate.sqlMessage ?? duplicate.message ?? "")
+    );
+    return { reason: "DUPLICATE_KEY", constraint: constraint?.[1] ?? "unknown" };
+  }
+  // Crypto 自己嘅錯誤有 publicCode／code，兩個都係固定識別碼。
+  const named = chain.find((link) => typeof link.publicCode === "string" || typeof link.code === "string");
+  if (named) return { reason: named.publicCode ?? named.code };
+  return { reason: "UNKNOWN" };
+}
+
 const DEFAULT_BATCH_SIZE = 200;
 const MAX_RING_SIZE = 3;
 const MAX_TRANSITION_DAYS = 30;
@@ -56,6 +91,7 @@ function assertDistinct(from, to) {
  */
 export function ringWarnings({ crypto, transitionStartedAt = null, now = Date.now() } = {}) {
   const warnings = [];
+  // 兩個 ring 各自睇。之前呢個迴圈拆走 lookup 嗰半都冇測試會紅 —— 補咗。
   for (const [kind, ring] of [["encryption", crypto.encryptionKeyIds], ["lookup", crypto.lookupKeyIds]]) {
     if (ring.length > MAX_RING_SIZE) {
       warnings.push({
@@ -165,30 +201,36 @@ export async function runRotation({
   let lastId = Number(after) || 0;
   const failures = [];
 
+  // `attempted` 唔係 `processed`：`--limit` 限嘅係**做幾多行**，唔係成功幾多行。
+  // 之前用 `processed`，所以一批全部失敗嘅行永遠唔會令 room 縮細，而 `lastId`
+  // 照樣行 —— `--limit=2` 落去一張全壞嘅表會掃晒成張表，每行一條 failures。
+  // 一個謹慎嘅試探性 run 唔應該咁樣變成全表掃描。（REV-051 F-M2）
+  let attempted = 0;
   for (;;) {
-    const room = limit > 0 ? limit - processed : batchSize;
+    const room = limit > 0 ? limit - attempted : batchSize;
     if (room <= 0) break;
     const rows = await selectBatch(database, kind, from, lastId, Math.min(batchSize, room));
     if (rows.length === 0) break;
     for (const row of rows) {
+      attempted += 1;
       try {
         await rotateRow(database, kind, crypto, row);
         processed += 1;
       } catch (error) {
         // 一行壞唔應該停低成個輪替 —— 但亦都唔可以靜靜雞跳過，因為「舊 key row
-        // count = 0」係剷 key 嘅前提。記低 id 同 reason，最後 report 度見得到。
-        // `error.message` 由 crypto 拋出嚟，佢唔含密文或者 key（見 SupplierBankCrypto）。
-        failures.push({ id: Number(row.id), reason: error?.message ?? "unknown" });
+        // count = 0」係剷 key 嘅前提。記低 id 同一個**分類過**嘅 reason。
+        failures.push({ id: Number(row.id), ...safeReason(error) });
       }
       lastId = Number(row.id);
-      onProgress({ processed, lastId, failures: failures.length });
+      onProgress({ processed, attempted, lastId, failures: failures.length });
+      if (limit > 0 && attempted >= limit) break;
     }
   }
 
   const remaining = await remainingRows(database, kind, from);
   return {
     kind, from, to: active,
-    processed, failed: failures.length, failures,
+    processed, attempted, failed: failures.length, failures,
     lastId, remaining,
     // 剷得走舊 key 嘅唯一條件：冇行仲用緊佢，而且今次冇失敗行。
     safeToRemoveFromKey: remaining === 0 && failures.length === 0,

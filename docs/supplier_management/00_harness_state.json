@@ -3051,6 +3051,17 @@
       "source_ref": "Two resumable, bounded-batch Bank key rotation commands per design 2.7. The logic lives in server/src/modules/supplier/bankKeyRotation.js, inside module scope and injectable, and the three files in server/scripts/ are shells - a deliberate consequence of HD-034, which accepted an OUTSIDE_MODULE finding there rather than move the design baseline. The boundary validator against the merge-base reports exactly three OUTSIDE_MODULE entries, all in server/scripts/; server/package.json does not appear because APPROVAL-HD-035-SCOPE covers it, so the two paths each go through the gate they should. Resumability needs no progress file: the selection condition is the progress, because a rotated row no longer carries the from key. --to is validated as a confirmation rather than used as a selector, because encryptAccountNumber and blindIndex always use the active key, so a --to that differs from active means the operator is commanding a rotation that does not exist. safeToRemoveFromKey requires both remaining === 0 and zero failures, and the second clause is not redundant: a row that fails after its write landed leaves remaining at zero with an unexplained failure, which must not authorise removing a key; the unit suite constructs exactly that. Worth recording about the tests rather than the code: the first mutation pass left four of eight alive, and two of those survived for the same reason - the fake database assigned columns by parameter position, so rewriting the SQL to stop updating a column changed nothing. The double was not imitating MySQL. It now parses the SET clause. The other two were missing cases, the post-write failure and the 30/31-day boundary. All eight die now. The manual interrupted run from T36's verification was performed against the real CLI and real MySQL: limit 2 then resume for encryption, limit 3 then resume for lookup, with the old-key row count checked at each step and reaching zero. The real CLI output was scanned for both key values, both plaintexts and any 43-character base64 run, with zero hits and the scan shown to find a planted key. One unplanned finding: while resetting rows for a re-run I made encryption_key_id disagree with the ciphertext it named, and the command refused all five rows with a named authentication failure, reported their ids, declined to authorise key removal and exited 1 - that path is fail closed.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-23T13:59:00+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-022 (REV-047 F-M2) remediated: a non-numeric /suppliers/:id no longer hangs on the loading skeleton",
+      "code_commit": "a264d41e402c0adc3caf05555034755f54e7abbf",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "234b1e75bacf926f43faa41d7f01cbc49431d8bfd3ec84f33aa2aed963b63c40",
+      "status": "PASS",
+      "actor": "Claude Opus 5 (Claude Code session)",
+      "observed_at": "2026-09-23T05:55:47Z",
+      "source_ref": "PR #131 merged at 2026-09-23T02:11:48Z, merge commit a264d41, from commits da14c8b (guard + vitest) and ef1f9a1 (Playwright regression). Five required CI checks green on that head (run 35807241232), including Browser tests (Playwright). Mechanism confirmed before fixing and matches REV-047 probe P-B: Number(route.params.id) is NaN, so superseded() is NaN !== NaN and always true, leaving loading set and error unset. Both new tests were verified to discriminate by removing the guard and observing red; the skeleton hang was also reproduced and re-cleared in a real browser. REV-047 left open whether other Number(route.params...) sites share the shape: grepped at this commit, SupplierDetailPage is the only page with a supersede guard, and the other four sites (CustomerDetailPage x2, SkuDetailPage x2, SkuCreatePage, ItemDetailPage) clear loading unconditionally, so they surface a backend error instead of hanging. No manifest, design or plan baseline was touched; baseline drift fields were deliberately left unreconciled."
     }
   ],
   "pending_decisions": [
@@ -4394,6 +4405,24 @@
         "server/test/supplierBankCrypto.test.js",
         "HD-029",
         "REV-035 H-2"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-022",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "REV-047 F-M2",
+        "client/src/pages/suppliers/SupplierDetailPage.vue",
+        "PR #127",
+        "TASK-035"
+      ],
+      "closure_evidence": [
+        "client/src/pages/suppliers/SupplierDetailPage.vue",
+        "client/test/pages/suppliers/detail.test.js",
+        "client/e2e/supplier-management/supplier-detail-route-reuse.spec.js",
+        "PR #131 merge commit a264d41e402c0adc3caf05555034755f54e7abbf"
       ],
       "risk_approval_id": null
     }
