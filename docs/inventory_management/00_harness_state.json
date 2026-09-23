@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 14,
+  "revision": 15,
   "mode": "DESIGN_AND_PLAN",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "PLANNED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41",
     "plan": "b9a4a3874e84e70b1025b0d2fb9d06ff7f80bd66b5ff3aa4e1bc8fa93dc84bb9",
-    "code_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec",
-    "source_fingerprint": "0c297f9f6e48bd5e570a454d7fbeec1ea4657c3695361b7572f8a4c416686fb1",
+    "code_commit": "42ea51142c2484bc055a06e32ba8eda9a57f6021",
+    "source_fingerprint": "553d36d390584a5f4468e75bfcfaf357c6e8401ff8e7178ca2972a850781dfa9",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
-    "default_commit": "a264d41e402c0adc3caf05555034755f54e7abbf",
+    "default_commit": "3e53f7dcf47a7e31ec3290a852914afe9335b9e7",
     "mode_entry_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec"
   },
   "runtime": {
