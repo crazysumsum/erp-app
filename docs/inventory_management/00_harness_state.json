@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 15,
+  "revision": 19,
   "mode": "DESIGN_AND_PLAN",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "PLANNED",
@@ -9,12 +9,12 @@
   "current_phase": null,
   "current_task": null,
   "baseline": {
-    "design": "f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41",
-    "plan": "b9a4a3874e84e70b1025b0d2fb9d06ff7f80bd66b5ff3aa4e1bc8fa93dc84bb9",
-    "code_commit": "42ea51142c2484bc055a06e32ba8eda9a57f6021",
-    "source_fingerprint": "553d36d390584a5f4468e75bfcfaf357c6e8401ff8e7178ca2972a850781dfa9",
-    "worktree": "/private/tmp/erp-inventory-p0-foundation",
-    "default_commit": "3e53f7dcf47a7e31ec3290a852914afe9335b9e7",
+    "design": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+    "plan": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
+    "code_commit": "da222e2ef4e2b9cf7278878b7badc1b52203bb12",
+    "source_fingerprint": "e59ff28537a03f55c2c07f2334715e26fd1c59c2780cc8797ee3d707465b2b5b",
+    "worktree": "/private/tmp/erp-inventory-migration-plan-correction",
+    "default_commit": "da222e2ef4e2b9cf7278878b7badc1b52203bb12",
     "mode_entry_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec"
   },
   "runtime": {
@@ -160,6 +160,47 @@
         "UAT-001 through UAT-113"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-005",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving Inventory 0.5 DESIGN hash",
+      "recorded_at": "2026-09-23T14:52:41+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-028"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-006",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving Inventory 0.5 PLAN hash",
+      "recorded_at": "2026-09-23T15:01:49+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -206,6 +247,30 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41",
       "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-005",
+      "method": "SELF_REVIEW",
+      "author": "/root migration-order correction author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-006",
+      "method": "HUMAN",
+      "author": "/root migration-order correction author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving Inventory 0.5 DESIGN hash",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -465,6 +530,24 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "docs/inventory_management/09_final_alignment_review.md#hd-006--mysql-server-2670-baseline"
+    },
+    {
+      "id": "HD-007",
+      "impact": "MAJOR",
+      "question": "May the migration allocation be revised to split operation requests from movements and place operation/audit DDL before P1 master/stock DDL?",
+      "affected_ids": [
+        "DES-002",
+        "DES-003",
+        "DES-007",
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-23 approving migration allocation 0054-0063 and return to DESIGN_AND_PLAN"
     }
   ],
   "external_actions": [
@@ -563,9 +646,41 @@
       "idempotency_key": "mode-change-12",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task user decision on 2026-09-23: 改以 26.7.0 為基線"
+    },
+    {
+      "id": "EXT-011",
+      "kind": "LOCAL_WORKTREE_CREATE",
+      "target": "/private/tmp/erp-inventory-migration-plan-correction on codex/inventory-migration-plan-correction from da222e2ef4e2b9cf7278878b7badc1b52203bb12",
+      "idempotency_key": "inventory-migration-plan-correction-worktree-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 approving migration allocation 0054-0063 and return to DESIGN_AND_PLAN"
+    },
+    {
+      "id": "EXT-012",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-push-20260923",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
+    },
+    {
+      "id": "EXT-013",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-pr-20260923",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
+    },
+    {
+      "id": "EXT-014",
+      "kind": "PR_MERGE",
+      "target": "main<-codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-merge-20260923",
+      "status": "PLANNED",
+      "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Ask Sam whether to resume IMPLEMENT on the approved Inventory 0.4 baseline; if authorized, allocate an isolated MySQL Server 26.7.0 runtime and start TASK-001 by reconciling CI/runtime version without modifying existing migrations."
+  "next_safe_action": "Commit the approved docs-only correction, refresh origin/main, perform a final independent review, then push, create and merge the PR without CI under Sam's authorization."
 }
