@@ -2,7 +2,7 @@
 
 ## Status and execution boundary
 
-All cases are specification-only and `NOT_RUN`. `REVIEW_AND_ALIGN` authorizes no product implementation, test execution, Technical Acceptance or UAT sign-off. P0/P1 data-integrity and security cases must exist before execution, and actual results must bind to an immutable baseline.
+All cases are specification-only and `NOT_RUN`. The 0.4 design/plan is approved, but no test execution, Technical Acceptance or UAT sign-off has occurred. Database integration cases must run against a server that reports exactly MySQL Server 26.7.0; version mismatch or inability to prove the version blocks the suite.
 
 ## TC-001 — Authentication, authorization and boundary validation
 
