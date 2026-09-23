@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — `PHASE-001 / TASK-001` is complete and `TASK-002` is active on the approved exact MySQL Server 26.7.0 baseline. No migration has been executed.
+`IMPLEMENTING` — `PHASE-001 / TASK-001` and `TASK-002` are complete; `TASK-003` is active on the approved exact MySQL Server 26.7.0 baseline. No migration has been executed.
 
 ## Baseline
 
@@ -42,6 +42,12 @@ Sam independently confirmed this allocation in the active Codex task on 2026-09-
 
 This preserves the approved FK order. Existing migration filenames and contents remain unchanged.
 
+## TASK-002 developer verification
+
+- A focused regression first reproduced that `jwt-password` requests from different actors on the same IP shared one store key.
+- `identityScope` now treats every non-public authenticated strategy as actor-scoped while retaining the existing `jwt:` key namespace; public and unauthenticated requests retain IP scope.
+- `idempotencyService`, dispatcher, memory-store and MySQL-store regressions passed: 91 tests, 0 failures. The dispatcher suite required local loopback permission; no database or migration was used.
+
 ## Boundaries
 
 - No migration execution, production access, deployment, CI merge, Technical Acceptance or UAT has occurred.
@@ -49,4 +55,4 @@ This preserves the approved FK order. Existing migration filenames and contents 
 
 ## Next safe action
 
-Implement TASK-002's authenticated idempotency actor scope with a focused failing test first; do not execute migrations.
+Implement TASK-003 permissions, config, constants and public errors; creating the allocated `0054` seed migration is allowed, but executing migrations remains separately authorized.
