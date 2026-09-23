@@ -388,6 +388,53 @@ async function tryRefresh() {
 
 另加一條到期前警告：續期連續失敗且剩餘不到 2 分鐘時顯示 banner「連線階段即將結束，請儲存目前的工作」。這是唯一能救「分頁一直在前景、後端卻連不上」那個情境的東西——那時 `visibilitychange` 幫不上忙，因為使用者根本沒離開過。
 
+### 3.7 續期把權限調低之後，前端哪些東西會重新評估
+
+§3.4 說「權限變更 15 分鐘內生效」——那是**伺服器**的保證，而且是無條件的：
+`SupplierBankService.authorize` 這類檢查每次呼叫都重讀資料庫的 roles /
+permissions，所以權限被撤走之後，任何請求都會被擋。這一節講的是**前端畫面**在
+同一段時間裡會發生什麼，範圍僅限於「殘留的畫面與記憶體內容」，不是授權繞過。
+
+`session.refresh()` 做的是 `this.user = result.user`——換掉整個物件。
+`isAuthenticated` 是 `state.user !== null`，所以它由頭到尾都是 `true`，不會變。
+
+**本來就會自己重新評估的（因為是響應式的）：**
+
+| 位置 | 為什麼會 |
+| --- | --- |
+| 各頁的 `computed(() => can(session, …))` | `can()` 讀 `session.roles` / `session.permissions` 這兩個 getter，被 computed 追蹤到；`user` 一換就重算，按鈕自己收起 |
+| `v-can`（`framework/authorization/vCan.js`） | 裡面是 `watchEffect`，同上 |
+| 側邊欄選單（`AppShell.vue` 的 `computed(() => buildMenu(…))`） | `buildMenu` 內部呼叫 `can()`，同上 |
+
+**本來不會重新評估的：**
+
+1. **路由守衛**。`router.beforeEach` 只在導航時跑。坐在原地的人被撤走該頁
+   `meta.requires` 的權限之後，沒有任何東西會把他移走——他會一直留在那一頁，
+   連同已經抓下來的資料。全部 28 個有 `requires` 的頁面都適用。
+2. **元件已經抓在手上的資料**。上面那些 computed 收起的是**按鈕**，不是**資料**：
+   `supplier`、列表、解密後的明文這些 ref 是一次性填進去的，撤權之後照樣留在
+   記憶體並繼續 render。
+
+第 1 點已經修好：`createAppRouter` 加了一個 watcher，`session.user` 一換就用同一個
+`resolveNavigation` 重跑一次當前路由的決定，入不得就 `replace` 走。元件因此被
+unmount，第 2 點也跟著被清掉——**只要**那份資料所屬的頁面本身要求那個權限。
+
+修法刻意沒有做的事，以及為什麼：
+
+- **沒有版本號／事件／store action**。`resolveNavigation` 是純函數，權限沒變就
+  一定回 `allow`，重跑比維護一個要記得同步的版本號便宜。
+- **沒有寫 composable 給元件用**。元件那邊的 `can()` computed 已經是響應式的，
+  要在權限消失時清掉手上的東西，`watch(canView, v => { if (!v) forget(); })`
+  就夠，不需要框架再包一層。
+- **清 session（登出／401）不走這條路**。那兩條路徑各自已經會導頁，攔下來的話
+  登出會變成 `/login?redirect=<剛剛那頁>`，再登入就彈回去，與「我要登出」相反。
+
+**仍然沒被蓋到的一類**：頁內權限。頁面本身只要求 `supplier.view`，而面板要求
+`supplier.bank.view` 這種——撤走後者，路由守衛看不到，因為那個人仍然入得了這一
+頁。這一類必須由該元件自己 watch 它的權限 computed 並清掉手上的明文；框架層做
+不到，因為框架不知道哪個 ref 裝著什麼。`client/test/framework/routing/authorizationRefresh.test.js`
+有一個案例把這個邊界釘住（撤走與當前頁無關的權限時不應該把人移走）。
+
 ---
 
 ## 四、安全性分析
