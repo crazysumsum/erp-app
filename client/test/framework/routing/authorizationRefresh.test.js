@@ -1,6 +1,26 @@
+import { DOMWrapper, flushPromises, mount } from "@vue/test-utils";
 import { createPinia, setActivePinia } from "pinia";
-import { createMemoryHistory } from "vue-router";
-import { beforeEach, describe, expect, it } from "vitest";
+import { Quasar } from "quasar";
+import { h } from "vue";
+import { RouterView, createMemoryHistory } from "vue-router";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/services/supplier.js", () => ({
+  default: { getById: vi.fn(), completeness: vi.fn() }, service: { name: "supplier" }
+}));
+vi.mock("@/services/supplierBank.js", () => ({
+  default: { list: vi.fn(), create: vi.fn(), update: vi.fn(), setDefault: vi.fn(), deactivate: vi.fn(), reveal: vi.fn() },
+  service: { name: "supplierBank" }
+}));
+vi.mock("@/services/businessMaster.js", () => ({
+  default: { currencyList: vi.fn().mockResolvedValue({ rows: [] }), paymentTermList: vi.fn().mockResolvedValue({ rows: [] }) },
+  service: { name: "businessMaster" }
+}));
+vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
+
+import supplierService from "@/services/supplier.js";
+import supplierBankService from "@/services/supplierBank.js";
+import SupplierDetailPage, { page as supplierDetailPage } from "@/pages/suppliers/SupplierDetailPage.vue";
 import { createAppRouter } from "@/framework/routing/router.js";
 import { useSessionStore } from "@/stores/session.js";
 import { installFakeLocalStorage } from "../../support/fakeLocalStorage.js";
@@ -37,6 +57,8 @@ function routerAt(session) {
 describe("續期之後重新評估授權", () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    document.body.innerHTML = "";
+    vi.clearAllMocks();
     // session.clear() 會經 tokenStorage 寫 localStorage，而呢個 jsdom 冇提供。
     installFakeLocalStorage();
   });
@@ -103,5 +125,107 @@ describe("續期之後重新評估授權", () => {
     await flushNavigation();
 
     expect(appRouter.currentRoute.value.name).toBe("categories");
+  });
+});
+
+/**
+ * 呢兩個案例用真 `SupplierDetailPage` + 真 `createAppRouter`，因為佢哋問嘅係
+ * **兩個修法夾唔夾得埋**，唔係其中一個自己啱唔啱。
+ *
+ * 現有嘅測試各自證到一半：`bank.test.js` 嗰個 session watch 案例用一個冇守衛嘅
+ * 合成 router，而上面幾個案例用嘅頁面冇頁內權限。兩者都唔會發現「加咗守衛之後
+ * 個 panel 反而清唔到」或者相反。
+ *
+ * 兩條路係互補嘅，唔係冗餘：
+ *   - 撤 supplier.view（頁本身要求）→ 守衛踢走 → unmount → forgetEverything()
+ *   - 撤 supplier.bank.view（淨係 panel 要求）→ 守衛**唔應該**郁（佢仲入得呢頁）
+ *     → 得 panel 自己個 watch 清到明文
+ * 所以 panel 嗰個 watch 唔可以由呢個框架機制取代。
+ */
+describe("同 SupplierBankPanel 夾埋", () => {
+  const SECRET = "1234567890123456";
+  // `attachTo: document.body` 會留低一個掛住嘅 app：淨係清 innerHTML 唔會 unmount
+  // 佢，上一個案例嘅 DOM 同 watcher 會跟住入下一個。試過唔清——一個案例一紅，
+  // 下一個就搵唔到自己嗰粒掣。
+  let mounted = [];
+  afterEach(() => {
+    for (const w of mounted) w.unmount();
+    mounted = [];
+    document.body.innerHTML = "";
+  });
+
+  async function mountDetail(permissions) {
+    supplierService.getById.mockResolvedValue({
+      id: 7, supplierCode: "SUP-007", supplierName: "Evergreen Trading", displayName: "Evergreen",
+      defaultCurrencyCode: "HKD", defaultPaymentTermId: null, status: "active", version: 2,
+      website: "", generalPhone: "", generalEmail: "", notes: "",
+      createdAt: 100, updatedAt: 200, addresses: [], contacts: [], identifiers: [],
+      bankAccounts: [], warnings: []
+    });
+    supplierService.completeness.mockResolvedValue({ supplierId: 7, issues: [], warnings: [] });
+    supplierBankService.list.mockResolvedValue([{
+      id: 41, bankName: "Test Bank", accountHolderName: "Evergreen Trading",
+      maskedAccountNumber: "•••• 3456", status: "active", isDefault: true, version: 1
+    }]);
+    supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
+
+    const session = useSessionStore();
+    session.user = { id: 1, username: "sam", roles: [], permissions };
+    const appRouter = createAppRouter({
+      session,
+      history: createMemoryHistory(),
+      pages: [{ page: supplierDetailPage, component: SupplierDetailPage }]
+    });
+    await appRouter.push("/suppliers/7");
+    await appRouter.isReady();
+    const wrapper = mount({ render: () => h(RouterView) },
+      { global: { plugins: [Quasar, appRouter] }, attachTo: document.body });
+    mounted.push(wrapper);
+    await flushPromises();
+
+    const body = new DOMWrapper(document.body);
+    await body.findAll(".q-tab").find((t) => t.text().includes("銀行資料")).trigger("click");
+    await flushPromises();
+    return { wrapper, appRouter, body, session };
+  }
+
+  async function reveal(body) {
+    await body.findAll(".q-btn").find((b) => b.text().includes("查看完整帳號")).trigger("click");
+    await flushPromises();
+    await body.findAll(".q-field").find((f) => f.text().includes("密碼")).find("input")
+      .setValue("Correct-Horse-1!");
+    await body.findAll(".q-field").find((f) => f.text().includes("查看原因")).find("textarea")
+      .setValue("核對付款帳號");
+    await body.findAll(".q-btn").find((b) => b.text().includes("確認查看")).trigger("click");
+    await flushPromises();
+  }
+
+  it("撤走頁內權限（supplier.bank.view）：守衛唔郁人，但明文要冇咗", async () => {
+    const { body, appRouter, session } = await mountDetail(["supplier.view", "supplier.bank.view"]);
+    await reveal(body);
+    expect(document.body.innerHTML).toContain(SECRET);
+
+    session.user = { id: 1, username: "sam", roles: [], permissions: ["supplier.view"] };
+    await flushPromises();
+    await flushNavigation();
+
+    expect(appRouter.currentRoute.value.name,
+      "佢仲有 supplier.view，唔應該被踢出呢一頁").toBe("supplier-detail");
+    expect(document.body.innerHTML,
+      "守衛幫唔到手嗰陣，要靠 panel 自己個 watch 清明文").not.toContain(SECRET);
+  });
+
+  it("撤走頁面權限（supplier.view）：守衛踢去 403，unmount 順手清走明文", async () => {
+    const { body, appRouter, session } = await mountDetail(["supplier.view", "supplier.bank.view"]);
+    await reveal(body);
+    expect(document.body.innerHTML).toContain(SECRET);
+
+    session.user = { id: 1, username: "sam", roles: [], permissions: ["supplier.bank.view"] };
+    await flushPromises();
+    await flushNavigation();
+    await flushPromises();
+
+    expect(appRouter.currentRoute.value.name).toBe("forbidden");
+    expect(document.body.innerHTML).not.toContain(SECRET);
   });
 });

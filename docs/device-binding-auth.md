@@ -429,11 +429,22 @@ unmount，第 2 點也跟著被清掉——**只要**那份資料所屬的頁面
 - **清 session（登出／401）不走這條路**。那兩條路徑各自已經會導頁，攔下來的話
   登出會變成 `/login?redirect=<剛剛那頁>`，再登入就彈回去，與「我要登出」相反。
 
-**仍然沒被蓋到的一類**：頁內權限。頁面本身只要求 `supplier.view`，而面板要求
+**框架層蓋不到的一類**：頁內權限。頁面本身只要求 `supplier.view`，而面板要求
 `supplier.bank.view` 這種——撤走後者，路由守衛看不到，因為那個人仍然入得了這一
 頁。這一類必須由該元件自己 watch 它的權限 computed 並清掉手上的明文；框架層做
-不到，因為框架不知道哪個 ref 裝著什麼。`client/test/framework/routing/authorizationRefresh.test.js`
-有一個案例把這個邊界釘住（撤走與當前頁無關的權限時不應該把人移走）。
+不到，因為框架不知道哪個 ref 裝著什麼。
+
+所以 `SupplierBankPanel.vue:171` 那個 watch **不是**這個機制的重複品，兩者各自
+守著對方守不到的一半。這一點是量出來的，不是推論的——
+`client/test/framework/routing/authorizationRefresh.test.js` 最後兩個案例用真
+`SupplierDetailPage` 加真 `createAppRouter`，把明文展開之後分別撤走兩種權限：
+
+| 拆掉哪一個 | 撤 `supplier.bank.view` | 撤 `supplier.view` |
+| --- | --- | --- |
+| 把 panel 的 watch 收窄回只看 `isAuthenticated`（F-L3 原本那個 bug） | **紅** | 綠 |
+| 拿掉 `router.js` 這個 watcher | 綠 | **紅** |
+
+每一個修法都只被另一個蓋不到的那一格殺死，所以兩個都是必要的。
 
 ---
 
