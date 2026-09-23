@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:26.7.0
         env:
           # MySQL 官方映像收到這三個變數會自動建庫、建帳號並把該資料庫的
           # 全部權限授予這個帳號——同 server/database/init.sql 手動做的事一樣，
@@ -151,6 +151,9 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci
+
+      - name: Verify exact MySQL server version
+        run: test "$(docker exec "${{ job.services.mysql.id }}" mysql -uroot -proot --batch --skip-column-names -e "SELECT VERSION();")" = "26.7.0"
 
       - name: Apply database migrations
         run: npm run migrate --workspace server
