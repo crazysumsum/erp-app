@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 19,
+  "revision": 20,
   "mode": "DESIGN_AND_PLAN",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "PLANNED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
     "plan": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
-    "code_commit": "da222e2ef4e2b9cf7278878b7badc1b52203bb12",
-    "source_fingerprint": "e59ff28537a03f55c2c07f2334715e26fd1c59c2780cc8797ee3d707465b2b5b",
+    "code_commit": "7a415e514677dd80a75992dd7d904901582dd81d",
+    "source_fingerprint": "a9a710ad07644ec0098b0574d8a2ca054ec549d852eb01b07d3f65dbc8f08149",
     "worktree": "/private/tmp/erp-inventory-migration-plan-correction",
-    "default_commit": "da222e2ef4e2b9cf7278878b7badc1b52203bb12",
+    "default_commit": "487bec1f273de48de2a161e881e740bab118b41e",
     "mode_entry_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec"
   },
   "runtime": {
@@ -682,5 +682,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit the approved docs-only correction, refresh origin/main, perform a final independent review, then push, create and merge the PR without CI under Sam's authorization."
+  "next_safe_action": "Re-run the approved hash, PLAN_READY, traceability and docs-only boundary checks against origin/main 487bec1f273de48de2a161e881e740bab118b41e; if unchanged, push and create the authorized no-CI PR."
 }
