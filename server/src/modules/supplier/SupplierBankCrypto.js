@@ -208,6 +208,22 @@ export class SupplierBankCrypto {
   }
 
   /**
+   * Ring 入面有邊啲 key **id**。輪替工具靠呢兩個判斷 ring 大細（設計 §5.8 限 3 條）
+   * 同埋確認舊 key 仲喺唔喺 ring 入面。
+   *
+   * 回 id 唔回 material：key id 本身唔係祕密 —— 佢一行行寫咗喺
+   * `encryption_key_id` 同 `blind_index_key_id` 度。Key material 冇任何 getter，
+   * 而 `toJSON` 同 inspect 都係 [REDACTED]。
+   */
+  get encryptionKeyIds() {
+    return Object.keys(this.#encryption.keyRing);
+  }
+
+  get lookupKeyIds() {
+    return Object.keys(this.#lookup.keyRing);
+  }
+
+  /**
    * 加密一個帳號。IV 每次隨機 96-bit —— GCM 喺同一條 key 之下重用 IV 會直接洩漏
    * 明文異或值同埋 authentication key，所以呢度唔可以用 counter 或者由資料衍生。
    */

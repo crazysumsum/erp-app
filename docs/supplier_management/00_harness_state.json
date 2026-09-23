@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 220,
+  "revision": 224,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-035",
+  "current_task": "TASK-036",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "2d1355afb02dc4b6a6075d51243b3a65de3e1f87",
-    "source_fingerprint": "6c147834441b0275eb7a746ba81b60bb73c2254d9f65dce8d52cb7af951f8809",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t35-closeout",
-    "default_commit": "2d1355afb02dc4b6a6075d51243b3a65de3e1f87",
+    "code_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
+    "source_fingerprint": "6d3479cf129556a62790cb6cf34dbcea550b16991f54c8ae0b125d1e7c99b126",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
+    "default_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -847,6 +847,26 @@
         "docs/supplier_management/00_module_manifest.json",
         "the ci.yml entry above is prose: check_boundary no longer reads it, see this record's source_ref",
         "no production key material is committed by this approval"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-035-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Authorises TASK-036 to add two entries to server/package.json's scripts object, supplier:bank:rotate-encryption and supplier:bank:reindex-lookup, pointing at the two new files in server/scripts/. server/package.json is a declared approval_required_path, so this approval is what check_boundary will consult for it; server/scripts/ itself is deliberately undeclared per HD-034 and will report OUTSIDE_MODULE instead. No dependency is added or changed and no existing script is modified. The command names and their arguments come verbatim from design 2.7.",
+      "recorded_at": "2026-09-23T11:05:44+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "3e53f7dcf47a7e31ec3290a852914afe9335b9e7",
+      "scope": [
+        "supplier-management",
+        "server/package.json",
+        "server/scripts/rotateSupplierBankEncryption.js",
+        "server/scripts/reindexSupplierBankBlindIndexes.js",
+        "server/scripts/ is NOT declared in approval_required_paths, by decision HD-034; it reports OUTSIDE_MODULE"
       ],
       "expires_at": null
     }
@@ -3020,6 +3040,17 @@
       "source_ref": "PR #125 merged at 2026-09-23T02:24:47Z, merge commit 2d1355afb02dc4b6a6075d51243b3a65de3e1f87, candidate 3d8ca1f85568fb629d54bc7447d19ac1192af4e8. Five required CI checks green on that exact head (run 35809859789, attempt 1, single run), including the Browser tests (Playwright) job that runs this task's own supplier-bank.spec.js on Linux. REV-050 APPROVED at 51bcff8 with four Lows, all remediated before merge. Recorded about the process, because it is the useful part: seven rounds, of which the first three found eight live defects in the Bank UI and the last four found none. Every finding in rounds four through seven was about my own records and assertions - mutants I recorded as killed that survived, assertions I declared impossible that took a reviewer six lines, comments that contradicted the code, and once a comment that undersold a control I had written correctly. Three times I concluded 'no test can discriminate this' from a variant the reviewer had not proposed. Also recorded: main moved under this branch three separate times during review, and twice the moving commit was a follow-up task this work had itself spawned, touching the same file. Neither produced a textual conflict and the first of them produced a real integration defect, so the union was exercised by hand before this merge rather than inferred from two green suites: revealing on supplier 7, navigating to 8, and then to a non-numeric id, all verified together. TASK-035 was left PENDING in this ledger at merge time and is closed here.",
       "actor": "Harness agent (Claude Opus 5)",
       "observed_at": "2026-09-23T10:25:57+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-036 implemented: two rotation commands, eight mutants killed after four survived a first pass",
+      "code_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "6d3479cf129556a62790cb6cf34dbcea550b16991f54c8ae0b125d1e7c99b126",
+      "status": "PASS",
+      "source_ref": "Two resumable, bounded-batch Bank key rotation commands per design 2.7. The logic lives in server/src/modules/supplier/bankKeyRotation.js, inside module scope and injectable, and the three files in server/scripts/ are shells - a deliberate consequence of HD-034, which accepted an OUTSIDE_MODULE finding there rather than move the design baseline. The boundary validator against the merge-base reports exactly three OUTSIDE_MODULE entries, all in server/scripts/; server/package.json does not appear because APPROVAL-HD-035-SCOPE covers it, so the two paths each go through the gate they should. Resumability needs no progress file: the selection condition is the progress, because a rotated row no longer carries the from key. --to is validated as a confirmation rather than used as a selector, because encryptAccountNumber and blindIndex always use the active key, so a --to that differs from active means the operator is commanding a rotation that does not exist. safeToRemoveFromKey requires both remaining === 0 and zero failures, and the second clause is not redundant: a row that fails after its write landed leaves remaining at zero with an unexplained failure, which must not authorise removing a key; the unit suite constructs exactly that. Worth recording about the tests rather than the code: the first mutation pass left four of eight alive, and two of those survived for the same reason - the fake database assigned columns by parameter position, so rewriting the SQL to stop updating a column changed nothing. The double was not imitating MySQL. It now parses the SET clause. The other two were missing cases, the post-write failure and the 30/31-day boundary. All eight die now. The manual interrupted run from T36's verification was performed against the real CLI and real MySQL: limit 2 then resume for encryption, limit 3 then resume for lookup, with the old-key row count checked at each step and reaching zero. The real CLI output was scanned for both key values, both plaintexts and any 43-character base64 run, with zero hits and the scan shown to find a planted key. One unplanned finding: while resetting rows for a re-run I made encryption_key_id disagree with the ciphertext it named, and the command refused all five rows with a named authentication failure, reported their ids, declined to authorise key removal and exited 1 - that path is fail closed.",
+      "actor": "Harness agent (Claude Opus 5)",
+      "observed_at": "2026-09-23T13:59:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -3484,6 +3515,34 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-21, answering a question that stated the measured wire value and both options: 記低偏離，唔掂框架. The criterion is recorded as not met rather than quietly restated to match what was built; the deviation is the observation with subject 'DEV-T34-CACHE-PRIVATE: the reveal route's Cache-Control acceptance criterion is not met', status FAIL, deliberately. Recorded late, same as HD-032."
+    },
+    {
+      "id": "HD-034",
+      "impact": "MAJOR",
+      "question": "TASK-036 delivers two Bank key rotation commands whose files belong in server/scripts/, following the convention of the eight CLI scripts already there including two other modules' acceptance runners. That path is in neither scope.allowed_write_paths nor scope.approval_required_paths, so validate_module_boundary reports OUTSIDE_MODULE for it. Declaring it in approval_required_paths would silence that, but approval_required_paths lives inside the manifest scope object and the DESIGN digest is computed over that scope, so declaring it moves the design baseline. Counted before the decision: 33 of 44 reviews bind the current design hash e4083319, including REV-050, the only APPROVED review TASK-035 ever received, and APPROVAL-HD-017-DESIGN, the only DESIGN-kind approval bound to it. Options: leave it undeclared and accept a permanent OUTSIDE_MODULE finding on the two files, to be triaged by hand alongside the ci.yml one; declare it and re-record the design move with a fresh DESIGN approval; or put the CLI entry points inside server/src/modules/supplier/, which is already in scope, at the cost of putting CLI scripts somewhere no other module in this repository does.",
+      "affected_ids": [
+        "TASK-036",
+        "00_module_manifest.json",
+        "DESIGN baseline",
+        "REV-050",
+        "APPROVAL-HD-017-DESIGN",
+        "HD-032"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-23, answering a question that stated the count before the choice: leave it undeclared and accept OUTSIDE_MODULE. This is the same trade recorded in HD-032, which reverted a declaration of .github/workflows/ci.yml for the same reason when the count was 28 reviews; it is now 33 and includes an APPROVED review. The accepted cost is stated precisely in APPROVAL-HD-030-SCOPE-REBIND-2 and applies identically here: validate_module_boundary returns BLOCKED rather than LOCAL_CHECKS_PASS, check_boundary consults approvals only for paths matching approval_required_paths so no approval record is machine-checked against these files, and OUTSIDE_MODULE is the same issue code an arbitrary unapproved out-of-module write produces, so every occurrence on this branch must be triaged by hand."
+    },
+    {
+      "id": "HD-035",
+      "impact": "MAJOR",
+      "question": "Design 2.7 specifies the two rotation commands as npm scripts: 'npm run supplier:bank:rotate-encryption --workspace server -- --from=<oldId> --to=<activeId>' and 'npm run supplier:bank:reindex-lookup --workspace server -- --from=<oldId> --to=<activeId>'. Adding them touches server/package.json, which IS declared in scope.approval_required_paths, so it needs a current scoped human approval but does NOT move the design baseline. Correction recorded here because it matters: when HD-034 was put to the Product Owner I stated that server/package.json would not need to be touched at all. That was wrong. I had read the convention in items_management and business_master, whose acceptance scripts are invoked directly as 'node server/scripts/x.js' from their profiles, and generalised from it without checking this module's own design spec, which names the npm commands explicitly. Alternative considered: invoke the scripts as 'node server/scripts/...' and record a deviation from design 2.7 - but those two command strings are written verbatim into TASK-036's verification criteria.",
+      "affected_ids": [
+        "TASK-036",
+        "server/package.json",
+        "design 2.7",
+        "HD-034"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner decision on 2026-09-23: approve, add the two npm script entries exactly as design 2.7 names them. The diff is two lines in the scripts object; no dependency and no existing script is touched."
     }
   ],
   "external_actions": [
@@ -4035,7 +4094,11 @@
     "evidence/20260923T013856-66c42b913e13/run.json",
     "evidence/20260923T013859-211ff36d36b0/run.json",
     "evidence/20260923T013904-929e0591f4cf/run.json",
-    "evidence/20260923T013908-609318975f35/run.json"
+    "evidence/20260923T013908-609318975f35/run.json",
+    "evidence/20260923T055825-609eaefb67e2/run.json",
+    "evidence/20260923T055829-1cf9b69d433e/run.json",
+    "evidence/20260923T055834-e32af7560204/run.json",
+    "evidence/20260923T055837-050da53eebeb/run.json"
   ],
   "defects": [
     {
