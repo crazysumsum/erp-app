@@ -99,7 +99,7 @@ export class CustomerExportService {
       const metadata = { storedName: job.result_stored_name, sha256: Buffer.from(job.result_sha256) };
       try {
         await this.storage.finalizeResult(metadata);
-        return await this.#activate({ actorId, claimedRoles, claimedPermissions, id: job.id, metadata, requestId, ip });
+        return await this.#activate({ actorId, claimedRoles, claimedPermissions, operationId, id: job.id, metadata, requestId, ip });
       } catch (error) {
         if (error?.code !== "ENOENT") {
           await this.#fail(job.id, operationId, "RESULT_STORAGE_ERROR", "客戶匯出檔案無法安全保存", { storageError: true });
@@ -140,7 +140,7 @@ export class CustomerExportService {
     }
 
     try {
-      return await this.#activate({ actorId, claimedRoles, claimedPermissions, id: job.id, metadata, requestId, ip });
+      return await this.#activate({ actorId, claimedRoles, claimedPermissions, operationId, id: job.id, metadata, requestId, ip });
     } catch (error) {
       if ([401, 403].includes(error?.statusCode)) await this.#fail(job.id, operationId, "AUTHORIZATION_REVOKED", "匯出完成前權限已被撤銷");
       throw error;
@@ -211,8 +211,9 @@ export class CustomerExportService {
     });
   }
 
-  async #activate({ actorId, claimedRoles, claimedPermissions, id, metadata, requestId, ip }) {
+  async #activate({ actorId, claimedRoles, claimedPermissions, operationId, id, metadata, requestId, ip }) {
     return this.database.withTransaction(async (connection) => {
+      await this.#lockOperation(connection, operationId);
       const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
       const job = await this.#get(connection, id, { forUpdate: true });
       if (job.status === "completed") return summary(job);
@@ -281,6 +282,7 @@ export class CustomerExportService {
         continue;
       }
       const disposition = await this.database.withTransaction(async (connection) => {
+        await this.#lockOperation(connection, item.operation_id);
         const job = await this.#get(connection, item.id, { forUpdate: true });
         if (!job || job.status !== "processing" || job.result_storage_status !== "processing" || !job.result_sha256 ||
             !Buffer.from(job.result_sha256).equals(metadata.sha256)) return "ignored";
@@ -321,6 +323,11 @@ export class CustomerExportService {
     return row ?? null;
   }
 
+  async #lockOperation(connection, operationId) {
+    const [[operation]] = await connection.query("SELECT id FROM customer_operation_requests WHERE id = ? FOR UPDATE", [operationId]);
+    if (!operation) throw new Error("Customer export operation is missing");
+  }
+
   async #recoveryActor(connection, actorId) {
     if (!Number.isSafeInteger(Number(actorId))) return null;
     const [users] = await connection.query("SELECT username FROM users WHERE id = ? AND status = 'active'", [actorId]);
@@ -355,12 +362,14 @@ export class CustomerExportService {
 
   async #fail(id, operationId, code, message, { storageError = false } = {}) {
     await this.database.withTransaction(async (connection) => {
+      await this.#lockOperation(connection, operationId);
       await this.#failLocked(connection, id, operationId, code, message, { storageError });
     });
   }
 
   async #failUnregistered(scanned, staleBefore) {
     return this.database.withTransaction(async (connection) => {
+      await this.#lockOperation(connection, scanned.operation_id);
       const job = await this.#get(connection, scanned.id, { forUpdate: true });
       if (!job || job.status !== "processing" || job.result_sha256 || Number(job.updated_at) >= staleBefore ||
           Number(job.version) !== Number(scanned.version)) return false;

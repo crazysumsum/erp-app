@@ -116,6 +116,7 @@ test("Customer export recovery converges staged, finalized and missing registere
       const text = String(sql);
       if (text.includes("FROM users")) return [[{ id: 3, username: "sam" }]];
       if (text.includes("FROM permissions")) return [[{ name: "customer.mgmt" }, { name: "customer.view" }]];
+      if (text.includes("FROM customer_operation_requests")) return [[{ id: params[0] }]];
       if (text.includes("FROM customer_export_jobs WHERE id")) return [[rows.find((row) => row.id === Number(params[0]))]];
       return [[]];
     },
@@ -157,7 +158,10 @@ test("Customer export recovery ignores a stale scan after an idempotent retry re
   const terminal = { ...scannedTerminal, status: "failed", result_storage_status: "storage_error", version: 2 };
   let failed = 0;
   const connection = {
-    async query(sql, params) { return String(sql).includes("FROM customer_export_jobs WHERE id") ? [[Number(params[0]) === 7 ? current : terminal]] : [[]]; },
+    async query(sql, params) {
+      if (String(sql).includes("FROM customer_operation_requests")) return [[{ id: params[0] }]];
+      return String(sql).includes("FROM customer_export_jobs WHERE id") ? [[Number(params[0]) === 7 ? current : terminal]] : [[]];
+    },
     async execute() { throw new Error("changed jobs must not be failed"); }
   };
   const service = new CustomerExportService({
