@@ -2,7 +2,7 @@
 
 ## Outcome
 
-**0.4 DATABASE BASELINE AND PLAN APPROVED; IMPLEMENT PAUSED.** Sam approved the final 0.4 requirement/design and P0→P5 plan hashes with exact MySQL Server 26.7.0 on 2026-09-23. No product implementation, migration execution, test execution, UAT, Go-Live or release occurred; resuming `IMPLEMENT` remains a separate decision.
+**0.5 DESIGN AND PLAN APPROVED; IMPLEMENT PAUSED.** Sam approved the dependency-safe `0054`～`0063` DESIGN and PLAN hashes on 2026-09-23. P0 TASK-001～TASK-004 exist only on the unmerged implementation branch; TASK-005 DDL, migration execution, formal Technical Acceptance, UAT, Go-Live and release have not occurred.
 
 ## Mode, module and baselines
 
@@ -14,8 +14,9 @@
 | First alignment PR / merge | [PR #85](https://github.com/crazysumsum/erp-app/pull/85) / `87601a08e6f6d2d51a853f86f76f5bfa0cc1d268` |
 | Decision-alignment PR | [PR #88](https://github.com/crazysumsum/erp-app/pull/88); created from `codex/inventory-decision-alignment` for `main` under Sam's merge authorization |
 | Default for decision alignment / pre-delivery refresh | `b948c92fecc31555bdc4043feea26f8c72ddf7a2` / `134c2722f92eae298da7ad1a1b01b6a75522550e`; intervening changes were limited to out-of-scope `customer_management` documents |
-| Current topic branch / worktree | `codex/inventory-p0-foundation` / `/private/tmp/erp-inventory-p0-foundation`; retained temporarily for the planning correction because no product code was started |
-| Product-code changes | None |
+| Current design branch / worktree | `codex/inventory-migration-plan-correction` / `/private/tmp/erp-inventory-migration-plan-correction` |
+| Paused implementation branch / worktree | `codex/inventory-p0-foundation` / `/private/tmp/erp-inventory-p0-foundation`; TASK-001～TASK-004 committed, TASK-005 paused before DDL |
+| Product-code changes | Four local implementation commits; none merged to main |
 | Formal tests / CI / UAT | `NOT_RUN`; no acceptance result claimed |
 
 ## Canonical artifacts
@@ -51,6 +52,7 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 | HD-004 | ANSWERED | Serial fail-closed/Go-Live guard; `receiving.expiry.override`; Customer Return→`QUARANTINED`; fixed Adjustment reasons; Data Freeze and Go-Live responsibilities; DB-account separation and backup/restore rehearsal. |
 | HD-005 | ANSWERED | Sam authorized entry to `IMPLEMENT` on 2026-09-23; execution was later paused by the material baseline change. |
 | HD-006 | ANSWERED | Exact MySQL Server 26.7.0 supersedes the earlier MySQL 8.0 production/CI/developer integration baseline; patch upgrades are not implicit, and Sam approved the resulting 0.4 design/plan baseline. |
+| HD-007 | ANSWERED | Split P0 operations from P1 movements and fix the physical allocation to `0054`～`0063`; return to `DESIGN_AND_PLAN` before TASK-005. |
 
 ## HD-001 — Accountable owner
 
@@ -96,16 +98,23 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 - Scope: DDL, constraints, generated columns, locking, migrations and all database integration evidence for Inventory.
 - Boundary: 26.7 is the Calendar Versioning Innovation track under MySQL's [official release model](https://dev.mysql.com/doc/refman/26.7/en/mysql-releases.html); the [26.7 release notes](https://dev.mysql.com/doc/relnotes/mysql/26.7/en/) list 26.7.0 and later patches. A later patch such as 26.7.1 is not silently accepted; changing the exact version requires compatibility review. Current CI remains `mysql:8.0` until P0 changes and verifies it.
 
+## HD-007 — Dependency-safe migration allocation
+
+- Answer source: user response in the active Codex task on 2026-09-23: “同意”.
+- Recorded interpretation: approve `0054` permissions, `0055` operations, `0056` audit, `0057` master, `0058` stock, `0059` movements, `0060` reservations, `0061` transfers, `0062` stocktakes and `0063` opening; return to `DESIGN_AND_PLAN` before continuing TASK-005.
+- Reason: P0 operations and Audit must exist before business writes, while Movement has FK dependencies on P1 master／stock. Keeping operation requests and movements in one migration made the approved Phase order impossible.
+- Boundary: this approves the correction direction and exact allocation, not the changed artifact hashes, migration execution or implementation resumption.
+
 ## Independent review and baseline approval
 
 - Reviewer / method: Sam / `HUMAN`.
 - Historical decision: approved the 0.3 requirement/design baseline and P0→P5 plan/order after `HD-001`–`HD-004` were propagated.
 - Binding: design `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`; plan `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`. Later requirement/design/plan changes invalidate the affected approval and require re-review.
-- Current decision: Sam independently approved design `f163be7810a83112d23a8a3d18c501f242dd623e52f00ef75d8fd05e2ddd6a41` and plan `b9a4a3874e84e70b1025b0d2fb9d06ff7f80bd66b5ff3aa4e1bc8fa93dc84bb9` on 2026-09-23. Resuming `IMPLEMENT` remains a separate explicit decision.
+- Current decision: Sam independently approved 0.5 DESIGN `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef` and PLAN `43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8` on 2026-09-23.
 
 ## Readiness and next safe action
 
-- Design/review: final 0.4 planning baseline approved with zero open CRITICAL/HIGH review findings; CI/runtime alignment is an accepted P0 prerequisite.
-- Implementation readiness: `PLANNED`; every Task remains `PENDING` and no product code has started.
+- Design/review: 0.5 DESIGN and PLAN are approved.
+- Implementation readiness: `PLANNED`; local TASK-001～TASK-004 commits are preserved and TASK-005 is paused before DDL.
 - Business/release: not accepted and not approved.
-- Next safe action: separately ask Sam whether to resume `IMPLEMENT`; if confirmed, P0 first reconciles CI and the isolated local runtime to exact MySQL Server 26.7.0 before migration verification.
+- Next safe action: commit and merge the docs-only correction without CI, reconcile the paused implementation branch, then separately authorize resuming `IMPLEMENT` at TASK-005.

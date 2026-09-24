@@ -64,11 +64,20 @@ const itemTables = [
   "item_import_rows"
 ];
 
+// SHOW CREATE TABLE 的表選項裡帶著這張表下一個 AUTO_INCREMENT 值。它不是 schema 的
+// 一部分：任何一筆 insert 都會推它，包括 node --test 平行跑的其他整合測試檔案在這個
+// 共用資料庫上種下的資料。留著它，下面那句 assertion 比對的就是列計數器而不是 schema，
+// 於是這支測試會在沒有人動過 item migrations 的情況下紅（CI run 35826677221）。
+//
+// 只剝掉帶 `=數字` 的那個表選項。欄位定義上的 AUTO_INCREMENT 沒有等號，那個是 schema：
+// 它掉了就代表真的有東西改了，必須繼續讓這句測試紅。
+const nextAutoIncrement = / AUTO_INCREMENT=\d+/gu;
+
 async function schemaSnapshot(database) {
   const snapshot = {};
   for (const table of itemTables) {
     const [[row]] = await database.query(`SHOW CREATE TABLE \`${table}\``);
-    snapshot[table] = row["Create Table"];
+    snapshot[table] = row["Create Table"].replace(nextAutoIncrement, "");
   }
   return snapshot;
 }
