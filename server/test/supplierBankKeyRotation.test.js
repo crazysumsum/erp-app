@@ -86,9 +86,19 @@ function leakedEncodings(serialised, indexBytes) {
 
 function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), duplicateOn = new Map() } = {}) {
   const table = rows.map((row) => ({ ...row }));
+  /**
+   * 一個唔前進嘅 cursor 係**掛死**，唔係 fail —— `node --test` 冇 timeout，所以
+   * 「剷走 `AND id > ?`」呢個 mutant 會喺 CI 度燒到 job 上限先有人見到一個紅叉。
+   * 個上限放喺 double 度而唔係放喺一條測試度，因為第一條撞到嘅測試先係掛死嗰條，
+   * 而佢唔一定有 wrapper。呢個檔案最大嗰張表五行，最細 batch 兩行。（REV-053 L-6）
+   */
+  let selects = 0;
   const db = {
     table,
     async query(sql, params) {
+      if (sql.includes("ORDER BY") && (selects += 1) > 50) {
+        throw new Error("the rotation is not terminating: the double refuses a 51st SELECT");
+      }
       if (sql.includes("COUNT(*)")) {
         const column = sql.includes("encryption_key_id") ? "encryption_key_id" : "blind_index_key_id";
         return [[{ remaining: table.filter((r) => r[column] === params[0]).length }]];
