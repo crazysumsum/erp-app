@@ -33,12 +33,16 @@ stale publication and commit-unknown corruption.
   bounded export and its retry/recovery race, equality-key concurrency, party
   ownership, lookup and HTTP idempotency.
 - TC-064 imported exactly 10,000 representative create-only rows. On the final
-  measured run, precheck took 788.03 ms, execution 50,306.57 ms and total system
-  processing 51,094.60 ms, below the ten-minute requirement. Execution throughput
-  was 198.78 rows/s; row latency p50/p95 was 5.08/7.39 ms; concurrent Customer core
-  query latency p50/p95 was 0.31/0.57 ms. Heap grew 35,056,728 bytes against the
-  explicit 256 MiB test ceiling. All 10,000 rows completed without failure or skip,
-  and the fixture, audit/job rows and private files were removed.
+  measured run, precheck took 479.96 ms, execution 48,453.33 ms and total system
+  processing 48,933.29 ms, below the ten-minute requirement. Execution throughput
+  was 206.38 rows/s; row latency p50/p95 was 4.59/6.97 ms. The normal authenticated
+  Customer list API was sampled 446 times during execution with zero errors and
+  8.50/12.21 ms p50/p95 latency. Five-millisecond plus per-batch/per-row sampling
+  measured 81,527,792 bytes peak heap growth against the explicit 256 MiB ceiling.
+  MySQL recorded zero new InnoDB row-lock waits, zero current waiters, and one
+  additional connection against the ten-connection pool. All 10,000 rows completed
+  without failure or skip, and the fixture, audit/job/authorization rows and private
+  files were removed.
 - The Customer Bank maintenance CLIs completed against local MySQL with
   `processed=0`, `remaining=0` for both encryption rotation and blind-index
   reindex. Recovery/fault-injection checks passed for attachment stage/finalize,
@@ -66,9 +70,11 @@ this Phase appear green. Customer runtime behavior has no failing test.
 
 ## Main reconciliation and publication policy
 
-- Latest `origin/main` was checked before each merge. The final two upstream commits
-  changed Inventory documentation only; the merge was conflict-free and did not
-  alter Customer product/test paths.
+- Latest `origin/main` was checked before each merge. The first TASK-028
+  reconciliation brought in upstream Supplier Bank UI, Item lookup source/test and
+  Inventory documentation changes; the final reconciliation added Inventory
+  documentation only. Both merges were conflict-free, remained outside Customer
+  product/test paths and were not authored or claimed as Customer work.
 - The Product Owner explicitly directed this PR to be pushed and merged without CI
   and accepted that risk. Local developer gates and independent exact-candidate
   review remain mandatory and are not waived.

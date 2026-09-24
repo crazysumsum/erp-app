@@ -505,10 +505,14 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
 This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
 
 - Added the reproducible, opt-in TC-064 real-MySQL fixture and proved 10,000-row
-  precheck plus execution in 51.09 seconds, with 198.78 rows/s execution throughput,
-  5.08/7.39 ms row p50/p95, 0.31/0.57 ms concurrent core-query p50/p95 and 35.06 MB
-  measured heap growth against a 256 MiB ceiling. All rows succeeded and cleanup
-  removed the synthetic Customers, job/audit rows and private files.
+  precheck plus execution in 48.93 seconds, with 206.38 rows/s execution throughput
+  and 4.59/6.97 ms row p50/p95. During execution, 446 normal authenticated Customer
+  list API requests completed with zero errors at 8.50/12.21 ms p50/p95; MySQL added
+  zero InnoDB row-lock waits, observed zero current waiters and used one additional
+  connection against the ten-connection pool. Five-millisecond plus per-batch/per-row
+  sampling measured 81.53 MB peak heap growth against the 256 MiB ceiling. All rows
+  succeeded and cleanup removed the synthetic Customers, job/audit/authorization
+  rows and private files.
 - Customer real-MySQL integration passed 16/16; the exact Customer suite including
   TC-064 passed 255/255; the focused sensitive/recovery suite passed 105/105; client
   coverage passed 665/665; repository ESLint, production build, no-secret scan and
