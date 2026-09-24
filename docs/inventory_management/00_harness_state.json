@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 47,
+  "revision": 51,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-006",
+  "current_task": "TASK-007",
   "baseline": {
     "design": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
     "plan": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
-    "code_commit": "143fd9eb79db27590ae45dff74eb80baf91f1d28",
-    "source_fingerprint": "6dac8b46358eb24729bac53360c16e10ea879b2cb1962a4645c8993a6b647fc6",
+    "code_commit": "03df3f4c2a13840f44f3420ae0f692a90f7b6225",
+    "source_fingerprint": "e335af971bcfc5826c6dd1aea3df980936bf40f8d1aee8fde26bf22b5f9472e1",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
     "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
@@ -31,7 +31,7 @@
     "TASK-003": "DONE",
     "TASK-004": "DONE",
     "TASK-005": "DONE",
-    "TASK-006": "PENDING",
+    "TASK-006": "DONE",
     "TASK-007": "PENDING",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
@@ -529,6 +529,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-013",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-006 implementation author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "e335af971bcfc5826c6dd1aea3df980936bf40f8d1aee8fde26bf22b5f9472e1",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-006-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -949,6 +961,19 @@
         "TASK-006",
         "TC-004"
       ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving full TASK-006 scope without TASK-007, push, PR or merge"
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "May TASK-007 implement the approved fixed lock protocol, transaction-required internal command context and fault-injection/concurrency test support with focused developer tests, without starting TASK-008, executing migrations, pushing, creating a PR or merging?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
       "status": "OPEN",
       "answer_ref": null
     }
@@ -1205,5 +1230,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Wait for Sam's HD-013 decision before starting TASK-006; no database runtime is active and no push, PR or merge is authorized."
+  "next_safe_action": "Obtain Sam's HD-014 decision before starting TASK-007; do not execute migrations, start TASK-008 or perform any remote action."
 }

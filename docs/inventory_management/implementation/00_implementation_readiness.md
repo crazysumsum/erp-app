@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-005 are complete on this P0 branch. TASK-005 was developer-verified only in the approved disposable MySQL 26.7.0 schema; TASK-006 remains pending a separate human decision before implementation continues.
+`BLOCKED` — TASK-001～TASK-006 are complete on this P0 branch. TASK-006 is developer-verified without a database runtime; TASK-007 remains pending a separate human decision before implementation continues.
 
 ## Baseline
 
@@ -18,6 +18,7 @@
 - `HD-008`: Sam approved adopting TASK-004's transaction-aware `ItemLookupService` contract on 2026-09-23.
 - `HD-010`: Sam approved exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js` as the shared publication scope on 2026-09-24.
 - `HD-012`／`APR-015`: Sam approved TASK-005's exact two migration paths and execution of `0054`～`0056` only in a fresh disposable MySQL 26.7.0 schema on 2026-09-24.
+- `HD-013`: Sam approved TASK-006 operation／Audit services and focused developer tests on 2026-09-24, without TASK-007, push, PR or merge.
 
 ## Reconciled P0 checks
 
@@ -28,8 +29,8 @@
 - The Inventory profile is an explicit whitelist and exposes Serial so Inventory can reject it fail closed.
 - UOM resolution accepts only an active SKU UOM with an integer factor from 1 to 1,000,000 and requires Base UOM factor 1.
 - After merging latest `origin/main`, focused Item lookup checks passed 33/33 and focused ESLint passed.
-- Current TASK-005 module-boundary and traceability validation passed; `PLAN_READY` is now structurally blocked only by the open `HD-013` decision for TASK-006.
-- Multi-axis code review found no correctness, security, maintainability or contract-blocking issue in the isolated diff.
+- Current TASK-006 module-boundary and traceability validation passed; the next implementation path is blocked only by the open `HD-014` decision for TASK-007.
+- Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by the intentionally unfinished P0 tasks and pending remote CI/review; this local task completion does not claim that Phase gate.
 - TASK-005 used a newly observed MySQL 26.7.0 lease; its schema, server and exact temporary root were removed after developer verification and cannot be reused by later tasks.
 
@@ -41,6 +42,15 @@
 - The migration rerun preserved identical DDL, no `inventory_movements` table was created, and the schema test passed on observed MySQL `26.7.0` at the isolated schema `erp_inventory_task005_20260924_1008`.
 - Focused Inventory migration test: 1 passed, 0 failed, 0 skipped. Full server developer suite with the repository's CI test keys: 1,684 passed, 0 failed, 303 DB-gated tests skipped. Full repository ESLint passed.
 - These are developer checks, not formal `TC-001`／`TC-004` Technical Acceptance or business acceptance.
+
+## TASK-006 developer verification
+
+- Commit `03df3f4c2a13840f44f3420ae0f692a90f7b6225` implements canonical SHA-256 operation hashes, exact source-tuple claim/replay/conflict handling, completed-result source lookup and guarded single completion.
+- Command type is part of the hash but not the source unique tuple. Password／token／authorization／reauthentication proof fields are recursively excluded from the hash, while business-field changes alter it.
+- Durable result and Audit summaries use explicit server allowlists, scalar-only values and an 8 KiB cap. Required `SUCCEEDED` Audit uses the caller's transaction and propagates insert failure; post-rollback `REJECTED`／`FAILED` Audit uses a short independent transaction, stores no success projection or operation link, and falls back to a safe structured error log if persistence fails.
+- Focused operation／Audit tests: 13 passed, 0 failed. Full server developer suite with the repository's CI test keys: 1,697 passed, 0 failed, 303 MySQL-gated tests skipped. Full repository ESLint passed.
+- Full server coverage execution was attempted, but without an authorized active MySQL runtime the 303 integration cases were skipped and the repository-wide lines/functions thresholds could not be established. No schema was created or migrated for TASK-006.
+- These are developer checks, not formal `TC-004` Technical Acceptance, CI, independent code approval or business acceptance.
 
 ## Approved physical allocation
 
@@ -62,8 +72,9 @@
 - No shared／production database access, deployment, Technical Acceptance or UAT has occurred.
 - TASK-005 migration execution occurred only under `HD-012` in its disposable schema; no other project migration was executed there.
 - TASK-005 created only `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; Movement remains in P1 migration `0059`.
-- The remaining P0 implementation commits are local; no TASK-005 push, PR, CI or merge is claimed.
+- TASK-006 created only the two approved services, one shared safe-JSON helper and the three planned focused test files; TASK-007 lock/context/test support was not started.
+- The remaining P0 implementation commits are local; no TASK-006 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Obtain Sam's `HD-013` decision before starting TASK-006 service behavior. No database runtime is active, and no push, PR or merge is authorized.
+Obtain Sam's `HD-014` decision before starting TASK-007 fixed lock protocol, internal command context and fault-injection/concurrency test support. No database runtime is active, and no push, PR or merge is authorized.
