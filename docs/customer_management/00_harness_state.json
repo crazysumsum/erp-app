@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 141,
+  "revision": 142,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
     "plan": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
-    "code_commit": "b6f831d3155f8b26244ec558f71ddb78b3b0a5c2",
+    "code_commit": "6d059cc6da07b89885eef552547fceb0ab53002d",
     "source_fingerprint": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
     "worktree": "/private/tmp/erp-customer-management-phase-004",
     "default_commit": "b6f831d3155f8b26244ec558f71ddb78b3b0a5c2",
@@ -2011,6 +2011,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-039",
+      "method": "SEPARATE_AGENT",
+      "author": "/root PHASE-003 publication and PHASE-004 entry record",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
+      "source_ref": "2026-09-24 review of exact docs/state candidate 6d059cc6da07b89885eef552547fceb0ab53002d verified PR #143/merge evidence and confirmed TASK-029 must remain blocked because no real Sales module/consumer/test exists; final verdict APPROVED with no Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2442,6 +2454,17 @@
       "source_ref": "2026-09-24: latest origin/main contains the approved Sales design and CustomerLookupService new_sale/credit provider methods, but no server/src/modules/sales implementation, Sales consumer test, or Sales remote branch. TASK-029 requires a real consumer contract test and explicitly forbids a fake consumer; Customer scope cannot implement the Sales module.",
       "actor": "/root dependency discovery",
       "observed_at": "2026-09-24T02:08:31Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PHASE-003 publication and PHASE-004 blocked-entry record",
+      "code_commit": "6d059cc6da07b89885eef552547fceb0ab53002d",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
+      "status": "PASS",
+      "source_ref": "REV-039",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-24T02:11:29Z"
     }
   ],
   "pending_decisions": [
@@ -3051,6 +3074,30 @@
       "idempotency_key": "customer-phase004-entry-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-24: observed PHASE-003 merge on origin/main, removed the merged Phase-003 local/remote branch and worktree, and created codex/customer-p4-integration-release from the exact merged main commit."
+    },
+    {
+      "id": "EXT-PUSH-047",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-p4-integration-release",
+      "idempotency_key": "customer-phase004-blocked-entry-push-v1",
+      "status": "PLANNED",
+      "source_ref": "Publish the independently reviewed Phase-003 confirmation and TASK-029 dependency observation."
+    },
+    {
+      "id": "EXT-PR-048",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-integration-release",
+      "idempotency_key": "customer-phase004-blocked-entry-pr-v1",
+      "status": "PLANNED",
+      "source_ref": "State/documentation synchronization only; no Product code or Sales implementation."
+    },
+    {
+      "id": "EXT-MERGE-049",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-integration-release",
+      "idempotency_key": "customer-phase004-blocked-entry-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Product Owner standing publication authorization and no-CI exception apply; independent review REV-039 approved this docs/state-only candidate."
     }
   ],
   "evidence_files": [
@@ -3060,5 +3107,5 @@
     "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Wait until a real Sales implementation and consumer contract test are merged to main by the Sales owner, then refresh origin/main, reconcile the exact Sales contract, resume IMPLEMENTING, and execute TASK-029 without adding a fake consumer or modifying Sales-owned production code."
+  "next_safe_action": "Publish this reviewed state/documentation synchronization without waiting for CI, then wait until a real Sales implementation and consumer contract test are merged to main by the Sales owner. After that, refresh origin/main, reconcile the exact Sales contract, resume IMPLEMENTING, and execute TASK-029 without adding a fake consumer or modifying Sales-owned production code."
 }
