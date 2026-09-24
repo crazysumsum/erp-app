@@ -140,7 +140,7 @@
         "id": "customer-purpose-provider-contracts",
         "version": "aligned-design-2.0",
         "source": "docs/customer_management/03_design_spec.md",
-      "sha256": "0964cdc1e709359c703b9ec3b5bf07bc7799091a1e805c7a34f3e0f0f9b737e8",
+      "sha256": "ab567021254b09d5103caac5bba9b2e3324c0278e726d84999870abcdd7fe440",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",

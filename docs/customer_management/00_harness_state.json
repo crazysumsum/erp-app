@@ -1,24 +1,24 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 134,
+  "revision": 136,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-027",
+  "current_task": "TASK-028",
   "baseline": {
-    "design": "8f2cfcef298b2641da1aad6bb5637d94536d7681e039336c84a701d860610e77",
-    "plan": "81850e4de0e41a1e55d8220bbb84db0802f44ceb320fdf430a4473c82591c1b8",
-    "code_commit": "9d955fe9b1b7142145f837fdbc51086e1bca2dcc",
-    "source_fingerprint": "efbfd539aab7d025c9c1843efdab6d512446ccc43c5785b85aeb91d8609ddcfa",
+    "design": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
+    "plan": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+    "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+    "source_fingerprint": "f5c650218ce3ab6981cb41f3bcec09db0d82c253630f61f2ef9d1b3d11e0a259",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "487bec1f273de48de2a161e881e740bab118b41e",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase003-task027-20260923",
+    "instance_id": "customer-phase003-task028-20260924",
     "owner": "Primary harness agent",
     "resources": {
       "workspace": "/private/tmp/erp-customer-management-phase-003",
@@ -54,8 +54,8 @@
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
-    "TASK-027": "IN_PROGRESS",
-    "TASK-028": "PENDING",
+    "TASK-027": "DONE",
+    "TASK-028": "IN_PROGRESS",
     "TASK-029": "PENDING",
     "TASK-030": "PENDING",
     "TASK-031": "PENDING",
@@ -1374,6 +1374,126 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-013",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction that all required Customer Management designs are directly approved; this successor binds the durable export-job and crash-recovery detail added for TASK-027.",
+      "recorded_at": "2026-09-24T01:19:56Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "5fe616aab7e095791d7ef0debd720c5a34db178a92091955cba5694bec301cbf",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-027",
+        "durable bounded Customer export and recovery"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-013",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner approval of all required Customer Management PLAN baselines and automatic continuation unless a material decision is required.",
+      "recorded_at": "2026-09-24T01:19:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0693e4ca9368e866d2c652450a0ca4b0f90fd7472d9997ef345e6b0024736eb0",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-027",
+        "TASK-028"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-036",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing instruction to continue automatically until the Customer Management goal is complete; TASK-028 is the approved PHASE-003 gate after TASK-027 independent approval.",
+      "recorded_at": "2026-09-24T01:19:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0693e4ca9368e866d2c652450a0ca4b0f90fd7472d9997ef345e6b0024736eb0",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "scope": [
+        "PHASE-003",
+        "TASK-028",
+        "server/test/**",
+        "client/e2e/customer-management/**",
+        "server/scripts/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-DESIGN-014",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner instruction approving all required Customer Management designs; successor after aligning the manifest's existing design-contract checksum to the already reviewed TASK-027 design bytes, with no semantic or source-code change.",
+      "recorded_at": "2026-09-24T01:19:56Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "manifest contract checksum alignment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-PLAN-014",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing Product Owner PLAN approval; successor after non-semantic manifest contract checksum alignment.",
+      "recorded_at": "2026-09-24T01:19:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "scope": [
+        "customer-management",
+        "PHASE-003",
+        "TASK-028"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-037",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing instruction to continue automatically; current-plan successor for TASK-028 after manifest checksum alignment.",
+      "recorded_at": "2026-09-24T01:19:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "scope": [
+        "PHASE-003",
+        "TASK-028",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/services/customerImport/**",
+        "server/test/**",
+        "client/src/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1760,6 +1880,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-033",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-027 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "80e2cb250f7b669a33f34d187209dc821d7b9fd80d2596ce38ef2a0c546e5d18",
+      "source_ref": "Independent review required registered-hash crash convergence, a stable bounded export snapshot and complete structured import diagnostics.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-034",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-027 recovery remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "895eca03950f6297007d8046b47cd8c417099667b37953b08938f3763023855b",
+      "source_ref": "Independent re-review found stale recovery could overwrite a concurrent idempotent result registration and count terminal rows as recovered.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-035",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-027 recovery-CAS remediation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "ff16b53290c9d2f8c0436a8080b4d6d1b798eac2e767afd8f3109148853aa6c7",
+      "source_ref": "Independent re-review found inverse operation/job lock acquisition between retry and recovery could deadlock and corrupt the winner outcome.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-036",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-027 final lock-order candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "f5c650218ce3ab6981cb41f3bcec09db0d82c253630f61f2ef9d1b3d11e0a259",
+      "source_ref": "2026-09-24 exact-candidate review confirmed operation-to-job lock order across activate/fail/recovery, CAS-safe stale scan handling, fixed snapshot export and structured UI diagnostics. Final verdict APPROVED with no Required finding; independent focused tests passed 10/10.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2136,6 +2304,28 @@
       "source_ref": "REV-032",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-23T07:22:58Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-027 bounded Customer export and import/export UI developer verification",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "spec_baseline": "0693e4ca9368e866d2c652450a0ca4b0f90fd7472d9997ef345e6b0024736eb0",
+      "source_fingerprint": "f5c650218ce3ab6981cb41f3bcec09db0d82c253630f61f2ef9d1b3d11e0a259",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/00_implementation_readiness.md#task-027-developer-verification",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-24T01:19:56Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-027 Customer export durability/concurrency and import/export UI independent review",
+      "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
+      "spec_baseline": "0693e4ca9368e866d2c652450a0ca4b0f90fd7472d9997ef345e6b0024736eb0",
+      "source_fingerprint": "f5c650218ce3ab6981cb41f3bcec09db0d82c253630f61f2ef9d1b3d11e0a259",
+      "status": "PASS",
+      "source_ref": "REV-036",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-24T01:19:56Z"
     }
   ],
   "pending_decisions": [
@@ -2657,6 +2847,22 @@
       "idempotency_key": "customer-phase003-task026-execution-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-23: real-MySQL TC-060..TC-063 passed commit-unknown reconciliation, terminal-row non-replay, aggregate/children/credit atomicity and safe result publication; test rows and private temporary files were removed by the test cleanup."
+    },
+    {
+      "id": "EXT-MIGRATION-038",
+      "kind": "SCHEMA_MIGRATION",
+      "target": "mysql://127.0.0.1:3306/erp_dev",
+      "idempotency_key": "customer-phase003-task027-export-job-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: migration 0054 created the durable Customer export-job schema on the authorized local development database; no destructive purge was enabled."
+    },
+    {
+      "id": "EXT-MYSQL-039",
+      "kind": "DATABASE_TEST",
+      "target": "mysql://127.0.0.1:3306/erp_dev",
+      "idempotency_key": "customer-phase003-task027-export-concurrency-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: real-MySQL TC-066 passed 2/2, including filtered/formula-safe/owner-safe export and a barrier-controlled concurrent idempotent retry versus stale recovery with no deadlock or outcome corruption; fixtures and private temporary files were cleaned."
     }
   ],
   "evidence_files": [
@@ -2665,5 +2871,5 @@
     "docs/customer_management/implementation/phase-PHASE-002-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-027 bounded formula-safe Customer export and the import/export UI, including filter/permission reconciliation, owner-safe download/expiry and Playwright/API/export checks."
+  "next_safe_action": "Execute TASK-028 PHASE-003 developer gate: lint/coverage/build, real MySQL, Playwright, no-secret scan, 10k import under ten minutes, bank rotation and file/import/export recovery evidence; then obtain independent evidence review and prepare the planned Phase PR."
 }

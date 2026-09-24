@@ -469,3 +469,33 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   exact remediated candidate `9d955fe9b1b7142145f837fdbc51086e1bca2dcc`
   was independently retested (28/28) and approved with every finding closed. Under
   HD-002, no automatic destructive retention purge is enabled in this release.
+
+## TASK-027 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added actor-owned durable Customer export jobs, exact allowlisted list filters, a
+  10,000-row bound, formula-safe CSV output, expiry enforcement and current-permission
+  checks for creation, finalization and download. Bank, attachment and private credit
+  data are never selected.
+- Export rows are collected in pages of 100 inside one MySQL `REPEATABLE READ`
+  snapshot. Duplicate/short/drifting pagination fails with a stable conflict instead
+  of publishing an incomplete result.
+- The expected result hash/count is registered before storage publication. The shared
+  bounded worker reconciles pre-registration, staged, finalized, missing and
+  authorization-revoked states. All terminal/recovery paths use operation-then-job
+  lock order and conditional state transitions, so a concurrent idempotent retry is
+  neither deadlocked nor overwritten by a stale recovery scan.
+- The import UI now exposes total/success/failure/skipped counts and row-level
+  `field · stable code · message` diagnostics. Filtered export and the import flow
+  remain keyboard-operable and fit a 375px viewport.
+- Focused export/worker/Customer-list server tests passed, repository ESLint passed,
+  full client tests passed 665/665, and the production client build passed with only
+  the existing chunk-size advisory. Real-MySQL TC-066 passed 2/2, including the
+  barrier-controlled retry-versus-recovery concurrency regression. Customer
+  Playwright passed 16/16 with console/network monitoring.
+- Independent review required three remediation rounds covering durable recovery,
+  fixed-snapshot pagination, structured UI diagnostics, stale-scan CAS behavior and
+  lock ordering. Exact candidate `08a1afaf5461371a65161ad1566498fa83f2eef3`
+  was independently approved with no remaining Required finding. CI was not run
+  under the Product Owner's explicit standing exception.
