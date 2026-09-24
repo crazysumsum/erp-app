@@ -42,7 +42,6 @@ test("global configuration validation normalizes every configuration section", (
   // 打到不同實例會各自執行一次，而那是負載平衡下的常態。
   assert.equal(configuration.idempotency.storeAdapter, "mysql");
   assert.equal(configuration.item.categoryMaxDepth, 8);
-  assert.equal(configuration.customer.bankEncryption, null);
   assert.equal(configuration.supplier.duplicateNameThreshold, 0.85);
   assert.match(configuration.item.mediaDirectory, /storage\/items$/);
   assert.equal(configuration.logging.loggers.request.filePrefix, "requests");
@@ -155,7 +154,16 @@ test("global configuration validation reports errors from multiple sections", ()
 });
 
 test("Customer and Supplier bank capabilities use the same owner-separated key rings", () => {
-  const source = defaultConfigurationSource();
+  const configuredSource = defaultConfigurationSource();
+  const disabledBankKeyRings = {
+    bankEncryption: { activeKeyId: undefined, keyRing: undefined },
+    bankLookup: { activeKeyId: undefined, keyRing: undefined }
+  };
+  const source = {
+    ...configuredSource,
+    customer: { ...configuredSource.customer, ...disabledBankKeyRings },
+    supplier: { ...configuredSource.supplier, ...disabledBankKeyRings }
+  };
   const encryption = randomBytes(32).toString("base64");
   const lookup = randomBytes(32).toString("base64");
   const bankEncryption = { activeKeyId: "enc", keyRing: { enc: encryption } };
