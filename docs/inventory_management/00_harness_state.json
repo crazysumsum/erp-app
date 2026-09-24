@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 30,
+  "revision": 31,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
     "plan": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
-    "code_commit": "ad9e216f67440a33886186b86a528d09ccf711c4",
-    "source_fingerprint": "eb4c950b26e62beae4a076c7ba7912eed6e05f9a62d9a00db38aca3ef7a57864",
+    "code_commit": "22b5008cde2c5302bc7b33e02a9f6a7a01a20703",
+    "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
     "worktree": "/private/tmp/erp-inventory-item-contract-baseline",
     "default_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
     "mode_entry_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9"

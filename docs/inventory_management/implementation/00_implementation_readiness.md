@@ -22,7 +22,10 @@
 - Both new methods require the caller's transaction executor; they do not open an independent connection.
 - The Inventory profile is an explicit whitelist and exposes Serial so Inventory can reject it fail closed.
 - UOM resolution accepts only an active SKU UOM with an integer factor from 1 to 1,000,000 and requires Base UOM factor 1.
-- Focused Item lookup checks previously passed 33/33; they must be rerun on this publication branch before any PR.
+- After merging latest `origin/main`, focused Item lookup checks passed 33/33 and focused ESLint passed.
+- Module-boundary validation against the current PR target, traceability validation and `PLAN_READY` passed.
+- Multi-axis code review found no correctness, security, maintainability or contract-blocking issue in the isolated diff.
+- Full `PHASE-001 MERGE_READY` remains blocked by the intentionally unfinished P0 tasks, runtime leases and pending remote CI/review; this isolated publication does not claim that Phase gate.
 
 ## Approved physical allocation
 
