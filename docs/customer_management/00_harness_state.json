@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 136,
+  "revision": 138,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
     "plan": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
-    "code_commit": "08a1afaf5461371a65161ad1566498fa83f2eef3",
-    "source_fingerprint": "f5c650218ce3ab6981cb41f3bcec09db0d82c253630f61f2ef9d1b3d11e0a259",
+    "code_commit": "5bbeb7dc5605ff088f680105ac029dc87c2e0307",
+    "source_fingerprint": "173e7853a74419e1e0064276472d46398a763d44dc56a2b3b33b0cdc2779da1f",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "487bec1f273de48de2a161e881e740bab118b41e",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -2863,13 +2863,46 @@
       "idempotency_key": "customer-phase003-task027-export-concurrency-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-24: real-MySQL TC-066 passed 2/2, including filtered/formula-safe/owner-safe export and a barrier-controlled concurrent idempotent retry versus stale recovery with no deadlock or outcome corruption; fixtures and private temporary files were cleaned."
+    },
+    {
+      "id": "EXT-MAIN-RECONCILE-004",
+      "kind": "GIT_FETCH_MERGE",
+      "target": "github:crazysumsum/erp-app:origin/main@37594b843375297a9ac59dd5326ae0a6ec8d5db2",
+      "idempotency_key": "customer-phase003-task028-main-reconcile-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: fetched and inspected current origin/main, then merged it as 739bece7 with no conflict. Upstream changes were Inventory code/docs plus a Supplier UI correction; no Customer product path changed."
+    },
+    {
+      "id": "EXT-MAIN-RECONCILE-005",
+      "kind": "GIT_FETCH_MERGE",
+      "target": "github:crazysumsum/erp-app:origin/main@497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
+      "idempotency_key": "customer-phase003-task028-main-reconcile-v2",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: inspected and merged the final two upstream commits as 8b299824 with no conflict; they changed Inventory documentation only and did not alter Customer product/test paths."
+    },
+    {
+      "id": "EXT-MYSQL-040",
+      "kind": "DATABASE_TEST",
+      "target": "mysql://127.0.0.1:3306/erp_dev",
+      "idempotency_key": "customer-phase003-task028-tc064-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: TC-064 passed 10,000/10,000 rows. Final measured precheck/execution/total were 788.03/50306.57/51094.60ms; execution row p50/p95 5.08/7.39ms; concurrent core query p50/p95 0.31/0.57ms; heap growth 35056728 bytes below the 256 MiB ceiling. Fixtures and private files were removed."
+    },
+    {
+      "id": "EXT-MYSQL-041",
+      "kind": "DATABASE_TEST",
+      "target": "mysql://127.0.0.1:3306/erp_dev",
+      "idempotency_key": "customer-phase003-task028-integration-rotation-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: all 16 Customer real-MySQL integration tests passed; Customer Bank rotation and blind-index reindex CLIs each returned processed=0 and remaining=0. No destructive purge or schema reset was performed."
     }
   ],
   "evidence_files": [
     "docs/customer_management/implementation/00_implementation_readiness.md",
     "docs/customer_management/implementation/phase-PHASE-001-report.md",
-    "docs/customer_management/implementation/phase-PHASE-002-report.md"
+    "docs/customer_management/implementation/phase-PHASE-002-report.md",
+    "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Execute TASK-028 PHASE-003 developer gate: lint/coverage/build, real MySQL, Playwright, no-secret scan, 10k import under ten minutes, bank rotation and file/import/export recovery evidence; then obtain independent evidence review and prepare the planned Phase PR."
+  "next_safe_action": "Obtain independent exact-candidate review for TASK-028 at commit 5bbeb7dc5605ff088f680105ac029dc87c2e0307 / source fingerprint 173e7853a74419e1e0064276472d46398a763d44dc56a2b3b33b0cdc2779da1f. If approved, mark TASK-028 DONE, record planned push/PR/merge actions, publish the PHASE-003 PR without CI under the Product Owner exception, observe merge, and transition IMPLEMENT to READY_FOR_TESTING."
 }
