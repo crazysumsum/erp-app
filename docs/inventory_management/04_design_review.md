@@ -2,7 +2,7 @@
 
 ## Review result
 
-`APPROVED` for the 0.5 migration-order correction. Sam approved DESIGN hash `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef` and PLAN hash `43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8` on 2026-09-23. This does not itself resume `IMPLEMENT` or authorize migration execution.
+`APPROVED` for the 0.7 Item contract publication scope. Boundary validation found that the already-planned focused test file was not named in `approval_required_paths`. The corrected manifest adds exactly that file; Sam approved DESIGN `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b` and PLAN `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4` on 2026-09-24, with exact two-file scoped approval.
 
 ## Reviewer provenance
 
@@ -39,7 +39,9 @@
 | DR-07 | HIGH | ACCEPTED_PLANNED | Browser acceptance | No Inventory UI or Playwright Inventory suite exists. | Expected before implementation; Playwright remains mandatory for later UI Phase verification and no PASS is claimed now. |
 | DR-08 | HIGH | ACCEPTED_P0 | Compatibility baseline change | `HD-006` supersedes the MySQL 8.0 choice with exact MySQL Server 26.7.0; Sam approved the updated baseline while `.github/workflows/ci.yml` still declares `mysql:8.0`. | P0 must pin CI and local integration runtime to 26.7.0 and verify actual server version before migration work. |
 | DR-09 | HIGH | RESOLVED | Migration dependency order | The prior allocation combined P0 operation requests with P1 movements and placed Audit after tables owned by later Phases. | `HD-007` splits operations (`0055`) from movements (`0059`) and places Audit at `0056`; the resulting DESIGN and PLAN are approved. |
+| DR-10 | HIGH | RESOLVED | Consumed contract drift | TASK-004 implemented the planned transaction-aware Item lookup methods, but Inventory still pinned the pre-TASK-004 source hash. | `HD-008` adopts `transaction-v1` and binds the manifest to `ca31b00f…`; the resulting DESIGN and PLAN are approved. |
+| DR-11 | HIGH | RESOLVED_PENDING_APPROVAL | Publication scope omission | `ItemLookupService.js` required scoped approval, while its planned focused test was outside the manifest boundary. | `HD-010` authorizes exactly those two files; the candidate manifest adds only `server/test/itemLookupService.test.js` to `approval_required_paths`. Fresh hash-bound approval remains required. |
 
 ## Decision
 
-The corrected 0.5 DESIGN and PLAN are approved with zero open CRITICAL/HIGH design findings. TASK-005 stays paused until the docs-only correction is merged, the implementation branch is reconciled and Sam separately resumes `IMPLEMENT`; migration execution remains separately gated.
+The 0.7 DESIGN and PLAN have no open CRITICAL/HIGH finding and are approved. Publication scope is limited to the two named Item files; TASK-005 and migration execution remain excluded.

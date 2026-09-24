@@ -76,7 +76,7 @@ Capability ID沿用已確認需求書，不另改名：
 - 測試使用Node.js built-in test runner及Vitest；不新增測試框架。
 - Migration runner按檔名排序且MySQL DDL會implicit commit。`HD-007`固定Inventory使用`0054`～`0063`；每支尚未建立的migration動工前必須fetch最新main並驗證配額，碰撞時停止並重新批准，不自行改號或修改既有migration。
 - 現有`IdempotencyService.identityScope()`只把`auth.type === "jwt"`視為authenticated；`jwt-password`／`jwt-device-password`會錯誤退回IP scope。Phase 0必須先作§8.1的最小framework修正，否則高風險Inventory routes不可啟用framework idempotency。
-- Item設計中預期的Inventory lookup contract目前尚未實作；Phase 0由Item module提供`ItemLookupService`，Inventory不可複製Item資格邏輯。
+- `HD-008`採納由Item module擁有的transaction-aware `ItemLookupService` contract；Inventory只消費其白名單projection，不複製Item資格邏輯。Contract publication合併前TASK-005保持阻擋。
 
 ### 1.4 開發與驗證命令
 
@@ -1761,6 +1761,7 @@ Gate：AC-044～050、10k Opening、2M Movement查詢、復原／對賬、上線
 | `DEC-020` | Inventory只接受正式source及internal contracts，§§2.7、5.4、5.11。 |
 | `DEC-027` | Production、CI及開發整合測試精確固定MySQL Server 26.7.0；P0先把現有CI的`mysql:8.0`服務改為可重現的26.7.0並驗證DDL、constraint、locking及migration，§§4.1、10.1、14.2。 |
 | `DEC-028` | Migration固定為`0054`～`0063`；P0先建立permissions、operations、audit，P1再依序建立master、stock、movements，避免P0 DDL依賴P1 tables，§§4.23、8.5。 |
+| `DEC-029` | 採納Item-owned `ItemLookupService` transaction contract `transaction-v1`；`getInventoryProfileInTransaction`及`resolveUomInTransaction`只使用caller transaction，Inventory manifest綁定實作hash且不得複製Item資格規則，§§5.11、8.2。 |
 
 ---
 

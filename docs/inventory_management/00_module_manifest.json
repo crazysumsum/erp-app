@@ -36,6 +36,7 @@
       "server/src/modules/authorization/permissionCatalogue.js",
       "server/src/services/idempotency/**",
       "server/src/modules/item/ItemLookupService.js",
+      "server/test/itemLookupService.test.js",
       "client/config/menu.js",
       "package.json",
       "server/package.json",
@@ -67,9 +68,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v5",
+        "version": "planning-v6",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "d8df4b59886724ec8ee6c61ebe724e17032335f2618dd96e101d3645585d5c71",
+        "sha256": "245ec88459ab04a6035a8fe88dc22677496f383fb2862e2315d7bd14a9e479d2",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
@@ -82,9 +83,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-b948c92",
+        "version": "transaction-v1",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "sha256": "ca31b00f228e092fce27def6c5322ec804e9969c83853e90d0965e59a6e86ab1",
         "regression_suites": [
           "inventory-technical"
         ]

@@ -13,8 +13,17 @@ import { useSessionStore } from "@/stores/session.js";
  *
  * 帳號明文淨係住喺呢個 component 兩個 local ref 度：`revealed.accountNumber`（睇）
  * 同 `form.accountNumber`（寫）。**冇**入 Pinia、冇入 localStorage／sessionStorage、
- * 冇入 URL、冇入 toast、冇入驗證訊息。清除有五個觸發點，全部指向同一個
- * `forgetPlaintext()`：手動收起、30 秒到、unmount、route change、session 失效。
+ * 冇入 URL、冇入 toast、冇入驗證訊息。清除有**六**個觸發點，全部指向同一個
+ * `forgetPlaintext()`：手動收起、30 秒到、unmount、route change、session 失效，
+ * 同埋**仲登入住但被撤走 `supplier.bank.view`**（下面個 watch，REV-050 F-L3）。
+ *
+ * 第六個要同「session 失效」分開數，因為佢哋唔係同一件事：`session.refresh()` 換
+ * 一個新 user object，`isAuthenticated` 由頭到尾都係 `true`。舊版呢句寫住「五個」
+ * 而且當個 watch 淨係睇 session，兩樣都漏咗呢一種。
+ *
+ * `unmount` 嗰個而家仲多一條路：撤走**頁面層**權限（supplier.view）嗰陣，
+ * `framework/routing/router.js` 個 watcher 會重跑守衛並且 replace 走，個 panel
+ * 就係咁被 unmount 嘅 —— 唔使用戶自己導航。
  *
  * 展開用 `v-if` 而唔係 `v-show`：`v-show` 會留返個節點喺 DOM 度（`display: none`），
  * 即係明文仲喺頁面入面，一個 devtools、一個 screen reader、一個 `innerHTML` 都攞得返。
