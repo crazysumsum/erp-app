@@ -2,7 +2,7 @@
 
 ## Outcome
 
-**0.7 DESIGN AND PLAN APPROVED; CONTRACT PUBLICATION RESUMED.** Boundary validation found one manifest omission: the already-planned focused Item test was not in the approval-required scope. Sam approved the corrected DESIGN, PLAN and exact two-file publication boundary. TASK-005 DDL and migration execution remain excluded.
+**0.7 DESIGN AND PLAN APPROVED; ITEM CONTRACT PUBLISHED.** [PR #141](https://github.com/crazysumsum/erp-app/pull/141) merged the exact two-file Item contract scope after all five CI jobs passed. TASK-005 DDL and migration execution remain excluded and paused.
 
 ## Mode, module and baselines
 
@@ -125,6 +125,6 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 ## Readiness and next safe action
 
 - Design/review: 0.7 DESIGN and PLAN are approved with exact-path `SCOPE` approval.
-- Implementation readiness: `IMPLEMENTING`; only the isolated contract publication is active. TASK-005 remains paused before DDL.
+- Implementation readiness: `BLOCKED` after completing the isolated publication; TASK-005 remains paused before DDL pending explicit resumption and reconciliation of the broader P0 branch.
 - Business/release: not accepted and not approved.
-- Next safe action: refresh main, rerun publication checks and review, then push and merge only after required CI passes. TASK-005 and migration execution remain blocked.
+- Next safe action: retain the completed contract on `main`; do not resume TASK-005 or execute migrations until explicitly authorized and the broader P0 branch is reconciled with merge commit `37594b843375297a9ac59dd5326ae0a6ec8d5db2`.

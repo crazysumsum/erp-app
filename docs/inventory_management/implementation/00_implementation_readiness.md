@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — Sam approved the corrected 0.7 DESIGN, PLAN and exact two-file `SCOPE`. Only the isolated contract publication is active; TASK-005 remains paused and no Inventory migration has been executed.
+`BLOCKED` — the approved Item contract was published by [PR #141](https://github.com/crazysumsum/erp-app/pull/141) after all five CI jobs passed. TASK-005 remains paused and no Inventory migration has been executed.
 
 ## Baseline
 
@@ -50,4 +50,4 @@
 
 ## Next safe action
 
-Refresh main, rerun focused tests/lint and review, then push and merge the isolated contract PR only after required CI passes. Do not start TASK-005 or execute migrations.
+Keep TASK-005 and migration execution paused. Before resuming the broader P0 branch, obtain explicit authorization and reconcile it with merge commit `37594b843375297a9ac59dd5326ae0a6ec8d5db2`.
