@@ -529,6 +529,18 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   discovery. Under the Product Owner's standing Customer-only scope instruction,
   no other module was modified and no assertion or threshold was weakened. Full
   detail is in `phase-PHASE-003-report.md`.
-- CI is intentionally not run under the Product Owner's explicit standing
-  publication direction and accepted risk. Independent exact-candidate review and
-  Phase PR publication remain before TASK-028 closure.
+- CI was intentionally not run under the Product Owner's explicit standing
+  publication direction and accepted risk.
+
+### PHASE-003 publication
+
+- Independent exact-candidate review approved the remediated TASK-028 candidate
+  with no Required finding.
+- PR #143 merged to `main` as `b6f831d3155f8b26244ec558f71ddb78b3b0a5c2`
+  on 2026-09-24. Per the Product Owner's explicit exception, publication did not
+  wait for CI; all recorded local developer gates and independent review passed.
+- TASK-029 dependency discovery found the approved Sales design contract but no
+  merged `server/src/modules/sales` implementation or real Sales consumer. The
+  Customer provider already exposes the designed `new_sale` and credit methods,
+  but TASK-029 remains blocked because its DoD requires real consumer contract
+  tests; no fake Sales consumer was introduced.

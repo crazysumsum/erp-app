@@ -81,5 +81,7 @@ this Phase appear green. Customer runtime behavior has no failing test.
 
 ## Exit status
 
-`DEVELOPER_VERIFIED` pending independent exact-candidate review and Phase PR
-publication.
+`MERGED`: independent exact-candidate review approved the remediated TASK-028
+candidate with no Required finding. PR #143 merged as
+`b6f831d3155f8b26244ec558f71ddb78b3b0a5c2` on 2026-09-24 without waiting for
+CI under the Product Owner's explicit exception.
