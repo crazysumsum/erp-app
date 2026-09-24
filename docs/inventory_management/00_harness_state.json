@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 32,
+  "revision": 38,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,9 +9,9 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-005",
   "baseline": {
-    "design": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
-    "plan": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
-    "code_commit": "2e27e9f6e0a4187a362e126c6659b4f7961cdbd7",
+    "design": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+    "plan": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+    "code_commit": "c22dfceede9c3c3aad923dff795dc3bcfd2ac164",
     "source_fingerprint": "17c43e80f5a8b70d3e3f0d04e87bc6bf715b6d22ccf7a27a12b86ea161d219fd",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
@@ -300,6 +300,72 @@
         "server/test/itemLookupService.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-012",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 DESIGN hash",
+      "recorded_at": "2026-09-24T09:57:30+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-029"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-013",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 PLAN hash",
+      "recorded_at": "2026-09-24T09:58:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-014",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 PLAN and exact ten-path P0 SCOPE",
+      "recorded_at": "2026-09-24T09:58:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "code_commit": "c22dfceede9c3c3aad923dff795dc3bcfd2ac164",
+      "scope": [
+        ".github/workflows/ci.yml",
+        "client/src/framework/http/errorMessages.js",
+        "client/test/inventory/foundation.test.js",
+        "server/database/migrations/0054_seed_inventory_permissions.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/configuration.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/permissionCatalogueConventions.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -418,6 +484,30 @@
       "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
       "reviewed_baseline": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
       "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.7 DESIGN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-011",
+      "method": "SELF_REVIEW",
+      "author": "/root P0 boundary reconciliation author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-012",
+      "method": "HUMAN",
+      "author": "/root P0 boundary reconciliation author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 DESIGN hash",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -804,6 +894,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving the exact two-file Item contract publication scope"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "May the P0 module boundary add exactly the ten existing shared/framework implementation and test paths reported by reconciliation validation?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving exactly the ten existing P0 shared/framework paths"
     }
   ],
   "external_actions": [
@@ -1014,9 +1118,17 @@
       "idempotency_key": "inventory-item-contract-merge-20260924",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/141"
+    },
+    {
+      "id": "EXT-024",
+      "kind": "BASELINE_RECONCILIATION",
+      "target": "origin/main 497ef6ce65a8b9fa3c911efc824176dcd1f0e303 -> codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-p0-main-reconciliation-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user authorization on 2026-09-24 and local merge commit c22dfceede9c3c3aad923dff795dc3bcfd2ac164; no migration execution"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Complete reconciliation validation only, then keep TASK-005 PENDING and migration execution paused until Sam gives separate authorization to start TASK-005."
+  "next_safe_action": "Complete reconciliation validation, commit the approved 0.8 boundary records, and keep TASK-005 PENDING until Sam separately authorizes it. Migration execution remains separately prohibited."
 }

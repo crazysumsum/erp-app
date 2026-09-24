@@ -56,6 +56,7 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 | HD-008 | ANSWERED | Adopt TASK-004's transaction-aware ItemLookupService contract and update the Inventory consumed-contract binding; do not revert the completed contract. |
 | HD-009 | ANSWERED | Enter `IMPLEMENT` only for isolated Item contract publication; push, review and merge after required CI. TASK-005 and migrations remain excluded. |
 | HD-010 | ANSWERED | Limit shared-file publication scope to exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js`. |
+| HD-011 | ANSWERED | Limit existing P0 shared/framework scope to the ten exact paths reported by reconciliation validation; do not broaden globs. |
 
 ## HD-001 — Accountable owner
 
@@ -120,11 +121,11 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 - Reviewer / method: Sam / `HUMAN`.
 - Historical decision: approved the 0.3 requirement/design baseline and P0→P5 plan/order after `HD-001`–`HD-004` were propagated.
 - Binding: design `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`; plan `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`. Later requirement/design/plan changes invalidate the affected approval and require re-review.
-- Current decision: Sam independently approved 0.7 DESIGN `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b` and PLAN `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4` on 2026-09-24, including exact two-file scoped approval.
+- Current decision: Sam independently approved 0.8 DESIGN `56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e` and PLAN `4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434` on 2026-09-24, with exact ten-path `SCOPE` approval.
 
 ## Readiness and next safe action
 
-- Design/review: 0.7 DESIGN and PLAN are approved with exact-path `SCOPE` approval.
-- Implementation readiness: `BLOCKED` after completing the isolated publication; TASK-005 remains paused before DDL pending explicit resumption and reconciliation of the broader P0 branch.
+- Design/review: 0.8 DESIGN, PLAN and exact ten-path `SCOPE` are approved.
+- Implementation readiness: `BLOCKED`; P0 branch reconciliation is complete, while TASK-005 remains `PENDING` before DDL.
 - Business/release: not accepted and not approved.
-- Next safe action: retain the completed contract on `main`; do not resume TASK-005 or execute migrations until explicitly authorized and the broader P0 branch is reconciled with merge commit `37594b843375297a9ac59dd5326ae0a6ec8d5db2`.
+- Next safe action: finish reconciliation validation and commit the approved records; TASK-005 and migration execution remain blocked pending separate authorization.

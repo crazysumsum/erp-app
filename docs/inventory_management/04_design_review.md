@@ -2,7 +2,7 @@
 
 ## Review result
 
-`APPROVED` for the 0.7 Item contract publication scope. Boundary validation found that the already-planned focused test file was not named in `approval_required_paths`. The corrected manifest adds exactly that file; Sam approved DESIGN `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b` and PLAN `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4` on 2026-09-24, with exact two-file scoped approval.
+`APPROVED` for the 0.8 P0 shared-path boundary. Reconciliation found six already-implemented framework/test files missing from `approval_required_paths`; four other changed paths already matched existing approval-required rules. Sam approved exactly those ten paths, DESIGN `56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e` and PLAN `4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434` on 2026-09-24.
 
 ## Reviewer provenance
 
@@ -40,8 +40,9 @@
 | DR-08 | HIGH | ACCEPTED_P0 | Compatibility baseline change | `HD-006` supersedes the MySQL 8.0 choice with exact MySQL Server 26.7.0; Sam approved the updated baseline while `.github/workflows/ci.yml` still declares `mysql:8.0`. | P0 must pin CI and local integration runtime to 26.7.0 and verify actual server version before migration work. |
 | DR-09 | HIGH | RESOLVED | Migration dependency order | The prior allocation combined P0 operation requests with P1 movements and placed Audit after tables owned by later Phases. | `HD-007` splits operations (`0055`) from movements (`0059`) and places Audit at `0056`; the resulting DESIGN and PLAN are approved. |
 | DR-10 | HIGH | RESOLVED | Consumed contract drift | TASK-004 implemented the planned transaction-aware Item lookup methods, but Inventory still pinned the pre-TASK-004 source hash. | `HD-008` adopts `transaction-v1` and binds the manifest to `ca31b00f…`; the resulting DESIGN and PLAN are approved. |
-| DR-11 | HIGH | RESOLVED_PENDING_APPROVAL | Publication scope omission | `ItemLookupService.js` required scoped approval, while its planned focused test was outside the manifest boundary. | `HD-010` authorizes exactly those two files; the candidate manifest adds only `server/test/itemLookupService.test.js` to `approval_required_paths`. Fresh hash-bound approval remains required. |
+| DR-11 | HIGH | RESOLVED | Publication scope omission | `ItemLookupService.js` required scoped approval, while its planned focused test was outside the manifest boundary. | `HD-010` authorized exactly those two files; Sam approved the resulting 0.7 DESIGN and PLAN. |
+| DR-12 | HIGH | RESOLVED_PENDING_APPROVAL | P0 shared-path omission | Reconciliation found ten existing P0 shared/framework changes; four matched existing approval-required rules and six were outside the manifest boundary. | `HD-011` authorizes exactly those ten paths; the candidate adds only the six missing exact entries. Fresh hash-bound approval remains required. |
 
 ## Decision
 
-The 0.7 DESIGN and PLAN have no open CRITICAL/HIGH finding and are approved. Publication scope is limited to the two named Item files; TASK-005 and migration execution remain excluded.
+The 0.8 DESIGN and PLAN have no open CRITICAL/HIGH finding and are approved with exact ten-path `SCOPE`. TASK-005 and migration execution remain separately excluded.
