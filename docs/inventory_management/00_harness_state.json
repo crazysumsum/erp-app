@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 21,
-  "mode": "DESIGN_AND_PLAN",
-  "active_mode": "DESIGN_AND_PLAN",
-  "status": "PLANNED",
-  "resume_status": null,
-  "current_phase": null,
-  "current_task": null,
+  "revision": 32,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-004",
   "baseline": {
-    "design": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
-    "plan": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
-    "code_commit": "c233d693df12050bc7c3cb24a56f1b691311157e",
-    "source_fingerprint": "385cde8e437a08d9b811bf6c322bd7a585ec2edf4cb801f215a0a7ea598094b1",
-    "worktree": "/private/tmp/erp-inventory-migration-plan-correction",
-    "default_commit": "dd8e238755a8685182e32397c05552774fd74adc",
-    "mode_entry_commit": "623f74cea1d407d7b8f6516c348850cce29b1dec"
+    "design": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
+    "plan": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+    "code_commit": "37594b843375297a9ac59dd5326ae0a6ec8d5db2",
+    "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+    "worktree": "/private/tmp/erp-inventory-item-contract-baseline",
+    "default_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
+    "mode_entry_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9"
   },
   "runtime": {
     "instance_id": "DESIGN-ONLY-NO-RUNTIME",
@@ -29,7 +29,7 @@
     "TASK-001": "PENDING",
     "TASK-002": "PENDING",
     "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
+    "TASK-004": "IN_PROGRESS",
     "TASK-005": "PENDING",
     "TASK-006": "PENDING",
     "TASK-007": "PENDING",
@@ -201,6 +201,105 @@
         "UAT-001 through UAT-113"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-007",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.6 DESIGN hash",
+      "recorded_at": "2026-09-24T08:49:23+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9959a18116c0c9dc3310093cb0e9b9763b1ee552b877def3230021a658c42107",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-029"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-008",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.6 PLAN hash",
+      "recorded_at": "2026-09-24T08:52:48+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c8470cd0b354606e28b1dfca137a6741fafdee7443b6cf829fcdf815486ef8f9",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-009",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.7 DESIGN hash",
+      "recorded_at": "2026-09-24T09:08:41+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-029"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-010",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.7 PLAN hash",
+      "recorded_at": "2026-09-24T09:13:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-011",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.7 PLAN and its exact two-file SCOPE",
+      "recorded_at": "2026-09-24T09:13:15+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "code_commit": "ad9e216f67440a33886186b86a528d09ccf711c4",
+      "scope": [
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/itemLookupService.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -275,9 +374,124 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-007",
+      "method": "SELF_REVIEW",
+      "author": "/root Item contract baseline author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "9959a18116c0c9dc3310093cb0e9b9763b1ee552b877def3230021a658c42107",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-008",
+      "method": "HUMAN",
+      "author": "/root Item contract baseline author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "9959a18116c0c9dc3310093cb0e9b9763b1ee552b877def3230021a658c42107",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.6 DESIGN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-009",
+      "method": "SELF_REVIEW",
+      "author": "/root Item contract publication author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-010",
+      "method": "HUMAN",
+      "author": "/root Item contract publication author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.7 DESIGN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #141 isolated Item contract publication",
+      "code_commit": "37594b843375297a9ac59dd5326ae0a6ec8d5db2",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/141",
+      "actor": "GitHub",
+      "observed_at": "2026-09-24T09:21:49+08:00"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -548,6 +762,48 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user confirmation on 2026-09-23 approving migration allocation 0054-0063 and return to DESIGN_AND_PLAN"
+    },
+    {
+      "id": "HD-008",
+      "impact": "MAJOR",
+      "question": "Should the approved Inventory contract baseline adopt TASK-004's transaction-aware ItemLookupService contract, or should TASK-004 be reverted until Item Management publishes that contract separately?",
+      "affected_ids": [
+        "DES-002",
+        "DES-010",
+        "PHASE-001",
+        "TASK-004",
+        "TASK-005",
+        "TC-003",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-23 adopting TASK-004's transaction-aware ItemLookupService contract"
+    },
+    {
+      "id": "HD-009",
+      "impact": "MAJOR",
+      "question": "May the isolated Item contract publication branch enter IMPLEMENT and be pushed, reviewed and merged after required CI, without resuming TASK-005 or executing migrations?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-004",
+        "TC-003",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 authorizing isolated Item contract publication under IMPLEMENT"
+    },
+    {
+      "id": "HD-010",
+      "impact": "MAJOR",
+      "question": "May the isolated publication scope include exactly ItemLookupService.js and itemLookupService.test.js?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-004",
+        "TC-003",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving the exact two-file Item contract publication scope"
     }
   ],
   "external_actions": [
@@ -678,9 +934,57 @@
       "idempotency_key": "inventory-migration-plan-correction-merge-20260923",
       "status": "PLANNED",
       "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
+    },
+    {
+      "id": "EXT-019",
+      "kind": "LOCAL_WORKTREE_CREATE",
+      "target": "/private/tmp/erp-inventory-item-contract-baseline on codex/inventory-item-contract-baseline from b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
+      "idempotency_key": "inventory-item-contract-baseline-worktree-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-23 adopting TASK-004's transaction-aware ItemLookupService contract"
+    },
+    {
+      "id": "MODE-CHANGE-26",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-26",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 authorizing isolated Item contract publication under IMPLEMENT"
+    },
+    {
+      "id": "EXT-020",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-item-contract-baseline at 9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "idempotency_key": "inventory-item-contract-push-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/tree/codex/inventory-item-contract-baseline"
+    },
+    {
+      "id": "EXT-021",
+      "kind": "PR_CREATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/141 (main<-codex/inventory-item-contract-baseline)",
+      "idempotency_key": "inventory-item-contract-pr-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/141"
+    },
+    {
+      "id": "EXT-022",
+      "kind": "CI_RUN",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "idempotency_key": "inventory-item-contract-ci-35942297678",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678"
+    },
+    {
+      "id": "EXT-023",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/141 -> main at 37594b843375297a9ac59dd5326ae0a6ec8d5db2",
+      "idempotency_key": "inventory-item-contract-merge-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/141"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Re-run approved hashes, PLAN_READY, traceability and docs-only boundary checks against origin/main dd8e238755a8685182e32397c05552774fd74adc; push the refreshed head, confirm CI cancellation, then merge PR #139 without waiting for checks."
+  "next_safe_action": "Keep TASK-005 and migration execution paused. Before resuming the broader P0 branch, obtain explicit authorization and reconcile it with merged Item contract commit 37594b843375297a9ac59dd5326ae0a6ec8d5db2."
 }

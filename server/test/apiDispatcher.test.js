@@ -269,6 +269,18 @@ test("dispatcher validates request schemas before invoking the handler", async (
     }
   };
   let handlerCalls = 0;
+  const failureAudits = [];
+  const productHandler = new TestHandler("productHandler", (req) => {
+    handlerCalls += 1;
+    return {
+      id: req.input.params.id,
+      idType: typeof req.input.params.id,
+      includeInactive: req.input.query.includeInactive,
+      price: req.input.body.price,
+      priceType: typeof req.input.body.price
+    };
+  });
+  productHandler.auditFailure = async (req, error) => failureAudits.push({ requestId: req.requestId, code: error.code });
   const dispatcher = createApiDispatcher({
     routes: [
       {
@@ -308,16 +320,7 @@ test("dispatcher validates request schemas before invoking the handler", async (
       }
     ],
     handlers: {
-      productHandler: new TestHandler("productHandler", (req) => {
-        handlerCalls += 1;
-        return {
-          id: req.input.params.id,
-          idType: typeof req.input.params.id,
-          includeInactive: req.input.query.includeInactive,
-          price: req.input.body.price,
-          priceType: typeof req.input.body.price
-        };
-      })
+      productHandler
     },
     logger
   });
@@ -356,6 +359,7 @@ test("dispatcher validates request schemas before invoking the handler", async (
   assert.equal(invalidBody.meta.requestId, "invalid-schema-request");
   assert.ok(invalidBody.error.details.length >= 4);
   assert.equal(handlerCalls, 1);
+  assert.deepEqual(failureAudits, [{ requestId: "invalid-schema-request", code: "REQUEST_VALIDATION_FAILED" }]);
   assert.ok(
     systemLogs.some(
       (entry) =>

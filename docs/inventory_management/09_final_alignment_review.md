@@ -2,7 +2,7 @@
 
 ## Outcome
 
-**0.5 DESIGN AND PLAN APPROVED; IMPLEMENT PAUSED.** Sam approved the dependency-safe `0054`～`0063` DESIGN and PLAN hashes on 2026-09-23. P0 TASK-001～TASK-004 exist only on the unmerged implementation branch; TASK-005 DDL, migration execution, formal Technical Acceptance, UAT, Go-Live and release have not occurred.
+**0.7 DESIGN AND PLAN APPROVED; ITEM CONTRACT PUBLISHED.** [PR #141](https://github.com/crazysumsum/erp-app/pull/141) merged the exact two-file Item contract scope after all five CI jobs passed. TASK-005 DDL and migration execution remain excluded and paused.
 
 ## Mode, module and baselines
 
@@ -53,6 +53,9 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 | HD-005 | ANSWERED | Sam authorized entry to `IMPLEMENT` on 2026-09-23; execution was later paused by the material baseline change. |
 | HD-006 | ANSWERED | Exact MySQL Server 26.7.0 supersedes the earlier MySQL 8.0 production/CI/developer integration baseline; patch upgrades are not implicit, and Sam approved the resulting 0.4 design/plan baseline. |
 | HD-007 | ANSWERED | Split P0 operations from P1 movements and fix the physical allocation to `0054`～`0063`; return to `DESIGN_AND_PLAN` before TASK-005. |
+| HD-008 | ANSWERED | Adopt TASK-004's transaction-aware ItemLookupService contract and update the Inventory consumed-contract binding; do not revert the completed contract. |
+| HD-009 | ANSWERED | Enter `IMPLEMENT` only for isolated Item contract publication; push, review and merge after required CI. TASK-005 and migrations remain excluded. |
+| HD-010 | ANSWERED | Limit shared-file publication scope to exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js`. |
 
 ## HD-001 — Accountable owner
 
@@ -105,16 +108,23 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 - Reason: P0 operations and Audit must exist before business writes, while Movement has FK dependencies on P1 master／stock. Keeping operation requests and movements in one migration made the approved Phase order impossible.
 - Boundary: this approves the correction direction and exact allocation, not the changed artifact hashes, migration execution or implementation resumption.
 
+## HD-008 — Transaction-aware Item lookup contract
+
+- Answer source: user response in the active Codex task on 2026-09-23: “同意”.
+- Recorded interpretation: preserve TASK-004's `getInventoryProfileInTransaction` and `resolveUomInTransaction` methods, publish them as Item-owned `transaction-v1`, and update Inventory's consumed contract hash to `ca31b00f228e092fce27def6c5322ec804e9969c83853e90d0965e59a6e86ab1`.
+- Reason: both methods are already required by the approved design and prevent Inventory from opening a nested transaction or copying Item lifecycle／UOM rules.
+- Boundary: this approves contract adoption, not the resulting DESIGN／PLAN hashes, PR merge, TASK-005 resumption or migration execution.
+
 ## Independent review and baseline approval
 
 - Reviewer / method: Sam / `HUMAN`.
 - Historical decision: approved the 0.3 requirement/design baseline and P0→P5 plan/order after `HD-001`–`HD-004` were propagated.
 - Binding: design `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`; plan `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`. Later requirement/design/plan changes invalidate the affected approval and require re-review.
-- Current decision: Sam independently approved 0.5 DESIGN `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef` and PLAN `43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8` on 2026-09-23.
+- Current decision: Sam independently approved 0.7 DESIGN `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b` and PLAN `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4` on 2026-09-24, including exact two-file scoped approval.
 
 ## Readiness and next safe action
 
-- Design/review: 0.5 DESIGN and PLAN are approved.
-- Implementation readiness: `PLANNED`; local TASK-001～TASK-004 commits are preserved and TASK-005 is paused before DDL.
+- Design/review: 0.7 DESIGN and PLAN are approved with exact-path `SCOPE` approval.
+- Implementation readiness: `BLOCKED` after completing the isolated publication; TASK-005 remains paused before DDL pending explicit resumption and reconciliation of the broader P0 branch.
 - Business/release: not accepted and not approved.
-- Next safe action: commit and merge the docs-only correction without CI, reconcile the paused implementation branch, then separately authorize resuming `IMPLEMENT` at TASK-005.
+- Next safe action: retain the completed contract on `main`; do not resume TASK-005 or execute migrations until explicitly authorized and the broader P0 branch is reconciled with merge commit `37594b843375297a9ac59dd5326ae0a6ec8d5db2`.

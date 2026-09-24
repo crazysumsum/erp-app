@@ -6,7 +6,8 @@ const ROUTES = new Set([
   "customer.create", "customer.update", "customer.code_change", "customer.activate",
   "customer.suspend", "customer.reactivate", "customer.archive", "customer.restore", "customer.delete",
   "customer.block", "customer.unblock", "customer.approval.approve", "customer.approval.reject",
-  "customer.approval.reassign"
+  "customer.approval.reassign", "customer.attachment.upload", "customer.import.upload", "customer.import.confirm",
+  "customer.export.create"
 ]);
 
 function canonicalize(value) {
@@ -73,6 +74,15 @@ export class CustomerOperationService {
               updated_at = ?, completed_at = ?
         WHERE id = ? AND status = 'processing'`,
       [resourceType, resourceId, resultVersion, nowMs, nowMs, operationId]
+    );
+  }
+
+  async fail(connection, { operationId, errorCode, nowMs }) {
+    await connection.execute(
+      `UPDATE customer_operation_requests
+          SET status = 'failed', error_code = ?, updated_at = ?, completed_at = ?
+        WHERE id = ? AND status = 'processing'`,
+      [String(errorCode), nowMs, nowMs, operationId]
     );
   }
 

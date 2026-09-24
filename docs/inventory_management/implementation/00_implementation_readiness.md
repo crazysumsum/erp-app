@@ -2,22 +2,30 @@
 
 ## Status
 
-`PLANNED` — P0 TASK-001～TASK-004 are complete on the unmerged implementation branch. Sam approved the corrected DESIGN and PLAN hashes; implementation remains paused until the docs-only correction is merged, the branch is reconciled and `IMPLEMENT` is separately resumed.
+`BLOCKED` — the approved Item contract was published by [PR #141](https://github.com/crazysumsum/erp-app/pull/141) after all five CI jobs passed. TASK-005 remains paused and no Inventory migration has been executed.
 
 ## Baseline
 
-- Default / worktree baseline: `a264d41e402c0adc3caf05555034755f54e7abbf`
-- Historical 0.3 design approval: `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`
-- Historical 0.3 plan approval: `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`
-- Human authorization: Sam, active Codex task, 2026-09-23: `Inventory Management 切換到 IMPLEMENT`.
-- Superseding planning decision: Sam, active Codex task, 2026-09-23: approve dependency-safe `0054`～`0063` allocation and return to `DESIGN_AND_PLAN`.
+- Historical 0.3 design approval: `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`.
+- Historical 0.3 plan approval: `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`.
+- Historical 0.5 DESIGN: `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef`.
+- Historical 0.5 PLAN: `43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8`.
+- Candidate 0.7 DESIGN: `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b`.
+- Candidate 0.7 PLAN: `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4`.
+- `HD-008`: Sam approved adopting TASK-004's transaction-aware `ItemLookupService` contract on 2026-09-23.
+- `HD-010`: Sam approved exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js` as the shared publication scope on 2026-09-24.
 
-## Entry checks
+## Contract publication checks
 
-- 0.5 DESIGN hash `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef` and PLAN hash `43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8` were independently approved by Sam on 2026-09-23.
-- Local implementation commits completed TASK-001～TASK-004; none is merged to main. TASK-005 has no DDL change.
-- The isolated local MySQL server reports exactly 26.7.0; no Inventory migration has been executed.
-- The local implementation branch pins CI to `mysql:26.7.0`; that change is not merged to main.
+- Only `ItemLookupService.js`, its focused tests and Inventory planning records are in scope; TASK-001～TASK-003 code is not carried by this branch.
+- The implemented service contract hashes to `ca31b00f228e092fce27def6c5322ec804e9969c83853e90d0965e59a6e86ab1`.
+- Both new methods require the caller's transaction executor; they do not open an independent connection.
+- The Inventory profile is an explicit whitelist and exposes Serial so Inventory can reject it fail closed.
+- UOM resolution accepts only an active SKU UOM with an integer factor from 1 to 1,000,000 and requires Base UOM factor 1.
+- After merging latest `origin/main`, focused Item lookup checks passed 33/33 and focused ESLint passed.
+- Module-boundary validation against the current PR target, traceability validation and `PLAN_READY` passed.
+- Multi-axis code review found no correctness, security, maintainability or contract-blocking issue in the isolated diff.
+- Full `PHASE-001 MERGE_READY` remains blocked by the intentionally unfinished P0 tasks, runtime leases and pending remote CI/review; this isolated publication does not claim that Phase gate.
 
 ## Approved physical allocation
 
@@ -36,9 +44,10 @@
 
 ## Boundaries
 
-- No migration execution, production access, deployment, CI merge, Technical Acceptance or UAT has occurred.
+- No Inventory migration execution, production access, deployment, Technical Acceptance or UAT has occurred.
 - Migration execution remains a separate explicit authorization.
+- Contract publication does not resume TASK-005 or merge the remaining P0 implementation commits.
 
 ## Next safe action
 
-Commit and merge the docs-only PR to main without CI, reconcile the paused implementation branch, and only then ask to resume `IMPLEMENT` at TASK-005.
+Keep TASK-005 and migration execution paused. Before resuming the broader P0 branch, obtain explicit authorization and reconcile it with merge commit `37594b843375297a9ac59dd5326ae0a6ec8d5db2`.

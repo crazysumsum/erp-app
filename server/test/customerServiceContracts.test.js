@@ -34,6 +34,19 @@ function serviceWithConnection(connection) {
   });
 }
 
+function customerRow(overrides = {}) {
+  return {
+    id: 21, customer_code: "CUS-021", customer_code_key: "cus-021",
+    legal_name: "Example Limited", legal_name_key: "example limited", trading_name: "Example",
+    trading_name_key: "example", default_currency_code: "HKD", default_payment_term_id: 2,
+    account_manager_user_id: 3, category_id: 4, industry_id: 5, territory_id: 6,
+    website: "https://example.test", general_phone: "1234", general_email: "ops@example.test",
+    notes: "note", status: "draft", ever_activated_at: null, version: 1,
+    created_at: 1, updated_at: 1, created_by: 9, updated_by: 9,
+    ...overrides
+  };
+}
+
 test("TC-013 duplicate check selects normalized keys before grouping matches", async () => {
   let selectClause = "";
   const database = {
@@ -198,4 +211,100 @@ test("TC-012 root validation rejects non-HTTP websites and malformed email addre
 
   await assert.rejects(() => service.create(input({ website: "ftp://example.test" })), /website is invalid/);
   await assert.rejects(() => service.create(input({ generalEmail: "not-an-email" })), /generalEmail is invalid/);
+});
+
+test("Customer import row application creates the full aggregate without dropping optional children", async () => {
+  const writes = [];
+  const connection = {
+    async query(sql) {
+      const text = String(sql);
+      if (text.includes("FROM customer_credit_profiles")) return [[]];
+      if (text.includes("FROM customers WHERE id")) return [[customerRow()]];
+      if (/FROM (?:customer_categories|customer_industries|customer_territories|users)/u.test(text)) return [[{ id: 1 }]];
+      throw new Error(`Unexpected query: ${text}`);
+    },
+    async execute(sql) {
+      const text = String(sql); writes.push(text);
+      if (text.includes("INSERT INTO customers")) return [{ insertId: 21 }];
+      if (text.includes("INSERT INTO customer_addresses")) return [{ insertId: 31 }];
+      if (text.includes("INSERT INTO customer_contacts")) return [{ insertId: 32 }];
+      return [{ affectedRows: 1 }];
+    }
+  };
+  const service = new CustomerService({
+    database: {}, time: { nowMs: () => 1 }, audit: { async record() {} },
+    businessMaster: {
+      async assertCurrencyUsableInTransaction() {},
+      async assertPaymentTermUsableInTransaction() {}
+    }
+  });
+  const customerId = await service.applyImportRowInTransaction(connection, {
+    job: { activation_mode: "draft" }, row: {
+      operation: "create",
+      normalized_payload: JSON.stringify({
+        root: {
+          customerCode: "CUS-021", legalName: "Example Limited", tradingName: "Example",
+          defaultCurrencyCode: "HKD", defaultPaymentTermId: 2, accountManagerUserId: 3,
+          categoryId: 4, industryId: 5, territoryId: 6, website: "https://example.test",
+          generalPhone: "1234", generalEmail: "ops@example.test", notes: "note"
+        },
+        address: {
+          label: "HQ", recipientCompanyDepartment: "Ops", addressLine1: "1 Road", addressLine2: "",
+          addressLine3: "", city: "Hong Kong", stateRegion: "", postalCode: "", countryCode: "HK",
+          phone: "1234", notes: "", sortOrder: 0, purposes: [{ code: "billing", isDefault: true }]
+        },
+        contact: {
+          name: "Alex", jobTitle: "Manager", department: "Ops", email: "alex@example.test",
+          phone: "1234", mobile: "5678", preferredLanguage: "en", notes: "", sortOrder: 0,
+          purposes: [{ code: "general", isDefault: true }]
+        },
+        identifier: {
+          identifierType: "tax", issuerCountryCode: "HK", identifierValue: "12-34",
+          validFrom: null, expiresAt: null, notes: ""
+        },
+        credit: { creditLimit: "100.0000", creditCurrencyCode: "HKD", creditStatus: "normal" }
+      })
+    }, actor: { id: 9, username: "sam", permissions: [] }, nowMs: 1
+  });
+
+  assert.equal(customerId, 21);
+  for (const table of [
+    "customers", "customer_addresses", "customer_address_purposes", "customer_contacts",
+    "customer_contact_purposes", "customer_identifiers", "customer_credit_profiles"
+  ]) assert.ok(writes.some((sql) => sql.includes(`INSERT INTO ${table}`)), table);
+});
+
+test("Customer import update inherits omitted root fields and rejects invalid row contexts", async () => {
+  let reads = 0;
+  const connection = {
+    async query(sql) {
+      const text = String(sql);
+      if (text.includes("FROM customers WHERE id")) {
+        reads += 1;
+        return [[customerRow({ version: reads === 1 ? 1 : 2 })]];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    },
+    async execute(sql) {
+      assert.match(String(sql), /^UPDATE customers SET/u);
+      return [{ affectedRows: 1 }];
+    }
+  };
+  const service = new CustomerService({ database: {}, time: { nowMs: () => 1 }, audit: { async record() {} } });
+
+  assert.equal(await service.applyImportRowInTransaction(connection, {
+    job: { activation_mode: "draft" },
+    row: { operation: "update", match_customer_id: 21, expected_customer_version: 1, normalized_payload: { root: {} } },
+    actor: { id: 9, username: "sam", permissions: [] }, nowMs: 1
+  }), 21);
+  await assert.rejects(
+    () => service.applyImportRowInTransaction(null, {}),
+    /row context is invalid/u
+  );
+  await assert.rejects(
+    () => service.applyImportRowInTransaction(connection, {
+      job: {}, row: { operation: "delete", normalized_payload: {} }, actor: { id: 9 }, nowMs: 1
+    }),
+    /operation is invalid/u
+  );
 });

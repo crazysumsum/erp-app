@@ -208,3 +208,72 @@ test("TC-011 create with activation approval enabled creates one pending aggrega
     activate: true, approverUserId: 8, requestNote: "請覆核啟用"
   });
 });
+
+test("TC-060 import create applies children, credit and the confirmed approval snapshot in one transaction", async () => {
+  const customer = row(); customer.version = 1; const events = [];
+  const connection = {
+    async query(sql) {
+      if (String(sql).includes("customer_credit_profiles")) return [[]];
+      if (String(sql).includes("FROM customers")) return [[customer]];
+      return [[]];
+    },
+    async execute(sql) {
+      const text = String(sql); events.push(["execute", text]);
+      if (text.includes("INSERT INTO customers")) return [{ insertId: 4 }];
+      if (text.includes("INSERT INTO customer_addresses")) return [{ insertId: 10 }];
+      if (text.includes("INSERT INTO customer_contacts")) return [{ insertId: 20 }];
+      return [{ affectedRows: 1, insertId: 30 }];
+    }
+  };
+  const service = new CustomerService({
+    database: {}, time: { nowMs: () => 100 }, audit: { async record(_connection, input) { events.push(["audit", input]); } },
+    businessMaster: { async assertCurrencyUsableInTransaction() { events.push(["currency"]); } },
+    approvals: { async submitInTransaction(_connection, input, context) { events.push(["approval", input, context]); } }
+  });
+  const payload = {
+    root: { customerCode: "CUS-004", legalName: "Demo Customer", tradingName: "", defaultCurrencyCode: "HKD" },
+    address: { label: "Office", recipientCompanyDepartment: "", addressLine1: "1 Main", addressLine2: "", addressLine3: "", city: "", stateRegion: "", postalCode: "", countryCode: "HK", phone: "", notes: "", sortOrder: 0, purposes: [{ code: "billing", isDefault: true }] },
+    contact: { name: "Sam", jobTitle: "", department: "", email: "", phone: "", mobile: "", preferredLanguage: "", notes: "", sortOrder: 0, purposes: [{ code: "general", isDefault: true }] },
+    identifier: { identifierType: "tax", issuerCountryCode: "HK", identifierValue: "12-34", validFrom: null, expiresAt: null, notes: "" },
+    credit: { creditLimit: "10.0000", creditCurrencyCode: "HKD", creditStatus: "normal" }
+  };
+  const result = await service.applyImportRowInTransaction(connection, {
+    job: { activation_mode: "activate", approval_setting_value: 1, approval_setting_version: 7, approver_user_id: 8 },
+    row: { operation: "create", normalized_payload: JSON.stringify(payload) },
+    actor: { id: 2, username: "sam", permissions: ["customer.view", "customer.mgmt"] }, nowMs: 100
+  });
+  assert.equal(result, 4);
+  assert.ok(events.some(([kind, sql]) => kind === "execute" && sql.includes("customer_address_purposes")));
+  assert.ok(events.some(([kind, sql]) => kind === "execute" && sql.includes("customer_contact_purposes")));
+  assert.ok(events.some(([kind, sql]) => kind === "execute" && sql.includes("customer_identifiers")));
+  assert.ok(events.some(([kind, sql]) => kind === "execute" && sql.includes("customer_credit_profiles")));
+  const approval = events.find(([kind]) => kind === "approval");
+  assert.equal(approval[1].approverUserId, 8);
+  assert.deepEqual(approval[2].setting, { require_activation_approval: 1, version: 7 });
+});
+
+test("TC-060 import update preserves omitted fields and uses the precheck Customer version", async () => {
+  let customer = row(); const events = [];
+  const connection = {
+    async query(sql) { if (String(sql).includes("FROM customers")) return [[customer]]; return [[]]; },
+    async execute(sql, params) {
+      const text = String(sql); events.push([text, params]);
+      if (text.includes("UPDATE customers SET legal_name")) customer = { ...customer, legal_name: params[0], legal_name_key: params[1], version: customer.version + 1 };
+      return [{ affectedRows: 1 }];
+    }
+  };
+  const service = new CustomerService({
+    database: {}, time: { nowMs: () => 100 }, audit: { async record(_connection, input) { events.push(["audit", input]); } },
+    businessMaster: { async assertCurrencyUsableInTransaction() {} },
+    approvals: { async invalidateForCriticalChange(_connection, input) { events.push(["invalidate", input]); } }
+  });
+  const result = await service.applyImportRowInTransaction(connection, {
+    job: { activation_mode: "draft" },
+    row: { operation: "update", match_customer_id: 4, expected_customer_version: 3, normalized_payload: { root: { legalName: "Updated Customer" } } },
+    actor: { id: 2, username: "sam", permissions: ["customer.view", "customer.mgmt"] }, nowMs: 100
+  });
+  assert.equal(result, 4);
+  assert.equal(customer.legal_name, "Updated Customer");
+  assert.ok(events.some(([kind]) => kind === "invalidate"));
+  assert.equal(events.find(([kind]) => kind === "audit")[1].action, "customer.update");
+});
