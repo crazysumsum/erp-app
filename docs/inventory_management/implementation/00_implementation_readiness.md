@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-004 are complete on this P0 branch, and the approved Item contract published by [PR #141](https://github.com/crazysumsum/erp-app/pull/141) is now reconciled from `main`. TASK-005 is `PENDING`; no Inventory migration has been executed.
+`BLOCKED` — TASK-001～TASK-005 are complete on this P0 branch. TASK-005 was developer-verified only in the approved disposable MySQL 26.7.0 schema; TASK-006 remains pending a separate human decision before implementation continues.
 
 ## Baseline
 
@@ -17,6 +17,7 @@
 - Historical IMPLEMENT authorization: Sam, active Codex task, 2026-09-23: `Inventory Management 切換到 IMPLEMENT`.
 - `HD-008`: Sam approved adopting TASK-004's transaction-aware `ItemLookupService` contract on 2026-09-23.
 - `HD-010`: Sam approved exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js` as the shared publication scope on 2026-09-24.
+- `HD-012`／`APR-015`: Sam approved TASK-005's exact two migration paths and execution of `0054`～`0056` only in a fresh disposable MySQL 26.7.0 schema on 2026-09-24.
 
 ## Reconciled P0 checks
 
@@ -27,10 +28,19 @@
 - The Inventory profile is an explicit whitelist and exposes Serial so Inventory can reject it fail closed.
 - UOM resolution accepts only an active SKU UOM with an integer factor from 1 to 1,000,000 and requires Base UOM factor 1.
 - After merging latest `origin/main`, focused Item lookup checks passed 33/33 and focused ESLint passed.
-- Module-boundary validation against the current PR target, traceability validation and `PLAN_READY` passed.
+- Current TASK-005 module-boundary and traceability validation passed; `PLAN_READY` is now structurally blocked only by the open `HD-013` decision for TASK-006.
 - Multi-axis code review found no correctness, security, maintainability or contract-blocking issue in the isolated diff.
-- Full `PHASE-001 MERGE_READY` remains blocked by the intentionally unfinished P0 tasks, runtime leases and pending remote CI/review; this isolated publication does not claim that Phase gate.
-- The previous MySQL 26.7.0 lease is no longer active; a fresh isolated lease and version check are required before any later database work.
+- Full `PHASE-001 MERGE_READY` remains blocked by the intentionally unfinished P0 tasks and pending remote CI/review; this local task completion does not claim that Phase gate.
+- TASK-005 used a newly observed MySQL 26.7.0 lease; its schema, server and exact temporary root were removed after developer verification and cannot be reused by later tasks.
+
+## TASK-005 developer verification
+
+- Commit `143fd9eb79db27590ae45dff74eb80baf91f1d28` creates only `0055_create_inventory_operations.js`, `0056_create_inventory_audit.js` and the focused Inventory migration integration test.
+- The source tuple unique key contains exactly module, document type, document ID, non-null line ID and event ID; `command_type` is excluded. A real two-connection duplicate race produced one winner and one `ER_DUP_ENTRY`.
+- Audit permits only exact `SUCCEEDED`／`REJECTED`／`FAILED` outcomes, keeps actor/source snapshots, applies actor `SET NULL` and operation `RESTRICT`, and rejects direct `UPDATE`／`DELETE` through immutable triggers.
+- The migration rerun preserved identical DDL, no `inventory_movements` table was created, and the schema test passed on observed MySQL `26.7.0` at the isolated schema `erp_inventory_task005_20260924_1008`.
+- Focused Inventory migration test: 1 passed, 0 failed, 0 skipped. Full server developer suite with the repository's CI test keys: 1,684 passed, 0 failed, 303 DB-gated tests skipped. Full repository ESLint passed.
+- These are developer checks, not formal `TC-001`／`TC-004` Technical Acceptance or business acceptance.
 
 ## Approved physical allocation
 
@@ -49,11 +59,11 @@
 
 ## Boundaries
 
-- No Inventory migration execution, production access, deployment, Technical Acceptance or UAT has occurred.
-- Migration execution remains a separate explicit authorization.
-- Reconciliation does not start TASK-005 or merge the remaining P0 implementation commits.
-- TASK-005 may create only `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; Movement remains in P1 migration `0059`.
+- No shared／production database access, deployment, Technical Acceptance or UAT has occurred.
+- TASK-005 migration execution occurred only under `HD-012` in its disposable schema; no other project migration was executed there.
+- TASK-005 created only `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; Movement remains in P1 migration `0059`.
+- The remaining P0 implementation commits are local; no TASK-005 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Complete reconciliation validation and commit the approved 0.8 boundary records. Keep TASK-005 `PENDING` and migration execution paused pending separate authorization.
+Obtain Sam's `HD-013` decision before starting TASK-006 service behavior. No database runtime is active, and no push, PR or merge is authorized.
