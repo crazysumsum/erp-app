@@ -29,12 +29,59 @@ function crypto({ encActive = "e2", encRing = { e1: KEY_A, e2: KEY_B }, lookActi
  * `test/integration/supplierBankRotation.integration.test.js` 負責。
  */
 /** 一個同 mysql2 同形狀嘅重覆鍵錯誤 —— 連 MySQL 會嵌落去嗰個 key 值都有。 */
-function duplicateKeyError(indexBytes) {
-  const escaped = [...indexBytes].map((byte) => `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`).join("");
-  return Object.assign(new Error(
-    `Duplicate entry '${escaped}' for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'`
-  ), { errno: 1062, code: "ER_DUP_ENTRY", sqlMessage:
-    `Duplicate entry '${escaped}' for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'` });
+/**
+ * MySQL 個 `ER_DUP_ENTRY` 訊息 —— 照佢**真正**個樣，唔係我估佢個樣。
+ *
+ * 之前呢度每一個 byte 都寫成 `\xNN`，而且由 index 第一個 byte 起頭。真 MySQL 唔係
+ * 咁：`uq_supplier_bank_blind_index` 係 `(supplier_id, blind_index_key_id,
+ * account_blind_index)` 三欄複合鍵，所以個值頭先有 `26-look-new-`；可印 byte 原樣
+ * 出，得非可印嗰啲先變 `\xNN`；而成個值**喺第 64 個字元硬切**，切到一半個 escape
+ * 都照切。喺 MySQL 26.7.0 度實測：
+ *
+ *   Duplicate entry '26-look-new-\xFA\xA0\xD6tk\x0D#,(?\xF8\xE9fj\xB1\x16\xC9\xADB\x9' for key '…'
+ *
+ * 分別唔係學術嘅。之前個 double 嗰個形狀令 F-M1 嗰三句掃描**結構上捉唔到真洩漏**：
+ * `escaped.slice(0, 24)` 要求頭六個 byte 全部非可印（隨機 HMAC 大概 6% 機會），而
+ * hex 嗰句就永遠冇可能 —— MySQL 由頭到尾唔會連續出 hex。一個為咗防 F-M1 復發而寫
+ * 嘅測試，重覆咗 F-M1 本身嗰個錯：掃自己諗出嚟嘅形狀，唔係真嗰個。（REV-053 M-3）
+ */
+function duplicateKeyError(supplierId, keyId, indexBytes) {
+  const rendered = [...indexBytes]
+    .map((byte) => (byte >= 0x20 && byte <= 0x7e
+      ? String.fromCharCode(byte)
+      : `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`))
+    .join("");
+  const message = `Duplicate entry '${`${supplierId}-${keyId}-${rendered}`.slice(0, 64)}' `
+    + "for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'";
+  return Object.assign(new Error(message), { errno: 1062, code: "ER_DUP_ENTRY", sqlMessage: message });
+}
+
+/**
+ * 一個 blind index 喺任何編碼之下有冇漏入去個 report。
+ *
+ * 逐個編碼滑一個八字元嘅窗 —— 因為真 MySQL 會切，所以「成個 index 有冇出現」係
+ * 一個捉唔到嘢嘅問題。
+ */
+function leakedEncodings(serialised, indexBytes) {
+  const rendered = [...indexBytes]
+    .map((byte) => (byte >= 0x20 && byte <= 0x7e
+      ? String.fromCharCode(byte)
+      : `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`))
+    .join("");
+  const encodings = {
+    latin1: indexBytes.toString("latin1"),
+    hex: indexBytes.toString("hex"),
+    HEX: indexBytes.toString("hex").toUpperCase(),
+    base64: indexBytes.toString("base64"),
+    base64url: indexBytes.toString("base64url"),
+    mysql: rendered
+  };
+  return Object.entries(encodings)
+    .filter(([, encoded]) => Array.from(
+      { length: Math.max(0, encoded.length - 8) },
+      (_, at) => encoded.slice(at, at + 8)
+    ).some((window) => serialised.includes(window)))
+    .map(([name]) => name);
 }
 
 function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), duplicateOn = new Map() } = {}) {
@@ -73,8 +120,21 @@ function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), du
       // 而呢個分別唔係學術嘅：靠 reference 嘅話，一個模擬並發嘅測試改個 table 就
       // 連手上嗰行都改埋，於是個 guard 無論啱定錯都會「通過」，兩個 mutant 一齊
       // 生還。（REV-051 F-M3 嘅第一次修法就係咁樣測唔到嘢。）
+      /**
+       * `ORDER BY` 都要照住 SQL 行。
+       *
+       * 之前呢度係 `.sort((a, b) => a.id - b.id)`，即係**方向**由 double 供，唔係由
+       * 被測 SQL 供。REV-052 M-2 喺同一句入面點過兩半（硬寫 WHERE、無條件 sort），
+       * 我淨係修咗 WHERE 嗰半。結果：`ORDER BY id` 改成 `ORDER BY id DESC`，15 條
+       * 單元同 4 條 integration 全部照綠，而真 MySQL 上面個 cursor 會倒住行 ——
+       * 五行入面掃三行，跳過兩行，重覆一行，仲要報 exit 0。（REV-053 M-1）
+       */
+      const order = /ORDER BY (\w+)( DESC)?/u.exec(sql);
+      if (!order) throw new Error("the double cannot run a SELECT with no ORDER BY");
+      const [column, descending] = [order[1], Boolean(order[2])];
       return [table.filter((r) => tests.every((matches) => matches(r)))
-        .sort((a, b) => a.id - b.id).slice(0, limit).map((r) => ({ ...r }))];
+        .sort((a, b) => (descending ? b[column] - a[column] : a[column] - b[column]))
+        .slice(0, limit).map((r) => ({ ...r }))];
     },
     async withTransaction(work) {
       return work({
@@ -114,13 +174,22 @@ function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), du
             Object.entries(wanted).every(([column, value]) => candidate[column] === value));
           // 冇行 match 就係 affectedRows 0 —— 唔係錯，但亦都唔係寫入。
           if (!row) return [{ affectedRows: 0 }];
-          if (duplicateOn.has(row.id)) throw duplicateKeyError(duplicateOn.get(row.id));
+          if (duplicateOn.has(row.id)) {
+            const error = duplicateKeyError(row.supplier_id,
+              next.blind_index_key_id ?? row.blind_index_key_id, duplicateOn.get(row.id));
+            db.lastDuplicateMessage = error.sqlMessage;   // 俾掃描嘅負控制用
+            throw error;
+          }
           if (failOn.has(row.id)) throw new Error("simulated row failure");
           Object.assign(row, next);
+          // mysql2 永遠回 `[ResultSetHeader, fields]` —— 寫到嘢嗰次一樣要回，唔係
+          // 回 undefined。上面個 `affectedRows: 0` 分支一直啱，寫入呢半就唔係。
+          const written = [{ affectedRows: 1 }];
           // 寫咗之後先死 —— 例如 commit 階段出事。呢個係唯一一種「舊 key 已經冇
           // 行用緊，但今次 run 有失敗」嘅情況，而佢正正係 safeToRemoveFromKey
           // 唔可以淨係睇 remaining 嘅原因。
           if (failAfterWrite.has(row.id)) throw new Error("simulated failure after the write landed");
+          return written;
         }
       });
     }
@@ -267,13 +336,42 @@ test("a duplicate key failure reports the constraint, never the index MySQL echo
   assert.equal(report.failures[0].reason, "DUPLICATE_KEY");
   assert.equal(report.failures[0].constraint, "uq_supplier_bank_blind_index",
     "the constraint name is schema, not data, and it is what an operator needs");
+  // `remainingRows` 揀邊個欄位係一個三元式，而佢就係 `safeToRemoveFromKey` 嘅全部。
+  // 之前冇任何測試睇過佢個 lookup 分支：`const column = "encryption_key_id"` 咁改,
+  // 兩套測試照綠，而一個做咗一半嘅 lookup 輪替會報 `remaining: 0,
+  // safeToRemoveFromKey: true` —— 即係叫 operator 剷一個仲有行用緊嘅 key。
+  // 呢度係全個 repo 唯一一個「lookup 輪替之後仲有行留喺舊 key」嘅情境。（REV-053 M-2）
+  assert.equal(report.remaining, 1, "the row that failed is still on the old lookup key");
+  assert.equal(report.safeToRemoveFromKey, false);
+
+});
+
+/**
+ * 洩漏掃描要**自己一條測試**。
+ *
+ * 之前佢哋三句住喺上面嗰條測試嘅尾，而 `constraint` 嗰句 `assert.equal` 喺佢哋前面。
+ * 即係喺唯一一個佢哋有嘢可以捉嘅情境 —— F-M1 個 mutant —— 佢哋**一句都冇行過**：
+ * constraint 嗰句先炸，成條測試即刻停。佢哋淨係喺乾淨嗰次行過，而嗰次本來就冇嘢捉。
+ * （REV-053 M-3）
+ */
+test("no encoding of the blind index may reach the report, whatever MySQL echoed back", async () => {
+  const oldCrypto = crypto({ lookActive: "l1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 })];
+  const index = c.blindIndex(`${ACCOUNT}1`).index;
+  const db = fakeDatabase(rows, { duplicateOn: new Map([[1, index]]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2" });
 
   const serialised = JSON.stringify(report);
-  // MySQL 用 `\xAB` 咁嘅形式嵌住佢 —— base64 掃描係捉唔到嘅，所以要照佢個形式掃。
-  const escaped = [...index].map((byte) => `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`).join("");
-  assert.ok(!serialised.includes(escaped.slice(0, 24)), "no escaped index bytes may reach the report");
+  assert.deepEqual(leakedEncodings(serialised, index), [], "the index must not appear in any encoding");
   assert.ok(!serialised.includes("Duplicate entry"), "no driver message may be forwarded verbatim");
-  assert.ok(!serialised.includes(index.toString("hex").slice(0, 16)), "nor the index in hex");
+
+  // 負控制：同一個掃描，行喺一個真係漏咗嘅 report 上面，一定要紅。冇呢句，上面兩句
+  // 同「掃一個永遠搵唔到嘅形狀」係分唔開嘅 —— F-M1 嗰三句就係咁樣過咗成輪。
+  const leaked = JSON.stringify({ ...report, failures: [{ id: 1, reason: db.lastDuplicateMessage }] });
+  assert.deepEqual(leakedEncodings(leaked, index), ["mysql"],
+    "the scan must actually catch a leak in the shape MySQL emits");
 });
 
 // REV-051 F-M2：`--limit` 限嘅係做幾多行，唔係成功幾多行。
@@ -318,8 +416,29 @@ for (const [kind, fromKey, toKey, keyColumn, witness] of [
       "the guard must refuse to write a row whose key id no longer matches the one we read");
     assert.equal(db.table[1][keyColumn], toKey, "the untouched row still rotates");
     assert.equal(report.remaining, 0);
+    // Guard 響咗嗰行唔可以當做咗。之前兩條 guard 測試都冇睇過 `processed`，所以
+    // 「UPDATE 一行都冇寫到」同「寫咗」喺個 report 眼中一模一樣。（REV-053 L-2）
+    assert.equal(report.declined, 1, "the row the guard refused is reported as declined");
+    assert.equal(report.processed, 1, "and it is not counted as rotated");
   });
 }
+
+// REV-053 L-1：`startedAt` 同 `endedAt` 之前兩個都係同一個 `now`，即係任何 run 嘅
+// elapsed 結構上都係 0。警告嗰邊要定住時間，計時嗰邊唔可以。
+test("the report measures elapsed time instead of reporting zero for every run", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2].map((id) => seed(oldCrypto, { id })));
+  let tick = 1_000;
+  const clock = () => (tick += 250);
+
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", clock
+  });
+
+  assert.ok(report.endedAt > report.startedAt,
+    `a finished rotation must report a non-zero elapsed time, got ${report.endedAt - report.startedAt}`);
+});
 
 /**
  * REV-052 M-1。一個打錯咗嘅 `--from` 之前會行到尾，然後報
@@ -358,6 +477,10 @@ test("the cursor advances, so a rotation terminates instead of re-reading the sa
   db.query = async (sql, params) => {
     const result = await originalQuery(sql, params);
     if (sql.includes("ORDER BY id")) batches.push(result[0].map((r) => r.id));
+    // 一個唔前進嘅 cursor 係**掛死**，唔係 fail：`node --test` 冇 timeout，所以個
+    // mutant 會喺 CI 度燒到 job 上限先有人見到。呢度封個頂，令佢即刻變成一句讀得
+    // 明嘅 assertion。五行、batchSize 2 —— 三批，加最後嗰次讀返空。（REV-053 L-6）
+    assert.ok(batches.length <= 4, "the rotation must terminate: the cursor is not advancing");
     return result;
   };
 

@@ -228,7 +228,7 @@ integrationTest("a duplicate is still refused while the ring is half rotated", a
   // 兩行：一行留喺舊 lookup key，一行行去新 key。即係「輪替做咗一半」。
   await seedAccount(connection, before, { supplierId, account: `${ACCOUNT}1`, slot: 1 });
   await seedAccount(connection, before, { supplierId, account: `${ACCOUNT}2`, slot: 2 });
-  await runRotation({
+  const half = await runRotation({
     database: databaseOn(connection), crypto: afterLookup,
     kind: ROTATION_KINDS.LOOKUP, from: "look-old", to: "look-new", limit: 1
   });
@@ -236,6 +236,13 @@ integrationTest("a duplicate is still refused while the ring is half rotated", a
     "SELECT COUNT(*) AS n FROM supplier_bank_accounts WHERE supplier_id = ? AND blind_index_key_id = 'look-old'", [supplierId]
   );
   assert.equal(Number(still.n), 1, "exactly one row is still on the old lookup key");
+  // 個 report 要同上面呢句 raw COUNT 講同一件事。`remainingRows` 揀邊個欄位係一條
+  // 三元式，而佢就係 `safeToRemoveFromKey` 嘅全部 —— 之前佢個 lookup 分支喺兩套
+  // 測試入面都冇人睇過，所以一個做咗一半嘅 lookup 輪替可以報「可以剷 key」。
+  // （REV-053 M-2）
+  assert.equal(half.remaining, Number(still.n), "the report must agree with the table");
+  assert.equal(half.safeToRemoveFromKey, false,
+    "a row still on the old lookup key must not authorise removing it");
 
   // 而家用新 active key 嘅 service 去加返**舊 key 嗰行**嘅帳號。設計 §5.8：查重要
   // 對 ring 入面每條 key 計 candidate index，所以就算嗰行仲用緊舊 key，都要擋得住。

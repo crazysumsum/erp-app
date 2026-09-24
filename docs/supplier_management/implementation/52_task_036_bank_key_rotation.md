@@ -55,11 +55,20 @@ Boundary validator 對住 merge-base 報**啱啱三條** `OUTSIDE_MODULE`，全�
 人手驗證途中我為咗重跑，直接 `UPDATE ... SET encryption_key_id='rot-old'`，令個
 key id 講大話（行本身已經用新 key 加密咗）。結果：
 
+```json
+{ "kind": "encryption", "from": "rot-old", "to": "rot-new",
+  "processed": 0, "attempted": 5, "declined": 0, "failed": 5,
+  "failures": [ { "id": 212, "reason": "BANK_ACCOUNT_TAMPERED" },
+                { "id": 213, "reason": "BANK_ACCOUNT_TAMPERED" },
+                … 215, 216 … ],
+  "lastId": 216, "remaining": 5, "safeToRemoveFromKey": false,
+  "startedAt": 1790215143133, "endedAt": 1790215143146 }        exit=1
 ```
-processed 0 | failed 5 | remaining 5 | safeToRemove false   exit=1
-failure reason: Supplier bank account failed authentication:
-                the row, its context or its ciphertext was altered
-```
+
+> 呢段之前引嘅係一個 pipe 分隔嘅摘要同一句 `Supplier bank account failed
+> authentication: …`，**兩句喺呢份 code 度都出唔到**：CLI 印嘅係 JSON，而 REV-052
+> M-3 之後 `safeReason` 出嘅係 `BANK_ACCOUNT_TAMPERED`，冇 message。上面呢段係
+> REV-053 remediation 之後喺真 MySQL 上面重跑同一個情境嘅實際輸出。（REV-053 L-4）
 
 即係一個 key id 同密文對唔上嘅行，唔會被「重新加密」成一堆垃圾 —— GCM 個 auth tag
 擋住咗，逐行記低 id，唔授權剷 key，exit code 1。呢個唔係我特登設計嘅測試，但佢示範咗
@@ -71,7 +80,7 @@ failure reason: Supplier bank account failed authentication:
 | --- | --- |
 | `server/test/supplierBankKeyRotation.test.js` | **8/8** |
 | `server/test/integration/supplierBankRotation.integration.test.js` | **4/4**（真 MySQL） |
-| Supplier server suite（兩個 glob 已經覆蓋新檔案，profile 唔使改） | **352/352** |
+| Supplier server suite（兩個 glob 已經覆蓋新檔案，profile 唔使改） | **407/407** |
 | lint | exit 0 |
 
 ### Mutation：八個，八個殺到
@@ -172,7 +181,7 @@ ring limit > becomes >=           KILLED   reindex: key id not written    KILLED
 drop the lookup half of warnings  KILLED
 ```
 
-356/356 supplier server suite、lint exit 0。
+411/411 supplier server suite、lint exit 0。
 
 ## 8. 順帶加咗兩個 getter
 
@@ -241,6 +250,6 @@ drop the from-key filter         KILLED   reindex: key id not written     KILLED
 
 ### 驗證
 
-359/359 supplier server suite、646/646 client、lint exit 0。`main` merge 咗（15 個
+414/414 supplier server suite、646/646 client、lint exit 0。`main` merge 咗（15 個
 commit），順帶確認咗 `TC-001` 嗰個 flake 已經喺 `main` 修好（本機 `pass 1 / fail 0`）
 —— 之前擋住呢個 PR 嘅就係佢。

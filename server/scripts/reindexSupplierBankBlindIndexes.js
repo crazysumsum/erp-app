@@ -4,6 +4,10 @@
  *
  *   npm run supplier:bank:reindex-lookup --workspace server -- --from=<oldId> --to=<activeId>
  *
+ * 全部旗：`--help` 會印晒出嚟。`--batch-size=<n>`（預設 200）、`--limit=<n>`（今次最多
+ * 做幾多行；**唔好寫 `--limit=0` 當試探** —— 0 唔收，想做晒就唔好寫佢）、
+ * `--transition-started=<iso>`、`--json`。
+ *
  * 重建要攞明文，所以呢條命令一樣要 encryption ring 解密 —— 兩條命令都要兩個 ring
  * 齊全。Index 同佢個 key id 同一個 UPDATE 寫，中間唔會有兩者對唔上嘅一刻。
  *

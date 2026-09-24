@@ -20,7 +20,7 @@
  *
  * ## 續跑
  *
- * 兩條都係「揀 id 大過 `after` 而且仲係舊 key 嘅行，順住 id 做，一次最多
+ * 兩條都係「揀 id 大過 cursor 而且仲係舊 key 嘅行，順住 id 做，一次最多
  * `batchSize` 行」。續跑唔使記住任何進度檔案：**條件本身就係進度** —— 做完嘅行
  * 個 key id 已經唔再係 `from`，所以下次查根本揀唔中佢。一個崩咗嘅 run 同一個做完
  * 一半嘅 run 喺呢個查詢眼中係同一件事。
@@ -174,27 +174,32 @@ function plaintextOf(crypto, row) {
  */
 async function rotateRow(database, kind, crypto, row) {
   const accountNumber = plaintextOf(crypto, row);
-  await database.withTransaction(async (connection) => {
+  // 回 `affectedRows`：`WHERE … AND <key> = ?` 嗰個防並發 guard 唔 match 嘅時候，
+  // MySQL 唔會掟錯，佢只係乜都唔寫。之前呢度唔睇，於是嗰行照計入 `processed` ——
+  // 即係 guard 一響，個 report 就冇咗唯一一個講得出佢響過嘅訊號。（REV-053 L-2）
+  return database.withTransaction(async (connection) => {
     if (kind === ROTATION_KINDS.ENCRYPTION) {
       const sealed = crypto.encryptAccountNumber({
         supplierId: row.supplier_id, cryptoContext: row.crypto_context, accountNumber
       });
-      await connection.execute(
+      const [result] = await connection.execute(
         `UPDATE supplier_bank_accounts
             SET account_ciphertext = ?, account_iv = ?, account_auth_tag = ?, encryption_key_id = ?
           WHERE id = ? AND encryption_key_id = ?`,
         [sealed.ciphertext, sealed.iv, sealed.authTag, sealed.encryptionKeyId, row.id, row.encryption_key_id]
       );
+      return Number(result?.affectedRows ?? 0) > 0;
     } else {
       const { index, keyId } = crypto.blindIndex(accountNumber);
       // Index 同 key id **同一個 UPDATE** —— 分開寫就會有一瞬間兩者對唔上，而查重
       // 係靠 (blind_index_key_id, account_blind_index) 嗰條 UNIQUE 嘅。
-      await connection.execute(
+      const [result] = await connection.execute(
         `UPDATE supplier_bank_accounts
             SET account_blind_index = ?, blind_index_key_id = ?
           WHERE id = ? AND blind_index_key_id = ?`,
         [index, keyId, row.id, row.blind_index_key_id]
       );
+      return Number(result?.affectedRows ?? 0) > 0;
     }
   });
 }
@@ -207,8 +212,11 @@ async function rotateRow(database, kind, crypto, row) {
  */
 export async function runRotation({
   database, crypto, kind, from, to,
-  batchSize = DEFAULT_BATCH_SIZE, limit = 0, after = 0,
-  transitionStartedAt = null, now = Date.now(), onProgress = () => {}
+  batchSize = DEFAULT_BATCH_SIZE, limit = 0,
+  // `now` 定住成個 run 嘅警告算術（ring 大細、transition 幾耐），`clock` 係真時間。
+  // 之前 `startedAt` 同 `endedAt` 兩個都係同一個 `now`，所以一個跑四個鐘嘅輪替
+  // 報出嚟嘅 elapsed 結構上永遠係 0。（REV-053 L-1）
+  transitionStartedAt = null, clock = Date.now, now = clock(), onProgress = () => {}
 }) {
   if (kind !== ROTATION_KINDS.ENCRYPTION && kind !== ROTATION_KINDS.LOOKUP) {
     throw new Error(`unknown rotation kind ${kind}`);
@@ -216,9 +224,12 @@ export async function runRotation({
   const active = assertTarget(kind, crypto, to);
   assertSource(kind, crypto, from, active);
 
-  const startedAt = now;
+  const startedAt = clock();
   let processed = 0;
-  let lastId = Number(after) || 0;
+  let declined = 0;
+  // 冇 `after` 參數：佢一個 caller 一個測試都冇，而續跑本來就唔使外部狀態。
+  // （REV-053 L-7）
+  let lastId = 0;
   const failures = [];
 
   // `attempted` 唔係 `processed`：`--limit` 限嘅係**做幾多行**，唔係成功幾多行。
@@ -234,15 +245,17 @@ export async function runRotation({
     for (const row of rows) {
       attempted += 1;
       try {
-        await rotateRow(database, kind, crypto, row);
-        processed += 1;
+        if (await rotateRow(database, kind, crypto, row)) processed += 1;
+        // Guard 響咗：個 key id 喺我哋 SELECT 完之後變咗，或者行冇咗。唔係錯，但
+        // 亦都唔係做咗。（REV-053 L-2）
+        else declined += 1;
       } catch (error) {
         // 一行壞唔應該停低成個輪替 —— 但亦都唔可以靜靜雞跳過，因為「舊 key row
         // count = 0」係剷 key 嘅前提。記低 id 同一個**分類過**嘅 reason。
         failures.push({ id: Number(row.id), ...safeReason(error) });
       }
       lastId = Number(row.id);
-      onProgress({ processed, attempted, lastId, failures: failures.length });
+      onProgress({ processed, attempted, declined, lastId, failures: failures.length });
       if (limit > 0 && attempted >= limit) break;
     }
   }
@@ -250,11 +263,11 @@ export async function runRotation({
   const remaining = await remainingRows(database, kind, from);
   return {
     kind, from, to: active,
-    processed, attempted, failed: failures.length, failures,
+    processed, attempted, declined, failed: failures.length, failures,
     lastId, remaining,
     // 剷得走舊 key 嘅唯一條件：冇行仲用緊佢，而且今次冇失敗行。
     safeToRemoveFromKey: remaining === 0 && failures.length === 0,
     warnings: ringWarnings({ crypto, transitionStartedAt, now }),
-    startedAt, endedAt: now
+    startedAt, endedAt: clock()
   };
 }
