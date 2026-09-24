@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 138,
+  "revision": 140,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
     "plan": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
-    "code_commit": "5bbeb7dc5605ff088f680105ac029dc87c2e0307",
-    "source_fingerprint": "173e7853a74419e1e0064276472d46398a763d44dc56a2b3b33b0cdc2779da1f",
+    "code_commit": "ce230ec1f3870a1289154bec54ca074ac698f423",
+    "source_fingerprint": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
     "worktree": "/private/tmp/erp-customer-management-phase-003",
     "default_commit": "487bec1f273de48de2a161e881e740bab118b41e",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
@@ -55,7 +55,7 @@
     "TASK-025": "DONE",
     "TASK-026": "DONE",
     "TASK-027": "DONE",
-    "TASK-028": "IN_PROGRESS",
+    "TASK-028": "DONE",
     "TASK-029": "PENDING",
     "TASK-030": "PENDING",
     "TASK-031": "PENDING",
@@ -1494,6 +1494,44 @@
         "docs/customer_management/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-SCOPE-038",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "Standing instruction approving required Customer Management design and implementation work and automatic continuation; current-plan successor records the already approved shared Phase-003 support paths omitted from APPROVAL-SCOPE-037.",
+      "recorded_at": "2026-09-24T01:59:18Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "code_commit": "ce230ec1f3870a1289154bec54ca074ac698f423",
+      "scope": [
+        "PHASE-003",
+        "TASK-028",
+        "server/.env.example",
+        "server/config/customer.js",
+        "server/package.json",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/upload/cleanupUploadedFiles.js",
+        "server/src/framework/upload/normalizeUploadConfig.js",
+        "server/src/framework/upload/uploadMiddleware.js",
+        "server/src/modules/authorization/adminGuard.js",
+        "server/src/modules/role/RoleAdminService.js",
+        "server/src/modules/user/UserAdminService.js",
+        "server/database/migrations/**",
+        "server/src/modules/customer/**",
+        "server/src/handlers/customer-*/**",
+        "server/src/services/customer*/**",
+        "server/scripts/**",
+        "server/test/**",
+        "client/src/**",
+        "client/test/**",
+        "client/e2e/customer-management/**",
+        "docs/customer_management/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1928,6 +1966,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-037",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-028 initial candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "173e7853a74419e1e0064276472d46398a763d44dc56a2b3b33b0cdc2779da1f",
+      "source_ref": "2026-09-24 independent review required accurate upstream-merge evidence, true heap high-water sampling, a normal Customer application/API responsiveness sample and an explicit bounded MySQL lock metric.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 3,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-038",
+      "method": "SEPARATE_AGENT",
+      "author": "/root TASK-028 remediated candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
+      "source_ref": "2026-09-24 exact-candidate review confirmed all Required findings closed: truthful merge evidence, continuous/batch/row heap high-water sampling, normal authenticated Customer API response evidence, and explicit InnoDB lock/pool assertions. Final verdict APPROVED with no Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2326,6 +2388,28 @@
       "source_ref": "REV-036",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-24T01:19:56Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-028 PHASE-003 Customer developer gate and remediated TC-064",
+      "code_commit": "ce230ec1f3870a1289154bec54ca074ac698f423",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
+      "status": "PASS",
+      "source_ref": "docs/customer_management/implementation/phase-PHASE-003-report.md#task-028-developer-gate",
+      "actor": "/root local developer verification",
+      "observed_at": "2026-09-24T01:59:18Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "TASK-028 PHASE-003 Customer exact-candidate independent review",
+      "code_commit": "ce230ec1f3870a1289154bec54ca074ac698f423",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
+      "status": "PASS",
+      "source_ref": "REV-038",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-24T02:00:51Z"
     }
   ],
   "pending_decisions": [
@@ -2895,6 +2979,38 @@
       "idempotency_key": "customer-phase003-task028-integration-rotation-v1",
       "status": "CONFIRMED",
       "source_ref": "2026-09-24: all 16 Customer real-MySQL integration tests passed; Customer Bank rotation and blind-index reindex CLIs each returned processed=0 and remaining=0. No destructive purge or schema reset was performed."
+    },
+    {
+      "id": "EXT-MYSQL-042",
+      "kind": "DATABASE_TEST",
+      "target": "mysql://127.0.0.1:3306/erp_dev",
+      "idempotency_key": "customer-phase003-task028-tc064-remediated-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: remediated TC-064 passed 10,000/10,000 rows in 48933.29ms total. The normal authenticated Customer list API completed 446 samples with zero errors and 12.21ms p95; MySQL row-lock-wait delta/current waiters were 0/0 with one added connection; continuous plus batch/row heap high-water sampling measured 81527792 bytes below 256 MiB. All fixtures were removed."
+    },
+    {
+      "id": "EXT-PUSH-043",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-p3-sensitive-bulk",
+      "idempotency_key": "customer-phase003-push-v1",
+      "status": "PLANNED",
+      "source_ref": "Product Owner explicitly authorized push and instructed publication without waiting for CI."
+    },
+    {
+      "id": "EXT-PR-044",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-p3-sensitive-bulk",
+      "idempotency_key": "customer-phase003-pr-v1",
+      "status": "PLANNED",
+      "source_ref": "Publish the independently approved PHASE-003 Customer candidate."
+    },
+    {
+      "id": "EXT-MERGE-045",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-p3-sensitive-bulk",
+      "idempotency_key": "customer-phase003-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Product Owner explicitly authorized merge to main without waiting for CI and accepted that risk."
     }
   ],
   "evidence_files": [
@@ -2904,5 +3020,5 @@
     "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Obtain independent exact-candidate review for TASK-028 at commit 5bbeb7dc5605ff088f680105ac029dc87c2e0307 / source fingerprint 173e7853a74419e1e0064276472d46398a763d44dc56a2b3b33b0cdc2779da1f. If approved, mark TASK-028 DONE, record planned push/PR/merge actions, publish the PHASE-003 PR without CI under the Product Owner exception, observe merge, and transition IMPLEMENT to READY_FOR_TESTING."
+  "next_safe_action": "Commit this state-only review/publication ledger, push codex/customer-p3-sensitive-bulk, create and merge the PHASE-003 PR without waiting for CI under the Product Owner exception, then observe main and start TASK-029 from the refreshed default branch."
 }
