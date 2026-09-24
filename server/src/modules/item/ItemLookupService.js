@@ -10,7 +10,12 @@
  * 業務模組，不進 service container，依賴由呼叫端傳入——同 ItemAdminService／
  * ItemCatalogService 一致。
  */
-import { barcodeLookupInconsistent, skuNotFound, skuNotUsable } from "./itemErrors.js";
+import {
+  barcodeLookupInconsistent,
+  skuNotFound,
+  skuNotUsable,
+  uomConversionInvalid
+} from "./itemErrors.js";
 import { ITEM_LOOKUP_PURPOSES } from "./itemConstants.js";
 
 const SKU_JOIN_ITEM_SELECT = `
@@ -113,6 +118,64 @@ export class ItemLookupService {
     return projection;
   }
 
+  async getInventoryProfileInTransaction(transaction, skuId) {
+    this.#assertExecutor(transaction);
+    const [rows] = await transaction.query(`${SKU_JOIN_ITEM_SELECT} WHERE s.id = ?`, [skuId]);
+    if (!rows[0]) return null;
+
+    const uomRows = await this.#loadUomRows([rows[0].id], transaction);
+    const projection = this.#toProjection(
+      rows[0],
+      uomRows.get(Number(rows[0].id)) ?? [],
+      { purpose: "inventory" }
+    );
+    const baseUom = projection.uoms.find((uom) => uom.isBase);
+    if (!baseUom || baseUom.toBaseFactor !== 1) {
+      throw uomConversionInvalid("Inventory profile requires exactly one Base UOM with factor 1");
+    }
+
+    return {
+      skuId: projection.skuId,
+      skuCode: projection.skuCode,
+      skuStatus: projection.skuStatus,
+      itemStatus: projection.itemStatus,
+      inventoryTracked: projection.inventoryTracked,
+      trackingPolicy: projection.trackingPolicy,
+      shelfLifeDays: projection.shelfLifeDays,
+      minimumReceiptLifeDays: projection.minimumReceiptLifeDays,
+      minimumSaleLifeDays: projection.minimumSaleLifeDays,
+      baseUom: { uomId: baseUom.uomId, uomCode: baseUom.uomCode },
+      usable: projection.usable,
+      reasons: projection.reasons
+    };
+  }
+
+  async resolveUomInTransaction(transaction, skuId, uomId) {
+    this.#assertExecutor(transaction);
+    const [rows] = await transaction.query(
+      `SELECT su.sku_id, su.uom_id, u.code AS uom_code, su.to_base_factor, su.is_base
+         FROM item_sku_uoms su
+         JOIN item_uoms u ON u.id = su.uom_id
+        WHERE su.sku_id = ? AND su.uom_id = ? AND u.status = 'active'`,
+      [skuId, uomId]
+    );
+    if (!rows[0]) return null;
+
+    const factor = Number(rows[0].to_base_factor);
+    const isBase = Boolean(rows[0].is_base);
+    if (!Number.isSafeInteger(factor) || factor < 1 || factor > 1_000_000 || (isBase && factor !== 1)) {
+      throw uomConversionInvalid("Inventory UOM factor must be an integer from 1 to 1000000; Base UOM factor must be 1");
+    }
+
+    return {
+      skuId: Number(rows[0].sku_id),
+      uomId: Number(rows[0].uom_id),
+      uomCode: rows[0].uom_code,
+      toBaseFactor: factor,
+      isBase
+    };
+  }
+
   async #toProjectionOrNull(row, options) {
     if (!row) {
       return null;
@@ -121,7 +184,7 @@ export class ItemLookupService {
     return this.#toProjection(row, uomRowsBySkuId.get(Number(row.id)) ?? [], options);
   }
 
-  async #loadUomRows(skuIds) {
+  async #loadUomRows(skuIds, executor = this.database) {
     const uniqueIds = [...new Set(skuIds)];
     const byId = new Map();
     if (uniqueIds.length === 0) {
@@ -129,7 +192,7 @@ export class ItemLookupService {
     }
 
     const placeholders = uniqueIds.map(() => "?").join(",");
-    const [rows] = await this.database.query(
+    const [rows] = await executor.query(
       `SELECT su.sku_id, su.uom_id, u.code AS uom_code, su.to_base_factor, su.is_base,
               su.is_default_purchase, su.is_default_sale
          FROM item_sku_uoms su
@@ -146,6 +209,12 @@ export class ItemLookupService {
       byId.get(skuId).push(row);
     }
     return byId;
+  }
+
+  #assertExecutor(executor) {
+    if (!executor || typeof executor.query !== "function") {
+      throw new TypeError("ItemLookupService transaction executor must provide query()");
+    }
   }
 
   #toProjection(row, uomRows, { purpose, atMs, includeInactive = false } = {}) {
