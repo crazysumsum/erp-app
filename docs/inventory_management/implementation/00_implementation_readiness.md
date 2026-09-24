@@ -2,7 +2,7 @@
 
 ## Status
 
-`DESIGNING` — Sam approved adopting TASK-004's transaction-aware Item lookup contract. The contract and tests are isolated on this latest-main branch; TASK-005 remains paused until the updated DESIGN and PLAN hashes are approved and the contract publication is merged. No Inventory migration has been executed.
+`IMPLEMENTING` — Sam approved the corrected 0.7 DESIGN, PLAN and exact two-file `SCOPE`. Only the isolated contract publication is active; TASK-005 remains paused and no Inventory migration has been executed.
 
 ## Baseline
 
@@ -10,7 +10,10 @@
 - Historical 0.3 plan approval: `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`.
 - Historical 0.5 DESIGN: `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef`.
 - Historical 0.5 PLAN: `43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8`.
+- Candidate 0.7 DESIGN: `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b`.
+- Candidate 0.7 PLAN: `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4`.
 - `HD-008`: Sam approved adopting TASK-004's transaction-aware `ItemLookupService` contract on 2026-09-23.
+- `HD-010`: Sam approved exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js` as the shared publication scope on 2026-09-24.
 
 ## Contract publication checks
 
@@ -44,4 +47,4 @@
 
 ## Next safe action
 
-Update the Inventory manifest contract binding, validate the isolated contract and planning artifacts, then obtain fresh DESIGN and PLAN hash approvals. Do not push, merge or start TASK-005 before approval.
+Refresh main, rerun focused tests/lint and review, then push and merge the isolated contract PR only after required CI passes. Do not start TASK-005 or execute migrations.

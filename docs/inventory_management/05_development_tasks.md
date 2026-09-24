@@ -274,6 +274,7 @@ Phase P0 開始前：
 - [ ] `purchase`、`sale`、`inventory` purpose 與 Item design 一致；Inactive／Discontinued／Archived／Serial 分支有 contract tests。
 - [ ] Lookup 接受 caller 提供的 transaction executor，查詢 Base UOM 及有效整數 factor，不暗中另開 transaction。
 - [ ] Lookup 只回白名單 projection，不讀 HTTP claims、不洩漏 Item 管理資料；批量方法避免 N+1。
+- [ ] Inventory manifest的consumed contract版本／hash與實際`ItemLookupService.js`一致，traceability validation無`CONTRACT_DRIFT`。
 
 **Verification（納入 P0-GATE）：** `itemLookupService.test.js`、Inventory consumer contract test及真 MySQL lookup integration。
 
@@ -1703,6 +1704,7 @@ Implement only the scope and dependencies of legacy task `P0-T04` inside `PHASE-
 - `purchase`、`sale`、`inventory` purpose 與 Item design 一致；Inactive／Discontinued／Archived／Serial 分支有 contract tests。
 - Lookup 接受 caller 提供的 transaction executor，查詢 Base UOM 及有效整數 factor，不暗中另開 transaction。
 - Lookup 只回白名單 projection，不讀 HTTP claims、不洩漏 Item 管理資料；批量方法避免 N+1。
+- Inventory manifest的consumed contract版本／hash與實際`ItemLookupService.js`一致，traceability validation無`CONTRACT_DRIFT`。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
