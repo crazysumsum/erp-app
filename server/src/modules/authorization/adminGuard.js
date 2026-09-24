@@ -16,6 +16,11 @@ import { ApplicationError } from "../../framework/errors/ApplicationError.js";
 
 export const SYSTEM_ADMIN_ROLE = "system-admin";
 
+const PROTECTED_ADMIN_DELEGATABLE_PERMISSIONS = new Set([
+  "customer.bank.view",
+  "customer.bank.mgmt"
+]);
+
 function conflict(message, { code, publicMessage }) {
   return new ApplicationError(message, {
     code,
@@ -70,9 +75,23 @@ export function newlyGrantedPermissions(currentPermissionNames, nextPermissionNa
  * `user.mgmt` 的人，效果是他只能指派「權限集合 ⊆ {user.mgmt}」的角色——
  * `system-admin` 帶著另外兩個權限，於是指派不出去，包括指派給自己。
  */
-export function assertNoPermissionEscalation({ actorPermissions, grantedPermissions }) {
+export function assertNoPermissionEscalation({
+  actorRoles = [],
+  actorPermissions,
+  grantedPermissions,
+  delegationTargetIsActor = false
+}) {
   const actor = new Set(actorPermissions);
-  const disallowed = grantedPermissions.filter((permission) => !actor.has(permission));
+  const protectedAdmin = actorRoles.includes(SYSTEM_ADMIN_ROLE);
+  const disallowed = grantedPermissions.filter(
+    (permission) =>
+      !actor.has(permission) &&
+      !(
+        protectedAdmin &&
+        !delegationTargetIsActor &&
+        PROTECTED_ADMIN_DELEGATABLE_PERMISSIONS.has(permission)
+      )
+  );
 
   if (disallowed.length > 0) {
     throw forbidden(

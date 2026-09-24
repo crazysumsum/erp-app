@@ -82,9 +82,10 @@ export function normalizeUploadConfig(
     }
   }
 
+  const memoryOnly = source.memoryOnly === true;
   const directory = String(source.directory || "").trim();
 
-  if (!directory) {
+  if (!memoryOnly && !directory) {
     throw new Error(`${label} "directory" must be a non-empty string`);
   }
 
@@ -141,7 +142,8 @@ export function normalizeUploadConfig(
 
   return Object.freeze({
     enabled,
-    directory: path.isAbsolute(directory)
+    memoryOnly,
+    directory: memoryOnly ? null : path.isAbsolute(directory)
       ? directory
       : path.resolve(serverRoot, directory),
     maxFileSizeBytes,

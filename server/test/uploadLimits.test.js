@@ -10,6 +10,7 @@ import {
   normalizeUploadConfig
 } from "../src/framework/upload/normalizeUploadConfig.js";
 import { createUploadMiddleware } from "../src/framework/upload/uploadMiddleware.js";
+import { cleanupUploadedFiles } from "../src/framework/upload/cleanupUploadedFiles.js";
 import { FileTypeService } from "../src/services/filetype/FileTypeService.js";
 
 // 上傳在校驗通過之前完整累積在記憶體裡（校驗需要完整內容——OLE2 的目錄扇區與
@@ -419,6 +420,46 @@ test("an upload middleware with no gate still works", async (t) => {
   assert.equal(req.files.length, 1);
 });
 
+test("memory-only uploads expose the verified buffer without writing plaintext", async (t) => {
+  const directory = await uploadDirectory(t);
+  const middleware = createUploadMiddleware({
+    config: uploadConfig(directory, { memoryOnly: true }),
+    logger: null,
+    fileTypes
+  });
+  const content = png(1024);
+
+  const { error, req } = await send(middleware, multipart([content]));
+
+  assert.equal(error, null);
+  assert.equal(req.files.length, 1);
+  assert.deepEqual(req.files[0].buffer, content);
+  assert.equal(req.files[0].path, undefined);
+  assert.equal(req.files[0].storedName, undefined);
+  const { readdir } = await import("node:fs/promises");
+  assert.deepEqual(await readdir(directory), []);
+});
+
+test("a rejected memory-only multipart request wipes buffers collected before the failure", async (t) => {
+  let inspected;
+  const inspectingFileTypes = {
+    extensionsFor: (mimeType) => fileTypes.extensionsFor(mimeType),
+    rejectionReason(input) { inspected = input.content; return fileTypes.rejectionReason(input); }
+  };
+  const middleware = createUploadMiddleware({
+    config: uploadConfig(await uploadDirectory(t), { memoryOnly: true, maxFiles: 1 }),
+    logger: null,
+    fileTypes: inspectingFileTypes
+  });
+
+  const { error, req } = await send(middleware, multipart([png(128), png(128)]));
+
+  assert.equal(error.code, "UPLOAD_TOO_MANY_FILES");
+  assert.ok(inspected);
+  assert.deepEqual(inspected, Buffer.alloc(inspected.length));
+  assert.equal(req.files, undefined);
+});
+
 // --- 設定 ------------------------------------------------------------------------
 
 test("the per-route totals default to the product they are meant to bound", () => {
@@ -438,6 +479,32 @@ test("the per-route totals default to the product they are meant to bound", () =
 
   assert.equal(config.maxTotalFileBytes, 3000);
   assert.equal(config.maxRequestBytes, 3200);
+  assert.equal(config.memoryOnly, false);
+});
+
+test("memory-only upload config does not require a plaintext directory", () => {
+  const config = normalizeUploadConfig(
+    {
+      enabled: true,
+      memoryOnly: true,
+      maxFileSizeBytes: 1000,
+      maxFiles: 1,
+      allowedMimeTypes: ["image/png"]
+    },
+    "test upload",
+    fileTypes
+  );
+
+  assert.equal(config.memoryOnly, true);
+  assert.equal(config.directory, null);
+});
+
+test("failed memory-only requests wipe their buffered file content", async () => {
+  const buffer = Buffer.from("sensitive attachment");
+  const req = { files: [{ buffer }] };
+  await cleanupUploadedFiles(req, null, "schema_failed");
+  assert.deepEqual(buffer, Buffer.alloc(buffer.length));
+  assert.deepEqual(req.files, []);
 });
 
 test("upload sizes have a ceiling, because they multiply", () => {

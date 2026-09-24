@@ -267,6 +267,18 @@ describe("HttpClient", () => {
       expect(init.method).toBe("GET");
     });
 
+    it("附件短期 session 與 range 只放在 request headers，不放入 URL", async () => {
+      fetchImpl.mockResolvedValue(blobResponse(new Blob(["part"]), { headers: { "content-type": "application/pdf" } }));
+      const client = new HttpClient({ fetchImpl, getToken: () => "tok" });
+
+      await client.getBlob("/api/v1/customers/7/attachments/9/download", { sessionToken: "short-secret", range: "bytes=0-3" });
+
+      const [url, init] = fetchImpl.mock.calls[0];
+      expect(url).not.toContain("short-secret");
+      expect(init.headers["X-Customer-Attachment-Session"]).toBe("short-secret");
+      expect(init.headers.Range).toBe("bytes=0-3");
+    });
+
     it("失敗回應解返 JSON envelope 嘅 code／message，拋 ApiError", async () => {
       fetchImpl.mockResolvedValue(
         jsonResponse({ success: false, error: { code: "MEDIA_NOT_FOUND", message: "找不到這個檔案" }, meta: {} }, { status: 404 })

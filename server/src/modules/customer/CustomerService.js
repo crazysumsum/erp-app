@@ -3,6 +3,7 @@ import { CustomerOperationService } from "./CustomerOperationService.js";
 import { CustomerApprovalService } from "./CustomerApprovalService.js";
 import { CustomerReferenceProviderRegistry } from "./CustomerReferenceProviderRegistry.js";
 import {
+  creditPolicyInvalid,
   customerCodeTaken,
   customerLifecycleConflict,
   customerLifecycleInvalid,
@@ -118,6 +119,64 @@ function purposesByOwner(rows, ownerColumn) {
   return result;
 }
 
+const IMPORT_IDENTIFIER_SEPARATORS = Object.freeze({
+  company_registration: [" ", "-"], business_registration: [" ", "-"], tax: [" ", "-"], other: []
+});
+
+async function insertImportPurposes(connection, { type, ownerId, customerId, purposes, nowMs, actorId }) {
+  const ownerColumn = `${type}_id`;
+  for (const purpose of purposes ?? []) {
+    await connection.execute(
+      `INSERT INTO customer_${type}_purposes
+         (${ownerColumn}, customer_id, purpose_code, is_default, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [ownerId, customerId, purpose.code, purpose.isDefault ? 1 : 0, nowMs, nowMs, actorId, actorId]
+    );
+  }
+}
+
+async function insertImportChildren(connection, { customerId, payload, nowMs, actorId }) {
+  if (payload.address) {
+    const value = payload.address;
+    const [result] = await connection.execute(
+      `INSERT INTO customer_addresses
+         (customer_id, label, recipient_company_department, address_line1, address_line2, address_line3,
+          city, state_region, postal_code, country_code, phone, notes, sort_order, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [customerId, value.label, value.recipientCompanyDepartment, value.addressLine1, value.addressLine2,
+        value.addressLine3, value.city, value.stateRegion, value.postalCode, value.countryCode || null,
+        value.phone, value.notes, value.sortOrder, nowMs, nowMs, actorId, actorId]
+    );
+    await insertImportPurposes(connection, { type: "address", ownerId: Number(result.insertId), customerId, purposes: value.purposes, nowMs, actorId });
+  }
+  if (payload.contact) {
+    const value = payload.contact;
+    const [result] = await connection.execute(
+      `INSERT INTO customer_contacts
+         (customer_id, name, job_title, department, email, phone, mobile, preferred_language, notes,
+          sort_order, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [customerId, value.name, value.jobTitle, value.department, value.email, value.phone, value.mobile,
+        value.preferredLanguage, value.notes, value.sortOrder, nowMs, nowMs, actorId, actorId]
+    );
+    await insertImportPurposes(connection, { type: "contact", ownerId: Number(result.insertId), customerId, purposes: value.purposes, nowMs, actorId });
+  }
+  if (payload.identifier) {
+    const value = payload.identifier;
+    const separators = IMPORT_IDENTIFIER_SEPARATORS[value.identifierType];
+    if (!separators) throw new TypeError("Customer import identifier type is invalid");
+    const normalized = normalizeIdentifierValue(value.identifierValue, { removableSeparators: separators });
+    await connection.execute(
+      `INSERT INTO customer_identifiers
+         (customer_id, identifier_type, issuer_country_code, identifier_value, identifier_value_key,
+          valid_from, expires_at, notes, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [customerId, value.identifierType, value.issuerCountryCode, normalized.value, normalized.key,
+        value.validFrom, value.expiresAt, value.notes, nowMs, nowMs, actorId, actorId]
+    );
+  }
+}
+
 export class CustomerService {
   constructor({ database, time, audit = new CustomerAuditLogService(), operations = new CustomerOperationService(), actorVerifier = assertActorFresh, businessMaster, approvals, references = new CustomerReferenceProviderRegistry() } = {}) {
     if (!database || !time) throw new TypeError("CustomerService requires database and time");
@@ -203,6 +262,102 @@ export class CustomerService {
       });
       return { customer: toCustomerDetail(completed), operation: { operationId: started.operationId, status: "succeeded", resourceType: "customer", resourceId: id, resultVersion: Number(completed.version), errorCode: null } };
     });
+  }
+
+  async applyImportRowInTransaction(connection, { job, row, actor, nowMs }) {
+    if (!connection?.execute || !job || !row || !actor || !Number.isSafeInteger(nowMs)) {
+      throw new TypeError("Customer import row context is invalid");
+    }
+    const actorId = Number(actor.id);
+    const payload = typeof row.normalized_payload === "string" ? JSON.parse(row.normalized_payload) : row.normalized_payload;
+    const root = payload?.root ?? {};
+    let customerId;
+    let before = null;
+    if (row.operation === "create") {
+      const customer = customerInput(root);
+      await this.#assertNewDefaults(connection, customer);
+      let created;
+      try {
+        [created] = await connection.execute(
+          `INSERT INTO customers
+             (customer_code, customer_code_key, legal_name, legal_name_key, trading_name, trading_name_key,
+              default_currency_code, default_payment_term_id, account_manager_user_id, category_id, industry_id,
+              territory_id, website, general_phone, general_email, notes, status, version,
+              created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 1, ?, ?, ?, ?)`,
+          [customer.customerCode, customer.customerCodeKey, customer.legalName, customer.legalNameKey,
+            customer.tradingName, customer.tradingNameKey, customer.defaultCurrencyCode,
+            customer.defaultPaymentTermId, customer.accountManagerUserId, customer.categoryId, customer.industryId,
+            customer.territoryId, customer.website, customer.generalPhone, customer.generalEmail, customer.notes,
+            nowMs, nowMs, actorId, actorId]
+        );
+      } catch (error) { duplicate(error); }
+      customerId = Number(created.insertId);
+      await insertImportChildren(connection, { customerId, payload, nowMs, actorId });
+    } else if (row.operation === "update") {
+      customerId = Number(row.match_customer_id);
+      before = await this.#get(connection, customerId, { forUpdate: true });
+      if (!before) throw customerNotFound(customerId);
+      if (Number(before.version) !== Number(row.expected_customer_version)) throw versionConflict(before.version);
+      const customer = customerInput({
+        customerCode: before.customer_code,
+        legalName: root.legalName ?? before.legal_name, tradingName: root.tradingName ?? before.trading_name,
+        defaultCurrencyCode: root.defaultCurrencyCode ?? before.default_currency_code,
+        defaultPaymentTermId: root.defaultPaymentTermId ?? before.default_payment_term_id,
+        accountManagerUserId: root.accountManagerUserId ?? before.account_manager_user_id,
+        categoryId: root.categoryId ?? before.category_id, industryId: root.industryId ?? before.industry_id,
+        territoryId: root.territoryId ?? before.territory_id, website: root.website ?? before.website,
+        generalPhone: root.generalPhone ?? before.general_phone, generalEmail: root.generalEmail ?? before.general_email,
+        notes: root.notes ?? before.notes
+      });
+      await this.#assertNewDefaults(connection, customer, before);
+      let updated;
+      try {
+        [updated] = await connection.execute(
+          `UPDATE customers SET legal_name = ?, legal_name_key = ?, trading_name = ?, trading_name_key = ?,
+             default_currency_code = ?, default_payment_term_id = ?, account_manager_user_id = ?, category_id = ?,
+             industry_id = ?, territory_id = ?, website = ?, general_phone = ?, general_email = ?, notes = ?,
+             version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?`,
+          [customer.legalName, customer.legalNameKey, customer.tradingName, customer.tradingNameKey,
+            customer.defaultCurrencyCode, customer.defaultPaymentTermId, customer.accountManagerUserId,
+            customer.categoryId, customer.industryId, customer.territoryId, customer.website,
+            customer.generalPhone, customer.generalEmail, customer.notes, nowMs, actorId, customerId, before.version]
+        );
+      } catch (error) { duplicate(error); }
+      if (updated.affectedRows !== 1) throw versionConflict(before.version);
+      if (before.legal_name_key !== customer.legalNameKey || before.default_currency_code !== customer.defaultCurrencyCode) {
+        await this.approvals.invalidateForCriticalChange(connection, {
+          customer: before, actorId, actorUsername: actor.username, reason: "CSV 匯入更新", requestId: "", ip: ""
+        });
+      }
+    } else {
+      throw new TypeError("Customer import operation is invalid");
+    }
+
+    if (payload.credit) await this.#saveImportCredit(connection, { customerId, value: payload.credit, actorId, nowMs });
+    const current = await this.#get(connection, customerId);
+    await this.audit.record(connection, {
+      occurredAt: nowMs, actorUserId: actorId, actorUsername: actor.username,
+      action: before ? "customer.update" : "customer.create", targetType: "customer", targetId: customerId,
+      customerId, targetLabel: current.customer_code, reason: before ? "CSV 匯入更新" : "",
+      detail: { before: before ? this.#auditSnapshot(before) : undefined, after: this.#auditSnapshot(current) }
+    });
+    if (job.activation_mode === "activate" && current.status !== "active") {
+      if (current.status !== "draft") throw customerLifecycleConflict("CUSTOMER_IMPORT_ACTIVATION_CONFLICT", "匯入客戶目前不能啟用");
+      await this.#assertActivatable(connection, current);
+      if (Number(job.approval_setting_value) === 1) {
+        await this.approvals.submitInTransaction(connection, {
+          actorId, claimedRoles: [], claimedPermissions: actor.permissions, customerId,
+          approverUserId: Number(job.approver_user_id), requestNote: "CSV 匯入啟用"
+        }, { actor, setting: { require_activation_approval: 1, version: Number(job.approval_setting_version) }, customer: current });
+      } else {
+        await this.#transitionLocked(connection, {
+          input: { actorId, id: customerId, version: Number(current.version), reason: "CSV 匯入啟用" },
+          actor, before: current, status: "active", action: "customer.activate"
+        });
+      }
+    }
+    return customerId;
   }
 
   async update({ actorId, claimedRoles, claimedPermissions, id, idempotencyKey, requestId, ip, version, reason, ...input }) {
@@ -324,8 +479,8 @@ export class CustomerService {
     sortBy = "updatedAt", sortDirection, descending = true, status, currencyCode,
     paymentTermId, accountManagerUserId, categoryId, industryId, territoryId, creditStatus,
     missing, createdFrom, createdTo, updatedFrom, updatedTo, includeArchived = false
-  }) {
-    await this.actorVerifier(this.database, { actorId, claimedRoles, claimedPermissions });
+  }, reader = this.database) {
+    await this.actorVerifier(reader, { actorId, claimedRoles, claimedPermissions });
     const conditions = [];
     const params = [];
     const search = String(q).trim();
@@ -392,15 +547,15 @@ export class CustomerService {
     const sort = SORT_COLUMNS[sortBy] ?? SORT_COLUMNS.updatedAt;
     const direction = sortDirection ? (sortDirection === "asc" ? "ASC" : "DESC") : (descending ? "DESC" : "ASC");
     const ranking = exactOrder.length ? "CASE WHEN customer_code_key = ? THEN 0 WHEN legal_name_key = ? THEN 1 ELSE 2 END, " : "";
-    const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
-    const [idRows] = await this.database.query(
+    const [countRows] = await reader.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
+    const [idRows] = await reader.query(
       `SELECT id FROM customers ${where}
        ORDER BY ${ranking}${sort} ${direction}, id DESC LIMIT ? OFFSET ?`,
       [...params, ...exactOrder, safePageSize, (safePage - 1) * safePageSize]
     );
     const ids = idRows.map((row) => Number(row.id));
     if (ids.length === 0) return { items: [], total: Number(countRows[0].total), page: safePage, pageSize: safePageSize };
-    const [rows] = await this.database.query(
+    const [rows] = await reader.query(
       `SELECT ${CUSTOMER_COLUMNS}, COALESCE((SELECT cp.credit_status FROM customer_credit_profiles cp WHERE cp.customer_id = customers.id), 'not_configured') AS credit_status
          FROM customers
         WHERE id IN (${ids.map(() => "?").join(",")})`,
@@ -597,6 +752,38 @@ export class CustomerService {
       reason: String(input.reason ?? ""), detail: { before: this.#auditSnapshot(before), after: this.#auditSnapshot(after) }, requestId: input.requestId, ip: input.ip
     });
     return toCustomerDetail(after);
+  }
+
+  async #saveImportCredit(connection, { customerId, value, actorId, nowMs }) {
+    const [[before]] = await connection.query("SELECT * FROM customer_credit_profiles WHERE customer_id = ? FOR UPDATE", [customerId]);
+    const creditLimit = value.creditLimit ?? before?.credit_limit ?? null;
+    const currencyCode = value.creditCurrencyCode ?? before?.credit_currency_code ?? null;
+    const creditStatus = value.creditStatus ?? before?.credit_status;
+    if (!creditStatus || creditLimit !== null && !currencyCode) throw creditPolicyInvalid();
+    if (creditLimit !== null) {
+      try {
+        await this.businessMaster.assertCurrencyUsableInTransaction(connection, { code: currencyCode, purpose: "new_assignment" });
+      } catch (error) {
+        if (error?.code === "CURRENCY_NOT_ACTIVE") throw creditPolicyInvalid();
+        throw error;
+      }
+    }
+    if (before) {
+      await connection.execute(
+        `UPDATE customer_credit_profiles SET credit_limit = ?, credit_currency_code = ?, credit_status = ?,
+           last_change_reason = 'CSV 匯入更新', version = version + 1, updated_at = ?, updated_by = ?
+         WHERE customer_id = ? AND version = ?`,
+        [creditLimit, currencyCode, creditStatus, nowMs, actorId, customerId, before.version]
+      );
+    } else {
+      await connection.execute(
+        `INSERT INTO customer_credit_profiles
+           (customer_id, credit_limit, credit_currency_code, credit_status, credit_notes, last_change_reason,
+            created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, ?, '', 'CSV 匯入建立', ?, ?, ?, ?)`,
+        [customerId, creditLimit, currencyCode, creditStatus, nowMs, nowMs, actorId, actorId]
+      );
+    }
   }
 
   async #assertActivatable(connection, customer) {

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { randomBytes } from "node:crypto";
 import {
   defaultConfigurationSource,
   validateApplicationConfiguration
@@ -14,6 +15,7 @@ test("global configuration validation normalizes every configuration section", (
   assert.deepEqual(Object.keys(configuration).sort(), [
     "api",
     "application",
+    "customer",
     "database",
     "deviceBinding",
     // idempotency 也是一個 service，設定自己一個區塊、自己一個檔案。
@@ -40,6 +42,7 @@ test("global configuration validation normalizes every configuration section", (
   // 打到不同實例會各自執行一次，而那是負載平衡下的常態。
   assert.equal(configuration.idempotency.storeAdapter, "mysql");
   assert.equal(configuration.item.categoryMaxDepth, 8);
+  assert.equal(configuration.customer.bankEncryption, null);
   assert.equal(configuration.supplier.duplicateNameThreshold, 0.85);
   assert.match(configuration.item.mediaDirectory, /storage\/items$/);
   assert.equal(configuration.logging.loggers.request.filePrefix, "requests");
@@ -149,6 +152,54 @@ test("global configuration validation reports errors from multiple sections", ()
       return true;
     }
   );
+});
+
+test("Customer and Supplier bank capabilities use the same owner-separated key rings", () => {
+  const source = defaultConfigurationSource();
+  const encryption = randomBytes(32).toString("base64");
+  const lookup = randomBytes(32).toString("base64");
+  const bankEncryption = { activeKeyId: "enc", keyRing: { enc: encryption } };
+  const bankLookup = { activeKeyId: "lookup", keyRing: { lookup } };
+
+  assert.doesNotThrow(() => validateApplicationConfiguration({
+    ...source,
+    customer: { bankEncryption, bankLookup },
+    supplier: { ...source.supplier, bankEncryption, bankLookup }
+  }));
+  assert.throws(
+    () => validateApplicationConfiguration({
+      ...source,
+      customer: { bankEncryption, bankLookup }
+    }),
+    /must be enabled together/
+  );
+  assert.throws(
+    () => validateApplicationConfiguration({
+      ...source,
+      customer: { bankEncryption, bankLookup },
+      supplier: {
+        ...source.supplier,
+        bankEncryption: { activeKeyId: "enc", keyRing: { enc: randomBytes(32).toString("base64") } },
+        bankLookup
+      }
+    }),
+    /must use the same key rings/
+  );
+});
+
+test("Customer attachment orphan cleanup grace exceeds the complete request budget", () => {
+  const source = defaultConfigurationSource();
+  const bankEncryption = { activeKeyId: "enc", keyRing: { enc: randomBytes(32).toString("base64") } };
+  const bankLookup = { activeKeyId: "lookup", keyRing: { lookup: randomBytes(32).toString("base64") } };
+  const attachment = {
+    generalRoot: "/private/tmp/customer-general", bankSensitiveRoot: "/private/tmp/customer-bank",
+    tempRoot: "/private/tmp/customer-temp", orphanGraceMs: 20000,
+    malwareScanner: { mode: "clamd", host: "127.0.0.1", port: 3310, timeoutMs: 15000 }
+  };
+  assert.throws(() => validateApplicationConfiguration({
+    ...source, customer: { bankEncryption, bankLookup, attachment },
+    supplier: { ...source.supplier, bankEncryption, bankLookup }
+  }), /must exceed application.requestTimeoutMs/u);
 });
 
 test("every environment requires JWT_SECRET, not just production", () => {

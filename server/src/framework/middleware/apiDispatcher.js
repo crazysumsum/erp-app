@@ -394,6 +394,14 @@ export function createApiDispatcher({
           // 驗證失敗與 handler 拋錯都發生在檔案落盤之後。沒有這一步，每一個
           // 失敗的上傳請求都會在磁碟上留下一個永遠不會被清掉的檔案。
           await cleanupUploadedFiles(req, activeLogger, error.code || error.name);
+          try {
+            await handler.auditFailure?.(req, error);
+          } catch (auditError) {
+            void activeLogger.error("request.failure_audit_failed", "Request failure audit could not be recorded", {
+              requestId: req.requestId || null, handler: handler.handlerName,
+              error: { name: auditError.name, code: auditError.code ?? null, message: auditError.message }
+            });
+          }
 
           // 逾時中斷一個進行中的下載，串流會以 ERR_STREAM_PREMATURE_CLOSE
           // 收場。那不是新的故障——逾時本身已經記錄過了——而且回應早就送出

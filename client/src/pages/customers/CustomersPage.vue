@@ -16,8 +16,11 @@ import PageHeader from "@/framework/layout/PageHeader.vue";
 import DataTable from "@/framework/ui/DataTable.vue";
 import EllipsisCell from "@/framework/ui/EllipsisCell.vue";
 import { can } from "@/framework/authorization/can.js";
+import { promptPassword } from "@/framework/ui/confirm.js";
+import { notifyError, notifySuccess } from "@/framework/ui/notify.js";
 import { useSessionStore } from "@/stores/session.js";
 import customerService from "@/services/customer.js";
+import customerImportService from "@/services/customerImport.js";
 
 const STATUS_LABEL = Object.freeze({ draft: "草稿", pending_approval: "待審批", active: "啟用", suspended: "已暫停", blocked: "已封鎖", archived: "已封存" });
 const STATUS_COLOR = Object.freeze({ draft: "grey", pending_approval: "warning", active: "positive", suspended: "grey-7", blocked: "negative", archived: "warning" });
@@ -32,6 +35,7 @@ const statusFilter = ref(typeof initialQuery.status === "string" ? initialQuery.
 const initialPagination = { page: Number(initialQuery.page) > 0 ? Number(initialQuery.page) : 1, rowsPerPage: appConfig.defaultPageSize, rowsNumber: 0, sortBy: ["code", "legalName", "accountManager", "status", "updatedAt"].includes(initialQuery.sortBy) ? initialQuery.sortBy : "updatedAt", descending: initialQuery.descending !== "false" };
 const currentRequest = ref({ page: initialPagination.page, sortBy: initialPagination.sortBy, descending: initialPagination.descending });
 const table = ref(null);
+const exporting = ref(false);
 const columns = [
   { name: "code", label: "客戶代碼", field: "code", align: "left", sortable: true },
   { name: "legalName", label: "法定名稱", field: "legalName", align: "left", sortable: true },
@@ -45,13 +49,34 @@ const columns = [
 function syncUrl() { router.replace({ query: { page: currentRequest.value.page, sortBy: currentRequest.value.sortBy, descending: String(currentRequest.value.descending), q: searchText.value || undefined, status: statusFilter.value || undefined } }); }
 function fetchCustomers(request) { currentRequest.value = { page: request.page, sortBy: request.sortBy, descending: request.descending }; syncUrl(); return customerService.list({ ...request, status: statusFilter.value }); }
 function formatDate(value) { return new Date(value).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" }); }
+function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url); }
+async function exportCustomers() {
+  const password = await promptPassword({ title: "匯出客戶", message: "匯出目前篩選結果為 CSV？檔案不包含銀行、附件或信用備註。", okLabel: "匯出" });
+  if (password === null) return;
+  exporting.value = true;
+  try {
+    const result = await customerImportService.createExport({
+      password,
+      filters: {
+        q: searchText.value || undefined, status: statusFilter.value || undefined,
+        sortBy: currentRequest.value.sortBy, sortDirection: currentRequest.value.descending ? "desc" : "asc"
+      }
+    });
+    downloadBlob((await customerImportService.downloadExport(result.id)).blob, `customers-export-${result.id}.csv`);
+    notifySuccess(`已匯出 ${result.totalCount} 筆客戶資料`);
+  } catch (error) { notifyError(error.message || "匯出失敗"); }
+  finally { exporting.value = false; }
+}
 watch(statusFilter, () => table.value?.reload());
 </script>
 
 <template>
   <div>
     <PageHeader>
-      <template #actions><q-btn v-if="canManage" color="primary" unelevated icon="add" label="新增客戶" to="/customers/new" /></template>
+      <template #actions>
+        <q-btn v-if="canManage" flat icon="download" label="匯出 CSV" :loading="exporting" @click="exportCustomers" />
+        <q-btn v-if="canManage" color="primary" unelevated icon="add" label="新增客戶" to="/customers/new" />
+      </template>
     </PageHeader>
     <div class="q-px-md q-pb-md row q-gutter-sm items-center">
       <q-input v-model="searchText" dense outlined debounce="300" placeholder="搜尋代碼、名稱、電話、電郵或識別資料" style="width: 300px" @update:model-value="table?.reload()"><template #prepend><q-icon name="search" /></template></q-input>

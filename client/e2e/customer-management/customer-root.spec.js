@@ -1,11 +1,20 @@
 import { expect, test } from "@playwright/test";
+import { Buffer } from "node:buffer";
 
 const user = { id: 1, username: "customer-manager", displayName: "Customer Manager", roles: [], permissions: ["customer.view", "customer.mgmt"] };
 const customer = { id: 7, code: "CUS-007", legalName: "Evergreen Customer", displayName: "Evergreen", defaultCurrencyCode: "HKD", status: "draft", updatedAt: "2026-09-22T00:00:00.000Z" };
 
 async function installApi(page, { sessionUser = user, customerStatus = "draft" } = {}) {
   const calls = [];
-  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null } };
+  const importJob = { id: 12, templateVersion: "v1", mode: "upsert", activationMode: "draft", sourceStorageStatus: "active", resultStorageStatus: null, status: "ready_with_errors", totalCount: 2, validCount: 1, warningCount: 0, invalidCount: 1, successCount: 0, failedCount: 0, skippedCount: 0, lastErrorCode: "", errorSummary: "", createdBy: 1, confirmedBy: null, createdAt: 1700000000000, updatedAt: 1700000000000, confirmedAt: null, completedAt: null, version: 2 };
+  const importRows = [
+    { rowNumber: 1, operation: "create", matchCustomerId: null, expectedCustomerVersion: null, normalizedPayload: { customerCode: "CUS-NEW" }, status: "valid", appliedCustomerId: null, errors: [], warnings: [], startedAt: null, completedAt: null, version: 1 },
+    { rowNumber: 2, operation: "create", matchCustomerId: null, expectedCustomerVersion: null, normalizedPayload: {}, status: "invalid", appliedCustomerId: null, errors: [{ field: "legalName", code: "REQUIRED", message: "必須填寫法定名稱" }], warnings: [], startedAt: null, completedAt: null, version: 1 }
+  ];
+  const state = { addresses: [], contacts: [], identifiers: [], credit: { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null }, banks: [{ id: 9, customerId: 7, accountHolderName: "Evergreen Customer", bankName: "Example Bank", bankCountryCode: "HK", bankCode: "001", branchCode: "002", swiftBic: "EXAMPLHH", accountCurrencyCode: "HKD", purposeCode: "general", maskedAccountNumber: "••••••••9001", isDefault: true, status: "active", version: 2, updatedAt: 1 }], attachments: [
+    { id: 4, customerId: 7, displayName: "Customer contract", documentType: "contract", sensitivity: "general", originalFilename: "contract.pdf", mimeType: "application/pdf", extension: "pdf", sizeBytes: 20, storageClass: "general_private", scanStatus: "clean", status: "active", sortOrder: 0, notes: "", version: 1, updatedAt: 1 },
+    { id: 5, customerId: 7, displayName: "Bank proof image", documentType: "bank_proof", sensitivity: "bank_sensitive", originalFilename: "bank-proof.png", mimeType: "image/png", extension: "png", sizeBytes: 20, storageClass: "bank_sensitive_private", scanStatus: "clean", status: "active", sortOrder: 1, notes: "", version: 1, updatedAt: 1 }
+  ] };
   await page.addInitScript((sessionUser) => {
     localStorage.setItem("erp.token", "browser-test-token");
     localStorage.setItem("erp.token.deadline", String(Date.now() + 3_600_000));
@@ -13,14 +22,21 @@ async function installApi(page, { sessionUser = user, customerStatus = "draft" }
     window.__customerUser = sessionUser;
   }, sessionUser);
   await page.route("http://localhost:3000/api/v1/**", async (route) => {
-    const request = route.request(); const url = new URL(request.url()); const path = url.pathname; const body = request.postDataJSON?.() ?? null;
+    const request = route.request(); const url = new URL(request.url()); const path = url.pathname;
+    let body = null;
+    try { body = request.postDataJSON?.() ?? null; } catch { body = null; }
     calls.push({ method: request.method(), path, body, query: Object.fromEntries(url.searchParams) });
-    const headers = { "content-type": "application/json", "access-control-allow-origin": "http://127.0.0.1:5204" };
+    const headers = { "content-type": "application/json", "cache-control": "no-store", "access-control-allow-origin": "http://127.0.0.1:5204" };
     const ok = (data) => route.fulfill({ status: 200, headers, body: JSON.stringify({ success: true, data, meta: { requestId: "customer-browser" } }) });
     if (path === "/api/v1/user/me") return ok(sessionUser);
     if (request.method() === "GET" && path === "/api/v1/customers") return ok({ items: [{ ...customer, status: customerStatus }], total: 1 });
-    if (request.method() === "GET" && path === "/api/v1/customers/7") return ok({ ...customer, status: customerStatus, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state });
-    if (request.method() === "GET" && path === "/api/v1/customers/7/completeness") return ok({ customerId: 7, issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)$/u.test(path)) { const id = Number(path.split("/").at(-1)); return ok({ ...customer, id, code: `CUS-00${id}`, legalName: id === 8 ? "Second Customer" : customer.legalName, status: customerStatus, tradingName: "Evergreen", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", version: 2, ...state }); }
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/completeness$/u.test(path)) return ok({ customerId: Number(path.split("/")[4]), issues: [], warnings: [{ field: "credit", code: "CREDIT_POLICY_MISSING", message: "尚未設定信用政策（不等同 0 額度）" }] });
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/bank-accounts$/u.test(path)) { const customerId = Number(path.split("/")[4]); return ok({ items: state.banks.map((bank) => ({ ...bank, customerId, bankName: customerId === 8 ? "Second Bank" : bank.bankName })) }); }
+    if (request.method() === "GET" && /^\/api\/v1\/customers\/(7|8)\/attachments$/u.test(path)) { const allowed = sessionUser.permissions.includes("customer.bank.view"); return ok({ items: state.attachments.filter((item) => item.sensitivity === "general" || allowed), restrictedCount: allowed ? 0 : 1 }); }
+    if (request.method() === "POST" && path === "/api/v1/customers/7/attachments/5/download-session") return ok({ token: "browser-attachment-session", expiresAt: Date.now() + 60_000 });
+    if (request.method() === "GET" && path === "/api/v1/customers/7/attachments/5/preview") return route.fulfill({ status: request.headers()["x-customer-attachment-session"] === "browser-attachment-session" ? 200 : 403, headers: { "content-type": "image/png", "cache-control": "private, no-store", pragma: "no-cache", "x-content-type-options": "nosniff", "content-security-policy": "sandbox; default-src 'none'", "access-control-allow-origin": "http://127.0.0.1:5204" }, body: Buffer.from("89504e470d0a1a0a0000000049454e44ae426082", "hex") });
+    if (request.method() === "POST" && path === "/api/v1/customers/7/bank-accounts/9/reveal") return ok({ id: 9, accountNumber: "123456789001", revealedAt: Date.now(), expiresInSeconds: 30 });
     if (request.method() === "GET" && path === "/api/v1/business-master/currencies") return ok({ items: [{ code: "HKD", name: "Hong Kong Dollar" }], total: 1 });
     if (request.method() === "POST" && path === "/api/v1/customers/duplicates/check") return ok({ code: [], legalName: [], tradingName: [] });
     if (request.method() === "POST" && path === "/api/v1/customers/create") return ok({ customer: { ...customer, id: 41, code: body.customerCode, legalName: body.legalName, status: body.activate ? "active" : "draft" }, operation: { id: "op-41" } });
@@ -40,6 +56,15 @@ async function installApi(page, { sessionUser = user, customerStatus = "draft" }
     if (request.method() === "POST" && path === "/api/v1/customer-settings/update") return ok({ requireActivationApproval: body.requireActivationApproval, version: 5, updatedAt: 1700000001000, updatedBy: 3 });
     if (request.method() === "GET" && path.startsWith("/api/v1/customer-catalog/")) return ok({ items: [] });
     if (request.method() === "POST" && path === "/api/v1/customer-catalog/categories/create") return ok({ id: 21, code: body.code, name: body.name, description: body.description, status: "active", sortOrder: body.sortOrder, version: 1, createdAt: 1, updatedAt: 1 });
+    if (request.method() === "GET" && path === "/api/v1/customer-imports/template") return route.fulfill({ status: 200, headers: { ...headers, "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=customer-import-template.csv" }, body: "customerCode,legalName\r\n" });
+    if (request.method() === "POST" && path === "/api/v1/customer-imports/upload") return ok({ ...importJob, status: "uploaded", sourceStorageStatus: "active", version: 1 });
+    if (request.method() === "GET" && path === "/api/v1/customer-imports") return ok({ items: [importJob], total: 1, page: 1, pageSize: 20 });
+    if (request.method() === "GET" && path === "/api/v1/customer-imports/12") return ok({ job: importJob, rows: importRows, total: 2, page: 1, pageSize: 20 });
+    if (request.method() === "POST" && path === "/api/v1/customer-imports/12/confirm") { Object.assign(importJob, { activationMode: body.activationMode, resultStorageStatus: "active", status: "completed_with_errors", successCount: 1, failedCount: 0, skippedCount: 1, confirmedBy: 1, confirmedAt: Date.now(), completedAt: Date.now(), version: 3 }); return ok(importJob); }
+    if (request.method() === "POST" && path === "/api/v1/customer-imports/12/cancel") { Object.assign(importJob, { status: "cancelled", version: importJob.version + 1 }); return ok(importJob); }
+    if (request.method() === "GET" && path === "/api/v1/customer-imports/12/result") return route.fulfill({ status: 200, headers: { ...headers, "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=customer-import-12-result.csv" }, body: "rowNumber,status\r\n1,applied\r\n2,skipped\r\n" });
+    if (request.method() === "POST" && path === "/api/v1/customer-exports/create") return ok({ id: 21, filters: body.filters, status: "completed", resultStorageStatus: "active", totalCount: 1, expiresAt: Date.now() + 3600000, lastErrorCode: "", errorSummary: "", createdBy: 1, createdAt: Date.now(), updatedAt: Date.now(), completedAt: Date.now(), version: 2 });
+    if (request.method() === "GET" && path === "/api/v1/customer-exports/21/result") return route.fulfill({ status: 200, headers: { ...headers, "content-type": "text/csv; charset=utf-8", "content-disposition": "attachment; filename=customers-export-21.csv" }, body: "id,customerCode,legalName,status\r\n7,CUS-007,'+Evergreen Customer,active\r\n" });
     return route.fulfill({ status: 404, headers, body: JSON.stringify({ success: false, error: { code: "NOT_FOUND", message: `${request.method()} ${path}` } }) });
   });
   return calls;
@@ -104,6 +129,82 @@ test("@technical a manager adds an address from the customer detail", async ({ p
   await page.getByRole("button", { name: "儲存地址" }).focus(); await page.keyboard.press("Enter");
   await expect(page.getByText("皇后大道中 1 號")).toBeVisible();
   expect(calls.find((call) => call.path.endsWith("/addresses/create"))?.body).toMatchObject({ label: "總部", addressLine1: "皇后大道中 1 號", purposes: [] });
+  expect(problems).toEqual([]);
+});
+
+test("@technical bank reveal stays masked by default and clears plaintext after its timeout", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page, { sessionUser: { ...user, permissions: ["customer.view", "customer.bank.view", "customer.bank.mgmt"] } });
+  await page.clock.install();
+  await page.goto("/customers/7");
+  await page.getByRole("tab", { name: "銀行帳戶" }).click();
+  await expect(page.getByText("••••••••9001")).toBeVisible();
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  await page.getByRole("button", { name: "查看 Example Bank 完整帳號" }).click();
+  await page.getByLabel("原因").fill("核對退款銀行帳戶");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "查看", exact: true }).last().click();
+  await expect(page.getByText("123456789001")).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage }, url: location.href, history: history.state }))).not.toContain("123456789001");
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  await page.getByRole("button", { name: "查看 Example Bank 完整帳號" }).click();
+  await page.getByLabel("原因").fill("再次核對退款銀行帳戶");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "查看", exact: true }).last().click();
+  await expect(page.getByText("123456789001")).toBeVisible();
+  await page.clock.runFor(30_000);
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  await page.getByRole("button", { name: "查看 Example Bank 完整帳號" }).click();
+  await page.getByLabel("原因").fill("切換客戶前再次查看帳戶");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "查看", exact: true }).last().click();
+  await expect(page.getByText("123456789001")).toBeVisible();
+  await page.evaluate(() => { history.pushState({}, "", "/customers/8"); window.dispatchEvent(new PopStateEvent("popstate")); });
+  await expect(page.getByRole("heading", { name: "CUS-008 — Second Customer" })).toBeVisible();
+  await expect(page.getByText("123456789001")).toHaveCount(0);
+  expect(calls.filter((call) => call.path.endsWith("/bank-accounts/9/reveal"))).toHaveLength(3);
+  expect(problems).toEqual([]);
+});
+
+test("@technical bank controls remain usable at approved viewport widths", async ({ page }) => {
+  const problems = collectConsole(page);
+  await installApi(page, { sessionUser: { ...user, permissions: ["customer.view", "customer.bank.view", "customer.bank.mgmt"] } });
+  for (const width of [375, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/customers/7");
+    await page.getByRole("tab", { name: "銀行帳戶" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("••••••••9001")).toBeInViewport();
+    await expect(page.getByRole("button", { name: "新增銀行帳戶" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  }
+  expect(problems).toEqual([]);
+});
+
+test("@technical sensitive attachment preview is reauthenticated and cleared from browser state", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page, { sessionUser: { ...user, permissions: ["customer.view", "customer.mgmt", "customer.bank.view", "customer.bank.mgmt"] } });
+  await page.goto("/customers/7");
+  await page.getByRole("tab", { name: "附件" }).click();
+  await expect(page.getByText("Bank proof image")).toBeVisible();
+  await page.getByRole("button", { name: "預覽 Bank proof image" }).click();
+  await page.getByLabel("原因").fill("核對銀行證明附件");
+  await page.getByLabel("你的密碼").fill("browser-secret");
+  await page.getByRole("button", { name: "預覽", exact: true }).last().click();
+  await expect(page.getByRole("heading", { name: "預覽：Bank proof image" })).toBeVisible();
+  expect(await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage }, url: location.href, history: history.state }))).not.toContain("browser-attachment-session");
+  expect(calls.find((call) => call.path.endsWith("/download-session"))?.body).toMatchObject({ mode: "preview", reason: "核對銀行證明附件", password: "browser-secret" });
+  await page.evaluate(() => window.dispatchEvent(new Event("pagehide")));
+  await expect(page.getByRole("heading", { name: "預覽：Bank proof image" })).toHaveCount(0);
+  expect(problems).toEqual([]);
+});
+
+test("@technical unauthorized attachment list exposes only a restricted count", async ({ page }) => {
+  const problems = collectConsole(page); await installApi(page);
+  await page.goto("/customers/7"); await page.getByRole("tab", { name: "附件" }).click();
+  await expect(page.getByText("另有 1 份受限制文件")).toBeVisible();
+  await expect(page.getByText("Customer contract")).toBeVisible();
+  await expect(page.getByText("Bank proof image")).toHaveCount(0);
+  await expect(page.getByText("bank-proof.png")).toHaveCount(0);
   expect(problems).toEqual([]);
 });
 
@@ -193,5 +294,49 @@ test("@technical settings explains prospective scope and saves with re-auth", as
   await page.getByLabel("代碼 *").fill("retail"); await page.getByLabel("名稱 *").fill("零售"); await page.getByRole("button", { name: "儲存", exact: true }).click();
   await page.getByLabel("原因").fill("新增客戶分類"); await page.getByLabel("你的密碼").fill("browser-secret"); await page.getByRole("button", { name: "確認儲存" }).click();
   await expect.poll(() => calls.some((call) => call.path.endsWith("/categories/create"))).toBe(true);
+  expect(problems).toEqual([]);
+});
+
+test("@technical TC-065 Customer import resumes through precheck, confirm and result download", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page);
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto("/customer-imports");
+  await expect(page.getByRole("heading", { name: "客戶匯入" })).toBeVisible();
+  await expect(page.getByText("待確認（有錯誤）")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("待確認（有錯誤）")).toBeVisible();
+  await page.getByRole("button", { name: "上傳 CSV" }).focus(); await page.keyboard.press("Enter");
+  await page.getByLabel("CSV 檔案").setInputFiles({ name: "customers.csv", mimeType: "text/csv", buffer: Buffer.from("customerCode,legalName\r\nCUS-NEW,New Customer\r\n") });
+  await page.getByRole("button", { name: "上傳", exact: true }).click();
+  await expect.poll(() => calls.some((call) => call.path === "/api/v1/customer-imports/upload")).toBe(true);
+  await page.getByRole("button", { name: "工作 #12 的詳情" }).focus(); await page.keyboard.press("Enter");
+  await expect(page.getByText("必須填寫法定名稱")).toBeVisible();
+  await expect(page.getByText("legalName · REQUIRED · 必須填寫法定名稱")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  await page.getByRole("button", { name: "確認匯入", exact: true }).click();
+  await page.locator(".q-dialog input[type=password]").fill("browser-secret");
+  await page.getByRole("button", { name: "確認匯入", exact: true }).last().click();
+  await expect(page.getByText("已完成（有錯誤）")).toBeVisible();
+  await expect(page.getByText("略過 1")).toBeVisible();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "下載結果" }).click();
+  await downloadPromise;
+  expect(calls.find((call) => call.path.endsWith("/confirm"))?.body).toMatchObject({ version: 2, activationMode: "draft", password: "browser-secret" });
+  expect(problems).toEqual([]);
+});
+
+test("@technical TC-066 filtered export reauthenticates and downloads formula-safe allowlisted CSV", async ({ page }) => {
+  const problems = collectConsole(page); const calls = await installApi(page);
+  await page.goto("/customers?q=Evergreen&status=active&sortBy=legalName&descending=false");
+  await page.getByRole("button", { name: "匯出 CSV" }).click();
+  await page.locator(".q-dialog input[type=password]").fill("browser-secret");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "匯出", exact: true }).last().click();
+  const download = await downloadPromise;
+  const chunks = []; for await (const chunk of await download.createReadStream()) chunks.push(chunk);
+  const csv = Buffer.concat(chunks).toString("utf8");
+  expect(calls.find((call) => call.path === "/api/v1/customer-exports/create")?.body).toEqual({ password: "browser-secret", filters: { q: "Evergreen", status: "active", sortBy: "legalName", sortDirection: "asc" } });
+  expect(csv).toContain("'+Evergreen Customer");
+  expect(csv).not.toMatch(/bank|attachment|creditNotes/iu);
   expect(problems).toEqual([]);
 });

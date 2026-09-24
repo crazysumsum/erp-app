@@ -7,6 +7,8 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "migrate": "node scripts/migrate.js",
+    "customer-bank:rotate": "node scripts/rotateCustomerBankEncryption.js",
+    "customer-bank:reindex": "node scripts/reindexCustomerBankBlindIndexes.js",
     "create-user": "node scripts/createUser.js",
     "test": "node --test --import ./test-support/testEnv.js",
     "pretest:coverage": "node -e \"require('node:fs').mkdirSync('coverage',{recursive:true})\"",
