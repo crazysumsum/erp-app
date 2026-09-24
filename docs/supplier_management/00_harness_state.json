@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 227,
+  "revision": 230,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "18c16dacc7a831707bdbcf5510ec9bfa276eb2d2",
-    "source_fingerprint": "1042a0baded54e580654178ca5cf252b59dc24f97dfb8bd6bb768dca2f524a59",
+    "code_commit": "eaeb6c92ab63c5505463c9e40bb27308f512780e",
+    "source_fingerprint": "0ee623124bf6cab2ee7164339a3c4b85b0db4d944c676ff5fa509ca4041f446a",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
-    "default_commit": "da222e2ef4e2b9cf7278878b7badc1b52203bb12",
+    "default_commit": "60c735c3fb79b9d4e550aa36e32c1ca4ec5102ca",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -1396,6 +1396,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/51_rev_050_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-052",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-036 REV-051 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 28d974d9809376fdc4d49df69b3d0f016befcfb3",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/54_rev_052_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -3073,6 +3085,17 @@
       "source_ref": "REV-051 returned CHANGES_REQUESTED with 0 Critical, 0 High, 3 Medium, 7 Low and 5 Info; all three Mediums were real. F-M1 is the one that matters. I forwarded error.message into the failure report, justified by 'crypto's messages carry no ciphertext or key' - true of crypto, whose seven throw sites the reviewer checked, but the same catch also wraps connection.execute, and MySQL embeds the offending key value in an ER_DUP_ENTRY message. For uq_supplier_bank_blind_index that value is the blind index. I reproduced the shape on real MySQL before accepting it. My own secret scan could not have found it: it searched for base64 and 43-character base64, and the leak arrives byte-escaped as backslash-x-C0 and so on. The scan was sound and its negative control did discriminate; the conclusion I drew from it was narrower than I stated. Failure reasons are now classified - DUPLICATE_KEY plus the constraint name, which is schema rather than data, or a fixed identifier, or UNKNOWN - and no driver message is forwarded. F-M2: --limit bounded successes rather than work, because processed only increments on success, so a limit-2 probe over failing rows would scan the whole table; there is now an attempted counter. F-M3: the concurrency guard in the UPDATE's WHERE clause is correct and load-bearing - the reviewer landed a real concurrent write against real MySQL and the guard held - but both vacuous-guard mutants survived, because my fake database parsed SET and ignored WHERE, and the two things this task's safety rests on both live in WHERE. Worth recording that my first fix for that still did not discriminate: the fake's SELECT returned live references into its own table, so a test simulating a concurrent change also mutated the row the rotation was holding, and the guard passed whether it was correct or not. Real MySQL returns detached rows. After making the fake return copies the encryption mutant died and the lookup one did not, because the test only covered one kind; both are covered now. Two further record inaccuracies the reviewer caught: my 'ring limit off by one KILLED' held for some variants but > to >= survived, since no test built a ring of exactly three - the design's permitted maximum and the normal mid-transition state - and deleting the lookup half of ringWarnings entirely also survived. Eleven mutants now, eleven killed. 356/356 supplier server suite, lint exit 0, boundary still exactly three OUTSIDE_MODULE in server/scripts/.",
       "actor": "Harness agent (Claude Opus 5), remediating REV-051",
       "observed_at": "2026-09-23T14:25:18+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-052: the fourth double fidelity gap, an unvalidated --from, and a fix that cost its own diagnostics",
+      "code_commit": "eaeb6c92ab63c5505463c9e40bb27308f512780e",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "0ee623124bf6cab2ee7164339a3c4b85b0db4d944c676ff5fa509ca4041f446a",
+      "status": "PASS",
+      "source_ref": "REV-052 returned CHANGES_REQUESTED with 0 Critical, 0 High, 3 Medium, 7 Low and 5 Info. It confirmed all three REV-051 Mediums genuinely fixed by reproduction, and it is the first review in this module's history to confirm that my recorded mutation table was accurate - it applied all eleven itself and all eleven died. The three new Mediums were all in places nobody had looked. M-1: --from was never validated at all. REV-051 had examined --to exhaustively; a --from naming a key that has never existed ran to completion and reported processed 0, failed 0, remaining 0, safeToRemoveFromKey true and exit 0, which is shape-identical to a finished rotation, so a typo would tell an operator it was safe to delete a key that is still in use. The getter I added in this same PR for the ring-size warning is exactly the tool for checking this and I never called it for that. M-2: I repaired the fake database's execute three times - parameter position, then the WHERE clause, then live references - and never touched db.query, which hardcoded the selection predicate. So AND id > ?, the clause that makes the rotation terminate, was supplied by the double rather than by the SQL under test: I removed it and all 356 tests passed. That is the fourth fidelity gap on this task, in the one method the three previous repairs never reached; with the double now parsing the SELECT predicate, the same mutation hangs instead, which is the real symptom. M-3: my F-M1 fix cost the diagnostics of the very scenario I had documented as a feature. safeReason's comment claimed crypto errors carry a code or publicCode; all four crypto failure paths throw a plain Error or TypeError with neither, so that branch was dead and every crypto-originating failure reported UNKNOWN - including the tampered-row case section 5 presents as fail-closed evidence. Crypto now attaches stable codes so the classification is real rather than accidental. Fourteen mutants, fourteen killed. 359/359 supplier server suite, 646/646 client, lint exit 0. Merged 15 commits of main, which also carries the TC-001 AUTO_INCREMENT flake fix that had been blocking this PR's CI; that test now passes locally.",
+      "actor": "Harness agent (Claude Opus 5), remediating REV-052",
+      "observed_at": "2026-09-24T09:02:18+08:00"
     }
   ],
   "pending_decisions": [
@@ -4124,7 +4147,11 @@
     "evidence/20260923T062434-8ffdbd0731f3/run.json",
     "evidence/20260923T062439-75c8055ea9ec/run.json",
     "evidence/20260923T062441-09f05abc5e6a/run.json",
-    "evidence/20260923T062444-ad20928e31ba/run.json"
+    "evidence/20260923T062444-ad20928e31ba/run.json",
+    "evidence/20260924T010133-a52a8b81b018/run.json",
+    "evidence/20260924T010137-2c0f9fd7a5f0/run.json",
+    "evidence/20260924T010140-5f953ddef263/run.json",
+    "evidence/20260924T010143-e37b0ecc0f2e/run.json"
   ],
   "defects": [
     {

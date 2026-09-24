@@ -181,3 +181,66 @@ drop the lookup half of warnings  KILLED
 
 呢個係我自己寫 `ringWarnings` 嗰陣先發現嘅 —— 我一開始用咗兩個唔存在嘅 getter，
 `node -e` 一行就爆咗出嚟。
+
+## 9. REV-052 remediation
+
+REV-052 報 0 Critical、0 High、**3 Medium**、7 Low、5 Info。
+
+**佢確認咗 REV-051 三條 Medium 全部真係收咗**，逐個重現而唔係讀。而且 —— 值得記低 ——
+**佢係第一輪確認我張 mutation 表準確嘅 review**：十一個佢自己逐個貼過，十一個都死。
+
+三條新 Medium 全部係冇人睇過嘅地方。
+
+### M-1 —— `--from` 由頭到尾冇驗證過
+
+REV-051 把 `--to` 由每個角度睇過，確立咗佢係確認而唔係選擇器。**冇人睇過 `--from`。**
+
+一個從來冇存在過嘅 `--from`，喺真 CLI 上面會回
+`processed 0 / failed 0 / remaining 0 / safeToRemoveFromKey true`，**exit 0** ——
+形狀同一個做完咗嘅輪替**一模一樣**。即係 operator 打錯一個字，會收到「做完，可以剷
+key」，然後去剷一條仲有行用緊嘅 key。
+
+而最諷刺嗰點 REV-052 亦都指咗出嚟：我喺呢個 PR 為咗 ring 大細警告而加嘅
+`encryptionKeyIds` getter，**正正就係查呢樣嘢嘅工具，而我從來冇叫過佢去查**。
+
+### M-2 —— 令個迴圈會停嘅嗰一句，由 double 自己補返
+
+我修咗三次 `execute`（按位置派欄位 → 唔讀 `WHERE` → 回 live reference），**但由頭到尾
+冇掂過 `db.query`**。佢一直硬寫住 `r[column] === params[0] && r.id > params[1]`。
+
+即係 `AND id > ?` —— **令輪替會終止嘅嗰一句** —— 由個 double 提供，唔係由被測嘅 SQL
+提供。我自己驗咗：剷走佢，**356 條測試全部照綠**，包括每一條真 MySQL 測試。
+
+**呢個係呢個 task 第四個 double 失真**，而且就喺我三次都冇掂過嗰一個 method 度。
+修咗之後，同一個 mutation 而家**直接令測試掛死**（冇終止）—— 即係真實症狀。
+
+### M-3 —— 我個 F-M1 修正嘅代價
+
+`safeReason` 個註解寫住「crypto 自己嘅錯誤有 publicCode／code」。**假嘅。** 我查咗
+四條 crypto 失敗路徑：全部掟純 `Error`／`TypeError`，冇 `code`、冇 `publicCode`、
+冇 `errno`。所以嗰條 `named` 分支對 crypto 嚟講係**死**嘅，而每一個 crypto 失敗都報
+`UNKNOWN` ——
+
+**而嗰個正正就係 §5 我當成特點嚟寫嘅 fail-closed 情境。** 我為咗堵一個洩漏，順手抹走咗
+同一條路徑嘅診斷價值，仲喺註解度寫咗一句唔成立嘅理由去支持佢。
+
+修法：俾 crypto 嗰幾個失敗帶一個**穩定嘅 `code`**（`BANK_ACCOUNT_TAMPERED`、
+`BANK_KEY_NOT_IN_RING`、`BANK_ACCOUNT_<rejection>`），咁分類就係真嘅而唔係靠彩數。
+
+### Mutation：十四個，十四個殺到
+
+```
+M-1 drop the --from ring check   KILLED   F-M3b lookup guard vacuous      KILLED
+M-2 drop the cursor clause       KILLED（掛死）  ring limit > becomes >=  KILLED
+M-3 crypto loses its code        KILLED   drop the lookup half of warnings KILLED
+F-M1 forward the driver message  KILLED   safeToRemove ignores failures   KILLED
+F-M2 limit counts successes      KILLED   --to not validated              KILLED
+F-M3 encryption guard vacuous    KILLED   transition limit off by one     KILLED
+drop the from-key filter         KILLED   reindex: key id not written     KILLED
+```
+
+### 驗證
+
+359/359 supplier server suite、646/646 client、lint exit 0。`main` merge 咗（15 個
+commit），順帶確認咗 `TC-001` 嗰個 flake 已經喺 `main` 修好（本機 `pass 1 / fail 0`）
+—— 之前擋住呢個 PR 嘅就係佢。

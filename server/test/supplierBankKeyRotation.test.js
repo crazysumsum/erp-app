@@ -46,13 +46,34 @@ function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), du
         const column = sql.includes("encryption_key_id") ? "encryption_key_id" : "blind_index_key_id";
         return [[{ remaining: table.filter((r) => r[column] === params[0]).length }]];
       }
-      const column = sql.includes("WHERE encryption_key_id") ? "encryption_key_id" : "blind_index_key_id";
+      /**
+       * `WHERE` 要**照住 SQL 行**，唔可以硬寫。
+       *
+       * 之前呢度硬寫咗 `r[column] === params[0] && r.id > params[1]`，即係個 cursor
+       * 條件 `AND id > ?` —— **令個輪替會停嘅嗰一句** —— 由呢個 double 自己補返，
+       * 而唔係由被測嘅 SQL 提供。結果：剷走 `AND id > ?`，356 條測試全部照綠，而喺
+       * 真 MySQL 上面個迴圈會永遠攞返同一批行。
+       *
+       * 呢個係呢個 task 第四個 double 失真，而且就喺我三次修 `execute` 都冇掂過嗰
+       * 一個 method 度。（REV-052 M-2）
+       */
       const limit = Number(/LIMIT (\d+)/u.exec(sql)[1]);
+      const whereClause = /WHERE ([\s\S]*?)\s+ORDER BY/u.exec(sql)[1];
+      let cursor = 0;
+      const tests = [];
+      for (const predicate of whereClause.split(/\s+AND\s+/u).map((part) => part.trim())) {
+        const equals = /^([a-z_]+) = \?$/u.exec(predicate);
+        const greater = /^([a-z_]+) > \?$/u.exec(predicate);
+        if (equals) { const [column, value] = [equals[1], params[cursor++]]; tests.push((r) => r[column] === value); }
+        else if (greater) { const [column, value] = [greater[1], params[cursor++]]; tests.push((r) => r[column] > value); }
+        else if (/^\? IS NOT NULL$/u.test(predicate)) { cursor += 1; }   // 恆真，同真 SQL 一樣
+        else throw new Error(`the double cannot parse the predicate ${predicate}`);
+      }
       // **回副本**，唔回 live reference。真 MySQL 回嘅係一份已經脫離咗表嘅資料，
       // 而呢個分別唔係學術嘅：靠 reference 嘅話，一個模擬並發嘅測試改個 table 就
       // 連手上嗰行都改埋，於是個 guard 無論啱定錯都會「通過」，兩個 mutant 一齊
       // 生還。（REV-051 F-M3 嘅第一次修法就係咁樣測唔到嘢。）
-      return [table.filter((r) => r[column] === params[0] && r.id > params[1])
+      return [table.filter((r) => tests.every((matches) => matches(r)))
         .sort((a, b) => a.id - b.id).slice(0, limit).map((r) => ({ ...r }))];
     },
     async withTransaction(work) {
@@ -299,6 +320,81 @@ for (const [kind, fromKey, toKey, keyColumn, witness] of [
     assert.equal(report.remaining, 0);
   });
 }
+
+/**
+ * REV-052 M-1。一個打錯咗嘅 `--from` 之前會行到尾，然後報
+ * `processed 0 / failed 0 / remaining 0 / safeToRemoveFromKey true` 同 exit 0 ——
+ * **同一個做完咗嘅輪替一模一樣**。Operator 收到嘅係「做完，可以剷 key」。
+ */
+test("refuses a --from that is not in the ring, instead of reporting a finished rotation", async () => {
+  const c = crypto();
+  const db = fakeDatabase([]);
+  await assert.rejects(
+    () => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "TYPO", to: "e2" }),
+    /--from key id TYPO is not in the encryption ring/u
+  );
+  // Lookup 嗰邊查嘅要係 lookup ring，唔係 encryption ring。
+  await assert.rejects(
+    () => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "e1", to: "l2" }),
+    /not in the lookup ring/u,
+    "an encryption key id must not be accepted as a lookup source"
+  );
+  // 一個真係喺 ring 入面嘅 from 照樣行得到。
+  const ok = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+  assert.equal(ok.processed, 0);
+});
+
+/**
+ * REV-052 M-2。`AND id > ?` 係令個迴圈會停嘅嗰一句。之前個 double 自己硬寫咗佢，
+ * 所以剷走佢 356 條測試照綠，而喺真 MySQL 上面會永遠攞返同一批行。
+ */
+test("the cursor advances, so a rotation terminates instead of re-reading the same batch", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2, 3, 4, 5].map((id) => seed(oldCrypto, { id })), { failOn: new Set([1, 2, 3, 4, 5]) });
+
+  const batches = [];
+  const originalQuery = db.query.bind(db);
+  db.query = async (sql, params) => {
+    const result = await originalQuery(sql, params);
+    if (sql.includes("ORDER BY id")) batches.push(result[0].map((r) => r.id));
+    return result;
+  };
+
+  // 每行都會失敗，所以冇一行會離開「舊 key」—— 個迴圈只可以靠 cursor 前進。
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", batchSize: 2
+  });
+
+  assert.equal(report.failed, 5, "every row is attempted exactly once");
+  const seen = batches.flat();
+  assert.deepEqual(seen, [...new Set(seen)], "no row may be re-read: the cursor must move past a failed row");
+  assert.deepEqual(seen, [1, 2, 3, 4, 5]);
+});
+
+/**
+ * REV-052 M-3。`safeReason` 個 `named` 分支之前對 crypto 係死嘅 —— crypto 掟純
+ * Error／TypeError，一個 code 都冇 —— 所以每個 crypto 失敗都報 `UNKNOWN`，而
+ * 嗰個正正係實作報告 §5 當成特點嚟寫嘅 fail-closed 情境。
+ */
+test("a tampered row is reported by name, not as UNKNOWN", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 })];
+  // 改一個 byte：AAD／auth tag 就對唔上，crypto 會掟「被竄改」。
+  rows[0].account_ciphertext = Buffer.from(rows[0].account_ciphertext);
+  rows[0].account_ciphertext[0] ^= 0xff;
+  const db = fakeDatabase(rows);
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.failed, 1);
+  assert.equal(report.failures[0].reason, "BANK_ACCOUNT_TAMPERED",
+    "an operator must be able to tell a tampered row from an unclassified failure");
+  assert.notEqual(report.failures[0].reason, "UNKNOWN");
+  // 而個 reason 仍然唔可以帶住任何資料。
+  assert.ok(!JSON.stringify(report).includes(rows[0].account_ciphertext.toString("hex").slice(0, 12)));
+});
 
 // `--to` 係確認唔係選擇器。
 test("refuses a --to that is not the active key, instead of silently using the active one", async () => {

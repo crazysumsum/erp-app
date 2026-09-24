@@ -55,7 +55,10 @@ function safeReason(error) {
     );
     return { reason: "DUPLICATE_KEY", constraint: constraint?.[1] ?? "unknown" };
   }
-  // Crypto 自己嘅錯誤有 publicCode／code，兩個都係固定識別碼。
+  // Crypto 嘅錯誤而家帶住一個穩定嘅 `code`（BANK_ACCOUNT_TAMPERED 等）。
+  // **之前呢句係假嘅**：crypto 掟嘅係純 Error／TypeError，一個 code 都冇，所以呢條
+  // 分支對 crypto 嚟講係死嘅，而每一個 crypto 失敗都報 `UNKNOWN` —— 即係 §5 嗰個
+  // 我當成特點嚟寫嘅 fail-closed 情境，診斷價值俾我自己個修正抹走咗。（REV-052 M-3）
   const named = chain.find((link) => typeof link.publicCode === "string" || typeof link.code === "string");
   if (named) return { reason: named.publicCode ?? named.code };
   return { reason: "UNKNOWN" };
@@ -80,9 +83,26 @@ function assertTarget(kind, crypto, to) {
   return active;
 }
 
-function assertDistinct(from, to) {
+function assertSource(kind, crypto, from, to) {
   if (!from) throw new Error("--from is required");
   if (from === to) throw new Error("--from and --to are the same key id; nothing to rotate");
+  /**
+   * `--from` 要真係喺 ring 入面。
+   *
+   * 冇呢個檢查，一個打錯咗嘅 key id 會行到尾然後報
+   * `processed: 0, failed: 0, remaining: 0, safeToRemoveFromKey: true`，exit 0 ——
+   * **同一個做完咗嘅輪替一模一樣**。即係 operator 打錯字，會收到「做完，可以剷 key」
+   * 嘅回覆，然後去剷一條其實仲有行用緊嘅 key。
+   *
+   * 諷刺嘅係，我喺呢個 PR 為咗 ring 大細警告而加嘅 `encryptionKeyIds` getter，
+   * 正正就係查呢樣嘢嘅工具，而我從來冇叫過佢去查。（REV-052 M-1）
+   */
+  const ring = kind === ROTATION_KINDS.ENCRYPTION ? crypto.encryptionKeyIds : crypto.lookupKeyIds;
+  if (!ring.includes(from)) {
+    throw new Error(
+      `--from key id ${from} is not in the ${kind} ring (${ring.join(", ")}); refusing to report a rotation that cannot have happened`
+    );
+  }
 }
 
 /**
@@ -194,7 +214,7 @@ export async function runRotation({
     throw new Error(`unknown rotation kind ${kind}`);
   }
   const active = assertTarget(kind, crypto, to);
-  assertDistinct(from, active);
+  assertSource(kind, crypto, from, active);
 
   const startedAt = now;
   let processed = 0;
