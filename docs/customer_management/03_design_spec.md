@@ -873,6 +873,25 @@ Migration只在id=1不存在時insert default OFF；service明確拒絕id≠1、
 | `started_at`,`completed_at` | BIGINT NULL。 |
 | `version` | INT UNSIGNED DEFAULT 1。 |
 
+#### 5.17.3 `customer_export_jobs`
+
+Export uses a separate durable job instead of overloading import state. Each row
+stores `id BIGINT PK AUTO_INCREMENT`, actor-scoped `idempotency_key`, unique
+`operation_id` referencing `customer_operation_requests`, an allowlisted JSON
+`filter_snapshot`, deterministic `result_stored_name`, `result_sha256`,
+`result_storage_status`, `status` (processing/completed/failed), `total_count`,
+`expires_at`, bounded public error fields, `created_by`, timestamps and `version`.
+Indexes cover `(created_by,created_at,id)` and `(status,updated_at,id)`; unique keys
+cover `(created_by,idempotency_key)`, operation and stored name. Only the creating
+actor with current view+mgmt permissions may inspect or download the result.
+
+Creation streams the existing allowlisted Customer list projection in pages of 100,
+caps the result at the approved 10,000-row bulk limit and at the configured private
+CSV byte limit, neutralizes formula-leading cells, and never selects bank, attachment
+or credit-note data. File activation, export audit and durable operation outcome
+converge idempotently after a crash. `expires_at` ends download access after one year
+but HD-002 keeps the physical object and job evidence; no destructive purge runs.
+
 Index `(job_id,status,row_number)`。Worker先 `SELECT ... FOR UPDATE` row；terminal row不重做。成功transaction內依次寫Customer aggregate、audit、row applied。失敗rollback aggregate，再用另一短transaction把仍非terminal row標failed，確保合法列可繼續。
 
 ### 5.18 `customer_operation_requests`
@@ -1056,6 +1075,8 @@ Download在open stream前先commit access audit；audit失敗不提供內容。R
 | `POST /api/v1/customer-imports/:id/cancel` | jwt／view＋mgmt | 未running才取消。 |
 | `GET /api/v1/customer-imports/:id/result` | jwt／view＋mgmt | safe result CSV；expired 410。 |
 | `POST /api/v1/customer-exports/create` | jwt-password／view＋mgmt | filter snapshot、同步小量或async job；audit。 |
+| `GET /api/v1/customer-exports/:id` | jwt／view＋mgmt | owner-scoped status/count/expiry；other owners receive 404。 |
+| `GET /api/v1/customer-exports/:id/result` | jwt／view＋mgmt | owner-scoped active result；expired 410；download audit。 |
 | `GET /api/v1/customer-audit/logs` | jwt／customer.view | customerId、actor、action、target、date；time/id cursor。 |
 
 Template v1 fields：matching `customerId,customerCode`；root `legalName,tradingName,defaultCurrencyCode,paymentTermCode,accountManagerUsername,categoryCode,industryCode,territoryCode,website,generalPhone,generalEmail,notes`；一組Address；一組Contact；一組Identifier；Credit fields。Update的空cell表示保持原值，V1不提供清空語意；清空用UI/API。

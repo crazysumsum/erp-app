@@ -44,6 +44,8 @@ const ACTIONS = new Set([
   "import.complete",
   "import.cancel",
   "import.result_download",
+  "export.create",
+  "export.download",
   "setting.update",
   "catalog.create",
   "catalog.update",
@@ -130,7 +132,8 @@ const ROOT_AUDIT_FIELDS = new Set([
   "invalidCount",
   "successCount",
   "failedCount",
-  "skippedCount"
+  "skippedCount",
+  "filterSnapshot"
 ]);
 
 function allowlistedSnapshot(value) {

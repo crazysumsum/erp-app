@@ -5,8 +5,13 @@ import { createMemoryHistory, createRouter } from "vue-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/services/customer.js", () => ({ default: { list: vi.fn() }, service: { name: "customer" } }));
+vi.mock("@/services/customerImport.js", () => ({ default: { createExport: vi.fn(), downloadExport: vi.fn() }, service: { name: "customerImport" } }));
+vi.mock("@/framework/ui/confirm.js", () => ({ promptPassword: vi.fn() }));
+vi.mock("@/framework/ui/notify.js", () => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
 
 import customerService from "@/services/customer.js";
+import customerImportService from "@/services/customerImport.js";
+import { promptPassword } from "@/framework/ui/confirm.js";
 import CustomersPage, { page } from "@/pages/customers/CustomersPage.vue";
 import { useSessionStore } from "@/stores/session.js";
 
@@ -40,5 +45,22 @@ describe("pages/customers/CustomersPage.vue", () => {
     const { router } = await mountPage({ initialRoute: "/customers?page=2&q=evergreen&status=active&sortBy=legalName&descending=false" });
     expect(customerService.list).toHaveBeenCalledWith(expect.objectContaining({ page: 2, filter: "evergreen", status: "active", sortBy: "legalName", descending: false }));
     expect(router.currentRoute.value.query.q).toBe("evergreen");
+  });
+
+  it("exports exactly the visible search, status and sort without sensitive detail fields", async () => {
+    promptPassword.mockResolvedValue("pw");
+    customerImportService.createExport.mockResolvedValue({ id: 11, totalCount: 1 });
+    customerImportService.downloadExport.mockResolvedValue({ blob: new Blob(["csv"]) });
+    globalThis.URL.createObjectURL = vi.fn(() => "blob:customer-export");
+    globalThis.URL.revokeObjectURL = vi.fn();
+    const { body } = await mountPage({ initialRoute: "/customers?q=evergreen&status=active&sortBy=legalName&descending=false" });
+
+    await body.findAll("button").find((button) => button.text().includes("匯出 CSV")).trigger("click");
+    await flushPromises();
+
+    expect(customerImportService.createExport).toHaveBeenCalledWith({
+      password: "pw", filters: { q: "evergreen", status: "active", sortBy: "legalName", sortDirection: "asc" }
+    });
+    expect(customerImportService.downloadExport).toHaveBeenCalledWith(11);
   });
 });
