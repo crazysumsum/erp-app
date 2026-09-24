@@ -137,7 +137,7 @@ onUnmounted(stopPolling);
         <q-card-section class="q-pt-none">
           <template v-if="job">
             <div class="row items-center q-gutter-sm q-mb-sm"><q-badge :color="STATUS_COLOR[job.status]" :label="STATUS_LABEL[job.status] ?? job.status" /><q-spinner v-if="POLLABLE.has(job.status)" size="16px" /></div>
-            <div class="q-mb-sm">共 {{ job.totalCount }} 列；有效 {{ job.validCount }}、警告 {{ job.warningCount }}、無效 {{ job.invalidCount }}、成功 {{ job.successCount }}、失敗 {{ job.failedCount }}</div>
+            <div class="q-mb-sm">共 {{ job.totalCount }} 列；有效 {{ job.validCount }}、警告 {{ job.warningCount }}、無效 {{ job.invalidCount }}、成功 {{ job.successCount }}、失敗 {{ job.failedCount }}、略過 {{ job.skippedCount }}</div>
             <q-banner v-if="job.errorSummary" class="bg-negative text-white q-mb-sm">{{ job.errorSummary }}</q-banner>
             <div v-if="['ready', 'ready_with_errors'].includes(job.status)" class="row q-gutter-sm items-center q-mb-md">
               <q-select v-model="activationMode" dense outlined emit-value map-options label="寫入狀態" :options="[{ label: '草稿', value: 'draft' }, { label: '啟用', value: 'activate' }]" style="width: 150px" />
@@ -151,7 +151,7 @@ onUnmounted(stopPolling);
             </div>
           </template>
           <DataTable v-show="job" ref="detailTable" :fetch="fetchRows" :columns="rowColumns" row-key="rowNumber">
-            <template #body-cell-issues="{ row }"><q-td class="text-left"><div v-for="issue in [...row.errors, ...row.warnings]" :key="`${issue.field}-${issue.code}`" class="text-caption">{{ issue.message }}</div></q-td></template>
+            <template #body-cell-issues="{ row }"><q-td class="text-left"><div v-for="issue in [...row.errors, ...row.warnings]" :key="`${issue.field}-${issue.code}`" class="text-caption">{{ issue.field }} · {{ issue.code }} · {{ issue.message }}</div></q-td></template>
           </DataTable>
         </q-card-section><q-card-actions align="right"><q-btn flat label="關閉" @click="showDetail = false" /></q-card-actions>
       </q-card>

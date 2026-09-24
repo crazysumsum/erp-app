@@ -30,11 +30,15 @@ test("Customer import worker runs execution rows to a finalized result and keeps
     async finalizeExecution(input) { calls.push(["finalize", input.jobId]); return { status: "completed_with_errors" }; },
     async recoverFiles(input) { calls.push(["recover", input]); return { recovered: 1, failed: 0 }; }
   };
+  instance.exportService = { async recoverFiles(input) { calls.push(["export-recover", input]); return { recovered: 2, failed: 1 }; } };
   const result = await instance.runExecution();
   assert.deepEqual(result, { claimed: true, jobId: 12, applied: 1, failed: 1, status: "completed_with_errors" });
   assert.equal(calls.filter(([kind]) => kind === "row").length, 3);
-  assert.deepEqual(await instance.runFileRecovery(), { recovered: 1, failed: 0 });
-  assert.deepEqual(calls.at(-1), ["recover", { staleBefore: 700_000, limit: 10 }]);
+  assert.deepEqual(await instance.runFileRecovery(), { recovered: 3, failed: 1 });
+  assert.deepEqual(calls.slice(-2), [
+    ["recover", { staleBefore: 700_000, limit: 10 }],
+    ["export-recover", { staleBefore: 700_000, limit: 10 }]
+  ]);
 });
 
 test("Customer import worker stays idle when disabled, aborted or without a claimed job", async () => {

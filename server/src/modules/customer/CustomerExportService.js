@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
+
 import { CustomerAuditLogService } from "./CustomerAuditLogService.js";
 import { CustomerOperationService } from "./CustomerOperationService.js";
 import { CustomerService } from "./CustomerService.js";
 import { customerExportError } from "./customerErrors.js";
-import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { customerImportStoredName } from "../../services/customerImport/CustomerImportStorage.js";
 
 const HEADER = Object.freeze([
@@ -88,22 +90,41 @@ export class CustomerExportService {
     });
     if (job.status === "completed") return summary(job);
 
-    let first;
+    if (job.result_sha256) {
+      const metadata = { storedName: job.result_stored_name, sha256: Buffer.from(job.result_sha256) };
+      try {
+        await this.storage.finalizeResult(metadata);
+        return await this.#activate({ actorId, claimedRoles, claimedPermissions, id: job.id, metadata, requestId, ip });
+      } catch (error) {
+        if (error?.code !== "ENOENT") {
+          await this.#fail(job.id, operationId, "RESULT_STORAGE_ERROR", "客戶匯出檔案無法安全保存", { storageError: true });
+          throw customerExportError("CUSTOMER_EXPORT_STORAGE_ERROR", 503, "客戶匯出檔案無法安全保存");
+        }
+      }
+    }
+
+    let rows;
     try {
-      first = await this.customerService.list({ actorId, claimedRoles, claimedPermissions, ...filters, page: 1, pageSize: 100 });
-      if (first.total > this.maxRows) throw customerExportError(
-        "CUSTOMER_EXPORT_TOO_LARGE", 422, `匯出結果超過 ${this.maxRows} 筆上限`, { maxRows: this.maxRows }
-      );
+      rows = await this.#snapshot({ actorId, claimedRoles, claimedPermissions, filters });
     } catch (error) {
       await this.#fail(job.id, operationId, error.publicCode ?? "CUSTOMER_EXPORT_FAILED", "客戶匯出失敗");
       throw error;
     }
 
-    let staged;
+    const metadata = this.#resultMetadata(job.result_stored_name, rows);
     try {
-      staged = await this.storage.stageResult({ operationId, source: this.#csv({ first, filters, actorId, claimedRoles, claimedPermissions }) });
-      if (staged.storedName !== job.result_stored_name) throw new Error("Customer export result metadata mismatch");
-      await this.storage.finalizeResult(staged);
+      const completed = await this.#register({ actorId, claimedRoles, claimedPermissions, id: job.id, metadata });
+      if (completed) return completed;
+    } catch (error) {
+      if (error?.publicCode) await this.#fail(job.id, operationId, error.publicCode, "客戶匯出失敗");
+      throw error;
+    }
+    try {
+      const staged = await this.storage.stageResult({ operationId, source: this.#csv(rows) });
+      if (staged.storedName !== metadata.storedName || !Buffer.from(staged.sha256).equals(metadata.sha256)) {
+        throw new Error("Customer export result metadata mismatch");
+      }
+      await this.storage.finalizeResult(metadata);
     } catch (error) {
       if (error?.publicCode) {
         await this.#fail(job.id, operationId, error.publicCode, "客戶匯出失敗");
@@ -114,49 +135,88 @@ export class CustomerExportService {
     }
 
     try {
-      return await this.database.withTransaction(async (connection) => {
-        const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
-        const nowMs = this.time.nowMs();
-        const [updated] = await connection.execute(
-          `UPDATE customer_export_jobs SET result_sha256 = ?, result_storage_status = 'active',
-             status = 'completed', total_count = ?, expires_at = ?, updated_at = ?, completed_at = ?, version = version + 1
-           WHERE id = ? AND status = 'processing' AND result_storage_status = 'processing'`,
-          [staged.sha256, first.total, nowMs + RETENTION_MS, nowMs, nowMs, job.id]
-        );
-        const completed = await this.#get(connection, job.id);
-        if (updated.affectedRows === 1) {
-          await this.audit.record(connection, {
-            occurredAt: nowMs, actorUserId: actorId, actorUsername: actor.username, action: "export.create",
-            targetType: "export", targetId: Number(job.id), customerId: null, targetLabel: `export-${job.id}`,
-            detail: { after: { totalCount: first.total, filterSnapshot: filters } }, requestId, ip
-          });
-          await this.operations.succeed(connection, {
-            operationId, resourceType: "export", resourceId: Number(job.id), resultVersion: Number(completed.version), nowMs
-          });
-        }
-        return summary(completed);
-      });
+      return await this.#activate({ actorId, claimedRoles, claimedPermissions, id: job.id, metadata, requestId, ip });
     } catch (error) {
       if ([401, 403].includes(error?.statusCode)) await this.#fail(job.id, operationId, "AUTHORIZATION_REVOKED", "匯出完成前權限已被撤銷");
       throw error;
     }
   }
 
-  async *#csv({ first, filters, actorId, claimedRoles, claimedPermissions }) {
-    yield `${HEADER.join(",")}\r\n`;
-    const total = first.total;
-    let page = 1; let result = first; let emitted = 0;
-    while (true) {
-      for (const customer of result.items) {
-        if (emitted >= total) throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出期間客戶資料已變更，請重試");
-        yield `${HEADER.map((field) => csvCell(customer[field === "customerCode" ? "code" : field])).join(",")}\r\n`;
-        emitted += 1;
+  async #snapshot({ actorId, claimedRoles, claimedPermissions, filters }) {
+    return this.database.withTransaction(async (connection) => {
+      await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const rows = []; const ids = new Set(); let total = null; let page = 1;
+      while (true) {
+        const result = await this.customerService.list(
+          { actorId, claimedRoles, claimedPermissions, ...filters, page, pageSize: 100 }, connection
+        );
+        if (total === null) {
+          total = result.total;
+          if (total > this.maxRows) throw customerExportError(
+            "CUSTOMER_EXPORT_TOO_LARGE", 422, `匯出結果超過 ${this.maxRows} 筆上限`, { maxRows: this.maxRows }
+          );
+        }
+        if (result.total !== total || result.items.length === 0 && rows.length < total) {
+          throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出期間客戶資料已變更，請重試");
+        }
+        for (const customer of result.items) {
+          if (ids.has(customer.id) || rows.length >= total) {
+            throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出期間客戶資料已變更，請重試");
+          }
+          ids.add(customer.id); rows.push(customer);
+        }
+        if (rows.length === total) return rows;
+        page += 1;
       }
-      if (emitted >= total) return;
-      page += 1;
-      result = await this.customerService.list({ actorId, claimedRoles, claimedPermissions, ...filters, page, pageSize: 100 });
-      if (result.total !== total || result.items.length === 0) throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出期間客戶資料已變更，請重試");
+    }, { isolationLevel: "REPEATABLE READ" });
+  }
+
+  *#csv(rows) {
+    yield `${HEADER.join(",")}\r\n`;
+    for (const customer of rows) {
+      yield `${HEADER.map((field) => csvCell(customer[field === "customerCode" ? "code" : field])).join(",")}\r\n`;
     }
+  }
+
+  #resultMetadata(storedName, rows) {
+    const hash = createHash("sha256");
+    for (const chunk of this.#csv(rows)) hash.update(chunk);
+    return { storedName, sha256: hash.digest(), totalCount: rows.length };
+  }
+
+  async #register({ actorId, claimedRoles, claimedPermissions, id, metadata }) {
+    return this.database.withTransaction(async (connection) => {
+      await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const job = await this.#get(connection, id, { forUpdate: true });
+      if (job.status === "completed") return summary(job);
+      if (job.status !== "processing") throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出工作狀態不一致");
+      if (job.result_sha256) {
+        if (job.result_stored_name !== metadata.storedName || Number(job.total_count) !== metadata.totalCount || !Buffer.from(job.result_sha256).equals(metadata.sha256)) {
+          throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出資料快照已變更，請使用新的冪等鍵重試");
+        }
+        return null;
+      }
+      const [updated] = await connection.execute(
+        `UPDATE customer_export_jobs SET result_sha256 = ?, total_count = ?, updated_at = ?, version = version + 1
+          WHERE id = ? AND status = 'processing' AND result_storage_status = 'processing' AND result_sha256 IS NULL`,
+        [metadata.sha256, metadata.totalCount, this.time.nowMs(), id]
+      );
+      if (updated.affectedRows !== 1) throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出工作狀態不一致");
+      return null;
+    });
+  }
+
+  async #activate({ actorId, claimedRoles, claimedPermissions, id, metadata, requestId, ip }) {
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const job = await this.#get(connection, id, { forUpdate: true });
+      if (job.status === "completed") return summary(job);
+      if (job.status !== "processing" || job.result_storage_status !== "processing" || !job.result_sha256 ||
+          job.result_stored_name !== metadata.storedName || !Buffer.from(job.result_sha256).equals(metadata.sha256)) {
+        throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出工作狀態不一致");
+      }
+      return this.#complete(connection, job, actor, { requestId, ip, recovered: false });
+    });
   }
 
   async get({ actorId, claimedRoles, claimedPermissions, id }) {
@@ -191,6 +251,47 @@ export class CustomerExportService {
     return { buffer, fileName: `customers-export-${id}.csv` };
   }
 
+  async recoverFiles({ staleBefore, limit = 10 }) {
+    if (!Number.isSafeInteger(staleBefore) || staleBefore < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      throw new TypeError("Customer export recovery input is invalid");
+    }
+    const [jobs] = await this.database.query(
+      `SELECT ${SELECT} FROM customer_export_jobs
+        WHERE status = 'processing' AND result_storage_status = 'processing'
+          AND updated_at < ? ORDER BY updated_at ASC, id ASC LIMIT ?`,
+      [staleBefore, limit]
+    );
+    let recovered = 0; let failed = 0;
+    for (const item of jobs) {
+      if (!item.result_sha256) {
+        await this.#fail(item.id, item.operation_id, "CUSTOMER_EXPORT_INTERRUPTED", "客戶匯出在結果登記前中斷");
+        failed += 1;
+        continue;
+      }
+      const metadata = { storedName: item.result_stored_name, sha256: Buffer.from(item.result_sha256) };
+      try {
+        await this.storage.finalizeResult(metadata);
+      } catch {
+        await this.#fail(item.id, item.operation_id, "RESULT_STORAGE_ERROR", "客戶匯出檔案無法恢復", { storageError: true });
+        failed += 1;
+        continue;
+      }
+      const completed = await this.database.withTransaction(async (connection) => {
+        const job = await this.#get(connection, item.id, { forUpdate: true });
+        if (job.status === "completed") return true;
+        const actor = await this.#recoveryActor(connection, job.created_by);
+        if (!actor) {
+          await this.#failLocked(connection, job.id, job.operation_id, "AUTHORIZATION_REVOKED", "匯出完成前權限已被撤銷");
+          return false;
+        }
+        await this.#complete(connection, job, actor, { requestId: "", ip: "", recovered: true });
+        return true;
+      });
+      if (completed) recovered += 1; else failed += 1;
+    }
+    return { recovered, failed };
+  }
+
   #assertDownloadable(job) {
     if (job.status !== "completed" || job.result_storage_status !== "active" || !job.result_sha256) {
       throw customerExportError("CUSTOMER_EXPORT_NOT_READY", 409, "客戶匯出檔案尚未就緒");
@@ -204,8 +305,8 @@ export class CustomerExportService {
     return job;
   }
 
-  async #get(connection, id) {
-    const [[row]] = await connection.query(`SELECT ${SELECT} FROM customer_export_jobs WHERE id = ?`, [id]);
+  async #get(connection, id, { forUpdate = false } = {}) {
+    const [[row]] = await connection.query(`SELECT ${SELECT} FROM customer_export_jobs WHERE id = ?${forUpdate ? " FOR UPDATE" : ""}`, [id]);
     return row ?? null;
   }
 
@@ -214,16 +315,52 @@ export class CustomerExportService {
     return row ?? null;
   }
 
+  async #recoveryActor(connection, actorId) {
+    if (!Number.isSafeInteger(Number(actorId))) return null;
+    const [users] = await connection.query("SELECT username FROM users WHERE id = ? AND status = 'active'", [actorId]);
+    if (!users[0]) return null;
+    const permissions = await loadPermissionNamesForUser(connection, actorId);
+    return ["customer.view", "customer.mgmt"].every((permission) => permissions.includes(permission))
+      ? { id: Number(actorId), username: users[0].username }
+      : null;
+  }
+
+  async #complete(connection, job, actor, { requestId, ip, recovered }) {
+    const nowMs = this.time.nowMs();
+    const [updated] = await connection.execute(
+      `UPDATE customer_export_jobs SET result_storage_status = 'active', status = 'completed',
+         expires_at = ?, updated_at = ?, completed_at = ?, version = version + 1
+       WHERE id = ? AND status = 'processing' AND result_storage_status = 'processing' AND result_sha256 = ?`,
+      [nowMs + RETENTION_MS, nowMs, nowMs, job.id, job.result_sha256]
+    );
+    const completed = await this.#get(connection, job.id);
+    if (updated.affectedRows === 1) {
+      await this.audit.record(connection, {
+        occurredAt: nowMs, actorUserId: Number(job.created_by), actorUsername: actor.username, action: "export.create",
+        targetType: "export", targetId: Number(job.id), customerId: null, targetLabel: `export-${job.id}`,
+        detail: { after: { totalCount: Number(job.total_count), filterSnapshot: snapshot(job.filter_snapshot), recovered } }, requestId, ip
+      });
+      await this.operations.succeed(connection, {
+        operationId: job.operation_id, resourceType: "export", resourceId: Number(job.id), resultVersion: Number(completed.version), nowMs
+      });
+    }
+    return summary(completed);
+  }
+
   async #fail(id, operationId, code, message, { storageError = false } = {}) {
     await this.database.withTransaction(async (connection) => {
-      const nowMs = this.time.nowMs();
-      await connection.execute(
-        `UPDATE customer_export_jobs SET result_storage_status = ${storageError ? "'storage_error'" : "result_storage_status"}, status = 'failed',
-           last_error_code = ?, error_summary = ?, updated_at = ?, completed_at = ?, version = version + 1
-         WHERE id = ? AND status = 'processing'`,
-        [String(code).slice(0, 80), message, nowMs, nowMs, id]
-      );
-      await this.operations.fail(connection, { operationId, errorCode: code, nowMs });
+      await this.#failLocked(connection, id, operationId, code, message, { storageError });
     });
+  }
+
+  async #failLocked(connection, id, operationId, code, message, { storageError = false } = {}) {
+    const nowMs = this.time.nowMs();
+    const [updated] = await connection.execute(
+      `UPDATE customer_export_jobs SET result_storage_status = ${storageError ? "'storage_error'" : "result_storage_status"}, status = 'failed',
+         last_error_code = ?, error_summary = ?, updated_at = ?, completed_at = ?, version = version + 1
+       WHERE id = ? AND status = 'processing'`,
+      [String(code).slice(0, 80), message, nowMs, nowMs, id]
+    );
+    if (updated.affectedRows === 1) await this.operations.fail(connection, { operationId, errorCode: code, nowMs });
   }
 }

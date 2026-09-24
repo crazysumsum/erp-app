@@ -479,8 +479,8 @@ export class CustomerService {
     sortBy = "updatedAt", sortDirection, descending = true, status, currencyCode,
     paymentTermId, accountManagerUserId, categoryId, industryId, territoryId, creditStatus,
     missing, createdFrom, createdTo, updatedFrom, updatedTo, includeArchived = false
-  }) {
-    await this.actorVerifier(this.database, { actorId, claimedRoles, claimedPermissions });
+  }, reader = this.database) {
+    await this.actorVerifier(reader, { actorId, claimedRoles, claimedPermissions });
     const conditions = [];
     const params = [];
     const search = String(q).trim();
@@ -547,15 +547,15 @@ export class CustomerService {
     const sort = SORT_COLUMNS[sortBy] ?? SORT_COLUMNS.updatedAt;
     const direction = sortDirection ? (sortDirection === "asc" ? "ASC" : "DESC") : (descending ? "DESC" : "ASC");
     const ranking = exactOrder.length ? "CASE WHEN customer_code_key = ? THEN 0 WHEN legal_name_key = ? THEN 1 ELSE 2 END, " : "";
-    const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
-    const [idRows] = await this.database.query(
+    const [countRows] = await reader.query(`SELECT COUNT(*) AS total FROM customers ${where}`, params);
+    const [idRows] = await reader.query(
       `SELECT id FROM customers ${where}
        ORDER BY ${ranking}${sort} ${direction}, id DESC LIMIT ? OFFSET ?`,
       [...params, ...exactOrder, safePageSize, (safePage - 1) * safePageSize]
     );
     const ids = idRows.map((row) => Number(row.id));
     if (ids.length === 0) return { items: [], total: Number(countRows[0].total), page: safePage, pageSize: safePageSize };
-    const [rows] = await this.database.query(
+    const [rows] = await reader.query(
       `SELECT ${CUSTOMER_COLUMNS}, COALESCE((SELECT cp.credit_status FROM customer_credit_profiles cp WHERE cp.customer_id = customers.id), 'not_configured') AS credit_status
          FROM customers
         WHERE id IN (${ids.map(() => "?").join(",")})`,

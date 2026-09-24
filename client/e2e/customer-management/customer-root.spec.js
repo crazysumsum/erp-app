@@ -311,11 +311,13 @@ test("@technical TC-065 Customer import resumes through precheck, confirm and re
   await expect.poll(() => calls.some((call) => call.path === "/api/v1/customer-imports/upload")).toBe(true);
   await page.getByRole("button", { name: "工作 #12 的詳情" }).focus(); await page.keyboard.press("Enter");
   await expect(page.getByText("必須填寫法定名稱")).toBeVisible();
+  await expect(page.getByText("legalName · REQUIRED · 必須填寫法定名稱")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   await page.getByRole("button", { name: "確認匯入", exact: true }).click();
   await page.locator(".q-dialog input[type=password]").fill("browser-secret");
   await page.getByRole("button", { name: "確認匯入", exact: true }).last().click();
   await expect(page.getByText("已完成（有錯誤）")).toBeVisible();
+  await expect(page.getByText("略過 1")).toBeVisible();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "下載結果" }).click();
   await downloadPromise;

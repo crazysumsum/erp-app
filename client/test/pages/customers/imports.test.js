@@ -33,4 +33,24 @@ describe("customer import page", () => {
     expect(wrapper.text()).toContain("待確認（有錯誤）");
     expect(customerImportService.listJobs).toHaveBeenCalled();
   });
+
+  it("shows skipped results and structured row diagnostics", async () => {
+    useSessionStore().user = { id: 1, permissions: ["customer.view", "customer.mgmt"], roles: [] };
+    customerImportService.getJob.mockResolvedValue({
+      job: { id: 7, status: "completed_with_errors", totalCount: 2, validCount: 1, warningCount: 0, invalidCount: 1, successCount: 1, failedCount: 0, skippedCount: 1, resultStorageStatus: "active" },
+      rows: [{ rowNumber: 2, operation: "create", status: "invalid", errors: [{ field: "legalName", code: "REQUIRED", message: "必須填寫法定名稱" }], warnings: [] }],
+      total: 1
+    });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: CustomerImportsPage }] });
+    await router.push(page.path); await router.isReady();
+    const wrapper = mount(CustomerImportsPage, { attachTo: document.body, global: { plugins: [Quasar, router] } });
+    await flushPromises();
+    await wrapper.get('[aria-label="工作 #7 的詳情"]').trigger("click");
+    await flushPromises();
+    expect(document.body.textContent).toContain("略過 1");
+    expect(document.body.textContent).toContain("legalName");
+    expect(document.body.textContent).toContain("REQUIRED");
+    expect(document.body.textContent).toContain("必須填寫法定名稱");
+    wrapper.unmount();
+  });
 });
