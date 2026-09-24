@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 31,
+  "revision": 32,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-004",
   "baseline": {
     "design": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
     "plan": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
-    "code_commit": "22b5008cde2c5302bc7b33e02a9f6a7a01a20703",
+    "code_commit": "37594b843375297a9ac59dd5326ae0a6ec8d5db2",
     "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
     "worktree": "/private/tmp/erp-inventory-item-contract-baseline",
     "default_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
@@ -424,7 +424,74 @@
       "risk_approval_id": null
     }
   ],
-  "observations": [],
+  "observations": [
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "actor": "GitHub Actions CI",
+      "observed_at": "2026-09-24T09:21:19+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #141 isolated Item contract publication",
+      "code_commit": "37594b843375297a9ac59dd5326ae0a6ec8d5db2",
+      "spec_baseline": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
+      "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/141",
+      "actor": "GitHub",
+      "observed_at": "2026-09-24T09:21:49+08:00"
+    }
+  ],
   "pending_decisions": [
     {
       "id": "HD-001",
@@ -883,9 +950,41 @@
       "idempotency_key": "mode-change-26",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task user confirmation on 2026-09-24 authorizing isolated Item contract publication under IMPLEMENT"
+    },
+    {
+      "id": "EXT-020",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-item-contract-baseline at 9e698cd271170db18a4d255cdea4d0a561a2a235",
+      "idempotency_key": "inventory-item-contract-push-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/tree/codex/inventory-item-contract-baseline"
+    },
+    {
+      "id": "EXT-021",
+      "kind": "PR_CREATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/141 (main<-codex/inventory-item-contract-baseline)",
+      "idempotency_key": "inventory-item-contract-pr-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/141"
+    },
+    {
+      "id": "EXT-022",
+      "kind": "CI_RUN",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678",
+      "idempotency_key": "inventory-item-contract-ci-35942297678",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/35942297678"
+    },
+    {
+      "id": "EXT-023",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/141 -> main at 37594b843375297a9ac59dd5326ae0a6ec8d5db2",
+      "idempotency_key": "inventory-item-contract-merge-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/141"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Complete isolated TASK-004 publication validation, refresh main, commit, push, open the PR, require CI/review, and merge if green. Do not resume TASK-005 or execute migrations."
+  "next_safe_action": "Keep TASK-005 and migration execution paused. Before resuming the broader P0 branch, obtain explicit authorization and reconcile it with merged Item contract commit 37594b843375297a9ac59dd5326ae0a6ec8d5db2."
 }
