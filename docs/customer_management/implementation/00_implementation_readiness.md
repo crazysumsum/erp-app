@@ -499,3 +499,32 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   lock ordering. Exact candidate `08a1afaf5461371a65161ad1566498fa83f2eef3`
   was independently approved with no remaining Required finding. CI was not run
   under the Product Owner's explicit standing exception.
+
+## TASK-028 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added the reproducible, opt-in TC-064 real-MySQL fixture and proved 10,000-row
+  precheck plus execution in 51.09 seconds, with 198.78 rows/s execution throughput,
+  5.08/7.39 ms row p50/p95, 0.31/0.57 ms concurrent core-query p50/p95 and 35.06 MB
+  measured heap growth against a 256 MiB ceiling. All rows succeeded and cleanup
+  removed the synthetic Customers, job/audit rows and private files.
+- Customer real-MySQL integration passed 16/16; the exact Customer suite including
+  TC-064 passed 255/255; the focused sensitive/recovery suite passed 105/105; client
+  coverage passed 665/665; repository ESLint, production build, no-secret scan and
+  `git diff --check` passed. Customer Playwright passed 16/16 with console/network
+  monitoring.
+- Customer Bank rotate and reindex CLIs both reported `processed=0, remaining=0`.
+  Attachment/import/export fault-injection and recovery paths passed, and disabled
+  config/current-permission paths remained fail-closed without deleting ciphertext
+  or recoverable metadata.
+- The repository-wide coverage command retains only out-of-scope current-main debt:
+  global coverage is 83.66/81.28/81.94, the existing User/Auth refresh handler is
+  below its branch floor, and two global configuration assertions are mutually
+  incompatible with the shared temporary Bank key rings required for application
+  discovery. Under the Product Owner's standing Customer-only scope instruction,
+  no other module was modified and no assertion or threshold was weakened. Full
+  detail is in `phase-PHASE-003-report.md`.
+- CI is intentionally not run under the Product Owner's explicit standing
+  publication direction and accepted risk. Independent exact-candidate review and
+  Phase PR publication remain before TASK-028 closure.
