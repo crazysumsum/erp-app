@@ -126,7 +126,8 @@ test("Customer export recovery converges staged, finalized and missing registere
         row.result_storage_status = "active"; row.status = "completed"; row.version += 1; return [{ affectedRows: 1 }];
       }
       if (text.includes("status = 'failed'")) {
-        const row = rows.find((item) => item.id === Number(params.at(-1)));
+        const id = text.includes("result_sha256 IS NULL") ? params[2] : params.at(-1);
+        const row = rows.find((item) => item.id === Number(id));
         row.result_storage_status = "storage_error"; row.status = "failed"; row.version += 1; return [{ affectedRows: 1 }];
       }
       return [{ affectedRows: 1 }];
@@ -147,6 +148,27 @@ test("Customer export recovery converges staged, finalized and missing registere
   assert.equal(events.filter((value) => value === "export.create:true").length, 2);
   assert.ok(events.includes("failed:RESULT_STORAGE_ERROR"));
   assert.ok(events.includes("failed:CUSTOMER_EXPORT_INTERRUPTED"));
+});
+
+test("Customer export recovery ignores a stale scan after an idempotent retry registers the result", async () => {
+  const scanned = job({ id: 7, result_sha256: null, updated_at: 1, version: 1 });
+  const scannedTerminal = job({ id: 8, result_sha256: Buffer.alloc(32, 8), updated_at: 2, version: 1 });
+  const current = { ...scanned, result_sha256: Buffer.alloc(32, 7), total_count: 1, updated_at: 1000, version: 2 };
+  const terminal = { ...scannedTerminal, status: "failed", result_storage_status: "storage_error", version: 2 };
+  let failed = 0;
+  const connection = {
+    async query(sql, params) { return String(sql).includes("FROM customer_export_jobs WHERE id") ? [[Number(params[0]) === 7 ? current : terminal]] : [[]]; },
+    async execute() { throw new Error("changed jobs must not be failed"); }
+  };
+  const service = new CustomerExportService({
+    database: { async query() { return [[scanned, scannedTerminal]]; }, async withTransaction(work) { return work(connection); } },
+    time: { nowMs: () => 2000 }, maxRows: 10, storage: { async finalizeResult() {} },
+    operations: { async fail() { failed += 1; } }
+  });
+  assert.deepEqual(await service.recoverFiles({ staleBefore: 500, limit: 10 }), { recovered: 0, failed: 0 });
+  assert.equal(current.status, "processing");
+  assert.equal(terminal.status, "failed");
+  assert.equal(failed, 0);
 });
 
 test("Customer export detail is owner scoped without revealing another actor's job", async () => {

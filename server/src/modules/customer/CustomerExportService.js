@@ -77,6 +77,11 @@ export class CustomerExportService {
         if (!job) throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出工作狀態不一致");
         if (job.status === "completed") return;
         if (job.status !== "processing") throw customerExportError("CUSTOMER_EXPORT_STATE_CONFLICT", 409, "匯出工作已失敗，請使用新的冪等鍵重試");
+        await connection.execute(
+          "UPDATE customer_export_jobs SET updated_at = ?, version = version + 1 WHERE id = ? AND status = 'processing'",
+          [nowMs, job.id]
+        );
+        job = await this.#get(connection, job.id);
         return;
       }
       const storedName = customerImportStoredName(operationId, "result");
@@ -264,8 +269,7 @@ export class CustomerExportService {
     let recovered = 0; let failed = 0;
     for (const item of jobs) {
       if (!item.result_sha256) {
-        await this.#fail(item.id, item.operation_id, "CUSTOMER_EXPORT_INTERRUPTED", "客戶匯出在結果登記前中斷");
-        failed += 1;
+        if (await this.#failUnregistered(item, staleBefore)) failed += 1;
         continue;
       }
       const metadata = { storedName: item.result_stored_name, sha256: Buffer.from(item.result_sha256) };
@@ -276,18 +280,20 @@ export class CustomerExportService {
         failed += 1;
         continue;
       }
-      const completed = await this.database.withTransaction(async (connection) => {
+      const disposition = await this.database.withTransaction(async (connection) => {
         const job = await this.#get(connection, item.id, { forUpdate: true });
-        if (job.status === "completed") return true;
+        if (!job || job.status !== "processing" || job.result_storage_status !== "processing" || !job.result_sha256 ||
+            !Buffer.from(job.result_sha256).equals(metadata.sha256)) return "ignored";
         const actor = await this.#recoveryActor(connection, job.created_by);
         if (!actor) {
           await this.#failLocked(connection, job.id, job.operation_id, "AUTHORIZATION_REVOKED", "匯出完成前權限已被撤銷");
-          return false;
+          return "failed";
         }
         await this.#complete(connection, job, actor, { requestId: "", ip: "", recovered: true });
-        return true;
+        return "recovered";
       });
-      if (completed) recovered += 1; else failed += 1;
+      if (disposition === "recovered") recovered += 1;
+      if (disposition === "failed") failed += 1;
     }
     return { recovered, failed };
   }
@@ -350,6 +356,24 @@ export class CustomerExportService {
   async #fail(id, operationId, code, message, { storageError = false } = {}) {
     await this.database.withTransaction(async (connection) => {
       await this.#failLocked(connection, id, operationId, code, message, { storageError });
+    });
+  }
+
+  async #failUnregistered(scanned, staleBefore) {
+    return this.database.withTransaction(async (connection) => {
+      const job = await this.#get(connection, scanned.id, { forUpdate: true });
+      if (!job || job.status !== "processing" || job.result_sha256 || Number(job.updated_at) >= staleBefore ||
+          Number(job.version) !== Number(scanned.version)) return false;
+      const nowMs = this.time.nowMs();
+      const [updated] = await connection.execute(
+        `UPDATE customer_export_jobs SET status = 'failed', last_error_code = 'CUSTOMER_EXPORT_INTERRUPTED',
+           error_summary = '客戶匯出在結果登記前中斷', updated_at = ?, completed_at = ?, version = version + 1
+         WHERE id = ? AND status = 'processing' AND result_sha256 IS NULL AND updated_at = ? AND version = ?`,
+        [nowMs, nowMs, job.id, job.updated_at, job.version]
+      );
+      if (updated.affectedRows !== 1) return false;
+      await this.operations.fail(connection, { operationId: job.operation_id, errorCode: "CUSTOMER_EXPORT_INTERRUPTED", nowMs });
+      return true;
     });
   }
 
