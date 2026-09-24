@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 24,
+  "revision": 26,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef",
     "plan": "43b3bd4fc285d531f19bd2e3f8d7f22cb44a1ef2091d1d524e3007f45d28b2f8",
-    "code_commit": "5ac7d081165aa782c0352c63c2a7dc8039134dca",
+    "code_commit": "7715ee6cb06dc8524b1c6bf3f509765593f266f2",
     "source_fingerprint": "25441b2ee28088147a47d43160b9c6c96a05353487566a22e68a7b17702f2412",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
@@ -569,8 +569,8 @@
         "TC-003",
         "TC-010"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-23 adopting TASK-004's transaction-aware ItemLookupService contract"
     }
   ],
   "external_actions": [
@@ -733,9 +733,17 @@
       "idempotency_key": "inventory-migration-plan-correction-local-cleanup-20260923",
       "status": "CONFIRMED",
       "source_ref": "Observed clean worktree removal and non-force local branch deletion after PR #139 merge"
+    },
+    {
+      "id": "EXT-018",
+      "kind": "BASELINE_RECONCILIATION",
+      "target": "origin/main b142bfd9f78ec46a1c36d75b78f0e885c9357ed9 -> codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-p0-main-reconciliation-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Local merge commit 7715ee6cb06dc8524b1c6bf3f509765593f266f2; conflicts limited to Inventory harness state and readiness and were reconciled without migration execution"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Resolve HD-008: the manifest pins the pre-TASK-004 ItemLookupService hash 6aff6504..., while the implemented transaction-aware contract is ca31b00f.... Keep TASK-005 and all migration execution blocked until Sam chooses contract adoption with fresh DESIGN/PLAN approval or TASK-004 reversion."
+  "next_safe_action": "Publish TASK-004's transaction-aware ItemLookupService contract from an isolated latest-main branch, update the Inventory contract binding, and obtain fresh DESIGN then PLAN hash approvals. Keep TASK-005 and migration execution blocked."
 }
