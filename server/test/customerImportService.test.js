@@ -16,6 +16,68 @@ function job(overrides = {}) {
   };
 }
 
+test("Customer import rejects invalid public-operation boundaries before I/O", async () => {
+  assert.throws(() => new CustomerImportService(), /requires database, time and storage/u);
+  assert.throws(() => new CustomerImportService({ database: {} }), /requires database, time and storage/u);
+  assert.throws(() => new CustomerImportService({ database: {}, time: {} }), /requires database, time and storage/u);
+
+  const service = new CustomerImportService({
+    database: {
+      async withTransaction() { throw new Error("database must not run"); },
+      async query() { throw new Error("database must not run"); }
+    },
+    time: { nowMs: () => 1 }, storage: {}, authorize: async () => ({ username: "sam" })
+  });
+  const upload = { actorId: 1, templateVersion: "v1", mode: "upsert", fileSha256: "a".repeat(64) };
+  const invalid = (error) => error.publicCode === "CUSTOMER_IMPORT_INVALID";
+
+  await assert.rejects(() => service.createFromUpload({ ...upload, mode: "replace" }), invalid);
+  await assert.rejects(() => service.createFromUpload({ ...upload, templateVersion: "v2" }), invalid);
+  await assert.rejects(() => service.createFromUpload({ ...upload, fileSha256: "bad" }), invalid);
+  for (const input of [
+    { leaseOwner: "", leaseDurationMs: 1 },
+    { leaseOwner: "worker", leaseDurationMs: 1.5 },
+    { leaseOwner: "worker", leaseDurationMs: 0 }
+  ]) await assert.rejects(() => service.claimForPrecheck(input), /lease is invalid/u);
+  for (const input of [
+    { rows: null, leaseDurationMs: 1 },
+    { rows: [], leaseDurationMs: 1 },
+    { rows: Array(1001), leaseDurationMs: 1 },
+    { rows: [{}], leaseDurationMs: 1.5 },
+    { rows: [{}], leaseDurationMs: 0 }
+  ]) await assert.rejects(() => service.appendPrecheckRows({ jobId: 1, leaseOwner: "worker", ...input }), /batch is invalid/u);
+  await assert.rejects(() => service.confirm({ activationMode: "invalid", version: 1 }), invalid);
+  await assert.rejects(() => service.confirm({ activationMode: "draft", version: 1.5 }), invalid);
+  await assert.rejects(() => service.confirm({ activationMode: "draft", version: 0 }), invalid);
+  await assert.rejects(() => service.cancel({ version: 1.5 }), invalid);
+  await assert.rejects(() => service.cancel({ version: 0 }), invalid);
+  for (const input of [
+    { leaseOwner: "", leaseDurationMs: 1 },
+    { leaseOwner: "worker", leaseDurationMs: 1.5 },
+    { leaseOwner: "worker", leaseDurationMs: 0 }
+  ]) await assert.rejects(() => service.claimForExecution(input), /lease is invalid/u);
+  for (const input of [
+    { jobId: 1.5, leaseOwner: "worker", leaseDurationMs: 1, applyRow() {} },
+    { jobId: 0, leaseOwner: "worker", leaseDurationMs: 1, applyRow() {} },
+    { jobId: 1, leaseOwner: "", leaseDurationMs: 1, applyRow() {} },
+    { jobId: 1, leaseOwner: "worker", leaseDurationMs: 1.5, applyRow() {} },
+    { jobId: 1, leaseOwner: "worker", leaseDurationMs: 0, applyRow() {} },
+    { jobId: 1, leaseOwner: "worker", leaseDurationMs: 1 }
+  ]) await assert.rejects(() => service.processNextRow(input), /execution input is invalid/u);
+  await assert.rejects(() => service.finalizeExecution({ jobId: 1.5, leaseOwner: "worker" }), /finalization input is invalid/u);
+  await assert.rejects(() => service.finalizeExecution({ jobId: 0, leaseOwner: "worker" }), /finalization input is invalid/u);
+  await assert.rejects(() => service.finalizeExecution({ jobId: 1, leaseOwner: "" }), /finalization input is invalid/u);
+  await assert.rejects(() => service.downloadResult({ id: 0 }), /id is invalid/u);
+  for (const input of [
+    { staleBefore: 1.5 }, { staleBefore: -1 }, { staleBefore: 1, limit: 1.5 },
+    { staleBefore: 1, limit: 0 }, { staleBefore: 1, limit: 101 }
+  ]) await assert.rejects(() => service.recoverFiles(input), /recovery input is invalid/u);
+  await assert.rejects(() => service.list({ status: "unknown" }), /status is invalid/u);
+  await assert.rejects(() => service.list({ page: 0 }), /page is invalid/u);
+  await assert.rejects(() => service.list({ pageSize: 101 }), /pageSize is invalid/u);
+  await assert.rejects(() => service.get({ id: 0 }), /id is invalid/u);
+});
+
 test("Customer import upload commits recoverable metadata before private storage and activates it after finalize", async () => {
   const events = []; const operationId = randomUUID(); const content = Buffer.from("csv");
   const sha256 = createHash("sha256").update(content).digest(); const row = job({ operation_id: operationId, source_sha256: sha256 });
@@ -100,6 +162,35 @@ test("Customer import validation claim includes expired leases but only active s
   assert.equal(claimed.sourceStoredName, row.source_stored_name);
 });
 
+test("Customer import validation claims and precheck leases fail closed at every stale boundary", async () => {
+  const service = (connection) => new CustomerImportService({
+    database: { async withTransaction(work) { return work(connection); } },
+    time: { nowMs: () => 100 }, storage: {}
+  });
+  const noJob = { async query() { return [[]]; } };
+  assert.equal(await service(noJob).claimForPrecheck({ leaseOwner: "worker", leaseDurationMs: 10 }), null);
+
+  const staleClaim = {
+    async query() { return [[job({ source_storage_status: "active" })]]; },
+    async execute() { return [{ affectedRows: 0 }]; }
+  };
+  assert.equal(await service(staleClaim).claimForPrecheck({ leaseOwner: "worker", leaseDurationMs: 10 }), null);
+
+  const nullableCreator = job({ source_storage_status: "active", created_by: null });
+  const claimed = await service({
+    async query() { return [[nullableCreator]]; },
+    async execute() { return [{ affectedRows: 1 }]; }
+  }).claimForPrecheck({ leaseOwner: "worker", leaseDurationMs: 10 });
+  assert.equal(claimed.createdBy, null);
+
+  for (const stale of [null, job({ status: "uploaded", lease_owner: "worker" }), job({ status: "validating", lease_owner: "other" })]) {
+    await assert.rejects(
+      () => service({ async query() { return [[stale]]; } }).preparePrecheck({ jobId: 11, leaseOwner: "worker" }),
+      (error) => error.publicCode === "CUSTOMER_IMPORT_LEASE_LOST"
+    );
+  }
+});
+
 test("Customer import upload marks durable storage failure and operation failure", async () => {
   const operationId = randomUUID(); const content = Buffer.from("csv");
   const sha256 = createHash("sha256").update(content).digest(); const row = job({ operation_id: operationId, source_sha256: sha256 });
@@ -178,6 +269,45 @@ test("Customer import list and detail expose paged safe projections", async () =
   const detail = await service.get({ actorId: 3, id: 11, page: 1, pageSize: 20, rowStatus: "valid" });
   assert.equal(detail.rows[0].normalizedPayload.root.customerCode, "C-1");
   assert.equal(detail.total, 1);
+  assert.equal((await service.list({ actorId: 3 })).total, 1);
+  assert.equal((await service.get({ actorId: 3, id: 11 })).rows.length, 1);
+});
+
+test("Customer import detail and result download distinguish missing, invalid and not-ready state", async () => {
+  let current = null;
+  const database = {
+    async withTransaction(work) { return work(this); },
+    async query(sql) {
+      if (String(sql).includes("COUNT(*)")) return [[{ total: 0 }]];
+      return current ? [[current]] : [[]];
+    }
+  };
+  const service = new CustomerImportService({
+    database, time: { nowMs: () => 100 }, storage: {}, authorize: async () => ({ username: "sam" })
+  });
+  await assert.rejects(() => service.get({ actorId: 3, id: 11 }), (error) => error.publicCode === "CUSTOMER_IMPORT_NOT_FOUND");
+  current = job({ result_storage_status: null });
+  await assert.rejects(() => service.get({ actorId: 3, id: 11, rowStatus: "unknown" }), /row status is invalid/u);
+  await assert.rejects(() => service.downloadResult({ actorId: 3, id: 11 }), (error) => error.publicCode === "CUSTOMER_IMPORT_RESULT_NOT_READY");
+  current = null;
+  await assert.rejects(() => service.downloadResult({ actorId: 3, id: 11 }), (error) => error.publicCode === "CUSTOMER_IMPORT_NOT_FOUND");
+});
+
+test("Customer import upload replay returns only an active durable job", async () => {
+  let current = job({ source_storage_status: "active" });
+  const operationId = current.operation_id;
+  const connection = { async query() { return current ? [[current]] : [[]]; } };
+  const service = new CustomerImportService({
+    database: { async withTransaction(work) { return work(connection); } },
+    time: { nowMs: () => 100 }, storage: {}, authorize: async () => ({ username: "sam" }),
+    operations: { async begin() { return { operationId, replay: { status: "succeeded" } }; } }
+  });
+  const input = { actorId: 3, templateVersion: "v1", mode: "upsert", fileSha256: "a".repeat(64), content: Buffer.alloc(0) };
+  assert.equal((await service.createFromUpload(input)).sourceStorageStatus, "active");
+  current = job({ operation_id: operationId, source_storage_status: "storage_error" });
+  await assert.rejects(() => service.createFromUpload(input), (error) => error.publicCode === "CUSTOMER_IMPORT_STORAGE_ERROR");
+  current = null;
+  await assert.rejects(() => service.createFromUpload(input), (error) => error.publicCode === "CUSTOMER_IMPORT_STATE_CONFLICT");
 });
 
 test("Customer import confirm snapshots approval policy and queues once", async () => {
@@ -223,6 +353,45 @@ test("Customer import confirm snapshots approval policy and queues once", async 
   assert.equal(replay.status, "queued");
   assert.equal(audits.length, 1);
   assert.equal(operationSuccesses, 1);
+});
+
+test("Customer import confirm rejects stale replay, policy and approver state", async () => {
+  const input = { actorId: 3, id: 11, version: 4, activationMode: "activate", idempotencyKey: "confirm-edge" };
+  const attempt = async ({
+    replay = null, jobRow = job({ status: "ready", source_storage_status: "active", version: 4 }),
+    setting = { require_activation_approval: 1, version: 1 }, approver = { id: 9 }, permissions = ["customer.approval"],
+    affectedRows = 1, approverUserId, activationMode = "activate"
+  } = {}) => {
+    const connection = {
+      async query(sql) {
+        const text = String(sql);
+        if (text.includes("customer_settings")) return [[setting]];
+        if (text.includes("FROM users")) return [[approver]];
+        return [[jobRow]];
+      },
+      async execute() { return [{ affectedRows }]; }
+    };
+    const service = new CustomerImportService({
+      database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 300 }, storage: {},
+      authorize: async () => ({ username: "sam" }), loadPermissions: async () => permissions,
+      operations: { async begin() { return { operationId: randomUUID(), replay }; }, async succeed() {} },
+      audit: { async record() {} }
+    });
+    return service.confirm({ ...input, activationMode, approverUserId });
+  };
+  const code = (expected) => (error) => error.publicCode === expected;
+  await assert.rejects(() => attempt({ replay: { status: "pending", resourceType: "import", resourceId: 11 } }), code("CUSTOMER_IMPORT_OPERATION_CONFLICT"));
+  await assert.rejects(() => attempt({ replay: { status: "succeeded", resourceType: "import", resourceId: 11 }, jobRow: null }), code("CUSTOMER_IMPORT_STATE_CONFLICT"));
+  await assert.rejects(() => attempt({ jobRow: null }), code("CUSTOMER_IMPORT_NOT_FOUND"));
+  await assert.rejects(() => attempt({ jobRow: job({ status: "queued", version: 4 }) }), code("CUSTOMER_IMPORT_STATE_CONFLICT"));
+  await assert.rejects(() => attempt({ setting: null }), code("CUSTOMER_IMPORT_STATE_CONFLICT"));
+  await assert.rejects(() => attempt(), code("CUSTOMER_IMPORT_APPROVER_INVALID"));
+  await assert.rejects(() => attempt({ approverUserId: 0 }), code("CUSTOMER_IMPORT_APPROVER_INVALID"));
+  await assert.rejects(() => attempt({ approverUserId: 3 }), code("CUSTOMER_IMPORT_APPROVER_INVALID"));
+  await assert.rejects(() => attempt({ approverUserId: 9, approver: null }), code("CUSTOMER_IMPORT_APPROVER_INVALID"));
+  await assert.rejects(() => attempt({ approverUserId: 9, permissions: [] }), code("CUSTOMER_IMPORT_APPROVER_INVALID"));
+  await assert.rejects(() => attempt({ approverUserId: 9, activationMode: "draft" }), code("CUSTOMER_IMPORT_APPROVER_INVALID"));
+  await assert.rejects(() => attempt({ approverUserId: 9, affectedRows: 0 }), code("CUSTOMER_IMPORT_STATE_CONFLICT"));
 });
 
 test("Customer import cancel rejects running work and closes queued work", async () => {
@@ -421,6 +590,48 @@ test("Customer import execution claim skips invalid rows and fails closed after 
   });
   assert.equal(await revoked.claimForExecution({ leaseOwner: "worker-2", leaseDurationMs: 1000 }), null);
   assert.ok(statements.some((sql) => sql.includes("AUTHORIZATION_REVOKED")));
+});
+
+test("Customer import execution workers reject stale claims before applying a row", async () => {
+  const claim = async ({ jobRow, actor = { id: 3, username: "sam" }, permissions = ["customer.view", "customer.mgmt"], affectedRows = 1 }) => {
+    const connection = {
+      async query(sql) { return String(sql).includes("FROM users") ? [[actor]] : [[jobRow]]; },
+      async execute(sql) { return [{ affectedRows: String(sql).includes("SET status = 'running'") ? affectedRows : 1 }]; }
+    };
+    return new CustomerImportService({
+      database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 100 }, storage: {},
+      loadPermissions: async () => permissions
+    }).claimForExecution({ leaseOwner: "worker", leaseDurationMs: 10 });
+  };
+  assert.equal(await claim({ jobRow: null }), null);
+  assert.equal(await claim({ jobRow: job({ status: "queued", confirmed_by: 3 }), actor: null }), null);
+  assert.equal(await claim({ jobRow: job({ status: "queued", confirmed_by: 3 }), permissions: ["customer.mgmt"] }), null);
+  assert.equal(await claim({ jobRow: job({ status: "queued", confirmed_by: 3 }), permissions: ["customer.view"] }), null);
+  assert.equal(await claim({ jobRow: job({ status: "queued", confirmed_by: 3 }), affectedRows: 0 }), null);
+
+  const process = async (jobRow, { actor = { id: 3, username: "sam" }, permissions = ["customer.view", "customer.mgmt"] } = {}) => {
+    const connection = {
+      async query(sql) {
+        const text = String(sql);
+        if (text.includes("FROM users")) return [[actor]];
+        if (text.includes("FROM customer_import_rows")) return [[]];
+        return [[jobRow]];
+      }
+    };
+    const service = new CustomerImportService({
+      database: { async withTransaction(work) { return work(connection); } }, time: { nowMs: () => 100 }, storage: {},
+      loadPermissions: async () => permissions
+    });
+    return service.processNextRow({ jobId: 11, leaseOwner: "worker", leaseDurationMs: 10, async applyRow() { throw new Error("must not run"); } });
+  };
+  for (const stale of [null, job({ status: "queued", lease_owner: "worker", lease_until: 200 }), job({ status: "running", lease_owner: "other", lease_until: 200 }), job({ status: "running", lease_owner: "worker", lease_until: 99 })]) {
+    await assert.rejects(() => process(stale), (error) => error.publicCode === "CUSTOMER_IMPORT_LEASE_LOST");
+  }
+  await assert.rejects(
+    () => process(job({ status: "running", lease_owner: "worker", lease_until: 200, confirmed_by: 3 }), { actor: null }),
+    (error) => error.publicCode === "CUSTOMER_IMPORT_AUTHORIZATION_REVOKED"
+  );
+  assert.equal(await process(job({ status: "running", lease_owner: "worker", lease_until: 200, confirmed_by: 3 })), null);
 });
 
 test("Customer import row failure rolls back the aggregate then records a safe terminal error", async () => {
