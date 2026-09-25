@@ -11,14 +11,25 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { parseArguments, USAGE } from "../scripts/supplierBankRotationCli.js";
+import { ROTATION_KINDS } from "../src/modules/supplier/bankKeyRotation.js";
+import { main, parseArguments, progressReporter, USAGE } from "../scripts/supplierBankRotationCli.js";
 
 const REQUIRED = ["--from=e1", "--to=e2"];
 
-test("the two key ids are required", () => {
+test("the two key ids are required, and an empty one is a different complaint", () => {
   assert.throws(() => parseArguments([]), /both --from and --to are required/u);
   assert.throws(() => parseArguments(["--from=e1"]), /both --from and --to are required/u);
   assert.throws(() => parseArguments(["--to=e2"]), /both --from and --to are required/u);
+  // `--from=` 係寫咗但空咗，唔係冇寫 —— 報「required」等於話 operator 冇打過佢。
+  assert.throws(() => parseArguments(["--from=", "--to=e2"]), /--from needs a key id/u);
+  assert.throws(() => parseArguments(["--from=e1", "--to="]), /--to needs a key id/u);
+});
+
+// REV-054 L-3：隔籬 `rotateCustomerBankEncryption.js` 兩頭都封，呢個之前淨係封低。
+test("--batch-size is bounded at both ends", () => {
+  assert.equal(parseArguments([...REQUIRED, "--batch-size=1000"]).batchSize, 1000);
+  assert.throws(() => parseArguments([...REQUIRED, "--batch-size=1001"]), /must not exceed 1000/u);
+  assert.match(USAGE, /--batch-size.*1 to 1000/u, "and the usage says so");
 });
 
 test("defaults leave batch size and limit to the module", () => {
@@ -78,4 +89,53 @@ test("--help short-circuits, and the usage names every flag the parser accepts",
   for (const flag of ["--from", "--to", "--batch-size", "--limit", "--transition-started", "--json", "--help"]) {
     assert.ok(USAGE.includes(flag), `${flag} must appear in the usage text`);
   }
+});
+
+/**
+ * REV-054 M-3。`main` 之前**成個 repo 冇一個測試 import 過佢**。REV-053 M-4 嗰句
+ * 點名咗四個冇人睇嘅面 —— 旗解析、exit code 合約、進度列印、pool 接線 —— 而
+ * remediation 只係測咗第一個。REV-054 把 REV-053 喺 `main` 入面嗰個修正
+ * （`attempted % 100`）原封不動 revert 返，25 條測試全綠。
+ *
+ * 呢兩條唔掂資料庫：兩條路都喺開 pool 之前就返。
+ */
+test("main returns the exit code its own contract promises, without a stack trace", async () => {
+  const stderr = [];
+  const originalError = process.stderr.write.bind(process.stderr);
+  const originalOut = process.stdout.write.bind(process.stdout);
+  const stdout = [];
+  process.stderr.write = (chunk) => { stderr.push(String(chunk)); return true; };
+  process.stdout.write = (chunk) => { stdout.push(String(chunk)); return true; };
+  try {
+    assert.equal(await main(ROTATION_KINDS.ENCRYPTION, ["--from=e1", "--to=e2", "--oops=super-secret"]), 2,
+      "a bad flag is exit 2, not 1 — 1 means the rotation ran and rows failed");
+    assert.equal(await main(ROTATION_KINDS.ENCRYPTION, ["--help"]), 0);
+  } finally {
+    process.stderr.write = originalError;
+    process.stdout.write = originalOut;
+  }
+  const complaint = stderr.join("");
+  assert.match(complaint, /unknown argument --oops/u);
+  assert.ok(!complaint.includes("super-secret"), "the value must not reach stderr or the shell history");
+  assert.ok(!/\n\s+at /u.test(complaint), `an operator typo must not print a stack trace:\n${complaint}`);
+  assert.match(complaint, /Usage:/u, "and it must say how to type it correctly");
+  assert.match(stdout.join(""), /Usage:/u, "--help prints the usage on stdout");
+});
+
+// REV-054 M-3：`processed` 喺啲行一路失敗嗰陣唔郁，而 `0 % 100 === 0` —— 用佢做
+// gate 就係一行資料一行 stdout，偏偏就係 operator 最需要睇住個輪替嗰陣。
+test("the progress reporter counts attempts, not successes", () => {
+  const lines = [];
+  const report = progressReporter({ write: (line) => lines.push(line) });
+
+  for (let attempted = 1; attempted <= 250; attempted += 1) {
+    report({ processed: 0, attempted, lastId: attempted });   // 每一行都失敗
+  }
+
+  assert.deepEqual(lines, [
+    "attempted=100 processed=0 lastId=100\n",
+    "attempted=200 processed=0 lastId=200\n"
+  ], "a table where every row fails must not print one line per row");
+  assert.deepEqual(progressReporter({ json: true, write: () => assert.fail("--json must print nothing") })
+    .call(null, { processed: 0, attempted: 100, lastId: 1 }), undefined);
 });

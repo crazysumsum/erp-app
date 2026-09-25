@@ -14,12 +14,14 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
+const MAX_BATCH_SIZE = 1000;
+
 export const USAGE = [
   "Usage: --from=<keyId> --to=<activeKeyId> [options]",
   "",
   "  --from=<keyId>              the key id to rotate away from; must be in the ring",
   "  --to=<keyId>                the key id to rotate to; must be the active one",
-  "  --batch-size=<n>            rows per SELECT (default 200); at least 1",
+  `  --batch-size=<n>            rows per SELECT (default 200); 1 to ${MAX_BATCH_SIZE}`,
   "  --limit=<n>                 stop after n rows attempted; at least 1.",
   "                              Omit it to rotate everything — 0 is not a dry run.",
   "  --transition-started=<iso>  when the two-key transition began (age warning)",
@@ -64,7 +66,12 @@ export function parseArguments(argv) {
     // 走入 stderr 同 shell history。（L-8）
     } else throw new Error(`unknown argument --${flag}`);
   }
-  if (!options.from || !options.to) throw new Error("both --from and --to are required");
+  for (const [name, value] of [["--from", options.from], ["--to", options.to]]) {
+    // 空值同冇寫係兩件唔同嘅錯。`--from=` 之前報「both --from and --to are
+    // required」，而 operator 明明寫咗 —— 佢見到嘅係一句唔啱嘅投訴。（REV-054 L-4）
+    if (value === undefined) throw new Error("both --from and --to are required");
+    if (value === "") throw new Error(`${name} needs a key id`);
+  }
   for (const [name, value] of [["--batch-size", options.batchSize], ["--limit", options.limit]]) {
     if (value !== undefined && (!Number.isInteger(value) || value < 1)) {
       throw new Error(name === "--limit"
@@ -72,10 +79,36 @@ export function parseArguments(argv) {
         : "--batch-size must be a positive integer");
     }
   }
+  // 上限跟隔籬 `rotateCustomerBankEncryption.js` —— 佢兩頭都封。一個 `--batch-size`
+  // 一百萬嘅 SELECT 會把成張表拉入記憶體，而分批嘅原意正正係唔好咁。（REV-054 L-3）
+  if (options.batchSize !== undefined && options.batchSize > MAX_BATCH_SIZE) {
+    throw new Error(`--batch-size must not exceed ${MAX_BATCH_SIZE}`);
+  }
   if (options.transitionStarted !== null && Number.isNaN(options.transitionStarted)) {
     throw new Error("--transition-started must be an ISO date");
   }
   return options;
+}
+
+/**
+ * 進度列印。
+ *
+ * 抽出嚟係因為佢本身冇得測 —— 佢住喺 `main` 入面一個 object literal 度，而成個
+ * `server/test` 冇一個檔案 import 過 `main`。REV-053 修咗佢（`processed % 100` →
+ * `attempted % 100`），而 REV-054 把嗰個修正**原封不動咁 revert 返**，25 條測試
+ * 全部照綠。一個冇嘢睇住嘅修正同冇修過係同一件事。（REV-054 M-3）
+ *
+ * 用 `attempted` 唔用 `processed`：`processed` 喺啲行一路失敗嗰陣唔會郁，而
+ * `0 % 100 === 0`，所以一張壞表會變成**一行 stdout 一行資料**。
+ *
+ * 印 id 同數量 —— 冇一樣係祕密，而冇咗佢，一個跑幾個鐘嘅輪替就變成一個冇任何輸出
+ * 嘅黑盒。
+ */
+export function progressReporter({ json = false, write = (line) => process.stdout.write(line) } = {}) {
+  if (json) return () => {};
+  return ({ processed, attempted, lastId }) => {
+    if (attempted % 100 === 0) write(`attempted=${attempted} processed=${processed} lastId=${lastId}\n`);
+  };
 }
 
 export async function main(kind, argv = process.argv.slice(2)) {
@@ -92,54 +125,56 @@ export async function main(kind, argv = process.argv.slice(2)) {
     return 0;
   }
 
-  dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
-  const [{ default: supplierConfig }, { default: databaseConfig }] = await Promise.all([
-    import("../config/supplier.js"), import("../config/database.js")
-  ]);
-  const { normalizeSupplierConfig } = await import("../src/modules/supplier/normalizeSupplierConfig.js");
-  const { SupplierBankCrypto } = await import("../src/modules/supplier/SupplierBankCrypto.js");
-  const { runRotation } = await import("../src/modules/supplier/bankKeyRotation.js");
-  const { createMySqlDatabasePool } = await import("../src/services/mysqldatabase/connection.js");
-  const { normalizeDatabaseConfig } = await import("../src/framework/configuration/normalizeDatabaseConfig.js");
-
-  const supplier = normalizeSupplierConfig(supplierConfig);
-  const crypto = new SupplierBankCrypto({ encryption: supplier.bankEncryption, lookup: supplier.bankLookup });
-  const pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
-
-  const database = {
-    query: (sql, params) => pool.query(sql, params),
-    async withTransaction(work) {
-      const connection = await pool.getConnection();
-      try {
-        await connection.beginTransaction();
-        const result = await work(connection);
-        await connection.commit();
-        return result;
-      } catch (error) {
-        await connection.rollback();
-        throw error;
-      } finally {
-        connection.release();
-      }
-    }
-  };
-
+  /**
+   * 個 catch 由呢度先開始，唔係由 `runRotation` 先開始。
+   *
+   * 之前佢一頭包住 `parseArguments`，一尾包住 `runRotation`，中間十二行 ——
+   * `dotenv.config`、五個 dynamic import、`normalizeSupplierConfig`、
+   * `new SupplierBankCrypto`、`createMySqlDatabasePool` —— 一句都冇包。而一個爛咗
+   * 嘅 `SUPPLIER_BANK_ENCRYPTION_KEYS` **正正就係輪替期間最容易犯嗰個錯**，佢會
+   * 出一個原裝 Node stack trace，而且 exit **1** —— 即係呢個 CLI 自己個合約留返
+   * 俾「輪替行過，有行失敗」嗰個 code。（REV-054 M-4）
+   */
+  let pool = null;
   try {
+    dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
+    const [{ default: supplierConfig }, { default: databaseConfig }] = await Promise.all([
+      import("../config/supplier.js"), import("../config/database.js")
+    ]);
+    const { normalizeSupplierConfig } = await import("../src/modules/supplier/normalizeSupplierConfig.js");
+    const { SupplierBankCrypto } = await import("../src/modules/supplier/SupplierBankCrypto.js");
+    const { runRotation } = await import("../src/modules/supplier/bankKeyRotation.js");
+    const { createMySqlDatabasePool } = await import("../src/services/mysqldatabase/connection.js");
+    const { normalizeDatabaseConfig } = await import("../src/framework/configuration/normalizeDatabaseConfig.js");
+
+    const supplier = normalizeSupplierConfig(supplierConfig);
+    const crypto = new SupplierBankCrypto({ encryption: supplier.bankEncryption, lookup: supplier.bankLookup });
+    pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
+
+    const database = {
+      query: (sql, params) => pool.query(sql, params),
+      async withTransaction(work) {
+        const connection = await pool.getConnection();
+        try {
+          await connection.beginTransaction();
+          const result = await work(connection);
+          await connection.commit();
+          return result;
+        } catch (error) {
+          await connection.rollback();
+          throw error;
+        } finally {
+          connection.release();
+        }
+      }
+    };
+
     const report = await runRotation({
       database, crypto, kind, from: options.from, to: options.to,
       ...(options.batchSize === undefined ? {} : { batchSize: options.batchSize }),
       ...(options.limit === undefined ? {} : { limit: options.limit }),
       transitionStartedAt: options.transitionStarted,
-      // Progress 印 id 同數量 —— 冇一樣係祕密，而且冇咗佢，一個跑幾個鐘嘅輪替
-      // 就變成一個冇任何輸出嘅黑盒。
-      // 用 `attempted` 唔用 `processed`：`processed` 喺啲行一路失敗嗰陣唔會郁，而
-      // `0 % 100 === 0`，所以一張壞表會變成**一行 stdout 一行資料**。`attempted`
-      // 單調遞增，所以佢真係每一百行出一次。（REV-053 L-3）
-      onProgress: options.json ? () => {} : ({ processed, attempted, lastId }) => {
-        if (attempted % 100 === 0) {
-          process.stdout.write(`attempted=${attempted} processed=${processed} lastId=${lastId}\n`);
-        }
-      }
+      onProgress: progressReporter({ json: options.json })
     });
     process.stdout.write(`${JSON.stringify(report, null, options.json ? 0 : 2)}\n`);
     for (const warning of report.warnings) process.stderr.write(`WARNING ${warning.code}: ${warning.message}\n`);
@@ -159,6 +194,7 @@ export async function main(kind, argv = process.argv.slice(2)) {
     process.stderr.write(`${error.message}\n`);
     return 2;
   } finally {
-    await pool.end();
+    // 個 pool 可能根本未起得成 —— 例如 key ring 爛咗，掟喺佢前面。
+    if (pool) await pool.end();
   }
 }

@@ -8,6 +8,11 @@
  * 做幾多行；**唔好寫 `--limit=0` 當試探** —— 0 唔收，想做晒就唔好寫佢）、
  * `--transition-started=<iso>`、`--json`。
  *
+ * **呢個工具唔會叫你剷 key。** `supplierRowsDrained` 只係講 `supplier_bank_accounts`
+ * 掃乾淨未；同一個 lookup key id 亦都保護緊 `customer_bank_accounts`，兩張表都報零
+ * 之前邊個 ring 都唔可以剷。Customer 嗰邊係
+ * `scripts/reindexCustomerBankBlindIndexes.js`。（REV-054 H-1）
+ *
  * 重建要攞明文，所以呢條命令一樣要 encryption ring 解密 —— 兩條命令都要兩個 ring
  * 齊全。Index 同佢個 key id 同一個 UPDATE 寫，中間唔會有兩者對唔上嘅一刻。
  *

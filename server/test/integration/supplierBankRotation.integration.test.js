@@ -159,7 +159,7 @@ integrationTest("encryption rotation re-encrypts real rows and leaves them decry
 
   assert.equal(report.processed, 3);
   assert.equal(report.remaining, 0);
-  assert.equal(report.safeToRemoveFromKey, true);
+  assert.equal(report.supplierRowsDrained, true);
   assert.equal(await remainingRows(databaseOn(connection), ROTATION_KINDS.ENCRYPTION, "enc-old"), 0);
 
   const [afterRows] = await connection.query(
@@ -202,7 +202,7 @@ integrationTest("lookup rotation rewrites index and key id together, and the uni
   });
 
   assert.equal(report.processed, 2);
-  assert.equal(report.safeToRemoveFromKey, true);
+  assert.equal(report.supplierRowsDrained, true);
   assert.equal(await remainingRows(databaseOn(connection), ROTATION_KINDS.LOOKUP, "look-old"), 0);
 
   const [afterRows] = await connection.query(
@@ -237,11 +237,11 @@ integrationTest("a duplicate is still refused while the ring is half rotated", a
   );
   assert.equal(Number(still.n), 1, "exactly one row is still on the old lookup key");
   // 個 report 要同上面呢句 raw COUNT 講同一件事。`remainingRows` 揀邊個欄位係一條
-  // 三元式，而佢就係 `safeToRemoveFromKey` 嘅全部 —— 之前佢個 lookup 分支喺兩套
+  // 三元式，而佢就係 `supplierRowsDrained` 嘅全部 —— 之前佢個 lookup 分支喺兩套
   // 測試入面都冇人睇過，所以一個做咗一半嘅 lookup 輪替可以報「可以剷 key」。
   // （REV-053 M-2）
   assert.equal(half.remaining, Number(still.n), "the report must agree with the table");
-  assert.equal(half.safeToRemoveFromKey, false,
+  assert.equal(half.supplierRowsDrained, false,
     "a row still on the old lookup key must not authorise removing it");
 
   // 而家用新 active key 嘅 service 去加返**舊 key 嗰行**嘅帳號。設計 §5.8：查重要
@@ -278,7 +278,7 @@ integrationTest("an interrupted rotation resumes and finishes on real rows", asy
     kind: ROTATION_KINDS.ENCRYPTION, from: "enc-old", to: "enc-new", limit: 2
   });
   assert.equal(first.processed, 2);
-  assert.equal(first.safeToRemoveFromKey, false);
+  assert.equal(first.supplierRowsDrained, false);
   assert.equal(await remainingRows(databaseOn(connection), ROTATION_KINDS.ENCRYPTION, "enc-old"), 3);
 
   // 續跑唔傳 after —— 條件本身就係進度。
@@ -288,7 +288,7 @@ integrationTest("an interrupted rotation resumes and finishes on real rows", asy
   });
   assert.equal(second.processed, 3);
   assert.equal(second.remaining, 0);
-  assert.equal(second.safeToRemoveFromKey, true);
+  assert.equal(second.supplierRowsDrained, true);
 
   const [rows] = await connection.query(
     "SELECT encryption_key_id FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]

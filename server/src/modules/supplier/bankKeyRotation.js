@@ -132,7 +132,23 @@ export function ringWarnings({ crypto, transitionStartedAt = null, now = Date.no
   return warnings;
 }
 
-/** 剩低幾多行未換。舊 key 可唔可以剷走，就係睇呢個數係咪 0。 */
+/**
+ * 每一次 run 都出。**唔係條件性嘅**：`checkSharedBankKeyRings` 要求兩個 capability
+ * 一齊開，所以只要呢個輪替行得起，就一定有另一張表綁住同一個 ring。（REV-054 H-1）
+ */
+function sharedRingWarning() {
+  return {
+    code: "RING_SHARED_WITH_OTHER_TABLES",
+    scope: "supplier_bank_accounts",
+    message: "supplierRowsDrained covers supplier_bank_accounts only. The application configuration "
+      + "requires the Customer and Supplier bank key rings to be byte-identical, so this key id also "
+      + "protects customer_bank_accounts. Do not remove it from either ring until every table bound to "
+      + "the ring reports zero remaining rows; the Customer side is "
+      + "server/scripts/rotateCustomerBankEncryption.js and reindexCustomerBankBlindIndexes.js."
+  };
+}
+
+/** 剩低幾多行未換 —— **只係呢一張表**。讀埋 `sharedRingWarning` 點解要緊。 */
 export async function remainingRows(database, kind, keyId) {
   const column = kind === ROTATION_KINDS.ENCRYPTION ? "encryption_key_id" : "blind_index_key_id";
   const [[row]] = await database.query(
@@ -260,14 +276,46 @@ export async function runRotation({
     }
   }
 
-  const remaining = await remainingRows(database, kind, from);
+  /**
+   * 最後嗰句 `COUNT(*)` 死咗唔應該連成份 report 都冇埋。
+   *
+   * 佢之前係一句裸 await：連線喺最後一刻斷咗，成個 run 做過幾多行、邊幾行失敗、
+   * cursor 去到邊 —— 全部隨住個 exception 一齊消失，而工作係真係做咗嘅。而家記低
+   * 佢做一個失敗，`remaining` 留 null，於是 `supplierRowsDrained` 自動變 false。
+   * （REV-054 L-5）
+   */
+  let remaining = null;
+  try {
+    remaining = await remainingRows(database, kind, from);
+  } catch (error) {
+    failures.push({ id: null, ...safeReason(error) });
+  }
   return {
     kind, from, to: active,
     processed, attempted, declined, failed: failures.length, failures,
     lastId, remaining,
-    // 剷得走舊 key 嘅唯一條件：冇行仲用緊佢，而且今次冇失敗行。
-    safeToRemoveFromKey: remaining === 0 && failures.length === 0,
-    warnings: ringWarnings({ crypto, transitionStartedAt, now }),
+    /**
+     * **呢個欄位唔係「可以剷 key」。**
+     *
+     * 佢之前叫 `safeToRemoveFromKey`，即係一個授權。而喺 2026-09-24 嗰個 merge 之後
+     * 嗰個授權變成講大話：`validateApplicationConfiguration` 而家要求 Customer 同
+     * Supplier 兩個 bank key ring **逐個 byte 一模一樣**（連 activeKeyId 都要），而
+     * `customer_bank_accounts` 有自己嘅 `encryption_key_id` ／ `blind_index_key_id`。
+     * `remainingRows` 由頭到尾只係數一張表。
+     *
+     * 即係：supplier 呢邊掃乾淨咗，個 report 照樣可以喺 customer 仲有行用緊嗰個 key
+     * 嘅時候叫 operator 剷佢。而「剷」冇得剷一半 —— 淨係喺 supplier ring 度剷走，
+     * config validator 會拒絕啟動（實測：兩個 ring 都有 → ACCEPTED；只剷 supplier →
+     * REFUSED；兩個都剷 → ACCEPTED）。所以 operator 照住做就會兩個 ring 一齊剷，而
+     * customer 嗰啲行**永久解唔返**。
+     *
+     * 呢個 module 唔會查另一個 module 嘅表（HD-034 已經為呢個 task 食咗一個
+     * OUTSIDE_MODULE）。所以答案唔係「查多張表」，係**唔再發出呢個授權**：呢度只
+     * 講得出 supplier 自己嗰邊掃乾淨未，而 `RING_SHARED_WITH_OTHER_TABLES` 呢個警告
+     * 會講埋淨低嗰半邊點算。一個唔授權嘅工具，冇得授權錯。（REV-054 H-1）
+     */
+    supplierRowsDrained: remaining === 0 && failures.length === 0,
+    warnings: [...ringWarnings({ crypto, transitionStartedAt, now }), sharedRingWarning()],
     startedAt, endedAt: clock()
   };
 }
