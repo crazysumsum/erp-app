@@ -418,3 +418,176 @@ REV-052 M-1 drop --from check      KILLED   safeToRemove ignores failures     KI
 `DB_ADMIN_PASSWORD`，喺 GitHub Actions 之外要自己俾。我喺**未改過嘅 `f0bc0de`**
 上面用同一個環境跑同一條測試，一模一樣咁紅 —— 即係我部機個 MySQL setup，唔係呢個
 改動。CI 嗰邊嗰條有 root/root，照跑。
+
+## 11. REV-054 remediation
+
+REV-054（`98c72f4`）報 **0 Critical、1 High、4 Medium、8 Low、5 Info**。佢確認咗
+REV-053 四條 Medium 入面兩條全閉、三條部分閉，亦都逐個重跑咗 §10 十六個 mutant ——
+**十六個全部確認死，冇一個掛死**，包括嗰個由「掛死」變成「一秒內六句 assertion」
+嘅 cursor mutant。佢自己另外跑咗二十一個 mutant，三個打真 MySQL。
+
+### H-1（High）—— 個 report 授權剷一個第二張表仲用緊嘅 key
+
+呢一條唔係測試質素問題，而且佢唔係我寫錯咗嘢 —— **佢係一個 merge 整出嚟嘅**。
+
+呢個 candidate 本身包住一個 `origin/main` merge，而 `main` 帶咗
+`checkSharedBankKeyRings` 入嚟：Customer 同 Supplier 兩個 bank key ring 必須**逐個
+byte 一樣**，連 `activeKeyId` 都要。而 `customer_bank_accounts` 有自己嘅
+`encryption_key_id` ／ `blind_index_key_id`。`remainingRows` 由頭到尾只數一張表。
+
+即係 `safeToRemoveFromKey: true` —— 一個明文授權，exit 0 —— 可以喺 customer 仲有行
+用緊嗰個 key 嘅時候出。我用真 `validateApplicationConfiguration` 量咗三個情況：
+
+```
+ACCEPTED  k-old 仲喺兩個 ring 入面（剷之前）
+REFUSED   k-old 只喺 SUPPLIER ring 度剷走
+          Customer and Supplier bank capabilities must use the same key rings with owner-separated AAD
+ACCEPTED  k-old 兩個 ring 一齊剷走（即係個授權叫人做嗰樣嘢）
+```
+
+「剷」冇得剷一半。Operator 照住個 report 做，就會兩個 ring 一齊剷，而 customer
+嗰啲行**永久解唔返**。全個 repo 得呢個 tool 會發出「可以剷」呢個授權 ——
+`CustomerBankMaintenanceService` 只報 `{ processed, lastId, remaining }`，唔落判斷。
+
+**最要緊嗰句唔係個缺陷本身。** REV-053 §7.2 特登查過「有冇第二張表帶
+`encryption_key_id`」，當時答案係冇，而嗰個答案當時係啱嘅。**一個 merge 就令佢過咗
+期，而冇任何嘢會再查一次。** 一個由人查一次就當真嘅性質，下一個 merge 一樣可以再
+推翻佢。
+
+**修法（HD：收窄個聲明，唔跨 module 查表）。** 呢個 module 唔會查另一個 module 嘅
+表 —— HD-034 已經為呢個 task 食咗一個 `OUTSIDE_MODULE`，而「查多張表」會令兩個
+module 直接耦合。所以答案係**唔再發出呢個授權**：
+
+- `safeToRemoveFromKey` 改名做 `supplierRowsDrained`，佢而家只講得出一件事：
+  `supplier_bank_accounts` 呢一張表掃乾淨未。
+- 每一次 run **無條件**出一個 `RING_SHARED_WITH_OTHER_TABLES` 警告，講明同一個
+  key id 亦都保護緊 `customer_bank_accounts`、兩張表都報零之前兩個 ring 邊個都唔
+  可以剷，並且點名 customer 嗰兩個 tool。唔使條件判斷：`checkSharedBankKeyRings`
+  要求兩個 capability 一齊開，所以只要呢個輪替行得起，第二張表就一定喺度。
+- 兩個 entry script 個祈使句（「舊 key ... 先可以由 ring 度剷走」）剷咗。
+
+而 REV-053 §7.2 嗰個性質而家係**一條測試**，唔再係一個 reviewer 睇過一次嘅事實：
+個 report 唔准再有任何讀落似 ring-wide 授權嘅欄位（`/safe|removable|canRemove/i`），
+而每個 run 都要帶住嗰個警告。一個唔授權嘅工具，冇得授權錯。
+
+### M-1 —— 釘住咗方向，冇釘住欄位
+
+REV-053 教識個 double 讀 `ORDER BY (\w+)( DESC)?`，所以 `DESC` 死得。但個**欄位**
+冇人釘：`ORDER BY supplier_id` 喺真 MySQL 會跳行（cursor 係 `AND id > ?`，排序一旦
+唔跟 `id`，一批返嚟嘅最大 id 就會永遠掃走細 id 嘅行），而單元測試殺到佢純粹因為
+「cursor advances」嗰條測試個 wrapper sniff 緊字串 `"ORDER BY id"` —— 即係釘住佢嘅
+係個 harness，唔係一句 assertion。
+
+第四輪連續：修正收咗被點名嗰個，留低佢兄弟。
+
+修法：wrapper 改成 sniff `"ORDER BY"`，再加一條六行、`supplier_id` 次序同 `id`
+次序**相反**嘅測試，要求每行都掃到。舊嗰條測試睇唔到，係因為佢五行同一個
+supplier_id —— 排序穩定，次序一樣。
+
+### M-2 —— 用未逃逸嘅針，掃逃逸咗嘅草堆
+
+REV-053 把 `duplicateKeyError()` 改成 MySQL 真形狀（複合前綴、可印 byte 原樣、64
+字元硬切），啱嘅。但個掃描係咁樣比：
+
+```js
+const serialised = JSON.stringify(report);
+leakedEncodings(serialised, index)
+```
+
+MySQL 個訊息帶住 `\xFA` 咁嘅**兩個字元** —— 一個反斜線加一個 x —— 而
+`JSON.stringify` 會把嗰個反斜線變成兩個。針同草堆永遠對唔上。我自己用兩萬個隨機
+index 量過，一個**完整嘅真洩漏**擺喺 report 入面：
+
+```json
+{"samples":20000,"missed_scanning_JSON":"59.6%","missed_scanning_strings":"0.0%"}
+```
+
+（REV-054 量到 55.2%，同一個數量級，另一批隨機數。）個 fixture 係固定嘅，所以今日
+嗰條測試唔算 flaky、兩個 `safeReason` mutant 都照殺 —— 但佢聲稱建立嗰個性質（「任何
+編碼都漏唔出去」）根本冇建立到。
+
+修法：攤平個 report 啲字串嚟掃，唔再掃佢個 JSON 編碼；負控制跑三個唔同帳號，因為
+一個固定 fixture 之下「呢次啱」同「每次都啱」係兩件事。
+
+### M-3 —— `main()` 仍然冇一個測試 import 過
+
+REV-053 M-4 嗰句點名咗四個冇人睇嘅面：旗解析、exit code 合約、進度列印、pool 接線。
+Remediation 測咗第一個。REV-054 把 REV-053 喺 `main` 入面嗰個修正（`processed % 100`
+→ `attempted % 100`）**原封不動 revert 返**，25 條測試全綠。一個冇嘢睇住嘅修正，同
+冇修過係同一件事。
+
+修法：抽 `progressReporter` 出嚟做一個 export，直接測「每行都失敗嗰陣唔可以一行
+資料一行 stdout」；另外加一條直接 import `main` 嘅測試 —— 壞旗要 exit **2**（唔係
+1，1 係留返俾「輪替行過，有行失敗」）、唔准出 stack trace、唔准回顯嗰個值，而
+`--help` 要 exit 0。兩條路都喺開 pool 之前就返，唔使資料庫。
+
+### M-4 —— 個 catch 中間有十二行冇包到
+
+`main` 個 top-level catch 一頭包住 `parseArguments`，一尾包住 `runRotation`，中間
+`dotenv.config`、五個 dynamic import、`normalizeSupplierConfig`、
+`new SupplierBankCrypto`、`createMySqlDatabasePool` —— 一句都冇包。而一個爛咗嘅
+`SUPPLIER_BANK_ENCRYPTION_KEYS` **正正就係輪替期間最容易犯嗰個錯**。實測（修之前）：
+原裝 Node stack trace，exit **1** —— 即係呢個 CLI 自己個合約留返俾「有行失敗」嗰個
+code，一個 runbook 會照讀錯。
+
+修完之後：
+
+```
+$ SUPPLIER_BANK_ENCRYPTION_KEYS='{"rot-old": "not-base64-at-all!!"' \
+    node scripts/rotateSupplierBankEncryption.js --from=rot-old --to=rot-new
+Supplier config "bankEncryption.keyRing" must be a valid JSON object
+exit=2
+```
+
+`pool` 而家喺 try 外面宣告，`finally` 要 `if (pool)` —— 因為佢可能根本未起得成。
+
+### 順手收咗嘅 Low
+
+| | |
+| --- | --- |
+| L-3 | `--batch-size` 之前淨係封低唔封高，而隔籬 `rotateCustomerBankEncryption.js` 兩頭都封。補返上限 1000，usage 寫埋。 |
+| L-4 | `--from=` 空值之前報「both --from and --to are required」—— operator 明明打咗。而家分開報。 |
+| L-5 | 最尾嗰句 `COUNT(*)` 死咗之前會連成份 report 一齊掟走（做咗幾多行、邊幾行失敗、cursor 去到邊，全部冇埋）。而家記低做一個失敗，`remaining` 留 `null`，於是 `supplierRowsDrained` 自動 false —— 唔知等於唔可以當掃乾淨。 |
+| L-6 | 冇任何嘢睇住 `processed + declined + failed === attempted`。補咗一條。 |
+
+冇收嘅兩條，同 REV-053 一樣理由：**L-8 冇做成 CI 全域 `--test-timeout`**（個上限住
+喺呢個檔案自己個 double，第二個檔案將來寫個死循環仍然會掛 `npm test`；全域加
+timeout 會改變成個 server suite 行為，唔喺呢個 PR 冒嗰個 flake 險）；**L-7 進度列印
+喺一百行以下嘅 run 一句都唔出**（嗰種 run 一兩秒收工，個 report 本身就係輸出）。
+
+### Mutation：二十三個，二十三個殺到，冇一個掛死
+
+```
+H-1  report re-authorises removal   KILLED   L-5 COUNT failure discards report KILLED
+H-1b drop the shared-ring warning   KILLED   L-2 rotateRow always claims write KILLED
+M-1  ORDER BY supplier_id           KILLED   L-1 endedAt is startedAt          KILLED
+M-1b ORDER BY id DESC               KILLED   drop AND id > ?                   KILLED
+M-1c drop ORDER BY                  KILLED   F-M3 encryption guard vacuous     KILLED
+M-2  remainingRows always enc       KILLED   F-M3b lookup guard vacuous        KILLED
+M-3  safeReason forwards message    KILLED   REV-052 M-1 drop --from check     KILLED
+M-3b safeReason forwards a slice    KILLED   safeToRemove ignores failures     KILLED
+M-3c progress gate back to processed KILLED  M-4 --limit accepts 0 again       KILLED
+L-3  drop batch-size upper bound    KILLED   M-4b --json accepts a value       KILLED
+L-4  empty --from reports required  KILLED   L-9 split('=') truncates again    KILLED
+L-8  unknown flag echoes raw argv   KILLED
+```
+
+### 驗證
+
+| | |
+| --- | --- |
+| `server/test/supplierBankKeyRotation.test.js` | **22/22** |
+| `server/test/supplierBankRotationCli.test.js` | **11/11** |
+| `server/test/integration/supplierBankRotation.integration.test.js` | **4/4**，真 MySQL 26.7.0 |
+| Profile suite `supplier-phase-001-server`（原本 argv） | **434/434**，0 fail 0 skipped |
+| Client | **665/665** |
+| lint | exit 0 |
+
+全套 `npm test`（server）：2168 條，2164 pass、3 skipped、**1 fail**，而嗰條仍然係
+`TC-016`（要 `DB_ADMIN_USER`／`DB_ADMIN_PASSWORD`，GitHub Actions 以外要自己俾）。
+我喺未改過嘅 code 上面用同一個環境跑過同一條，一模一樣咁紅。
+
+> **§10 嗰組數係喺 `7cd42e3` 度量嘅，即係 merge `main` 之前。**（REV-054 L-1／L-2）
+> 同一個 profile suite 喺 merge 之後係 426，而家係 434；全套 server suite 喺 merge
+> 之後係兩千一百幾條，唔再係兩千零幾。兩組數各自喺自己嗰個 commit 度啱，冇改
+> §10 —— 一個歷史記錄唔應該扮自己係喺第二個 commit 度量嘅。
