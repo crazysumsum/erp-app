@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-010 are complete on this branch. TASK-010 is developer-verified for its strict HTTP／client contract; TASK-011 remains pending a separate human decision before implementation continues.
+`BLOCKED` — TASK-001～TASK-011 are complete on this branch. TASK-011 is developer-verified for its responsive Warehouse／Bin management UI; TASK-012 remains pending a separate human decision before implementation continues.
 
 ## Baseline
 
@@ -29,6 +29,7 @@
 - `HD-021`／`APR-020`: Sam selected and approved the complete TASK-010 strict handlers, schemas, route metadata, owner-safe client contract, Traditional Chinese error coverage and focused tests on 2026-09-25, without TASK-011 or remote actions.
 - `HD-022`／`APR-021`: Sam approved the minimal TASK-010 service extension for designed Bin `lockStatus` filtering and `currentLock` detail, without advancing the Stocktake migration.
 - `HD-023`／`APR-022`: Sam approved allowlisted Warehouse／Bin `sortBy` and `descending` behavior with `id` as the final tie-breaker.
+- `HD-024`／`APR-023`: Sam selected and approved the complete TASK-011 responsive Warehouse／Bin UI, separate Inventory menu group, focused component tests and mocked local Playwright validation on 2026-09-25, without TASK-012, CI or remote actions.
 
 ## Reconciled P0 checks
 
@@ -43,6 +44,7 @@
 - TASK-008 stayed inside its HD-019-approved migration boundary and did not start TASK-009 or perform any remote action.
 - TASK-009 stayed inside its HD-020-approved four-file boundary and did not start TASK-010 or perform any remote action.
 - TASK-010 stayed inside its approved handler／client boundary plus the two explicitly approved service-extension files; it did not start TASK-011, add a migration or perform any remote action.
+- TASK-011 stayed inside the HD-024／APR-023-approved page, Inventory menu, component-test and browser-test boundary; it did not start TASK-012, add a migration, run CI or perform any remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -106,6 +108,15 @@
 - No MySQL runtime was started: TASK-010 adds no DDL, while active Bin locks depend on planned migration `0062`; real lock-filter integration remains gated by the later Stocktake persistence task. Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker within the approved contract diff.
 - These are developer checks, not formal `TC-002` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
+## TASK-011 developer verification
+
+- Commit `fed56e40e959c97afc4d047f85f22e23d6fbb050` adds the separate Inventory menu group and one Warehouse／Bin master-detail page built from the existing `PageHeader`, `DataTable`, `FormPanel` and password＋reason confirmation helper.
+- Warehouse and Bin create／edit, permission-gated lifecycle actions, owner-safe blocker counts, lock detail and optimistic-version conflict handling are connected to the strict TASK-010 service. A 409 reloads current data while preserving the user's form input.
+- Desktop uses a two-panel master-detail layout. At 375 px the same accessible controls become a sequential Warehouse → Bin flow with a keyboard-operable return path; no parallel UI framework or dependency was added.
+- Full client developer suite: 656 passed, 0 failed. Focused Inventory component／service checks: 9 passed, 0 failed. Mocked local Playwright: 4 passed, covering desktop master-detail, blocker-confirmed high-risk action, idempotency header, 409 retention, error/retry/empty states, view-only permissions, browser console/page errors and the 375 px keyboard flow.
+- Full repository ESLint, client production build, `git diff --check`, TASK-011 module-boundary validation and traceability validation passed. The build retained only the repository's pre-existing bundle-size warning. Multi-axis self-review found no correctness, security, accessibility, architecture or maintainability blocker.
+- These are developer checks, not formal `TC-002` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
+
 ## Approved physical allocation
 
 | Prefix | Migration | Owner |
@@ -131,8 +142,9 @@
 - TASK-008 created only the HD-019-approved `0057` migration, inspector and focused tests; its migration execution was confined to the disposable TASK-008 schema.
 - TASK-009 created only the HD-020-approved service, projection and focused tests; both MySQL executions were confined to disposable TASK-009 schemas.
 - TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
-- The remaining implementation commits are local; no TASK-006 through TASK-010 push, PR, CI or merge is claimed.
+- TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
+- The remaining implementation commits are local; no TASK-006 through TASK-011 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Obtain Sam's next explicit decision before starting TASK-011 Warehouse／Bin management UI. No database runtime is active, and no CI, push, PR or merge is authorized.
+Obtain Sam's next explicit decision before starting TASK-012 Lot／Stock Control／Balance／Movement persistence. No database runtime is active, and no CI, push, PR or merge is authorized.

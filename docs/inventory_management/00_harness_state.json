@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 74,
+  "revision": 77,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-002",
-  "current_task": "TASK-010",
+  "current_task": "TASK-011",
   "baseline": {
     "design": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
     "plan": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
-    "code_commit": "4b1ad68da7885ee41430d4859f602d9264575131",
-    "source_fingerprint": "937e841228499769f8a347faa8e89b38bf966b52f21e5dbc32db9361c1a12042",
+    "code_commit": "fed56e40e959c97afc4d047f85f22e23d6fbb050",
+    "source_fingerprint": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
     "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
@@ -36,7 +36,7 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "PENDING",
+    "TASK-011": "DONE",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
@@ -517,6 +517,26 @@
         "server/test/inventoryMasterService.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-023",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-011 Warehouse/Bin management UI, Inventory menu group, focused component tests and mocked local Playwright validation",
+      "recorded_at": "2026-09-25T11:10:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "6f99f640e8bdca2a43700ea2ea371b165074ca96",
+      "scope": [
+        "client/src/pages/inventory/WarehousesPage.vue",
+        "client/src/components/inventory/**",
+        "client/test/**/inventory*.test.js",
+        "client/e2e/inventory-management/**",
+        "client/config/menu.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -723,6 +743,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-018",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-011 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-011-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -846,6 +878,17 @@
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-010-developer-verification",
       "actor": "/root developer self-check under HD-021 through HD-023 and APR-020 through APR-022",
       "observed_at": "2026-09-25T11:01:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-011 Warehouse/Bin component, production build and mocked Playwright browser verification",
+      "code_commit": "fed56e40e959c97afc4d047f85f22e23d6fbb050",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-011-developer-verification",
+      "actor": "/root developer self-check under HD-024 and APR-023",
+      "observed_at": "2026-09-25T11:16:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -1325,6 +1368,22 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended allowlisted sorting option"
+    },
+    {
+      "id": "HD-024",
+      "impact": "MAJOR",
+      "question": "May TASK-011 implement the complete responsive Warehouse/Bin management UI, add an Inventory menu group in shared client/config/menu.js, add focused component tests and perform mocked local Playwright validation, without CI or remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-011",
+        "TC-002",
+        "UAT-001",
+        "UAT-002",
+        "UAT-003",
+        "UAT-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-011 option"
     }
   ],
   "external_actions": [
@@ -1683,5 +1742,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain Sam's explicit decision before starting TASK-011 Warehouse/Bin management UI. Do not start UI work, create Stocktake migrations or perform CI/push/PR/merge actions."
+  "next_safe_action": "Obtain Sam's explicit decision before starting TASK-012 Lot, Stock Control, Balance and Movement persistence. Do not create migrations, run CI or perform push/PR/merge actions without new authorization."
 }
