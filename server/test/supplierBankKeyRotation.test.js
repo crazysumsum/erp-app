@@ -681,10 +681,21 @@ test("the report never claims a key is safe to remove from the ring", async () =
 
   assert.equal(report.remaining, 0, "this run really did drain every supplier row");
   assert.equal(report.supplierRowsDrained, true);
-  const authorising = Object.keys(report).filter((key) => /safe|removable|canRemove/iu.test(key));
-  assert.deepEqual(authorising, [],
-    "no field may read as an authorisation to remove the key: this module can only see one of the "
-    + "tables bound to the ring");
+  /**
+   * **白名單，唔係黑名單。**
+   *
+   * 呢句之前係 `/safe|removable|canRemove/i` —— 三個字。REV-055 加一個叫
+   * `keyRemovalApproved` 嘅欄位落個 report 度，兩套測試照綠：個掃描淨係捉得返
+   * `safeToRemoveFromKey` 嗰個歷史拼法。即係佢守住嘅唔係「唔准授權」呢個性質，
+   * 係「唔准用返舊嗰個名」。
+   *
+   * 而家係列晒成個 report 有咩欄位。加任何一個新欄位都要行過呢一行，而行過呢一行
+   * 就要諗清楚：呢個欄位講緊嘅嘢，呢個 module 見唔見到成個 ring？（REV-055 M-3）
+   */
+  assert.deepEqual(Object.keys(report).sort(), [
+    "attempted", "declined", "endedAt", "failed", "failures", "from", "kind", "lastId",
+    "processed", "remaining", "startedAt", "supplierRowsDrained", "to", "warnings"
+  ], "the report's shape is fixed: a new field must be justified against what this module can see");
 
   // 而且每次都要講埋淨低嗰半邊 —— 連呢個完全乾淨嘅 run 都要。
   const shared = report.warnings.find((warning) => warning.code === "RING_SHARED_WITH_OTHER_TABLES");
@@ -729,5 +740,22 @@ test("a failure in the final count keeps the report and refuses to call the rows
   assert.equal(report.processed, 2, "the work that was done is still reported");
   assert.equal(report.remaining, null, "but how much is left is now unknown");
   assert.equal(report.supplierRowsDrained, false, "and unknown must never read as drained");
-  assert.deepEqual(report.failures.at(-1), { id: null, reason: "PROTOCOL_CONNECTION_LOST" });
+
+  /**
+   * 「數唔到」唔係一行嘅失敗。
+   *
+   * REV-054 把佢 `push` 落 `failures`，而同一個 commit 另一個修正加咗
+   * `processed + declined + failed === attempted`。夾埋之後，一個兩行都換得乾淨嘅
+   * run 會報 `failed: 1` 同一個 `id: null` 嘅失敗，個不變式爆咗。（REV-055 M-1）
+   */
+  assert.equal(report.failed, 0, "both rows rotated cleanly: nothing about a row failed");
+  assert.deepEqual(report.failures, []);
+  assert.equal(report.processed + report.declined + report.failed, report.attempted,
+    "the count invariant must survive a failure that is not about a row");
+  assert.deepEqual(report.failures.map((f) => f.id).filter((id) => id === null), [],
+    "failures carries rows, and a row always has an id");
+
+  const unknown = report.warnings.find((w) => w.code === "REMAINING_UNKNOWN");
+  assert.ok(unknown, "it is a warning instead");
+  assert.equal(unknown.reason, "PROTOCOL_CONNECTION_LOST");
 });

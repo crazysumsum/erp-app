@@ -10,9 +10,11 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 
 import { ROTATION_KINDS } from "../src/modules/supplier/bankKeyRotation.js";
-import { main, parseArguments, progressReporter, USAGE } from "../scripts/supplierBankRotationCli.js";
+import { exitCodeFor, main, parseArguments, progressReporter, USAGE }
+  from "../scripts/supplierBankRotationCli.js";
 
 const REQUIRED = ["--from=e1", "--to=e2"];
 
@@ -138,4 +140,56 @@ test("the progress reporter counts attempts, not successes", () => {
   ], "a table where every row fails must not print one line per row");
   assert.deepEqual(progressReporter({ json: true, write: () => assert.fail("--json must print nothing") })
     .call(null, { processed: 0, attempted: 100, lastId: 1 }), undefined);
+});
+
+/**
+ * Exit code 合約 —— 由外面睇。
+ *
+ * REV-055 M-3：上面嗰兩條直接叫 `main` 嘅測試守住咗 `parseArguments` 嗰半，但
+ * `main` 個 body catch 由 `return 2` 改成 `return 1`，三十三條單元加四條整合全部
+ * 照綠；連「`main` 永遠回 0」都生還。即係「輪替失敗回 1、跑唔起回 2」呢個合約
+ * —— 一個 runbook 或者 CI job 真係會讀嗰樣嘢 —— 由頭到尾冇嘢睇住。
+ *
+ * 呢度開子程序，因為呢幾條路要經過 config 載入，而 ESM 會 cache module ——
+ * 同一個 process 入面改 `process.env` 係改唔郁佢嘅。隔籬個
+ * `customerBankMaintenanceCli.test.js` 都係咁做。
+ */
+const ENTRY = new URL("../scripts/rotateSupplierBankEncryption.js", import.meta.url).pathname;
+const CWD = new URL("..", import.meta.url).pathname;
+
+function run(argv, env = {}) {
+  return spawnSync(process.execPath, [ENTRY, ...argv], {
+    cwd: CWD, encoding: "utf8",
+    env: { ...process.env, ...env }
+  });
+}
+
+test("the CLI's exit codes mean what the contract says", () => {
+  const help = run(["--help"]);
+  assert.equal(help.status, 0, "--help is not a failure");
+  assert.match(help.stdout, /Usage:/u);
+
+  const badFlag = run(["--from=e1", "--to=e2", "--nope=x"]);
+  assert.equal(badFlag.status, 2, "an operator typo is 2, never 1");
+
+  // 爛 key ring：呢個係輪替期間最容易犯嗰個錯，而佢喺開 pool 之前就炸。
+  const badRing = run(["--from=e1", "--to=e2"], { SUPPLIER_BANK_ENCRYPTION_KEYS: '{"e1": "not base64' });
+  assert.equal(badRing.status, 2, "a broken key ring is 2: the rotation never ran");
+  assert.ok(!/\n\s+at /u.test(badRing.stderr), `no stack trace for an operator error:\n${badRing.stderr}`);
+  assert.ok(badRing.stderr.trim().length > 0, "and it must say something");
+
+  // 連唔到資料庫亦都係「跑唔起」，唔係「有行失敗」。
+  const noDatabase = run(["--from=e1", "--to=e2"], { DB_PORT: "1", DB_HOST: "127.0.0.1" });
+  assert.equal(noDatabase.status, 2, "an unreachable database is 2, not 1");
+});
+
+// REV-055 M-1／M-3：呢個表之前一個 case 都冇人行過。
+test("exitCodeFor distinguishes done, half-done, and could-not-count", () => {
+  assert.equal(exitCodeFor({ failed: 0, remaining: 0 }), 0, "clean and drained");
+  assert.equal(exitCodeFor({ failed: 0, remaining: 7 }), 0, "clean; rows left is the resume case, not a failure");
+  assert.equal(exitCodeFor({ failed: 3, remaining: 0 }), 1, "rows failed");
+  assert.equal(exitCodeFor({ failed: 3, remaining: 7 }), 1);
+  assert.equal(exitCodeFor({ failed: 0, remaining: null }), 1,
+    "the count could not be read: not knowing is not success");
+  assert.equal(exitCodeFor({ failed: 2, remaining: null }), 1);
 });

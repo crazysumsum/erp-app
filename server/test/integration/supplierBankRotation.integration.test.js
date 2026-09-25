@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomBytes, randomUUID } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import mysql from "mysql2/promise";
 
 import { normalizeSupplierConfig } from "../../src/modules/supplier/normalizeSupplierConfig.js";
@@ -294,4 +295,54 @@ integrationTest("an interrupted rotation resumes and finishes on real rows", asy
     "SELECT encryption_key_id FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]
   );
   assert.deepEqual([...new Set(rows.map((row) => row.encryption_key_id))], ["enc-new"]);
+});
+
+/**
+ * Exit code 合約，由外面、打真資料庫睇。
+ *
+ * REV-055 M-3：`main` 尾嗰句 `return` 改成「永遠回 0」，三十三條單元加四條整合全部
+ * 照綠 —— 即係「有行失敗要回 1」呢件事由頭到尾冇嘢睇住，而一個 runbook 或者 CI
+ * job 讀嘅正正就係佢。上面嗰幾條 spawn 測試守住咗「跑唔起 → 2」嗰邊；呢條守住
+ * 「跑過但有行失敗 → 1」，因為要行到嗰句就要一個真資料庫。
+ */
+integrationTest("the CLI exits 1 when the rotation ran and rows failed", async (t) => {
+  const connection = await mysql.createConnection(config());
+  let supplierId = null;
+  t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
+
+  const active = process.env.SUPPLIER_BANK_ACTIVE_KEY_ID;
+  const normalized = normalizeSupplierConfig({
+    bankEncryption: { activeKeyId: active, keyRing: process.env.SUPPLIER_BANK_ENCRYPTION_KEYS },
+    bankLookup: {
+      activeKeyId: process.env.SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID,
+      keyRing: process.env.SUPPLIER_BANK_LOOKUP_KEYS
+    }
+  });
+  const crypto = new SupplierBankCrypto({
+    encryption: normalized.bankEncryption, lookup: normalized.bankLookup
+  });
+  supplierId = await seedSupplier(connection, randomUUID().slice(0, 8));
+  for (const slot of [1, 2, 3]) {
+    await seedAccount(connection, crypto, { supplierId, account: `${ACCOUNT}${slot}`, slot });
+  }
+  // 行係用 active key 加密嘅，但而家把 key id 改到講大話 —— 解密一定失敗。
+  await connection.execute(
+    "UPDATE supplier_bank_accounts SET encryption_key_id = 'enc-lie' WHERE supplier_id = ?", [supplierId]);
+
+  const ring = JSON.parse(process.env.SUPPLIER_BANK_ENCRYPTION_KEYS);
+  const result = spawnSync(process.execPath, ["scripts/rotateSupplierBankEncryption.js",
+    "--from=enc-lie", `--to=${active}`, "--json"], {
+    cwd: new URL("../..", import.meta.url).pathname, encoding: "utf8",
+    env: { ...process.env,
+      SUPPLIER_BANK_ENCRYPTION_KEYS: JSON.stringify({ ...ring, "enc-lie": randomBytes(32).toString("base64") }) }
+  });
+
+  assert.equal(result.status, 1,
+    `a rotation that ran and failed rows is 1, not 0 and not 2:\n${result.stdout}\n${result.stderr}`);
+  const report = JSON.parse(result.stdout.trim().split("\n").at(-1));
+  assert.equal(report.processed, 0);
+  assert.equal(report.failed, 3, "every row fails: the key id lies about the ciphertext");
+  assert.equal(report.supplierRowsDrained, false);
+  assert.ok(report.warnings.some((w) => w.code === "RING_SHARED_WITH_OTHER_TABLES"),
+    "and it still says the ring reaches past this table");
 });

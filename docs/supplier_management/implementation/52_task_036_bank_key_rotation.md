@@ -42,13 +42,18 @@ Boundary validator 對住 merge-base 報**啱啱三條** `OUTSIDE_MODULE`，全�
 佢係一個**確認**：如果 caller 心目中嘅目標同 active 唔同，就係佢對緊一個唔存在嘅輪替
 落命令 —— 嗰陣停，唔係靜靜雞寫入 active key 然後回報成功。`--from === --to` 一樣拒。
 
-## 4. 剷舊 key 嘅條件
+## 4. 「呢張表掃乾淨未」嘅條件
 
-`safeToRemoveFromKey = remaining === 0 && failures.length === 0`。
+`supplierRowsDrained = remaining === 0 && failures.length === 0`。
 
 第二個條件唔係多餘。一個**寫咗之後先死**嘅行（例如 commit 階段出事）會令
-`remaining` 變 0 而同時留低一個未解釋嘅失敗 —— 嗰種狀態唔應該授權剷走一條 key。
+`remaining` 變 0 而同時留低一個未解釋嘅失敗 —— 嗰種狀態唔應該當成掃乾淨。
 單元測試特登造咗呢個情況（`failAfterWrite`），而拆走第二個條件佢會紅。
+
+> **呢一節本來叫「剷舊 key 嘅條件」，而個欄位本來叫 `safeToRemoveFromKey`。**
+> 兩樣都改咗：REV-054 H-1 之後，呢個 module 唔再發出「可以剷 key」呢個授權 ——
+> 佢只數得到 `supplier_bank_accounts` 一張表，而同一個 key ring 綁住
+> `customer_bank_accounts`。見 §11。（REV-055 M-2）
 
 ## 5. 一個意外做到嘅 fail-closed 示範
 
@@ -58,17 +63,23 @@ key id 講大話（行本身已經用新 key 加密咗）。結果：
 ```json
 { "kind": "encryption", "from": "rot-old", "to": "rot-new",
   "processed": 0, "attempted": 5, "declined": 0, "failed": 5,
-  "failures": [ { "id": 212, "reason": "BANK_ACCOUNT_TAMPERED" },
-                { "id": 213, "reason": "BANK_ACCOUNT_TAMPERED" },
-                … 215, 216 … ],
-  "lastId": 216, "remaining": 5, "safeToRemoveFromKey": false,
-  "startedAt": 1790215143133, "endedAt": 1790215143146 }        exit=1
+  "failures": [ { "id": 804, "reason": "BANK_ACCOUNT_TAMPERED" },
+                { "id": 805, "reason": "BANK_ACCOUNT_TAMPERED" },
+                … 806, 807, 808 … ],
+  "lastId": 808, "remaining": 5, "supplierRowsDrained": false,
+  "warnings": [ { "code": "RING_SHARED_WITH_OTHER_TABLES",
+                  "scope": "supplier_bank_accounts",
+                  "message": "supplierRowsDrained covers supplier_bank_accounts only. …" } ],
+  "startedAt": 1790302436642, "endedAt": 1790302436649 }        exit=1
 ```
 
-> 呢段之前引嘅係一個 pipe 分隔嘅摘要同一句 `Supplier bank account failed
-> authentication: …`，**兩句喺呢份 code 度都出唔到**：CLI 印嘅係 JSON，而 REV-052
-> M-3 之後 `safeReason` 出嘅係 `BANK_ACCOUNT_TAMPERED`，冇 message。上面呢段係
-> REV-053 remediation 之後喺真 MySQL 上面重跑同一個情境嘅實際輸出。（REV-053 L-4）
+> 呢段引過兩次錯嘅嘢。第一次引嘅係一個 pipe 分隔嘅摘要同一句 `Supplier bank
+> account failed authentication: …`，**兩句喺當時份 code 度都出唔到**（REV-053
+> L-4）。第二次（REV-053 remediation 嗰次）係真嘅，但佢引住 `safeToRemoveFromKey`
+> 同埋冇 `warnings` —— 而 REV-054 H-1 之後嗰個形狀又唔同咗（REV-055 M-2）。上面
+> 呢段係喺**呢一版 code** 上面重跑同一個情境嘅實際輸出，`exit=1`。
+>
+> 一份實作報告引用輸出，就要同引用一個測試結果一樣：每次改完都要重跑。
 
 即係一個 key id 同密文對唔上嘅行，唔會被「重新加密」成一堆垃圾 —— GCM 個 auth tag
 擋住咗，逐行記低 id，唔授權剷 key，exit code 1。呢個唔係我特登設計嘅測試，但佢示範咗

@@ -111,6 +111,23 @@ export function progressReporter({ json = false, write = (line) => process.stdou
   };
 }
 
+/**
+ * 一份 report 對應邊個 exit code。
+ *
+ * 抽咗出嚟，因為佢本身冇得測：佢住喺 `main` 尾嗰句 `return` 度，而要行到嗰句就要
+ * 一個真資料庫。REV-055 M-3 把佢改成「永遠回 0」，三十三條單元加四條整合全部照綠。
+ * 一個 runbook 或者 CI job 真係會讀呢個數。
+ *
+ * - `0`：跑完，每一行都掂，而且我哋數得到仲有幾多行未換。
+ * - `1`：跑過，但有行失敗，或者**數唔到**剩低幾多 —— 兩樣都係「做咗一半」。
+ *   仲有行未換本身唔係失敗：續跑本來就係預期用法。
+ * - `2`：根本冇跑起（旗打錯、key ring 爛咗、連唔到資料庫）。由 `main` 兩個
+ *   catch 直接回。
+ */
+export function exitCodeFor(report) {
+  return report.failed === 0 && report.remaining !== null ? 0 : 1;
+}
+
 export async function main(kind, argv = process.argv.slice(2)) {
   let options;
   try {
@@ -178,9 +195,7 @@ export async function main(kind, argv = process.argv.slice(2)) {
     });
     process.stdout.write(`${JSON.stringify(report, null, options.json ? 0 : 2)}\n`);
     for (const warning of report.warnings) process.stderr.write(`WARNING ${warning.code}: ${warning.message}\n`);
-    // 有失敗行就唔可以回 0 —— 一個 CI job 或者 runbook 睇 exit code，而「做咗一半」
-    // 唔係成功。仲有行未換唔係失敗：續跑本來就係預期用法。
-    return report.failed === 0 ? 0 : 1;
+    return exitCodeFor(report);
   } catch (error) {
     /**
      * 打錯 `--from`、`--to` 唔係 active、連唔到資料庫 —— 呢啲之前全部變成一個

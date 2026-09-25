@@ -277,18 +277,31 @@ export async function runRotation({
   }
 
   /**
-   * 最後嗰句 `COUNT(*)` 死咗唔應該連成份 report 都冇埋。
+   * 最後嗰句 `COUNT(*)` 死咗唔應該連成份 report 都冇埋 —— 但**佢亦都唔係一行嘅
+   * 失敗**。
    *
-   * 佢之前係一句裸 await：連線喺最後一刻斷咗，成個 run 做過幾多行、邊幾行失敗、
-   * cursor 去到邊 —— 全部隨住個 exception 一齊消失，而工作係真係做咗嘅。而家記低
-   * 佢做一個失敗，`remaining` 留 null，於是 `supplierRowsDrained` 自動變 false。
-   * （REV-054 L-5）
+   * REV-054 L-5 同 L-6 兩個修正同一個 commit 入嚟，然後喺呢度撞咗。L-5 把 COUNT
+   * 嘅失敗 `push` 落 `failures`；L-6 加咗一條測試要求
+   * `processed + declined + failed === attempted`。夾埋之後，一個**兩行都換得乾乾
+   * 淨淨**嘅 run 會報 `attempted 2 / processed 2 / failed 1`、一個 `id: null` 嘅
+   * 失敗、個不變式爆咗、而 exit code 係 1 —— 即係「有行失敗，唔好剷 key」。實測
+   * 過：`rows_actually_rotated: true`。兩條新測試各自都綠，冇一條行過交叉點。
+   *
+   * 第三次喺呢個 module 出現同一件事：兩個各自啱嘅修正，夾埋就錯。所以 `failures`
+   * 而家**只准載真係有 id 嘅行**，而「數唔到剩低幾多」係一個警告 ——
+   * `remaining` 留 `null`，`supplierRowsDrained` 因此係 false，而 CLI 見到 `null`
+   * 就唔會回 0。（REV-055 M-1）
    */
   let remaining = null;
+  let remainingUnknown = null;
   try {
     remaining = await remainingRows(database, kind, from);
   } catch (error) {
-    failures.push({ id: null, ...safeReason(error) });
+    remainingUnknown = {
+      code: "REMAINING_UNKNOWN", ...safeReason(error),
+      message: "the rotation finished but the count of rows still on the old key could not be read; "
+        + "treat this run as incomplete and re-run it before acting on the result"
+    };
   }
   return {
     kind, from, to: active,
@@ -315,7 +328,8 @@ export async function runRotation({
      * 會講埋淨低嗰半邊點算。一個唔授權嘅工具，冇得授權錯。（REV-054 H-1）
      */
     supplierRowsDrained: remaining === 0 && failures.length === 0,
-    warnings: [...ringWarnings({ crypto, transitionStartedAt, now }), sharedRingWarning()],
+    warnings: [...ringWarnings({ crypto, transitionStartedAt, now }), sharedRingWarning(),
+      ...(remainingUnknown ? [remainingUnknown] : [])],
     startedAt, endedAt: clock()
   };
 }
