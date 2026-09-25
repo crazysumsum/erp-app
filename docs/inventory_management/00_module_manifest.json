@@ -27,6 +27,8 @@
       "client/src/pages/inventory/**",
       "client/src/components/inventory/**",
       "client/src/services/inventory.js",
+      "server/test-support/fakeInventoryDatabase.js",
+      "server/test-support/inventoryFixtures.js",
       "server/test/**/inventory*.test.js",
       "client/test/**/inventory*.test.js",
       "client/e2e/inventory-management/**"

@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 51,
+  "revision": 62,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-007",
+  "current_task": null,
   "baseline": {
-    "design": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
-    "plan": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
-    "code_commit": "03df3f4c2a13840f44f3420ae0f692a90f7b6225",
-    "source_fingerprint": "e335af971bcfc5826c6dd1aea3df980936bf40f8d1aee8fde26bf22b5f9472e1",
+    "design": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
+    "plan": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+    "code_commit": "ff35f5f0aa13b68de198929753a0a5a74634cf4c",
+    "source_fingerprint": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
     "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
@@ -32,7 +32,7 @@
     "TASK-004": "DONE",
     "TASK-005": "DONE",
     "TASK-006": "DONE",
-    "TASK-007": "PENDING",
+    "TASK-007": "DONE",
     "TASK-008": "PENDING",
     "TASK-009": "PENDING",
     "TASK-010": "PENDING",
@@ -383,6 +383,51 @@
         "server/database/migrations/0056_create_inventory_audit.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-016",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory DESIGN hash 4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
+      "recorded_at": "2026-09-25T08:52:58+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-029",
+        "server/test-support/fakeInventoryDatabase.js",
+        "server/test-support/inventoryFixtures.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-017",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory PLAN hash 27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "recorded_at": "2026-09-25T08:53:53+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113",
+        "server/test-support/fakeInventoryDatabase.js",
+        "server/test-support/inventoryFixtures.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -541,6 +586,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-014",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-007 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -609,6 +666,28 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/141",
       "actor": "GitHub",
       "observed_at": "2026-09-24T09:21:49+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-007 developer checks and isolated MySQL 26.7.0 two-connection lock-contention smoke test",
+      "code_commit": "ff35f5f0aa13b68de198929753a0a5a74634cf4c",
+      "spec_baseline": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "source_fingerprint": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "actor": "/root developer self-check under HD-014 and HD-015",
+      "observed_at": "2026-09-24T14:03:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-007 developer checks and isolated MySQL 26.7.0 two-connection lock-contention smoke test rebound to approved 0.9 PLAN",
+      "code_commit": "ff35f5f0aa13b68de198929753a0a5a74634cf4c",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "actor": "/root developer self-check under HD-014 through HD-018",
+      "observed_at": "2026-09-25T08:56:22+08:00"
     }
   ],
   "pending_decisions": [
@@ -974,6 +1053,70 @@
         "TC-004",
         "TC-010"
       ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving TASK-007 implementation and focused developer tests without MySQL runtime, migrations, TASK-008 or remote actions"
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "May TASK-007 use an isolated disposable local MySQL 26.7.0 schema with test-owned minimal tables (not production migrations) and two real connections solely for the lock-contention smoke test, then remove the schema?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 selecting option A: isolated disposable local MySQL 26.7.0 test schema with test-owned minimal tables and two real connections, followed by schema removal"
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "May the Inventory module manifest add exactly server/test-support/fakeInventoryDatabase.js and server/test-support/inventoryFixtures.js to allowed_write_paths, matching TASK-007’s already approved design and plan, then re-establish the resulting DESIGN and PLAN baselines?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 selecting option A: add exactly server/test-support/fakeInventoryDatabase.js and server/test-support/inventoryFixtures.js to the Inventory module allowlist, then re-establish resulting DESIGN and PLAN baselines"
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "question": "Approve Inventory DESIGN baseline 4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff, whose only change from approved 0.8 scope is adding the two HD-016-approved TASK-007 test-support files to allowed_write_paths?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory DESIGN hash 4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff"
+    },
+    {
+      "id": "HD-018",
+      "impact": "MAJOR",
+      "question": "Approve Inventory PLAN baseline 27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be, resulting solely from the HD-016-approved manifest allowlist correction with no task, test or command change?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory PLAN hash 27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be"
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "question": "May TASK-008 implement only migration 0057 for Warehouse and Bin persistence, its schema inspector and focused developer tests, with execution limited to a fresh disposable MySQL 26.7.0 schema, without starting TASK-009 or performing remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-008",
+        "TC-003",
+        "TC-010"
+      ],
       "status": "OPEN",
       "answer_ref": null
     }
@@ -1230,5 +1373,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain Sam's HD-014 decision before starting TASK-007; do not execute migrations, start TASK-008 or perform any remote action."
+  "next_safe_action": "Obtain Sam’s HD-019 decision before entering PHASE-002 and starting TASK-008 migration 0057 for Warehouse and Bin persistence. No database runtime is active, and no push, PR or merge is authorized."
 }
