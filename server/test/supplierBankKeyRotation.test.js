@@ -697,6 +697,19 @@ test("the report never claims a key is safe to remove from the ring", async () =
     "processed", "remaining", "startedAt", "supplierRowsDrained", "to", "warnings"
   ], "the report's shape is fixed: a new field must be justified against what this module can see");
 
+  /**
+   * `warnings` 係上面嗰個清單入面**一個** key，而佢啲內容冇人管 —— 而今輪正正就係
+   * 開始往佢入面寫新嘢嗰一輪（`REMAINING_UNKNOWN` 就係行呢道門入嚟嘅）。一個
+   * `{ code: "SAFE_TO_REMOVE_KEY", message: "… safe to remove it …" }` 行得過兩套
+   * 測試，而且會原句印喺真 CLI 個 stderr 上面，就喺嗰句話你唔可以剷嘅警告下面。
+   * 即係個授權冇消失，佢搬咗屋。（REV-056 M-2）
+   */
+  const ALLOWED_WARNINGS = [
+    "RING_TOO_LARGE", "TRANSITION_TOO_LONG", "RING_SHARED_WITH_OTHER_TABLES", "REMAINING_UNKNOWN"
+  ];
+  assert.deepEqual(report.warnings.map((w) => w.code).filter((code) => !ALLOWED_WARNINGS.includes(code)), [],
+    "a new warning code is a new sentence this module puts in front of an operator: justify it here");
+
   // 而且每次都要講埋淨低嗰半邊 —— 連呢個完全乾淨嘅 run 都要。
   const shared = report.warnings.find((warning) => warning.code === "RING_SHARED_WITH_OTHER_TABLES");
   assert.ok(shared, "every run must say the ring reaches past this table");
@@ -719,6 +732,12 @@ test("every attempted row lands in exactly one of processed, declined or failed"
   assert.equal(report.processed + report.declined + report.failed, report.attempted,
     `processed ${report.processed} + declined ${report.declined} + failed ${report.failed} `
     + `must account for all ${report.attempted} attempted rows`);
+
+  // 呢句本來擺咗喺一個 `failures` 已經釘死係 `[]` 嘅測試度，即係永遠唔會紅。
+  // 搬咗嚟一個**真係有失敗**嘅 fixture。（REV-056 L-2）
+  assert.equal(report.failures.length, 2, "this fixture really does fail two rows");
+  assert.deepEqual(report.failures.map((f) => f.id), [2, 4],
+    "failures carries rows, and a row always has an id");
 });
 
 /**
@@ -752,8 +771,6 @@ test("a failure in the final count keeps the report and refuses to call the rows
   assert.deepEqual(report.failures, []);
   assert.equal(report.processed + report.declined + report.failed, report.attempted,
     "the count invariant must survive a failure that is not about a row");
-  assert.deepEqual(report.failures.map((f) => f.id).filter((id) => id === null), [],
-    "failures carries rows, and a row always has an id");
 
   const unknown = report.warnings.find((w) => w.code === "REMAINING_UNKNOWN");
   assert.ok(unknown, "it is a warning instead");

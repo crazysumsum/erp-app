@@ -17,6 +17,8 @@ import { exitCodeFor, main, parseArguments, progressReporter, USAGE }
   from "../scripts/supplierBankRotationCli.js";
 
 const REQUIRED = ["--from=e1", "--to=e2"];
+const PROBE_OLD = "probe-old";
+const PROBE_NEW = "probe-new";
 
 test("the two key ids are required, and an empty one is a different complaint", () => {
   assert.throws(() => parseArguments([]), /both --from and --to are required/u);
@@ -178,10 +180,123 @@ test("the CLI's exit codes mean what the contract says", () => {
   assert.ok(!/\n\s+at /u.test(badRing.stderr), `no stack trace for an operator error:\n${badRing.stderr}`);
   assert.ok(badRing.stderr.trim().length > 0, "and it must say something");
 
-  // 連唔到資料庫亦都係「跑唔起」，唔係「有行失敗」。
-  const noDatabase = run(["--from=e1", "--to=e2"], { DB_PORT: "1", DB_HOST: "127.0.0.1" });
+  /**
+   * 連唔到資料庫亦都係「跑唔起」，唔係「有行失敗」。
+   *
+   * 呢個 case 本來寫住 `--to=e2`，而 CI 個 ring 入面根本冇 `e2` —— 所以佢死喺
+   * `assertTarget` 度，一個 socket 都冇開過，`DB_PORT` 完全冇作用。個 assertion
+   * 過，係因為個 process 為咗第二個原因死咗。而家用 ring 入面真有嘅 key id，再
+   * 要求 stderr 真係講得出連唔到，噉佢先冇得再喺個 guard 度過。（REV-056 L-1）
+   */
+  const key = (fill) => Buffer.alloc(32, fill).toString("base64");
+  const noDatabase = run([`--from=${PROBE_OLD}`, `--to=${PROBE_NEW}`], {
+    DB_PORT: "1", DB_HOST: "127.0.0.1", DB_SOCKET_PATH: "",
+    SUPPLIER_BANK_ACTIVE_KEY_ID: PROBE_NEW,
+    SUPPLIER_BANK_ENCRYPTION_KEYS: JSON.stringify({ [PROBE_OLD]: key(1), [PROBE_NEW]: key(2) }),
+    SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID: "probe-look",
+    SUPPLIER_BANK_LOOKUP_KEYS: JSON.stringify({ "probe-look": key(3) })
+  });
   assert.equal(noDatabase.status, 2, "an unreachable database is 2, not 1");
+  assert.match(noDatabase.stderr, /ECONNREFUSED|ETIMEDOUT|connect /u,
+    `the case must actually reach the database:\n${noDatabase.stderr}`);
 });
+
+/**
+ * REV-056 M-1。`main` 尾嗰句 `return exitCodeFor(report)` 之前冇任何嘢睇住：把佢
+ * 改成 `return 1`，三十五條單元加五條整合全部照綠 —— 即係一個每行都換乾淨嘅輪替
+ * 報 exit 1（「當做咗一半」），而冇人知。而今輪先至加嗰條 `remaining === null → 1`
+ * 規則，更加係連住條冇人睇嘅線：`exitCodeFor` 自己六個 case 都綠，但 `main` 用唔
+ * 用佢，冇嘢講得出。
+ *
+ * 用注入嘅連線，所以呢兩條唔使真 MySQL 都行到（CLAUDE.md §7）。
+ */
+
+/** 自己帶 ring，唔靠環境 —— 呢兩條測試唔應該因為 CI 個 ring 改咗就紅。 */
+async function probeCrypto() {
+  const { normalizeSupplierConfig } = await import("../src/modules/supplier/normalizeSupplierConfig.js");
+  const { SupplierBankCrypto } = await import("../src/modules/supplier/SupplierBankCrypto.js");
+  const key = (fill) => Buffer.alloc(32, fill).toString("base64");
+  const supplier = normalizeSupplierConfig({
+    bankEncryption: {
+      activeKeyId: PROBE_NEW,
+      keyRing: JSON.stringify({ [PROBE_OLD]: key(1), [PROBE_NEW]: key(2) })
+    },
+    bankLookup: {
+      activeKeyId: "probe-look",
+      keyRing: JSON.stringify({ "probe-look": key(3) })
+    }
+  });
+  return new SupplierBankCrypto({ encryption: supplier.bankEncryption, lookup: supplier.bankLookup });
+}
+
+async function connectionWhere({ count }) {
+  const crypto = await probeCrypto();
+  return {
+    crypto,
+    database: {
+      async query(sql) {
+        if (sql.includes("COUNT(*)")) return count();
+        return [[]];                       // 冇行要換
+      },
+      async withTransaction() { throw new Error("no row should be rotated in this fixture"); }
+    },
+    close: async () => {}
+  };
+}
+
+test("main returns 0 for a rotation that drained every row, and 1 when the count could not be read", async () => {
+  const out = [];
+  const originalOut = process.stdout.write.bind(process.stdout);
+  const originalErr = process.stderr.write.bind(process.stderr);
+  process.stdout.write = (chunk) => { out.push(String(chunk)); return true; };
+  process.stderr.write = () => true;
+  let drained, unknown;
+  try {
+    drained = await main(ROTATION_KINDS.ENCRYPTION,
+      [`--from=${PROBE_OLD}`, `--to=${PROBE_NEW}`, "--json"],
+      () => connectionWhere({ count: () => [[{ remaining: 0 }]] }));
+    unknown = await main(ROTATION_KINDS.ENCRYPTION,
+      [`--from=${PROBE_OLD}`, `--to=${PROBE_NEW}`, "--json"],
+      () => connectionWhere({ count: () => { throw Object.assign(new Error("gone"), { code: "PROTOCOL_CONNECTION_LOST" }); } }));
+  } finally {
+    process.stdout.write = originalOut;
+    process.stderr.write = originalErr;
+  }
+
+  assert.equal(drained, 0, "a completed, fully drained rotation is exit 0");
+  assert.equal(unknown, 1, "a rotation whose remaining count could not be read is exit 1, not 0");
+
+  const reports = out.filter((line) => line.startsWith("{")).map((line) => JSON.parse(line));
+  assert.equal(reports[0].supplierRowsDrained, true);
+  assert.equal(reports[1].remaining, null, "and the report says so too");
+  assert.ok(reports[1].warnings.some((w) => w.code === "REMAINING_UNKNOWN"));
+});
+
+// REV-056 L-3：收尾失敗唔可以改寫一個做完咗嘅 run 嘅結論。
+test("a teardown failure does not rewrite the verdict of a finished run", async () => {
+  const originalOut = process.stdout.write.bind(process.stdout);
+  const originalErr = process.stderr.write.bind(process.stderr);
+  process.stdout.write = () => true;
+  process.stderr.write = () => true;
+  try {
+    const crypto = await probeCrypto();
+    const code = await main(ROTATION_KINDS.ENCRYPTION,
+      [`--from=${PROBE_OLD}`, `--to=${PROBE_NEW}`, "--json"],
+      async () => ({
+        crypto,
+        database: {
+          async query(sql) { return sql.includes("COUNT(*)") ? [[{ remaining: 0 }]] : [[]]; },
+          async withTransaction() { throw new Error("unused"); }
+        },
+        close: async () => { throw new Error("pool teardown failed"); }
+      }));
+    assert.equal(code, 0, "the rotation drained every row; how the pool closed cannot change that");
+  } finally {
+    process.stdout.write = originalOut;
+    process.stderr.write = originalErr;
+  }
+});
+
 
 // REV-055 M-1／M-3：呢個表之前一個 case 都冇人行過。
 test("exitCodeFor distinguishes done, half-done, and could-not-count", () => {

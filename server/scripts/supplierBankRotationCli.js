@@ -14,6 +14,11 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 
+// 靜態 import 安全：`bankKeyRotation.js` 唔讀 config，而兩個 entry script 已經
+// 靜態 import 緊佢。要留喺 `openConnection` 入面動態載嘅，得嗰幾個讀 `process.env`
+// 嘅 config module。
+import { runRotation } from "../src/modules/supplier/bankKeyRotation.js";
+
 const MAX_BATCH_SIZE = 1000;
 
 export const USAGE = [
@@ -128,7 +133,56 @@ export function exitCodeFor(report) {
   return report.failed === 0 && report.remaining !== null ? 0 : 1;
 }
 
-export async function main(kind, argv = process.argv.slice(2)) {
+/**
+ * 開一條去真資料庫嘅連線，連埋由 config 砌出嚟嘅 crypto。
+ *
+ * 抽咗做一個參數（`main` 個第三個 argument），因為 `main` 尾嗰句
+ * `return exitCodeFor(report)` 之前冇任何嘢睇住 —— 要行到嗰句就要一個真資料庫，
+ * 所以冇一條測試行過佢。把佢改成 `return 1`，三十五條單元加五條整合全部照綠；
+ * 而今輪先至加嗰條 `remaining === null → 1` 規則，更加係連住條冇人睇嘅線。
+ * （REV-056 M-1，CLAUDE.md §7）
+ *
+ * 載入次序唔可以亂：`config/*.js` 喺載入當下就讀 `process.env`，所以一定要先
+ * `dotenv.config()` 再動態 import。
+ */
+async function openRuntime() {
+  dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
+  const [{ default: supplierConfig }, { default: databaseConfig }] = await Promise.all([
+    import("../config/supplier.js"), import("../config/database.js")
+  ]);
+  const { normalizeSupplierConfig } = await import("../src/modules/supplier/normalizeSupplierConfig.js");
+  const { SupplierBankCrypto } = await import("../src/modules/supplier/SupplierBankCrypto.js");
+  const { createMySqlDatabasePool } = await import("../src/services/mysqldatabase/connection.js");
+  const { normalizeDatabaseConfig } = await import("../src/framework/configuration/normalizeDatabaseConfig.js");
+
+  const supplier = normalizeSupplierConfig(supplierConfig);
+  const crypto = new SupplierBankCrypto({ encryption: supplier.bankEncryption, lookup: supplier.bankLookup });
+  const pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
+
+  return {
+    crypto,
+    database: {
+      query: (sql, params) => pool.query(sql, params),
+      async withTransaction(work) {
+        const connection = await pool.getConnection();
+        try {
+          await connection.beginTransaction();
+          const result = await work(connection);
+          await connection.commit();
+          return result;
+        } catch (error) {
+          await connection.rollback();
+          throw error;
+        } finally {
+          connection.release();
+        }
+      }
+    },
+    close: () => pool.end()
+  };
+}
+
+export async function main(kind, argv = process.argv.slice(2), openConnection = openRuntime) {
   let options;
   try {
     options = parseArguments(argv);
@@ -152,42 +206,11 @@ export async function main(kind, argv = process.argv.slice(2)) {
    * 出一個原裝 Node stack trace，而且 exit **1** —— 即係呢個 CLI 自己個合約留返
    * 俾「輪替行過，有行失敗」嗰個 code。（REV-054 M-4）
    */
-  let pool = null;
+  let runtime = null;
   try {
-    dotenv.config({ path: fileURLToPath(new URL("../.env", import.meta.url)) });
-    const [{ default: supplierConfig }, { default: databaseConfig }] = await Promise.all([
-      import("../config/supplier.js"), import("../config/database.js")
-    ]);
-    const { normalizeSupplierConfig } = await import("../src/modules/supplier/normalizeSupplierConfig.js");
-    const { SupplierBankCrypto } = await import("../src/modules/supplier/SupplierBankCrypto.js");
-    const { runRotation } = await import("../src/modules/supplier/bankKeyRotation.js");
-    const { createMySqlDatabasePool } = await import("../src/services/mysqldatabase/connection.js");
-    const { normalizeDatabaseConfig } = await import("../src/framework/configuration/normalizeDatabaseConfig.js");
-
-    const supplier = normalizeSupplierConfig(supplierConfig);
-    const crypto = new SupplierBankCrypto({ encryption: supplier.bankEncryption, lookup: supplier.bankLookup });
-    pool = createMySqlDatabasePool(normalizeDatabaseConfig(databaseConfig));
-
-    const database = {
-      query: (sql, params) => pool.query(sql, params),
-      async withTransaction(work) {
-        const connection = await pool.getConnection();
-        try {
-          await connection.beginTransaction();
-          const result = await work(connection);
-          await connection.commit();
-          return result;
-        } catch (error) {
-          await connection.rollback();
-          throw error;
-        } finally {
-          connection.release();
-        }
-      }
-    };
-
+    runtime = await openConnection();
     const report = await runRotation({
-      database, crypto, kind, from: options.from, to: options.to,
+      database: runtime.database, crypto: runtime.crypto, kind, from: options.from, to: options.to,
       ...(options.batchSize === undefined ? {} : { batchSize: options.batchSize }),
       ...(options.limit === undefined ? {} : { limit: options.limit }),
       transitionStartedAt: options.transitionStarted,
@@ -209,7 +232,20 @@ export async function main(kind, argv = process.argv.slice(2)) {
     process.stderr.write(`${error.message}\n`);
     return 2;
   } finally {
-    // 個 pool 可能根本未起得成 —— 例如 key ring 爛咗，掟喺佢前面。
-    if (pool) await pool.end();
+    /**
+     * 收尾失敗唔可以改寫一個已經做完咗嘅 run 嘅結論。
+     *
+     * 之前呢句係 `if (pool) await pool.end()` 一句裸 await：`pool.end()` 一掟錯，
+     * 佢就取代咗 `main` 個回傳值，變成一個 unhandled rejection 走到 entry script
+     * 個 top-level await 度 —— 一個每一行都換得乾乾淨淨、按合約應該 exit 0 嘅
+     * run，變成 exit 1 加一個原裝 stack trace。而由今輪起 exit 1 仲多咗一個意思
+     * （「數唔到剩低幾多」），即係 operator 收到一個「當佢做咗一半」嘅訊號，而
+     * 佢其實係做完咗。（REV-056 L-3）
+     */
+    try {
+      await runtime?.close();
+    } catch {
+      // 個 run 已經完咗；收尾點都好都唔應該影響個判斷。
+    }
   }
 }
