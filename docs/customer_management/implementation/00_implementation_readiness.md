@@ -401,3 +401,160 @@ This is developer evidence only, not Technical Acceptance, UAT or a release clai
 - CI is intentionally not run under the Product Owner's explicit publication
   direction and accepted risk. Exact-candidate local checks and independent review
   remain required before merge.
+
+## TASK-020 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added the approved narrow delegation exception: only an actor whose fresh database
+  roles include protected `system-admin` may delegate `customer.bank.view` or
+  `customer.bank.mgmt` without holding those route permissions. Every unrelated
+  unheld permission remains `PERMISSION_ESCALATION_DENIED`.
+- Role-permission, user-role and initial-user role assignment all pass the fresh
+  database role set into the shared guard. Existing `jwt-device-password`, required
+  reason, audit transaction and compare-and-set behavior remain the enforcement for
+  approved device, current password, auditability and replay rejection.
+- Focused authorization and service tests passed 76/76 and repository ESLint passed.
+  A fresh isolated MySQL schema migrated through `0048`, the real role/user HTTP
+  suites passed 16/16 including the protected delegation and replay scenario, the
+  complete migration rerun was a no-op, and final schema absence was confirmed.
+- The delegating administrator remained absent from the Customer bank permission
+  assignment. Independent review identified and the implementation then closed both
+  possible self-escalation paths: assigning a bank-bearing role to the acting user,
+  and adding bank permissions to any custom role already held by that user. Both bank
+  permissions and both paths are covered by unit and real-HTTP regression checks, so
+  delegation does not grant route access. CI was not run under the Product Owner's
+  standing direction and accepted risk.
+- Independent re-review approved the exact remediated candidate after independently
+  rerunning the focused 76/76 unit suite; no blocking TASK-020 finding remains.
+
+## TASK-021 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added the exact `customer_bank_accounts` contract with no plaintext account-number
+  column, owner-scoped blind-index uniqueness, cross-owner lookup support, one active
+  default per Customer, exact foreign keys and a fail-closed adoption inspector.
+- Added Customer-only AES-256-GCM with random 96-bit IVs, owner/context-bound injective
+  AAD, HMAC-SHA-256 blind indexes across the whole lookup ring, safe normalization and
+  masking. Encryption and lookup key material must be separate, valid 32-byte keys;
+  missing, partial, malformed or retired key configuration fails closed without
+  serializing key material.
+- Focused unit/configuration tests passed 18/18. The real-MySQL schema test passed the
+  no-plaintext scan, same-owner duplicate constraint, legal cross-owner duplicate and
+  active-default constraint. A fresh schema migrated through `0049`, and a complete
+  rerun skipped every migration.
+- The full serial real-MySQL server coverage gate passed at 94.90% lines, 83.89%
+  branches and 91.96% functions; all 34 high-risk per-file floors passed. Repository
+  ESLint and `git diff --check` passed. CI was not run under the Product Owner's
+  standing direction and accepted risk.
+
+## TASK-026 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Import confirmation now records a durable actor/route/payload-bound operation in
+  the same transaction as the queued job and audit. Each valid/warning row applies
+  its Customer aggregate, audit and terminal row marker atomically; commit-unknown
+  reconciliation does not replay terminal rows.
+- Result generation is bounded and formula-safe, contains only row/status/error-code
+  projections, finalizes outside database transactions and rechecks the confirmer's
+  current permissions before every publish commit. Source recovery atomically
+  reconciles job state, upload audit and the original operation outcome.
+- Focused import/lifecycle/operation tests passed 59/59; real-MySQL TC-060..TC-063
+  passed; repository ESLint and `git diff --check` passed. The full server regression
+  ran 2,103 tests (1,785 pass, 311 skip) and retained only the same seven inherited,
+  non-Customer Supplier bank-configuration failures.
+- Independent review first found three required durability/authorization races. The
+  exact remediated candidate `9d955fe9b1b7142145f837fdbc51086e1bca2dcc`
+  was independently retested (28/28) and approved with every finding closed. Under
+  HD-002, no automatic destructive retention purge is enabled in this release.
+
+## TASK-027 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added actor-owned durable Customer export jobs, exact allowlisted list filters, a
+  10,000-row bound, formula-safe CSV output, expiry enforcement and current-permission
+  checks for creation, finalization and download. Bank, attachment and private credit
+  data are never selected.
+- Export rows are collected in pages of 100 inside one MySQL `REPEATABLE READ`
+  snapshot. Duplicate/short/drifting pagination fails with a stable conflict instead
+  of publishing an incomplete result.
+- The expected result hash/count is registered before storage publication. The shared
+  bounded worker reconciles pre-registration, staged, finalized, missing and
+  authorization-revoked states. All terminal/recovery paths use operation-then-job
+  lock order and conditional state transitions, so a concurrent idempotent retry is
+  neither deadlocked nor overwritten by a stale recovery scan.
+- The import UI now exposes total/success/failure/skipped counts and row-level
+  `field · stable code · message` diagnostics. Filtered export and the import flow
+  remain keyboard-operable and fit a 375px viewport.
+- Focused export/worker/Customer-list server tests passed, repository ESLint passed,
+  full client tests passed 665/665, and the production client build passed with only
+  the existing chunk-size advisory. Real-MySQL TC-066 passed 2/2, including the
+  barrier-controlled retry-versus-recovery concurrency regression. Customer
+  Playwright passed 16/16 with console/network monitoring.
+- Independent review required three remediation rounds covering durable recovery,
+  fixed-snapshot pagination, structured UI diagnostics, stale-scan CAS behavior and
+  lock ordering. Exact candidate `08a1afaf5461371a65161ad1566498fa83f2eef3`
+  was independently approved with no remaining Required finding. CI was not run
+  under the Product Owner's explicit standing exception.
+
+## TASK-028 developer verification
+
+This is developer evidence only, not Technical Acceptance, UAT, CI or a merge claim.
+
+- Added the reproducible, opt-in TC-064 real-MySQL fixture and proved 10,000-row
+  precheck plus execution in 48.93 seconds, with 206.38 rows/s execution throughput
+  and 4.59/6.97 ms row p50/p95. During execution, 446 normal authenticated Customer
+  list API requests completed with zero errors at 8.50/12.21 ms p50/p95; MySQL added
+  zero InnoDB row-lock waits, observed zero current waiters and used one additional
+  connection against the ten-connection pool. Five-millisecond plus per-batch/per-row
+  sampling measured 81.53 MB peak heap growth against the 256 MiB ceiling. All rows
+  succeeded and cleanup removed the synthetic Customers, job/audit/authorization
+  rows and private files.
+- Customer real-MySQL integration passed 16/16; the exact Customer suite including
+  TC-064 passed 255/255; the focused sensitive/recovery suite passed 105/105; client
+  coverage passed 665/665; repository ESLint, production build, no-secret scan and
+  `git diff --check` passed. Customer Playwright passed 16/16 with console/network
+  monitoring.
+- Customer Bank rotate and reindex CLIs both reported `processed=0, remaining=0`.
+  Attachment/import/export fault-injection and recovery paths passed, and disabled
+  config/current-permission paths remained fail-closed without deleting ciphertext
+  or recoverable metadata.
+- The repository-wide coverage command retains only out-of-scope current-main debt:
+  global coverage is 83.66/81.28/81.94, the existing User/Auth refresh handler is
+  below its branch floor, and two global configuration assertions are mutually
+  incompatible with the shared temporary Bank key rings required for application
+  discovery. Under the Product Owner's standing Customer-only scope instruction,
+  no other module was modified and no assertion or threshold was weakened. Full
+  detail is in `phase-PHASE-003-report.md`.
+- CI was intentionally not run under the Product Owner's explicit standing
+  publication direction and accepted risk.
+
+### PHASE-003 publication
+
+- Independent exact-candidate review approved the remediated TASK-028 candidate
+  with no Required finding.
+- PR #143 merged to `main` as `b6f831d3155f8b26244ec558f71ddb78b3b0a5c2`
+  on 2026-09-24. Per the Product Owner's explicit exception, publication did not
+  wait for CI; all recorded local developer gates and independent review passed.
+- TASK-029 dependency discovery found the approved Sales design contract but no
+  merged `server/src/modules/sales` implementation or real Sales consumer. The
+  Customer provider already exposes the designed `new_sale` and credit methods,
+  but TASK-029 remains blocked because its DoD requires real consumer contract
+  tests; no fake Sales consumer was introduced.
+
+### PHASE-004 blocked-entry publication and CI recovery
+
+- PR #144 merged the reviewed PHASE-004 blocked-entry record to `main` as
+  `8bcf4378134423e672292ac525e3653be341cbd3` on 2026-09-24. Its automatically
+  triggered server/client MySQL job failed after merge; the approved no-CI
+  publication exception applied to that documentation-only candidate.
+- PR #145 corrected the Customer/Supplier bank-key CI environment, isolated
+  ambient configuration-test state, serialized the shared MySQL coverage run,
+  and added Customer import/service boundary coverage. It merged as
+  `c0ea960b9ca061b26cfee037163b4e5e7c42a1d0`; all five GitHub CI jobs passed.
+- Reinspection of that integrated baseline still found no
+  `server/src/modules/sales` implementation or real Sales consumer test. TASK-029
+  therefore remains `BLOCKED` without expanding Customer ownership.

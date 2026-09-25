@@ -1,5 +1,6 @@
 import { getHeapStatistics } from "node:v8";
 import applicationConfig from "../../../config/application.js";
+import customerConfig from "../../../config/customer.js";
 import apiConfig from "../../../config/api.js";
 import databaseConfig from "../../../config/database.js";
 import deviceBindingConfig from "../../../config/deviceBinding.js";
@@ -18,12 +19,14 @@ import { normalizeLoggingConfig } from "../../services/logging/normalizeLoggingC
 import { normalizeSecurityConfig } from "../security/normalizeSecurityConfig.js";
 import { normalizeApiConfig } from "../api/normalizeApiConfig.js";
 import { ConfigurationError } from "./ConfigurationError.js";
+import { revealSecret } from "./SecretValue.js";
 import { normalizeApplicationConfig } from "./normalizeApplicationConfig.js";
 import { normalizeDatabaseConfig } from "./normalizeDatabaseConfig.js";
 import { normalizeDeviceBindingConfig } from "../../services/deviceBinding/normalizeDeviceBindingConfig.js";
 import { normalizeIdempotencyConfig } from "../../services/idempotency/normalizeIdempotencyConfig.js";
 import { normalizeInventoryConfig } from "../../modules/inventory/normalizeInventoryConfig.js";
 import { normalizeItemConfig } from "../../modules/item/normalizeItemConfig.js";
+import { normalizeCustomerConfig } from "../../modules/customer/normalizeCustomerConfig.js";
 import { normalizeJwtConfig } from "./normalizeJwtConfig.js";
 import { normalizeRequestConfig } from "./normalizeRequestConfig.js";
 import { normalizeRequestLimiterConfig } from "../../services/requestLimiter/normalizeRequestLimiterConfig.js";
@@ -35,6 +38,7 @@ import { JOB_NAME as REVOCATION_REFRESH_JOB } from "../../services/tokenRevocati
 export function defaultConfigurationSource() {
   return {
     application: applicationConfig,
+    customer: customerConfig,
     api: apiConfig,
     database: databaseConfig,
     deviceBinding: deviceBindingConfig,
@@ -88,6 +92,7 @@ export function validateApplicationConfiguration(
   validateSection("application", () =>
     normalizeApplicationConfig(source?.application)
   );
+  validateSection("customer", () => normalizeCustomerConfig(source?.customer));
   validateSection("api", () => normalizeApiConfig(source?.api));
   validateSection("database", () => normalizeDatabaseConfig(source?.database));
   validateSection("deviceBinding", () =>
@@ -133,10 +138,18 @@ export function validateApplicationConfiguration(
  * 沒有上限、或讓某個設定值從此是一句空話。
  */
 function crossSectionChecks(normalized, details, { heapLimitBytes }) {
-  const { application, database, logging, requestLimiter, scheduler } = normalized;
+  const { application, customer, database, logging, requestLimiter, scheduler, supplier } = normalized;
 
   checkLogQueueBudget(logging, heapLimitBytes, details);
   checkRevocationRefreshScheduled(scheduler, details);
+  checkSharedBankKeyRings(customer, supplier, details);
+
+  if (application && customer?.attachment && customer.attachment.orphanGraceMs <= application.requestTimeoutMs) {
+    details.push({
+      section: "customer",
+      message: `attachment.orphanGraceMs (${customer.attachment.orphanGraceMs}ms) must exceed application.requestTimeoutMs (${application.requestTimeoutMs}ms) so cleanup cannot delete a file from a live upload request.`
+    });
+  }
 
   if (!application || !database) {
     return;
@@ -223,6 +236,35 @@ function crossSectionChecks(normalized, details, { heapLimitBytes }) {
         `requestLimiter.maxConcurrentRequests (${requestLimiter.maxConcurrentRequests}) ` +
         `minus "connectionLimit" (${database.connectionLimit}) = ${worstCaseWaiters}, ` +
         "or the pool starts rejecting queries at ordinary full load."
+    });
+  }
+}
+
+function sameKeyGroup(left, right) {
+  if (left.activeKeyId !== right.activeKeyId) return false;
+  const ids = Object.keys(left.keyRing);
+  return ids.length === Object.keys(right.keyRing).length && ids.every((id) =>
+    Object.hasOwn(right.keyRing, id) && revealSecret(left.keyRing[id]) === revealSecret(right.keyRing[id])
+  );
+}
+
+function checkSharedBankKeyRings(customer, supplier, details) {
+  const customerEnabled = Boolean(customer?.bankEncryption);
+  const supplierEnabled = Boolean(supplier?.bankEncryption);
+  if (!customerEnabled && !supplierEnabled) return;
+  if (customerEnabled !== supplierEnabled ||
+      !customer?.bankLookup || !supplier?.bankLookup) {
+    details.push({
+      section: "customer",
+      message: "Customer and Supplier bank capabilities must be enabled together with the same key rings"
+    });
+    return;
+  }
+  if (!sameKeyGroup(customer.bankEncryption, supplier.bankEncryption) ||
+      !sameKeyGroup(customer.bankLookup, supplier.bankLookup)) {
+    details.push({
+      section: "customer",
+      message: "Customer and Supplier bank capabilities must use the same key rings with owner-separated AAD"
     });
   }
 }

@@ -22,11 +22,15 @@ export async function cleanupUploadedFiles(req, logger, reason) {
   // 讀到已經不存在的路徑。
   req.files = Object.freeze([]);
 
+  for (const file of files) {
+    if (Buffer.isBuffer(file.buffer)) file.buffer.fill(0);
+  }
+
   const removed = [];
   const failures = [];
 
   await Promise.all(
-    files.map(async (file) => {
+    files.filter((file) => file.path).map(async (file) => {
       try {
         await unlink(file.path);
         removed.push(file.storedName);

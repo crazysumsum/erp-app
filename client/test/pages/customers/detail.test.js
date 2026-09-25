@@ -14,14 +14,14 @@ import { useSessionStore } from "@/stores/session.js";
 
 const CUSTOMER = { id: 7, code: "CUS-007", legalName: "Evergreen Customer", displayName: "Evergreen", tradingName: "Evergreen", defaultCurrencyCode: "HKD", defaultPaymentTermId: null, accountManagerUserId: null, categoryId: null, industryId: null, territoryId: null, generalPhone: "", generalEmail: "", website: "", notes: "", status: "draft", version: 2, addresses: [], contacts: [], identifiers: [], credit: { configured: false, status: "not_configured" } };
 const Host = { render: () => h(RouterView) };
-async function mountPage() {
-  customerService.getById.mockResolvedValue(CUSTOMER);
+async function mountPage({ getById = async () => CUSTOMER } = {}) {
+  customerService.getById.mockImplementation(getById);
   customerService.completeness.mockResolvedValue({ customerId: 7, issues: [], warnings: [] });
   const router = createRouter({ history: createMemoryHistory(), routes: [{ path: page.path, component: CustomerDetailPage }, { path: "/customers", component: { template: "<div>customers</div>" } }] });
   await router.push("/customers/7"); await router.isReady();
   useSessionStore().user = { id: 1, permissions: ["customer.view", "customer.mgmt"], roles: [] };
   const wrapper = mount(Host, { global: { plugins: [Quasar, router] }, attachTo: document.body });
-  await flushPromises(); return { wrapper, body: new DOMWrapper(document.body) };
+  await flushPromises(); return { wrapper, body: new DOMWrapper(document.body), router };
 }
 function input(body, label) { return body.findAll(".q-field").find((field) => field.text().includes(label)).find("input, textarea"); }
 describe("pages/customers/CustomerDetailPage.vue", () => {
@@ -30,6 +30,7 @@ describe("pages/customers/CustomerDetailPage.vue", () => {
     expect(page.requires.permissions).toEqual(["customer.view"]);
     const { body } = await mountPage();
     expect(body.text()).toContain("CUS-007"); expect(body.text()).toContain("草稿");
+    expect(body.text()).toContain("銀行帳戶");
     await body.find('button[aria-label="編輯一般資料"]').trigger("click"); await flushPromises();
     expect(body.find('button[aria-label="儲存一般資料"]').exists()).toBe(true);
   });
@@ -53,5 +54,12 @@ describe("pages/customers/CustomerDetailPage.vue", () => {
     await body.find('button[aria-label="儲存一般資料"]').trigger("click"); await flushPromises();
     expect(body.text()).toContain("Evergreen Customer Limited");
     expect(body.text()).toContain("版本 3");
+  });
+  it("reloads the reused page when the customer route id changes", async () => {
+    const { body, router } = await mountPage({ getById: async (id) => ({ ...CUSTOMER, id, code: `CUS-00${id}`, legalName: id === 8 ? "Second Customer" : CUSTOMER.legalName }) });
+    await router.push("/customers/8"); await flushPromises();
+    expect(body.text()).toContain("CUS-008 — Second Customer");
+    expect(customerService.getById).toHaveBeenLastCalledWith(8);
+    expect(customerService.completeness).toHaveBeenLastCalledWith(8);
   });
 });

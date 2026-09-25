@@ -7,10 +7,14 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "migrate": "node scripts/migrate.js",
+    "customer-bank:rotate": "node scripts/rotateCustomerBankEncryption.js",
+    "customer-bank:reindex": "node scripts/reindexCustomerBankBlindIndexes.js",
     "create-user": "node scripts/createUser.js",
+    "supplier:bank:rotate-encryption": "node scripts/rotateSupplierBankEncryption.js",
+    "supplier:bank:reindex-lookup": "node scripts/reindexSupplierBankBlindIndexes.js",
     "test": "node --test --import ./test-support/testEnv.js",
     "pretest:coverage": "node -e \"require('node:fs').mkdirSync('coverage',{recursive:true})\"",
-    "test:coverage": "node --test --import ./test-support/testEnv.js --experimental-test-coverage --test-coverage-lines=92 --test-coverage-branches=83 --test-coverage-functions=90 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info && node scripts/checkCoverageFloors.js"
+    "test:coverage": "node --test --test-concurrency=1 --import ./test-support/testEnv.js --experimental-test-coverage --test-coverage-lines=92 --test-coverage-branches=83 --test-coverage-functions=90 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info && node scripts/checkCoverageFloors.js"
   },
   "dependencies": {
     "ajv": "^8.20.0",
