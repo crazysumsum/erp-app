@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 92,
+  "revision": 93,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
     "plan": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
-    "code_commit": "e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b",
+    "code_commit": "ade425f1800578161cf11042186a524223434f1f",
     "source_fingerprint": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
@@ -2086,9 +2086,25 @@
       "idempotency_key": "inventory-main-reconciliation-20260925",
       "status": "CONFIRMED",
       "source_ref": "Fetched origin/main and created merge commit e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b without conflicts before post-merge validation"
+    },
+    {
+      "id": "EXT-046",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-task001-task012-publication-push-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Pushed branch through ade425f1800578161cf11042186a524223434f1f to origin"
+    },
+    {
+      "id": "EXT-047",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-task001-task012-pr-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/148"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Under APR-029, commit and push the reconciled branch, create and merge its PR into main without running or waiting for CI, then remove the merged branch and worktree. Do not start TASK-013."
+  "next_safe_action": "Under APR-029, merge PR #148 into main without running or waiting for CI, then remove the merged branch and worktree. Do not start TASK-013."
 }
