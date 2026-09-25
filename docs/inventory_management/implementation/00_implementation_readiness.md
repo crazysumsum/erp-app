@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-007 are complete on this P0 branch. TASK-007 is developer-verified, including the approved isolated MySQL 26.7.0 two-connection smoke test; TASK-008 remains pending a separate human decision before implementation continues.
+`BLOCKED` — TASK-001～TASK-008 are complete on this branch. TASK-008 is developer-verified against an isolated MySQL 26.7.0 schema; TASK-009 remains pending a separate human decision before implementation continues.
 
 ## Baseline
 
@@ -24,6 +24,7 @@
 - `HD-014`: Sam approved TASK-007's fixed lock protocol, transaction-required internal command context and test support on 2026-09-24, without TASK-008, production migrations or remote actions.
 - `HD-015`: Sam selected the isolated disposable MySQL 26.7.0 option for TASK-007's two-connection contention smoke test on 2026-09-24; only test-owned minimal DDL was permitted and the schema had to be removed afterwards.
 - `HD-016`～`HD-018`: Sam approved adding exactly the two planned TASK-007 test-support paths to the module allowlist and approved the resulting 0.9 DESIGN／PLAN hashes on 2026-09-25.
+- `HD-019`: Sam approved TASK-008 migration `0057`, its schema inspector, focused developer tests and isolated disposable MySQL 26.7.0 verification on 2026-09-25, without TASK-009 or remote actions.
 
 ## Reconciled P0 checks
 
@@ -35,9 +36,10 @@
 - UOM resolution accepts only an active SKU UOM with an integer factor from 1 to 1,000,000 and requires Base UOM factor 1.
 - After merging latest `origin/main`, focused Item lookup checks passed 33/33 and focused ESLint passed.
 - TASK-007 stayed inside the approved module boundary and did not add a migration, start TASK-008 or perform any remote action.
+- TASK-008 stayed inside its HD-019-approved migration boundary and did not start TASK-009 or perform any remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
-- Full `PHASE-001 MERGE_READY` remains blocked by the intentionally unfinished P0 tasks and pending remote CI/review; this local task completion does not claim that Phase gate.
+- Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
 - TASK-005 used a newly observed MySQL 26.7.0 lease; its schema, server and exact temporary root were removed after developer verification and cannot be reused by later tasks.
 
 ## TASK-005 developer verification
@@ -68,6 +70,16 @@
 - The disposable schema, local test account, MySQL server and temporary data root were removed after the smoke test. No reusable runtime lease remains.
 - Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-010` Technical Acceptance, CI, independent code approval or business acceptance.
 
+## TASK-008 developer verification
+
+- Commit `9207aff16b435895ee34bf7687dbfa372ac76d85` adds only migration `0057_create_inventory_master.js`, its schema-inspector unit test and its isolated integration test.
+- Warehouse normalized code is company-wide unique. Bin normalized code is unique within Warehouse, and `(id, warehouse_id)` is a unique candidate key for later composite ownership FKs.
+- Actor FKs use `SET NULL`; Bin-to-Warehouse uses `RESTRICT`. Status checks, version/status defaults and the approved list indexes are present.
+- The inspector rejects an incompatible partial schema before DDL. A compatible interrupted state with Warehouse present and Bin absent converges on rerun, and a complete rerun preserves identical DDL without relying on transaction rollback.
+- Focused Inventory plus migration-ordering checks: 37 passed, 0 failed. Focused ESLint, `git diff --check`, module-boundary validation and traceability validation passed. The dedicated MySQL migration test passed 1/1 on observed server `26.7.0` in schema `erp_inventory_task008_20260925_0924`.
+- The disposable schema, local test account, isolated server and `/private/tmp/erp-inventory-task008-mysql-2670.wAtsfk` data root were removed after verification. No runtime lease remains.
+- Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-003`／`TC-010` Technical Acceptance, CI, independent code approval or business acceptance.
+
 ## Approved physical allocation
 
 | Prefix | Migration | Owner |
@@ -90,8 +102,9 @@
 - TASK-005 created only `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; Movement remains in P1 migration `0059`.
 - TASK-006 created only the two approved services, one shared safe-JSON helper and the three planned focused test files.
 - TASK-007 created only the approved lock／validation services, test support and focused tests; the smoke test's minimal DDL was disposable and is not a migration or product schema authority.
-- The remaining P0 implementation commits are local; no TASK-006／TASK-007 push, PR, CI or merge is claimed.
+- TASK-008 created only the HD-019-approved `0057` migration, inspector and focused tests; its migration execution was confined to the disposable TASK-008 schema.
+- The remaining implementation commits are local; no TASK-006／TASK-007／TASK-008 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Obtain Sam's next explicit decision before starting TASK-008 Warehouse／Bin persistence. No database runtime is active, and no push, PR or merge is authorized.
+Obtain Sam's next explicit decision before starting TASK-009 Warehouse／Bin domain service. No database runtime is active, and no push, PR or merge is authorized.
