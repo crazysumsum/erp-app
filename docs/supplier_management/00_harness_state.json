@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 235,
+  "revision": 236,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
+  "active_mode": "TEST_AND_VERIFY",
+  "status": "VERIFYING",
   "resume_status": null,
   "current_phase": "PHASE-003",
   "current_task": "TASK-036",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "fddcc44239075435406ce99b83d4fd1b38174f9d",
+    "code_commit": "654f7c32ecccccaf3e7867a4abb028c040d32212",
     "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
-    "default_commit": "fddcc44239075435406ce99b83d4fd1b38174f9d",
+    "default_commit": "e29ff779bf932d04e9a8a502170c6981ba1fca60",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -3189,6 +3189,15 @@
       "source_fingerprint": null,
       "status": "PASS",
       "source_ref": "PR #135 merged as fddcc44. Main's CI run 36089500739 is green on that commit across all five required checks: Dependency audit, Lint, Browser tests (Playwright), Test (server + client, MySQL integration), Build frontend. source_fingerprint is null deliberately - this observation is about an external event on a commit that is not this worktree's HEAD, and recording a fingerprint computed here would claim more than was observed. TASK-036 delivered bank encryption and blind-index key rotation with a CLI, through six independent review rounds (REV-051 3M, REV-052 3M, REV-053 4M, REV-054 1 HIGH 4M, REV-055 3M, REV-056 2M), every finding remediated, ending at thirty-three mutants all killed with none hanging. REV-056 was the first round to state it found no defect in shipped behaviour."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-037: readiness gate BLOCKED; TC-074 and TC-077 built and executed; fifteen cases not run",
+      "code_commit": "654f7c32ecccccaf3e7867a4abb028c040d32212",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": null,
+      "status": "PASS",
+      "source_ref": "TEST_AND_VERIFY on T37. The readiness gate returned BLOCKED for formal Technical Acceptance, with four verified blockers: the profile suites that declare TC-062 through TC-077 and TC-133 point at paths that do not exist; no test in the repository is labelled with any of this task's seventeen case IDs (the apparent TC-064/065/066 hits belong to the customer module's namespace, and the apparent BANK-005/006/007 hits are the requirement IDs FR-BANK-005/006/007); BANK-013 and BANK-016 had no harness at all; and bank_operations.md, which the third Verification bullet requires a human to review, does not exist. The user chose to build harnesses for the two cases that had none and to assess the rest. TC-074 (BANK-013) drives a unique marker through success and failure flows plus real HTTP with bodyCapture deliberately looser than production, then scans six channels - db_dump, audit_log, request_log, system_log, http_responses, errors - in seven encodings, each channel carrying its own planted-marker control so a clean result cannot be confused with a blind scanner. It was shown to fail on a real leak by removing accountNumber from redactedFields. CSV, cache and notification do not exist on this baseline and are recorded NOT_APPLICABLE with an assertion that fails once a SupplierExportService appears. TC-077 (BANK-016) dumps and restores into a fresh schema and reveals under three key configurations; mutation found that a textbook fail-open in the crypto survived the first version, because the service deliberately collapses key-absent and key-wrong into one BANK_ACCOUNT_UNREADABLE, so a crypto-layer assertion requiring BANK_KEY_NOT_IN_RING was added. Both cases pass on CI, verified by reading the job log rather than trusting a green check. Two portability defects in the harnesses were caught by CI and not by local runs, both with the same root cause - the local environment was more permissive than CI (an application account with ALL ON *.*, and mysqldump always present). CI's privilege model was then reproduced locally and both cases re-run across four environment combinations. The other fourteen cases are NOT_RUN with a coverage assessment that is explicitly not a result, and TC-133 is BLOCKED. The largest assessed gap is BANK-004: the nonce replay path that SEC-013 rests on is exercised nowhere in the repository. Two REPORT_ONLY findings recorded as DEF-023 and DEF-024; no product code was changed by this task."
     }
   ],
   "pending_decisions": [
@@ -4107,6 +4116,30 @@
       "idempotency_key": "supplier-task-036-worktree-retire",
       "status": "CONFIRMED",
       "source_ref": "Checked before removing, not after: no unpushed commits, listed by git branch --merged origin/main, and git status clean. Worktree removed and pruned, local branch deleted with -d, remote branch deleted. The throwaway MySQL 26.7.0 instance on port 3421 that the review rounds used was shut down, its datadir under the session scratchpad removed, and /tmp/rev053m.sock and /tmp/env53.sh deleted. Only the main worktree and another agent's codex/inventory-p0-foundation remain."
+    },
+    {
+      "id": "MODE-CHANGE-24",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "supplier-task-037-test-and-verify",
+      "status": "CONFIRMED",
+      "source_ref": "User instruction to start TASK-037. T37 is an acceptance task, so it runs in TEST_AND_VERIFY with product code at REPORT_ONLY. Writing new test harnesses is not product-code change and stayed inside this mode; no product file was modified by TASK-037."
+    },
+    {
+      "id": "MERGE-012",
+      "kind": "MERGE_PR",
+      "target": "main from claude/supplier-task-037 via PR #149",
+      "idempotency_key": "supplier-task-037-merge-pr-149",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED, mergeCommit 654f7c32ecccccaf3e7867a4abb028c040d32212. Required CI green on the PR head 70b1d50 (run 36110479443), and the log was read to confirm both new cases actually executed rather than trusting a green job: TC-074 passed in 1231ms, TC-077 in 117ms. main's own CI (run 36111664694) is green on the merge commit."
+    },
+    {
+      "id": "MERGE-013",
+      "kind": "MERGE_PR",
+      "target": "main from claude/repo-node-modules-symlink via PR #151",
+      "idempotency_key": "repo-node-modules-symlink-merge-pr-151",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED, mergeCommit e29ff779bf932d04e9a8a502170c6981ba1fca60. Repairs a regression this task shipped: see DEF-025. CI green on b669d27 (run 36111901759); afterwards git pull was verified to work again in a worktree that already had dependencies installed."
     }
   ],
   "evidence_files": [
@@ -4576,8 +4609,52 @@
         "PR #131 merge commit a264d41e402c0adc3caf05555034755f54e7abbf"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-023",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-074",
+        "BANK-013",
+        "server/config/logging.js",
+        "TASK-037"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null,
+      "summary": "The request log's only protection against a bank plaintext is the field-name blacklist redactedFields, while bodyCaptureErrorStatus 500 forces a full body capture on any 5xx into a file kept 30 days. Today the API contract happens to name the field accountNumber, which is on the list. A plaintext arriving under another name, nested, or in a URL is not covered. Demonstrated by removing accountNumber from the list, which turns TC-074 red on the request_log channel. Flagged for SUP-CAP-05, whose CSV import will accept account numbers under column names the blacklist has never seen. REPORT_ONLY: no product change made."
+    },
+    {
+      "id": "DEF-024",
+      "severity": "LOW",
+      "status": "OPEN",
+      "source_ids": [
+        "TC-077",
+        "BANK-016",
+        "server/src/modules/supplier/SupplierBankService.js",
+        "TASK-037"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": null,
+      "summary": "ER_LOCK_DEADLOCK from InnoDB reaches the caller unchanged rather than being retried. Normal for an application to delegate the retry, but it is documented nowhere an operator would look, and bank_operations.md does not exist. Observed when TC-077's fixture ran concurrently with the existing deliberate-contention tests. REPORT_ONLY: no product change made; the harness retries only its own fixture seed, never an assertion."
+    },
+    {
+      "id": "DEF-025",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "commit 6d55c1f",
+        "PR #149",
+        "TASK-037",
+        ".gitignore"
+      ],
+      "closure_evidence": [
+        "PR #151 merge commit e29ff779bf932d04e9a8a502170c6981ba1fca60"
+      ],
+      "risk_approval_id": null,
+      "summary": "A node_modules symlink pointing at one developer's absolute path was committed and reached main. .gitignore's node_modules/ entry has a trailing slash and matches directories only, so a symlink of that name was not ignored and git add -A staged it. Two harms: any clone with dependencies installed could no longer git pull (fatal: cannot rmdir 'node_modules': Directory not empty), and the repository carried a machine-specific absolute path. CI could not see it structurally - a runner checks out fresh and runs npm ci, so it never has an existing directory to replace. Fixed by git rm --cached plus a second, slashless .gitignore entry."
     }
   ],
-  "next_safe_action": "TASK-036 (Bank key rotation) is DONE and merged to main as fddcc44, with main's own CI green on that commit. Its worktree, branch and the four review worktrees are gone and the throwaway MySQL instance is shut down. PHASE-003's remaining work is TASK-037 (Bank security and recovery acceptance), which should run in TEST_AND_VERIFY mode against an immutable implemented baseline - it is formal verification, not implementation, so product code defaults to REPORT_ONLY and any fix needs an explicit remediation decision first. Two items are open by explicit human decision, both because fixing them moves a baseline hash and strands baseline-bound records: 03_design_spec.md still authorises removing a key on a single-table basis in five places (392, 1415, 1702, 1704, 1742) while the shipped tool deliberately no longer issues that authorisation - editing it moves the DESIGN hash and strands 36 reviews including 13 APPROVED; and the profile's env_keys for supplier-phase-001-server omits the CUSTOMER_BANK_* variables the suite needs since the customer module landed - editing the profile moves the PLAN hash and strands 38 observations. Neither blocks CI, which runs the suite argv directly rather than through the harness runner. Also still true and recorded: .github/workflows/ci.yml is a permanent OUTSIDE_MODULE path, AC-025 and AC-026 have no HTTP-layer test, and the profile declares a technical/regression test tree that does not exist, so four suites cannot run.",
+  "next_safe_action": "TASK-037 is IN PROGRESS, not done: two of seventeen cases have been executed. It is NOT Technical Acceptance and it is not business sign-off; business acceptance is PENDING_USER_ACCEPTANCE because the Security/Operations review named in T37's third Verification bullet is a human gate. Reports live in docs/supplier_management/testing/ (00 readiness, 01 environment, 02 technical test report). The routes forward, in the order this module would benefit from them: (1) BANK-004 - the nonce replay path that SEC-013 depends on is exercised nowhere, the single largest assessed gap; (2) bank_operations.md - without it the Security/Operations review has no subject, and DEF-024 has nowhere to be documented; (3) the remaining thirteen cases, whose behaviour is largely covered but which have no execution against their own case IDs; (4) TC-133 / OPS-006, a module-wide restore drill with no harness. Also still open by explicit human decision, both because fixing them moves a baseline hash: 03_design_spec.md authorises key removal on a single-table basis in five places, and the profile's env_keys omits CUSTOMER_BANK_* for supplier-phase-001-server. And still true: the profile declares eight suites whose targets do not exist, which is why no TC in this task can be produced by a declared suite. Do not merge anything without the user's explicit word.",
   "decisions": []
 }
