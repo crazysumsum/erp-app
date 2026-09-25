@@ -723,3 +723,96 @@ L-2 係：profile 入面 `supplier-phase-001-server` 個 `env_keys` 冇列 merge
 REV-055 評佢做 Low，理由係 customer module 自己個 suite 聲明 `env_keys: []` 而佢
 照跑得到 —— 即係呢個欄位睇落係描述性，唔係一個注入白名單。CI 直接跑 argv，唔經
 harness runner，所以 CI 唔受影響。
+
+## 13. REV-056 remediation
+
+REV-056（`4f4a7f7`）報 **0 Critical、0 High、2 Medium、7 Low、6 Info**，而且講得好白：
+**喺 shipped behaviour 度搵唔到缺陷** —— 佢攻嘅每一個行為聲明都企得住。
+
+佢逐條用執行確認 REV-055 三條 Medium 全部真係收咗，二十九個 mutant 全部重跑確認
+死，§12 嗰組數（包括 **437/437**）全部重現得到。佢仲第一次喺六輪入面做咗兩件之前
+冇人做過嘅嘢：喺真 MySQL 上面用**一個真正並發嘅 application write** 驗咗防覆寫
+guard（`declined: 1`、app 嗰個寫冇被蓋、不變式企得住），同埋把 `remaining: null`
+嗰條路由頭行到尾（`drained: false`、exit 1、兩個警告都喺 stderr、跟住續跑乾淨）。
+
+兩條 Medium 都唔係 shipped behaviour 嘅缺陷 —— 兩條都係「我今輪新整嘅嘢，冇嘢睇住」。
+
+### M-1 —— 唯一一條今輪發明嘅 exit path，冇嘢睇住
+
+REV-055 M-3(a) 係「`main` 個 exit code 合約冇嘢睇住」。我個 remediation 抽咗
+`exitCodeFor` 出嚟、測晒佢六個 case、加咗四條 spawn 測試同一條真 MySQL 測試。
+
+嗰啲測試釘住嘅係：`2`（三個 spawn case）、`--help` 嘅 `0`（佢喺開 pool 之前就返）、
+同埋「有行失敗 → `1`」。**冇一條測試驅使 `main` 行完一個成功嘅輪替。** 所以：
+
+```
+[main 永遠回 1]                    unit exit=0 (35/35)   integ exit=0 (5/5)
+[main 拆走 remaining===null 分支]  unit exit=0 (35/35)   integ exit=0 (5/5)
+```
+
+第一個係 REV-055 用嚟立案嗰個 mutant（「`main` 永遠回 0」）嘅鏡像：我釘咗佢示範過
+嗰個方向，冇釘返轉頭嗰個。第二個更加貼題 —— 佢保持 `exitCodeFor` 完全正確、六個
+unit case 全綠，只係令 `main` **唔用**佢新加嗰條分支。即係今輪加落個合約嘅唯一一條
+規則，連住條冇人睇嘅線。
+
+操作上點解要緊：一個每行都換乾淨嘅輪替報 exit 1，按呢個工具自己個合約即係「當佢
+做咗一半」—— 一個 `set -e` 嘅 runbook 會喺一個完美嘅 run 度停低。
+
+**第三輪連續**`main` 個 exit code 做 finding（REV-053 M-4 點名、REV-054 M-3 再點、
+REV-055 M-3 量度過）。
+
+**修法（CLAUDE.md §7）**：`main` 收多一個 `openConnection` 參數，預設就係原本嗰個
+真 pool factory。個 runtime 而家係**遞入嚟**而唔係喺入面攞，所以兩條新測試唔使真
+MySQL 就行得到 —— 一條釘「掃乾淨 → 0」，一條釘「數唔到 → 1」。三個 mutant（永遠
+1、永遠 0、拆走 null 分支）全部死。順帶：成個 `main` body 而家都測得到。
+
+### M-2 —— 個授權冇消失，佢搬咗屋
+
+REV-055 M-3(b) 嗰個三字黑名單換成咗十四個 key 嘅白名單。佢係真係好咗：加
+`keyRemovalApproved` 而家死、`supplierRowsDrained` 改任何名都死（兩樣我都驗過）。
+
+但 `warnings` 係嗰個清單入面**一個 key**，而佢啲內容冇人管 —— **而今輪正正就係開始
+往佢入面寫新嘢嗰一輪**：`REMAINING_UNKNOWN` 就係行呢道門入嚟嘅。所以：
+
+```js
+{ code: "SAFE_TO_REMOVE_KEY", scope: "ring",
+  message: "the old key id is no longer referenced; it is now safe to remove it …" }
+```
+
+行得過兩套測試，而且會**原句印喺真 CLI 個 stderr 上面**，就喺嗰句話你唔可以剷嘅
+`RING_SHARED_WITH_OTHER_TABLES` 下面。一個凍結咗欄位名單嘅白名單，擋唔住一個搬咗
+入 `warnings` 嘅授權。
+
+**修法**：warning code 有 allow-list。加一個新 code 就要行過嗰一行，而行過嗰一行
+就要答：呢句說話擺喺一個 operator 面前，呢個 module 見唔見到成個 ring？
+
+### 三條 Low，全部都係「讀落似覆蓋，其實冇」
+
+| | |
+| --- | --- |
+| L-1 | 嗰條 spawn「連唔到資料庫 → 2」由頭到尾**冇掂過資料庫**：`--to=e2` 唔喺 CI 個 ring 入面，所以佢死喺 `assertTarget` 度，`DB_PORT` 完全冇作用。個 assertion 過，係因為個 process 為咗第二個原因死咗。而家自己帶 ring，再要求 stderr 真係講得出連唔到（`ECONNREFUSED`）。 |
+| L-2 | 「`failures` 唔准有 `null` id」嗰句，行喺一個兩行之前已經 `assert.deepEqual(report.failures, [])` 釘死係空嘅 array 上面 —— 永遠唔會紅。搬咗去一個真係有兩行失敗嘅 fixture。 |
+| L-3 | REV-055 L-4 一直冇修：`finally` 入面一句裸 `await pool.end()`。收尾一掟錯就取代咗 `main` 個回傳值，變成 unhandled rejection 走到 entry script 個 top-level await —— 一個做完晒、按合約 exit 0 嘅 run 變成 **exit 1 加一個原裝 stack trace**，而由今輪起 exit 1 仲多咗「數唔到剩低幾多」呢個意思。而家 `close()` 包住：個 run 已經完咗，收尾點都好都唔應該改寫個判斷。 |
+
+### Mutation：三十三個，三十三個殺到，冇一個掛死
+
+上一輪二十九個全部保留並且重跑，加四個新嘅：`main` 永遠回 1／永遠回 0／拆走 null
+分支，同埋一個搬咗入 `warnings` 嘅授權。
+
+### 驗證
+
+| | |
+| --- | --- |
+| `server/test/supplierBankKeyRotation.test.js` | **22/22** |
+| `server/test/supplierBankRotationCli.test.js` | **15/15** |
+| `server/test/integration/supplierBankRotation.integration.test.js` | **5/5**，真 MySQL 26.7.0 |
+| Profile suite `supplier-phase-001-server`（原本 argv） | **439/439**，0 fail 0 skipped |
+| Client | **665/665**（呢次冇掂過 client） |
+| lint | exit 0 |
+
+### 兩件仍然開住嘅嘢，決定冇變
+
+`03_design_spec.md` 五處單表授權、同 profile 個 `env_keys` 冇列 `CUSTOMER_BANK_*`
+—— 兩件都係**明確決定咗唔改**，因為兩件都會搬 baseline hash（DESIGN 弄散 36 條
+review／13 條 APPROVED；PLAN 弄散 38 個 observation）。REV-056 見到咗，冇當新嘢
+再開一次。
