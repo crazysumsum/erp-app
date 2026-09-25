@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { randomBytes, randomUUID } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import mysql from "mysql2/promise";
 
 import { ApplicationError } from "../../src/framework/errors/ApplicationError.js";
@@ -715,4 +719,254 @@ integrationTest("no Bank route reaches another Supplier's row, and the refusal c
     [victimId, attackerId]
   );
   assert.equal(audits.length, 0, "a refused reveal must not leave a record claiming one happened");
+});
+
+
+/**
+ * TC-074（§6.7 `BANK-013`）—— 全通道明文洩漏掃描。AC-027、SEC-010、SEC-011、
+ * BR-020、FR-BANK-007。
+ *
+ * 呢個檔案上面已經有一條掃 Bank 表同 audit 表嘅測試。`BANK-013` 要求嘅闊好多：用
+ * 一個獨一無二嘅虛構 marker 行完**成功同失敗**流程之後，去搜 DB dump、request／
+ * system log、errors、cache、CSV、notification，全部要係零。
+ *
+ * ## 呢個 baseline 上面真正存在嘅通道
+ *
+ * | 通道 | 狀態 |
+ * | --- | --- |
+ * | DB dump | 有 —— 成個 schema 用 `mysqldump` 導出，逐 byte 掃 |
+ * | request log | 有 —— `config/logging.js` 個 `request` logger 寫檔案 |
+ * | system log | 有 —— 同一個 logger registry 嘅 `system` profile |
+ * | audit log | 有 —— 佢係一張表，所以喺 dump 入面；另外再單獨掃一次 |
+ * | errors | 有 —— 每個失敗流程掟出嚟嗰個 error 嘅 message、stack、public payload |
+ * | CSV | **唔存在** —— `server/src/modules/supplier/` 冇任何 export／CSV 模組；SUP-CAP-05 未做 |
+ * | cache | **唔存在** —— `server/src/services/` 冇 cache service |
+ * | notification | **唔存在** —— 同上 |
+ *
+ * 最後三個記做 `NOT_APPLICABLE`，唔係 PASS。一個唔存在嘅通道漏唔到嘢，但佢亦都
+ * 證唔到任何嘢 —— 等 SUP-CAP-05 落地，`BANK-013` 要重跑。
+ *
+ * ## 點解每條通道都有一個對照組
+ *
+ * 「掃唔到」同「個掃描器對呢種內容根本睇唔到」係兩件事。TASK-036 喺呢一點上面蝕過
+ * 兩次：一次係掃 base64 而 MySQL 出嘅係 `\xNN`，一次係用未逃逸嘅針掃 JSON 逃逸過
+ * 嘅草堆，實測五成九嘅真洩漏掃唔到。所以每條通道都要當場證明：**同一個掃描器，
+ * 喺同一份內容上面，种一個 marker 落去係搵得返嘅。**
+ */
+function markerEncodings(marker) {
+  const raw = Buffer.from(marker, "utf8");
+  return {
+    utf8: marker,
+    latin1: raw.toString("latin1"),
+    hex: raw.toString("hex"),
+    HEX: raw.toString("hex").toUpperCase(),
+    base64: raw.toString("base64"),
+    base64url: raw.toString("base64url"),
+    // MySQL 喺錯誤訊息入面咁樣嵌二進位值；可印 byte 原樣，其餘 `\xNN`。
+    mysql: [...raw].map((b) => (b >= 0x20 && b <= 0x7e
+      ? String.fromCharCode(b)
+      : `\\x${b.toString(16).toUpperCase().padStart(2, "0")}`)).join("")
+  };
+}
+
+function leakedIn(haystack, marker) {
+  return Object.entries(markerEncodings(marker))
+    .filter(([, encoded]) => haystack.includes(encoded))
+    .map(([name]) => name);
+}
+
+function readAllFiles(directory) {
+  if (!fs.existsSync(directory)) return "";
+  return fs.readdirSync(directory, { withFileTypes: true })
+    .map((entry) => (entry.isDirectory()
+      ? readAllFiles(path.join(directory, entry.name))
+      : fs.readFileSync(path.join(directory, entry.name), "latin1")))
+    .join("\n");
+}
+
+integrationTest("TC-074 (BANK-013): after success and failure flows, no channel on this baseline carries the account", async (t) => {
+  const connection = await mysql.createConnection(config());
+  const logRoot = fs.mkdtempSync(path.join(os.tmpdir(), "tc074-logs-"));
+  let victimId = null;
+  let otherId = null;
+  let application = null;
+  t.after(async () => {
+    if (application) await application.shutdown("tc074_complete");
+    await cleanup(connection, [victimId, otherId]);
+    await connection.end();
+    fs.rmSync(logRoot, { recursive: true, force: true });
+  });
+
+  // 一個獨一無二嘅 marker：搵到佢就一定係呢次 run 漏出去嘅，唔會撞到其他資料。
+  const MARKER = `99${randomUUID().replace(/-/gu, "").slice(0, 16).toUpperCase()}`;
+
+  const victim = await seedSupplier(connection, randomUUID().slice(0, 8));
+  victimId = victim.supplierId;
+  const other = await seedSupplier(connection, randomUUID().slice(0, 8));
+  otherId = other.supplierId;
+
+  const crypto = buildCrypto();
+  const service = serviceOn(connection, { crypto, realAudit: true });
+  const errors = [];
+  const capture = async (label, work) => {
+    try {
+      return await work();
+    } catch (error) {
+      errors.push({
+        label,
+        message: String(error?.message ?? ""),
+        stack: String(error?.stack ?? ""),
+        publicCode: String(error?.publicCode ?? ""),
+        details: JSON.stringify(error?.details ?? error?.payload ?? null)
+      });
+      return null;
+    }
+  };
+
+  // ---- 成功流程 ----
+  const created = await service.create({
+    ...actor, ...details, supplierId: victimId, accountNumber: MARKER,
+    isDefault: true, reason: "TC-074 成功流程：建立"
+  });
+  const updated = await service.update({
+    ...actor, ...details, supplierId: victimId, bankAccountId: created.id, version: created.version,
+    accountNumber: `${MARKER.slice(0, 6)} ${MARKER.slice(6)}`, reason: "TC-074 成功流程：重新加密"
+  });
+  const revealed = await service.reveal({
+    ...actor, supplierId: victimId, bankAccountId: created.id, reason: "TC-074 成功流程：受控查看"
+  });
+  assert.equal(revealed.accountNumber, MARKER, "the reveal really did return the marker, so the scan has something to find");
+  await service.setDefault({
+    ...actor, supplierId: victimId, bankAccountId: created.id, version: updated.version,
+    reason: "TC-074 成功流程：設定預設"
+  });
+
+  // ---- 失敗流程 ----
+  await capture("duplicate create", () => service.create({
+    ...actor, ...details, supplierId: victimId, accountNumber: MARKER, reason: "TC-074 失敗流程：重複帳號"
+  }));
+  await capture("cross-supplier reveal", () => service.reveal({
+    ...actor, supplierId: otherId, bankAccountId: created.id, reason: "TC-074 失敗流程：借另一個 Supplier"
+  }));
+  // Tamper 一個 byte，令 GCM fail closed —— 呢條路會喺 crypto 層掟錯，而佢手上
+  // 係有密文嘅，所以佢係最有機會把資料帶入 error／log 嘅一條。
+  await connection.execute(
+    "UPDATE supplier_bank_accounts SET account_auth_tag = ? WHERE id = ?",
+    [randomBytes(16), created.id]
+  );
+  await capture("tampered reveal", () => service.reveal({
+    ...actor, supplierId: victimId, bankAccountId: created.id, reason: "TC-074 失敗流程：被竄改嘅行"
+  }));
+  assert.ok(errors.length >= 3, `all three failure flows must actually have failed, got ${errors.length}`);
+
+  // ---- HTTP 流程：request／system log 只有經過真 app 先會寫 ----
+  const { createApplication } = await import("../../src/framework/application/createApplication.js");
+  const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
+  const source = defaultConfigurationSource();
+  application = await createApplication({
+    configurationSource: {
+      ...source,
+      application: { ...source.application, port: 0 },
+      logging: {
+        loggers: {
+          request: { ...source.logging.loggers.request, directory: path.join(logRoot, "requests"), bodyCapture: "full" },
+          system: { ...source.logging.loggers.system, directory: path.join(logRoot, "system") }
+        }
+      }
+    },
+    serviceDiscoveryOptions: {
+      additionalModuleUrls: [
+        new URL("../../src/modules/businessMaster/BusinessMasterService.js", import.meta.url).href,
+        new URL("../../src/modules/supplier/SupplierProviderServices.js", import.meta.url).href
+      ]
+    }
+  });
+  const { url } = await application.start();
+  const responses = [];
+  const hit = async (path_, init = {}) => {
+    const response = await fetch(`${url}${path_}`, init);
+    const text = await response.text();
+    responses.push({ path: path_, status: response.status, headers: [...response.headers].map((h) => h.join(": ")), body: text });
+    return response.status;
+  };
+  // 無 token 嘅讀取、一個唔存在嘅 id、同一個帶住 marker 嘅寫入嘗試 —— 最後嗰個
+  // 係關鍵：`bodyCapture` 喺呢度特登開咗 "full"，即係比生產設定更寬鬆。掃得過
+  // 呢個設定，生產嗰個預設 "none" 只會更安全。
+  await hit(`/api/v1/suppliers/${victimId}/bank-accounts`);
+  await hit(`/api/v1/suppliers/${victimId}/bank-accounts/999999999`);
+  await hit(`/api/v1/suppliers/${victimId}/bank-accounts`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...details, accountNumber: MARKER, reason: "TC-074 未授權寫入嘗試" })
+  });
+  await application.shutdown("tc074_flows_complete");
+  application = null;
+
+  // ---- 通道 ----
+  /**
+   * DB dump 呢條通道有兩種攞法。
+   *
+   * `mysqldump` 係真嘅備份格式，但 runner 上面唔一定有 client binary。冇嘅時候就
+   * 逐張表讀返每一行嘅原始欄位值 —— 掃描而言嗰個反而更直接（讀嘅係欄位 byte
+   * 本身，唔係一層文字編碼）。兩條路都要包住成個 schema，唔係得 Bank 嗰兩張表。
+   */
+  const mysqlBin = process.env.MYSQL_BIN ?? "/usr/local/mysql/bin";
+  const canDump = spawnSync(`${mysqlBin}/mysqldump`, ["--version"], { encoding: "utf8" }).status === 0;
+  let dumpText = "";
+  if (canDump) {
+    const dump = spawnSync(`${mysqlBin}/mysqldump`, [
+      `--host=${process.env.DB_HOST}`, `--port=${process.env.DB_PORT}`,
+      `--user=${process.env.DB_USER}`, `--password=${process.env.DB_PASSWORD}`,
+      "--set-gtid-purged=OFF", "--hex-blob", "--skip-lock-tables", process.env.DB_NAME
+    ], { encoding: "latin1", maxBuffer: 512 * 1024 * 1024 });
+    assert.equal(dump.status, 0, `mysqldump must succeed for this case to mean anything: ${dump.stderr}`);
+    dumpText = dump.stdout;
+  } else {
+    const [tables] = await connection.query(
+      "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'"
+    );
+    const parts = [];
+    for (const table of tables) {
+      const name = table.name ?? table.NAME;
+      const [rows] = await connection.query(`SELECT * FROM \`${name}\``);
+      parts.push(`-- ${name}`);
+      for (const row of rows) {
+        parts.push(Object.values(row)
+          .map((value) => (Buffer.isBuffer(value) ? value.toString("latin1") : String(value ?? "")))
+          .join("\u0001"));
+      }
+    }
+    dumpText = parts.join("\n");
+  }
+  assert.ok(dumpText.includes("supplier_bank_accounts") || dumpText.includes("-- supplier_bank_accounts"),
+    "the dump must actually cover the Bank table, or the scan below is empty");
+
+  const [auditRows] = await connection.query(
+    "SELECT * FROM supplier_audit_logs WHERE supplier_id IN (?, ?)", [victimId, otherId]
+  );
+  assert.ok(auditRows.length > 0, "the flows must have written audit rows, or the audit scan is vacuous");
+
+  const channels = {
+    db_dump: dumpText,
+    audit_log: JSON.stringify(auditRows),
+    request_log: readAllFiles(path.join(logRoot, "requests")),
+    system_log: readAllFiles(path.join(logRoot, "system")),
+    http_responses: JSON.stringify(responses),
+    errors: JSON.stringify(errors)
+  };
+
+  for (const [name, content] of Object.entries(channels)) {
+    assert.ok(content.length > 0, `channel ${name} is empty — an empty channel proves nothing`);
+    // 對照組先行：呢個掃描器喺呢份內容上面，搵唔搵得返一個种落去嘅 marker？
+    const control = leakedIn(`${content}\n${MARKER}`, MARKER);
+    assert.ok(control.includes("utf8"),
+      `the scanner cannot see a planted marker in ${name}; its clean result would be meaningless`);
+    // 然後先落判斷。
+    assert.deepEqual(leakedIn(content, MARKER), [],
+      `AC-027 / SEC-010: the account number must not appear in ${name} in any encoding`);
+  }
+
+  // 呢個 baseline 上面唔存在嘅通道 —— 記錄低，唔當 PASS。
+  assert.equal(fs.existsSync("server/src/modules/supplier/SupplierExportService.js"), false,
+    "if a supplier export lands, BANK-013's CSV channel stops being NOT_APPLICABLE and this case must be re-run");
 });
