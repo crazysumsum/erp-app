@@ -117,7 +117,10 @@ function requireAccount(value, what) {
   if (rejection) {
     // 訊息刻意唔帶輸入 —— 設計 §6.6：validation error 同 ApplicationError.details
     // 都唔可以包含 accountNumber。
-    throw new TypeError(`Supplier bank crypto cannot ${what} this account number (${rejection})`);
+    throw Object.assign(
+      new TypeError(`Supplier bank crypto cannot ${what} this account number (${rejection})`),
+      { code: `BANK_ACCOUNT_${rejection}` }
+    );
   }
   return normalizeBankAccountNumber(value);
 }
@@ -208,6 +211,22 @@ export class SupplierBankCrypto {
   }
 
   /**
+   * Ring 入面有邊啲 key **id**。輪替工具靠呢兩個判斷 ring 大細（設計 §5.8 限 3 條）
+   * 同埋確認舊 key 仲喺唔喺 ring 入面。
+   *
+   * 回 id 唔回 material：key id 本身唔係祕密 —— 佢一行行寫咗喺
+   * `encryption_key_id` 同 `blind_index_key_id` 度。Key material 冇任何 getter，
+   * 而 `toJSON` 同 inspect 都係 [REDACTED]。
+   */
+  get encryptionKeyIds() {
+    return Object.keys(this.#encryption.keyRing);
+  }
+
+  get lookupKeyIds() {
+    return Object.keys(this.#lookup.keyRing);
+  }
+
+  /**
    * 加密一個帳號。IV 每次隨機 96-bit —— GCM 喺同一條 key 之下重用 IV 會直接洩漏
    * 明文異或值同埋 authentication key，所以呢度唔可以用 counter 或者由資料衍生。
    */
@@ -237,7 +256,12 @@ export class SupplierBankCrypto {
   decryptAccountNumber({ supplierId, cryptoContext, ciphertext, iv, authTag, encryptionKeyId }) {
     const secret = this.#encryption.keyRing[String(encryptionKeyId ?? "")];
     if (!secret) {
-      throw new Error("Supplier bank account cannot be decrypted: its encryption key is not in the configured ring");
+      // 帶一個穩定嘅 `code`：輪替工具要分類呢啲失敗，而分類唔可以靠讀 message
+      // （message 會改，而且一個由驅動程式嚟嘅 message 可能帶住資料）。（REV-052）
+      throw Object.assign(
+        new Error("Supplier bank account cannot be decrypted: its encryption key is not in the configured ring"),
+        { code: "BANK_KEY_NOT_IN_RING" }
+      );
     }
     // REV-033 M-3：呢三句本來喺 try 外面，所以一個截短咗嘅 tag 或者一個 NULL IV 會
     // 用原始 TypeError（ERR_CRYPTO_INVALID_AUTH_TAG／ERR_INVALID_ARG_TYPE）穿出去，
@@ -251,7 +275,10 @@ export class SupplierBankCrypto {
     } catch {
       // GCM 嘅 final() 喺 tag 對唔上嗰陣拋錯。原錯誤唔會向上傳：佢帶住 OpenSSL 嘅
       // 內部細節，而呢度只需要講一件事 —— 呢行嘢驗證唔過。
-      throw new Error("Supplier bank account failed authentication: the row, its context or its ciphertext was altered");
+      throw Object.assign(
+        new Error("Supplier bank account failed authentication: the row, its context or its ciphertext was altered"),
+        { code: "BANK_ACCOUNT_TAMPERED" }
+      );
     }
   }
 

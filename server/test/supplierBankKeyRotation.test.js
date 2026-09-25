@@ -1,0 +1,778 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { SupplierBankCrypto } from "../src/modules/supplier/SupplierBankCrypto.js";
+import { normalizeSupplierConfig } from "../src/modules/supplier/normalizeSupplierConfig.js";
+import { ROTATION_KINDS, ringWarnings, runRotation } from "../src/modules/supplier/bankKeyRotation.js";
+
+const KEY_A = Buffer.alloc(32, 1).toString("base64");
+const KEY_B = Buffer.alloc(32, 2).toString("base64");
+const KEY_C = Buffer.alloc(32, 3).toString("base64");
+const ACCOUNT = "12345678901234";
+
+/**
+ * 行返 `normalizeSupplierConfig`，唔自己砌個 ring。個 ring 入面係 `SecretValue`
+ * 包住嘅 key，唔係 base64 字串 —— 自己砌就會砌出一個同正式設定唔同形狀嘅嘢，而
+ * 嗰種分別就係呢個模組一路揾到嘅缺陷來源。
+ */
+function crypto({ encActive = "e2", encRing = { e1: KEY_A, e2: KEY_B }, lookActive = "l2", lookRing = { l1: KEY_A, l2: KEY_C } } = {}) {
+  const normalized = normalizeSupplierConfig({
+    bankEncryption: { activeKeyId: encActive, keyRing: JSON.stringify(encRing) },
+    bankLookup: { activeKeyId: lookActive, keyRing: JSON.stringify(lookRing) }
+  });
+  return new SupplierBankCrypto({ encryption: normalized.bankEncryption, lookup: normalized.bankLookup });
+}
+
+/**
+ * 一個記住行嘅假資料庫。佢唔係扮一個 MySQL —— 佢係一張表，而輪替邏輯唯一需要嘅
+ * 就係「揀舊 key 而且 id 大過 X 嘅行」同「更新一行」。真 MySQL 嗰邊由
+ * `test/integration/supplierBankRotation.integration.test.js` 負責。
+ */
+/** 一個同 mysql2 同形狀嘅重覆鍵錯誤 —— 連 MySQL 會嵌落去嗰個 key 值都有。 */
+/**
+ * MySQL 個 `ER_DUP_ENTRY` 訊息 —— 照佢**真正**個樣，唔係我估佢個樣。
+ *
+ * 之前呢度每一個 byte 都寫成 `\xNN`，而且由 index 第一個 byte 起頭。真 MySQL 唔係
+ * 咁：`uq_supplier_bank_blind_index` 係 `(supplier_id, blind_index_key_id,
+ * account_blind_index)` 三欄複合鍵，所以個值頭先有 `26-look-new-`；可印 byte 原樣
+ * 出，得非可印嗰啲先變 `\xNN`；而成個值**喺第 64 個字元硬切**，切到一半個 escape
+ * 都照切。喺 MySQL 26.7.0 度實測：
+ *
+ *   Duplicate entry '26-look-new-\xFA\xA0\xD6tk\x0D#,(?\xF8\xE9fj\xB1\x16\xC9\xADB\x9' for key '…'
+ *
+ * 分別唔係學術嘅。之前個 double 嗰個形狀令 F-M1 嗰三句掃描**結構上捉唔到真洩漏**：
+ * `escaped.slice(0, 24)` 要求頭六個 byte 全部非可印（隨機 HMAC 大概 6% 機會），而
+ * hex 嗰句就永遠冇可能 —— MySQL 由頭到尾唔會連續出 hex。一個為咗防 F-M1 復發而寫
+ * 嘅測試，重覆咗 F-M1 本身嗰個錯：掃自己諗出嚟嘅形狀，唔係真嗰個。（REV-053 M-3）
+ */
+function duplicateKeyError(supplierId, keyId, indexBytes) {
+  const rendered = [...indexBytes]
+    .map((byte) => (byte >= 0x20 && byte <= 0x7e
+      ? String.fromCharCode(byte)
+      : `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`))
+    .join("");
+  const message = `Duplicate entry '${`${supplierId}-${keyId}-${rendered}`.slice(0, 64)}' `
+    + "for key 'supplier_bank_accounts.uq_supplier_bank_blind_index'";
+  return Object.assign(new Error(message), { errno: 1062, code: "ER_DUP_ENTRY", sqlMessage: message });
+}
+
+/**
+ * 攤平個 report 入面所有字串。
+ *
+ * **唔可以用 `JSON.stringify`。** MySQL 個訊息帶住 `\xFA` 咁嘅**兩個字元** —— 一個
+ * 反斜線加一個 x —— 而 `JSON.stringify` 會把嗰個反斜線變成兩個。於是「未逃逸」嘅
+ * 針同「逃逸咗」嘅草堆永遠對唔上：REV-054 量過，用兩萬個隨機 index 做，一個完整
+ * 嘅真洩漏喺 55.2% 嘅情況下掃唔到。對住未逃逸嘅訊息就係 0.0%。
+ *
+ * 個 fixture 係固定嘅，所以舊嗰句唔算 flaky，佢兩個 mutant 都照殺 —— 但佢聲稱建立
+ * 嗰個性質（「任何編碼都漏唔出去」）根本冇建立到。（REV-054 M-2）
+ */
+function stringsIn(value) {
+  if (typeof value === "string") return [value];
+  if (value && typeof value === "object") return Object.values(value).flatMap(stringsIn);
+  return [];
+}
+
+/**
+ * 一個 blind index 喺任何編碼之下有冇漏入去個 report。
+ *
+ * 逐個編碼滑一個八字元嘅窗 —— 因為真 MySQL 會切，所以「成個 index 有冇出現」係
+ * 一個捉唔到嘢嘅問題。
+ */
+function leakedEncodings(serialised, indexBytes) {
+  const rendered = [...indexBytes]
+    .map((byte) => (byte >= 0x20 && byte <= 0x7e
+      ? String.fromCharCode(byte)
+      : `\\x${byte.toString(16).toUpperCase().padStart(2, "0")}`))
+    .join("");
+  const encodings = {
+    latin1: indexBytes.toString("latin1"),
+    hex: indexBytes.toString("hex"),
+    HEX: indexBytes.toString("hex").toUpperCase(),
+    base64: indexBytes.toString("base64"),
+    base64url: indexBytes.toString("base64url"),
+    mysql: rendered
+  };
+  return Object.entries(encodings)
+    .filter(([, encoded]) => Array.from(
+      { length: Math.max(0, encoded.length - 8) },
+      (_, at) => encoded.slice(at, at + 8)
+    ).some((window) => serialised.includes(window)))
+    .map(([name]) => name);
+}
+
+function fakeDatabase(rows, { failOn = new Set(), failAfterWrite = new Set(), duplicateOn = new Map() } = {}) {
+  const table = rows.map((row) => ({ ...row }));
+  /**
+   * 一個唔前進嘅 cursor 係**掛死**，唔係 fail —— `node --test` 冇 timeout，所以
+   * 「剷走 `AND id > ?`」呢個 mutant 會喺 CI 度燒到 job 上限先有人見到一個紅叉。
+   * 個上限放喺 double 度而唔係放喺一條測試度，因為第一條撞到嘅測試先係掛死嗰條，
+   * 而佢唔一定有 wrapper。呢個檔案最大嗰張表五行，最細 batch 兩行。（REV-053 L-6）
+   */
+  let selects = 0;
+  const db = {
+    table,
+    async query(sql, params) {
+      if (sql.includes("ORDER BY") && (selects += 1) > 50) {
+        throw new Error("the rotation is not terminating: the double refuses a 51st SELECT");
+      }
+      if (sql.includes("COUNT(*)")) {
+        const column = sql.includes("encryption_key_id") ? "encryption_key_id" : "blind_index_key_id";
+        return [[{ remaining: table.filter((r) => r[column] === params[0]).length }]];
+      }
+      /**
+       * `WHERE` 要**照住 SQL 行**，唔可以硬寫。
+       *
+       * 之前呢度硬寫咗 `r[column] === params[0] && r.id > params[1]`，即係個 cursor
+       * 條件 `AND id > ?` —— **令個輪替會停嘅嗰一句** —— 由呢個 double 自己補返，
+       * 而唔係由被測嘅 SQL 提供。結果：剷走 `AND id > ?`，356 條測試全部照綠，而喺
+       * 真 MySQL 上面個迴圈會永遠攞返同一批行。
+       *
+       * 呢個係呢個 task 第四個 double 失真，而且就喺我三次修 `execute` 都冇掂過嗰
+       * 一個 method 度。（REV-052 M-2）
+       */
+      const limit = Number(/LIMIT (\d+)/u.exec(sql)[1]);
+      const whereClause = /WHERE ([\s\S]*?)\s+ORDER BY/u.exec(sql)[1];
+      let cursor = 0;
+      const tests = [];
+      for (const predicate of whereClause.split(/\s+AND\s+/u).map((part) => part.trim())) {
+        const equals = /^([a-z_]+) = \?$/u.exec(predicate);
+        const greater = /^([a-z_]+) > \?$/u.exec(predicate);
+        if (equals) { const [column, value] = [equals[1], params[cursor++]]; tests.push((r) => r[column] === value); }
+        else if (greater) { const [column, value] = [greater[1], params[cursor++]]; tests.push((r) => r[column] > value); }
+        else if (/^\? IS NOT NULL$/u.test(predicate)) { cursor += 1; }   // 恆真，同真 SQL 一樣
+        else throw new Error(`the double cannot parse the predicate ${predicate}`);
+      }
+      // **回副本**，唔回 live reference。真 MySQL 回嘅係一份已經脫離咗表嘅資料，
+      // 而呢個分別唔係學術嘅：靠 reference 嘅話，一個模擬並發嘅測試改個 table 就
+      // 連手上嗰行都改埋，於是個 guard 無論啱定錯都會「通過」，兩個 mutant 一齊
+      // 生還。（REV-051 F-M3 嘅第一次修法就係咁樣測唔到嘢。）
+      /**
+       * `ORDER BY` 都要照住 SQL 行。
+       *
+       * 之前呢度係 `.sort((a, b) => a.id - b.id)`，即係**方向**由 double 供，唔係由
+       * 被測 SQL 供。REV-052 M-2 喺同一句入面點過兩半（硬寫 WHERE、無條件 sort），
+       * 我淨係修咗 WHERE 嗰半。結果：`ORDER BY id` 改成 `ORDER BY id DESC`，15 條
+       * 單元同 4 條 integration 全部照綠，而真 MySQL 上面個 cursor 會倒住行 ——
+       * 五行入面掃三行，跳過兩行，重覆一行，仲要報 exit 0。（REV-053 M-1）
+       */
+      const order = /ORDER BY (\w+)( DESC)?/u.exec(sql);
+      if (!order) throw new Error("the double cannot run a SELECT with no ORDER BY");
+      const [column, descending] = [order[1], Boolean(order[2])];
+      return [table.filter((r) => tests.every((matches) => matches(r)))
+        .sort((a, b) => (descending ? b[column] - a[column] : a[column] - b[column]))
+        .slice(0, limit).map((r) => ({ ...r }))];
+    },
+    async withTransaction(work) {
+      return work({
+        /**
+         * 讀個 SET 子句嚟決定邊個欄位收邊個參數，唔係照參數位置硬派。
+         *
+         * 之前呢度係硬派嘅，而咁樣個 double 就唔再係喺度扮 MySQL —— 我改個 SQL
+         * 字串（例如剷走 `blind_index_key_id = ?`），佢照樣寫入，所以兩個真缺陷
+         * 喺 mutation 之下生還。真 MySQL 係跟 SQL 行事嘅；呢度都要。
+         */
+        async execute(sql, params) {
+          const setClause = /SET ([\s\S]*?)\s+WHERE/u.exec(sql)[1];
+          const whereClause = /WHERE ([\s\S]*)$/u.exec(sql)[1];
+          const next = {};
+          let cursor = 0;
+          for (const assignment of setClause.split(",").map((part) => part.trim())) {
+            const [column, value] = assignment.split("=").map((part) => part.trim());
+            // 右邊唔係 `?` 就係「寫返自己」，即係冇變 —— 同真 SQL 一樣。
+            if (value === "?") next[column] = params[cursor++];
+          }
+          /**
+           * `WHERE` 一樣要跟住行，唔係靠 `params` 尾二個當作 id。
+           *
+           * 之前呢度淨係 parse `SET`，而呢個 task 兩樣最要緊嘅嘢 —— 續跑用嘅
+           * `encryption_key_id = ?` 過濾，同防並發覆寫嗰個 guard —— **兩個都住喺
+           * `WHERE` 入面**。即係我可以把個 guard 改成 `OR 1 = 1` 而成套測試照綠。
+           * （REV-051 F-M3）
+           */
+          const predicates = whereClause.split(/\s+AND\s+/u).map((part) => part.trim());
+          const wanted = {};
+          for (const predicate of predicates) {
+            const [column, value] = predicate.split("=").map((part) => part.trim());
+            if (value === "?") wanted[column] = params[cursor++];
+            else if (column === "1" && value === "1") continue; // `OR 1 = 1` 類嘅恆真
+          }
+          const row = table.find((candidate) =>
+            Object.entries(wanted).every(([column, value]) => candidate[column] === value));
+          // 冇行 match 就係 affectedRows 0 —— 唔係錯，但亦都唔係寫入。
+          if (!row) return [{ affectedRows: 0 }];
+          if (duplicateOn.has(row.id)) {
+            const error = duplicateKeyError(row.supplier_id,
+              next.blind_index_key_id ?? row.blind_index_key_id, duplicateOn.get(row.id));
+            db.lastDuplicateMessage = error.sqlMessage;   // 俾掃描嘅負控制用
+            throw error;
+          }
+          if (failOn.has(row.id)) throw new Error("simulated row failure");
+          Object.assign(row, next);
+          // mysql2 永遠回 `[ResultSetHeader, fields]` —— 寫到嘢嗰次一樣要回，唔係
+          // 回 undefined。上面個 `affectedRows: 0` 分支一直啱，寫入呢半就唔係。
+          const written = [{ affectedRows: 1 }];
+          // 寫咗之後先死 —— 例如 commit 階段出事。呢個係唯一一種「舊 key 已經冇
+          // 行用緊，但今次 run 有失敗」嘅情況，而佢正正係 supplierRowsDrained
+          // 唔可以淨係睇 remaining 嘅原因。
+          if (failAfterWrite.has(row.id)) throw new Error("simulated failure after the write landed");
+          return written;
+        }
+      });
+    }
+  };
+  return db;
+}
+
+/**
+ * 種一行，形狀同 `supplier_bank_accounts` 一樣。密文同 blind index 係**分開兩個
+ * call** —— `encryptAccountNumber` 唔會順手計 index，而嗰個分工正正就係兩條輪替
+ * 命令可以獨立行嘅原因。
+ */
+function seed(c, { id, supplierId = 7 }) {
+  const context = c.newCryptoContext();
+  const account = `${ACCOUNT}${id}`;
+  const sealed = c.encryptAccountNumber({ supplierId, cryptoContext: context, accountNumber: account });
+  const indexed = c.blindIndex(account);
+  return {
+    id, supplier_id: supplierId, crypto_context: context,
+    account_ciphertext: sealed.ciphertext, account_iv: sealed.iv, account_auth_tag: sealed.authTag,
+    encryption_key_id: sealed.encryptionKeyId,
+    account_blind_index: indexed.index, blind_index_key_id: indexed.keyId
+  };
+}
+
+// AC：encryption command 只處理 from key 嘅行，並且用 active key 重新加密。
+test("encryption rotation only touches rows on the from key, and re-encrypts under the active one", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const rows = [
+    seed(oldCrypto, { id: 1 }), seed(oldCrypto, { id: 2 }),
+    { ...seed(c, { id: 3 }) }
+  ];
+  const db = fakeDatabase(rows);
+  const before = new Map(db.table.map((r) => [r.id, r.account_ciphertext]));
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.processed, 2, "only the two rows on e1");
+  assert.equal(report.remaining, 0);
+  assert.equal(report.supplierRowsDrained, true);
+  assert.deepEqual(db.table.map((r) => r.encryption_key_id), ["e2", "e2", "e2"]);
+  // 第三行完全冇郁過 —— 連密文都一樣。
+  assert.deepEqual(db.table[2].account_ciphertext, before.get(3));
+  // 頭兩行解得返，而且解出嚟係原本個帳號：AAD 綁定冇斷。
+  for (const row of db.table.slice(0, 2)) {
+    assert.equal(c.decryptAccountNumber({
+      supplierId: row.supplier_id, cryptoContext: row.crypto_context,
+      ciphertext: row.account_ciphertext, iv: row.account_iv,
+      authTag: row.account_auth_tag, encryptionKeyId: row.encryption_key_id
+    }), `${ACCOUNT}${row.id}`);
+  }
+  // Blind index 完全唔關 encryption 輪替事。
+  assert.deepEqual(db.table.map((r) => r.blind_index_key_id), ["l2", "l2", "l2"]);
+});
+
+// AC：lookup command 同一個交易更新 index ＋ key ID。
+test("lookup rotation rewrites the index and its key id together", async () => {
+  const oldCrypto = crypto({ lookActive: "l1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 }), seed(oldCrypto, { id: 2 })];
+  const db = fakeDatabase(rows);
+  const beforeIndex = db.table[0].account_blind_index;
+  const beforeCipher = db.table[0].account_ciphertext;
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2" });
+
+  assert.equal(report.processed, 2);
+  assert.equal(report.supplierRowsDrained, true);
+  for (const row of db.table) {
+    assert.equal(row.blind_index_key_id, "l2");
+    // 個 index 要真係用新 key 計過，唔係照抄。
+    assert.deepEqual(row.account_blind_index, c.blindIndex(`${ACCOUNT}${row.id}`).index);
+  }
+  assert.notDeepEqual(db.table[0].account_blind_index, beforeIndex);
+  // 密文完全唔關 lookup 輪替事。
+  assert.deepEqual(db.table[0].account_ciphertext, beforeCipher);
+});
+
+// AC：兩者按 ID 續跑。
+test("a half-finished run resumes without external progress state", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2, 3, 4, 5].map((id) => seed(oldCrypto, { id })));
+
+  const first = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", limit: 2 });
+  assert.equal(first.processed, 2);
+  assert.equal(first.remaining, 3);
+  assert.equal(first.supplierRowsDrained, false, "three rows still hold the old key");
+
+  // 第二次唔傳 `after` —— 條件本身就係進度。
+  const second = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+  assert.equal(second.processed, 3, "picks up exactly the rows the first run did not reach");
+  assert.equal(second.remaining, 0);
+  assert.equal(second.supplierRowsDrained, true);
+  assert.deepEqual(db.table.map((r) => r.encryption_key_id), ["e2", "e2", "e2", "e2", "e2"]);
+});
+
+// AC：舊 key row count 為 0 先可以移除。
+test("a failed row keeps the old key un-removable and is reported by id", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2, 3].map((id) => seed(oldCrypto, { id })), { failOn: new Set([2]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.processed, 2);
+  assert.equal(report.failed, 1);
+  assert.deepEqual(report.failures.map((f) => f.id), [2]);
+  assert.equal(report.remaining, 1);
+  assert.equal(report.supplierRowsDrained, false,
+    "one row still on the old key must block removing it");
+});
+
+// 剷舊 key 嘅條件唔可以淨係「冇行用緊佢」。
+test("a failure that lands after the write still blocks removing the old key", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2].map((id) => seed(oldCrypto, { id })), { failAfterWrite: new Set([2]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.remaining, 0, "both rows now carry the new key id");
+  assert.equal(report.failed, 1, "but one of them did not finish cleanly");
+  assert.equal(report.supplierRowsDrained, false,
+    "remaining === 0 is not sufficient: a run with an unexplained failure must not authorise removing the key");
+});
+
+/**
+ * REV-051 F-M1。MySQL 喺 `ER_DUP_ENTRY` 嘅訊息入面會嵌住撞咗嗰個 key 嘅值，而對
+ * `uq_supplier_bank_blind_index` 嚟講，嗰個值**就係 blind index**。轉發
+ * `error.message` 就等於把半個 HMAC 印落 report。
+ */
+test("a duplicate key failure reports the constraint, never the index MySQL echoes back", async () => {
+  const oldCrypto = crypto({ lookActive: "l1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 })];
+  const index = c.blindIndex(`${ACCOUNT}1`).index;
+  const db = fakeDatabase(rows, { duplicateOn: new Map([[1, index]]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2" });
+
+  assert.equal(report.failed, 1);
+  assert.equal(report.failures[0].reason, "DUPLICATE_KEY");
+  assert.equal(report.failures[0].constraint, "uq_supplier_bank_blind_index",
+    "the constraint name is schema, not data, and it is what an operator needs");
+  // `remainingRows` 揀邊個欄位係一個三元式，而佢就係 `supplierRowsDrained` 嘅全部。
+  // 之前冇任何測試睇過佢個 lookup 分支：`const column = "encryption_key_id"` 咁改,
+  // 兩套測試照綠，而一個做咗一半嘅 lookup 輪替會報 `remaining: 0,
+  // supplierRowsDrained: true` —— 即係叫 operator 剷一個仲有行用緊嘅 key。
+  // 呢度係全個 repo 唯一一個「lookup 輪替之後仲有行留喺舊 key」嘅情境。（REV-053 M-2）
+  assert.equal(report.remaining, 1, "the row that failed is still on the old lookup key");
+  assert.equal(report.supplierRowsDrained, false);
+
+});
+
+/**
+ * 洩漏掃描要**自己一條測試**。
+ *
+ * 之前佢哋三句住喺上面嗰條測試嘅尾，而 `constraint` 嗰句 `assert.equal` 喺佢哋前面。
+ * 即係喺唯一一個佢哋有嘢可以捉嘅情境 —— F-M1 個 mutant —— 佢哋**一句都冇行過**：
+ * constraint 嗰句先炸，成條測試即刻停。佢哋淨係喺乾淨嗰次行過，而嗰次本來就冇嘢捉。
+ * （REV-053 M-3）
+ */
+test("no encoding of the blind index may reach the report, whatever MySQL echoed back", async () => {
+  const oldCrypto = crypto({ lookActive: "l1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 })];
+  const index = c.blindIndex(`${ACCOUNT}1`).index;
+  const db = fakeDatabase(rows, { duplicateOn: new Map([[1, index]]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2" });
+
+  assert.deepEqual(leakedEncodings(stringsIn(report).join("\u0000"), index), [],
+    "the index must not appear in any encoding");
+  assert.ok(!JSON.stringify(report).includes("Duplicate entry"),
+    "no driver message may be forwarded verbatim");
+});
+
+/**
+ * 負控制。冇呢一條，上面嗰條同「掃一個永遠搵唔到嘅形狀」係分唔開嘅 —— F-M1 嗰三句
+ * 就係咁樣過咗成輪 review。
+ *
+ * 跑三個唔同帳號：個 fixture 一旦固定咗，「呢次啱」同「每次都啱」係兩件事，而
+ * REV-054 M-2 就係喺一個固定 fixture 之下睇落好地地、換個隨機值就一半機會掃唔到。
+ */
+test("the leak scan catches a genuine ER_DUP_ENTRY leak, on every account it is given", async () => {
+  for (const slot of [1, 2, 3]) {
+    const oldCrypto = crypto({ lookActive: "l1" });
+    const c = crypto();
+    const db = fakeDatabase([seed(oldCrypto, { id: slot })],
+      { duplicateOn: new Map([[slot, c.blindIndex(`${ACCOUNT}${slot}`).index]])
+      });
+    const index = c.blindIndex(`${ACCOUNT}${slot}`).index;
+
+    const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2" });
+    const leaked = { ...report, failures: [{ id: slot, reason: db.lastDuplicateMessage }] };
+
+    assert.deepEqual(leakedEncodings(stringsIn(leaked).join("\u0000"), index), ["mysql"],
+      `the scan must catch the leak for account ${slot}`);
+  }
+});
+
+// REV-051 F-M2：`--limit` 限嘅係做幾多行，唔係成功幾多行。
+test("--limit bounds the work attempted, not just the rows that succeed", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  const db = fakeDatabase(ids.map((id) => seed(oldCrypto, { id })), { failOn: new Set(ids) });
+
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", limit: 2
+  });
+
+  assert.equal(report.processed, 0, "every row fails");
+  assert.equal(report.attempted, 2, "but a --limit=2 run must still stop after two");
+  assert.equal(report.failed, 2,
+    "a cautious probe must not turn into a full table scan just because the rows fail");
+});
+
+// REV-051 F-M3：防並發覆寫嗰個 guard 住喺 WHERE 入面。
+for (const [kind, fromKey, toKey, keyColumn, witness] of [
+  [ROTATION_KINDS.ENCRYPTION, "e1", "e2", "encryption_key_id", "account_ciphertext"],
+  [ROTATION_KINDS.LOOKUP, "l1", "l2", "blind_index_key_id", "account_blind_index"]
+]) {
+  test(`${kind}: a row whose key changed under us is not overwritten`, async () => {
+    const oldCrypto = crypto(kind === ROTATION_KINDS.ENCRYPTION ? { encActive: "e1" } : { lookActive: "l1" });
+    const c = crypto();
+    const db = fakeDatabase([seed(oldCrypto, { id: 1 }), seed(oldCrypto, { id: 2 })]);
+    const before = db.table[0][witness];
+
+    // 模擬另一個 process 喺 SELECT 同 UPDATE 之間換走咗第一行嘅 key。
+    const originalQuery = db.query.bind(db);
+    db.query = async (sql, params) => {
+      const result = await originalQuery(sql, params);
+      if (sql.includes(`WHERE ${keyColumn}`)) db.table[0][keyColumn] = toKey;
+      return result;
+    };
+
+    const report = await runRotation({ database: db, crypto: c, kind, from: fromKey, to: toKey });
+
+    assert.deepEqual(db.table[0][witness], before,
+      "the guard must refuse to write a row whose key id no longer matches the one we read");
+    assert.equal(db.table[1][keyColumn], toKey, "the untouched row still rotates");
+    assert.equal(report.remaining, 0);
+    // Guard 響咗嗰行唔可以當做咗。之前兩條 guard 測試都冇睇過 `processed`，所以
+    // 「UPDATE 一行都冇寫到」同「寫咗」喺個 report 眼中一模一樣。（REV-053 L-2）
+    assert.equal(report.declined, 1, "the row the guard refused is reported as declined");
+    assert.equal(report.processed, 1, "and it is not counted as rotated");
+  });
+}
+
+// REV-053 L-1：`startedAt` 同 `endedAt` 之前兩個都係同一個 `now`，即係任何 run 嘅
+// elapsed 結構上都係 0。警告嗰邊要定住時間，計時嗰邊唔可以。
+test("the report measures elapsed time instead of reporting zero for every run", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2].map((id) => seed(oldCrypto, { id })));
+  let tick = 1_000;
+  const clock = () => (tick += 250);
+
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", clock
+  });
+
+  assert.ok(report.endedAt > report.startedAt,
+    `a finished rotation must report a non-zero elapsed time, got ${report.endedAt - report.startedAt}`);
+});
+
+/**
+ * REV-052 M-1。一個打錯咗嘅 `--from` 之前會行到尾，然後報
+ * `processed 0 / failed 0 / remaining 0 / supplierRowsDrained true` 同 exit 0 ——
+ * **同一個做完咗嘅輪替一模一樣**。Operator 收到嘅係「做完，可以剷 key」。
+ */
+test("refuses a --from that is not in the ring, instead of reporting a finished rotation", async () => {
+  const c = crypto();
+  const db = fakeDatabase([]);
+  await assert.rejects(
+    () => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "TYPO", to: "e2" }),
+    /--from key id TYPO is not in the encryption ring/u
+  );
+  // Lookup 嗰邊查嘅要係 lookup ring，唔係 encryption ring。
+  await assert.rejects(
+    () => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "e1", to: "l2" }),
+    /not in the lookup ring/u,
+    "an encryption key id must not be accepted as a lookup source"
+  );
+  // 一個真係喺 ring 入面嘅 from 照樣行得到。
+  const ok = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+  assert.equal(ok.processed, 0);
+});
+
+/**
+ * REV-052 M-2。`AND id > ?` 係令個迴圈會停嘅嗰一句。之前個 double 自己硬寫咗佢，
+ * 所以剷走佢 356 條測試照綠，而喺真 MySQL 上面會永遠攞返同一批行。
+ */
+test("the cursor advances, so a rotation terminates instead of re-reading the same batch", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2, 3, 4, 5].map((id) => seed(oldCrypto, { id })), { failOn: new Set([1, 2, 3, 4, 5]) });
+
+  const batches = [];
+  const originalQuery = db.query.bind(db);
+  db.query = async (sql, params) => {
+    const result = await originalQuery(sql, params);
+    // 唔可以 sniff `"ORDER BY id"` —— 咁樣呢個 wrapper 自己就變成咗釘住個欄位嘅嘢，
+    // 而唔係被測 SQL。`ORDER BY supplier_id` 嗰個 mutant 之前就係死喺呢句手上。
+    // （REV-054 M-1）
+    if (sql.includes("ORDER BY")) batches.push(result[0].map((r) => r.id));
+    // 一個唔前進嘅 cursor 係**掛死**，唔係 fail：`node --test` 冇 timeout，所以個
+    // mutant 會喺 CI 度燒到 job 上限先有人見到。呢度封個頂，令佢即刻變成一句讀得
+    // 明嘅 assertion。五行、batchSize 2 —— 三批，加最後嗰次讀返空。（REV-053 L-6）
+    assert.ok(batches.length <= 4, "the rotation must terminate: the cursor is not advancing");
+    return result;
+  };
+
+  // 每行都會失敗，所以冇一行會離開「舊 key」—— 個迴圈只可以靠 cursor 前進。
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", batchSize: 2
+  });
+
+  assert.equal(report.failed, 5, "every row is attempted exactly once");
+  const seen = batches.flat();
+  assert.deepEqual(seen, [...new Set(seen)], "no row may be re-read: the cursor must move past a failed row");
+  assert.deepEqual(seen, [1, 2, 3, 4, 5]);
+});
+
+/**
+ * REV-054 M-1。REV-053 釘住咗 `ORDER BY` 個**方向**，冇釘住個**欄位**。
+ *
+ * `ORDER BY supplier_id` 喺真 MySQL 上面會跳行：個 cursor 係 `AND id > ?`，所以
+ * 排序一旦唔係跟 `id`，一批返嚟嘅最大 id 就會把細 id 嘅行永遠掃走。上面嗰條測試
+ * 睇唔到，因為佢五行全部同一個 supplier_id —— 排序穩定，次序一樣。
+ *
+ * 呢度特登令 supplier_id 嘅次序同 id 嘅次序**相反**。
+ */
+test("the cursor orders by the column it advances on, so no row is skipped", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const ids = [1, 2, 3, 4, 5, 6];
+  const rows = ids.map((id) => seed(oldCrypto, { id, supplierId: 100 - id }));
+  const db = fakeDatabase(rows, { failOn: new Set(ids) });
+
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2", batchSize: 2
+  });
+
+  assert.equal(report.attempted, 6, "every row must be attempted");
+  assert.deepEqual(report.failures.map((f) => f.id), ids,
+    "a SELECT ordered by anything other than the cursor column silently skips rows");
+  assert.equal(report.remaining, 6, "none of them rotated, so none of them may be forgotten");
+});
+
+/**
+ * REV-052 M-3。`safeReason` 個 `named` 分支之前對 crypto 係死嘅 —— crypto 掟純
+ * Error／TypeError，一個 code 都冇 —— 所以每個 crypto 失敗都報 `UNKNOWN`，而
+ * 嗰個正正係實作報告 §5 當成特點嚟寫嘅 fail-closed 情境。
+ */
+test("a tampered row is reported by name, not as UNKNOWN", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const rows = [seed(oldCrypto, { id: 1 })];
+  // 改一個 byte：AAD／auth tag 就對唔上，crypto 會掟「被竄改」。
+  rows[0].account_ciphertext = Buffer.from(rows[0].account_ciphertext);
+  rows[0].account_ciphertext[0] ^= 0xff;
+  const db = fakeDatabase(rows);
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.failed, 1);
+  assert.equal(report.failures[0].reason, "BANK_ACCOUNT_TAMPERED",
+    "an operator must be able to tell a tampered row from an unclassified failure");
+  assert.notEqual(report.failures[0].reason, "UNKNOWN");
+  // 而個 reason 仍然唔可以帶住任何資料。
+  assert.ok(!JSON.stringify(report).includes(rows[0].account_ciphertext.toString("hex").slice(0, 12)));
+});
+
+// `--to` 係確認唔係選擇器。
+test("refuses a --to that is not the active key, instead of silently using the active one", async () => {
+  const c = crypto();
+  const db = fakeDatabase([]);
+  await assert.rejects(
+    () => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e9" }),
+    /must be the active encryption key id \(e2\)/u
+  );
+  await assert.rejects(
+    () => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e2", to: "e2" }),
+    /same key id/u
+  );
+});
+
+// AC：report 唔含 key、明文、ciphertext 或 blind index。
+test("the report carries ids and counts, never key material, plaintext, ciphertext or an index", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2].map((id) => seed(oldCrypto, { id })), { failOn: new Set([2]) });
+  const progress = [];
+
+  const report = await runRotation({
+    database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2",
+    onProgress: (p) => progress.push(p)
+  });
+
+  const serialised = JSON.stringify({ report, progress });
+  for (const secret of [KEY_A, KEY_B, KEY_C, ACCOUNT, `${ACCOUNT}1`]) {
+    assert.ok(!serialised.includes(secret), `report must not contain ${secret.slice(0, 8)}…`);
+  }
+  // Base64 嘅 key 會唔會以另一種編碼漏出去？掃 raw bytes。
+  for (const raw of [Buffer.from(KEY_A, "base64").toString("hex"), Buffer.from(KEY_B, "base64").toString("hex")]) {
+    assert.ok(!serialised.includes(raw), "no key material in any encoding");
+  }
+  assert.ok(!serialised.includes(db.table[0].account_blind_index.toString("hex")), "no blind index");
+  // Key **id** 係應該喺度嘅 —— 佢一行行寫咗喺資料庫，唔係祕密。
+  assert.ok(serialised.includes("e1") && serialised.includes("e2"));
+});
+
+// AC：ring 超 3 或過渡超 30 日告警。
+test("warns when the ring grows past three keys or the transition runs past thirty days", () => {
+  const big = crypto({ encRing: { e1: KEY_A, e2: KEY_B, e3: KEY_C, e4: KEY_A } });
+  const codes = (w) => w.map((item) => item.code).sort();
+
+  assert.deepEqual(codes(ringWarnings({ crypto: big })), ["RING_TOO_LARGE"]);
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto() })), [], "a healthy ring warns about nothing");
+  // 邊界：啱啱三條係設計容許嘅上限，亦都係過渡期嘅正常狀態 —— 唔可以警告。
+  // 冇呢句，一個 `>` 改 `>=` 嘅 mutant 會生還。（REV-051）
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto({ encRing: { e1: KEY_A, e2: KEY_B, e3: KEY_C } }) })), [],
+    "exactly three keys is the permitted maximum");
+  // Lookup 嗰半一樣要有嘢釘住 —— 拆走佢之前冇任何測試會紅。
+  assert.deepEqual(ringWarnings({ crypto: crypto({ lookRing: { l1: KEY_A, l2: KEY_B, l3: KEY_C, l4: KEY_A } }) })
+    .map((w) => w.kind), ["lookup"]);
+
+  const now = Date.UTC(2026, 0, 31);
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto(), transitionStartedAt: Date.UTC(2025, 11, 1), now })),
+    ["TRANSITION_TOO_LONG"]);
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto(), transitionStartedAt: Date.UTC(2026, 0, 10), now })), [],
+    "21 days is inside the limit");
+  // 邊界：30 日啱啱好唔警告，31 日要警告。冇呢兩句，一個 off-by-one 會生還。
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto(), transitionStartedAt: now - 30 * 86_400_000, now })), [],
+    "exactly thirty days is still inside the limit");
+  assert.deepEqual(codes(ringWarnings({ crypto: crypto(), transitionStartedAt: now - 31 * 86_400_000, now })),
+    ["TRANSITION_TOO_LONG"], "thirty-one days is outside it");
+  assert.deepEqual(codes(ringWarnings({ crypto: big, transitionStartedAt: Date.UTC(2025, 11, 1), now })),
+    ["RING_TOO_LARGE", "TRANSITION_TOO_LONG"]);
+});
+
+/**
+ * REV-054 H-1。個 report 之前有一個叫 `safeToRemoveFromKey` 嘅欄位 —— 一個授權。
+ * 2026-09-24 嗰個 merge 令嗰個授權變成講大話：配置要求 Customer 同 Supplier 兩個
+ * bank ring 逐個 byte 一樣，而 `customer_bank_accounts` 有自己嘅 key id 欄位，
+ * `remainingRows` 由頭到尾只數一張表。
+ *
+ * REV-053 §7.2 查過「有冇第二張表帶 `encryption_key_id`」，當時答案係冇。**一個
+ * merge 就令嗰個答案過咗期，而冇任何嘢會再查一次。** 所以呢度唔再靠人查：個
+ * property 變成一條測試 —— 呢個 module 唔准再出一個聽落似 ring-wide 授權嘅欄位。
+ */
+test("the report never claims a key is safe to remove from the ring", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2].map((id) => seed(oldCrypto, { id })));
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.remaining, 0, "this run really did drain every supplier row");
+  assert.equal(report.supplierRowsDrained, true);
+  /**
+   * **白名單，唔係黑名單。**
+   *
+   * 呢句之前係 `/safe|removable|canRemove/i` —— 三個字。REV-055 加一個叫
+   * `keyRemovalApproved` 嘅欄位落個 report 度，兩套測試照綠：個掃描淨係捉得返
+   * `safeToRemoveFromKey` 嗰個歷史拼法。即係佢守住嘅唔係「唔准授權」呢個性質，
+   * 係「唔准用返舊嗰個名」。
+   *
+   * 而家係列晒成個 report 有咩欄位。加任何一個新欄位都要行過呢一行，而行過呢一行
+   * 就要諗清楚：呢個欄位講緊嘅嘢，呢個 module 見唔見到成個 ring？（REV-055 M-3）
+   */
+  assert.deepEqual(Object.keys(report).sort(), [
+    "attempted", "declined", "endedAt", "failed", "failures", "from", "kind", "lastId",
+    "processed", "remaining", "startedAt", "supplierRowsDrained", "to", "warnings"
+  ], "the report's shape is fixed: a new field must be justified against what this module can see");
+
+  /**
+   * `warnings` 係上面嗰個清單入面**一個** key，而佢啲內容冇人管 —— 而今輪正正就係
+   * 開始往佢入面寫新嘢嗰一輪（`REMAINING_UNKNOWN` 就係行呢道門入嚟嘅）。一個
+   * `{ code: "SAFE_TO_REMOVE_KEY", message: "… safe to remove it …" }` 行得過兩套
+   * 測試，而且會原句印喺真 CLI 個 stderr 上面，就喺嗰句話你唔可以剷嘅警告下面。
+   * 即係個授權冇消失，佢搬咗屋。（REV-056 M-2）
+   */
+  const ALLOWED_WARNINGS = [
+    "RING_TOO_LARGE", "TRANSITION_TOO_LONG", "RING_SHARED_WITH_OTHER_TABLES", "REMAINING_UNKNOWN"
+  ];
+  assert.deepEqual(report.warnings.map((w) => w.code).filter((code) => !ALLOWED_WARNINGS.includes(code)), [],
+    "a new warning code is a new sentence this module puts in front of an operator: justify it here");
+
+  // 而且每次都要講埋淨低嗰半邊 —— 連呢個完全乾淨嘅 run 都要。
+  const shared = report.warnings.find((warning) => warning.code === "RING_SHARED_WITH_OTHER_TABLES");
+  assert.ok(shared, "every run must say the ring reaches past this table");
+  assert.equal(shared.scope, "supplier_bank_accounts");
+  assert.match(shared.message, /customer_bank_accounts/u);
+  assert.match(shared.message, /rotateCustomerBankEncryption\.js/u,
+    "the warning must name the tool that drains the other half");
+});
+
+// REV-054 L-6：四個計數之間嘅關係之前冇任何嘢睇住。每一行淨係可以係三樣嘢之一。
+test("every attempted row lands in exactly one of processed, declined or failed", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const ids = [1, 2, 3, 4, 5];
+  const db = fakeDatabase(ids.map((id) => seed(oldCrypto, { id })), { failOn: new Set([2, 4]) });
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.attempted, 5);
+  assert.equal(report.processed + report.declined + report.failed, report.attempted,
+    `processed ${report.processed} + declined ${report.declined} + failed ${report.failed} `
+    + `must account for all ${report.attempted} attempted rows`);
+
+  // 呢句本來擺咗喺一個 `failures` 已經釘死係 `[]` 嘅測試度，即係永遠唔會紅。
+  // 搬咗嚟一個**真係有失敗**嘅 fixture。（REV-056 L-2）
+  assert.equal(report.failures.length, 2, "this fixture really does fail two rows");
+  assert.deepEqual(report.failures.map((f) => f.id), [2, 4],
+    "failures carries rows, and a row always has an id");
+});
+
+/**
+ * REV-054 L-5。最尾嗰句 `COUNT(*)` 死咗，之前會把成份 report 一齊掟走 —— 連做咗
+ * 幾多行、邊幾行失敗都冇埋，而啲工作係真係做咗嘅。
+ */
+test("a failure in the final count keeps the report and refuses to call the rows drained", async () => {
+  const oldCrypto = crypto({ encActive: "e1" });
+  const c = crypto();
+  const db = fakeDatabase([1, 2].map((id) => seed(oldCrypto, { id })));
+  const originalQuery = db.query.bind(db);
+  db.query = async (sql, params) => {
+    if (sql.includes("COUNT(*)")) throw Object.assign(new Error("connection lost"), { code: "PROTOCOL_CONNECTION_LOST" });
+    return originalQuery(sql, params);
+  };
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "e1", to: "e2" });
+
+  assert.equal(report.processed, 2, "the work that was done is still reported");
+  assert.equal(report.remaining, null, "but how much is left is now unknown");
+  assert.equal(report.supplierRowsDrained, false, "and unknown must never read as drained");
+
+  /**
+   * 「數唔到」唔係一行嘅失敗。
+   *
+   * REV-054 把佢 `push` 落 `failures`，而同一個 commit 另一個修正加咗
+   * `processed + declined + failed === attempted`。夾埋之後，一個兩行都換得乾淨嘅
+   * run 會報 `failed: 1` 同一個 `id: null` 嘅失敗，個不變式爆咗。（REV-055 M-1）
+   */
+  assert.equal(report.failed, 0, "both rows rotated cleanly: nothing about a row failed");
+  assert.deepEqual(report.failures, []);
+  assert.equal(report.processed + report.declined + report.failed, report.attempted,
+    "the count invariant must survive a failure that is not about a row");
+
+  const unknown = report.warnings.find((w) => w.code === "REMAINING_UNKNOWN");
+  assert.ok(unknown, "it is a warning instead");
+  assert.equal(unknown.reason, "PROTOCOL_CONNECTION_LOST");
+});
