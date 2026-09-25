@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-011 are complete on this branch. TASK-011 is developer-verified for its responsive Warehouse／Bin management UI; TASK-012 remains pending a separate human decision before implementation continues.
+`BLOCKED` — TASK-001～TASK-011 are complete on this branch. `HD-026` resolved the observed `0054` collision by selecting a contiguous shift to `0055`～`0064`; migration renames and TASK-012 remain blocked until the exact candidate DESIGN and PLAN hashes are approved.
 
 ## Baseline
 
@@ -30,6 +30,7 @@
 - `HD-022`／`APR-021`: Sam approved the minimal TASK-010 service extension for designed Bin `lockStatus` filtering and `currentLock` detail, without advancing the Stocktake migration.
 - `HD-023`／`APR-022`: Sam approved allowlisted Warehouse／Bin `sortBy` and `descending` behavior with `id` as the final tie-breaker.
 - `HD-024`／`APR-023`: Sam selected and approved the complete TASK-011 responsive Warehouse／Bin UI, separate Inventory menu group, focused component tests and mocked local Playwright validation on 2026-09-25, without TASK-012, CI or remote actions.
+- `HD-026`／`APR-025`: after local and `origin/main` were observed to contain Customer migration `0054_create_customer_export_jobs.js`, Sam selected the minimal contiguous Inventory shift from `0054`～`0063` to `0055`～`0064` and returned the module to `DESIGN_AND_PLAN` for fresh hash-bound approval.
 
 ## Reconciled P0 checks
 
@@ -105,7 +106,7 @@
 - Bin detail remains owner-safe through the Warehouse＋Bin lookup. Lists use allowlisted sorting with a stable `id` tie-breaker; Bin lists support `ALL`／`LOCKED`／`UNLOCKED`, and detail exposes only the current Stocktake lock projection.
 - Every client POST enables `Idempotency-Key`; caller-supplied retry keys are excluded from strict bodies. The client performs one request only on `VERSION_CONFLICT`. Existing shared Traditional Chinese mappings already covered every Warehouse／Bin public error, so no duplicate error-map change was needed.
 - Focused Inventory／handler／permission checks: 52 passed, 0 failed. Focused client HTTP／Inventory checks: 30 passed, 0 failed. Full repository ESLint, client production build, `git diff --check`, module-boundary validation and traceability validation passed. The build retained only the repository's pre-existing bundle-size warning.
-- No MySQL runtime was started: TASK-010 adds no DDL, while active Bin locks depend on planned migration `0062`; real lock-filter integration remains gated by the later Stocktake persistence task. Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker within the approved contract diff.
+- No MySQL runtime was started: TASK-010 adds no DDL, while active Bin locks depend on planned migration `0063`; real lock-filter integration remains gated by the later Stocktake persistence task. Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker within the approved contract diff.
 - These are developer checks, not formal `TC-002` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
 ## TASK-011 developer verification
@@ -121,25 +122,25 @@
 
 | Prefix | Migration | Owner |
 | --- | --- | --- |
-| `0054` | `seed_inventory_permissions` | P0-T03 |
-| `0055` | `create_inventory_operations` | P0-T05 |
-| `0056` | `create_inventory_audit` | P0-T05 |
-| `0057` | `create_inventory_master` | P1-T01 |
-| `0058` | `create_inventory_stock` | P1-T05 |
-| `0059` | `create_inventory_movements` | P1-T05 |
-| `0060` | `create_inventory_reservations` | P2-T01 |
-| `0061` | `create_inventory_transfers` | P3-T01 |
-| `0062` | `create_inventory_stocktakes` | P4-T01 |
-| `0063` | `create_inventory_opening` | P5-T01 |
+| `0055` | `seed_inventory_permissions` | P0-T03 |
+| `0056` | `create_inventory_operations` | P0-T05 |
+| `0057` | `create_inventory_audit` | P0-T05 |
+| `0058` | `create_inventory_master` | P1-T01 |
+| `0059` | `create_inventory_stock` | P1-T05 |
+| `0060` | `create_inventory_movements` | P1-T05 |
+| `0061` | `create_inventory_reservations` | P2-T01 |
+| `0062` | `create_inventory_transfers` | P3-T01 |
+| `0063` | `create_inventory_stocktakes` | P4-T01 |
+| `0064` | `create_inventory_opening` | P5-T01 |
 
 ## Boundaries
 
 - No shared／production database access, deployment, Technical Acceptance or UAT has occurred.
 - TASK-005 migration execution occurred only under `HD-012` in its disposable schema; no other project migration was executed there.
-- TASK-005 created only `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; Movement remains in P1 migration `0059`.
+- TASK-005 historically created `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; after candidate approval they will be renamed to `0056` and `0057`. Movement is now planned as P1 migration `0060`.
 - TASK-006 created only the two approved services, one shared safe-JSON helper and the three planned focused test files.
 - TASK-007 created only the approved lock／validation services, test support and focused tests; the smoke test's minimal DDL was disposable and is not a migration or product schema authority.
-- TASK-008 created only the HD-019-approved `0057` migration, inspector and focused tests; its migration execution was confined to the disposable TASK-008 schema.
+- TASK-008 historically created the HD-019-approved `0057` migration, inspector and focused tests; after candidate approval it will be renamed to `0058`. Its prior execution was confined to the disposable TASK-008 schema and remains historical evidence only.
 - TASK-009 created only the HD-020-approved service, projection and focused tests; both MySQL executions were confined to disposable TASK-009 schemas.
 - TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
 - TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
@@ -147,4 +148,4 @@
 
 ## Next safe action
 
-Obtain Sam's next explicit decision before starting TASK-012 Lot／Stock Control／Balance／Movement persistence. No database runtime is active, and no CI, push, PR or merge is authorized.
+Validate and present the exact 1.0 candidate DESIGN and PLAN hashes for Sam's independent approval. No migration rename, TASK-012 code, database runtime, CI, push, PR or merge is authorized before both approvals.

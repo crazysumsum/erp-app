@@ -2,7 +2,7 @@
 
 ## Review result
 
-`APPROVED` for the 0.8 P0 shared-path boundary. Reconciliation found six already-implemented framework/test files missing from `approval_required_paths`; four other changed paths already matched existing approval-required rules. Sam approved exactly those ten paths, DESIGN `56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e` and PLAN `4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434` on 2026-09-24.
+`CHANGES_REQUESTED` for the 1.0 candidate until DESIGN `567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7` and PLAN `124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8` receive Sam's independent approval. The semantic direction is approved by `HD-026`: main owns `0054_create_customer_export_jobs.js`, so Inventory shifts as one contiguous block from `0054`～`0063` to `0055`～`0064` without changing dependency order.
 
 ## Reviewer provenance
 
@@ -42,7 +42,8 @@
 | DR-10 | HIGH | RESOLVED | Consumed contract drift | TASK-004 implemented the planned transaction-aware Item lookup methods, but Inventory still pinned the pre-TASK-004 source hash. | `HD-008` adopts `transaction-v1` and binds the manifest to `ca31b00f…`; the resulting DESIGN and PLAN are approved. |
 | DR-11 | HIGH | RESOLVED | Publication scope omission | `ItemLookupService.js` required scoped approval, while its planned focused test was outside the manifest boundary. | `HD-010` authorized exactly those two files; Sam approved the resulting 0.7 DESIGN and PLAN. |
 | DR-12 | HIGH | RESOLVED_PENDING_APPROVAL | P0 shared-path omission | Reconciliation found ten existing P0 shared/framework changes; four matched existing approval-required rules and six were outside the manifest boundary. | `HD-011` authorizes exactly those ten paths; the candidate adds only the six missing exact entries. Fresh hash-bound approval remains required. |
+| DR-13 | HIGH | RESOLVED_PENDING_APPROVAL | Global migration collision | Current local and `origin/main` contain Customer migration `0054_create_customer_export_jobs.js`, while the Inventory branch still uses `0054_seed_inventory_permissions.js`. | `HD-026` selected the minimal contiguous shift to `0055`～`0064`. Existing disposable-schema evidence remains historical under old filenames; implementation and TASK-012 stay blocked until exact candidate hashes are approved. |
 
 ## Decision
 
-The 0.8 DESIGN and PLAN have no open CRITICAL/HIGH finding and are approved with exact ten-path `SCOPE`. TASK-005 and migration execution remain separately excluded.
+The 1.0 candidate has no unresolved semantic alternative after `HD-026`, but DR-13 remains `RESOLVED_PENDING_APPROVAL` until Sam approves the exact regenerated DESIGN and PLAN hashes. No migration rename or TASK-012 implementation is authorized by this document alone.

@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 77,
-  "mode": "IMPLEMENT",
-  "active_mode": "IMPLEMENT",
+  "revision": 82,
+  "mode": "DESIGN_AND_PLAN",
+  "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "resume_status": "DESIGNING",
   "current_phase": "PHASE-002",
-  "current_task": "TASK-011",
+  "current_task": "TASK-012",
   "baseline": {
     "design": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
     "plan": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
-    "code_commit": "fed56e40e959c97afc4d047f85f22e23d6fbb050",
+    "code_commit": "29e1bb5e236a3213a277d2e13f4b533517efd11f",
     "source_fingerprint": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
@@ -535,6 +535,48 @@
         "client/test/**/inventory*.test.js",
         "client/e2e/inventory-management/**",
         "client/config/menu.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-024",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-012 migrations 0058/0059, focused tests and disposable MySQL 26.7.0 verification and cleanup",
+      "recorded_at": "2026-09-25T11:18:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "29e1bb5e236a3213a277d2e13f4b533517efd11f",
+      "scope": [
+        "server/database/migrations/0058_create_inventory_stock.js",
+        "server/database/migrations/0059_create_inventory_movements.js",
+        "server/src/modules/inventory/inventoryStockSchema.js",
+        "server/test/inventoryStockMigrations.test.js",
+        "server/test/integration/inventoryStockMigrations.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-025",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 selecting the contiguous Inventory migration shift from 0054-0063 to 0055-0064",
+      "recorded_at": "2026-09-25T11:22:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "29e1bb5e236a3213a277d2e13f4b533517efd11f",
+      "scope": [
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/04_design_review.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/09_final_alignment_review.md",
+        "docs/inventory_management/implementation/00_implementation_readiness.md",
+        "docs/inventory_management/00_harness_state.json"
       ],
       "expires_at": null
     }
@@ -1384,6 +1426,53 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-011 option"
+    },
+    {
+      "id": "HD-025",
+      "impact": "MAJOR",
+      "question": "May TASK-012 create only migrations 0058 and 0059 plus focused tests, verify creation, constraints, immutability and rerun in a disposable MySQL 26.7.0 schema and clean it up, without TASK-013, CI or remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-012",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-012 option"
+    },
+    {
+      "id": "HD-026",
+      "impact": "MAJOR",
+      "question": "Local and origin/main now contain 0054_create_customer_export_jobs.js, colliding with Inventory's approved 0054 allocation. Should the entire contiguous Inventory allocation shift from 0054-0063 to 0055-0064 before TASK-012 resumes?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-003",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 selecting the recommended contiguous shift to 0055-0064"
+    },
+    {
+      "id": "HD-027",
+      "impact": "MAJOR",
+      "question": "Approve candidate DESIGN hash 567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7 after applying only HD-026's migration reallocation?",
+      "affected_ids": [
+        "DEC-028",
+        "DEC-030",
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-012"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -1742,5 +1831,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain Sam's explicit decision before starting TASK-012 Lot, Stock Control, Balance and Movement persistence. Do not create migrations, run CI or perform push/PR/merge actions without new authorization."
+  "next_safe_action": "Obtain Sam's independent approval or rejection of candidate DESIGN hash 567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7. Ask for PLAN approval separately only after DESIGN approval."
 }

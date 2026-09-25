@@ -4,11 +4,11 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 0.4 Approved Planning Baseline |
-| 文件日期 | 2026-09-23 |
+| 文件版本 | 1.0 Candidate — HD-026 Migration Reallocation |
+| 文件日期 | 2026-09-25 |
 | Requirement | `docs/inventory_management/01_requirement_spec.md` 0.4 Approved Planning Baseline |
-| Design | `docs/inventory_management/03_design_spec.md` 0.4 Approved Planning Baseline |
-| 任務狀態 | Sam已批准MySQL Server 26.7.0設計及P0～P5計畫；所有Task仍為PENDING，是否恢復IMPLEMENT仍待另行確認 |
+| Design | `docs/inventory_management/03_design_spec.md` 1.0 Candidate — HD-026 Migration Reallocation |
+| 任務狀態 | Sam已選定`0055`～`0064`連續配置；候選DESIGN／PLAN hash仍待獨立批准，未恢復IMPLEMENT |
 | Task list target | 本文件；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模型 | 6 個獨立 Phase；每個 Phase 使用一個 worktree、分支、PR 及一次完整 Phase 測試 |
 | 技術基線 | Node.js 26、Express 5、MySQL Server 26.7.0、Vue 3、Quasar 2 |
@@ -211,7 +211,7 @@ Phase P0 開始前：
 
 - [ ] 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
 - [ ] Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
-- [ ] 實體配置固定為`0054` permissions、`0055` operations、`0056` audit、`0057` master、`0058` stock、`0059` movements、`0060` reservations、`0061` transfers、`0062` stocktakes、`0063` opening；任何碰撞先停止並重新批准，不自行平移。
+- [ ] 實體配置固定為`0055` permissions、`0056` operations、`0057` audit、`0058` master、`0059` stock、`0060` movements、`0061` reservations、`0062` transfers、`0063` stocktakes、`0064` opening；任何碰撞先停止並重新批准，不自行平移。
 - [ ] Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
 - [ ] `.github/workflows/ci.yml`不再使用`mysql:8.0`；CI及本機整合測試均固定到MySQL Server 26.7.0，並以實際server version assertion防止漂移。
 
@@ -300,7 +300,7 @@ Phase P0 開始前：
 
 **Dependencies：** P0-T01、P0-T03。
 
-**Files likely touched：** `0055_create_inventory_operations.js`、`0056_create_inventory_audit.js`、`server/test/integration/inventoryMigrations.integration.test.js`。
+**Files likely touched：** `0056_create_inventory_operations.js`、`0057_create_inventory_audit.js`、`server/test/integration/inventoryMigrations.integration.test.js`。
 
 **Estimated scope：** M。
 
@@ -456,7 +456,7 @@ Phase P0 開始前：
 
 **Dependencies：** P1-T01、P0-T05。
 
-**Files likely touched：** `0058_create_inventory_stock.js`、`0059_create_inventory_movements.js`、`inventoryMigrations.integration.test.js`。
+**Files likely touched：** `0059_create_inventory_stock.js`、`0060_create_inventory_movements.js`、`inventoryMigrations.integration.test.js`。
 
 **Estimated scope：** M。
 
@@ -1462,7 +1462,7 @@ P5另須執行非一般 unit command可取代的受控驗證：
 | 風險 | 影響 | 緩解／阻擋點 |
 | --- | --- | --- |
 | Item lifecycle／lookup尚未完成 | Inventory重複或猜錯 SKU資格 | P0-T01硬 gate；只依賴 Item module唯一 contract |
-| Migration與多個模組 worktree碰撞 | DDL無法安全合併或破壞歷史 | 每 Phase起點 fetch並驗證`0054`～`0063`配額；碰撞時停止及重新批准，不自行改號、不修改已套用 migration |
+| Migration與多個模組 worktree碰撞 | DDL無法安全合併或破壞歷史 | 每 Phase起點 fetch並驗證`0055`～`0064`配額；碰撞時停止及重新批准，不自行改號、不修改已套用 migration |
 | Phase PR過大 | Review遺漏或整合延遲 | Tasks維持 S/M、每2～3項 checkpoint、shared hotspot單一 owner、Phase結果單一 |
 | 同 Warehouse/SKU並發超額 | 負庫存或超 Reserved/Allocation | Warehouse＋Stock Control serialization、fixed lock order、真並發 barrier tests |
 | HTTP重試或下游事件重送 | 重複入出庫 | P0先修 actor scope；HTTP與domain兩層 idempotency；source result lookup |
@@ -1653,7 +1653,7 @@ Implement only the scope and dependencies of legacy task `P0-T01` inside `PHASE-
 ### Acceptance criteria
 - 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
 - Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
-- 實體配置固定為`0054` permissions、`0055` operations、`0056` audit、`0057` master、`0058` stock、`0059` movements、`0060` reservations、`0061` transfers、`0062` stocktakes、`0063` opening；任何碰撞先停止並重新批准，不自行平移。
+- 實體配置固定為`0055` permissions、`0056` operations、`0057` audit、`0058` master、`0059` stock、`0060` movements、`0061` reservations、`0062` transfers、`0063` stocktakes、`0064` opening；任何碰撞先停止並重新批准，不自行平移。
 - Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
 - `.github/workflows/ci.yml`不再使用`mysql:8.0`；CI及本機整合測試均固定到MySQL Server 26.7.0，並以實際server version assertion防止漂移。
 
@@ -1721,7 +1721,7 @@ Implement only the scope and dependencies of legacy task `P0-T05` inside `PHASE-
 - Source unique key 精確為 module＋document type＋document ID＋line ID＋event ID，不含 command type，空 line 使用 `''`。
 - Audit 支援 `SUCCEEDED`、`REJECTED`、`FAILED`，只保存白名單摘要；Movement/Audit retention 至少 7 年。
 - 一般 app account 或 application SQL 無法 UPDATE／DELETE Audit；FK、indexes、SET NULL／RESTRICT 行為符合設計。
-- 本Task只建立`0055_create_inventory_operations.js`及`0056_create_inventory_audit.js`；不得提前建立依賴P1 master／stock的Movement table。
+- 本Task只建立`0056_create_inventory_operations.js`及`0057_create_inventory_audit.js`；不得提前建立依賴P1 master／stock的Movement table。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
@@ -1834,7 +1834,7 @@ Implement only the scope and dependencies of legacy task `P1-T05` inside `PHASE-
 - Balance 唯一表示 Warehouse＋Bin＋SKU＋Lot/No Lot＋Status；MySQL NULL 不可繞過 no-lot unique。
 - Lot 必屬 SKU、Bin 必屬 Warehouse；Movement 保存 source、actor及必要 master snapshots。
 - Movement 的 warehouse／SKU／Bin／Lot／actor／type/date及 group/source 查詢均有相符 index，且一般 app 無法修改或刪除。
-- 本Task依序建立`0058_create_inventory_stock.js`及`0059_create_inventory_movements.js`；Movement不得早於`0057_create_inventory_master.js`與`0058`。
+- 本Task依序建立`0059_create_inventory_stock.js`及`0060_create_inventory_movements.js`；Movement不得早於`0058_create_inventory_master.js`與`0059`。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.
