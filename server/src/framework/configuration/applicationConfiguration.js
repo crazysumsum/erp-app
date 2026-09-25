@@ -5,6 +5,7 @@ import apiConfig from "../../../config/api.js";
 import databaseConfig from "../../../config/database.js";
 import deviceBindingConfig from "../../../config/deviceBinding.js";
 import idempotencyConfig from "../../../config/idempotency.js";
+import inventoryConfig from "../../../config/inventory.js";
 import itemConfig from "../../../config/item.js";
 import jwtConfig from "../../../config/jwt.js";
 import loggingConfig from "../../../config/logging.js";
@@ -23,6 +24,7 @@ import { normalizeApplicationConfig } from "./normalizeApplicationConfig.js";
 import { normalizeDatabaseConfig } from "./normalizeDatabaseConfig.js";
 import { normalizeDeviceBindingConfig } from "../../services/deviceBinding/normalizeDeviceBindingConfig.js";
 import { normalizeIdempotencyConfig } from "../../services/idempotency/normalizeIdempotencyConfig.js";
+import { normalizeInventoryConfig } from "../../modules/inventory/normalizeInventoryConfig.js";
 import { normalizeItemConfig } from "../../modules/item/normalizeItemConfig.js";
 import { normalizeCustomerConfig } from "../../modules/customer/normalizeCustomerConfig.js";
 import { normalizeJwtConfig } from "./normalizeJwtConfig.js";
@@ -41,6 +43,7 @@ export function defaultConfigurationSource() {
     database: databaseConfig,
     deviceBinding: deviceBindingConfig,
     idempotency: idempotencyConfig,
+    inventory: inventoryConfig,
     item: itemConfig,
     jwt: jwtConfig,
     logging: loggingConfig,
@@ -98,6 +101,7 @@ export function validateApplicationConfiguration(
   validateSection("idempotency", () =>
     normalizeIdempotencyConfig(source?.idempotency)
   );
+  validateSection("inventory", () => normalizeInventoryConfig(source?.inventory));
   validateSection("item", () => normalizeItemConfig(source?.item));
   validateSection("jwt", () => normalizeJwtConfig(source?.jwt));
   validateSection("logging", () => normalizeLoggingConfig(source?.logging));

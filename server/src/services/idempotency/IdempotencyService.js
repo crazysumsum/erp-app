@@ -28,7 +28,7 @@ function hash(value) {
 }
 
 function identityScope(req) {
-  if (req.auth?.type === "jwt") {
+  if (req.auth?.type && req.auth.type !== "public") {
     const claims = req.auth.claims || {};
     return `jwt:${claims.sub || claims.jti || hash(JSON.stringify(canonicalValue(claims)))}`;
   }

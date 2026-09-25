@@ -56,6 +56,8 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 | HD-008 | ANSWERED | Adopt TASK-004's transaction-aware ItemLookupService contract and update the Inventory consumed-contract binding; do not revert the completed contract. |
 | HD-009 | ANSWERED | Enter `IMPLEMENT` only for isolated Item contract publication; push, review and merge after required CI. TASK-005 and migrations remain excluded. |
 | HD-010 | ANSWERED | Limit shared-file publication scope to exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js`. |
+| HD-011 | ANSWERED | Limit existing P0 shared/framework scope to the ten exact paths reported by reconciliation validation; do not broaden globs. |
+| HD-026 | ANSWERED | Main owns migration prefix `0054`; shift the complete Inventory allocation as one contiguous block to `0055`～`0064` and return to `DESIGN_AND_PLAN` before renaming files or resuming TASK-012. |
 
 ## HD-001 — Accountable owner
 
@@ -115,16 +117,25 @@ The initial `SELF_REVIEW` by `/root` is retained as historical review `REV-001`.
 - Reason: both methods are already required by the approved design and prevent Inventory from opening a nested transaction or copying Item lifecycle／UOM rules.
 - Boundary: this approves contract adoption, not the resulting DESIGN／PLAN hashes, PR merge, TASK-005 resumption or migration execution.
 
+## HD-026 — Collision-safe migration reallocation
+
+- Answer source: user response A in the active Codex task on 2026-09-25.
+- Observed conflict: local and `origin/main` at `fddcc44239075435406ce99b83d4fd1b38174f9d` contain `0054_create_customer_export_jobs.js`, while the Inventory branch still contains `0054_seed_inventory_permissions.js`.
+- Recorded interpretation: supersede `HD-007`／`DEC-028` physical numbers without changing their dependency order; use `0055` permissions, `0056` operations, `0057` audit, `0058` master, `0059` stock, `0060` movements, `0061` reservations, `0062` transfers, `0063` stocktakes and `0064` opening.
+- Historical evidence: prior disposable-schema runs remain truthful under the filenames used when they ran. They do not establish verification of the renamed files.
+- Boundary: the direction is approved, but migration renames, TASK-012 and schema execution remain blocked until Sam approves the exact candidate DESIGN and PLAN hashes.
+
 ## Independent review and baseline approval
 
 - Reviewer / method: Sam / `HUMAN`.
 - Historical decision: approved the 0.3 requirement/design baseline and P0→P5 plan/order after `HD-001`–`HD-004` were propagated.
 - Binding: design `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`; plan `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`. Later requirement/design/plan changes invalidate the affected approval and require re-review.
-- Current decision: Sam independently approved 0.7 DESIGN `474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b` and PLAN `12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4` on 2026-09-24, including exact two-file scoped approval.
+- Current binding decision before HD-026: Sam independently approved DESIGN `4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff` and PLAN `27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be`.
+- Current candidate: DESIGN `567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7` and PLAN `124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8`; both still require Sam's independent approval.
 
 ## Readiness and next safe action
 
-- Design/review: 0.7 DESIGN and PLAN are approved with exact-path `SCOPE` approval.
-- Implementation readiness: `BLOCKED` after completing the isolated publication; TASK-005 remains paused before DDL pending explicit resumption and reconciliation of the broader P0 branch.
+- Design/review: 1.0 candidate alignment is complete in substance; exact DESIGN and PLAN hash approval remains pending.
+- Implementation readiness: `BLOCKED`; no existing migration may be renamed and TASK-012 may not resume before both hash approvals.
 - Business/release: not accepted and not approved.
-- Next safe action: retain the completed contract on `main`; do not resume TASK-005 or execute migrations until explicitly authorized and the broader P0 branch is reconciled with merge commit `37594b843375297a9ac59dd5326ae0a6ec8d5db2`.
+- Next safe action: validate the candidate artifacts and obtain Sam's exact DESIGN and PLAN hash approvals.

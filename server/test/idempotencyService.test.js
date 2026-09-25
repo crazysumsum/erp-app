@@ -4,6 +4,7 @@ import {
   IdempotencyError,
   IdempotencyService
 } from "../src/services/idempotency/IdempotencyService.js";
+import { MemoryIdempotencyStore } from "../src/services/idempotency/IdempotencyStore.js";
 import { normalizeIdempotencyConfig } from "../src/services/idempotency/normalizeIdempotencyConfig.js";
 
 // 這裡測兩件事：key 對應到誰（錯了就是跨使用者外洩），以及 store 降級時客戶端
@@ -114,9 +115,9 @@ test("the identity scope falls back from sub to jti to a claims hash", async () 
 test("different users never share an idempotency scope", async () => {
   const store = recordingStore();
   const { manager } = createManager(store);
-  const run = (claims) =>
+  const run = (claims, type = "jwt") =>
     manager.execute(
-      createRequest({ auth: { type: "jwt", claims } }),
+      createRequest({ auth: { type, claims } }),
       createResponse(),
       routeOptions,
       () => "ok"
@@ -128,10 +129,47 @@ test("different users never share an idempotency scope", async () => {
   await run({ sub: "user-2" });
   // sub 相同的同一個人則必須落在同一個 scope，否則 idempotency 形同虛設。
   await run({ sub: "user-1", role: "admin" });
+  await run({ sub: "user-1" }, "jwt-password");
+  await run({ sub: "user-1" }, "jwt-device-password");
+  await run({ sub: "user-1" }, "apiKey");
 
-  const [first, second, again] = store.seen.map(({ key }) => key);
+  const [first, second, ...sameActor] = store.seen.map(({ key }) => key);
   assert.notEqual(first, second, "不同使用者不得共用 scope");
-  assert.equal(first, again, "同一個 sub 必須落在同一個 scope");
+  assert.ok(sameActor.every((key) => key === first), "同一個 sub 必須共用 actor scope");
+});
+
+test("strong-authenticated actors retain replay and conflict behaviour", async () => {
+  const store = new MemoryIdempotencyStore();
+  const { manager } = createManager(store);
+  const auth = { type: "jwt-password", claims: { sub: "user-1" } };
+  let runs = 0;
+  const execute = async (input, work) => {
+    const req = createRequest({ auth, input });
+    const res = createResponse();
+    await manager.execute(req, res, routeOptions, () => work(res));
+    return { req, res };
+  };
+
+  await execute({ quantity: 1 }, (res) => {
+    runs += 1;
+    res.status(201).json({ id: 1 });
+  });
+
+  const replay = await execute({ quantity: 1 }, () => {
+    runs += 1;
+  });
+  assert.equal(runs, 1);
+  assert.equal(replay.req.idempotentReplay, true);
+  assert.equal(replay.res.headers["idempotency-replayed"], "true");
+
+  await assert.rejects(
+    () =>
+      execute({ quantity: 2 }, () => {
+        runs += 1;
+      }),
+    { code: "IDEMPOTENCY_CONFLICT", statusCode: 409 }
+  );
+  assert.equal(runs, 1);
 });
 
 test("claims that differ only in an unrelated field still hash apart", async () => {

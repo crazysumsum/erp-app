@@ -1,43 +1,43 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 32,
+  "revision": 93,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-004",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-013",
   "baseline": {
-    "design": "474fc6e215cc86ce9be2866c17156e18ac3dc91ad320937af7a310a2a099e08b",
-    "plan": "12b274ba8529f70c058d9393d9fb83ccc57319641fc3ee756907d73cdc9031e4",
-    "code_commit": "37594b843375297a9ac59dd5326ae0a6ec8d5db2",
-    "source_fingerprint": "264dd78d39ec9dec9e3113e0a5941829ddf33f5ac6efb311acf30e092748c6bb",
-    "worktree": "/private/tmp/erp-inventory-item-contract-baseline",
-    "default_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9",
-    "mode_entry_commit": "b142bfd9f78ec46a1c36d75b78f0e885c9357ed9"
+    "design": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
+    "plan": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+    "code_commit": "ade425f1800578161cf11042186a524223434f1f",
+    "source_fingerprint": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
+    "worktree": "/private/tmp/erp-inventory-p0-foundation",
+    "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
+    "mode_entry_commit": "7279749a8fec0832d6f47fa316efb33c20726af8"
   },
   "runtime": {
-    "instance_id": "DESIGN-ONLY-NO-RUNTIME",
+    "instance_id": "INVENTORY-P0-NO-ACTIVE-LEASE",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "erp-inventory-p0-foundation"
+      "workspace": "/private/tmp/erp-inventory-p0-foundation"
     },
     "lease_ref": null
   },
   "tasks": {
-    "TASK-001": "PENDING",
-    "TASK-002": "PENDING",
-    "TASK-003": "PENDING",
-    "TASK-004": "IN_PROGRESS",
-    "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
-    "TASK-007": "PENDING",
-    "TASK-008": "PENDING",
-    "TASK-009": "PENDING",
-    "TASK-010": "PENDING",
-    "TASK-011": "PENDING",
-    "TASK-012": "PENDING",
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
+    "TASK-009": "DONE",
+    "TASK-010": "DONE",
+    "TASK-011": "DONE",
+    "TASK-012": "DONE",
     "TASK-013": "PENDING",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
@@ -300,6 +300,385 @@
         "server/test/itemLookupService.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-012",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 DESIGN hash",
+      "recorded_at": "2026-09-24T09:57:30+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-029"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-013",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 PLAN hash",
+      "recorded_at": "2026-09-24T09:58:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-014",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 PLAN and exact ten-path P0 SCOPE",
+      "recorded_at": "2026-09-24T09:58:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "code_commit": "c22dfceede9c3c3aad923dff795dc3bcfd2ac164",
+      "scope": [
+        ".github/workflows/ci.yml",
+        "client/src/framework/http/errorMessages.js",
+        "client/test/inventory/foundation.test.js",
+        "server/database/migrations/0054_seed_inventory_permissions.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/configuration.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/permissionCatalogueConventions.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-015",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving full TASK-005 scope and isolated MySQL 26.7.0 execution",
+      "recorded_at": "2026-09-24T10:27:13+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "code_commit": "42082588f7c9b23aaf6c12145cd0603b13457ee9",
+      "scope": [
+        "server/database/migrations/0055_create_inventory_operations.js",
+        "server/database/migrations/0056_create_inventory_audit.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-016",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory DESIGN hash 4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
+      "recorded_at": "2026-09-25T08:52:58+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "FR-001 through FR-125",
+        "SEC-001 through SEC-014",
+        "NFR-001 through NFR-014",
+        "DES-001 through DES-010",
+        "DEC-001 through DEC-029",
+        "server/test-support/fakeInventoryDatabase.js",
+        "server/test-support/inventoryFixtures.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-017",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory PLAN hash 27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "recorded_at": "2026-09-25T08:53:53+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "PHASE-001 through PHASE-006",
+        "TASK-001 through TASK-051",
+        "TC-001 through TC-010",
+        "UAT-001 through UAT-113",
+        "server/test-support/fakeInventoryDatabase.js",
+        "server/test-support/inventoryFixtures.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-018",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user confirmation on 2026-09-25 approving TASK-008 migration 0057, schema inspector, focused developer tests and isolated disposable MySQL 26.7.0 verification",
+      "recorded_at": "2026-09-25T09:15:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "3a99617d18562735ba7b539cff547c289dbb3d83",
+      "scope": [
+        "server/database/migrations/0057_create_inventory_master.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-019",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-009 service, projection, focused tests and isolated MySQL 26.7.0 deactivate/posting race verification",
+      "recorded_at": "2026-09-25T09:31:26+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "1830f10286ef6cdcdda172534c70161b3d9d0d89",
+      "scope": [
+        "server/src/modules/inventory/InventoryMasterService.js",
+        "server/src/modules/inventory/inventoryProjections.js",
+        "server/test/inventoryMasterService.test.js",
+        "server/test/integration/inventoryMaster.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-020",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-010 handlers, schemas, route metadata, owner-safe lookup, client contract, shared Traditional Chinese error mapping and focused tests",
+      "recorded_at": "2026-09-25T10:40:35+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "35a839d2cb398ef7555a657c3c5d2f3bde20ddbf",
+      "scope": [
+        "server/src/handlers/inventory/**",
+        "server/test/**/inventory*.test.js",
+        "client/src/services/inventory.js",
+        "client/src/framework/http/errorMessages.js",
+        "client/test/**/inventory*.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-021",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving the minimal TASK-010 scope extension for lockStatus and currentLock service behavior",
+      "recorded_at": "2026-09-25T10:56:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "35a839d2cb398ef7555a657c3c5d2f3bde20ddbf",
+      "scope": [
+        "server/src/modules/inventory/InventoryMasterService.js",
+        "server/test/inventoryMasterService.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-022",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving the TASK-010 allowlisted Warehouse/Bin sortBy and descending service behavior",
+      "recorded_at": "2026-09-25T11:02:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "35a839d2cb398ef7555a657c3c5d2f3bde20ddbf",
+      "scope": [
+        "server/src/modules/inventory/InventoryMasterService.js",
+        "server/test/inventoryMasterService.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-023",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-011 Warehouse/Bin management UI, Inventory menu group, focused component tests and mocked local Playwright validation",
+      "recorded_at": "2026-09-25T11:10:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "6f99f640e8bdca2a43700ea2ea371b165074ca96",
+      "scope": [
+        "client/src/pages/inventory/WarehousesPage.vue",
+        "client/src/components/inventory/**",
+        "client/test/**/inventory*.test.js",
+        "client/e2e/inventory-management/**",
+        "client/config/menu.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-024",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-012 migrations 0058/0059, focused tests and disposable MySQL 26.7.0 verification and cleanup",
+      "recorded_at": "2026-09-25T11:18:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "29e1bb5e236a3213a277d2e13f4b533517efd11f",
+      "scope": [
+        "server/database/migrations/0058_create_inventory_stock.js",
+        "server/database/migrations/0059_create_inventory_movements.js",
+        "server/src/modules/inventory/inventoryStockSchema.js",
+        "server/test/inventoryStockMigrations.test.js",
+        "server/test/integration/inventoryStockMigrations.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-025",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 selecting the contiguous Inventory migration shift from 0054-0063 to 0055-0064",
+      "recorded_at": "2026-09-25T11:22:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "29e1bb5e236a3213a277d2e13f4b533517efd11f",
+      "scope": [
+        "docs/inventory_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/04_design_review.md",
+        "docs/inventory_management/05_development_tasks.md",
+        "docs/inventory_management/09_final_alignment_review.md",
+        "docs/inventory_management/implementation/00_implementation_readiness.md",
+        "docs/inventory_management/00_harness_state.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-026",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact HD-026 candidate DESIGN hash",
+      "recorded_at": "2026-09-25T11:27:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
+      "code_commit": "4055427c49fa7a094a5302dd1c6e9bb0fc348134",
+      "scope": [
+        "inventory-management",
+        "HD-026",
+        "DEC-030",
+        "migration allocation 0055 through 0064"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-027",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact HD-028 candidate PLAN hash",
+      "recorded_at": "2026-09-25T11:31:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "code_commit": "4055427c49fa7a094a5302dd1c6e9bb0fc348134",
+      "scope": [
+        "inventory-management",
+        "HD-028",
+        "DEC-030",
+        "migration allocation 0055 through 0064"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-028",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response '同意' on 2026-09-25 approving HD-029 and the return to IMPLEMENT",
+      "recorded_at": "2026-09-25T11:35:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "code_commit": "7279749a8fec0832d6f47fa316efb33c20726af8",
+      "scope": [
+        "TASK-012",
+        "rename existing Inventory migrations to 0055 through 0058",
+        "validate migration history on disposable MySQL 26.7.0",
+        "implement migrations 0059 and 0060 with focused tests",
+        "exclude TASK-013, CI and remote actions",
+        "server/database/migrations/0054_seed_inventory_permissions.js",
+        "server/database/migrations/0055_create_inventory_operations.js",
+        "server/database/migrations/0056_create_inventory_audit.js",
+        "server/database/migrations/0057_create_inventory_master.js",
+        "server/database/migrations/0055_seed_inventory_permissions.js",
+        "server/database/migrations/0056_create_inventory_operations.js",
+        "server/database/migrations/0057_create_inventory_audit.js",
+        "server/database/migrations/0058_create_inventory_master.js",
+        "server/database/migrations/0059_create_inventory_stock.js",
+        "server/database/migrations/0060_create_inventory_movements.js",
+        "server/test/permissionCatalogueConventions.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-029",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user instruction on 2026-09-25 to update the branch from main, commit, push, open a PR and merge without running CI",
+      "recorded_at": "2026-09-25T14:13:08+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "code_commit": "e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b",
+      "scope": [
+        "merge latest origin/main into codex/inventory-p0-foundation",
+        "run local post-merge validation and review",
+        "commit and push the reconciled Inventory branch",
+        "create and merge a pull request into main",
+        "do not run or wait for CI",
+        "remove the merged branch and worktree",
+        "exclude TASK-013 implementation",
+        ".github/workflows/ci.yml",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "client/test/inventory/foundation.test.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/configuration.test.js",
+        "server/test/idempotencyService.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -422,6 +801,150 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-011",
+      "method": "SELF_REVIEW",
+      "author": "/root P0 boundary reconciliation author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+      "source_ref": "docs/inventory_management/04_design_review.md#reviewer-provenance",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-012",
+      "method": "HUMAN",
+      "author": "/root P0 boundary reconciliation author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "56dd0913f0dedf891eb9885d9d89ceb763c3daca1fae3887226ae5358563784e",
+      "source_ref": "Active Codex task user confirmation on 2026-09-24 approving Inventory 0.8 DESIGN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-013",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-006 implementation author",
+      "reviewer": "/root in the same active Codex context",
+      "reviewed_baseline": "e335af971bcfc5826c6dd1aea3df980936bf40f8d1aee8fde26bf22b5f9472e1",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-006-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-014",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-007 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-015",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-008 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "a5ae0318046406f182572f966fb59bc09c02a49de26855be9586ac05bb3cdcbe",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-016",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-009 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "e666dc5eb88667132de46bae4469be90e7d7bba51bc944105bf859ff72d2445a",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-017",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-010 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "937e841228499769f8a347faa8e89b38bf966b52f21e5dbc32db9361c1a12042",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-010-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-018",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-011 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-011-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-019",
+      "method": "HUMAN",
+      "author": "/root HD-026 alignment author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact candidate DESIGN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-020",
+      "method": "HUMAN",
+      "author": "/root HD-028 alignment author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact candidate PLAN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-021",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-012 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "2813a9de65bad63218a32f6330f4f27375f6fa7f4a0a22ed90aecaf0b94c0a41",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-012-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-022",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-001 through TASK-012 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist after reconciling latest origin/main",
+      "reviewed_baseline": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#post-main-merge-publication-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -490,6 +1013,94 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/141",
       "actor": "GitHub",
       "observed_at": "2026-09-24T09:21:49+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-007 developer checks and isolated MySQL 26.7.0 two-connection lock-contention smoke test",
+      "code_commit": "ff35f5f0aa13b68de198929753a0a5a74634cf4c",
+      "spec_baseline": "4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434",
+      "source_fingerprint": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "actor": "/root developer self-check under HD-014 and HD-015",
+      "observed_at": "2026-09-24T14:03:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-007 developer checks and isolated MySQL 26.7.0 two-connection lock-contention smoke test rebound to approved 0.9 PLAN",
+      "code_commit": "ff35f5f0aa13b68de198929753a0a5a74634cf4c",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "93eff6466d9db823d44a6edf9252955a3515327138ebdf8fe6a8ab5dad42100f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-007-developer-verification",
+      "actor": "/root developer self-check under HD-014 through HD-018",
+      "observed_at": "2026-09-25T08:56:22+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-008 focused checks and isolated MySQL 26.7.0 Warehouse/Bin migration verification",
+      "code_commit": "9207aff16b435895ee34bf7687dbfa372ac76d85",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "a5ae0318046406f182572f966fb59bc09c02a49de26855be9586ac05bb3cdcbe",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
+      "actor": "/root developer self-check under HD-019",
+      "observed_at": "2026-09-25T09:27:44+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-009 focused checks and isolated MySQL 26.7.0 Warehouse deactivate/posting race verification",
+      "code_commit": "1cf960b3d21fab95b5c6e8489659d70ba1776f3b",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "e666dc5eb88667132de46bae4469be90e7d7bba51bc944105bf859ff72d2445a",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "actor": "/root developer self-check under HD-020 and APR-019",
+      "observed_at": "2026-09-25T09:43:42+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-010 strict Warehouse/Bin handler, service-query and client contract developer checks",
+      "code_commit": "4b1ad68da7885ee41430d4859f602d9264575131",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "937e841228499769f8a347faa8e89b38bf966b52f21e5dbc32db9361c1a12042",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-010-developer-verification",
+      "actor": "/root developer self-check under HD-021 through HD-023 and APR-020 through APR-022",
+      "observed_at": "2026-09-25T11:01:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-011 Warehouse/Bin component, production build and mocked Playwright browser verification",
+      "code_commit": "fed56e40e959c97afc4d047f85f22e23d6fbb050",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-011-developer-verification",
+      "actor": "/root developer self-check under HD-024 and APR-023",
+      "observed_at": "2026-09-25T11:16:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-012 migration reallocation, stock schema and immutable Movement developer checks",
+      "code_commit": "d5b1e7f318e02dbf5c375ec72148dcb08eedbe4f",
+      "spec_baseline": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "source_fingerprint": "2813a9de65bad63218a32f6330f4f27375f6fa7f4a0a22ed90aecaf0b94c0a41",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-012-developer-verification",
+      "actor": "/root developer self-check under HD-025 through HD-029 and APR-024 through APR-028",
+      "observed_at": "2026-09-25T11:55:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Post-main-merge Inventory publication validation",
+      "code_commit": "e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b",
+      "spec_baseline": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "source_fingerprint": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#post-main-merge-publication-verification",
+      "actor": "/root developer self-check under APR-029",
+      "observed_at": "2026-09-25T14:13:08+08:00"
     }
   ],
   "pending_decisions": [
@@ -804,6 +1415,291 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving the exact two-file Item contract publication scope"
+    },
+    {
+      "id": "HD-011",
+      "impact": "MAJOR",
+      "question": "May the P0 module boundary add exactly the ten existing shared/framework implementation and test paths reported by reconciliation validation?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving exactly the ten existing P0 shared/framework paths"
+    },
+    {
+      "id": "HD-012",
+      "impact": "MAJOR",
+      "question": "May TASK-005 implement only migrations 0055 and 0056 and execute 0054 through 0056 solely in a fresh disposable MySQL 26.7.0 schema for verification?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-005",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving full TASK-005 scope with isolated disposable MySQL 26.7.0 migration execution"
+    },
+    {
+      "id": "HD-013",
+      "impact": "MAJOR",
+      "question": "May TASK-006 implement the approved operation claim/replay and safe success/reject/failure Audit services with focused developer tests, without starting TASK-007, pushing, creating a PR or merging?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-006",
+        "TC-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving full TASK-006 scope without TASK-007, push, PR or merge"
+    },
+    {
+      "id": "HD-014",
+      "impact": "MAJOR",
+      "question": "May TASK-007 implement the approved fixed lock protocol, transaction-required internal command context and fault-injection/concurrency test support with focused developer tests, without starting TASK-008, executing migrations, pushing, creating a PR or merging?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 approving TASK-007 implementation and focused developer tests without MySQL runtime, migrations, TASK-008 or remote actions"
+    },
+    {
+      "id": "HD-015",
+      "impact": "MAJOR",
+      "question": "May TASK-007 use an isolated disposable local MySQL 26.7.0 schema with test-owned minimal tables (not production migrations) and two real connections solely for the lock-contention smoke test, then remove the schema?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-24 selecting option A: isolated disposable local MySQL 26.7.0 test schema with test-owned minimal tables and two real connections, followed by schema removal"
+    },
+    {
+      "id": "HD-016",
+      "impact": "MAJOR",
+      "question": "May the Inventory module manifest add exactly server/test-support/fakeInventoryDatabase.js and server/test-support/inventoryFixtures.js to allowed_write_paths, matching TASK-007’s already approved design and plan, then re-establish the resulting DESIGN and PLAN baselines?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 selecting option A: add exactly server/test-support/fakeInventoryDatabase.js and server/test-support/inventoryFixtures.js to the Inventory module allowlist, then re-establish resulting DESIGN and PLAN baselines"
+    },
+    {
+      "id": "HD-017",
+      "impact": "MAJOR",
+      "question": "Approve Inventory DESIGN baseline 4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff, whose only change from approved 0.8 scope is adding the two HD-016-approved TASK-007 test-support files to allowed_write_paths?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory DESIGN hash 4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff"
+    },
+    {
+      "id": "HD-018",
+      "impact": "MAJOR",
+      "question": "Approve Inventory PLAN baseline 27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be, resulting solely from the HD-016-approved manifest allowlist correction with no task, test or command change?",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-007",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 approving Inventory PLAN hash 27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be"
+    },
+    {
+      "id": "HD-019",
+      "impact": "MAJOR",
+      "question": "May TASK-008 implement only migration 0057 for Warehouse and Bin persistence, its schema inspector and focused developer tests, with execution limited to a fresh disposable MySQL 26.7.0 schema, without starting TASK-009 or performing remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-008",
+        "TC-003",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user confirmation on 2026-09-25 approving TASK-008 migration 0057, schema inspector, focused developer tests and isolated disposable MySQL 26.7.0 verification without TASK-009 or remote actions"
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "question": "May TASK-009 implement the complete Warehouse/Bin domain service and projection with focused tests plus an isolated disposable MySQL 26.7.0 deactivate/posting race test, without starting TASK-010 or performing remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-009",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-009 option"
+    },
+    {
+      "id": "HD-021",
+      "impact": "MAJOR",
+      "question": "May TASK-010 implement the complete strict Warehouse/Bin handlers, schemas, route auth/permission/idempotency metadata, owner-safe lookup, client methods, Traditional Chinese error mapping and focused tests, including the shared errorMessages.js path, without starting TASK-011 or performing remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-010",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-010 option"
+    },
+    {
+      "id": "HD-022",
+      "impact": "MAJOR",
+      "question": "May TASK-010 extend into InventoryMasterService.js and its focused test solely to make the designed Bin lockStatus filter and currentLock detail contract effective, without creating Stocktake migrations or entering TASK-011?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-010",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended minimal service scope extension"
+    },
+    {
+      "id": "HD-023",
+      "impact": "MAJOR",
+      "question": "May the approved TASK-010 InventoryMasterService extension also implement the common list contract's allowlisted sortBy and descending behavior with id as the final tie-breaker?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-010",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended allowlisted sorting option"
+    },
+    {
+      "id": "HD-024",
+      "impact": "MAJOR",
+      "question": "May TASK-011 implement the complete responsive Warehouse/Bin management UI, add an Inventory menu group in shared client/config/menu.js, add focused component tests and perform mocked local Playwright validation, without CI or remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-011",
+        "TC-002",
+        "UAT-001",
+        "UAT-002",
+        "UAT-003",
+        "UAT-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-011 option"
+    },
+    {
+      "id": "HD-025",
+      "impact": "MAJOR",
+      "question": "May TASK-012 create only migrations 0058 and 0059 plus focused tests, verify creation, constraints, immutability and rerun in a disposable MySQL 26.7.0 schema and clean it up, without TASK-013, CI or remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-012",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-012 option"
+    },
+    {
+      "id": "HD-026",
+      "impact": "MAJOR",
+      "question": "Local and origin/main now contain 0054_create_customer_export_jobs.js, colliding with Inventory's approved 0054 allocation. Should the entire contiguous Inventory allocation shift from 0054-0063 to 0055-0064 before TASK-012 resumes?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-003",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 selecting the recommended contiguous shift to 0055-0064"
+    },
+    {
+      "id": "HD-027",
+      "impact": "MAJOR",
+      "question": "Approve candidate DESIGN hash 567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7 after applying only HD-026's migration reallocation?",
+      "affected_ids": [
+        "DEC-028",
+        "DEC-030",
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 'agree' on 2026-09-25 approving DESIGN 567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7"
+    },
+    {
+      "id": "HD-028",
+      "impact": "MAJOR",
+      "question": "Approve candidate PLAN hash 124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8 after applying only HD-026's migration reallocation?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-003",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 'agree' on 2026-09-25 approving PLAN 124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8"
+    },
+    {
+      "id": "HD-029",
+      "impact": "MAJOR",
+      "question": "With DESIGN and PLAN re-approved after HD-026, may Inventory return to IMPLEMENT and resume TASK-012 by renaming the existing Inventory migrations to 0055-0058, validating that migration history on disposable MySQL 26.7.0, then implementing approved migrations 0059-0060 and their focused tests?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-003",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response '同意' on 2026-09-25 approving return to IMPLEMENT and resumption of TASK-012 within the stated local-only scope"
+    },
+    {
+      "id": "HD-030",
+      "impact": "MAJOR",
+      "question": "May the completed TASK-001 through TASK-012 Inventory branch be updated from latest main, locally revalidated, committed, pushed, opened as a PR, merged into main without CI, then have its merged branch and worktree removed?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user instruction on 2026-09-25 authorizing branch update, commit, push, PR creation and merge without CI"
     }
   ],
   "external_actions": [
@@ -932,8 +1828,40 @@
       "kind": "PR_MERGE",
       "target": "https://github.com/crazysumsum/erp-app/pull/139 -> main",
       "idempotency_key": "inventory-migration-plan-correction-merge-20260923",
-      "status": "PLANNED",
-      "source_ref": "Active Codex task authorization to commit, create PR and merge documentation without CI"
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/139 (merged as b142bfd9f78ec46a1c36d75b78f0e885c9357ed9)"
+    },
+    {
+      "id": "EXT-015",
+      "kind": "CI_CANCEL",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/35830256994",
+      "idempotency_key": "inventory-migration-plan-correction-ci-cancel-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub run 35830256994 concluded cancelled; two short jobs completed before cancellation"
+    },
+    {
+      "id": "EXT-016",
+      "kind": "REMOTE_BRANCH_DELETE",
+      "target": "origin/codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-remote-cleanup-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Observed successful git push --delete after PR #139 merge"
+    },
+    {
+      "id": "EXT-017",
+      "kind": "LOCAL_WORKTREE_BRANCH_CLEANUP",
+      "target": "/private/tmp/erp-inventory-migration-plan-correction and codex/inventory-migration-plan-correction",
+      "idempotency_key": "inventory-migration-plan-correction-local-cleanup-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Observed clean worktree removal and non-force local branch deletion after PR #139 merge"
+    },
+    {
+      "id": "EXT-018",
+      "kind": "BASELINE_RECONCILIATION",
+      "target": "origin/main b142bfd9f78ec46a1c36d75b78f0e885c9357ed9 -> codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-p0-main-reconciliation-20260923",
+      "status": "CONFIRMED",
+      "source_ref": "Local merge commit 7715ee6cb06dc8524b1c6bf3f509765593f266f2; conflicts limited to Inventory harness state and readiness and were reconciled without migration execution"
     },
     {
       "id": "EXT-019",
@@ -982,9 +1910,201 @@
       "idempotency_key": "inventory-item-contract-merge-20260924",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/141"
+    },
+    {
+      "id": "EXT-024",
+      "kind": "BASELINE_RECONCILIATION",
+      "target": "origin/main 497ef6ce65a8b9fa3c911efc824176dcd1f0e303 -> codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-p0-main-reconciliation-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user authorization on 2026-09-24 and local merge commit c22dfceede9c3c3aad923dff795dc3bcfd2ac164; no migration execution"
+    },
+    {
+      "id": "EXT-025",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3308 using /private/tmp/erp-inventory-task005-mysql-2670.0VlSm4",
+      "idempotency_key": "inventory-task005-mysql-2670-runtime-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0, port 3308 and the exact temporary socket before schema creation"
+    },
+    {
+      "id": "EXT-026",
+      "kind": "ISOLATED_SCHEMA_CREATE",
+      "target": "erp_inventory_task005_20260924_1008 on INVENTORY-TASK005-MYSQL-2670-75439",
+      "idempotency_key": "inventory-task005-schema-create-20260924-1008",
+      "status": "CONFIRMED",
+      "source_ref": "Observed exact schema creation after VERSION()=26.7.0 and absence check; utf8mb4/utf8mb4_unicode_ci"
+    },
+    {
+      "id": "EXT-027",
+      "kind": "ISOLATED_MIGRATION_EXECUTION",
+      "target": "0054 through 0056 only in erp_inventory_task005_20260924_1008",
+      "idempotency_key": "inventory-task005-migrations-0054-0056-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "Focused MySQL 26.7.0 integration test passed with one two-connection duplicate winner, immutable Audit enforcement, FK/delete rules, exact outcomes and idempotent rerun; only 0054 through 0056 executed after minimal prerequisite fixture DDL"
+    },
+    {
+      "id": "EXT-028",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task005_20260924_1008 and /private/tmp/erp-inventory-task005-mysql-2670.0VlSm4",
+      "idempotency_key": "inventory-task005-runtime-cleanup-20260924",
+      "status": "CONFIRMED",
+      "source_ref": "Observed exact schema present on MySQL 26.7.0, dropped only erp_inventory_task005_20260924_1008, confirmed it absent, stopped the isolated mysqld, confirmed its socket absent, and removed only /private/tmp/erp-inventory-task005-mysql-2670.0VlSm4"
+    },
+    {
+      "id": "EXT-029",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 initialization at /private/tmp/erp-inventory-task008-mysql-2670.kwfi0M",
+      "idempotency_key": "inventory-task008-mysql-2670-sandbox-attempt-20260925",
+      "status": "FAILED",
+      "source_ref": "Sandboxed mysqld initialization terminated with SIGSEGV; no server started and the exact temporary root was removed before retry"
+    },
+    {
+      "id": "EXT-030",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3310 using /private/tmp/erp-inventory-task008-mysql-2670.wAtsfk",
+      "idempotency_key": "inventory-task008-mysql-2670-runtime-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0 before schema creation"
+    },
+    {
+      "id": "EXT-031",
+      "kind": "ISOLATED_SCHEMA_CREATE",
+      "target": "erp_inventory_task008_20260925_0924 on local MySQL 26.7.0 port 3310",
+      "idempotency_key": "inventory-task008-schema-create-20260925-0924",
+      "status": "CONFIRMED",
+      "source_ref": "Created only the guarded disposable TASK-008 schema and local test account"
+    },
+    {
+      "id": "EXT-032",
+      "kind": "ISOLATED_MIGRATION_EXECUTION",
+      "target": "0057_create_inventory_master.js only in erp_inventory_task008_20260925_0924",
+      "idempotency_key": "inventory-task008-migration-0057-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Focused MySQL 26.7.0 integration test passed 1/1, including complete rerun, compatible interrupted-state recovery, unique/check/FK/delete rules and defaults"
+    },
+    {
+      "id": "EXT-033",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task008_20260925_0924 and /private/tmp/erp-inventory-task008-mysql-2670.wAtsfk",
+      "idempotency_key": "inventory-task008-runtime-cleanup-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Dropped the exact schema and account, observed schema count zero, stopped mysqld, confirmed the socket absent and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-034",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3311 using /private/tmp/erp-inventory-task009-mysql-2670.eO5k9B",
+      "idempotency_key": "inventory-task009-mysql-2670-runtime-pre-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0 before the pre-final race run"
+    },
+    {
+      "id": "EXT-035",
+      "kind": "ISOLATED_SCHEMA_CREATE",
+      "target": "erp_inventory_task009_20260925_0940 on local MySQL 26.7.0 port 3311",
+      "idempotency_key": "inventory-task009-schema-create-20260925-0940",
+      "status": "CONFIRMED",
+      "source_ref": "Created only the guarded disposable TASK-009 schema and local test account"
+    },
+    {
+      "id": "EXT-036",
+      "kind": "ISOLATED_TEST_EXECUTION",
+      "target": "TASK-009 lifecycle and race test in erp_inventory_task009_20260925_0940",
+      "idempotency_key": "inventory-task009-race-pre-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Pre-final MySQL 26.7.0 test passed 1/1; superseded as evidence after actor-id validation changed the source fingerprint"
+    },
+    {
+      "id": "EXT-037",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task009_20260925_0940 and /private/tmp/erp-inventory-task009-mysql-2670.eO5k9B",
+      "idempotency_key": "inventory-task009-runtime-cleanup-pre-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Dropped the exact schema and account, observed schema count zero, stopped mysqld and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-038",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3312 using /private/tmp/erp-inventory-task009-mysql-2670.OBzifa",
+      "idempotency_key": "inventory-task009-mysql-2670-runtime-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0 before final-fingerprint verification"
+    },
+    {
+      "id": "EXT-039",
+      "kind": "ISOLATED_SCHEMA_CREATE",
+      "target": "erp_inventory_task009_20260925_0944 on local MySQL 26.7.0 port 3312",
+      "idempotency_key": "inventory-task009-schema-create-20260925-0944",
+      "status": "CONFIRMED",
+      "source_ref": "Created only the guarded final TASK-009 schema and local test account"
+    },
+    {
+      "id": "EXT-040",
+      "kind": "ISOLATED_TEST_EXECUTION",
+      "target": "TASK-009 lifecycle and race test in erp_inventory_task009_20260925_0944",
+      "idempotency_key": "inventory-task009-race-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Final-fingerprint MySQL 26.7.0 test passed 1/1 with lifecycle, duplicate, version and both Warehouse-lock race orderings"
+    },
+    {
+      "id": "EXT-041",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task009_20260925_0944 and /private/tmp/erp-inventory-task009-mysql-2670.OBzifa",
+      "idempotency_key": "inventory-task009-runtime-cleanup-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Dropped the exact schema and account, observed schema count zero, stopped mysqld, confirmed the socket absent and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-042",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3313 using /private/tmp/erp-inventory-task012-history-mysql-2670.mGLld3",
+      "idempotency_key": "inventory-task012-mysql-2670-runtime-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0 and the exact three guarded schemas before final verification"
+    },
+    {
+      "id": "EXT-043",
+      "kind": "ISOLATED_MIGRATION_EXECUTION",
+      "target": "Inventory 0055 through 0060 in erp_inventory_task012_20260925_1144 plus renamed historical checks in task005/task008 schemas",
+      "idempotency_key": "inventory-task012-migrations-0055-0060-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "MySQL 26.7.0 final test passed 1/1 after applying and rerunning 0055-0060; historical renamed tests passed 2/2; generated no-lot uniqueness, composite ownership FKs, query indexes, snapshots and UPDATE/DELETE triggers were exercised"
+    },
+    {
+      "id": "EXT-044",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task005_20260925_1144, erp_inventory_task008_20260925_1144, erp_inventory_task012_20260925_1144 and /private/tmp/erp-inventory-task012-history-mysql-2670.mGLld3",
+      "idempotency_key": "inventory-task012-runtime-cleanup-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Dropped only the exact three schemas, observed schema count zero, stopped mysqld, confirmed port 3313 and the socket absent, and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-045",
+      "kind": "BRANCH_RECONCILIATION",
+      "target": "origin/main at 9b2d0d3e0b2e0da284a0bfb99da861705279993f into codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-main-reconciliation-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Fetched origin/main and created merge commit e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b without conflicts before post-merge validation"
+    },
+    {
+      "id": "EXT-046",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-task001-task012-publication-push-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Pushed branch through ade425f1800578161cf11042186a524223434f1f to origin"
+    },
+    {
+      "id": "EXT-047",
+      "kind": "PR_CREATE",
+      "target": "main<-codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-task001-task012-pr-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/148"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Keep TASK-005 and migration execution paused. Before resuming the broader P0 branch, obtain explicit authorization and reconcile it with merged Item contract commit 37594b843375297a9ac59dd5326ae0a6ec8d5db2."
+  "next_safe_action": "Under APR-029, merge PR #148 into main without running or waiting for CI, then remove the merged branch and worktree. Do not start TASK-013."
 }
