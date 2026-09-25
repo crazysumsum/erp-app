@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 142,
+  "revision": 145,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,19 +11,17 @@
   "baseline": {
     "design": "a711118a2d5b4867e9866ad1e572139e6d589ae72e258ae39d5fa882f88a6115",
     "plan": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
-    "code_commit": "6d059cc6da07b89885eef552547fceb0ab53002d",
-    "source_fingerprint": "8538f328ec1a8941c6bb0d7d058af041b151f541b57de15e67c8dea7e720a6c8",
-    "worktree": "/private/tmp/erp-customer-management-phase-004",
-    "default_commit": "b6f831d3155f8b26244ec558f71ddb78b3b0a5c2",
+    "code_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
+    "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+    "worktree": "/private/tmp/erp-customer-p4-state-reconcile",
+    "default_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
     "mode_entry_commit": "f7fd95584e827f1bce112388fc2c196b5939671f"
   },
   "runtime": {
-    "instance_id": "customer-phase004-task029-20260924",
+    "instance_id": "customer-phase004-state-reconcile-20260925",
     "owner": "Primary harness agent",
     "resources": {
-      "workspace": "/private/tmp/erp-customer-management-phase-004",
-      "database": "mysql://127.0.0.1:3306/erp_customer_task023",
-      "file_root": "/private/tmp/erp-customer-task023-files"
+      "workspace": "/private/tmp/erp-customer-p4-state-reconcile"
     },
     "lease_ref": null
   },
@@ -2023,6 +2021,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-040",
+      "method": "SEPARATE_AGENT",
+      "author": "/root PHASE-004 state reconciliation candidate",
+      "reviewer": "Jason (/root/customer_task011_review), separate agent",
+      "reviewed_baseline": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "source_ref": "2026-09-25 final re-review verified PR #144/#145 action evidence, corrected PR-head versus merge identities and identical tree, current runtime worktree, unchanged approved baselines, and the continuing real-Sales-consumer blocker. Final verdict APPROVED with no Required finding.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2465,6 +2475,50 @@
       "source_ref": "REV-039",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-24T02:11:29Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #145 Customer CI recovery on exact PR-head candidate",
+      "code_commit": "97b2644de017dc0b8b0fd73df8b2213c00fda44f",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "status": "PASS",
+      "source_ref": "GitHub PR #145 Actions run 35950832672 on PR head 97b2644de017dc0b8b0fd73df8b2213c00fda44f: Dependency audit, Lint, Browser tests (Playwright), Test (server + client, MySQL integration), and Build frontend all completed SUCCESS. The PR-head and merge-commit c0ea960b9ca061b26cfee037163b4e5e7c42a1d0 trees are identical (bafab758fd1a29aaec2116c832e1561773b41ab9).",
+      "actor": "GitHub Actions, observed by /root",
+      "observed_at": "2026-09-25T00:45:48Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-029 real Sales consumer dependency reinspection after PR #145",
+      "code_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "status": "BLOCKED",
+      "source_ref": "2026-09-25: refreshed origin/main still has no server/src/modules/sales implementation or real Sales consumer test. CustomerLookupService already provides new_sale and credit methods; TASK-029 cannot meet its real-consumer DoD inside Customer ownership.",
+      "actor": "/root dependency reinspection",
+      "observed_at": "2026-09-25T00:45:48Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PR #145 Customer CI recovery integrated into main",
+      "code_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "status": "PASS",
+      "source_ref": "GitHub PR #145 reported MERGED at 2026-09-24T03:24:15Z as c0ea960b9ca061b26cfee037163b4e5e7c42a1d0; merge tree bafab758fd1a29aaec2116c832e1561773b41ab9 equals the green PR-head tree.",
+      "actor": "GitHub, observed by /root",
+      "observed_at": "2026-09-25T00:45:48Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PHASE-004 Customer state reconciliation independent review",
+      "code_commit": "c0ea960b9ca061b26cfee037163b4e5e7c42a1d0",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "status": "PASS",
+      "source_ref": "REV-040",
+      "actor": "Jason (/root/customer_task011_review), separate agent",
+      "observed_at": "2026-09-25T00:45:48Z"
     }
   ],
   "pending_decisions": [
@@ -3080,24 +3134,72 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-p4-integration-release",
       "idempotency_key": "customer-phase004-blocked-entry-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Publish the independently reviewed Phase-003 confirmation and TASK-029 dependency observation."
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: pushed codex/customer-p4-integration-release through commit 0d9ae2753c4d6df91292512e9d2d8c9cda8dd672; GitHub later removed the remote branch after merge."
     },
     {
       "id": "EXT-PR-048",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-integration-release",
       "idempotency_key": "customer-phase004-blocked-entry-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "State/documentation synchronization only; no Product code or Sales implementation."
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: GitHub PR #144 created and observed at https://github.com/crazysumsum/erp-app/pull/144."
     },
     {
       "id": "EXT-MERGE-049",
       "kind": "GIT_MERGE",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-integration-release",
       "idempotency_key": "customer-phase004-blocked-entry-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: GitHub reported PR #144 MERGED at 2026-09-24T02:13:17Z as 8bcf4378134423e672292ac525e3653be341cbd3 under the approved documentation-only no-CI exception; its automatic Test job failed and was remediated by PR #145."
+    },
+    {
+      "id": "EXT-PUSH-050",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-ci-bank-config-fix",
+      "idempotency_key": "customer-ci-bank-config-fix-push-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: pushed commit 97b2644de017dc0b8b0fd73df8b2213c00fda44f to codex/customer-ci-bank-config-fix; GitHub later removed the remote branch after merge."
+    },
+    {
+      "id": "EXT-PR-051",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-ci-bank-config-fix",
+      "idempotency_key": "customer-ci-bank-config-fix-pr-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: GitHub PR #145 created and observed at https://github.com/crazysumsum/erp-app/pull/145."
+    },
+    {
+      "id": "EXT-MERGE-052",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-ci-bank-config-fix",
+      "idempotency_key": "customer-ci-bank-config-fix-merge-v1",
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-24: GitHub reported PR #145 MERGED at 2026-09-24T03:24:15Z as c0ea960b9ca061b26cfee037163b4e5e7c42a1d0; all five CI jobs passed."
+    },
+    {
+      "id": "EXT-PUSH-053",
+      "kind": "GIT_PUSH",
+      "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-p4-state-reconcile",
+      "idempotency_key": "customer-phase004-state-reconcile-push-v1",
       "status": "PLANNED",
-      "source_ref": "Product Owner standing publication authorization and no-CI exception apply; independent review REV-039 approved this docs/state-only candidate."
+      "source_ref": "Publish the reviewed Customer-only state reconciliation."
+    },
+    {
+      "id": "EXT-PR-054",
+      "kind": "PULL_REQUEST",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-state-reconcile",
+      "idempotency_key": "customer-phase004-state-reconcile-pr-v1",
+      "status": "PLANNED",
+      "source_ref": "Customer harness state and implementation-readiness synchronization only; TASK-029 remains blocked."
+    },
+    {
+      "id": "EXT-MERGE-055",
+      "kind": "GIT_MERGE",
+      "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-state-reconcile",
+      "idempotency_key": "customer-phase004-state-reconcile-merge-v1",
+      "status": "PLANNED",
+      "source_ref": "Standing publication authorization and documentation-only no-CI exception apply after independent review."
     }
   ],
   "evidence_files": [
@@ -3107,5 +3209,5 @@
     "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Publish this reviewed state/documentation synchronization without waiting for CI, then wait until a real Sales implementation and consumer contract test are merged to main by the Sales owner. After that, refresh origin/main, reconcile the exact Sales contract, resume IMPLEMENTING, and execute TASK-029 without adding a fake consumer or modifying Sales-owned production code."
+  "next_safe_action": "Publish this reviewed Customer state reconciliation without waiting for CI. Then wait for a real Sales implementation and consumer contract test to merge to main; re-fetch origin/main, reconcile that exact contract, and resume TASK-029 without modifying Sales-owned production code or adding a fake consumer."
 }
