@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 82,
+  "revision": 85,
   "mode": "DESIGN_AND_PLAN",
   "active_mode": "DESIGN_AND_PLAN",
   "status": "BLOCKED",
@@ -9,9 +9,9 @@
   "current_phase": "PHASE-002",
   "current_task": "TASK-012",
   "baseline": {
-    "design": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
-    "plan": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
-    "code_commit": "29e1bb5e236a3213a277d2e13f4b533517efd11f",
+    "design": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
+    "plan": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+    "code_commit": "4055427c49fa7a094a5302dd1c6e9bb0fc348134",
     "source_fingerprint": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
@@ -579,6 +579,44 @@
         "docs/inventory_management/00_harness_state.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-026",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact HD-026 candidate DESIGN hash",
+      "recorded_at": "2026-09-25T11:27:00+08:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
+      "code_commit": "4055427c49fa7a094a5302dd1c6e9bb0fc348134",
+      "scope": [
+        "inventory-management",
+        "HD-026",
+        "DEC-030",
+        "migration allocation 0055 through 0064"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-027",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact HD-028 candidate PLAN hash",
+      "recorded_at": "2026-09-25T11:31:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "code_commit": "4055427c49fa7a094a5302dd1c6e9bb0fc348134",
+      "scope": [
+        "inventory-management",
+        "HD-028",
+        "DEC-030",
+        "migration allocation 0055 through 0064"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -793,6 +831,30 @@
       "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
       "reviewed_baseline": "d912249aeaba7ca1bdc2230d8edc534dcaaf300839b2915e892960a9af483cb4",
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-011-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-019",
+      "method": "HUMAN",
+      "author": "/root HD-026 alignment author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact candidate DESIGN hash",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-020",
+      "method": "HUMAN",
+      "author": "/root HD-028 alignment author",
+      "reviewer": "Sam (ERP Product Owner and named independent reviewer)",
+      "reviewed_baseline": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "source_ref": "Active Codex task user response 'agree' on 2026-09-25 approving the exact candidate PLAN hash",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1471,6 +1533,40 @@
         "TASK-001",
         "TASK-012"
       ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 'agree' on 2026-09-25 approving DESIGN 567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7"
+    },
+    {
+      "id": "HD-028",
+      "impact": "MAJOR",
+      "question": "Approve candidate PLAN hash 124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8 after applying only HD-026's migration reallocation?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-003",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 'agree' on 2026-09-25 approving PLAN 124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8"
+    },
+    {
+      "id": "HD-029",
+      "impact": "MAJOR",
+      "question": "With DESIGN and PLAN re-approved after HD-026, may Inventory return to IMPLEMENT and resume TASK-012 by renaming the existing Inventory migrations to 0055-0058, validating that migration history on disposable MySQL 26.7.0, then implementing approved migrations 0059-0060 and their focused tests?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-003",
+        "TASK-005",
+        "TASK-008",
+        "TASK-012",
+        "TC-003",
+        "TC-004",
+        "TC-010"
+      ],
       "status": "OPEN",
       "answer_ref": null
     }
@@ -1831,5 +1927,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain Sam's independent approval or rejection of candidate DESIGN hash 567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7. Ask for PLAN approval separately only after DESIGN approval."
+  "next_safe_action": "Obtain Sam's explicit approval or rejection of HD-029 before changing active_mode to IMPLEMENT, renaming Inventory migrations, running the disposable MySQL 26.7.0 migration validation, or resuming TASK-012."
 }
