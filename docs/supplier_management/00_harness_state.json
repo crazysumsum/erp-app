@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 233,
+  "revision": 234,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "2dd1cd270c34f6419288699e947ef7d263d30337",
-    "source_fingerprint": "15fcaf8a20be87e22da689ba610ad3184e8aa88bfce37f0662e70c08adcc1d15",
+    "code_commit": "16aff559d4065f32904eb656456ea30a7d2e1455",
+    "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
     "default_commit": "60c735c3fb79b9d4e550aa36e32c1ca4ec5102ca",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
@@ -1443,6 +1443,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 65017c3ac4b11b131369cc7273300726bd503fc4",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/57_rev_055_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-056",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5 (TASK-036 REV-055 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 4f4a7f77cd7b43bc53db8e7840e4e4d490989fc3",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/58_rev_056_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -3159,6 +3171,15 @@
       "source_fingerprint": "15fcaf8a20be87e22da689ba610ad3184e8aa88bfce37f0662e70c08adcc1d15",
       "status": "PASS",
       "source_ref": "REV-055 reviewed the true merge candidate - main was merged into the branch first, so the reviewer saw exactly what would land, which is the direct lesson of REV-054's High. It returned CHANGES_REQUESTED with 0 Critical, 0 High, 3 Medium, 5 Low, 5 Info: the first round on this task with no High and the lowest Medium count. It confirmed by execution that REV-054's High and all four Mediums are genuinely fixed, re-measuring the leak-scan miss rate itself at 59.1 percent before and 0.0 percent after over 20000 random indexes, and it re-applied all twenty-three mutants in the record's table and confirmed all twenty-three die. M-1 is the third instance in this module of two individually correct fixes that are wrong together: REV-054's L-5 pushed the final COUNT(*) failure onto failures while its L-6 added an assertion that processed + declined + failed equals attempted, both in the same commit. A run in which both rows rotated cleanly then reported attempted 2, processed 2, failed 1 with a null-id failure, a broken invariant and exit 1 - the code meaning rows failed, do not remove the key. I reproduced it: rows_actually_rotated true. Each new test covered one side and neither crossed. failures now carries only rows that have an id; an unreadable count is a REMAINING_UNKNOWN warning with remaining null, and the CLI refuses to exit 0 on null because not knowing is not success. M-3 had two halves, both real: the exit-code contract was watched by nothing - flipping main's body catch from 2 to 1 left thirty-three unit and four integration tests green, as did making main always return 0 - and the test written to hold REV-054's H-1 property was a three-token blacklist that a field named keyRemovalApproved walked straight past. exitCodeFor is now extracted and its six cases tested, four spawned CLI tests pin the could-not-run paths, one real-MySQL integration test pins rotation-ran-and-failed equals 1, and the property test is now a whitelist of the report's entire key set. M-2's cost-free half is closed: the record's section 4 and section 5 still named a field that no longer exists and quoted output this code cannot produce; both were re-run against the real CLI and replaced, while sections 9 through 11 were left alone because a historical record must not pretend it was written at a later commit. Twenty-nine mutants, twenty-nine killed, none hanging. 22/22 and 13/13 unit, 5/5 integration on real MySQL, 437/437 profile suite, 665/665 client, lint exit 0. TWO ITEMS REMAIN AND BOTH NEED A HUMAN DECISION because both move a baseline: 03_design_spec.md still authorises removing a key in five places on a single-table basis (M-2's remaining half) and editing it moves the DESIGN hash, stranding 36 reviews of which 13 are APPROVED; and the profile's env_keys for supplier-phase-001-server omits the CUSTOMER_BANK_* variables the suite needs after the merge (L-2), and editing the profile moves the PLAN hash, stranding 38 observations. CI is unaffected by the latter because it runs the argv directly rather than through the harness runner."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "REV-056: the only exit path this round invented had nothing watching it, and the authorisation moved house into warnings",
+      "code_commit": "16aff559d4065f32904eb656456ea30a7d2e1455",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
+      "status": "PASS",
+      "source_ref": "REV-056 returned CHANGES_REQUESTED with 0 Critical, 0 High, 2 Medium, 7 Low, 6 Info, and stated plainly that it found no defect in shipped behaviour - every behavioural claim it attacked held. It confirmed all three REV-055 Mediums closed by execution, re-applied all twenty-nine mutants in the record's table and confirmed all twenty-nine die, and reproduced section 12's counts including 437/437 on the profile argv. It also did two things no earlier round did: it exercised the anti-clobber guard against a genuine concurrent application write on real MySQL, watching declined go to 1 with the app's write intact and the count invariant holding, and it drove the remaining-null path end to end against MySQL, confirming drained false, exit 1, both warnings on stderr and a clean resumed run afterwards. Both Mediums were about this round's own new machinery rather than about behaviour. M-1: the remediation that answered REV-055's exit-code finding pinned exit 2 with four spawned tests and exit-1-on-failed-rows with one real-MySQL test, but no test anywhere drove main through a successful rotation - so making main return 1 unconditionally, or dropping the remaining-null branch this round itself invented, left all thirty-five unit and five integration tests green. A clean full rotation would have reported exit 1, which by this tool's own contract means treat the run as incomplete. Third consecutive round in which main's exit code is the finding. Fixed per CLAUDE.md section 7 by giving main an injectable openConnection whose default is the real pool factory, which makes the whole main body testable without a database; three exit mutants now die. M-2: the fourteen-key report whitelist that replaced REV-055's three-token blacklist does stop a field being added or renamed - I verified both - but warnings is one key in that list and its contents were unconstrained, and this is the round that began writing into warnings, since REMAINING_UNKNOWN arrived through exactly that door. A warning coded SAFE_TO_REMOVE_KEY passed both suites and printed verbatim on the real CLI's stderr directly beneath the shared-ring warning contradicting it. Warning codes now have an allow-list. Three Lows, all of the same shape - machinery that reads as coverage and is not: the spawned unreachable-database case never opened a socket because its key id was not in the ring so it died at the target guard; the null-id assertion ran against an array asserted empty two lines above; and REV-055's L-4 was still unremediated, so a pool teardown failure replaced main's return value and turned a completed, fully drained rotation into exit 1 with a raw stack trace. Thirty-three mutants, thirty-three killed, none hanging. 22/22, 15/15 and 5/5 on real MySQL, 439/439 profile suite, 665/665 client, lint exit 0. The two deliberately-open items were seen and correctly not re-filed."
     }
   ],
   "pending_decisions": [
@@ -4532,6 +4553,6 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-036 (Bank key rotation) is on PR #135, branch claude/supplier-task-036, head 2dd1cd270c34f6419288699e947ef7d263d30337. Five independent review rounds have run - REV-051 (3M), REV-052 (3M), REV-053 (4M), REV-054 (1 HIGH, 4M) and REV-055 (0H, 3M) - all CHANGES_REQUESTED, all remediated. The trend finally turned: REV-055 is the first round with no High and the fewest Mediums, and it confirmed every prior finding fixed. REV-055's remediation has NOT itself been reviewed. TWO OPEN ITEMS NEED THE USER'S DECISION, both because they move a baseline hash: (1) 03_design_spec.md still authorises removing a key in five single-table places, and editing it moves the DESIGN hash and strands 36 reviews including 13 APPROVED; (2) the profile's env_keys omits CUSTOMER_BANK_* for supplier-phase-001-server, and editing the profile moves the PLAN hash and strands 38 observations. Neither blocks CI. Re-run required CI on the exact merge candidate before any merge, since recording in this ledger moves HEAD. Do not merge without the user's explicit word. After merge: remove the worktree at /Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036 and the branch, stop the throwaway MySQL instance on port 3421 (datadir under the session scratchpad) and remove the detached review worktrees /private/tmp/erp-rev-053, /private/tmp/erp-rev-054 and /private/tmp/erp-rev-055, then PHASE-003's remaining work is TASK-037 (Bank security and recovery acceptance) in TEST_AND_VERIFY mode.",
+  "next_safe_action": "TASK-036 (Bank key rotation) is on PR #135, branch claude/supplier-task-036, head 16aff559d4065f32904eb656456ea30a7d2e1455. Six independent review rounds have run - REV-051 (3M), REV-052 (3M), REV-053 (4M), REV-054 (1 HIGH, 4M), REV-055 (3M) and REV-056 (2M) - all CHANGES_REQUESTED, all remediated. REV-056 is the first round to state that it found no defect in shipped behaviour: both of its Mediums were about test machinery the previous round had introduced. REV-056's remediation has NOT itself been reviewed; it added an injectable openConnection parameter to main, an allow-list for warning codes, and made pool teardown non-fatal. Two items remain open by explicit human decision, both because fixing them moves a baseline hash: 03_design_spec.md still authorises key removal on a single-table basis in five places (DESIGN hash, 36 reviews including 13 APPROVED), and the profile's env_keys omits CUSTOMER_BANK_* for supplier-phase-001-server (PLAN hash, 38 observations). Neither blocks CI. Re-run required CI on the exact merge candidate before any merge, since recording in this ledger moves HEAD, and re-merge origin/main first if it has moved. Do not merge without the user's explicit word. After merge: remove the worktree at /Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036 and the branch, stop the throwaway MySQL instance on port 3421 (datadir under the session scratchpad, socket /tmp/rev053m.sock) and remove the detached review worktrees /private/tmp/erp-rev-053 through erp-rev-056, then PHASE-003's remaining work is TASK-037 (Bank security and recovery acceptance) in TEST_AND_VERIFY mode.",
   "decisions": []
 }
