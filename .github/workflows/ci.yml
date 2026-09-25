@@ -158,6 +158,10 @@ jobs:
         run: test "$(docker exec "${{ job.services.mysql.id }}" mysql -uroot -proot --batch --skip-column-names -e "SELECT VERSION();")" = "26.7.0"
 
       - name: Apply database migrations
+        # The ephemeral migration account may create immutable triggers; application tests stay on erp_user.
+        env:
+          DB_USER: root
+          DB_PASSWORD: root
         run: npm run migrate --workspace server
 
       - name: Run tests with coverage thresholds

@@ -34,6 +34,27 @@ function logger() {
   };
 }
 
+test("InventoryAuditService requires its collaborators and a caller-owned connection", async () => {
+  const database = { async withTransaction() {} };
+  const auditLogger = logger();
+  const time = { nowMs: () => NOW_MS };
+
+  for (const options of [
+    undefined,
+    { database: {}, logger: auditLogger, time },
+    { database, logger: {}, time },
+    { database, logger: auditLogger, time: {} }
+  ]) {
+    assert.throws(() => new InventoryAuditService(options), /requires database, logger and time/);
+  }
+
+  const service = new InventoryAuditService({ database, logger: auditLogger, time });
+  await assert.rejects(
+    () => service.recordSucceeded(null, input()),
+    /caller-owned transaction connection/
+  );
+});
+
 test("InventoryAuditService writes required success audit on the caller transaction", async () => {
   const calls = [];
   const connection = {
@@ -59,6 +80,34 @@ test("InventoryAuditService writes required success audit on the caller transact
   assert.equal(calls[0].params[10], JSON.stringify({ status: "READY", version: 1 }));
   assert.equal(calls[0].params[11], JSON.stringify({ status: "POSTED", version: 2 }));
   assert.equal(calls[0].params[12], 91);
+});
+
+test("InventoryAuditService writes nullable actors and default metadata without inventing values", async () => {
+  let params;
+  const service = new InventoryAuditService({
+    database: { async withTransaction() {} },
+    logger: logger(),
+    time: { nowMs: () => NOW_MS }
+  });
+
+  await service.recordSucceeded({
+    async execute(_sql, values) { params = values; }
+  }, input({
+    actorUserId: null,
+    targetId: undefined,
+    reasonCategory: undefined,
+    reasonText: undefined,
+    beforeSummary: undefined,
+    afterSummary: undefined,
+    operationRequestId: null,
+    requestId: undefined,
+    correlationId: undefined,
+    ip: undefined
+  }));
+
+  assert.deepEqual(params.slice(0, 3), [NOW_MS, null, "sam"]);
+  assert.equal(params[5], null);
+  assert.deepEqual(params.slice(8), ["", "", null, null, null, "", "", ""]);
 });
 
 test("InventoryAuditService propagates required success audit failure", async () => {
@@ -91,6 +140,15 @@ test("InventoryAuditService rejects non-allowlisted actions and summaries", asyn
     () => service.recordSucceeded(connection, input({ afterSummary: { status: { rawPayload: "hidden" } } })),
     /Inventory audit summary field status must be scalar/
   );
+  for (const [overrides, message] of [
+    [{ actorUserId: 0 }, /Invalid Inventory audit actor user id/],
+    [{ actorLabel: "" }, /Invalid Inventory audit actor label/],
+    [{ targetType: "movement_組" }, /Invalid Inventory audit target type/],
+    [{ operationRequestId: 0 }, /Invalid Inventory audit operation request id/],
+    [{ requestId: "x".repeat(65) }, /Invalid Inventory audit request id/]
+  ]) {
+    await assert.rejects(() => service.recordSucceeded(connection, input(overrides)), message);
+  }
 });
 
 test("InventoryAuditService records rejection and failure after rollback without a success projection", async () => {
@@ -149,4 +207,36 @@ test("InventoryAuditService falls back to a safe structured log when failure aud
     databaseErrorCode: "ER_LOCK_WAIT_TIMEOUT"
   });
   assert.doesNotMatch(JSON.stringify(auditLogger.entries), /secret-password|private-source-id/);
+});
+
+test("InventoryAuditService scrubs invalid fields from fallback diagnostics", async () => {
+  const auditLogger = logger();
+  const service = new InventoryAuditService({
+    database: { async withTransaction() { throw new Error("database details"); } },
+    logger: auditLogger,
+    time: { nowMs: () => NOW_MS }
+  });
+
+  const recorded = await service.recordRejected(input({
+    action: "receipt.run_sql",
+    targetType: "invalid\ntype",
+    targetId: -1,
+    actorUserId: "7",
+    requestId: "invalid\nrequest",
+    correlationId: null,
+    errorCode: "invalid-code"
+  }));
+
+  assert.equal(recorded, false);
+  assert.deepEqual(auditLogger.entries[0].context, {
+    action: "unknown",
+    targetType: "unknown",
+    targetId: null,
+    actorUserId: null,
+    requestId: "",
+    correlationId: "",
+    outcome: "REJECTED",
+    errorCode: "INVENTORY_AUDIT_WRITE_FAILED",
+    databaseErrorCode: "UNKNOWN"
+  });
 });

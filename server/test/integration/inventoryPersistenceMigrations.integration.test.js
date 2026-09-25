@@ -24,6 +24,9 @@ async function createPrerequisites(connection) {
     CREATE TABLE IF NOT EXISTS users (
       id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
       username VARCHAR(190) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      created_at BIGINT UNSIGNED NOT NULL,
+      updated_at BIGINT UNSIGNED NOT NULL,
       PRIMARY KEY (id),
       UNIQUE KEY uq_users_username (username)
     ) ENGINE=InnoDB
@@ -51,6 +54,9 @@ integrationTest("TASK-005 creates durable operation identity and immutable Inven
   t.after(async () => Promise.all([first.end(), second.end()]));
 
   await createPrerequisites(first);
+  const [[movementBefore]] = await first.query(
+    "SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'inventory_movements'"
+  );
   await seedInventoryPermissions(first);
   await createInventoryOperations(first);
   await createInventoryAudit(first);
@@ -156,9 +162,10 @@ integrationTest("TASK-005 creates durable operation identity and immutable Inven
   ]);
 
   const suffix = randomUUID();
+  const nowMs = Date.now();
   const [actor] = await first.execute(
-    "INSERT INTO users (username) VALUES (?)",
-    [`inventory-migration-${suffix}`]
+    "INSERT INTO users (username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?)",
+    [`inventory-migration-${suffix}`, "not-used", nowMs, nowMs]
   );
   const insertOperation = (connection, commandType, requestHash) => connection.execute(
     `INSERT INTO inventory_operation_requests (
@@ -242,5 +249,5 @@ integrationTest("TASK-005 creates durable operation identity and immutable Inven
   const [[movement]] = await first.query(
     "SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'inventory_movements'"
   );
-  assert.equal(Number(movement.count), 0);
+  assert.equal(Number(movement.count), Number(movementBefore.count));
 });
