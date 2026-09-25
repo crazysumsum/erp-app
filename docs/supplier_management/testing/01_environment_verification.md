@@ -17,6 +17,7 @@ Recorded at the time the executed cases below were run. Everything here was obse
 | Playwright CLI | 1.63.0 present; not exercised by the cases below (neither is a browser case) |
 | Clock / timezone | host clock, no freeze; no case below depends on wall-clock time |
 | Test data | every case generates its own `randomUUID`-derived supplier and account; no shared fixture |
+| Privilege model | reproduced CI's: the application account holds `erp_dev.*` only and **cannot** create a schema (verified: `ERROR 1044`), with a separate admin account for the restore drill. Both executed cases were re-run under it, with and without `mysqldump`. |
 
 ## Deviations, stated rather than glossed
 

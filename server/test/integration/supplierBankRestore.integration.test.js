@@ -228,7 +228,15 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
   assert.equal(load.status, 0, `the restore itself must succeed: ${load.stderr}`);
   }
 
-  restored = await mysql.createConnection(config(restoreName));
+  /**
+   * 用 admin 帳號連還原出嚟嗰個 schema，唔係用 app 帳號。
+   *
+   * CI 上面 `erp_user` 只得 `erp_dev` 嘅權限 —— 一個新建嘅 schema 佢連都連唔入，
+   * 報 `Access denied for user 'erp_user'@'%' to database 'erp_restore_…'`。呢個
+   * case 問嘅係「備份出嚟嘅資料，配唔同 key ring 解唔解得返」，用邊個帳號連入去
+   * 唔影響個答案；而一次真實嘅還原演練本來就係 admin 做。
+   */
+  restored = await mysql.createConnection({ ...options, database: restoreName });
   const [[row]] = await restored.query(
     "SELECT id, crypto_context, encryption_key_id, blind_index_key_id FROM supplier_bank_accounts WHERE id = ?", [created.id]
   );
