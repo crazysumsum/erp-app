@@ -3,9 +3,9 @@ import test from "node:test";
 import { randomUUID } from "node:crypto";
 import mysql from "mysql2/promise";
 
-import { up as seedInventoryPermissions } from "../../database/migrations/0054_seed_inventory_permissions.js";
-import { up as createInventoryOperations } from "../../database/migrations/0055_create_inventory_operations.js";
-import { up as createInventoryAudit } from "../../database/migrations/0056_create_inventory_audit.js";
+import { up as seedInventoryPermissions } from "../../database/migrations/0055_seed_inventory_permissions.js";
+import { up as createInventoryOperations } from "../../database/migrations/0056_create_inventory_operations.js";
+import { up as createInventoryAudit } from "../../database/migrations/0057_create_inventory_audit.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 

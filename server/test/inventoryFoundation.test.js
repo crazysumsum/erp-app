@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { up as seedInventoryPermissions } from "../database/migrations/0054_seed_inventory_permissions.js";
+import { up as seedInventoryPermissions } from "../database/migrations/0055_seed_inventory_permissions.js";
 import { PERMISSION_NAMES } from "../src/modules/authorization/permissionCatalogue.js";
 import {
   INVENTORY_ADJUSTMENT_REASON_CATEGORIES,

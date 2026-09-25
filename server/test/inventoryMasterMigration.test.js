@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   inspectInventoryMasterSchema,
   up
-} from "../database/migrations/0057_create_inventory_master.js";
+} from "../database/migrations/0058_create_inventory_master.js";
 
 test("Inventory master inspector reports an absent schema", async () => {
   const connection = { query: async () => [[]] };

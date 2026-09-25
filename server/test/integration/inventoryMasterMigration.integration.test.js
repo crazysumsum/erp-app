@@ -6,7 +6,7 @@ import mysql from "mysql2/promise";
 import {
   inspectInventoryMasterSchema,
   up
-} from "../../database/migrations/0057_create_inventory_master.js";
+} from "../../database/migrations/0058_create_inventory_master.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" &&
   process.env.INVENTORY_MASTER_MIGRATION_TESTS === "1" ? test : test.skip;

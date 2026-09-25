@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import mysql from "mysql2/promise";
 
-import { up as createInventoryMaster } from "../../database/migrations/0057_create_inventory_master.js";
+import { up as createInventoryMaster } from "../../database/migrations/0058_create_inventory_master.js";
 import { InventoryLockService } from "../../src/modules/inventory/InventoryLockService.js";
 import { InventoryMasterService } from "../../src/modules/inventory/InventoryMasterService.js";
 
