@@ -149,7 +149,7 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
       const deadlock = error?.code === "ER_LOCK_DEADLOCK" || error?.cause?.code === "ER_LOCK_DEADLOCK"
         || String(error?.message ?? "").includes("Deadlock");
       if (!deadlock || attempt === 5) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
+      await new Promise((resolve) => { setTimeout(resolve, 50 * attempt); });
     }
   }
   assert.ok(created, "the fixture row must exist before anything can be backed up");
