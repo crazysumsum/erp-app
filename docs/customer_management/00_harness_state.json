@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "customer-management",
-  "revision": 145,
+  "revision": 149,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -2028,7 +2028,7 @@
       "author": "/root PHASE-004 state reconciliation candidate",
       "reviewer": "Jason (/root/customer_task011_review), separate agent",
       "reviewed_baseline": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
-      "source_ref": "2026-09-25 final re-review verified PR #144/#145 action evidence, corrected PR-head versus merge identities and identical tree, current runtime worktree, unchanged approved baselines, and the continuing real-Sales-consumer blocker. Final verdict APPROVED with no Required finding.",
+      "source_ref": "2026-09-25 final pre-publication review verified PR #144/#145 action evidence, corrected PR-head versus merge identities and identical tree, current runtime worktree, unchanged approved baselines, and the continuing real-Sales-consumer blocker. The pre-commit checkpoint inspect passed; a later tracked documentation commit necessarily changes HEAD without changing the product source fingerprint. Final verdict APPROVED with no Required finding.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2519,6 +2519,17 @@
       "source_ref": "REV-040",
       "actor": "Jason (/root/customer_task011_review), separate agent",
       "observed_at": "2026-09-25T00:45:48Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Post-publication Customer state inspection after first PR #146 push",
+      "code_commit": "ae4fd70d4ac83cbf91861e9b3cd1f76062b21a39",
+      "spec_baseline": "5014886f1be14900ca65c0e017cd02ff30b65032f69dc1152a6d100cd77598d3",
+      "source_fingerprint": "bc50b4f7ff27fb29c02f1d8d9d0256d54228d647bc1b2cfe291d40ef2273fbf3",
+      "status": "BLOCKED",
+      "source_ref": "state_tool inspect at PR #146 head ae4fd70d4ac83cbf91861e9b3cd1f76062b21a39 reports COMMIT_CHANGED because baseline.code_commit remains the integrated product baseline c0ea960b9ca061b26cfee037163b4e5e7c42a1d0. This is an expected tracked-state self-reference after the documentation commit: design, plan, source fingerprint, and worktree remained consistent, and no product evidence was reused for changed source.",
+      "actor": "/root state reconciliation",
+      "observed_at": "2026-09-25T00:54:41Z"
     }
   ],
   "pending_decisions": [
@@ -3182,16 +3193,16 @@
       "kind": "GIT_PUSH",
       "target": "github:crazysumsum/erp-app:refs/heads/codex/customer-p4-state-reconcile",
       "idempotency_key": "customer-phase004-state-reconcile-push-v1",
-      "status": "PLANNED",
-      "source_ref": "Publish the reviewed Customer-only state reconciliation."
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-25: pushed codex/customer-p4-state-reconcile through commit ae4fd70d4ac83cbf91861e9b3cd1f76062b21a39."
     },
     {
       "id": "EXT-PR-054",
       "kind": "PULL_REQUEST",
       "target": "github:crazysumsum/erp-app:main<-codex/customer-p4-state-reconcile",
       "idempotency_key": "customer-phase004-state-reconcile-pr-v1",
-      "status": "PLANNED",
-      "source_ref": "Customer harness state and implementation-readiness synchronization only; TASK-029 remains blocked."
+      "status": "CONFIRMED",
+      "source_ref": "2026-09-25: GitHub PR #146 created at https://github.com/crazysumsum/erp-app/pull/146."
     },
     {
       "id": "EXT-MERGE-055",
@@ -3209,5 +3220,5 @@
     "docs/customer_management/implementation/phase-PHASE-003-report.md"
   ],
   "defects": [],
-  "next_safe_action": "Publish this reviewed Customer state reconciliation without waiting for CI. Then wait for a real Sales implementation and consumer contract test to merge to main; re-fetch origin/main, reconcile that exact contract, and resume TASK-029 without modifying Sales-owned production code or adding a fake consumer."
+  "next_safe_action": "Commit and push this reviewed revision-149 reconciliation to the existing GitHub PR #146, then re-observe its exact remote head before merging under the approved documentation-only no-CI exception. After merge, clean its worktree/branches. TASK-029 remains blocked until a real Sales implementation and consumer contract test merge to main; then re-fetch origin/main, reconcile the exact contract, and resume without modifying Sales-owned production code or adding a fake consumer."
 }
