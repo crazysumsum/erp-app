@@ -31,6 +31,33 @@ import { SupplierBankService } from "../../src/modules/supplier/SupplierBankServ
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const MYSQL_BIN = process.env.MYSQL_BIN ?? "/usr/local/mysql/bin";
+
+/**
+ * 建立／剷 schema 要一個 admin 帳號 —— CI 上面 `erp_user` 只得 `erp_dev` 嘅權限
+ * （MySQL service image 淨係 grant 嗰一個 database）。跟 `itemRecoveryAcceptance`
+ * 嗰條既有慣例：`DB_ADMIN_*`，喺 GitHub Actions 上面 fallback 去 root/root。
+ */
+function adminOptions() {
+  const githubActions = process.env.GITHUB_ACTIONS === "true";
+  return {
+    host: process.env.DB_HOST, port: Number(process.env.DB_PORT),
+    user: process.env.DB_ADMIN_USER ?? (githubActions ? "root" : undefined),
+    password: process.env.DB_ADMIN_PASSWORD ?? (githubActions ? "root" : undefined),
+    multipleStatements: true
+  };
+}
+
+/**
+ * 備份／還原嘅搬運方式。
+ *
+ * `mysqldump` 先係真嘅備份格式 —— VARBINARY 密文經過 `--hex-blob` 再入返去，呢條
+ * 路上面一個編碼錯誤就會靜靜雞毀掉密文，而嗰樣正正係呢個案例要問嘅嘢之一。但
+ * runner 上面唔一定有 client binary。所以：**有就用真 dump，冇就用 SQL 複製**，
+ * 兩條路做同樣三個判斷，而報告要講明今次行咗邊條。
+ */
+function dumpAvailable() {
+  return spawnSync(`${MYSQL_BIN}/mysqldump`, ["--version"], { encoding: "utf8" }).status === 0;
+}
 const ACCOUNT = `66${randomUUID().replace(/-/gu, "").slice(0, 14).toUpperCase()}`;
 
 function config(database = process.env.DB_NAME) {
@@ -107,6 +134,10 @@ const details = { accountHolderName: "Restore Holder", bankName: "Restore Bank" 
 
 integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring, and fails closed without it", async (t) => {
   const source = await mysql.createConnection(config());
+  const options = adminOptions();
+  assert.ok(options.user && options.password,
+    "DB_ADMIN_USER / DB_ADMIN_PASSWORD are required: creating the restore schema needs more than the application account");
+  const admin = await mysql.createConnection({ ...options, database: process.env.DB_NAME });
   const restoreName = `erp_restore_${randomUUID().replace(/-/gu, "").slice(0, 12)}`;
   let supplierId = null;
   let restored = null;
@@ -117,7 +148,8 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
       await source.execute("DELETE FROM supplier_bank_accounts WHERE supplier_id = ?", [supplierId]);
       await source.execute("DELETE FROM suppliers WHERE id = ?", [supplierId]);
     }
-    await source.query(`DROP DATABASE IF EXISTS \`${restoreName}\``);
+    await admin.query(`DROP DATABASE IF EXISTS \`${restoreName}\``).catch(() => {});
+    await admin.end().catch(() => {});
     await source.end();
   });
 
@@ -154,10 +186,32 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
   }
   assert.ok(created, "the fixture row must exist before anything can be backed up");
 
-  // ---- 備份 ----
+  // ---- 備份同還原 ----
+  await admin.query(`CREATE DATABASE \`${restoreName}\` CHARACTER SET utf8mb4`);
+  const transport = dumpAvailable() ? "mysqldump" : "sql-copy";
+  if (transport === "sql-copy") {
+    // 冇 client binary 嗰陣嘅退路：逐張表 `CREATE TABLE … LIKE` 加 `INSERT … SELECT`。
+    // 佢搬得走資料，但**搬唔到 dump 格式本身** —— 所以佢係一個比較弱嘅版本，
+    // 驗收報告要照講。呢條路跟 `itemRecoveryAcceptance` 嗰個做法。
+    for (const table of ["suppliers", "supplier_bank_accounts", "supplier_audit_logs", "currencies"]) {
+      await admin.query(`CREATE TABLE \`${restoreName}\`.\`${table}\` LIKE \`${process.env.DB_NAME}\`.\`${table}\``);
+      // `SELECT *` 唔得：`supplier_bank_accounts` 有一條 generated column
+      // （`default_slot`），寫落去會被 MySQL 拒（ER_NON_DEFAULT_VALUE_FOR_GENERATED_COLUMN）。
+      // 真 `mysqldump` 自己識避開，SQL 複製呢條路要自己列欄位。
+      const [columns] = await admin.query(
+        `SELECT column_name AS name FROM information_schema.columns
+          WHERE table_schema = ? AND table_name = ? AND extra NOT LIKE '%GENERATED%'
+          ORDER BY ordinal_position`, [process.env.DB_NAME, table]
+      );
+      const names = columns.map((column) => `\`${column.name ?? column.NAME}\``).join(", ");
+      await admin.query(
+        `INSERT INTO \`${restoreName}\`.\`${table}\` (${names}) SELECT ${names} FROM \`${process.env.DB_NAME}\`.\`${table}\``
+      );
+    }
+  } else {
   const dump = spawnSync(`${MYSQL_BIN}/mysqldump`, [
-    `--host=${process.env.DB_HOST}`, `--port=${process.env.DB_PORT}`,
-    `--user=${process.env.DB_USER}`, `--password=${process.env.DB_PASSWORD}`,
+    `--host=${options.host}`, `--port=${options.port}`,
+    `--user=${options.user}`, `--password=${options.password}`,
     // `--set-gtid-purged=OFF`：restore target 同 source 喺同一個實例，而一個帶住
     // `SET @@GLOBAL.GTID_PURGED` 嘅 dump load 落同一部 server 會被拒
     // （ERROR 3546）。呢個係「同機還原」嘅代價，唔係資料嘅代價 —— 表結構同每
@@ -167,19 +221,18 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
   assert.equal(dump.status, 0, `the backup itself must succeed: ${dump.stderr}`);
   assert.ok(dump.stdout.includes("supplier_bank_accounts"), "the backup must contain the Bank table");
 
-  // ---- 還原入一個全新 schema ----
-  await source.query(`CREATE DATABASE \`${restoreName}\` CHARACTER SET utf8mb4`);
   const load = spawnSync(`${MYSQL_BIN}/mysql`, [
-    `--host=${process.env.DB_HOST}`, `--port=${process.env.DB_PORT}`,
-    `--user=${process.env.DB_USER}`, `--password=${process.env.DB_PASSWORD}`, restoreName
+    `--host=${options.host}`, `--port=${options.port}`,
+    `--user=${options.user}`, `--password=${options.password}`, restoreName
   ], { input: dump.stdout, encoding: "utf8", maxBuffer: 512 * 1024 * 1024 });
   assert.equal(load.status, 0, `the restore itself must succeed: ${load.stderr}`);
+  }
 
   restored = await mysql.createConnection(config(restoreName));
   const [[row]] = await restored.query(
     "SELECT id, crypto_context, encryption_key_id, blind_index_key_id FROM supplier_bank_accounts WHERE id = ?", [created.id]
   );
-  assert.ok(row, "the restored schema must actually contain the row");
+  assert.ok(row, `the restored schema must actually contain the row (transport: ${transport})`);
   assert.equal(row.encryption_key_id, "backup-enc");
 
   const revealOn = (crypto) => serviceOn(restored, crypto).reveal({

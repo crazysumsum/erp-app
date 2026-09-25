@@ -903,14 +903,43 @@ integrationTest("TC-074 (BANK-013): after success and failure flows, no channel 
   application = null;
 
   // ---- 通道 ----
-  const dump = spawnSync(`${process.env.MYSQL_BIN ?? "/usr/local/mysql/bin"}/mysqldump`, [
-    `--host=${process.env.DB_HOST}`, `--port=${process.env.DB_PORT}`,
-    `--user=${process.env.DB_USER}`, `--password=${process.env.DB_PASSWORD}`,
-    "--hex-blob", "--skip-lock-tables", process.env.DB_NAME
-  ], { encoding: "latin1", maxBuffer: 512 * 1024 * 1024 });
-  assert.equal(dump.status, 0, `mysqldump must succeed for this case to mean anything: ${dump.stderr}`);
-  assert.ok(dump.stdout.includes("supplier_bank_accounts"),
-    "the dump must actually contain the Bank table, or the scan below is empty");
+  /**
+   * DB dump 呢條通道有兩種攞法。
+   *
+   * `mysqldump` 係真嘅備份格式，但 runner 上面唔一定有 client binary。冇嘅時候就
+   * 逐張表讀返每一行嘅原始欄位值 —— 掃描而言嗰個反而更直接（讀嘅係欄位 byte
+   * 本身，唔係一層文字編碼）。兩條路都要包住成個 schema，唔係得 Bank 嗰兩張表。
+   */
+  const mysqlBin = process.env.MYSQL_BIN ?? "/usr/local/mysql/bin";
+  const canDump = spawnSync(`${mysqlBin}/mysqldump`, ["--version"], { encoding: "utf8" }).status === 0;
+  let dumpText = "";
+  if (canDump) {
+    const dump = spawnSync(`${mysqlBin}/mysqldump`, [
+      `--host=${process.env.DB_HOST}`, `--port=${process.env.DB_PORT}`,
+      `--user=${process.env.DB_USER}`, `--password=${process.env.DB_PASSWORD}`,
+      "--set-gtid-purged=OFF", "--hex-blob", "--skip-lock-tables", process.env.DB_NAME
+    ], { encoding: "latin1", maxBuffer: 512 * 1024 * 1024 });
+    assert.equal(dump.status, 0, `mysqldump must succeed for this case to mean anything: ${dump.stderr}`);
+    dumpText = dump.stdout;
+  } else {
+    const [tables] = await connection.query(
+      "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'"
+    );
+    const parts = [];
+    for (const table of tables) {
+      const name = table.name ?? table.NAME;
+      const [rows] = await connection.query(`SELECT * FROM \`${name}\``);
+      parts.push(`-- ${name}`);
+      for (const row of rows) {
+        parts.push(Object.values(row)
+          .map((value) => (Buffer.isBuffer(value) ? value.toString("latin1") : String(value ?? "")))
+          .join("\u0001"));
+      }
+    }
+    dumpText = parts.join("\n");
+  }
+  assert.ok(dumpText.includes("supplier_bank_accounts") || dumpText.includes("-- supplier_bank_accounts"),
+    "the dump must actually cover the Bank table, or the scan below is empty");
 
   const [auditRows] = await connection.query(
     "SELECT * FROM supplier_audit_logs WHERE supplier_id IN (?, ?)", [victimId, otherId]
@@ -918,7 +947,7 @@ integrationTest("TC-074 (BANK-013): after success and failure flows, no channel 
   assert.ok(auditRows.length > 0, "the flows must have written audit rows, or the audit scan is vacuous");
 
   const channels = {
-    db_dump: dump.stdout,
+    db_dump: dumpText,
     audit_log: JSON.stringify(auditRows),
     request_log: readAllFiles(path.join(logRoot, "requests")),
     system_log: readAllFiles(path.join(logRoot, "system")),

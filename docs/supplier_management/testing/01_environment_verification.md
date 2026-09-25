@@ -12,12 +12,22 @@ Recorded at the time the executed cases below were run. Everything here was obse
 | Why a throwaway instance | the developer's own MySQL is on 3306; an acceptance run must not write to it, and `TC-077` creates and drops a schema |
 | Integration gate | `DB_INTEGRATION_TESTS=1` |
 | Key rings | the CI test rings from `.github/workflows/ci.yml` — `SUPPLIER_BANK_*` and `CUSTOMER_BANK_*`, identical as `checkSharedBankKeyRings` requires |
-| `mysqldump` / `mysql` | `/usr/local/mysql/bin`, 26.7.0 |
+| `mysqldump` / `mysql` | `/usr/local/mysql/bin`, 26.7.0 — **present locally, not assumed on CI** |
+| Admin account | `DB_ADMIN_USER` / `DB_ADMIN_PASSWORD`, falling back to root/root on GitHub Actions, following `itemRecoveryAcceptance`'s existing convention; needed because `TC-077` creates and drops a schema and the CI `erp_user` only holds `erp_dev` |
 | Playwright CLI | 1.63.0 present; not exercised by the cases below (neither is a browser case) |
 | Clock / timezone | host clock, no freeze; no case below depends on wall-clock time |
 | Test data | every case generates its own `randomUUID`-derived supplier and account; no shared fixture |
 
 ## Deviations, stated rather than glossed
+
+0. **The backup transport depends on the runner.** `TC-077` and `TC-074`'s `db_dump` channel use
+   `mysqldump` when the client binary exists and fall back to SQL otherwise — `CREATE TABLE … LIKE`
+   plus a column-enumerated `INSERT … SELECT` for the restore, and a whole-schema row read for the
+   scan. Both paths were exercised locally. The dump path is the stronger one: it is the only one that
+   exercises the real backup format, where a `VARBINARY` encoding fault could corrupt ciphertext
+   silently. **A CI run without the binary therefore tests slightly less than a local run does**, and
+   the report must not claim otherwise. (The SQL path also has to enumerate columns explicitly:
+   `supplier_bank_accounts` carries a generated column, `default_slot`, that `SELECT *` cannot write.)
 
 1. **`TC-077`'s restore target is a fresh schema on the same instance**, not a separate host. It
    answers "does a backup decrypt with, and only with, its key ring"; it does not cover OS-level or
