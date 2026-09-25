@@ -1,3 +1,7 @@
+# 兩條都要：`node_modules/` 只擋目錄，擋唔到一條叫 node_modules 嘅 symlink。
+# 一條指住本機絕對路徑嘅 symlink 曾經就係咁樣 commit 咗上 main（6d55c1f），
+# 令任何已經裝咗依賴嘅 clone `git pull` 都會死喺 "cannot rmdir 'node_modules'"。
+node_modules
 node_modules/
 dist/
 .env*
