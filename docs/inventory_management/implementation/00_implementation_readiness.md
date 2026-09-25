@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-011 are complete on this branch. `HD-026` resolved the observed `0054` collision by selecting a contiguous shift to `0055`～`0064`; migration renames and TASK-012 remain blocked until the exact candidate DESIGN and PLAN hashes are approved.
+`IMPLEMENTING` — TASK-001～TASK-012 are complete on this branch. The approved `0055`～`0064` allocation is active, and TASK-012 has passed its local developer checks. TASK-013 has not started.
 
 ## Baseline
 
@@ -16,6 +16,8 @@
 - Approved 0.8 PLAN: `4ac86650205134dacc954badc3e54b2610f2fe43f0625e0eb2b6922616fb3434`.
 - Approved 0.9 DESIGN: `4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff`.
 - Approved 0.9 PLAN: `27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be`.
+- Approved 1.0 DESIGN: `567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7`.
+- Approved 1.0 PLAN: `124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8`.
 - Historical IMPLEMENT authorization: Sam, active Codex task, 2026-09-23: `Inventory Management 切換到 IMPLEMENT`.
 - `HD-008`: Sam approved adopting TASK-004's transaction-aware `ItemLookupService` contract on 2026-09-23.
 - `HD-010`: Sam approved exactly `server/src/modules/item/ItemLookupService.js` and `server/test/itemLookupService.test.js` as the shared publication scope on 2026-09-24.
@@ -31,6 +33,8 @@
 - `HD-023`／`APR-022`: Sam approved allowlisted Warehouse／Bin `sortBy` and `descending` behavior with `id` as the final tie-breaker.
 - `HD-024`／`APR-023`: Sam selected and approved the complete TASK-011 responsive Warehouse／Bin UI, separate Inventory menu group, focused component tests and mocked local Playwright validation on 2026-09-25, without TASK-012, CI or remote actions.
 - `HD-026`／`APR-025`: after local and `origin/main` were observed to contain Customer migration `0054_create_customer_export_jobs.js`, Sam selected the minimal contiguous Inventory shift from `0054`～`0063` to `0055`～`0064` and returned the module to `DESIGN_AND_PLAN` for fresh hash-bound approval.
+- `HD-027`～`HD-028`／`APR-026`～`APR-027`: Sam independently approved the exact 1.0 DESIGN and PLAN hashes after the migration reallocation.
+- `HD-029`／`APR-028`: Sam approved returning to IMPLEMENT, renaming existing Inventory migrations to `0055`～`0058`, validating the complete Inventory `0055`～`0060` history on disposable MySQL 26.7.0 and completing TASK-012 locally, without TASK-013, CI or remote actions.
 
 ## Reconciled P0 checks
 
@@ -46,6 +50,7 @@
 - TASK-009 stayed inside its HD-020-approved four-file boundary and did not start TASK-010 or perform any remote action.
 - TASK-010 stayed inside its approved handler／client boundary plus the two explicitly approved service-extension files; it did not start TASK-011, add a migration or perform any remote action.
 - TASK-011 stayed inside the HD-024／APR-023-approved page, Inventory menu, component-test and browser-test boundary; it did not start TASK-012, add a migration, run CI or perform any remote action.
+- TASK-012 stayed inside the HD-029／APR-028-approved migration and focused-test boundary; it did not start TASK-013, run CI or perform any remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -118,6 +123,16 @@
 - Full repository ESLint, client production build, `git diff --check`, TASK-011 module-boundary validation and traceability validation passed. The build retained only the repository's pre-existing bundle-size warning. Multi-axis self-review found no correctness, security, accessibility, architecture or maintainability blocker.
 - These are developer checks, not formal `TC-002` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
+## TASK-012 developer verification
+
+- Commit `d5b1e7f318e02dbf5c375ec72148dcb08eedbe4f` renames the existing Inventory migrations to `0055`～`0058`, creates `0059_create_inventory_stock.js` and `0060_create_inventory_movements.js`, updates their imports and adds one focused real-MySQL integration test.
+- `0059` creates Lot ownership, Warehouse＋SKU serialization rows and unique current Balance buckets. The generated `lot_scope=IFNULL(lot_id,0)` closes MySQL's nullable-unique gap; composite FKs enforce Bin／Warehouse and Lot／SKU ownership.
+- `0060` creates the immutable Movement ledger with source operation, actor and master snapshots; all designed warehouse／SKU／Bin／Lot／actor／type／date, group and source indexes are present. Database triggers reject UPDATE and DELETE.
+- TDD red was captured before the migrations existed. The final MySQL 26.7.0 test passed 1/1 after applying and rerunning the complete renamed Inventory `0055`～`0060` history, then exercising generated uniqueness, composite ownership FKs, snapshots, indexes and immutable triggers. The two renamed historical migration tests also passed 2/2.
+- Focused Inventory and migration checks passed 58 with 5 gated integration skips. The complete local server suite passed 1,726 with 307 gated skips after using the repository's public CI-only test keys and permitting temporary localhost test ports. Full repository ESLint, `git diff --check`, module-boundary validation and traceability validation passed.
+- The exact schemas `erp_inventory_task005_20260925_1144`, `erp_inventory_task008_20260925_1144` and `erp_inventory_task012_20260925_1144` were dropped and confirmed absent. The isolated MySQL 26.7.0 server stopped, port 3313 and its socket were absent, and `/private/tmp/erp-inventory-task012-history-mysql-2670.mGLld3` was removed.
+- Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
+
 ## Approved physical allocation
 
 | Prefix | Migration | Owner |
@@ -137,15 +152,16 @@
 
 - No shared／production database access, deployment, Technical Acceptance or UAT has occurred.
 - TASK-005 migration execution occurred only under `HD-012` in its disposable schema; no other project migration was executed there.
-- TASK-005 historically created `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; after candidate approval they will be renamed to `0056` and `0057`. Movement is now planned as P1 migration `0060`.
+- TASK-005 historically created `0055_create_inventory_operations.js` and `0056_create_inventory_audit.js`; they are now `0056` and `0057` under the approved allocation.
 - TASK-006 created only the two approved services, one shared safe-JSON helper and the three planned focused test files.
 - TASK-007 created only the approved lock／validation services, test support and focused tests; the smoke test's minimal DDL was disposable and is not a migration or product schema authority.
-- TASK-008 historically created the HD-019-approved `0057` migration, inspector and focused tests; after candidate approval it will be renamed to `0058`. Its prior execution was confined to the disposable TASK-008 schema and remains historical evidence only.
+- TASK-008 historically created the HD-019-approved `0057` migration, inspector and focused tests; it is now `0058` under the approved allocation. Its prior execution remains historical evidence under the old filename.
 - TASK-009 created only the HD-020-approved service, projection and focused tests; both MySQL executions were confined to disposable TASK-009 schemas.
 - TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
 - TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
-- The remaining implementation commits are local; no TASK-006 through TASK-011 push, PR, CI or merge is claimed.
+- TASK-012 created only the approved stock and Movement persistence plus its focused test; it did not start TASK-013.
+- The remaining implementation commits are local; no TASK-006 through TASK-012 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Validate and present the exact 1.0 candidate DESIGN and PLAN hashes for Sam's independent approval. No migration rename, TASK-012 code, database runtime, CI, push, PR or merge is authorized before both approvals.
+TASK-012 is locally complete. Await explicit scope approval before starting TASK-013; CI, push, PR and merge remain out of scope.
