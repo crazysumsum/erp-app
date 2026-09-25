@@ -602,3 +602,124 @@ L-8  unknown flag echoes raw argv   KILLED
 > 同一個 profile suite 喺 merge 之後係 426，而家係 434；全套 server suite 喺 merge
 > 之後係兩千一百幾條，唔再係兩千零幾。兩組數各自喺自己嗰個 commit 度啱，冇改
 > §10 —— 一個歷史記錄唔應該扮自己係喺第二個 commit 度量嘅。
+
+## 12. REV-055 remediation
+
+REV-055（`65017c3`，即係**已經 merge 咗 `main` 嘅真正 merge candidate**）報
+**0 Critical、0 High、3 Medium、5 Low、5 Info**。
+
+佢逐條用執行確認咗 REV-054 個 High 同四條 Medium **全部真係收咗**：冇任何 report
+欄位喺度授權、每個 run stdout 同 stderr 都出 `RING_SHARED_WITH_OTHER_TABLES`、兩個
+entry 註解／`USAGE`／npm script 名／exit code 都乾淨；`ORDER BY supplier_id` 而家
+死喺一句行為 assertion 上面（`attempted actual 3, expected 6`）而唔係一個 wrapper
+嘅字串比對；佢重量咗洩漏掃描嘅漏報率，**59.1% → 0.0%**（兩萬個隨機 index）；爛
+key ring、連唔到資料庫、打錯 `--from` 全部 exit 2。二十三個 mutant 佢全部重跑，
+二十三個確認死。
+
+### M-1 —— 同一個 commit 入面兩個修正撞咗
+
+REV-054 個 **L-5**（最尾嗰句 `COUNT(*)` 死咗 → `failures.push({ id: null, … })`）
+同 **L-6**（加一條 `processed + declined + failed === attempted` 嘅測試）同一次
+入嚟。實測：
+
+```
+{"attempted":2,"processed":2,"declined":0,"failed":1,"failure_ids":[null],
+ "remaining":null,"supplierRowsDrained":false,"invariant_holds":false,
+ "rows_actually_rotated":true,"cli_exit_code":1}
+```
+
+**兩行都換得乾乾淨淨**，但個 report 講有一行失敗、個失敗冇 id、個不變式爆咗、而
+exit code 係 1 —— 即係「有行失敗，唔好剷 key」。兩條新測試各自都綠：一條淨係睇
+COUNT 死咗嗰個情境，一條淨係睇乾淨嗰個情境，**冇一條行過交叉點**。
+
+呢個係呢個 module 第三次出現同一件事：兩個各自啱嘅修正，夾埋就錯。
+
+**修法**：`failures` 只准載真係有 id 嘅行。「數唔到剩低幾多」唔係一行嘅失敗 ——
+佢係一個 `REMAINING_UNKNOWN` 警告，`remaining` 留 `null`，而 CLI 見到 `null` 就
+唔會回 0（唔知唔等於成功）。原本嗰條測試而家順手釘埋個不變式同「`failures` 入面
+唔准有 `id: null`」。
+
+### M-2 —— 個授權喺 code 度收咗聲，喺文件度仲講緊
+
+兩部分，成本差好遠。
+
+**冇成本嗰半（已經修咗）**：record §4 標題同內文仲叫「剷舊 key 嘅條件」、仲用緊
+`safeToRemoveFromKey` —— 一個已經唔存在嘅欄位；而 §5 引嗰段輸出喺呢一版 code 度
+出唔到（冇 `warnings`，欄位名又係舊嗰個）。兩段都用**真 CLI 重跑過**再換返，§5
+而家嗰段係喺呢一版上面真真正正跑出嚟嘅，`exit=1`。§9／§10／§11 嗰啲歷史敘述**冇
+改** —— 佢哋各自喺自己嗰個 commit 度啱，一份歷史記錄唔應該扮自己係喺第二個
+commit 度寫。
+
+§5 呢段輸出而家已經引錯過兩次。教訓好簡單：**一份實作報告引用輸出，要同引用一個
+測試結果一樣 —— 每次改完都要重跑。**
+
+**要人決定嗰半（未修）**：`03_design_spec.md` 有五處（392、1415、1702、1704、
+1742）仍然用單表、冇限定嘅講法去授權剷 key，而佢係 TASK-036 traceability 指住嗰份
+**規範文件**。改佢會搬 DESIGN baseline hash —— 見下面。
+
+### M-3 —— 兩樣「守住咗」其實冇守住
+
+**(a) Exit code 合約冇嘢睇住。** 把 `main` 個 body catch 由 `return 2` 改成
+`return 1`，三十三條單元加四條整合全部照綠；連「`main` 永遠回 0」都生還。而
+runbook 同 CI job 真係會讀呢個數。
+
+修法：抽 `exitCodeFor(report)` 出嚟（因為佢本身冇得測 —— 佢住喺 `main` 尾嗰句
+`return` 度，要行到嗰句就要一個真資料庫），測晒佢六個 case；加四條 spawn 測試
+（`--help` → 0、壞旗 → 2、爛 key ring → 2、連唔到資料庫 → 2，全部唔准出 stack
+trace）；再加一條**打真 MySQL** 嘅整合測試釘住最後嗰半 ——「跑過但有行失敗 → 1」，
+因為淨係嗰條路行得到 `main` 尾嗰句。
+
+**(b) 我為咗守住 H-1 而寫嗰條測試係一個黑名單。** 佢係
+`/safe|removable|canRemove/i` —— 三個字。REV-055 加咗一個叫 `keyRemovalApproved`
+嘅欄位落個 report，兩套測試照綠。即係佢守住嘅唔係「唔准授權」呢個性質，係「唔准
+用返舊嗰個名」。
+
+修法：改成列晒成個 report 有咩欄位嘅**白名單**。加任何一個新欄位都一定要行過嗰一
+行，而行過嗰一行就要答一個問題：呢個欄位講緊嘅嘢，呢個 module 見唔見到成個 ring？
+
+### Mutation：二十九個，二十九個殺到，冇一個掛死
+
+```
+H-1  report re-authorises removal   KILLED   drop AND id > ?                   KILLED
+H-1b drop the shared-ring warning   KILLED   encryption guard vacuous          KILLED
+H-1c keyRemovalApproved added       KILLED   lookup guard vacuous              KILLED
+M-1  COUNT failure into failures    KILLED   drop the --from ring check        KILLED
+M-1b drop REMAINING_UNKNOWN         KILLED   drained ignores failures          KILLED
+M-1c exit ignores unknown remaining KILLED   --limit accepts 0 again           KILLED
+M-3a main always returns 0          KILLED   --json accepts a value            KILLED
+M-3b body catch returns 1           KILLED   drop batch-size upper bound       KILLED
+M-3c parse catch returns 1          KILLED   empty --from reports required     KILLED
+ORDER BY supplier_id                KILLED   split('=') truncates again        KILLED
+ORDER BY id DESC                    KILLED   unknown flag echoes raw argv      KILLED
+drop ORDER BY                       KILLED   progress gate back to processed   KILLED
+remainingRows always enc            KILLED   rotateRow always claims a write   KILLED
+safeReason forwards message         KILLED   endedAt is startedAt              KILLED
+safeReason forwards a slice         KILLED
+```
+
+### 驗證
+
+| | |
+| --- | --- |
+| `server/test/supplierBankKeyRotation.test.js` | **22/22** |
+| `server/test/supplierBankRotationCli.test.js` | **13/13** |
+| `server/test/integration/supplierBankRotation.integration.test.js` | **5/5**，真 MySQL 26.7.0 |
+| Profile suite `supplier-phase-001-server`（原本 argv） | **437/437**，0 fail 0 skipped |
+| Client | **665/665**（呢次冇掂過 client） |
+| lint | exit 0 |
+
+### 兩樣要人決定，兩樣都會搬 baseline
+
+`harness_core.py` 入面 `design = digest({module_id, requirements, design, scope,
+contracts, risk})`，而 `design` 就係 `03_design_spec.md` **個檔案 SHA**。即係：
+
+| 改乜 | 搬邊個 hash | 弄散幾多嘢 |
+| --- | --- | --- |
+| `03_design_spec.md`（M-2 淨低嗰半） | DESIGN | **36 條 review，入面 13 條 APPROVED** |
+| `00_project_profile.json`（L-2） | PLAN | **38 個 observation** |
+
+L-2 係：profile 入面 `supplier-phase-001-server` 個 `env_keys` 冇列 merge 之後
+先需要嘅 `CUSTOMER_BANK_*`，所以淨係用佢聲明咗嘅 key 去跑，一百幾條測試會死。
+REV-055 評佢做 Low，理由係 customer module 自己個 suite 聲明 `env_keys: []` 而佢
+照跑得到 —— 即係呢個欄位睇落係描述性，唔係一個注入白名單。CI 直接跑 argv，唔經
+harness runner，所以 CI 唔受影響。
