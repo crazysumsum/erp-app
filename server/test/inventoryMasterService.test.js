@@ -279,3 +279,64 @@ test("InventoryMasterService rolls a create back when required Audit fails", asy
   );
   assert.equal(committed, 0);
 });
+
+test("InventoryMasterService applies allowlisted Warehouse sorting with an id tie-breaker", async () => {
+  const { service, calls } = fixture({
+    query: async (sql) => sql.includes("COUNT(*)") ? [[{ total: 0 }]] : [[]]
+  });
+
+  await service.listWarehouses({ sortBy: "updatedAt", descending: true });
+
+  const list = calls.find(({ sql }) => sql.includes("SELECT * FROM inventory_warehouses"));
+  assert.match(list.sql, /ORDER BY updated_at DESC, id DESC/);
+});
+
+test("InventoryMasterService filters Bin lock status and returns a locked projection", async () => {
+  const { service, calls } = fixture({
+    query: async (sql) => {
+      if (sql === "SELECT id FROM inventory_warehouses WHERE id = ?") return [[{ id: 4 }]];
+      if (sql.includes("COUNT(*) AS total")) return [[{ total: 1 }]];
+      return [[{
+        id: 9, warehouse_id: 4, bin_code: "A-01", bin_name: "A", description: "",
+        status: "ACTIVE", version: 2, created_at: 10, updated_at: 20, locked: 1
+      }]];
+    }
+  });
+
+  const result = await service.listBins({
+    warehouseId: 4, lockStatus: "LOCKED", sortBy: "name", descending: true
+  });
+
+  assert.equal(result.items[0].locked, true);
+  assert.ok(calls.some(({ sql }) => sql.includes("inventory_bin_locks") && sql.includes("released_at IS NULL")));
+  const list = calls.find(({ sql }) => sql.includes("SELECT b.*"));
+  assert.match(list.sql, /ORDER BY b\.bin_name DESC, b\.id DESC/);
+});
+
+test("InventoryMasterService returns owner-safe Bin detail with its current lock", async () => {
+  const { service } = fixture({
+    query: async (sql) => {
+      if (sql.includes("FROM inventory_bins") && sql.includes("warehouse_id = ?")) {
+        return [[{
+          id: 9, warehouse_id: 4, bin_code: "A-01", bin_name: "A", description: "",
+          status: "ACTIVE", version: 2, created_at: 10, updated_at: 20
+        }]];
+      }
+      if (sql.includes("current_on_hand")) {
+        return [[{ current_on_hand: 0, active_allocations: 0, open_transfers: 0, active_stocktake_locks: 1 }]];
+      }
+      if (sql.includes("stocktake_number")) {
+        return [[{ lock_type: "STOCKTAKE", stocktake_id: 12, stocktake_number: "ST-001", locked_at: 30 }]];
+      }
+      return [[]];
+    }
+  });
+
+  const bin = await service.getBin(4, 9);
+  assert.deepEqual(bin.currentLock, {
+    type: "STOCKTAKE", stocktakeId: 12, stocktakeNumber: "ST-001", lockedAt: 30
+  });
+
+  const missing = fixture({ query: async () => [[]] }).service;
+  await assert.rejects(() => missing.getBin(4, 9), (error) => error.code === "INVENTORY_RESOURCE_NOT_FOUND");
+});

@@ -12,6 +12,9 @@ import {
 
 const MASTER_PERMISSION = "inventory.mgmt";
 const STATUSES = new Set(["ACTIVE", "INACTIVE"]);
+const LOCK_STATUSES = new Set(["ALL", "LOCKED", "UNLOCKED"]);
+const WAREHOUSE_SORTS = Object.freeze({ code: "warehouse_code", name: "warehouse_name", status: "status", updatedAt: "updated_at" });
+const BIN_SORTS = Object.freeze({ code: "b.bin_code", name: "b.bin_name", status: "b.status", updatedAt: "b.updated_at" });
 
 function positiveId(value, field) {
   const id = Number(value);
@@ -69,7 +72,7 @@ function binInput(input) {
   };
 }
 
-function pageInput(input = {}) {
+function pageInput(input = {}, sorts, defaultSort) {
   const page = Number(input.page ?? 1);
   const pageSize = Number(input.pageSize ?? 50);
   if (!Number.isSafeInteger(page) || page <= 0 || !Number.isSafeInteger(pageSize) ||
@@ -81,7 +84,11 @@ function pageInput(input = {}) {
     throw inventoryError("INVENTORY_INPUT_INVALID", { field: "status" });
   }
   const search = text(input.q ?? "", "q", 190, { optional: true });
-  return { page, pageSize, status, search };
+  const sortBy = input.sortBy ?? defaultSort;
+  if (!Object.hasOwn(sorts, sortBy) || (input.descending !== undefined && typeof input.descending !== "boolean")) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "sortBy" });
+  }
+  return { page, pageSize, status, search, sortColumn: sorts[sortBy], direction: input.descending ? "DESC" : "ASC" };
 }
 
 function duplicate(error) {
@@ -154,7 +161,7 @@ export class InventoryMasterService {
   }
 
   async listWarehouses(input = {}) {
-    const { page, pageSize, status, search } = pageInput(input);
+    const { page, pageSize, status, search, sortColumn, direction } = pageInput(input, WAREHOUSE_SORTS, "code");
     const where = [];
     const params = [];
     if (status !== "ALL") {
@@ -172,7 +179,7 @@ export class InventoryMasterService {
     );
     const [rows] = await this.database.query(
       `SELECT * FROM inventory_warehouses${clause}
-        ORDER BY warehouse_name, id LIMIT ? OFFSET ?`,
+        ORDER BY ${sortColumn} ${direction}, id ${direction} LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
     return { items: rows.map((row) => warehouseProjection(row)), total: Number(count.total), page, pageSize };
@@ -204,29 +211,34 @@ export class InventoryMasterService {
 
   async listBins(input = {}) {
     const warehouseId = positiveId(input.warehouseId, "warehouseId");
-    const { page, pageSize, status, search } = pageInput(input);
+    const { page, pageSize, status, search, sortColumn, direction } = pageInput(input, BIN_SORTS, "code");
+    const lockStatus = input.lockStatus ?? "ALL";
+    if (!LOCK_STATUSES.has(lockStatus)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lockStatus" });
     const [[warehouse]] = await this.database.query(
       "SELECT id FROM inventory_warehouses WHERE id = ?",
       [warehouseId]
     );
     if (!warehouse) throw notFound();
-    const where = ["warehouse_id = ?"];
+    const where = ["b.warehouse_id = ?"];
     const params = [warehouseId];
     if (status !== "ALL") {
-      where.push("status = ?");
+      where.push("b.status = ?");
       params.push(status);
     }
     if (search) {
-      where.push("(bin_code LIKE ? OR bin_name LIKE ?)");
+      where.push("(b.bin_code LIKE ? OR b.bin_name LIKE ?)");
       params.push(`%${search}%`, `%${search}%`);
     }
+    const activeLock = "EXISTS (SELECT 1 FROM inventory_bin_locks l WHERE l.bin_id = b.id AND l.released_at IS NULL)";
+    if (lockStatus !== "ALL") where.push(`${lockStatus === "LOCKED" ? "" : "NOT "}${activeLock}`);
     const clause = ` WHERE ${where.join(" AND ")}`;
-    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM inventory_bins${clause}`, params);
+    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total FROM inventory_bins b${clause}`, params);
     const [rows] = await this.database.query(
-      `SELECT * FROM inventory_bins${clause} ORDER BY bin_code, id LIMIT ? OFFSET ?`,
+      `SELECT b.*, ${activeLock} AS locked FROM inventory_bins b${clause}
+        ORDER BY ${sortColumn} ${direction}, b.id ${direction} LIMIT ? OFFSET ?`,
       [...params, pageSize, (page - 1) * pageSize]
     );
-    return { items: rows.map((row) => binProjection(row)), total: Number(count.total), page, pageSize };
+    return { items: rows.map((row) => binProjection(row, { locked: Boolean(row.locked) })), total: Number(count.total), page, pageSize };
   }
 
   async getBin(warehouseId, binId) {
@@ -237,7 +249,11 @@ export class InventoryMasterService {
       [id, ownerId]
     );
     if (!row) throw notFound();
-    return binProjection(row, { blockers: await this.#binCurrentBlockers(this.database, id) });
+    const [blockers, currentLock] = await Promise.all([
+      this.#binCurrentBlockers(this.database, id),
+      this.#binCurrentLock(id)
+    ]);
+    return binProjection(row, { blockers, currentLock });
   }
 
   async createWarehouse(input) {
@@ -594,6 +610,23 @@ export class InventoryMasterService {
       [binId, binId, binId, binId, binId]
     );
     return binCurrentBlockers(row);
+  }
+
+  async #binCurrentLock(binId) {
+    const [[row]] = await this.database.query(
+      `SELECT l.lock_type, l.stocktake_id, s.stocktake_number, l.locked_at
+         FROM inventory_bin_locks l
+         JOIN inventory_stocktakes s ON s.id = l.stocktake_id
+        WHERE l.bin_id = ? AND l.released_at IS NULL
+        LIMIT 1`,
+      [binId]
+    );
+    return row ? {
+      type: row.lock_type,
+      stocktakeId: Number(row.stocktake_id),
+      stocktakeNumber: row.stocktake_number,
+      lockedAt: Number(row.locked_at)
+    } : null;
   }
 
   async #warehouseDeleteBlockers(connection, warehouseId) {
