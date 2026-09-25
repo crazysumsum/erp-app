@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 69,
+  "revision": 74,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-002",
-  "current_task": "TASK-009",
+  "current_task": "TASK-010",
   "baseline": {
     "design": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
     "plan": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
-    "code_commit": "1cf960b3d21fab95b5c6e8489659d70ba1776f3b",
-    "source_fingerprint": "e666dc5eb88667132de46bae4469be90e7d7bba51bc944105bf859ff72d2445a",
+    "code_commit": "4b1ad68da7885ee41430d4859f602d9264575131",
+    "source_fingerprint": "937e841228499769f8a347faa8e89b38bf966b52f21e5dbc32db9361c1a12042",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
     "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
@@ -35,7 +35,7 @@
     "TASK-007": "DONE",
     "TASK-008": "DONE",
     "TASK-009": "DONE",
-    "TASK-010": "PENDING",
+    "TASK-010": "DONE",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
     "TASK-013": "PENDING",
@@ -463,6 +463,60 @@
         "server/test/integration/inventoryMaster.integration.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-020",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-010 handlers, schemas, route metadata, owner-safe lookup, client contract, shared Traditional Chinese error mapping and focused tests",
+      "recorded_at": "2026-09-25T10:40:35+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "35a839d2cb398ef7555a657c3c5d2f3bde20ddbf",
+      "scope": [
+        "server/src/handlers/inventory/**",
+        "server/test/**/inventory*.test.js",
+        "client/src/services/inventory.js",
+        "client/src/framework/http/errorMessages.js",
+        "client/test/**/inventory*.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-021",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving the minimal TASK-010 scope extension for lockStatus and currentLock service behavior",
+      "recorded_at": "2026-09-25T10:56:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "35a839d2cb398ef7555a657c3c5d2f3bde20ddbf",
+      "scope": [
+        "server/src/modules/inventory/InventoryMasterService.js",
+        "server/test/inventoryMasterService.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-022",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving the TASK-010 allowlisted Warehouse/Bin sortBy and descending service behavior",
+      "recorded_at": "2026-09-25T11:02:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "35a839d2cb398ef7555a657c3c5d2f3bde20ddbf",
+      "scope": [
+        "server/src/modules/inventory/InventoryMasterService.js",
+        "server/test/inventoryMasterService.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -657,6 +711,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-017",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-010 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "937e841228499769f8a347faa8e89b38bf966b52f21e5dbc32db9361c1a12042",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-010-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -769,6 +835,17 @@
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
       "actor": "/root developer self-check under HD-020 and APR-019",
       "observed_at": "2026-09-25T09:43:42+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-010 strict Warehouse/Bin handler, service-query and client contract developer checks",
+      "code_commit": "4b1ad68da7885ee41430d4859f602d9264575131",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "937e841228499769f8a347faa8e89b38bf966b52f21e5dbc32db9361c1a12042",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-010-developer-verification",
+      "actor": "/root developer self-check under HD-021 through HD-023 and APR-020 through APR-022",
+      "observed_at": "2026-09-25T11:01:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -1212,6 +1289,42 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-009 option"
+    },
+    {
+      "id": "HD-021",
+      "impact": "MAJOR",
+      "question": "May TASK-010 implement the complete strict Warehouse/Bin handlers, schemas, route auth/permission/idempotency metadata, owner-safe lookup, client methods, Traditional Chinese error mapping and focused tests, including the shared errorMessages.js path, without starting TASK-011 or performing remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-010",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-010 option"
+    },
+    {
+      "id": "HD-022",
+      "impact": "MAJOR",
+      "question": "May TASK-010 extend into InventoryMasterService.js and its focused test solely to make the designed Bin lockStatus filter and currentLock detail contract effective, without creating Stocktake migrations or entering TASK-011?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-010",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended minimal service scope extension"
+    },
+    {
+      "id": "HD-023",
+      "impact": "MAJOR",
+      "question": "May the approved TASK-010 InventoryMasterService extension also implement the common list contract's allowlisted sortBy and descending behavior with id as the final tie-breaker?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-010",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended allowlisted sorting option"
     }
   ],
   "external_actions": [
@@ -1570,5 +1683,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain Sam approval before starting TASK-010 Warehouse/Bin API and client contract. No database runtime is active and no push, PR, merge or other remote action is authorized."
+  "next_safe_action": "Obtain Sam's explicit decision before starting TASK-011 Warehouse/Bin management UI. Do not start UI work, create Stocktake migrations or perform CI/push/PR/merge actions."
 }

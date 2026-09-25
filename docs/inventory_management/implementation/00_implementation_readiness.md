@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-009 are complete on this branch. TASK-009 is developer-verified, including both Warehouse-lock race orderings on isolated MySQL 26.7.0; TASK-010 remains pending a separate human decision before implementation continues.
+`BLOCKED` — TASK-001～TASK-010 are complete on this branch. TASK-010 is developer-verified for its strict HTTP／client contract; TASK-011 remains pending a separate human decision before implementation continues.
 
 ## Baseline
 
@@ -26,6 +26,9 @@
 - `HD-016`～`HD-018`: Sam approved adding exactly the two planned TASK-007 test-support paths to the module allowlist and approved the resulting 0.9 DESIGN／PLAN hashes on 2026-09-25.
 - `HD-019`: Sam approved TASK-008 migration `0057`, its schema inspector, focused developer tests and isolated disposable MySQL 26.7.0 verification on 2026-09-25, without TASK-009 or remote actions.
 - `HD-020`／`APR-019`: Sam selected and approved the complete TASK-009 option on 2026-09-25: Warehouse／Bin domain service, projection, focused tests and isolated MySQL 26.7.0 deactivate/posting race verification, without TASK-010 or remote actions.
+- `HD-021`／`APR-020`: Sam selected and approved the complete TASK-010 strict handlers, schemas, route metadata, owner-safe client contract, Traditional Chinese error coverage and focused tests on 2026-09-25, without TASK-011 or remote actions.
+- `HD-022`／`APR-021`: Sam approved the minimal TASK-010 service extension for designed Bin `lockStatus` filtering and `currentLock` detail, without advancing the Stocktake migration.
+- `HD-023`／`APR-022`: Sam approved allowlisted Warehouse／Bin `sortBy` and `descending` behavior with `id` as the final tie-breaker.
 
 ## Reconciled P0 checks
 
@@ -39,6 +42,7 @@
 - TASK-007 stayed inside the approved module boundary and did not add a migration, start TASK-008 or perform any remote action.
 - TASK-008 stayed inside its HD-019-approved migration boundary and did not start TASK-009 or perform any remote action.
 - TASK-009 stayed inside its HD-020-approved four-file boundary and did not start TASK-010 or perform any remote action.
+- TASK-010 stayed inside its approved handler／client boundary plus the two explicitly approved service-extension files; it did not start TASK-011, add a migration or perform any remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -92,6 +96,16 @@
 - The final disposable schema, local test account, isolated server and `/private/tmp/erp-inventory-task009-mysql-2670.OBzifa` data root were removed after verification. The earlier passing pre-final run and its `/private/tmp/erp-inventory-task009-mysql-2670.eO5k9B` root were also removed; only the final source fingerprint is evidence-bearing.
 - Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-002` Technical Acceptance, CI, independent code approval or business acceptance.
 
+## TASK-010 developer verification
+
+- Commit `4b1ad68da7885ee41430d4859f602d9264575131` adds all 14 Warehouse／Bin GET and POST handlers, closed request／response schemas and the Inventory client service.
+- Read routes require `inventory.view`; every write requires `inventory.view`＋`inventory.mgmt`, enables framework idempotency and uses the fixed password or device-password strength from design. Authentication passwords are removed before domain-service invocation.
+- Bin detail remains owner-safe through the Warehouse＋Bin lookup. Lists use allowlisted sorting with a stable `id` tie-breaker; Bin lists support `ALL`／`LOCKED`／`UNLOCKED`, and detail exposes only the current Stocktake lock projection.
+- Every client POST enables `Idempotency-Key`; caller-supplied retry keys are excluded from strict bodies. The client performs one request only on `VERSION_CONFLICT`. Existing shared Traditional Chinese mappings already covered every Warehouse／Bin public error, so no duplicate error-map change was needed.
+- Focused Inventory／handler／permission checks: 52 passed, 0 failed. Focused client HTTP／Inventory checks: 30 passed, 0 failed. Full repository ESLint, client production build, `git diff --check`, module-boundary validation and traceability validation passed. The build retained only the repository's pre-existing bundle-size warning.
+- No MySQL runtime was started: TASK-010 adds no DDL, while active Bin locks depend on planned migration `0062`; real lock-filter integration remains gated by the later Stocktake persistence task. Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker within the approved contract diff.
+- These are developer checks, not formal `TC-002` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
+
 ## Approved physical allocation
 
 | Prefix | Migration | Owner |
@@ -116,8 +130,9 @@
 - TASK-007 created only the approved lock／validation services, test support and focused tests; the smoke test's minimal DDL was disposable and is not a migration or product schema authority.
 - TASK-008 created only the HD-019-approved `0057` migration, inspector and focused tests; its migration execution was confined to the disposable TASK-008 schema.
 - TASK-009 created only the HD-020-approved service, projection and focused tests; both MySQL executions were confined to disposable TASK-009 schemas.
-- The remaining implementation commits are local; no TASK-006 through TASK-009 push, PR, CI or merge is claimed.
+- TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
+- The remaining implementation commits are local; no TASK-006 through TASK-010 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Obtain Sam's next explicit decision before starting TASK-010 Warehouse／Bin API and client contract. No database runtime is active, and no push, PR or merge is authorized.
+Obtain Sam's next explicit decision before starting TASK-011 Warehouse／Bin management UI. No database runtime is active, and no CI, push, PR or merge is authorized.
