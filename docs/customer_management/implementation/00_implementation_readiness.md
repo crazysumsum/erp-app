@@ -544,3 +544,17 @@ This is developer evidence only, not Technical Acceptance, UAT, CI or a merge cl
   Customer provider already exposes the designed `new_sale` and credit methods,
   but TASK-029 remains blocked because its DoD requires real consumer contract
   tests; no fake Sales consumer was introduced.
+
+### PHASE-004 blocked-entry publication and CI recovery
+
+- PR #144 merged the reviewed PHASE-004 blocked-entry record to `main` as
+  `8bcf4378134423e672292ac525e3653be341cbd3` on 2026-09-24. Its automatically
+  triggered server/client MySQL job failed after merge; the approved no-CI
+  publication exception applied to that documentation-only candidate.
+- PR #145 corrected the Customer/Supplier bank-key CI environment, isolated
+  ambient configuration-test state, serialized the shared MySQL coverage run,
+  and added Customer import/service boundary coverage. It merged as
+  `c0ea960b9ca061b26cfee037163b4e5e7c42a1d0`; all five GitHub CI jobs passed.
+- Reinspection of that integrated baseline still found no
+  `server/src/modules/sales` implementation or real Sales consumer test. TASK-029
+  therefore remains `BLOCKED` without expanding Customer ownership.
