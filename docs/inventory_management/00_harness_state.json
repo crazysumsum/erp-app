@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 65,
+  "revision": 69,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-002",
-  "current_task": "TASK-008",
+  "current_task": "TASK-009",
   "baseline": {
     "design": "4c27910933198d1de4f287e23d83d68775d0707a837c531cc79b5460f2ecc4ff",
     "plan": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
-    "code_commit": "9207aff16b435895ee34bf7687dbfa372ac76d85",
-    "source_fingerprint": "a5ae0318046406f182572f966fb59bc09c02a49de26855be9586ac05bb3cdcbe",
+    "code_commit": "1cf960b3d21fab95b5c6e8489659d70ba1776f3b",
+    "source_fingerprint": "e666dc5eb88667132de46bae4469be90e7d7bba51bc944105bf859ff72d2445a",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
     "mode_entry_commit": "1a47b65570ed7757b79cdabb1cdea20daadfdbbe"
@@ -34,7 +34,7 @@
     "TASK-006": "DONE",
     "TASK-007": "DONE",
     "TASK-008": "DONE",
-    "TASK-009": "PENDING",
+    "TASK-009": "DONE",
     "TASK-010": "PENDING",
     "TASK-011": "PENDING",
     "TASK-012": "PENDING",
@@ -444,6 +444,25 @@
         "server/database/migrations/0057_create_inventory_master.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-019",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-25 approving complete TASK-009 service, projection, focused tests and isolated MySQL 26.7.0 deactivate/posting race verification",
+      "recorded_at": "2026-09-25T09:31:26+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "code_commit": "1830f10286ef6cdcdda172534c70161b3d9d0d89",
+      "scope": [
+        "server/src/modules/inventory/InventoryMasterService.js",
+        "server/src/modules/inventory/inventoryProjections.js",
+        "server/test/inventoryMasterService.test.js",
+        "server/test/integration/inventoryMaster.integration.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -626,6 +645,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-016",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-009 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "e666dc5eb88667132de46bae4469be90e7d7bba51bc944105bf859ff72d2445a",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -727,6 +758,17 @@
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-008-developer-verification",
       "actor": "/root developer self-check under HD-019",
       "observed_at": "2026-09-25T09:27:44+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-009 focused checks and isolated MySQL 26.7.0 Warehouse deactivate/posting race verification",
+      "code_commit": "1cf960b3d21fab95b5c6e8489659d70ba1776f3b",
+      "spec_baseline": "27a3f616185d5b6ed865cbb962bafb05e23c74347df7ea994037d81f9e5583be",
+      "source_fingerprint": "e666dc5eb88667132de46bae4469be90e7d7bba51bc944105bf859ff72d2445a",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-009-developer-verification",
+      "actor": "/root developer self-check under HD-020 and APR-019",
+      "observed_at": "2026-09-25T09:43:42+08:00"
     }
   ],
   "pending_decisions": [
@@ -1158,6 +1200,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user confirmation on 2026-09-25 approving TASK-008 migration 0057, schema inspector, focused developer tests and isolated disposable MySQL 26.7.0 verification without TASK-009 or remote actions"
+    },
+    {
+      "id": "HD-020",
+      "impact": "MAJOR",
+      "question": "May TASK-009 implement the complete Warehouse/Bin domain service and projection with focused tests plus an isolated disposable MySQL 26.7.0 deactivate/posting race test, without starting TASK-010 or performing remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-009",
+        "TC-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-25 approving the recommended complete TASK-009 option"
     }
   ],
   "external_actions": [
@@ -1448,9 +1502,73 @@
       "idempotency_key": "inventory-task008-runtime-cleanup-20260925",
       "status": "CONFIRMED",
       "source_ref": "Dropped the exact schema and account, observed schema count zero, stopped mysqld, confirmed the socket absent and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-034",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3311 using /private/tmp/erp-inventory-task009-mysql-2670.eO5k9B",
+      "idempotency_key": "inventory-task009-mysql-2670-runtime-pre-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0 before the pre-final race run"
+    },
+    {
+      "id": "EXT-035",
+      "kind": "ISOLATED_SCHEMA_CREATE",
+      "target": "erp_inventory_task009_20260925_0940 on local MySQL 26.7.0 port 3311",
+      "idempotency_key": "inventory-task009-schema-create-20260925-0940",
+      "status": "CONFIRMED",
+      "source_ref": "Created only the guarded disposable TASK-009 schema and local test account"
+    },
+    {
+      "id": "EXT-036",
+      "kind": "ISOLATED_TEST_EXECUTION",
+      "target": "TASK-009 lifecycle and race test in erp_inventory_task009_20260925_0940",
+      "idempotency_key": "inventory-task009-race-pre-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Pre-final MySQL 26.7.0 test passed 1/1; superseded as evidence after actor-id validation changed the source fingerprint"
+    },
+    {
+      "id": "EXT-037",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task009_20260925_0940 and /private/tmp/erp-inventory-task009-mysql-2670.eO5k9B",
+      "idempotency_key": "inventory-task009-runtime-cleanup-pre-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Dropped the exact schema and account, observed schema count zero, stopped mysqld and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-038",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "MySQL 26.7.0 at 127.0.0.1:3312 using /private/tmp/erp-inventory-task009-mysql-2670.OBzifa",
+      "idempotency_key": "inventory-task009-mysql-2670-runtime-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed SELECT VERSION() = 26.7.0 before final-fingerprint verification"
+    },
+    {
+      "id": "EXT-039",
+      "kind": "ISOLATED_SCHEMA_CREATE",
+      "target": "erp_inventory_task009_20260925_0944 on local MySQL 26.7.0 port 3312",
+      "idempotency_key": "inventory-task009-schema-create-20260925-0944",
+      "status": "CONFIRMED",
+      "source_ref": "Created only the guarded final TASK-009 schema and local test account"
+    },
+    {
+      "id": "EXT-040",
+      "kind": "ISOLATED_TEST_EXECUTION",
+      "target": "TASK-009 lifecycle and race test in erp_inventory_task009_20260925_0944",
+      "idempotency_key": "inventory-task009-race-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Final-fingerprint MySQL 26.7.0 test passed 1/1 with lifecycle, duplicate, version and both Warehouse-lock race orderings"
+    },
+    {
+      "id": "EXT-041",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "erp_inventory_task009_20260925_0944 and /private/tmp/erp-inventory-task009-mysql-2670.OBzifa",
+      "idempotency_key": "inventory-task009-runtime-cleanup-final-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Dropped the exact schema and account, observed schema count zero, stopped mysqld, confirmed the socket absent and removed only the exact temporary root"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Obtain Sam approval before starting TASK-009 Warehouse/Bin domain service. No database runtime is active and no push, PR, merge or other remote action is authorized."
+  "next_safe_action": "Obtain Sam approval before starting TASK-010 Warehouse/Bin API and client contract. No database runtime is active and no push, PR, merge or other remote action is authorized."
 }

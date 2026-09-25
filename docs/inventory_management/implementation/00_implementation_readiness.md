@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` — TASK-001～TASK-008 are complete on this branch. TASK-008 is developer-verified against an isolated MySQL 26.7.0 schema; TASK-009 remains pending a separate human decision before implementation continues.
+`BLOCKED` — TASK-001～TASK-009 are complete on this branch. TASK-009 is developer-verified, including both Warehouse-lock race orderings on isolated MySQL 26.7.0; TASK-010 remains pending a separate human decision before implementation continues.
 
 ## Baseline
 
@@ -25,6 +25,7 @@
 - `HD-015`: Sam selected the isolated disposable MySQL 26.7.0 option for TASK-007's two-connection contention smoke test on 2026-09-24; only test-owned minimal DDL was permitted and the schema had to be removed afterwards.
 - `HD-016`～`HD-018`: Sam approved adding exactly the two planned TASK-007 test-support paths to the module allowlist and approved the resulting 0.9 DESIGN／PLAN hashes on 2026-09-25.
 - `HD-019`: Sam approved TASK-008 migration `0057`, its schema inspector, focused developer tests and isolated disposable MySQL 26.7.0 verification on 2026-09-25, without TASK-009 or remote actions.
+- `HD-020`／`APR-019`: Sam selected and approved the complete TASK-009 option on 2026-09-25: Warehouse／Bin domain service, projection, focused tests and isolated MySQL 26.7.0 deactivate/posting race verification, without TASK-010 or remote actions.
 
 ## Reconciled P0 checks
 
@@ -37,6 +38,7 @@
 - After merging latest `origin/main`, focused Item lookup checks passed 33/33 and focused ESLint passed.
 - TASK-007 stayed inside the approved module boundary and did not add a migration, start TASK-008 or perform any remote action.
 - TASK-008 stayed inside its HD-019-approved migration boundary and did not start TASK-009 or perform any remote action.
+- TASK-009 stayed inside its HD-020-approved four-file boundary and did not start TASK-010 or perform any remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -80,6 +82,16 @@
 - The disposable schema, local test account, isolated server and `/private/tmp/erp-inventory-task008-mysql-2670.wAtsfk` data root were removed after verification. No runtime lease remains.
 - Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-003`／`TC-010` Technical Acceptance, CI, independent code approval or business acceptance.
 
+## TASK-009 developer verification
+
+- Commit `1cf960b3d21fab95b5c6e8489659d70ba1776f3b` implements Warehouse／Bin list, detail, create, update, deactivate, reactivate and controlled delete plus explicit response projections.
+- Every write revalidates the actor's current `inventory.mgmt` permission, uses optimistic version checks, acquires the shared Warehouse row lock before Warehouse-scoped mutation and writes required Audit in the same transaction.
+- Codes are trimmed, NFKC-normalized and case-folded for uniqueness. Cross-Warehouse child lookup fails closed; an Inactive Warehouse rejects Bin create/reactivate.
+- Warehouse and Bin deactivation recheck current On Hand, active Reservation／Allocation, open Transfer and active Stocktake blockers while holding the Warehouse lock. Historical Movement is excluded from deactivation guards but blocks permanent delete.
+- Focused Inventory plus migration-ordering checks: 46 passed, 0 failed. Focused ESLint and `git diff --check` passed. The final dedicated MySQL race test passed 1/1 on observed server `26.7.0` in schema `erp_inventory_task009_20260925_0944`, covering complete lifecycle and both posting-first／deactivate-first lock orderings.
+- The final disposable schema, local test account, isolated server and `/private/tmp/erp-inventory-task009-mysql-2670.OBzifa` data root were removed after verification. The earlier passing pre-final run and its `/private/tmp/erp-inventory-task009-mysql-2670.eO5k9B` root were also removed; only the final source fingerprint is evidence-bearing.
+- Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-002` Technical Acceptance, CI, independent code approval or business acceptance.
+
 ## Approved physical allocation
 
 | Prefix | Migration | Owner |
@@ -103,8 +115,9 @@
 - TASK-006 created only the two approved services, one shared safe-JSON helper and the three planned focused test files.
 - TASK-007 created only the approved lock／validation services, test support and focused tests; the smoke test's minimal DDL was disposable and is not a migration or product schema authority.
 - TASK-008 created only the HD-019-approved `0057` migration, inspector and focused tests; its migration execution was confined to the disposable TASK-008 schema.
-- The remaining implementation commits are local; no TASK-006／TASK-007／TASK-008 push, PR, CI or merge is claimed.
+- TASK-009 created only the HD-020-approved service, projection and focused tests; both MySQL executions were confined to disposable TASK-009 schemas.
+- The remaining implementation commits are local; no TASK-006 through TASK-009 push, PR, CI or merge is claimed.
 
 ## Next safe action
 
-Obtain Sam's next explicit decision before starting TASK-009 Warehouse／Bin domain service. No database runtime is active, and no push, PR or merge is authorized.
+Obtain Sam's next explicit decision before starting TASK-010 Warehouse／Bin API and client contract. No database runtime is active, and no push, PR or merge is authorized.
