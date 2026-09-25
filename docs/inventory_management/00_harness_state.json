@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 90,
+  "revision": 92,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
     "plan": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
-    "code_commit": "d5b1e7f318e02dbf5c375ec72148dcb08eedbe4f",
-    "source_fingerprint": "2813a9de65bad63218a32f6330f4f27375f6fa7f4a0a22ed90aecaf0b94c0a41",
+    "code_commit": "e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b",
+    "source_fingerprint": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
     "worktree": "/private/tmp/erp-inventory-p0-foundation",
     "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
     "mode_entry_commit": "7279749a8fec0832d6f47fa316efb33c20726af8"
@@ -648,6 +648,37 @@
         "server/test/permissionCatalogueConventions.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-029",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user instruction on 2026-09-25 to update the branch from main, commit, push, open a PR and merge without running CI",
+      "recorded_at": "2026-09-25T14:13:08+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "code_commit": "e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b",
+      "scope": [
+        "merge latest origin/main into codex/inventory-p0-foundation",
+        "run local post-merge validation and review",
+        "commit and push the reconciled Inventory branch",
+        "create and merge a pull request into main",
+        "do not run or wait for CI",
+        "remove the merged branch and worktree",
+        "exclude TASK-013 implementation",
+        ".github/workflows/ci.yml",
+        "client/config/menu.js",
+        "client/src/framework/http/errorMessages.js",
+        "client/test/inventory/foundation.test.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/test/configuration.test.js",
+        "server/test/idempotencyService.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -902,6 +933,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-022",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-001 through TASK-012 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist after reconciling latest origin/main",
+      "reviewed_baseline": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#post-main-merge-publication-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1047,6 +1090,17 @@
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-012-developer-verification",
       "actor": "/root developer self-check under HD-025 through HD-029 and APR-024 through APR-028",
       "observed_at": "2026-09-25T11:55:00+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Post-main-merge Inventory publication validation",
+      "code_commit": "e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b",
+      "spec_baseline": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "source_fingerprint": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#post-main-merge-publication-verification",
+      "actor": "/root developer self-check under APR-029",
+      "observed_at": "2026-09-25T14:13:08+08:00"
     }
   ],
   "pending_decisions": [
@@ -1623,6 +1677,29 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response '同意' on 2026-09-25 approving return to IMPLEMENT and resumption of TASK-012 within the stated local-only scope"
+    },
+    {
+      "id": "HD-030",
+      "impact": "MAJOR",
+      "question": "May the completed TASK-001 through TASK-012 Inventory branch be updated from latest main, locally revalidated, committed, pushed, opened as a PR, merged into main without CI, then have its merged branch and worktree removed?",
+      "affected_ids": [
+        "PHASE-001",
+        "PHASE-002",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "TASK-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user instruction on 2026-09-25 authorizing branch update, commit, push, PR creation and merge without CI"
     }
   ],
   "external_actions": [
@@ -2001,9 +2078,17 @@
       "idempotency_key": "inventory-task012-runtime-cleanup-20260925",
       "status": "CONFIRMED",
       "source_ref": "Dropped only the exact three schemas, observed schema count zero, stopped mysqld, confirmed port 3313 and the socket absent, and removed only the exact temporary root"
+    },
+    {
+      "id": "EXT-045",
+      "kind": "BRANCH_RECONCILIATION",
+      "target": "origin/main at 9b2d0d3e0b2e0da284a0bfb99da861705279993f into codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-main-reconciliation-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Fetched origin/main and created merge commit e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b without conflicts before post-merge validation"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "TASK-012 is locally complete. Obtain explicit scope approval before starting TASK-013. Do not run CI or perform push, PR, merge or other remote actions."
+  "next_safe_action": "Under APR-029, commit and push the reconciled branch, create and merge its PR into main without running or waiting for CI, then remove the merged branch and worktree. Do not start TASK-013."
 }

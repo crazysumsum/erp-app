@@ -35,6 +35,7 @@
 - `HD-026`／`APR-025`: after local and `origin/main` were observed to contain Customer migration `0054_create_customer_export_jobs.js`, Sam selected the minimal contiguous Inventory shift from `0054`～`0063` to `0055`～`0064` and returned the module to `DESIGN_AND_PLAN` for fresh hash-bound approval.
 - `HD-027`～`HD-028`／`APR-026`～`APR-027`: Sam independently approved the exact 1.0 DESIGN and PLAN hashes after the migration reallocation.
 - `HD-029`／`APR-028`: Sam approved returning to IMPLEMENT, renaming existing Inventory migrations to `0055`～`0058`, validating the complete Inventory `0055`～`0060` history on disposable MySQL 26.7.0 and completing TASK-012 locally, without TASK-013, CI or remote actions.
+- `HD-030`／`APR-029`: Sam approved updating the completed TASK-001～TASK-012 branch from latest `main`, local post-merge verification, commit, push, PR creation and merge without CI, followed by merged branch/worktree cleanup; TASK-013 remains excluded.
 
 ## Reconciled P0 checks
 
@@ -133,6 +134,13 @@
 - The exact schemas `erp_inventory_task005_20260925_1144`, `erp_inventory_task008_20260925_1144` and `erp_inventory_task012_20260925_1144` were dropped and confirmed absent. The isolated MySQL 26.7.0 server stopped, port 3313 and its socket were absent, and `/private/tmp/erp-inventory-task012-history-mysql-2670.mGLld3` was removed.
 - Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
+## Post-main-merge publication verification
+
+- Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
+- Full server suite passed 1,902 with 324 gated skips and 0 failures using the repository's public CI-only Customer and Supplier test keys. Full client suite, repository ESLint and client production build passed; the build retained only the existing bundle-size warning.
+- Mocked local Inventory Playwright passed 4/4 after the merge, covering the desktop and 375 px flows, permissions, 409 retention and error/empty states. `git diff --check`, module-boundary validation and traceability validation passed.
+- Multi-axis post-merge self-review found no open critical or high correctness, security, architecture, performance or maintainability issue. These are local developer checks; CI was explicitly excluded by APR-029.
+
 ## Approved physical allocation
 
 | Prefix | Migration | Owner |
@@ -160,8 +168,8 @@
 - TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
 - TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
 - TASK-012 created only the approved stock and Movement persistence plus its focused test; it did not start TASK-013.
-- The remaining implementation commits are local; no TASK-006 through TASK-012 push, PR, CI or merge is claimed.
+- APR-029 authorizes publication of the completed TASK-001～TASK-012 branch; TASK-013 remains unstarted and out of scope. CI remains explicitly excluded.
 
 ## Next safe action
 
-TASK-012 is locally complete. Await explicit scope approval before starting TASK-013; CI, push, PR and merge remain out of scope.
+Under APR-029, publish and merge the reconciled TASK-001～TASK-012 branch without CI, then remove its merged branch and worktree. Await separate explicit scope approval before starting TASK-013.
