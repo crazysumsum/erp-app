@@ -18,6 +18,17 @@ function inventoryNonNegativeInteger(value, field) {
   return value;
 }
 
+function dateOnly(value, field) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field });
+  }
+  const milliseconds = Date.parse(`${value}T00:00:00.000Z`);
+  if (!Number.isFinite(milliseconds) || new Date(milliseconds).toISOString().slice(0, 10) !== value) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field });
+  }
+  return milliseconds;
+}
+
 export function inventoryPositiveInteger(value, field = "quantity") {
   if (!Number.isSafeInteger(value) || value <= 0) throw quantityError(field);
   return value;
@@ -43,6 +54,21 @@ export function calculateInventoryAvailability({ eligibleOnHand, reserved }) {
     atp: Math.max(rawAtp, 0),
     uncoveredReserved: Math.max(-rawAtp, 0)
   };
+}
+
+export function isInventoryLotExpired(expiryDate, currentLocalDate) {
+  const current = dateOnly(currentLocalDate, "currentLocalDate");
+  return expiryDate === null ? false : dateOnly(expiryDate, "expiryDate") < current;
+}
+
+export function meetsMinimumRemainingLife(expiryDate, currentLocalDate, minimumRemainingDays) {
+  const current = dateOnly(currentLocalDate, "currentLocalDate");
+  if (!Number.isSafeInteger(minimumRemainingDays) || minimumRemainingDays < 0) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "minimumRemainingDays" });
+  }
+  if (expiryDate === null) return true;
+  const minimumExpiry = current + minimumRemainingDays * 86_400_000;
+  return dateOnly(expiryDate, "expiryDate") >= minimumExpiry;
 }
 
 function object(value, label) {
