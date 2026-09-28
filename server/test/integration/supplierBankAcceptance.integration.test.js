@@ -25,6 +25,8 @@ import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypt
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const PASSWORD = "Bank-Acceptance-1!";
 const SECRET = `44${randomUUID().replace(/-/gu, "").slice(0, 14).toUpperCase()}`;
+// 同 SECRET 永遠唔同嘅另一個帳號。之前係「第 7 位換做 9」，SECRET 第 7 位本身係 9 就一樣（1/16，REV-057 L-5）。
+const NEXT_SECRET = `${SECRET.slice(0, 6)}${SECRET[6] === "9" ? "8" : "9"}${SECRET.slice(7)}`;
 const SHORT = String(Math.floor(1000 + Math.random() * 8999));   // 4 位
 const CRYPTO_FIELDS = ["ciphertext", "authTag", "blindIndex", "cryptoContext", "encryptionKeyId", "lastFour", "iv"];
 
@@ -369,7 +371,10 @@ integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existi
     const systemLog = () => fs.readdirSync(path.join(h.logRoot, "system"), { recursive: true })
       .map((name) => path.join(h.logRoot, "system", name)).filter((file) => fs.statSync(file).isFile())
       .map((file) => fs.readFileSync(file, "utf8")).join("\n");
-    const seen = () => systemLog().split("supplier.bank.keys_outside_ring").length - 1;
+    // 淨係數 lookup 嗰半：同一個 schema 入面有 gone-enc 嘅行，encryption 嗰半會令一個
+    // 唔分 kind 嘅計數自己成立（REV-057 L-1）。
+    const seen = () => systemLog().split("\n")
+      .filter((line) => line.includes("supplier.bank.keys_outside_ring") && /"kind":\s*"lookup"/u.test(line)).length;
     const logged = seen();
     await h.application.services.require("supplierBankKeyCheck").initialize();
     assert.ok(seen() > logged, "startup check reports rows on a lookup key outside the ring");
@@ -387,7 +392,7 @@ integrationTest("TC-068 (BANK-007): re-entering the account on the only unreadab
     // 修復路徑：重新輸入嗰行嘅帳號會用 active key 重算佢個 index。嗰行自己唔可以擋住自己，
     // 但同一個 Supplier 仲有第二行唔喺 ring 就要照擋 —— 呢半係對照。
     const service = await serviceWith();
-    const NEXT = `${SECRET.slice(0, 6)}8${SECRET.slice(7)}`;
+    const NEXT = NEXT_SECRET;
     const alone = await seedSupplier();
     const only = await seedUnder(alone, SECRET, { lookupKeyId: "gone-look-3" });
     await service.update({ ...svcActor, supplierId: alone, bankAccountId: only.id, version: only.version,
@@ -399,6 +404,20 @@ integrationTest("TC-068 (BANK-007): re-entering the account on the only unreadab
     await seedUnder(two, NEXT, { lookupKeyId: "gone-look-4" });
     await assert.rejects(() => service.update({ ...svcActor, supplierId: two, bankAccountId: first.id, version: first.version,
       accountHolderName: "Seed", bankName: "Seed Bank", accountNumber: `${NEXT}1`, reason: "TC-068 對照" }),
+    (error) => error.statusCode === 503 && error.publicCode === "BANK_KEY_UNAVAILABLE");
+  });
+
+integrationTest("TC-068 (BANK-007): a deactivated row on a lookup key outside the ring still blocks, as the unique index would",
+  async () => {
+    // REV-057 M-1：UNIQUE(supplier_id, blind_index_key_id, account_blind_index) 冇 status 謂詞，
+    // 所以停用咗嘅帳號再加返都要擋（REV-035 H-3）。嗰行 key 唔喺 ring，就只剩呢個檢查擋得住。
+    const service = await serviceWith();
+    const supplierId = await seedSupplier();
+    const row = await seedUnder(supplierId, SECRET, { lookupKeyId: "gone-look-5" });
+    await service.deactivate({ ...svcActor, supplierId, bankAccountId: row.id, version: row.version, reason: "TC-068 停用" });
+    assert.equal((await rawRow(row.id)).status, "inactive");
+    await assert.rejects(() => service.create({ ...svcActor, supplierId, accountHolderName: "Seed", bankName: "Seed Bank",
+      accountNumber: SECRET, reason: "TC-068 停用後再加" }),
     (error) => error.statusCode === 503 && error.publicCode === "BANK_KEY_UNAVAILABLE");
   });
 
@@ -446,7 +465,7 @@ integrationTest("TC-071 (BANK-010): an update that keeps the account keeps every
   assert.equal(Number(afterRename.version), Number(original.version) + 1, "the version still advances");
 
   // 改帳號：新 IV、新密文、新 blind index，而舊帳號喺呢行任何欄位都搵唔返。
-  const NEXT = `${SECRET.slice(0, 6)}9${SECRET.slice(7)}`;
+  const NEXT = NEXT_SECRET;
   await service.update({ ...svcActor, supplierId, bankAccountId: created.id, version: renamed.version,
     accountHolderName: "U", bankName: "After", accountNumber: NEXT, reason: "TC-071 改帳號" });
   const afterChange = await rawRow(created.id);

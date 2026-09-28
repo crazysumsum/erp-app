@@ -104,6 +104,7 @@ export class SupplierBankKeyCheckService extends BaseService {
     const database = this.services.require("mysqldatabase");
     const { logger } = this.services.require("logging");
     try {
+      const outside = {};
       for (const [kind, column, ring] of [
         ["encryption", "encryption_key_id", Object.keys(bankEncryption.keyRing)],
         ["lookup", "blind_index_key_id", Object.keys(bankLookup.keyRing)]
@@ -112,14 +113,18 @@ export class SupplierBankKeyCheckService extends BaseService {
           `SELECT COUNT(*) AS n FROM supplier_bank_accounts WHERE ${column} NOT IN (${ring.map(() => "?").join(", ")})`,
           ring
         );
-        if (Number(n) > 0) {
+        outside[kind] = Number(n);
+        if (outside[kind] > 0) {
           await logger.error("supplier.bank.keys_outside_ring",
-            "Supplier bank rows use a key that is not in the configured ring", { kind, rows: Number(n) });
+            "Supplier bank rows use a key that is not in the configured ring", { kind, rows: outside[kind] });
         }
       }
+      // REV-057 L-4：健康嘅結果都要留一行，否則「冇 error」同「冇行過」睇落一樣。
+      await logger.info("supplier.bank.key_check_completed", "Supplier bank key check completed", outside);
     } catch (error) {
+      // REV-057 L-3：MySqlDatabaseExecutor 將 driver 錯誤包咗落 cause（同 REV-036 H-1）。
       await logger.error("supplier.bank.key_check_failed",
-        "Supplier bank key check could not run", { reason: error?.code ?? "unknown" });
+        "Supplier bank key check could not run", { reason: error?.cause?.code ?? error?.code ?? "unknown" });
     }
   }
 }
