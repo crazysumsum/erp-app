@@ -4,6 +4,7 @@ import test from "node:test";
 import { ServiceContainer } from "../src/framework/services/ServiceContainer.js";
 import { BusinessMasterProvider } from "../src/modules/businessMaster/BusinessMasterProvider.js";
 import {
+  SupplierBankKeyCheckService,
   SupplierBusinessMasterImpactCheckerService,
   SupplierCoreProviderService
 } from "../src/modules/supplier/SupplierProviderServices.js";
@@ -87,4 +88,44 @@ test("the application container resolves both Supplier provider contracts and a 
   const impact = container.require("supplierBusinessMasterImpactChecker");
   assert.equal(impact.id, "supplier");
   assert.equal((await impact.check({ entityType: "CURRENCY", entityKey: "HKD" })).activeDefaultCount, 1);
+});
+
+test("DEF-027: startup logs bank rows on a key outside the ring as an error, and never refuses to start", async () => {
+  const supplier = {
+    bankEncryption: { activeKeyId: "enc-1", keyRing: { "enc-1": "x" } },
+    bankLookup: { activeKeyId: "look-2", keyRing: { "look-1": "x", "look-2": "x" } }
+  };
+  const start = async ({ config = { supplier }, counts = {}, fails = false } = {}) => {
+    const queries = [];
+    const errors = [];
+    const container = new ServiceContainer({
+      config,
+      definitions: [definition(SupplierBankKeyCheckService)],
+      values: {
+        mysqldatabase: { async query(sql, params) {
+          queries.push([sql, params]);
+          if (fails) throw Object.assign(new Error("no such table"), { code: "ER_NO_SUCH_TABLE" });
+          return [[{ n: counts[sql.includes("blind_index_key_id") ? "lookup" : "encryption"] ?? 0 }]];
+        } },
+        logging: { logger: { async error(...args) { errors.push(args); } } }
+      }
+    });
+    await container.initialize();
+    return { queries, errors };
+  };
+
+  const healthy = await start();
+  assert.deepEqual(healthy.errors, [], "a clean database logs nothing");
+  assert.deepEqual(healthy.queries.map(([, params]) => params), [["enc-1"], ["look-1", "look-2"]], "each column against its own ring");
+
+  const broken = await start({ counts: { lookup: 2 } });
+  assert.deepEqual(broken.errors.map(([event, , context]) => [event, context]),
+    [["supplier.bank.keys_outside_ring", { kind: "lookup", rows: 2 }]]);
+
+  const failing = await start({ fails: true });
+  assert.deepEqual(failing.errors.map(([event, , context]) => [event, context]),
+    [["supplier.bank.key_check_failed", { reason: "ER_NO_SUCH_TABLE" }]], "a failed check is logged, not thrown");
+
+  const undeployed = await start({ config: {} });
+  assert.equal(undeployed.queries.length, 0, "no Bank keys configured, nothing to check (design §1700)");
 });

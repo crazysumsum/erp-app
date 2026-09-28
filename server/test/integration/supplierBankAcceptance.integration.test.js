@@ -365,6 +365,16 @@ integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existi
     assert.ok(!response.text.includes("gone-look"), "the public message must not name the key");
     assert.equal((await state(supplierId)).rows, before.rows, "no second row may be created");
 
+    // 開機檢查：用 app 自己嗰個 service、真設定、真 MySQL 再行一次。佢只 log，唔掟。
+    const systemLog = () => fs.readdirSync(path.join(h.logRoot, "system"), { recursive: true })
+      .map((name) => path.join(h.logRoot, "system", name)).filter((file) => fs.statSync(file).isFile())
+      .map((file) => fs.readFileSync(file, "utf8")).join("\n");
+    const seen = () => systemLog().split("supplier.bank.keys_outside_ring").length - 1;
+    const logged = seen();
+    await h.application.services.require("supplierBankKeyCheck").initialize();
+    assert.ok(seen() > logged, "startup check reports rows on a lookup key outside the ring");
+    assert.ok(!systemLog().includes("gone-look"), "the log does not name the key");
+
     // 對照：另一個 Supplier 唔受影響 —— fail closed 係逐個 Supplier，唔係成個模組。
     const other = await seedSupplier();
     const allowed = await post(writer, `/api/v1/suppliers/${other}/bank-accounts/create`, {
