@@ -97,7 +97,7 @@ export function toIdentifierResponse(row) {
 
 export function toMaskedBankResponse(row) {
   const accountLength = Number(row.account_length);
-  const maskedAccountNumber = accountLength > 4 ? `•••• ${row.last_four}` : "•".repeat(accountLength);
+  const maskedAccountNumber = accountLength > 4 ? `**** ${row.last_four}` : "*".repeat(accountLength);
   return {
     id: Number(row.id),
     supplierId: row.supplier_id === undefined ? undefined : Number(row.supplier_id),

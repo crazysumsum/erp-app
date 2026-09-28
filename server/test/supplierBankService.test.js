@@ -139,7 +139,7 @@ test("the masked list never selects an encrypted column", async () => {
   const { service, events } = harness();
   const result = await service.list({ ...actor, supplierId: 7 });
   assert.equal(result.items.length, 1);
-  assert.equal(result.items[0].maskedAccountNumber, "•••• 9001");
+  assert.equal(result.items[0].maskedAccountNumber, "**** 9001");
   assert.equal(result.items[0].accountNumber, undefined);
 
   const sql = allSql(events);

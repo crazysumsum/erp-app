@@ -22,7 +22,7 @@ const SUPPLIER = {
 };
 const MASKED = [{
   id: 41, supplierId: 7, bankName: "Test Bank", accountHolderName: "Evergreen Trading",
-  maskedAccountNumber: "•••• 1234", status: "active", isDefault: true, version: 1,
+  maskedAccountNumber: "**** 1234", status: "active", isDefault: true, version: 1,
   bankCountryCode: "HK", accountCurrencyCode: "HKD"
 }];
 
@@ -82,7 +82,7 @@ function collectConsole(page) {
 async function openBankTab(page) {
   await page.goto("/suppliers/7");
   await page.getByRole("tab", { name: "銀行資料" }).click();
-  await expect(page.getByText("•••• 1234")).toBeVisible();
+  await expect(page.getByText("**** 1234")).toBeVisible();
 }
 
 async function reveal(page) {

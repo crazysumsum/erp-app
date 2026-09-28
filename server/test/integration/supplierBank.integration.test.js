@@ -555,7 +555,7 @@ integrationTest("the Bank routes answer over real HTTP, and the masked list leak
   assert.equal(listed.status, 200, JSON.stringify(listed.body));
   assert.equal(listed.body.data.items.length, 1);
   const [item] = listed.body.data.items;
-  assert.match(item.maskedAccountNumber, /^••••\s/u);
+  assert.match(item.maskedAccountNumber, /^\*{4}\s/u);
   assert.equal(item.isDefault, true);
 
   // 成個 response body —— 唔係淨係嗰個 item —— 唔可以有帳號或者任何 crypto metadata。
