@@ -399,7 +399,15 @@ export class InventoryReservationService {
       requestId: context.correlationId, correlationId: context.correlationId, createdAt: timestamp
     });
     if (claim.replay) return allocationReleaseFromSummary(claim.replay.resultSummary);
+    return this.#releaseAllocationsWithClaim(transaction, {
+      context, reservationId, expectedVersion, lines, quantity, claim, actorLabel, timestamp
+    });
+  }
 
+  async #releaseAllocationsWithClaim(transaction, {
+    context, reservationId, expectedVersion, lines, quantity, claim, actorLabel, timestamp,
+    auditAction = "allocation.release", complete = true
+  }) {
     const [[scope]] = await transaction.query(
       "SELECT warehouse_id, sku_id FROM inventory_reservations WHERE id = ?", [reservationId]
     );
@@ -489,7 +497,7 @@ export class InventoryReservationService {
       results.push(result);
       await this.audit.recordSucceeded(transaction, {
         actorUserId: context.actor.userId, actorLabel,
-        action: "allocation.release", targetType: "allocation", targetId: line.allocationId,
+        action: auditAction, targetType: "allocation", targetId: line.allocationId,
         targetLabel: String(line.allocationId),
         beforeSummary: { allocationId: line.allocationId, outstandingQuantity: outstanding,
           balanceAllocated: balanceAllocated - releasedFromBalance },
@@ -518,11 +526,13 @@ export class InventoryReservationService {
     if (Number(reservationUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
     const result = { reservationId, operationId: claim.operationId,
       version: expectedVersion + 1, quantity, allocations: results };
-    await this.operations.complete(transaction, {
-      operationId: claim.operationId, resultType: "ALLOCATION", resultId: String(reservationId),
-      resultSummary: { reservationId, operationId: claim.operationId, version: result.version,
-        quantity, allocationSnapshot: JSON.stringify(results) }, completedAt: timestamp
-    });
+    if (complete) {
+      await this.operations.complete(transaction, {
+        operationId: claim.operationId, resultType: "ALLOCATION", resultId: String(reservationId),
+        resultSummary: { reservationId, operationId: claim.operationId, version: result.version,
+          quantity, allocationSnapshot: JSON.stringify(results) }, completedAt: timestamp
+      });
+    }
     return result;
   }
 
@@ -551,7 +561,15 @@ export class InventoryReservationService {
       requestId: context.correlationId, correlationId: context.correlationId, createdAt: timestamp
     });
     if (claim.replay) return allocationResultFromSummary(claim.replay.resultSummary);
+    return this.#allocateWithClaim(transaction, {
+      context, reservationId, expectedVersion, lines, quantity, actor, claim, actorLabel, timestamp
+    });
+  }
 
+  async #allocateWithClaim(transaction, {
+    context, reservationId, expectedVersion, lines, quantity, actor, claim, actorLabel, timestamp,
+    auditAction = "allocation.create"
+  }) {
     const [[scope]] = await transaction.query(
       "SELECT warehouse_id, sku_id, minimum_remaining_days FROM inventory_reservations WHERE id = ?", [reservationId]
     );
@@ -674,7 +692,7 @@ export class InventoryReservationService {
       allocations.push(allocation);
       await this.audit.recordSucceeded(transaction, {
         actorUserId: context.actor.userId, actorLabel,
-        action: "allocation.create", targetType: "allocation", targetId: allocation.id,
+        action: auditAction, targetType: "allocation", targetId: allocation.id,
         targetLabel: String(allocation.id),
         beforeSummary: { balanceId: candidate.id, allocatedQuantity: currentAllocated },
         afterSummary: { allocationId: allocation.id, balanceId: candidate.id, quantity: lineQuantity,
