@@ -25,8 +25,11 @@ function setup({ auditFails = false, sharedBalance = false } = {}) {
         consumed_quantity: 0, released_quantity: 0, outstanding_quantity: 6,
         minimum_remaining_days: 0, status: "ACTIVE", version: 2 },
       bin: { id: 31, warehouse_id: 2, status: "ACTIVE" },
+      destinationBin: { id: 32, warehouse_id: 2, status: "ACTIVE" },
       balance: { id: 41, warehouse_id: 2, sku_id: 12, bin_id: 31, lot_id: 51,
         stock_status: "AVAILABLE", on_hand_quantity: 5, allocated_quantity: 4, version: 2 },
+      destinationBalance: { id: 42, warehouse_id: 2, sku_id: 12, bin_id: 32, lot_id: 52,
+        stock_status: "AVAILABLE", on_hand_quantity: 5, allocated_quantity: 0, version: 1 },
       allocations: [71, ...(sharedBalance ? [72] : [])].map((id) => ({
         id, reservation_id: 17, stock_balance_id: 41,
         allocated_quantity: sharedBalance ? 2 : 4, consumed_quantity: 0, released_quantity: 0,
@@ -35,7 +38,16 @@ function setup({ auditFails = false, sharedBalance = false } = {}) {
       audits: [], completed: null
     },
     async query({ sql, params, state }) {
+      if (sql.includes("FROM inventory_stock_balances b")) return [[
+        { ...state.destinationBalance, bin_code: "A", normalized_lot_number: "lot-a",
+          expiry_date: "2026-10-01", first_receipt_date: "2026-09-01", fifo_anchor_date: null },
+        { ...state.balance, bin_code: "B", normalized_lot_number: "lot-b",
+          expiry_date: "2026-11-01", first_receipt_date: "2026-09-02", fifo_anchor_date: null }
+      ]];
       if (sql.includes("FROM inventory_reservations")) return [[state.reservation]];
+      if (sql.includes("SUM(outstanding_quantity)")) return [[{
+        outstanding: state.allocations.reduce((sum, allocation) => sum + allocation.outstanding_quantity, 0)
+      }]];
       if (sql.includes("FROM inventory_allocations")) return [state.allocations.filter(({ id }) =>
         params.includes(id)).map((allocation) => ({
         ...allocation,
@@ -54,18 +66,27 @@ function setup({ auditFails = false, sharedBalance = false } = {}) {
         allocation.version += 1;
       }
       if (sql.includes("UPDATE inventory_stock_balances")) {
-        if (state.balance.version !== params.at(-1)) return [{ affectedRows: 0 }];
-        state.balance.allocated_quantity = params[0];
-        state.balance.version += 1;
+        const balance = [state.balance, state.destinationBalance].find(({ id }) => id === params.at(-2));
+        if (balance.version !== params.at(-1)) return [{ affectedRows: 0 }];
+        balance.allocated_quantity = params[0];
+        balance.version += 1;
       }
       if (sql.includes("UPDATE inventory_reservations")) state.reservation.version += 1;
+      if (sql.includes("INSERT INTO inventory_allocations")) {
+        state.allocations.push({ id: 73, reservation_id: 17, stock_balance_id: params[2],
+          allocated_quantity: params[3], consumed_quantity: 0, released_quantity: 0,
+          outstanding_quantity: params[4], status: "ACTIVE", version: 1 });
+        return [{ affectedRows: 1, insertId: 73 }];
+      }
       return [{ affectedRows: 1 }];
     }
   });
   const service = new InventoryReservationService({
     database, time: { nowMs: () => NOW, fileDate: () => "2026-09-28" },
     authorize: async () => ({ username: "sam", permissions: ["inventory.operation"] }),
-    itemLookup: {},
+    itemLookup: { async getInventoryProfileInTransaction() {
+      return { usable: true, inventoryTracked: true, trackingPolicy: "batch_expiry" };
+    } },
     operations: {
       async claim(transaction, input) {
         if (transaction.state.completed && transaction.state.eventId === input.source.eventId) {
@@ -78,7 +99,8 @@ function setup({ auditFails = false, sharedBalance = false } = {}) {
     },
     locks: { async lockForCommand(transaction) { return {
       warehouses: [transaction.state.warehouse], stockControls: [transaction.state.control],
-      bins: [transaction.state.bin], binLocks: [], balances: [structuredClone(transaction.state.balance)],
+      bins: [transaction.state.bin, transaction.state.destinationBin], binLocks: [],
+      balances: [transaction.state.balance, transaction.state.destinationBalance].map((row) => structuredClone(row)),
       reservations: [transaction.state.reservation]
     }; } },
     audit: { async recordSucceeded(transaction, input) {
@@ -122,5 +144,33 @@ test("TASK-022 Allocation release rolls back all writes if required Audit fails"
     reservationId: 17, expectedVersion: 2,
     releases: [{ allocationId: 71, expectedVersion: 1, quantity: 4 }]
   })), /injected audit failure/u);
+  assert.deepEqual(database.state, before);
+});
+
+test("TASK-022 Reallocate atomically moves a hold to the recommended destination", async () => {
+  const { service, database } = setup();
+  const request = command("reallocate", { reservationId: 17, expectedVersion: 2,
+    releases: [{ allocationId: 71, expectedVersion: 1, quantity: 2 }],
+    allocations: [{ balanceId: 42, expectedVersion: 1, quantity: 2 }] });
+  const result = await service.reallocateAllocation(request);
+  assert.deepEqual(await service.reallocateAllocation(request), result);
+  assert.deepEqual([result.version, result.quantity, result.allocations[0].balanceId], [3, 2, 42]);
+  assert.deepEqual([database.state.balance.allocated_quantity,
+    database.state.destinationBalance.allocated_quantity,
+    database.state.reservation.outstanding_quantity,
+    database.state.control.reserved_quantity], [2, 2, 6, 6]);
+  assert.equal(database.state.allocations[0].outstanding_quantity, 2);
+  assert.equal(database.state.allocations[1].outstanding_quantity, 2);
+  assert.equal(database.state.audits.length, 2);
+});
+
+test("TASK-022 Reallocate rolls back the old Allocation if the destination is stale", async () => {
+  const { service, database } = setup();
+  const before = database.state;
+  await assert.rejects(() => service.reallocateAllocation(command("reallocate", {
+    reservationId: 17, expectedVersion: 2,
+    releases: [{ allocationId: 71, expectedVersion: 1, quantity: 2 }],
+    allocations: [{ balanceId: 42, expectedVersion: 9, quantity: 2 }]
+  })), (error) => error.code === "VERSION_CONFLICT");
   assert.deepEqual(database.state, before);
 });

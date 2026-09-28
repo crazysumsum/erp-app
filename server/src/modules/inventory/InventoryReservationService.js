@@ -15,7 +15,8 @@ import {
 const AUTHORIZATIONS = Object.freeze(Object.fromEntries(
   [["create", "reservation.create"], ["release", "reservation.release"],
     ["cancel", "reservation.cancel"], ["allocate", "allocation.create"],
-    ["releaseAllocation", "allocation.release"]].map(([action, purpose]) => [action, Object.freeze({
+    ["releaseAllocation", "allocation.release"],
+    ["reallocateAllocation", "allocation.reallocate"]].map(([action, purpose]) => [action, Object.freeze({
     purpose,
     requiredCallerPermission: "inventory.operation"
   })])
@@ -26,6 +27,7 @@ const CANCEL_FIELDS = new Set(["reservationId", "expectedVersion"]);
 const ALLOCATE_FIELDS = new Set(["reservationId", "expectedVersion", "allocations", "overrideReason"]);
 const ALLOCATION_FIELDS = new Set(["balanceId", "expectedVersion", "quantity"]);
 const ALLOCATION_RELEASE_FIELDS = new Set(["reservationId", "expectedVersion", "releases"]);
+const REALLOCATE_FIELDS = new Set(["reservationId", "expectedVersion", "releases", "allocations", "overrideReason"]);
 const ALLOCATION_RELEASE_LINE_FIELDS = new Set(["allocationId", "expectedVersion", "quantity"]);
 const CANDIDATE_FIELDS = new Set(["reservationId", "requestedQuantity", "page"]);
 
@@ -406,7 +408,7 @@ export class InventoryReservationService {
 
   async #releaseAllocationsWithClaim(transaction, {
     context, reservationId, expectedVersion, lines, quantity, claim, actorLabel, timestamp,
-    auditAction = "allocation.release", complete = true
+    auditAction = "allocation.release", complete = true, bumpReservationVersion = true
   }) {
     const [[scope]] = await transaction.query(
       "SELECT warehouse_id, sku_id FROM inventory_reservations WHERE id = ?", [reservationId]
@@ -518,14 +520,16 @@ export class InventoryReservationService {
       );
       if (Number(balanceUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
     }
-    const [reservationUpdate] = await transaction.execute(
-      `UPDATE inventory_reservations SET version = version + 1, updated_at = ?, updated_by = ?
-        WHERE id = ? AND version = ?`,
-      [timestamp, context.actor.userId, reservationId, expectedVersion]
-    );
-    if (Number(reservationUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+    if (bumpReservationVersion) {
+      const [reservationUpdate] = await transaction.execute(
+        `UPDATE inventory_reservations SET version = version + 1, updated_at = ?, updated_by = ?
+          WHERE id = ? AND version = ?`,
+        [timestamp, context.actor.userId, reservationId, expectedVersion]
+      );
+      if (Number(reservationUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+    }
     const result = { reservationId, operationId: claim.operationId,
-      version: expectedVersion + 1, quantity, allocations: results };
+      version: expectedVersion + Number(bumpReservationVersion), quantity, allocations: results };
     if (complete) {
       await this.operations.complete(transaction, {
         operationId: claim.operationId, resultType: "ALLOCATION", resultId: String(reservationId),
@@ -738,6 +742,49 @@ export class InventoryReservationService {
         ])) }, completedAt: timestamp
     });
     return result;
+  }
+
+  reallocateAllocation(command) {
+    return this.database.withTransaction((transaction) => this.reallocateAllocationInTransaction(transaction, command));
+  }
+
+  async reallocateAllocationInTransaction(transaction, command) {
+    const context = validateInventoryCommandContext(transaction, command, AUTHORIZATIONS.reallocateAllocation);
+    if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
+    exactFields(context.payload, REALLOCATE_FIELDS);
+    const reservationId = positiveId(context.payload.reservationId, "reservationId");
+    const expectedVersion = positiveId(context.payload.expectedVersion, "expectedVersion");
+    const releases = allocationReleaseLines(context.payload.releases);
+    const allocations = allocationLines(context.payload.allocations);
+    const releasedQuantity = releases.reduce((total, line) => total + line.quantity, 0);
+    const quantity = allocations.reduce((total, line) => total + line.quantity, 0);
+    if (!Number.isSafeInteger(quantity) || quantity !== releasedQuantity) {
+      throw inventoryError("INVENTORY_QUANTITY_INVALID", { field: "allocations" });
+    }
+    const actor = await this.authorize(transaction, {
+      actorId: context.actor.userId,
+      claimedRoles: context.actor.claimedRoles,
+      claimedPermissions: context.actor.claimedPermissions
+    });
+    if (!actor?.permissions?.includes(AUTHORIZATIONS.reallocateAllocation.requiredCallerPermission)) {
+      throw inventoryError("PERMISSION_STALE");
+    }
+    const timestamp = this.time.nowMs();
+    const actorLabel = actor.username || `user:${context.actor.userId}`;
+    const claim = await this.operations.claim(transaction, {
+      commandType: "ALLOCATION_REALLOCATE", source: context.source, payload: context.payload,
+      actorUserId: context.actor.userId, actorLabel,
+      requestId: context.correlationId, correlationId: context.correlationId, createdAt: timestamp
+    });
+    if (claim.replay) return allocationResultFromSummary(claim.replay.resultSummary);
+    const released = await this.#releaseAllocationsWithClaim(transaction, {
+      context, reservationId, expectedVersion, lines: releases, quantity, claim, actorLabel, timestamp,
+      auditAction: "allocation.reallocate", complete: false, bumpReservationVersion: false
+    });
+    return this.#allocateWithClaim(transaction, {
+      context, reservationId, expectedVersion: released.version, lines: allocations,
+      quantity, actor, claim, actorLabel, timestamp, auditAction: "allocation.reallocate"
+    });
   }
 
   async #changeInTransaction(transaction, command, action) {
