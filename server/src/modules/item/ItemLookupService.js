@@ -19,7 +19,7 @@ import {
 import { ITEM_LOOKUP_PURPOSES } from "./itemConstants.js";
 
 const SKU_JOIN_ITEM_SELECT = `
-  SELECT s.id, s.sku_code, s.status AS sku_status, s.purchasable, s.sellable, s.inventory_tracked,
+  SELECT s.id, s.sku_code, s.sku_name, s.status AS sku_status, s.purchasable, s.sellable, s.inventory_tracked,
          s.tracking_policy, s.shelf_life_days, s.min_receipt_life_days, s.min_sale_life_days,
          s.effective_from, s.effective_to,
          i.id AS item_id, i.name AS item_name, i.product_type, i.status AS item_status
@@ -137,6 +137,7 @@ export class ItemLookupService {
     return {
       skuId: projection.skuId,
       skuCode: projection.skuCode,
+      skuName: projection.skuName,
       skuStatus: projection.skuStatus,
       itemStatus: projection.itemStatus,
       inventoryTracked: projection.inventoryTracked,
@@ -223,6 +224,7 @@ export class ItemLookupService {
     return {
       skuId: Number(row.id),
       skuCode: row.sku_code,
+      skuName: row.sku_name,
       skuStatus: row.sku_status,
       itemId: Number(row.item_id),
       itemName: row.item_name,

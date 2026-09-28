@@ -44,6 +44,7 @@ function skuRow(overrides = {}) {
   return {
     id: 10,
     sku_code: "SKU-1",
+    sku_name: "SKU One",
     sku_status: "active",
     purchasable: 1,
     sellable: 1,
@@ -399,8 +400,9 @@ test("Inventory profile uses only the caller transaction and returns a narrow pr
   assert.deepEqual(Object.keys(result).sort(), [
     "baseUom", "inventoryTracked", "itemStatus", "minimumReceiptLifeDays",
     "minimumSaleLifeDays", "reasons", "shelfLifeDays", "skuCode", "skuId",
-    "skuStatus", "trackingPolicy", "usable"
+    "skuName", "skuStatus", "trackingPolicy", "usable"
   ]);
+  assert.equal(result.skuName, "SKU One");
   assert.deepEqual(result.baseUom, { uomId: 5, uomCode: "EA" });
   assert.equal(result.trackingPolicy, "serial", "Inventory must see serial and fail closed");
 });
