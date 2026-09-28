@@ -1,4 +1,7 @@
-import { INVENTORY_MASTER_STATUSES } from "../../modules/inventory/inventoryConstants.js";
+import {
+  INVENTORY_MASTER_STATUSES,
+  INVENTORY_STOCK_STATUSES
+} from "../../modules/inventory/inventoryConstants.js";
 
 export const EMPTY = Object.freeze({ type: "object", properties: {}, additionalProperties: false });
 export const VIEW_POLICY = Object.freeze([Object.freeze({
@@ -8,6 +11,10 @@ export const VIEW_POLICY = Object.freeze([Object.freeze({
 export const MGMT_POLICY = Object.freeze([Object.freeze({
   name: "hasPermission",
   options: Object.freeze({ permissions: Object.freeze(["inventory.view", "inventory.mgmt"]) })
+})]);
+export const OPERATION_POLICY = Object.freeze([Object.freeze({
+  name: "hasPermission",
+  options: Object.freeze({ permissions: Object.freeze(["inventory.view", "inventory.operation"]) })
 })]);
 
 const ID = Object.freeze({ type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
@@ -154,4 +161,98 @@ export const WAREHOUSE_DELETE_RESPONSE = Object.freeze({
 export const BIN_DELETE_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["id", "warehouseId", "deleted"],
   properties: { id: ID, warehouseId: ID, deleted: { const: true } }
+});
+
+const SOURCE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["module", "documentType", "documentId", "eventId"],
+  properties: {
+    module: { type: "string", minLength: 1, maxLength: 40, pattern: "^[\\x20-\\x7e]+$" },
+    documentType: { type: "string", minLength: 1, maxLength: 50, pattern: "^[\\x20-\\x7e]+$" },
+    documentId: { type: "string", minLength: 1, maxLength: 100 },
+    lineId: { type: "string", maxLength: 100, default: "" },
+    eventId: { type: "string", minLength: 1, maxLength: 100 }
+  }
+});
+const DATE_ONLY = Object.freeze({ type: ["string", "null"], pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" });
+const MINIMUM_LIFE_OVERRIDE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [
+    "permission", "reason", "minimumLifeDaysApplied", "actualRemainingLifeDays", "actorId",
+    "receiptId", "requestId"
+  ],
+  properties: {
+    permission: { const: "receiving.expiry.override" },
+    reason: { type: "string", trim: true, minLength: 5, maxLength: 500 },
+    minimumLifeDaysApplied: { type: "integer", minimum: 0, maximum: 36500 },
+    actualRemainingLifeDays: { type: "integer", minimum: 0, maximum: 36500 },
+    actorId: ID,
+    receiptId: { type: "string", minLength: 1, maxLength: 100 },
+    requestId: { type: "string", minLength: 1, maxLength: 64, pattern: "^[\\x20-\\x7e]+$" }
+  }
+});
+
+export const RECEIPT_CREATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["source", "skuId", "quantity", "uomId", "warehouseId", "binId", "stockStatus"],
+  properties: {
+    source: SOURCE,
+    skuId: ID,
+    quantity: ID,
+    uomId: ID,
+    warehouseId: ID,
+    binId: ID,
+    lotNumber: { type: ["string", "null"], trim: true, minLength: 1, maxLength: 100 },
+    expiryDate: DATE_ONLY,
+    manufactureDate: DATE_ONLY,
+    stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+    minimumLifeOverride: MINIMUM_LIFE_OVERRIDE
+  }
+});
+
+const UOM_RESULT = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id", "code"],
+  properties: { id: ID, code: { type: "string" } }
+});
+const BALANCE_RESULT = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "onHandQuantity", "allocatedQuantity", "version"],
+  properties: {
+    id: ID,
+    onHandQuantity: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
+    allocatedQuantity: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
+    version: VERSION
+  }
+});
+
+export const RECEIPT_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [
+    "status", "operationId", "movementGroupId", "movementId", "skuId", "skuCode", "skuName",
+    "warehouseId", "warehouseCode", "binId", "binCode", "lotId", "lotNumber", "expiryDate",
+    "stockStatus", "inputQuantity", "inputUom", "baseQuantity", "baseUom", "balance", "postedAt"
+  ],
+  properties: {
+    status: { const: "POSTED" },
+    operationId: ID,
+    movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
+    movementId: ID,
+    skuId: ID,
+    skuCode: { type: "string" },
+    skuName: { type: "string" },
+    warehouseId: ID,
+    warehouseCode: { type: "string" },
+    binId: ID,
+    binCode: { type: "string" },
+    lotId: { type: ["integer", "null"], minimum: 1 },
+    lotNumber: { type: ["string", "null"] },
+    expiryDate: DATE_ONLY,
+    stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+    inputQuantity: ID,
+    inputUom: UOM_RESULT,
+    baseQuantity: ID,
+    baseUom: UOM_RESULT,
+    balance: BALANCE_RESULT,
+    postedAt: TIMESTAMP
+  }
 });
