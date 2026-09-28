@@ -86,8 +86,8 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 > 1. **首選：把該 key 補回 ring 並重新啟動**，然後照 §4 完成 lookup 輪替。
 > 2. 重新輸入帳號**只在**以下條件全部成立時有效：該列是 active，而且是該 Supplier **唯一**一列缺
 >    lookup key 的列。停用列會回 `409 BANK_ACCOUNT_INACTIVE`；有兩列或以上時會互相擋住，每一列都回 `503`。
-> 3. **Key material 已遺失**時，目前**沒有**已驗證並文件化的修復程序：§4 的 reindex 工具會拒絕不在 ring
->    中的 `--from`。這是 REV-057 M-2 的待決事項。
+> 3. **Lookup key material 已遺失**時：照 §4.1 以 `--from-lost` 重建。Encryption key 遺失則無法修復
+>    （密文解不回），只能從備份補回 key（§7）。
 >
 > **§5 的移除前檢查仍然不可省略** —— 上述行為只是讓錯誤可被看見，不會把 key 找回來。
 
@@ -168,6 +168,29 @@ Ring 變數改為 `SUPPLIER_BANK_LOOKUP_KEYS`／`SUPPLIER_BANK_LOOKUP_ACTIVE_KEY
 輪替期間（兩條 key 並存時）查重會同時計算所有 lookup key 的 candidate index，不會出現空窗
 （設計 §3.3；由 `supplierBankCrypto.test.js` 的 ring 查重測試及
 `supplierBankRotation.integration.test.js` 的「輪替一半時仍擋得住重覆」測試驗證）。
+
+### 4.1 舊 lookup key 已遺失（HD-038）
+
+情況：舊 lookup key 在重建完成前已從 secret store 移除，而且找不回來。受影響的 Supplier 新增／修改帳號
+會回 `503`（§2）。重建 blind index 只需要 **encryption ring** 解密，不需要舊 lookup key，所以可以救：
+
+```bash
+npm run supplier:bank:reindex-lookup --workspace server -- --from=<遺失的 key id> --to=<active> --from-lost --json
+```
+
+- `--from-lost` 取代「`--from` 必須在 ring 中」的防打錯字檢查，改為要求**仍有列使用這個 key id**；
+  沒有就拒絕（exit 2）。所以打錯字仍會被擋；已經跑完的再跑一次也會被拒，看到
+  `no supplier_bank_accounts row uses lookup key id` 即表示已完成。
+- key id 其實仍在 ring 中時拒絕（不需要這個旗）；用在 encryption 輪替時拒絕。
+- **不需要**放假 key 進 ring，因此過程中查重沒有盲區：未重建的列仍令該 Supplier 回 `503`，重建完的列
+  立即參與查重。
+- 若某列回報 `DUPLICATE_KEY`，表示 key 遺失期間同一 Supplier 已經加入了同一個帳號（DEF-027 修正前的
+  情況），要人手調查，不要重試了事。
+- 完成後 `remaining` 為 0，並照 §5 處理 Customer 那一邊（本工具只處理 `supplier_bank_accounts`）。
+
+已驗證（真 MySQL）：同一 Supplier 兩列在遺失的 key 下、其中一列已停用 —— 重建前新增回 `503`；
+`--from-lost` 重建 2 列、0 失敗；之後兩個舊帳號（包括停用那列）都被拒為 `BANK_ACCOUNT_DUPLICATE`，
+新帳號可以新增。
 
 ---
 

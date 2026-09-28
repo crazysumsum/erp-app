@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 240,
+  "revision": 241,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -3765,8 +3765,8 @@
         "bankKeyRotation.js",
         "HD-036"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-28: 'B'. Implemented on claude/supplier-def-026-027: runRotation fromLost in server/src/modules/supplier/bankKeyRotation.js, and the --from-lost flag in server/scripts/supplierBankRotationCli.js - that file is OUTSIDE_MODULE under HD-034, and this answer is the authority for touching it, as the option text named the shim. Verified against real MySQL on REV-057's lockout shape; five mutants killed. Needs REV-058."
     }
   ],
   "external_actions": [
@@ -4804,5 +4804,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #158 (DEF-026/027/028) had REV-057: CHANGES_REQUESTED, 0 critical, 0 high, 2 medium. M-1 and L-1..L-5 are fixed on the branch and their mutants are killed; the runbook states when re-entry works and that no lost-key repair is documented. HD-038 (M-2, the lost-key recovery) awaits the Product Owner. Then: a REV-058 of the remediation, green CI, and the Product Owner's word before merge. After merge: close DEF-026/027/028 and return active_mode to TEST_AND_VERIFY. Still open: TC-133 / OPS-006, HD-036 (after this merge and HD-038), DEF-023, DEF-024."
+  "next_safe_action": "PR #158: REV-057 findings M-1, M-2 (HD-038 option b) and L-1..L-5 are remediated on the branch. Next: REV-058 of the remediation, green CI on the new head, then the Product Owner's explicit word before merge. After merge: close DEF-026/027/028 and return active_mode to TEST_AND_VERIFY. Still open: TC-133 / OPS-006, HD-036 (after this merge), DEF-023, DEF-024."
 }

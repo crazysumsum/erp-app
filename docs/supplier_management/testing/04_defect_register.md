@@ -30,8 +30,8 @@ check never matched it and the same Supplier could add the same account again; s
 Fixed per HD-037 option (b): create and account-changing update for that Supplier return `503
 BANK_KEY_UNAVAILABLE` with an error log (`supplier.bank.duplicate_check_unavailable`); other Suppliers are
 unaffected; deactivated rows count, as they do in the unique index. Re-entering the account repairs a row
-only when it is active and the Supplier's only such row; when the key material is lost there is no
-documented repair yet (REV-057 M-2, pending a decision). A new eager service,
+only when it is active and the Supplier's only such row; when the key material is lost, the lookup
+reindex accepts `--from-lost` (HD-038, REV-057 M-2). A new eager service,
 `SupplierBankKeyCheckService`, logs `supplier.bank.keys_outside_ring` (kind and row count, no key id) at
 startup and never refuses to start. The equivalent Customer-module gap is outside this module and was
 not taken up, on the Product Owner's instruction.

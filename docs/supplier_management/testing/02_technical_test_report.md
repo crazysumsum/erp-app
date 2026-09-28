@@ -246,8 +246,10 @@ the mutant is now killed.
 REV-057 (independent, CHANGES_REQUESTED) found three more that survived: a status filter on the 503 check
 (M-1), the startup check's skip guard removed (L-2), and an invalid lookup column in the startup check
 (L-1). Tests were added for each, plus the driver code read through the database wrapper (L-3) and a
-completion log so silence is no longer the pass signal (L-4). All five mutants are now killed. The
-lost-key recovery REV-057 M-2 raised is HD-038, pending.
+completion log so silence is no longer the pass signal (L-4). All five mutants are now killed. For the
+lost-key recovery REV-057 M-2 raised, the Product Owner chose HD-038 option (b): the lookup reindex takes
+`--from-lost`. Verified against real MySQL on the reviewer's lockout shape (two rows on the lost key, one
+inactive); its five mutants are killed.
 
 ---
 
