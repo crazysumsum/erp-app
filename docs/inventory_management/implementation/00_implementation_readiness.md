@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are complete on this branch. The approved `0055`～`0064` allocation is active, and TASK-012 has passed its local developer checks. TASK-013 has not started.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 is authorized under APR-030 and is in progress in an isolated worktree from `main` commit `a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac`.
 
 ## Baseline
 
@@ -140,7 +140,7 @@
 - Full server suite passed 1,902 with 324 gated skips and 0 failures using the repository's public CI-only Customer and Supplier test keys. Full client suite, repository ESLint and client production build passed; the build retained only the existing bundle-size warning.
 - Mocked local Inventory Playwright passed 4/4 after the merge, covering the desktop and 375 px flows, permissions, 409 retention and error/empty states. `git diff --check`, module-boundary validation and traceability validation passed.
 - Multi-axis post-merge self-review found no open critical or high correctness, security, architecture, performance or maintainability issue. These are local developer checks; CI was explicitly excluded by APR-029.
-- The reconciled branch was pushed and opened as [PR #148](https://github.com/crazysumsum/erp-app/pull/148); merge and cleanup remain the next authorized actions.
+- [PR #148](https://github.com/crazysumsum/erp-app/pull/148) and corrective [PR #150](https://github.com/crazysumsum/erp-app/pull/150) are present in current `main`; the former Inventory branch and worktree have been removed.
 
 ## Approved physical allocation
 
@@ -173,4 +173,4 @@
 
 ## Next safe action
 
-Under APR-029, publish and merge the reconciled TASK-001～TASK-012 branch without CI, then remove its merged branch and worktree. Await separate explicit scope approval before starting TASK-013.
+Under APR-030, implement only TASK-013 pure quantity, expiry, Lot/tracking and projection rules with focused unit tests. Migrations, database execution, CI, push, PR and merge remain out of scope.

@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 93,
+  "revision": 94,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-002",
   "current_task": "TASK-013",
   "baseline": {
     "design": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
     "plan": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
-    "code_commit": "ade425f1800578161cf11042186a524223434f1f",
-    "source_fingerprint": "3bb2853357724f340f048004bc798601cd2c9aba67609252cbf4092b13579bfe",
-    "worktree": "/private/tmp/erp-inventory-p0-foundation",
-    "default_commit": "497ef6ce65a8b9fa3c911efc824176dcd1f0e303",
+    "code_commit": "a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac",
+    "source_fingerprint": "e7c81ea81ff6b05016d4a3cba766821b3be4c921c4f16c6520b00201493d029e",
+    "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
+    "default_commit": "a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac",
     "mode_entry_commit": "7279749a8fec0832d6f47fa316efb33c20726af8"
   },
   "runtime": {
-    "instance_id": "INVENTORY-P0-NO-ACTIVE-LEASE",
+    "instance_id": "INVENTORY-TASK013-NO-ACTIVE-RUNTIME",
     "owner": "Primary Harness agent",
     "resources": {
-      "workspace": "/private/tmp/erp-inventory-p0-foundation"
+      "workspace": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app"
     },
     "lease_ref": null
   },
@@ -38,7 +38,7 @@
     "TASK-010": "DONE",
     "TASK-011": "DONE",
     "TASK-012": "DONE",
-    "TASK-013": "PENDING",
+    "TASK-013": "IN_PROGRESS",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
@@ -677,6 +677,31 @@
         "server/src/services/idempotency/IdempotencyService.js",
         "server/test/configuration.test.js",
         "server/test/idempotencyService.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-030",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 同意 on 2026-09-28 approving Harness reconciliation and local TASK-013 implementation",
+      "recorded_at": "2026-09-28T00:00:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "code_commit": "a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac",
+      "scope": [
+        "TASK-013",
+        "server/src/modules/inventory/inventoryValidation.js",
+        "server/src/modules/inventory/inventoryProjections.js",
+        "server/test/inventoryQuantity.test.js",
+        "server/test/inventoryExpiry.test.js",
+        "server/test/inventoryValidation.test.js",
+        "server/test/inventoryProjections.test.js",
+        "docs/inventory_management/00_harness_state.json",
+        "docs/inventory_management/implementation/00_implementation_readiness.md",
+        "exclude migrations, database execution, CI, push, PR and merge"
       ],
       "expires_at": null
     }
@@ -1700,6 +1725,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user instruction on 2026-09-25 authorizing branch update, commit, push, PR creation and merge without CI"
+    },
+    {
+      "id": "HD-031",
+      "impact": "MAJOR",
+      "question": "After reconciling merged PR #148, corrective PR #150 and cleanup on current main, may Inventory start TASK-013 in a fresh isolated worktree, limited to quantity, expiry, lot/tracking and projection pure rules with focused unit tests, without migrations, database execution or remote actions?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-013",
+        "TC-003"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 同意 on 2026-09-28 approving Harness reconciliation and local TASK-013 implementation within the stated scope"
     }
   ],
   "external_actions": [
@@ -2102,9 +2139,41 @@
       "idempotency_key": "inventory-task001-task012-pr-20260925",
       "status": "CONFIRMED",
       "source_ref": "https://github.com/crazysumsum/erp-app/pull/148"
+    },
+    {
+      "id": "EXT-048",
+      "kind": "PR_MERGE",
+      "target": "PR #148 main<-codex/inventory-p0-foundation",
+      "idempotency_key": "inventory-task001-task012-pr148-merge-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed local main contains merge commit 46f3db7 for PR #148"
+    },
+    {
+      "id": "EXT-049",
+      "kind": "PR_MERGE",
+      "target": "PR #150 main<-codex/inventory-ci-trigger-fix",
+      "idempotency_key": "inventory-ci-trigger-fix-pr150-merge-20260925",
+      "status": "CONFIRMED",
+      "source_ref": "Observed local main contains merge commit 57834cd for PR #150"
+    },
+    {
+      "id": "EXT-050",
+      "kind": "LOCAL_WORKTREE_BRANCH_CLEANUP",
+      "target": "former codex/inventory-p0-foundation branch and worktree",
+      "idempotency_key": "inventory-task001-task012-cleanup-reconciled-20260928",
+      "status": "CONFIRMED",
+      "source_ref": "Observed 2026-09-28: no Inventory topic branch or old Inventory worktree remains"
+    },
+    {
+      "id": "EXT-051",
+      "kind": "LOCAL_WORKTREE_CREATE",
+      "target": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app on codex/inventory-task-013 from a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac",
+      "idempotency_key": "inventory-task013-worktree-create-20260928",
+      "status": "CONFIRMED",
+      "source_ref": "Active Codex task user approval and observed managed worktree/branch creation"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Under APR-029, merge PR #148 into main without running or waiting for CI, then remove the merged branch and worktree. Do not start TASK-013."
+  "next_safe_action": "Implement only TASK-013 pure quantity, expiry, lot/tracking and projection rules with focused unit tests under APR-030; do not add migrations, execute a database or perform remote actions."
 }
