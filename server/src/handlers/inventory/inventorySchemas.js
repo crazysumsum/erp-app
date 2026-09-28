@@ -256,3 +256,240 @@ export const RECEIPT_RESPONSE = Object.freeze({
     postedAt: TIMESTAMP
   }
 });
+
+const NONNEGATIVE = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
+const NULLABLE_ID = Object.freeze({ type: ["integer", "null"], minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
+const LIST_PAGE = Object.freeze({
+  page: { type: "integer", minimum: 1, default: 1 },
+  pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 }
+});
+const EXPIRY_FILTERS = Object.freeze({
+  expiryFrom: DATE_ONLY,
+  expiryTo: DATE_ONLY,
+  expiryState: { type: "string", enum: ["ALL", "UNEXPIRED", "EXPIRED", "WITHIN_DAYS"], default: "ALL" },
+  withinDays: { type: "integer", minimum: 0, maximum: 36500, default: 30 }
+});
+const STOCK_STATUS_FILTER = Object.freeze({
+  type: "string", enum: ["ALL", ...INVENTORY_STOCK_STATUSES], default: "ALL"
+});
+const BASE_UOM = Object.freeze({
+  type: "object", additionalProperties: false, required: ["uomId", "uomCode"],
+  properties: { uomId: ID, uomCode: { type: "string" } }
+});
+const SKU_REF = Object.freeze({
+  type: "object", additionalProperties: false, required: ["skuId", "code", "name"],
+  properties: { skuId: ID, code: { type: "string" }, name: { type: "string" } }
+});
+const SOURCE_LINK = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["module", "documentType", "documentId", "lineId", "eventId"],
+  properties: {
+    module: { type: "string" }, documentType: { type: "string" }, documentId: { type: "string" },
+    lineId: { type: "string" }, eventId: { type: "string" }
+  }
+});
+
+export const STOCK_ID_PARAMS = Object.freeze({
+  type: "object", additionalProperties: false, required: ["balanceId"], properties: { balanceId: ID }
+});
+export const MOVEMENT_ID_PARAMS = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id"], properties: { id: ID }
+});
+export const STOCK_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    ...LIST_PAGE,
+    q: { type: "string", trim: true, maxLength: 190, default: "" },
+    warehouseId: ID, binId: ID, skuId: ID,
+    lot: { type: "string", trim: true, maxLength: 100 },
+    ...EXPIRY_FILTERS,
+    status: STOCK_STATUS_FILTER,
+    availability: { type: "string", enum: ["ALL", "IN_STOCK", "NO_STOCK", "ZERO_ATP"], default: "ALL" },
+    sortBy: {
+      type: "string",
+      enum: ["skuCode", "skuName", "warehouse", "bin", "lot", "expiryDate", "stockStatus", "onHand", "available"],
+      default: "skuCode"
+    },
+    descending: { type: "boolean", default: false }
+  }
+});
+export const STOCK_SUMMARY_QUERY = Object.freeze({
+  type: "object", additionalProperties: false, required: ["skuId"],
+  properties: {
+    skuId: ID, warehouseId: ID,
+    purpose: { type: "string", trim: true, minLength: 1, maxLength: 40, pattern: "^[\\x20-\\x7e]+$" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36500, default: 0 }
+  }
+});
+export const LOT_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    ...LIST_PAGE,
+    skuId: ID, warehouseId: ID,
+    lot: { type: "string", trim: true, maxLength: 100 },
+    ...EXPIRY_FILTERS,
+    status: STOCK_STATUS_FILTER,
+    sortBy: { type: "string", enum: ["skuCode", "lot", "expiryDate", "firstReceiptDate"], default: "lot" },
+    descending: { type: "boolean", default: false }
+  }
+});
+export const EXPIRY_LIST_QUERY = Object.freeze({
+  ...LOT_LIST_QUERY,
+  properties: {
+    ...LOT_LIST_QUERY.properties,
+    expiryState: { type: "string", enum: ["EXPIRED", "WITHIN_DAYS"], default: "EXPIRED" }
+  }
+});
+export const MOVEMENT_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    ...LIST_PAGE,
+    postedFrom: TIMESTAMP, postedTo: TIMESTAMP,
+    movementType: { type: "string", trim: true, minLength: 1, maxLength: 40, pattern: "^[\\x20-\\x7e]+$" },
+    sourceModule: { type: "string", trim: true, minLength: 1, maxLength: 40, pattern: "^[\\x20-\\x7e]+$" },
+    sourceDocumentType: { type: "string", trim: true, minLength: 1, maxLength: 50, pattern: "^[\\x20-\\x7e]+$" },
+    sourceDocumentId: { type: "string", trim: true, minLength: 1, maxLength: 100 },
+    skuId: ID, warehouseId: ID, binId: ID, lotId: ID, actorId: ID
+  }
+});
+export const OPERATION_SOURCE_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["sourceModule", "sourceDocumentType", "sourceDocumentId", "sourceEventId"],
+  properties: {
+    sourceModule: { type: "string", trim: true, minLength: 1, maxLength: 40, pattern: "^[\\x20-\\x7e]+$" },
+    sourceDocumentType: { type: "string", trim: true, minLength: 1, maxLength: 50, pattern: "^[\\x20-\\x7e]+$" },
+    sourceDocumentId: { type: "string", trim: true, minLength: 1, maxLength: 100 },
+    sourceLineId: { type: "string", trim: true, maxLength: 100, default: "" },
+    sourceEventId: { type: "string", trim: true, minLength: 1, maxLength: 100 }
+  }
+});
+
+const STOCK_ITEM = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [
+    "balanceId", "warehouse", "bin", "sku", "lot", "stockStatus", "isExpired",
+    "onHand", "allocated", "bucketFree", "baseUom", "version"
+  ],
+  properties: {
+    balanceId: ID,
+    warehouse: {
+      type: "object", additionalProperties: false, required: ["warehouseId", "code", "name"],
+      properties: { warehouseId: ID, code: { type: "string" }, name: { type: "string" } }
+    },
+    bin: {
+      type: "object", additionalProperties: false, required: ["binId", "code", "name"],
+      properties: { binId: ID, code: { type: "string" }, name: { type: ["string", "null"] } }
+    },
+    sku: SKU_REF,
+    lot: {
+      type: ["object", "null"], additionalProperties: false,
+      required: ["lotId", "number", "expiryDate", "manufactureDate"],
+      properties: { lotId: ID, number: { type: "string" }, expiryDate: DATE_ONLY, manufactureDate: DATE_ONLY }
+    },
+    stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+    isExpired: { type: "boolean" },
+    onHand: NONNEGATIVE, allocated: NONNEGATIVE, bucketFree: NONNEGATIVE,
+    baseUom: BASE_UOM,
+    version: VERSION
+  }
+});
+
+const MOVEMENT = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [
+    "movementId", "groupId", "movementType", "locationKind", "warehouse", "bin", "sku", "lot",
+    "stockStatus", "direction", "quantity", "balanceBefore", "balanceAfter", "balanceVersionAfter",
+    "postedAt", "postedBy", "operationId", "source"
+  ],
+  properties: {
+    movementId: ID, groupId: { type: "string" }, movementType: { type: "string" },
+    locationKind: { type: "string", enum: ["BIN", "IN_TRANSIT"] },
+    warehouse: {
+      type: "object", additionalProperties: false, required: ["warehouseId", "code"],
+      properties: { warehouseId: ID, code: { type: "string" } }
+    },
+    bin: {
+      type: ["object", "null"], additionalProperties: false, required: ["binId", "code"],
+      properties: { binId: ID, code: { type: "string" } }
+    },
+    sku: SKU_REF,
+    lot: {
+      type: ["object", "null"], additionalProperties: false, required: ["lotId", "number", "expiryDate"],
+      properties: { lotId: ID, number: { type: "string" }, expiryDate: DATE_ONLY }
+    },
+    stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
+    direction: { type: "string", enum: ["IN", "OUT"] },
+    quantity: ID,
+    balanceBefore: { type: ["integer", "null"], minimum: 0 },
+    balanceAfter: { type: ["integer", "null"], minimum: 0 },
+    balanceVersionAfter: NULLABLE_ID,
+    postedAt: TIMESTAMP,
+    postedBy: {
+      type: "object", additionalProperties: false, required: ["userId", "label"],
+      properties: { userId: NULLABLE_ID, label: { type: "string" } }
+    },
+    operationId: ID,
+    source: SOURCE_LINK
+  }
+});
+
+const LOT_ITEM = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [
+    "lotId", "sku", "lotNumber", "expiryDate", "manufactureDate", "firstReceiptDate",
+    "isExpired", "remainingLifeDays", "totalOnHand", "availableOnHand", "quarantined", "damaged", "baseUom"
+  ],
+  properties: {
+    lotId: ID, sku: SKU_REF, lotNumber: { type: "string" }, expiryDate: DATE_ONLY,
+    manufactureDate: DATE_ONLY, firstReceiptDate: { type: "string", pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    isExpired: { type: "boolean" }, remainingLifeDays: { type: ["integer", "null"] },
+    totalOnHand: NONNEGATIVE, availableOnHand: NONNEGATIVE, quarantined: NONNEGATIVE, damaged: NONNEGATIVE,
+    baseUom: BASE_UOM
+  }
+});
+
+export const STOCK_LIST_RESPONSE = listResponse(STOCK_ITEM);
+export const LOT_LIST_RESPONSE = listResponse(LOT_ITEM);
+export const MOVEMENT_LIST_RESPONSE = listResponse(MOVEMENT);
+export const STOCK_DETAIL_RESPONSE = Object.freeze({
+  ...STOCK_ITEM,
+  required: [...STOCK_ITEM.required, "allocationSummary", "recentMovements"],
+  properties: {
+    ...STOCK_ITEM.properties,
+    allocationSummary: {
+      type: "object", additionalProperties: false, required: ["allocated"], properties: { allocated: NONNEGATIVE }
+    },
+    recentMovements: { type: "array", items: MOVEMENT, maxItems: 20 }
+  }
+});
+export const STOCK_SUMMARY_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: [
+    "totalOnHand", "availableOnHand", "eligibleOnHand", "reserved", "atp",
+    "uncoveredReserved", "quarantined", "damaged", "inTransit"
+  ],
+  properties: Object.fromEntries([
+    "totalOnHand", "availableOnHand", "eligibleOnHand", "reserved", "atp",
+    "uncoveredReserved", "quarantined", "damaged", "inTransit"
+  ].map((field) => [field, NONNEGATIVE]))
+});
+export const MOVEMENT_DETAIL_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["movement", "groupLegs", "reversal"],
+  properties: {
+    movement: MOVEMENT,
+    groupLegs: { type: "array", items: MOVEMENT },
+    reversal: {
+      type: "object", additionalProperties: false,
+      required: ["reversalOfMovementId", "reversedByMovementId"],
+      properties: { reversalOfMovementId: NULLABLE_ID, reversedByMovementId: NULLABLE_ID }
+    }
+  }
+});
+export const OPERATION_SOURCE_RESPONSE = Object.freeze({
+  type: ["object", "null"], additionalProperties: false,
+  required: ["operationId", "resultType", "resultId", "resultSummary", "completedAt"],
+  properties: {
+    operationId: ID, resultType: { type: "string" }, resultId: { type: "string" },
+    resultSummary: { type: ["object", "null"] }, completedAt: TIMESTAMP
+  }
+});
