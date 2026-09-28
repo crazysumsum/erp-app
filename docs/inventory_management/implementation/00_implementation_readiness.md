@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 is authorized under APR-030 and is in progress in an isolated worktree from `main` commit `a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac`.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 is complete locally under APR-030 in an isolated worktree from `main` commit `a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac`; TASK-014 remains pending and has not started.
 
 ## Baseline
 
@@ -52,6 +52,7 @@
 - TASK-010 stayed inside its approved handler／client boundary plus the two explicitly approved service-extension files; it did not start TASK-011, add a migration or perform any remote action.
 - TASK-011 stayed inside the HD-024／APR-023-approved page, Inventory menu, component-test and browser-test boundary; it did not start TASK-012, add a migration, run CI or perform any remote action.
 - TASK-012 stayed inside the HD-029／APR-028-approved migration and focused-test boundary; it did not start TASK-013, run CI or perform any remote action.
+- TASK-013 stayed inside the APR-030-approved pure-rule and focused-test boundary; it did not start TASK-014, add or execute a migration, run CI or perform any remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -134,6 +135,14 @@
 - The exact schemas `erp_inventory_task005_20260925_1144`, `erp_inventory_task008_20260925_1144` and `erp_inventory_task012_20260925_1144` were dropped and confirmed absent. The isolated MySQL 26.7.0 server stopped, port 3313 and its socket were absent, and `/private/tmp/erp-inventory-task012-history-mysql-2670.mGLld3` was removed.
 - Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
+## TASK-013 developer verification
+
+- Commits `ad9c194`, `66336f0`, `24886e8`, `8cb85cd` and `3c49765` implement Base UOM safe-integer quantities, integer pack conversion, ATP/uncovered reservation calculation, date-only expiry/minimum-life rules, tracking-policy and Lot consistency checks, fixed Stock Status validation and explicit stock／Movement projections.
+- Projections use explicit allowlisted fields, preserve immutable Movement snapshots and fail closed on missing, unsafe or impossible quantities; no database row spread is used. Serial tracking remains explicitly unsupported as required by the approved design.
+- TDD red was captured for each slice before implementation. Focused Inventory checks passed 31/31. The complete local server suite passed 1,920 with 326 gated skips and 0 failures using the repository's public CI-only Customer and Supplier test keys. Full repository ESLint and client production build passed; the build retained only the existing bundle-size warning.
+- `git diff --check`, module-boundary validation and traceability validation passed. Multi-axis self-review found no open critical or high correctness, security, contract, performance or maintainability issue.
+- No migration or database execution occurred. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
+
 ## Post-main-merge publication verification
 
 - Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
@@ -169,8 +178,9 @@
 - TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
 - TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
 - TASK-012 created only the approved stock and Movement persistence plus its focused test; it did not start TASK-013.
-- APR-029 authorizes publication of the completed TASK-001～TASK-012 branch; TASK-013 remains unstarted and out of scope. CI remains explicitly excluded.
+- TASK-013 created only the approved pure quantity, expiry, Lot／tracking and projection rules plus focused tests; it did not start TASK-014 or change persistence.
+- APR-030 authorizes only local TASK-013 implementation and verification. CI, push, PR and merge remain explicitly excluded.
 
 ## Next safe action
 
-Under APR-030, implement only TASK-013 pure quantity, expiry, Lot/tracking and projection rules with focused unit tests. Migrations, database execution, CI, push, PR and merge remain out of scope.
+Await Sam's authorization before starting TASK-014 Receipt implementation or performing any remote publication action. Keep migrations, database execution, CI, push, PR and merge out of scope until separately approved.

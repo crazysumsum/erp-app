@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 94,
+  "revision": 95,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-013",
+  "current_task": "TASK-014",
   "baseline": {
     "design": "567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7",
     "plan": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
-    "code_commit": "a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac",
-    "source_fingerprint": "e7c81ea81ff6b05016d4a3cba766821b3be4c921c4f16c6520b00201493d029e",
+    "code_commit": "3c497652e44479b115c2ec62e084a3ee4eb99a5f",
+    "source_fingerprint": "11efd4d1c1a47ce666f8696a1e724f548357ff0d1d220514df5af629072aad7f",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac",
     "mode_entry_commit": "7279749a8fec0832d6f47fa316efb33c20726af8"
@@ -38,7 +38,7 @@
     "TASK-010": "DONE",
     "TASK-011": "DONE",
     "TASK-012": "DONE",
-    "TASK-013": "IN_PROGRESS",
+    "TASK-013": "DONE",
     "TASK-014": "PENDING",
     "TASK-015": "PENDING",
     "TASK-016": "PENDING",
@@ -970,6 +970,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-023",
+      "method": "SELF_REVIEW",
+      "author": "/root TASK-013 implementation author",
+      "reviewer": "/root in the same active Codex context using the code-review-and-quality five-axis checklist",
+      "reviewed_baseline": "11efd4d1c1a47ce666f8696a1e724f548357ff0d1d220514df5af629072aad7f",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-013-developer-verification",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1126,6 +1138,17 @@
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#post-main-merge-publication-verification",
       "actor": "/root developer self-check under APR-029",
       "observed_at": "2026-09-25T14:13:08+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-013 quantity, expiry, Lot/tracking and explicit projection developer checks",
+      "code_commit": "3c497652e44479b115c2ec62e084a3ee4eb99a5f",
+      "spec_baseline": "124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8",
+      "source_fingerprint": "11efd4d1c1a47ce666f8696a1e724f548357ff0d1d220514df5af629072aad7f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-013-developer-verification",
+      "actor": "/root developer self-check under APR-030",
+      "observed_at": "2026-09-28T09:13:00+08:00"
     }
   ],
   "pending_decisions": [
@@ -2175,5 +2198,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Implement only TASK-013 pure quantity, expiry, lot/tracking and projection rules with focused unit tests under APR-030; do not add migrations, execute a database or perform remote actions."
+  "next_safe_action": "Await Sam's authorization before starting TASK-014 Receipt implementation or performing CI, push, PR or merge."
 }
