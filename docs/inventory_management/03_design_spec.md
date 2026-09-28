@@ -251,6 +251,8 @@ Warehouse row是啟用狀態的serialization point：Warehouse停用及所有Rec
 
 對用途`minimumRemainingDays = D`：
 
+建立`SALE` Reservation時，`D = max(來源要求的minimumRemainingDays, SKU的minimumSaleLifeDays)`；將此實際採用值保存於Reservation快照。來源可以要求更長效期，但不能降低SKU銷售政策。
+
 ```text
 eligibleOnHand = SUM(
   AVAILABLE buckets where expiry_date is null
@@ -591,7 +593,7 @@ Indexes／constraints：
 | `consumed_quantity` | BIGINT UNSIGNED | NOT NULL／0 | 已Issue數量。 |
 | `released_quantity` | BIGINT UNSIGNED | NOT NULL／0 | Release／Cancel數量。 |
 | `outstanding_quantity` | BIGINT UNSIGNED | NOT NULL | Current未耗用未釋放數量。 |
-| `minimum_remaining_days` | INT UNSIGNED | NOT NULL／0 | 建立時來源用途要求的最低剩餘效期快照。 |
+| `minimum_remaining_days` | INT UNSIGNED | NOT NULL／0 | 建立時實際採用的最低剩餘效期快照；`SALE`取來源要求與SKU最低銷售效期的較大值。 |
 | `purpose` | VARCHAR(40) | NOT NULL | `SALE`等server allowlist用途。 |
 | `status` | VARCHAR(30) | NOT NULL | `ACTIVE`、`PARTIALLY_CONSUMED`、`CONSUMED`、`RELEASED`、`CANCELLED`。 |
 | `version` | INT UNSIGNED | NOT NULL／1 | Consume／release／cancel compare-and-set。 |

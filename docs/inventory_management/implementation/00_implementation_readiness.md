@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-019 are complete locally in the continuing implementation branch; TASK-020 awaits separate authorization.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-020 are complete locally in the continuing implementation branch; TASK-021 awaits separate authorization.
 
 ## Baseline
 
@@ -44,6 +44,7 @@
 - `HD-039`／`APR-040`: Sam selected and approved the complete local TASK-017 Stock／Lot／Movement UI, URL-restorable filters, server pagination, responsive/accessibility states, focused client tests, production build and mocked Playwright, while excluding MySQL, CI and remote publication.
 - `HD-040`／`APR-041`: after implementation discovery proved the existing APIs could not correctly paginate the designed default SKU aggregate list, Sam selected option A and approved the minimal server-side paginated `/api/v1/inventory/stocks/aggregates` extension inside TASK-017 instead of an incorrect client-side page aggregate.
 - `HD-042`／`APR-043`: Sam selected and approved complete local TASK-019 Reservation／Allocation persistence migration `0061`, focused tests, guarded disposable MySQL 26.7.0 verification and exact cleanup, while excluding TASK-020, CI and remote publication.
+- `HD-043`～`HD-044`／`APR-044`～`APR-047`: Sam approved complete local TASK-020 ATP／Reservation state service and disposable MySQL 26.7.0 verification. For `SALE`, effective `minimumRemainingDays` is the greater of the source request and SKU `minimumSaleLifeDays`, persisted on Reservation. TASK-021, CI and remote publication remain excluded.
 
 ## Reconciled P0 checks
 
@@ -250,7 +251,15 @@
 - TASK-017 created only the approved inquiry UI/client/tests plus the HD-040-approved read-only SKU aggregate endpoint needed for correct server pagination. It did not add writes, migrations, database execution or begin TASK-018.
 - TASK-018 added only the guarded capacity/security/concurrency tests, two measured root-cause fixes and the minimum reusable Warehouse race fixture alignment. It added no business feature, migration, dependency, CI or remote action.
 - TASK-019 added only the approved Reservation／Allocation migration and guarded focused integration test. It did not start TASK-020, add a dependency, run CI or perform any remote action.
+- TASK-020 added only the local Reservation service, operation replay summary fields and focused tests. It did not start Allocation implementation, add a migration or dependency, run CI or perform a remote action.
+
+## TASK-020 local developer evidence
+
+- Focused service tests passed 4/4; lint passed. Full server suite with the repository's public CI-only test keys passed 1962, failed 0, skipped 330. A first sandboxed suite run could not bind localhost (`listen EPERM`); rerunning with local socket permission and the required test keys passed.
+- MySQL 26.7.0 integration passed 1/1 in `erp_inventory_task020_20260928_1630`: two independent transactions crossed a barrier after initial consistent reads, then competed for the same Stock Control. Exactly one Reservation succeeded, the other failed `INSUFFICIENT_ATP`; source replay and conflicting replay were checked.
+- Expiry crossing to the next day yielded `rawAtp = -3` and `uncoveredReserved = 3` without deleting the existing Reservation. Partial release, stale version rejection, terminal cancel and injected Audit failure rollback preserved Reservation, Stock Control, operation and Audit consistency.
+- The exact disposable schema was dropped, the isolated port 3320 listener stopped and `/private/tmp/erp-inventory-task020-mysql-2670.JHx2FZ` removed. No shared or production schema was used. These are IMPLEMENT-stage developer checks, not formal `TC-005`, CI, independent approval or business acceptance.
 
 ## Next safe action
 
-TASK-019 local developer checks are complete. Await a separately approved TASK-020 scope; do not start TASK-020, run CI or perform push/PR/merge.
+TASK-020 local developer checks are complete. Await a separately approved TASK-021 scope; do not start TASK-021, run CI or perform push/PR/merge.
