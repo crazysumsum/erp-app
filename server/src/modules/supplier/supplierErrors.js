@@ -44,11 +44,11 @@ export function supplierConflict(code, publicMessage, details) {
  * 之前兩者收埋做同一個 422 `BANK_ACCOUNT_UNREADABLE`。嗰個改動係修 REV-035 時做嘅，冇任何
  * 決定紀錄，而設計本身已經用唔同 status 分開咗兩者。TASK-037 驗收 BANK-007 時 FAIL（DEF-026）。
  */
-export function supplierBankKeyUnavailable() {
+export function supplierBankKeyUnavailable(publicMessage = "這個銀行帳戶目前無法讀取，請聯絡系統管理員") {
   return supplierError("Supplier bank account key is not in the configured ring", {
     code: "BANK_KEY_UNAVAILABLE",
     statusCode: 503,
-    publicMessage: "這個銀行帳戶目前無法讀取，請聯絡系統管理員"
+    publicMessage
   });
 }
 

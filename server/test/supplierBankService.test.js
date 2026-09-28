@@ -60,7 +60,7 @@ function wrappedDuplicate(constraint) {
   return new MySqlDatabaseOperationError("MySQL database execute failed", { cause: driver });
 }
 
-function harness({ row = bankRow(), duplicates = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
+function harness({ row = bankRow(), duplicates = [], outsideRing = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
   const events = [];
   const current = row;
   const connection = {
@@ -69,6 +69,7 @@ function harness({ row = bankRow(), duplicates = [], statementFails = null, perm
       if (sql.includes("FROM suppliers") && sql.includes("FOR UPDATE")) return [[{ id: 7, supplier_code: "SUP-007" }]];
       if (sql.includes("FROM suppliers WHERE id")) return [[{ id: 7 }]];
       if (sql.includes("JOIN suppliers s")) return [duplicates];
+      if (sql.includes("blind_index_key_id NOT IN")) return [outsideRing];
       if (sql.includes("account_ciphertext") && sql.includes("WHERE id = ?")) {
         return [[sealRow ? { ...current, ...sealRow } : null].filter(Boolean)];
       }
@@ -213,6 +214,38 @@ test("duplicate checking uses every lookup key, not just the active one", async 
   const indexes = lookup[2].filter((value) => Buffer.isBuffer(value));
   assert.equal(indexes.length, 2, "both ring keys must be searched");
   assert.notEqual(indexes[0].toString("hex"), indexes[1].toString("hex"));
+});
+
+test("TC-068 (BANK-007): a Supplier with a row on a lookup key outside the ring cannot add or change an account", async () => {
+  // DEF-027：嗰行冇 key 重算 index，查重撞唔中佢，所以「冇重覆」呢個答案唔可信。
+  const refused = async (write) => {
+    const errors = [];
+    const run = harness({ outsideRing: [{ id: 40 }] });
+    run.service.logger = { error: (...args) => errors.push(args), warn() {} };
+    const thrown = await write(run.service).then(() => null, (error) => error);
+    return { ...run, errors, thrown };
+  };
+  const create = await refused((service) => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "查重唔晒測試原因" }));
+  const update = await refused((service) => service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, accountNumber: "999-000111-222", reason: "查重唔晒測試原因" }));
+
+  for (const [label, run] of [["create", create], ["update", update]]) {
+    assert.equal(run.thrown?.statusCode, 503, `${label}: 503`);
+    assert.equal(run.thrown?.publicCode, "BANK_KEY_UNAVAILABLE");
+    assert.ok(!run.events.some(([kind, sql]) => kind === "execute" && /INSERT INTO supplier_bank_accounts|UPDATE supplier_bank_accounts/u.test(sql)),
+      `${label}: nothing is written`);
+    assert.equal(run.audited.length, 0, `${label}: nothing is audited`);
+    assert.deepEqual(run.errors.map(([event, , context]) => [event, context]),
+      [["supplier.bank.duplicate_check_unavailable", { supplierId: 7 }]], `${label}: logged once, as an error`);
+    const check = run.events.find(([, sql]) => sql.includes("blind_index_key_id NOT IN"));
+    assert.deepEqual(check[2].slice(0, 2), [7, "look-1"], `${label}: scoped to this Supplier, against the ring`);
+  }
+  assert.equal(update.events.find(([, sql]) => sql.includes("blind_index_key_id NOT IN"))[2].at(-1), 41,
+    "the row being rewritten does not block itself");
+
+  // 對照：改名唔產生新 index，冇嘢要查，照做得。
+  const rename = harness({ outsideRing: [{ id: 40 }] });
+  await rename.service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, reason: "改名測試原因" });
+  assert.equal(rename.audited.length, 1);
 });
 
 test("update re-encrypts only when the account itself changed", async () => {

@@ -309,11 +309,10 @@ integrationTest("TC-064 (BANK-003): only view + bank.view + bank.mgmt, with devi
  * 2. **公開 code 要係 503 `BANK_KEY_UNAVAILABLE`**（設計 §6 錯誤表、§8.3）—— 之前 FAIL
  *    （回 422 `BANK_ACCOUNT_UNREADABLE`，同竄改收埋做同一個 code），DEF-026 修正後 PASS，
  *    `todo` 已拎走，而家強制執行。
- * 3. **Lookup key 唔喺 ring 時查重要 fail closed** —— **FAIL，HIGH**。同一個 Supplier
- *    可以再新增同一個帳號，開機亦唔會發現。DEF-027。
- *
- * 2 同 3 用 `todo`：佢哋照樣執行、照樣喺輸出見到失敗，但唔令 CI 紅。TEST_AND_VERIFY
- * 預設 REPORT_ONLY，唔改 product code；修好嗰日拎走 `todo` 就變成強制。
+ * 3. **Lookup key 唔喺 ring 時查重要 fail closed** —— 之前 FAIL（HIGH）：同一個
+ *    Supplier 可以再新增同一個帳號。DEF-027 按 Product Owner 揀嘅 (b) 修正：嗰個
+ *    Supplier 嘅新增／改帳號回 503，其他 Supplier 唔受影響；開機只記 error log，唔阻開機。
+ *    `todo` 已拎走，而家強制執行。
  */
 async function seedUnder(supplierId, account, { encryptionKeyId, lookupKeyId }) {
   const appConfig = h.application.services.config.supplier;
@@ -354,7 +353,6 @@ integrationTest("TC-068 (BANK-007): the refusal is 503 BANK_KEY_UNAVAILABLE, as 
   });
 
 integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existing row's lookup key fails closed",
-  { todo: "DEF-027 (HIGH): the duplicate is accepted, and startup does not detect rows on a lookup key missing from the ring" },
   async () => {
     const supplierId = await seedSupplier();
     await seedUnder(supplierId, SECRET, { lookupKeyId: "gone-look" });
@@ -362,8 +360,16 @@ integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existi
     const before = await state(supplierId);
     const response = await post(writer, `/api/v1/suppliers/${supplierId}/bank-accounts/create`, {
       accountHolderName: "Dup", bankName: "Dup Bank", accountNumber: SECRET, reason: "TC-068 查重", password: PASSWORD });
-    assert.ok(response.status >= 400, `the same account under the same Supplier must be refused, got ${response.status}`);
+    assert.equal(response.status, 503, response.text.slice(0, 200));
+    assert.ok(response.text.includes('"BANK_KEY_UNAVAILABLE"'));
+    assert.ok(!response.text.includes("gone-look"), "the public message must not name the key");
     assert.equal((await state(supplierId)).rows, before.rows, "no second row may be created");
+
+    // 對照：另一個 Supplier 唔受影響 —— fail closed 係逐個 Supplier，唔係成個模組。
+    const other = await seedSupplier();
+    const allowed = await post(writer, `/api/v1/suppliers/${other}/bank-accounts/create`, {
+      accountHolderName: "Other", bankName: "Other Bank", accountNumber: SECRET, reason: "TC-068 對照", password: PASSWORD });
+    assert.equal(allowed.status, 200, allowed.text.slice(0, 200));
   });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -203,6 +203,24 @@ export class SupplierBankService {
    * 落去嗰個 INSERT 會捉 ER_DUP_ENTRY 再翻譯返做同一個 409。
    */
   async #duplicates(connection, { supplierId, candidates, excludeId = null, actor }) {
+    // DEF-027：一行嘅 lookup key 唔喺 ring，就冇 key 可以為佢重算 index，下面個 IN
+    // 永遠撞唔中佢 —— 即係同一個帳號可以再入一次。查唔晒就唔可以答「冇重覆」，所以
+    // 呢個 Supplier 嘅寫入 fail closed（設計 §6 嘅 503）。只睇自己個 Supplier：跨
+    // Supplier 本來就只係 warning，少咗一條係少咗提示，唔係少咗約束。
+    const ring = this.crypto.lookupKeyIds;
+    const [unreadable] = await connection.query(
+      `SELECT id FROM supplier_bank_accounts
+        WHERE supplier_id = ? AND blind_index_key_id NOT IN (${ring.map(() => "?").join(", ")})
+          ${excludeId === null ? "" : "AND id <> ?"} LIMIT 1`,
+      [supplierId, ...ring, ...(excludeId === null ? [] : [excludeId])]
+    );
+    if (unreadable.length > 0) {
+      this.logger?.error?.("supplier.bank.duplicate_check_unavailable",
+        "Supplier has bank rows under a lookup key outside the ring; duplicate check refused",
+        { supplierId: Number(supplierId) });
+      throw supplierBankKeyUnavailable("這個供應商有銀行帳戶目前無法核對重覆，請聯絡系統管理員");
+    }
+
     const indexes = candidates.map((candidate) => candidate.index);
     const placeholders = indexes.map(() => "?").join(", ");
     const [rows] = await connection.query(
