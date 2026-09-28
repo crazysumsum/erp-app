@@ -95,7 +95,7 @@ async function reveal(page) {
   await expect(page.locator('[data-test="bank-plaintext"]')).toHaveText(SECRET);
 }
 
-test("@technical the masked list never fetches plaintext by itself", async ({ page }) => {
+test("@technical TC-075 (BANK-014): the masked list never fetches plaintext by itself", async ({ page }) => {
   const problems = collectConsole(page);
   const state = await installApi(page);
   await openBankTab(page);
@@ -105,7 +105,7 @@ test("@technical the masked list never fetches plaintext by itself", async ({ pa
   expect(problems).toEqual([]);
 });
 
-test("@technical a revealed account lives only in the DOM, and only for thirty seconds", async ({ page }) => {
+test("@technical TC-075 (BANK-014): a revealed account lives only in the DOM, and only for thirty seconds", async ({ page }) => {
   test.setTimeout(90_000);
   const problems = collectConsole(page);
   await installApi(page);
@@ -145,7 +145,7 @@ test("@technical a revealed account lives only in the DOM, and only for thirty s
   expect(problems).toEqual([]);
 });
 
-test("@technical leaving the page clears the account immediately", async ({ page }) => {
+test("@technical TC-075 (BANK-014): leaving the page clears the account immediately", async ({ page }) => {
   const problems = collectConsole(page);
   await installApi(page);
   await openBankTab(page);

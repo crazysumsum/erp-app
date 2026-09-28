@@ -115,7 +115,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   afterEach(() => vi.useRealTimers());
 
   // AC-023：遮罩清單所有 supplier.view 都睇到，而初次 render **唔可以**叫 reveal。
-  it("renders masked rows on load and never calls reveal by itself", async () => {
+  it("TC-075 (BANK-014): renders masked rows on load and never calls reveal by itself", async () => {
     const { body } = await mountPanel({ permissions: VIEW });
     expect(supplierBankService.list).toHaveBeenCalledWith(7);
     expect(body.text()).toContain("•••• 1234");
@@ -149,7 +149,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
   });
 
   // AC-024 + 設計 §7.5：主動輸入密碼之後只展開**嗰一筆** 30 秒，並且顯示倒數。
-  it("reveals one row for thirty seconds with a countdown, then clears it from the DOM", async () => {
+  it("TC-075 (BANK-014): reveals one row for thirty seconds with a countdown, then clears it from the DOM", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { body } = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(body);
@@ -212,7 +212,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
       "a backwards clock step must not hold the account open").not.toContain(SECRET);
   });
 
-  it("keeps the plaintext out of Pinia, storage, the URL and notifications", async () => {
+  it("TC-075 (BANK-014): keeps the plaintext out of Pinia, storage, the URL and notifications", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { body } = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(body);
@@ -234,7 +234,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     }
   });
 
-  it("clears the plaintext when the row is closed by hand", async () => {
+  it("TC-075 (BANK-014): clears the plaintext when the row is closed by hand", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { body } = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(body);
@@ -535,7 +535,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     expect(body.find('[role="alert"]').text()).toMatch(/稽核|重新查看/u);
   });
 
-  it("clears the plaintext when the user navigates away", async () => {
+  it("TC-075 (BANK-014): clears the plaintext when the user navigates away", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     const { router, body } = await mountPanel({ permissions: VIEW_BANK });
     await revealRow(body);
@@ -545,7 +545,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
     expect(document.body.innerHTML).not.toContain(SECRET);
   });
 
-  it("clears the plaintext on unmount and on session expiry", async () => {
+  it("TC-075 (BANK-014): clears the plaintext on unmount and on session expiry", async () => {
     supplierBankService.reveal.mockResolvedValue({ id: 41, accountNumber: SECRET, revealedAt: 1000 });
     let result = await mountPanel({ permissions: VIEW_BANK });
     // REV-046 X12：斷言「clearInterval 有被叫過」唔夠 —— 清一個**唔相干**嘅 handle
@@ -610,7 +610,7 @@ describe("components/suppliers/SupplierBankPanel.vue", () => {
    * 設計 §6.6／§7.5：同一個 Supplier 重覆係伺服器直接擋（409）；跨 Supplier 只回一個
    * warning，而個 warning **唔可以**帶對方嘅帳號，使用者要主動確認先繼續。
    */
-  it("blocks a same-Supplier duplicate and makes a cross-Supplier duplicate an explicit confirmation", async () => {
+  it("TC-070 (BANK-009): blocks a same-Supplier duplicate and makes a cross-Supplier duplicate an explicit confirmation", async () => {
     supplierBankService.create.mockRejectedValue(
       Object.assign(new Error("這個銀行帳號已經登記咗"), { code: "BANK_ACCOUNT_DUPLICATE" })
     );

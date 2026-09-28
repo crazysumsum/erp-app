@@ -7,13 +7,15 @@ assess the remaining fourteen without executing them. Taken by the user.
 
 ## Result: **NOT Technical Acceptance**
 
-Three of seventeen cases were executed. Fourteen were not. Technical Acceptance of SUP-CAP-03 is **not**
+Sixteen of seventeen cases were executed; one of them fails. TC-133 has no harness. Technical Acceptance of SUP-CAP-03 is **not**
 granted by this report and cannot be until the readiness conditions are met.
 
 | | |
 | --- | --- |
-| Executed, `PASS` | **TC-065** (BANK-004), **TC-074** (BANK-013), **TC-077** (BANK-016) |
-| Not executed | TC-062…TC-064, TC-066…TC-073, TC-075, TC-076 — thirteen cases, status `NOT_RUN` |
+| Executed, `PASS` | TC-062…TC-067, TC-069…TC-077 — fifteen cases |
+| Executed, **`FAIL`** | **TC-068** (BANK-007) — two of its three expectations; DEF-026 (MEDIUM), **DEF-027 (HIGH)** |
+| Executed, `PASS` with recorded deviations | TC-063 (BANK-002) — DEV-T34-CACHE-PRIVATE, DEV-T34-EXPIRES-IN, both accepted under HD-033 |
+| Not executed, no harness | **TC-133** (OPS-006) — status `BLOCKED` |
 | Not executed, no harness | **TC-133** (OPS-006) — out of the agreed scope, status `BLOCKED` |
 | Business acceptance | `PENDING_USER_ACCEPTANCE` — the Security/Operations review is a human gate |
 
@@ -96,7 +98,7 @@ Mutating the crypto to fall back to the active key when the row's key id is not 
 textbook fail-open — **survived the first version of this case**. The service deliberately collapses
 "key not in ring" and "key is wrong" into one `BANK_ACCOUNT_UNREADABLE`, so that layer cannot tell them
 apart. A crypto-layer assertion requiring `BANK_KEY_NOT_IN_RING` was added; all three mutants now die.
-The collapsing itself is correct and is not a finding — it is the right thing to tell a caller.
+~~The collapsing itself is correct and is not a finding — it is the right thing to tell a caller.~~ **Withdrawn.** That sentence judged the behaviour against my own view instead of the approved design, which gives the two cases different answers — `503 BANK_KEY_UNAVAILABLE` when the key is absent, a generic `500` for an integrity failure. The collapse into one `422` was introduced during the REV-035 remediation with no recorded decision. It is **DEF-026**; see §2b, TC-068.
 
 ### Finding recorded, not fixed (REPORT_ONLY)
 
@@ -161,9 +163,68 @@ password therefore cannot be retried with the same nonce — asserted in the har
 alternative lets an attacker probe passwords without spending nonces — and it is recorded here only
 because a client implementer would otherwise meet it as a surprise.
 
+## 2b. The thirteen remaining cases — executed against their own case IDs
+
+Each case's expected result was compared sentence by sentence with what the tests actually assert.
+Where the existing tests covered it fully, they were **labelled with the case ID** (29 tests, title
+changes only) so that `TC → test` is a mechanical link rather than a judgement; where they did not,
+the gap was filled in `server/test/integration/supplierBankAcceptance.integration.test.js`.
+
+| Case | Result | How |
+| --- | --- | --- |
+| TC-062 BANK-001 masked list | **PASS** | New, over HTTP: U-VIEW, U-MGMT, U-BANK-R, U-BANK-W all see masks only; a ≤4-digit account carries no character of itself; no crypto field in the projection; U-NONE 403, no token 401 |
+| TC-063 BANK-002 controlled reveal | **PASS**, recorded deviations | New, over HTTP: wrong password 403 `PASSWORD_INVALID` and no audit; without bank.view 403 and no audit; legitimate reveal audited before the plaintext arrives, `no-store`, `Pragma: no-cache`. `private` and `expiresInSeconds` absent — accepted deviations under HD-033, asserted so a change is noticed |
+| TC-064 BANK-003 write permission matrix | **PASS** | New, over HTTP: U-MGMT, bank.mgmt-only and U-BANK-R each refused 403 on all four write routes with a valid device and password, nothing changed, nothing audited; U-BANK-W succeeds on all four as the control |
+| TC-066 BANK-005 create stores only ciphertext | **PASS** | Existing integration tests, labelled; logs covered by TC-074 |
+| TC-067 BANK-006 crypto integrity and AAD | **PASS** | Existing crypto tests (round trip, per-row IV, moved row, swapped context, one bit flipped in ciphertext, tag and IV) and the moved-row integration test, labelled |
+| **TC-068 BANK-007 key unavailable** | **FAIL** | New, over HTTP. No plaintext is ever returned — **PASS**. The refusal is `422 BANK_ACCOUNT_UNREADABLE`, not the designed `503 BANK_KEY_UNAVAILABLE`, and it is the same code as a tampered row, which the design makes a `500` — **FAIL, DEF-026**. A row whose lookup key is absent from the ring lets the same Supplier add the same account again, and startup does not notice — **FAIL, DEF-027 (HIGH)**. The two failing expectations are `todo` tests: they run, their failure is visible, CI stays green |
+| TC-069 BANK-008 unique default | **PASS** | Existing integration tests incl. two concurrent switches, labelled |
+| TC-070 BANK-009 duplicate blind index | **PASS** | Existing crypto, service, integration and client tests (the client makes a cross-Supplier duplicate an explicit confirmation), labelled |
+| TC-071 BANK-010 update re-encryption | **PASS** | New: renaming leaves ciphertext, IV, tag, index and both key IDs byte-identical; changing the account replaces all of them, stores neither account in clear, and is audited without either |
+| TC-072 BANK-011 deactivate | **PASS**, one part N/A | New: deactivation clears the default and keeps the row; DELETE on a Bank row is answered exactly as an unregistered route. Payment references do not exist on this baseline — that half is `NOT_APPLICABLE` |
+| TC-073 BANK-012 audit failure | **PASS** | New: with an audit that throws, create, update, set default, deactivate and reveal each fail, change nothing and return nothing; the same update with a working audit succeeds as the control |
+| TC-075 BANK-014 client plaintext lifecycle | **PASS** | Existing client tests and **three Playwright tests in real Chromium**, including a real 30-second wait, labelled. The Playwright suite mocks the API at the network layer — appropriate for a client-memory case, and stated here because it is not end-to-end |
+| TC-076 BANK-015 rotation | **PASS** | TASK-036 integration tests, labelled |
+
+### Mutation, and three mistakes of mine it caught
+
+| Mutant | Result |
+| --- | --- |
+| short account's writer exposes its digits | survived — **and correctly so**: the renderer masks by `account_length` independently. Breaking both guards is killed |
+| `Pragma` dropped | killed |
+| reveal writes no audit | killed |
+| route policy needs only bank.mgmt | killed |
+| both layers need only supplier.view | killed |
+| rename also rewrites the IV | killed |
+| deactivate keeps the default flag | killed |
+| audit failures swallowed | killed |
+
+- **A check that could not fail.** TC-063's audit query first used `action = 'bank.reveal'`; the stored
+  value is `supplier.bank.reveal`, so it always counted 0 and the two "no audit on refusal" assertions
+  passed vacuously. The positive control — a legitimate reveal must add exactly one — caught it.
+- **An expectation that was wrong.** TC-072 first expected 404/405 for DELETE. This framework answers
+  every unregistered `/api` request with `401 Unauthorized Access`, deliberately. 401 alone cannot
+  distinguish "no route" from "bad token", so the case now requires the same token to succeed on a
+  registered route and the DELETE to be answered exactly as a nonexistent route is.
+- **A meaningless assertion.** TC-062's first draft contained `assert.ok(short || true)`, removed
+  before it ever ran.
+
+### A consequence of the `todo` tests that the reviewer should know
+
+In JUnit output a `todo` test that fails carries both `<skipped type="todo">` and `<failure>`, and the
+harness JUnit adapter classifies it as **FAIL**. So **CI is green while a harness run of
+`supplier-phase-001-server` reports two failures** — which is the truth about BANK-007, but it also
+means any later task gated on that suite is blocked by this defect until it is fixed or the two
+expectations are moved out of that suite's glob. That choice is recorded as a decision, not taken here.
+
+### Low observation
+
+Design §5.8 says a short account is masked with `*`; the implementation uses `•`. Cosmetic, no
+security effect; recorded for the reviewer rather than raised as a defect.
+
 ---
 
-## 3. The thirteen cases that were not executed
+## 3. (Superseded by §2b) The coverage assessment made before execution
 
 These are `NOT_RUN`. The notes are a **coverage assessment made by reading existing tests** — not a
 result, and explicitly not a PASS. `TEST_AND_VERIFY` forbids inferring a result from code review or
@@ -190,7 +251,7 @@ as discharging any of these cases.
 
 1. The profile's `supplier-bank-security` and `supplier-recovery` suites point at paths that do not
    exist; until that is resolved, no `TC-xxx` in this task can be produced by a declared suite.
-2. The fourteen cases above need execution against their own case IDs, not assessment.
+2. ~~The cases above need execution against their own case IDs.~~ Done — §2b. TC-068 fails.
 4. `TC-133` (OPS-006) needs a module-wide restore drill.
 5. ~~`bank_operations.md` must exist for the Security/Operations review to have a subject.~~ It now exists and every command in it was executed against a CI-like MySQL; the review itself is still outstanding.
 6. A named human authority must accept the review. Nothing in this report substitutes for it.

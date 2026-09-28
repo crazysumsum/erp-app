@@ -170,7 +170,7 @@ test("create encrypts, indexes and audits, and no plaintext reaches the audit en
     "nor the key IDs, which would narrow an attacker's search");
 });
 
-test("a same-Supplier duplicate is blocked and a cross-Supplier one is only a warning", async () => {
+test("TC-070 (BANK-009): a same-Supplier duplicate is blocked and a cross-Supplier one is only a warning", async () => {
   // 兩間公司共用一個收款帳號係合法嘅業務情況，唔應該封死；同一間公司入兩次就係錯。
   const mine = harness({ duplicates: [{ id: 40, supplier_id: 7, supplier_code: "SUP-007" }] });
   await assert.rejects(
