@@ -59,15 +59,27 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 
 **對照：** 四個 ring 齊全且一致時，應用程式正常啟動，`GET /api/v1/health` 回 200。
 
-> **啟動檢查的範圍只到 ring 本身。** 它**不會**檢查資料庫中現有的列所使用的 key ID 是否仍在
-> ring 中。已實際驗證：資料列使用的 encryption key 或 lookup key 已從 ring 移除時，應用程式仍然
-> 正常啟動、health 回 200。後果：
+> **只有 ring 本身不合格才會拒絕啟動。** 資料庫中有列使用的 key ID 已不在 ring 中時，應用程式
+> **仍然正常啟動**（Product Owner 的決定：一列壞資料不應令整個 ERP 停機），但啟動時會寫一條
+> error 級別的 `supplier.bank.keys_outside_ring` 日誌，內容只有 `kind`（`encryption`／`lookup`）
+> 與列數，不含 key ID。若檢查本身無法執行，會寫 `supplier.bank.key_check_failed`。受影響的列：
 >
 > - Encryption key 缺失：該列 reveal 會被拒，不會洩漏明文，回應是 `503 BANK_KEY_UNAVAILABLE`，
->   並寫入一條 error 級別的 `supplier.bank.key_unavailable` 日誌（DEF-026 已修正；之前是 `422`）。
-> - **Lookup key 缺失：同一 Supplier 可以再新增同一個帳號，重覆檢查靜默失效（DEF-027，HIGH）。**
+>   並寫入一條 error 級別的 `supplier.bank.key_unavailable` 日誌（DEF-026）。
+> - Lookup key 缺失：**該 Supplier** 的新增及修改帳號都回 `503 BANK_KEY_UNAVAILABLE`，並寫入
+>   `supplier.bank.duplicate_check_unavailable` 日誌，因為重覆檢查無法涵蓋那一列（DEF-027）。
+>   其他 Supplier 不受影響；只改銀行名等欄位仍可進行。
 >
-> 所以 §5 的移除前檢查查詢是**唯一的保障**，不可省略。
+> 找出是哪個 key ID、哪些列：
+>
+> ```sql
+> SELECT encryption_key_id, blind_index_key_id, supplier_id, COUNT(*) FROM supplier_bank_accounts
+>  GROUP BY encryption_key_id, blind_index_key_id, supplier_id;
+> ```
+>
+> 修復：把該 key 補回 ring 並重新啟動；或對 lookup key 缺失的列重新輸入帳號（若它是該 Supplier
+> 唯一一列缺 key 的列，修改會成功，並以 active key 重算）。**§5 的移除前檢查仍然不可省略** ——
+> 上述行為只是讓錯誤可被看見，不會把 key 找回來。
 
 ---
 
@@ -267,7 +279,8 @@ mysql -u<admin> -p <restore_db> < backup.sql
 
 **還原後的驗證：**
 
-1. 以原本的 key ring 啟動應用程式，必須成功（§2）。
+1. 以原本的 key ring 啟動應用程式，必須成功（§2），而且啟動日誌中**不得**出現
+   `supplier.bank.keys_outside_ring`；出現即表示還原的資料用了 ring 中沒有的 key。
 2. 以一個已知帳號做 reveal，必須取回原帳號。
 3. **缺 key 或 key 錯誤時必須 fail closed**，而不是回傳亂碼：已由 TC-077 驗證 —— 還原後以正確
    ring 可取回帳號；ring 中缺該 key ID 時回 `503 BANK_KEY_UNAVAILABLE`；同一 key ID 但 key 值錯誤時
