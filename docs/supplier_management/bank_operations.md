@@ -59,6 +59,16 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 
 **對照：** 四個 ring 齊全且一致時，應用程式正常啟動，`GET /api/v1/health` 回 200。
 
+> **啟動檢查的範圍只到 ring 本身。** 它**不會**檢查資料庫中現有的列所使用的 key ID 是否仍在
+> ring 中。已實際驗證：資料列使用的 encryption key 或 lookup key 已從 ring 移除時，應用程式仍然
+> 正常啟動、health 回 200。後果：
+>
+> - Encryption key 缺失：該列 reveal 會被拒（不會洩漏明文），但回應是 `422
+>   BANK_ACCOUNT_UNREADABLE`，而非設計要求的 `503 BANK_KEY_UNAVAILABLE`（DEF-026）。
+> - **Lookup key 缺失：同一 Supplier 可以再新增同一個帳號，重覆檢查靜默失效（DEF-027，HIGH）。**
+>
+> 所以 §5 的移除前檢查查詢是**唯一的保障**，不可省略。
+
 ---
 
 ## 3. Encryption key 輪替
