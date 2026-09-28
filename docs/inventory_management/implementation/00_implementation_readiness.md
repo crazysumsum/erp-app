@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 is complete locally under APR-030 in an isolated worktree from `main` commit `a1005d0ee477021f7e4074e53cbe6bcbdafbb4ac`; TASK-014 remains pending and has not started.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 and TASK-014 are implemented locally in the continuing PHASE-002 branch; TASK-014's guarded MySQL 26.7.0 integration remains pending execution under Sam's approval.
 
 ## Baseline
 
@@ -36,6 +36,7 @@
 - `HD-027`～`HD-028`／`APR-026`～`APR-027`: Sam independently approved the exact 1.0 DESIGN and PLAN hashes after the migration reallocation.
 - `HD-029`／`APR-028`: Sam approved returning to IMPLEMENT, renaming existing Inventory migrations to `0055`～`0058`, validating the complete Inventory `0055`～`0060` history on disposable MySQL 26.7.0 and completing TASK-012 locally, without TASK-013, CI or remote actions.
 - `HD-030`／`APR-029`: Sam approved updating the completed TASK-001～TASK-012 branch from latest `main`, local post-merge verification, commit, push, PR creation and merge without CI, followed by merged branch/worktree cleanup; TASK-013 remains excluded.
+- `HD-032`～`HD-034`／`APR-032`～`APR-035`: Sam approved the exact 1.1 DESIGN and PLAN baselines, the minimal `ItemLookupService` Inventory-profile extension exposing `skuName`, and local TASK-014 Receipt implementation plus developer verification on the continuing PHASE-002 branch. Migration execution, CI and remote publication remained excluded until separately approved.
 
 ## Reconciled P0 checks
 
@@ -53,6 +54,7 @@
 - TASK-011 stayed inside the HD-024／APR-023-approved page, Inventory menu, component-test and browser-test boundary; it did not start TASK-012, add a migration, run CI or perform any remote action.
 - TASK-012 stayed inside the HD-029／APR-028-approved migration and focused-test boundary; it did not start TASK-013, run CI or perform any remote action.
 - TASK-013 stayed inside the APR-030-approved pure-rule and focused-test boundary; it did not start TASK-014, add or execute a migration, run CI or perform any remote action.
+- TASK-014 stayed inside APR-035's Receipt posting service, handler, strict schema and focused-test boundary. It reused the approved transaction, lock, Item lookup, operation and Audit primitives without adding a migration or performing a remote action.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -143,6 +145,14 @@
 - `git diff --check`, module-boundary validation and traceability validation passed. Multi-axis self-review found no open critical or high correctness, security, contract, performance or maintainability issue.
 - No migration or database execution occurred. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
+## TASK-014 developer verification
+
+- Commits `d601772`, `db847aa`, `263cb99` and `e499015` implement Receipt posting primitives, one atomic posting service, the strict `POST /api/v1/inventory/receipts` endpoint and a guarded MySQL integration test.
+- Receipt posting performs fixed authorization and fresh actor checks, Item／UOM resolution, Base／Pack conversion, tracking／Lot／expiry／minimum-life validation, exact override evidence, source-tuple replay／conflict handling, fixed-order locking, Balance mutation, immutable Movement insertion, required Audit and operation completion in one transaction.
+- TDD covers success, exact replay, source conflict, all three Stock Statuses, five rollback injection points, inactive master data, unsupported Serial, untracked and Lot consistency rules, minimum-life override evidence and expired-lot rejection. Focused Inventory checks passed; the complete local server suite passed 1,933 with 326 gated skips and 0 failures using the repository's public CI-only bank test keys.
+- Full repository ESLint passed. The guarded integration test loaded with its MySQL flags disabled and its file-specific ESLint passed. `git diff --check`, module-boundary validation and traceability validation passed.
+- The real MySQL integration has not yet run. It requires a disposable MySQL 26.7.0 schema and is the only remaining TASK-014 developer check. CI, push, PR and merge were not performed. These checks are not formal `TC-004` Technical Acceptance, independent code approval or business acceptance.
+
 ## Post-main-merge publication verification
 
 - Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
@@ -179,8 +189,9 @@
 - TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
 - TASK-012 created only the approved stock and Movement persistence plus its focused test; it did not start TASK-013.
 - TASK-013 created only the approved pure quantity, expiry, Lot／tracking and projection rules plus focused tests; it did not start TASK-014 or change persistence.
-- APR-030 authorizes only local TASK-013 implementation and verification. CI, push, PR and merge remain explicitly excluded.
+- TASK-014 created only the approved posting service, handler/schema updates and focused tests. It added no production migration and reused the approved Inventory `0055`～`0060` history.
+- APR-035 authorizes local TASK-014 implementation and developer verification. CI, push, PR and merge remain explicitly excluded.
 
 ## Next safe action
 
-Await Sam's authorization before starting TASK-014 Receipt implementation or performing any remote publication action. Keep migrations, database execution, CI, push, PR and merge out of scope until separately approved.
+Under Sam's approval, create one guarded disposable MySQL 26.7.0 `erp_inventory_task014_*` schema, apply only Inventory migrations `0055`～`0060`, execute the TASK-014 posting integration test, then remove the exact schema and stop the isolated runtime. CI, push, PR and merge remain out of scope.
