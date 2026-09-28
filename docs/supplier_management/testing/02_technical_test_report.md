@@ -192,5 +192,5 @@ as discharging any of these cases.
    exist; until that is resolved, no `TC-xxx` in this task can be produced by a declared suite.
 2. The fourteen cases above need execution against their own case IDs, not assessment.
 4. `TC-133` (OPS-006) needs a module-wide restore drill.
-5. `bank_operations.md` must exist for the Security/Operations review to have a subject.
+5. ~~`bank_operations.md` must exist for the Security/Operations review to have a subject.~~ It now exists and every command in it was executed against a CI-like MySQL; the review itself is still outstanding.
 6. A named human authority must accept the review. Nothing in this report substitutes for it.
