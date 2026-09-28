@@ -5,6 +5,13 @@
 **Baseline:** `9b2d0d3e0b2e0da284a0bfb99da861705279993f` (`main`, merged PR #147; CI run 36090912373 green on it)
 **Assessed by:** Claude Opus 5 ・**Assessed against:** `05_development_tasks.md` §T37, `06_technical_test_cases.md` §6.7 and §6.13, `00_project_profile.json`
 
+> **Correction, 2026-09-28 (Product Owner decision (a)).** This report put **TC-133 / OPS-006** into
+> TASK-037's scope. That was my error: `08_traceability.json` assigns TC-133 to **TASK-051** (PHASE-004,
+> release gate) only, and §T37's own acceptance criteria and Verification never name it. OPS-006 also
+> needs Supplier import data, and import (T41–T49) is not built. TC-133 now belongs to TASK-051; the
+> Product Owner accepted under HD-036 that it must pass before release. The rest of this report stands
+> as written for its baseline.
+
 ## Verdict: **BLOCKED** for formal Technical Acceptance ・**CONDITIONAL** for a defined executable subset
 
 Formal Technical Acceptance of SUP-CAP-03 as the profile declares it cannot be executed on this
