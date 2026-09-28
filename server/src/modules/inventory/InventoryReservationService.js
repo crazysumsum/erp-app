@@ -818,6 +818,28 @@ export class InventoryReservationService {
     });
     if (claim.replay) return resultFromSummary(claim.replay.resultSummary);
 
+    if (action === "cancel") {
+      const [activeAllocations] = await transaction.query(
+        `SELECT id, version, outstanding_quantity FROM inventory_allocations
+          WHERE reservation_id = ? AND outstanding_quantity > 0 ORDER BY id`, [reservationId]
+      );
+      if (activeAllocations.length) {
+        const lines = activeAllocations.map((row) => ({
+          allocationId: positiveId(Number(row.id), "allocationId"),
+          expectedVersion: positiveId(Number(row.version), "expectedVersion"),
+          quantity: inventoryPositiveInteger(Number(row.outstanding_quantity))
+        }));
+        const quantity = lines.reduce((total, line) => total + line.quantity, 0);
+        if (!Number.isSafeInteger(quantity)) {
+          throw inventoryError("INVENTORY_QUANTITY_INVALID", { field: "quantity" });
+        }
+        await this.#releaseAllocationsWithClaim(transaction, {
+          context, reservationId, expectedVersion, lines, quantity, claim, actorLabel, timestamp,
+          complete: false, bumpReservationVersion: false
+        });
+      }
+    }
+
     const [[scope]] = await transaction.query(
       "SELECT warehouse_id, sku_id FROM inventory_reservations WHERE id = ?",
       [reservationId]

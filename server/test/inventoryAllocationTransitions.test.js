@@ -48,6 +48,10 @@ function setup({ auditFails = false, sharedBalance = false } = {}) {
       if (sql.includes("SUM(outstanding_quantity)")) return [[{
         outstanding: state.allocations.reduce((sum, allocation) => sum + allocation.outstanding_quantity, 0)
       }]];
+      if (sql.includes("WHERE reservation_id = ? AND outstanding_quantity > 0")) {
+        return [state.allocations.filter((allocation) =>
+          allocation.reservation_id === params[0] && allocation.outstanding_quantity > 0)];
+      }
       if (sql.includes("FROM inventory_allocations")) return [state.allocations.filter(({ id }) =>
         params.includes(id)).map((allocation) => ({
         ...allocation,
@@ -71,7 +75,18 @@ function setup({ auditFails = false, sharedBalance = false } = {}) {
         balance.allocated_quantity = params[0];
         balance.version += 1;
       }
-      if (sql.includes("UPDATE inventory_reservations")) state.reservation.version += 1;
+      if (sql.includes("UPDATE inventory_stock_controls")) {
+        state.control.reserved_quantity = params[0];
+        state.control.version += 1;
+      }
+      if (sql.includes("UPDATE inventory_reservations")) {
+        if (sql.includes("SET released_quantity")) {
+          state.reservation.released_quantity = params[0];
+          state.reservation.outstanding_quantity = params[1];
+          state.reservation.status = params[2];
+        }
+        state.reservation.version += 1;
+      }
       if (sql.includes("INSERT INTO inventory_allocations")) {
         state.allocations.push({ id: 73, reservation_id: 17, stock_balance_id: params[2],
           allocated_quantity: params[3], consumed_quantity: 0, released_quantity: 0,
@@ -173,4 +188,19 @@ test("TASK-022 Reallocate rolls back the old Allocation if the destination is st
     allocations: [{ balanceId: 42, expectedVersion: 9, quantity: 2 }]
   })), (error) => error.code === "VERSION_CONFLICT");
   assert.deepEqual(database.state, before);
+});
+
+test("TASK-022 source cancel releases active Allocation holds and all Reservation outstanding", async () => {
+  const { service, database } = setup();
+  const request = inventoryCommandFixture({
+    actor: { claimedPermissions: ["inventory.operation"] },
+    authorization: { purpose: "reservation.cancel", requiredCallerPermission: "inventory.operation" },
+    source: { module: "FULFILLMENT", documentType: "PICK", eventId: "cancel-1" },
+    payload: { reservationId: 17, expectedVersion: 2 }
+  });
+  const result = await service.cancel(request);
+  assert.deepEqual([result.status, result.outstandingQuantity, result.releasedQuantity], ["CANCELLED", 0, 6]);
+  assert.deepEqual([database.state.control.reserved_quantity, database.state.balance.allocated_quantity,
+    database.state.allocations[0].outstanding_quantity], [0, 0, 0]);
+  assert.deepEqual(database.state.audits.map(({ action }) => action), ["allocation.release", "reservation.cancel"]);
 });
