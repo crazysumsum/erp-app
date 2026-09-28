@@ -63,8 +63,8 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 > ring 中。已實際驗證：資料列使用的 encryption key 或 lookup key 已從 ring 移除時，應用程式仍然
 > 正常啟動、health 回 200。後果：
 >
-> - Encryption key 缺失：該列 reveal 會被拒（不會洩漏明文），但回應是 `422
->   BANK_ACCOUNT_UNREADABLE`，而非設計要求的 `503 BANK_KEY_UNAVAILABLE`（DEF-026）。
+> - Encryption key 缺失：該列 reveal 會被拒，不會洩漏明文，回應是 `503 BANK_KEY_UNAVAILABLE`，
+>   並寫入一條 error 級別的 `supplier.bank.key_unavailable` 日誌（DEF-026 已修正；之前是 `422`）。
 > - **Lookup key 缺失：同一 Supplier 可以再新增同一個帳號，重覆檢查靜默失效（DEF-027，HIGH）。**
 >
 > 所以 §5 的移除前檢查查詢是**唯一的保障**，不可省略。
@@ -270,8 +270,10 @@ mysql -u<admin> -p <restore_db> < backup.sql
 1. 以原本的 key ring 啟動應用程式，必須成功（§2）。
 2. 以一個已知帳號做 reveal，必須取回原帳號。
 3. **缺 key 或 key 錯誤時必須 fail closed**，而不是回傳亂碼：已由 TC-077 驗證 —— 還原後以正確
-   ring 可取回帳號；ring 中缺該 key ID 時被拒為 `BANK_KEY_NOT_IN_RING`；同一 key ID 但 key 值錯誤時
-   在 GCM tag 驗證失敗；三種情況下錯誤訊息都不含帳號，還原後的密文一個 byte 都沒有改變。
+   ring 可取回帳號；ring 中缺該 key ID 時回 `503 BANK_KEY_UNAVAILABLE`；同一 key ID 但 key 值錯誤時
+   在 GCM tag 驗證失敗，回通用 `500`（不說明原因），並寫入 `supplier.bank.integrity_failed` 日誌；
+   三種情況下錯誤訊息都不含帳號，還原後的密文一個 byte 都沒有改變。
+   **看到 503 → 補回 key；看到 integrity_failed → 資料可能被竄改，要調查，不要重試了事。**
 
 自動化的還原演練：
 
