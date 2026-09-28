@@ -73,11 +73,12 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 >   停用列一樣會擋（與唯一索引一致，停用列不計 status）。其他 Supplier 的寫入不受影響；只改銀行名等
 >   欄位仍可進行。但其他 Supplier 新增同一帳號時，**跨 Supplier 的重覆提示對這些列失效**，且不會記錄。
 >
-> 找出是哪些列（把 `<…>` 換成目前 ring 中的 key ID）：
+> 找出是哪些列（把 `<…>` 換成**正在運行的應用程式** ring 中的 key ID，**每個 ID 各自加引號**，例如
+> `('enc-1', 'enc-2')`；寫成 `('enc-1, enc-2')` 會把所有列都列出來）：
 >
 > ```sql
 > SELECT id, supplier_id, status, encryption_key_id, blind_index_key_id FROM supplier_bank_accounts
->  WHERE encryption_key_id NOT IN ('<encryption key ids>') OR blind_index_key_id NOT IN ('<lookup key ids>')
+>  WHERE encryption_key_id NOT IN ('<enc id 1>', '<enc id 2>') OR blind_index_key_id NOT IN ('<lookup id 1>', '<lookup id 2>')
 >  ORDER BY supplier_id, id;
 > ```
 >
@@ -175,17 +176,23 @@ Ring 變數改為 `SUPPLIER_BANK_LOOKUP_KEYS`／`SUPPLIER_BANK_LOOKUP_ACTIVE_KEY
 會回 `503`（§2）。重建 blind index 只需要 **encryption ring** 解密，不需要舊 lookup key，所以可以救：
 
 ```bash
-npm run supplier:bank:reindex-lookup --workspace server -- --from=<遺失的 key id> --to=<active> --from-lost --json
+npm run -s supplier:bank:reindex-lookup --workspace server -- --from=<遺失的 key id> --to=<active> --from-lost --json
 ```
 
+- 執行前：先用 §2 的 SQL 確認這個 key id 確實**不在正在運行的應用程式的 ring 中**，而且執行工具的環境與
+  應用程式用同一組 ring（工具讀 `server/.env` 及環境變數）。兩邊 ring 不同時，這個旗會把列重建到應用程式
+  沒有的 key 上（可再以正確環境重跑修正，不會遺失資料）。`-s` 讓 `--json` 輸出只有 JSON。
 - `--from-lost` 取代「`--from` 必須在 ring 中」的防打錯字檢查，改為要求**仍有列使用這個 key id**；
-  沒有就拒絕（exit 2）。所以打錯字仍會被擋；已經跑完的再跑一次也會被拒，看到
-  `no supplier_bank_accounts row uses lookup key id` 即表示已完成。
+  沒有就拒絕（exit 2）。**這個拒絕分不出打錯字與已完成**，不能當作完成的證明。
+- **完成的判斷**：某一次執行的報告 `remaining: 0` 而且 `failed: 0`；再以 §2 的 SQL 確認沒有列使用這個
+  key id，重新啟動後 `supplier.bank.key_check_completed` 的 `lookup` 為 0。
 - key id 其實仍在 ring 中時拒絕（不需要這個旗）；用在 encryption 輪替時拒絕。
 - **不需要**放假 key 進 ring，因此過程中查重沒有盲區：未重建的列仍令該 Supplier 回 `503`，重建完的列
   立即參與查重。
-- 若某列回報 `DUPLICATE_KEY`，表示 key 遺失期間同一 Supplier 已經加入了同一個帳號（DEF-027 修正前的
-  情況），要人手調查，不要重試了事。
+- 若某列回報 `DUPLICATE_KEY`（exit 1）：同一 Supplier 已經有同一個帳號在 active key 之下 —— 來源可能是
+  DEF-027 修正前的漏洞，或有人曾用「放假 key 進 ring」的方法處理遺失的 key。**該 Supplier 會一直回 `503`**，
+  停用、重新輸入、修改帳號或重跑都解不了（停用列一樣計入查重）。要由人決定保留哪一列（以 reveal 比對
+  帳號），再由 DBA 修正資料；本 runbook 不提供這一步的程序，不要自行刪列。
 - 完成後 `remaining` 為 0，並照 §5 處理 Customer 那一邊（本工具只處理 `supplier_bank_accounts`）。
 
 已驗證（真 MySQL）：同一 Supplier 兩列在遺失的 key 下、其中一列已停用 —— 重建前新增回 `503`；

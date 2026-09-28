@@ -88,7 +88,7 @@ export class SupplierCoreProviderService extends SupplierLookupService {
  *
  * 所以呢度乜都唔掟：連檢查本身失敗都只係記低。Bank 未部署（冇 key ring 設定）就
  * 唔查，設計 §1700 講明 PHASE-001／002 唔可以因 Bank 而受阻。Log 只帶數目同種類，
- * 唔帶 key ID —— 要知係邊條 key，operator 用 runbook §8 嗰句 SQL 查。
+ * 唔帶 key ID —— 要知係邊條 key，operator 用 runbook §2 嗰句 SQL 查。
  */
 export class SupplierBankKeyCheckService extends BaseService {
   static service = Object.freeze({
