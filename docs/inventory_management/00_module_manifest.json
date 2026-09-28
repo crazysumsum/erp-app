@@ -78,7 +78,7 @@
         "id": "inventory-domain-contract",
         "version": "planning-v7",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "2c89dff80da709003c17b1b3871408689e20de573f51581c860512951af07602",
+        "sha256": "9df21d75c290dab878991e8e42ec9eeef4c35b0e4a43783b33f7c3c7444b5f92",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
@@ -93,7 +93,7 @@
         "id": "item-lookup-service",
         "version": "transaction-v1",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "ca31b00f228e092fce27def6c5322ec804e9969c83853e90d0965e59a6e86ab1",
+        "sha256": "2f6924b6545395a56581619d0f621a215f0aa18115115071cc8ed00d023c685a",
         "regression_suites": [
           "inventory-technical"
         ]

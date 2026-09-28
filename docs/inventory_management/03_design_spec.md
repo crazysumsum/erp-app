@@ -290,7 +290,7 @@ Domain source tuple嚴格依需求為`sourceModule＋sourceDocumentType＋source
 
 ### 3.2 SKU與Lot規則
 
-- 每次提交由`ItemLookupService`按SKU ID讀取`inventoryTracked`、status、Base UOM、tracking policy及minimum life；client snapshot不可信。
+- 每次提交由`ItemLookupService`按SKU ID讀取`skuCode`、`skuName`、`inventoryTracked`、status、Base UOM、tracking policy及minimum life；Movement使用該次讀取的SKU code/name建立不可變snapshot，client snapshot不可信。
 - `none`：Lot／Expiry／Manufacture禁止提交；Balance的`lot_id=NULL`。
 - `batch`：Lot必填，Expiry選填；同SKU＋normalized lot唯一。
 - `batch_expiry`：Lot及Expiry必填。
@@ -1278,7 +1278,7 @@ server/src/modules/inventory/
     InventoryOpeningWorker.js
 ```
 
-`ItemLookupService`由Item module擁有，提供`getInventoryProfileInTransaction(transaction,skuId)`及`resolveUomInTransaction(transaction,skuId,uomId)`，回SKU status、inventoryTracked、trackingPolicy、Base UOM、整數factor及minimum life的白名單projection；不得要求下游actor持有`item.view`。新增`server/test/itemLookupService.test.js`及Inventory consumer contract test，證明Inactive／Archived／Serial／UOM版本語意一致。
+`ItemLookupService`由Item module擁有，提供`getInventoryProfileInTransaction(transaction,skuId)`及`resolveUomInTransaction(transaction,skuId,uomId)`，回`skuCode`、`skuName`、SKU status、inventoryTracked、trackingPolicy、Base UOM、整數factor及minimum life的白名單projection；不得要求下游actor持有`item.view`。新增`server/test/itemLookupService.test.js`及Inventory consumer contract test，證明Inactive／Archived／Serial／UOM版本語意一致。
 
 若已有跨Item／Supplier／Customer共用CSV parser dependency，沿用同一版本；否則新增一個RFC 4180 parser並在lockfile記錄。不得自行`split(',')`。
 
