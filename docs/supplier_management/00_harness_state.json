@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 237,
+  "revision": 238,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "VERIFYING",
@@ -3699,6 +3699,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-23: approve, add the two npm script entries exactly as design 2.7 names them. The diff is two lines in the scripts object; no dependency and no existing script is touched."
+    },
+    {
+      "id": "HD-036",
+      "impact": "MAJOR",
+      "question": "T37's third Verification bullet requires a manual Security/Operations review that approves the backup, restore and rotation runbook and its evidence. docs/supplier_management/bank_operations.md exists and every command in it was executed; the review package is docs/supplier_management/testing/03_security_operations_review.md. Fourteen items (R1-R14) each state what the agent verified and what only a human can judge - the production secret store, who holds DB admin credentials, off-box restore, backup retention and encryption, and whether Customer rotation correctness may rest on the customer module's own tests. Four open items need an accept/reject decision: DEF-023, DEF-024, the design 3.3 key-removal divergence, and OPS-006/TC-133 timing. An agent cannot grant this approval.",
+      "affected_ids": [
+        "TASK-037",
+        "docs/supplier_management/bank_operations.md",
+        "DEF-023",
+        "DEF-024",
+        "TC-133"
+      ],
+      "status": "PENDING",
+      "answer_ref": null
     }
   ],
   "external_actions": [
