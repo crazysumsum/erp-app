@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 and TASK-014 are implemented locally in the continuing PHASE-002 branch; TASK-014's guarded MySQL 26.7.0 integration remains pending execution under Sam's approval.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013 and TASK-014 are complete locally in the continuing PHASE-002 branch; TASK-015 has not started.
 
 ## Baseline
 
@@ -37,6 +37,7 @@
 - `HD-029`／`APR-028`: Sam approved returning to IMPLEMENT, renaming existing Inventory migrations to `0055`～`0058`, validating the complete Inventory `0055`～`0060` history on disposable MySQL 26.7.0 and completing TASK-012 locally, without TASK-013, CI or remote actions.
 - `HD-030`／`APR-029`: Sam approved updating the completed TASK-001～TASK-012 branch from latest `main`, local post-merge verification, commit, push, PR creation and merge without CI, followed by merged branch/worktree cleanup; TASK-013 remains excluded.
 - `HD-032`～`HD-034`／`APR-032`～`APR-035`: Sam approved the exact 1.1 DESIGN and PLAN baselines, the minimal `ItemLookupService` Inventory-profile extension exposing `skuName`, and local TASK-014 Receipt implementation plus developer verification on the continuing PHASE-002 branch. Migration execution, CI and remote publication remained excluded until separately approved.
+- `HD-035`／`APR-036`: Sam approved one guarded disposable MySQL 26.7.0 TASK-014 integration run using an `erp_inventory_task014_*` schema and Inventory migrations `0055`～`0060`, followed by exact schema/runtime cleanup. CI and remote publication remained excluded.
 
 ## Reconciled P0 checks
 
@@ -147,11 +148,12 @@
 
 ## TASK-014 developer verification
 
-- Commits `d601772`, `db847aa`, `263cb99` and `e499015` implement Receipt posting primitives, one atomic posting service, the strict `POST /api/v1/inventory/receipts` endpoint and a guarded MySQL integration test.
+- Commits `d601772`, `db847aa`, `263cb99`, `e499015` and `b88cb14` implement Receipt posting primitives, one atomic posting service, the strict `POST /api/v1/inventory/receipts` endpoint, a guarded MySQL integration test and the pre-Stocktake schema compatibility fix found by that test.
 - Receipt posting performs fixed authorization and fresh actor checks, Item／UOM resolution, Base／Pack conversion, tracking／Lot／expiry／minimum-life validation, exact override evidence, source-tuple replay／conflict handling, fixed-order locking, Balance mutation, immutable Movement insertion, required Audit and operation completion in one transaction.
-- TDD covers success, exact replay, source conflict, all three Stock Statuses, five rollback injection points, inactive master data, unsupported Serial, untracked and Lot consistency rules, minimum-life override evidence and expired-lot rejection. Focused Inventory checks passed; the complete local server suite passed 1,933 with 326 gated skips and 0 failures using the repository's public CI-only bank test keys.
-- Full repository ESLint passed. The guarded integration test loaded with its MySQL flags disabled and its file-specific ESLint passed. `git diff --check`, module-boundary validation and traceability validation passed.
-- The real MySQL integration has not yet run. It requires a disposable MySQL 26.7.0 schema and is the only remaining TASK-014 developer check. CI, push, PR and merge were not performed. These checks are not formal `TC-004` Technical Acceptance, independent code approval or business acceptance.
+- TDD covers success, exact replay, source conflict, all three Stock Statuses, five rollback injection points, inactive master data, unsupported Serial, untracked and Lot consistency rules, minimum-life override evidence and expired-lot rejection. The complete post-fix local server suite passed 1,934 with 327 gated skips and 0 failures using the repository's public CI-only bank test keys.
+- The first real-MySQL run correctly failed because the PHASE-002 schema has no future `inventory_bin_locks` table. The fix treats the complete absence of Stocktake tables as the pre-feature state, while a partial Stocktake schema still fails closed; focused Receipt/lock checks passed 15/15.
+- The final guarded integration passed 1/1 on MySQL 26.7.0 in `erp_inventory_task014_20260928_1052`, proving success, exact replay, source conflict and Audit-failure rollback after migrations `0055`～`0060`. The schema, port 3314, isolated server and `/private/tmp/erp-inventory-task014-mysql-2670.Cm9eZt` root were removed and confirmed absent.
+- Full repository ESLint and `git diff --check` passed. Module-boundary validation and traceability validation passed. CI, push, PR and merge were not performed. These checks are not formal `TC-004` Technical Acceptance, independent code approval or business acceptance.
 
 ## Post-main-merge publication verification
 
@@ -190,8 +192,8 @@
 - TASK-012 created only the approved stock and Movement persistence plus its focused test; it did not start TASK-013.
 - TASK-013 created only the approved pure quantity, expiry, Lot／tracking and projection rules plus focused tests; it did not start TASK-014 or change persistence.
 - TASK-014 created only the approved posting service, handler/schema updates and focused tests. It added no production migration and reused the approved Inventory `0055`～`0060` history.
-- APR-035 authorizes local TASK-014 implementation and developer verification. CI, push, PR and merge remain explicitly excluded.
+- APR-036 authorized the guarded TASK-014 MySQL run and exact cleanup. CI, push, PR and merge remain explicitly excluded.
 
 ## Next safe action
 
-Under Sam's approval, create one guarded disposable MySQL 26.7.0 `erp_inventory_task014_*` schema, apply only Inventory migrations `0055`～`0060`, execute the TASK-014 posting integration test, then remove the exact schema and stop the isolated runtime. CI, push, PR and merge remain out of scope.
+Await Sam's authorization before starting TASK-015 Receipt downstream synchronization or any remote publication action. Keep migration execution, MySQL, CI, push, PR and merge out of scope until separately approved.
