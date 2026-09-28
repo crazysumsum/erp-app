@@ -25,6 +25,8 @@ export const USAGE = [
   "Usage: --from=<keyId> --to=<activeKeyId> [options]",
   "",
   "  --from=<keyId>              the key id to rotate away from; must be in the ring",
+  "  --from-lost                 lookup reindex only: --from's key material is lost and it is no",
+  "                              longer in the ring; refused unless some row still uses it",
   "  --to=<keyId>                the key id to rotate to; must be the active one",
   `  --batch-size=<n>            rows per SELECT (default 200); 1 to ${MAX_BATCH_SIZE}`,
   "  --limit=<n>                 stop after n rows attempted; at least 1.",
@@ -51,7 +53,7 @@ export const USAGE = [
  * 3. `--json=false` 之前等於 `--json`。（L-9）
  */
 export function parseArguments(argv) {
-  const options = { batchSize: undefined, limit: undefined, transitionStarted: null, json: false };
+  const options = { batchSize: undefined, limit: undefined, transitionStarted: null, json: false, fromLost: false };
   for (const argument of argv) {
     if (!argument.startsWith("--")) throw new Error(`unknown argument ${JSON.stringify(argument)}`);
     const body = argument.slice(2);
@@ -64,7 +66,10 @@ export function parseArguments(argv) {
     else if (flag === "batch-size") options.batchSize = Number(rawValue);
     else if (flag === "limit") options.limit = Number(rawValue);
     else if (flag === "transition-started") options.transitionStarted = Date.parse(String(rawValue));
-    else if (flag === "json") {
+    else if (flag === "from-lost") {
+      if (rawValue !== undefined) throw new Error("--from-lost takes no value");
+      options.fromLost = true;
+    } else if (flag === "json") {
       if (rawValue !== undefined) throw new Error("--json takes no value");
       options.json = true;
     // 淨係報旗名，唔好把成個 argv 回顯 —— 一個打錯位置嘅 key value 唔應該
@@ -213,7 +218,7 @@ export async function main(kind, argv = process.argv.slice(2), openConnection = 
       database: runtime.database, crypto: runtime.crypto, kind, from: options.from, to: options.to,
       ...(options.batchSize === undefined ? {} : { batchSize: options.batchSize }),
       ...(options.limit === undefined ? {} : { limit: options.limit }),
-      transitionStartedAt: options.transitionStarted,
+      transitionStartedAt: options.transitionStarted, fromLost: options.fromLost,
       onProgress: progressReporter({ json: options.json })
     });
     process.stdout.write(`${JSON.stringify(report, null, options.json ? 0 : 2)}\n`);

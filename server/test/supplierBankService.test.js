@@ -60,7 +60,7 @@ function wrappedDuplicate(constraint) {
   return new MySqlDatabaseOperationError("MySQL database execute failed", { cause: driver });
 }
 
-function harness({ row = bankRow(), duplicates = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
+function harness({ row = bankRow(), duplicates = [], outsideRing = [], statementFails = null, permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"], crypto = realCrypto(), sealRow = null } = {}) {
   const events = [];
   const current = row;
   const connection = {
@@ -69,6 +69,7 @@ function harness({ row = bankRow(), duplicates = [], statementFails = null, perm
       if (sql.includes("FROM suppliers") && sql.includes("FOR UPDATE")) return [[{ id: 7, supplier_code: "SUP-007" }]];
       if (sql.includes("FROM suppliers WHERE id")) return [[{ id: 7 }]];
       if (sql.includes("JOIN suppliers s")) return [duplicates];
+      if (sql.includes("blind_index_key_id NOT IN")) return [outsideRing];
       if (sql.includes("account_ciphertext") && sql.includes("WHERE id = ?")) {
         return [[sealRow ? { ...current, ...sealRow } : null].filter(Boolean)];
       }
@@ -138,7 +139,7 @@ test("the masked list never selects an encrypted column", async () => {
   const { service, events } = harness();
   const result = await service.list({ ...actor, supplierId: 7 });
   assert.equal(result.items.length, 1);
-  assert.equal(result.items[0].maskedAccountNumber, "•••• 9001");
+  assert.equal(result.items[0].maskedAccountNumber, "**** 9001");
   assert.equal(result.items[0].accountNumber, undefined);
 
   const sql = allSql(events);
@@ -213,6 +214,38 @@ test("duplicate checking uses every lookup key, not just the active one", async 
   const indexes = lookup[2].filter((value) => Buffer.isBuffer(value));
   assert.equal(indexes.length, 2, "both ring keys must be searched");
   assert.notEqual(indexes[0].toString("hex"), indexes[1].toString("hex"));
+});
+
+test("TC-068 (BANK-007): a Supplier with a row on a lookup key outside the ring cannot add or change an account", async () => {
+  // DEF-027：嗰行冇 key 重算 index，查重撞唔中佢，所以「冇重覆」呢個答案唔可信。
+  const refused = async (write) => {
+    const errors = [];
+    const run = harness({ outsideRing: [{ id: 40 }] });
+    run.service.logger = { error: (...args) => errors.push(args), warn() {} };
+    const thrown = await write(run.service).then(() => null, (error) => error);
+    return { ...run, errors, thrown };
+  };
+  const create = await refused((service) => service.create({ ...actor, ...bankDetails, supplierId: 7, accountNumber: ACCOUNT, reason: "查重唔晒測試原因" }));
+  const update = await refused((service) => service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, accountNumber: "999-000111-222", reason: "查重唔晒測試原因" }));
+
+  for (const [label, run] of [["create", create], ["update", update]]) {
+    assert.equal(run.thrown?.statusCode, 503, `${label}: 503`);
+    assert.equal(run.thrown?.publicCode, "BANK_KEY_UNAVAILABLE");
+    assert.ok(!run.events.some(([kind, sql]) => kind === "execute" && /INSERT INTO supplier_bank_accounts|UPDATE supplier_bank_accounts/u.test(sql)),
+      `${label}: nothing is written`);
+    assert.equal(run.audited.length, 0, `${label}: nothing is audited`);
+    assert.deepEqual(run.errors.map(([event, , context]) => [event, context]),
+      [["supplier.bank.duplicate_check_unavailable", { supplierId: 7 }]], `${label}: logged once, as an error`);
+    const check = run.events.find(([, sql]) => sql.includes("blind_index_key_id NOT IN"));
+    assert.deepEqual(check[2].slice(0, 2), [7, "look-1"], `${label}: scoped to this Supplier, against the ring`);
+  }
+  assert.equal(update.events.find(([, sql]) => sql.includes("blind_index_key_id NOT IN"))[2].at(-1), 41,
+    "the row being rewritten does not block itself");
+
+  // 對照：改名唔產生新 index，冇嘢要查，照做得。
+  const rename = harness({ outsideRing: [{ id: 40 }] });
+  await rename.service.update({ ...actor, ...bankDetails, supplierId: 7, bankAccountId: 41, version: 1, reason: "改名測試原因" });
+  assert.equal(rename.audited.length, 1);
 });
 
 test("update re-encrypts only when the account itself changed", async () => {
@@ -383,8 +416,9 @@ test("a reveal of a tampered row fails instead of returning something", async ()
       account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId
     }
   });
-  // REV-035：一個竄改咗嘅行要係一個**具名** 422，唔係匿名 500 —— 日誌要分得出
-  // 「資料被改過」同「條 key 唔喺 ring 入面」，兩者嘅處理方法完全唔同。
+  // 設計 §8.3、§6：一個竄改咗嘅行係通用 500 —— 唔話俾 caller 聽點解。之前佢係一個具名
+  // 422 BANK_ACCOUNT_UNREADABLE，同「key 唔喺 ring」收埋做同一個 code（DEF-026）。
+  // 日誌照樣分得出兩者（見下面嗰條 log 測試）。
   let thrown = null;
   try {
     await service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "竄改資料測試原因" });
@@ -392,8 +426,9 @@ test("a reveal of a tampered row fails instead of returning something", async ()
     thrown = error;
   }
   assert.ok(thrown);
-  assert.equal(thrown.statusCode, 422);
-  assert.equal(thrown.publicCode, "BANK_ACCOUNT_UNREADABLE");
+  assert.equal(thrown.statusCode, 500);
+  assert.equal(thrown.publicCode, "INTERNAL_SERVER_ERROR", "an integrity failure is not explained to the caller");
+  assert.equal(thrown.code, "BANK_ACCOUNT_INTEGRITY_FAILED");
   assert.ok(!thrown.publicMessage.includes(NORMALIZED));
   assert.equal(audited.length, 0, "no audit row may claim a reveal that never produced an account");
 });
@@ -593,30 +628,45 @@ test("the duplicate translation reads the driver code through the wrapper, not o
   );
 });
 
-test("an unreadable row logs its reason in the context slot, which is the whole point of the 422", async () => {
-  // REV-036 M-1：systemLogger 係 warn(event, message, context)。第一版傳兩個
-  // argument，所以個 payload 跌咗入 message 個位 —— 而個 422 嘅全部理由就係「竄改」
-  // 同「條 key 唔喺 ring」喺日誌分得出。之前冇任何測試望過個 log。
+test("an unreadable row is logged as an error, and tampering and a missing key are told apart", async () => {
+  // REV-036 M-1：systemLogger 係 error(event, message, context)。第一版傳兩個
+  // argument，個 payload 跌咗入 message 個位。之前呢度係 warn；設計 §12 要求 integrity
+  // 同 key 錯誤即時 critical alert，所以而家係 error，而兩種情況有兩個唔同 event。
   const crypto = realCrypto();
   const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: "ctx-41", accountNumber: ACCOUNT });
+
+  const logged = async (sealRow) => {
+    const errors = [];
+    const { service } = harness({ crypto, sealRow });
+    service.logger = { error: (...args) => errors.push(args), warn() {} };
+    const thrown = await service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "日誌測試原因" })
+      .then(() => null, (error) => error);
+    return { errors, thrown };
+  };
+
   const broken = Buffer.from(sealed.ciphertext);
   broken[0] ^= 0x01;
-  const warnings = [];
-  const { service } = harness({
-    crypto,
-    sealRow: { account_ciphertext: broken, account_iv: sealed.iv, account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId }
-  });
-  service.logger = { warn: (...args) => warnings.push(args) };
+  const tampered = await logged({ account_ciphertext: broken, account_iv: sealed.iv,
+    account_auth_tag: sealed.authTag, encryption_key_id: sealed.encryptionKeyId });
+  const missing = await logged({ account_ciphertext: sealed.ciphertext, account_iv: sealed.iv,
+    account_auth_tag: sealed.authTag, encryption_key_id: "gone-key" });
 
-  await assert.rejects(() => service.reveal({ ...actor, supplierId: 7, bankAccountId: 41, reason: "日誌測試原因" }));
-  assert.equal(warnings.length, 1);
-  const [event, message, context] = warnings[0];
-  assert.equal(warnings[0].length, 3, "warn takes (event, message, context); two arguments puts the payload in the message slot");
-  assert.equal(event, "supplier.bank.reveal.unreadable");
-  assert.equal(typeof message, "string");
-  assert.equal(context.bankAccountId, 41);
-  assert.match(context.reason, /failed authentication/u, "tampering and a missing key must read differently here");
-  assert.ok(!JSON.stringify(warnings[0]).includes(NORMALIZED), "and the log must not carry the account");
+  for (const [label, run, event, status, publicCode] of [
+    ["tampered", tampered, "supplier.bank.integrity_failed", 500, "INTERNAL_SERVER_ERROR"],
+    ["missing key", missing, "supplier.bank.key_unavailable", 503, "BANK_KEY_UNAVAILABLE"]
+  ]) {
+    assert.equal(run.errors.length, 1, `${label}: logged once`);
+    assert.equal(run.errors[0].length, 3, `${label}: error takes (event, message, context)`);
+    const [loggedEvent, message, context] = run.errors[0];
+    assert.equal(loggedEvent, event, `${label}: its own event`);
+    assert.equal(typeof message, "string");
+    assert.equal(context.bankAccountId, 41);
+    assert.ok(!JSON.stringify(run.errors[0]).includes(NORMALIZED), `${label}: the log must not carry the account`);
+    assert.ok(!JSON.stringify(run.errors[0]).includes("gone-key"), `${label}: nor the key id`);
+    assert.equal(run.thrown?.statusCode, status, `${label}: ${status}`);
+    assert.equal(run.thrown?.publicCode, publicCode);
+    assert.ok(!String(run.thrown?.publicMessage).includes("gone-key"), `${label}: the public message does not name the key`);
+  }
 });
 
 

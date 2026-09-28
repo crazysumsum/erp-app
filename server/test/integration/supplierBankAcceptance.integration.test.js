@@ -25,6 +25,8 @@ import { SupplierBankCrypto } from "../../src/modules/supplier/SupplierBankCrypt
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const PASSWORD = "Bank-Acceptance-1!";
 const SECRET = `44${randomUUID().replace(/-/gu, "").slice(0, 14).toUpperCase()}`;
+// 同 SECRET 永遠唔同嘅另一個帳號。之前係「第 7 位換做 9」，SECRET 第 7 位本身係 9 就一樣（1/16，REV-057 L-5）。
+const NEXT_SECRET = `${SECRET.slice(0, 6)}${SECRET[6] === "9" ? "8" : "9"}${SECRET.slice(7)}`;
 const SHORT = String(Math.floor(1000 + Math.random() * 8999));   // 4 位
 const CRYPTO_FIELDS = ["ciphertext", "authTag", "blindIndex", "cryptoContext", "encryptionKeyId", "lastFour", "iv"];
 
@@ -306,14 +308,13 @@ integrationTest("TC-064 (BANK-003): only view + bank.view + bank.mgmt, with devi
  * 分三條，因為佢三部分嘅結果唔同：
  *
  * 1. **唔可以回明文** —— PASS，呢條強制執行。
- * 2. **公開 code 要係 503 `BANK_KEY_UNAVAILABLE`**（設計 §6 錯誤表、§8.3）—— **FAIL**。
- *    實際係 422 `BANK_ACCOUNT_UNREADABLE`，而且同「密文被竄改」收埋做同一個 code，
- *    而設計要求後者係 500。DEF-026。
- * 3. **Lookup key 唔喺 ring 時查重要 fail closed** —— **FAIL，HIGH**。同一個 Supplier
- *    可以再新增同一個帳號，開機亦唔會發現。DEF-027。
- *
- * 2 同 3 用 `todo`：佢哋照樣執行、照樣喺輸出見到失敗，但唔令 CI 紅。TEST_AND_VERIFY
- * 預設 REPORT_ONLY，唔改 product code；修好嗰日拎走 `todo` 就變成強制。
+ * 2. **公開 code 要係 503 `BANK_KEY_UNAVAILABLE`**（設計 §6 錯誤表、§8.3）—— 之前 FAIL
+ *    （回 422 `BANK_ACCOUNT_UNREADABLE`，同竄改收埋做同一個 code），DEF-026 修正後 PASS，
+ *    `todo` 已拎走，而家強制執行。
+ * 3. **Lookup key 唔喺 ring 時查重要 fail closed** —— 之前 FAIL（HIGH）：同一個
+ *    Supplier 可以再新增同一個帳號。DEF-027 按 Product Owner 揀嘅 (b) 修正：嗰個
+ *    Supplier 嘅新增／改帳號回 503，其他 Supplier 唔受影響；開機只記 error log，唔阻開機。
+ *    `todo` 已拎走，而家強制執行。
  */
 async function seedUnder(supplierId, account, { encryptionKeyId, lookupKeyId }) {
   const appConfig = h.application.services.config.supplier;
@@ -343,7 +344,6 @@ integrationTest("TC-068 (BANK-007): a row whose encryption key is not in the rin
 });
 
 integrationTest("TC-068 (BANK-007): the refusal is 503 BANK_KEY_UNAVAILABLE, as design 6 and 8.3 specify",
-  { todo: "DEF-026: implementation returns 422 BANK_ACCOUNT_UNREADABLE and collapses key-absent with integrity failure" },
   async () => {
     const supplierId = await seedSupplier();
     const row = await seedUnder(supplierId, SECRET, { encryptionKeyId: "gone-enc-2" });
@@ -355,7 +355,6 @@ integrationTest("TC-068 (BANK-007): the refusal is 503 BANK_KEY_UNAVAILABLE, as 
   });
 
 integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existing row's lookup key fails closed",
-  { todo: "DEF-027 (HIGH): the duplicate is accepted, and startup does not detect rows on a lookup key missing from the ring" },
   async () => {
     const supplierId = await seedSupplier();
     await seedUnder(supplierId, SECRET, { lookupKeyId: "gone-look" });
@@ -363,8 +362,90 @@ integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existi
     const before = await state(supplierId);
     const response = await post(writer, `/api/v1/suppliers/${supplierId}/bank-accounts/create`, {
       accountHolderName: "Dup", bankName: "Dup Bank", accountNumber: SECRET, reason: "TC-068 查重", password: PASSWORD });
-    assert.ok(response.status >= 400, `the same account under the same Supplier must be refused, got ${response.status}`);
+    assert.equal(response.status, 503, response.text.slice(0, 200));
+    assert.ok(response.text.includes('"BANK_KEY_UNAVAILABLE"'));
+    assert.ok(!response.text.includes("gone-look"), "the public message must not name the key");
     assert.equal((await state(supplierId)).rows, before.rows, "no second row may be created");
+
+    // 開機檢查：用 app 自己嗰個 service、真設定、真 MySQL 再行一次。佢只 log，唔掟。
+    const systemLog = () => fs.readdirSync(path.join(h.logRoot, "system"), { recursive: true })
+      .map((name) => path.join(h.logRoot, "system", name)).filter((file) => fs.statSync(file).isFile())
+      .map((file) => fs.readFileSync(file, "utf8")).join("\n");
+    // 淨係數 lookup 嗰半：同一個 schema 入面有 gone-enc 嘅行，encryption 嗰半會令一個
+    // 唔分 kind 嘅計數自己成立（REV-057 L-1）。
+    const seen = () => systemLog().split("\n")
+      .filter((line) => line.includes("supplier.bank.keys_outside_ring") && /"kind":\s*"lookup"/u.test(line)).length;
+    const logged = seen();
+    await h.application.services.require("supplierBankKeyCheck").initialize();
+    assert.ok(seen() > logged, "startup check reports rows on a lookup key outside the ring");
+    assert.ok(!systemLog().includes("gone-look"), "the log does not name the key");
+
+    // 對照：另一個 Supplier 唔受影響 —— fail closed 係逐個 Supplier，唔係成個模組。
+    const other = await seedSupplier();
+    const allowed = await post(writer, `/api/v1/suppliers/${other}/bank-accounts/create`, {
+      accountHolderName: "Other", bankName: "Other Bank", accountNumber: SECRET, reason: "TC-068 對照", password: PASSWORD });
+    assert.equal(allowed.status, 200, allowed.text.slice(0, 200));
+  });
+
+integrationTest("TC-068 (BANK-007): re-entering the account on the only unreadable row repairs it; a second one still blocks",
+  async () => {
+    // 修復路徑：重新輸入嗰行嘅帳號會用 active key 重算佢個 index。嗰行自己唔可以擋住自己，
+    // 但同一個 Supplier 仲有第二行唔喺 ring 就要照擋 —— 呢半係對照。
+    const service = await serviceWith();
+    const NEXT = NEXT_SECRET;
+    const alone = await seedSupplier();
+    const only = await seedUnder(alone, SECRET, { lookupKeyId: "gone-look-3" });
+    await service.update({ ...svcActor, supplierId: alone, bankAccountId: only.id, version: only.version,
+      accountHolderName: "Seed", bankName: "Seed Bank", accountNumber: NEXT, reason: "TC-068 修復" });
+    assert.equal((await rawRow(only.id)).lk, h.application.services.config.supplier.bankLookup.activeKeyId);
+
+    const two = await seedSupplier();
+    const first = await seedUnder(two, SECRET, { lookupKeyId: "gone-look-4" });
+    await seedUnder(two, NEXT, { lookupKeyId: "gone-look-4" });
+    await assert.rejects(() => service.update({ ...svcActor, supplierId: two, bankAccountId: first.id, version: first.version,
+      accountHolderName: "Seed", bankName: "Seed Bank", accountNumber: `${NEXT}1`, reason: "TC-068 對照" }),
+    (error) => error.statusCode === 503 && error.publicCode === "BANK_KEY_UNAVAILABLE");
+  });
+
+integrationTest("TC-068 (BANK-007): a deactivated row on a lookup key outside the ring still blocks, as the unique index would",
+  async () => {
+    // REV-057 M-1：UNIQUE(supplier_id, blind_index_key_id, account_blind_index) 冇 status 謂詞，
+    // 所以停用咗嘅帳號再加返都要擋（REV-035 H-3）。嗰行 key 唔喺 ring，就只剩呢個檢查擋得住。
+    const service = await serviceWith();
+    const supplierId = await seedSupplier();
+    const row = await seedUnder(supplierId, SECRET, { lookupKeyId: "gone-look-5" });
+    await service.deactivate({ ...svcActor, supplierId, bankAccountId: row.id, version: row.version, reason: "TC-068 停用" });
+    assert.equal((await rawRow(row.id)).status, "inactive");
+    await assert.rejects(() => service.create({ ...svcActor, supplierId, accountHolderName: "Seed", bankName: "Seed Bank",
+      accountNumber: SECRET, reason: "TC-068 停用後再加" }),
+    (error) => error.statusCode === 503 && error.publicCode === "BANK_KEY_UNAVAILABLE");
+  });
+
+integrationTest("TC-068 (BANK-007): a Supplier locked by a lost lookup key is recovered by the --from-lost reindex (HD-038)",
+  async () => {
+    // REV-057 M-2 嘅形狀：兩行喺遺失咗嘅 key 之下，其中一行停用 —— 重新輸入帳號救唔到
+    // （503／409），而 key material 亦冇咗。Lookup 重建只要 encryption ring。
+    const { runRotation, ROTATION_KINDS } = await import("../../src/modules/supplier/bankKeyRotation.js");
+    const service = await serviceWith();
+    const supplierId = await seedSupplier();
+    const lostId = `gone-look-${randomUUID().slice(0, 8)}`;
+    const kept = await seedUnder(supplierId, SECRET, { lookupKeyId: lostId });
+    const retired = await seedUnder(supplierId, NEXT_SECRET, { lookupKeyId: lostId });
+    await service.deactivate({ ...svcActor, supplierId, bankAccountId: retired.id, version: retired.version, reason: "HD-038 停用" });
+    const create = (accountNumber) => service.create({ ...svcActor, supplierId, accountHolderName: "Seed", bankName: "Seed Bank",
+      accountNumber, reason: "HD-038 新增" });
+    await assert.rejects(() => create(`${SECRET}7`), (error) => error.statusCode === 503, "locked before the reindex");
+
+    const active = h.application.services.config.supplier.bankLookup.activeKeyId;
+    const report = await runRotation({ database: h.db, crypto: h.crypto, kind: ROTATION_KINDS.LOOKUP, from: lostId, to: active, fromLost: true });
+    assert.deepEqual([report.processed, report.failed, report.remaining], [2, 0, 0]);
+    assert.equal((await rawRow(kept.id)).lk, active);
+
+    // 查重返晒嚟：active 同停用嗰行都擋得住重覆，新帳號照入到。
+    for (const account of [SECRET, NEXT_SECRET]) {
+      await assert.rejects(() => create(account), (error) => error.publicCode === "BANK_ACCOUNT_DUPLICATE", "duplicate detection is back");
+    }
+    assert.ok((await create(`${SECRET}7`)).id, "and the Supplier can add a new account again");
   });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -411,7 +492,7 @@ integrationTest("TC-071 (BANK-010): an update that keeps the account keeps every
   assert.equal(Number(afterRename.version), Number(original.version) + 1, "the version still advances");
 
   // 改帳號：新 IV、新密文、新 blind index，而舊帳號喺呢行任何欄位都搵唔返。
-  const NEXT = `${SECRET.slice(0, 6)}9${SECRET.slice(7)}`;
+  const NEXT = NEXT_SECRET;
   await service.update({ ...svcActor, supplierId, bankAccountId: created.id, version: renamed.version,
     accountHolderName: "U", bankName: "After", accountNumber: NEXT, reason: "TC-071 改帳號" });
   const afterChange = await rawRow(created.id);

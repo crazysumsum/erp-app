@@ -301,14 +301,14 @@ function masked(row) {
 
 test("masking never reveals a short account", () => {
   // 一個四位嘅帳號，佢個「尾四位」就係成個帳號 —— 所以長度 <= 4 要全遮。
-  assert.equal(masked({ account_length: 13, last_four: "0123" }), "•••• 0123");
-  assert.equal(masked({ account_length: 5, last_four: "2345" }), "•••• 2345");
-  assert.equal(masked({ account_length: 4, last_four: "" }), "••••");
-  assert.equal(masked({ account_length: 1, last_four: "" }), "•");
+  assert.equal(masked({ account_length: 13, last_four: "0123" }), "**** 0123");
+  assert.equal(masked({ account_length: 5, last_four: "2345" }), "**** 2345");
+  assert.equal(masked({ account_length: 4, last_four: "" }), "****");
+  assert.equal(masked({ account_length: 1, last_four: "" }), "*");
   assert.equal(masked({ account_length: 0, last_four: "" }), "");
   // 即使有人錯手將一個短帳號嘅全值放咗入 last_four，遮罩都唔可以原樣吐返出嚟。
-  assert.equal(masked({ account_length: 4, last_four: "1234" }), "••••");
-  assert.equal(masked({ account_length: 3, last_four: "123" }), "•••");
+  assert.equal(masked({ account_length: 4, last_four: "1234" }), "****");
+  assert.equal(masked({ account_length: 3, last_four: "123" }), "***");
 });
 
 test("the crypto redacts itself, so logging one cannot leak a key", () => {
@@ -336,11 +336,11 @@ test("the crypto redacts itself, so logging one cannot leak a key", () => {
 test("the writer, not just the renderer, respects the short-account boundary", () => {
   const crypto = cryptoWith();
   const cases = [
-    ["1234", 4, "", "••••"],
-    ["1", 1, "", "•"],
-    ["12345", 5, "2345", "•••• 2345"],
-    ["1234 5678", 8, "5678", "•••• 5678"],
-    ["1234-5678-9012", 12, "9012", "•••• 9012"]
+    ["1234", 4, "", "****"],
+    ["1", 1, "", "*"],
+    ["12345", 5, "2345", "**** 2345"],
+    ["1234 5678", 8, "5678", "**** 5678"],
+    ["1234-5678-9012", 12, "9012", "**** 9012"]
   ];
   for (const [input, length, lastFour, masked] of cases) {
     const sealed = crypto.encryptAccountNumber({

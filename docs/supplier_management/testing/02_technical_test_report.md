@@ -220,7 +220,36 @@ expectations are moved out of that suite's glob. That choice is recorded as a de
 ### Low observation
 
 Design §5.8 says a short account is masked with `*`; the implementation uses `•`. Cosmetic, no
-security effect; recorded for the reviewer rather than raised as a defect.
+security effect; recorded for the reviewer rather than raised as a defect. Later recorded as DEF-028
+(LOW) and fixed — see §2c.
+
+## 2c. Remediation and retest of TC-068 — branch `claude/supplier-def-026-027`
+
+The results above stand for the baseline they were taken on. The Product Owner authorised remediation
+(a mode change to `IMPLEMENT` for these three defects only); the retest below is on the fix branch
+and is not Technical Acceptance by itself.
+
+| Defect | Decision | Fix | Retest |
+| --- | --- | --- | --- |
+| DEF-026 (MEDIUM) | change code to match the design | a key missing from the ring is `503 BANK_KEY_UNAVAILABLE`; a GCM failure is a generic `500`; each logs its own error event | TC-068 part 2 and TC-077 enforced — **PASS** |
+| DEF-027 (HIGH) | option (b): fail closed per Supplier, startup only logs | a Supplier with a row on a lookup key outside the ring gets `503` on create and account change; startup logs `supplier.bank.keys_outside_ring` and does not refuse to start | TC-068 part 3 enforced — **PASS**; another Supplier unaffected (control); a deactivated such row still blocks (REV-057 M-1); re-entering the account repairs a row only when it is active and the Supplier's only such row, a second one still blocks (control); startup check exercised against real MySQL, lookup half asserted separately (REV-057 L-1) |
+| DEF-028 (LOW) | change code to match the design | accounts masked with `*` | projection tests; Playwright `supplier-bank.spec.js` (API mocked) — **PASS** |
+
+No `todo` tests remain in the Bank suites, so the JUnit concern in the previous section no longer applies.
+
+Mutation on the fix: write check removed; check not scoped to the Supplier; the row being rewritten
+blocking itself; refusal logged as `warn`; startup check throwing; startup check reading the wrong
+column; startup check never logging; mask reverted — **all eight killed**. The self-blocking mutant
+first **survived**: the unit fake ignores SQL, so it could not tell. A real-MySQL test was added and
+the mutant is now killed.
+
+REV-057 (independent, CHANGES_REQUESTED) found three more that survived: a status filter on the 503 check
+(M-1), the startup check's skip guard removed (L-2), and an invalid lookup column in the startup check
+(L-1). Tests were added for each, plus the driver code read through the database wrapper (L-3) and a
+completion log so silence is no longer the pass signal (L-4). All five mutants are now killed. For the
+lost-key recovery REV-057 M-2 raised, the Product Owner chose HD-038 option (b): the lookup reindex takes
+`--from-lost`. Verified against real MySQL on the reviewer's lockout shape (two rows on the lost key, one
+inactive); its five mutants are killed.
 
 ---
 

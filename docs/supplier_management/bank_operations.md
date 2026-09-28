@@ -59,15 +59,38 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 
 **對照：** 四個 ring 齊全且一致時，應用程式正常啟動，`GET /api/v1/health` 回 200。
 
-> **啟動檢查的範圍只到 ring 本身。** 它**不會**檢查資料庫中現有的列所使用的 key ID 是否仍在
-> ring 中。已實際驗證：資料列使用的 encryption key 或 lookup key 已從 ring 移除時，應用程式仍然
-> 正常啟動、health 回 200。後果：
+> **只有 ring 本身不合格才會拒絕啟動。** 資料庫中有列使用的 key ID 已不在 ring 中時，應用程式
+> **仍然正常啟動**（Product Owner 的決定：一列壞資料不應令整個 ERP 停機），但啟動時會寫一條
+> error 級別的 `supplier.bank.keys_outside_ring` 日誌，內容只有 `kind`（`encryption`／`lookup`）
+> 與列數，不含 key ID。若檢查本身無法執行，會寫 `supplier.bank.key_check_failed`。檢查跑完一定會寫
+> 一條 info 級別的 `supplier.bank.key_check_completed`（兩個 kind 各自的列數）；**沒有這一行即代表
+> 檢查沒有跑**（例如未配置 Bank key），不能當作通過。受影響的列：
 >
-> - Encryption key 缺失：該列 reveal 會被拒（不會洩漏明文），但回應是 `422
->   BANK_ACCOUNT_UNREADABLE`，而非設計要求的 `503 BANK_KEY_UNAVAILABLE`（DEF-026）。
-> - **Lookup key 缺失：同一 Supplier 可以再新增同一個帳號，重覆檢查靜默失效（DEF-027，HIGH）。**
+> - Encryption key 缺失：該列 reveal 會被拒，不會洩漏明文，回應是 `503 BANK_KEY_UNAVAILABLE`，
+>   並寫入一條 error 級別的 `supplier.bank.key_unavailable` 日誌（DEF-026）。
+> - Lookup key 缺失：**該 Supplier** 的新增及修改帳號都回 `503 BANK_KEY_UNAVAILABLE`，並寫入
+>   `supplier.bank.duplicate_check_unavailable` 日誌，因為重覆檢查無法涵蓋那一列（DEF-027）。
+>   停用列一樣會擋（與唯一索引一致，停用列不計 status）。其他 Supplier 的寫入不受影響；只改銀行名等
+>   欄位仍可進行。但其他 Supplier 新增同一帳號時，**跨 Supplier 的重覆提示對這些列失效**，且不會記錄。
 >
-> 所以 §5 的移除前檢查查詢是**唯一的保障**，不可省略。
+> 找出是哪些列（把 `<…>` 換成**正在運行的應用程式** ring 中的 key ID，**每個 ID 各自加引號**，例如
+> `('enc-1', 'enc-2')`；寫成 `('enc-1, enc-2')` 會把所有列都列出來）：
+>
+> ```sql
+> SELECT id, supplier_id, status, encryption_key_id, blind_index_key_id FROM supplier_bank_accounts
+>  WHERE encryption_key_id NOT IN ('<enc id 1>', '<enc id 2>') OR blind_index_key_id NOT IN ('<lookup id 1>', '<lookup id 2>')
+>  ORDER BY supplier_id, id;
+> ```
+>
+> 修復：
+>
+> 1. **首選：把該 key 補回 ring 並重新啟動**，然後照 §4 完成 lookup 輪替。
+> 2. 重新輸入帳號**只在**以下條件全部成立時有效：該列是 active，而且是該 Supplier **唯一**一列缺
+>    lookup key 的列。停用列會回 `409 BANK_ACCOUNT_INACTIVE`；有兩列或以上時會互相擋住，每一列都回 `503`。
+> 3. **Lookup key material 已遺失**時：照 §4.1 以 `--from-lost` 重建。Encryption key 遺失則無法修復
+>    （密文解不回），只能從備份補回 key（§7）。
+>
+> **§5 的移除前檢查仍然不可省略** —— 上述行為只是讓錯誤可被看見，不會把 key 找回來。
 
 ---
 
@@ -146,6 +169,35 @@ Ring 變數改為 `SUPPLIER_BANK_LOOKUP_KEYS`／`SUPPLIER_BANK_LOOKUP_ACTIVE_KEY
 輪替期間（兩條 key 並存時）查重會同時計算所有 lookup key 的 candidate index，不會出現空窗
 （設計 §3.3；由 `supplierBankCrypto.test.js` 的 ring 查重測試及
 `supplierBankRotation.integration.test.js` 的「輪替一半時仍擋得住重覆」測試驗證）。
+
+### 4.1 舊 lookup key 已遺失（HD-038）
+
+情況：舊 lookup key 在重建完成前已從 secret store 移除，而且找不回來。受影響的 Supplier 新增／修改帳號
+會回 `503`（§2）。重建 blind index 只需要 **encryption ring** 解密，不需要舊 lookup key，所以可以救：
+
+```bash
+npm run -s supplier:bank:reindex-lookup --workspace server -- --from=<遺失的 key id> --to=<active> --from-lost --json
+```
+
+- 執行前：先用 §2 的 SQL 確認這個 key id 確實**不在正在運行的應用程式的 ring 中**，而且執行工具的環境與
+  應用程式用同一組 ring（工具讀 `server/.env` 及環境變數）。兩邊 ring 不同時，這個旗會把列重建到應用程式
+  沒有的 key 上（可再以正確環境重跑修正，不會遺失資料）。`-s` 讓 `--json` 輸出只有 JSON。
+- `--from-lost` 取代「`--from` 必須在 ring 中」的防打錯字檢查，改為要求**仍有列使用這個 key id**；
+  沒有就拒絕（exit 2）。**這個拒絕分不出打錯字與已完成**，不能當作完成的證明。
+- **完成的判斷**：某一次執行的報告 `remaining: 0` 而且 `failed: 0`；再以 §2 的 SQL 確認沒有列使用這個
+  key id，重新啟動後 `supplier.bank.key_check_completed` 的 `lookup` 為 0。
+- key id 其實仍在 ring 中時拒絕（不需要這個旗）；用在 encryption 輪替時拒絕。
+- **不需要**放假 key 進 ring，因此過程中查重沒有盲區：未重建的列仍令該 Supplier 回 `503`，重建完的列
+  立即參與查重。
+- 若某列回報 `DUPLICATE_KEY`（exit 1）：同一 Supplier 已經有同一個帳號在 active key 之下 —— 來源可能是
+  DEF-027 修正前的漏洞，或有人曾用「放假 key 進 ring」的方法處理遺失的 key。**該 Supplier 會一直回 `503`**，
+  停用、重新輸入、修改帳號或重跑都解不了（停用列一樣計入查重）。要由人決定保留哪一列（以 reveal 比對
+  帳號），再由 DBA 修正資料；本 runbook 不提供這一步的程序，不要自行刪列。
+- 完成後 `remaining` 為 0，並照 §5 處理 Customer 那一邊（本工具只處理 `supplier_bank_accounts`）。
+
+已驗證（真 MySQL）：同一 Supplier 兩列在遺失的 key 下、其中一列已停用 —— 重建前新增回 `503`；
+`--from-lost` 重建 2 列、0 失敗；之後兩個舊帳號（包括停用那列）都被拒為 `BANK_ACCOUNT_DUPLICATE`，
+新帳號可以新增。
 
 ---
 
@@ -267,11 +319,16 @@ mysql -u<admin> -p <restore_db> < backup.sql
 
 **還原後的驗證：**
 
-1. 以原本的 key ring 啟動應用程式，必須成功（§2）。
+1. 以原本的 key ring 啟動應用程式，必須成功（§2），而且啟動日誌中**不得**出現
+   `supplier.bank.keys_outside_ring`；出現即表示還原的資料用了 ring 中沒有的 key。同時**必須看到**
+   `supplier.bank.key_check_completed`（兩個列數都是 0），且沒有 `supplier.bank.key_check_failed` ——
+   沒有 completed 那一行，代表檢查沒有跑，不算通過。
 2. 以一個已知帳號做 reveal，必須取回原帳號。
 3. **缺 key 或 key 錯誤時必須 fail closed**，而不是回傳亂碼：已由 TC-077 驗證 —— 還原後以正確
-   ring 可取回帳號；ring 中缺該 key ID 時被拒為 `BANK_KEY_NOT_IN_RING`；同一 key ID 但 key 值錯誤時
-   在 GCM tag 驗證失敗；三種情況下錯誤訊息都不含帳號，還原後的密文一個 byte 都沒有改變。
+   ring 可取回帳號；ring 中缺該 key ID 時回 `503 BANK_KEY_UNAVAILABLE`；同一 key ID 但 key 值錯誤時
+   在 GCM tag 驗證失敗，回通用 `500`（不說明原因），並寫入 `supplier.bank.integrity_failed` 日誌；
+   三種情況下錯誤訊息都不含帳號，還原後的密文一個 byte 都沒有改變。
+   **看到 503 → 補回 key；看到 integrity_failed → 資料可能被竄改，要調查，不要重試了事。**
 
 自動化的還原演練：
 
