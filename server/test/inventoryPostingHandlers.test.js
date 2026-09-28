@@ -60,10 +60,10 @@ test("TASK-014 Receipt handler maps trusted actor and source into a fixed comman
   assert.deepEqual(response.data, { status: "POSTED" });
 });
 
-test("TASK-015 keeps the Issue HTTP path unregistered", () => {
+test("TASK-022 keeps the Issue HTTP path unregistered until TASK-023", () => {
   const paths = Object.values(postingHandlers)
     .filter((value) => typeof value === "function" && value.api)
     .map((Handler) => Handler.api.path);
   assert.equal(paths.includes("/api/v1/inventory/issues"), false);
-  assert.equal(InventoryPostingService.prototype.postIssueInTransaction, undefined);
+  assert.equal(typeof InventoryPostingService.prototype.postIssueInTransaction, "function");
 });
