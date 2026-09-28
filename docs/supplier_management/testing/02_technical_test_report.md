@@ -7,13 +7,13 @@ assess the remaining fourteen without executing them. Taken by the user.
 
 ## Result: **NOT Technical Acceptance**
 
-Two of seventeen cases were executed. Fifteen were not. Technical Acceptance of SUP-CAP-03 is **not**
+Three of seventeen cases were executed. Fourteen were not. Technical Acceptance of SUP-CAP-03 is **not**
 granted by this report and cannot be until the readiness conditions are met.
 
 | | |
 | --- | --- |
-| Executed, `PASS` | **TC-074** (BANK-013), **TC-077** (BANK-016) |
-| Not executed | TC-062…TC-073, TC-075, TC-076 — fourteen cases, status `NOT_RUN` |
+| Executed, `PASS` | **TC-065** (BANK-004), **TC-074** (BANK-013), **TC-077** (BANK-016) |
+| Not executed | TC-062…TC-064, TC-066…TC-073, TC-075, TC-076 — thirteen cases, status `NOT_RUN` |
 | Not executed, no harness | **TC-133** (OPS-006) — out of the agreed scope, status `BLOCKED` |
 | Business acceptance | `PENDING_USER_ACCEPTANCE` — the Security/Operations review is a human gate |
 
@@ -108,7 +108,62 @@ documented anywhere an operator would look, and `bank_operations.md` does not ex
 
 ---
 
-## 3. The fourteen cases that were not executed
+## 2a. TC-065 — BANK-004 — device, password and replay protection on every Bank write — **PASS**
+
+**Requirement:** SEC-013 ・**Evidence:** `server/test/integration/supplierBankDeviceWrites.integration.test.js`
+
+Everything is real: a started application, real HTTP, a JWT carrying `did`, `user_devices` bindings, a
+non-extractable ECDSA P-256 key generated through WebCrypto exactly as the browser client does, the
+application's own `deviceBinding.signingInput` (not a copy of it), and a scrypt-hashed password.
+
+Each of the four write routes — create, update, set default, deactivate — receives seven attacks,
+then one fully legitimate request, then an exact replay of that request:
+
+| Attack | Must be refused as |
+| --- | --- |
+| password omitted | `PASSWORD_REQUIRED` |
+| wrong password | `PASSWORD_INVALID` |
+| device headers omitted | `DEVICE_SIGNATURE_REQUIRED` |
+| device revoked | `DEVICE_REVOKED` |
+| body changed after signing | `DEVICE_SIGNATURE_INVALID` |
+| signature moved to another path | `DEVICE_SIGNATURE_INVALID` |
+| accepted request replayed verbatim | `DEVICE_SIGNATURE_INVALID`, logged as `nonce_replayed` |
+
+After every refusal: no Bank row changed, no audit row written, no password, token or account in the
+response, and none of the internal reasons (`nonce_replayed`, `signature_invalid`, `timestamp_stale`)
+exposed to the client. Every legitimate request must succeed and write exactly one audit row — the
+control without which every refusal above could be the harness failing to sign anything. The system
+log must hold exactly four `auth.device.signature_rejected` events with reason `nonce_replayed`, one per
+route, and no secret.
+
+### What mutation found in this harness
+
+The first version passed with **nonce replay protection switched off entirely**. Every replay was
+still refused — but not by the nonce. An update, default or deactivate replay carries a version that
+the first request already advanced, so it dies as a 409 version conflict; a create replay carries an
+account that now exists, so it dies as `BANK_ACCOUNT_DUPLICATE`. Two genuine refusals, neither of them
+the protection this case exists to prove. The assertions were changed to require each attack to fail
+**as its intended code**, and the replay to appear in the device log as `nonce_replayed`.
+
+| Mutant | Result |
+| --- | --- |
+| nonce consumption disabled | killed — the create replay came back as `BANK_ACCOUNT_DUPLICATE` |
+| signature never checked | killed — a body changed after signing was accepted |
+| password re-authentication skipped | killed — a missing password surfaced as schema validation, not `PASSWORD_REQUIRED` |
+| revoked binding accepted | killed |
+| internal reason added to the client message | killed — `signature_invalid` reached the client |
+
+### Observation, not a defect
+
+The wrong-password path consumes a nonce: device verification (which records the nonce) runs before
+the password check, by design, because ECDSA is far cheaper than scrypt. A request refused for a wrong
+password therefore cannot be retried with the same nonce — asserted in the harness against `user_device_nonces`, not inferred from the code. That is the correct direction — the
+alternative lets an attacker probe passwords without spending nonces — and it is recorded here only
+because a client implementer would otherwise meet it as a surprise.
+
+---
+
+## 3. The thirteen cases that were not executed
 
 These are `NOT_RUN`. The notes are a **coverage assessment made by reading existing tests** — not a
 result, and explicitly not a PASS. `TEST_AND_VERIFY` forbids inferring a result from code review or
@@ -120,7 +175,6 @@ as discharging any of these cases.
 | BANK-001 masked list | `NOT_RUN` | handler schema tests, crypto masking tests, HTTP masked-list integration | the six role combinations are not enumerated over HTTP |
 | BANK-002 controlled reveal | `NOT_RUN` | audit-before-plaintext and audit-failure service tests, cache-header handler test | `expires=30` and `no-store` are asserted at schema level, not on a live response |
 | BANK-003 write permission matrix | `NOT_RUN` | "every write demands all three permissions and a device password", per-write re-check | the matrix is not driven role by role over HTTP |
-| BANK-004 device / password / replay | `NOT_RUN` | step-up schema declarations only | **nonce replay is exercised nowhere** — the largest assessed gap |
 | BANK-005 create stores only ciphertext | `NOT_RUN` | column-width integration test, plaintext-absence scan | — |
 | BANK-006 crypto integrity and AAD | `NOT_RUN` | eleven crypto tests incl. AAD boundary shifting and bit tampering | — |
 | BANK-007 key unavailable | `NOT_RUN` | "a row whose key is no longer in the ring is refused, and the error is not an oracle" | startup fail-closed was demonstrated during TASK-034, not re-run here |
@@ -137,7 +191,6 @@ as discharging any of these cases.
 1. The profile's `supplier-bank-security` and `supplier-recovery` suites point at paths that do not
    exist; until that is resolved, no `TC-xxx` in this task can be produced by a declared suite.
 2. The fourteen cases above need execution against their own case IDs, not assessment.
-3. `BANK-004`'s replay/nonce path needs a test before SUP-CAP-03 can claim SEC-013.
 4. `TC-133` (OPS-006) needs a module-wide restore drill.
 5. `bank_operations.md` must exist for the Security/Operations review to have a subject.
 6. A named human authority must accept the review. Nothing in this report substitutes for it.
