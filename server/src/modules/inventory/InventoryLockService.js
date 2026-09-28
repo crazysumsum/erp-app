@@ -123,6 +123,29 @@ async function lockIds(connection, table, values) {
   return rows;
 }
 
+async function lockActiveBinLocks(connection, binIds) {
+  if (binIds.length === 0) return [];
+  try {
+    const [rows] = await connection.query(
+      `SELECT * FROM inventory_bin_locks
+       WHERE bin_id IN (${binIds.map(() => "?").join(", ")}) AND released_at IS NULL
+       ORDER BY bin_id, id FOR UPDATE`,
+      binIds
+    );
+    return rows;
+  } catch (error) {
+    if ((error?.cause?.code ?? error?.code) !== "ER_NO_SUCH_TABLE") throw error;
+    const [stocktakeTables] = await connection.query(
+      `SELECT table_name FROM information_schema.tables
+       WHERE table_schema = DATABASE()
+         AND table_name IN ('inventory_stocktakes', 'inventory_bin_locks')
+       ORDER BY table_name`
+    );
+    if (stocktakeTables.length !== 0) throw error;
+    return [];
+  }
+}
+
 async function upsertAndLockBalances(connection, balances, timestamp) {
   if (balances.length === 0) return [];
   await connection.execute(
@@ -184,14 +207,7 @@ export class InventoryLockService {
       } else locked.stockControls = [];
 
       locked.bins = await lockIds(connection, "inventory_bins", binIds);
-      if (binIds.length) {
-        [locked.binLocks] = await connection.query(
-          `SELECT * FROM inventory_bin_locks
-           WHERE bin_id IN (${binIds.map(() => "?").join(", ")}) AND released_at IS NULL
-           ORDER BY bin_id, id FOR UPDATE`,
-          binIds
-        );
-      } else locked.binLocks = [];
+      locked.binLocks = await lockActiveBinLocks(connection, binIds);
 
       if (lots.length) {
         [locked.lots] = await connection.query(

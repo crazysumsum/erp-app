@@ -113,6 +113,33 @@ test("InventoryLockService maps MySQL deadlocks and lock timeouts to CONCURRENT_
   }
 });
 
+test("InventoryLockService tolerates only the pre-Stocktake absence of semantic lock tables", async () => {
+  const missingTable = Object.assign(new Error("missing"), { code: "ER_NO_SUCH_TABLE" });
+  const connection = recordingConnection();
+  connection.query = async (sql, params) => {
+    connection.calls.push({ method: "query", sql: String(sql), params });
+    if (String(sql).includes("information_schema.tables")) return [[]];
+    if (String(sql).includes("inventory_bin_locks")) throw missingTable;
+    return [[]];
+  };
+
+  const locked = await new InventoryLockService().lockForCommand(connection, {
+    warehouseIds: [1],
+    binIds: [2]
+  });
+  assert.deepEqual(locked.binLocks, []);
+
+  connection.query = async (sql) => {
+    if (String(sql).includes("information_schema.tables")) return [[{ table_name: "inventory_stocktakes" }]];
+    if (String(sql).includes("inventory_bin_locks")) throw missingTable;
+    return [[]];
+  };
+  await assert.rejects(
+    () => new InventoryLockService().lockForCommand(connection, { warehouseIds: [1], binIds: [2] }),
+    missingTable
+  );
+});
+
 test("InventoryLockService locks a Balance only after its Lot identity is known", async () => {
   const connection = recordingConnection();
 
