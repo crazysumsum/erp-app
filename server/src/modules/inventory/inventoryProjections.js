@@ -1,5 +1,8 @@
 function integer(value) {
-  const normalized = Number(value ?? 0);
+  if (value === null || value === undefined || value === "") {
+    throw new TypeError("Inventory projection quantity must be a non-negative safe integer");
+  }
+  const normalized = Number(value);
   if (!Number.isSafeInteger(normalized) || normalized < 0) {
     throw new TypeError("Inventory projection quantity must be a non-negative safe integer");
   }
@@ -14,6 +17,12 @@ function positiveInteger(value, field) {
 
 function nullableInteger(value) {
   return value === null || value === undefined ? null : integer(value);
+}
+
+function booleanFlag(value, field) {
+  if (value === true || value === 1 || value === "1") return true;
+  if (value === false || value === 0 || value === "0") return false;
+  throw new TypeError(`Inventory projection ${field} must be a boolean flag`);
 }
 
 export function warehouseProjection(row, extras = {}) {
@@ -48,21 +57,21 @@ export function binProjection(row, extras = {}) {
 
 export function warehouseCurrentBlockers(row = {}) {
   return {
-    currentOnHand: integer(row.current_on_hand),
-    activeReservations: integer(row.active_reservations),
-    activeAllocations: integer(row.active_allocations),
-    openTransfers: integer(row.open_transfers),
-    activeStocktakes: integer(row.active_stocktakes),
-    activeBinLocks: integer(row.active_bin_locks)
+    currentOnHand: integer(row.current_on_hand ?? 0),
+    activeReservations: integer(row.active_reservations ?? 0),
+    activeAllocations: integer(row.active_allocations ?? 0),
+    openTransfers: integer(row.open_transfers ?? 0),
+    activeStocktakes: integer(row.active_stocktakes ?? 0),
+    activeBinLocks: integer(row.active_bin_locks ?? 0)
   };
 }
 
 export function binCurrentBlockers(row = {}) {
   return {
-    currentOnHand: integer(row.current_on_hand),
-    activeAllocations: integer(row.active_allocations),
-    openTransfers: integer(row.open_transfers),
-    activeStocktakeLocks: integer(row.active_stocktake_locks)
+    currentOnHand: integer(row.current_on_hand ?? 0),
+    activeAllocations: integer(row.active_allocations ?? 0),
+    openTransfers: integer(row.open_transfers ?? 0),
+    activeStocktakeLocks: integer(row.active_stocktake_locks ?? 0)
   };
 }
 
@@ -81,7 +90,7 @@ export function stockBucketProjection(row) {
     skuId: positiveInteger(row.sku_id, "skuId"),
     lotId: row.lot_id === null ? null : positiveInteger(row.lot_id, "lotId"),
     stockStatus: row.stock_status,
-    isExpired: Boolean(row.is_expired),
+    isExpired: booleanFlag(row.is_expired, "isExpired"),
     onHand,
     allocated,
     bucketFree: onHand - allocated,

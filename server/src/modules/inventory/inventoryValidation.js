@@ -87,6 +87,9 @@ export function meetsMinimumRemainingLife(expiryDate, currentLocalDate, minimumR
     throw inventoryError("INVENTORY_INPUT_INVALID", { field: "minimumRemainingDays" });
   }
   if (expiryDate === null) return true;
+  if (minimumRemainingDays > Math.floor((Number.MAX_SAFE_INTEGER - current) / 86_400_000)) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "minimumRemainingDays" });
+  }
   const minimumExpiry = current + minimumRemainingDays * 86_400_000;
   return dateOnly(expiryDate, "expiryDate") >= minimumExpiry;
 }

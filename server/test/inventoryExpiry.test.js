@@ -31,4 +31,8 @@ test("Expiry rules reject malformed dates and minimum-life values", () => {
     () => meetsMinimumRemainingLife("2026-09-30", "2026-09-28", -1),
     (error) => error.code === "INVENTORY_INPUT_INVALID"
   );
+  assert.throws(
+    () => meetsMinimumRemainingLife("2026-09-30", "2026-09-28", Number.MAX_SAFE_INTEGER),
+    (error) => error.code === "INVENTORY_INPUT_INVALID"
+  );
 });

@@ -15,7 +15,7 @@ test("Stock bucket projection keeps each quantity meaning explicit", () => {
     sku_id: "3",
     lot_id: "4",
     stock_status: "AVAILABLE",
-    is_expired: 0,
+    is_expired: "0",
     on_hand_quantity: "10",
     allocated_quantity: "3",
     base_uom_id: "5",
@@ -36,6 +36,23 @@ test("Stock bucket projection keeps each quantity meaning explicit", () => {
     baseUom: { uomId: 5, uomCode: "EA" },
     version: 6
   });
+});
+
+test("Stock bucket projection fails closed on impossible quantity state", () => {
+  assert.throws(() => stockBucketProjection({
+    id: 1,
+    warehouse_id: 1,
+    bin_id: 1,
+    sku_id: 1,
+    lot_id: null,
+    stock_status: "AVAILABLE",
+    is_expired: 0,
+    on_hand_quantity: 2,
+    allocated_quantity: 3,
+    base_uom_id: 1,
+    base_uom_code: "EA",
+    version: 1
+  }), /allocated quantity exceeds on hand/);
 });
 
 test("Stock summary projection separates on-hand, reserved, ATP, status and transit quantities", () => {
@@ -63,6 +80,19 @@ test("Stock summary projection separates on-hand, reserved, ATP, status and tran
     damaged: 4,
     inTransit: 3
   });
+});
+
+test("Stock summary projection fails closed when a required quantity alias is missing", () => {
+  assert.throws(() => stockSummaryProjection({
+    total_on_hand: 1,
+    available_on_hand: 1,
+    eligible_on_hand: 1,
+    reserved_quantity: 0,
+    atp: 1,
+    uncovered_reserved: 0,
+    quarantined_quantity: 0,
+    damaged_quantity: 0
+  }), /non-negative safe integer/);
 });
 
 test("Movement projection uses immutable snapshots instead of current master values", () => {
