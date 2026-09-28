@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-016 are complete locally in the continuing PHASE-002 branch; TASK-017 has not started.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-018 are complete locally in the continuing implementation branch; TASK-019 awaits separate authorization.
 
 ## Baseline
 
@@ -187,6 +187,16 @@
 - Mocked local Inventory Playwright passed 11/11, including TASK-017 keyboard drill-down, URL restoration, permission denial, error/retry/empty states, safe network fixtures, no relevant console errors and 375／768／1024／1440 px layouts without body overflow. Repository ESLint, client production build, `git diff --check`, module-boundary validation and traceability validation passed; the build retained only the existing bundle-size warning.
 - Multi-axis self-review found no open critical or high correctness, security, accessibility, architecture, performance or maintainability blocker. No migration or MySQL execution occurred, so aggregate SQL execution and query-plan evidence remain for TASK-018. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003`／`TC-010` Technical Acceptance, independent code approval or business acceptance.
 
+## TASK-018 developer verification
+
+- Complete evidence is preserved in [01_task018_core_stock_gate.md](./01_task018_core_stock_gate.md). A disposable MySQL 26.7.0 schema held exactly 100,000 SKUs, 500,000 non-zero Stock buckets and 2,000,000 Movements; 20 workers produced 100 samples per query shape.
+- Exact SKU, exact Barcode, Warehouse/SKU stock summary, bucket drill-down and recent Warehouse Movement filter all passed the `< 2s` p95 gate. Final p95 values were 11.669ms, 1.459ms, 1.530ms, 2.896ms and 8.088ms respectively. Preserved EXPLAIN plans use the designed exact, stock and Movement indexes without a large-table full scan.
+- The measured Movement bottleneck was an unnecessary operation-table join in the count query when no source filter existed. Removing it improved the original all-history-like stress p95 from 3,168.6ms to 2,307.8ms before the fixture's time distribution was corrected; source-filter counts retain the join.
+- Same-source/two-connection Receipt competition produced one operation and one Movement with exact replay. A real lock timeout returned `CONCURRENT_OPERATION` with zero partial effects after fixing an omitted `await` that had let the raw asynchronous DB error escape. Warehouse posting/deactivate races passed both orderings.
+- All 24 Core endpoint contracts were enumerated for unauthenticated, missing-permission and stale-actor denial, strict request schemas, owner-scoped Bin paths and sensitive response-field exclusion. Focused security/inquiry checks passed 14/14, focused lock checks passed 6/6, capacity/concurrency passed 1/1 and Warehouse race passed 1/1. The complete local server suite passed 1,958 with 328 gated skips and 0 failures.
+- Repository ESLint, client production build, `git diff --check`, TASK-018 module-boundary validation and traceability validation passed. The build retained only the existing bundle-size warning.
+- All three exact test-owned schemas, both isolated runs on port 3318 and runtime roots `/private/tmp/erp-inventory-task018-mysql-2670.J0LCkz` and `/private/tmp/erp-inventory-task018-final-mysql-2670.1u1Icz` were removed and confirmed absent. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, independent code approval or business acceptance.
+
 ## Post-main-merge publication verification
 
 - Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
@@ -228,7 +238,8 @@
 - TASK-015 created only the approved downstream Receipt contract methods and focused tests in existing TASK-014 files. It did not add Issue, persistence, routes, migrations or database execution.
 - TASK-016 created only the approved inquiry service, read-only handlers/schemas and focused tests. It did not add UI, write routes, migrations or database execution.
 - TASK-017 created only the approved inquiry UI/client/tests plus the HD-040-approved read-only SKU aggregate endpoint needed for correct server pagination. It did not add writes, migrations, database execution or begin TASK-018.
+- TASK-018 added only the guarded capacity/security/concurrency tests, two measured root-cause fixes and the minimum reusable Warehouse race fixture alignment. It added no business feature, migration, dependency, CI or remote action.
 
 ## Next safe action
 
-Await Sam's decision on TASK-018 Core Stock integration, concurrency and performance verification. Keep MySQL, CI, push, PR and merge out of scope until separately approved.
+TASK-018 local developer checks are complete. Await a separately approved TASK-019 scope; do not start TASK-019, run CI or perform push/PR/merge.
