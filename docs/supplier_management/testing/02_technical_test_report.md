@@ -232,7 +232,7 @@ and is not Technical Acceptance by itself.
 | Defect | Decision | Fix | Retest |
 | --- | --- | --- | --- |
 | DEF-026 (MEDIUM) | change code to match the design | a key missing from the ring is `503 BANK_KEY_UNAVAILABLE`; a GCM failure is a generic `500`; each logs its own error event | TC-068 part 2 and TC-077 enforced — **PASS** |
-| DEF-027 (HIGH) | option (b): fail closed per Supplier, startup only logs | a Supplier with a row on a lookup key outside the ring gets `503` on create and account change; startup logs `supplier.bank.keys_outside_ring` and does not refuse to start | TC-068 part 3 enforced — **PASS**; another Supplier unaffected (control); the only such row can be repaired by re-entering its account, a second one still blocks (control); startup check exercised against real MySQL |
+| DEF-027 (HIGH) | option (b): fail closed per Supplier, startup only logs | a Supplier with a row on a lookup key outside the ring gets `503` on create and account change; startup logs `supplier.bank.keys_outside_ring` and does not refuse to start | TC-068 part 3 enforced — **PASS**; another Supplier unaffected (control); a deactivated such row still blocks (REV-057 M-1); re-entering the account repairs a row only when it is active and the Supplier's only such row, a second one still blocks (control); startup check exercised against real MySQL, lookup half asserted separately (REV-057 L-1) |
 | DEF-028 (LOW) | change code to match the design | accounts masked with `*` | projection tests; Playwright `supplier-bank.spec.js` (API mocked) — **PASS** |
 
 No `todo` tests remain in the Bank suites, so the JUnit concern in the previous section no longer applies.
@@ -242,6 +242,12 @@ blocking itself; refusal logged as `warn`; startup check throwing; startup check
 column; startup check never logging; mask reverted — **all eight killed**. The self-blocking mutant
 first **survived**: the unit fake ignores SQL, so it could not tell. A real-MySQL test was added and
 the mutant is now killed.
+
+REV-057 (independent, CHANGES_REQUESTED) found three more that survived: a status filter on the 503 check
+(M-1), the startup check's skip guard removed (L-2), and an invalid lookup column in the startup check
+(L-1). Tests were added for each, plus the driver code read through the database wrapper (L-3) and a
+completion log so silence is no longer the pass signal (L-4). All five mutants are now killed. The
+lost-key recovery REV-057 M-2 raised is HD-038, pending.
 
 ---
 

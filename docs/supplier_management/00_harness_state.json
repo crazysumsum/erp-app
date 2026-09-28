@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 239,
+  "revision": 240,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -1455,6 +1455,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 4f4a7f77cd7b43bc53db8e7840e4e4d490989fc3",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/58_rev_056_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-057",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-026/027/028 remediation, HD-037)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing b701d284a9accf4d6b9ce6ac16bffbeff1a67935 (PR #158)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/59_rev_057_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -3741,6 +3753,20 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-09-28: 'follow all your recommendations' - remediate, and fix DEF-026 by changing code to match the design. Then: DEF-027 option (b); DEF-028 change code to follow the design; the Customer module is not this agent's work and is to be left alone. Merging the fix PR is not covered by these answers and needs a separate word."
+    },
+    {
+      "id": "HD-038",
+      "impact": "MAJOR",
+      "question": "REV-057 M-2: when lookup key material is lost (the likely DEF-027 incident: a rotation whose old key left the secret store before the reindex finished), a Supplier with an inactive row or two or more rows on that key is refused every account create and change, and no documented procedure recovers it; the reindex CLI refuses a --from outside the ring. Options: (a) document the reviewer's verified workaround - placeholder material under the lost id, restart, reindex, remove - which leaves the duplicate check blind to those rows for the length of the run; (b) add an explicit flag to the lookup reindex that accepts a --from absent from the ring (lookup reindex decrypts with the encryption ring and never needs the old lookup material), refusing if no row uses that id, so REV-052 M-1's typo protection survives; (c) document only 'restore the real key', and accept that loss of the key leaves those Suppliers locked until a later change.",
+      "affected_ids": [
+        "DEF-027",
+        "REV-057",
+        "bank_operations.md",
+        "bankKeyRotation.js",
+        "HD-036"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4778,5 +4804,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Remediation of DEF-026/027/028 (HD-037) is on branch claude/supplier-def-026-027: push, PR, green CI, an independent review (product code changed), then the Product Owner's explicit word before merge. After merge: close the three defects with the merge commit and CI run, and return active_mode to TEST_AND_VERIFY. Still open for TASK-037: TC-133 / OPS-006 module-wide restore drill (no harness yet); HD-036 Security/Operations sign-off, a human gate best taken after this merge because several review items describe the 503/500 behaviour. Open defects outside this fix: DEF-023, DEF-024. Revision 239 also repaired schema violations introduced by hand-written checkpoints from revision 231 on (see 04_defect_register.md and the backfill notes on observations 153-159)."
+  "next_safe_action": "PR #158 (DEF-026/027/028) had REV-057: CHANGES_REQUESTED, 0 critical, 0 high, 2 medium. M-1 and L-1..L-5 are fixed on the branch and their mutants are killed; the runbook states when re-entry works and that no lost-key repair is documented. HD-038 (M-2, the lost-key recovery) awaits the Product Owner. Then: a REV-058 of the remediation, green CI, and the Product Owner's word before merge. After merge: close DEF-026/027/028 and return active_mode to TEST_AND_VERIFY. Still open: TC-133 / OPS-006, HD-036 (after this merge and HD-038), DEF-023, DEF-024."
 }

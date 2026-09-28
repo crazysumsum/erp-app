@@ -62,24 +62,34 @@ node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
 > **只有 ring 本身不合格才會拒絕啟動。** 資料庫中有列使用的 key ID 已不在 ring 中時，應用程式
 > **仍然正常啟動**（Product Owner 的決定：一列壞資料不應令整個 ERP 停機），但啟動時會寫一條
 > error 級別的 `supplier.bank.keys_outside_ring` 日誌，內容只有 `kind`（`encryption`／`lookup`）
-> 與列數，不含 key ID。若檢查本身無法執行，會寫 `supplier.bank.key_check_failed`。受影響的列：
+> 與列數，不含 key ID。若檢查本身無法執行，會寫 `supplier.bank.key_check_failed`。檢查跑完一定會寫
+> 一條 info 級別的 `supplier.bank.key_check_completed`（兩個 kind 各自的列數）；**沒有這一行即代表
+> 檢查沒有跑**（例如未配置 Bank key），不能當作通過。受影響的列：
 >
 > - Encryption key 缺失：該列 reveal 會被拒，不會洩漏明文，回應是 `503 BANK_KEY_UNAVAILABLE`，
 >   並寫入一條 error 級別的 `supplier.bank.key_unavailable` 日誌（DEF-026）。
 > - Lookup key 缺失：**該 Supplier** 的新增及修改帳號都回 `503 BANK_KEY_UNAVAILABLE`，並寫入
 >   `supplier.bank.duplicate_check_unavailable` 日誌，因為重覆檢查無法涵蓋那一列（DEF-027）。
->   其他 Supplier 不受影響；只改銀行名等欄位仍可進行。
+>   停用列一樣會擋（與唯一索引一致，停用列不計 status）。其他 Supplier 的寫入不受影響；只改銀行名等
+>   欄位仍可進行。但其他 Supplier 新增同一帳號時，**跨 Supplier 的重覆提示對這些列失效**，且不會記錄。
 >
-> 找出是哪個 key ID、哪些列：
+> 找出是哪些列（把 `<…>` 換成目前 ring 中的 key ID）：
 >
 > ```sql
-> SELECT encryption_key_id, blind_index_key_id, supplier_id, COUNT(*) FROM supplier_bank_accounts
->  GROUP BY encryption_key_id, blind_index_key_id, supplier_id;
+> SELECT id, supplier_id, status, encryption_key_id, blind_index_key_id FROM supplier_bank_accounts
+>  WHERE encryption_key_id NOT IN ('<encryption key ids>') OR blind_index_key_id NOT IN ('<lookup key ids>')
+>  ORDER BY supplier_id, id;
 > ```
 >
-> 修復：把該 key 補回 ring 並重新啟動；或對 lookup key 缺失的列重新輸入帳號（若它是該 Supplier
-> 唯一一列缺 key 的列，修改會成功，並以 active key 重算）。**§5 的移除前檢查仍然不可省略** ——
-> 上述行為只是讓錯誤可被看見，不會把 key 找回來。
+> 修復：
+>
+> 1. **首選：把該 key 補回 ring 並重新啟動**，然後照 §4 完成 lookup 輪替。
+> 2. 重新輸入帳號**只在**以下條件全部成立時有效：該列是 active，而且是該 Supplier **唯一**一列缺
+>    lookup key 的列。停用列會回 `409 BANK_ACCOUNT_INACTIVE`；有兩列或以上時會互相擋住，每一列都回 `503`。
+> 3. **Key material 已遺失**時，目前**沒有**已驗證並文件化的修復程序：§4 的 reindex 工具會拒絕不在 ring
+>    中的 `--from`。這是 REV-057 M-2 的待決事項。
+>
+> **§5 的移除前檢查仍然不可省略** —— 上述行為只是讓錯誤可被看見，不會把 key 找回來。
 
 ---
 
@@ -280,7 +290,9 @@ mysql -u<admin> -p <restore_db> < backup.sql
 **還原後的驗證：**
 
 1. 以原本的 key ring 啟動應用程式，必須成功（§2），而且啟動日誌中**不得**出現
-   `supplier.bank.keys_outside_ring`；出現即表示還原的資料用了 ring 中沒有的 key。
+   `supplier.bank.keys_outside_ring`；出現即表示還原的資料用了 ring 中沒有的 key。同時**必須看到**
+   `supplier.bank.key_check_completed`（兩個列數都是 0），且沒有 `supplier.bank.key_check_failed` ——
+   沒有 completed 那一行，代表檢查沒有跑，不算通過。
 2. 以一個已知帳號做 reveal，必須取回原帳號。
 3. **缺 key 或 key 錯誤時必須 fail closed**，而不是回傳亂碼：已由 TC-077 驗證 —— 還原後以正確
    ring 可取回帳號；ring 中缺該 key ID 時回 `503 BANK_KEY_UNAVAILABLE`；同一 key ID 但 key 值錯誤時
