@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 236,
+  "revision": 237,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
   "status": "VERIFYING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "654f7c32ecccccaf3e7867a4abb028c040d32212",
+    "code_commit": "320540a9df943c692e6c42731f69fc9d497c94e7",
     "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
-    "default_commit": "e29ff779bf932d04e9a8a502170c6981ba1fca60",
+    "default_commit": "320540a9df943c692e6c42731f69fc9d497c94e7",
     "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
   },
   "runtime": {
@@ -3198,6 +3198,15 @@
       "source_fingerprint": null,
       "status": "PASS",
       "source_ref": "TEST_AND_VERIFY on T37. The readiness gate returned BLOCKED for formal Technical Acceptance, with four verified blockers: the profile suites that declare TC-062 through TC-077 and TC-133 point at paths that do not exist; no test in the repository is labelled with any of this task's seventeen case IDs (the apparent TC-064/065/066 hits belong to the customer module's namespace, and the apparent BANK-005/006/007 hits are the requirement IDs FR-BANK-005/006/007); BANK-013 and BANK-016 had no harness at all; and bank_operations.md, which the third Verification bullet requires a human to review, does not exist. The user chose to build harnesses for the two cases that had none and to assess the rest. TC-074 (BANK-013) drives a unique marker through success and failure flows plus real HTTP with bodyCapture deliberately looser than production, then scans six channels - db_dump, audit_log, request_log, system_log, http_responses, errors - in seven encodings, each channel carrying its own planted-marker control so a clean result cannot be confused with a blind scanner. It was shown to fail on a real leak by removing accountNumber from redactedFields. CSV, cache and notification do not exist on this baseline and are recorded NOT_APPLICABLE with an assertion that fails once a SupplierExportService appears. TC-077 (BANK-016) dumps and restores into a fresh schema and reveals under three key configurations; mutation found that a textbook fail-open in the crypto survived the first version, because the service deliberately collapses key-absent and key-wrong into one BANK_ACCOUNT_UNREADABLE, so a crypto-layer assertion requiring BANK_KEY_NOT_IN_RING was added. Both cases pass on CI, verified by reading the job log rather than trusting a green check. Two portability defects in the harnesses were caught by CI and not by local runs, both with the same root cause - the local environment was more permissive than CI (an application account with ALL ON *.*, and mysqldump always present). CI's privilege model was then reproduced locally and both cases re-run across four environment combinations. The other fourteen cases are NOT_RUN with a coverage assessment that is explicitly not a result, and TC-133 is BLOCKED. The largest assessed gap is BANK-004: the nonce replay path that SEC-013 rests on is exercised nowhere in the repository. Two REPORT_ONLY findings recorded as DEF-023 and DEF-024; no product code was changed by this task."
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-037: TC-065 (BANK-004) executed; bank_operations.md written with every command executed",
+      "code_commit": "320540a9df943c692e6c42731f69fc9d497c94e7",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": null,
+      "status": "PASS",
+      "source_ref": "TC-065 (BANK-004), the single case the readiness assessment found uncovered even by reading: SEC-013 rests on a nonce replay path nothing in the repository had exercised. The harness uses a started application, real HTTP, a JWT carrying did, user_devices bindings, a non-extractable WebCrypto ECDSA P-256 key and the application's own signingInput. Each of the four write routes receives seven attacks - password missing or wrong, device headers missing, device revoked, body changed after signing, signature moved to another path, verbatim replay - each required to fail as its intended code with no row changed, no audit written, no secret and no internal reason reaching the client, and each route carries a legitimate-request control. The first version passed with nonce replay protection disabled entirely: every replay was refused, but by a stale version (409) or an existing account (BANK_ACCOUNT_DUPLICATE), never by the nonce. Requiring the intended code plus a nonce_replayed device log event killed that mutant and four others. Also verified by execution rather than read from code: a wrong-password request has already spent its nonce, because device verification runs before scrypt. Then bank_operations.md, required as the subject of T37's human Security/Operations review: every command and error message in it was executed against a MySQL with CI's privilege model, through a full rotation drill for both key kinds with a control at each step, and statements derived only from code are labelled as such. The drill surfaced three operational facts nobody had recorded - the Customer tools need the full application environment; the two tools' remaining counts mean different things once a ring holds three keys; a restore must run as an admin account because the inventory triggers need SUPER (ERROR 1419). A self-review before committing found one fabricated test-case reference and one inferred claim written as fact; both were corrected. TASK-037 now stands at three of seventeen cases executed, all PASS on CI."
     }
   ],
   "pending_decisions": [
@@ -4140,6 +4149,30 @@
       "idempotency_key": "repo-node-modules-symlink-merge-pr-151",
       "status": "CONFIRMED",
       "source_ref": "MERGED, mergeCommit e29ff779bf932d04e9a8a502170c6981ba1fca60. Repairs a regression this task shipped: see DEF-025. CI green on b669d27 (run 36111901759); afterwards git pull was verified to work again in a worktree that already had dependencies installed."
+    },
+    {
+      "id": "MERGE-014",
+      "kind": "MERGE_PR",
+      "target": "main from claude/supplier-task-037-bank-004 via PR #153",
+      "idempotency_key": "supplier-task-037-merge-pr-153",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED, mergeCommit 980bcc5e5c5cbda971750f25d6ba9992141acb8d. CI green on the head 8770a60 (run 36364973786); the job log was read to confirm TC-065, TC-074 and TC-077 all executed. main's own CI (run 36365984053) green on the merge commit."
+    },
+    {
+      "id": "MERGE-015",
+      "kind": "MERGE_PR",
+      "target": "main from claude/supplier-task-037-bank-ops via PR #154",
+      "idempotency_key": "supplier-task-037-merge-pr-154",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED, mergeCommit 320540a9df943c692e6c42731f69fc9d497c94e7. CI green on the head 9d144ca (run 36369601985)."
+    },
+    {
+      "id": "LOCAL-REPAIR-001",
+      "kind": "REPAIR_LOCAL_DEPENDENCIES",
+      "target": "/Users/sam/Documents/workspace/erp-app/node_modules (the user's main checkout)",
+      "idempotency_key": "main-checkout-npm-ci-after-def-025",
+      "status": "CONFIRMED",
+      "source_ref": "Run on the user's explicit instruction. Checked first that the main checkout was clean and nothing was running from it. npm ci exit 0; verified completeness against package-lock.json and by running lint and tests there. See DEF-025."
     }
   ],
   "evidence_files": [
@@ -4649,12 +4682,14 @@
         ".gitignore"
       ],
       "closure_evidence": [
-        "PR #151 merge commit e29ff779bf932d04e9a8a502170c6981ba1fca60"
+        "PR #151 merge commit e29ff779bf932d04e9a8a502170c6981ba1fca60",
+        "npm ci in the main checkout at 980bcc5: 399/422 top-level packages, the 23 absent all optional platform bindings",
+        "main checkout after repair: lint exit 0, server Bank suites 37/37, client bank.test.js 26/26"
       ],
       "risk_approval_id": null,
-      "summary": "A node_modules symlink pointing at one developer's absolute path was committed and reached main. .gitignore's node_modules/ entry has a trailing slash and matches directories only, so a symlink of that name was not ignored and git add -A staged it. Two harms: any clone with dependencies installed could no longer git pull (fatal: cannot rmdir 'node_modules': Directory not empty), and the repository carried a machine-specific absolute path. CI could not see it structurally - a runner checks out fresh and runs npm ci, so it never has an existing directory to replace. Fixed by git rm --cached plus a second, slashless .gitignore entry."
+      "summary": "A node_modules symlink pointing at one developer's absolute path was committed and reached main. .gitignore's node_modules/ entry has a trailing slash and matches directories only, so a symlink of that name was not ignored and git add -A staged it. Two harms: any clone with dependencies installed could no longer git pull (fatal: cannot rmdir 'node_modules': Directory not empty), and the repository carried a machine-specific absolute path. CI could not see it structurally - a runner checks out fresh and runs npm ci, so it never has an existing directory to replace. Fixed by git rm --cached plus a second, slashless .gitignore entry. CORRECTION recorded at the next checkpoint: the harm was understated. The failed pull did not merely refuse to update - before it aborted with 'cannot rmdir', git deleted ignored files it treated as expendable, removing 258 of the 422 top-level packages from the main checkout's node_modules (dotenv and the whole eslint toolchain among them). The directory's mtime matched the failed pull to the second. A clone that attempted a pull between PR #149 and PR #151 was left unable to run lint or tests. Repaired with npm ci in the main checkout after confirming it was clean and that nothing was running from it; afterwards 399 of 422 were present and every one of the 23 absent was an optional platform-specific binary for another OS or CPU, with this machine's darwin-arm64 binding installed; lint exited 0 and the Bank server and client suites passed there."
     }
   ],
-  "next_safe_action": "TASK-037 is IN PROGRESS, not done: two of seventeen cases have been executed. It is NOT Technical Acceptance and it is not business sign-off; business acceptance is PENDING_USER_ACCEPTANCE because the Security/Operations review named in T37's third Verification bullet is a human gate. Reports live in docs/supplier_management/testing/ (00 readiness, 01 environment, 02 technical test report). The routes forward, in the order this module would benefit from them: (1) BANK-004 - the nonce replay path that SEC-013 depends on is exercised nowhere, the single largest assessed gap; (2) bank_operations.md - without it the Security/Operations review has no subject, and DEF-024 has nowhere to be documented; (3) the remaining thirteen cases, whose behaviour is largely covered but which have no execution against their own case IDs; (4) TC-133 / OPS-006, a module-wide restore drill with no harness. Also still open by explicit human decision, both because fixing them moves a baseline hash: 03_design_spec.md authorises key removal on a single-table basis in five places, and the profile's env_keys omits CUSTOMER_BANK_* for supplier-phase-001-server. And still true: the profile declares eight suites whose targets do not exist, which is why no TC in this task can be produced by a declared suite. Do not merge anything without the user's explicit word.",
+  "next_safe_action": "TASK-037 is IN PROGRESS: three of seventeen cases executed and passing on CI - TC-065 (BANK-004), TC-074 (BANK-013), TC-077 (BANK-016) - and docs/supplier_management/bank_operations.md now exists. It is NOT Technical Acceptance and not business sign-off. What remains, in the order this module would benefit: (1) the Security/Operations review named in T37's third Verification bullet - a human gate, now with a subject; it cannot be granted by an agent; (2) the remaining thirteen cases, TC-062 to TC-064, TC-066 to TC-073, TC-075 and TC-076, whose behaviour is largely covered by existing tests but none of which has been executed against its own case ID; (3) TC-133 / OPS-006, a module-wide restore drill with no harness. Open defects: DEF-023 (request-log plaintext protection is a field-name blacklist; flagged for SUP-CAP-05's CSV import) and DEF-024 (deadlocks reach the caller; now documented in bank_operations.md section 6.3). Still open by explicit human decision, both because fixing them moves a baseline hash: 03_design_spec.md authorises key removal on a single-table basis in five places - bank_operations.md section 5 states the stricter two-table rule and why - and the profile's env_keys omits CUSTOMER_BANK_* for supplier-phase-001-server. The profile still declares eight suites whose targets do not exist. Do not merge anything without the user's explicit word.",
   "decisions": []
 }
