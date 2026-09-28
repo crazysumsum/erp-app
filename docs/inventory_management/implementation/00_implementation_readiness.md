@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-015 are complete locally in the continuing PHASE-002 branch; TASK-016 has not started.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-016 are complete locally in the continuing PHASE-002 branch; TASK-017 has not started.
 
 ## Baseline
 
@@ -40,6 +40,7 @@
 - `HD-035`／`APR-036`: Sam approved one guarded disposable MySQL 26.7.0 TASK-014 integration run using an `erp_inventory_task014_*` schema and Inventory migrations `0055`～`0060`, followed by exact schema/runtime cleanup. CI and remote publication remained excluded.
 - `HD-036`／`APR-037`: Sam approved TASK-015's transaction-required downstream Receipt contracts and focused tests, while keeping Issue, migrations, MySQL, CI and remote publication excluded.
 - `HD-037`／`APR-038`: Sam approved fixed Receiving mapping `PURCHASE_RECEIPT`／`receiving.operation`／`PURCHASING_RECEIVING`／`GOODS_RECEIPT`, fixed Returns mapping `CUSTOMER_RETURN_RECEIPT`／`returns.operation`／`RETURNS`／`CUSTOMER_RETURN`, and mandatory `QUARANTINED` status for Customer Return Receipt.
+- `HD-038`／`APR-039`: Sam selected and approved the complete local TASK-016 Stock／Lot／Movement inquiry service, eight read-only APIs and focused tests, while excluding UI, migrations, MySQL, CI and remote publication.
 
 ## Reconciled P0 checks
 
@@ -59,6 +60,7 @@
 - TASK-013 stayed inside the APR-030-approved pure-rule and focused-test boundary; it did not start TASK-014, add or execute a migration, run CI or perform any remote action.
 - TASK-014 stayed inside APR-035's Receipt posting service, handler, strict schema and focused-test boundary. It reused the approved transaction, lock, Item lookup, operation and Audit primitives without adding a migration or performing a remote action.
 - TASK-015 stayed inside APR-037／APR-038's downstream Receipt contract and focused-test boundary. It reused the atomic Receipt posting core, exposed no Issue contract, added no migration and performed no database or remote action.
+- TASK-016 stayed inside APR-039's inquiry service, strict GET handler/schema and focused-test boundary. It did not start TASK-017, add persistence or perform database or remote actions.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -166,6 +168,14 @@
 - TDD red was captured before the downstream methods existed. Focused Inventory checks passed 84/84. The complete local server suite passed 1,939 with 327 gated skips and 0 failures using the repository's public CI-only bank test keys.
 - Full repository ESLint, `git diff --check`, module-boundary validation and traceability validation passed. No migration or MySQL execution occurred; CI, push, PR and merge were not performed. These checks are not formal Technical Acceptance, independent code approval or business acceptance.
 
+## TASK-016 developer verification
+
+- Commit `1a6b677` adds the Stock／Lot／Movement inquiry service and eight `inventory.view` GET endpoints for paginated Stock buckets, bucket detail, SKU summary, Lots, expiry, Movement list/detail and exact operation-source lookup.
+- Stock search gives exact SKU Code／Barcode matches priority over safely escaped partial SKU Name matches. All filters and sorts are allowlisted, page size is capped at 100, offsets remain safe integers and every ordering has a stable ID tie-breaker; Movement history is fixed to `posted_at DESC, id DESC`.
+- Responses are explicit projections: quantities retain separate On Hand／Allocated／Free／Reserved／ATP／status meanings, expiry uses the application local date, Movement uses immutable snapshots and safe source tuples, and bucket detail limits recent Movement history to 20 rows. Pre-`0061` allocation detail uses the authoritative Balance allocated total; pre-`0062` In Transit is explicitly zero until Transfer current-state persistence exists.
+- TDD red was captured before the service and handlers existed. Focused TASK-016 checks passed 13/13; all focused Inventory unit checks passed 97/97. The complete local server suite passed 1,952 with 327 gated skips and 0 failures using the repository's public CI-only bank test keys.
+- Full repository ESLint, `git diff --check`, module-boundary validation and traceability validation passed. No migration or MySQL execution occurred, so SQL execution and query-plan evidence remain deferred to the later authorized integration gate. CI, push, PR and merge were not performed.
+
 ## Post-main-merge publication verification
 
 - Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
@@ -205,7 +215,8 @@
 - TASK-014 created only the approved posting service, handler/schema updates and focused tests. It added no production migration and reused the approved Inventory `0055`～`0060` history.
 - APR-036 authorized the guarded TASK-014 MySQL run and exact cleanup. CI, push, PR and merge remain explicitly excluded.
 - TASK-015 created only the approved downstream Receipt contract methods and focused tests in existing TASK-014 files. It did not add Issue, persistence, routes, migrations or database execution.
+- TASK-016 created only the approved inquiry service, read-only handlers/schemas and focused tests. It did not add UI, write routes, migrations or database execution.
 
 ## Next safe action
 
-Await Sam's authorization before starting TASK-016 Stock／Lot／Movement query API work or any remote publication action. Keep migration execution, MySQL, CI, push, PR and merge out of scope until separately approved.
+Await Sam's authorization before starting TASK-017 Stock／Lot／Movement UI work or any remote publication action. Keep migration execution, MySQL, CI, push, PR and merge out of scope until separately approved.
