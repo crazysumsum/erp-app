@@ -366,3 +366,133 @@ integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existi
     assert.ok(response.status >= 400, `the same account under the same Supplier must be refused, got ${response.status}`);
     assert.equal((await state(supplierId)).rows, before.rows, "no second row may be created");
   });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Service 層嘅案例（真 MySQL，app 自己個 database service）
+async function serviceWith({ audit } = {}) {
+  const { SupplierBankService } = await import("../../src/modules/supplier/SupplierBankService.js");
+  const permissions = ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"];
+  return new SupplierBankService({
+    database: h.db, logger: { warn() {}, info() {}, error() {} }, time: { nowMs: () => Date.now() }, crypto: h.crypto,
+    authorize: async () => ({ id: null, username: "acc-svc", permissions }),
+    audit: audit ?? { async record(txn, i) {
+      await txn.execute(
+        `INSERT INTO supplier_audit_logs (occurred_at, actor_user_id, actor_username, action, target_type,
+           target_id, supplier_id, target_label, reason, detail, request_id, ip) VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [Date.now(), i.actorUsername, i.action, i.targetType, i.targetId, i.supplierId, i.targetLabel, i.reason,
+          JSON.stringify(i.detail), "", ""]);
+    } }
+  });
+}
+const svcActor = { actorId: null, claimedRoles: [], claimedPermissions: ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"],
+  requestId: "acc-svc", ip: "127.0.0.1" };
+async function rawRow(id) {
+  const [[row]] = await h.db.query(
+    `SELECT version, status, is_default, HEX(account_ciphertext) AS c, HEX(account_iv) AS iv, HEX(account_auth_tag) AS tag,
+            HEX(account_blind_index) AS idx, encryption_key_id AS ek, blind_index_key_id AS lk
+       FROM supplier_bank_accounts WHERE id = ?`, [id]);
+  return row;
+}
+
+integrationTest("TC-071 (BANK-010): an update that keeps the account keeps every encrypted byte; one that changes it replaces them all", async () => {
+  const supplierId = await seedSupplier();
+  const service = await serviceWith();
+  const created = await service.create({ ...svcActor, supplierId, accountHolderName: "U", bankName: "Before",
+    accountNumber: SECRET, reason: "TC-071 建立" });
+  const original = await rawRow(created.id);
+
+  // 只改銀行名：密文、IV、tag、blind index、兩個 key id 一個 byte 都唔可以郁。
+  const renamed = await service.update({ ...svcActor, supplierId, bankAccountId: created.id, version: created.version,
+    accountHolderName: "U", bankName: "After", reason: "TC-071 改銀行名" });
+  const afterRename = await rawRow(created.id);
+  for (const field of ["c", "iv", "tag", "idx", "ek", "lk"]) {
+    assert.equal(afterRename[field], original[field], `changing only the bank name must not touch ${field}`);
+  }
+  assert.equal(Number(afterRename.version), Number(original.version) + 1, "the version still advances");
+
+  // 改帳號：新 IV、新密文、新 blind index，而舊帳號喺呢行任何欄位都搵唔返。
+  const NEXT = `${SECRET.slice(0, 6)}9${SECRET.slice(7)}`;
+  await service.update({ ...svcActor, supplierId, bankAccountId: created.id, version: renamed.version,
+    accountHolderName: "U", bankName: "After", accountNumber: NEXT, reason: "TC-071 改帳號" });
+  const afterChange = await rawRow(created.id);
+  for (const field of ["c", "iv", "idx"]) {
+    assert.notEqual(afterChange[field], original[field], `changing the account must replace ${field}`);
+  }
+  assert.equal(afterChange.ek, h.application.services.config.supplier.bankEncryption.activeKeyId, "re-encrypted under the active key");
+  const [[everything]] = await h.db.query("SELECT * FROM supplier_bank_accounts WHERE id = ?", [created.id]);
+  const serialised = Object.values(everything).map((v) => (Buffer.isBuffer(v) ? v.toString("latin1") : String(v))).join("|");
+  assert.ok(!serialised.includes(SECRET) && !serialised.includes(NEXT), "neither the old nor the new account is stored in clear");
+  const [updates] = await h.db.query(
+    "SELECT detail FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.update' ORDER BY id", [supplierId]);
+  assert.equal(updates.length, 2, "both updates are audited");
+  assert.ok(!JSON.stringify(updates).includes(SECRET) && !JSON.stringify(updates).includes(NEXT), "the audit carries no account");
+});
+
+integrationTest("TC-072 (BANK-011): deactivation clears the default and keeps the row; there is no route that deletes one", async () => {
+  const supplierId = await seedSupplier();
+  const service = await serviceWith();
+  const row = await service.create({ ...svcActor, supplierId, accountHolderName: "D", bankName: "Deact",
+    accountNumber: SECRET, isDefault: true, reason: "TC-072 建立" });
+  assert.equal(Number((await rawRow(row.id)).is_default), 1);
+  await service.deactivate({ ...svcActor, supplierId, bankAccountId: row.id, version: row.version, reason: "TC-072 停用" });
+  const after = await rawRow(row.id);
+  assert.ok(after, "a deactivated row is kept, not deleted");
+  assert.notEqual(after.status, "active");
+  assert.equal(Number(after.is_default), 0, "deactivating the default clears it");
+
+  /**
+   * 永久刪除唔存在：DELETE 冇 route。
+   *
+   * 呢個框架對**所有未登記**嘅 `/api` 請求一律回 401 `Unauthorized Access`（`apiDispatcher`
+   * 嘅 `api.not_registered`），特登唔回 404，唔俾人探測有邊啲 route。所以「冇 route」同
+   * 「token 有問題」單睇 401 分唔開。第一版斷言 404／405，錯咗。
+   *
+   * 分得開嘅做法：同一個 token 叫一條**有登記**嘅 route 要 200（token 冇問題），叫一條
+   * 明顯唔存在嘅 route 攞佢個回應做對照，DELETE 嘅回應一定要同呢個對照一模一樣。
+   */
+  const writer = await makeUser("tc072", ["supplier.view", "supplier.bank.view", "supplier.bank.mgmt"]);
+  const auth = { authorization: `Bearer ${writer.token}` };
+  const registered = await fetch(`${h.url}/api/v1/suppliers/${supplierId}/bank-accounts`, { headers: auth });
+  assert.equal(registered.status, 200, "the token is valid on a registered route");
+  const unregistered = await fetch(`${h.url}/api/v1/suppliers/${supplierId}/no-such-route-${h.suffix}`,
+    { method: "DELETE", headers: auth });
+  const unregisteredBody = JSON.parse(await unregistered.text());
+  const deleted = await fetch(`${h.url}/api/v1/suppliers/${supplierId}/bank-accounts/${row.id}`, { method: "DELETE", headers: auth });
+  const deletedBody = JSON.parse(await deleted.text());
+  assert.equal(deleted.status, unregistered.status,
+    `DELETE on a Bank row must be answered exactly as an unregistered route is (${unregistered.status}), got ${deleted.status}`);
+  assert.equal(deletedBody.error?.code, unregisteredBody.error?.code, "same refusal as a route that does not exist");
+  assert.ok(await rawRow(row.id), "and the row is still there");
+  // 「已被付款引用嘅資料保留」：呢個 baseline 冇付款模組引用 Bank 行，所以嗰一半 NOT_APPLICABLE。
+});
+
+integrationTest("TC-073 (BANK-012): when the audit cannot be written, no Bank write lands and no reveal returns an account", async () => {
+  const supplierId = await seedSupplier();
+  const good = await serviceWith();
+  const seeded = await good.create({ ...svcActor, supplierId, accountHolderName: "A", bankName: "Audit",
+    accountNumber: SECRET, reason: "TC-073 建立" });
+  const failing = await serviceWith({ audit: { async record() { throw new Error("simulated audit failure"); } } });
+  const operations = {
+    create: () => failing.create({ ...svcActor, supplierId, accountHolderName: "B", bankName: "Audit",
+      accountNumber: `${SECRET.slice(0, 5)}8${SECRET.slice(6)}`, reason: "TC-073 create" }),
+    update: () => failing.update({ ...svcActor, supplierId, bankAccountId: seeded.id, version: seeded.version,
+      accountHolderName: "A2", bankName: "Audit2", reason: "TC-073 update" }),
+    setDefault: () => failing.setDefault({ ...svcActor, supplierId, bankAccountId: seeded.id, version: seeded.version,
+      reason: "TC-073 setDefault" }),
+    deactivate: () => failing.deactivate({ ...svcActor, supplierId, bankAccountId: seeded.id, version: seeded.version,
+      reason: "TC-073 deactivate" }),
+    reveal: () => failing.reveal({ ...svcActor, supplierId, bankAccountId: seeded.id, reason: "TC-073 reveal" })
+  };
+  for (const [name, run] of Object.entries(operations)) {
+    const before = await state(supplierId);
+    let result = null;
+    await assert.rejects(async () => { result = await run(); }, `${name} must fail when its audit cannot be written`);
+    assert.equal(result, null, `${name}: nothing may be returned`);
+    const afterState = await state(supplierId);
+    assert.equal(afterState.rows, before.rows, `${name}: the business write must roll back`);
+  }
+  // 對照組：同一個操作配一個正常嘅 audit 係成功嘅 —— 否則上面嘅「失敗」可能唔係因為 audit。
+  const control = await good.update({ ...svcActor, supplierId, bankAccountId: seeded.id, version: seeded.version,
+    accountHolderName: "A3", bankName: "Audit3", reason: "TC-073 control" });
+  assert.ok(control.version > seeded.version, "with a working audit the same update succeeds");
+});
