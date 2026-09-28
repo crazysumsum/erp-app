@@ -9,7 +9,7 @@ const runDirectory = path.resolve(process.cwd(), process.env.HARNESS_RUN_DIR || 
 
 export default defineConfig({
   testDir: here,
-  testMatch: "inventory-warehouses.spec.js",
+  testMatch: "inventory-*.spec.js",
   timeout: 30_000,
   expect: { timeout: 5_000 },
   workers: 1,

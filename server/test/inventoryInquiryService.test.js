@@ -118,6 +118,35 @@ test("TASK-016 Stock summary keeps ATP and status quantities separate", async ()
   assert.deepEqual(database.calls[0].params, ["2026-10-05", 3, 1, 3, 1]);
 });
 
+test("TASK-017 Stock aggregate list paginates complete SKU totals before bucket drill-down", async () => {
+  const database = databaseWith(
+    [[{ total: "1" }]],
+    [[{
+      sku_id: "3", sku_code: "SKU-3", sku_name: "Widget", base_uom_id: "5", base_uom_code: "EA",
+      total_on_hand: "30", available_on_hand: "20", eligible_on_hand: "8", reserved_quantity: "12",
+      quarantined_quantity: "6", damaged_quantity: "4"
+    }]]
+  );
+  const service = new InventoryInquiryService({ database, time });
+
+  const page = await service.listStockAggregates({ q: "SKU-3", warehouseId: 1, page: 2, pageSize: 20 });
+
+  assert.deepEqual(page, {
+    items: [{
+      sku: { skuId: 3, code: "SKU-3", name: "Widget" },
+      baseUom: { uomId: 5, uomCode: "EA" },
+      totalOnHand: 30, availableOnHand: 20, eligibleOnHand: 8, reserved: 12,
+      atp: 0, uncoveredReserved: 4, quarantined: 6, damaged: 4, inTransit: 0
+    }],
+    total: 1, page: 2, pageSize: 20
+  });
+  assert.match(database.calls[0].sql, /COUNT\(DISTINCT b\.sku_id\)/);
+  assert.match(database.calls[1].sql, /GROUP BY b\.sku_id/);
+  assert.match(database.calls[1].sql, /ORDER BY search_rank ASC, s\.sku_code ASC, b\.sku_id ASC/);
+  assert.equal(database.calls[1].params.at(-2), 20);
+  assert.equal(database.calls[1].params.at(-1), 20);
+});
+
 test("TASK-016 Stock detail returns one bucket and recent source-linked movements", async () => {
   const database = databaseWith([[stockRow()]], [[movementRow()]]);
   const service = new InventoryInquiryService({ database, time });

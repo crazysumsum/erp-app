@@ -22,6 +22,12 @@ const STOCK_SORTS = Object.freeze({
   onHand: "b.on_hand_quantity",
   available: "(b.on_hand_quantity - b.allocated_quantity)"
 });
+const STOCK_AGGREGATE_SORTS = Object.freeze({
+  skuCode: "s.sku_code",
+  skuName: "s.sku_name",
+  totalOnHand: "total_on_hand",
+  availableOnHand: "available_on_hand"
+});
 const LOT_SORTS = Object.freeze({
   skuCode: "s.sku_code",
   lot: "l.normalized_lot_number",
@@ -256,6 +262,59 @@ export class InventoryInquiryService {
       [...(search ? [search, normalizedBarcode(search)] : []), ...params, pageSize, offset]
     );
     return { items: rows.map((row) => projectStock(row, currentDate)), total: Number(count.total), page, pageSize };
+  }
+
+  async listStockAggregates(input = {}) {
+    const currentDate = this.time.fileDate();
+    const { page, pageSize, sortColumn, direction, offset } = pageInput(input, STOCK_AGGREGATE_SORTS, "skuCode");
+    const { filters, params, search } = stockFilters(input, currentDate);
+    const warehouseId = positiveId(input.warehouseId, "warehouseId", { optional: true });
+    const clause = whereClause(filters);
+    const [[count]] = await this.database.query(
+      `SELECT COUNT(DISTINCT b.sku_id) AS total${STOCK_FROM}${clause}`,
+      params
+    );
+    const rank = search ? `, CASE WHEN s.sku_code = ? OR EXISTS (
+      SELECT 1 FROM item_sku_barcodes barcode
+       WHERE barcode.sku_id = s.id AND barcode.normalized_barcode = ?
+    ) THEN 0 ELSE 1 END AS search_rank` : "";
+    const reservedWarehouse = warehouseId === null ? "" : " AND c2.warehouse_id = ?";
+    const order = `${search ? "search_rank ASC, " : ""}${sortColumn} ${direction}, b.sku_id ${direction}`;
+    const [rows] = await this.database.query(
+      `SELECT b.sku_id, s.sku_code, s.sku_name, su.uom_id AS base_uom_id, u.code AS base_uom_code,
+              COALESCE(SUM(b.on_hand_quantity), 0) AS total_on_hand,
+              COALESCE(SUM(CASE WHEN b.stock_status = 'AVAILABLE' THEN b.on_hand_quantity ELSE 0 END), 0) AS available_on_hand,
+              COALESCE(SUM(CASE WHEN b.stock_status = 'AVAILABLE'
+                                  AND (l.expiry_date IS NULL OR l.expiry_date >= ?)
+                                THEN b.on_hand_quantity ELSE 0 END), 0) AS eligible_on_hand,
+              (SELECT COALESCE(SUM(c2.reserved_quantity), 0)
+                 FROM inventory_stock_controls c2
+                WHERE c2.sku_id = b.sku_id${reservedWarehouse}) AS reserved_quantity,
+              COALESCE(SUM(CASE WHEN b.stock_status = 'QUARANTINED' THEN b.on_hand_quantity ELSE 0 END), 0) AS quarantined_quantity,
+              COALESCE(SUM(CASE WHEN b.stock_status = 'DAMAGED' THEN b.on_hand_quantity ELSE 0 END), 0) AS damaged_quantity
+              ${rank}
+         ${STOCK_FROM}${clause}
+        GROUP BY b.sku_id, s.sku_code, s.sku_name, su.uom_id, u.code
+        ORDER BY ${order} LIMIT ? OFFSET ?`,
+      [currentDate, ...(warehouseId === null ? [] : [warehouseId]),
+        ...(search ? [search, normalizedBarcode(search)] : []), ...params, pageSize, offset]
+    );
+    return {
+      items: rows.map((row) => {
+        const summary = stockSummaryProjection({
+          ...row,
+          atp: Math.max(Number(row.eligible_on_hand) - Number(row.reserved_quantity), 0),
+          uncovered_reserved: Math.max(Number(row.reserved_quantity) - Number(row.eligible_on_hand), 0),
+          in_transit_quantity: 0
+        });
+        return {
+          sku: { skuId: positiveId(row.sku_id, "skuId"), code: row.sku_code, name: row.sku_name },
+          baseUom: { uomId: positiveId(row.base_uom_id, "baseUomId"), uomCode: row.base_uom_code },
+          ...summary
+        };
+      }),
+      total: Number(count.total), page, pageSize
+    };
   }
 
   async getStock(balanceId) {

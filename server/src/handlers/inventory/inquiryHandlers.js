@@ -11,6 +11,8 @@ import {
   MOVEMENT_LIST_RESPONSE,
   OPERATION_SOURCE_QUERY,
   OPERATION_SOURCE_RESPONSE,
+  STOCK_AGGREGATE_LIST_QUERY,
+  STOCK_AGGREGATE_LIST_RESPONSE,
   STOCK_DETAIL_RESPONSE,
   STOCK_ID_PARAMS,
   STOCK_LIST_QUERY,
@@ -53,7 +55,20 @@ export class ListInventoryStocksHandler extends InquiryHandler {
   async execute(req) { return this.response(await this.inventory.listStocks(req.input.query)); }
 }
 
-// Aggregate sorts before the parameter route in automatic handler discovery, so /summary
+// Static stock routes must register before /:balanceId in automatic discovery.
+export class GetInventoryStockAggregatesHandler extends InquiryHandler {
+  static handlerName = "listInventoryStockAggregates";
+  static api = readApi(
+    "/api/v1/inventory/stocks/aggregates",
+    "分頁查詢 SKU 庫存與 ATP 聚合。",
+    EMPTY,
+    STOCK_AGGREGATE_LIST_QUERY,
+    STOCK_AGGREGATE_LIST_RESPONSE
+  );
+  async execute(req) { return this.response(await this.inventory.listStockAggregates(req.input.query)); }
+}
+
+// Static routes sort before the parameter route in automatic handler discovery, so /summary
 // cannot be consumed by /:balanceId.
 export class GetInventoryStockAggregateHandler extends InquiryHandler {
   static handlerName = "getInventoryStockSummary";

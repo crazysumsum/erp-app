@@ -313,6 +313,17 @@ export const STOCK_LIST_QUERY = Object.freeze({
     descending: { type: "boolean", default: false }
   }
 });
+export const STOCK_AGGREGATE_LIST_QUERY = Object.freeze({
+  ...STOCK_LIST_QUERY,
+  properties: {
+    ...STOCK_LIST_QUERY.properties,
+    sortBy: {
+      type: "string",
+      enum: ["skuCode", "skuName", "totalOnHand", "availableOnHand"],
+      default: "skuCode"
+    }
+  }
+});
 export const STOCK_SUMMARY_QUERY = Object.freeze({
   type: "object", additionalProperties: false, required: ["skuId"],
   properties: {
@@ -473,6 +484,15 @@ export const STOCK_SUMMARY_RESPONSE = Object.freeze({
     "uncoveredReserved", "quarantined", "damaged", "inTransit"
   ].map((field) => [field, NONNEGATIVE]))
 });
+export const STOCK_AGGREGATE_LIST_RESPONSE = listResponse(Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["sku", "baseUom", ...STOCK_SUMMARY_RESPONSE.required],
+  properties: {
+    sku: SKU_REF,
+    baseUom: BASE_UOM,
+    ...STOCK_SUMMARY_RESPONSE.properties
+  }
+}));
 export const MOVEMENT_DETAIL_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false, required: ["movement", "groupLegs", "reversal"],
   properties: {

@@ -9,11 +9,16 @@ const handlers = Object.values(inquiryHandlers)
   .filter((value) => typeof value === "function" && value.api);
 
 test("TASK-016 inquiry routes expose strict read-only inventory.view contracts", () => {
-  assert.equal(handlers.length, 8);
+  assert.equal(handlers.length, 9);
   assert.ok(
     handlers.indexOf(inquiryHandlers.GetInventoryStockAggregateHandler) <
       handlers.indexOf(inquiryHandlers.GetInventoryStockHandler),
     "the static /stocks/summary route must register before /stocks/:balanceId"
+  );
+  assert.ok(
+    handlers.indexOf(inquiryHandlers.GetInventoryStockAggregatesHandler) <
+      handlers.indexOf(inquiryHandlers.GetInventoryStockHandler),
+    "the static /stocks/aggregates route must register before /stocks/:balanceId"
   );
   assert.deepEqual(handlers.map((Handler) => Handler.api.path).sort(), [
     "/api/v1/inventory/expiry",
@@ -23,6 +28,7 @@ test("TASK-016 inquiry routes expose strict read-only inventory.view contracts",
     "/api/v1/inventory/operations/by-source",
     "/api/v1/inventory/stocks",
     "/api/v1/inventory/stocks/:balanceId",
+    "/api/v1/inventory/stocks/aggregates",
     "/api/v1/inventory/stocks/summary"
   ]);
   for (const Handler of handlers) {
@@ -41,6 +47,7 @@ test("TASK-016 inquiry schemas compile and bound every paginated list to 100 row
   }
   for (const Handler of [
     inquiryHandlers.ListInventoryStocksHandler,
+    inquiryHandlers.GetInventoryStockAggregatesHandler,
     inquiryHandlers.ListInventoryLotsHandler,
     inquiryHandlers.ListInventoryMovementsHandler,
     inquiryHandlers.ListInventoryExpiryHandler
