@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-020 are complete locally in the continuing implementation branch; TASK-021 local service implementation and focused checks are complete, while guarded MySQL verification remains separately gated.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-020 are complete locally in the continuing implementation branch; TASK-021 local service implementation and guarded MySQL developer verification are complete locally.
 
 ## Baseline
 
@@ -253,7 +253,7 @@
 - TASK-018 added only the guarded capacity/security/concurrency tests, two measured root-cause fixes and the minimum reusable Warehouse race fixture alignment. It added no business feature, migration, dependency, CI or remote action.
 - TASK-019 added only the approved Reservation／Allocation migration and guarded focused integration test. It did not start TASK-020, add a dependency, run CI or perform any remote action.
 - TASK-020 added only the local Reservation service, operation replay summary fields and focused tests. It did not start Allocation implementation, add a migration or dependency, run CI or perform a remote action.
-- TASK-021 added only the approved candidate ranking／lookup, Allocation create, override evidence and focused tests. It did not start release／reallocate／Issue, add a migration, execute MySQL, run CI or perform a remote action.
+- TASK-021 added only the approved candidate ranking／lookup, Allocation create, override evidence and focused tests, followed by the separately approved guarded MySQL integration test. It did not start release／reallocate／Issue, add a migration, run CI or perform a remote action.
 
 ## TASK-020 local developer evidence
 
@@ -266,9 +266,21 @@
 
 - Candidate lookup returns eligible free quantity, Balance version and deterministic FEFO／FIFO rank. Allocation create rechecks Reservation and Balance versions, free quantity, unallocated Reservation capacity, active Bin and Stocktake locks before updating allocated quantity; On Hand is unchanged.
 - Sequence deviations require a 5～500-character reason; FEFO deviation additionally requires fresh `inventory.fefo.override` permission. Allocation and FEFO override Audit evidence, operation replay and rollback on required Audit failure are covered by focused tests.
-- Focused candidate／Reservation tests passed 13/13; full server developer suite passed 1,971, failed 0, skipped 330 using the repository's public CI-only test keys. Repository ESLint, module-boundary validation and `git diff --check` passed. Traceability validation remains blocked by a pre-existing provided-contract hash mismatch: TASK-020 changed `03_design_spec.md` in commit `5f83f3d`, but `00_module_manifest.json` still pins its earlier hash.
-- No MySQL integration, formal `TC-005`, CI, push, PR or merge was performed under `APR-048`. Real SQL／constraint, two-connection contention and rollback verification remain pending a separately approved disposable MySQL run.
+- Focused candidate／Reservation tests passed 13/13; full server developer suite passed 1,971, failed 0, skipped 330 using the repository's public CI-only test keys. Repository ESLint, module-boundary validation and `git diff --check` passed. The prior provided-contract hash mismatch was corrected in `f03e537` under separately approved DESIGN／PLAN baselines; traceability structure now passes.
+- `APR-052` separately authorized the guarded MySQL run below. It is IMPLEMENT-stage developer evidence, not formal `TC-005`; no CI, push, PR or merge was performed.
+
+### TASK-021 guarded developer integration cases
+
+| ID | Priority／risk | Preconditions and data | Steps／input | Expected persisted result and required evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| DEV-021-DB-01 | P1／SQL and FEFO integrity | Fresh disposable MySQL 26.7.0 schema with Inventory `0055`～`0061`; one Active Reservation and eligible expiry Lots in Active Bins | Query candidates; create recommended Allocation; replay; attempt a row-local quantity-constraint violation | Stable FEFO order and free/version projection; `ACTIVE` Allocation and Audit persist once, On Hand stays unchanged, invalid quantity update is rejected by MySQL; service output plus table rows／error code | PASS — FEFO IDs／expiry／free／version matched; one `ACTIVE` Allocation and Audit, stable replay, unchanged On Hand, invalid update returned `ER_CHECK_CONSTRAINT_VIOLATED` |
+| DEV-021-DB-02 | P1／oversubscription race | Same schema; one Reservation and Balance with enough stock for only one competing request | Launch two independent Allocation transactions with distinct source events and a barrier before current-state reads | Exactly one commits, the other gets a concurrency/version/capacity rejection; outstanding Allocation and Balance allocated never exceed Reservation or On Hand; two-connection result plus table rows | PASS — one committed, one rejected `VERSION_CONFLICT`／`CONCURRENT_OPERATION`; one Allocation for quantity 3 and Balance stayed On Hand 5, allocated 3, version 2 |
+| DEV-021-DB-03 | P1／atomic rollback | Same schema; valid remaining Reservation capacity | Inject required Audit failure after attempted Allocation writes | Reservation version, Balance allocated, Allocation／operation／Audit row counts stay identical to the pre-command snapshot; before／after table rows and error | PASS — injected Audit failure rejected the command; before／after persisted snapshot matched exactly |
+
+The focused MySQL suite passed 4/4 (parent plus three cases), failed 0, on a socket-only MySQL 26.7.0 instance using `erp_inventory_task021_20260928_1728`. The exact schema was dropped, the instance shut down, and its temporary root removed; no shared or production database was touched.
+
+After this change, the complete local server suite passed 1,971, failed 0, skipped 331 (the new guarded test is skipped outside its explicit MySQL opt-in). Repository ESLint, module-boundary validation, traceability structure validation and `git diff --check` passed.
 
 ## Next safe action
 
-TASK-021 focused developer checks are complete. Await a separately approved guarded MySQL 26.7.0 verification decision; do not start TASK-022, run CI or perform push/PR/merge.
+TASK-021 developer checks are complete. Checkpoint local task evidence, then request a separate TASK-022 scope decision; do not start TASK-022, run CI or perform push/PR/merge under the current approval.
