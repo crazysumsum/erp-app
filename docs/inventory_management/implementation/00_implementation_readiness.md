@@ -281,6 +281,13 @@ The focused MySQL suite passed 4/4 (parent plus three cases), failed 0, on a soc
 
 After this change, the complete local server suite passed 1,971, failed 0, skipped 331 (the new guarded test is skipped outside its explicit MySQL opt-in). Repository ESLint, module-boundary validation, traceability structure validation and `git diff --check` passed.
 
+## TASK-022 local developer evidence
+
+- Allocation release updates only the matching Balance hold and Allocation outstanding; source cancel releases active holds before closing the Reservation. Reallocate releases and creates holds under one operation and transaction, with rollback on stale destination or required Audit failure.
+- Issue consumes only matching Reservation／Allocation／Balance lines in Base UOM. It checks versions, active locations, Stocktake locks, available status and Lot remaining life; each line writes one immutable Movement while the same transaction updates On Hand, allocated, Control reserved, Reservation outstanding／consumed, Allocation outstanding／consumed, operation replay and Audit.
+- Focused Reservation／Allocation／Posting tests passed 38/38, including two Allocations sharing a Balance, replay, mismatched bucket, expired／short-life Lot, locked Bin and Audit-failure rollback. The full local server suite passed 1,983, failed 0, skipped 331 using public CI-only test keys; repository ESLint, module-boundary and traceability-structure validators, and `git diff --check` passed.
+- These are local mocked-transaction developer checks. No TASK-022 MySQL execution, real concurrency test, CI, independent review, push, PR or merge occurred; formal `TC-004`／`TC-005` remain open. TASK-023 owns the Issue HTTP route and provider-fixed contracts; generic Reverse Issue belongs to the later P3 posting scope.
+
 ## Next safe action
 
-TASK-021 developer checks are complete. Checkpoint local task evidence, then request a separate TASK-022 scope decision; do not start TASK-022, run CI or perform push/PR/merge under the current approval.
+Guarded TASK-022 MySQL execution and publication require separate approval; do not infer formal `TC-004`／`TC-005` acceptance, CI, push, PR or merge from the local evidence.
