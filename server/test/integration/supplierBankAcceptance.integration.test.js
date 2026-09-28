@@ -421,6 +421,33 @@ integrationTest("TC-068 (BANK-007): a deactivated row on a lookup key outside th
     (error) => error.statusCode === 503 && error.publicCode === "BANK_KEY_UNAVAILABLE");
   });
 
+integrationTest("TC-068 (BANK-007): a Supplier locked by a lost lookup key is recovered by the --from-lost reindex (HD-038)",
+  async () => {
+    // REV-057 M-2 嘅形狀：兩行喺遺失咗嘅 key 之下，其中一行停用 —— 重新輸入帳號救唔到
+    // （503／409），而 key material 亦冇咗。Lookup 重建只要 encryption ring。
+    const { runRotation, ROTATION_KINDS } = await import("../../src/modules/supplier/bankKeyRotation.js");
+    const service = await serviceWith();
+    const supplierId = await seedSupplier();
+    const lostId = `gone-look-${randomUUID().slice(0, 8)}`;
+    const kept = await seedUnder(supplierId, SECRET, { lookupKeyId: lostId });
+    const retired = await seedUnder(supplierId, NEXT_SECRET, { lookupKeyId: lostId });
+    await service.deactivate({ ...svcActor, supplierId, bankAccountId: retired.id, version: retired.version, reason: "HD-038 停用" });
+    const create = (accountNumber) => service.create({ ...svcActor, supplierId, accountHolderName: "Seed", bankName: "Seed Bank",
+      accountNumber, reason: "HD-038 新增" });
+    await assert.rejects(() => create(`${SECRET}7`), (error) => error.statusCode === 503, "locked before the reindex");
+
+    const active = h.application.services.config.supplier.bankLookup.activeKeyId;
+    const report = await runRotation({ database: h.db, crypto: h.crypto, kind: ROTATION_KINDS.LOOKUP, from: lostId, to: active, fromLost: true });
+    assert.deepEqual([report.processed, report.failed, report.remaining], [2, 0, 0]);
+    assert.equal((await rawRow(kept.id)).lk, active);
+
+    // 查重返晒嚟：active 同停用嗰行都擋得住重覆，新帳號照入到。
+    for (const account of [SECRET, NEXT_SECRET]) {
+      await assert.rejects(() => create(account), (error) => error.publicCode === "BANK_ACCOUNT_DUPLICATE", "duplicate detection is back");
+    }
+    assert.ok((await create(`${SECRET}7`)).id, "and the Supplier can add a new account again");
+  });
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Service 層嘅案例（真 MySQL，app 自己個 database service）
 async function serviceWith({ audit } = {}) {
