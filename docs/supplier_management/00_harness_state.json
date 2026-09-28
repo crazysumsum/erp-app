@@ -1,9 +1,9 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 242,
+  "revision": 243,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "IMPLEMENT",
+  "active_mode": "TEST_AND_VERIFY",
   "status": "BLOCKED",
   "resume_status": "VERIFYING",
   "current_phase": "PHASE-003",
@@ -11,11 +11,11 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "320540a9df943c692e6c42731f69fc9d497c94e7",
-    "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
-    "default_commit": "320540a9df943c692e6c42731f69fc9d497c94e7",
-    "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
+    "code_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+    "source_fingerprint": "ff3b74d4e69c4ec3e8e1cdf3785e9c6bef7b56e826b09e77b8a4d6a31aa326fb",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/def-close",
+    "default_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+    "mode_entry_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
@@ -3245,6 +3245,17 @@
       "source_ref": "TC-065 (BANK-004), the single case the readiness assessment found uncovered even by reading: SEC-013 rests on a nonce replay path nothing in the repository had exercised. The harness uses a started application, real HTTP, a JWT carrying did, user_devices bindings, a non-extractable WebCrypto ECDSA P-256 key and the application's own signingInput. Each of the four write routes receives seven attacks - password missing or wrong, device headers missing, device revoked, body changed after signing, signature moved to another path, verbatim replay - each required to fail as its intended code with no row changed, no audit written, no secret and no internal reason reaching the client, and each route carries a legitimate-request control. The first version passed with nonce replay protection disabled entirely: every replay was refused, but by a stale version (409) or an existing account (BANK_ACCOUNT_DUPLICATE), never by the nonce. Requiring the intended code plus a nonce_replayed device log event killed that mutant and four others. Also verified by execution rather than read from code: a wrong-password request has already spent its nonce, because device verification runs before scrypt. Then bank_operations.md, required as the subject of T37's human Security/Operations review: every command and error message in it was executed against a MySQL with CI's privilege model, through a full rotation drill for both key kinds with a control at each step, and statements derived only from code are labelled as such. The drill surfaced three operational facts nobody had recorded - the Customer tools need the full application environment; the two tools' remaining counts mean different things once a ring holds three keys; a restore must run as an admin account because the inventory triggers need SUPER (ERROR 1419). A self-review before committing found one fabricated test-case reference and one inferred claim written as fact; both were corrected. TASK-037 now stands at three of seventeen cases executed, all PASS on CI. [source_fingerprint computed at revision 239 with harness_core.fingerprint on a clean checkout of code_commit]",
       "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit ef029a9, which recorded this observation",
       "observed_at": "2026-09-28T10:41:37+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-026/027/028 remediation (HD-037, HD-038) merged to main; required CI green on the merge commit",
+      "code_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "ff3b74d4e69c4ec3e8e1cdf3785e9c6bef7b56e826b09e77b8a4d6a31aa326fb",
+      "status": "PASS",
+      "source_ref": "PR #158 merged as 761c0bd910af1daa6d5ccbff75ff5a1912c65424 on the Product Owner's word ('merge once CI is all green and main has not moved'), after verifying head de1a46b's CI green and origin/main unchanged at c83bcac. Main: run 36398576418 (push) cancelled by concurrency when the weekly scheduled run 36399059980 started on the same commit; 36399059980 green on all five checks. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-28T08:53:29Z"
     }
   ],
   "pending_decisions": [
@@ -4261,6 +4272,14 @@
       "idempotency_key": "mode-change-239",
       "status": "CONFIRMED",
       "source_ref": "HD-037: Product Owner authorised remediation of DEF-026/027/028 on 2026-09-28. Written directly, not through state_tool checkpoint: the tool validates the prior state on load and revision 238 failed its own schema (hand-written records from revision 231 on), so it could not be used to repair it. Revision 239 carries the same mode-change record the tool would have appended."
+    },
+    {
+      "id": "MODE-CHANGE-243",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-243",
+      "status": "CONFIRMED",
+      "source_ref": "PR #158 merged at 761c0bd with green CI on the Product Owner's word; HD-037 remediation complete, TEST_AND_VERIFY resumes on the merged baseline"
     }
   ],
   "evidence_files": [
@@ -4780,41 +4799,56 @@
     {
       "id": "DEF-026",
       "severity": "MEDIUM",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TC-068",
         "TC-077",
         "TASK-037",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #158 merge commit 761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+        "PR CI run 36397475860 on head de1a46b: all five required checks success",
+        "main CI run 36399059980 (scheduled) on 761c0bd910af1daa6d5ccbff75ff5a1912c65424: all five required checks success; the push run 36398576418 on the same commit was cancelled by that scheduled run through the workflow's cancel-in-progress concurrency group, not by a failure",
+        "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
+      ],
       "risk_approval_id": null
     },
     {
       "id": "DEF-027",
       "severity": "HIGH",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TC-068",
         "TASK-037",
         "HD-037",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #158 merge commit 761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+        "PR CI run 36397475860 on head de1a46b: all five required checks success",
+        "main CI run 36399059980 (scheduled) on 761c0bd910af1daa6d5ccbff75ff5a1912c65424: all five required checks success; the push run 36398576418 on the same commit was cancelled by that scheduled run through the workflow's cancel-in-progress concurrency group, not by a failure",
+        "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
+      ],
       "risk_approval_id": null
     },
     {
       "id": "DEF-028",
       "severity": "LOW",
-      "status": "RETEST",
+      "status": "CLOSED",
       "source_ids": [
         "TC-062",
         "HD-037",
         "docs/supplier_management/testing/04_defect_register.md"
       ],
-      "closure_evidence": [],
+      "closure_evidence": [
+        "PR #158 merge commit 761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+        "PR CI run 36397475860 on head de1a46b: all five required checks success",
+        "main CI run 36399059980 (scheduled) on 761c0bd910af1daa6d5ccbff75ff5a1912c65424: all five required checks success; the push run 36398576418 on the same commit was cancelled by that scheduled run through the workflow's cancel-in-progress concurrency group, not by a failure",
+        "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
+      ],
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "PR #158: REV-058 APPROVED bb04fd8 (0 critical, 0 high, 0 medium, 3 low - all runbook wording). The three lows, I-1, I-2 and I-4 were then fixed in runbook text and one code comment only, after the approval; no executable line changed. Next: green CI on the final head and the Product Owner's explicit word before merge. After merge: close DEF-026/027/028 with the merge commit and CI run, return active_mode to TEST_AND_VERIFY, clean up the worktree, branch and throwaway MySQL. Still open: TC-133 / OPS-006, HD-036 (to include runbook §4.1), DEF-023, DEF-024."
+  "next_safe_action": "DEF-026/027/028 are closed on main at 761c0bd; TEST_AND_VERIFY resumes on that baseline (status BLOCKED only because HD-036 is an open major gate). TASK-037 remaining: TC-133 / OPS-006 module-wide restore drill (no harness yet); HD-036 Security/Operations sign-off - a human gate whose subject now includes bank_operations.md §4.1 (--from-lost) and the REV-057/058 runbook corrections. Open defects: DEF-023, DEF-024."
 }
