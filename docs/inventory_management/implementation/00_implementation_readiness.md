@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-020 are complete locally in the continuing implementation branch; TASK-021 awaits separate authorization.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-020 are complete locally in the continuing implementation branch; TASK-021 local service implementation and focused checks are complete, while guarded MySQL verification remains separately gated.
 
 ## Baseline
 
@@ -45,6 +45,7 @@
 - `HD-040`／`APR-041`: after implementation discovery proved the existing APIs could not correctly paginate the designed default SKU aggregate list, Sam selected option A and approved the minimal server-side paginated `/api/v1/inventory/stocks/aggregates` extension inside TASK-017 instead of an incorrect client-side page aggregate.
 - `HD-042`／`APR-043`: Sam selected and approved complete local TASK-019 Reservation／Allocation persistence migration `0061`, focused tests, guarded disposable MySQL 26.7.0 verification and exact cleanup, while excluding TASK-020, CI and remote publication.
 - `HD-043`～`HD-044`／`APR-044`～`APR-047`: Sam approved complete local TASK-020 ATP／Reservation state service and disposable MySQL 26.7.0 verification. For `SALE`, effective `minimumRemainingDays` is the greater of the source request and SKU `minimumSaleLifeDays`, persisted on Reservation. TASK-021, CI and remote publication remain excluded.
+- `HD-045`／`APR-048`: Sam approved local TASK-021 FEFO／FIFO candidate ranking and Allocation create service, including quantity／version checks, authorized overrides, Audit evidence and focused developer tests. Disposable MySQL execution, TASK-022, CI and remote publication remain excluded.
 
 ## Reconciled P0 checks
 
@@ -252,6 +253,7 @@
 - TASK-018 added only the guarded capacity/security/concurrency tests, two measured root-cause fixes and the minimum reusable Warehouse race fixture alignment. It added no business feature, migration, dependency, CI or remote action.
 - TASK-019 added only the approved Reservation／Allocation migration and guarded focused integration test. It did not start TASK-020, add a dependency, run CI or perform any remote action.
 - TASK-020 added only the local Reservation service, operation replay summary fields and focused tests. It did not start Allocation implementation, add a migration or dependency, run CI or perform a remote action.
+- TASK-021 added only the approved candidate ranking／lookup, Allocation create, override evidence and focused tests. It did not start release／reallocate／Issue, add a migration, execute MySQL, run CI or perform a remote action.
 
 ## TASK-020 local developer evidence
 
@@ -260,6 +262,13 @@
 - Expiry crossing to the next day yielded `rawAtp = -3` and `uncoveredReserved = 3` without deleting the existing Reservation. Partial release, stale version rejection, terminal cancel and injected Audit failure rollback preserved Reservation, Stock Control, operation and Audit consistency.
 - The exact disposable schema was dropped, the isolated port 3320 listener stopped and `/private/tmp/erp-inventory-task020-mysql-2670.JHx2FZ` removed. No shared or production schema was used. These are IMPLEMENT-stage developer checks, not formal `TC-005`, CI, independent approval or business acceptance.
 
+## TASK-021 local developer evidence
+
+- Candidate lookup returns eligible free quantity, Balance version and deterministic FEFO／FIFO rank. Allocation create rechecks Reservation and Balance versions, free quantity, unallocated Reservation capacity, active Bin and Stocktake locks before updating allocated quantity; On Hand is unchanged.
+- Sequence deviations require a 5～500-character reason; FEFO deviation additionally requires fresh `inventory.fefo.override` permission. Allocation and FEFO override Audit evidence, operation replay and rollback on required Audit failure are covered by focused tests.
+- Focused candidate／Reservation tests passed 13/13; full server developer suite passed 1,971, failed 0, skipped 330 using the repository's public CI-only test keys. Repository ESLint, module-boundary validation and `git diff --check` passed. Traceability validation remains blocked by a pre-existing provided-contract hash mismatch: TASK-020 changed `03_design_spec.md` in commit `5f83f3d`, but `00_module_manifest.json` still pins its earlier hash.
+- No MySQL integration, formal `TC-005`, CI, push, PR or merge was performed under `APR-048`. Real SQL／constraint, two-connection contention and rollback verification remain pending a separately approved disposable MySQL run.
+
 ## Next safe action
 
-TASK-020 local developer checks are complete. Await a separately approved TASK-021 scope; do not start TASK-021, run CI or perform push/PR/merge.
+TASK-021 focused developer checks are complete. Await a separately approved guarded MySQL 26.7.0 verification decision; do not start TASK-022, run CI or perform push/PR/merge.

@@ -201,3 +201,213 @@ test("TASK-020 Audit failure rolls back Reservation and Stock Control together",
     database.state.reservation.outstanding_quantity, database.state.control.reserved_quantity],
   [0, 10, 10]);
 });
+
+function allocationSetup({
+  permissions = ["inventory.operation"], expiryDates = ["2026-10-31", "2026-11-30"],
+  auditFails = false, replayAfterCompletion = false, lockedBinIds = [],
+  sameLot = false, allocatedOutstanding = 0
+} = {}) {
+  const database = createFakeInventoryDatabase({
+    initialState: {
+      warehouse: { id: 2, status: "ACTIVE" },
+      control: { id: 5, warehouse_id: 2, sku_id: 12, reserved_quantity: 6, version: 1 },
+      reservation: { id: 17, warehouse_id: 2, sku_id: 12, purpose: "SALE",
+        minimum_remaining_days: 30, outstanding_quantity: 6, status: "ACTIVE", version: 1 },
+      bins: [{ id: 31, status: "ACTIVE" }, { id: 32, status: "ACTIVE" }],
+      balances: [
+        { id: 41, warehouse_id: 2, bin_id: 31, sku_id: 12, lot_id: 51,
+          stock_status: "AVAILABLE", on_hand_quantity: 3, allocated_quantity: 0, version: 1 },
+        { id: 42, warehouse_id: 2, bin_id: 32, sku_id: 12, lot_id: sameLot ? 51 : 52,
+          stock_status: "AVAILABLE", on_hand_quantity: 5, allocated_quantity: 0, version: 1 }
+      ],
+      audits: []
+    },
+    async query({ sql, state }) {
+      if (sql.includes("FROM inventory_reservations")) return [[state.reservation]];
+      if (sql.includes("SUM(outstanding_quantity)")) return [[{ outstanding: allocatedOutstanding }]];
+      if (sql.includes("FROM inventory_stock_balances b")) return [[
+        { ...state.balances[0], bin_code: "A", normalized_lot_number: "lot-1",
+          expiry_date: expiryDates[0], first_receipt_date: "2026-09-01", fifo_anchor_date: null },
+        { ...state.balances[1], bin_code: "B", normalized_lot_number: sameLot ? "lot-1" : "lot-2",
+          expiry_date: expiryDates[1], first_receipt_date: "2026-09-02", fifo_anchor_date: null }
+      ]];
+      return [[]];
+    },
+    async execute({ sql, params, state }) {
+      if (sql.includes("UPDATE inventory_stock_balances")) {
+        const balance = state.balances.find(({ id }) => id === params[2]);
+        balance.allocated_quantity = params[0];
+        balance.version += 1;
+      }
+      if (sql.includes("UPDATE inventory_reservations")) state.reservation.version += 1;
+      if (sql.includes("INSERT INTO inventory_allocations")) {
+        state.nextAllocationId = (state.nextAllocationId ?? 70) + 1;
+        return [{ affectedRows: 1, insertId: state.nextAllocationId }];
+      }
+      return [{ affectedRows: 1 }];
+    }
+  });
+  let completedSummary;
+  const service = new InventoryReservationService({
+    database, time: { nowMs: () => NOW, fileDate: () => "2026-09-28" },
+    authorize: async () => ({ username: "sam", permissions }),
+    itemLookup: { async getInventoryProfileInTransaction() {
+      return { usable: true, inventoryTracked: true,
+        trackingPolicy: expiryDates[0] === null ? "batch" : "batch_expiry" };
+    } },
+    operations: {
+      async claim() { return { operationId: 21,
+        replay: replayAfterCompletion && completedSummary ? { resultSummary: completedSummary } : null }; },
+      async complete(_transaction, input) { completedSummary = input.resultSummary; }
+    },
+    locks: { async lockForCommand(transaction) { return {
+      warehouses: [transaction.state.warehouse], stockControls: [transaction.state.control],
+      bins: transaction.state.bins, binLocks: lockedBinIds.map((binId) => ({ bin_id: binId })),
+      balances: transaction.state.balances,
+      reservations: [transaction.state.reservation]
+    }; } },
+    audit: { async recordSucceeded(transaction, input) {
+      if (auditFails) throw new Error("injected audit failure");
+      transaction.state.audits.push(input);
+    } }
+  });
+  return { service, database };
+}
+
+function allocationCommand(allocations, { reason, permissions = ["inventory.operation"], eventId = "pick-1" } = {}) {
+  return inventoryCommandFixture({
+    actor: { claimedPermissions: permissions },
+    authorization: { purpose: "allocation.create", requiredCallerPermission: "inventory.operation" },
+    source: { module: "FULFILLMENT", documentType: "PICK", eventId },
+    payload: { reservationId: 17, expectedVersion: 1, allocations,
+      ...(reason === undefined ? {} : { overrideReason: reason }) }
+  });
+}
+
+test("TASK-021 allocates the recommended buckets without reducing On Hand", async () => {
+  const { service, database } = allocationSetup();
+  const result = await service.allocate(allocationCommand([
+    { balanceId: 41, expectedVersion: 1, quantity: 3 },
+    { balanceId: 42, expectedVersion: 1, quantity: 3 }
+  ]));
+  assert.equal(result.version, 2);
+  assert.deepEqual(result.allocations.map(({ balanceId, quantity }) => [balanceId, quantity]), [[41, 3], [42, 3]]);
+  assert.deepEqual(database.state.balances.map(({ on_hand_quantity, allocated_quantity }) =>
+    [on_hand_quantity, allocated_quantity]), [[3, 3], [5, 3]]);
+  assert.ok(database.calls.some(({ sql }) => sql.includes("INSERT INTO inventory_allocations") &&
+    sql.includes("'ACTIVE'")));
+  assert.equal(database.state.audits.length, 2);
+});
+
+test("TASK-021 FEFO deviation needs fresh specialist permission and audited reason", async () => {
+  const selected = [{ balanceId: 42, expectedVersion: 1, quantity: 2 }];
+  const denied = allocationSetup();
+  await assert.rejects(() => denied.service.allocate(allocationCommand(selected, { reason: "Customer-approved exception" })),
+    (error) => error.code === "FEFO_OVERRIDE_DENIED");
+  assert.equal(denied.database.state.balances[1].allocated_quantity, 0);
+
+  const permissions = ["inventory.operation", "inventory.fefo.override"];
+  const approved = allocationSetup({ permissions });
+  await assert.rejects(() => approved.service.allocate(allocationCommand(selected, { permissions, eventId: "no-reason" })),
+    (error) => error.code === "FEFO_OVERRIDE_REQUIRED");
+  const result = await approved.service.allocate(allocationCommand(selected, {
+    permissions, reason: "Customer-approved exception"
+  }));
+  assert.equal(result.allocations[0].isSequenceOverride, true);
+  assert.equal(approved.database.state.balances[1].allocated_quantity, 2);
+  assert.ok(approved.database.state.audits.some(({ action, reasonText, afterSummary }) =>
+    action === "fefo.override" && reasonText === "Customer-approved exception" &&
+    afterSummary.recommendedBalanceId === 41 && afterSummary.selectedBalanceId === 42));
+});
+
+test("TASK-021 FIFO deviation needs a reason but not FEFO specialist permission", async () => {
+  const { service, database } = allocationSetup({ expiryDates: [null, null] });
+  const selected = [{ balanceId: 42, expectedVersion: 1, quantity: 2 }];
+  await assert.rejects(() => service.allocate(allocationCommand(selected)),
+    (error) => error.code === "PICK_SEQUENCE_REASON_REQUIRED");
+  const result = await service.allocate(allocationCommand(selected, { reason: "Urgent bin selection" }));
+  assert.equal(result.allocations[0].selectionStrategy, "FIFO");
+  assert.equal(result.allocations[0].isSequenceOverride, true);
+  assert.equal(database.state.balances[1].allocated_quantity, 2);
+});
+
+test("TASK-021 candidate inquiry returns bounded eligible free quantities and versions without writes", async () => {
+  const queries = [];
+  const transaction = {
+    async query(sql, params) {
+      queries.push({ sql: String(sql), params });
+      if (String(sql).includes("FROM inventory_reservations")) return [[{
+        warehouse_id: 2, sku_id: 12, outstanding_quantity: 6,
+        minimum_remaining_days: 30, status: "ACTIVE", version: 1, warehouse_status: "ACTIVE"
+      }]];
+      if (String(sql).includes("SUM(outstanding_quantity)")) return [[{ outstanding: 1 }]];
+      return [[{
+        id: 41, bin_id: 31, lot_id: 51, version: 2, on_hand_quantity: 5,
+        allocated_quantity: 1, bin_code: "A", normalized_lot_number: "lot-1",
+        expiry_date: "2026-10-31", first_receipt_date: "2026-09-01", fifo_anchor_date: null
+      }]];
+    },
+    async execute() { throw new Error("candidate inquiry must not write"); }
+  };
+  const service = new InventoryReservationService({
+    database: { withTransaction: async (work) => work(transaction) },
+    time: { nowMs: () => NOW, fileDate: () => "2026-09-28" },
+    itemLookup: { async getInventoryProfileInTransaction() {
+      return { usable: true, inventoryTracked: true, trackingPolicy: "batch_expiry" };
+    } }, authorize: async () => ({}), audit: {}, operations: {}, locks: {}
+  });
+  const result = await service.listAllocationCandidatesInTransaction(transaction, {
+    reservationId: 17, requestedQuantity: 3
+  });
+  assert.deepEqual(result.items.map(({ balanceId, freeQuantity, balanceVersion }) =>
+    [balanceId, freeQuantity, balanceVersion]), [[41, 4, 2]]);
+  assert.equal(result.unallocatedQuantity, 5);
+  assert.equal(result.hasMore, false);
+  assert.ok(queries.some(({ sql, params }) => sql.includes("LIMIT ?") && params.at(-1) === 101));
+});
+
+test("TASK-021 Allocation replay returns the original lines without new writes", async () => {
+  const { service, database } = allocationSetup({ replayAfterCompletion: true, expiryDates: [null, null] });
+  const request = allocationCommand([{ balanceId: 41, expectedVersion: 1, quantity: 2 }]);
+  const original = await service.allocate(request);
+  const writes = database.calls.filter(({ method }) => method === "execute").length;
+  assert.deepEqual(await service.allocate(request), original);
+  assert.equal(database.calls.filter(({ method }) => method === "execute").length, writes);
+});
+
+test("TASK-021 Allocation rejects stale or locked buckets and rolls back Audit failure", async () => {
+  const selected = [{ balanceId: 41, expectedVersion: 2, quantity: 2 }];
+  const stale = allocationSetup();
+  await assert.rejects(() => stale.service.allocate(allocationCommand(selected)),
+    (error) => error.code === "VERSION_CONFLICT");
+  assert.equal(stale.database.state.balances[0].allocated_quantity, 0);
+
+  const locked = allocationSetup({ lockedBinIds: [31] });
+  await assert.rejects(() => locked.service.allocate(allocationCommand([
+    { balanceId: 41, expectedVersion: 1, quantity: 2 }
+  ])), (error) => error.code === "BIN_LOCKED_BY_STOCKTAKE");
+
+  const failing = allocationSetup({ auditFails: true });
+  await assert.rejects(() => failing.service.allocate(allocationCommand([
+    { balanceId: 41, expectedVersion: 1, quantity: 2 }
+  ])), /injected audit failure/u);
+  assert.equal(failing.database.state.balances[0].allocated_quantity, 0);
+  assert.equal(failing.database.state.reservation.version, 1);
+});
+
+test("TASK-021 same Lot across Bins remains separate and cannot exceed unallocated Reservation", async () => {
+  const sameLot = allocationSetup({ sameLot: true, expiryDates: ["2026-10-31", "2026-10-31"] });
+  const lines = [
+    { balanceId: 41, expectedVersion: 1, quantity: 3 },
+    { balanceId: 42, expectedVersion: 1, quantity: 3 }
+  ];
+  const result = await sameLot.service.allocate(allocationCommand(lines));
+  assert.deepEqual(result.allocations.map(({ balanceId }) => balanceId), [41, 42]);
+  assert.deepEqual(sameLot.database.state.balances.map(({ allocated_quantity }) => allocated_quantity), [3, 3]);
+
+  const over = allocationSetup({ allocatedOutstanding: 5 });
+  await assert.rejects(() => over.service.allocate(allocationCommand([
+    { balanceId: 41, expectedVersion: 1, quantity: 2 }
+  ])), (error) => error.code === "ALLOCATION_INSUFFICIENT");
+  assert.equal(over.database.state.balances[0].allocated_quantity, 0);
+});

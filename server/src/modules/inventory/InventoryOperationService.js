@@ -18,7 +18,8 @@ const RESULT_SUMMARY_FIELDS = new Set([
   "baseUomCode", "onHandQuantity", "allocatedQuantity", "postedAt", "reservationId",
   "allocationId", "transferId", "stocktakeId", "openingJobId", "purpose",
   "minimumRemainingDays", "originalQuantity", "consumedQuantity", "releasedQuantity",
-  "outstandingQuantity", "eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"
+  "outstandingQuantity", "eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved",
+  "allocationSnapshot"
 ]);
 
 function assertExecutor(executor, method = "execute") {
