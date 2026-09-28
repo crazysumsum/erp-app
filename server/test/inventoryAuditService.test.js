@@ -151,6 +151,28 @@ test("InventoryAuditService rejects non-allowlisted actions and summaries", asyn
   }
 });
 
+test("InventoryAuditService accepts Receipt quantity and minimum-life evidence", async () => {
+  let afterSummary;
+  const service = new InventoryAuditService({
+    database: { async withTransaction() {} }, logger: logger(), time: { nowMs: () => NOW_MS }
+  });
+
+  await service.recordSucceeded({
+    async execute(_sql, params) { afterSummary = JSON.parse(params[11]); }
+  }, input({
+    afterSummary: {
+      id: 501, quantity: 29, version: 4, movementId: 701, operationId: 91, skuId: 12,
+      lotId: 601, stockStatus: "AVAILABLE", inputQuantity: 2, inputUomId: 8,
+      baseQuantity: 24, baseUomId: 5, onHandQuantity: 29, allocatedQuantity: 0,
+      minimumLifeDaysApplied: 60, actualRemainingLifeDays: 45, overrideActorId: 7,
+      receiptId: "receipt-42", requestId: "request-1"
+    }
+  }));
+
+  assert.equal(afterSummary.minimumLifeDaysApplied, 60);
+  assert.equal(afterSummary.requestId, "request-1");
+});
+
 test("InventoryAuditService records rejection and failure after rollback without a success projection", async () => {
   const calls = [];
   const database = {

@@ -179,6 +179,35 @@ test("InventoryOperationService refuses secrets in durable result summaries", as
   );
 });
 
+test("InventoryOperationService accepts the scalar Receipt replay projection", async () => {
+  let summary;
+  const connection = {
+    async execute(_sql, params) {
+      summary = JSON.parse(params[2]);
+      return [{ affectedRows: 1 }];
+    }
+  };
+
+  await new InventoryOperationService().complete(connection, {
+    operationId: 91,
+    resultType: "MOVEMENT_GROUP",
+    resultId: "11111111-1111-4111-8111-111111111111",
+    resultSummary: {
+      status: "POSTED", operationId: 91, movementGroupId: "11111111-1111-4111-8111-111111111111",
+      movementId: 701, balanceId: 501, balanceVersion: 4, onHandQuantity: 29,
+      allocatedQuantity: 0, skuId: 12, skuCode: "SKU-12", skuName: "Widget",
+      warehouseId: 2, warehouseCode: "WH-1", binId: 35, binCode: "A-01", lotId: null,
+      lotNumber: null, expiryDate: null, stockStatus: "AVAILABLE", inputQuantity: 2,
+      inputUomId: 8, inputUomCode: "CASE", baseQuantity: 24, baseUomId: 5,
+      baseUomCode: "EA", postedAt: 1_700_000_000_000
+    },
+    completedAt: 1_700_000_000_000
+  });
+
+  assert.equal(summary.movementId, 701);
+  assert.equal(summary.skuName, "Widget");
+});
+
 test("InventoryOperationService refuses a second completion and hides incomplete lookup rows", async () => {
   const service = new InventoryOperationService();
   const connection = {

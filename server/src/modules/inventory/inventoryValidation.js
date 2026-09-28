@@ -94,6 +94,10 @@ export function meetsMinimumRemainingLife(expiryDate, currentLocalDate, minimumR
   return dateOnly(expiryDate, "expiryDate") >= minimumExpiry;
 }
 
+export function inventoryRemainingLifeDays(expiryDate, currentLocalDate) {
+  return (dateOnly(expiryDate, "expiryDate") - dateOnly(currentLocalDate, "currentLocalDate")) / 86_400_000;
+}
+
 export function validateInventoryLotInput(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lot" });

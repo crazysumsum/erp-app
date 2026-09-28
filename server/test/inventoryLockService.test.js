@@ -112,3 +112,17 @@ test("InventoryLockService maps MySQL deadlocks and lock timeouts to CONCURRENT_
     );
   }
 });
+
+test("InventoryLockService locks a Balance only after its Lot identity is known", async () => {
+  const connection = recordingConnection();
+
+  await new InventoryLockService().lockBalancesAfterLot(connection, {
+    balances: [{ warehouseId: 2, skuId: 3, binId: 4, lotId: 12, stockStatus: "QUARANTINED" }],
+    now: 1_700_000_000_000
+  });
+
+  assert.deepEqual(connection.calls.map(({ method }) => method), ["execute", "query"]);
+  assert.match(connection.calls[0].sql, /INSERT INTO inventory_stock_balances/u);
+  assert.match(connection.calls[1].sql, /ORDER BY warehouse_id, sku_id, bin_id, lot_scope, stock_status FOR UPDATE$/su);
+  assert.deepEqual(connection.calls[1].params, [2, 3, 4, 12, "QUARANTINED"]);
+});

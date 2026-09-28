@@ -10,7 +10,10 @@ const SUMMARY_FIELDS = new Set([
   "id", "code", "name", "status", "version", "quantity", "warehouseId", "binId",
   "skuId", "lotId", "stockStatus", "movementGroupId", "reservationId", "allocationId",
   "transferId", "stocktakeId", "openingJobId", "rowCount", "bucketCount", "locked",
-  "fromStatus", "toStatus"
+  "fromStatus", "toStatus", "movementId", "operationId", "balanceId", "balanceVersion",
+  "inputQuantity", "inputUomId", "baseQuantity", "baseUomId", "onHandQuantity",
+  "allocatedQuantity", "lotNumber", "expiryDate", "minimumLifeDaysApplied",
+  "actualRemainingLifeDays", "overrideActorId", "receiptId", "requestId"
 ]);
 
 function boundedString(value, field, max, { empty = false, ascii = false } = {}) {
