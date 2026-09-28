@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 243,
+  "revision": 244,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "TEST_AND_VERIFY",
-  "status": "BLOCKED",
-  "resume_status": "VERIFYING",
+  "status": "VERIFYING",
+  "resume_status": null,
   "current_phase": "PHASE-003",
   "current_task": "TASK-036",
   "baseline": {
@@ -3760,8 +3760,8 @@
         "DEF-024",
         "TC-133"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner (Sam Wong), 2026-09-28: 'HD-036 我 sign-off', then chose option (a) for how to record it: APPROVED as a whole, with no conditions; the four items in §3 of docs/supplier_management/testing/03_security_operations_review.md accepted as recommended (DEF-023 accepted as a known risk to be reassessed before SUP-CAP-05 CSV import; DEF-024 accepted; the design 3.3 difference accepted with runbook §5 as the operating rule; OPS-006 / TC-133 must be completed before release). The review scope was updated to bank_operations.md at main 761c0bd and gained R15 (rows on a key outside the ring) and R16 (--from-lost). The reviewer did NOT answer the per-item questions in the §2 reviewer column (R1-R11, R13-R16: production secret store, key-ring backup location, DB admin credential custody, alerting, off-site restore, who may run --from-lost); each is marked 'not answered' in the document and remains an open operational question for release approval. This is not Technical Acceptance of SUP-CAP-03 and not a release approval."
     },
     {
       "id": "HD-037",
@@ -4850,5 +4850,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "DEF-026/027/028 are closed on main at 761c0bd; TEST_AND_VERIFY resumes on that baseline (status BLOCKED only because HD-036 is an open major gate). TASK-037 remaining: TC-133 / OPS-006 module-wide restore drill (no harness yet); HD-036 Security/Operations sign-off - a human gate whose subject now includes bank_operations.md §4.1 (--from-lost) and the REV-057/058 runbook corrections. Open defects: DEF-023, DEF-024."
+  "next_safe_action": "HD-036 is answered (approved as a whole; §2 reviewer questions not answered and carried to release approval). TASK-037 remaining: TC-133 / OPS-006 module-wide restore drill - no harness yet, and the Product Owner's acceptance of §3 makes it a release prerequisite. Open defects: DEF-023 (accepted risk, reassess before SUP-CAP-05 CSV import), DEF-024 (accepted)."
 }
