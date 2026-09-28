@@ -384,11 +384,12 @@ integrationTest("TC-067 (BANK-006): a row moved to another Supplier cannot be re
   const created = await service.create({ ...actor, ...details, supplierId, accountNumber: SECRET, reason: "整合測試搬移前建立" });
 
   await connection.execute("UPDATE supplier_bank_accounts SET supplier_id = ? WHERE id = ?", [otherId, created.id]);
-  // REV-035：解密失敗要係一個具名 422，唔係一個匿名 500 —— 日誌要分得出「資料被改
-  // 過」同「條 key 唔喺 ring 入面」。
+  // 搬錯行係完整性失敗（AAD 對唔上），設計 §8.3、§6 要求通用 500 —— 唔話俾 caller 聽
+  // 點解。之前佢係具名 422，同「key 唔喺 ring」收埋做同一個 code（DEF-026）。
   await assert.rejects(
     () => service.reveal({ ...actor, supplierId: otherId, bankAccountId: created.id, reason: "整合測試搬移後查看" }),
-    (error) => error.statusCode === 422 && error.publicCode === "BANK_ACCOUNT_UNREADABLE"
+    (error) => error.statusCode === 500 && error.publicCode === "INTERNAL_SERVER_ERROR"
+      && error.code === "BANK_ACCOUNT_INTEGRITY_FAILED"
   );
   const [audits] = await connection.query(
     "SELECT id FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.reveal'", [otherId]

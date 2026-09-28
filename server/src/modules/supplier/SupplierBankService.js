@@ -4,7 +4,7 @@ import {
   BANK_ACCOUNT_EMPTY, BANK_ACCOUNT_TOO_LONG, BANK_ACCOUNT_UNREPRESENTABLE,
   bankAccountRejection, SupplierBankCrypto
 } from "./SupplierBankCrypto.js";
-import { invalidSupplierInput, supplierBankUnreadable, supplierChildNotFound, supplierConflict, supplierForbidden, supplierNotFound } from "./supplierErrors.js";
+import { invalidSupplierInput, supplierBankIntegrityFailure, supplierBankKeyUnavailable, supplierChildNotFound, supplierConflict, supplierForbidden, supplierNotFound } from "./supplierErrors.js";
 import { toMaskedBankResponse } from "./supplierProjections.js";
 
 /**
@@ -565,15 +565,19 @@ export class SupplierBankService {
           encryptionKeyId: row.encryption_key_id
         });
       } catch (error) {
-        // systemLogger 係 warn(event, message, context) —— 第一版傳兩個 argument，
-        // 個 payload 跌咗入 message 個位（REV-036 M-1）。而呢個 422 嘅全部理由就係
-        // 「竄改」同「條 key 唔喺 ring」喺日誌分得出，所以 context 唔可以走失。
-        this.logger?.warn?.("supplier.bank.reveal.unreadable", "Supplier bank account could not be read", {
-          bankAccountId: Number(row.id), supplierId: Number(row.supplier_id),
-          // 原因講得出，但唔帶密文、唔帶 key material。
-          reason: error?.message ?? "unknown"
-        });
-        throw supplierBankUnreadable("這個銀行帳戶目前無法讀取，請聯絡系統管理員");
+        // 兩種失敗，兩個答案（設計 §8.3、§6）：key 唔喺 ring 係 503 BANK_KEY_UNAVAILABLE，
+        // 其他（竄改、搬錯行、IV／tag 壞咗）係通用 500。之前兩者收埋做同一個 422（DEF-026）。
+        //
+        // 兩種都係 error 級別：設計 §12 要求 integrity 同 key 錯誤即時 critical alert。
+        // systemLogger 係 error(event, message, context) —— context 要喺第三個位
+        // （REV-036 M-1 嘅教訓）。原因講得出，但唔帶密文、唔帶 key material、唔帶 key ID。
+        const keyUnavailable = error?.code === "BANK_KEY_NOT_IN_RING";
+        this.logger?.error?.(
+          keyUnavailable ? "supplier.bank.key_unavailable" : "supplier.bank.integrity_failed",
+          "Supplier bank account could not be read",
+          { bankAccountId: Number(row.id), supplierId: Number(row.supplier_id), reason: error?.code ?? "unknown" }
+        );
+        throw keyUnavailable ? supplierBankKeyUnavailable() : supplierBankIntegrityFailure();
       }
 
       await this.audit.record(connection, {

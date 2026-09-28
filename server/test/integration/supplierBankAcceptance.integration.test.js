@@ -306,9 +306,9 @@ integrationTest("TC-064 (BANK-003): only view + bank.view + bank.mgmt, with devi
  * 分三條，因為佢三部分嘅結果唔同：
  *
  * 1. **唔可以回明文** —— PASS，呢條強制執行。
- * 2. **公開 code 要係 503 `BANK_KEY_UNAVAILABLE`**（設計 §6 錯誤表、§8.3）—— **FAIL**。
- *    實際係 422 `BANK_ACCOUNT_UNREADABLE`，而且同「密文被竄改」收埋做同一個 code，
- *    而設計要求後者係 500。DEF-026。
+ * 2. **公開 code 要係 503 `BANK_KEY_UNAVAILABLE`**（設計 §6 錯誤表、§8.3）—— 之前 FAIL
+ *    （回 422 `BANK_ACCOUNT_UNREADABLE`，同竄改收埋做同一個 code），DEF-026 修正後 PASS，
+ *    `todo` 已拎走，而家強制執行。
  * 3. **Lookup key 唔喺 ring 時查重要 fail closed** —— **FAIL，HIGH**。同一個 Supplier
  *    可以再新增同一個帳號，開機亦唔會發現。DEF-027。
  *
@@ -343,7 +343,6 @@ integrationTest("TC-068 (BANK-007): a row whose encryption key is not in the rin
 });
 
 integrationTest("TC-068 (BANK-007): the refusal is 503 BANK_KEY_UNAVAILABLE, as design 6 and 8.3 specify",
-  { todo: "DEF-026: implementation returns 422 BANK_ACCOUNT_UNREADABLE and collapses key-absent with integrity failure" },
   async () => {
     const supplierId = await seedSupplier();
     const row = await seedUnder(supplierId, SECRET, { encryptionKeyId: "gone-enc-2" });
