@@ -2,11 +2,48 @@ import {
   inventoryStringHasInvalidCharacters,
   isInventorySensitiveKey
 } from "./inventorySafeJson.js";
+import { inventoryError } from "./inventoryErrors.js";
 
 const COMMAND_FIELDS = new Set(["actor", "authorization", "source", "correlationId", "payload"]);
 const ACTOR_FIELDS = new Set(["userId", "serviceName", "claimedRoles", "claimedPermissions"]);
 const AUTHORIZATION_FIELDS = new Set(["purpose", "requiredCallerPermission"]);
 const SOURCE_FIELDS = new Set(["module", "documentType", "documentId", "lineId", "eventId"]);
+
+function quantityError(field) {
+  return inventoryError("INVENTORY_QUANTITY_INVALID", { field });
+}
+
+function inventoryNonNegativeInteger(value, field) {
+  if (!Number.isSafeInteger(value) || value < 0) throw quantityError(field);
+  return value;
+}
+
+export function inventoryPositiveInteger(value, field = "quantity") {
+  if (!Number.isSafeInteger(value) || value <= 0) throw quantityError(field);
+  return value;
+}
+
+export function toBaseQuantity(quantity, factor) {
+  const normalizedQuantity = inventoryPositiveInteger(quantity, "quantity");
+  const normalizedFactor = inventoryPositiveInteger(factor, "factor");
+  if (normalizedFactor > 1_000_000 || normalizedQuantity > Math.floor(Number.MAX_SAFE_INTEGER / normalizedFactor)) {
+    throw quantityError("quantity");
+  }
+  return normalizedQuantity * normalizedFactor;
+}
+
+export function calculateInventoryAvailability({ eligibleOnHand, reserved }) {
+  const eligible = inventoryNonNegativeInteger(eligibleOnHand, "eligibleOnHand");
+  const outstanding = inventoryNonNegativeInteger(reserved, "reserved");
+  const rawAtp = eligible - outstanding;
+  return {
+    eligibleOnHand: eligible,
+    reserved: outstanding,
+    rawAtp,
+    atp: Math.max(rawAtp, 0),
+    uncoveredReserved: Math.max(-rawAtp, 0)
+  };
+}
 
 function object(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value) ||
