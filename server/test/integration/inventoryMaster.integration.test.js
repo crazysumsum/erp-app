@@ -11,8 +11,8 @@ const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" &&
 
 function config() {
   const database = process.env.DB_NAME;
-  if (!/^erp_inventory_task009_[a-z0-9_]+$/u.test(database ?? "")) {
-    throw new Error("TASK-009 test requires a disposable erp_inventory_task009_* schema");
+  if (!/^erp_inventory_task(?:009|018)_[a-z0-9_]+$/u.test(database ?? "")) {
+    throw new Error("Inventory master race test requires a disposable erp_inventory_task009_* or erp_inventory_task018_* schema");
   }
   return {
     host: process.env.DB_HOST,
@@ -104,6 +104,7 @@ async function createPrerequisites(connection) {
     `CREATE TABLE inventory_stocktakes (
        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
        warehouse_id BIGINT UNSIGNED NOT NULL,
+       stocktake_number VARCHAR(50) NOT NULL DEFAULT '',
        status VARCHAR(30) NOT NULL
      ) ENGINE=InnoDB`,
     `CREATE TABLE inventory_stocktake_bins (
@@ -113,6 +114,9 @@ async function createPrerequisites(connection) {
     `CREATE TABLE inventory_bin_locks (
        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
        bin_id BIGINT UNSIGNED NOT NULL,
+       lock_type VARCHAR(30) NOT NULL DEFAULT 'STOCKTAKE',
+       stocktake_id BIGINT UNSIGNED NOT NULL,
+       locked_at BIGINT UNSIGNED NOT NULL,
        released_at BIGINT UNSIGNED NULL
      ) ENGINE=InnoDB`,
     `CREATE TABLE inventory_movements (

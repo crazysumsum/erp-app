@@ -471,6 +471,7 @@ export class InventoryInquiryService {
     if (postedTo !== null && postedFrom > postedTo) invalid("postedFrom");
     if (input.postedFrom !== undefined) { filters.push("m.posted_at >= ?"); params.push(postedFrom); }
     if (postedTo !== null) { filters.push("m.posted_at <= ?"); params.push(postedTo); }
+    let sourceFilter = false;
     for (const [field, column, max, ascii] of [
       ["movementType", "m.movement_type", 40, true],
       ["sourceModule", "o.source_module", 40, true],
@@ -478,11 +479,16 @@ export class InventoryInquiryService {
       ["sourceDocumentId", "o.source_document_id", 100, false]
     ]) {
       const value = boundedText(input[field], field, max, { ascii });
-      if (value) { filters.push(`${column} = ?`); params.push(value); }
+      if (value) {
+        filters.push(`${column} = ?`);
+        params.push(value);
+        sourceFilter ||= column.startsWith("o.");
+      }
     }
     const clause = whereClause(filters);
     const from = ` FROM inventory_movements m JOIN inventory_operation_requests o ON o.id = m.operation_request_id`;
-    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total${from}${clause}`, params);
+    const countFrom = sourceFilter ? from : " FROM inventory_movements m";
+    const [[count]] = await this.database.query(`SELECT COUNT(*) AS total${countFrom}${clause}`, params);
     const [rows] = await this.database.query(
       `${MOVEMENT_SELECT}${clause} ORDER BY m.posted_at DESC, m.id DESC LIMIT ? OFFSET ?`,
       [...params, pageSize, offset]

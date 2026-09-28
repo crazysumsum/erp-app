@@ -236,7 +236,7 @@ export class InventoryLockService {
     assertInventoryTransaction(connection);
     try {
       const balances = balanceRows(input.balances);
-      return upsertAndLockBalances(connection, balances, now(input.now));
+      return await upsertAndLockBalances(connection, balances, now(input.now));
     } catch (error) {
       if (RETRYABLE_LOCK_ERRORS.has(error?.cause?.code ?? error?.code)) {
         throw inventoryError("CONCURRENT_OPERATION");

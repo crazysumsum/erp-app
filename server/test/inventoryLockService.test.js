@@ -113,6 +113,23 @@ test("InventoryLockService maps MySQL deadlocks and lock timeouts to CONCURRENT_
   }
 });
 
+test("TASK-018 post-Lot Balance lock maps an asynchronous timeout to CONCURRENT_OPERATION", async () => {
+  const connection = {
+    async execute() {
+      throw Object.assign(new Error("database detail"), { code: "ER_LOCK_WAIT_TIMEOUT" });
+    },
+    async query() { return [[]]; }
+  };
+
+  await assert.rejects(
+    () => new InventoryLockService().lockBalancesAfterLot(connection, {
+      balances: [{ warehouseId: 1, skuId: 1, binId: 1, lotId: null, stockStatus: "AVAILABLE" }],
+      now: 1
+    }),
+    (error) => error.code === "CONCURRENT_OPERATION" && !error.message.includes("database detail")
+  );
+});
+
 test("InventoryLockService tolerates only the pre-Stocktake absence of semantic lock tables", async () => {
   const missingTable = Object.assign(new Error("missing"), { code: "ER_NO_SUCH_TABLE" });
   const connection = recordingConnection();

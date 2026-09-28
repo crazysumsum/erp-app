@@ -188,8 +188,19 @@ test("TASK-016 Movement inquiry keeps fixed history order and source snapshots",
   });
   assert.equal(page.items[0].sku.code, "SKU-3");
   assert.equal(page.items[0].source.documentId, "GR-42");
+  assert.match(database.calls[0].sql, /JOIN inventory_operation_requests/u);
   assert.match(database.calls[1].sql, /ORDER BY m\.posted_at DESC, m\.id DESC/);
   assert.equal(Object.hasOwn(page.items[0], "request_hash"), false);
+});
+
+test("TASK-018 Movement count skips the operation join when no source filter needs it", async () => {
+  const database = databaseWith([[{ total: "1" }]], [[movementRow()]]);
+  const service = new InventoryInquiryService({ database, time });
+
+  await service.listMovements({ warehouseId: 1, postedFrom: 100 });
+
+  assert.doesNotMatch(database.calls[0].sql, /inventory_operation_requests/u);
+  assert.match(database.calls[1].sql, /JOIN inventory_operation_requests/u);
 });
 
 test("TASK-016 Movement detail returns group legs and both reversal links", async () => {
