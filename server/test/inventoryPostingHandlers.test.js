@@ -4,6 +4,8 @@ import test from "node:test";
 import { RequestValidator } from "../src/framework/validation/requestValidator.js";
 import { ResponseValidator } from "../src/framework/validation/responseValidator.js";
 import { PostInventoryReceiptHandler } from "../src/handlers/inventory/postingHandlers.js";
+import * as postingHandlers from "../src/handlers/inventory/postingHandlers.js";
+import { InventoryPostingService } from "../src/modules/inventory/InventoryPostingService.js";
 
 test("TASK-014 Receipt route exposes the strict operation contract", () => {
   const api = PostInventoryReceiptHandler.api;
@@ -56,4 +58,12 @@ test("TASK-014 Receipt handler maps trusted actor and source into a fixed comman
     payload: { skuId: 12, quantity: 2, uomId: 8, warehouseId: 2, binId: 35, stockStatus: "AVAILABLE" }
   });
   assert.deepEqual(response.data, { status: "POSTED" });
+});
+
+test("TASK-015 keeps the Issue HTTP path unregistered", () => {
+  const paths = Object.values(postingHandlers)
+    .filter((value) => typeof value === "function" && value.api)
+    .map((Handler) => Handler.api.path);
+  assert.equal(paths.includes("/api/v1/inventory/issues"), false);
+  assert.equal(InventoryPostingService.prototype.postIssueInTransaction, undefined);
 });

@@ -22,7 +22,26 @@ const RECEIPT_AUTHORIZATION = Object.freeze({
   purpose: "receipt.post",
   requiredCallerPermission: "inventory.operation"
 });
+const RECEIVING_RECEIPT = Object.freeze({
+  authorization: Object.freeze({
+    purpose: "PURCHASE_RECEIPT",
+    requiredCallerPermission: "receiving.operation"
+  }),
+  module: "PURCHASING_RECEIVING",
+  documentType: "GOODS_RECEIPT"
+});
+const CUSTOMER_RETURN_RECEIPT = Object.freeze({
+  authorization: Object.freeze({
+    purpose: "CUSTOMER_RETURN_RECEIPT",
+    requiredCallerPermission: "returns.operation"
+  }),
+  module: "RETURNS",
+  documentType: "CUSTOMER_RETURN",
+  stockStatus: "QUARANTINED"
+});
 const OVERRIDE_PERMISSION = "receiving.expiry.override";
+const PROVIDER_COMMAND_FIELDS = new Set(["actor", "source", "correlationId", "payload"]);
+const PROVIDER_SOURCE_FIELDS = new Set(["documentId", "lineId", "eventId"]);
 const PAYLOAD_FIELDS = new Set([
   "skuId", "quantity", "uomId", "warehouseId", "binId", "lotNumber", "expiryDate",
   "manufactureDate", "stockStatus", "minimumLifeOverride"
@@ -78,6 +97,31 @@ function receiptPayload(payload) {
     manufactureDate: payload.manufactureDate ?? null,
     stockStatus: validateInventoryStockStatus(payload.stockStatus),
     minimumLifeOverride: payload.minimumLifeOverride ?? null
+  };
+}
+
+function providerReceiptCommand(command, contract) {
+  exactFields(command, PROVIDER_COMMAND_FIELDS, "command");
+  exactFields(command.source, PROVIDER_SOURCE_FIELDS, "source");
+  object(command.payload, "payload");
+  if (contract.stockStatus && command.payload.stockStatus !== undefined &&
+      command.payload.stockStatus !== contract.stockStatus) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "stockStatus" });
+  }
+  return {
+    actor: command.actor,
+    authorization: contract.authorization,
+    source: {
+      module: contract.module,
+      documentType: contract.documentType,
+      documentId: command.source.documentId,
+      lineId: command.source.lineId ?? "",
+      eventId: command.source.eventId
+    },
+    correlationId: command.correlationId,
+    payload: contract.stockStatus
+      ? { ...command.payload, stockStatus: contract.stockStatus }
+      : command.payload
   };
 }
 
@@ -191,8 +235,28 @@ export class InventoryPostingService {
     return this.database.withTransaction((transaction) => this.postReceiptInTransaction(transaction, command));
   }
 
-  async postReceiptInTransaction(transaction, command) {
-    const context = validateInventoryCommandContext(transaction, command, RECEIPT_AUTHORIZATION);
+  postReceiptInTransaction(transaction, command) {
+    return this.#postReceiptInTransaction(transaction, command, RECEIPT_AUTHORIZATION);
+  }
+
+  postReceivingReceiptInTransaction(transaction, command) {
+    return this.#postReceiptInTransaction(
+      transaction,
+      providerReceiptCommand(command, RECEIVING_RECEIPT),
+      RECEIVING_RECEIPT.authorization
+    );
+  }
+
+  postCustomerReturnReceiptInTransaction(transaction, command) {
+    return this.#postReceiptInTransaction(
+      transaction,
+      providerReceiptCommand(command, CUSTOMER_RETURN_RECEIPT),
+      CUSTOMER_RETURN_RECEIPT.authorization
+    );
+  }
+
+  async #postReceiptInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw new TypeError("Receipt posting requires a user actor");
     const payload = receiptPayload(context.payload);
     const actor = await this.authorize(transaction, {
@@ -200,7 +264,7 @@ export class InventoryPostingService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(RECEIPT_AUTHORIZATION.requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
 

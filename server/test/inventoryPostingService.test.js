@@ -27,7 +27,7 @@ function command(payload = {}, overrides = {}) {
   });
 }
 
-function setup({ failAt = null, profile = {}, uom = {}, initialState = {} } = {}) {
+function setup({ failAt = null, profile = {}, uom = {}, initialState = {}, currentPermissions, lookupError } = {}) {
   const state = {
     warehouse: { id: 2, warehouse_code: "WH-1", status: "ACTIVE" },
     bin: { id: 35, warehouse_id: 2, bin_code: "A-01", status: "ACTIVE" },
@@ -82,7 +82,10 @@ function setup({ failAt = null, profile = {}, uom = {}, initialState = {} } = {}
     ...profile
   };
   const itemLookup = {
-    async getInventoryProfileInTransaction() { return structuredClone(itemProfile); },
+    async getInventoryProfileInTransaction() {
+      if (lookupError) throw lookupError;
+      return structuredClone(itemProfile);
+    },
     async resolveUomInTransaction() {
       return { skuId: 12, uomId: 8, uomCode: "CASE", toBaseFactor: 12, isBase: false, ...uom };
     }
@@ -129,11 +132,38 @@ function setup({ failAt = null, profile = {}, uom = {}, initialState = {} } = {}
     authorize: async (_transaction, input) => ({
       id: input.actorId,
       username: "sam",
-      permissions: [...input.claimedPermissions]
+      permissions: [...(currentPermissions ?? input.claimedPermissions)]
     }),
     createMovementGroupId: () => "11111111-1111-4111-8111-111111111111"
   });
   return { service, database };
+}
+
+function internalReceipt(permission, payload = {}, overrides = {}) {
+  return {
+    actor: {
+      userId: 7,
+      serviceName: "",
+      claimedRoles: ["warehouse-operator"],
+      claimedPermissions: [permission]
+    },
+    source: {
+      documentId: "receipt-42",
+      lineId: "10",
+      eventId: "posted-1",
+      ...overrides.source
+    },
+    correlationId: "request-1",
+    payload: {
+      skuId: 12,
+      quantity: 2,
+      uomId: 8,
+      warehouseId: 2,
+      binId: 35,
+      ...payload
+    },
+    ...overrides.command
+  };
 }
 
 test("TASK-014 Receipt converts Pack UOM and atomically updates Balance, Movement, Audit and operation", async () => {
@@ -275,4 +305,127 @@ test("TASK-014 never overrides expired Lots and rejects mismatched override evid
     }, { overridePermission: true })),
     (error) => error.code === "INVENTORY_INPUT_INVALID"
   );
+});
+
+test("TASK-015 Receiving contract owns authorization and source mapping", async () => {
+  const { service, database } = setup();
+  const input = internalReceipt("receiving.operation", { stockStatus: "AVAILABLE" });
+
+  const result = await database.withTransaction(
+    (transaction) => service.postReceivingReceiptInTransaction(transaction, input)
+  );
+
+  assert.equal(result.stockStatus, "AVAILABLE");
+  assert.deepEqual(database.state.operation.source, {
+    module: "PURCHASING_RECEIVING",
+    documentType: "GOODS_RECEIPT",
+    documentId: "receipt-42",
+    lineId: "10",
+    eventId: "posted-1"
+  });
+  const replay = await database.withTransaction(
+    (transaction) => service.postReceivingReceiptInTransaction(transaction, input)
+  );
+  assert.deepEqual(replay, result);
+  assert.equal(database.state.movements.length, 1);
+  await assert.rejects(
+    () => database.withTransaction((transaction) => service.postReceivingReceiptInTransaction(
+      transaction,
+      internalReceipt("receiving.operation", { stockStatus: "AVAILABLE" }, {
+        command: { authorization: { purpose: "receipt.post", requiredCallerPermission: "inventory.operation" } }
+      })
+    )),
+    (error) => error.code === "INVENTORY_INPUT_INVALID" && error.details.field === "authorization"
+  );
+  await assert.rejects(
+    () => database.withTransaction((transaction) => service.postReceivingReceiptInTransaction(
+      transaction,
+      internalReceipt("inventory.operation", { stockStatus: "AVAILABLE" })
+    )),
+    /required caller permission/
+  );
+});
+
+test("TASK-015 Customer Return contract fixes permission, source and QUARANTINED status", async () => {
+  const { service, database } = setup();
+  const result = await database.withTransaction(
+    (transaction) => service.postCustomerReturnReceiptInTransaction(
+      transaction,
+      internalReceipt("returns.operation")
+    )
+  );
+
+  assert.equal(result.stockStatus, "QUARANTINED");
+  assert.equal(database.state.operation.payload.stockStatus, "QUARANTINED");
+  assert.deepEqual(database.state.operation.source, {
+    module: "RETURNS",
+    documentType: "CUSTOMER_RETURN",
+    documentId: "receipt-42",
+    lineId: "10",
+    eventId: "posted-1"
+  });
+  await assert.rejects(
+    () => database.withTransaction((transaction) => service.postCustomerReturnReceiptInTransaction(
+      transaction,
+      internalReceipt("returns.operation", { stockStatus: "AVAILABLE" })
+    )),
+    (error) => error.code === "INVENTORY_INPUT_INVALID"
+  );
+});
+
+test("TASK-015 caller and Inventory writes share one transaction boundary", async () => {
+  const callerFailure = setup({ initialState: { sourceStatus: "DRAFT" } });
+  await assert.rejects(
+    () => callerFailure.database.withTransaction(async (transaction) => {
+      transaction.state.sourceStatus = "POSTING";
+      await callerFailure.service.postReceivingReceiptInTransaction(
+        transaction,
+        internalReceipt("receiving.operation", { stockStatus: "AVAILABLE" })
+      );
+      throw new Error("caller source write failed");
+    }),
+    /caller source write failed/
+  );
+  assert.equal(callerFailure.database.state.sourceStatus, "DRAFT");
+  assert.equal(callerFailure.database.state.balance.on_hand_quantity, 5);
+
+  const inventoryFailure = setup({ failAt: "movement", initialState: { sourceStatus: "DRAFT" } });
+  await assert.rejects(
+    () => inventoryFailure.database.withTransaction(async (transaction) => {
+      transaction.state.sourceStatus = "POSTING";
+      await inventoryFailure.service.postReceivingReceiptInTransaction(
+        transaction,
+        internalReceipt("receiving.operation", { stockStatus: "AVAILABLE" })
+      );
+    }),
+    { faultPoint: "movement" }
+  );
+  assert.equal(inventoryFailure.database.state.sourceStatus, "DRAFT");
+  assert.equal(inventoryFailure.database.state.balance.on_hand_quantity, 5);
+});
+
+test("TASK-015 fails closed for missing transaction, revoked permission and unavailable Item", async () => {
+  const input = internalReceipt("receiving.operation", { stockStatus: "AVAILABLE" });
+  await assert.rejects(
+    () => setup().service.postReceivingReceiptInTransaction(null, input),
+    /caller-owned transaction executor/
+  );
+
+  const revoked = setup({ currentPermissions: [] });
+  await assert.rejects(
+    () => revoked.database.withTransaction(
+      (transaction) => revoked.service.postReceivingReceiptInTransaction(transaction, input)
+    ),
+    (error) => error.code === "PERMISSION_STALE"
+  );
+  assert.equal(revoked.database.state.balance.on_hand_quantity, 5);
+
+  const unavailable = setup({ lookupError: Object.assign(new Error("Item unavailable"), { code: "ITEM_UNAVAILABLE" }) });
+  await assert.rejects(
+    () => unavailable.database.withTransaction(
+      (transaction) => unavailable.service.postReceivingReceiptInTransaction(transaction, input)
+    ),
+    { code: "ITEM_UNAVAILABLE" }
+  );
+  assert.equal(unavailable.database.state.balance.on_hand_quantity, 5);
 });
