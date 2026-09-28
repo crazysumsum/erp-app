@@ -71,8 +71,8 @@
 
 ## 5. 這次審閱**不**涵蓋的
 
-- TASK-037 的技術測試案例中，TC-133 仍未有 harness（其餘案例已按編號執行，TC-068 的失敗已由 DEF-026／027
-  修正）；本次審閱只針對 runbook 與其證據，**不是** SUP-CAP-03 的 Technical Acceptance。
+- TC-133 屬於 TASK-051（原先列入 TASK-037 是 agent 的範圍錯誤，已更正），仍未有 harness；TASK-037 其餘案例已按
+  編號執行，TC-068 的失敗已由 DEF-026／027 修正；本次審閱只針對 runbook 與其證據，**不是** SUP-CAP-03 的 Technical Acceptance。
 - §2 審閱人欄的問題（正式環境的 secret store、備份、憑證保管、告警等）未有答案；它們是 release 審批時
   仍需回答的營運事項，不因本次批准而視為已解決。
 - 業務驗收（UAT）不在本次範圍。

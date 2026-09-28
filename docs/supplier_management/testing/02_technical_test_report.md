@@ -5,7 +5,29 @@
 **Scope decision:** build harnesses for the two cases that had none — `BANK-013` and `BANK-016` — and
 assess the remaining fourteen without executing them. Taken by the user.
 
-## Result: **NOT Technical Acceptance**
+## Current status (2026-09-28, main `4178366`)
+
+The result below was true for the baseline it was taken on. Since then DEF-026/027/028 were fixed and
+merged (PR #158, `761c0bd`, REV-057/058), HD-036 was signed off (PR #160), and TC-133 was moved out of
+this task: `08_traceability.json` assigns it to TASK-051 only, and including it here was my scoping
+error (correction recorded in `00_test_readiness_report.md`).
+
+Assessed against §T37's own criteria:
+
+| §T37 | Evidence | Result |
+| --- | --- | --- |
+| Six permission combinations, stale claim, IDOR, re-auth, no-store, audit success and failure | TC-062…TC-065, TC-072, TC-073; §2b | **PASS** |
+| No plaintext in DB dump, request/system/audit logs, CSV, errors, client storage | TC-074, TC-075. **CSV is not applicable on this baseline**: no export exists until T47; T49 covers it | **PASS**, CSV `NOT_APPLICABLE` |
+| Backup with key ring restores and reveals; missing key fails closed | TC-077; TC-068 (503 / 500 after DEF-026) | **PASS** |
+| Rotation complete | TASK-036 (PR #135), TC-076 | **PASS** |
+| No P0/P1 defect in SUP-CAP-03 | DEF-027 (HIGH) closed; open DEF-023, DEF-024 are LOW and accepted under HD-036 | **PASS** |
+| Verification: the two server integration suites and `client/test/pages/suppliers/bank.test.js` | main CI run 36399059980 on `761c0bd`, all five required checks green; code unchanged since (same source fingerprint) | **PASS** |
+| Verification: manual Security/Operations review | HD-036 approved (PR #160); §2 reviewer questions not answered, carried to release | **PASS**, with that note |
+
+TASK-037 is recorded as **DONE**. This is a technical result for the task, not business acceptance of
+SUP-CAP-03 and not a release approval.
+
+## Result at the original baseline: **NOT Technical Acceptance**
 
 Sixteen of seventeen cases were executed; one of them fails. TC-133 has no harness. Technical Acceptance of SUP-CAP-03 is **not**
 granted by this report and cannot be until the readiness conditions are met.
