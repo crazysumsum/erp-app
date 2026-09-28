@@ -116,7 +116,7 @@ IDs this task must sign off, and it does not reach `BANK-013` or `BANK-016` at a
 2. A decision on whether an existing test may be credited to a `TC-xxx` by assessment rather than by
    a declared link, and if so, how that judgement is recorded.
 3. An isolated restore target and a scan harness, or an accepted `BLOCKED` for `BANK-013`/`BANK-016`.
-4. `bank_operations.md` written, for the human review to have a subject.
+4. ~~`bank_operations.md` written, for the human review to have a subject.~~ Done — see `bank_operations.md` §10 for how each statement was verified.
 5. A named human authority for the Security/Operations review.
 
 Until 1–3 are settled, executing the runnable subset produces a **partial technical result**, never
