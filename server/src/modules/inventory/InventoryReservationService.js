@@ -29,6 +29,7 @@ const ALLOCATION_FIELDS = new Set(["balanceId", "expectedVersion", "quantity"]);
 const ALLOCATION_RELEASE_FIELDS = new Set(["reservationId", "expectedVersion", "releases"]);
 const REALLOCATE_FIELDS = new Set(["reservationId", "expectedVersion", "releases", "allocations", "overrideReason"]);
 const ALLOCATION_RELEASE_LINE_FIELDS = new Set(["allocationId", "expectedVersion", "quantity"]);
+const RELEASE_STATUSES = ["ACTIVE", "PARTIALLY_CONSUMED", "RELEASED"];
 const CANDIDATE_FIELDS = new Set(["reservationId", "requestedQuantity", "page"]);
 
 function positiveId(value, field) {
@@ -160,10 +161,15 @@ function allocationReleaseLines(value) {
   return lines;
 }
 
-function allocationReleaseFromSummary(summary) {
+function allocationReleaseFromSummary(summary, lines) {
+  const snapshot = JSON.parse(summary.allocationSnapshot);
   return { reservationId: Number(summary.reservationId), operationId: Number(summary.operationId),
     version: Number(summary.version), quantity: Number(summary.quantity),
-    allocations: JSON.parse(summary.allocationSnapshot) };
+    allocations: lines.map((line, index) => ({ id: line.allocationId,
+      balanceId: Number(snapshot[index][0]), quantity: line.quantity,
+      releasedQuantity: Number(snapshot[index][1]), outstandingQuantity: Number(snapshot[index][2]),
+      status: RELEASE_STATUSES[snapshot[index][3]], version: line.expectedVersion + 1,
+      balanceVersion: Number(snapshot[index][4]) })) };
 }
 
 export class InventoryReservationService {
@@ -400,7 +406,7 @@ export class InventoryReservationService {
       actorUserId: context.actor.userId, actorLabel,
       requestId: context.correlationId, correlationId: context.correlationId, createdAt: timestamp
     });
-    if (claim.replay) return allocationReleaseFromSummary(claim.replay.resultSummary);
+    if (claim.replay) return allocationReleaseFromSummary(claim.replay.resultSummary, lines);
     return this.#releaseAllocationsWithClaim(transaction, {
       context, reservationId, expectedVersion, lines, quantity, claim, actorLabel, timestamp
     });
@@ -534,7 +540,10 @@ export class InventoryReservationService {
       await this.operations.complete(transaction, {
         operationId: claim.operationId, resultType: "ALLOCATION", resultId: String(reservationId),
         resultSummary: { reservationId, operationId: claim.operationId, version: result.version,
-          quantity, allocationSnapshot: JSON.stringify(results) }, completedAt: timestamp
+          quantity, allocationSnapshot: JSON.stringify(results.map((result) => [
+            result.balanceId, result.releasedQuantity, result.outstandingQuantity,
+            RELEASE_STATUSES.indexOf(result.status), result.balanceVersion
+          ])) }, completedAt: timestamp
       });
     }
     return result;
