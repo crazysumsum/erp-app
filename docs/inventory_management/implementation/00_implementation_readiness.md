@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-018 are complete locally in the continuing implementation branch; TASK-019 awaits separate authorization.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-019 are complete locally in the continuing implementation branch; TASK-020 awaits separate authorization.
 
 ## Baseline
 
@@ -43,6 +43,7 @@
 - `HD-038`／`APR-039`: Sam selected and approved the complete local TASK-016 Stock／Lot／Movement inquiry service, eight read-only APIs and focused tests, while excluding UI, migrations, MySQL, CI and remote publication.
 - `HD-039`／`APR-040`: Sam selected and approved the complete local TASK-017 Stock／Lot／Movement UI, URL-restorable filters, server pagination, responsive/accessibility states, focused client tests, production build and mocked Playwright, while excluding MySQL, CI and remote publication.
 - `HD-040`／`APR-041`: after implementation discovery proved the existing APIs could not correctly paginate the designed default SKU aggregate list, Sam selected option A and approved the minimal server-side paginated `/api/v1/inventory/stocks/aggregates` extension inside TASK-017 instead of an incorrect client-side page aggregate.
+- `HD-042`／`APR-043`: Sam selected and approved complete local TASK-019 Reservation／Allocation persistence migration `0061`, focused tests, guarded disposable MySQL 26.7.0 verification and exact cleanup, while excluding TASK-020, CI and remote publication.
 
 ## Reconciled P0 checks
 
@@ -197,6 +198,15 @@
 - Repository ESLint, client production build, `git diff --check`, TASK-018 module-boundary validation and traceability validation passed. The build retained only the existing bundle-size warning.
 - All three exact test-owned schemas, both isolated runs on port 3318 and runtime roots `/private/tmp/erp-inventory-task018-mysql-2670.J0LCkz` and `/private/tmp/erp-inventory-task018-final-mysql-2670.1u1Icz` were removed and confirmed absent. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, independent code approval or business acceptance.
 
+## TASK-019 developer verification
+
+- Commit `0a0371c` adds migration `0061_create_inventory_reservations.js` and its guarded focused integration test. The migration creates Reservation／Allocation quantity breakdowns, status／version fields, approved indexes and delete-rule FKs, then adds the two deferred Movement FKs.
+- Native MySQL checks enforce positive unsigned Base UOM quantities, row-local quantity equations, allowed statuses／selection strategies, positive versions and complete override evidence. Service-level cross-row invariants remain deferred to TASK-020／TASK-021 as designed.
+- TDD red was captured before migration `0061` existed. The final guarded migration test passed 1/1 on MySQL 26.7.0, proving `0055`～`0061` execution, identical rerun DDL, quantity types, indexes, FK delete rules, valid writes and rejection of invalid quantity／override writes.
+- `EXPLAIN FORMAT=TRADITIONAL` used `idx_inventory_reservations_scope`, `idx_inventory_allocations_reservation` and `idx_inventory_allocations_balance` for the three planned query shapes. No speculative indexes or dependencies were added.
+- The complete local server suite passed 1,958 with 329 gated skips and 0 failures. Repository ESLint, `git diff --check`, module-boundary validation and traceability validation passed. Multi-axis self-review found no open critical or high correctness, security, architecture, performance or maintainability issue.
+- The exact schema `erp_inventory_task019_20260928_1605`, isolated MySQL listener on port 3319 and runtime root `/private/tmp/erp-inventory-task019-mysql-2670.lofcir` were removed and confirmed absent. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-001`／`TC-004`／`TC-005` Technical Acceptance, independent code approval or business acceptance.
+
 ## Post-main-merge publication verification
 
 - Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
@@ -239,7 +249,8 @@
 - TASK-016 created only the approved inquiry service, read-only handlers/schemas and focused tests. It did not add UI, write routes, migrations or database execution.
 - TASK-017 created only the approved inquiry UI/client/tests plus the HD-040-approved read-only SKU aggregate endpoint needed for correct server pagination. It did not add writes, migrations, database execution or begin TASK-018.
 - TASK-018 added only the guarded capacity/security/concurrency tests, two measured root-cause fixes and the minimum reusable Warehouse race fixture alignment. It added no business feature, migration, dependency, CI or remote action.
+- TASK-019 added only the approved Reservation／Allocation migration and guarded focused integration test. It did not start TASK-020, add a dependency, run CI or perform any remote action.
 
 ## Next safe action
 
-TASK-018 local developer checks are complete. Await a separately approved TASK-019 scope; do not start TASK-019, run CI or perform push/PR/merge.
+TASK-019 local developer checks are complete. Await a separately approved TASK-020 scope; do not start TASK-020, run CI or perform push/PR/merge.
