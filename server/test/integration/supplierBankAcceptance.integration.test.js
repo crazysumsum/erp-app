@@ -382,6 +382,26 @@ integrationTest("TC-068 (BANK-007): a duplicate check that cannot read an existi
     assert.equal(allowed.status, 200, allowed.text.slice(0, 200));
   });
 
+integrationTest("TC-068 (BANK-007): re-entering the account on the only unreadable row repairs it; a second one still blocks",
+  async () => {
+    // 修復路徑：重新輸入嗰行嘅帳號會用 active key 重算佢個 index。嗰行自己唔可以擋住自己，
+    // 但同一個 Supplier 仲有第二行唔喺 ring 就要照擋 —— 呢半係對照。
+    const service = await serviceWith();
+    const NEXT = `${SECRET.slice(0, 6)}8${SECRET.slice(7)}`;
+    const alone = await seedSupplier();
+    const only = await seedUnder(alone, SECRET, { lookupKeyId: "gone-look-3" });
+    await service.update({ ...svcActor, supplierId: alone, bankAccountId: only.id, version: only.version,
+      accountHolderName: "Seed", bankName: "Seed Bank", accountNumber: NEXT, reason: "TC-068 修復" });
+    assert.equal((await rawRow(only.id)).lk, h.application.services.config.supplier.bankLookup.activeKeyId);
+
+    const two = await seedSupplier();
+    const first = await seedUnder(two, SECRET, { lookupKeyId: "gone-look-4" });
+    await seedUnder(two, NEXT, { lookupKeyId: "gone-look-4" });
+    await assert.rejects(() => service.update({ ...svcActor, supplierId: two, bankAccountId: first.id, version: first.version,
+      accountHolderName: "Seed", bankName: "Seed Bank", accountNumber: `${NEXT}1`, reason: "TC-068 對照" }),
+    (error) => error.statusCode === 503 && error.publicCode === "BANK_KEY_UNAVAILABLE");
+  });
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Service 層嘅案例（真 MySQL，app 自己個 database service）
 async function serviceWith({ audit } = {}) {
