@@ -141,7 +141,7 @@
     "developer": [
       "lint",
       "client-build",
-      "inventory-technical"
+      "inventory-developer"
     ],
     "technical": [
       "inventory-technical"

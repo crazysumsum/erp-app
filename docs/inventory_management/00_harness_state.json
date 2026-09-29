@@ -1,27 +1,30 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 98,
+  "revision": 114,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-002",
   "current_task": "TASK-018",
   "baseline": {
     "design": "d3c934c71b3f369a98c3a884665c96c626fb8d4b5d115b1cde5309528c6c673a",
-    "plan": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
-    "code_commit": "53d3cf3a371497a4cb0361e020635530aa64c1c5",
-    "source_fingerprint": "6413f1efdbf23c50ab6537aafb44eb1241b0feca1dbd8a7a36246c28f5c43492",
+    "plan": "2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561",
+    "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+    "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p1-integration/erp-app",
-    "default_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
+    "default_commit": "742d58ec7b934818f03adbd8b1df88006f834a2d",
     "mode_entry_commit": "7279749a8fec0832d6f47fa316efb33c20726af8"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Codex /root P1 integration; first isolated runtime cleaned",
+    "instance_id": "inventory-p1-harness-mysql-2670-u9g684-3341",
+    "owner": "Codex /root P1 integration; exact disposable MySQL 26.7.0 runtime restarted and verified",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/inventory-p1-integration/erp-app"
+      "workspace": "/Users/sam/.codex/worktrees/inventory-p1-integration/erp-app",
+      "mysql-schema": "erp_inventory_p1_harness_20260929 on private MySQL 26.7.0 socket /private/tmp/erp-inventory-p1-harness-runtime-2670.u9g684/mysql.sock port 3341",
+      "web-port": "127.0.0.1:3441 reserved for this P1 runtime; no web server needed by the three developer suites",
+      "opening-file-root": "/private/tmp/erp-inventory-p1-harness-runtime-2670.u9g684/opening-files"
     },
     "lease_ref": null
   },
@@ -989,6 +992,60 @@
         "no formal Technical Acceptance, UAT, deployment or release approval"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-056",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 approving HD-054 exact revised PLAN hash",
+      "recorded_at": "2026-09-29T14:44:58+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "scope": [
+        "inventory-management",
+        "Inventory P1 PHASE-002 Harness developer evidence and PR integration under exact revised PLAN 2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561",
+        "DEVELOPER-only 108-test Inventory JUnit suite, isolated runtime authorization reference, and all five CI checks",
+        "no product logic, formal Technical Acceptance, UAT, deployment or release approval"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-057",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 reauthorizing two existing P1 shared ItemLookupService paths under the exact revised PLAN",
+      "recorded_at": "2026-09-29T14:44:58+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "scope": [
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/itemLookupService.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-058",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response A on 2026-09-29 to explicit evidence-export decision: approve publishing three classified synthetic P1 developer runs with PR #164 despite local absolute path in JUnit",
+      "recorded_at": "2026-09-29T15:03:45+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "scope": [
+        "docs/inventory_management/evidence/20260929T065003-55782fc654a1/**",
+        "docs/inventory_management/evidence/20260929T065017-b8c2bf0a1c99/**",
+        "docs/inventory_management/evidence/20260929T065027-f5a806ad9f7b/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1327,6 +1384,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-040",
+      "method": "HUMAN",
+      "author": "/root P1 implementation and design-spec alignment author",
+      "reviewer": "Sam (ERP Product Owner and independent P1 PR reviewer)",
+      "reviewed_baseline": "d3c934c71b3f369a98c3a884665c96c626fb8d4b5d115b1cde5309528c6c673a",
+      "source_ref": "Active Codex task user messages 已審閱並批准合併 and 批准新 head，CI 全綠後合併 on 2026-09-29 for PR #164 P1 diff, including 03_design_spec.md, at e46e607; no detailed findings were supplied",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1582,6 +1651,105 @@
       "source_ref": "docs/inventory_management/implementation/01_task018_core_stock_gate.md#refresh-after-main-advanced-2026-09-29",
       "actor": "/root developer verification under APR-055; not independent review or formal acceptance",
       "observed_at": "2026-09-29T11:51:06+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #164 current-head five-job GitHub Actions CI",
+      "code_commit": "7f399f558c334110ecca7ebc8c56305079c95b99",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "6413f1efdbf23c50ab6537aafb44eb1241b0feca1dbd8a7a36246c28f5c43492",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36519117573",
+      "actor": "GitHub Actions CI observed read-only by /root; not Sam independent review",
+      "observed_at": "2026-09-29T12:02:12+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR #164 P1 diff at original head 7f399f5",
+      "code_commit": "7f399f558c334110ecca7ebc8c56305079c95b99",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "6413f1efdbf23c50ab6537aafb44eb1241b0feca1dbd8a7a36246c28f5c43492",
+      "status": "PASS",
+      "source_ref": "Active Codex task user response on 2026-09-29: 已審閱並批准合併; reviewed PR #164 original head 7f399f5, superseded for merge by main integration at e46e607",
+      "actor": "Sam (independent human reviewer)",
+      "observed_at": "2026-09-29T14:04:35+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P1 code-equivalence after unrelated supplier-state main integration",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "git diff --exit-code 7f399f5..e46e607 -- . :!docs/supplier_management/00_harness_state.json returned zero; git diff --check passed; previous P1 developer gate in docs/inventory_management/implementation/01_task018_core_stock_gate.md remains a prior-code self-test, not a fresh run",
+      "actor": "/root candidate diff verification; not a new full developer test",
+      "observed_at": "2026-09-29T14:04:35+08:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR #164 independent human review of refreshed head e46e607",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "Active Codex task user response on 2026-09-29 to exact-head confirmation: 批准新 head，CI 全綠後合併; Sam independently approves PR #164 refreshed head e46e607 after requested diff review; merge conditional on all five CI checks",
+      "actor": "Sam (independent human reviewer)",
+      "observed_at": "2026-09-29T14:07:10+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36529373849",
+      "actor": "GitHub Actions CI observed read-only by /root",
+      "observed_at": "2026-09-29T14:14:53+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36529373849",
+      "actor": "GitHub Actions CI observed read-only by /root",
+      "observed_at": "2026-09-29T14:14:53+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36529373849",
+      "actor": "GitHub Actions CI observed read-only by /root",
+      "observed_at": "2026-09-29T14:14:53+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36529373849",
+      "actor": "GitHub Actions CI observed read-only by /root",
+      "observed_at": "2026-09-29T14:14:53+08:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "e46e60732e191fe697dc34040b12a41a48925190",
+      "spec_baseline": "a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d",
+      "source_fingerprint": "f3e67d4cf0ca817db59bb5281e30f1b9f7c89468240d3103159bbb9e782cdb0a",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36529373849",
+      "actor": "GitHub Actions CI observed read-only by /root",
+      "observed_at": "2026-09-29T14:14:53+08:00"
     }
   ],
   "pending_decisions": [
@@ -2348,6 +2516,52 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response 同意你的建議，請推進 on 2026-09-29"
+    },
+    {
+      "id": "HD-053",
+      "impact": "MAJOR",
+      "question": "PR #164 head e46e607 has Sam independent review and all five GitHub CI checks green, but the local harness MERGE_READY validator is BLOCKED by legacy metadata/evidence gaps (missing design-baseline reviewer record, environment authorization reference, cleaned-up runtime resource leases, malformed evidence_files path, and absent current-fingerprint runner evidence). Should this integration use a documented one-time exception to only the local mechanical gate, preserving required CI/review and exact-head checks, or first repair the harness evidence/profile and rerun any invalidated checks?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-013",
+        "TASK-018"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response B on 2026-09-29: repair the Harness evidence/profile and rerun invalidated checks before merge; no local MERGE_READY exception"
+    },
+    {
+      "id": "HD-054",
+      "impact": "MAJOR",
+      "question": "Confirm exact revised Inventory PLAN hash 2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561 for Harness MERGE_READY repair: link the already approved isolated environment to APR-055/APR-042, add a DEVELOPER-only 108-test Inventory JUnit suite with zero skips, use it for PHASE-002 instead of the repo-wide formal suite, and make all five current GitHub CI checks mandatory. DESIGN hash and product code are unchanged. May this exact plan baseline replace the prior PLAN hash for P1 developer evidence and PR integration?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-013",
+        "TASK-018"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 批准 on 2026-09-29 approving exact revised PLAN 2daf4db0073a1790951a9aaf7839940dffb3545a5e3b6758f74f89dd527e7561"
+    },
+    {
+      "id": "HD-055",
+      "impact": "MAJOR",
+      "question": "May one audited direct migration remove the malformed Markdown report pointer docs/inventory_management/implementation/01_task018_core_stock_gate.md from evidence_files, while retaining the report and an exact state recovery copy, because state_tool checkpoint preserves legacy evidence references?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-018"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 批准 on 2026-09-29 approving the one-time audited direct migration; no runner evidence is fabricated"
+    },
+    {
+      "id": "HD-056",
+      "impact": "MAJOR",
+      "question": "May the three classified, synthetic P1 Harness developer run directories (about 52 KB total, JUnit contains a local absolute path but no detected secrets or business data) be committed and pushed with PR #164 so main retains verifiable evidence?",
+      "affected_ids": [
+        "PHASE-002",
+        "TASK-018"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-29 approving evidence export with PR #164"
     }
   ],
   "external_actions": [
@@ -2922,38 +3136,96 @@
     {
       "id": "EXT-083",
       "kind": "GIT_PUSH",
-      "target": "origin/codex/inventory-p1-integration",
+      "target": "origin/codex/inventory-p1-integration at 7f399f558c334110ecca7ebc8c56305079c95b99",
       "idempotency_key": "inventory-p1-push-20260929",
-      "status": "PLANNED",
-      "source_ref": "APR-055 authorizes P1-only publication; verify latest main and branch diff before push"
+      "status": "CONFIRMED",
+      "source_ref": "git push -u origin succeeded; remote tracking branch established"
     },
     {
       "id": "EXT-084",
       "kind": "PR_CREATE",
-      "target": "main<-codex/inventory-p1-integration",
+      "target": "https://github.com/crazysumsum/erp-app/pull/164 (main<-codex/inventory-p1-integration)",
       "idempotency_key": "inventory-p1-pr-20260929",
-      "status": "PLANNED",
-      "source_ref": "APR-055 authorizes P1-only PR; CI and Sam review required before merge"
+      "status": "CONFIRMED",
+      "source_ref": "gh pr create returned PR #164; gh pr view confirmed P1-only 40-file diff, base 8009e899, head 7f399f5, open and mergeable"
     },
     {
       "id": "EXT-085",
       "kind": "CI_RUN",
-      "target": "P1 PR GitHub Actions on latest candidate",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/36519117573 for PR #164 head 7f399f5",
       "idempotency_key": "inventory-p1-ci-20260929",
-      "status": "PLANNED",
-      "source_ref": "Observe all workflow jobs; do not substitute local developer checks for CI"
+      "status": "CONFIRMED",
+      "source_ref": "GitHub run completed success; Dependency audit, Lint, Browser tests (Playwright), Test (server + client, MySQL integration), Build frontend all SUCCESS"
     },
     {
       "id": "EXT-086",
       "kind": "PR_MERGE",
-      "target": "P1 PR into main after current CI and Sam independent review",
+      "target": "https://github.com/crazysumsum/erp-app/pull/164 at e46e607 into main 742d58e",
       "idempotency_key": "inventory-p1-merge-conditional-20260929",
       "status": "PLANNED",
-      "source_ref": "Conditional authorization APR-055 only; no merge until actual review and CI pass"
+      "source_ref": "P1 merge remains deferred under HD-053 choice B until repaired MERGE_READY passes on a newly approved PLAN baseline, fresh evidence, exact-head CI and Sam review"
+    },
+    {
+      "id": "EXT-087",
+      "kind": "GIT_PUSH",
+      "target": "origin/codex/inventory-p1-integration at e46e60732e191fe697dc34040b12a41a48925190",
+      "idempotency_key": "inventory-p1-main-refresh-push-20260929",
+      "status": "CONFIRMED",
+      "source_ref": "git push succeeded; gh pr view confirms PR #164 head e46e60732e191fe697dc34040b12a41a48925190 and base 742d58ec7b934818f03adbd8b1df88006f834a2d"
+    },
+    {
+      "id": "EXT-088",
+      "kind": "CI_RUN",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/36529373849 for PR #164 head e46e607",
+      "idempotency_key": "inventory-p1-main-refresh-ci-20260929",
+      "status": "CONFIRMED",
+      "source_ref": "GitHub Actions run 36529373849 completed SUCCESS on exact e46e607 head; all five jobs SUCCESS"
+    },
+    {
+      "id": "EXT-089",
+      "kind": "STATE_REPAIR",
+      "target": "P1 Inventory Harness state rev108 malformed evidence_files pointer only",
+      "idempotency_key": "inventory-p1-evidence-pointer-repair-20260929",
+      "status": "CONFIRMED",
+      "source_ref": "Sam approved one-time audited direct migration on 2026-09-29. Removed only invalid module-relative evidence_files pointer to docs/inventory_management/implementation/01_task018_core_stock_gate.md (Markdown, not runner JSON); report remains unchanged at implementation/01_task018_core_stock_gate.md. Exact rev108 recovery: /private/tmp/inventory-p1-state-rev108-recovery.json, SHA256 89a9867646f8ee2e2995c50f7beab6f6c55361426bbacdb5d7fd15417e9d96d4. This direct migration bypasses checkpoint preservation once; subsequent updates return to CAS."
+    },
+    {
+      "id": "EXT-090",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "Private MySQL 26.7.0 at 127.0.0.1:3341 in /private/tmp/erp-inventory-p1-harness-runtime-2670.u9g684/datadir-retry",
+      "idempotency_key": "inventory-p1-harness-runtime-20260929-u9g684",
+      "status": "CONFIRMED",
+      "source_ref": "mysqld initialized and started in escalated isolated process; mysql socket query returned version 26.7.0 and exact schema erp_inventory_p1_harness_20260929; web-port 3441 checked free; opening-files root created. First sandboxed initialization crashed and its unused datadir remains for exact cleanup."
+    },
+    {
+      "id": "EXT-091",
+      "kind": "LOCAL_RUNTIME_STOP",
+      "target": "Private MySQL 26.7.0 at 127.0.0.1:3341, exact P1 Harness runtime u9g684",
+      "idempotency_key": "inventory-p1-harness-runtime-pause-20260929-u9g684",
+      "status": "CONFIRMED",
+      "source_ref": "mysqladmin shutdown succeeded; lsof showed no 3341 listener. Exact private datadir and schema are retained for restart on the same runtime identity; no shared MySQL instance was touched."
+    },
+    {
+      "id": "EXT-092",
+      "kind": "LOCAL_RUNTIME_START",
+      "target": "Same private MySQL 26.7.0 u9g684 runtime at 127.0.0.1:3341",
+      "idempotency_key": "inventory-p1-harness-runtime-resume-20260929-u9g684",
+      "status": "CONFIRMED",
+      "source_ref": "Restarted unchanged isolated datadir-retry; socket query confirmed MySQL 26.7.0 and retained exact erp_inventory_p1_harness_20260929 schema"
+    },
+    {
+      "id": "EXT-093",
+      "kind": "GIT_PUSH",
+      "target": "PR #164 branch codex/inventory-p1-integration with approved Harness repair and three developer evidence directories",
+      "idempotency_key": "inventory-p1-harness-repair-push-20260929",
+      "status": "PLANNED",
+      "source_ref": "Sam APR-056 exact PLAN and APR-058 classified evidence export approval; stage review, commit and latest-main reconciliation required before push"
     }
   ],
   "evidence_files": [
-    "docs/inventory_management/implementation/01_task018_core_stock_gate.md"
+    "evidence/20260929T065003-55782fc654a1/run.json",
+    "evidence/20260929T065017-b8c2bf0a1c99/run.json",
+    "evidence/20260929T065027-f5a806ad9f7b/run.json"
   ],
   "defects": [
     {
@@ -2972,5 +3244,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit this P1 evidence checkpoint, push codex/inventory-p1-integration and open a P1-only PR against current main. Wait for current-candidate CI and Sam independent code review; merge only after both pass and main freshness is checked. Keep P2 untouched until P1 merges."
+  "next_safe_action": "Sam approved evidence export (APR-058), and the same private MySQL runtime restarted and verified. Review exact staged diff, commit/push the P1 Harness repair plus three approved evidence directories, then require fresh CI, exact-head Sam review and MERGE_READY before merge."
 }
