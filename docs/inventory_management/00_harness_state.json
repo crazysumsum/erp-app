@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 150,
+  "revision": 152,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-003",
   "current_task": "TASK-023",
   "baseline": {
     "design": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
     "plan": "6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd",
-    "code_commit": "f9f65e8ce1709090891bd44b8586d4a31df24977",
-    "source_fingerprint": "04e21cad1c061ec56304e130178d207b162d2f8ccdaa8c9dcdff9fd66d20abdc",
+    "code_commit": "d49c0d109318c7ecf721b94d6398aefac7162b62",
+    "source_fingerprint": "7b06ff1a3c3988e683da5c6eee2db4e80c74608e0e3023b0e71748c5590dbf4c",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",
     "mode_entry_commit": "7279749a8fec0832d6f47fa316efb33c20726af8"
@@ -3156,6 +3156,46 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response 批准 on 2026-09-29 to the detailed exact-baseline HD-057 request; approves local TASK-023–025 continuation only"
+    },
+    {
+      "id": "HD-058",
+      "impact": "MAJOR",
+      "question": "Which fixed downstream provider permissions and responsibilities should Inventory use for Sales Reservation and Fulfillment Allocation/Issue without granting inventory.view?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "SEC-007",
+        "AC-047"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A：新增 sales.operation／fulfillment.operation（建議） on 2026-09-29; Sales Reservation create/release/cancel uses sales.operation, Fulfillment Allocation/Issue uses fulfillment.operation; no inventory.view grant"
+    },
+    {
+      "id": "HD-059",
+      "impact": "MAJOR",
+      "question": "Should direct Inventory Issue HTTP preserve inventory.view plus inventory.operation while Fulfillment internal service uses fulfillment.operation without inventory.view?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "SEC-007",
+        "AC-047"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A：HTTP 與 internal 權限分開（建議） on 2026-09-29; direct Inventory Issue HTTP remains inventory.view plus inventory.operation, Fulfillment internal service uses fulfillment.operation"
+    },
+    {
+      "id": "HD-060",
+      "impact": "MAJOR",
+      "question": "Where should the newly approved sales.operation and fulfillment.operation permissions be seeded given 0055 is merged/immutable and 0062–0064 are reserved: add seeds to unmerged P2 0061, or add new 0062 seed and shift future migration slots?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "TASK-025",
+        "SEC-007",
+        "AC-047"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -3999,5 +4039,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Verify PLAN_READY and module boundary under APR-059/060/061, then implement TASK-023 through TASK-025 locally in thin tested increments. P2 developer suite command must be aligned and reapproved before final developer gate; CI, push, PR, merge and formal acceptance remain separate decisions."
+  "next_safe_action": "Await HD-060 migration placement answer before changing permission seed or provider contracts. Then update canonical design and exact baseline approvals before continuing affected implementation. Existing TASK-023 direct HTTP API slices through d49c0d1 remain local only; P2 CI/push/PR/merge and formal acceptance remain separate gates."
 }
