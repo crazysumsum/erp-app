@@ -81,10 +81,14 @@ export async function prepareSupplierImportRoot(root, otherRoots = [],
   { uid = process.getuid?.(), lstat: lstatFn = lstat } = {}) {
   root = path.resolve(root);
   await mkdir(root, { recursive: true, mode: 0o700 });
+  // root 本身唔可以係 symlink；佢上面嘅路徑可以，但之後一律用真實路徑，因為上面嗰個 symlink
+  // 開機之後可以被換走（REV-063 L-10）。
+  if (!(await lstatFn(root)).isDirectory()) throw new Error("Supplier import root is not a regular directory");
+  root = await realpath(root);
   // 任何一層上層目錄如果人人寫得入而又冇 sticky bit，或者屬於其他 user，就可以將下面嗰層改名
   // 再換做自己嘅目錄或 symlink（REV-061 L-4）。用真實路徑逐層睇到 `/`：淨係睇直屬上層，一個
   // symlink 上層或者 0777 嘅祖父目錄就過到（REV-062 L-7）。
-  for (let directory = path.dirname(await realpath(root)); ; directory = path.dirname(directory)) {
+  for (let directory = path.dirname(root); ; directory = path.dirname(directory)) {
     const info = await lstatFn(directory);
     if (((info.mode & 0o022) !== 0 && (info.mode & 0o1000) === 0) ||
         (uid !== undefined && info.uid !== uid && info.uid !== 0)) {
@@ -107,7 +111,7 @@ export async function prepareSupplierImportRoot(root, otherRoots = [],
     await chmod(directory, 0o700);
   }
 
-  const real = await realpath(root);
+  const real = root;
   for (const other of otherRoots.filter(Boolean)) {
     let otherReal;
     let otherInfo;

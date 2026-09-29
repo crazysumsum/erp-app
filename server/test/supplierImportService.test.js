@@ -55,8 +55,10 @@ test("applyRow's connection admits data statements only, however a control state
     "CHECK TABLE suppliers", "FLUSH TABLES", "CALL p()", "PREPARE s FROM 'COMMIT'", "EXECUTE s", "DO 1",
     "SET @@autocommit = 0", "SET foreign_key_checks = 0", "SET NAMES latin1", "SET SESSION sql_mode = ''",
     "LOCK TABLES suppliers WRITE", "CREATE TABLE t (a INT)", "LOAD DATA INFILE 'x' INTO TABLE suppliers",
-    "SELECT 1 INTO OUTFILE '/tmp/x'", "SELECT /*!COMMIT*/ 1", "", undefined, { sql: "COMMIT" }]) {
-    assert.throws(() => assertRowStatement(sql), TypeError, JSON.stringify(sql));
+    "SELECT 1 INTO OUTFILE '/tmp/x'", "SELECT 1 INTO/**/OUTFILE '/tmp/x'", "SELECT /*!COMMIT*/ 1",
+    "SET @x = (SELECT 1)", "DO (SELECT 1)", "", undefined, { sql: "COMMIT" }]) {
+    assert.throws(() => assertRowStatement(sql), (error) => error instanceof TypeError && error.code === "SUPPLIER_IMPORT_STATEMENT_REFUSED",
+      JSON.stringify(sql));
   }
   for (const sql of ["SELECT id FROM suppliers WHERE id = ? FOR UPDATE", "SELECT 1 LOCK IN SHARE MODE",
     "INSERT INTO t (release_date) VALUES (?)", "UPDATE t SET commit_hash = ?", "/* note */ SELECT 1",

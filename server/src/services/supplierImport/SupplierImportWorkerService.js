@@ -44,7 +44,8 @@ export class SupplierImportWorkerService extends BaseService {
   async initialize() {
     if (this.root) {
       const { customer, item } = this.config ?? {};
-      await prepareSupplierImportRoot(this.root, [customer?.import?.root, customer?.attachment?.generalRoot,
+      // 之後一律用真實路徑：設定嘅 path 可能經過一個之後會被換走嘅 symlink（REV-063 L-10）。
+      this.root = await prepareSupplierImportRoot(this.root, [customer?.import?.root, customer?.attachment?.generalRoot,
         customer?.attachment?.bankSensitiveRoot, customer?.attachment?.tempRoot,
         item?.mediaDirectory, item?.importDirectory]);
     }

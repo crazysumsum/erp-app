@@ -90,6 +90,7 @@ test("abort or shutdown stops the worker between rows and it claims nothing new"
 test("the import root is prepared 0700 and refused when shared, loose or overlapping", async (t) => {
   const base = await mkdtemp(path.join(os.tmpdir(), "supplier-import-root-"));
   t.after(() => rm(base, { recursive: true, force: true }));
+  const baseReal = await realpath(base);   // root 之後一律按真實路徑檢查（REV-063 L-10）
   const root = path.join(base, "supplier");
   await prepareSupplierImportRoot(root);
   for (const directory of [root, path.join(root, "source"), path.join(root, "result")]) {
@@ -106,13 +107,13 @@ test("the import root is prepared 0700 and refused when shared, loose or overlap
     return candidate === target ? Object.assign(Object.create(info), patch(info)) : info;
   };
   const owned = path.join(base, "owned");
-  await assert.rejects(() => prepareSupplierImportRoot(owned, [], { lstat: reporting(owned, (i) => ({ uid: i.uid + 1 })) }),
+  await assert.rejects(() => prepareSupplierImportRoot(owned, [], { lstat: reporting(path.join(baseReal, "owned"), (i) => ({ uid: i.uid + 1 })) }),
     /root must be owned by the service user/u);
   await assert.rejects(() => prepareSupplierImportRoot(owned, [],
-    { lstat: reporting(path.join(owned, "source"), (i) => ({ uid: i.uid + 1 })) }),
+    { lstat: reporting(path.join(baseReal, "owned", "source"), (i) => ({ uid: i.uid + 1 })) }),
   /owned by the service user/u, "a kind directory owned by someone else");
   await assert.rejects(() => prepareSupplierImportRoot(owned, [],
-    { lstat: reporting(path.join(owned, "result"), (i) => ({ dev: i.dev + 1 })) }),
+    { lstat: reporting(path.join(baseReal, "owned", "result"), (i) => ({ dev: i.dev + 1 })) }),
   /on the root's filesystem/u, "a kind directory mounted from another filesystem");
   const bound = path.join(base, "bound");
   await mkdir(bound);
@@ -141,6 +142,8 @@ test("the import root is prepared 0700 and refused when shared, loose or overlap
   await symlink(shared, path.join(base, "linked-shared"));
   await assert.rejects(() => prepareSupplierImportRoot(path.join(base, "linked-shared", "via-link")), replaceable,
     "a symlinked parent is judged by the directory it points at (REV-062 L-7)");
+  await chmod(shared, 0o770);
+  await assert.rejects(() => prepareSupplierImportRoot(path.join(shared, "imports")), replaceable, "a group-writable parent");
   await chmod(shared, 0o1777);
   assert.ok(await prepareSupplierImportRoot(path.join(shared, "imports")), "control: a sticky shared parent such as /tmp is fine");
   const foreignParent = path.join(base, "foreign-parent");

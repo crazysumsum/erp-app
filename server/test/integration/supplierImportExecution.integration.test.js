@@ -245,7 +245,8 @@ integrationTest("TASK-042: a row's Supplier, audit and applied marker commit tog
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid", "valid", "warning", "valid"] });
-  const importer = service();
+  const logged = [];
+  const importer = service({ error: (...args) => logged.push(args) });
   await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
 
   const applied = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() });
@@ -275,6 +276,7 @@ integrationTest("TASK-042: a row's Supplier, audit and applied marker commit tog
   const noId = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000,
     applyRow: writeSupplier({ returnId: false }) });
   assert.equal(noId.status, "failed", "an applyRow that does not return the Supplier it wrote is a failure");
+  assert.equal(logged.at(-1)[2].causeCode, "SUPPLIER_IMPORT_NO_SUPPLIER_ID", "and the log says so (REV-063 L-9)");
   assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, "and its Supplier rolled back");
   assert.ok(before.length > 0);
 
@@ -379,12 +381,14 @@ integrationTest("TASK-042: a worker that loses its lease while a row fails leave
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid"] });
-  const old = service();
+  const oldLog = [];
+  const old = service({ error: (...args) => oldLog.push(args) });
   await old.claimForExecution({ leaseOwner: "old", leaseDurationMs: 60_000 });
   const expireThenFail = async () => { clock += 61_000; throw new Error("slow row"); };
   await assert.rejects(() => old.processNextRow({ jobId, leaseOwner: "old", leaseDurationMs: 60_000, applyRow: expireThenFail }),
     (error) => error.publicCode === "SUPPLIER_IMPORT_LEASE_LOST");
   assert.equal((await rows(jobId))[0].status, "valid", "the old worker may not mark a row of a job it no longer owns");
+  assert.deepEqual(oldLog, [], "and it logs no 'row failed' for a row it did not mark (REV-062 I-18)");
   const next = service();
   await next.claimForExecution({ leaseOwner: "new", leaseDurationMs: 60_000 });
   assert.equal((await next.processNextRow({ jobId, leaseOwner: "new", leaseDurationMs: 60_000, applyRow: writeSupplier() })).status, "applied");
@@ -421,7 +425,8 @@ integrationTest("TASK-042: applyRow cannot commit the Supplier ahead of its mark
   clock += 1_000_000;
   await quiesce();
   const jobId = await seedJob({ rows: ["valid"] });
-  const importer = service();
+  const refusals = [];
+  const importer = service({ error: (...args) => refusals.push(args) });
   await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
   // 真 MySQL 上面試 REV-062 嘅繞過寫法：每一個都要被拒絕，Supplier 跟住 rollback。
   // execute（prepared statement）一樣行到 COMMIT，所以兩個 method 都要守。
@@ -439,4 +444,7 @@ integrationTest("TASK-042: applyRow cannot commit the Supplier ahead of its mark
       "failed", `${method} ${statement}`);
     assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, `${method} ${statement}: refused, so the Supplier rolled back with the row`);
   }
+  assert.ok(refusals.length === bypasses.length &&
+    refusals.every(([, , context]) => context.causeCode === "SUPPLIER_IMPORT_STATEMENT_REFUSED"),
+  "the log names a guard refusal as such, not as a bare TypeError (REV-063 L-9)");
 });

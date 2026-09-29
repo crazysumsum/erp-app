@@ -104,8 +104,11 @@ const ROW_STATEMENT = /^(?:select|insert|update|delete|replace|with)\b/iu;
 export function assertRowStatement(sql) {
   const text = typeof sql === "string" ? sql : "";
   if (!ROW_STATEMENT.test(text.replace(LEADING_COMMENTS, "")) || text.includes("/*!") ||
-      /\binto\s+(?:outfile|dumpfile)\b/iu.test(text)) {
-    throw new TypeError("applyRow may only run SELECT, INSERT, UPDATE, DELETE, REPLACE or WITH on its connection");
+      // 註解可以夾喺 INTO 同 OUTFILE 中間（`INTO/**/OUTFILE`，REV-063 I-22），所以先剷走註解再睇。
+      /\binto\s+(?:outfile|dumpfile)\b/iu.test(text.replace(/\/\*[\s\S]*?\*\//gu, " "))) {
+    // code 令 log 分得出「守衛拒絕」同其他 TypeError（REV-063 L-9）。
+    throw Object.assign(new TypeError("applyRow may only run SELECT, INSERT, UPDATE, DELETE, REPLACE or WITH on its connection"),
+      { code: "SUPPLIER_IMPORT_STATEMENT_REFUSED" });
   }
 }
 function rowConnection(connection) {
@@ -200,7 +203,8 @@ export class SupplierImportService {
         rowNumber = Number(row.row_number);
         const appliedSupplierId = Number(await applyRow(rowConnection(connection), { job, row, nowMs }));
         if (!positiveInteger(appliedSupplierId)) {
-          throw new TypeError("applyRow must return the Supplier ID it wrote");
+          throw Object.assign(new TypeError("applyRow must return the Supplier ID it wrote"),
+            { code: "SUPPLIER_IMPORT_NO_SUPPLIER_ID" });
         }
         const [marked] = await connection.execute(
           `UPDATE supplier_import_rows SET status = 'applied', applied_supplier_id = ?,
