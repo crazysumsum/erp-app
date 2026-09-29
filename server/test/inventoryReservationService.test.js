@@ -97,7 +97,7 @@ test("TASK-020 rejects insufficient raw ATP before Reservation writes", async ()
   assert.equal(executed.some((sql) => sql.includes("inventory_reservations")), false);
 });
 
-function transitionSetup({ auditFails = false } = {}) {
+function transitionSetup({ auditFails = false, permissions = ["inventory.operation"] } = {}) {
   const database = createFakeInventoryDatabase({
     initialState: {
       warehouse: { id: 2, status: "ACTIVE" },
@@ -131,7 +131,7 @@ function transitionSetup({ auditFails = false } = {}) {
   const service = new InventoryReservationService({
     database,
     time: { nowMs: () => NOW, fileDate: () => "2026-09-28" },
-    authorize: async () => ({ username: "sam", permissions: ["inventory.operation"] }),
+    authorize: async () => ({ username: "sam", permissions }),
     itemLookup: {},
     operations: {
       async claim() { return { operationId: 19, replay: null }; },
@@ -200,6 +200,31 @@ test("TASK-020 Audit failure rolls back Reservation and Stock Control together",
   assert.deepEqual([database.state.reservation.released_quantity,
     database.state.reservation.outstanding_quantity, database.state.control.reserved_quantity],
   [0, 10, 10]);
+});
+
+test("TASK-023 Sales release provider commits and rolls back with caller transaction", async () => {
+  const { service, database } = transitionSetup({ permissions: ["sales.operation"] });
+  const request = {
+    actor: { userId: 7, serviceName: "", claimedRoles: [], claimedPermissions: ["sales.operation"] },
+    source: { documentId: "SO-42", eventId: "release-1" },
+    correlationId: "release-1",
+    payload: { reservationId: 17, expectedVersion: 1, quantity: 3 }
+  };
+  const released = await database.withTransaction(
+    (transaction) => service.releaseSalesReservationInTransaction(transaction, request)
+  );
+  assert.equal(released.outstandingQuantity, 7);
+  assert.equal(database.state.control.reserved_quantity, 7);
+
+  await assert.rejects(() => database.withTransaction(async (transaction) => {
+    await service.cancelSalesReservationInTransaction(transaction, {
+      ...request, source: { documentId: "SO-42", eventId: "cancel-1" },
+      payload: { reservationId: 17, expectedVersion: 2 }
+    });
+    throw new Error("caller source update failed");
+  }), /caller source update failed/);
+  assert.equal(database.state.reservation.outstanding_quantity, 7);
+  assert.equal(database.state.control.reserved_quantity, 7);
 });
 
 function allocationSetup({
@@ -297,6 +322,21 @@ test("TASK-021 allocates the recommended buckets without reducing On Hand", asyn
   assert.ok(database.calls.some(({ sql }) => sql.includes("INSERT INTO inventory_allocations") &&
     sql.includes("'ACTIVE'")));
   assert.equal(database.state.audits.length, 2);
+});
+
+test("TASK-023 Fulfillment allocation provider needs only downstream permission", async () => {
+  const { service, database } = allocationSetup({ permissions: ["fulfillment.operation"] });
+  const result = await database.withTransaction((transaction) => service.allocateForFulfillmentInTransaction(
+    transaction, {
+      actor: { userId: 7, serviceName: "", claimedRoles: [], claimedPermissions: ["fulfillment.operation"] },
+      source: { documentId: "PICK-42", eventId: "allocated-1" },
+      correlationId: "allocated-1",
+      payload: { reservationId: 17, expectedVersion: 1,
+        allocations: [{ balanceId: 41, expectedVersion: 1, quantity: 3 }] }
+    }
+  ));
+  assert.equal(result.allocations[0].quantity, 3);
+  assert.equal(database.state.balances[0].allocated_quantity, 3);
 });
 
 test("TASK-021 FEFO deviation needs fresh specialist permission and audited reason", async () => {

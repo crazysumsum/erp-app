@@ -9,6 +9,7 @@ import {
   assertInventoryTransaction,
   calculateInventoryAvailability,
   inventoryPositiveInteger,
+  providerInventoryCommand,
   validateInventoryCommandContext
 } from "./inventoryValidation.js";
 
@@ -21,6 +22,13 @@ const AUTHORIZATIONS = Object.freeze(Object.fromEntries(
     requiredCallerPermission: "inventory.operation"
   })])
 ));
+const SALES_PROVIDER = { module: "SALES", documentType: "SALES_ORDER", permission: "sales.operation" };
+const FULFILLMENT_PROVIDER = { module: "FULFILLMENT", documentType: "PICK", permission: "fulfillment.operation" };
+function providerContract(action, provider) {
+  return { authorization: { purpose: AUTHORIZATIONS[action].purpose,
+    requiredCallerPermission: provider.permission },
+  module: provider.module, documentType: provider.documentType };
+}
 const CREATE_FIELDS = new Set(["skuId", "warehouseId", "quantity", "purpose", "minimumRemainingDays"]);
 const RELEASE_FIELDS = new Set(["reservationId", "expectedVersion", "quantity"]);
 const CANCEL_FIELDS = new Set(["reservationId", "expectedVersion"]);
@@ -192,8 +200,18 @@ export class InventoryReservationService {
     return this.database.withTransaction((transaction) => this.createInTransaction(transaction, command));
   }
 
-  async createInTransaction(transaction, command) {
-    const context = validateInventoryCommandContext(transaction, command, AUTHORIZATIONS.create);
+  createInTransaction(transaction, command) {
+    return this.#createInTransaction(transaction, command, AUTHORIZATIONS.create);
+  }
+
+  createSalesReservationInTransaction(transaction, command) {
+    const contract = providerContract("create", SALES_PROVIDER);
+    return this.#createInTransaction(transaction,
+      providerInventoryCommand(transaction, command, contract), contract.authorization);
+  }
+
+  async #createInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     exactFields(context.payload, CREATE_FIELDS);
     const payload = {
@@ -210,7 +228,7 @@ export class InventoryReservationService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(AUTHORIZATIONS.create.requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
     const profile = await this.itemLookup.getInventoryProfileInTransaction(transaction, payload.skuId);
@@ -308,7 +326,13 @@ export class InventoryReservationService {
   }
 
   releaseInTransaction(transaction, command) {
-    return this.#changeInTransaction(transaction, command, "release");
+    return this.#changeInTransaction(transaction, command, "release", AUTHORIZATIONS.release);
+  }
+
+  releaseSalesReservationInTransaction(transaction, command) {
+    const contract = providerContract("release", SALES_PROVIDER);
+    return this.#changeInTransaction(transaction,
+      providerInventoryCommand(transaction, command, contract), "release", contract.authorization);
   }
 
   cancel(command) {
@@ -316,11 +340,38 @@ export class InventoryReservationService {
   }
 
   cancelInTransaction(transaction, command) {
-    return this.#changeInTransaction(transaction, command, "cancel");
+    return this.#changeInTransaction(transaction, command, "cancel", AUTHORIZATIONS.cancel);
+  }
+
+  cancelSalesReservationInTransaction(transaction, command) {
+    const contract = providerContract("cancel", SALES_PROVIDER);
+    return this.#changeInTransaction(transaction,
+      providerInventoryCommand(transaction, command, contract), "cancel", contract.authorization);
   }
 
   listAllocationCandidates(query) {
     return this.database.withTransaction((transaction) => this.listAllocationCandidatesInTransaction(transaction, query));
+  }
+
+  async listFulfillmentAllocationCandidatesInTransaction(transaction, request) {
+    assertInventoryTransaction(transaction);
+    exactFields(request, new Set(["actor", "query"]));
+    const authorization = { purpose: "allocation.candidates", requiredCallerPermission: "fulfillment.operation" };
+    const context = validateInventoryCommandContext(transaction, {
+      actor: request.actor, authorization,
+      source: { module: "FULFILLMENT", documentType: "PICK", documentId: "candidate", eventId: "candidate" },
+      correlationId: "", payload: request.query
+    }, authorization);
+    if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
+    const actor = await this.authorize(transaction, {
+      actorId: context.actor.userId,
+      claimedRoles: context.actor.claimedRoles,
+      claimedPermissions: context.actor.claimedPermissions
+    });
+    if (!actor?.permissions?.includes(authorization.requiredCallerPermission)) {
+      throw inventoryError("PERMISSION_STALE");
+    }
+    return this.listAllocationCandidatesInTransaction(transaction, context.payload);
   }
 
   async listAllocationCandidatesInTransaction(transaction, query) {
@@ -386,8 +437,18 @@ export class InventoryReservationService {
     return this.database.withTransaction((transaction) => this.releaseAllocationInTransaction(transaction, command));
   }
 
-  async releaseAllocationInTransaction(transaction, command) {
-    const context = validateInventoryCommandContext(transaction, command, AUTHORIZATIONS.releaseAllocation);
+  releaseAllocationInTransaction(transaction, command) {
+    return this.#releaseAllocationInTransaction(transaction, command, AUTHORIZATIONS.releaseAllocation);
+  }
+
+  releaseFulfillmentAllocationInTransaction(transaction, command) {
+    const contract = providerContract("releaseAllocation", FULFILLMENT_PROVIDER);
+    return this.#releaseAllocationInTransaction(transaction,
+      providerInventoryCommand(transaction, command, contract), contract.authorization);
+  }
+
+  async #releaseAllocationInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     exactFields(context.payload, ALLOCATION_RELEASE_FIELDS);
     const reservationId = positiveId(context.payload.reservationId, "reservationId");
@@ -400,7 +461,7 @@ export class InventoryReservationService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(AUTHORIZATIONS.releaseAllocation.requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
     const timestamp = this.time.nowMs();
@@ -553,8 +614,18 @@ export class InventoryReservationService {
     return result;
   }
 
-  async allocateInTransaction(transaction, command) {
-    const context = validateInventoryCommandContext(transaction, command, AUTHORIZATIONS.allocate);
+  allocateInTransaction(transaction, command) {
+    return this.#allocateInTransaction(transaction, command, AUTHORIZATIONS.allocate);
+  }
+
+  allocateForFulfillmentInTransaction(transaction, command) {
+    const contract = providerContract("allocate", FULFILLMENT_PROVIDER);
+    return this.#allocateInTransaction(transaction,
+      providerInventoryCommand(transaction, command, contract), contract.authorization);
+  }
+
+  async #allocateInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     exactFields(context.payload, ALLOCATE_FIELDS);
     const reservationId = positiveId(context.payload.reservationId, "reservationId");
@@ -567,7 +638,7 @@ export class InventoryReservationService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(AUTHORIZATIONS.allocate.requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
     const timestamp = this.time.nowMs();
@@ -761,8 +832,18 @@ export class InventoryReservationService {
     return this.database.withTransaction((transaction) => this.reallocateAllocationInTransaction(transaction, command));
   }
 
-  async reallocateAllocationInTransaction(transaction, command) {
-    const context = validateInventoryCommandContext(transaction, command, AUTHORIZATIONS.reallocateAllocation);
+  reallocateAllocationInTransaction(transaction, command) {
+    return this.#reallocateAllocationInTransaction(transaction, command, AUTHORIZATIONS.reallocateAllocation);
+  }
+
+  reallocateFulfillmentAllocationInTransaction(transaction, command) {
+    const contract = providerContract("reallocateAllocation", FULFILLMENT_PROVIDER);
+    return this.#reallocateAllocationInTransaction(transaction,
+      providerInventoryCommand(transaction, command, contract), contract.authorization);
+  }
+
+  async #reallocateAllocationInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     exactFields(context.payload, REALLOCATE_FIELDS);
     const reservationId = positiveId(context.payload.reservationId, "reservationId");
@@ -779,7 +860,7 @@ export class InventoryReservationService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(AUTHORIZATIONS.reallocateAllocation.requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
     const timestamp = this.time.nowMs();
@@ -800,8 +881,8 @@ export class InventoryReservationService {
     });
   }
 
-  async #changeInTransaction(transaction, command, action) {
-    const context = validateInventoryCommandContext(transaction, command, AUTHORIZATIONS[action]);
+  async #changeInTransaction(transaction, command, action, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     exactFields(context.payload, action === "release" ? RELEASE_FIELDS : CANCEL_FIELDS);
     const reservationId = positiveId(context.payload.reservationId, "reservationId");
@@ -814,7 +895,7 @@ export class InventoryReservationService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(AUTHORIZATIONS[action].requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
     const timestamp = this.time.nowMs();

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 155,
+  "revision": 156,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "c4ef4c1b9cadee1c87a4b3041a080ee005fa5533c33d266dea4b0c3013240843",
     "plan": "00f237d83e9933f5c3f6c014be8ec3ea3ff30fd25c57c8770933320e6691fa38",
-    "code_commit": "787782841f2a40e95e71b8e46c77cc4515936951",
+    "code_commit": "37152373d6a70c06abdc4c3c2221f50817b7517b",
     "source_fingerprint": "7b06ff1a3c3988e683da5c6eee2db4e80c74608e0e3023b0e71748c5590dbf4c",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",

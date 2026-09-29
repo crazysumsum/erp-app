@@ -1,3 +1,21 @@
+const PERMISSIONS = [
+  { name: "sales.operation", description: "執行銷售預留及其釋放或取消" },
+  { name: "fulfillment.operation", description: "執行履約庫存分配及出庫" }
+];
+
+async function seedDownstreamPermissions(connection) {
+  const nowMs = Date.now();
+  for (const permission of PERMISSIONS) {
+    const [existing] = await connection.query("SELECT id FROM permissions WHERE name = ?", [permission.name]);
+    if (existing.length === 0) {
+      await connection.execute(
+        "INSERT INTO permissions (name, description, created_at) VALUES (?, ?, ?)",
+        [permission.name, permission.description, nowMs]
+      );
+    }
+  }
+}
+
 const TABLES = Object.freeze({
   inventory_reservations: {
     columns: [
@@ -181,7 +199,10 @@ async function ensureMovementForeignKeys(connection) {
 }
 
 export async function up(connection) {
-  if (await inspectInventoryReservationSchema(connection)) return;
+  if (await inspectInventoryReservationSchema(connection)) {
+    await seedDownstreamPermissions(connection);
+    return;
+  }
 
   await connection.query(`
     CREATE TABLE IF NOT EXISTS inventory_reservations (
@@ -284,4 +305,5 @@ export async function up(connection) {
 
   await ensureMovementForeignKeys(connection);
   await inspectInventoryReservationSchema(connection);
+  await seedDownstreamPermissions(connection);
 }

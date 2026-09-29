@@ -12,6 +12,7 @@ import {
   inventoryRemainingLifeDays,
   isInventoryLotExpired,
   meetsMinimumRemainingLife,
+  providerInventoryCommand,
   toBaseQuantity,
   validateInventoryCommandContext,
   validateInventoryLotInput,
@@ -25,6 +26,11 @@ const RECEIPT_AUTHORIZATION = Object.freeze({
 const ISSUE_AUTHORIZATION = Object.freeze({
   purpose: "issue.post",
   requiredCallerPermission: "inventory.operation"
+});
+const FULFILLMENT_ISSUE = Object.freeze({
+  authorization: Object.freeze({ purpose: "issue.post", requiredCallerPermission: "fulfillment.operation" }),
+  module: "FULFILLMENT",
+  documentType: "SHIPMENT"
 });
 const RECEIVING_RECEIPT = Object.freeze({
   authorization: Object.freeze({
@@ -309,8 +315,17 @@ export class InventoryPostingService {
     return this.database.withTransaction((transaction) => this.postIssueInTransaction(transaction, command));
   }
 
-  async postIssueInTransaction(transaction, command) {
-    const context = validateInventoryCommandContext(transaction, command, ISSUE_AUTHORIZATION);
+  postIssueInTransaction(transaction, command) {
+    return this.#postIssueInTransaction(transaction, command, ISSUE_AUTHORIZATION);
+  }
+
+  postFulfillmentIssueInTransaction(transaction, command) {
+    return this.#postIssueInTransaction(transaction,
+      providerInventoryCommand(transaction, command, FULFILLMENT_ISSUE), FULFILLMENT_ISSUE.authorization);
+  }
+
+  async #postIssueInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
     if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     const payload = issuePayload(context.payload);
     const actor = await this.authorize(transaction, {
@@ -318,7 +333,7 @@ export class InventoryPostingService {
       claimedRoles: context.actor.claimedRoles,
       claimedPermissions: context.actor.claimedPermissions
     });
-    if (!actor?.permissions?.includes(ISSUE_AUTHORIZATION.requiredCallerPermission)) {
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
       throw inventoryError("PERMISSION_STALE");
     }
     const postedAt = this.time.nowMs();

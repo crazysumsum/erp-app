@@ -23,7 +23,7 @@ const lines = [
 ];
 
 function setup({ auditFails = false, expired = false, lockedBin = false,
-  sharedBalance = false, minimumRemainingDays = 0 } = {}) {
+  sharedBalance = false, minimumRemainingDays = 0, permissions = ["inventory.operation"] } = {}) {
   const database = createFakeInventoryDatabase({
     initialState: {
       warehouse: { id: 2, warehouse_code: "WH-2", status: "ACTIVE" },
@@ -111,7 +111,7 @@ function setup({ auditFails = false, expired = false, lockedBin = false,
   });
   const service = new InventoryPostingService({
     database, time: { nowMs: () => NOW, fileDate: () => "2026-09-28" },
-    authorize: async () => ({ username: "sam", permissions: ["inventory.operation"] }),
+    authorize: async () => ({ username: "sam", permissions }),
     itemLookup: { async getInventoryProfileInTransaction() {
       return { usable: true, inventoryTracked: true, trackingPolicy: "batch_expiry",
         skuCode: "SKU-12", skuName: "Widget", baseUom: { uomId: 5, uomCode: "EA" } };
@@ -154,6 +154,20 @@ test("TASK-022 Issue consumes matching Allocations and persists one Movement per
   assert.deepEqual(database.state.allocations.map(({ outstanding_quantity }) => outstanding_quantity), [0, 1]);
   assert.equal(database.state.movements.length, 2);
   assert.equal(database.state.audits.length, 1);
+});
+
+test("TASK-023 Fulfillment Issue provider posts without Inventory management permission", async () => {
+  const { service, database } = setup({ permissions: ["fulfillment.operation"] });
+  const result = await database.withTransaction((transaction) => service.postFulfillmentIssueInTransaction(
+    transaction, {
+      actor: { userId: 7, serviceName: "", claimedRoles: [], claimedPermissions: ["fulfillment.operation"] },
+      source: { documentId: "SHIP-42", eventId: "posted-1" },
+      correlationId: "posted-1",
+      payload: { reservationId: 17, expectedVersion: 2, lines }
+    }
+  ));
+  assert.equal(result.status, "POSTED");
+  assert.equal(database.state.reservation.outstanding_quantity, 1);
 });
 
 test("TASK-022 Issue rejects Allocation/Balance mismatch without a partial posting", async () => {

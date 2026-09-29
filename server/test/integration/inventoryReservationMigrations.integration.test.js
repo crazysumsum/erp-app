@@ -96,11 +96,20 @@ integrationTest("TASK-019 creates rerunnable Reservation and Allocation persiste
   await migrate(connection);
   assert.equal(await inspectInventoryReservationSchema(connection), true);
 
+  const [downstreamPermissions] = await connection.query(
+    "SELECT name FROM permissions WHERE name IN ('sales.operation', 'fulfillment.operation') ORDER BY name"
+  );
+  assert.deepEqual(downstreamPermissions.map(({ name }) => name), ["fulfillment.operation", "sales.operation"]);
+
   const tables = ["inventory_reservations", "inventory_allocations", "inventory_movements"];
   const beforeRerun = Object.fromEntries(
     await Promise.all(tables.map(async (table) => [table, await showCreate(connection, table)]))
   );
   await createInventoryReservations(connection);
+  const [permissionsAfterRerun] = await connection.query(
+    "SELECT name FROM permissions WHERE name IN ('sales.operation', 'fulfillment.operation') ORDER BY name"
+  );
+  assert.deepEqual(permissionsAfterRerun, downstreamPermissions);
   assert.deepEqual(
     Object.fromEntries(
       await Promise.all(tables.map(async (table) => [table, await showCreate(connection, table)]))
