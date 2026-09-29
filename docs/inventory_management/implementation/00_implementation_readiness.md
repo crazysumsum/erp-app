@@ -227,7 +227,7 @@
 | `0058` | `create_inventory_master` | P1-T01 |
 | `0059` | `create_inventory_stock` | P1-T05 |
 | `0060` | `create_inventory_movements` | P1-T05 |
-| `0061` | `create_inventory_reservations` | P2-T01 |
+| `0061` | `create_inventory_reservations` plus P2 downstream permission seed | P2-T01／T05 |
 | `0062` | `create_inventory_transfers` | P3-T01 |
 | `0063` | `create_inventory_stocktakes` | P4-T01 |
 | `0064` | `create_inventory_opening` | P5-T01 |
@@ -303,6 +303,15 @@ The initial guarded run against `erp_inventory_task022_20260929_0854` found `DEF
 
 The exact `erp_inventory_task022_20260929_0854` schema was dropped and confirmed absent; the private MySQL process was shut down, its socket／PID disappeared, and `/private/tmp/erp-inventory-task022-mysql-2670.AdPesg` was removed and confirmed absent. Only disposable synthetic test data was deleted; no shared or production database was touched.
 
+## TASK-023 local developer progress
+
+- Direct Reservation／Allocation／Issue HTTP contracts and client methods remain local on the P2 branch. The direct Inventory Issue route still requires `inventory.view`＋`inventory.operation`; its security regression test now includes the route in the endpoint count.
+- Under Sam-approved DESIGN `c4ef4c1b9cadee1c87a4b3041a080ee005fa5533c33d266dea4b0c3013240843`, PLAN `00f237d83e9933f5c3f6c014be8ec3ea3ff30fd25c57c8770933320e6691fa38` and shared-path scope, `0061` now idempotently seeds `sales.operation`／`fulfillment.operation` without role grants. The catalogue and seed-convention test match both names and descriptions.
+- Sales Reservation and Fulfillment candidates／Allocation／Issue provider entry points fix permission, purpose and source mapping, reject caller-supplied authorization or source module, require caller-owned transactions and recheck current actor permission. Focused tests exercise one-transaction rollback, revoked permission and successful Sales／Fulfillment commands without `inventory.operation`.
+- Focused Inventory and permission-convention unit checks passed; repository ESLint, traceability structure, module boundary and `git diff --check` passed. The local full server suite passed on rerun with public CI-only test fixtures and localhost test sockets. Its first correctly configured run hit an unrelated nondeterministic Supplier crypto test: the test “flips” the first auth-tag byte by setting it to zero, which leaves a legitimately zero byte unchanged; no Supplier code was changed.
+- `HD-062`／`APR-065` separately approved one isolated MySQL 26.7.0 developer check. The guarded `0055`～`0061` migration test passed 1/1 in `erp_inventory_task023_20260929_0843`, verifying both permission rows and idempotent rerun alongside existing Reservation／Allocation DDL. The exact schema was dropped and confirmed absent; the socket-only server stopped (PID `84678` and socket gone), and `/private/tmp/erp-inventory-task023-mysql-2670.1hnRxU` was removed and confirmed absent. Only disposable synthetic data was deleted.
+- TASK-023 is not yet marked DONE: complete integration/review evidence and the P2 candidate gate remain open. These are IMPLEMENT-stage checks, not formal `TC-004`／`TC-005`, CI, independent code approval, push, PR or merge.
+
 ## Next safe action
 
-Reconcile the P2 branch with merged P1 `main`, approve the resulting exact DESIGN／PLAN baselines, then complete TASK-023～TASK-025 and their developer checks. Seek separate CI／publication／review authority for the complete P2 candidate; formal `TC-004`／`TC-005` remain for TEST_AND_VERIFY.
+Complete TASK-023 integration/review evidence, then TASK-024 UI with Playwright and TASK-025 developer checks. Seek separate CI／publication／review authority for the complete P2 candidate; formal `TC-004`／`TC-005` remain for TEST_AND_VERIFY.

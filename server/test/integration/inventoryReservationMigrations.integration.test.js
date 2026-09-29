@@ -19,12 +19,15 @@ const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" &&
 
 function config() {
   const database = process.env.DB_NAME;
-  if (!/^erp_inventory_task019_[a-z0-9_]+$/u.test(database ?? "")) {
-    throw new Error("TASK-019 migration test requires a disposable erp_inventory_task019_* schema");
+  if (!/^erp_inventory_task0(?:19|23)_[a-z0-9_]+$/u.test(database ?? "")) {
+    throw new Error("Reservation migration test requires a disposable erp_inventory_task019_* or task023_* schema");
+  }
+  const socketPath = process.env.DB_SOCKET;
+  if (socketPath && !/^\/private\/tmp\/erp-inventory-task023-mysql-2670\.[A-Za-z0-9]+\/mysql\.sock$/u.test(socketPath)) {
+    throw new Error("TASK-023 migration test requires its isolated MySQL socket");
   }
   return {
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
+    ...(socketPath ? { socketPath } : { host: process.env.DB_HOST, port: Number(process.env.DB_PORT) }),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database
