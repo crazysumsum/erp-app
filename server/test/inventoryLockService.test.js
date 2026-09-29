@@ -112,3 +112,61 @@ test("InventoryLockService maps MySQL deadlocks and lock timeouts to CONCURRENT_
     );
   }
 });
+
+test("TASK-018 post-Lot Balance lock maps an asynchronous timeout to CONCURRENT_OPERATION", async () => {
+  const connection = {
+    async execute() {
+      throw Object.assign(new Error("database detail"), { code: "ER_LOCK_WAIT_TIMEOUT" });
+    },
+    async query() { return [[]]; }
+  };
+
+  await assert.rejects(
+    () => new InventoryLockService().lockBalancesAfterLot(connection, {
+      balances: [{ warehouseId: 1, skuId: 1, binId: 1, lotId: null, stockStatus: "AVAILABLE" }],
+      now: 1
+    }),
+    (error) => error.code === "CONCURRENT_OPERATION" && !error.message.includes("database detail")
+  );
+});
+
+test("InventoryLockService tolerates only the pre-Stocktake absence of semantic lock tables", async () => {
+  const missingTable = Object.assign(new Error("missing"), { code: "ER_NO_SUCH_TABLE" });
+  const connection = recordingConnection();
+  connection.query = async (sql, params) => {
+    connection.calls.push({ method: "query", sql: String(sql), params });
+    if (String(sql).includes("information_schema.tables")) return [[]];
+    if (String(sql).includes("inventory_bin_locks")) throw missingTable;
+    return [[]];
+  };
+
+  const locked = await new InventoryLockService().lockForCommand(connection, {
+    warehouseIds: [1],
+    binIds: [2]
+  });
+  assert.deepEqual(locked.binLocks, []);
+
+  connection.query = async (sql) => {
+    if (String(sql).includes("information_schema.tables")) return [[{ table_name: "inventory_stocktakes" }]];
+    if (String(sql).includes("inventory_bin_locks")) throw missingTable;
+    return [[]];
+  };
+  await assert.rejects(
+    () => new InventoryLockService().lockForCommand(connection, { warehouseIds: [1], binIds: [2] }),
+    missingTable
+  );
+});
+
+test("InventoryLockService locks a Balance only after its Lot identity is known", async () => {
+  const connection = recordingConnection();
+
+  await new InventoryLockService().lockBalancesAfterLot(connection, {
+    balances: [{ warehouseId: 2, skuId: 3, binId: 4, lotId: 12, stockStatus: "QUARANTINED" }],
+    now: 1_700_000_000_000
+  });
+
+  assert.deepEqual(connection.calls.map(({ method }) => method), ["execute", "query"]);
+  assert.match(connection.calls[0].sql, /INSERT INTO inventory_stock_balances/u);
+  assert.match(connection.calls[1].sql, /ORDER BY warehouse_id, sku_id, bin_id, lot_scope, stock_status FOR UPDATE$/su);
+  assert.deepEqual(connection.calls[1].params, [2, 3, 4, 12, "QUARANTINED"]);
+});

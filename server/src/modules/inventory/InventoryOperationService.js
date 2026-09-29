@@ -12,7 +12,11 @@ import {
 const COMMAND_TYPES = new Set(INVENTORY_COMMAND_TYPES);
 const RESULT_SUMMARY_FIELDS = new Set([
   "id", "status", "version", "quantity", "rowCount", "movementGroupId",
-  "reservationId", "allocationId", "transferId", "stocktakeId", "openingJobId"
+  "movementId", "operationId", "balanceId", "balanceVersion", "skuId", "skuCode", "skuName",
+  "warehouseId", "warehouseCode", "binId", "binCode", "lotId", "lotNumber", "expiryDate",
+  "stockStatus", "inputQuantity", "inputUomId", "inputUomCode", "baseQuantity", "baseUomId",
+  "baseUomCode", "onHandQuantity", "allocatedQuantity", "postedAt", "reservationId",
+  "allocationId", "transferId", "stocktakeId", "openingJobId"
 ]);
 
 function assertExecutor(executor, method = "execute") {

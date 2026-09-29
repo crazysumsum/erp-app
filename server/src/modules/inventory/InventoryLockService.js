@@ -123,6 +123,55 @@ async function lockIds(connection, table, values) {
   return rows;
 }
 
+async function lockActiveBinLocks(connection, binIds) {
+  if (binIds.length === 0) return [];
+  try {
+    const [rows] = await connection.query(
+      `SELECT * FROM inventory_bin_locks
+       WHERE bin_id IN (${binIds.map(() => "?").join(", ")}) AND released_at IS NULL
+       ORDER BY bin_id, id FOR UPDATE`,
+      binIds
+    );
+    return rows;
+  } catch (error) {
+    if ((error?.cause?.code ?? error?.code) !== "ER_NO_SUCH_TABLE") throw error;
+    const [stocktakeTables] = await connection.query(
+      `SELECT table_name FROM information_schema.tables
+       WHERE table_schema = DATABASE()
+         AND table_name IN ('inventory_stocktakes', 'inventory_bin_locks')
+       ORDER BY table_name`
+    );
+    if (stocktakeTables.length !== 0) throw error;
+    return [];
+  }
+}
+
+async function upsertAndLockBalances(connection, balances, timestamp) {
+  if (balances.length === 0) return [];
+  await connection.execute(
+    `INSERT INTO inventory_stock_balances
+       (warehouse_id, bin_id, sku_id, lot_id, stock_status, on_hand_quantity,
+        allocated_quantity, fifo_anchor_date, version, created_at, updated_at)
+     VALUES ${balances.map(() => "(?, ?, ?, ?, ?, 0, 0, NULL, 1, ?, ?)").join(", ")}
+     ON DUPLICATE KEY UPDATE id = id`,
+    balances.flatMap((value) => [
+      value.warehouseId, value.binId, value.skuId, value.lotId, value.stockStatus,
+      timestamp, timestamp
+    ])
+  );
+  const [rows] = await connection.query(
+    `SELECT * FROM inventory_stock_balances
+     WHERE ${balances.map(() => (
+       "(warehouse_id = ? AND sku_id = ? AND bin_id = ? AND lot_scope = ? AND stock_status = ?)"
+     )).join(" OR ")}
+     ORDER BY warehouse_id, sku_id, bin_id, lot_scope, stock_status FOR UPDATE`,
+    balances.flatMap((value) => [
+      value.warehouseId, value.skuId, value.binId, value.lotScope, value.stockStatus
+    ])
+  );
+  return rows;
+}
+
 export class InventoryLockService {
   async lockForCommand(connection, input = {}) {
     assertInventoryTransaction(connection);
@@ -158,14 +207,7 @@ export class InventoryLockService {
       } else locked.stockControls = [];
 
       locked.bins = await lockIds(connection, "inventory_bins", binIds);
-      if (binIds.length) {
-        [locked.binLocks] = await connection.query(
-          `SELECT * FROM inventory_bin_locks
-           WHERE bin_id IN (${binIds.map(() => "?").join(", ")}) AND released_at IS NULL
-           ORDER BY bin_id, id FOR UPDATE`,
-          binIds
-        );
-      } else locked.binLocks = [];
+      locked.binLocks = await lockActiveBinLocks(connection, binIds);
 
       if (lots.length) {
         [locked.lots] = await connection.query(
@@ -176,34 +218,25 @@ export class InventoryLockService {
         );
       } else locked.lots = [];
 
-      if (balances.length) {
-        await connection.execute(
-          `INSERT INTO inventory_stock_balances
-             (warehouse_id, bin_id, sku_id, lot_id, stock_status, on_hand_quantity,
-              allocated_quantity, fifo_anchor_date, version, created_at, updated_at)
-           VALUES ${balances.map(() => "(?, ?, ?, ?, ?, 0, 0, NULL, 1, ?, ?)").join(", ")}
-           ON DUPLICATE KEY UPDATE id = id`,
-          balances.flatMap((value) => [
-            value.warehouseId, value.binId, value.skuId, value.lotId, value.stockStatus,
-            timestamp, timestamp
-          ])
-        );
-        [locked.balances] = await connection.query(
-          `SELECT * FROM inventory_stock_balances
-           WHERE ${balances.map(() => (
-             "(warehouse_id = ? AND sku_id = ? AND bin_id = ? AND lot_scope = ? AND stock_status = ?)"
-           )).join(" OR ")}
-           ORDER BY warehouse_id, sku_id, bin_id, lot_scope, stock_status FOR UPDATE`,
-          balances.flatMap((value) => [
-            value.warehouseId, value.skuId, value.binId, value.lotScope, value.stockStatus
-          ])
-        );
-      } else locked.balances = [];
+      locked.balances = await upsertAndLockBalances(connection, balances, timestamp);
 
       locked.reservations = await lockIds(connection, "inventory_reservations", reservationIds);
       locked.transfers = await lockIds(connection, "inventory_transfers", transferIds);
       locked.stocktakes = await lockIds(connection, "inventory_stocktakes", stocktakeIds);
       return locked;
+    } catch (error) {
+      if (RETRYABLE_LOCK_ERRORS.has(error?.cause?.code ?? error?.code)) {
+        throw inventoryError("CONCURRENT_OPERATION");
+      }
+      throw error;
+    }
+  }
+
+  async lockBalancesAfterLot(connection, input = {}) {
+    assertInventoryTransaction(connection);
+    try {
+      const balances = balanceRows(input.balances);
+      return await upsertAndLockBalances(connection, balances, now(input.now));
     } catch (error) {
       if (RETRYABLE_LOCK_ERRORS.has(error?.cause?.code ?? error?.code)) {
         throw inventoryError("CONCURRENT_OPERATION");
