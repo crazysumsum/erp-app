@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { lstat, readdir } from "node:fs/promises";
+import { chmod, lstat, mkdir, readdir, realpath } from "node:fs/promises";
 import path from "node:path";
 
 /**
@@ -62,4 +62,71 @@ export async function listSupplierImportFiles(root, kind, { lstat: lstatFn = lst
   return entries
     .filter((entry) => entry.isFile() && STORED_NAME.test(entry.name))
     .map((entry) => ({ storedName: entry.name, path: path.join(directory, entry.name) }));
+}
+
+function contains(parent, child) {
+  const relative = path.relative(parent, child);
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+}
+
+/**
+ * Import 服務啟動時準備 root（T42，HD-041；REV-059 L-5、L-6、L-7）。
+ *
+ * - root 同 `source`／`result` 建成 0700，擁有者一定要係呢個 process 嘅 user；group 或其他人
+ *   寫得入嘅 root（例如 /tmp）拒絕 —— 否則任何本機 user 都可以預先放一個自己嘅 `source`。
+ * - 用真實路徑同 `dev`+`ino` 再比一次其他模組嘅目錄：開機嗰個檢查（applicationConfiguration）
+ *   只比字串，唔分大細階唔同嘅 filesystem 同經 symlink 嘅上層目錄都過得到。
+ */
+export async function prepareSupplierImportRoot(root, otherRoots = [],
+  { uid = process.getuid?.(), lstat: lstatFn = lstat } = {}) {
+  root = path.resolve(root);
+  await mkdir(root, { recursive: true, mode: 0o700 });
+  // root 本身唔可以係 symlink；佢上面嘅路徑可以，但之後一律用真實路徑，因為上面嗰個 symlink
+  // 開機之後可以被換走（REV-063 L-10）。
+  if (!(await lstatFn(root)).isDirectory()) throw new Error("Supplier import root is not a regular directory");
+  root = await realpath(root);
+  // 任何一層上層目錄如果人人寫得入而又冇 sticky bit，或者屬於其他 user，就可以將下面嗰層改名
+  // 再換做自己嘅目錄或 symlink（REV-061 L-4）。用真實路徑逐層睇到 `/`：淨係睇直屬上層，一個
+  // symlink 上層或者 0777 嘅祖父目錄就過到（REV-062 L-7）。
+  for (let directory = path.dirname(root); ; directory = path.dirname(directory)) {
+    const info = await lstatFn(directory);
+    if (((info.mode & 0o022) !== 0 && (info.mode & 0o1000) === 0) ||
+        (uid !== undefined && info.uid !== uid && info.uid !== 0)) {
+      throw new Error(`Supplier import root's ancestor ${directory} must not be replaceable by other users`);
+    }
+    if (directory === path.dirname(directory)) break;
+  }
+  const rootInfo = await lstatFn(root);
+  if (!rootInfo.isDirectory()) throw new Error("Supplier import root is not a regular directory");
+  if (uid !== undefined && rootInfo.uid !== uid) throw new Error("Supplier import root must be owned by the service user");
+  if ((rootInfo.mode & 0o022) !== 0) throw new Error("Supplier import root must not be writable by group or others");
+  await chmod(root, 0o700);
+  for (const kind of KINDS) {
+    const directory = path.join(root, kind);
+    await mkdir(directory, { mode: 0o700 }).catch((error) => { if (error.code !== "EEXIST") throw error; });
+    const info = await lstatFn(directory);
+    if (!info.isDirectory() || info.dev !== rootInfo.dev || (uid !== undefined && info.uid !== uid)) {
+      throw new Error("Supplier import directories must be regular, on the root's filesystem and owned by the service user");
+    }
+    await chmod(directory, 0o700);
+  }
+
+  const real = root;
+  for (const other of otherRoots.filter(Boolean)) {
+    let otherReal;
+    let otherInfo;
+    try {
+      otherReal = await realpath(other);
+      otherInfo = await lstatFn(otherReal);
+    } catch (error) {
+      if (error.code === "ENOENT") continue;   // 未建立嘅目錄唔會同佢重疊
+      throw error;
+    }
+    const sameDirectory = otherInfo.dev === rootInfo.dev && otherInfo.ino === rootInfo.ino;
+    // realpath 會還原真實嘅大細階，所以唔分大細階嘅 filesystem 上面換咗大細階都比得到。
+    if (sameDirectory || contains(otherReal, real) || contains(real, otherReal)) {
+      throw new Error("Supplier import root overlaps another module's file directory");
+    }
+  }
+  return real;
 }

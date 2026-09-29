@@ -314,6 +314,13 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "logging", "mysqldatabase"]
     },
     {
+      // Supplier import 執行（T42）。冇 cluster scope：互斥靠 supplier_import_jobs 自己嘅
+      // lease compare-and-set，同 job.itemImportWorker 一樣。
+      name: "job.supplierImportWorker",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
+    },
+    {
       name: "time",
       lifecycle: "singleton",
       dependencies: []
