@@ -1,6 +1,7 @@
 import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { InventoryReservationService } from "../../modules/inventory/InventoryReservationService.js";
 import {
+  ALLOCATION_CANDIDATES_QUERY, ALLOCATION_CANDIDATES_RESPONSE,
   EMPTY, OPERATION_POLICY, RESERVATION_CANCEL, RESERVATION_CREATE,
   RESERVATION_ID_PARAMS, RESERVATION_RELEASE, RESERVATION_RESPONSE
 } from "./inventorySchemas.js";
@@ -78,5 +79,22 @@ export class CancelInventoryReservationHandler extends ReservationHandler {
       reservationId: req.input.params.id,
       expectedVersion: req.input.body.version
     })));
+  }
+}
+
+export class ListInventoryAllocationCandidatesHandler extends ReservationHandler {
+  static handlerName = "listInventoryAllocationCandidates";
+  static api = {
+    method: "GET", path: "/api/v1/inventory/reservations/:id/allocation-candidates",
+    description: "查詢庫存預留的即時 FEFO／FIFO 候選，不修改庫存。",
+    authorizationPolicies: OPERATION_POLICY,
+    requestSchema: { params: RESERVATION_ID_PARAMS, query: ALLOCATION_CANDIDATES_QUERY },
+    responseSchema: { 200: ALLOCATION_CANDIDATES_RESPONSE }
+  };
+
+  async execute(req) {
+    return this.response(await this.inventory.listAllocationCandidates({
+      reservationId: req.input.params.id, ...req.input.query
+    }));
   }
 }

@@ -41,5 +41,10 @@ export default {
   getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); },
   createReservation(payload) { return write("/api/v1/inventory/reservations/create", payload); },
   releaseReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/release`, payload); },
-  cancelReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/cancel`, payload); }
+  cancelReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/cancel`, payload); },
+  listAllocationCandidates(id, { requestedQuantity, page, signal } = {}) {
+    return httpClient.get(`/api/v1/inventory/reservations/${id}/allocation-candidates`, {
+      params: { requestedQuantity, page }, signal
+    });
+  }
 };

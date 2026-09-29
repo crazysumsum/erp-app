@@ -319,6 +319,10 @@ export class InventoryReservationService {
     return this.#changeInTransaction(transaction, command, "cancel");
   }
 
+  listAllocationCandidates(query) {
+    return this.database.withTransaction((transaction) => this.listAllocationCandidatesInTransaction(transaction, query));
+  }
+
   async listAllocationCandidatesInTransaction(transaction, query) {
     assertInventoryTransaction(transaction);
     if (!query || typeof query !== "object" || Array.isArray(query)) {

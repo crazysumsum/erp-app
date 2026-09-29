@@ -6,6 +6,7 @@ import { ResponseValidator } from "../src/framework/validation/responseValidator
 import {
   CancelInventoryReservationHandler,
   CreateInventoryReservationHandler,
+  ListInventoryAllocationCandidatesHandler,
   ReleaseInventoryReservationHandler
 } from "../src/handlers/inventory/reservationHandlers.js";
 
@@ -17,6 +18,26 @@ test("TASK-023 Reservation create exposes a strict idempotent operation contract
   assert.equal(api.requestSchema.body.additionalProperties, false);
   new RequestValidator().compile(api.requestSchema, api.path);
   new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
+});
+
+test("TASK-023 allocation candidates are a read-only, operation-authorized query", async () => {
+  const api = ListInventoryAllocationCandidatesHandler.api;
+  assert.equal(api.method, "GET");
+  assert.equal(api.path, "/api/v1/inventory/reservations/:id/allocation-candidates");
+  assert.equal(api.idempotency, undefined);
+  assert.deepEqual(api.authorizationPolicies[0].options.permissions, ["inventory.view", "inventory.operation"]);
+  new RequestValidator().compile(api.requestSchema, api.path);
+  new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
+  const handler = new ListInventoryAllocationCandidatesHandler({ require(name) {
+    if (name === "mysqldatabase") return { withTransaction() {} };
+    if (name === "logging") return { logger: { error() {} } };
+    if (name === "time") return { nowMs: () => 1, fileDate: () => "2026-09-29" };
+    throw new Error(name);
+  } });
+  let received;
+  handler.inventory = { async listAllocationCandidates(query) { received = query; return { items: [] }; } };
+  await handler.execute({ input: { params: { id: 7 }, query: { requestedQuantity: 3, page: 2 } } });
+  assert.deepEqual(received, { reservationId: 7, requestedQuantity: 3, page: 2 });
 });
 
 test("TASK-023 Reservation create maps trusted actor, fixed permission, source and payload", async () => {

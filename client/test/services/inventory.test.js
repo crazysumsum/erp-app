@@ -107,6 +107,16 @@ describe("inventory service", () => {
     ]);
   });
 
+  it("forwards allocation candidate quantity and cancellation without calculating a rank", async () => {
+    httpClient.get.mockResolvedValue({ reservationId: 7, items: [{ rank: 1, balanceId: 3 }] });
+    await expect(inventoryService.listAllocationCandidates(7, {
+      requestedQuantity: 3, page: 2, signal: "candidate-signal"
+    })).resolves.toEqual({ reservationId: 7, items: [{ rank: 1, balanceId: 3 }] });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/inventory/reservations/7/allocation-candidates", {
+      params: { requestedQuantity: 3, page: 2 }, signal: "candidate-signal"
+    });
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);

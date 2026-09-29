@@ -232,6 +232,29 @@ export const RESERVATION_CANCEL = Object.freeze({
   type: "object", additionalProperties: false, required: ["source", "version"],
   properties: { source: SOURCE, version: VERSION }
 });
+export const ALLOCATION_CANDIDATES_QUERY = Object.freeze({
+  type: "object", additionalProperties: false, required: ["requestedQuantity"],
+  properties: { requestedQuantity: ID, page: { type: "integer", minimum: 1, default: 1 } }
+});
+export const ALLOCATION_CANDIDATES_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["reservationId", "requestedQuantity", "asOf", "reservationVersion", "unallocatedQuantity", "page", "hasMore", "items"],
+  properties: {
+    reservationId: ID, requestedQuantity: ID, asOf: { type: "string", pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    reservationVersion: VERSION, unallocatedQuantity: { type: "integer", minimum: 0 },
+    page: ID, hasMore: { type: "boolean" },
+    items: { type: "array", items: {
+      type: "object", additionalProperties: false,
+      required: ["balanceId", "binId", "lotId", "expiryDate", "firstReceiptDate", "fifoAnchorDate",
+        "freeQuantity", "balanceVersion", "selectionStrategy", "rank"],
+      properties: {
+        balanceId: ID, binId: ID, lotId: { type: ["integer", "null"], minimum: 1 },
+        expiryDate: DATE_ONLY, firstReceiptDate: DATE_ONLY, fifoAnchorDate: DATE_ONLY,
+        freeQuantity: ID, balanceVersion: VERSION, selectionStrategy: { type: "string", enum: ["FEFO", "FIFO"] }, rank: ID
+      }
+    } }
+  }
+});
 
 const NON_NEGATIVE_QUANTITY = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
 export const RESERVATION_RESPONSE = Object.freeze({
