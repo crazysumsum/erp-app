@@ -74,10 +74,11 @@ worker ignoring abort; the worker running without `applyRow`; the root not prepa
 accepted; the realpath overlap skipped; the rows CHECK not inspected; a CASCADE row FK accepted; the job
 column types not inspected. Four of these first survived and each got a test.
 
-After REV-061, 39 mutants, all killed: the 19 above, ten of REV-061's survivors (no `SKIP LOCKED`; no lease check on the
+After REV-061, 40 mutants, all killed: the 19 above, ten of REV-061's survivors (no `SKIP LOCKED`; no lease check on the
 failure path; no renewal after an applied row; no renewal after a failed row; kind-directory `dev`, owner, and `chmod`
-checks; root `chmod`; the `dev`/`ino` same-directory check; the rows trigger check — an earlier revision of this record
-said "eleven" and "40", which REV-062 L-8 caught) and ten for the remediation (a
+checks; root `chmod`; the `dev`/`ino` same-directory check; the rows trigger check — the first revision of this record
+said "eleven", which REV-062 L-8 caught; its count of 39 was itself wrong, as REV-063 I-24 showed, because the
+remediation list below has eleven entries) and eleven for the remediation (a
 generic code passed through to the row; no failure log; `applyRow` given the raw connection; a leaseless running job
 left stuck; an unconfirmed job claimed; the root's parent unchecked; `auto_increment`, extra UNIQUE, charset and CHECK
 contracts on jobs; an extra CHECK on rows). The pending guard on the failure path (REV-061 M4) is left as REV-061 found
@@ -101,3 +102,22 @@ judged by string instead of realpath; a NOT ENFORCED rows CHECK accepted.
   longer reach the pooled connection through `applyRow`: `SET` is outside the allowlist.
 - **M4 (REV-061), left as found.** The pending guard on the failure UPDATE is backstopped by the rollback and the CHECK;
   REV-062 agreed.
+
+After REV-063, 63 mutants, all killed: the 56 above plus the allowlist unanchored; the failure log written before the
+lease check; the ancestor check ignoring group-write; the guard refusal and the missing-ID failure logged without a
+code; `INTO/**/OUTFILE` accepted; root preparation keeping the configured path; the worker ignoring the real path it is
+given back. The last one first survived and got a test that configures the root through a symlink.
+
+## REV-063 notes kept for later
+
+- **For operators (I-27).** Every ancestor of the real import root must be owned by the service user or root and must
+  not be group- or other-writable unless it has the sticky bit. A Kubernetes `fsGroup` volume (typically 2775) and an
+  NFS export mapped to `nobody` (uid 65534) are therefore refused at startup; mount the root so that its ancestors meet
+  that rule. The refusal names the ancestor.
+- **T45 (I-23).** The allowlist still lets a `SELECT` leave state on the pooled connection: `GET_LOCK` named locks, user
+  variables, and a transaction isolation set inside a stored function. Nothing uses these today; T45's `applyRow` must
+  not either.
+- **I-25, accepted.** The guard also refuses `--\r\n`-style comments, a parenthesised `(SELECT …)` and a string literal
+  containing `/*!`. None occurs in the codebase; a T45 helper that needs one can be rewritten.
+- **I-26, accepted.** Both log lines are written before `COMMIT`, so a failed commit leaves one line per attempt that
+  describes a state that was rolled back. `withTransaction` does not retry, so nothing is duplicated.

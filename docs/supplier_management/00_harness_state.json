@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 254,
+  "revision": 255,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1565,6 +1565,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/65_rev_062_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-063",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-042 REV-062 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing ebf3e4103677c7bfe576781c134cfa8e7cc1c692 (PR #165)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/66_rev_063_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -4009,7 +4021,7 @@
     {
       "id": "HD-048",
       "impact": "MINOR",
-      "question": "Carry-forward from TASK-042 (see docs/supplier_management/implementation/62_task_041_carry_forward.md): before TASK-045 is DONE, confirm that (1) the real applyRow is wired into SupplierImportWorkerService; (2) it calls connection-taking domain helpers, never the public Supplier service methods, which open their own transaction on a second connection and would commit the Supplier before the marker (REV-061 M-3); the allowlisted connection handed to applyRow (SELECT/INSERT/UPDATE/DELETE/REPLACE/WITH only, REV-062 M-4) cannot see a second connection, so it does not make such a call safe; (3) a row, job lock included, finishes within DB_TRANSACTION_TIMEOUT_MS; (4) an integration test with the real applyRow injects a failure after the Supplier write and finds no Supplier, audit or name-gram row; (5) domain errors carry an explicit Chinese publicMessage; (6) the confirming user is re-checked for active status and supplier.mgmt at execution; (7) a decision is recorded on retrying transient errors. Extended at revision 253.",
+      "question": "Carry-forward from TASK-042 (see docs/supplier_management/implementation/62_task_041_carry_forward.md): before TASK-045 is DONE, confirm that (1) the real applyRow is wired into SupplierImportWorkerService; (2) it calls connection-taking domain helpers, never the public Supplier service methods, which open their own transaction on a second connection and would commit the Supplier before the marker (REV-061 M-3); the allowlisted connection handed to applyRow (SELECT/INSERT/UPDATE/DELETE/REPLACE/WITH only, REV-062 M-4) cannot see a second connection, so it does not make such a call safe; (3) a row, job lock included, finishes within DB_TRANSACTION_TIMEOUT_MS; (4) an integration test with the real applyRow injects a failure after the Supplier write and finds no Supplier, audit or name-gram row; (5) domain errors carry an explicit Chinese publicMessage; (6) the confirming user is re-checked for active status and supplier.mgmt at execution; (7) a decision is recorded on retrying transient errors. (8) it leaves no GET_LOCK named locks, user variables or stored-function isolation changes on the pooled connection (REV-063 I-23). Extended at revisions 253 and 255.",
       "affected_ids": [
         "TASK-045",
         "TASK-042"
@@ -5104,5 +5116,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-042 on PR #165: REV-062 CHANGES_REQUESTED (0 critical, 0 high, 1 medium). M-4 (allowlist), L-6, L-7, L-8, I-16 (main e36f0de merged in, clean), I-17, I-18 and I-19 remediated; 56/56 mutants killed on the merged tree; full suite 2329 pass, only the known TC-059 race fails. Next: REV-063, green CI on the new head, the Product Owner's word before merge. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-042 on PR #165: REV-063 APPROVED ebf3e41 (0 critical, 0 high, 0 medium, 3 low). After the approval, L-9 (codes on the service's own TypeErrors), L-10 (the worker and root preparation use the real path), L-11 (A4, A11, A15 pinned) and I-22 (INTO/**/OUTFILE) were fixed in code, and I-23..I-27 recorded in the carry-forward; 63/63 mutants killed, full suite 2329 pass with only the known TC-059 race. Those post-approval code changes were not re-reviewed. Next: green CI on the final head, main unchanged, the Product Owner's word before merge. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
