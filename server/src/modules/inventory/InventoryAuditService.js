@@ -12,7 +12,8 @@ const SUMMARY_FIELDS = new Set([
   "transferId", "stocktakeId", "openingJobId", "rowCount", "bucketCount", "locked",
   "fromStatus", "toStatus", "movementId", "operationId", "balanceId", "balanceVersion",
   "inputQuantity", "inputUomId", "baseQuantity", "baseUomId", "onHandQuantity",
-  "allocatedQuantity", "lotNumber", "expiryDate", "minimumLifeDaysApplied",
+  "allocatedQuantity", "balanceAllocated", "reservedQuantity", "outstandingQuantity",
+  "consumedQuantity", "releasedQuantity", "lotNumber", "expiryDate", "minimumLifeDaysApplied",
   "actualRemainingLifeDays", "overrideActorId", "receiptId", "requestId",
   "selectionStrategy", "isSequenceOverride", "recommendedBalanceId", "selectedBalanceId",
   "recommendedExpiryDate", "selectedExpiryDate"
