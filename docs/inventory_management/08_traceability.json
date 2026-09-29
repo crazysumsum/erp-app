@@ -1630,7 +1630,7 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "inventory-technical"
+        "inventory-developer"
       ]
     },
     {

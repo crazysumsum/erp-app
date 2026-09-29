@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are complete on this branch. The approved `0055`～`0064` allocation is active, and TASK-012 has passed its local developer checks. TASK-013 has not started.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-018 form a P1-only integration candidate based on current `main`; its local gate passed on 2026-09-29. PR CI and Sam's independent review remain pending. TASK-019 onward is excluded from this candidate.
 
 ## Baseline
 
@@ -36,6 +36,13 @@
 - `HD-027`～`HD-028`／`APR-026`～`APR-027`: Sam independently approved the exact 1.0 DESIGN and PLAN hashes after the migration reallocation.
 - `HD-029`／`APR-028`: Sam approved returning to IMPLEMENT, renaming existing Inventory migrations to `0055`～`0058`, validating the complete Inventory `0055`～`0060` history on disposable MySQL 26.7.0 and completing TASK-012 locally, without TASK-013, CI or remote actions.
 - `HD-030`／`APR-029`: Sam approved updating the completed TASK-001～TASK-012 branch from latest `main`, local post-merge verification, commit, push, PR creation and merge without CI, followed by merged branch/worktree cleanup; TASK-013 remains excluded.
+- `HD-032`～`HD-034`／`APR-032`～`APR-035`: Sam approved the exact 1.1 DESIGN and PLAN baselines, the minimal `ItemLookupService` Inventory-profile extension exposing `skuName`, and local TASK-014 Receipt implementation plus developer verification on the continuing PHASE-002 branch. Migration execution, CI and remote publication remained excluded until separately approved.
+- `HD-035`／`APR-036`: Sam approved one guarded disposable MySQL 26.7.0 TASK-014 integration run using an `erp_inventory_task014_*` schema and Inventory migrations `0055`～`0060`, followed by exact schema/runtime cleanup. CI and remote publication remained excluded.
+- `HD-036`／`APR-037`: Sam approved TASK-015's transaction-required downstream Receipt contracts and focused tests, while keeping Issue, migrations, MySQL, CI and remote publication excluded.
+- `HD-037`／`APR-038`: Sam approved fixed Receiving mapping `PURCHASE_RECEIPT`／`receiving.operation`／`PURCHASING_RECEIVING`／`GOODS_RECEIPT`, fixed Returns mapping `CUSTOMER_RETURN_RECEIPT`／`returns.operation`／`RETURNS`／`CUSTOMER_RETURN`, and mandatory `QUARANTINED` status for Customer Return Receipt.
+- `HD-038`／`APR-039`: Sam selected and approved the complete local TASK-016 Stock／Lot／Movement inquiry service, eight read-only APIs and focused tests, while excluding UI, migrations, MySQL, CI and remote publication.
+- `HD-039`／`APR-040`: Sam selected and approved the complete local TASK-017 Stock／Lot／Movement UI, URL-restorable filters, server pagination, responsive/accessibility states, focused client tests, production build and mocked Playwright, while excluding MySQL, CI and remote publication.
+- `HD-040`／`APR-041`: after implementation discovery proved the existing APIs could not correctly paginate the designed default SKU aggregate list, Sam selected option A and approved the minimal server-side paginated `/api/v1/inventory/stocks/aggregates` extension inside TASK-017 instead of an incorrect client-side page aggregate.
 
 ## Reconciled P0 checks
 
@@ -52,6 +59,10 @@
 - TASK-010 stayed inside its approved handler／client boundary plus the two explicitly approved service-extension files; it did not start TASK-011, add a migration or perform any remote action.
 - TASK-011 stayed inside the HD-024／APR-023-approved page, Inventory menu, component-test and browser-test boundary; it did not start TASK-012, add a migration, run CI or perform any remote action.
 - TASK-012 stayed inside the HD-029／APR-028-approved migration and focused-test boundary; it did not start TASK-013, run CI or perform any remote action.
+- TASK-013 stayed inside the APR-030-approved pure-rule and focused-test boundary; it did not start TASK-014, add or execute a migration, run CI or perform any remote action.
+- TASK-014 stayed inside APR-035's Receipt posting service, handler, strict schema and focused-test boundary. It reused the approved transaction, lock, Item lookup, operation and Audit primitives without adding a migration or performing a remote action.
+- TASK-015 stayed inside APR-037／APR-038's downstream Receipt contract and focused-test boundary. It reused the atomic Receipt posting core, exposed no Issue contract, added no migration and performed no database or remote action.
+- TASK-016 stayed inside APR-039's inquiry service, strict GET handler/schema and focused-test boundary. It did not start TASK-017, add persistence or perform database or remote actions.
 - The corrected 0.9 module boundary and traceability validations pass; the only scope change from 0.8 is the two planned TASK-007 test-support paths.
 - Multi-axis TASK-006 self-review found and fixed one unsafe-summary issue before commit: allowlisted summary keys now accept scalar values only, so a nested raw payload cannot hide under an approved key. No correctness, security, maintainability or contract-blocking issue remains in the isolated diff.
 - Full `PHASE-001 MERGE_READY` remains blocked by pending remote CI/review; this local task completion does not claim that Phase gate.
@@ -134,13 +145,65 @@
 - The exact schemas `erp_inventory_task005_20260925_1144`, `erp_inventory_task008_20260925_1144` and `erp_inventory_task012_20260925_1144` were dropped and confirmed absent. The isolated MySQL 26.7.0 server stopped, port 3313 and its socket were absent, and `/private/tmp/erp-inventory-task012-history-mysql-2670.mGLld3` was removed.
 - Multi-axis self-review found no correctness, security, architecture, performance or maintainability blocker. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
 
+## TASK-013 developer verification
+
+- Commits `ad9c194`, `66336f0`, `24886e8`, `8cb85cd` and `3c49765` implement Base UOM safe-integer quantities, integer pack conversion, ATP/uncovered reservation calculation, date-only expiry/minimum-life rules, tracking-policy and Lot consistency checks, fixed Stock Status validation and explicit stock／Movement projections.
+- Projections use explicit allowlisted fields, preserve immutable Movement snapshots and fail closed on missing, unsafe or impossible quantities; no database row spread is used. Serial tracking remains explicitly unsupported as required by the approved design.
+- TDD red was captured for each slice before implementation. Focused Inventory checks passed 31/31. The complete local server suite passed 1,920 with 326 gated skips and 0 failures using the repository's public CI-only Customer and Supplier test keys. Full repository ESLint and client production build passed; the build retained only the existing bundle-size warning.
+- `git diff --check`, module-boundary validation and traceability validation passed. Multi-axis self-review found no open critical or high correctness, security, contract, performance or maintainability issue.
+- No migration or database execution occurred. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003` Technical Acceptance, CI, Sam's independent code approval or business acceptance.
+
+## TASK-014 developer verification
+
+- Commits `d601772`, `db847aa`, `263cb99`, `e499015` and `b88cb14` implement Receipt posting primitives, one atomic posting service, the strict `POST /api/v1/inventory/receipts` endpoint, a guarded MySQL integration test and the pre-Stocktake schema compatibility fix found by that test.
+- Receipt posting performs fixed authorization and fresh actor checks, Item／UOM resolution, Base／Pack conversion, tracking／Lot／expiry／minimum-life validation, exact override evidence, source-tuple replay／conflict handling, fixed-order locking, Balance mutation, immutable Movement insertion, required Audit and operation completion in one transaction.
+- TDD covers success, exact replay, source conflict, all three Stock Statuses, five rollback injection points, inactive master data, unsupported Serial, untracked and Lot consistency rules, minimum-life override evidence and expired-lot rejection. The complete post-fix local server suite passed 1,934 with 327 gated skips and 0 failures using the repository's public CI-only bank test keys.
+- The first real-MySQL run correctly failed because the PHASE-002 schema has no future `inventory_bin_locks` table. The fix treats the complete absence of Stocktake tables as the pre-feature state, while a partial Stocktake schema still fails closed; focused Receipt/lock checks passed 15/15.
+- The final guarded integration passed 1/1 on MySQL 26.7.0 in `erp_inventory_task014_20260928_1052`, proving success, exact replay, source conflict and Audit-failure rollback after migrations `0055`～`0060`. The schema, port 3314, isolated server and `/private/tmp/erp-inventory-task014-mysql-2670.Cm9eZt` root were removed and confirmed absent.
+- Full repository ESLint and `git diff --check` passed. Module-boundary validation and traceability validation passed. CI, push, PR and merge were not performed. These checks are not formal `TC-004` Technical Acceptance, independent code approval or business acceptance.
+
+## TASK-015 developer verification
+
+- Commit `040de0b` adds only transaction-required Receiving and Customer Return Receipt contracts around the existing atomic Receipt posting core; no public route or Issue method was added.
+- Receiving is fixed to purpose `PURCHASE_RECEIPT`, permission `receiving.operation` and source `PURCHASING_RECEIVING`／`GOODS_RECEIPT`. Customer Return is fixed to purpose `CUSTOMER_RETURN_RECEIPT`, permission `returns.operation` and source `RETURNS`／`CUSTOMER_RETURN`, with `QUARANTINED` forced by the service. Callers cannot inject authorization or source-module/type values.
+- Focused tests prove current actor permission checks, dependency-unavailable failure, exact replay without duplicate posting, and caller-transaction rollback in both directions. They also reject a non-Quarantined return and confirm the Issue API remains absent.
+- TDD red was captured before the downstream methods existed. Focused Inventory checks passed 84/84. The complete local server suite passed 1,939 with 327 gated skips and 0 failures using the repository's public CI-only bank test keys.
+- Full repository ESLint, `git diff --check`, module-boundary validation and traceability validation passed. No migration or MySQL execution occurred; CI, push, PR and merge were not performed. These checks are not formal Technical Acceptance, independent code approval or business acceptance.
+
+## TASK-016 developer verification
+
+- Commit `1a6b677` adds the Stock／Lot／Movement inquiry service and eight `inventory.view` GET endpoints for paginated Stock buckets, bucket detail, SKU summary, Lots, expiry, Movement list/detail and exact operation-source lookup.
+- Stock search gives exact SKU Code／Barcode matches priority over safely escaped partial SKU Name matches. All filters and sorts are allowlisted, page size is capped at 100, offsets remain safe integers and every ordering has a stable ID tie-breaker; Movement history is fixed to `posted_at DESC, id DESC`.
+- Responses are explicit projections: quantities retain separate On Hand／Allocated／Free／Reserved／ATP／status meanings, expiry uses the application local date, Movement uses immutable snapshots and safe source tuples, and bucket detail limits recent Movement history to 20 rows. Pre-`0061` allocation detail uses the authoritative Balance allocated total; pre-`0062` In Transit is explicitly zero until Transfer current-state persistence exists.
+- TDD red was captured before the service and handlers existed. Focused TASK-016 checks passed 13/13; all focused Inventory unit checks passed 97/97. The complete local server suite passed 1,952 with 327 gated skips and 0 failures using the repository's public CI-only bank test keys.
+- Full repository ESLint, `git diff --check`, module-boundary validation and traceability validation passed. No migration or MySQL execution occurred, so SQL execution and query-plan evidence remain deferred to the later authorized integration gate. CI, push, PR and merge were not performed.
+
+## TASK-017 developer verification
+
+- Commit `1a834c7` adds the Stock overview, Lot／expiry and Movement pages plus their Inventory client methods. URL state restores filters, paging and allowed sorting; every page uses server pagination and aborts stale list/detail requests.
+- The approved scope correction adds `GET /api/v1/inventory/stocks/aggregates`, which groups and paginates complete SKU totals on the server before the UI drills into Warehouse → Bin → Lot／No Lot → Status buckets. Quantity columns remain explicit for On Hand, Available, Reserved, ATP, uncovered Reserved, Quarantined, Damaged, In Transit, Allocated and Bucket Free.
+- Expired／low-life／status and Movement direction/reversal states use icon plus text. Movement detail exposes only safe source tuples, group legs and bidirectional reversal links. All three routes require `inventory.view`.
+- TDD red was captured for the aggregate API and client service. Focused server inquiry checks passed 14/14 and focused client checks passed 11/11. The complete server suite passed 1,953 with 327 gated skips and 0 failures using the repository's public CI-only bank keys; the complete client suite passed 681/681.
+- Mocked local Inventory Playwright passed 11/11, including TASK-017 keyboard drill-down, URL restoration, permission denial, error/retry/empty states, safe network fixtures, no relevant console errors and 375／768／1024／1440 px layouts without body overflow. Repository ESLint, client production build, `git diff --check`, module-boundary validation and traceability validation passed; the build retained only the existing bundle-size warning.
+- Multi-axis self-review found no open critical or high correctness, security, accessibility, architecture, performance or maintainability blocker. No migration or MySQL execution occurred, so aggregate SQL execution and query-plan evidence remain for TASK-018. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003`／`TC-010` Technical Acceptance, independent code approval or business acceptance.
+
+## TASK-018 developer verification
+
+- Complete evidence is preserved in [01_task018_core_stock_gate.md](./01_task018_core_stock_gate.md). A disposable MySQL 26.7.0 schema held exactly 100,000 SKUs, 500,000 non-zero Stock buckets and 2,000,000 Movements; 20 workers produced 100 samples per query shape.
+- Exact SKU, exact Barcode, Warehouse/SKU stock summary, bucket drill-down and recent Warehouse Movement filter all passed the `< 2s` p95 gate. Final p95 values were 11.669ms, 1.459ms, 1.530ms, 2.896ms and 8.088ms respectively. Preserved EXPLAIN plans use the designed exact, stock and Movement indexes without a large-table full scan.
+- The measured Movement bottleneck was an unnecessary operation-table join in the count query when no source filter existed. Removing it improved the original all-history-like stress p95 from 3,168.6ms to 2,307.8ms before the fixture's time distribution was corrected; source-filter counts retain the join.
+- Same-source/two-connection Receipt competition produced one operation and one Movement with exact replay. A real lock timeout returned `CONCURRENT_OPERATION` with zero partial effects after fixing an omitted `await` that had let the raw asynchronous DB error escape. Warehouse posting/deactivate races passed both orderings.
+- All 24 Core endpoint contracts were enumerated for unauthenticated, missing-permission and stale-actor denial, strict request schemas, owner-scoped Bin paths and sensitive response-field exclusion. Focused security/inquiry checks passed 14/14, focused lock checks passed 6/6, capacity/concurrency passed 1/1 and Warehouse race passed 1/1. The complete local server suite passed 1,958 with 328 gated skips and 0 failures.
+- Repository ESLint, client production build, `git diff --check`, TASK-018 module-boundary validation and traceability validation passed. The build retained only the existing bundle-size warning.
+- All three exact test-owned schemas, both isolated runs on port 3318 and runtime roots `/private/tmp/erp-inventory-task018-mysql-2670.J0LCkz` and `/private/tmp/erp-inventory-task018-final-mysql-2670.1u1Icz` were removed and confirmed absent. CI, push, PR and merge were not performed. These are developer checks, not formal `TC-003`／`TC-004`／`TC-010` Technical Acceptance, independent code approval or business acceptance.
+
 ## Post-main-merge publication verification
 
 - Latest `origin/main` at `9b2d0d3e0b2e0da284a0bfb99da861705279993f` was merged without conflicts as `e6c7108f0e717a2d3b199d1a7a039ce3f1f9658b`; Inventory migrations remain contiguous at `0055`～`0060` after main's `0054` Customer migration.
 - Full server suite passed 1,902 with 324 gated skips and 0 failures using the repository's public CI-only Customer and Supplier test keys. Full client suite, repository ESLint and client production build passed; the build retained only the existing bundle-size warning.
 - Mocked local Inventory Playwright passed 4/4 after the merge, covering the desktop and 375 px flows, permissions, 409 retention and error/empty states. `git diff --check`, module-boundary validation and traceability validation passed.
 - Multi-axis post-merge self-review found no open critical or high correctness, security, architecture, performance or maintainability issue. These are local developer checks; CI was explicitly excluded by APR-029.
-- The reconciled branch was pushed and opened as [PR #148](https://github.com/crazysumsum/erp-app/pull/148); merge and cleanup remain the next authorized actions.
+- [PR #148](https://github.com/crazysumsum/erp-app/pull/148) and corrective [PR #150](https://github.com/crazysumsum/erp-app/pull/150) are present in current `main`; the former Inventory branch and worktree have been removed.
 
 ## Approved physical allocation
 
@@ -169,8 +232,14 @@
 - TASK-010 created only the approved handlers, schemas, client service, focused tests and narrow master-service query extensions; it did not create Stocktake persistence or UI code.
 - TASK-011 created only the approved responsive UI, shared Inventory menu entry, focused component tests and mocked Playwright suite; it did not create persistence or start TASK-012.
 - TASK-012 created only the approved stock and Movement persistence plus its focused test; it did not start TASK-013.
-- APR-029 authorizes publication of the completed TASK-001～TASK-012 branch; TASK-013 remains unstarted and out of scope. CI remains explicitly excluded.
+- TASK-013 created only the approved pure quantity, expiry, Lot／tracking and projection rules plus focused tests; it did not start TASK-014 or change persistence.
+- TASK-014 created only the approved posting service, handler/schema updates and focused tests. It added no production migration and reused the approved Inventory `0055`～`0060` history.
+- APR-036 authorized the guarded TASK-014 MySQL run and exact cleanup. CI, push, PR and merge remain explicitly excluded.
+- TASK-015 created only the approved downstream Receipt contract methods and focused tests in existing TASK-014 files. It did not add Issue, persistence, routes, migrations or database execution.
+- TASK-016 created only the approved inquiry service, read-only handlers/schemas and focused tests. It did not add UI, write routes, migrations or database execution.
+- TASK-017 created only the approved inquiry UI/client/tests plus the HD-040-approved read-only SKU aggregate endpoint needed for correct server pagination. It did not add writes, migrations, database execution or begin TASK-018.
+- TASK-018 added only the guarded capacity/security/concurrency tests, two measured root-cause fixes and the minimum reusable Warehouse race fixture alignment. It added no business feature, migration, dependency, CI or remote action.
 
 ## Next safe action
 
-Under APR-029, publish and merge the reconciled TASK-001～TASK-012 branch without CI, then remove its merged branch and worktree. Await separate explicit scope approval before starting TASK-013.
+Publish the P1-only candidate for CI and Sam's independent review. Merge only after both gates pass and `main` freshness is rechecked; then rebase the separate P2 work on the merged P1 baseline. No formal Technical Acceptance or UAT is implied by this local developer gate.

@@ -42,6 +42,25 @@ describe("inventory service", () => {
     ]);
   });
 
+  it("passes inquiry filters and cancellation without leaking empty query values", async () => {
+    httpClient.get.mockResolvedValue({ items: [{ sku: { skuId: 3 } }], total: 1 });
+
+    await expect(inventoryService.listStockAggregates({
+      page: 2, rowsPerPage: 50, filter: "SKU-3", warehouseId: "1", binId: "",
+      status: "AVAILABLE", availability: "ZERO_ATP", expiryState: "WITHIN_DAYS",
+      withinDays: 30, sortBy: "skuCode", descending: false, signal: "aggregate-signal"
+    })).resolves.toEqual({ rows: [{ sku: { skuId: 3 } }], rowsNumber: 1 });
+
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/inventory/stocks/aggregates", {
+      params: {
+        page: 2, pageSize: 50, q: "SKU-3", warehouseId: "1", status: "AVAILABLE",
+        availability: "ZERO_ATP", expiryState: "WITHIN_DAYS", withinDays: 30,
+        sortBy: "skuCode", descending: false
+      },
+      signal: "aggregate-signal"
+    });
+  });
+
   it("makes every write idempotent, strips a caller key from strict bodies and signs deletes only", async () => {
     await inventoryService.createWarehouse({ warehouseCode: "MAIN", warehouseName: "Main", idempotencyKey: "create-main" });
     await inventoryService.deactivateWarehouse(3, { version: 2, reason: "Close location", password: "pw" });
