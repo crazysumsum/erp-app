@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-018 are complete locally in the continuing implementation branch; TASK-019 awaits separate authorization.
+`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-018 form a P1-only integration candidate based on current `main`; its local gate passed on 2026-09-29. PR CI and Sam's independent review remain pending. TASK-019 onward is excluded from this candidate.
 
 ## Baseline
 
@@ -242,4 +242,4 @@
 
 ## Next safe action
 
-TASK-018 local developer checks are complete. Await a separately approved TASK-019 scope; do not start TASK-019, run CI or perform push/PR/merge.
+Publish the P1-only candidate for CI and Sam's independent review. Merge only after both gates pass and `main` freshness is rechecked; then rebase the separate P2 work on the merged P1 baseline. No formal Technical Acceptance or UAT is implied by this local developer gate.

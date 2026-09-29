@@ -1,7 +1,7 @@
 # TASK-018 Core Stock developer gate
 
-Date: 2026-09-28  
-Authorization: `HD-041` / `APR-042`  
+Date: 2026-09-28
+Authorization: `HD-041` / `APR-042`
 Baseline: DESIGN `d3c934c71b3f369a98c3a884665c96c626fb8d4b5d115b1cde5309528c6c673a`; PLAN `a9fbd958ef6bdf11e480334af9d1a4fee7bfd8dc38596334267f9337d17d740d`
 
 This is local IMPLEMENT-stage developer evidence for TASK-018. It does not claim formal `TC-003`, `TC-004` or `TC-010` acceptance, CI, independent code approval or business acceptance.
@@ -77,3 +77,16 @@ The bucket sort operates on the one-row Warehouse/SKU result for this fixture; i
 ## Cleanup
 
 Schemas `erp_inventory_task018_20260928_1521`, `erp_inventory_task018_master_20260928` and `erp_inventory_task018_final_20260928` were dropped and confirmed absent. Both isolated runs on port 3318 were stopped and their listeners were absent. Exact runtime roots `/private/tmp/erp-inventory-task018-mysql-2670.J0LCkz` and `/private/tmp/erp-inventory-task018-final-mysql-2670.1u1Icz` were removed. No shared or production schema was accessed.
+
+## P1 integration rerun against current main (2026-09-29)
+
+The P1-only TASK-013～TASK-018 candidate was separated from the continuing P2 branch at `00925ff355162927a1d2a03ed94c3e5291bc5daf`, then merged with `origin/main` `894cdc62f54dc3ea27efabfad8db5f14510fa953` without conflicts (`866eedfe14209491573685c512019c6f0169e1a5`). The approved DESIGN and PLAN hashes above were unchanged; no P2 code or migration is in this candidate.
+
+- Full server coverage on a migrated, isolated MySQL 26.7.0 schema: 2,300 passed, 0 failed, 9 gated skips; global lines 93.97%, branches 83.18%, functions 91.53%, and all 34 high-risk per-file floors passed. The five separately guarded Inventory lock, master migration/race, stock migration and Receipt posting tests passed 5/5 on their own empty schemas.
+- Full client coverage, repository lint, production client build, 11/11 Inventory Playwright cases and the CI-equivalent 39/39 business-master/Supplier Playwright cases passed. The browser runs reported no relevant unexpected console or network errors. The build retained the existing large-chunk warning.
+- The dependency audit passed its existing high-severity gate; four moderate findings remain in the existing Vitest/Undici dependency tree. No dependency or CI threshold was changed for P1.
+- The first full server run lacked the existing recovery tests' DB admin credentials; after configuring those only on the disposable instance, 2,304 tests passed but global branch coverage was 82.84%. Added P1 inquiry/projection boundary assertions, then reran the complete unchanged 83% gate to the passing result above. Neither failure was treated as a pass.
+
+The current-candidate capacity rerun used exactly 100,000 SKUs, 500,000 Stock buckets and 2,000,000 Movements on MySQL 26.7.0; seed time was 42,773 ms. Twenty workers each completed five rounds. All five large-table EXPLAIN plans used the expected indexes. The p95 values in milliseconds were exact SKU 12.637, exact barcode 1.470, stock summary 1.597, bucket drill-down 3.697 and recent Warehouse Movement 9.689; all were below the approved 2,000 ms ceiling. Same-source competition left one operation and one Movement; injected lock timeout left no partial effect. The test passed 1/1.
+
+A read-only post-run Receipt → Stock → Movement check resolved `same-source` to one Movement of quantity 1, one group leg and Warehouse/SKU On Hand 101 with Movement `balanceAfter` 101. The exact seven test-owned schemas were dropped and confirmed absent; the private port 3331 listener and socket were stopped. No shared or production database was accessed. These remain developer checks, not PR CI, Sam's independent review, formal Technical Acceptance or UAT.
