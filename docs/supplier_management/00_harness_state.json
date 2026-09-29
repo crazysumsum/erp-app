@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 248,
+  "revision": 249,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-041",
   "baseline": {
@@ -3855,8 +3855,8 @@
         "HD-039",
         "server/src/framework/configuration/applicationConfiguration.js"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: 'a' - extend the overlap check to Item's mediaDirectory and importDirectory. Implemented in applicationConfiguration.js (already within APPROVAL-HD-039-SCOPE; this answer authorises the extra reads of Item config); two mutants killed."
     }
   ],
   "external_actions": [
@@ -4933,5 +4933,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-041 on PR #162: REV-059 CHANGES_REQUESTED (0 critical, 0 high, 2 medium). M-1, M-2, L-1..L-4, L-7..L-9 and I-5 are remediated on the branch; L-5, L-6, the rest of L-7 and I-6 are carried to T42/T43/T44/T45/T48 in implementation/62_task_041_carry_forward.md. BLOCKED on HD-040 (whether the overlap check also covers Item's media and import directories). Then REV-060, green CI and the Product Owner's word before merge. Carried: DEF-023 (accepted; reassess in T43 before CSV import), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-041 on PR #162: REV-059 CHANGES_REQUESTED (0 critical, 0 high, 2 medium). M-1, M-2, L-1..L-4, L-7..L-9 and I-5 are remediated on the branch; L-5, L-6, the rest of L-7 and I-6 are carried to T42/T43/T44/T45/T48 in implementation/62_task_041_carry_forward.md. HD-040 answered (a) and implemented. Next: REV-060, green CI and the Product Owner's word before merge. Carried: DEF-023 (accepted; reassess in T43 before CSV import), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
