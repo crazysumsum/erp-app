@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 250,
+  "revision": 251,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,9 +11,9 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
-    "source_fingerprint": "ff3b74d4e69c4ec3e8e1cdf3785e9c6bef7b56e826b09e77b8a4d6a31aa326fb",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/task-041",
+    "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
+    "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t41-close",
     "default_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
@@ -68,7 +68,7 @@
     "TASK-038": "PENDING",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
-    "TASK-041": "IN_PROGRESS",
+    "TASK-041": "DONE",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
@@ -3310,6 +3310,17 @@
       "source_ref": "docs/supplier_management/testing/02_technical_test_report.md 'Current status'. Every §T37 acceptance criterion and Verification bullet PASS; CSV NOT_APPLICABLE (no export until T47). Code evidence: main CI run 36399059980 green on 761c0bd; 4178366 differs only in docs, confirmed by an identical source fingerprint. TC-133 was never TASK-037's in 08_traceability.json (TASK-051 only); the readiness report's inclusion was the agent's error and carries a correction note. Not business acceptance of SUP-CAP-03, not release approval.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-09-28T09:22:26Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-041 merged to main; required CI green on the merge commit",
+      "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
+      "status": "PASS",
+      "source_ref": "PR #162 merged as 8009e899fa22249cf1752bfc20db5f4fcd276a3c on the Product Owner's word, after head db2d8f7's CI run 36516957862 was green on all five checks and origin/main was unchanged at 894cdc6. Main CI run 36517757981 green on the merge commit across all five required checks. Reviews: REV-059 CHANGES_REQUESTED, REV-060 APPROVED. Obligations carried to TASK-042/043/044/045/048 as HD-041..HD-044 and implementation/62_task_041_carry_forward.md. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-29T03:44:56Z"
     }
   ],
   "pending_decisions": [
@@ -4990,5 +5001,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-041 on PR #162: REV-060 APPROVED 00532a5 (0 critical, 0 high, 0 medium). After the approval: REV-060 L-12 (tempRoot pinned), I-10 (a no-op resolve removed), I-11, I-12 and L-11 (carry-forward rows) and L-10 (HD-041..HD-044, one open MINOR record per receiving task). Next: green CI on the final head and the Product Owner's word before merge. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-041 is DONE (merged at 8009e89, main CI green). PHASE-004 continues; by dependencies the next ready task should be re-derived from 08_traceability.json against this ledger before starting. Open carry-forward: HD-041..HD-044 (TASK-042/043/044/045/048). Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
