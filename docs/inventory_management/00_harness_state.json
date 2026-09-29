@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 149,
+  "revision": 150,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-003",
   "current_task": "TASK-023",
   "baseline": {
     "design": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
     "plan": "6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd",
-    "code_commit": "dd7832b069f580f095a660de44ee826f69dcb143",
+    "code_commit": "f9f65e8ce1709090891bd44b8586d4a31df24977",
     "source_fingerprint": "04e21cad1c061ec56304e130178d207b162d2f8ccdaa8c9dcdff9fd66d20abdc",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",
@@ -1283,6 +1283,63 @@
         "docs/inventory_management/evidence/20260929T065027-f5a806ad9f7b/**"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-059",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-057 independently reaffirming exact Inventory DESIGN b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
+      "recorded_at": "2026-09-29T07:46:45Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
+      "code_commit": "f9f65e8ce1709090891bd44b8586d4a31df24977",
+      "scope": [
+        "inventory-management",
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-060",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-057 approving combined P2 PLAN 6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd for local TASK-023–025 work only",
+      "recorded_at": "2026-09-29T07:46:45Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd",
+      "code_commit": "f9f65e8ce1709090891bd44b8586d4a31df24977",
+      "scope": [
+        "inventory-management",
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "no P2 CI, push, PR, merge, formal acceptance or release approval"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-061",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-057 reauthorizing the existing P2 shared migration 0061 path under exact combined PLAN",
+      "recorded_at": "2026-09-29T07:46:45Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd",
+      "code_commit": "f9f65e8ce1709090891bd44b8586d4a31df24977",
+      "scope": [
+        "server/database/migrations/0061_create_inventory_reservations.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1701,6 +1758,18 @@
       "reviewer": "Sam (ERP Product Owner and independent P1 PR reviewer)",
       "reviewed_baseline": "d3c934c71b3f369a98c3a884665c96c626fb8d4b5d115b1cde5309528c6c673a",
       "source_ref": "Active Codex task user messages 已審閱並批准合併 and 批准新 head，CI 全綠後合併 on 2026-09-29 for PR #164 P1 diff, including 03_design_spec.md, at e46e607; no detailed findings were supplied",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-041",
+      "method": "HUMAN",
+      "author": "/root P2 design and plan reconciliation author",
+      "reviewer": "Sam (ERP Product Owner and independent reviewer)",
+      "reviewed_baseline": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-057 after request to review exact DESIGN and P2 task plan; no detailed findings were supplied",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3085,8 +3154,8 @@
         "TC-004",
         "TC-005"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 批准 on 2026-09-29 to the detailed exact-baseline HD-057 request; approves local TASK-023–025 continuation only"
     }
   ],
   "external_actions": [
@@ -3930,5 +3999,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "P2 branch now includes merged P1 main at dd7832b; no P2 publication occurred. Await HD-057: Sam's independent review/reaffirmation of DESIGN b4c9ed31, approval of combined PLAN 6c0ea255 and migration 0061 scope. Only then begin TASK-023 through TASK-025. P2 CI/push/PR/merge remain separate gates."
+  "next_safe_action": "Verify PLAN_READY and module boundary under APR-059/060/061, then implement TASK-023 through TASK-025 locally in thin tested increments. P2 developer suite command must be aligned and reapproved before final developer gate; CI, push, PR, merge and formal acceptance remain separate decisions."
 }
