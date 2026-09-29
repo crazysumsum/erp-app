@@ -117,6 +117,29 @@ describe("inventory service", () => {
     });
   });
 
+  it("forwards Allocation create, release and reallocate intents without changing selected buckets", async () => {
+    const source = { module: "FULFILLMENT", documentType: "SHIPMENT", documentId: "S-1", eventId: "change-1" };
+    const allocations = [{ balanceId: 4, expectedVersion: 2, quantity: 3 }];
+    const releases = [{ allocationId: 8, expectedVersion: 1, quantity: 3 }];
+    await inventoryService.createAllocation(7, { source, version: 5, allocations, idempotencyKey: "allocate-1" });
+    await inventoryService.releaseAllocation(7, { source, version: 6, releases, idempotencyKey: "release-1" });
+    await inventoryService.reallocateAllocation(7, {
+      source, version: 7, releases, allocations, overrideReason: "FIFO choice", idempotencyKey: "reallocate-1"
+    });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/inventory/reservations/7/allocations/create", {
+        idempotent: true, idempotencyKey: "allocate-1", body: { source, version: 5, allocations }
+      }],
+      ["/api/v1/inventory/reservations/7/allocations/release", {
+        idempotent: true, idempotencyKey: "release-1", body: { source, version: 6, releases }
+      }],
+      ["/api/v1/inventory/reservations/7/allocations/reallocate", {
+        idempotent: true, idempotencyKey: "reallocate-1",
+        body: { source, version: 7, releases, allocations, overrideReason: "FIFO choice" }
+      }]
+    ]);
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);

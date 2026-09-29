@@ -46,5 +46,8 @@ export default {
     return httpClient.get(`/api/v1/inventory/reservations/${id}/allocation-candidates`, {
       params: { requestedQuantity, page }, signal
     });
-  }
+  },
+  createAllocation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/allocations/create`, payload); },
+  releaseAllocation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/allocations/release`, payload); },
+  reallocateAllocation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/allocations/reallocate`, payload); }
 };
