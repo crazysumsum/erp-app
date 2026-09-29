@@ -1,3 +1,4 @@
+import path from "node:path";
 import { getHeapStatistics } from "node:v8";
 import applicationConfig from "../../../config/application.js";
 import customerConfig from "../../../config/customer.js";
@@ -143,6 +144,7 @@ function crossSectionChecks(normalized, details, { heapLimitBytes }) {
   checkLogQueueBudget(logging, heapLimitBytes, details);
   checkRevocationRefreshScheduled(scheduler, details);
   checkSharedBankKeyRings(customer, supplier, details);
+  checkSupplierImportRoot(customer, supplier, details);
 
   if (application && customer?.attachment && customer.attachment.orphanGraceMs <= application.requestTimeoutMs) {
     details.push({
@@ -246,6 +248,27 @@ function sameKeyGroup(left, right) {
   return ids.length === Object.keys(right.keyRing).length && ids.every((id) =>
     Object.hasOwn(right.keyRing, id) && revealSecret(left.keyRing[id]) === revealSecret(right.keyRing[id])
   );
+}
+
+/**
+ * Supplier import root 唔可以同 Customer 嘅 import 或附件目錄互相包含：兩邊嘅清理
+ * job 都會刪自己 root 入面過期嘅檔，重疊就會刪到對方嘅檔。
+ */
+function checkSupplierImportRoot(customer, supplier, details) {
+  const root = supplier?.import?.root;
+  if (!root) return;
+  const others = [customer?.import?.root, customer?.attachment?.generalRoot,
+    customer?.attachment?.bankSensitiveRoot, customer?.attachment?.tempRoot].filter(Boolean);
+  const inside = (parent, child) => {
+    const relative = path.relative(parent, child);
+    return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+  };
+  if (others.some((other) => inside(other, root) || inside(root, other))) {
+    details.push({
+      section: "supplier",
+      message: "import.root must not contain, or sit inside, a Customer import or attachment root"
+    });
+  }
 }
 
 function checkSharedBankKeyRings(customer, supplier, details) {

@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
   revealSecret,
   secretValue
@@ -89,7 +91,14 @@ export function normalizeSupplierConfig(source = {}) {
   if (!importSource || typeof importSource !== "object" || Array.isArray(importSource)) {
     throw new TypeError('Supplier config "import" must be an object');
   }
+  // 受控 root（設計 §12.4：cleanup 只掃呢個 root）。冇就係 import 未部署，唔阻開機；
+  // 有就要係絕對路徑，相對路徑會跟住 process 嘅 cwd 走。
+  const root = String(importSource.root ?? "").trim();
+  if (root && !path.isAbsolute(root)) {
+    throw new Error('Supplier config "import.root" must be an absolute path');
+  }
   const importConfig = Object.freeze({
+    root: root ? path.resolve(root) : null,
     maxFileBytes: positiveInteger(importSource.maxFileBytes ?? 10_485_760, "import.maxFileBytes", MAX_FILE_BYTES),
     maxRows: positiveInteger(importSource.maxRows ?? 10_000, "import.maxRows", MAX_IMPORT_ROWS),
     fileRetentionDays: positiveInteger(importSource.fileRetentionDays ?? 365, "import.fileRetentionDays", MAX_RETENTION_DAYS)
