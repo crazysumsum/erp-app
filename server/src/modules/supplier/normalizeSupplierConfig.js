@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
   revealSecret,
   secretValue
@@ -89,7 +91,18 @@ export function normalizeSupplierConfig(source = {}) {
   if (!importSource || typeof importSource !== "object" || Array.isArray(importSource)) {
     throw new TypeError('Supplier config "import" must be an object');
   }
+  // 受控 root（設計 §12.4：cleanup 只掃呢個 root）。冇就係 import 未部署，唔阻開機；
+  // 有就要係絕對路徑，相對路徑會跟住 process 嘅 cwd 走。
+  const root = String(importSource.root ?? "").trim();
+  if (root && !path.isAbsolute(root)) {
+    throw new Error('Supplier config "import.root" must be an absolute path');
+  }
+  // `/` 做 root 即係清理 job 會掃成部機嘅 /source、/result（REV-059 L-7）。
+  if (root && path.resolve(root) === path.parse(path.resolve(root)).root) {
+    throw new Error('Supplier config "import.root" must not be a filesystem root');
+  }
   const importConfig = Object.freeze({
+    root: root ? path.resolve(root) : null,
     maxFileBytes: positiveInteger(importSource.maxFileBytes ?? 10_485_760, "import.maxFileBytes", MAX_FILE_BYTES),
     maxRows: positiveInteger(importSource.maxRows ?? 10_000, "import.maxRows", MAX_IMPORT_ROWS),
     fileRetentionDays: positiveInteger(importSource.fileRetentionDays ?? 365, "import.fileRetentionDays", MAX_RETENTION_DAYS)
