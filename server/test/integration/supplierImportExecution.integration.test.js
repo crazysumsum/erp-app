@@ -178,7 +178,8 @@ integrationTest("TASK-042: the two migrations converge on rerun and refuse a han
     await h.db.query(`ALTER TABLE \`${jobProbe}\` ${undo}`);
   }
   await h.db.query(`ALTER TABLE \`${jobProbe}\` ADD CONSTRAINT chk_${jobProbe} CHECK (status <> 'cancelled')`);
-  await assert.rejects(() => inspectSupplierImportJobSchema(runner, { table: jobProbe }), /(CHECK constraints|foreign keys)/u);
+  await assert.rejects(() => inspectSupplierImportJobSchema(runner, { table: jobProbe }), /CHECK constraints/u,
+    "an extra CHECK on jobs (checked before the FKs, so the FK-less probe can reach it)");
 
   await h.db.query(`ALTER TABLE \`${probe}\` DROP FOREIGN KEY fk_${probe}`);
   await h.db.query(`ALTER TABLE \`${probe}\` ADD CONSTRAINT fk_${probe} FOREIGN KEY (job_id) REFERENCES supplier_import_jobs (id) ON DELETE RESTRICT`);

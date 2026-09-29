@@ -118,6 +118,13 @@ export async function inspectSupplierImportJobSchema(connection, { table = "supp
     if (!found || found.unique !== unique || found.columns.join(",") !== covered) throw incompatible(`index ${name}`);
   }
 
+  const [checks] = await connection.query(
+    `SELECT constraint_name AS constraint_name FROM information_schema.table_constraints
+      WHERE constraint_schema = DATABASE() AND table_name = ? AND constraint_type = 'CHECK'`,
+    [table]
+  );
+  if (checks.length > 0) throw incompatible("the table carries CHECK constraints the contract does not define");
+
   const [foreignKeys] = await connection.query(
     `SELECT rc.constraint_name AS constraint_name, kcu.column_name AS column_name,
             rc.referenced_table_name AS referenced_table_name, rc.delete_rule AS delete_rule
@@ -137,13 +144,6 @@ export async function inspectSupplierImportJobSchema(connection, { table = "supp
       throw incompatible(`foreign key ${value(row, "constraint_name", "CONSTRAINT_NAME")}`);
     }
   }
-
-  const [checks] = await connection.query(
-    `SELECT constraint_name AS constraint_name FROM information_schema.table_constraints
-      WHERE constraint_schema = DATABASE() AND table_name = ? AND constraint_type = 'CHECK'`,
-    [table]
-  );
-  if (checks.length > 0) throw incompatible("the table carries CHECK constraints the contract does not define");
 
   const [triggers] = await connection.query(
     `SELECT trigger_name AS trigger_name FROM information_schema.triggers
