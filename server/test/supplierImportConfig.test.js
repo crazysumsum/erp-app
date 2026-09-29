@@ -64,7 +64,7 @@ test("the Supplier import root may not overlap a Customer import or attachment r
     supplier: { ...source.supplier, bankEncryption, bankLookup, import: { root: supplierRoot } }
   });
   assert.doesNotThrow(() => withAttachments("/srv/supplier-imports"));
-  for (const root of ["/srv/att/general/supplier", "/srv/att/bank", "/srv/att"]) {
+  for (const root of ["/srv/att/general/supplier", "/srv/att/bank", "/srv/att/temp/supplier", "/srv/att"]) {
     assert.throws(() => withAttachments(root), /import.root must not contain, or sit inside, a Customer/u, root);
   }
 });

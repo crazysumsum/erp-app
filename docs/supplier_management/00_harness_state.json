@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 249,
+  "revision": 250,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1511,6 +1511,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/61_rev_059_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-060",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-041 REV-059 remediation, HD-040)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 00532a5016773a6929ee427b9476c3f2b5722453 (PR #162)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/63_rev_060_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -3857,6 +3869,51 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-09-29: 'a' - extend the overlap check to Item's mediaDirectory and importDirectory. Implemented in applicationConfiguration.js (already within APPROVAL-HD-039-SCOPE; this answer authorises the extra reads of Item config); two mutants killed."
+    },
+    {
+      "id": "HD-041",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-042 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: require import.root at service registration; 0700 root and kind directories owned by the service user, refuse group/other-writable; realpath + dev/ino overlap check against Customer and Item roots; static jobs use SUPPLIER_IMPORT_JOB_NAMES; stored names and paths only via supplierImportFiles.js.",
+      "affected_ids": [
+        "TASK-042",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-042",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-043 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: reassess DEF-023 before CSV import accepts account-like columns; review confirms every CSV read/write uses csv-parse / csv-stringify (the split test is only a tripwire).",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-043",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-044, TASK-045 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: stored names come from the job row, never the request; refuse nlink > 1 before serving a file.",
+      "affected_ids": [
+        "TASK-044",
+        "TASK-045",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-044",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-048 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: purge job uses SUPPLIER_IMPORT_JOB_NAMES.purge; re-verify directory dev/ino and file isFile/dev/nlink immediately before each unlink; retry failed deletes next run.",
+      "affected_ids": [
+        "TASK-048",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4933,5 +4990,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-041 on PR #162: REV-059 CHANGES_REQUESTED (0 critical, 0 high, 2 medium). M-1, M-2, L-1..L-4, L-7..L-9 and I-5 are remediated on the branch; L-5, L-6, the rest of L-7 and I-6 are carried to T42/T43/T44/T45/T48 in implementation/62_task_041_carry_forward.md. HD-040 answered (a) and implemented. Next: REV-060, green CI and the Product Owner's word before merge. Carried: DEF-023 (accepted; reassess in T43 before CSV import), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-041 on PR #162: REV-060 APPROVED 00532a5 (0 critical, 0 high, 0 medium). After the approval: REV-060 L-12 (tempRoot pinned), I-10 (a no-op resolve removed), I-11, I-12 and L-11 (carry-forward rows) and L-10 (HD-041..HD-044, one open MINOR record per receiving task). Next: green CI on the final head and the Product Owner's word before merge. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
