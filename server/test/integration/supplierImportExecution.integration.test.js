@@ -5,6 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { ApplicationError } from "../../src/framework/errors/ApplicationError.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
 import { inspectSupplierImportJobSchema, up as createJobs } from "../../database/migrations/0061_create_supplier_import_jobs.js";
 import { inspectSupplierImportRowSchema, up as createRows } from "../../database/migrations/0062_create_supplier_import_rows.js";
@@ -83,7 +84,7 @@ async function rows(jobId) {
 }
 
 /** 一個真嘅 applyRow：喺收到嘅 connection 上面寫 Supplier 同 audit，好似 T45 會做嘅咁。 */
-function writeSupplier({ failAfterWrite = false, returnId = true } = {}) {
+function writeSupplier({ failAfterWrite = false, returnId = true, stealRow = false } = {}) {
   return async (connection, { job, row }) => {
     const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
     const tag = randomUUID().slice(0, 8);
@@ -97,7 +98,16 @@ function writeSupplier({ failAfterWrite = false, returnId = true } = {}) {
       `INSERT INTO supplier_audit_logs (occurred_at, actor_username, action, target_type, target_id, supplier_id,
          target_label, reason, detail, request_id, ip) VALUES (?, 'import', 'supplier.create', 'supplier', ?, ?, ?, '', ?, '', '')`,
       [clock, supplierId, supplierId, `IMP-${tag}`, JSON.stringify({ jobId: Number(job.id), row: Number(row.row_number) })]);
-    if (failAfterWrite) throw Object.assign(new Error(`secret CSV value IMP-${tag} leaked into a message`), { code: "BOOM" });
+    // 一個 domain 錯誤：內部 message 帶住資料，對外 code／message 冇 —— 好似 Supplier 驗證失敗咁。
+    if (failAfterWrite) {
+      throw new ApplicationError(`secret CSV value IMP-${tag} leaked into a message`,
+        { code: "SUPPLIER_DUPLICATE", statusCode: 409, publicMessage: "供應商重覆" });
+    }
+    // 喺 marker 寫之前令佢寫唔到：證明 marker 同 Supplier 喺同一個 transaction。
+    if (stealRow) {
+      await connection.execute("UPDATE supplier_import_rows SET status = 'skipped' WHERE job_id = ? AND `row_number` = ?",
+        [job.id, row.row_number]);
+    }
     return returnId ? supplierId : 0;
   };
 }
@@ -130,6 +140,19 @@ integrationTest("TASK-042: the two migrations converge on rerun and refuse a han
   assert.equal(await inspectSupplierImportRowSchema(runner, { table: probe }), true, "control: with the check restored it passes");
   await h.db.query(`ALTER TABLE \`${probe}\` MODIFY status VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`);
   await assert.rejects(() => inspectSupplierImportRowSchema(runner, { table: probe }), /column status/u);
+  await h.db.query(`ALTER TABLE \`${probe}\` MODIFY status VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`);
+  await h.db.query(`ALTER TABLE \`${probe}\` DROP FOREIGN KEY fk_${probe}`);
+  await h.db.query(`ALTER TABLE \`${probe}\` ADD CONSTRAINT fk_${probe} FOREIGN KEY (job_id) REFERENCES supplier_import_jobs (id) ON DELETE CASCADE`);
+  await assert.rejects(() => inspectSupplierImportRowSchema(runner, { table: probe }), /ON DELETE RESTRICT/u,
+    "rows that would vanish with their job are refused");
+
+  // Jobs：`LIKE` 唔抄 FK，所以對照組要啱啱好死喺 FK 嗰步；改一個欄位類型就要早過佢死。
+  const jobProbe = `sijp_${randomUUID().slice(0, 8)}`;
+  t.after(() => h.db.query(`DROP TABLE IF EXISTS \`${jobProbe}\``));
+  await h.db.query(`CREATE TABLE \`${jobProbe}\` LIKE supplier_import_jobs`);
+  await assert.rejects(() => inspectSupplierImportJobSchema(runner, { table: jobProbe }), /foreign keys/u, "control");
+  await h.db.query(`ALTER TABLE \`${jobProbe}\` MODIFY source_sha256 BINARY(16) NOT NULL`);
+  await assert.rejects(() => inspectSupplierImportJobSchema(runner, { table: jobProbe }), /column source_sha256/u);
 });
 
 integrationTest("TASK-042: the database itself enforces the applied marker and keeps rows when a job is deleted", async () => {
@@ -167,7 +190,7 @@ integrationTest("TASK-042: a worker claims only queued or lease-expired jobs, ol
 integrationTest("TASK-042: a row's Supplier, audit and applied marker commit together, or none of them does", async () => {
   clock += 1_000_000;
   await quiesce();
-  const jobId = await seedJob({ rows: ["valid", "valid", "warning"] });
+  const jobId = await seedJob({ rows: ["valid", "valid", "warning", "valid"] });
   const importer = service();
   await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
 
@@ -186,7 +209,14 @@ integrationTest("TASK-042: a row's Supplier, audit and applied marker commit tog
   assert.equal(Number(orphanAudit.n), 0, "and so did its audit");
   const [, second] = await rows(jobId);
   assert.equal(second.applied_supplier_id, null);
-  assert.ok(!JSON.stringify(second.errors).includes("secret CSV value"), "a row error never carries the thrown message");
+  assert.deepEqual(second.errors, [{ code: "SUPPLIER_DUPLICATE", message: "供應商重覆" }],
+    "a row error keeps the public code and message, never the internal one");
+
+  // Supplier 寫咗，但 marker 寫唔到：成個 transaction rollback，Supplier 唔可以留低。
+  const stolen = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000,
+    applyRow: writeSupplier({ stealRow: true }) });
+  assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, "no Supplier survives a marker that could not be written");
+  assert.equal(stolen.status, "failed", "the row went back to pending with the rollback and is then marked failed");
 
   const noId = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000,
     applyRow: writeSupplier({ returnId: false }) });
@@ -196,7 +226,7 @@ integrationTest("TASK-042: a row's Supplier, audit and applied marker commit tog
 
   assert.equal(await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() }), null);
   const done = await importer.finalizeExecution({ jobId, leaseOwner: "me" });
-  assert.deepEqual([done.status, done.applied, done.failed, done.skipped], ["completed_with_errors", 1, 2, 0]);
+  assert.deepEqual([done.status, done.applied, done.failed, done.skipped], ["completed_with_errors", 1, 3, 0]);
 });
 
 integrationTest("TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires", async () => {
