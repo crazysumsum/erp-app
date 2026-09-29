@@ -1,11 +1,11 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 247,
+  "revision": 248,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
   "current_task": "TASK-041",
   "baseline": {
@@ -13,9 +13,9 @@
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
     "source_fingerprint": "ff3b74d4e69c4ec3e8e1cdf3785e9c6bef7b56e826b09e77b8a4d6a31aa326fb",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/def-close",
-    "default_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
-    "mode_entry_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424"
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/task-041",
+    "default_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953",
+    "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
@@ -1499,6 +1499,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/60_rev_058_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-059",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-041)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 843ac5788e06ebe9fb44bb3cfc6bb839e44915c0 (PR #162)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/61_rev_059_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -3832,7 +3844,19 @@
         "server/src/framework/configuration/applicationConfiguration.js"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-09-29: 'A批準，B，C按你的建議' - A approved; B option (1); C yes. server/config/scheduler.js was proposed as unchanged and is not touched; server/package.json and package-lock.json are not touched because csv-parse and csv-stringify were already locked."
+      "answer_ref": "Product Owner, 2026-09-29: 'A批準，B，C按你的建議' - A approved; B option (1); C yes. server/config/scheduler.js was proposed as unchanged and is not touched; server/package.json and package-lock.json are not touched because csv-parse and csv-stringify were already locked. The recommendations the answer refers to, as presented in chat: B option (1) - unset root means import is not deployed, startup not blocked, required when T42 registers import services; C yes - refuse startup when the Supplier import root contains or sits inside a Customer import or attachment root. (Added at revision 248 after REV-059 I-5.)"
+    },
+    {
+      "id": "HD-040",
+      "impact": "MAJOR",
+      "question": "REV-059 I-1: the startup overlap check (HD-039 C) covers Customer import and attachment roots only. Item's mediaDirectory and importDirectory are not checked; ITEM_MEDIA_DIRECTORY=<supplier root>/source is accepted, and by reading ItemMediaCleanupJob deletes unreferenced files older than a day in that directory, which would delete Supplier import sources. Extend the check to Item's two directories (again touching applicationConfiguration.js, reading Item config only)?",
+      "affected_ids": [
+        "TASK-041",
+        "HD-039",
+        "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4331,6 +4355,14 @@
       "idempotency_key": "mode-change-247",
       "status": "CONFIRMED",
       "source_ref": "Product Owner, 2026-09-29: '可以開始' for TASK-041 (PHASE-004), after TASK-037 closed PHASE-003. Written directly, not through state_tool checkpoint: the tool's transition table has no VERIFYING -> IMPLEMENTING edge even with a mode-change reference, while references/19-state-and-recovery.md says a new material change re-enters the required stage with explicit mode authorization. This revision carries the same mode-change record the tool appends."
+    },
+    {
+      "id": "MODE-CHANGE-248",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-248",
+      "status": "CONFIRMED",
+      "source_ref": "Baseline correction (REV-059 L-8): IMPLEMENT for TASK-041 was entered from main 894cdc62f54dc3ea27efabfad8db5f14510fa953 on the Product Owner's '可以開始' (MODE-CHANGE-247); default_commit and mode_entry_commit now record that"
     }
   ],
   "evidence_files": [
@@ -4901,5 +4933,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-041 implemented on claude/supplier-task-041 (commit 805423e9103e2992e538cec67a0261a429402dd4): unit and config tests pass, 11 mutants killed, npm audit and lint clean. Next: PR, green CI, an independent review, and the Product Owner's word before merge."
+  "next_safe_action": "TASK-041 on PR #162: REV-059 CHANGES_REQUESTED (0 critical, 0 high, 2 medium). M-1, M-2, L-1..L-4, L-7..L-9 and I-5 are remediated on the branch; L-5, L-6, the rest of L-7 and I-6 are carried to T42/T43/T44/T45/T48 in implementation/62_task_041_carry_forward.md. BLOCKED on HD-040 (whether the overlap check also covers Item's media and import directories). Then REV-060, green CI and the Product Owner's word before merge. Carried: DEF-023 (accepted; reassess in T43 before CSV import), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }

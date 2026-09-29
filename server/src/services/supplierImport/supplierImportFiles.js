@@ -44,7 +44,7 @@ async function realDirectory(directory, lstatFn) {
  * 一律跳過 —— `Dirent.isFile()` 對 symlink 係 false，所以唔會跟過去。目錄未建立就係冇檔。
  *
  * 只係一份清單：刪除之前要再驗一次目錄同檔案，因為列完到刪之間目錄可以被換成 symlink
- * （REV-059 L-6，T48 嘅責任，見 implementation/61_task_041_carry_forward.md）。
+ * （REV-059 L-6，T48 嘅責任，見 implementation/62_task_041_carry_forward.md）。
  * `lstat` 可以注入，等測試做到「唔同 filesystem」而唔使 mount 碟。
  */
 export async function listSupplierImportFiles(root, kind, { lstat: lstatFn = lstat } = {}) {

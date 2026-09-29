@@ -126,7 +126,7 @@ test("listing for cleanup never follows a symlink or leaves the root", async (t)
 });
 
 // 只證到三個名唔同、合法。分開控制要等 T42／T48 嘅 service 真係用呢三個名宣告 job
-// （REV-059 M-1，見 implementation/61_task_041_carry_forward.md）。
+// （REV-059 M-1，見 implementation/62_task_041_carry_forward.md）。
 test("precheck, worker and purge have three distinct, valid job names", () => {
   const names = Object.values(SUPPLIER_IMPORT_JOB_NAMES);
   assert.equal(new Set(names).size, 3);
