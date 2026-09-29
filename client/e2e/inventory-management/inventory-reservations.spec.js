@@ -21,8 +21,8 @@ const CANDIDATES = {
   ]
 };
 
-async function installApi(page, { permissions = ["inventory.view", "inventory.operation", "inventory.fefo.override"], candidateMode = "normal" } = {}) {
-  const state = { calls: [], unexpected: [], errors: [], conflictOnce: true, candidateReads: 0 };
+async function installApi(page, { permissions = ["inventory.view", "inventory.operation", "inventory.fefo.override"], candidateMode = "normal", conflictOnce = true } = {}) {
+  const state = { calls: [], unexpected: [], errors: [], conflictOnce, candidateReads: 0 };
   page.on("pageerror", (error) => state.errors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") state.errors.push(message.text()); });
   page.on("requestfailed", (request) => state.errors.push(`${request.method()} ${request.url()}: ${request.failure()?.errorText}`));
@@ -131,6 +131,25 @@ test("TASK-024 @technical no FEFO override permission blocks sequence deviation 
   await expect(page.getByText(/需要 FEFO 偏離權限/)).toBeVisible();
   await expect(page.getByRole("button", { name: "建立分配" })).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  expect(state.errors).toEqual([]);
+});
+
+test("TASK-024 @technical FEFO override requires an authorized reason", async ({ page }) => {
+  const state = await installApi(page, { conflictOnce: false });
+  await page.goto("/inventory/reservations");
+  await page.getByRole("button", { name: "查看預留 17 詳情" }).click();
+  await page.getByRole("button", { name: "分配庫存" }).click();
+  await page.getByLabel("分配數量").fill("1");
+  await page.getByRole("button", { name: "載入候選" }).click();
+  await page.getByLabel("庫位 32 分配數量").fill("1");
+  await expect(page.getByLabel("偏離原因")).toBeVisible();
+  await expect(page.getByRole("button", { name: "建立分配" })).toBeDisabled();
+  await page.getByLabel("偏離原因").fill("客戶要求較晚到期批次");
+  await page.getByRole("button", { name: "建立分配" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+  const command = state.calls.find((call) => call.path.endsWith("/allocations/create"));
+  expect(command.body.overrideReason).toBe("客戶要求較晚到期批次");
+  expect(state.unexpected).toEqual([]);
   expect(state.errors).toEqual([]);
 });
 
