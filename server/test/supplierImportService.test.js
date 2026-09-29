@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   assertJobTransition,
+  assertRowStatement,
   countsFromRows,
   IMPORT_JOB_STATUSES,
   IMPORT_JOB_TRANSITIONS,
@@ -46,4 +47,20 @@ test("the execution API refuses malformed input before touching the database", a
   await assert.rejects(() => importer.processNextRow({ jobId: 0, leaseOwner: "w", leaseDurationMs: 1, applyRow() {} }), TypeError);
   await assert.rejects(() => importer.finalizeExecution({ jobId: 1, leaseOwner: "" }), TypeError);
   assert.throws(() => new SupplierImportService({ database }), TypeError);
+});
+
+test("applyRow's connection admits data statements only, however a control statement is spelled (REV-062 M-4)", () => {
+  for (const sql of ["/* x */ COMMIT", "-- x\nCOMMIT", "# x\nCOMMIT", "/*!COMMIT*/", "START /*x*/ TRANSACTION", "commit",
+    "ROLLBACK", "SAVEPOINT a", "BEGIN", "XA START 'x'", "ANALYZE TABLE suppliers", "OPTIMIZE TABLE suppliers",
+    "CHECK TABLE suppliers", "FLUSH TABLES", "CALL p()", "PREPARE s FROM 'COMMIT'", "EXECUTE s", "DO 1",
+    "SET @@autocommit = 0", "SET foreign_key_checks = 0", "SET NAMES latin1", "SET SESSION sql_mode = ''",
+    "LOCK TABLES suppliers WRITE", "CREATE TABLE t (a INT)", "LOAD DATA INFILE 'x' INTO TABLE suppliers",
+    "SELECT 1 INTO OUTFILE '/tmp/x'", "SELECT /*!COMMIT*/ 1", "", undefined, { sql: "COMMIT" }]) {
+    assert.throws(() => assertRowStatement(sql), TypeError, JSON.stringify(sql));
+  }
+  for (const sql of ["SELECT id FROM suppliers WHERE id = ? FOR UPDATE", "SELECT 1 LOCK IN SHARE MODE",
+    "INSERT INTO t (release_date) VALUES (?)", "UPDATE t SET commit_hash = ?", "/* note */ SELECT 1",
+    "-- note\nDELETE FROM t WHERE id = ?", "WITH x AS (SELECT 1) SELECT * FROM x", "replace into t values (1)"]) {
+    assert.doesNotThrow(() => assertRowStatement(sql), sql);
+  }
 });

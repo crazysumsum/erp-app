@@ -88,17 +88,29 @@ function rowError(error) {
 }
 
 /**
- * 交俾 applyRow 嘅 connection：拒絕結束或者改變 transaction 嘅語句（REV-061 M-3）。一句
- * COMMIT 就會令 Supplier 喺 marker 之前落地 —— 正正係設計 §8.8 禁止嘅兩段式。
+ * 交俾 applyRow 嘅 connection 只准資料語句（REV-061 M-3，REV-062 M-4）。
+ *
+ * 白名單，唔係黑名單：黑名單版本俾註解（`/* x *\/ COMMIT`）、`/*!COMMIT*\/`、`CALL`、
+ * `PREPARE`/`EXECUTE`、`ANALYZE` 等等繞過咗，而 `SET @@autocommit = 0`、`SET foreign_key_checks`
+ * 仲會留喺 pool 嘅 connection 上面害到之後嘅 transaction。所以：剝走開頭嘅註解，第一個字一定要係
+ * SELECT／INSERT／UPDATE／DELETE／REPLACE／WITH；任何 `/*!`（MySQL 會執行嘅註解）同
+ * `INTO OUTFILE／DUMPFILE` 一律拒絕。
+ *
  * 呢個擋唔到 applyRow 另外開 `database.withTransaction`（第二條 connection）：現有嘅 Supplier
  * service method 全部都係咁，T45 一定要用收 connection 嘅 helper，見 carry-forward。
  */
-const TRANSACTION_CONTROL = /^\s*(commit|rollback|start\s+transaction|begin|savepoint|release|set\s+(session|global|autocommit)|create|alter|drop|truncate|rename|lock|unlock)\b/iu;
+const LEADING_COMMENTS = /^(?:\s+|\/\*(?!!)[\s\S]*?\*\/|--(?:[ \t][^\n]*)?(?:\n|$)|#[^\n]*(?:\n|$))*/u;
+const ROW_STATEMENT = /^(?:select|insert|update|delete|replace|with)\b/iu;
+export function assertRowStatement(sql) {
+  const text = typeof sql === "string" ? sql : "";
+  if (!ROW_STATEMENT.test(text.replace(LEADING_COMMENTS, "")) || text.includes("/*!") ||
+      /\binto\s+(?:outfile|dumpfile)\b/iu.test(text)) {
+    throw new TypeError("applyRow may only run SELECT, INSERT, UPDATE, DELETE, REPLACE or WITH on its connection");
+  }
+}
 function rowConnection(connection) {
   const guard = (method) => (sql, ...rest) => {
-    if (TRANSACTION_CONTROL.test(String(sql))) {
-      throw new TypeError("applyRow must not control the transaction it runs in");
-    }
+    assertRowStatement(sql);
     return connection[method](sql, ...rest);
   };
   return { query: guard("query"), execute: guard("execute") };
@@ -139,6 +151,9 @@ export class SupplierImportService {
             WHERE id = ?`,
           [nowMs, nowMs, job.id]
         );
+        // 最常見嘅原因係確認人個 user 俾人刪咗（confirmed_by 係 ON DELETE SET NULL）。留低記錄（REV-062 I-17）。
+        void this.logger?.error?.("supplier.import.not_confirmed", "Supplier import job has no confirmer and was failed",
+          { jobId: Number(job.id) });
         return null;
       }
       assertJobTransition(job.status, "running");
@@ -205,11 +220,6 @@ export class SupplierImportService {
     } catch (error) {
       // 未揀到列（lease 冇咗、job 唔見咗）就唔係「呢一列失敗」，照拋。
       if (rowNumber === null) throw error;
-      // 記低真正原因，但唔帶 message：佢可能有 CSV 或 SQL 值（REV-061 M-1）。
-      void this.logger?.error?.("supplier.import.failed", "Supplier import row failed", {
-        jobId, rowNumber, name: error?.name ?? "Error", code: error?.code ?? null,
-        causeCode: error?.cause?.code ?? null, publicCode: error?.publicCode ?? null
-      });
       return this.database.withTransaction(async (connection) => {
         const nowMs = this.time.nowMs();
         const [[job]] = await connection.query(
@@ -225,6 +235,14 @@ export class SupplierImportService {
           "UPDATE supplier_import_jobs SET lease_until = ?, updated_at = ? WHERE id = ? AND lease_owner = ?",
           [nowMs + leaseDurationMs, nowMs, jobId, leaseOwner]
         );
+        // 真係標咗先記：lease 冇咗嘅話上面已經拋出，嗰列留俾新 owner（REV-062 I-18）。記原因但唔帶
+        // message —— 佢可能有 CSV 或 SQL 值（REV-061 M-1）；causeName 分得出 TypeError 同守衛拒絕（L-6）。
+        if (marked.affectedRows === 1) {
+          void this.logger?.error?.("supplier.import.failed", "Supplier import row failed", {
+            jobId, rowNumber, name: error?.name ?? "Error", code: error?.code ?? null,
+            causeCode: error?.cause?.code ?? null, causeName: error?.cause?.name ?? null, publicCode: error?.publicCode ?? null
+          });
+        }
         return { rowNumber, status: marked.affectedRows === 1 ? "failed" : "unchanged", appliedSupplierId: null };
       });
     }

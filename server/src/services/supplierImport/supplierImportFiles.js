@@ -81,12 +81,16 @@ export async function prepareSupplierImportRoot(root, otherRoots = [],
   { uid = process.getuid?.(), lstat: lstatFn = lstat } = {}) {
   root = path.resolve(root);
   await mkdir(root, { recursive: true, mode: 0o700 });
-  // 上層目錄如果人人寫得入而又冇 sticky bit，其他 user 可以將 root 改名再換做自己嘅目錄或
-  // symlink（REV-061 L-4）。
-  const parentInfo = await lstatFn(path.dirname(root));
-  if (((parentInfo.mode & 0o022) !== 0 && (parentInfo.mode & 0o1000) === 0) ||
-      (uid !== undefined && parentInfo.uid !== uid && parentInfo.uid !== 0)) {
-    throw new Error("Supplier import root's parent directory must not be replaceable by other users");
+  // 任何一層上層目錄如果人人寫得入而又冇 sticky bit，或者屬於其他 user，就可以將下面嗰層改名
+  // 再換做自己嘅目錄或 symlink（REV-061 L-4）。用真實路徑逐層睇到 `/`：淨係睇直屬上層，一個
+  // symlink 上層或者 0777 嘅祖父目錄就過到（REV-062 L-7）。
+  for (let directory = path.dirname(await realpath(root)); ; directory = path.dirname(directory)) {
+    const info = await lstatFn(directory);
+    if (((info.mode & 0o022) !== 0 && (info.mode & 0o1000) === 0) ||
+        (uid !== undefined && info.uid !== uid && info.uid !== 0)) {
+      throw new Error(`Supplier import root's ancestor ${directory} must not be replaceable by other users`);
+    }
+    if (directory === path.dirname(directory)) break;
   }
   const rootInfo = await lstatFn(root);
   if (!rootInfo.isDirectory()) throw new Error("Supplier import root is not a regular directory");

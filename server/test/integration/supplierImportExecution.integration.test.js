@@ -189,6 +189,11 @@ integrationTest("TASK-042: the two migrations converge on rerun and refuse a han
   await h.db.query(`ALTER TABLE \`${probe}\` ADD UNIQUE KEY uq_probe_status (job_id, status)`);
   await assert.rejects(() => inspectSupplierImportRowSchema(runner, { table: probe }), /unexpected unique index/u);
   await h.db.query(`ALTER TABLE \`${probe}\` DROP INDEX uq_probe_status`);
+  const [[appliedCheck]] = await h.db.query(
+    "SELECT constraint_name AS name FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = ? AND constraint_type = 'CHECK'", [probe]);
+  await h.db.query(`ALTER TABLE \`${probe}\` ALTER CHECK \`${appliedCheck.name ?? appliedCheck.NAME}\` NOT ENFORCED`);
+  await assert.rejects(() => inspectSupplierImportRowSchema(runner, { table: probe }), /not enforced/u, "a CHECK that is not enforced");
+  await h.db.query(`ALTER TABLE \`${probe}\` ALTER CHECK \`${appliedCheck.name ?? appliedCheck.NAME}\` ENFORCED`);
   // 對照：改晒返之後又合格；然後加一個 trigger 就要拒絕。
   assert.equal(await inspectSupplierImportRowSchema(runner, { table: probe }), true, "control: the restored probe passes");
   // CREATE TRIGGER 要 admin（binlog 開住，erp_user 冇 SUPER）。跟 supplierBankRestore 嘅慣例：
@@ -328,10 +333,15 @@ integrationTest("TASK-042: job counts are rebuilt from rows, and a job with pend
 integrationTest("TASK-042: a queued job without a confirmer fails instead of jumping the queue, and a running job without a lease is resumable", async () => {
   clock += 1_000_000;
   await quiesce();
-  const unconfirmed = await seedJob({ confirmedBy: null, confirmedAt: null });
-  assert.equal(await service().claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 }), null);
-  const [[failed]] = await h.db.query("SELECT status, last_error_code FROM supplier_import_jobs WHERE id = ?", [unconfirmed]);
-  assert.deepEqual([failed.status, failed.last_error_code], ["failed", "SUPPLIER_IMPORT_NOT_CONFIRMED"]);
+  const logged = [];
+  for (const [label, missing] of [["no confirmer", { confirmedBy: null }], ["no confirmation time", { confirmedAt: null }]]) {
+    const unconfirmed = await seedJob(missing);
+    assert.equal(await service({ error: (...args) => logged.push(args) }).claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 }),
+      null, label);
+    const [[failed]] = await h.db.query("SELECT status, last_error_code FROM supplier_import_jobs WHERE id = ?", [unconfirmed]);
+    assert.deepEqual([failed.status, failed.last_error_code], ["failed", "SUPPLIER_IMPORT_NOT_CONFIRMED"], label);
+  }
+  assert.deepEqual(logged.map(([event]) => event), ["supplier.import.not_confirmed", "supplier.import.not_confirmed"]);
   const leaseless = await seedJob({ status: "running", leaseOwner: "gone", leaseUntil: null });
   assert.deepEqual(await service().claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 }), { id: leaseless, resumed: true });
 });
@@ -383,21 +393,28 @@ integrationTest("TASK-042: a worker that loses its lease while a row fails leave
 integrationTest("TASK-042: a failure that is not a domain error is stored as the fixed Supplier pair and logged once, without its message", async () => {
   clock += 1_000_000;
   await quiesce();
-  const jobId = await seedJob({ rows: ["valid", "valid"] });
+  const jobId = await seedJob({ rows: ["valid", "valid", "valid"] });
   const logged = [];
   const importer = service({ error: (...args) => logged.push(args) });
   await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
   const typeError = async () => { throw new TypeError("secret CSV value in a type error"); };
   const badSql = async (connection) => { await connection.query("SELECT secret_column FROM no_such_table_t42"); };
-  for (const applyRow of [typeError, badSql]) {
+  const unavailable = async () => {
+    throw new ApplicationError("secret pool detail", { code: "DATABASE_POOL_EXHAUSTED", statusCode: 503, publicCode: "SERVICE_UNAVAILABLE" });
+  };
+  for (const applyRow of [typeError, badSql, unavailable]) {
     assert.equal((await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow })).status, "failed");
   }
   for (const row of await rows(jobId)) {
     assert.deepEqual(row.errors, [{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]);
   }
-  assert.deepEqual(logged.map(([event, , context]) => [event, context.rowNumber]), [["supplier.import.failed", 1], ["supplier.import.failed", 2]]);
+  assert.deepEqual(logged.map(([event, , context]) => [event, context.rowNumber]),
+    [["supplier.import.failed", 1], ["supplier.import.failed", 2], ["supplier.import.failed", 3]]);
   assert.ok(!JSON.stringify(logged).includes("secret"), "the log carries codes, never the message");
-  assert.equal(logged[1][2].causeCode, "ER_NO_SUCH_TABLE", "but it does carry the driver's code");
+  assert.deepEqual(Object.keys(logged[0][2]).sort(), ["causeCode", "causeName", "code", "jobId", "name", "publicCode", "rowNumber"]);
+  assert.equal(logged[0][2].causeName, "TypeError", "a TypeError is told apart from other wrapped failures (REV-062 L-6)");
+  assert.equal(logged[1][2].causeCode, "ER_NO_SUCH_TABLE", "and a driver error carries its code");
+  assert.equal(logged[2][2].publicCode, "SERVICE_UNAVAILABLE");
 });
 
 integrationTest("TASK-042: applyRow cannot commit the Supplier ahead of its marker", async () => {
@@ -406,11 +423,18 @@ integrationTest("TASK-042: applyRow cannot commit the Supplier ahead of its mark
   const jobId = await seedJob({ rows: ["valid"] });
   const importer = service();
   await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
-  const committing = async (connection, context) => {
-    await writeSupplier()(connection, context);
-    await connection.query("COMMIT");
-    return h.supplierIds.at(-1);
-  };
-  assert.equal((await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: committing })).status, "failed");
-  assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, "the COMMIT was refused, so the Supplier rolled back with the row");
+  // 真 MySQL 上面試 REV-062 嘅繞過寫法：每一個都要被拒絕，Supplier 跟住 rollback。
+  const bypasses = ["COMMIT", "/* x */ COMMIT", "/*!COMMIT*/", "SET @@autocommit = 0", "SET foreign_key_checks = 0"];
+  await h.db.execute("UPDATE supplier_import_rows SET status = 'valid' WHERE job_id = ?", [jobId]);
+  for (const statement of bypasses) {
+    await h.db.execute("UPDATE supplier_import_rows SET status = 'valid', errors = NULL WHERE job_id = ?", [jobId]);
+    const committing = async (connection, context) => {
+      await writeSupplier()(connection, context);
+      await connection.query(statement);
+      return h.supplierIds.at(-1);
+    };
+    assert.equal((await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: committing })).status,
+      "failed", statement);
+    assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, `${statement}: refused, so the Supplier rolled back with the row`);
+  }
 });

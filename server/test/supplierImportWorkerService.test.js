@@ -42,6 +42,13 @@ function scripted(rowsLeft, { onRow = () => {} } = {}) {
   };
 }
 
+test("the worker hands its logger to the import service, so row failures reach the system log", () => {
+  const logger = { info() {}, error() {} };
+  const services = { require: (name) => (name === "logging" ? { logger } : name === "time" ? { nowMs: () => 1 } : { register() {} }) };
+  const instance = new SupplierImportWorkerService({ config: { supplier: { import: { root: null } } }, services });
+  assert.equal(instance.importService.logger, logger);
+});
+
 test("the worker's scheduled job carries the name T41 reserved for it", () => {
   assert.deepEqual(SupplierImportWorkerService.jobs.map((job) => job.name), [SUPPLIER_IMPORT_JOB_NAMES.worker]);
   const [job] = SupplierImportWorkerService.jobs;
@@ -128,9 +135,20 @@ test("the import root is prepared 0700 and refused when shared, loose or overlap
   const shared = path.join(base, "shared");
   await mkdir(shared);
   await chmod(shared, 0o777);
-  await assert.rejects(() => prepareSupplierImportRoot(path.join(shared, "imports")), /parent directory must not be replaceable/u);
+  const replaceable = /ancestor .* must not be replaceable by other users/u;
+  await assert.rejects(() => prepareSupplierImportRoot(path.join(shared, "imports")), replaceable, "a 0777 parent");
+  await assert.rejects(() => prepareSupplierImportRoot(path.join(shared, "deeper", "imports")), replaceable, "a 0777 grandparent");
+  await symlink(shared, path.join(base, "linked-shared"));
+  await assert.rejects(() => prepareSupplierImportRoot(path.join(base, "linked-shared", "via-link")), replaceable,
+    "a symlinked parent is judged by the directory it points at (REV-062 L-7)");
   await chmod(shared, 0o1777);
   assert.ok(await prepareSupplierImportRoot(path.join(shared, "imports")), "control: a sticky shared parent such as /tmp is fine");
+  const foreignParent = path.join(base, "foreign-parent");
+  await mkdir(foreignParent);
+  const foreignReal = await realpath(foreignParent);
+  await assert.rejects(() => prepareSupplierImportRoot(path.join(foreignParent, "imports"), [],
+    { lstat: reporting(foreignReal, (i) => ({ uid: i.uid + 1 })) }), replaceable,
+  "a parent owned by another user");
 
   // 經 symlink 嘅上層目錄：字串唔同，真實路徑一樣 —— 開機檢查睇唔到，呢度要睇到。
   const customer = path.join(base, "customer");
