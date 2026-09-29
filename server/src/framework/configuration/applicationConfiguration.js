@@ -139,12 +139,12 @@ export function validateApplicationConfiguration(
  * 沒有上限、或讓某個設定值從此是一句空話。
  */
 function crossSectionChecks(normalized, details, { heapLimitBytes }) {
-  const { application, customer, database, logging, requestLimiter, scheduler, supplier } = normalized;
+  const { application, customer, database, item, logging, requestLimiter, scheduler, supplier } = normalized;
 
   checkLogQueueBudget(logging, heapLimitBytes, details);
   checkRevocationRefreshScheduled(scheduler, details);
   checkSharedBankKeyRings(customer, supplier, details);
-  checkSupplierImportRoot(customer, supplier, details);
+  checkSupplierImportRoot(customer, item, supplier, details);
 
   if (application && customer?.attachment && customer.attachment.orphanGraceMs <= application.requestTimeoutMs) {
     details.push({
@@ -251,14 +251,16 @@ function sameKeyGroup(left, right) {
 }
 
 /**
- * Supplier import root 唔可以同 Customer 嘅 import 或附件目錄互相包含：兩邊嘅清理
- * job 都會刪自己 root 入面過期嘅檔，重疊就會刪到對方嘅檔。
+ * Supplier import root 唔可以同 Customer 嘅 import 或附件目錄、Item 嘅 media 或 import 目錄
+ * 互相包含：各自嘅清理 job 都會刪自己目錄入面過期或者冇人引用嘅檔，重疊就會刪到對方嘅檔
+ * （HD-039 C；Item 由 HD-040 加入）。
  */
-function checkSupplierImportRoot(customer, supplier, details) {
+function checkSupplierImportRoot(customer, item, supplier, details) {
   const root = supplier?.import?.root;
   if (!root) return;
   const others = [customer?.import?.root, customer?.attachment?.generalRoot,
-    customer?.attachment?.bankSensitiveRoot, customer?.attachment?.tempRoot].filter(Boolean);
+    customer?.attachment?.bankSensitiveRoot, customer?.attachment?.tempRoot,
+    item?.mediaDirectory, item?.importDirectory].filter(Boolean);
   const inside = (parent, child) => {
     const relative = path.relative(parent, child);
     return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
@@ -266,7 +268,7 @@ function checkSupplierImportRoot(customer, supplier, details) {
   if (others.some((other) => inside(other, root) || inside(root, other))) {
     details.push({
       section: "supplier",
-      message: "import.root must not contain, or sit inside, a Customer import or attachment root"
+      message: "import.root must not contain, or sit inside, a Customer import or attachment root, or an Item media or import directory"
     });
   }
 }
