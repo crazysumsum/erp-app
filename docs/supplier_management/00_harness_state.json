@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 252,
+  "revision": 253,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1541,6 +1541,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/63_rev_060_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-061",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-042)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 405830ac628b2f822562a62822113115ef97a5e7 (PR #165)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/64_rev_061_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -3973,7 +3985,7 @@
     {
       "id": "HD-047",
       "impact": "MINOR",
-      "question": "Carry-forward from TASK-042: before TASK-043, TASK-044 is DONE, confirm it refuse startup without import.root once the upload API registers (HD-046 a); the precheck job uses SUPPLIER_IMPORT_JOB_NAMES.precheck; stored names come from newSupplierImportStoredName / supplierImportFilePath (docs/supplier_management/implementation/62_task_041_carry_forward.md).",
+      "question": "Carry-forward from TASK-042 (see docs/supplier_management/implementation/62_task_041_carry_forward.md): before TASK-043 and TASK-044 are DONE, confirm that (1) startup is refused without import.root once the upload API registers (HD-046 a), with the stale comment at server/config/supplier.js:14 corrected; (2) the precheck job uses SUPPLIER_IMPORT_JOB_NAMES.precheck; (3) stored names come only from newSupplierImportStoredName / supplierImportFilePath. Reworded at revision 253 (REV-061 I-8).",
       "affected_ids": [
         "TASK-043",
         "TASK-044",
@@ -3985,9 +3997,21 @@
     {
       "id": "HD-048",
       "impact": "MINOR",
-      "question": "Carry-forward from TASK-042: before TASK-045 is DONE, confirm it wire the real applyRow into SupplierImportWorkerService, writing Supplier and audit on the given connection and returning the Supplier ID; re-check that the confirming user is still active and holds supplier.mgmt at execution (docs/supplier_management/implementation/62_task_041_carry_forward.md).",
+      "question": "Carry-forward from TASK-042 (see docs/supplier_management/implementation/62_task_041_carry_forward.md): before TASK-045 is DONE, confirm that (1) the real applyRow is wired into SupplierImportWorkerService; (2) it calls connection-taking domain helpers, never the public Supplier service methods, which open their own transaction on a second connection and would commit the Supplier before the marker (REV-061 M-3); (3) a row, job lock included, finishes within DB_TRANSACTION_TIMEOUT_MS; (4) an integration test with the real applyRow injects a failure after the Supplier write and finds no Supplier, audit or name-gram row; (5) domain errors carry an explicit Chinese publicMessage; (6) the confirming user is re-checked for active status and supplier.mgmt at execution; (7) a decision is recorded on retrying transient errors. Extended at revision 253.",
       "affected_ids": [
         "TASK-045",
+        "TASK-042"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-049",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-042 (REV-061 I-13): before TASK-043 and TASK-046 are DONE, confirm finalize checks total_count = applied + failed + skipped, since T43 writes total_count and T42 only rebuilds applied/failed/skipped from rows.",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-046",
         "TASK-042"
       ],
       "status": "OPEN",
@@ -5068,5 +5092,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-042 implemented on claude/supplier-task-042: migrations 0061/0062 (HD-045), SupplierImportService, SupplierImportWorkerService, prepared import root. Integration 6/6 on real MySQL, 19 mutants killed, lint clean, real entrypoint boots with and without SUPPLIER_IMPORT_ROOT. Next: PR, REV-061, green CI, the Product Owner's word before merge. HD-041 stays open until TASK-042 is DONE; its root-required row moved to TASK-043/044 (HD-046, HD-047). Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-042 on PR #165: REV-061 CHANGES_REQUESTED (0 critical, 0 high, 3 medium). M-1..M-3, L-1, L-3, L-4 and I-2, I-8, I-14 are remediated on the branch; 40/40 mutants killed including REV-061's eleven survivors; L-2 accepted, L-5, I-3, I-4, I-7, I-13 carried (implementation/62_task_041_carry_forward.md, HD-047, HD-048, HD-049). Next: REV-062, green CI, the Product Owner's word before merge. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
