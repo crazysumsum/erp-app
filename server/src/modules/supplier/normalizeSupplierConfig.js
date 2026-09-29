@@ -97,6 +97,10 @@ export function normalizeSupplierConfig(source = {}) {
   if (root && !path.isAbsolute(root)) {
     throw new Error('Supplier config "import.root" must be an absolute path');
   }
+  // `/` 做 root 即係清理 job 會掃成部機嘅 /source、/result（REV-059 L-7）。
+  if (root && path.resolve(root) === path.parse(path.resolve(root)).root) {
+    throw new Error('Supplier config "import.root" must not be a filesystem root');
+  }
   const importConfig = Object.freeze({
     root: root ? path.resolve(root) : null,
     maxFileBytes: positiveInteger(importSource.maxFileBytes ?? 10_485_760, "import.maxFileBytes", MAX_FILE_BYTES),
