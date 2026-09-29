@@ -140,6 +140,22 @@ describe("inventory service", () => {
     ]);
   });
 
+  it("maps Reservation list filters and reads detail without changing server quantities", async () => {
+    httpClient.get.mockResolvedValueOnce({ items: [{ id: 7, outstandingQuantity: 3 }], total: 1 })
+      .mockResolvedValueOnce({ id: 7, outstandingQuantity: 3 });
+    await expect(inventoryService.listReservations({
+      page: 2, rowsPerPage: 20, filter: "SO-1", warehouseId: 2, uncovered: true, signal: "list-signal"
+    })).resolves.toEqual({ rows: [{ id: 7, outstandingQuantity: 3 }], rowsNumber: 1 });
+    await expect(inventoryService.getReservation(7, { signal: "detail-signal" }))
+      .resolves.toEqual({ id: 7, outstandingQuantity: 3 });
+    expect(httpClient.get.mock.calls).toEqual([
+      ["/api/v1/inventory/reservations", {
+        params: { page: 2, pageSize: 20, q: "SO-1", warehouseId: 2, uncovered: true }, signal: "list-signal"
+      }],
+      ["/api/v1/inventory/reservations/7", { signal: "detail-signal" }]
+    ]);
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);

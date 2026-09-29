@@ -1,4 +1,5 @@
 import {
+  INVENTORY_ALLOCATION_STATUSES,
   INVENTORY_MASTER_STATUSES,
   INVENTORY_RESERVATION_STATUSES,
   INVENTORY_STOCK_STATUSES
@@ -20,6 +21,7 @@ export const OPERATION_POLICY = Object.freeze([Object.freeze({
 
 const ID = Object.freeze({ type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
 const NON_NEGATIVE_QUANTITY = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
+const SIGNED_QUANTITY = Object.freeze({ type: "integer", minimum: -Number.MAX_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER });
 const VERSION = Object.freeze({ type: "integer", minimum: 1, maximum: 4_294_967_295 });
 const TIMESTAMP = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
 const STATUS = Object.freeze({ type: "string", enum: [...INVENTORY_MASTER_STATUSES] });
@@ -316,6 +318,14 @@ function allocationResponse(item) {
 export const ALLOCATION_CREATE_RESPONSE = allocationResponse(ALLOCATION_CREATED_RESULT);
 export const ALLOCATION_RELEASE_RESPONSE = allocationResponse(ALLOCATION_RELEASED_RESULT);
 
+const AVAILABILITY_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"],
+  properties: {
+    eligibleOnHand: NON_NEGATIVE_QUANTITY, reserved: NON_NEGATIVE_QUANTITY,
+    rawAtp: SIGNED_QUANTITY, atp: NON_NEGATIVE_QUANTITY, uncoveredReserved: NON_NEGATIVE_QUANTITY
+  }
+});
 export const RESERVATION_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["id", "operationId", "warehouseId", "skuId", "purpose", "minimumRemainingDays",
@@ -326,12 +336,64 @@ export const RESERVATION_RESPONSE = Object.freeze({
     originalQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
     releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
     status: { type: "string", enum: [...INVENTORY_RESERVATION_STATUSES] }, version: VERSION,
-    availability: {
+    availability: AVAILABILITY_RESPONSE
+  }
+});
+
+export const RESERVATION_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    page: { type: "integer", minimum: 1, default: 1 },
+    pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+    q: { type: "string", trim: true, maxLength: 190, default: "" },
+    warehouseId: ID, skuId: ID,
+    sourceModule: { type: "string", minLength: 1, maxLength: 40 },
+    sourceDocumentType: { type: "string", minLength: 1, maxLength: 50 },
+    sourceDocumentId: { type: "string", minLength: 1, maxLength: 100 },
+    status: { type: "string", enum: ["ALL", ...INVENTORY_RESERVATION_STATUSES], default: "ALL" },
+    uncovered: { type: "boolean" },
+    sortBy: { type: "string", enum: ["updatedAt", "createdAt", "status", "skuCode"], default: "updatedAt" },
+    descending: { type: "boolean", default: true }
+  }
+});
+const RESERVATION_INQUIRY = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "warehouse", "sku", "source", "purpose", "minimumRemainingDays", "originalQuantity",
+    "consumedQuantity", "releasedQuantity", "outstandingQuantity", "status", "version", "createdAt", "updatedAt", "availability"],
+  properties: {
+    id: ID,
+    warehouse: { type: "object", additionalProperties: false, required: ["warehouseId", "code"],
+      properties: { warehouseId: ID, code: { type: "string" } } },
+    sku: { type: "object", additionalProperties: false, required: ["skuId", "code", "name"],
+      properties: { skuId: ID, code: { type: "string" }, name: { type: "string" } } },
+    source: SOURCE, purpose: { const: "SALE" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36_500 },
+    originalQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
+    releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
+    status: { type: "string", enum: [...INVENTORY_RESERVATION_STATUSES] }, version: VERSION,
+    createdAt: TIMESTAMP, updatedAt: TIMESTAMP, availability: AVAILABILITY_RESPONSE
+  }
+});
+export const RESERVATION_LIST_RESPONSE = listResponse(RESERVATION_INQUIRY);
+export const RESERVATION_DETAIL_RESPONSE = Object.freeze({
+  ...RESERVATION_INQUIRY,
+  required: [...RESERVATION_INQUIRY.required, "allocations"],
+  properties: { ...RESERVATION_INQUIRY.properties,
+    allocations: { type: "array", items: {
       type: "object", additionalProperties: false,
-      required: ["eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"],
-      properties: Object.fromEntries(["eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"]
-        .map((field) => [field, NON_NEGATIVE_QUANTITY]))
-    }
+      required: ["id", "balanceId", "binId", "lotId", "expiryDate", "allocatedQuantity", "consumedQuantity",
+        "releasedQuantity", "outstandingQuantity", "selectionStrategy", "isSequenceOverride", "overrideReason", "status",
+        "version", "balanceVersion"],
+      properties: {
+        id: ID, balanceId: ID, binId: ID, lotId: { type: ["integer", "null"], minimum: 1 }, expiryDate: DATE_ONLY,
+        allocatedQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
+        releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
+        selectionStrategy: { type: "string", enum: ["FEFO", "FIFO"] }, isSequenceOverride: { type: "boolean" },
+        overrideReason: { type: "string", maxLength: 500 },
+        status: { type: "string", enum: [...INVENTORY_ALLOCATION_STATUSES] },
+        version: VERSION, balanceVersion: VERSION
+      }
+    } }
   }
 });
 

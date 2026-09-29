@@ -1,4 +1,5 @@
 import { InventoryOperationService } from "./InventoryOperationService.js";
+import { INVENTORY_RESERVATION_STATUSES } from "./inventoryConstants.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
   movementProjection,
@@ -37,6 +38,34 @@ const LOT_SORTS = Object.freeze({
 const STOCK_STATUSES = new Set(["AVAILABLE", "QUARANTINED", "DAMAGED"]);
 const AVAILABILITY_FILTERS = new Set(["ALL", "IN_STOCK", "NO_STOCK", "ZERO_ATP"]);
 const EXPIRY_STATES = new Set(["ALL", "UNEXPIRED", "EXPIRED", "WITHIN_DAYS"]);
+const RESERVATION_STATUSES = new Set(INVENTORY_RESERVATION_STATUSES);
+const RESERVATION_SORTS = Object.freeze({
+  updatedAt: "v.updated_at", createdAt: "v.created_at", status: "v.status", skuCode: "v.sku_code"
+});
+
+const RESERVATION_VIEW = `
+  WITH reservation_base AS (
+    SELECT r.*, w.warehouse_code, s.sku_code, s.sku_name,
+           o.source_module, o.source_document_type, o.source_document_id,
+           o.source_line_id, o.source_event_id,
+           COALESCE(c.reserved_quantity, 0) AS reserved_quantity,
+           (SELECT COALESCE(SUM(b.on_hand_quantity), 0)
+              FROM inventory_stock_balances b
+              LEFT JOIN inventory_lots l ON l.id = b.lot_id
+             WHERE b.warehouse_id = r.warehouse_id AND b.sku_id = r.sku_id
+               AND b.stock_status = 'AVAILABLE'
+               AND (l.expiry_date IS NULL OR l.expiry_date >= DATE_ADD(?, INTERVAL r.minimum_remaining_days DAY)))
+             AS eligible_on_hand
+      FROM inventory_reservations r
+      JOIN inventory_warehouses w ON w.id = r.warehouse_id
+      JOIN item_skus s ON s.id = r.sku_id
+      JOIN inventory_operation_requests o ON o.id = r.create_operation_id
+      LEFT JOIN inventory_stock_controls c ON c.warehouse_id = r.warehouse_id AND c.sku_id = r.sku_id
+  ), reservation_view AS (
+    SELECT reservation_base.*,
+           GREATEST(reserved_quantity - eligible_on_hand, 0) AS uncovered_reserved
+      FROM reservation_base
+  )`;
 
 const STOCK_FROM = `
   FROM inventory_stock_balances b
@@ -214,6 +243,30 @@ function projectStock(row, currentDate) {
   };
 }
 
+function projectReservation(row) {
+  return {
+    id: positiveId(row.id, "reservationId"),
+    warehouse: { warehouseId: positiveId(row.warehouse_id, "warehouseId"), code: row.warehouse_code },
+    sku: { skuId: positiveId(row.sku_id, "skuId"), code: row.sku_code, name: row.sku_name },
+    source: {
+      module: row.source_module, documentType: row.source_document_type,
+      documentId: row.source_document_id, lineId: row.source_line_id, eventId: row.source_event_id
+    },
+    purpose: row.purpose, minimumRemainingDays: nonNegativeInteger(row.minimum_remaining_days, "minimumRemainingDays"),
+    originalQuantity: nonNegativeInteger(row.original_quantity, "originalQuantity"),
+    consumedQuantity: nonNegativeInteger(row.consumed_quantity, "consumedQuantity"),
+    releasedQuantity: nonNegativeInteger(row.released_quantity, "releasedQuantity"),
+    outstandingQuantity: nonNegativeInteger(row.outstanding_quantity, "outstandingQuantity"),
+    status: row.status, version: positiveId(row.version, "version"),
+    createdAt: nonNegativeInteger(row.created_at, "createdAt"),
+    updatedAt: nonNegativeInteger(row.updated_at, "updatedAt"),
+    availability: calculateInventoryAvailability({
+      eligibleOnHand: nonNegativeInteger(row.eligible_on_hand, "eligibleOnHand"),
+      reserved: nonNegativeInteger(row.reserved_quantity, "reserved")
+    })
+  };
+}
+
 function sourceProjection(row) {
   return {
     module: row.source_module,
@@ -244,6 +297,77 @@ export class InventoryInquiryService {
     this.database = database;
     this.time = time;
     this.operationService = operationService ?? new InventoryOperationService();
+  }
+
+  async listReservations(input = {}) {
+    const { page, pageSize, sortColumn, direction, offset } = pageInput(input, RESERVATION_SORTS, "updatedAt");
+    const filters = [];
+    const params = [];
+    for (const [field, column] of [["warehouseId", "v.warehouse_id"], ["skuId", "v.sku_id"]]) {
+      const id = positiveId(input[field], field, { optional: true });
+      if (id !== null) { filters.push(`${column} = ?`); params.push(id); }
+    }
+    for (const [field, column, length] of [
+      ["sourceModule", "v.source_module", 40],
+      ["sourceDocumentType", "v.source_document_type", 50],
+      ["sourceDocumentId", "v.source_document_id", 100]
+    ]) {
+      const value = boundedText(input[field], field, length, { ascii: field !== "sourceDocumentId" });
+      if (value) { filters.push(`${column} = ?`); params.push(value); }
+    }
+    const status = input.status ?? "ALL";
+    if (status !== "ALL" && !RESERVATION_STATUSES.has(status)) invalid("status");
+    if (status !== "ALL") { filters.push("v.status = ?"); params.push(status); }
+    if (input.uncovered !== undefined && typeof input.uncovered !== "boolean") invalid("uncovered");
+    if (input.uncovered === true) filters.push("v.uncovered_reserved > 0");
+    if (input.uncovered === false) filters.push("v.uncovered_reserved = 0");
+    const q = boundedText(input.q, "q", 190);
+    if (q) {
+      filters.push("(v.sku_code LIKE ? ESCAPE '!' OR v.sku_name LIKE ? ESCAPE '!' OR v.source_document_id LIKE ? ESCAPE '!')");
+      params.push(...Array(3).fill(`%${escapeLike(q)}%`));
+    }
+    const clause = whereClause(filters);
+    const currentDate = this.time.fileDate();
+    const [[count]] = await this.database.query(
+      `${RESERVATION_VIEW} SELECT COUNT(*) AS total FROM reservation_view v${clause}`,
+      [currentDate, ...params]
+    );
+    const [rows] = await this.database.query(
+      `${RESERVATION_VIEW} SELECT * FROM reservation_view v${clause}
+        ORDER BY ${sortColumn} ${direction}, v.id ${direction} LIMIT ? OFFSET ?`,
+      [currentDate, ...params, pageSize, offset]
+    );
+    return { items: rows.map(projectReservation), total: Number(count.total), page, pageSize };
+  }
+
+  async getReservation(reservationId) {
+    const id = positiveId(reservationId, "reservationId");
+    const [rows] = await this.database.query(
+      `${RESERVATION_VIEW} SELECT * FROM reservation_view v WHERE v.id = ?`,
+      [this.time.fileDate(), id]
+    );
+    if (!rows[0]) throw notFound();
+    const [allocations] = await this.database.query(
+      `SELECT a.*, b.bin_id, b.lot_id, b.version AS balance_version,
+              DATE_FORMAT(l.expiry_date, '%Y-%m-%d') AS expiry_date
+         FROM inventory_allocations a
+         JOIN inventory_stock_balances b ON b.id = a.stock_balance_id
+         LEFT JOIN inventory_lots l ON l.id = b.lot_id
+        WHERE a.reservation_id = ? ORDER BY a.id`,
+      [id]
+    );
+    return { ...projectReservation(rows[0]), allocations: allocations.map((row) => ({
+      id: positiveId(row.id, "allocationId"), balanceId: positiveId(row.stock_balance_id, "balanceId"),
+      binId: positiveId(row.bin_id, "binId"), lotId: positiveId(row.lot_id, "lotId", { optional: true }),
+      expiryDate: row.expiry_date ?? null,
+      allocatedQuantity: nonNegativeInteger(row.allocated_quantity, "allocatedQuantity"),
+      consumedQuantity: nonNegativeInteger(row.consumed_quantity, "consumedQuantity"),
+      releasedQuantity: nonNegativeInteger(row.released_quantity, "releasedQuantity"),
+      outstandingQuantity: nonNegativeInteger(row.outstanding_quantity, "outstandingQuantity"),
+      selectionStrategy: row.selection_strategy, isSequenceOverride: Boolean(row.is_sequence_override),
+      overrideReason: row.override_reason, status: row.status,
+      version: positiveId(row.version, "version"), balanceVersion: positiveId(row.balance_version, "balanceVersion")
+    })) };
   }
 
   async listStocks(input = {}) {
