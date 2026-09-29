@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 255,
+  "revision": 256,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
-    "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/task-042",
-    "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",
+    "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
+    "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t42-close",
+    "default_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -69,7 +69,7 @@
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
     "TASK-041": "DONE",
-    "TASK-042": "IN_PROGRESS",
+    "TASK-042": "DONE",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
     "TASK-045": "PENDING",
@@ -3375,6 +3375,17 @@
       "source_ref": "PR #162 merged as 8009e899fa22249cf1752bfc20db5f4fcd276a3c on the Product Owner's word, after head db2d8f7's CI run 36516957862 was green on all five checks and origin/main was unchanged at 894cdc6. Main CI run 36517757981 green on the merge commit across all five required checks. Reviews: REV-059 CHANGES_REQUESTED, REV-060 APPROVED. Obligations carried to TASK-042/043/044/045/048 as HD-041..HD-044 and implementation/62_task_041_carry_forward.md. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-09-29T03:44:56Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-042 merged to main; required CI green on the merge commit",
+      "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
+      "status": "PASS",
+      "source_ref": "PR #165 merged as 5b8aa9bbcf5217ab3a30f722ff241d167fa402f6 on the Product Owner's word, after head 1f86002's CI run 36541458758 was green on all five checks and origin/main was unchanged at e36f0de. Main CI run 36543582766 green on the merge commit. Reviews: REV-061 and REV-062 CHANGES_REQUESTED, REV-063 APPROVED (post-approval fixes recorded at revision 255, not re-reviewed). source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-29T08:45:08Z"
     }
   ],
   "pending_decisions": [
@@ -3943,8 +3954,8 @@
         "TASK-042",
         "TASK-041"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Discharged by TASK-042 (PR #165, 5b8aa9b), as recorded in implementation/62_task_041_carry_forward.md 'Status after TASK-042': 0700 root and kind directories owned by the service user, group/other-writable root and every replaceable ancestor refused; realpath + dev/ino overlap check against Customer and Item roots; the worker's static jobs use SUPPLIER_IMPORT_JOB_NAMES.worker, pinned by a test. Not discharged here and moved on: the root becoming required (HD-046 a, to TASK-043/044 as HD-047) and stored-name use (no file writes in T42; HD-047). Closed by the agent against the merged evidence; not a Product Owner answer."
     },
     {
       "id": "HD-042",
@@ -5116,5 +5127,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-042 on PR #165: REV-063 APPROVED ebf3e41 (0 critical, 0 high, 0 medium, 3 low). After the approval, L-9 (codes on the service's own TypeErrors), L-10 (the worker and root preparation use the real path), L-11 (A4, A11, A15 pinned) and I-22 (INTO/**/OUTFILE) were fixed in code, and I-23..I-27 recorded in the carry-forward; 63/63 mutants killed, full suite 2329 pass with only the known TC-059 race. Those post-approval code changes were not re-reviewed. Next: green CI on the final head, main unchanged, the Product Owner's word before merge. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-042 is DONE (merged at 5b8aa9b, main CI green). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting. Open carry-forward: HD-042..HD-044, HD-047..HD-049. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
