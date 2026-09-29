@@ -173,9 +173,13 @@ test("the import root is prepared 0700 and refused when shared, loose or overlap
 test("the worker prepares its root before it registers, and registers even when import is not deployed", async (t) => {
   const base = await mkdtemp(path.join(os.tmpdir(), "supplier-import-worker-"));
   t.after(() => rm(base, { recursive: true, force: true }));
-  const deployed = worker({ root: path.join(base, "imports") });
+  await mkdir(path.join(base, "real"));
+  await symlink(path.join(base, "real"), path.join(base, "alias"));
+  const deployed = worker({ root: path.join(base, "alias", "imports") });
   await deployed.instance.initialize();
-  assert.equal((await stat(path.join(base, "imports", "source"))).mode & 0o777, 0o700);
+  assert.equal((await stat(path.join(base, "real", "imports", "source"))).mode & 0o777, 0o700);
+  assert.equal(deployed.instance.root, await realpath(path.join(base, "real", "imports")),
+    "the worker keeps the real path, so swapping the symlink later cannot redirect it (REV-063 L-10)");
   assert.equal(deployed.registered.length, 1);
 
   const undeployed = worker({ root: null });
