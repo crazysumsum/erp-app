@@ -288,6 +288,15 @@ After this change, the complete local server suite passed 1,971, failed 0, skipp
 - Focused Reservation／Allocation／Posting tests passed 39/39, including two Allocations sharing a Balance, 100-line release replay within the operation-summary limit, mismatched bucket, expired／short-life Lot, locked Bin and Audit-failure rollback. The full local server suite passed 1,984, failed 0, skipped 331 using public CI-only test keys; repository ESLint, module-boundary and traceability-structure validators, and `git diff --check` passed.
 - These are local mocked-transaction developer checks. No TASK-022 MySQL execution, real concurrency test, CI, independent review, push, PR or merge occurred; formal `TC-004`／`TC-005` remain open. TASK-023 owns the Issue HTTP route and provider-fixed contracts; generic Reverse Issue belongs to the later P3 posting scope.
 
+### TASK-022 guarded developer integration cases
+
+| ID | Priority／requirement risk | Preconditions and data | Steps／input | Expected persisted result and required evidence | Status |
+| --- | --- | --- | --- | --- | --- |
+| DEV-022-DB-01 | P1／TC-005 Allocation transition integrity | Fresh disposable MySQL 26.7.0 schema with Inventory `0055`～`0061`; one Reservation and two eligible Lot Balances | Allocate, partially release and replay; reallocate remaining hold; cancel source | Only matching Balance holds change; Reservation／Control quantities stay aligned until cancel; replay has no second effect; final Allocation／Balance／Reservation／Operation／Audit rows are consistent | NOT RUN |
+| DEV-022-DB-02 | P1／TC-004 and TC-005 Issue atomic posting | Same isolated schema; separate Reservation with two eligible Allocation lines | Issue both lines, replay same source and reject changed payload | On Hand, allocated, Control reserved, Reservation／Allocation consumed/outstanding agree; exactly one Movement per line and one Issue Audit／operation; persisted row values and conflict code | NOT RUN |
+| DEV-022-DB-03 | P1／TC-004 and TC-005 rejection／rollback | Same schema; allocated Lots crossing eligibility date, mismatched Balance reference and injected required Audit failure | Attempt each invalid Issue after a persisted-state snapshot | Stable rejection; every current-state, Movement, Operation and Audit row remains identical to its pre-command snapshot | NOT RUN |
+| DEV-022-DB-04 | P1／TC-005 lost-update race | Same schema; one outstanding Allocation; two separate MySQL connections and distinct source events | Release the Allocation and Issue it concurrently from the same versions | Exactly one commits and the other returns a stable conflict; no negative or duplicate quantity effect; final persisted Allocation／Balance／Reservation／Control and Movement totals reconcile | NOT RUN |
+
 ## Next safe action
 
 Guarded TASK-022 MySQL execution and publication require separate approval; do not infer formal `TC-004`／`TC-005` acceptance, CI, push, PR or merge from the local evidence.
