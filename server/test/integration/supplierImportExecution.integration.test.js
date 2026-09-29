@@ -424,17 +424,19 @@ integrationTest("TASK-042: applyRow cannot commit the Supplier ahead of its mark
   const importer = service();
   await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
   // 真 MySQL 上面試 REV-062 嘅繞過寫法：每一個都要被拒絕，Supplier 跟住 rollback。
-  const bypasses = ["COMMIT", "/* x */ COMMIT", "/*!COMMIT*/", "SET @@autocommit = 0", "SET foreign_key_checks = 0"];
+  // execute（prepared statement）一樣行到 COMMIT，所以兩個 method 都要守。
+  const bypasses = [["query", "COMMIT"], ["execute", "COMMIT"], ["query", "/* x */ COMMIT"], ["query", "/*!COMMIT*/"],
+    ["query", "SET @@autocommit = 0"], ["execute", "SET foreign_key_checks = 0"]];
   await h.db.execute("UPDATE supplier_import_rows SET status = 'valid' WHERE job_id = ?", [jobId]);
-  for (const statement of bypasses) {
+  for (const [method, statement] of bypasses) {
     await h.db.execute("UPDATE supplier_import_rows SET status = 'valid', errors = NULL WHERE job_id = ?", [jobId]);
     const committing = async (connection, context) => {
       await writeSupplier()(connection, context);
-      await connection.query(statement);
+      await connection[method](statement);
       return h.supplierIds.at(-1);
     };
     assert.equal((await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: committing })).status,
-      "failed", statement);
-    assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, `${statement}: refused, so the Supplier rolled back with the row`);
+      "failed", `${method} ${statement}`);
+    assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, `${method} ${statement}: refused, so the Supplier rolled back with the row`);
   }
 });
