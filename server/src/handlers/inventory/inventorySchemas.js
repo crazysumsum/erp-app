@@ -221,6 +221,18 @@ export const RESERVATION_CREATE = Object.freeze({
   }
 });
 
+export const RESERVATION_ID_PARAMS = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id"], properties: { id: ID }
+});
+export const RESERVATION_RELEASE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version", "quantity"],
+  properties: { source: SOURCE, version: VERSION, quantity: ID }
+});
+export const RESERVATION_CANCEL = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version"],
+  properties: { source: SOURCE, version: VERSION }
+});
+
 const NON_NEGATIVE_QUANTITY = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
 export const RESERVATION_RESPONSE = Object.freeze({
   type: "object", additionalProperties: false,

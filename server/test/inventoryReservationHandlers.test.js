@@ -3,7 +3,11 @@ import test from "node:test";
 
 import { RequestValidator } from "../src/framework/validation/requestValidator.js";
 import { ResponseValidator } from "../src/framework/validation/responseValidator.js";
-import { CreateInventoryReservationHandler } from "../src/handlers/inventory/reservationHandlers.js";
+import {
+  CancelInventoryReservationHandler,
+  CreateInventoryReservationHandler,
+  ReleaseInventoryReservationHandler
+} from "../src/handlers/inventory/reservationHandlers.js";
 
 test("TASK-023 Reservation create exposes a strict idempotent operation contract", () => {
   const api = CreateInventoryReservationHandler.api;
@@ -38,4 +42,37 @@ test("TASK-023 Reservation create maps trusted actor, fixed permission, source a
     payload: { skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10 }
   });
   assert.deepEqual(response.data, { id: 1 });
+});
+
+test("TASK-023 Reservation release and cancel bind path owner, version and source", async () => {
+  const source = { module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", eventId: "change-1" };
+  for (const [Handler, method, body, expectedPayload] of [
+    [ReleaseInventoryReservationHandler, "release", { source, version: 2, quantity: 3 },
+      { reservationId: 7, expectedVersion: 2, quantity: 3 }],
+    [CancelInventoryReservationHandler, "cancel", { source, version: 2 },
+      { reservationId: 7, expectedVersion: 2 }]
+  ]) {
+    const api = Handler.api;
+    assert.equal(api.requestSchema.body.additionalProperties, false);
+    assert.deepEqual(api.idempotency, { enabled: true });
+    new RequestValidator().compile(api.requestSchema, api.path);
+    new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
+    const handler = new Handler({ require(name) {
+      if (name === "mysqldatabase") return { withTransaction() {} };
+      if (name === "logging") return { logger: { error() {} } };
+      if (name === "time") return { nowMs: () => 1, fileDate: () => "2026-09-29" };
+      throw new Error(name);
+    } });
+    let received;
+    handler.inventory = { async [method](command) { received = command; return { id: 7 }; } };
+    await handler.execute({
+      auth: { claims: { sub: "9", roles: [], permissions: ["inventory.operation"] } },
+      input: { params: { id: 7 }, body }, requestId: "req-2"
+    });
+    assert.deepEqual(received.authorization, {
+      purpose: `reservation.${method}`, requiredCallerPermission: "inventory.operation"
+    });
+    assert.deepEqual(received.source, source);
+    assert.deepEqual(received.payload, expectedPayload);
+  }
 });

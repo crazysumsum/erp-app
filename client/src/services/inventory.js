@@ -39,5 +39,7 @@ export default {
   listExpiry(options) { return list("/api/v1/inventory/expiry", options); },
   listMovements(options) { return list("/api/v1/inventory/movements", options); },
   getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); },
-  createReservation(payload) { return write("/api/v1/inventory/reservations/create", payload); }
+  createReservation(payload) { return write("/api/v1/inventory/reservations/create", payload); },
+  releaseReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/release`, payload); },
+  cancelReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/cancel`, payload); }
 };

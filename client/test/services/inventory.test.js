@@ -93,6 +93,20 @@ describe("inventory service", () => {
     });
   });
 
+  it("sends Reservation release and cancel with path ownership and an intent key", async () => {
+    const source = { module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", eventId: "change-1" };
+    await inventoryService.releaseReservation(7, { source, version: 2, quantity: 3, idempotencyKey: "release-1" });
+    await inventoryService.cancelReservation(7, { source, version: 3, idempotencyKey: "cancel-1" });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/inventory/reservations/7/release", {
+        idempotent: true, idempotencyKey: "release-1", body: { source, version: 2, quantity: 3 }
+      }],
+      ["/api/v1/inventory/reservations/7/cancel", {
+        idempotent: true, idempotencyKey: "cancel-1", body: { source, version: 3 }
+      }]
+    ]);
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);
