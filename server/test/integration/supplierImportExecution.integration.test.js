@@ -1,0 +1,247 @@
+import assert from "node:assert/strict";
+import { after, before, test } from "node:test";
+import { randomBytes, randomUUID } from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+
+import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
+import { inspectSupplierImportJobSchema, up as createJobs } from "../../database/migrations/0061_create_supplier_import_jobs.js";
+import { inspectSupplierImportRowSchema, up as createRows } from "../../database/migrations/0062_create_supplier_import_rows.js";
+
+/**
+ * TASK-042：import 執行嘅交易規則打真 MySQL（設計 §8.8）。Unit double 模仿唔到 FOR UPDATE、
+ * CHECK、FK 同 rollback，而呢個 task 嘅保證正正住喺嗰度。
+ */
+const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
+const h = { application: null, db: null, logRoot: "", jobIds: [], supplierIds: [] };
+
+before(async () => {
+  if (process.env.DB_INTEGRATION_TESTS !== "1") return;
+  h.logRoot = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-import-logs-"));
+  const { createApplication } = await import("../../src/framework/application/createApplication.js");
+  const { defaultConfigurationSource } = await import("../../src/framework/configuration/applicationConfiguration.js");
+  const source = defaultConfigurationSource();
+  h.application = await createApplication({
+    configurationSource: { ...source, application: { ...source.application, port: 0 },
+      logging: { loggers: {
+        request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
+        system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } }
+  });
+  h.db = h.application.services.require("mysqldatabase");
+});
+
+after(async () => {
+  if (!h.db) return;
+  for (const id of h.jobIds) await h.db.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [id]);
+  for (const id of h.jobIds) await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
+  for (const id of h.supplierIds) {
+    await h.db.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [id]);
+    await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
+  }
+  await h.application.shutdown("test");
+  fs.rmSync(h.logRoot, { recursive: true, force: true });
+});
+
+let clock = Date.now();
+const time = { nowMs: () => clock };
+const service = () => new SupplierImportService({ database: h.db, time });
+
+async function seedJob({ status = "queued", rows = ["valid", "valid"], leaseOwner = "", leaseUntil = null, confirmedAt = clock }) {
+  const [job] = await h.db.execute(
+    `INSERT INTO supplier_import_jobs (template_version, source_stored_name, source_sha256, mode, activation_mode,
+       status, lease_owner, lease_until, created_at, updated_at, confirmed_at)
+     VALUES ('v1', ?, ?, 'create_only', 'draft', ?, ?, ?, ?, ?, ?)`,
+    [randomBytes(32).toString("hex"), randomBytes(32), status, leaseOwner, leaseUntil, clock, clock, confirmedAt]);
+  const id = Number(job.insertId);
+  h.jobIds.push(id);
+  for (const [index, rowStatus] of rows.entries()) {
+    await h.db.execute(
+      `INSERT INTO supplier_import_rows (job_id, \`row_number\`, operation, normalized_payload, status, created_at, updated_at)
+       VALUES (?, ?, 'create', ?, ?, ?, ?)`,
+      [id, index + 1, JSON.stringify({ n: index + 1 }), rowStatus, clock, clock]);
+  }
+  return id;
+}
+
+/** 領取係全域嘅：開始之前收埋其他測試留低未完成嘅 job。只有呢個檔案用呢兩張表。 */
+async function quiesce() {
+  await h.db.execute(
+    "UPDATE supplier_import_jobs SET status = 'cancelled', lease_owner = '', lease_until = NULL WHERE status IN ('queued', 'running')");
+}
+
+/** 資料庫錯誤包咗一層（MySqlDatabaseOperationError），constraint 名喺 cause 入面。 */
+function violates(pattern) {
+  return (error) => [error, error?.cause].some((link) => pattern.test(String(link?.message ?? "")));
+}
+
+async function rows(jobId) {
+  const [result] = await h.db.query(
+    "SELECT `row_number`, status, applied_supplier_id, errors FROM supplier_import_rows WHERE job_id = ? ORDER BY `row_number`",
+    [jobId]);
+  return result;
+}
+
+/** 一個真嘅 applyRow：喺收到嘅 connection 上面寫 Supplier 同 audit，好似 T45 會做嘅咁。 */
+function writeSupplier({ failAfterWrite = false, returnId = true } = {}) {
+  return async (connection, { job, row }) => {
+    const [[currency]] = await connection.query("SELECT code FROM currencies LIMIT 1");
+    const tag = randomUUID().slice(0, 8);
+    const [supplier] = await connection.execute(
+      `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key,
+         default_currency_code, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [`IMP-${tag}`, `imp-${tag}`, `Import ${tag}`, `import ${tag}`, currency.code ?? currency.CODE, clock, clock]);
+    const supplierId = Number(supplier.insertId);
+    h.supplierIds.push(supplierId);
+    await connection.execute(
+      `INSERT INTO supplier_audit_logs (occurred_at, actor_username, action, target_type, target_id, supplier_id,
+         target_label, reason, detail, request_id, ip) VALUES (?, 'import', 'supplier.create', 'supplier', ?, ?, ?, '', ?, '', '')`,
+      [clock, supplierId, supplierId, `IMP-${tag}`, JSON.stringify({ jobId: Number(job.id), row: Number(row.row_number) })]);
+    if (failAfterWrite) throw Object.assign(new Error(`secret CSV value IMP-${tag} leaked into a message`), { code: "BOOM" });
+    return returnId ? supplierId : 0;
+  };
+}
+
+async function supplierCount(ids) {
+  if (ids.length === 0) return 0;
+  const [[row]] = await h.db.query(`SELECT COUNT(*) AS n FROM suppliers WHERE id IN (${ids.map(() => "?").join(",")})`, ids);
+  return Number(row.n);
+}
+
+integrationTest("TASK-042: the two migrations converge on rerun and refuse a hand-divergent table", async (t) => {
+  const connection = await h.db.pool?.getConnection?.() ?? null;
+  const runner = connection ?? h.db;
+  t.after(() => connection?.release?.());
+  await createJobs(runner); await createJobs(runner);
+  await createRows(runner); await createRows(runner);
+  assert.equal(await inspectSupplierImportJobSchema(runner), true);
+  assert.equal(await inspectSupplierImportRowSchema(runner), true);
+
+  // 一張冇 CHECK 嘅 rows probe 表一定要被拒絕 —— 否則「CHECK 由資料庫執行」只係一句說話。
+  const probe = `sirp_${randomUUID().slice(0, 8)}`;
+  t.after(() => h.db.query(`DROP TABLE IF EXISTS \`${probe}\``));
+  await h.db.query(`CREATE TABLE \`${probe}\` LIKE supplier_import_rows`);
+  await h.db.query(`ALTER TABLE \`${probe}\` ADD CONSTRAINT fk_${probe} FOREIGN KEY (job_id) REFERENCES supplier_import_jobs (id) ON DELETE RESTRICT`);
+  const [checks] = await h.db.query(
+    "SELECT constraint_name AS name FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = ? AND constraint_type = 'CHECK'", [probe]);
+  for (const check of checks) await h.db.query(`ALTER TABLE \`${probe}\` DROP CHECK \`${check.name ?? check.NAME}\``);
+  await assert.rejects(() => inspectSupplierImportRowSchema(runner, { table: probe }), /applied_supplier_id check/u);
+  await h.db.query(`ALTER TABLE \`${probe}\` ADD CONSTRAINT chk_${probe} CHECK ((status = 'applied') = (applied_supplier_id IS NOT NULL))`);
+  assert.equal(await inspectSupplierImportRowSchema(runner, { table: probe }), true, "control: with the check restored it passes");
+  await h.db.query(`ALTER TABLE \`${probe}\` MODIFY status VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL`);
+  await assert.rejects(() => inspectSupplierImportRowSchema(runner, { table: probe }), /column status/u);
+});
+
+integrationTest("TASK-042: the database itself enforces the applied marker and keeps rows when a job is deleted", async () => {
+  const jobId = await seedJob({ rows: ["valid"] });
+  await assert.rejects(() => h.db.execute(
+    "UPDATE supplier_import_rows SET status = 'applied' WHERE job_id = ?", [jobId]), violates(/chk_supplier_import_row_applied/u),
+  "applied without a Supplier ID");
+  await assert.rejects(() => h.db.execute(
+    "UPDATE supplier_import_rows SET applied_supplier_id = 1 WHERE job_id = ?", [jobId]), violates(/chk_supplier_import_row_applied/u),
+  "a Supplier ID on a row that is not applied");
+  await assert.rejects(() => h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [jobId]), violates(/foreign key constraint fails/iu),
+    "a job with rows cannot be deleted");
+});
+
+integrationTest("TASK-042: a worker claims only queued or lease-expired jobs, oldest first, and skips invalid rows", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const live = await seedJob({ status: "running", leaseOwner: "other", leaseUntil: clock + 60_000, confirmedAt: clock - 30 });
+  const expired = await seedJob({ status: "running", leaseOwner: "dead", leaseUntil: clock - 1, confirmedAt: clock - 20 });
+  const queued = await seedJob({ rows: ["valid", "invalid", "warning"], confirmedAt: clock - 10 });
+  const ready = await seedJob({ status: "ready", confirmedAt: clock - 40 });
+
+  const first = await service().claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  assert.deepEqual(first, { id: expired, resumed: true }, "the oldest claimable is the one whose worker died");
+  const second = await service().claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  assert.deepEqual(second, { id: queued, resumed: false });
+  assert.deepEqual((await rows(queued)).map((row) => row.status), ["valid", "skipped", "warning"]);
+  // 仲有 lease 嘅 running 同未 confirm 嘅 ready 都唔會被領取。
+  for (const id of [live, ready]) {
+    const [[job]] = await h.db.query("SELECT status, lease_owner FROM supplier_import_jobs WHERE id = ?", [id]);
+    assert.notEqual(job.lease_owner, "me", `job ${id} must not be claimed`);
+  }
+});
+
+integrationTest("TASK-042: a row's Supplier, audit and applied marker commit together, or none of them does", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid", "warning"] });
+  const importer = service();
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+
+  const applied = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() });
+  assert.equal(applied.status, "applied");
+  const [[audit]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE supplier_id = ?", [applied.appliedSupplierId]);
+  assert.equal(Number(audit.n), 1, "the audit committed with the row");
+
+  const before = [...h.supplierIds];
+  const failed = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000,
+    applyRow: writeSupplier({ failAfterWrite: true }) });
+  assert.equal(failed.status, "failed");
+  const leaked = h.supplierIds.at(-1);
+  assert.equal(await supplierCount([leaked]), 0, "the Supplier written before the failure rolled back");
+  const [[orphanAudit]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_audit_logs WHERE supplier_id = ?", [leaked]);
+  assert.equal(Number(orphanAudit.n), 0, "and so did its audit");
+  const [, second] = await rows(jobId);
+  assert.equal(second.applied_supplier_id, null);
+  assert.ok(!JSON.stringify(second.errors).includes("secret CSV value"), "a row error never carries the thrown message");
+
+  const noId = await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000,
+    applyRow: writeSupplier({ returnId: false }) });
+  assert.equal(noId.status, "failed", "an applyRow that does not return the Supplier it wrote is a failure");
+  assert.equal(await supplierCount([h.supplierIds.at(-1)]), 0, "and its Supplier rolled back");
+  assert.ok(before.length > 0);
+
+  assert.equal(await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() }), null);
+  const done = await importer.finalizeExecution({ jobId, leaseOwner: "me" });
+  assert.deepEqual([done.status, done.applied, done.failed, done.skipped], ["completed_with_errors", 1, 2, 0]);
+});
+
+integrationTest("TASK-042: a row applied before a crash is not applied again, and the job resumes after the lease expires", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid"] });
+  const first = service();
+  await first.claimForExecution({ leaseOwner: "worker-a", leaseDurationMs: 60_000 });
+  const one = await first.processNextRow({ jobId, leaseOwner: "worker-a", leaseDurationMs: 60_000, applyRow: writeSupplier() });
+  // worker-a 喺呢度死咗：lease 仲喺，第二個 worker 攞唔到，亦都寫唔到。
+  const second = service();
+  assert.equal(await second.claimForExecution({ leaseOwner: "worker-b", leaseDurationMs: 60_000 }), null);
+  await assert.rejects(() => second.processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 60_000, applyRow: writeSupplier() }),
+    (error) => error.publicCode === "SUPPLIER_IMPORT_LEASE_LOST");
+
+  clock += 61_000;
+  assert.deepEqual(await second.claimForExecution({ leaseOwner: "worker-b", leaseDurationMs: 60_000 }), { id: jobId, resumed: true });
+  let calls = 0;
+  const counting = async (connection, context) => { calls += 1; return writeSupplier()(connection, context); };
+  const next = await second.processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 60_000, applyRow: counting });
+  assert.equal(next.rowNumber, 2, "row 1 was committed by worker-a and is not redone");
+  assert.equal(await second.processNextRow({ jobId, leaseOwner: "worker-b", leaseDurationMs: 60_000, applyRow: counting }), null);
+  assert.equal(calls, 1);
+  // 舊 worker 返嚟都寫唔到：lease 已經唔係佢嘅。
+  await assert.rejects(() => first.finalizeExecution({ jobId, leaseOwner: "worker-a" }),
+    (error) => error.publicCode === "SUPPLIER_IMPORT_LEASE_LOST");
+  const done = await second.finalizeExecution({ jobId, leaseOwner: "worker-b" });
+  assert.deepEqual([done.status, done.applied], ["completed", 2]);
+  assert.equal(one.status, "applied");
+});
+
+integrationTest("TASK-042: job counts are rebuilt from rows, and a job with pending rows cannot be finalized", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "invalid"] });
+  const importer = service();
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  await assert.rejects(() => importer.finalizeExecution({ jobId, leaseOwner: "me" }),
+    (error) => error.publicCode === "SUPPLIER_IMPORT_ROWS_PENDING");
+  // 將 job 上面嘅 count 改亂：finalize 要照 rows 重算，唔係信佢。
+  await h.db.execute("UPDATE supplier_import_jobs SET applied_count = 99, failed_count = 99 WHERE id = ?", [jobId]);
+  await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() });
+  await importer.finalizeExecution({ jobId, leaseOwner: "me" });
+  const [[job]] = await h.db.query(
+    "SELECT status, applied_count, failed_count, skipped_count, lease_owner, lease_until FROM supplier_import_jobs WHERE id = ?", [jobId]);
+  assert.deepEqual([job.status, Number(job.applied_count), Number(job.failed_count), Number(job.skipped_count), job.lease_owner, job.lease_until],
+    ["completed", 1, 0, 1, "", null]);
+});
