@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 251,
+  "revision": 252,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-041",
+  "current_task": "TASK-042",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
     "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t41-close",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/task-042",
     "default_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
@@ -69,7 +69,7 @@
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
     "TASK-041": "DONE",
-    "TASK-042": "PENDING",
+    "TASK-042": "IN_PROGRESS",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
     "TASK-045": "PENDING",
@@ -886,6 +886,24 @@
         "server/config/supplier.js",
         "server/.env.example",
         "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-045-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-045. Authorises TASK-042 to add server/database/migrations/0061_create_supplier_import_jobs.js and 0062_create_supplier_import_rows.js with the schema proposed in chat on 2026-09-29.",
+      "recorded_at": "2026-09-29T14:42:58+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "f441e725d33b42013886ed80c4ebd5b3f12a9c7d",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0061_create_supplier_import_jobs.js",
+        "server/database/migrations/0062_create_supplier_import_rows.js"
       ],
       "expires_at": null
     }
@@ -3925,6 +3943,55 @@
       ],
       "status": "OPEN",
       "answer_ref": null
+    },
+    {
+      "id": "HD-045",
+      "impact": "MAJOR",
+      "question": "TASK-042 schema (CLAUDE.md §8; server/database/migrations/** is approval-required): 0061_create_supplier_import_jobs and 0062_create_supplier_import_rows with design §5.13 columns only. (1) Add CHECK ((status='applied') = (applied_supplier_id IS NOT NULL)) on rows? (2) rows.job_id FK ON DELETE RESTRICT rather than CASCADE? (3) Leave out Customer's idempotency_key, operation_id and *_storage_status columns (upload uses framework route idempotency)?",
+      "affected_ids": [
+        "TASK-042",
+        "server/database/migrations/0061_create_supplier_import_jobs.js",
+        "server/database/migrations/0062_create_supplier_import_rows.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: '全按你的建議批准' - approve the schema as proposed in chat, with (1) the CHECK, (2) RESTRICT and (3) the Customer-only columns left out until T43 proves a need."
+    },
+    {
+      "id": "HD-046",
+      "impact": "MAJOR",
+      "question": "HD-039 (B) said the import root becomes required when T42 registers the import services. The T42 worker is auto-discovered in every environment, so requiring it now would stop every environment without SUPPLIER_IMPORT_ROOT, CI included (the CI workflow is outside the module). (a) Move the requirement to T43/T44, when the upload API registers and import is actually deployed; the T42 worker does nothing without a root. (b) Require it now and change CI, test and local environments.",
+      "affected_ids": [
+        "TASK-042",
+        "TASK-043",
+        "TASK-044",
+        "HD-039",
+        "HD-041"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: 'a'."
+    },
+    {
+      "id": "HD-047",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-042: before TASK-043, TASK-044 is DONE, confirm it refuse startup without import.root once the upload API registers (HD-046 a); the precheck job uses SUPPLIER_IMPORT_JOB_NAMES.precheck; stored names come from newSupplierImportStoredName / supplierImportFilePath (docs/supplier_management/implementation/62_task_041_carry_forward.md).",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-044",
+        "TASK-042"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-048",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-042: before TASK-045 is DONE, confirm it wire the real applyRow into SupplierImportWorkerService, writing Supplier and audit on the given connection and returning the Supplier ID; re-check that the confirming user is still active and holds supplier.mgmt at execution (docs/supplier_management/implementation/62_task_041_carry_forward.md).",
+      "affected_ids": [
+        "TASK-045",
+        "TASK-042"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -5001,5 +5068,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-041 is DONE (merged at 8009e89, main CI green). PHASE-004 continues; by dependencies the next ready task should be re-derived from 08_traceability.json against this ledger before starting. Open carry-forward: HD-041..HD-044 (TASK-042/043/044/045/048). Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-042 implemented on claude/supplier-task-042: migrations 0061/0062 (HD-045), SupplierImportService, SupplierImportWorkerService, prepared import root. Integration 6/6 on real MySQL, 19 mutants killed, lint clean, real entrypoint boots with and without SUPPLIER_IMPORT_ROOT. Next: PR, REV-061, green CI, the Product Owner's word before merge. HD-041 stays open until TASK-042 is DONE; its root-required row moved to TASK-043/044 (HD-046, HD-047). Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }

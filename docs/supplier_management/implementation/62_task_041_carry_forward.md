@@ -31,3 +31,33 @@ Round 2 (after REV-059) — all killed: the `dev` check removed (now testable th
 a filesystem root accepted; `split(",")` planted in `handlers/supplier-approvals`; the same planted in a
 not-yet-created `handlers/supplier-imports`; `split(/,/)` and `split("\n")` planted in
 `modules/supplier`. Round 1 was re-run after the test changes and stayed all-killed.
+
+## Status after TASK-042
+
+| Obligation | Status |
+| --- | --- |
+| 0700 root and kind directories, owned by the service user; group/other-writable root refused | **Done** — `prepareSupplierImportRoot`, run by `SupplierImportWorkerService.initialize` |
+| `realpath` + `dev`/`ino` overlap check against Customer and Item roots | **Done** — same function; `fs.promises.realpath` restores on-disk case, so a case variant on a case-insensitive filesystem is caught |
+| Worker `static jobs` use `SUPPLIER_IMPORT_JOB_NAMES.worker`, pinned by a test | **Done** |
+| Stored names only via `newSupplierImportStoredName` / `supplierImportFilePath` | **Not yet exercised** — T42 writes no files; carried to T43 (upload) |
+| Precheck job uses `SUPPLIER_IMPORT_JOB_NAMES.precheck` | **Moved to T43** — precheck is T43's job; T42 has nothing to schedule for it |
+| Root required when import services register (HD-039 B) | **Moved to T43/T44 by HD-046 (a)** — required when the upload API registers, which is when import is actually deployed. The T42 worker registers everywhere and does nothing without a root; with no upload there are no jobs |
+
+New obligations T42 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T43 / T44 | Refuse startup without `import.root` once the upload API registers (HD-046 a) |
+| T45 | Wire the real `applyRow` into `SupplierImportWorkerService` (it claims nothing until then), writing Supplier and audit on the given connection and returning the Supplier ID |
+| T45 | Re-check at execution that the confirming user is still active and holds `supplier.mgmt`, as Customer import does; T42 does not |
+
+## Mutation record for TASK-042
+
+All killed, against `supplierImportService`, `supplierImportWorkerService` and the
+`supplierImportExecution` integration test on real MySQL: claiming a running job whose lease is live;
+newest job first; invalid rows not skipped; rows out of order; lease not checked; the applied marker
+committed in a separate transaction; an `applyRow` that returns no ID accepted; the thrown message stored
+as the row error; finalize with rows pending; finalize ignoring failures; a terminal state reopened; the
+worker ignoring abort; the worker running without `applyRow`; the root not prepared; a loose root
+accepted; the realpath overlap skipped; the rows CHECK not inspected; a CASCADE row FK accepted; the job
+column types not inspected. Four of these first survived and each got a test.
