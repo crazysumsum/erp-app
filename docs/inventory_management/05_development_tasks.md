@@ -680,6 +680,8 @@ Phase P0 開始前：
 
 **Description：** 建立 §5.5 全部查詢／command handlers、client methods及 Sales/Fulfillment transaction-aware service entry points；provider固定 caller permission/purpose mapping，不接受 caller自報權限名稱。
 
+**P2授權決策：** Sam批准Sales預留使用`sales.operation`、Fulfillment分配／Issue使用`fulfillment.operation`；兩者由尚未合併的`0061` idempotent seed，不修改已合併的`0055`或後續預留的migration序號。直接Inventory HTTP route維持`inventory.view`＋`inventory.operation`，與下游internal入口分開。
+
 **Traceability：** Design §§5.1、5.5、5.11、6.1；SEC-003、SEC-006～008、AC-047～048。
 
 **Acceptance criteria：**
@@ -687,6 +689,7 @@ Phase P0 開始前：
 - [ ] Create/release/cancel/candidates/allocate/release allocation/reallocate route具有 strict schema、version、source及 idempotency。
 - [ ] FEFO candidates query不改資料；所有 command共用既有 caller transaction且提交點重讀 actor permission。
 - [ ] 下游角色不因呼叫 Inventory capability取得 `inventory.view`或管理頁權限。
+- [ ] `0061` seed兩項下游契約權限且不自動grant；同步更新權限目錄及seed一致性檢查；Sales／Fulfillment provider固定驗其對應權限，caller不能自報替換。
 
 **Verification（納入 P2-GATE）：** handler/client contract tests、internal transaction rollback及 permission revocation integration。
 
@@ -2004,6 +2007,8 @@ The task diff is scoped, reviewed and covered by its mandatory technical cases; 
 ### Goal
 建立 §5.5 全部查詢／command handlers、client methods及 Sales/Fulfillment transaction-aware service entry points；provider固定 caller permission/purpose mapping，不接受 caller自報權限名稱
 
+Sam批准的固定映射：Sales Reservation create／release／cancel驗`sales.operation`，Fulfillment candidates／Allocation／Issue驗`fulfillment.operation`；尚未合併的`0061`負責idempotent seed，`0055`及後續migration序號不變。直接Inventory HTTP route仍用`inventory.view`＋`inventory.operation`，不借此授予下游管理頁權限。
+
 ### Approach
 Implement only the scope and dependencies of legacy task `P2-T05` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
 
@@ -2011,6 +2016,7 @@ Implement only the scope and dependencies of legacy task `P2-T05` inside `PHASE-
 - Create/release/cancel/candidates/allocate/release allocation/reallocate route具有 strict schema、version、source及 idempotency。
 - FEFO candidates query不改資料；所有 command共用既有 caller transaction且提交點重讀 actor permission。
 - 下游角色不因呼叫 Inventory capability取得 `inventory.view`或管理頁權限。
+- `0061` seed兩項下游契約權限且不自動grant；同步更新權限目錄及seed一致性檢查；provider固定purpose／permission，拒絕caller自報替換。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.

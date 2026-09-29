@@ -850,7 +850,7 @@ Indexes：`idx_inventory_audit_time(occurred_at,id)`、`idx_inventory_audit_targ
 | `0058` | `create_inventory_master` | P1-T01 | Warehouses、bins。 |
 | `0059` | `create_inventory_stock` | P1-T05 | Lots、stock_controls、stock_balances。 |
 | `0060` | `create_inventory_movements` | P1-T05 | Movements及immutable triggers；依賴master與stock。 |
-| `0061` | `create_inventory_reservations` | P2-T01 | Reservations、allocations。 |
+| `0061` | `create_inventory_reservations` | P2-T01／T05 | Reservations、allocations及P2下游契約權限`sales.operation`／`fulfillment.operation`的idempotent seed；不修改已合併的`0055`。 |
 | `0062` | `create_inventory_transfers` | P3-T01 | Transfer headers／lines；補Movement optional FKs。 |
 | `0063` | `create_inventory_stocktakes` | P4-T01 | Headers／bins／locks／lines；補Movement optional FKs。 |
 | `0064` | `create_inventory_opening` | P5-T01 | Control singleton、opening jobs／rows。 |
@@ -1099,6 +1099,7 @@ Internal `command`必須包括：
 ```
 
 - `requiredCallerPermission`由provider contract針對Receiving／Fulfillment等固定映射，不接受caller傳入任意permission name再自稱通過。
+- Sales Reservation create／release／cancel固定驗`sales.operation`；Fulfillment Allocation（含release／reallocate）、candidates及Issue固定驗`fulfillment.operation`。這兩項為下游業務權限，不授予`inventory.view`、`inventory.operation`或Inventory管理頁。直接Inventory HTTP route仍按§§5.4～5.5要求`inventory.view`＋`inventory.operation`，與internal provider入口分開。
 - Receiving低效期例外固定映射`receiving.expiry.override`並驗證逐筆evidence；Customer Return Receipt固定預設`QUARANTINED`，品質檢查完成後才可另走Status Transfer轉為`AVAILABLE`或`DAMAGED`。
 - Service要求已傳入transaction；若沒有則立即拋TypeError，避免上下游以為共用transaction但Inventory偷偷另開transaction。
 - Inventory在提交點重讀actor、SKU及位置狀態。若必要依賴不可用，整個來源transaction rollback。
@@ -1121,6 +1122,8 @@ Internal `command`必須包括：
 | `inventory.fefo.override` | 偏離FEFO但仍合資格；FIFO偏離由來源模組自身operation permission＋原因控制 | 過期／低效期／非AVAILABLE／不足繞過。 |
 
 五項權限互不繼承。頁面若要讀後寫，route requirement可要求view，按鈕再依額外permission顯示；後端仍完整驗證。System administrator角色名稱不自動取得任何Inventory權限。
+
+P2另在尚未合併的`0061`建立`sales.operation`（Sales預留）與`fulfillment.operation`（Fulfillment分配／出庫）兩個下游契約權限，並同步登錄權限目錄及seed一致性檢查；它們不屬於上述五項Inventory管理權限，也不自動grant給任何角色。`0055`已合併，保持不變；`0062`～`0064`的後續migration序號保持原配置。
 
 ### 6.2 Authentication strength
 

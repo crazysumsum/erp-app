@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 152,
+  "revision": 155,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-003",
   "current_task": "TASK-023",
   "baseline": {
-    "design": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
-    "plan": "6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd",
-    "code_commit": "d49c0d109318c7ecf721b94d6398aefac7162b62",
+    "design": "c4ef4c1b9cadee1c87a4b3041a080ee005fa5533c33d266dea4b0c3013240843",
+    "plan": "00f237d83e9933f5c3f6c014be8ec3ea3ff30fd25c57c8770933320e6691fa38",
+    "code_commit": "787782841f2a40e95e71b8e46c77cc4515936951",
     "source_fingerprint": "7b06ff1a3c3988e683da5c6eee2db4e80c74608e0e3023b0e71748c5590dbf4c",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",
@@ -1340,6 +1340,65 @@
         "server/database/migrations/0061_create_inventory_reservations.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-062",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-061 independently reviewing updated P2 exact DESIGN",
+      "recorded_at": "2026-09-29T08:22:45Z",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "c4ef4c1b9cadee1c87a4b3041a080ee005fa5533c33d266dea4b0c3013240843",
+      "code_commit": "787782841f2a40e95e71b8e46c77cc4515936951",
+      "scope": [
+        "inventory-management",
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-063",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-061 updated exact P2 PLAN; local TASK-023–025 implementation only",
+      "recorded_at": "2026-09-29T08:22:45Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "00f237d83e9933f5c3f6c014be8ec3ea3ff30fd25c57c8770933320e6691fa38",
+      "code_commit": "787782841f2a40e95e71b8e46c77cc4515936951",
+      "scope": [
+        "inventory-management",
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "no P2 CI, push, PR, merge, formal acceptance or release approval"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-064",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-061 reauthorizing exact three shared paths under updated P2 PLAN",
+      "recorded_at": "2026-09-29T08:22:45Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "00f237d83e9933f5c3f6c014be8ec3ea3ff30fd25c57c8770933320e6691fa38",
+      "code_commit": "787782841f2a40e95e71b8e46c77cc4515936951",
+      "scope": [
+        "server/database/migrations/0061_create_inventory_reservations.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/test/permissionCatalogueConventions.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1770,6 +1829,18 @@
       "reviewer": "Sam (ERP Product Owner and independent reviewer)",
       "reviewed_baseline": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
       "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-057 after request to review exact DESIGN and P2 task plan; no detailed findings were supplied",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-042",
+      "method": "HUMAN",
+      "author": "/root P2 design and plan permission-alignment author",
+      "reviewer": "Sam (ERP Product Owner and independent reviewer)",
+      "reviewed_baseline": "c4ef4c1b9cadee1c87a4b3041a080ee005fa5533c33d266dea4b0c3013240843",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-061 exact DESIGN/PLAN and three shared paths; no detailed findings were supplied",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3194,8 +3265,23 @@
         "SEC-007",
         "AC-047"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response A on 2026-09-29: seed sales.operation and fulfillment.operation in unmerged P2 migration 0061; leave merged 0055 and reserved 0062–0064 unchanged"
+    },
+    {
+      "id": "HD-061",
+      "impact": "MAJOR",
+      "question": "Does Sam independently review and approve the updated Inventory DESIGN c4ef4c1b9cadee1c87a4b3041a080ee005fa5533c33d266dea4b0c3013240843 and PLAN 00f237d83e9933f5c3f6c014be8ec3ea3ff30fd25c57c8770933320e6691fa38 for local TASK-023–025 continuation, and reauthorize the exact shared paths server/database/migrations/0061_create_inventory_reservations.js, server/src/modules/authorization/permissionCatalogue.js, and server/test/permissionCatalogueConventions.test.js under that PLAN? This does not authorize P2 CI, push, PR, merge, formal acceptance, or release.",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "SEC-007",
+        "AC-047"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 批准 on 2026-09-29 to HD-061 exact DESIGN/PLAN and three shared paths; local TASK-023–025 continuation only"
     }
   ],
   "external_actions": [
@@ -4039,5 +4125,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Await HD-060 migration placement answer before changing permission seed or provider contracts. Then update canonical design and exact baseline approvals before continuing affected implementation. Existing TASK-023 direct HTTP API slices through d49c0d1 remain local only; P2 CI/push/PR/merge and formal acceptance remain separate gates."
+  "next_safe_action": "Continue locally with TASK-023 approved permission seed/catalogue/provider contracts using TDD and scoped developer checks. Do not run P2 CI, push, PR, merge, formal acceptance or release without separate gate."
 }
