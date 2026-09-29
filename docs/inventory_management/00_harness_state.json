@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 148,
+  "revision": 149,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "b4c9ed316c82f3e8dab234406c7d49b3284c399832fea3896dfb67aa3893f2ba",
     "plan": "6c0ea25500271e8f9dba93a6c75e7bd0ea3ed5ddbc8f316410e2757c19731ddd",
-    "code_commit": "9d19c79ac46f7950be0d67836873f7646bccea62",
+    "code_commit": "dd7832b069f580f095a660de44ee826f69dcb143",
     "source_fingerprint": "04e21cad1c061ec56304e130178d207b162d2f8ccdaa8c9dcdff9fd66d20abdc",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",
@@ -3797,10 +3797,10 @@
     {
       "id": "EXT-086",
       "kind": "PR_MERGE",
-      "target": "https://github.com/crazysumsum/erp-app/pull/164 at e46e607 into main 742d58e",
+      "target": "https://github.com/crazysumsum/erp-app/pull/164 exact head 774271fdba92d5e19f3de9f11f94f6f2e2249a41 into main",
       "idempotency_key": "inventory-p1-merge-conditional-20260929",
-      "status": "PLANNED",
-      "source_ref": "P1 merge remains deferred under HD-053 choice B until repaired MERGE_READY passes on a newly approved PLAN baseline, fresh evidence, exact-head CI and Sam review"
+      "status": "CONFIRMED",
+      "source_ref": "Previously observed gh pr view #164 MERGED at 2026-09-29T07:17:17Z, merge commit e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a; P2 branch now contains that exact main commit"
     },
     {
       "id": "EXT-087",
@@ -3855,16 +3855,32 @@
       "kind": "GIT_PUSH",
       "target": "PR #164 branch codex/inventory-p1-integration with approved Harness repair and three developer evidence directories",
       "idempotency_key": "inventory-p1-harness-repair-push-20260929",
-      "status": "PLANNED",
-      "source_ref": "Sam APR-056 exact PLAN and APR-058 classified evidence export approval; stage review, commit and latest-main reconciliation required before push"
+      "status": "CONFIRMED",
+      "source_ref": "Previously observed git push and gh pr view confirmed PR #164 head 774271fdba92d5e19f3de9f11f94f6f2e2249a41; branch was safely deleted only after merge"
+    },
+    {
+      "id": "EXT-094",
+      "kind": "CI_RUN",
+      "target": "https://github.com/crazysumsum/erp-app/actions/runs/36534680829 for PR #164 exact head 774271f",
+      "idempotency_key": "inventory-p1-harness-repair-ci-20260929",
+      "status": "CONFIRMED",
+      "source_ref": "Previously observed GitHub Actions run completed SUCCESS on exact head 774271fdba92d5e19f3de9f11f94f6f2e2249a41; all five required jobs completed SUCCESS"
+    },
+    {
+      "id": "EXT-095",
+      "kind": "ISOLATED_RUNTIME_CLEANUP",
+      "target": "Exact P1 private MySQL schema erp_inventory_p1_harness_20260929, listener 3341 and /private/tmp/erp-inventory-p1-harness-runtime-2670.u9g684",
+      "idempotency_key": "inventory-p1-harness-runtime-cleanup-20260929-u9g684",
+      "status": "CONFIRMED",
+      "source_ref": "Previously observed exact schema dropped and absent, private mysqld stopped, runtime path/socket/3341 listener absent after PR #164 merge; archived P1 worktree preserves local cleanup checkpoint"
     },
     {
       "id": "EXT-096",
       "kind": "BRANCH_RECONCILIATION",
       "target": "Merge observed origin/main e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a into P2 codex/inventory-task-013 after preserving rev145 TASK-022 state",
       "idempotency_key": "inventory-p2-main-reconciliation-20260929-e36f0de",
-      "status": "PLANNED",
-      "source_ref": "Sam's prior P1-first integration approval APR-055 explicitly included updating P2 after P1 merged; git merge-tree preview shows conflicts only in Inventory Harness state and implementation readiness; preserve both branches' unique records and P1 approved profile/gates. No P2 push/PR/merge to main is authorized by this action."
+      "status": "CONFIRMED",
+      "source_ref": "git merge origin/main completed locally as dd7832b069f580f095a660de44ee826f69dcb143 after preserving P2 rev145/146 state and resolving only Inventory Harness state/readiness; local lint, client build and 26 focused P2 unit tests passed. No P2 push, PR or main merge occurred."
     },
     {
       "id": "EXT-097",
@@ -3914,5 +3930,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Commit the conflict-resolved P2/main integration without claiming approval. Await HD-057: Sam's independent review/reaffirmation of DESIGN b4c9ed31, approval of PLAN 6c0ea255 and migration 0061 scope. Only then begin TASK-023 through TASK-025. P2 CI/push/PR/merge remain separate gates."
+  "next_safe_action": "P2 branch now includes merged P1 main at dd7832b; no P2 publication occurred. Await HD-057: Sam's independent review/reaffirmation of DESIGN b4c9ed31, approval of combined PLAN 6c0ea255 and migration 0061 scope. Only then begin TASK-023 through TASK-025. P2 CI/push/PR/merge remain separate gates."
 }
