@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 246,
+  "revision": 247,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "VERIFYING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-003",
-  "current_task": "TASK-037",
+  "current_phase": "PHASE-004",
+  "current_task": "TASK-041",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
@@ -68,7 +68,7 @@
     "TASK-038": "PENDING",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
-    "TASK-041": "PENDING",
+    "TASK-041": "IN_PROGRESS",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
@@ -867,6 +867,25 @@
         "server/scripts/rotateSupplierBankEncryption.js",
         "server/scripts/reindexSupplierBankBlindIndexes.js",
         "server/scripts/ is NOT declared in approval_required_paths, by decision HD-034; it reports OUTSIDE_MODULE"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-039-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-039 (A). Authorises TASK-041 to edit server/config/supplier.js (import.root from SUPPLIER_IMPORT_ROOT), server/.env.example (one SUPPLIER_IMPORT_ROOT example line, no secret) and server/src/framework/configuration/applicationConfiguration.js (a cross-section check that the Supplier import root does not overlap a Customer import or attachment root; reads Customer config only).",
+      "recorded_at": "2026-09-29T09:05:51+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "805423e9103e2992e538cec67a0261a429402dd4",
+      "scope": [
+        "supplier-management",
+        "server/config/supplier.js",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js"
       ],
       "expires_at": null
     }
@@ -3801,6 +3820,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-09-28: 'B'. Implemented on claude/supplier-def-026-027: runRotation fromLost in server/src/modules/supplier/bankKeyRotation.js, and the --from-lost flag in server/scripts/supplierBankRotationCli.js - that file is OUTSIDE_MODULE under HD-034, and this answer is the authority for touching it, as the option text named the shim. Verified against real MySQL on REV-057's lockout shape; five mutants killed. Needs REV-058."
+    },
+    {
+      "id": "HD-039",
+      "impact": "MAJOR",
+      "question": "TASK-041 needs edits to approval-required paths (server/config/supplier.js, server/.env.example, server/src/framework/configuration/applicationConfiguration.js). (B) When SUPPLIER_IMPORT_ROOT is unset: (1) treat import as not deployed and do not block startup, require it when T42 registers the import services, or (2) require it now. (C) Refuse startup when the Supplier import root overlaps a Customer import or attachment root?",
+      "affected_ids": [
+        "TASK-041",
+        "server/config/supplier.js",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: 'A批準，B，C按你的建議' - A approved; B option (1); C yes. server/config/scheduler.js was proposed as unchanged and is not touched; server/package.json and package-lock.json are not touched because csv-parse and csv-stringify were already locked."
     }
   ],
   "external_actions": [
@@ -4291,6 +4323,14 @@
       "idempotency_key": "mode-change-243",
       "status": "CONFIRMED",
       "source_ref": "PR #158 merged at 761c0bd with green CI on the Product Owner's word; HD-037 remediation complete, TEST_AND_VERIFY resumes on the merged baseline"
+    },
+    {
+      "id": "MODE-CHANGE-247",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-247",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-09-29: '可以開始' for TASK-041 (PHASE-004), after TASK-037 closed PHASE-003. Written directly, not through state_tool checkpoint: the tool's transition table has no VERIFYING -> IMPLEMENTING edge even with a mode-change reference, while references/19-state-and-recovery.md says a new material change re-enters the required stage with explicit mode authorization. This revision carries the same mode-change record the tool appends."
     }
   ],
   "evidence_files": [
@@ -4861,5 +4901,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-037 is DONE (technical result; SUP-CAP-03 business acceptance and release are separate), and with it every PHASE-003 task (TASK-032..037) is DONE in this ledger. By 08_traceability.json dependencies the only PHASE-004 task whose prerequisites are all DONE is TASK-041 (T41: import dependencies, config and scheduler); starting it needs an IMPLEMENT mode change. Correction to revision 245's text, which named T38 as next in PHASE-003: T38 is PHASE-004 and depends on TASK-042. TC-133 / OPS-006 belongs to TASK-051 and must pass before release (HD-036). Open defects: DEF-023 (accepted; reassess before SUP-CAP-05 CSV import), DEF-024 (accepted). HD-036's unanswered §2 reviewer questions are carried to release approval."
+  "next_safe_action": "TASK-041 implemented on claude/supplier-task-041 (commit 805423e9103e2992e538cec67a0261a429402dd4): unit and config tests pass, 11 mutants killed, npm audit and lint clean. Next: PR, green CI, an independent review, and the Product Owner's word before merge."
 }
