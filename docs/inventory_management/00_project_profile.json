@@ -5,7 +5,7 @@
     "id": "inventory-isolated-test",
     "kind": "LOCAL_ISOLATED",
     "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
-    "authorization_ref": null
+    "authorization_ref": "APR-055 (Sam approved P1 developer gates on isolated resources); APR-042 (Sam approved disposable MySQL 26.7.0)"
   },
   "permissions": {
     "product_write": [
@@ -116,6 +116,63 @@
       ]
     },
     {
+      "id": "inventory-developer",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-developer.xml",
+        "server/test/inventoryAuditService.test.js",
+        "server/test/inventoryConfig.test.js",
+        "server/test/inventoryEndpointSecurity.test.js",
+        "server/test/inventoryExpiry.test.js",
+        "server/test/inventoryFoundation.test.js",
+        "server/test/inventoryInquiryHandlers.test.js",
+        "server/test/inventoryInquiryService.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/inventoryMasterHandlers.test.js",
+        "server/test/inventoryMasterMigration.test.js",
+        "server/test/inventoryMasterService.test.js",
+        "server/test/inventoryOperationHash.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryPostingHandlers.test.js",
+        "server/test/inventoryPostingService.test.js",
+        "server/test/inventoryProjections.test.js",
+        "server/test/inventoryQuantity.test.js",
+        "server/test/inventoryTestSupport.test.js",
+        "server/test/inventoryValidation.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-developer.xml",
+      "min_tests": 108,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
       "id": "inventory-technical",
       "kind": "INTEGRATION",
       "argv": [
@@ -188,6 +245,7 @@
     "required_checks": [
       "Dependency audit",
       "Lint",
+      "Browser tests (Playwright)",
       "Test (server + client, MySQL integration)",
       "Build frontend"
     ]

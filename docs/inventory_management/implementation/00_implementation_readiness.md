@@ -2,7 +2,7 @@
 
 ## Status
 
-`IMPLEMENTING` — TASK-001～TASK-012 are integrated into `main` through PR #148, with the CI remediation integrated through PR #150. TASK-013～TASK-020 are complete locally in the continuing implementation branch; TASK-021 local service implementation and guarded MySQL developer verification are complete locally.
+`IMPLEMENTING` — TASK-001～TASK-018 are integrated into `main` through PR #164. TASK-019～TASK-022 have local developer checks on the P2 branch; TASK-023～TASK-025 remain pending. P2 has not passed its Phase merge gate, and no formal Technical Acceptance or UAT is claimed.
 
 ## Baseline
 
@@ -305,4 +305,4 @@ The exact `erp_inventory_task022_20260929_0854` schema was dropped and confirmed
 
 ## Next safe action
 
-TASK-022 guarded developer checks and exact runtime cleanup are complete. Seek a separate publication／CI scope decision before push, PR or merge; formal `TC-004`／`TC-005` remain for TEST_AND_VERIFY.
+Reconcile the P2 branch with merged P1 `main`, approve the resulting exact DESIGN／PLAN baselines, then complete TASK-023～TASK-025 and their developer checks. Seek separate CI／publication／review authority for the complete P2 candidate; formal `TC-004`／`TC-005` remain for TEST_AND_VERIFY.

@@ -257,16 +257,19 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
   await assert.rejects(() => revealOn(missing), (error) => {
     const serialised = `${error?.message ?? ""}${error?.stack ?? ""}${JSON.stringify(error?.details ?? null)}`;
     assert.ok(!serialised.includes(ACCOUNT), "a key-unavailable failure must not carry the account");
-    assert.ok(error?.publicCode || error?.code, `the refusal must be coded, got ${serialised.slice(0, 120)}`);
+    // DEF-026 之後 service 層分得開兩種失敗：缺 key 係 503 BANK_KEY_UNAVAILABLE。
+    assert.equal(error?.statusCode, 503, `a missing key is 503, got ${serialised.slice(0, 120)}`);
+    assert.equal(error?.publicCode, "BANK_KEY_UNAVAILABLE");
     return true;
   }, "restoring the database without its key ring must fail closed, not return plaintext");
 
   /**
-   * Service 層特登把「ring 冇嗰條 key」同「key 係錯嘅」收成同一個
-   * `BANK_ACCOUNT_UNREADABLE` —— 唔話俾 caller 聽點解，係啱嘅。但代價係上面嗰句
-   * 斷言分唔開兩者：我把 crypto 改成「ring 揾唔到就靜靜雞用 active key」（一個
-   * 教科書式嘅 fail-open），佢照樣 fail closed，因為 GCM tag 一樣對唔上 ——
-   * **個 mutant 生還咗。**
+   * 呢一句最初寫嘅時候，service 層把「ring 冇嗰條 key」同「key 係錯嘅」收成同一個
+   * `BANK_ACCOUNT_UNREADABLE`，而我當時仲寫咗句「係啱嘅」—— 嗰句係用我自己嘅判斷，唔係
+   * 對照設計；設計一早就要求兩者分開（503 同 500），嗰個收埋就係 DEF-026，已經修正。
+   * 當時嘅代價係上面嗰句斷言分唔開兩者：我把 crypto 改成「ring 揾唔到就靜靜雞用 active
+   * key」（一個教科書式嘅 fail-open），佢照樣 fail closed，因為 GCM tag 一樣對唔上 ——
+   * **個 mutant 生還咗。** 而家 service 層都分得開，但 crypto 層呢句保留：佢係最直接嗰道。
    *
    * 所以要落一層問。Crypto 係唯一一層分得開嘅，而「分得開」就係呢個案例要嘅嘢：
    * 缺 key 要因為**缺 key** 而拒絕，唔係因為順手試咗第二條 key 又啱撞唔到。
@@ -290,6 +293,9 @@ integrationTest("TC-077 (BANK-016): a restored backup reveals with its key ring,
   await assert.rejects(() => revealOn(wrong), (error) => {
     const serialised = `${error?.message ?? ""}${error?.stack ?? ""}${JSON.stringify(error?.details ?? null)}`;
     assert.ok(!serialised.includes(ACCOUNT), "a wrong-key failure must not carry the account");
+    // DEF-026 之後：同一個 key id 錯 material 係完整性失敗，通用 500，唔講原因。
+    assert.equal(error?.statusCode, 500, "a wrong key of the right id is an integrity failure, 500");
+    assert.equal(error?.publicCode, "INTERNAL_SERVER_ERROR");
     return true;
   }, "a wrong key of the right id must fail closed on the GCM tag, never return garbage as if it were an account");
 

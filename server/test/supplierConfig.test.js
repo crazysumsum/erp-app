@@ -14,6 +14,7 @@ test("Supplier config supplies bounded Phase 1 defaults without requiring Bank k
   assert.equal(config.bankLookup, null);
   assert.equal(config.duplicateNameThreshold, 0.85);
   assert.deepEqual(config.import, {
+    root: null,
     maxFileBytes: 10_485_760,
     maxRows: 10_000,
     fileRetentionDays: 365

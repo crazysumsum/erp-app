@@ -138,7 +138,7 @@ async function cleanup(connection, supplierIds) {
   }
 }
 
-integrationTest("encryption rotation re-encrypts real rows and leaves them decryptable and un-reindexed", async (t) => {
+integrationTest("TC-076 (BANK-015): encryption rotation re-encrypts real rows and leaves them decryptable and un-reindexed", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
@@ -183,7 +183,7 @@ integrationTest("encryption rotation re-encrypts real rows and leaves them decry
   assert.deepEqual(afterRows.map((row) => Number(row.id)), ids);
 });
 
-integrationTest("lookup rotation rewrites index and key id together, and the unique constraint holds", async (t) => {
+integrationTest("TC-076 (BANK-015): lookup rotation rewrites index and key id together, and the unique constraint holds", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
@@ -219,7 +219,7 @@ integrationTest("lookup rotation rewrites index and key id together, and the uni
   }
 });
 
-integrationTest("a duplicate is still refused while the ring is half rotated", async (t) => {
+integrationTest("TC-076 (BANK-015): a duplicate is still refused while the ring is half rotated", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
@@ -263,7 +263,7 @@ integrationTest("a duplicate is still refused while the ring is half rotated", a
   );
 });
 
-integrationTest("an interrupted rotation resumes and finishes on real rows", async (t) => {
+integrationTest("TC-076 (BANK-015): an interrupted rotation resumes and finishes on real rows", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });

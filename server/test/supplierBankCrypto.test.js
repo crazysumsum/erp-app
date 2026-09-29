@@ -42,7 +42,7 @@ function cryptoAndLookupKey() {
   };
 }
 
-test("a round trip returns the account, and records the key ID that produced it", () => {
+test("TC-067 (BANK-006): a round trip returns the account, and records the key ID that produced it", () => {
   const crypto = cryptoWith();
   const context = crypto.newCryptoContext();
   const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: ACCOUNT });
@@ -57,7 +57,7 @@ test("a round trip returns the account, and records the key ID that produced it"
   assert.equal(crypto.decryptAccountNumber({ supplierId: 7, cryptoContext: context, ...sealed }), ACCOUNT);
 });
 
-test("every row gets its own IV, so the same account never encrypts to the same bytes", () => {
+test("TC-067 (BANK-006): every row gets its own IV, so the same account never encrypts to the same bytes", () => {
   // GCM 重用 IV 唔係「弱少少」，係直接洩漏明文異或值同 authentication key。
   const crypto = cryptoWith();
   const context = crypto.newCryptoContext();
@@ -69,7 +69,7 @@ test("every row gets its own IV, so the same account never encrypts to the same 
   assert.notEqual(crypto.newCryptoContext(), crypto.newCryptoContext());
 });
 
-test("moving a row to another Supplier makes it undecryptable", () => {
+test("TC-067 (BANK-006): moving a row to another Supplier makes it undecryptable", () => {
   // AAD 綁 supplierId 就係為咗呢個：攞到資料庫寫入權但攞唔到 key 嘅人，唔可以將
   // A 公司嘅帳號移花接木做 B 公司嘅。
   const crypto = cryptoWith();
@@ -82,7 +82,7 @@ test("moving a row to another Supplier makes it undecryptable", () => {
   );
 });
 
-test("swapping the crypto context of two rows under one Supplier also fails", () => {
+test("TC-067 (BANK-006): swapping the crypto context of two rows under one Supplier also fails", () => {
   const crypto = cryptoWith();
   const mine = crypto.newCryptoContext();
   const theirs = crypto.newCryptoContext();
@@ -113,7 +113,7 @@ test("the AAD cannot be forged by shifting the boundary between its two parts", 
   );
 });
 
-test("tampering with the ciphertext or the tag fails verification", () => {
+test("TC-067 (BANK-006): tampering with the ciphertext or the tag fails verification", () => {
   const crypto = cryptoWith();
   const context = crypto.newCryptoContext();
   const sealed = crypto.encryptAccountNumber({ supplierId: 7, cryptoContext: context, accountNumber: ACCOUNT });
@@ -215,7 +215,7 @@ test("duplicate checking covers the whole lookup ring, not just the active key",
   assert.ok(SupplierBankCrypto.sameIndex(match.index, active.index));
 });
 
-test("formatting differences in the same account collide, so a duplicate cannot hide behind a space", () => {
+test("TC-070 (BANK-009): formatting differences in the same account collide, so a duplicate cannot hide behind a space", () => {
   const crypto = cryptoWith();
   const spaced = crypto.blindIndex("1234 5678 9012 3");
   const plain = crypto.blindIndex("1234567890123");
@@ -301,14 +301,14 @@ function masked(row) {
 
 test("masking never reveals a short account", () => {
   // 一個四位嘅帳號，佢個「尾四位」就係成個帳號 —— 所以長度 <= 4 要全遮。
-  assert.equal(masked({ account_length: 13, last_four: "0123" }), "•••• 0123");
-  assert.equal(masked({ account_length: 5, last_four: "2345" }), "•••• 2345");
-  assert.equal(masked({ account_length: 4, last_four: "" }), "••••");
-  assert.equal(masked({ account_length: 1, last_four: "" }), "•");
+  assert.equal(masked({ account_length: 13, last_four: "0123" }), "**** 0123");
+  assert.equal(masked({ account_length: 5, last_four: "2345" }), "**** 2345");
+  assert.equal(masked({ account_length: 4, last_four: "" }), "****");
+  assert.equal(masked({ account_length: 1, last_four: "" }), "*");
   assert.equal(masked({ account_length: 0, last_four: "" }), "");
   // 即使有人錯手將一個短帳號嘅全值放咗入 last_four，遮罩都唔可以原樣吐返出嚟。
-  assert.equal(masked({ account_length: 4, last_four: "1234" }), "••••");
-  assert.equal(masked({ account_length: 3, last_four: "123" }), "•••");
+  assert.equal(masked({ account_length: 4, last_four: "1234" }), "****");
+  assert.equal(masked({ account_length: 3, last_four: "123" }), "***");
 });
 
 test("the crypto redacts itself, so logging one cannot leak a key", () => {
@@ -336,11 +336,11 @@ test("the crypto redacts itself, so logging one cannot leak a key", () => {
 test("the writer, not just the renderer, respects the short-account boundary", () => {
   const crypto = cryptoWith();
   const cases = [
-    ["1234", 4, "", "••••"],
-    ["1", 1, "", "•"],
-    ["12345", 5, "2345", "•••• 2345"],
-    ["1234 5678", 8, "5678", "•••• 5678"],
-    ["1234-5678-9012", 12, "9012", "•••• 9012"]
+    ["1234", 4, "", "****"],
+    ["1", 1, "", "*"],
+    ["12345", 5, "2345", "**** 2345"],
+    ["1234 5678", 8, "5678", "**** 5678"],
+    ["1234-5678-9012", 12, "9012", "**** 9012"]
   ];
   for (const [input, length, lastFour, masked] of cases) {
     const sealed = crypto.encryptAccountNumber({

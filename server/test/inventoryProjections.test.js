@@ -55,6 +55,20 @@ test("Stock bucket projection fails closed on impossible quantity state", () => 
   }), /allocated quantity exceeds on hand/);
 });
 
+test("Stock bucket projection distinguishes absent lots and rejects invalid identifiers and expiry flags", () => {
+  const row = {
+    id: 1, warehouse_id: 1, bin_id: 1, sku_id: 1, lot_id: null,
+    stock_status: "AVAILABLE", is_expired: true, on_hand_quantity: 0,
+    allocated_quantity: 0, base_uom_id: 1, base_uom_code: "EA", version: 1
+  };
+  assert.equal(stockBucketProjection(row).lotId, null);
+  assert.equal(stockBucketProjection(row).isExpired, true);
+  for (const id of [0, -1, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.throws(() => stockBucketProjection({ ...row, id }), /Inventory projection/);
+  }
+  assert.throws(() => stockBucketProjection({ ...row, is_expired: "yes" }), /isExpired must be a boolean flag/);
+});
+
 test("Stock summary projection separates on-hand, reserved, ATP, status and transit quantities", () => {
   const projection = stockSummaryProjection({
     total_on_hand: "30",
@@ -131,4 +145,23 @@ test("Movement projection uses immutable snapshots instead of current master val
   assert.equal(projection.quantity, 8);
   assert.equal(Object.hasOwn(projection, "authentication_token"), false);
   assert.equal(Object.hasOwn(projection, "current_sku_code"), false);
+});
+
+test("Movement projection preserves nullable ledger fields and refuses a zero quantity", () => {
+  const row = {
+    id: 1, movement_group_id: "group-1", movement_type: "ADJUSTMENT",
+    location_kind: "WAREHOUSE", warehouse_id: 1, warehouse_code_snapshot: "WH-A",
+    bin_id: null, sku_id: 2, sku_code_snapshot: "SKU-2", sku_name_snapshot: "Widget",
+    lot_id: null, stock_status: "AVAILABLE", direction: "IN", quantity: 1,
+    balance_before: null, balance_after: null, balance_version_after: null,
+    posted_at: 1, posted_by: null, posted_by_label: "system"
+  };
+  const result = movementProjection(row);
+  assert.equal(result.bin, null);
+  assert.equal(result.lot, null);
+  assert.equal(result.balanceBefore, null);
+  assert.equal(result.balanceAfter, null);
+  assert.equal(result.balanceVersionAfter, null);
+  assert.equal(result.postedBy.userId, null);
+  assert.throws(() => movementProjection({ ...row, quantity: 0 }), /quantity must be a positive integer/);
 });

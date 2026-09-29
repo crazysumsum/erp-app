@@ -22,7 +22,7 @@ const SUPPLIER = {
 };
 const MASKED = [{
   id: 41, supplierId: 7, bankName: "Test Bank", accountHolderName: "Evergreen Trading",
-  maskedAccountNumber: "•••• 1234", status: "active", isDefault: true, version: 1,
+  maskedAccountNumber: "**** 1234", status: "active", isDefault: true, version: 1,
   bankCountryCode: "HK", accountCurrencyCode: "HKD"
 }];
 
@@ -82,7 +82,7 @@ function collectConsole(page) {
 async function openBankTab(page) {
   await page.goto("/suppliers/7");
   await page.getByRole("tab", { name: "銀行資料" }).click();
-  await expect(page.getByText("•••• 1234")).toBeVisible();
+  await expect(page.getByText("**** 1234")).toBeVisible();
 }
 
 async function reveal(page) {
@@ -95,7 +95,7 @@ async function reveal(page) {
   await expect(page.locator('[data-test="bank-plaintext"]')).toHaveText(SECRET);
 }
 
-test("@technical the masked list never fetches plaintext by itself", async ({ page }) => {
+test("@technical TC-075 (BANK-014): the masked list never fetches plaintext by itself", async ({ page }) => {
   const problems = collectConsole(page);
   const state = await installApi(page);
   await openBankTab(page);
@@ -105,7 +105,7 @@ test("@technical the masked list never fetches plaintext by itself", async ({ pa
   expect(problems).toEqual([]);
 });
 
-test("@technical a revealed account lives only in the DOM, and only for thirty seconds", async ({ page }) => {
+test("@technical TC-075 (BANK-014): a revealed account lives only in the DOM, and only for thirty seconds", async ({ page }) => {
   test.setTimeout(90_000);
   const problems = collectConsole(page);
   await installApi(page);
@@ -145,7 +145,7 @@ test("@technical a revealed account lives only in the DOM, and only for thirty s
   expect(problems).toEqual([]);
 });
 
-test("@technical leaving the page clears the account immediately", async ({ page }) => {
+test("@technical TC-075 (BANK-014): leaving the page clears the account immediately", async ({ page }) => {
   const problems = collectConsole(page);
   await installApi(page);
   await openBankTab(page);

@@ -146,7 +146,7 @@ const details = {
   bankCountryCode: "HK", bankCode: "999", branchCode: "001", swiftBic: "EXAMPLEHH"
 };
 
-integrationTest("create really writes every column, and the encrypted ones are binary of the right width", async (t) => {
+integrationTest("TC-066 (BANK-005): create really writes every column, and the encrypted ones are binary of the right width", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
@@ -170,7 +170,7 @@ integrationTest("create really writes every column, and the encrypted ones are b
   assert.equal(Number(row.default_slot), 1, "an active default takes the generated slot");
 });
 
-integrationTest("the plaintext account appears in no column of the Bank table or the audit log", async (t) => {
+integrationTest("TC-066 (BANK-005): the plaintext account appears in no column of the Bank table or the audit log", async (t) => {
   // T33 驗收要求嘅「Manual DB check」。人手做嘅檢查唔會每次都做，所以逐個欄位掃。
   const connection = await mysql.createConnection(config());
   let supplierId = null;
@@ -226,7 +226,7 @@ integrationTest("the plaintext account appears in no column of the Bank table or
     "the scanner finds a planted plaintext in both a binary and a text column, so the assertions above are not vacuous");
 });
 
-integrationTest("the database refuses a second active default even if the service is bypassed", async (t) => {
+integrationTest("TC-069 (BANK-008): the database refuses a second active default even if the service is bypassed", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
@@ -255,7 +255,7 @@ integrationTest("the database refuses a second active default even if the servic
   assert.equal(first.isDefault, true);
 });
 
-integrationTest("switching the default clears the old one, and deactivating frees the slot", async (t) => {
+integrationTest("TC-069 (BANK-008): switching the default clears the old one, and deactivating frees the slot", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   t.after(async () => { await cleanup(connection, [supplierId]); await connection.end(); });
@@ -287,7 +287,7 @@ integrationTest("switching the default clears the old one, and deactivating free
   assert.equal(restored.isDefault, true);
 });
 
-integrationTest("two concurrent default switches leave exactly one default", async (t) => {
+integrationTest("TC-069 (BANK-008): two concurrent default switches leave exactly one default", async (t) => {
   // 服務層自己清舊 default 只喺佢見到嗰一刻啱；真正嘅保證係資料庫嗰條 unique slot
   // 加上 §2.6 嘅鎖序。兩條連線同時撳，唔可以兩個都成功。
   const setup = await mysql.createConnection(config());
@@ -319,7 +319,7 @@ integrationTest("two concurrent default switches leave exactly one default", asy
   assert.ok(Number(rows[0].taken ?? rows[0].TAKEN) <= 1, "never two defaults, whatever the interleaving");
 });
 
-integrationTest("the same account twice under one Supplier is refused by the database as well as the service", async (t) => {
+integrationTest("TC-070 (BANK-009): the same account twice under one Supplier is refused by the database as well as the service", async (t) => {
   const connection = await mysql.createConnection(config());
   let supplierId = null;
   let otherId = null;
@@ -368,7 +368,7 @@ integrationTest("reveal round-trips through real MySQL and leaves an audit row b
   assert.deepEqual(detail, { after: { revealed: true } });
 });
 
-integrationTest("a row moved to another Supplier cannot be revealed, because the AAD is bound to the owner", async (t) => {
+integrationTest("TC-067 (BANK-006): a row moved to another Supplier cannot be revealed, because the AAD is bound to the owner", async (t) => {
   // 設計 §5.8 講 AAD 綁 supplierId 就係為咗呢個：一個攞到資料庫寫入權但攞唔到 key
   // 嘅人，唔可以將 A 公司嘅帳號移花接木做 B 公司嘅。呢度用真 row 證。
   const connection = await mysql.createConnection(config());
@@ -384,11 +384,12 @@ integrationTest("a row moved to another Supplier cannot be revealed, because the
   const created = await service.create({ ...actor, ...details, supplierId, accountNumber: SECRET, reason: "整合測試搬移前建立" });
 
   await connection.execute("UPDATE supplier_bank_accounts SET supplier_id = ? WHERE id = ?", [otherId, created.id]);
-  // REV-035：解密失敗要係一個具名 422，唔係一個匿名 500 —— 日誌要分得出「資料被改
-  // 過」同「條 key 唔喺 ring 入面」。
+  // 搬錯行係完整性失敗（AAD 對唔上），設計 §8.3、§6 要求通用 500 —— 唔話俾 caller 聽
+  // 點解。之前佢係具名 422，同「key 唔喺 ring」收埋做同一個 code（DEF-026）。
   await assert.rejects(
     () => service.reveal({ ...actor, supplierId: otherId, bankAccountId: created.id, reason: "整合測試搬移後查看" }),
-    (error) => error.statusCode === 422 && error.publicCode === "BANK_ACCOUNT_UNREADABLE"
+    (error) => error.statusCode === 500 && error.publicCode === "INTERNAL_SERVER_ERROR"
+      && error.code === "BANK_ACCOUNT_INTEGRITY_FAILED"
   );
   const [audits] = await connection.query(
     "SELECT id FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.bank.reveal'", [otherId]
@@ -396,7 +397,7 @@ integrationTest("a row moved to another Supplier cannot be revealed, because the
   assert.equal(audits.length, 0, "a failed decrypt must not leave an audit row claiming a reveal");
 });
 
-integrationTest("a real ER_DUP_ENTRY from the driver becomes a 409, not a 500 carrying the blind index", async (t) => {
+integrationTest("TC-070 (BANK-009): a real ER_DUP_ENTRY from the driver becomes a 409, not a 500 carrying the blind index", async (t) => {
   // REV-036 H-1 嘅整合面。呢度唔製造假錯誤 —— 真係叫真 MySQL 撞嗰條 UNIQUE，然後
   // 睇個 service 譯唔譯得返。設計 §2.5：DB unique 係競態下最後防線，service 預查只
   // 為回傳較清晰嘅公開錯誤，所以兩者要講同一句。
@@ -554,7 +555,7 @@ integrationTest("the Bank routes answer over real HTTP, and the masked list leak
   assert.equal(listed.status, 200, JSON.stringify(listed.body));
   assert.equal(listed.body.data.items.length, 1);
   const [item] = listed.body.data.items;
-  assert.match(item.maskedAccountNumber, /^••••\s/u);
+  assert.match(item.maskedAccountNumber, /^\*{4}\s/u);
   assert.equal(item.isDefault, true);
 
   // 成個 response body —— 唔係淨係嗰個 item —— 唔可以有帳號或者任何 crypto metadata。

@@ -90,6 +90,55 @@ test("TASK-016 Stock inquiry rejects non-allowlisted sorting before querying", a
   assert.equal(database.calls.length, 0);
 });
 
+test("TASK-016 Stock filters bound lot, expiry and zero-ATP results without raw SQL input", async () => {
+  const database = databaseWith([[{ total: "0" }]], [[]]);
+  const service = new InventoryInquiryService({ database, time });
+  const result = await service.listStocks({
+    binId: 2, skuId: 3, lot: "LOT_%", expiryFrom: "2026-09-01", expiryTo: "2026-10-31",
+    status: "QUARANTINED", expiryState: "WITHIN_DAYS", withinDays: 7, availability: "ZERO_ATP"
+  });
+  assert.deepEqual(result.items, []);
+  assert.match(database.calls[0].sql, /l\.normalized_lot_number LIKE \? ESCAPE '!'/);
+  assert.match(database.calls[0].sql, /l\.expiry_date >= \? AND l\.expiry_date <= \?/);
+  assert.match(database.calls[0].sql, /reserved_quantity/);
+  assert.ok(database.calls[0].params.includes("%LOT!_!%%"));
+  assert.ok(database.calls[0].params.includes("2026-10-05"));
+  assert.doesNotMatch(database.calls[1].sql, /search_rank/);
+});
+
+test("TASK-016 Stock expiry and no-stock states generate distinct bounded predicates", async () => {
+  for (const [expiryState, availability, expected] of [
+    ["EXPIRED", "NO_STOCK", /l\.expiry_date IS NOT NULL AND l\.expiry_date < \?/],
+    ["UNEXPIRED", "ALL", /l\.expiry_date IS NULL OR l\.expiry_date >= \?/]
+  ]) {
+    const database = databaseWith([[{ total: "0" }]], [[]]);
+    await new InventoryInquiryService({ database, time }).listStocks({ expiryState, availability });
+    assert.match(database.calls[0].sql, expected);
+    if (availability === "NO_STOCK") assert.match(database.calls[0].sql, /b\.on_hand_quantity = 0/);
+  }
+});
+
+test("TASK-016 rejects malformed inquiry filters before issuing a query", async () => {
+  const database = databaseWith();
+  const service = new InventoryInquiryService({ database, time });
+  for (const [method, input] of [
+    ["listStocks", { status: "UNREVIEWED" }],
+    ["listStocks", { expiryState: "SOON" }],
+    ["listStocks", { availability: "NEGATIVE" }],
+    ["listStocks", { expiryFrom: "2026-10-01", expiryTo: "2026-09-01" }],
+    ["listStocks", { withinDays: 36_501 }],
+    ["listStocks", { q: "\u0000" }],
+    ["listStockAggregates", { sortBy: "raw SQL" }],
+    ["listLots", { expiryState: "SOON" }],
+    ["listLots", { expiryFrom: "2026-10-01", expiryTo: "2026-09-01" }],
+    ["listMovements", { postedFrom: 200, postedTo: 100 }],
+    ["listMovements", { pageSize: 101 }]
+  ]) {
+    await assert.rejects(service[method](input), (error) => error.code === "INVENTORY_INPUT_INVALID");
+  }
+  assert.equal(database.calls.length, 0);
+});
+
 test("TASK-016 pagination rejects an offset that cannot be represented safely", async () => {
   const database = databaseWith();
   const service = new InventoryInquiryService({ database, time });

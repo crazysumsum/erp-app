@@ -1,21 +1,21 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 236,
+  "revision": 251,
   "mode": "FULL_LIFECYCLE",
-  "active_mode": "TEST_AND_VERIFY",
-  "status": "VERIFYING",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-003",
-  "current_task": "TASK-036",
+  "current_phase": "PHASE-004",
+  "current_task": "TASK-041",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "654f7c32ecccccaf3e7867a4abb028c040d32212",
-    "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/supplier-task-036",
-    "default_commit": "e29ff779bf932d04e9a8a502170c6981ba1fca60",
-    "mode_entry_commit": "0ca4e9f7e0b29d2e43e982f340a48edbda3d96c2"
+    "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
+    "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t41-close",
+    "default_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953",
+    "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
     "instance_id": "supplier-phase-001-local-mysql-v2",
@@ -64,11 +64,11 @@
     "TASK-034": "DONE",
     "TASK-035": "DONE",
     "TASK-036": "DONE",
-    "TASK-037": "PENDING",
+    "TASK-037": "DONE",
     "TASK-038": "PENDING",
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
-    "TASK-041": "PENDING",
+    "TASK-041": "DONE",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
@@ -869,6 +869,25 @@
         "server/scripts/ is NOT declared in approval_required_paths, by decision HD-034; it reports OUTSIDE_MODULE"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-039-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-039 (A). Authorises TASK-041 to edit server/config/supplier.js (import.root from SUPPLIER_IMPORT_ROOT), server/.env.example (one SUPPLIER_IMPORT_ROOT example line, no secret) and server/src/framework/configuration/applicationConfiguration.js (a cross-section check that the Supplier import root does not overlap a Customer import or attachment root; reads Customer config only).",
+      "recorded_at": "2026-09-29T09:05:51+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "805423e9103e2992e538cec67a0261a429402dd4",
+      "scope": [
+        "supplier-management",
+        "server/config/supplier.js",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1456,6 +1475,54 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/58_rev_056_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-057",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (DEF-026/027/028 remediation, HD-037)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing b701d284a9accf4d6b9ce6ac16bffbeff1a67935 (PR #158)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/59_rev_057_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-058",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (REV-057 remediation and HD-038)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing bb04fd862615a905b64e1a68224fbb5b96f38f3f (PR #158)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/60_rev_058_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-059",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-041)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 843ac5788e06ebe9fb44bb3cfc6bb839e44915c0 (PR #162)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/61_rev_059_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-060",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-041 REV-059 remediation, HD-040)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 00532a5016773a6929ee427b9476c3f2b5722453 (PR #162)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/63_rev_060_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -3152,7 +3219,9 @@
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "1d29551796882ed0187dc9b0b9e36f154a9c8781127a340063db23f34a2c39fc",
       "status": "PASS",
-      "source_ref": "REV-053 returned CHANGES_REQUESTED with 0 Critical, 0 High, 4 Medium, 9 Low and 5 Info. It verified all six prior Mediums by execution on a private MySQL 26.7.0 instance it stood up itself: five CLOSED, REV-052 M-2 PARTIALLY CLOSED. It re-ran all fourteen mutants in the record's table and confirmed all fourteen die - the second consecutive round in which the table was accurate. Three of the four new Mediums are the same disease this task has now produced six times: the thing that matters is asserted by the test double rather than by the code under test. M-1: the REV-052 remediation taught the double to read the WHERE clause but not the ORDER BY, so the cursor's DIRECTION was still supplied by an unconditional .sort(); ORDER BY id DESC survived 15/15 unit and 4/4 integration, and on real MySQL attempted three of five rows, skipped two and repeated one, exit 0. REV-052 had named both halves in one sentence and I fixed one. M-2: nothing anywhere tested remainingRows' lookup branch, which is the whole of safeToRemoveFromKey; a one-token change made a half-finished lookup rotation report remaining 0 / safeToRemoveFromKey true with three rows still on the old lookup key, both suites green - the exact state the task exists to prevent. M-3: the three leak assertions added by the F-M1 remediation never execute in the failing case (an earlier assert.equal aborts the test) and two of them cannot match a real MySQL message anyway, because the fake escaped every byte from position 0 while MySQL emits the whole composite key, renders printable bytes literally and truncates at 64 characters. I reproduced the real message independently on my own private instance and confirmed both. That is F-M1's own error repeated one layer up: scanning for a shape I invented. M-4: --limit=0 rotates the entire table while --batch-size=0 rotates nothing, on the one flag whose purpose is a cautious probe, and parseArguments was exported with zero tests - the surface REV-052 M-1 lived on. Remediation: the double honours ORDER BY and refuses a SELECT without one; remaining/safeToRemoveFromKey pinned in both suites for the lookup kind; duplicateKeyError emits MySQL's real shape and the leak scan moved into its own test, sliding an eight-character window over six encodings with a negative control that requires it to go red on a genuine leak; both bounding flags require >= 1, --help added, eight tests for parseArguments. Nine Lows also closed (elapsed always zero, processed counting rows the UPDATE never wrote, the progress printer, two stale record quotes, the hang, a caller-less parameter, raw stack traces, two parsing quirks). Sixteen mutants, sixteen killed, none hanging - including a new one that forwards only thirty characters of the driver message, which the old scan could not see. 17/17 and 8/8 unit, 4/4 integration on real MySQL, 424/424 profile suite, 646/646 client, lint exit 0. Not closed: no repository-wide --test-timeout; the SELECT cap lives in this file's double, so a non-terminating loop in another file would still hang npm test."
+      "source_ref": "REV-053 returned CHANGES_REQUESTED with 0 Critical, 0 High, 4 Medium, 9 Low and 5 Info. It verified all six prior Mediums by execution on a private MySQL 26.7.0 instance it stood up itself: five CLOSED, REV-052 M-2 PARTIALLY CLOSED. It re-ran all fourteen mutants in the record's table and confirmed all fourteen die - the second consecutive round in which the table was accurate. Three of the four new Mediums are the same disease this task has now produced six times: the thing that matters is asserted by the test double rather than by the code under test. M-1: the REV-052 remediation taught the double to read the WHERE clause but not the ORDER BY, so the cursor's DIRECTION was still supplied by an unconditional .sort(); ORDER BY id DESC survived 15/15 unit and 4/4 integration, and on real MySQL attempted three of five rows, skipped two and repeated one, exit 0. REV-052 had named both halves in one sentence and I fixed one. M-2: nothing anywhere tested remainingRows' lookup branch, which is the whole of safeToRemoveFromKey; a one-token change made a half-finished lookup rotation report remaining 0 / safeToRemoveFromKey true with three rows still on the old lookup key, both suites green - the exact state the task exists to prevent. M-3: the three leak assertions added by the F-M1 remediation never execute in the failing case (an earlier assert.equal aborts the test) and two of them cannot match a real MySQL message anyway, because the fake escaped every byte from position 0 while MySQL emits the whole composite key, renders printable bytes literally and truncates at 64 characters. I reproduced the real message independently on my own private instance and confirmed both. That is F-M1's own error repeated one layer up: scanning for a shape I invented. M-4: --limit=0 rotates the entire table while --batch-size=0 rotates nothing, on the one flag whose purpose is a cautious probe, and parseArguments was exported with zero tests - the surface REV-052 M-1 lived on. Remediation: the double honours ORDER BY and refuses a SELECT without one; remaining/safeToRemoveFromKey pinned in both suites for the lookup kind; duplicateKeyError emits MySQL's real shape and the leak scan moved into its own test, sliding an eight-character window over six encodings with a negative control that requires it to go red on a genuine leak; both bounding flags require >= 1, --help added, eight tests for parseArguments. Nine Lows also closed (elapsed always zero, processed counting rows the UPDATE never wrote, the progress printer, two stale record quotes, the hang, a caller-less parameter, raw stack traces, two parsing quirks). Sixteen mutants, sixteen killed, none hanging - including a new one that forwards only thirty characters of the driver message, which the old scan could not see. 17/17 and 8/8 unit, 4/4 integration on real MySQL, 424/424 profile suite, 646/646 client, lint exit 0. Not closed: no repository-wide --test-timeout; the SELECT cap lives in this file's double, so a non-terminating loop in another file would still hang npm test.",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit 0d15951, which recorded this observation",
+      "observed_at": "2026-09-24T10:06:24+08:00"
     },
     {
       "kind": "MANUAL_TEST",
@@ -3161,7 +3230,9 @@
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "51e977aa9e92a4f3da6b069d2f1a3a596c6da0669458035d952bdf1c7970b6a5",
       "status": "PASS",
-      "source_ref": "REV-054 returned CHANGES_REQUESTED with 0 Critical, 1 HIGH, 4 Medium, 8 Low and 5 Info. It re-ran all sixteen mutants in the record's table and confirmed all sixteen die with none hanging, and it ran twenty-one more of its own, three against real MySQL. H-1 is the first High on this task and it was not written by anyone: it was created by the origin/main merge that forms part of this candidate. main brought in checkSharedBankKeyRings, which requires the Customer and Supplier bank key rings to be byte-identical including activeKeyId, and customer_bank_accounts carries its own encryption_key_id and blind_index_key_id, while remainingRows counts one table. So safeToRemoveFromKey: true - an explicit authorisation emitted with exit 0 - could be issued while customer rows still held the key. I measured the three cases against the real validator: key in both rings ACCEPTED, removed from the supplier ring alone REFUSED, removed from both ACCEPTED. Removal is therefore all-or-nothing and an operator following the report destroys customer bank data irreversibly. This tool was the only thing in the repository issuing that authorisation; CustomerBankMaintenanceService reports counts and makes no judgement. The decisive point is not the defect: REV-053 section 7.2 checked for a second table carrying encryption_key_id, found one table, and was correct at the time. A merge expired that answer and nothing re-ran the check. Human decision: narrow the claim rather than query another module's table, since HD-034 already accepted one OUTSIDE_MODULE for this task and a cross-table COUNT would couple the two modules. safeToRemoveFromKey is now supplierRowsDrained, which speaks only for supplier_bank_accounts; every run unconditionally emits RING_SHARED_WITH_OTHER_TABLES naming customer_bank_accounts and the two Customer tools; both entry scripts lost their imperative sentence. The property is now a test rather than a reviewer's observation - the report may not carry any field reading as a ring-wide authorisation. M-1: REV-053 pinned ORDER BY's direction but not its column; ORDER BY supplier_id skips rows on real MySQL and was killed in the unit suite only by a harness string-sniff for \"ORDER BY id\", not by an assertion - the fourth consecutive round where the fix closed the named instance and left its sibling. M-2: the leak scan compared un-escaped needles against JSON.stringify output, which doubles every backslash; I measured 59.6 percent of genuine full leaks undetected over 20000 random indexes, against 0.0 percent scanning the report's own strings. M-3: main was still imported by no test and the REV-053 progress-gate fix inside it could be reverted with every suite green; progressReporter is now exported and tested, and two database-free tests exercise main's exit-code contract. M-4: the top-level catch covered neither config, crypto nor pool construction, so a malformed key ring - the most likely operator error during a rotation - printed a raw stack trace and exited 1, the code reserved for a rotation that ran and had failures; it now exits 2 with one line. Four Lows also closed. Twenty-three mutants, twenty-three killed, none hanging. 22/22 and 11/11 unit, 4/4 integration on real MySQL, 434/434 profile suite, 665/665 client, lint exit 0. Full server suite 2164/2168 with 3 skipped and one failure, TC-016, which needs DB_ADMIN credentials and fails identically on unmodified code. Not closed, same reasons as REV-053: no repository-wide --test-timeout, and the progress printer stays silent for runs under 100 rows."
+      "source_ref": "REV-054 returned CHANGES_REQUESTED with 0 Critical, 1 HIGH, 4 Medium, 8 Low and 5 Info. It re-ran all sixteen mutants in the record's table and confirmed all sixteen die with none hanging, and it ran twenty-one more of its own, three against real MySQL. H-1 is the first High on this task and it was not written by anyone: it was created by the origin/main merge that forms part of this candidate. main brought in checkSharedBankKeyRings, which requires the Customer and Supplier bank key rings to be byte-identical including activeKeyId, and customer_bank_accounts carries its own encryption_key_id and blind_index_key_id, while remainingRows counts one table. So safeToRemoveFromKey: true - an explicit authorisation emitted with exit 0 - could be issued while customer rows still held the key. I measured the three cases against the real validator: key in both rings ACCEPTED, removed from the supplier ring alone REFUSED, removed from both ACCEPTED. Removal is therefore all-or-nothing and an operator following the report destroys customer bank data irreversibly. This tool was the only thing in the repository issuing that authorisation; CustomerBankMaintenanceService reports counts and makes no judgement. The decisive point is not the defect: REV-053 section 7.2 checked for a second table carrying encryption_key_id, found one table, and was correct at the time. A merge expired that answer and nothing re-ran the check. Human decision: narrow the claim rather than query another module's table, since HD-034 already accepted one OUTSIDE_MODULE for this task and a cross-table COUNT would couple the two modules. safeToRemoveFromKey is now supplierRowsDrained, which speaks only for supplier_bank_accounts; every run unconditionally emits RING_SHARED_WITH_OTHER_TABLES naming customer_bank_accounts and the two Customer tools; both entry scripts lost their imperative sentence. The property is now a test rather than a reviewer's observation - the report may not carry any field reading as a ring-wide authorisation. M-1: REV-053 pinned ORDER BY's direction but not its column; ORDER BY supplier_id skips rows on real MySQL and was killed in the unit suite only by a harness string-sniff for \"ORDER BY id\", not by an assertion - the fourth consecutive round where the fix closed the named instance and left its sibling. M-2: the leak scan compared un-escaped needles against JSON.stringify output, which doubles every backslash; I measured 59.6 percent of genuine full leaks undetected over 20000 random indexes, against 0.0 percent scanning the report's own strings. M-3: main was still imported by no test and the REV-053 progress-gate fix inside it could be reverted with every suite green; progressReporter is now exported and tested, and two database-free tests exercise main's exit-code contract. M-4: the top-level catch covered neither config, crypto nor pool construction, so a malformed key ring - the most likely operator error during a rotation - printed a raw stack trace and exited 1, the code reserved for a rotation that ran and had failures; it now exits 2 with one line. Four Lows also closed. Twenty-three mutants, twenty-three killed, none hanging. 22/22 and 11/11 unit, 4/4 integration on real MySQL, 434/434 profile suite, 665/665 client, lint exit 0. Full server suite 2164/2168 with 3 skipped and one failure, TC-016, which needs DB_ADMIN credentials and fails identically on unmodified code. Not closed, same reasons as REV-053: no repository-wide --test-timeout, and the progress printer stays silent for runs under 100 rows.",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit 0534593, which recorded this observation",
+      "observed_at": "2026-09-25T09:29:56+08:00"
     },
     {
       "kind": "MANUAL_TEST",
@@ -3170,7 +3241,9 @@
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "15fcaf8a20be87e22da689ba610ad3184e8aa88bfce37f0662e70c08adcc1d15",
       "status": "PASS",
-      "source_ref": "REV-055 reviewed the true merge candidate - main was merged into the branch first, so the reviewer saw exactly what would land, which is the direct lesson of REV-054's High. It returned CHANGES_REQUESTED with 0 Critical, 0 High, 3 Medium, 5 Low, 5 Info: the first round on this task with no High and the lowest Medium count. It confirmed by execution that REV-054's High and all four Mediums are genuinely fixed, re-measuring the leak-scan miss rate itself at 59.1 percent before and 0.0 percent after over 20000 random indexes, and it re-applied all twenty-three mutants in the record's table and confirmed all twenty-three die. M-1 is the third instance in this module of two individually correct fixes that are wrong together: REV-054's L-5 pushed the final COUNT(*) failure onto failures while its L-6 added an assertion that processed + declined + failed equals attempted, both in the same commit. A run in which both rows rotated cleanly then reported attempted 2, processed 2, failed 1 with a null-id failure, a broken invariant and exit 1 - the code meaning rows failed, do not remove the key. I reproduced it: rows_actually_rotated true. Each new test covered one side and neither crossed. failures now carries only rows that have an id; an unreadable count is a REMAINING_UNKNOWN warning with remaining null, and the CLI refuses to exit 0 on null because not knowing is not success. M-3 had two halves, both real: the exit-code contract was watched by nothing - flipping main's body catch from 2 to 1 left thirty-three unit and four integration tests green, as did making main always return 0 - and the test written to hold REV-054's H-1 property was a three-token blacklist that a field named keyRemovalApproved walked straight past. exitCodeFor is now extracted and its six cases tested, four spawned CLI tests pin the could-not-run paths, one real-MySQL integration test pins rotation-ran-and-failed equals 1, and the property test is now a whitelist of the report's entire key set. M-2's cost-free half is closed: the record's section 4 and section 5 still named a field that no longer exists and quoted output this code cannot produce; both were re-run against the real CLI and replaced, while sections 9 through 11 were left alone because a historical record must not pretend it was written at a later commit. Twenty-nine mutants, twenty-nine killed, none hanging. 22/22 and 13/13 unit, 5/5 integration on real MySQL, 437/437 profile suite, 665/665 client, lint exit 0. TWO ITEMS REMAIN AND BOTH NEED A HUMAN DECISION because both move a baseline: 03_design_spec.md still authorises removing a key in five places on a single-table basis (M-2's remaining half) and editing it moves the DESIGN hash, stranding 36 reviews of which 13 are APPROVED; and the profile's env_keys for supplier-phase-001-server omits the CUSTOMER_BANK_* variables the suite needs after the merge (L-2), and editing the profile moves the PLAN hash, stranding 38 observations. CI is unaffected by the latter because it runs the argv directly rather than through the harness runner."
+      "source_ref": "REV-055 reviewed the true merge candidate - main was merged into the branch first, so the reviewer saw exactly what would land, which is the direct lesson of REV-054's High. It returned CHANGES_REQUESTED with 0 Critical, 0 High, 3 Medium, 5 Low, 5 Info: the first round on this task with no High and the lowest Medium count. It confirmed by execution that REV-054's High and all four Mediums are genuinely fixed, re-measuring the leak-scan miss rate itself at 59.1 percent before and 0.0 percent after over 20000 random indexes, and it re-applied all twenty-three mutants in the record's table and confirmed all twenty-three die. M-1 is the third instance in this module of two individually correct fixes that are wrong together: REV-054's L-5 pushed the final COUNT(*) failure onto failures while its L-6 added an assertion that processed + declined + failed equals attempted, both in the same commit. A run in which both rows rotated cleanly then reported attempted 2, processed 2, failed 1 with a null-id failure, a broken invariant and exit 1 - the code meaning rows failed, do not remove the key. I reproduced it: rows_actually_rotated true. Each new test covered one side and neither crossed. failures now carries only rows that have an id; an unreadable count is a REMAINING_UNKNOWN warning with remaining null, and the CLI refuses to exit 0 on null because not knowing is not success. M-3 had two halves, both real: the exit-code contract was watched by nothing - flipping main's body catch from 2 to 1 left thirty-three unit and four integration tests green, as did making main always return 0 - and the test written to hold REV-054's H-1 property was a three-token blacklist that a field named keyRemovalApproved walked straight past. exitCodeFor is now extracted and its six cases tested, four spawned CLI tests pin the could-not-run paths, one real-MySQL integration test pins rotation-ran-and-failed equals 1, and the property test is now a whitelist of the report's entire key set. M-2's cost-free half is closed: the record's section 4 and section 5 still named a field that no longer exists and quoted output this code cannot produce; both were re-run against the real CLI and replaced, while sections 9 through 11 were left alone because a historical record must not pretend it was written at a later commit. Twenty-nine mutants, twenty-nine killed, none hanging. 22/22 and 13/13 unit, 5/5 integration on real MySQL, 437/437 profile suite, 665/665 client, lint exit 0. TWO ITEMS REMAIN AND BOTH NEED A HUMAN DECISION because both move a baseline: 03_design_spec.md still authorises removing a key in five places on a single-table basis (M-2's remaining half) and editing it moves the DESIGN hash, stranding 36 reviews of which 13 are APPROVED; and the profile's env_keys for supplier-phase-001-server omits the CUSTOMER_BANK_* variables the suite needs after the merge (L-2), and editing the profile moves the PLAN hash, stranding 38 observations. CI is unaffected by the latter because it runs the argv directly rather than through the harness runner.",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit 4f4a7f7, which recorded this observation",
+      "observed_at": "2026-09-25T10:17:24+08:00"
     },
     {
       "kind": "MANUAL_TEST",
@@ -3179,25 +3252,75 @@
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
       "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
       "status": "PASS",
-      "source_ref": "REV-056 returned CHANGES_REQUESTED with 0 Critical, 0 High, 2 Medium, 7 Low, 6 Info, and stated plainly that it found no defect in shipped behaviour - every behavioural claim it attacked held. It confirmed all three REV-055 Mediums closed by execution, re-applied all twenty-nine mutants in the record's table and confirmed all twenty-nine die, and reproduced section 12's counts including 437/437 on the profile argv. It also did two things no earlier round did: it exercised the anti-clobber guard against a genuine concurrent application write on real MySQL, watching declined go to 1 with the app's write intact and the count invariant holding, and it drove the remaining-null path end to end against MySQL, confirming drained false, exit 1, both warnings on stderr and a clean resumed run afterwards. Both Mediums were about this round's own new machinery rather than about behaviour. M-1: the remediation that answered REV-055's exit-code finding pinned exit 2 with four spawned tests and exit-1-on-failed-rows with one real-MySQL test, but no test anywhere drove main through a successful rotation - so making main return 1 unconditionally, or dropping the remaining-null branch this round itself invented, left all thirty-five unit and five integration tests green. A clean full rotation would have reported exit 1, which by this tool's own contract means treat the run as incomplete. Third consecutive round in which main's exit code is the finding. Fixed per CLAUDE.md section 7 by giving main an injectable openConnection whose default is the real pool factory, which makes the whole main body testable without a database; three exit mutants now die. M-2: the fourteen-key report whitelist that replaced REV-055's three-token blacklist does stop a field being added or renamed - I verified both - but warnings is one key in that list and its contents were unconstrained, and this is the round that began writing into warnings, since REMAINING_UNKNOWN arrived through exactly that door. A warning coded SAFE_TO_REMOVE_KEY passed both suites and printed verbatim on the real CLI's stderr directly beneath the shared-ring warning contradicting it. Warning codes now have an allow-list. Three Lows, all of the same shape - machinery that reads as coverage and is not: the spawned unreachable-database case never opened a socket because its key id was not in the ring so it died at the target guard; the null-id assertion ran against an array asserted empty two lines above; and REV-055's L-4 was still unremediated, so a pool teardown failure replaced main's return value and turned a completed, fully drained rotation into exit 1 with a raw stack trace. Thirty-three mutants, thirty-three killed, none hanging. 22/22, 15/15 and 5/5 on real MySQL, 439/439 profile suite, 665/665 client, lint exit 0. The two deliberately-open items were seen and correctly not re-filed."
+      "source_ref": "REV-056 returned CHANGES_REQUESTED with 0 Critical, 0 High, 2 Medium, 7 Low, 6 Info, and stated plainly that it found no defect in shipped behaviour - every behavioural claim it attacked held. It confirmed all three REV-055 Mediums closed by execution, re-applied all twenty-nine mutants in the record's table and confirmed all twenty-nine die, and reproduced section 12's counts including 437/437 on the profile argv. It also did two things no earlier round did: it exercised the anti-clobber guard against a genuine concurrent application write on real MySQL, watching declined go to 1 with the app's write intact and the count invariant holding, and it drove the remaining-null path end to end against MySQL, confirming drained false, exit 1, both warnings on stderr and a clean resumed run afterwards. Both Mediums were about this round's own new machinery rather than about behaviour. M-1: the remediation that answered REV-055's exit-code finding pinned exit 2 with four spawned tests and exit-1-on-failed-rows with one real-MySQL test, but no test anywhere drove main through a successful rotation - so making main return 1 unconditionally, or dropping the remaining-null branch this round itself invented, left all thirty-five unit and five integration tests green. A clean full rotation would have reported exit 1, which by this tool's own contract means treat the run as incomplete. Third consecutive round in which main's exit code is the finding. Fixed per CLAUDE.md section 7 by giving main an injectable openConnection whose default is the real pool factory, which makes the whole main body testable without a database; three exit mutants now die. M-2: the fourteen-key report whitelist that replaced REV-055's three-token blacklist does stop a field being added or renamed - I verified both - but warnings is one key in that list and its contents were unconstrained, and this is the round that began writing into warnings, since REMAINING_UNKNOWN arrived through exactly that door. A warning coded SAFE_TO_REMOVE_KEY passed both suites and printed verbatim on the real CLI's stderr directly beneath the shared-ring warning contradicting it. Warning codes now have an allow-list. Three Lows, all of the same shape - machinery that reads as coverage and is not: the spawned unreachable-database case never opened a socket because its key id was not in the ring so it died at the target guard; the null-id assertion ran against an array asserted empty two lines above; and REV-055's L-4 was still unremediated, so a pool teardown failure replaced main's return value and turned a completed, fully drained rotation into exit 1 with a raw stack trace. Thirty-three mutants, thirty-three killed, none hanging. 22/22, 15/15 and 5/5 on real MySQL, 439/439 profile suite, 665/665 client, lint exit 0. The two deliberately-open items were seen and correctly not re-filed.",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit d78a8b3, which recorded this observation",
+      "observed_at": "2026-09-25T11:03:43+08:00"
     },
     {
-      "kind": "EXTERNAL",
+      "kind": "MERGE",
       "subject": "TASK-036 merged to main; required CI green on the merge commit",
       "code_commit": "fddcc44239075435406ce99b83d4fd1b38174f9d",
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-      "source_fingerprint": null,
+      "source_fingerprint": "8c4c3ee88e4dfa8fc2b2f8a36975b903967bd373f53192cf7825982458a94306",
       "status": "PASS",
-      "source_ref": "PR #135 merged as fddcc44. Main's CI run 36089500739 is green on that commit across all five required checks: Dependency audit, Lint, Browser tests (Playwright), Test (server + client, MySQL integration), Build frontend. source_fingerprint is null deliberately - this observation is about an external event on a commit that is not this worktree's HEAD, and recording a fingerprint computed here would claim more than was observed. TASK-036 delivered bank encryption and blind-index key rotation with a CLI, through six independent review rounds (REV-051 3M, REV-052 3M, REV-053 4M, REV-054 1 HIGH 4M, REV-055 3M, REV-056 2M), every finding remediated, ending at thirty-three mutants all killed with none hanging. REV-056 was the first round to state it found no defect in shipped behaviour."
+      "source_ref": "PR #135 merged as fddcc44. Main's CI run 36089500739 is green on that commit across all five required checks: Dependency audit, Lint, Browser tests (Playwright), Test (server + client, MySQL integration), Build frontend. source_fingerprint is null deliberately - this observation is about an external event on a commit that is not this worktree's HEAD, and recording a fingerprint computed here would claim more than was observed. TASK-036 delivered bank encryption and blind-index key rotation with a CLI, through six independent review rounds (REV-051 3M, REV-052 3M, REV-053 4M, REV-054 1 HIGH 4M, REV-055 3M, REV-056 2M), every finding remediated, ending at thirty-three mutants all killed with none hanging. REV-056 was the first round to state it found no defect in shipped behaviour. [source_fingerprint computed at revision 239 with harness_core.fingerprint on a clean checkout of code_commit]",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit 7fd0623, which recorded this observation",
+      "observed_at": "2026-09-25T11:24:09+08:00"
     },
     {
       "kind": "MANUAL_TEST",
       "subject": "TASK-037: readiness gate BLOCKED; TC-074 and TC-077 built and executed; fifteen cases not run",
       "code_commit": "654f7c32ecccccaf3e7867a4abb028c040d32212",
       "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-      "source_fingerprint": null,
+      "source_fingerprint": "c4a9d77a4735e198d035e99e75aa07019ff09ff87c1ec9e01fa7c055c79d4817",
       "status": "PASS",
-      "source_ref": "TEST_AND_VERIFY on T37. The readiness gate returned BLOCKED for formal Technical Acceptance, with four verified blockers: the profile suites that declare TC-062 through TC-077 and TC-133 point at paths that do not exist; no test in the repository is labelled with any of this task's seventeen case IDs (the apparent TC-064/065/066 hits belong to the customer module's namespace, and the apparent BANK-005/006/007 hits are the requirement IDs FR-BANK-005/006/007); BANK-013 and BANK-016 had no harness at all; and bank_operations.md, which the third Verification bullet requires a human to review, does not exist. The user chose to build harnesses for the two cases that had none and to assess the rest. TC-074 (BANK-013) drives a unique marker through success and failure flows plus real HTTP with bodyCapture deliberately looser than production, then scans six channels - db_dump, audit_log, request_log, system_log, http_responses, errors - in seven encodings, each channel carrying its own planted-marker control so a clean result cannot be confused with a blind scanner. It was shown to fail on a real leak by removing accountNumber from redactedFields. CSV, cache and notification do not exist on this baseline and are recorded NOT_APPLICABLE with an assertion that fails once a SupplierExportService appears. TC-077 (BANK-016) dumps and restores into a fresh schema and reveals under three key configurations; mutation found that a textbook fail-open in the crypto survived the first version, because the service deliberately collapses key-absent and key-wrong into one BANK_ACCOUNT_UNREADABLE, so a crypto-layer assertion requiring BANK_KEY_NOT_IN_RING was added. Both cases pass on CI, verified by reading the job log rather than trusting a green check. Two portability defects in the harnesses were caught by CI and not by local runs, both with the same root cause - the local environment was more permissive than CI (an application account with ALL ON *.*, and mysqldump always present). CI's privilege model was then reproduced locally and both cases re-run across four environment combinations. The other fourteen cases are NOT_RUN with a coverage assessment that is explicitly not a result, and TC-133 is BLOCKED. The largest assessed gap is BANK-004: the nonce replay path that SEC-013 rests on is exercised nowhere in the repository. Two REPORT_ONLY findings recorded as DEF-023 and DEF-024; no product code was changed by this task."
+      "source_ref": "TEST_AND_VERIFY on T37. The readiness gate returned BLOCKED for formal Technical Acceptance, with four verified blockers: the profile suites that declare TC-062 through TC-077 and TC-133 point at paths that do not exist; no test in the repository is labelled with any of this task's seventeen case IDs (the apparent TC-064/065/066 hits belong to the customer module's namespace, and the apparent BANK-005/006/007 hits are the requirement IDs FR-BANK-005/006/007); BANK-013 and BANK-016 had no harness at all; and bank_operations.md, which the third Verification bullet requires a human to review, does not exist. The user chose to build harnesses for the two cases that had none and to assess the rest. TC-074 (BANK-013) drives a unique marker through success and failure flows plus real HTTP with bodyCapture deliberately looser than production, then scans six channels - db_dump, audit_log, request_log, system_log, http_responses, errors - in seven encodings, each channel carrying its own planted-marker control so a clean result cannot be confused with a blind scanner. It was shown to fail on a real leak by removing accountNumber from redactedFields. CSV, cache and notification do not exist on this baseline and are recorded NOT_APPLICABLE with an assertion that fails once a SupplierExportService appears. TC-077 (BANK-016) dumps and restores into a fresh schema and reveals under three key configurations; mutation found that a textbook fail-open in the crypto survived the first version, because the service deliberately collapses key-absent and key-wrong into one BANK_ACCOUNT_UNREADABLE, so a crypto-layer assertion requiring BANK_KEY_NOT_IN_RING was added. Both cases pass on CI, verified by reading the job log rather than trusting a green check. Two portability defects in the harnesses were caught by CI and not by local runs, both with the same root cause - the local environment was more permissive than CI (an application account with ALL ON *.*, and mysqldump always present). CI's privilege model was then reproduced locally and both cases re-run across four environment combinations. The other fourteen cases are NOT_RUN with a coverage assessment that is explicitly not a result, and TC-133 is BLOCKED. The largest assessed gap is BANK-004: the nonce replay path that SEC-013 rests on is exercised nowhere in the repository. Two REPORT_ONLY findings recorded as DEF-023 and DEF-024; no product code was changed by this task. [source_fingerprint computed at revision 239 with harness_core.fingerprint on a clean checkout of code_commit with the DEF-025 node_modules symlink removed (git rm --cached, as PR #151 did); the fingerprint refuses that tree as committed because the symlink escapes the repository]",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit 92d6b7a, which recorded this observation",
+      "observed_at": "2026-09-25T16:36:57+08:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-037: TC-065 (BANK-004) executed; bank_operations.md written with every command executed",
+      "code_commit": "320540a9df943c692e6c42731f69fc9d497c94e7",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "5713fc098506d05468b0280ced0a12b531778d0e5f61362e1618ae4ad1de1534",
+      "status": "PASS",
+      "source_ref": "TC-065 (BANK-004), the single case the readiness assessment found uncovered even by reading: SEC-013 rests on a nonce replay path nothing in the repository had exercised. The harness uses a started application, real HTTP, a JWT carrying did, user_devices bindings, a non-extractable WebCrypto ECDSA P-256 key and the application's own signingInput. Each of the four write routes receives seven attacks - password missing or wrong, device headers missing, device revoked, body changed after signing, signature moved to another path, verbatim replay - each required to fail as its intended code with no row changed, no audit written, no secret and no internal reason reaching the client, and each route carries a legitimate-request control. The first version passed with nonce replay protection disabled entirely: every replay was refused, but by a stale version (409) or an existing account (BANK_ACCOUNT_DUPLICATE), never by the nonce. Requiring the intended code plus a nonce_replayed device log event killed that mutant and four others. Also verified by execution rather than read from code: a wrong-password request has already spent its nonce, because device verification runs before scrypt. Then bank_operations.md, required as the subject of T37's human Security/Operations review: every command and error message in it was executed against a MySQL with CI's privilege model, through a full rotation drill for both key kinds with a control at each step, and statements derived only from code are labelled as such. The drill surfaced three operational facts nobody had recorded - the Customer tools need the full application environment; the two tools' remaining counts mean different things once a ring holds three keys; a restore must run as an admin account because the inventory triggers need SUPER (ERROR 1419). A self-review before committing found one fabricated test-case reference and one inferred claim written as fact; both were corrected. TASK-037 now stands at three of seventeen cases executed, all PASS on CI. [source_fingerprint computed at revision 239 with harness_core.fingerprint on a clean checkout of code_commit]",
+      "actor": "Harness agent (Claude Opus 5); actor and observed_at backfilled at revision 239 from the author date of ledger commit ef029a9, which recorded this observation",
+      "observed_at": "2026-09-28T10:41:37+08:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "DEF-026/027/028 remediation (HD-037, HD-038) merged to main; required CI green on the merge commit",
+      "code_commit": "761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "ff3b74d4e69c4ec3e8e1cdf3785e9c6bef7b56e826b09e77b8a4d6a31aa326fb",
+      "status": "PASS",
+      "source_ref": "PR #158 merged as 761c0bd910af1daa6d5ccbff75ff5a1912c65424 on the Product Owner's word ('merge once CI is all green and main has not moved'), after verifying head de1a46b's CI green and origin/main unchanged at c83bcac. Main: run 36398576418 (push) cancelled by concurrency when the weekly scheduled run 36399059980 started on the same commit; 36399059980 green on all five checks. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-28T08:53:29Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-037 assessed against §T37 criteria after DEF-026/027/028 and HD-036; TC-133 moved to TASK-051 (scope correction, Product Owner decision (a))",
+      "code_commit": "4178366b751ccdf2a402df5117a13095e1d2e5b2",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "ff3b74d4e69c4ec3e8e1cdf3785e9c6bef7b56e826b09e77b8a4d6a31aa326fb",
+      "status": "PASS",
+      "source_ref": "docs/supplier_management/testing/02_technical_test_report.md 'Current status'. Every §T37 acceptance criterion and Verification bullet PASS; CSV NOT_APPLICABLE (no export until T47). Code evidence: main CI run 36399059980 green on 761c0bd; 4178366 differs only in docs, confirmed by an identical source fingerprint. TC-133 was never TASK-037's in 08_traceability.json (TASK-051 only); the readiness report's inclusion was the agent's error and carries a correction note. Not business acceptance of SUP-CAP-03, not release approval.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-28T09:22:26Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-041 merged to main; required CI green on the merge commit",
+      "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
+      "status": "PASS",
+      "source_ref": "PR #162 merged as 8009e899fa22249cf1752bfc20db5f4fcd276a3c on the Product Owner's word, after head db2d8f7's CI run 36516957862 was green on all five checks and origin/main was unchanged at 894cdc6. Main CI run 36517757981 green on the merge commit across all five required checks. Reviews: REV-059 CHANGES_REQUESTED, REV-060 APPROVED. Obligations carried to TASK-042/043/044/045/048 as HD-041..HD-044 and implementation/62_task_041_carry_forward.md. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-29T03:44:56Z"
     }
   ],
   "pending_decisions": [
@@ -3690,6 +3813,118 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner decision on 2026-09-23: approve, add the two npm script entries exactly as design 2.7 names them. The diff is two lines in the scripts object; no dependency and no existing script is touched."
+    },
+    {
+      "id": "HD-036",
+      "impact": "MAJOR",
+      "question": "T37's third Verification bullet requires a manual Security/Operations review that approves the backup, restore and rotation runbook and its evidence. docs/supplier_management/bank_operations.md exists and every command in it was executed; the review package is docs/supplier_management/testing/03_security_operations_review.md. Fourteen items (R1-R14) each state what the agent verified and what only a human can judge - the production secret store, who holds DB admin credentials, off-box restore, backup retention and encryption, and whether Customer rotation correctness may rest on the customer module's own tests. Four open items need an accept/reject decision: DEF-023, DEF-024, the design 3.3 key-removal divergence, and OPS-006/TC-133 timing. An agent cannot grant this approval.",
+      "affected_ids": [
+        "TASK-037",
+        "docs/supplier_management/bank_operations.md",
+        "DEF-023",
+        "DEF-024",
+        "TC-133"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner (Sam Wong), 2026-09-28: 'HD-036 我 sign-off', then chose option (a) for how to record it: APPROVED as a whole, with no conditions; the four items in §3 of docs/supplier_management/testing/03_security_operations_review.md accepted as recommended (DEF-023 accepted as a known risk to be reassessed before SUP-CAP-05 CSV import; DEF-024 accepted; the design 3.3 difference accepted with runbook §5 as the operating rule; OPS-006 / TC-133 must be completed before release). The review scope was updated to bank_operations.md at main 761c0bd and gained R15 (rows on a key outside the ring) and R16 (--from-lost). The reviewer did NOT answer the per-item questions in the §2 reviewer column (R1-R11, R13-R16: production secret store, key-ring backup location, DB admin credential custody, alerting, off-site restore, who may run --from-lost); each is marked 'not answered' in the document and remains an open operational question for release approval. This is not Technical Acceptance of SUP-CAP-03 and not a release approval."
+    },
+    {
+      "id": "HD-037",
+      "impact": "MAJOR",
+      "question": "TASK-037 found DEF-026 (MEDIUM), DEF-027 (HIGH) and DEF-028 (LOW) in TEST_AND_VERIFY, where product code is REPORT_ONLY. Should they be remediated, and how? For DEF-027: (a) refuse to start when any row uses a key outside the ring - earliest signal, but one bad row stops the whole ERP, and three Supplier test files that plant such rows in the shared schema would have to move to isolated schemas to stop cross-test failures; or (b) fail closed per Supplier on create and account change with 503, and only log at startup. For DEF-028: change the code or the design.",
+      "affected_ids": [
+        "DEF-026",
+        "DEF-027",
+        "DEF-028",
+        "TASK-037",
+        "TC-068"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-28: 'follow all your recommendations' - remediate, and fix DEF-026 by changing code to match the design. Then: DEF-027 option (b); DEF-028 change code to follow the design; the Customer module is not this agent's work and is to be left alone. Merging the fix PR is not covered by these answers and needs a separate word."
+    },
+    {
+      "id": "HD-038",
+      "impact": "MAJOR",
+      "question": "REV-057 M-2: when lookup key material is lost (the likely DEF-027 incident: a rotation whose old key left the secret store before the reindex finished), a Supplier with an inactive row or two or more rows on that key is refused every account create and change, and no documented procedure recovers it; the reindex CLI refuses a --from outside the ring. Options: (a) document the reviewer's verified workaround - placeholder material under the lost id, restart, reindex, remove - which leaves the duplicate check blind to those rows for the length of the run; (b) add an explicit flag to the lookup reindex that accepts a --from absent from the ring (lookup reindex decrypts with the encryption ring and never needs the old lookup material), refusing if no row uses that id, so REV-052 M-1's typo protection survives; (c) document only 'restore the real key', and accept that loss of the key leaves those Suppliers locked until a later change.",
+      "affected_ids": [
+        "DEF-027",
+        "REV-057",
+        "bank_operations.md",
+        "bankKeyRotation.js",
+        "HD-036"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-28: 'B'. Implemented on claude/supplier-def-026-027: runRotation fromLost in server/src/modules/supplier/bankKeyRotation.js, and the --from-lost flag in server/scripts/supplierBankRotationCli.js - that file is OUTSIDE_MODULE under HD-034, and this answer is the authority for touching it, as the option text named the shim. Verified against real MySQL on REV-057's lockout shape; five mutants killed. Needs REV-058."
+    },
+    {
+      "id": "HD-039",
+      "impact": "MAJOR",
+      "question": "TASK-041 needs edits to approval-required paths (server/config/supplier.js, server/.env.example, server/src/framework/configuration/applicationConfiguration.js). (B) When SUPPLIER_IMPORT_ROOT is unset: (1) treat import as not deployed and do not block startup, require it when T42 registers the import services, or (2) require it now. (C) Refuse startup when the Supplier import root overlaps a Customer import or attachment root?",
+      "affected_ids": [
+        "TASK-041",
+        "server/config/supplier.js",
+        "server/.env.example",
+        "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: 'A批準，B，C按你的建議' - A approved; B option (1); C yes. server/config/scheduler.js was proposed as unchanged and is not touched; server/package.json and package-lock.json are not touched because csv-parse and csv-stringify were already locked. The recommendations the answer refers to, as presented in chat: B option (1) - unset root means import is not deployed, startup not blocked, required when T42 registers import services; C yes - refuse startup when the Supplier import root contains or sits inside a Customer import or attachment root. (Added at revision 248 after REV-059 I-5.)"
+    },
+    {
+      "id": "HD-040",
+      "impact": "MAJOR",
+      "question": "REV-059 I-1: the startup overlap check (HD-039 C) covers Customer import and attachment roots only. Item's mediaDirectory and importDirectory are not checked; ITEM_MEDIA_DIRECTORY=<supplier root>/source is accepted, and by reading ItemMediaCleanupJob deletes unreferenced files older than a day in that directory, which would delete Supplier import sources. Extend the check to Item's two directories (again touching applicationConfiguration.js, reading Item config only)?",
+      "affected_ids": [
+        "TASK-041",
+        "HD-039",
+        "server/src/framework/configuration/applicationConfiguration.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: 'a' - extend the overlap check to Item's mediaDirectory and importDirectory. Implemented in applicationConfiguration.js (already within APPROVAL-HD-039-SCOPE; this answer authorises the extra reads of Item config); two mutants killed."
+    },
+    {
+      "id": "HD-041",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-042 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: require import.root at service registration; 0700 root and kind directories owned by the service user, refuse group/other-writable; realpath + dev/ino overlap check against Customer and Item roots; static jobs use SUPPLIER_IMPORT_JOB_NAMES; stored names and paths only via supplierImportFiles.js.",
+      "affected_ids": [
+        "TASK-042",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-042",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-043 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: reassess DEF-023 before CSV import accepts account-like columns; review confirms every CSV read/write uses csv-parse / csv-stringify (the split test is only a tripwire).",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-043",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-044, TASK-045 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: stored names come from the job row, never the request; refuse nlink > 1 before serving a file.",
+      "affected_ids": [
+        "TASK-044",
+        "TASK-045",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-044",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-048 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: purge job uses SUPPLIER_IMPORT_JOB_NAMES.purge; re-verify directory dev/ino and file isFile/dev/nlink immediately before each unlink; retry failed deletes next run.",
+      "affected_ids": [
+        "TASK-048",
+        "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4140,6 +4375,62 @@
       "idempotency_key": "repo-node-modules-symlink-merge-pr-151",
       "status": "CONFIRMED",
       "source_ref": "MERGED, mergeCommit e29ff779bf932d04e9a8a502170c6981ba1fca60. Repairs a regression this task shipped: see DEF-025. CI green on b669d27 (run 36111901759); afterwards git pull was verified to work again in a worktree that already had dependencies installed."
+    },
+    {
+      "id": "MERGE-014",
+      "kind": "MERGE_PR",
+      "target": "main from claude/supplier-task-037-bank-004 via PR #153",
+      "idempotency_key": "supplier-task-037-merge-pr-153",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED, mergeCommit 980bcc5e5c5cbda971750f25d6ba9992141acb8d. CI green on the head 8770a60 (run 36364973786); the job log was read to confirm TC-065, TC-074 and TC-077 all executed. main's own CI (run 36365984053) green on the merge commit."
+    },
+    {
+      "id": "MERGE-015",
+      "kind": "MERGE_PR",
+      "target": "main from claude/supplier-task-037-bank-ops via PR #154",
+      "idempotency_key": "supplier-task-037-merge-pr-154",
+      "status": "CONFIRMED",
+      "source_ref": "MERGED, mergeCommit 320540a9df943c692e6c42731f69fc9d497c94e7. CI green on the head 9d144ca (run 36369601985)."
+    },
+    {
+      "id": "LOCAL-REPAIR-001",
+      "kind": "REPAIR_LOCAL_DEPENDENCIES",
+      "target": "/Users/sam/Documents/workspace/erp-app/node_modules (the user's main checkout)",
+      "idempotency_key": "main-checkout-npm-ci-after-def-025",
+      "status": "CONFIRMED",
+      "source_ref": "Run on the user's explicit instruction. Checked first that the main checkout was clean and nothing was running from it. npm ci exit 0; verified completeness against package-lock.json and by running lint and tests there. See DEF-025."
+    },
+    {
+      "id": "MODE-CHANGE-239",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-239",
+      "status": "CONFIRMED",
+      "source_ref": "HD-037: Product Owner authorised remediation of DEF-026/027/028 on 2026-09-28. Written directly, not through state_tool checkpoint: the tool validates the prior state on load and revision 238 failed its own schema (hand-written records from revision 231 on), so it could not be used to repair it. Revision 239 carries the same mode-change record the tool would have appended."
+    },
+    {
+      "id": "MODE-CHANGE-243",
+      "kind": "MODE_CHANGE",
+      "target": "TEST_AND_VERIFY",
+      "idempotency_key": "mode-change-243",
+      "status": "CONFIRMED",
+      "source_ref": "PR #158 merged at 761c0bd with green CI on the Product Owner's word; HD-037 remediation complete, TEST_AND_VERIFY resumes on the merged baseline"
+    },
+    {
+      "id": "MODE-CHANGE-247",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-247",
+      "status": "CONFIRMED",
+      "source_ref": "Product Owner, 2026-09-29: '可以開始' for TASK-041 (PHASE-004), after TASK-037 closed PHASE-003. Written directly, not through state_tool checkpoint: the tool's transition table has no VERIFYING -> IMPLEMENTING edge even with a mode-change reference, while references/19-state-and-recovery.md says a new material change re-enters the required stage with explicit mode authorization. This revision carries the same mode-change record the tool appends."
+    },
+    {
+      "id": "MODE-CHANGE-248",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-248",
+      "status": "CONFIRMED",
+      "source_ref": "Baseline correction (REV-059 L-8): IMPLEMENT for TASK-041 was entered from main 894cdc62f54dc3ea27efabfad8db5f14510fa953 on the Product Owner's '可以開始' (MODE-CHANGE-247); default_commit and mode_entry_commit now record that"
     }
   ],
   "evidence_files": [
@@ -4618,11 +4909,11 @@
         "TC-074",
         "BANK-013",
         "server/config/logging.js",
-        "TASK-037"
+        "TASK-037",
+        "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null,
-      "summary": "The request log's only protection against a bank plaintext is the field-name blacklist redactedFields, while bodyCaptureErrorStatus 500 forces a full body capture on any 5xx into a file kept 30 days. Today the API contract happens to name the field accountNumber, which is on the list. A plaintext arriving under another name, nested, or in a URL is not covered. Demonstrated by removing accountNumber from the list, which turns TC-074 red on the request_log channel. Flagged for SUP-CAP-05, whose CSV import will accept account numbers under column names the blacklist has never seen. REPORT_ONLY: no product change made."
+      "risk_approval_id": null
     },
     {
       "id": "DEF-024",
@@ -4632,11 +4923,11 @@
         "TC-077",
         "BANK-016",
         "server/src/modules/supplier/SupplierBankService.js",
-        "TASK-037"
+        "TASK-037",
+        "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [],
-      "risk_approval_id": null,
-      "summary": "ER_LOCK_DEADLOCK from InnoDB reaches the caller unchanged rather than being retried. Normal for an application to delegate the retry, but it is documented nowhere an operator would look, and bank_operations.md does not exist. Observed when TC-077's fixture ran concurrently with the existing deliberate-contention tests. REPORT_ONLY: no product change made; the harness retries only its own fixture seed, never an assertion."
+      "risk_approval_id": null
     },
     {
       "id": "DEF-025",
@@ -4646,15 +4937,69 @@
         "commit 6d55c1f",
         "PR #149",
         "TASK-037",
-        ".gitignore"
+        ".gitignore",
+        "docs/supplier_management/testing/04_defect_register.md"
       ],
       "closure_evidence": [
-        "PR #151 merge commit e29ff779bf932d04e9a8a502170c6981ba1fca60"
+        "PR #151 merge commit e29ff779bf932d04e9a8a502170c6981ba1fca60",
+        "npm ci in the main checkout at 980bcc5: 399/422 top-level packages, the 23 absent all optional platform bindings",
+        "main checkout after repair: lint exit 0, server Bank suites 37/37, client bank.test.js 26/26"
       ],
-      "risk_approval_id": null,
-      "summary": "A node_modules symlink pointing at one developer's absolute path was committed and reached main. .gitignore's node_modules/ entry has a trailing slash and matches directories only, so a symlink of that name was not ignored and git add -A staged it. Two harms: any clone with dependencies installed could no longer git pull (fatal: cannot rmdir 'node_modules': Directory not empty), and the repository carried a machine-specific absolute path. CI could not see it structurally - a runner checks out fresh and runs npm ci, so it never has an existing directory to replace. Fixed by git rm --cached plus a second, slashless .gitignore entry."
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-026",
+      "severity": "MEDIUM",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-068",
+        "TC-077",
+        "TASK-037",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [
+        "PR #158 merge commit 761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+        "PR CI run 36397475860 on head de1a46b: all five required checks success",
+        "main CI run 36399059980 (scheduled) on 761c0bd910af1daa6d5ccbff75ff5a1912c65424: all five required checks success; the push run 36398576418 on the same commit was cancelled by that scheduled run through the workflow's cancel-in-progress concurrency group, not by a failure",
+        "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-027",
+      "severity": "HIGH",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-068",
+        "TASK-037",
+        "HD-037",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [
+        "PR #158 merge commit 761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+        "PR CI run 36397475860 on head de1a46b: all five required checks success",
+        "main CI run 36399059980 (scheduled) on 761c0bd910af1daa6d5ccbff75ff5a1912c65424: all five required checks success; the push run 36398576418 on the same commit was cancelled by that scheduled run through the workflow's cancel-in-progress concurrency group, not by a failure",
+        "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
+      ],
+      "risk_approval_id": null
+    },
+    {
+      "id": "DEF-028",
+      "severity": "LOW",
+      "status": "CLOSED",
+      "source_ids": [
+        "TC-062",
+        "HD-037",
+        "docs/supplier_management/testing/04_defect_register.md"
+      ],
+      "closure_evidence": [
+        "PR #158 merge commit 761c0bd910af1daa6d5ccbff75ff5a1912c65424",
+        "PR CI run 36397475860 on head de1a46b: all five required checks success",
+        "main CI run 36399059980 (scheduled) on 761c0bd910af1daa6d5ccbff75ff5a1912c65424: all five required checks success; the push run 36398576418 on the same commit was cancelled by that scheduled run through the workflow's cancel-in-progress concurrency group, not by a failure",
+        "REV-058 APPROVED (docs/supplier_management/implementation/60_rev_058_independent_review.md)"
+      ],
+      "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-037 is IN PROGRESS, not done: two of seventeen cases have been executed. It is NOT Technical Acceptance and it is not business sign-off; business acceptance is PENDING_USER_ACCEPTANCE because the Security/Operations review named in T37's third Verification bullet is a human gate. Reports live in docs/supplier_management/testing/ (00 readiness, 01 environment, 02 technical test report). The routes forward, in the order this module would benefit from them: (1) BANK-004 - the nonce replay path that SEC-013 depends on is exercised nowhere, the single largest assessed gap; (2) bank_operations.md - without it the Security/Operations review has no subject, and DEF-024 has nowhere to be documented; (3) the remaining thirteen cases, whose behaviour is largely covered but which have no execution against their own case IDs; (4) TC-133 / OPS-006, a module-wide restore drill with no harness. Also still open by explicit human decision, both because fixing them moves a baseline hash: 03_design_spec.md authorises key removal on a single-table basis in five places, and the profile's env_keys omits CUSTOMER_BANK_* for supplier-phase-001-server. And still true: the profile declares eight suites whose targets do not exist, which is why no TC in this task can be produced by a declared suite. Do not merge anything without the user's explicit word.",
-  "decisions": []
+  "next_safe_action": "TASK-041 is DONE (merged at 8009e89, main CI green). PHASE-004 continues; by dependencies the next ready task should be re-derived from 08_traceability.json against this ledger before starting. Open carry-forward: HD-041..HD-044 (TASK-042/043/044/045/048). Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }
