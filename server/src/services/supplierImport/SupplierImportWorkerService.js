@@ -36,7 +36,7 @@ export class SupplierImportWorkerService extends BaseService {
     this.applyRow = options.applyRow ?? null;
     this.leaseOwner = options.instanceId || randomUUID();
     this.importService = new SupplierImportService({
-      database: services.require("mysqldatabase"), time: services.require("time")
+      database: services.require("mysqldatabase"), time: services.require("time"), logger: this.logger
     });
     this.stopping = false;
   }

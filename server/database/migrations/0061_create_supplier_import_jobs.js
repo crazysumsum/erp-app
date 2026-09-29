@@ -8,7 +8,7 @@
  * 用 framework 嘅 route idempotency，同 Supplier create 一樣；T43 證實需要先再開 migration。
  */
 const COLUMN_CONTRACT = Object.freeze({
-  id:                       { type: "bigint unsigned", nullable: false, default: null },
+  id:                       { type: "bigint unsigned", nullable: false, default: null, autoIncrement: true },
   template_version:         { type: "varchar(20)", nullable: false, default: null, collation: "ascii_bin" },
   source_stored_name:       { type: "char(64)", nullable: false, default: null, collation: "ascii_bin" },
   source_sha256:            { type: "binary(32)", nullable: false, default: null },
@@ -29,7 +29,7 @@ const COLUMN_CONTRACT = Object.freeze({
   failed_count:             { type: "int unsigned", nullable: false, default: "0" },
   skipped_count:            { type: "int unsigned", nullable: false, default: "0" },
   last_error_code:          { type: "varchar(80)", nullable: false, default: "", collation: "ascii_bin" },
-  error_summary:            { type: "varchar(500)", nullable: false, default: "" },
+  error_summary:            { type: "varchar(500)", nullable: false, default: "", charset: "utf8mb4" },
   lease_owner:              { type: "varchar(100)", nullable: false, default: "", collation: "ascii_bin" },
   lease_until:              { type: "bigint unsigned", nullable: true, default: null },
   created_by:               { type: "bigint unsigned", nullable: true, default: null },
@@ -70,7 +70,7 @@ function incompatible(detail) {
 export async function inspectSupplierImportJobSchema(connection, { table = "supplier_import_jobs" } = {}) {
   const [columns] = await connection.query(
     `SELECT column_name AS column_name, column_type AS column_type, is_nullable AS is_nullable,
-            column_default AS column_default, collation_name AS collation_name
+            column_default AS column_default, collation_name AS collation_name, extra AS extra
        FROM information_schema.columns
       WHERE table_schema = DATABASE() AND table_name = ?
       ORDER BY ordinal_position`,
@@ -87,7 +87,9 @@ export async function inspectSupplierImportJobSchema(connection, { table = "supp
     if (String(value(row, "column_type", "COLUMN_TYPE")).toLowerCase() !== expected.type ||
         nullable !== expected.nullable ||
         (value(row, "column_default", "COLUMN_DEFAULT") ?? null) !== expected.default ||
-        (expected.collation && value(row, "collation_name", "COLLATION_NAME") !== expected.collation)) {
+        (expected.collation && value(row, "collation_name", "COLLATION_NAME") !== expected.collation) ||
+        (expected.charset && !String(value(row, "collation_name", "COLLATION_NAME")).startsWith(`${expected.charset}_`)) ||
+        (expected.autoIncrement && !/auto_increment/iu.test(String(value(row, "extra", "EXTRA"))))) {
       throw incompatible(`column ${name}`);
     }
   }
@@ -106,6 +108,10 @@ export async function inspectSupplierImportJobSchema(connection, { table = "supp
     found.unique &&= Number(value(row, "non_unique", "NON_UNIQUE")) === 0;
     found.columns.push(value(row, "column_name", "COLUMN_NAME"));
     indexes.set(name, found);
+  }
+  // 契約以外嘅 UNIQUE 會靜靜雞改變業務規則（例如 UNIQUE(status) = 每個狀態只准一個 job）。
+  for (const [name, found] of indexes) {
+    if (found.unique && !INDEXES[name]) throw incompatible(`unexpected unique index ${name}`);
   }
   for (const [name, [unique, covered]] of Object.entries(INDEXES)) {
     const found = indexes.get(name);
@@ -131,6 +137,13 @@ export async function inspectSupplierImportJobSchema(connection, { table = "supp
       throw incompatible(`foreign key ${value(row, "constraint_name", "CONSTRAINT_NAME")}`);
     }
   }
+
+  const [checks] = await connection.query(
+    `SELECT constraint_name AS constraint_name FROM information_schema.table_constraints
+      WHERE constraint_schema = DATABASE() AND table_name = ? AND constraint_type = 'CHECK'`,
+    [table]
+  );
+  if (checks.length > 0) throw incompatible("the table carries CHECK constraints the contract does not define");
 
   const [triggers] = await connection.query(
     `SELECT trigger_name AS trigger_name FROM information_schema.triggers

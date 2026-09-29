@@ -74,17 +74,42 @@ function assertLease(job, leaseOwner, nowMs) {
   }
 }
 
-/** 列嘅錯誤只留低 code 同一句固定訊息：error.message 可能帶住 CSV 內容或者 SQL 值。 */
+/**
+ * 列嘅錯誤：domain 錯誤（Supplier 驗證、衝突）留佢嘅公開 code 同訊息，其餘一律係固定嘅一對。
+ * `withTransaction` 會將 SQL 錯誤、TypeError 等包成 `INTERNAL_SERVER_ERROR`，嗰個英文訊息同
+ * 內部 message（可能帶 CSV 或 SQL 值）都唔可以落入結果（REV-061 M-1）。
+ */
+const GENERIC_PUBLIC_CODES = new Set(["INTERNAL_SERVER_ERROR", "SERVICE_UNAVAILABLE"]);
 function rowError(error) {
-  return [{ code: String(error?.publicCode ?? "SUPPLIER_IMPORT_ROW_FAILED"),
-    message: String(error?.publicMessage ?? "匯入資料列處理失敗") }];
+  const code = error?.publicCode;
+  return !code || GENERIC_PUBLIC_CODES.has(code)
+    ? [{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]
+    : [{ code: String(code), message: String(error.publicMessage) }];
+}
+
+/**
+ * 交俾 applyRow 嘅 connection：拒絕結束或者改變 transaction 嘅語句（REV-061 M-3）。一句
+ * COMMIT 就會令 Supplier 喺 marker 之前落地 —— 正正係設計 §8.8 禁止嘅兩段式。
+ * 呢個擋唔到 applyRow 另外開 `database.withTransaction`（第二條 connection）：現有嘅 Supplier
+ * service method 全部都係咁，T45 一定要用收 connection 嘅 helper，見 carry-forward。
+ */
+const TRANSACTION_CONTROL = /^\s*(commit|rollback|start\s+transaction|begin|savepoint|release|set\s+(session|global|autocommit)|create|alter|drop|truncate|rename|lock|unlock)\b/iu;
+function rowConnection(connection) {
+  const guard = (method) => (sql, ...rest) => {
+    if (TRANSACTION_CONTROL.test(String(sql))) {
+      throw new TypeError("applyRow must not control the transaction it runs in");
+    }
+    return connection[method](sql, ...rest);
+  };
+  return { query: guard("query"), execute: guard("execute") };
 }
 
 export class SupplierImportService {
-  constructor({ database, time } = {}) {
+  constructor({ database, time, logger = null } = {}) {
     if (!database || !time) throw new TypeError("SupplierImportService requires database and time");
     this.database = database;
     this.time = time;
+    this.logger = logger;
   }
 
   /**
@@ -99,11 +124,23 @@ export class SupplierImportService {
       const nowMs = this.time.nowMs();
       const [[job]] = await connection.query(
         `SELECT ${JOB_COLUMNS} FROM supplier_import_jobs
-          WHERE status = 'queued' OR (status = 'running' AND lease_until < ?)
+          WHERE status = 'queued' OR (status = 'running' AND (lease_until IS NULL OR lease_until < ?))
           ORDER BY confirmed_at, id LIMIT 1 FOR UPDATE SKIP LOCKED`,
         [nowMs]
       );
       if (!job) return null;
+      // 冇確認人或確認時間嘅 queued job 唔應該存在（T45 要用確認人再驗權限），亦唔可以因為
+      // NULL 排最前而插隊（REV-061 L-3）：直接標 failed，唔好靜靜雞卡住。
+      if (job.status === "queued" && (job.confirmed_by === null || job.confirmed_at === null)) {
+        assertJobTransition(job.status, "failed");
+        await connection.execute(
+          `UPDATE supplier_import_jobs SET status = 'failed', last_error_code = 'SUPPLIER_IMPORT_NOT_CONFIRMED',
+                  error_summary = '匯入工作缺少確認資料', completed_at = ?, updated_at = ?, version = version + 1
+            WHERE id = ?`,
+          [nowMs, nowMs, job.id]
+        );
+        return null;
+      }
       assertJobTransition(job.status, "running");
       await connection.execute(
         `UPDATE supplier_import_rows SET status = 'skipped', completed_at = ?, updated_at = ?
@@ -146,7 +183,7 @@ export class SupplierImportService {
         );
         if (!row) return null;
         rowNumber = Number(row.row_number);
-        const appliedSupplierId = Number(await applyRow(connection, { job, row, nowMs }));
+        const appliedSupplierId = Number(await applyRow(rowConnection(connection), { job, row, nowMs }));
         if (!positiveInteger(appliedSupplierId)) {
           throw new TypeError("applyRow must return the Supplier ID it wrote");
         }
@@ -168,6 +205,11 @@ export class SupplierImportService {
     } catch (error) {
       // 未揀到列（lease 冇咗、job 唔見咗）就唔係「呢一列失敗」，照拋。
       if (rowNumber === null) throw error;
+      // 記低真正原因，但唔帶 message：佢可能有 CSV 或 SQL 值（REV-061 M-1）。
+      void this.logger?.error?.("supplier.import.failed", "Supplier import row failed", {
+        jobId, rowNumber, name: error?.name ?? "Error", code: error?.code ?? null,
+        causeCode: error?.cause?.code ?? null, publicCode: error?.publicCode ?? null
+      });
       return this.database.withTransaction(async (connection) => {
         const nowMs = this.time.nowMs();
         const [[job]] = await connection.query(

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { chmod, mkdir, mkdtemp, rm, stat, symlink } from "node:fs/promises";
+import { chmod, lstat, mkdir, mkdtemp, realpath, rm, stat, symlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -93,8 +93,44 @@ test("the import root is prepared 0700 and refused when shared, loose or overlap
   await mkdir(loose, { mode: 0o777 });
   await chmod(loose, 0o777);
   await assert.rejects(() => prepareSupplierImportRoot(loose), /must not be writable by group or others/u, "a /tmp-like root");
-  await assert.rejects(() => prepareSupplierImportRoot(path.join(base, "other-owner"), [], { uid: process.getuid() + 1 }),
-    /owned by the service user/u);
+  // 擁有者、filesystem 同 dev/ino 要真機先整得出，所以注入 lstat：只改被測嗰一個 path 嘅答案。
+  const reporting = (target, patch) => async (candidate) => {
+    const info = await lstat(candidate);
+    return candidate === target ? Object.assign(Object.create(info), patch(info)) : info;
+  };
+  const owned = path.join(base, "owned");
+  await assert.rejects(() => prepareSupplierImportRoot(owned, [], { lstat: reporting(owned, (i) => ({ uid: i.uid + 1 })) }),
+    /root must be owned by the service user/u);
+  await assert.rejects(() => prepareSupplierImportRoot(owned, [],
+    { lstat: reporting(path.join(owned, "source"), (i) => ({ uid: i.uid + 1 })) }),
+  /owned by the service user/u, "a kind directory owned by someone else");
+  await assert.rejects(() => prepareSupplierImportRoot(owned, [],
+    { lstat: reporting(path.join(owned, "result"), (i) => ({ dev: i.dev + 1 })) }),
+  /on the root's filesystem/u, "a kind directory mounted from another filesystem");
+  const bound = path.join(base, "bound");
+  await mkdir(bound);
+  const ownedInfo = await lstat(owned);
+  const boundReal = await realpath(bound);   // 比較用真實路徑：macOS 嘅 /var 其實係 /private/var
+  await assert.rejects(() => prepareSupplierImportRoot(owned, [bound],
+    { lstat: reporting(boundReal, () => ({ dev: ownedInfo.dev, ino: ownedInfo.ino })) }),
+  /overlaps another module's file directory/u, "the same directory under another path (a bind mount)");
+
+  // 已經存在而且太鬆嘅 root 同 kind 目錄會收緊到 0700，唔係照舊保留。
+  const existing = path.join(base, "existing");
+  await mkdir(path.join(existing, "source"), { recursive: true });
+  await chmod(existing, 0o750);
+  await chmod(path.join(existing, "source"), 0o770);
+  await prepareSupplierImportRoot(existing);
+  assert.equal((await stat(existing)).mode & 0o777, 0o700);
+  assert.equal((await stat(path.join(existing, "source"))).mode & 0o777, 0o700);
+
+  // 上層目錄人人寫得入又冇 sticky bit：其他 user 可以將 root 換走（REV-061 L-4）。
+  const shared = path.join(base, "shared");
+  await mkdir(shared);
+  await chmod(shared, 0o777);
+  await assert.rejects(() => prepareSupplierImportRoot(path.join(shared, "imports")), /parent directory must not be replaceable/u);
+  await chmod(shared, 0o1777);
+  assert.ok(await prepareSupplierImportRoot(path.join(shared, "imports")), "control: a sticky shared parent such as /tmp is fine");
 
   // 經 symlink 嘅上層目錄：字串唔同，真實路徑一樣 —— 開機檢查睇唔到，呢度要睇到。
   const customer = path.join(base, "customer");

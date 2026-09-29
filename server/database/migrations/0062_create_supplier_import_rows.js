@@ -54,7 +54,7 @@ export async function inspectSupplierImportRowSchema(connection,
   { table = "supplier_import_rows", jobTable = "supplier_import_jobs" } = {}) {
   const [columns] = await connection.query(
     `SELECT column_name AS column_name, column_type AS column_type, is_nullable AS is_nullable,
-            column_default AS column_default, collation_name AS collation_name
+            column_default AS column_default, collation_name AS collation_name, extra AS extra
        FROM information_schema.columns
       WHERE table_schema = DATABASE() AND table_name = ?
       ORDER BY ordinal_position`,
@@ -71,7 +71,9 @@ export async function inspectSupplierImportRowSchema(connection,
     if (String(value(row, "column_type", "COLUMN_TYPE")).toLowerCase() !== expected.type ||
         nullable !== expected.nullable ||
         (value(row, "column_default", "COLUMN_DEFAULT") ?? null) !== expected.default ||
-        (expected.collation && value(row, "collation_name", "COLLATION_NAME") !== expected.collation)) {
+        (expected.collation && value(row, "collation_name", "COLLATION_NAME") !== expected.collation) ||
+        (expected.charset && !String(value(row, "collation_name", "COLLATION_NAME")).startsWith(`${expected.charset}_`)) ||
+        (expected.autoIncrement && !/auto_increment/iu.test(String(value(row, "extra", "EXTRA"))))) {
       throw incompatible(`column ${name}`);
     }
   }
@@ -90,6 +92,10 @@ export async function inspectSupplierImportRowSchema(connection,
     found.unique &&= Number(value(row, "non_unique", "NON_UNIQUE")) === 0;
     found.columns.push(value(row, "column_name", "COLUMN_NAME"));
     indexes.set(name, found);
+  }
+  // 契約以外嘅 UNIQUE 會靜靜雞改變業務規則（例如 UNIQUE(status) = 每個狀態只准一個 job）。
+  for (const [name, found] of indexes) {
+    if (found.unique && !INDEXES[name]) throw incompatible(`unexpected unique index ${name}`);
   }
   for (const [name, [unique, covered]] of Object.entries(INDEXES)) {
     const found = indexes.get(name);
@@ -114,16 +120,17 @@ export async function inspectSupplierImportRowSchema(connection,
   }
 
   const [checks] = await connection.query(
-    `SELECT cc.check_clause AS check_clause
+    `SELECT cc.check_clause AS check_clause, tc.enforced AS enforced
        FROM information_schema.table_constraints tc
        JOIN information_schema.check_constraints cc
          ON cc.constraint_schema = tc.constraint_schema AND cc.constraint_name = tc.constraint_name
-      WHERE tc.constraint_schema = DATABASE() AND tc.table_name = ? AND tc.constraint_type = 'CHECK'
-        AND tc.enforced = 'YES'`,
+      WHERE tc.constraint_schema = DATABASE() AND tc.table_name = ? AND tc.constraint_type = 'CHECK'`,
     [table]
   );
-  if (!checks.some((row) => normalizeClause(value(row, "check_clause", "CHECK_CLAUSE")) === APPLIED_CHECK)) {
-    throw incompatible("the applied_supplier_id check is missing or not enforced");
+  // 啱啱好一條：多一條（例如 status <> 'skipped'）會靜靜雞令某啲列寫唔入。
+  if (checks.length !== 1 || normalizeClause(value(checks[0], "check_clause", "CHECK_CLAUSE")) !== APPLIED_CHECK ||
+      String(value(checks[0], "enforced", "ENFORCED")).toUpperCase() !== "YES") {
+    throw incompatible("the applied_supplier_id check is missing, not enforced, or not alone");
   }
 
   const [triggers] = await connection.query(

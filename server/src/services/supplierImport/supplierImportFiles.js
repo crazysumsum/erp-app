@@ -77,10 +77,18 @@ function contains(parent, child) {
  * - 用真實路徑同 `dev`+`ino` 再比一次其他模組嘅目錄：開機嗰個檢查（applicationConfiguration）
  *   只比字串，唔分大細階唔同嘅 filesystem 同經 symlink 嘅上層目錄都過得到。
  */
-export async function prepareSupplierImportRoot(root, otherRoots = [], { uid = process.getuid?.() } = {}) {
+export async function prepareSupplierImportRoot(root, otherRoots = [],
+  { uid = process.getuid?.(), lstat: lstatFn = lstat } = {}) {
   root = path.resolve(root);
   await mkdir(root, { recursive: true, mode: 0o700 });
-  const rootInfo = await lstat(root);
+  // 上層目錄如果人人寫得入而又冇 sticky bit，其他 user 可以將 root 改名再換做自己嘅目錄或
+  // symlink（REV-061 L-4）。
+  const parentInfo = await lstatFn(path.dirname(root));
+  if (((parentInfo.mode & 0o022) !== 0 && (parentInfo.mode & 0o1000) === 0) ||
+      (uid !== undefined && parentInfo.uid !== uid && parentInfo.uid !== 0)) {
+    throw new Error("Supplier import root's parent directory must not be replaceable by other users");
+  }
+  const rootInfo = await lstatFn(root);
   if (!rootInfo.isDirectory()) throw new Error("Supplier import root is not a regular directory");
   if (uid !== undefined && rootInfo.uid !== uid) throw new Error("Supplier import root must be owned by the service user");
   if ((rootInfo.mode & 0o022) !== 0) throw new Error("Supplier import root must not be writable by group or others");
@@ -88,7 +96,7 @@ export async function prepareSupplierImportRoot(root, otherRoots = [], { uid = p
   for (const kind of KINDS) {
     const directory = path.join(root, kind);
     await mkdir(directory, { mode: 0o700 }).catch((error) => { if (error.code !== "EEXIST") throw error; });
-    const info = await lstat(directory);
+    const info = await lstatFn(directory);
     if (!info.isDirectory() || info.dev !== rootInfo.dev || (uid !== undefined && info.uid !== uid)) {
       throw new Error("Supplier import directories must be regular, on the root's filesystem and owned by the service user");
     }
@@ -101,7 +109,7 @@ export async function prepareSupplierImportRoot(root, otherRoots = [], { uid = p
     let otherInfo;
     try {
       otherReal = await realpath(other);
-      otherInfo = await lstat(otherReal);
+      otherInfo = await lstatFn(otherReal);
     } catch (error) {
       if (error.code === "ENOENT") continue;   // 未建立嘅目錄唔會同佢重疊
       throw error;
