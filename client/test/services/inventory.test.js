@@ -80,6 +80,19 @@ describe("inventory service", () => {
     ]);
   });
 
+  it("sends Reservation create with the same intent key and without client-side ATP calculation", async () => {
+    const payload = {
+      source: { module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", eventId: "reserve-1" },
+      skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10,
+      idempotencyKey: "reservation-intent-1"
+    };
+    await inventoryService.createReservation(payload);
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/inventory/reservations/create", {
+      idempotent: true, idempotencyKey: "reservation-intent-1",
+      body: { source: payload.source, skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10 }
+    });
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);

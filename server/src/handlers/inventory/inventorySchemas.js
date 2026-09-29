@@ -1,5 +1,6 @@
 import {
   INVENTORY_MASTER_STATUSES,
+  INVENTORY_RESERVATION_STATUSES,
   INVENTORY_STOCK_STATUSES
 } from "../../modules/inventory/inventoryConstants.js";
 
@@ -207,6 +208,36 @@ export const RECEIPT_CREATE = Object.freeze({
     manufactureDate: DATE_ONLY,
     stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
     minimumLifeOverride: MINIMUM_LIFE_OVERRIDE
+  }
+});
+
+export const RESERVATION_CREATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["source", "skuId", "warehouseId", "quantity", "purpose", "minimumRemainingDays"],
+  properties: {
+    source: SOURCE, skuId: ID, warehouseId: ID, quantity: ID,
+    purpose: { const: "SALE" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36_500 }
+  }
+});
+
+const NON_NEGATIVE_QUANTITY = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
+export const RESERVATION_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "operationId", "warehouseId", "skuId", "purpose", "minimumRemainingDays",
+    "originalQuantity", "consumedQuantity", "releasedQuantity", "outstandingQuantity", "status", "version"],
+  properties: {
+    id: ID, operationId: ID, warehouseId: ID, skuId: ID, purpose: { const: "SALE" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36_500 },
+    originalQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
+    releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
+    status: { type: "string", enum: [...INVENTORY_RESERVATION_STATUSES] }, version: VERSION,
+    availability: {
+      type: "object", additionalProperties: false,
+      required: ["eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"],
+      properties: Object.fromEntries(["eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"]
+        .map((field) => [field, NON_NEGATIVE_QUANTITY]))
+    }
   }
 });
 

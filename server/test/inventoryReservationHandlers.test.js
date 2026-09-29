@@ -1,0 +1,41 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { RequestValidator } from "../src/framework/validation/requestValidator.js";
+import { ResponseValidator } from "../src/framework/validation/responseValidator.js";
+import { CreateInventoryReservationHandler } from "../src/handlers/inventory/reservationHandlers.js";
+
+test("TASK-023 Reservation create exposes a strict idempotent operation contract", () => {
+  const api = CreateInventoryReservationHandler.api;
+  assert.equal(api.path, "/api/v1/inventory/reservations/create");
+  assert.deepEqual(api.authorizationPolicies[0].options.permissions, ["inventory.view", "inventory.operation"]);
+  assert.deepEqual(api.idempotency, { enabled: true });
+  assert.equal(api.requestSchema.body.additionalProperties, false);
+  new RequestValidator().compile(api.requestSchema, api.path);
+  new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
+});
+
+test("TASK-023 Reservation create maps trusted actor, fixed permission, source and payload", async () => {
+  const services = { require(name) {
+    if (name === "mysqldatabase") return { withTransaction() {} };
+    if (name === "logging") return { logger: { error() {} } };
+    if (name === "time") return { nowMs: () => 1, fileDate: () => "2026-09-29" };
+    throw new Error(name);
+  } };
+  const handler = new CreateInventoryReservationHandler(services);
+  let received;
+  handler.inventory = { async create(command) { received = command; return { id: 1 }; } };
+  const source = { module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", lineId: "1", eventId: "reserve-1" };
+  const body = { source, skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10 };
+  const response = await handler.execute({
+    auth: { claims: { sub: "9", roles: ["sales"], permissions: ["inventory.operation"] } },
+    input: { body }, requestId: "req-1"
+  });
+  assert.deepEqual(received, {
+    actor: { userId: 9, serviceName: "", claimedRoles: ["sales"], claimedPermissions: ["inventory.operation"] },
+    authorization: { purpose: "reservation.create", requiredCallerPermission: "inventory.operation" },
+    source, correlationId: "req-1",
+    payload: { skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10 }
+  });
+  assert.deepEqual(response.data, { id: 1 });
+});
