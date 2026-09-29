@@ -38,7 +38,13 @@ test("--batch-size is bounded at both ends", () => {
 
 test("defaults leave batch size and limit to the module", () => {
   assert.deepEqual(parseArguments(REQUIRED),
-    { batchSize: undefined, limit: undefined, transitionStarted: null, json: false, from: "e1", to: "e2" });
+    { batchSize: undefined, limit: undefined, transitionStarted: null, json: false, fromLost: false, from: "e1", to: "e2" });
+});
+
+test("--from-lost is an explicit flag with no value (HD-038)", () => {
+  assert.equal(parseArguments([...REQUIRED, "--from-lost"]).fromLost, true);
+  assert.throws(() => parseArguments([...REQUIRED, "--from-lost=true"]), /--from-lost takes no value/u);
+  assert.match(USAGE, /--from-lost/u);
 });
 
 /**
@@ -270,6 +276,24 @@ test("main returns 0 for a rotation that drained every row, and 1 when the count
   assert.equal(reports[0].supplierRowsDrained, true);
   assert.equal(reports[1].remaining, null, "and the report says so too");
   assert.ok(reports[1].warnings.some((w) => w.code === "REMAINING_UNKNOWN"));
+});
+
+test("main forwards --from-lost, so a lost lookup key can be reindexed (HD-038)", async () => {
+  const originalOut = process.stdout.write.bind(process.stdout);
+  const originalErr = process.stderr.write.bind(process.stderr);
+  process.stdout.write = () => true;
+  process.stderr.write = () => true;
+  const run = (argv) => {
+    const counts = [[[{ remaining: 1 }]], [[{ remaining: 0 }]]];   // 開頭有行用緊；跑完冇
+    return main(ROTATION_KINDS.LOOKUP, argv, () => connectionWhere({ count: () => counts.shift() ?? [[{ remaining: 0 }]] }));
+  };
+  try {
+    assert.equal(await run(["--from=lost-look", "--to=probe-look", "--json", "--from-lost"]), 0);
+    assert.equal(await run(["--from=lost-look", "--to=probe-look", "--json"]), 2, "without the flag the ring check still refuses");
+  } finally {
+    process.stdout.write = originalOut;
+    process.stderr.write = originalErr;
+  }
 });
 
 // REV-056 L-3：收尾失敗唔可以改寫一個做完咗嘅 run 嘅結論。

@@ -4,10 +4,12 @@ import test from "node:test";
 import { ServiceContainer } from "../src/framework/services/ServiceContainer.js";
 import { BusinessMasterProvider } from "../src/modules/businessMaster/BusinessMasterProvider.js";
 import {
+  SupplierBankKeyCheckService,
   SupplierBusinessMasterImpactCheckerService,
   SupplierCoreProviderService
 } from "../src/modules/supplier/SupplierProviderServices.js";
 import { SupplierLookupService } from "../src/modules/supplier/SupplierLookupService.js";
+import { MySqlDatabaseOperationError } from "../src/services/mysqldatabase/MySqlDatabaseService.js";
 
 function definition(ServiceClass) {
   return {
@@ -87,4 +89,54 @@ test("the application container resolves both Supplier provider contracts and a 
   const impact = container.require("supplierBusinessMasterImpactChecker");
   assert.equal(impact.id, "supplier");
   assert.equal((await impact.check({ entityType: "CURRENCY", entityKey: "HKD" })).activeDefaultCount, 1);
+});
+
+test("DEF-027: startup logs bank rows on a key outside the ring as an error, and never refuses to start", async () => {
+  const supplier = {
+    bankEncryption: { activeKeyId: "enc-1", keyRing: { "enc-1": "x" } },
+    bankLookup: { activeKeyId: "look-2", keyRing: { "look-1": "x", "look-2": "x" } }
+  };
+  const start = async ({ config = { supplier }, counts = {}, fails = false } = {}) => {
+    const queries = [];
+    const errors = [];
+    const infos = [];
+    const container = new ServiceContainer({
+      config,
+      definitions: [definition(SupplierBankKeyCheckService)],
+      values: {
+        mysqldatabase: { async query(sql, params) {
+          queries.push([sql, params]);
+          if (fails) {
+            // 同真嘅 MySqlDatabaseExecutor 一樣包一層（REV-057 L-3）。
+            const driver = Object.assign(new Error("Table 'erp.supplier_bank_accounts' doesn't exist"), { code: "ER_NO_SUCH_TABLE", errno: 1146 });
+            throw new MySqlDatabaseOperationError("MySQL database query failed", { cause: driver });
+          }
+          return [[{ n: counts[sql.includes("blind_index_key_id") ? "lookup" : "encryption"] ?? 0 }]];
+        } },
+        logging: { logger: { async error(...args) { errors.push(args); }, async info(...args) { infos.push(args); } } }
+      }
+    });
+    await container.initialize();
+    return { queries, errors, infos };
+  };
+  const events = (list) => list.map(([event, , context]) => [event, context]);
+
+  const healthy = await start();
+  assert.deepEqual(healthy.errors, [], "a clean database logs no error");
+  assert.deepEqual(events(healthy.infos), [["supplier.bank.key_check_completed", { encryption: 0, lookup: 0 }]],
+    "but it does say the check ran, so silence is not the pass signal");
+  assert.deepEqual(healthy.queries.map(([, params]) => params), [["enc-1"], ["look-1", "look-2"]], "each column against its own ring");
+
+  const broken = await start({ counts: { lookup: 2 } });
+  assert.deepEqual(events(broken.errors), [["supplier.bank.keys_outside_ring", { kind: "lookup", rows: 2 }]]);
+  assert.deepEqual(events(broken.infos), [["supplier.bank.key_check_completed", { encryption: 0, lookup: 2 }]]);
+
+  const failing = await start({ fails: true });
+  assert.deepEqual(events(failing.errors), [["supplier.bank.key_check_failed", { reason: "ER_NO_SUCH_TABLE" }]],
+    "a failed check is logged with the driver's code, not thrown");
+  assert.deepEqual(failing.infos, [], "and is not reported as completed");
+
+  const undeployed = await start({ config: {} });
+  assert.equal(undeployed.queries.length, 0, "no Bank keys configured, nothing to check (design §1700)");
+  assert.deepEqual([...undeployed.errors, ...undeployed.infos], [], "and nothing to alert on (REV-057 L-2)");
 });

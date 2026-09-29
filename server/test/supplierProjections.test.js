@@ -58,8 +58,8 @@ test("masked Bank projection never exposes encrypted material, key IDs or a shor
     status: "active", is_default: 1, version: 3, updated_at: 30,
     account_ciphertext: Buffer.from("secret"), encryption_key_id: "k1", account_blind_index: Buffer.alloc(32)
   });
-  assert.equal(bank.maskedAccountNumber, "•••• 1234");
+  assert.equal(bank.maskedAccountNumber, "**** 1234");
   assert.equal(bank.accountCiphertext, undefined);
   assert.equal(bank.encryptionKeyId, undefined);
-  assert.equal(toMaskedBankResponse({ ...bank, last_four: "123", account_length: 3 }).maskedAccountNumber, "•••");
+  assert.equal(toMaskedBankResponse({ ...bank, last_four: "123", account_length: 3 }).maskedAccountNumber, "***");
 });

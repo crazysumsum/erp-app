@@ -510,6 +510,31 @@ test("refuses a --from that is not in the ring, instead of reporting a finished 
 });
 
 /**
+ * HD-038（REV-057 M-2）：舊 lookup key 嘅 material 冇咗。重建只要 encryption ring，所以
+ * 救得返；`fromLost` 換走「要喺 ring」嗰個檢查，改為要求有行用緊佢。
+ */
+test("a lookup key that left the ring can be reindexed with fromLost, and only when rows still use it", async () => {
+  const lost = crypto({ lookActive: "gone", lookRing: { gone: KEY_B, l2: KEY_C } });
+  const c = crypto();                                      // lookup ring 只有 l1、l2
+  const db = fakeDatabase([seed(lost, { id: 1 }), seed(lost, { id: 2 }), seed(c, { id: 3 })]);
+
+  const report = await runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "gone", to: "l2", fromLost: true });
+  assert.equal(report.processed, 2);
+  assert.equal(report.remaining, 0);
+  for (const row of db.table) assert.deepEqual(row.account_blind_index, c.blindIndex(`${ACCOUNT}${row.id}`).index);
+
+  // 對照同拒絕：
+  await assert.rejects(() => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "gone", to: "l2", fromLost: true }),
+    /no supplier_bank_accounts row uses lookup key id gone/u, "a lost id nothing uses is a typo or a finished run, not a rotation");
+  await assert.rejects(() => runRotation({ database: fakeDatabase([seed(lost, { id: 4 })]), crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "gone", to: "l2" }),
+    /not in the lookup ring/u, "without the flag the ring check still refuses");
+  await assert.rejects(() => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.LOOKUP, from: "l1", to: "l2", fromLost: true }),
+    /is in the lookup ring; it is not lost/u);
+  await assert.rejects(() => runRotation({ database: db, crypto: c, kind: ROTATION_KINDS.ENCRYPTION, from: "gone-enc", to: "e2", fromLost: true }),
+    /lookup reindex only/u);
+});
+
+/**
  * REV-052 M-2。`AND id > ?` 係令個迴圈會停嘅嗰一句。之前個 double 自己硬寫咗佢，
  * 所以剷走佢 356 條測試照綠，而喺真 MySQL 上面會永遠攞返同一批行。
  */

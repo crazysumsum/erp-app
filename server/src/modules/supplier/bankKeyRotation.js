@@ -83,9 +83,26 @@ function assertTarget(kind, crypto, to) {
   return active;
 }
 
-function assertSource(kind, crypto, from, to) {
+function assertSource(kind, crypto, from, to, fromLost) {
   if (!from) throw new Error("--from is required");
   if (from === to) throw new Error("--from and --to are the same key id; nothing to rotate");
+  /**
+   * `--from-lost`（HD-038，REV-057 M-2）：舊 lookup key 嘅 material 已經冇咗。Lookup
+   * 重建只需要 encryption ring 解密，唔使舊 lookup key，所以呢個情況救得返 —— 但
+   * 下面嗰個「要喺 ring 入面」嘅防打錯字檢查會擋住佢。明確嘅旗換走嗰個檢查，而
+   * `runRotation` 改為要求真係有行用緊呢個 id，所以打錯字照樣會被拒。
+   *
+   * Encryption 唔適用：密文嘅 key 冇咗，嗰啲行根本解唔返。
+   */
+  if (fromLost) {
+    if (kind !== ROTATION_KINDS.LOOKUP) {
+      throw new Error("--from-lost applies to the lookup reindex only; rows on a lost encryption key cannot be decrypted");
+    }
+    if (crypto.lookupKeyIds.includes(from)) {
+      throw new Error(`--from key id ${from} is in the lookup ring; it is not lost, so drop --from-lost`);
+    }
+    return;
+  }
   /**
    * `--from` 要真係喺 ring 入面。
    *
@@ -232,13 +249,18 @@ export async function runRotation({
   // `now` 定住成個 run 嘅警告算術（ring 大細、transition 幾耐），`clock` 係真時間。
   // 之前 `startedAt` 同 `endedAt` 兩個都係同一個 `now`，所以一個跑四個鐘嘅輪替
   // 報出嚟嘅 elapsed 結構上永遠係 0。（REV-053 L-1）
-  transitionStartedAt = null, clock = Date.now, now = clock(), onProgress = () => {}
+  transitionStartedAt = null, clock = Date.now, now = clock(), onProgress = () => {}, fromLost = false
 }) {
   if (kind !== ROTATION_KINDS.ENCRYPTION && kind !== ROTATION_KINDS.LOOKUP) {
     throw new Error(`unknown rotation kind ${kind}`);
   }
   const active = assertTarget(kind, crypto, to);
-  assertSource(kind, crypto, from, active);
+  assertSource(kind, crypto, from, active, fromLost);
+  // Ring 證明唔到呢個 id 唔係打錯字，就要資料證明：冇行用緊佢就拒絕，唔好報一個
+  // 「processed 0、remaining 0」嘅假完成（REV-052 M-1 嗰個形狀）。
+  if (fromLost && await remainingRows(database, kind, from) === 0) {
+    throw new Error(`no supplier_bank_accounts row uses lookup key id ${from}; refusing a --from-lost that matches nothing`);
+  }
 
   const startedAt = clock();
   let processed = 0;
