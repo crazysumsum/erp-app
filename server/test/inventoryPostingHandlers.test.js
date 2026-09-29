@@ -3,7 +3,7 @@ import test from "node:test";
 
 import { RequestValidator } from "../src/framework/validation/requestValidator.js";
 import { ResponseValidator } from "../src/framework/validation/responseValidator.js";
-import { PostInventoryReceiptHandler } from "../src/handlers/inventory/postingHandlers.js";
+import { PostInventoryIssueHandler, PostInventoryReceiptHandler } from "../src/handlers/inventory/postingHandlers.js";
 import * as postingHandlers from "../src/handlers/inventory/postingHandlers.js";
 import { InventoryPostingService } from "../src/modules/inventory/InventoryPostingService.js";
 
@@ -60,10 +60,33 @@ test("TASK-014 Receipt handler maps trusted actor and source into a fixed comman
   assert.deepEqual(response.data, { status: "POSTED" });
 });
 
-test("TASK-022 keeps the Issue HTTP path unregistered until TASK-023", () => {
+test("TASK-023 direct Issue HTTP path uses Inventory operation, not Fulfillment internal permission", async () => {
   const paths = Object.values(postingHandlers)
     .filter((value) => typeof value === "function" && value.api)
     .map((Handler) => Handler.api.path);
-  assert.equal(paths.includes("/api/v1/inventory/issues"), false);
+  assert.equal(paths.includes("/api/v1/inventory/issues"), true);
   assert.equal(typeof InventoryPostingService.prototype.postIssueInTransaction, "function");
+  const api = PostInventoryIssueHandler.api;
+  assert.deepEqual(api.authorizationPolicies[0].options.permissions, ["inventory.view", "inventory.operation"]);
+  assert.deepEqual(api.idempotency, { enabled: true });
+  assert.equal(api.requestSchema.body.additionalProperties, false);
+  new RequestValidator().compile(api.requestSchema, api.path);
+  new ResponseValidator({ environment: "production" }).compile(api.responseSchema, api.path);
+  const handler = new PostInventoryIssueHandler({ require(name) {
+    if (name === "mysqldatabase") return { withTransaction() {} };
+    if (name === "logging") return { logger: { error() {} } };
+    if (name === "time") return { nowMs: () => 1, fileDate: () => "2026-09-29" };
+    throw new Error(name);
+  } });
+  let received;
+  handler.inventory = { async postIssue(command) { received = command; return { status: "POSTED" }; } };
+  const source = { module: "FULFILLMENT", documentType: "SHIPMENT", documentId: "S-1", eventId: "post-1" };
+  const lines = [{ allocationId: 8, expectedVersion: 2, balanceId: 4, expectedBalanceVersion: 3, quantity: 1 }];
+  await handler.execute({
+    auth: { claims: { sub: "9", roles: [], permissions: ["inventory.operation"] } },
+    input: { body: { source, reservationId: 7, version: 5, lines } }, requestId: "req-1"
+  });
+  assert.deepEqual(received.authorization, { purpose: "issue.post", requiredCallerPermission: "inventory.operation" });
+  assert.deepEqual(received.payload, { reservationId: 7, expectedVersion: 5, lines });
+  assert.deepEqual(received.source, source);
 });

@@ -214,6 +214,39 @@ export const RECEIPT_CREATE = Object.freeze({
   }
 });
 
+export const ISSUE_CREATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["source", "reservationId", "version", "lines"],
+  properties: {
+    source: SOURCE, reservationId: ID, version: VERSION,
+    lines: { type: "array", minItems: 1, maxItems: 100, items: {
+      type: "object", additionalProperties: false,
+      required: ["allocationId", "expectedVersion", "balanceId", "expectedBalanceVersion", "quantity"],
+      properties: {
+        allocationId: ID, expectedVersion: VERSION, balanceId: ID,
+        expectedBalanceVersion: VERSION, quantity: ID
+      }
+    } }
+  }
+});
+export const ISSUE_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["status", "operationId", "movementGroupId", "reservationId", "version", "quantity", "lines"],
+  properties: {
+    status: { const: "POSTED" }, operationId: ID,
+    movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
+    reservationId: ID, version: VERSION, quantity: ID,
+    lines: { type: "array", minItems: 1, maxItems: 100, items: {
+      type: "object", additionalProperties: false,
+      required: ["movementId", "allocationId", "balanceId", "quantity", "allocationVersion", "balanceVersion"],
+      properties: {
+        movementId: ID, allocationId: ID, balanceId: ID, quantity: ID,
+        allocationVersion: VERSION, balanceVersion: VERSION
+      }
+    } }
+  }
+});
+
 export const RESERVATION_CREATE = Object.freeze({
   type: "object", additionalProperties: false,
   required: ["source", "skuId", "warehouseId", "quantity", "purpose", "minimumRemainingDays"],

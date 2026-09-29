@@ -156,6 +156,15 @@ describe("inventory service", () => {
     ]);
   });
 
+  it("sends direct Inventory Issue with its source event and exact Allocation versions", async () => {
+    const source = { module: "FULFILLMENT", documentType: "SHIPMENT", documentId: "S-1", eventId: "post-1" };
+    const lines = [{ allocationId: 8, expectedVersion: 2, balanceId: 4, expectedBalanceVersion: 3, quantity: 1 }];
+    await inventoryService.postIssue({ source, reservationId: 7, version: 5, lines, idempotencyKey: "issue-1" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/inventory/issues", {
+      idempotent: true, idempotencyKey: "issue-1", body: { source, reservationId: 7, version: 5, lines }
+    });
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);
