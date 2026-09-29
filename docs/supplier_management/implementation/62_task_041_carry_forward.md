@@ -49,7 +49,7 @@ New obligations T42 creates:
 | --- | --- |
 | T43 / T44 | Refuse startup without `import.root` once the upload API registers (HD-046 a) |
 | T45 | Wire the real `applyRow` into `SupplierImportWorkerService` (it claims nothing until then), writing Supplier and audit on the given connection and returning the Supplier ID |
-| T45 | `applyRow` must call **connection-taking** domain helpers extracted from `SupplierAdminService` and the other write services. Their public methods each open `database.withTransaction` on a second pooled connection, which commits the Supplier before the marker — the two-phase path design §8.8 forbids (REV-061 M-3, verified E4b). The connection handed to `applyRow` already refuses `COMMIT`, `ROLLBACK`, `START TRANSACTION`, `SAVEPOINT`, `SET SESSION`, DDL and `LOCK`; it cannot see a second connection |
+| T45 | `applyRow` must call **connection-taking** domain helpers extracted from `SupplierAdminService` and the other write services. Their public methods each open `database.withTransaction` on a second pooled connection, which commits the Supplier before the marker — the two-phase path design §8.8 forbids (REV-061 M-3, verified E4b). The connection handed to `applyRow` admits only `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `REPLACE` and `WITH` (after leading comments; any `/*!` and `INTO OUTFILE`/`DUMPFILE` refused), on both `query` and `execute` — an allowlist since REV-062 M-4 showed a blacklist is bypassed by comments, `CALL`, `PREPARE` and `SET @@autocommit`. It cannot see a second connection, so it does not make a public service method safe |
 | T45 | The whole row, job lock included, must finish inside `DB_TRANSACTION_TIMEOUT_MS` (20 s by default) |
 | T45 | Ship an integration test with the **real** `applyRow` that injects a failure after the Supplier write and asserts no Supplier, audit or name-gram row survives |
 | T45 | Domain errors thrown from `applyRow` must set an explicit Chinese `publicMessage`: `ApplicationError` defaults it to the internal message, and the row stores `publicCode` / `publicMessage` for domain codes (REV-061 I-4). Decide whether transient errors (lock wait, deadlock, transaction timeout) should retry instead of failing the row (I-3) |
@@ -74,10 +74,30 @@ worker ignoring abort; the worker running without `applyRow`; the root not prepa
 accepted; the realpath overlap skipped; the rows CHECK not inspected; a CASCADE row FK accepted; the job
 column types not inspected. Four of these first survived and each got a test.
 
-After REV-061, 40 mutants, all killed: the 19 above, REV-061's eleven survivors (no `SKIP LOCKED`; no lease check on the
+After REV-061, 39 mutants, all killed: the 19 above, ten of REV-061's survivors (no `SKIP LOCKED`; no lease check on the
 failure path; no renewal after an applied row; no renewal after a failed row; kind-directory `dev`, owner, and `chmod`
-checks; root `chmod`; the `dev`/`ino` same-directory check; the rows trigger check) and ten for the remediation (a
+checks; root `chmod`; the `dev`/`ino` same-directory check; the rows trigger check — an earlier revision of this record
+said "eleven" and "40", which REV-062 L-8 caught) and ten for the remediation (a
 generic code passed through to the row; no failure log; `applyRow` given the raw connection; a leaseless running job
 left stuck; an unconfirmed job claimed; the root's parent unchecked; `auto_increment`, extra UNIQUE, charset and CHECK
 contracts on jobs; an extra CHECK on rows). The pending guard on the failure path (REV-061 M4) is left as REV-061 found
 it: the rollback returns the row to pending before that UPDATE runs, and the CHECK backstops the applied case.
+
+After REV-062, 56 mutants, all killed, on the tree with main merged in: the 39 above plus the allowlist admitting `SET` or
+`CALL`; an executable comment allowed; `INTO OUTFILE` allowed; leading comments not stripped; `execute` unguarded (it
+first survived — `COMMIT` runs as a prepared statement on MySQL, so a real-MySQL `execute("COMMIT")` case was added);
+`SERVICE_UNAVAILABLE` passed through; `causeName` dropped from the log; the not-confirmed path unlogged; each half of
+the confirmer check; the worker not passing its logger; the ancestor owner check; only the parent checked; ancestors
+judged by string instead of realpath; a NOT ENFORCED rows CHECK accepted.
+
+## REV-062 notes kept for later
+
+- **I-17.** A queued job whose confirmer was deleted (`confirmed_by` is `ON DELETE SET NULL`) is failed with
+  `SUPPLIER_IMPORT_NOT_CONFIRMED` and now logged as `supplier.import.not_confirmed`. A **running** job whose confirmer is
+  deleted is still resumed by T42; T45's re-check of the confirmer (HD-048) must fail it.
+- **I-18.** The failure log is written only when the row is actually marked `failed`; when the lease is lost the row
+  stays pending for the new owner and no "row failed" line is written.
+- **I-19.** Session `SET`s (`sql_mode`, `transaction_isolation`, `NAMES`, `foreign_key_checks`, `autocommit`) can no
+  longer reach the pooled connection through `applyRow`: `SET` is outside the allowlist.
+- **M4 (REV-061), left as found.** The pending guard on the failure UPDATE is backstopped by the rollback and the CHECK;
+  REV-062 agreed.
