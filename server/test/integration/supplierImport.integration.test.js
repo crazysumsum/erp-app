@@ -10,15 +10,17 @@ import { stringify } from "csv-stringify/sync";
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
 import { SupplierImportWorkerService } from "../../src/services/supplierImport/SupplierImportWorkerService.js";
+import { SUPPLIER_IMPORT_JOB_NAMES } from "../../src/services/supplierImport/supplierImportFiles.js";
 
 /**
  * TASK-043：上載同 precheck 打真 MySQL 同真檔案系統（IMP-003/004/005/011/014；TC-090、TC-096、TC-099）。
  *
- * 用自己建嘅 worker（自己嘅 import root），唔經 scheduler：app 本身冇設定 root，佢個 worker
- * 乜都唔做（HD-050）。只有呢個檔案會產生 uploaded／validating 嘅 job。
+ * App 有自己嘅 import root，但 import 兩件排程工作關咗：precheck 只由測試叫 worker 去做，時間由測試控制。
+ * 只有呢個檔案會產生 uploaded／validating 嘅 job。
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
-const h = { application: null, db: null, logRoot: "", importBase: "", worker: null, jobIds: [], supplierIds: [], userId: null };
+const h = { application: null, url: "", db: null, jwt: null, logRoot: "", importBase: "", worker: null, jobIds: [], supplierIds: [],
+  userId: null, roleIds: [], userIds: [] };
 const BANK_VALUE = "GB29NWBK60161331926819";
 let clock = Date.now();
 const time = { nowMs: () => clock };
@@ -32,19 +34,23 @@ before(async () => {
   const source = defaultConfigurationSource();
   h.application = await createApplication({
     configurationSource: { ...source, application: { ...source.application, port: 0 },
+      // 只停 Supplier import 兩件工作（成個 scheduler 停唔得：JWT revocation 要佢）。
+      scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs,
+        [SUPPLIER_IMPORT_JOB_NAMES.precheck]: { enabled: false }, [SUPPLIER_IMPORT_JOB_NAMES.worker]: { enabled: false } } },
+      supplier: { ...source.supplier, import: { ...source.supplier.import, root: path.join(h.importBase, "imports") } },
       logging: { loggers: {
         request: { ...source.logging.loggers.request, directory: path.join(h.logRoot, "requests") },
         system: { ...source.logging.loggers.system, directory: path.join(h.logRoot, "system") } } } }
   });
   h.db = h.application.services.require("mysqldatabase");
-  const config = h.application.services.config;
-  h.worker = new SupplierImportWorkerService({
-    config: { ...config, supplier: { ...config.supplier, import: { ...config.supplier.import, root: path.join(h.importBase, "imports") } } },
-    services: { require: (name) => (name === "scheduler" ? { register() {} } : h.application.services.require(name)) },
-    options: { instanceId: `precheck-${randomUUID()}` }
-  });
-  await h.worker.initialize();
+  h.jwt = h.application.services.require("jwt");
+  h.worker = h.application.services.require("job.supplierImportWorker");
+  assert.ok(h.worker instanceof SupplierImportWorkerService);
   h.worker.importService = new SupplierImportService({ database: h.db, time, logger: h.worker.logger });
+  ({ url: h.url } = await h.application.start());
+  // 之前中斷咗嘅 run 可能留低 uploaded／validating 嘅 job（佢哋嘅 root 已經刪咗）；只有呢個檔案會整呢兩種。
+  await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE status = 'uploaded'");
+  await h.db.execute("UPDATE supplier_import_jobs SET status = 'failed', lease_owner = '', lease_until = NULL WHERE status = 'validating'");
   const [user] = await h.db.execute(
     "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', 'Import uploader', ?, ?)",
     [`imp43-${randomUUID().slice(0, 8)}`, clock, clock]);
@@ -63,6 +69,15 @@ after(async () => {
     await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
   }
   if (h.userId) await h.db.execute("DELETE FROM users WHERE id = ?", [h.userId]);
+  for (const id of h.userIds) {
+    await h.db.execute("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [id]);
+    await h.db.execute("DELETE FROM user_roles WHERE user_id = ?", [id]);
+    await h.db.execute("DELETE FROM users WHERE id = ?", [id]);
+  }
+  for (const id of h.roleIds) {
+    await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [id]);
+    await h.db.execute("DELETE FROM roles WHERE id = ?", [id]);
+  }
   await h.application.shutdown("test");
   fs.rmSync(h.logRoot, { recursive: true, force: true });
   fs.rmSync(h.importBase, { recursive: true, force: true });
@@ -300,4 +315,91 @@ integrationTest("TASK-043: a file that fails after some rows were written leaves
     jobLevelError: { code: "SUPPLIER_IMPORT_CSV_MALFORMED", message: "CSV 格式不符合 RFC 4180（引號或欄數不正確）" } });
   assert.deepEqual([summary.status, summary.totalCount, summary.lastErrorCode], ["failed", 0, "SUPPLIER_IMPORT_CSV_MALFORMED"]);
   assert.deepEqual(await rows(created.id), []);
+});
+
+/** 一個有指定權限嘅用戶同佢嘅 JWT（呢兩條 route 係 jwt，唔使設備簽章）。 */
+async function makeUser(label, permissions) {
+  const now = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+  const [role] = await h.db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`imp43-${label}-${suffix}`, now]);
+  const roleId = Number(role.insertId);
+  h.roleIds.push(roleId);
+  for (const name of permissions) {
+    const [[permission]] = await h.db.query("SELECT id FROM permissions WHERE name = ?", [name]);
+    await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
+  }
+  const [user] = await h.db.execute(
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', ?, ?, ?)",
+    [`imp43-${label}-${suffix}`, `Import ${label}`, now, now]);
+  const userId = Number(user.insertId);
+  h.userIds.push(userId);
+  await h.db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
+  const version = await h.application.services.require("tokenRevocation").currentVersion(String(userId));
+  const token = await h.jwt.issue({ roles: [`imp43-${label}-${suffix}`], permissions },
+    { subject: String(userId), version, authTime: Math.floor(Date.now() / 1000) });
+  return { userId, token };
+}
+
+async function httpUpload(user, content, { key = randomUUID(), mode = "create_only", type = "text/csv" } = {}) {
+  const form = new FormData();
+  form.append("mode", mode);
+  form.append("file", new Blob([content], { type }), "suppliers.csv");
+  const response = await fetch(`${h.url}/api/v1/supplier-imports/upload`, {
+    method: "POST", body: form, headers: { authorization: `Bearer ${user.token}`, "idempotency-key": key }
+  });
+  const body = await response.json().catch(() => null);
+  if (response.status === 201) h.jobIds.push(body.data?.id ?? body.id);
+  return { status: response.status, body, job: body?.data ?? body };
+}
+
+integrationTest("TASK-043 manual-check flow over HTTP: template, mixed and Bank uploads, replay, permission and MIME", async () => {
+  const manager = await makeUser("mgmt", ["supplier.mgmt"]);
+  const viewer = await makeUser("view", ["supplier.view"]);
+
+  const template = await fetch(`${h.url}/api/v1/supplier-imports/template`, { headers: { authorization: `Bearer ${manager.token}` } });
+  assert.equal(template.status, 200);
+  assert.match(template.headers.get("content-type"), /^text\/csv/u);
+  assert.equal(template.headers.get("x-supplier-import-template-version"), "v1");
+  // 睇原始 bytes：fetch 嘅 text() 會食咗 BOM。
+  const templateBytes = Buffer.from(await template.arrayBuffer());
+  assert.ok(templateBytes.toString("utf8").startsWith(`\uFEFF${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\n`));
+
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const mixed = csv([
+    { supplierCode: `H1-${tag}`, supplierName: `Http One ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `H2-${tag}`, supplierName: `Http One ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `H3-${tag}`, supplierName: `Http Three ${tag}` }
+  ]);
+  const key = randomUUID();
+  const first = await httpUpload(manager, mixed, { key });
+  assert.equal(first.status, 201, JSON.stringify(first.body));
+  assert.equal(first.job.status, "uploaded");
+  assert.equal(JSON.stringify(first.body).includes(h.worker.preparedRoot), false, "no filesystem path in the response");
+  const replay = await httpUpload(manager, mixed, { key });
+  assert.deepEqual([replay.status, replay.job.id], [201, first.job.id], "the same key and file replay the first job");
+  const reused = await httpUpload(manager, csv([{ supplierCode: "OTHER" }]), { key });
+  assert.ok(reused.status >= 400 && reused.status < 500, `the same key with another file is refused (${reused.status})`);
+  const [[{ n: jobsForKey }]] = await h.db.query(
+    "SELECT COUNT(*) AS n FROM supplier_import_jobs WHERE created_by = ?", [manager.userId]);
+  assert.equal(Number(jobsForKey), 1, "one job, however often it was sent");
+
+  assert.equal((await httpUpload(viewer, mixed)).status, 403, "supplier.view cannot upload");
+  const wrongType = await httpUpload(manager, mixed, { type: "application/json" });
+  assert.ok(wrongType.status >= 400 && wrongType.status < 500, `a non-CSV MIME type is refused (${wrongType.status})`);
+
+  assert.equal((await precheck(first.job.id)).status, "ready_with_errors");
+  assert.deepEqual((await rows(first.job.id)).map((row) => [row.row_number, row.status]),
+    [[1, "valid"], [2, "warning"], [3, "invalid"]]);
+
+  const bank = await httpUpload(manager, csv([{ supplierCode: `HB-${tag}`, accountNumber: BANK_VALUE }],
+    [...SUPPLIER_IMPORT_COLUMN_NAMES, "accountNumber"]));
+  assert.equal(bank.status, 201);
+  assert.equal((await precheck(bank.job.id)).status, "failed");
+  assert.equal((await job(bank.job.id)).last_error_code, "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN");
+
+  await h.application.services.require("logging").logger.flush?.();
+  const requests = path.join(h.logRoot, "requests");
+  const logged = fs.existsSync(requests)
+    ? (await Promise.all((await readdir(requests)).map((name) => readFile(path.join(requests, name), "utf8")))).join("\n") : "";
+  assert.equal(logged.includes(BANK_VALUE), false, "the request log never holds the uploaded content");
 });
