@@ -379,9 +379,11 @@ Final Harness unit evidence is 155/155 with zero skips, lint and client-build PA
 
 ## Next safe action
 
-本機 coverage／開發自查及精確清理已完成。先由 Sam 決定下列精確共享測試範圍提案（HD-075）；現行 manifest 未修改。若批准，套用已審閱的精確範圍、重綁 approvals 及 fresh developer evidence，再進行獨立 P2 candidate review／publication 授權。TASK-023～025 保持 PENDING，不以自查代替 DoD／Sam review。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY；本次沒有推送、PR、CI 或合併授權。
+Sam 已批准並套用 HD-075 方案 A；精確範圍、baseline approvals 及五組 fresh developer evidence 已完成。下一步是 Sam 對完整 P2 candidate 的獨立 code review，以及另外批准 publication。TASK-023～025 保持 PENDING，不以範圍批准或自查代替 DoD／Sam review。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY；本次沒有推送、PR、CI 或合併授權。
 
-### Decision Required — narrow shared regression-test boundary proposal (not applied)
+### HD-075 narrow shared regression-test boundary — historical proposal
+
+以下保留批准前提案原文；其「未套用／等待批准」描述只適用於當時。2026-09-30 Sam 回覆「方案A」，實際套用及驗證結果見本節末。
 
 Context: DB-enabled coverage reproduced 13 failures because four existing Auth integration fixtures inferred system-admin grants from the full permission catalogue. P2 deliberately seeds `sales.operation`／`fulfillment.operation` without grants. The minimal test-only corrections passed all 35 focused real-MySQL cases; product authorization, migrations and grants were not changed. These files are outside the current Inventory manifest, so `MERGE_READY` reports `OUTSIDE_MODULE`. The reversible regression corrections are committed locally, but the boundary proposal below has not been applied and no merge readiness is claimed.
 
@@ -399,3 +401,11 @@ Option B: retain the existing manifest and hold P2 publication while Sam selects
 Recommendation: A, because the change is explicit, test-only and independently gated, without weakening least privilege. Default while awaiting Sam: leave the actual manifest and approved baselines unchanged, retain all local commits/evidence, and do not push, create a PR, run remote CI or merge. This is a boundary approval, not independent P2 code approval or formal acceptance.
 
 Skill requirement versus interpretation: [software-engineering-harness](/Users/sam/.agents/skills/software-engineering-harness/SKILL.md) §Non-negotiable controls requires "Bind decisions to their approved **design or plan hash** and applicable code commit/scope." Its IMPLEMENT reference requires checking "every diff against the module/mode boundary". The gate's four `OUTSIDE_MODULE` findings are observed facts; choosing exact shared test paths (instead of broadening all Auth paths or changing role grants) is the proposed implementation judgment requiring Sam's disposition.
+
+### HD-075 applied and fresh local developer verification
+
+Sam 的真實回覆「方案A」記錄為 `APR-077` DESIGN、`APR-078` PLAN、`APR-079` 精確九路徑 SCOPE，以及 `REV-046` HUMAN provenance；這不是完整 P2 code approval。Manifest 只在 `test_paths` 與 `approval_required_paths` 追加上述四個測試檔，沒有擴大 `allowed_write_paths`、新增 wildcard、變更產品／測試程式或角色授權。實際 DESIGN `53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce`、PLAN `ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973` 均與已批准提案一致；traceability `STRUCTURE_PASS`、`PLAN_READY` 及相對已核對 main `0f20c00f443f7ee5bf929d60cedb3f587b8357d3` 的 module-boundary 檢查均通過。
+
+新 Harness runner 五組 DEVELOPER 證據均 PASS：lint `evidence/20260930T063657-b74bb14fea2b/run.json`、client-build `evidence/20260930T063659-80d0b12400e3/run.json`、inventory-developer 155/155 `evidence/20260930T063659-0ee3488a79c1/run.json`、inventory-p2-database 7/7 `evidence/20260930T063724-5d6dd00e9ec2/run.json`、inventory-p2-api 1/1 JUnit 葉節點 `evidence/20260930T063825-c9cc2d5083d9/run.json`；測試套件均零失敗／跳過。API 外層權限及撤權斷言與巢狀正向 provider／HTTP／FEFO／Allocation／Issue trace 均執行。五份報告綁定新 PLAN、同一 source fingerprint `0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe` 與 runtime `inventory-p2-scope-20260930-0630`；舊證據原樣保留。範圍調整沒有產品／測試內容變更，未重跑完整 coverage 或 UI；此前完整 coverage／Playwright 仍僅作歷史開發證據，不冒充新 CI 或正式驗收。
+
+`EXT-111` 僅使用私有 socket-only MySQL 26.7.0，確認 `@@skip_networking=1` 及初始只有 system schemas，再建立 `erp_inventory_task025_scope_20260930_0630`。DB 套件後僅重建該 schema，套用既有 66 項 migrations，API 後核對 migration rows 66 及 ISSUE Movement 1。只刪除該 schema並確認不存在，關閉私有實例、確認 socket／PID 不存在，核對 owner Sam／mode 700／無 symlink 後移除精確 `/private/tmp/erp-inventory-task025-mysql-2670.xbGP3h`。合成資料不可恢復，報告保留，共用／正式資料未受影響。Runtime 已退休，不能把這些 PASS 報告宣稱為 live-runtime `MERGE_READY`；完整 candidate 獨立審閱、所需 CI／publication 門檻仍未滿足。
