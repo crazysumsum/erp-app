@@ -33,6 +33,11 @@ export function supplierConflict(code, publicMessage, details) {
   return supplierError(publicMessage, { code, statusCode: 409, publicMessage, details });
 }
 
+/** Import 嘅非 400 錯誤：413 檔案太大、503 未部署（HD-050）。 */
+export function supplierImportError(code, statusCode, publicMessage) {
+  return supplierError(publicMessage, { code, statusCode, publicMessage });
+}
+
 /**
  * 解密失敗有兩種，設計 §8.3 同 §6 錯誤表俾佢哋兩個唔同答案：
  *
