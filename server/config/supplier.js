@@ -11,7 +11,7 @@ const supplierConfig = {
     process.env.SUPPLIER_DUPLICATE_NAME_THRESHOLD || 0.85
   ),
   import: {
-    // 未設定 = import 未部署（同 CUSTOMER_IMPORT_ROOT 一樣）；T42 註冊 import service 時先規定要有。
+    // 未設定 = import 未部署（同 CUSTOMER_IMPORT_ROOT 一樣）：照常開機，upload 回 503（HD-050）。
     root: process.env.SUPPLIER_IMPORT_ROOT || undefined,
     maxFileBytes: Number(
       process.env.SUPPLIER_IMPORT_MAX_FILE_BYTES || 10_485_760

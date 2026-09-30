@@ -1,27 +1,33 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { chmod, lstat, mkdir, mkdtemp, realpath, rm, stat, symlink } from "node:fs/promises";
+import { chmod, link, lstat, mkdir, mkdtemp, realpath, rm, stat, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import { SupplierImportWorkerService } from "../src/services/supplierImport/SupplierImportWorkerService.js";
-import { prepareSupplierImportRoot, SUPPLIER_IMPORT_JOB_NAMES } from "../src/services/supplierImport/supplierImportFiles.js";
+import {
+  prepareSupplierImportRoot, SUPPLIER_IMPORT_JOB_NAMES, writeSupplierImportSource
+} from "../src/services/supplierImport/supplierImportFiles.js";
+import { SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 
 /**
  * TASK-042：worker 嘅生命週期（領取、逐列、停低）同 import root 嘅準備。資料庫嘅部分喺
  * test/integration/supplierImportExecution.integration.test.js。
  */
-function worker({ root = "/srv/imports", applyRow = async () => 1 } = {}) {
+function worker({ root = "/srv/imports", applyRow = async () => 1, logger = { info() {} }, businessMaster } = {}) {
   const registered = [];
   const services = {
     require(name) {
       if (name === "scheduler") return { register: (instance) => registered.push(instance) };
-      if (name === "logging") return { logger: { info() {} } };
+      if (name === "logging") return { logger };
       if (name === "time") return { nowMs: () => 1 };
+      if (name === "mysqldatabase") return { async query() { return [[]]; } };
       return {};
     }
   };
-  const instance = new SupplierImportWorkerService({ config: { supplier: { import: { root } } }, services, options: { applyRow } });
+  const instance = new SupplierImportWorkerService({
+    config: { supplier: { import: { root, maxFileBytes: 1_000_000, maxRows: 100 } } }, services, options: { applyRow, businessMaster }
+  });
   return { instance, registered };
 }
 
@@ -49,10 +55,12 @@ test("the worker hands its logger to the import service, so row failures reach t
   assert.equal(instance.importService.logger, logger);
 });
 
-test("the worker's scheduled job carries the name T41 reserved for it", () => {
-  assert.deepEqual(SupplierImportWorkerService.jobs.map((job) => job.name), [SUPPLIER_IMPORT_JOB_NAMES.worker]);
-  const [job] = SupplierImportWorkerService.jobs;
-  assert.equal(typeof SupplierImportWorkerService.prototype[job.method], "function");
+test("the worker's scheduled jobs carry the names T41 reserved for them", () => {
+  assert.deepEqual(SupplierImportWorkerService.jobs.map((job) => job.name),
+    [SUPPLIER_IMPORT_JOB_NAMES.precheck, SUPPLIER_IMPORT_JOB_NAMES.worker]);
+  for (const job of SupplierImportWorkerService.jobs) {
+    assert.equal(typeof SupplierImportWorkerService.prototype[job.method], "function", job.name);
+  }
 });
 
 test("with no import root or no row writer, the worker claims nothing", async () => {
@@ -182,7 +190,172 @@ test("the worker prepares its root before it registers, and registers even when 
     "the worker keeps the real path, so swapping the symlink later cannot redirect it (REV-063 L-10)");
   assert.equal(deployed.registered.length, 1);
 
-  const undeployed = worker({ root: null });
+  assert.equal(deployed.instance.preparedRoot, deployed.instance.root, "upload writes only under the prepared real root");
+
+  const warnings = [];
+  const undeployed = worker({ root: null, logger: { info() {}, warn: (event) => warnings.push(event) } });
+  assert.equal(undeployed.instance.preparedRoot, null);
   await undeployed.instance.initialize();
   assert.equal(undeployed.registered.length, 1);
+  assert.equal(undeployed.instance.preparedRoot, null, "no root: upload answers 503 (HD-050)");
+  assert.deepEqual(warnings, ["supplier.import.disabled"], "and startup says so instead of refusing to start");
+});
+
+/** Precheck 嘅 import service 替身：記低 worker 叫咗乜同交咗咩。 */
+function precheckScript(job) {
+  const calls = [];
+  return {
+    calls,
+    async claimForPrecheck() { calls.push(["claim"]); return job; },
+    async appendPrecheckRows({ rows }) { calls.push(["append", rows.map((row) => [row.rowNumber, row.status])]); },
+    async completePrecheck({ jobLevelError }) {
+      calls.push(["complete", jobLevelError]);
+      return { status: jobLevelError ? "failed" : "ready", lastErrorCode: jobLevelError?.code ?? "", totalCount: 1 };
+    }
+  };
+}
+
+const readyCatalog = () => ({
+  async assertReady() {},
+  async listCurrencies({ page }) { return page === 1 ? [{ code: "HKD" }] : []; },
+  async listPaymentTerms() { return []; }
+});
+
+async function preparedWorker(t, options = {}) {
+  const base = await mkdtemp(path.join(os.tmpdir(), "supplier-import-precheck-"));
+  t.after(() => rm(base, { recursive: true, force: true }));
+  const built = worker({ root: path.join(base, "imports"), businessMaster: readyCatalog(), ...options });
+  await built.instance.initialize();
+  return { ...built, base };
+}
+
+const oneRowCsv = () => Buffer.from(`${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\n${SUPPLIER_IMPORT_COLUMN_NAMES
+  .map((name) => ({ supplierCode: "SUP-1", supplierName: "Acme", defaultCurrencyCode: "HKD" })[name] ?? "").join(",")}\r\n`);
+
+test("precheck reads the stored source, writes its rows and completes the job", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 9, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  assert.deepEqual(await instance.runPrecheck(new AbortController().signal), { claimed: true, jobId: 9, status: "ready" });
+  assert.deepEqual(instance.importService.calls, [["claim"], ["append", [[1, "valid"]]], ["complete", null]]);
+});
+
+test("a missing, altered, hard-linked or symlinked source fails the job instead of being read", async (t) => {
+  const { instance, base } = await preparedWorker(t);
+  const outside = path.join(base, "outside.csv");
+  await writeFile(outside, oneRowCsv());
+  const cases = {
+    missing: async () => ({ storedName: "a".repeat(64), sha256: Buffer.alloc(32) }),
+    altered: async () => ({ ...(await writeSupplierImportSource(instance.root, oneRowCsv())), sha256: Buffer.alloc(32) }),
+    "hard link to a file outside the root": async () => {
+      const storedName = "b".repeat(64);
+      await link(outside, path.join(instance.root, "source", storedName));
+      return { storedName, sha256: (await writeSupplierImportSource(instance.root, oneRowCsv())).sha256 };
+    },
+    symlink: async () => {
+      // 另一個檔：上面嗰個 hard link 令 outside 嘅 nlink 變 2，會喺 O_NOFOLLOW 之前就被 nlink 擋住。
+      const target = path.join(base, "outside-for-symlink.csv");
+      await writeFile(target, oneRowCsv());
+      const storedName = "c".repeat(64);
+      await symlink(target, path.join(instance.root, "source", storedName));
+      return { storedName, sha256: (await writeSupplierImportSource(instance.root, oneRowCsv())).sha256 };
+    }
+  };
+  for (const [label, make] of Object.entries(cases)) {
+    const source = await make();
+    instance.importService = precheckScript({ id: 3, mode: "create_only", sourceStoredName: source.storedName, sourceSha256: source.sha256 });
+    await instance.runPrecheck(new AbortController().signal);
+    assert.deepEqual(instance.importService.calls.at(-1),
+      ["complete", { code: "SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", message: "匯入來源檔案無法讀取，請重新上載" }], label);
+    assert.equal(instance.importService.calls.some(([call]) => call === "append"), false, label);
+  }
+});
+
+test("precheck that cannot finish for another reason keeps the lease for a retry and does not fail the job", async (t) => {
+  const errors = [];
+  const { instance } = await preparedWorker(t, {
+    logger: { info() {}, error: (event, _message, context) => errors.push([event, context.code]) },
+    businessMaster: { ...readyCatalog(), async assertReady() { throw Object.assign(new Error("not ready"), { code: "BUSINESS_MASTER_NOT_READY" }); } }
+  });
+  const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 4, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  await assert.rejects(() => instance.runPrecheck(new AbortController().signal), (error) =>
+    error.code === "BUSINESS_MASTER_NOT_READY" && !error.message.includes("not ready"),
+  "the scheduler gets the code only, never the original message (REV-064 H-1)");
+  assert.deepEqual(instance.importService.calls, [["claim"]]);
+  assert.deepEqual(errors, [["supplier.import.precheck_interrupted", "BUSINESS_MASTER_NOT_READY"]]);
+});
+
+test("a failed precheck deletes its source at once; a successful one keeps it (HD-053 A)", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const bad = await writeSupplierImportSource(instance.root, Buffer.from(`${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\nx,y"z\r\n`));
+  instance.importService = precheckScript({ id: 21, mode: "create_only", sourceStoredName: bad.storedName, sourceSha256: bad.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.equal(instance.importService.calls.at(-1)[1].code, "SUPPLIER_IMPORT_CSV_MALFORMED");
+  await assert.rejects(() => stat(path.join(instance.root, "source", bad.storedName)), { code: "ENOENT" });
+
+  const good = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 22, mode: "create_only", sourceStoredName: good.storedName, sourceSha256: good.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.equal((await stat(path.join(instance.root, "source", good.storedName))).isFile(), true, "kept for confirm and the result");
+
+  const abandoned = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 23, abandoned: true, sourceStoredName: abandoned.storedName });
+  assert.deepEqual(await instance.runPrecheck(new AbortController().signal), { claimed: true, jobId: 23, status: "failed" });
+  assert.deepEqual(instance.importService.calls, [["claim"]], "an abandoned job is not read or completed again");
+  await assert.rejects(() => stat(path.join(instance.root, "source", abandoned.storedName)), { code: "ENOENT" });
+});
+
+test("a directory or an oversized file at the stored name fails the job instead of being retried", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const directory = "d".repeat(64);
+  await mkdir(path.join(instance.root, "source", directory));
+  instance.importService = precheckScript({ id: 11, mode: "create_only", sourceStoredName: directory, sourceSha256: Buffer.alloc(32) });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls.at(-1),
+    ["complete", { code: "SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", message: "匯入來源檔案無法讀取，請重新上載" }]);
+
+  // 上載之後上限調低咗：讀嗰陣就拒絕，唔會讀晒入記憶體。
+  const stored = await writeSupplierImportSource(instance.root, Buffer.alloc(2_000, 0x41));
+  instance.limits.maxFileBytes = 1_000;
+  instance.importService = precheckScript({ id: 12, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls.at(-1), ["complete", { code: "SUPPLIER_IMPORT_FILE_TOO_LARGE", message: "CSV 檔案超過大小上限" }]);
+});
+
+test("every page of the Business Master catalogue is read, not just the first hundred", async (t) => {
+  const currencies = Array.from({ length: 100 }, (_, index) => ({ code: `C${String(index).padStart(2, "0")}` }));
+  const { instance } = await preparedWorker(t, { businessMaster: {
+    async assertReady() {},
+    async listCurrencies({ page }) { return page === 1 ? currencies : page === 2 ? [{ code: "HKD" }] : []; },
+    async listPaymentTerms() { return []; }
+  } });
+  const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 13, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls[1], ["append", [[1, "valid"]]], "HKD is on the second page");
+});
+
+test("shutdown during a precheck stops before the next batch is written and leaves the job to the lease", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 6, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  const claim = instance.importService.claimForPrecheck;
+  instance.importService.claimForPrecheck = async (input) => { const job = await claim(input); await instance.shutdown(); return job; };
+  await assert.rejects(() => instance.runPrecheck(new AbortController().signal), { code: "SUPPLIER_IMPORT_STOPPING" });
+  assert.deepEqual(instance.importService.calls, [["claim"]], "nothing appended, nothing completed");
+});
+
+test("precheck claims nothing without a root, after shutdown or when aborted", async (t) => {
+  const none = worker({ root: null });
+  none.instance.importService = precheckScript(null);
+  assert.deepEqual(await none.instance.runPrecheck(), { claimed: false });
+  const { instance } = await preparedWorker(t);
+  instance.importService = precheckScript(null);
+  const aborted = new AbortController();
+  aborted.abort();
+  assert.deepEqual(await instance.runPrecheck(aborted.signal), { claimed: false });
+  await instance.shutdown();
+  assert.deepEqual(await instance.runPrecheck(new AbortController().signal), { claimed: false });
+  assert.deepEqual(none.instance.importService.calls.concat(instance.importService.calls), []);
 });

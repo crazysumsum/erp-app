@@ -233,6 +233,19 @@ test("request logger never records file uploads or downloads", async () => {
   });
   assert.equal(upload.input.body, "[FILE_TRANSFER]");
 
+  // 5xx 會強制記錄 body（bodyCaptureErrorStatus），但上載嘅檔案內容照樣唔記：Supplier CSV 匯入
+  // 可能帶住用家誤填嘅帳號，而遮蔽只認欄位名（DEF-023 喺 T43 重新評估，靠呢條守住）。
+  const failedUpload = await captureEntry({
+    config: { bodyCaptureErrorStatus: 500 },
+    req: {
+      headers: { "content-type": "multipart/form-data; boundary=x" },
+      body: { mode: "create_only", csv: "supplierCode,accountNumber\r\nSUP-1,123456789012" }
+    },
+    status: 500,
+    responseBody: { error: { code: "INTERNAL_SERVER_ERROR" } }
+  });
+  assert.equal(failedUpload.input.body, "[FILE_TRANSFER]", "a 5xx upload must not capture the file");
+
   // 下載：即使是錯誤狀態碼，也不記錄二進位回應。
   const download = await captureEntry({
     req: { body: { reportId: 7 } },

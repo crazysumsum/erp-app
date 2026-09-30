@@ -6,7 +6,7 @@ import { toAddressResponse } from "./supplierProjections.js";
 export const SUPPLIER_ADDRESS_PURPOSES = Object.freeze(["registered", "office", "ordering", "return", "remittance", "other"]);
 const PURPOSE_SET = new Set(SUPPLIER_ADDRESS_PURPOSES);
 
-function normalizeAddress(input) {
+export function normalizeAddress(input) {
   const purposes = input.purposes ?? [];
   if (!Array.isArray(purposes) || new Set(purposes.map((purpose) => purpose.purposeCode)).size !== purposes.length) {
     throw invalidSupplierInput("SUPPLIER_ADDRESS_PURPOSE_INVALID", "地址用途不可重複");

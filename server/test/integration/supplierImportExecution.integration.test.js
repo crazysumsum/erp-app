@@ -59,9 +59,10 @@ async function seedJob({ status = "queued", rows = ["valid", "valid"], leaseOwne
   confirmedBy = h.userId }) {
   const [job] = await h.db.execute(
     `INSERT INTO supplier_import_jobs (template_version, source_stored_name, source_sha256, mode, activation_mode,
-       status, lease_owner, lease_until, created_at, updated_at, confirmed_at, confirmed_by)
-     VALUES ('v1', ?, ?, 'create_only', 'draft', ?, ?, ?, ?, ?, ?, ?)`,
-    [randomBytes(32).toString("hex"), randomBytes(32), status, leaseOwner, leaseUntil, clock, clock, confirmedAt, confirmedBy]);
+       status, total_count, lease_owner, lease_until, created_at, updated_at, confirmed_at, confirmed_by)
+     VALUES ('v1', ?, ?, 'create_only', 'draft', ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [randomBytes(32).toString("hex"), randomBytes(32), status, rows.length, leaseOwner, leaseUntil, clock, clock, confirmedAt,
+      confirmedBy]);
   const id = Number(job.insertId);
   h.jobIds.push(id);
   for (const [index, rowStatus] of rows.entries()) {
@@ -330,6 +331,26 @@ integrationTest("TASK-042: job counts are rebuilt from rows, and a job with pend
     "SELECT status, applied_count, failed_count, skipped_count, lease_owner, lease_until FROM supplier_import_jobs WHERE id = ?", [jobId]);
   assert.deepEqual([job.status, Number(job.applied_count), Number(job.failed_count), Number(job.skipped_count), job.lease_owner, job.lease_until],
     ["completed", 1, 0, 1, "", null]);
+});
+
+integrationTest("TASK-043 (HD-049): a job whose rows no longer add up to the precheck total fails instead of completing", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "invalid"] });
+  // 模擬 precheck 之後有列被刪走：total_count 仍然係 2，rows 得返 1。
+  await h.db.execute("DELETE FROM supplier_import_rows WHERE job_id = ? AND `row_number` = 2", [jobId]);
+  const logged = [];
+  const importer = service({ error: (event, _message, context) => logged.push([event, context]) });
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow: writeSupplier() });
+  const done = await importer.finalizeExecution({ jobId, leaseOwner: "me" });
+  assert.equal(done.status, "failed");
+  const [[job]] = await h.db.query(
+    "SELECT status, last_error_code, applied_count, lease_owner, lease_until, completed_at FROM supplier_import_jobs WHERE id = ?", [jobId]);
+  assert.deepEqual([job.status, job.last_error_code, Number(job.applied_count), job.lease_owner, job.lease_until],
+    ["failed", "SUPPLIER_IMPORT_COUNT_MISMATCH", 1, "", null]);
+  assert.notEqual(job.completed_at, null);
+  assert.deepEqual(logged, [["supplier.import.count_mismatch", { jobId, expected: 2, actual: 1 }]]);
 });
 
 integrationTest("TASK-042: a queued job without a confirmer fails instead of jumping the queue, and a running job without a lease is resumable", async () => {
