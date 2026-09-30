@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
-import { chmod, mkdir, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, open, rmdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import busboy from "busboy";
+import { pipeline } from "node:stream/promises";
+import { prepareDiskTempDirectory } from "./normalizeUploadConfig.js";
 import { ApplicationError } from "../errors/ApplicationError.js";
 import { cleanupUploadedFiles } from "./cleanupUploadedFiles.js";
 
@@ -71,6 +73,37 @@ function collect(stream, limitBytes, onLimit) {
   });
 }
 
+async function collectDisk(stream, { directory, storedName, limitBytes, onBytes, paths, signal }) {
+  let streamError = null;
+  stream.on("error", (error) => { streamError = error; });
+  const filePath = path.join(await directory, storedName);
+  signal.throwIfAborted();
+  if (streamError) throw streamError;
+  paths.push(filePath);
+  const handle = await open(filePath, "wx", 0o600);
+  let size = 0;
+  const prefix = Buffer.alloc(65536);
+  let prefixSize = 0;
+  const hash = createHash("sha256");
+  try {
+    await handle.chmod(0o600);
+    await pipeline(stream, async function* (source) {
+      for await (const chunk of source) {
+        size += chunk.length;
+        if (size > limitBytes) throw new UploadError("UPLOAD_FILE_TOO_LARGE", `File exceeds the ${limitBytes} byte limit`, 413);
+        onBytes(chunk.length);
+        hash.update(chunk);
+        const copied = chunk.copy(prefix, prefixSize, 0, Math.min(chunk.length, 65536 - prefixSize));
+        prefixSize += copied;
+        yield chunk;
+      }
+    }, handle.createWriteStream(), { signal });
+    return { path: filePath, storedName, size, prefix: prefix.subarray(0, prefixSize), contentHash: hash.digest("hex") };
+  } finally {
+    await handle.close();
+  }
+}
+
 /**
  * 建立單一 route 的 multipart 上傳中間件。
  *
@@ -122,7 +155,8 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
       return;
     }
 
-    const releaseSlot = gate ? gate.acquire() : () => {};
+    const disk = config.storageMode === "disk";
+    const releaseSlot = gate ? gate.acquire(disk ? config.maxRequestBytes : 0) : () => {};
 
     if (!releaseSlot) {
       void logger?.warn?.("upload.rejected", "Multipart upload rejected", {
@@ -148,7 +182,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
       parser = busboy({
         headers: req.headers,
         limits: {
-          fileSize: config.maxFileSizeBytes,
+          fileSize: config.maxFileSizeBytes + (disk ? 1 : 0),
           files: config.maxFiles,
           fields: config.maxFieldCount,
           // 沒有這一項時 busboy 會套用自己的 1MiB 預設值，於是 maxFieldCount
@@ -173,15 +207,41 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     let settled = false;
     let requestBytes = 0;
     let acceptedFileBytes = 0;
+    let streamedFileBytes = 0;
+    let diskDirectory = null;
+    const diskPaths = [];
+    const diskAbort = new AbortController();
+    const discardDisk = async () => {
+      if (!diskDirectory) return;
+      const directory = await diskDirectory;
+      for (const filePath of diskPaths) await unlink(filePath).catch((error) => { if (error.code !== "ENOENT") throw error; });
+      await rmdir(directory);
+    };
 
     // 只記錄第一個失敗原因。串流仍必須讀完——busboy 在任何一個 file stream 未被
     // 消耗時就不會發出 close，請求會一路掛到 request timeout。
     const fail = (error) => {
       failure = failure || error;
+      if (disk) stopDisk(failure);
     };
     const wipeCollectedBuffers = () => {
       for (const buffer of collectedBuffers) buffer.fill(0);
       collectedBuffers.clear();
+    };
+
+    const stopDisk = (error) => {
+      if (settled) return;
+      settled = true;
+      diskAbort.abort();
+      req.unpipe(parser);
+      parser.destroy();
+      req.removeListener("close", onRequestClose);
+      void Promise.allSettled(pending).then(discardDisk).catch(() => {
+        void logger?.error?.("upload.cleanup_failed", "Disk upload cleanup failed", { requestId: req.requestId || null });
+      }).finally(() => {
+        releaseSlot();
+        next(error);
+      });
     };
 
     // 客戶端在 body 送完之前斷線時 busboy 永遠不會發出 close。少了這個收尾，
@@ -193,6 +253,10 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
         return;
       }
 
+      if (disk) {
+        stopDisk(new UploadError("UPLOAD_ABORTED", "Upload ended before the request body was fully received", 400));
+        return;
+      }
       settled = true;
       releaseSlot();
       req.unpipe(parser);
@@ -220,6 +284,10 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
         return;
       }
 
+      if (disk) {
+        stopDisk(new UploadError("UPLOAD_REQUEST_TOO_LARGE", `Request exceeds the ${config.maxRequestBytes} byte limit`, 413));
+        return;
+      }
       settled = true;
       releaseSlot();
       req.unpipe(parser);
@@ -262,9 +330,27 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
       // 每個 promise 在建立當下就掛上處理器，否則校驗失敗會在 close 之前
       // 變成 unhandled rejection。
       pending.push(
-        collect(stream, config.maxFileSizeBytes, onLimit).then(
-          ({ buffer, size }) => {
-            collectedBuffers.add(buffer);
+        (disk ? (() => {
+          diskDirectory ??= Promise.resolve().then(async () => {
+            const root = prepareDiskTempDirectory(config.directory);
+            const directory = await mkdtemp(path.join(root, "upload-"));
+            await chmod(directory, 0o700);
+            Object.defineProperty(req, "uploadTempDirectory", { value: directory, configurable: true });
+            Object.defineProperty(req, "uploadTempRoot", { value: root, configurable: true });
+            return directory;
+          });
+          return collectDisk(stream, { directory: diskDirectory,
+            storedName: storedFileName(String(mimeType || "").toLowerCase(), fileTypes),
+            limitBytes: config.maxFileSizeBytes, paths: diskPaths, signal: diskAbort.signal,
+            onBytes: (bytes) => {
+              streamedFileBytes += bytes;
+              if (streamedFileBytes > config.maxTotalFileBytes) throw new UploadError("UPLOAD_TOTAL_TOO_LARGE", "Files exceed the total byte limit", 413);
+            }
+          });
+        })() : collect(stream, config.maxFileSizeBytes, onLimit)).then(
+          (file) => {
+            const { buffer, size } = file;
+            if (buffer) collectedBuffers.add(buffer);
             if (limitExceeded) {
               fail(
                 new UploadError(
@@ -296,7 +382,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
               mimeType: declared,
               fileName: filename,
               // 完整內容：OLE2 這類格式的特徵可能落在檔案尾端。
-              content: buffer
+              content: disk ? file.prefix : buffer
             });
 
             if (reason) {
@@ -332,8 +418,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
               size,
               // 內容摘要在這裡算最便宜——buffer 還在手上。Idempotency 需要它
               // 才能分辨「同一個 key 重送同一份檔案」與「換了一份檔案」。
-              contentHash: createHash("sha256").update(buffer).digest("hex"),
-              buffer
+              ...(disk ? file : { contentHash: createHash("sha256").update(buffer).digest("hex"), buffer })
             });
           },
           (error) => fail(error)
@@ -372,6 +457,12 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
           }
 
           const files = accepted;
+          if (disk) {
+            req.files = Object.freeze(files.map((file) => Object.freeze(file)));
+            req.body = { ...fields };
+            next();
+            return;
+          }
           if (config.memoryOnly) {
             req.files = Object.freeze(files.map((file) => Object.freeze({ ...file })));
             collectedBuffers.clear();
@@ -450,8 +541,11 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
           });
           next();
         })
-        .catch((error) => {
+        .catch(async (error) => {
           wipeCollectedBuffers();
+          if (disk) await discardDisk().catch(() => {
+            void logger?.error?.("upload.cleanup_failed", "Disk upload cleanup failed", { requestId: req.requestId || null });
+          });
           const uploadError =
             error instanceof ApplicationError
               ? error

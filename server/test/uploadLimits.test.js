@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { chmod, mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
@@ -787,4 +788,60 @@ test("TC-005 disk routes use a managed non-symlink writable temp root and privat
   await chmod(directory, 0o500);
   assert.throws(() => normalizeUploadConfig(source, "test", null, global), /writable/);
   await chmod(directory, 0o700);
+});
+
+async function diskDirectory(t) {
+  const storage = path.resolve("server/storage");
+  await mkdir(storage, { recursive: true });
+  const directory = await mkdtemp(path.join(storage, "disk-upload-test-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  return directory;
+}
+
+function csvMultipart(content, { filename = "input.csv", mimeType = "text/csv" } = {}) {
+  return Buffer.concat([
+    Buffer.from(`--${BOUNDARY}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\nContent-Type: ${mimeType}\r\n\r\n`),
+    content, Buffer.from(`\r\n--${BOUNDARY}--\r\n`)
+  ]);
+}
+
+function diskConfig(directory, overrides = {}) {
+  return normalizeUploadConfig({ enabled: true, storageMode: "disk", maxFiles: 1,
+    maxFileSizeBytes: 1024 * 1024, allowedMimeTypes: ["text/csv"], ...overrides },
+    "test disk upload", fileTypes, normalizeApiUploadConfig({ diskTempDirectory: directory }));
+}
+
+test("TC-004 disk uploads expose a bounded prefix and full hash in a private request directory", async (t) => {
+  const directory = await diskDirectory(t);
+  const content = Buffer.from("sku,quantity\n" + "ABC,1\n".repeat(20000));
+  const gate = new UploadConcurrencyGate({ maxConcurrentUploads: 1, maxBytesInFlight: 4000000 });
+  const { error, req } = await send(createUploadMiddleware({ config: diskConfig(directory), fileTypes, gate }),
+    csvMultipart(content, { filename: "../../outside.csv" }));
+  assert.equal(error, null);
+  const file = req.files[0];
+  assert.equal(file.buffer, undefined);
+  assert.equal(file.prefix.length, 65536);
+  assert.deepEqual(file.prefix, content.subarray(0, 65536));
+  assert.equal(file.contentHash, createHash("sha256").update(content).digest("hex"));
+  assert.equal(file.size, content.length);
+  assert.equal(file.field, "file");
+  assert.equal(file.originalName, "outside.csv");
+  assert.notEqual(path.dirname(file.path), directory);
+  assert.equal(path.dirname(path.dirname(file.path)), directory);
+  assert.deepEqual(await readFile(file.path), content);
+  assert.equal((await stat(file.path)).mode & 0o777, 0o600);
+  assert.equal((await stat(path.dirname(file.path))).mode & 0o777, 0o700);
+  await drain();
+  assert.equal(gate.stats().bytesInFlight, 0);
+});
+
+test("TC-005 disk byte limits accept the exact boundary and remove oversized partials", async (t) => {
+  const directory = await diskDirectory(t);
+  const middleware = createUploadMiddleware({ config: diskConfig(directory, { maxFileSizeBytes: 100 }), fileTypes });
+  const accepted = await send(middleware, csvMultipart(Buffer.alloc(100, 0x61)));
+  assert.equal(accepted.error, null);
+  const before = await readdir(directory);
+  const rejected = await send(middleware, csvMultipart(Buffer.alloc(101, 0x61)), { declareLength: false });
+  assert.equal(rejected.error.code, "UPLOAD_FILE_TOO_LARGE");
+  assert.deepEqual(await readdir(directory), before);
 });
