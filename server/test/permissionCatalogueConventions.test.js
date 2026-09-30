@@ -130,14 +130,14 @@ const PERMISSION_SEED_MIGRATIONS = [
   "../database/migrations/0028_seed_supplier_management_permissions.js",
   "../database/migrations/0038_seed_customer_permissions.js",
   "../database/migrations/0055_seed_inventory_permissions.js",
-  "../database/migrations/0061_create_inventory_reservations.js"
+  "../database/migrations/0063_create_inventory_reservations.js"
 ];
 
-test("P2 downstream permissions are catalogued and seeded in 0061", async () => {
+test("P2 downstream permissions are catalogued and seeded in 0063", async () => {
   const source = await readFile(new URL(PERMISSION_SEED_MIGRATIONS.at(-1), import.meta.url), "utf8");
   for (const name of ["sales.operation", "fulfillment.operation"]) {
     assert.ok(PERMISSION_NAMES.includes(name), `${name} missing from catalogue`);
-    assert.ok(source.includes(`name: "${name}"`), `${name} missing from 0061`);
+    assert.ok(source.includes(`name: "${name}"`), `${name} missing from 0063`);
   }
   assert.doesNotMatch(source, /INSERT\s+INTO\s+role_permissions/iu);
 });

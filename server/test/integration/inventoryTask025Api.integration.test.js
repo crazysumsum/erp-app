@@ -51,7 +51,7 @@ integrationTest("DEV-025-API-01 real HTTP and provider permission boundaries", a
   assert.equal(Number(server.skip_networking), 1);
   assert.equal(server.db_name, process.env.DB_NAME);
   const [[migrations]] = await db.query("SELECT COUNT(*) AS count FROM fr_schema_migrations");
-  assert.equal(Number(migrations.count), 64);
+  assert.equal(Number(migrations.count), 66);
 
   const now = Date.now();
   const suffix = randomUUID().slice(0, 8);

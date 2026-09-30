@@ -12,7 +12,7 @@ import { up as createInventoryMovements } from "../../database/migrations/0060_c
 import {
   inspectInventoryReservationSchema,
   up as createInventoryReservations
-} from "../../database/migrations/0061_create_inventory_reservations.js";
+} from "../../database/migrations/0063_create_inventory_reservations.js";
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" &&
   process.env.INVENTORY_RESERVATION_MIGRATION_TESTS === "1" ? test : test.skip;

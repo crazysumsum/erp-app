@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 251,
+  "revision": 256,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-041",
+  "current_task": "TASK-042",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
-    "code_commit": "8009e899fa22249cf1752bfc20db5f4fcd276a3c",
-    "source_fingerprint": "acf8d56269006a870f997f9c5ec206a8818fd76c961fe7917da136e7b373726c",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t41-close",
-    "default_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953",
+    "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
+    "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t42-close",
+    "default_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -69,7 +69,7 @@
     "TASK-039": "PENDING",
     "TASK-040": "PENDING",
     "TASK-041": "DONE",
-    "TASK-042": "PENDING",
+    "TASK-042": "DONE",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
     "TASK-045": "PENDING",
@@ -888,6 +888,24 @@
         "server/src/framework/configuration/applicationConfiguration.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-045-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-045. Authorises TASK-042 to add server/database/migrations/0061_create_supplier_import_jobs.js and 0062_create_supplier_import_rows.js with the schema proposed in chat on 2026-09-29.",
+      "recorded_at": "2026-09-29T14:42:58+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "f441e725d33b42013886ed80c4ebd5b3f12a9c7d",
+      "scope": [
+        "supplier-management",
+        "server/database/migrations/0061_create_supplier_import_jobs.js",
+        "server/database/migrations/0062_create_supplier_import_rows.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1522,6 +1540,42 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 00532a5016773a6929ee427b9476c3f2b5722453 (PR #162)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/63_rev_060_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-061",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-042)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 405830ac628b2f822562a62822113115ef97a5e7 (PR #165)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/64_rev_061_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-062",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-042 REV-061 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing e41c2536144a25b841d376e660be5172dee6410d (PR #165)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/65_rev_062_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-063",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-042 REV-062 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing ebf3e4103677c7bfe576781c134cfa8e7cc1c692 (PR #165)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/66_rev_063_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3321,6 +3375,17 @@
       "source_ref": "PR #162 merged as 8009e899fa22249cf1752bfc20db5f4fcd276a3c on the Product Owner's word, after head db2d8f7's CI run 36516957862 was green on all five checks and origin/main was unchanged at 894cdc6. Main CI run 36517757981 green on the merge commit across all five required checks. Reviews: REV-059 CHANGES_REQUESTED, REV-060 APPROVED. Obligations carried to TASK-042/043/044/045/048 as HD-041..HD-044 and implementation/62_task_041_carry_forward.md. source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
       "actor": "Harness agent (Claude Opus 5.5)",
       "observed_at": "2026-09-29T03:44:56Z"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "TASK-042 merged to main; required CI green on the merge commit",
+      "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
+      "spec_baseline": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
+      "status": "PASS",
+      "source_ref": "PR #165 merged as 5b8aa9bbcf5217ab3a30f722ff241d167fa402f6 on the Product Owner's word, after head 1f86002's CI run 36541458758 was green on all five checks and origin/main was unchanged at e36f0de. Main CI run 36543582766 green on the merge commit. Reviews: REV-061 and REV-062 CHANGES_REQUESTED, REV-063 APPROVED (post-approval fixes recorded at revision 255, not re-reviewed). source_fingerprint computed with harness_core.fingerprint on a clean worktree at the merge commit.",
+      "actor": "Harness agent (Claude Opus 5.5)",
+      "observed_at": "2026-09-29T08:45:08Z"
     }
   ],
   "pending_decisions": [
@@ -3889,8 +3954,8 @@
         "TASK-042",
         "TASK-041"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Discharged by TASK-042 (PR #165, 5b8aa9b), as recorded in implementation/62_task_041_carry_forward.md 'Status after TASK-042': 0700 root and kind directories owned by the service user, group/other-writable root and every replaceable ancestor refused; realpath + dev/ino overlap check against Customer and Item roots; the worker's static jobs use SUPPLIER_IMPORT_JOB_NAMES.worker, pinned by a test. Not discharged here and moved on: the root becoming required (HD-046 a, to TASK-043/044 as HD-047) and stored-name use (no file writes in T42; HD-047). Closed by the agent against the merged evidence; not a Product Owner answer."
     },
     {
       "id": "HD-042",
@@ -3922,6 +3987,67 @@
       "affected_ids": [
         "TASK-048",
         "TASK-041"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-045",
+      "impact": "MAJOR",
+      "question": "TASK-042 schema (CLAUDE.md §8; server/database/migrations/** is approval-required): 0061_create_supplier_import_jobs and 0062_create_supplier_import_rows with design §5.13 columns only. (1) Add CHECK ((status='applied') = (applied_supplier_id IS NOT NULL)) on rows? (2) rows.job_id FK ON DELETE RESTRICT rather than CASCADE? (3) Leave out Customer's idempotency_key, operation_id and *_storage_status columns (upload uses framework route idempotency)?",
+      "affected_ids": [
+        "TASK-042",
+        "server/database/migrations/0061_create_supplier_import_jobs.js",
+        "server/database/migrations/0062_create_supplier_import_rows.js"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: '全按你的建議批准' - approve the schema as proposed in chat, with (1) the CHECK, (2) RESTRICT and (3) the Customer-only columns left out until T43 proves a need."
+    },
+    {
+      "id": "HD-046",
+      "impact": "MAJOR",
+      "question": "HD-039 (B) said the import root becomes required when T42 registers the import services. The T42 worker is auto-discovered in every environment, so requiring it now would stop every environment without SUPPLIER_IMPORT_ROOT, CI included (the CI workflow is outside the module). (a) Move the requirement to T43/T44, when the upload API registers and import is actually deployed; the T42 worker does nothing without a root. (b) Require it now and change CI, test and local environments.",
+      "affected_ids": [
+        "TASK-042",
+        "TASK-043",
+        "TASK-044",
+        "HD-039",
+        "HD-041"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-29: 'a'."
+    },
+    {
+      "id": "HD-047",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-042 (see docs/supplier_management/implementation/62_task_041_carry_forward.md): before TASK-043 and TASK-044 are DONE, confirm that (1) startup is refused without import.root once the upload API registers (HD-046 a), with the stale comment at server/config/supplier.js:14 corrected; (2) the precheck job uses SUPPLIER_IMPORT_JOB_NAMES.precheck; (3) stored names come only from newSupplierImportStoredName / supplierImportFilePath. Reworded at revision 253 (REV-061 I-8).",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-044",
+        "TASK-042"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-048",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-042 (see docs/supplier_management/implementation/62_task_041_carry_forward.md): before TASK-045 is DONE, confirm that (1) the real applyRow is wired into SupplierImportWorkerService; (2) it calls connection-taking domain helpers, never the public Supplier service methods, which open their own transaction on a second connection and would commit the Supplier before the marker (REV-061 M-3); the allowlisted connection handed to applyRow (SELECT/INSERT/UPDATE/DELETE/REPLACE/WITH only, REV-062 M-4) cannot see a second connection, so it does not make such a call safe; (3) a row, job lock included, finishes within DB_TRANSACTION_TIMEOUT_MS; (4) an integration test with the real applyRow injects a failure after the Supplier write and finds no Supplier, audit or name-gram row; (5) domain errors carry an explicit Chinese publicMessage; (6) the confirming user is re-checked for active status and supplier.mgmt at execution; (7) a decision is recorded on retrying transient errors. (8) it leaves no GET_LOCK named locks, user variables or stored-function isolation changes on the pooled connection (REV-063 I-23). Extended at revisions 253 and 255.",
+      "affected_ids": [
+        "TASK-045",
+        "TASK-042"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "HD-049",
+      "impact": "MINOR",
+      "question": "Carry-forward from TASK-042 (REV-061 I-13): before TASK-043 and TASK-046 are DONE, confirm finalize checks total_count = applied + failed + skipped, since T43 writes total_count and T42 only rebuilds applied/failed/skipped from rows.",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-046",
+        "TASK-042"
       ],
       "status": "OPEN",
       "answer_ref": null
@@ -5001,5 +5127,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-041 is DONE (merged at 8009e89, main CI green). PHASE-004 continues; by dependencies the next ready task should be re-derived from 08_traceability.json against this ledger before starting. Open carry-forward: HD-041..HD-044 (TASK-042/043/044/045/048). Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
+  "next_safe_action": "TASK-042 is DONE (merged at 5b8aa9b, main CI green). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting. Open carry-forward: HD-042..HD-044, HD-047..HD-049. Carried: DEF-023 (reassess in T43), DEF-024 (accepted), TC-133 / OPS-006 in TASK-051 before release, HD-036's unanswered §2 questions at release approval."
 }

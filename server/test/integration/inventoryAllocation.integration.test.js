@@ -8,7 +8,7 @@ import { up as createInventoryAudit } from "../../database/migrations/0057_creat
 import { up as createInventoryMaster } from "../../database/migrations/0058_create_inventory_master.js";
 import { up as createInventoryStock } from "../../database/migrations/0059_create_inventory_stock.js";
 import { up as createInventoryMovements } from "../../database/migrations/0060_create_inventory_movements.js";
-import { up as createInventoryReservations } from "../../database/migrations/0061_create_inventory_reservations.js";
+import { up as createInventoryReservations } from "../../database/migrations/0063_create_inventory_reservations.js";
 import { InventoryOperationService } from "../../src/modules/inventory/InventoryOperationService.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 import { inventoryCommandFixture } from "../../test-support/inventoryFixtures.js";

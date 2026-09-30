@@ -2,7 +2,7 @@
 
 ## Status
 
-`BLOCKED` pending separate IMPLEMENT／migration authorization — Sam approved HD-066's exact DESIGN／PLAN hashes through HD-067. TASK-001～TASK-018 are integrated into `main` through PR #164. TASK-019～TASK-022 have local developer checks on the P2 branch; TASK-023～TASK-025 remain pending. P2 has not passed its Phase merge gate, and no formal Technical Acceptance or UAT is claimed.
+`IMPLEMENTING` local HD-068 rebaseline — Sam approved HD-066's exact DESIGN／PLAN hashes through HD-067 and authorized only local main integration／migration renumbering through HD-068. TASK-001～TASK-018 are integrated into `main` through PR #164. TASK-019～TASK-022 have local developer checks on the P2 branch; TASK-023～TASK-025 remain pending. P2 has not passed its Phase merge gate, and no formal Technical Acceptance or UAT is claimed.
 
 ## Baseline
 
@@ -227,10 +227,10 @@
 | `0058` | `create_inventory_master` | P1-T01 |
 | `0059` | `create_inventory_stock` | P1-T05 |
 | `0060` | `create_inventory_movements` | P1-T05 |
-| `0061` | `create_inventory_reservations` plus P2 downstream permission seed | P2-T01／T05 |
-| `0062` | `create_inventory_transfers` | P3-T01 |
-| `0063` | `create_inventory_stocktakes` | P4-T01 |
-| `0064` | `create_inventory_opening` | P5-T01 |
+| `0063` | `create_inventory_reservations` plus P2 downstream permission seed | P2-T01／T05 |
+| `0064` | `create_inventory_transfers` | P3-T01 |
+| `0065` | `create_inventory_stocktakes` | P4-T01 |
+| `0066` | `create_inventory_opening` | P5-T01 |
 
 ## Boundaries
 
@@ -340,12 +340,14 @@ A broader `npm test --workspace server` attempt in the restricted shell did not 
 
 ### P2 integration rebaseline required before main merge
 
-After `git fetch --prune origin`, `origin/main` is `0f20c00f443f7ee5bf929d60cedb3f587b8357d3` and has 18 commits not on the P2 branch. It now owns `0061_create_supplier_import_jobs.js` and `0062_create_supplier_import_rows.js`, while P2 still owns `0061_create_inventory_reservations.js`. This is a migration-number policy collision even though the filenames do not produce a Git path conflict. The approved design §4.23 expressly says to stop and reapprove allocation on a new collision. No merge/rebase, renumber, schema execution or P2 publication has occurred after this observation; the two pre-existing uncommitted Inventory documents remain preserved in this worktree.
+At the initial `git fetch --prune origin` observation, `origin/main` was `0f20c00f443f7ee5bf929d60cedb3f587b8357d3` and had 18 commits not on the P2 branch. It owned `0061_create_supplier_import_jobs.js` and `0062_create_supplier_import_rows.js`, while P2 still owned `0061_create_inventory_reservations.js`. This was a migration-number policy collision even though the filenames did not produce a Git path conflict. The approved design §4.23 required reapproval; no merge/rebase, renumber, schema execution or P2 publication occurred before `HD-066`／`HD-067`／`HD-068` were answered.
 
 Sam selected HD-066 option B on 2026-09-30. The approved DESIGN and PLAN now reserve Inventory `0063`～`0066` and replace the three nonexistent P2 cycle paths with actual unit, guarded DB/API and Playwright files. The guarded DB cases require their distinct test-owned schemas, flags and separate runtime authorization; a skipped case is not PASS. This is documentation approval, not new product or test execution evidence. The guarded API test proves successful Sales Reservation and Fulfillment Allocation, but only denies direct Issue without `inventory.view`; a positive Sales→Reserve→FEFO candidates→Allocate→Issue HTTP/DB trace required by P2-GATE has not yet been observed. Complete P2-GATE coverage, coverage thresholds, security audit, CI and Sam's independent P2 code review therefore remain open.
 
 `HD-067`／`APR-068`～`APR-069`：Sam於2026-09-30批准精確DESIGN `f58d1223371a6e53fe78c34403e3172f7ab497a38a1ff0b6994095c0e920f7df`及PLAN `b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b`，並作為獨立人類評審記錄`REV-043`；未提供逐項評審意見。`PLAN_READY`本機一致性檢查通過，但不代表P2實作、DB重測、CI或Phase merge已獲授權／通過。
 
+`HD-068`／`APR-070`：Sam批准返回IMPLEMENT，僅在P2分支本機整合已核對的`origin/main` `0f20c00f443f7ee5bf929d60cedb3f587b8357d3`，將未合併Inventory Reservation migration `0061`改名為`0063`，並更新五個整合測試／permission seed測試的引用及真API測試migration總數`64`→`66`。本機`--no-commit` merge無Git衝突；檔名排序顯示Supplier `0061`／`0062`、Inventory `0063`且63支業務migration加3支framework SQL共66個runner entries。改名前權限種子測試因找不到`0063`而按預期失敗；改名後migration／權限測試12/12、Inventory相鄰unit測試37/37、Supplier相鄰unit測試22/22及全倉ESLint通過。五個MySQL gated整合測試可載入但全部按預期SKIP，並非DB PASS；沒有啟動MySQL、CI或remote action。
+
 ## Next safe action
 
-Await separate authorization to return to IMPLEMENT, integrate latest main and rename the unmerged P2 migration. Then update migration imports/runner-count assumptions, obtain new isolated MySQL authorization, close the positive end-to-end gap and execute the complete P2 developer gate before separate CI／publication／review authority. Formal `TC-004`／`TC-005` remain for TEST_AND_VERIFY.
+Await separate new isolated MySQL authorization for the renumbered `0063` migration and P2 DB/API retests. Then close the positive Sales→Reservation→FEFO→Allocation→Issue gap and execute the complete P2 developer gate before separate CI／publication／review authority. Formal `TC-004`／`TC-005` remain for TEST_AND_VERIFY.

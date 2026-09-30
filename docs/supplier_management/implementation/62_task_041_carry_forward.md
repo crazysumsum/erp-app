@@ -31,3 +31,93 @@ Round 2 (after REV-059) — all killed: the `dev` check removed (now testable th
 a filesystem root accepted; `split(",")` planted in `handlers/supplier-approvals`; the same planted in a
 not-yet-created `handlers/supplier-imports`; `split(/,/)` and `split("\n")` planted in
 `modules/supplier`. Round 1 was re-run after the test changes and stayed all-killed.
+
+## Status after TASK-042
+
+| Obligation | Status |
+| --- | --- |
+| 0700 root and kind directories, owned by the service user; group/other-writable root refused | **Done** — `prepareSupplierImportRoot`, run by `SupplierImportWorkerService.initialize` |
+| `realpath` + `dev`/`ino` overlap check against Customer and Item roots | **Done** — same function; `fs.promises.realpath` restores on-disk case, so a case variant on a case-insensitive filesystem is caught |
+| Worker `static jobs` use `SUPPLIER_IMPORT_JOB_NAMES.worker`, pinned by a test | **Done** |
+| Stored names only via `newSupplierImportStoredName` / `supplierImportFilePath` | **Not yet exercised** — T42 writes no files; carried to T43 (upload) |
+| Precheck job uses `SUPPLIER_IMPORT_JOB_NAMES.precheck` | **Moved to T43** — precheck is T43's job; T42 has nothing to schedule for it |
+| Root required when import services register (HD-039 B) | **Moved to T43/T44 by HD-046 (a)** — required when the upload API registers, which is when import is actually deployed. The T42 worker registers everywhere and does nothing without a root; with no upload there are no jobs |
+
+New obligations T42 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T43 / T44 | Refuse startup without `import.root` once the upload API registers (HD-046 a) |
+| T45 | Wire the real `applyRow` into `SupplierImportWorkerService` (it claims nothing until then), writing Supplier and audit on the given connection and returning the Supplier ID |
+| T45 | `applyRow` must call **connection-taking** domain helpers extracted from `SupplierAdminService` and the other write services. Their public methods each open `database.withTransaction` on a second pooled connection, which commits the Supplier before the marker — the two-phase path design §8.8 forbids (REV-061 M-3, verified E4b). The connection handed to `applyRow` admits only `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `REPLACE` and `WITH` (after leading comments; any `/*!` and `INTO OUTFILE`/`DUMPFILE` refused), on both `query` and `execute` — an allowlist since REV-062 M-4 showed a blacklist is bypassed by comments, `CALL`, `PREPARE` and `SET @@autocommit`. It cannot see a second connection, so it does not make a public service method safe |
+| T45 | The whole row, job lock included, must finish inside `DB_TRANSACTION_TIMEOUT_MS` (20 s by default) |
+| T45 | Ship an integration test with the **real** `applyRow` that injects a failure after the Supplier write and asserts no Supplier, audit or name-gram row survives |
+| T45 | Domain errors thrown from `applyRow` must set an explicit Chinese `publicMessage`: `ApplicationError` defaults it to the internal message, and the row stores `publicCode` / `publicMessage` for domain codes (REV-061 I-4). Decide whether transient errors (lock wait, deadlock, transaction timeout) should retry instead of failing the row (I-3) |
+| T43 / T46 | Check `total_count = applied + failed + skipped` at finalize; T42 rebuilds applied/failed/skipped from rows but T43 writes `total_count` (REV-061 I-13) |
+| T45 | Re-check at execution that the confirming user is still active and holds `supplier.mgmt`, as Customer import does; T42 does not |
+
+## REV-061 notes kept for later
+
+- **L-2, accepted.** Under REPEATABLE READ the claim reads and locks every queued or running candidate before sorting, so concurrent claimers get one job per burst and the rest return `null`; the next 5 s tick takes the next job. Nothing is lost. A `(status, confirmed_at, id)` index would let `LIMIT 1` stop early, but that is a schema change and needs its own approval.
+- **L-5.** T42's `migrations.integration.test.js` Verification item covers 0006–0028 only. Convergence and fail-closed coverage for 0061/0062 is in `test/integration/supplierImportExecution.integration.test.js`, which is what met that item.
+- **I-7.** `server/config/supplier.js:14` still says the root becomes required at T42; HD-046 moved that to T43/T44. The file is approval-required, so the comment is corrected with HD-047's change.
+- **I-14.** The integration test's `quiesce()` cancels or fails every open job in the schema it runs on; do not run it against a schema where someone is checking a worker by hand.
+
+## Mutation record for TASK-042
+
+All killed, against `supplierImportService`, `supplierImportWorkerService` and the
+`supplierImportExecution` integration test on real MySQL: claiming a running job whose lease is live;
+newest job first; invalid rows not skipped; rows out of order; lease not checked; the applied marker
+committed in a separate transaction; an `applyRow` that returns no ID accepted; the thrown message stored
+as the row error; finalize with rows pending; finalize ignoring failures; a terminal state reopened; the
+worker ignoring abort; the worker running without `applyRow`; the root not prepared; a loose root
+accepted; the realpath overlap skipped; the rows CHECK not inspected; a CASCADE row FK accepted; the job
+column types not inspected. Four of these first survived and each got a test.
+
+After REV-061, 40 mutants, all killed: the 19 above, ten of REV-061's survivors (no `SKIP LOCKED`; no lease check on the
+failure path; no renewal after an applied row; no renewal after a failed row; kind-directory `dev`, owner, and `chmod`
+checks; root `chmod`; the `dev`/`ino` same-directory check; the rows trigger check — the first revision of this record
+said "eleven", which REV-062 L-8 caught; its count of 39 was itself wrong, as REV-063 I-24 showed, because the
+remediation list below has eleven entries) and eleven for the remediation (a
+generic code passed through to the row; no failure log; `applyRow` given the raw connection; a leaseless running job
+left stuck; an unconfirmed job claimed; the root's parent unchecked; `auto_increment`, extra UNIQUE, charset and CHECK
+contracts on jobs; an extra CHECK on rows). The pending guard on the failure path (REV-061 M4) is left as REV-061 found
+it: the rollback returns the row to pending before that UPDATE runs, and the CHECK backstops the applied case.
+
+After REV-062, 56 mutants, all killed, on the tree with main merged in: the 39 above plus the allowlist admitting `SET` or
+`CALL`; an executable comment allowed; `INTO OUTFILE` allowed; leading comments not stripped; `execute` unguarded (it
+first survived — `COMMIT` runs as a prepared statement on MySQL, so a real-MySQL `execute("COMMIT")` case was added);
+`SERVICE_UNAVAILABLE` passed through; `causeName` dropped from the log; the not-confirmed path unlogged; each half of
+the confirmer check; the worker not passing its logger; the ancestor owner check; only the parent checked; ancestors
+judged by string instead of realpath; a NOT ENFORCED rows CHECK accepted.
+
+## REV-062 notes kept for later
+
+- **I-17.** A queued job whose confirmer was deleted (`confirmed_by` is `ON DELETE SET NULL`) is failed with
+  `SUPPLIER_IMPORT_NOT_CONFIRMED` and now logged as `supplier.import.not_confirmed`. A **running** job whose confirmer is
+  deleted is still resumed by T42; T45's re-check of the confirmer (HD-048) must fail it.
+- **I-18.** The failure log is written only when the row is actually marked `failed`; when the lease is lost the row
+  stays pending for the new owner and no "row failed" line is written.
+- **I-19.** Session `SET`s (`sql_mode`, `transaction_isolation`, `NAMES`, `foreign_key_checks`, `autocommit`) can no
+  longer reach the pooled connection through `applyRow`: `SET` is outside the allowlist.
+- **M4 (REV-061), left as found.** The pending guard on the failure UPDATE is backstopped by the rollback and the CHECK;
+  REV-062 agreed.
+
+After REV-063, 63 mutants, all killed: the 56 above plus the allowlist unanchored; the failure log written before the
+lease check; the ancestor check ignoring group-write; the guard refusal and the missing-ID failure logged without a
+code; `INTO/**/OUTFILE` accepted; root preparation keeping the configured path; the worker ignoring the real path it is
+given back. The last one first survived and got a test that configures the root through a symlink.
+
+## REV-063 notes kept for later
+
+- **For operators (I-27).** Every ancestor of the real import root must be owned by the service user or root and must
+  not be group- or other-writable unless it has the sticky bit. A Kubernetes `fsGroup` volume (typically 2775) and an
+  NFS export mapped to `nobody` (uid 65534) are therefore refused at startup; mount the root so that its ancestors meet
+  that rule. The refusal names the ancestor.
+- **T45 (I-23).** The allowlist still lets a `SELECT` leave state on the pooled connection: `GET_LOCK` named locks, user
+  variables, and a transaction isolation set inside a stored function. Nothing uses these today; T45's `applyRow` must
+  not either.
+- **I-25, accepted.** The guard also refuses `--\r\n`-style comments, a parenthesised `(SELECT …)` and a string literal
+  containing `/*!`. None occurs in the codebase; a T45 helper that needs one can be rewritten.
+- **I-26, accepted.** Both log lines are written before `COMMIT`, so a failed commit leaves one line per attempt that
+  describes a state that was rolled back. `withTransaction` does not retry, so nothing is duplicated.
