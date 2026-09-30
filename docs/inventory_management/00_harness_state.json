@@ -1,25 +1,25 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 172,
+  "revision": 197,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-003",
   "current_task": "TASK-025",
   "baseline": {
     "design": "f58d1223371a6e53fe78c34403e3172f7ab497a38a1ff0b6994095c0e920f7df",
-    "plan": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
-    "code_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43",
-    "source_fingerprint": "261b1117718f6bebe6f3f3f84ae9d3bec9c912df82094268a2b29a60de3c3619",
+    "plan": "ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a",
+    "code_commit": "bbfe0b52892e4ba3d8652527fa38cce77c8da00c",
+    "source_fingerprint": "0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
-    "default_commit": "e36f0de08a36b836ccdba8ddcffc6f9e4995bd7a",
+    "default_commit": "0f20c00f443f7ee5bf929d60cedb3f587b8357d3",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Codex /root Inventory P2 developer implementation; TASK-025 private MySQL runtime fully cleaned",
+    "owner": "Codex /root; EXT-108/109/110 private MySQL resources fully cleaned, reports retained",
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app"
     },
@@ -1520,8 +1520,117 @@
         "refresh and locally integrate origin/main into the P2 branch",
         "rename unmerged server/database/migrations/0061_create_inventory_reservations.js to 0063_create_inventory_reservations.js",
         "update directly affected test imports and migration-count assertions",
+        "server/database/migrations/0063_create_inventory_reservations.js",
+        "server/test/permissionCatalogueConventions.test.js",
         "local non-database verification only",
         "no MySQL execution, CI, push, PR or PR merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-071",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 准建，以後想用本機資源可以直接用，不用我批 on 2026-09-30; standing authorization scoped to isolated task-owned local synthetic test resources and exact cleanup",
+      "recorded_at": "2026-09-30T01:45:33Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "scope": [
+        "fresh isolated MySQL 26.7.0 socket-only instance under task025 private temp root",
+        "disposable erp_inventory_task025_* synthetic schema create/reset/migrate/test/exact cleanup",
+        "future isolated task-owned local test resources with exact cleanup; not shared/production resources, CI, push, PR, merge or deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-072",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 全部同意 on 2026-09-30 to decision HD-070 option A",
+      "recorded_at": "2026-09-30T02:35:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "scope": [
+        "existing server/src/modules/authorization/permissionCatalogue.js Sales/Fulfillment fixed permission change only",
+        "local independent diff review; no additional permission grants or remote action"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-073",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 全部同意 on 2026-09-30 to decision HD-071 option A",
+      "recorded_at": "2026-09-30T02:35:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "scope": [
+        "local minimal compatible dependency remediation in package.json, client/package.json, server/package.json and package-lock.json only as needed",
+        "no forced or breaking major upgrade; verify audit and regressions; no push, PR or merge"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-074",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 全部同意 on 2026-09-30 to decision HD-072 option A",
+      "recorded_at": "2026-09-30T02:35:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "scope": [
+        "local minimal docs/inventory_management/00_project_profile.json proposal to separate P2 DEVELOPER checks from later formal TECHNICAL/REGRESSION",
+        "no test removal or formal floor reduction; resulting PLAN requires a fresh exact-hash human review before further implementation gates; no remote action"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-075",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-30 to HD-073 exact new PLAN hash; no detailed review findings supplied",
+      "recorded_at": "2026-09-30T03:36:39Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "64d749fd9f0fd05b857d36679ac964ee9a68c10fa832919c91876f4433bb2c66",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "scope": [
+        "inventory-management",
+        "inventory-management PHASE-003 P2 developer suite profile and ledger rebaseline",
+        "local developer-suite execution and evidence registration",
+        "no CI, push, PR, merge or formal acceptance"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-076",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task Sam user response 批准 on 2026-09-30 to HD-074 exact revised PLAN hash; no detailed review findings supplied",
+      "recorded_at": "2026-09-30T03:56:35Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "scope": [
+        "inventory-management",
+        "PHASE-003 P2 developer JUnit leaf-count correction 8/2 to 7/1",
+        "fresh local developer evidence; previous BLOCKED reports retained",
+        "no CI, push, PR, merge or formal acceptance"
       ],
       "expires_at": null
     }
@@ -1978,6 +2087,30 @@
       "reviewer": "Sam (ERP Product Owner and independent reviewer)",
       "reviewed_baseline": "f58d1223371a6e53fe78c34403e3172f7ab497a38a1ff0b6994095c0e920f7df",
       "source_ref": "Active Codex task user response 批准 on 2026-09-30 to HD-067 after exact DESIGN/PLAN hash review request; no detailed findings supplied",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-044",
+      "method": "HUMAN",
+      "author": "/root P2 developer profile and ledger revision author",
+      "reviewer": "Sam (ERP Product Owner and independent reviewer)",
+      "reviewed_baseline": "64d749fd9f0fd05b857d36679ac964ee9a68c10fa832919c91876f4433bb2c66",
+      "source_ref": "Active Codex task user response 批准 on 2026-09-30 after exact candidate PLAN 64d749fd9f0fd05b857d36679ac964ee9a68c10fa832919c91876f4433bb2c66 review request; no detailed findings supplied",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-045",
+      "method": "HUMAN",
+      "author": "/root P2 developer profile and ledger revision author",
+      "reviewer": "Sam (ERP Product Owner and independent reviewer)",
+      "reviewed_baseline": "ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a",
+      "source_ref": "Sam user response 批准 on 2026-09-30 to exact HD-074 revised PLAN; no detailed findings supplied",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2468,6 +2601,61 @@
       "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-025-guarded-developer-test-cases-not-formal-tc-004tc-005",
       "actor": "/root developer self-check; npm test --workspace server with process-only synthetic Bank test keys and localhost permission exited 0 (dot reporter); npm run lint exited 0. No CI, shared database, formal TC-004/TC-005 or independent approval.",
       "observed_at": "2026-09-29T09:54:46Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-068 local non-database migration-number rebaseline checks only",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "spec_baseline": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "source_fingerprint": "6b1e1504287589337e1a0ff7a6eb2b1e5c1dbe2c4db49d1d62685f0967f9bf3f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#p2-integration-rebaseline-required-before-main-merge",
+      "actor": "/root developer self-check: migration/permission tests 12/12, Inventory adjacent unit tests 37/37, Supplier adjacent unit tests 22/22, repository lint PASS and unique migration prefixes/66 runner entries observed; five DB-gated import checks SKIPPED and not treated as PASS. No MySQL, CI or remote action.",
+      "observed_at": "2026-09-30T01:27:31Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-069 TASK-025 MySQL 26.7.0 migration rebaseline developer checks",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "spec_baseline": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "source_fingerprint": "6b1e1504287589337e1a0ff7a6eb2b1e5c1dbe2c4db49d1d62685f0967f9bf3f",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#p2-integration-rebaseline-required-before-main-merge",
+      "actor": "/root developer self-check: 8/8 guarded DB including DEV-025-DB-01/02/03, full migration runner 66 applied and 66 skipped on rerun including Inventory 0063, real local HTTP/API DEV-025-API-01 1/1; isolated schema/runtime exactly cleaned. Not formal TC, CI, code review or merge.",
+      "observed_at": "2026-09-30T01:50:17Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-025 positive Sales Reservation to FEFO Allocation to Fulfillment Issue on real API/MySQL",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "spec_baseline": "b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b",
+      "source_fingerprint": "b6b4e25ce8272c705aa26f1e77d4deeaa702d30abffd4c7b6a742fc1582615b3",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-025-guarded-developer-test-cases-not-formal-tc-004tc-005",
+      "actor": "/root developer self-check under APR-071; guarded DEV-025-API-01/02 2/2 real HTTP/MySQL, 0 skipped; not formal TC-004/TC-005, CI or independent approval",
+      "observed_at": "2026-09-30T02:27:32Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Local compatible dependency remediation and physical install regression",
+      "code_commit": "59d4c658175a4185227be3092a4d58582c4a199f",
+      "spec_baseline": "64d749fd9f0fd05b857d36679ac964ee9a68c10fa832919c91876f4433bb2c66",
+      "source_fingerprint": "962efd7dfd66cd9bf12d83bc07d007619a90d565f01656d5f45ab952ba8c9b1c",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/implementation/00_implementation_readiness.md#task-025-guarded-developer-test-cases-not-formal-tc-004tc-005",
+      "actor": "/root developer self-check under APR-073; npm audit 0 findings; physical Vitest/mocker 4.1.11 and undici 8.11.2; client unit 687/687, client coverage exit 0, build, Playwright 18/18, lint and server no-DB suite exit 0. Candidate PLAN unapproved; not CI, formal TC or merge evidence.",
+      "observed_at": "2026-09-30T02:46:22Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Final DB-enabled local server coverage and P2 remediation developer self-check",
+      "code_commit": "bbfe0b52892e4ba3d8652527fa38cce77c8da00c",
+      "spec_baseline": "ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a",
+      "source_fingerprint": "0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/evidence/local-coverage-20260930/README.md; archived final stdout SHA256 8b43cc564cb657b5328b0a78a76f13831410038aa31d0883db22d26a5c0639bc",
+      "actor": "Codex /root developer self-check: server coverage exit0, 2378 pass/0 fail/14 optional skips; unchanged 92/83/90 and 34 per-file floors; final Inventory unit155/155, lint/build PASS. Not CI, independent review, formal TC or merge evidence. Branch margin very thin. Retired-runtime DB/API reports remain history, not current merge-gate attestations.",
+      "observed_at": "2026-09-30T06:08:54Z"
     }
   ],
   "pending_decisions": [
@@ -3581,6 +3769,101 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Active Codex task user response 批准 on 2026-09-30 to the return-to-IMPLEMENT and local rebaseline question; origin/main 0f20c00 and free 0063 re-observed before action"
+    },
+    {
+      "id": "HD-069",
+      "impact": "MAJOR",
+      "question": "May TASK-025 rerun guarded DB and API developer tests against a fresh private socket-only MySQL 26.7.0 instance and disposable erp_inventory_task025_* schema after migration rebaseline, with exact cleanup? May task-owned isolated local synthetic test resources be used without repeated approval, excluding shared/production resources and remote actions?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-025",
+        "TC-004",
+        "TC-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 准建，以後想用本機資源可以直接用，不用我批 on 2026-09-30; scope limited as APR-071"
+    },
+    {
+      "id": "HD-070",
+      "impact": "MAJOR",
+      "question": "Reauthorize the existing sales.operation/fulfillment.operation shared permissionCatalogue.js change under exact current PLAN, without adding permissions or remote actions?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "SEC-007"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 全部同意 on 2026-09-30 to the three explicit recommended A options; this is the first option"
+    },
+    {
+      "id": "HD-071",
+      "impact": "MAJOR",
+      "question": "Authorize a local minimal compatible remediation of the pre-existing high undici and moderate Vitest dependency audit findings in shared package manifests/lockfile, with regression checks and no forced major upgrade or remote action?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-025"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 全部同意 on 2026-09-30 to the three explicit recommended A options; this is the second option"
+    },
+    {
+      "id": "HD-072",
+      "impact": "MAJOR",
+      "question": "Authorize a minimal local project-profile proposal separating P2 DEVELOPER integration evidence from later formal TECHNICAL/REGRESSION case requirements, without dropping tests or reducing formal floors, subject to independent approval of the resulting exact new PLAN hash?",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TC-004",
+        "TC-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 全部同意 on 2026-09-30 to the three explicit recommended A options; this is the third option. New PLAN hash still requires separate approval."
+    },
+    {
+      "id": "HD-073",
+      "impact": "MAJOR",
+      "question": "Does Sam independently review and approve exact candidate PLAN 64d749fd9f0fd05b857d36679ac964ee9a68c10fa832919c91876f4433bb2c66 after the P2 profile/ledger split, retaining formal TC-001–010, max_skipped=0 and server coverage floors? DESIGN f58d1223371a6e53fe78c34403e3172f7ab497a38a1ff0b6994095c0e920f7df is unchanged. Approval would permit local developer-suite execution and evidence registration, not CI/push/PR/merge or formal acceptance.",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TC-004",
+        "TC-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task user response 批准 on 2026-09-30 to exact candidate PLAN 64d749fd9f0fd05b857d36679ac964ee9a68c10fa832919c91876f4433bb2c66; local developer-suite execution and evidence registration only"
+    },
+    {
+      "id": "HD-074",
+      "impact": "MAJOR",
+      "question": "Does Sam independently review and approve exact revised PLAN ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a after correcting only the two P2 developer JUnit min_tests counts from 8/2 to observed 7/1 leaf cases? Formal TC-001–010, zero-skip rules, source code, DESIGN and coverage floors remain unchanged. Approval permits fresh local runner evidence only; prior BLOCKED reports remain historical. No CI/push/PR/merge or formal acceptance.",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TC-004",
+        "TC-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Active Codex task Sam user response 批准 on 2026-09-30 approving exact HD-074 PLAN hash; APR-076"
+    },
+    {
+      "id": "HD-075",
+      "impact": "MAJOR",
+      "question": "Does Sam independently approve the not-applied narrow shared regression-test boundary proposal: append only server/test/integration/{migrations,passwordChange,roleManagement,userManagement}.integration.test.js, in that listed order, to manifest scope.test_paths and scope.approval_required_paths, without broadening allowed_write_paths or granting permissions? Exact proposed DESIGN 53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce and PLAN ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973. Approval also rebinds already approved narrow shared paths client/package.json, package-lock.json, server/database/migrations/0063_create_inventory_reservations.js, server/src/modules/authorization/permissionCatalogue.js and server/test/permissionCatalogueConventions.test.js plus the four test-only files to the new PLAN. Current manifest remains unchanged; local fixtures correct 13 demonstrated integration failures and preserve least privilege. Option A apply exact reviewed proposal then fresh developer evidence; option B hold publication for another ownership disposition. No new product/source behavior, CI, push, PR, merge, formal acceptance or full P2 code approval is included. See implementation/00_implementation_readiness.md decision section.",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -4455,12 +4738,80 @@
       "idempotency_key": "mode-change-172",
       "status": "CONFIRMED",
       "source_ref": "Active Codex task user response 批准 on 2026-09-30 authorizing return to IMPLEMENT and local P2 migration rebaseline"
+    },
+    {
+      "id": "EXT-105",
+      "kind": "ISOLATED_MYSQL_DEV_VERIFICATION",
+      "target": "Only erp_inventory_task025_20260930_0145 on private MySQL 26.7.0 socket /private/tmp/erp-inventory-task025-mysql-2670.krnXXe/mysql.sock; own runtime root /private/tmp/erp-inventory-task025-mysql-2670.krnXXe",
+      "idempotency_key": "inventory-task025-rebaseline-20260930-0145-krnXXe",
+      "status": "CONFIRMED",
+      "source_ref": "HD-069/APR-071. Private socket observed MySQL 26.7.0 with @@skip_networking=1 and only system schemas before run. Guarded DB cases 8/8 PASS. Exact synthetic schema was reset; framework SQL plus 0001–0063 applied 66/66 and rerun skipped 66/66; Inventory 0063 recorded once. Real local HTTP/API 1/1 PASS. Exact schema dropped and confirmed absent; mysqladmin shutdown succeeded, socket/PID absent, exact private root removed and confirmed absent. No shared/production DB, CI or remote action."
+    },
+    {
+      "id": "EXT-106",
+      "kind": "ISOLATED_MYSQL_DEV_VERIFICATION",
+      "target": "Only erp_inventory_task025_positive_20260930 on private MySQL 26.7.0 socket /private/tmp/erp-inventory-task025-mysql-2670.4jhunD/mysql.sock; exact private root /private/tmp/erp-inventory-task025-mysql-2670.4jhunD",
+      "idempotency_key": "inventory-task025-positive-20260930-0216-4jhunD",
+      "status": "CONFIRMED",
+      "source_ref": "Private MySQL 26.7.0 socket-only instance at /private/tmp/erp-inventory-task025-mysql-2670.4jhunD/mysql.sock ran framework SQL plus migrations 0001–0063 (66 rows) and guarded DEV-025-API-01/02 (2/2 pass, 0 skipped) against exact erp_inventory_task025_positive_20260930. Dropped only that schema and confirmed absent; mysqladmin shutdown succeeded, socket/PID absent, removed only exact private root and confirmed absent. Synthetic data/runtime unrecoverable; no shared/production database touched."
+    },
+    {
+      "id": "EXT-107",
+      "kind": "ISOLATED_MYSQL_DEV_VERIFICATION",
+      "target": "Only erp_inventory_task025_runner_20260930_0340 on private socket-only MySQL 26.7.0 /private/tmp/erp-inventory-task025-mysql-2670.RLkJvY/mysql.sock and exact task-owned root /private/tmp/erp-inventory-task025-mysql-2670.RLkJvY",
+      "idempotency_key": "inventory-p2-runner-20260930-0339-RLkJvY",
+      "status": "CONFIRMED",
+      "source_ref": "Private MySQL 26.7.0 at exact socket had @@skip_networking=1 and only system schemas before exact task025 schema creation. Harness inventory-p2-database JUnit 7/7 PASS but runner BLOCKED on profile min_tests=8; reset only task schema, applied framework SQL plus 0001–0063 (66 rows), Harness inventory-p2-api JUnit 1/1 PASS but runner BLOCKED on profile min_tests=2. Original reports preserved. Dropped only erp_inventory_task025_runner_20260930_0340, confirmed absent; mysqladmin shutdown succeeded; socket/PID absent and exact private root removed/confirmed absent. Synthetic data unrecoverable; no shared/production data touched."
+    },
+    {
+      "id": "EXT-108",
+      "kind": "ISOLATED_MYSQL_DEV_VERIFICATION",
+      "target": "Only erp_inventory_task025_runner_20260930_0357 on private socket-only MySQL 26.7.0 /private/tmp/erp-inventory-task025-mysql-2670.2Targw/mysql.sock and exact task-owned root /private/tmp/erp-inventory-task025-mysql-2670.2Targw",
+      "idempotency_key": "inventory-p2-20260930-0357-2Targw",
+      "status": "CONFIRMED",
+      "source_ref": "Private socket-only MySQL 26.7.0 verified. Approved PLAN developer lint/build/unit and P2 DB/API runners PASS: DB 7/7, API one JUnit leaf containing positive Sales-to-Fulfillment flow and outer security assertions, zero skips. Applied 66 migrations; persisted one ISSUE movement. Dropped exact synthetic schema and confirmed absent; mysqladmin shutdown, socket/PID absent, owner Sam mode 700/no symlinks; exact root removed and absent. No shared/production data touched. Synthetic data unrecoverable; reports retained."
+    },
+    {
+      "id": "EXT-109",
+      "kind": "ISOLATED_MYSQL_COVERAGE_VERIFICATION",
+      "target": "Only new MySQL 26.7.0 at 127.0.0.1:33579 and /private/tmp/erp-inventory-coverage-mysql-2670.9hT0zI/mysql.sock; erp_inventory_coverage_20260930_0403 plus test-generated synthetic recovery schemas/users confined to this private instance; exact task-owned root /private/tmp/erp-inventory-coverage-mysql-2670.9hT0zI",
+      "idempotency_key": "inventory-coverage-20260930-0403-9hT0zI",
+      "status": "CONFIRMED",
+      "source_ref": "Private localhost-only MySQL 26.7.0 port 33579, 66 existing migrations, isolated synthetic schema/accounts and random developer keys. Final npm server coverage exited 0: 2378 pass, 0 fail, 14 explicit optional guard skips; exact branches 83.00060496067755%, lines 93.64%, functions 91.87%, all 34 per-file floors PASS. Original failed/sleep-interrupted reports archived unchanged. Verified only task schema plus system schemas and two task accounts before exact cleanup; dropped task schema/accounts, recovery schemas/users absent; mysqladmin shutdown, socket/PID absent, owner Sam mode700/no symlinks, exact root removed and absent. Synthetic DB data unrecoverable, reports retained; no shared/production resources or remote actions."
+    },
+    {
+      "id": "EXT-110",
+      "kind": "ISOLATED_MYSQL_DEV_VERIFICATION",
+      "target": "Only erp_inventory_task025_final_20260930 at private socket-only MySQL 26.7.0 /private/tmp/erp-inventory-task025-mysql-2670.X5WgXq/mysql.sock; exact task-owned root /private/tmp/erp-inventory-task025-mysql-2670.X5WgXq",
+      "idempotency_key": "inventory-p2-final-20260930-X5WgXq",
+      "status": "CONFIRMED",
+      "source_ref": "Fresh developer reports for source 7878997a4011c2305fa849dcf759c08f6426ee7b73a1095f9cbe464e2ef275af: inventory unit 153/153, DB 7/7, API 1/1 JUnit leaf with outer security assertions, lint/build PASS and zero suite skips. Private socket-only MySQL 26.7.0, 66 migration rows, one ISSUE movement. Only erp_inventory_task025_final_20260930 dropped and confirmed absent; shutdown, socket/PID absent, exact owner-Sam mode-700 root without symlinks removed and absent. Synthetic data unrecoverable; no shared/production data touched."
     }
   ],
   "evidence_files": [
     "evidence/20260929T065003-55782fc654a1/run.json",
     "evidence/20260929T065017-b8c2bf0a1c99/run.json",
-    "evidence/20260929T065027-f5a806ad9f7b/run.json"
+    "evidence/20260929T065027-f5a806ad9f7b/run.json",
+    "evidence/20260930T034122-1f2bd512626a/run.json",
+    "evidence/20260930T034250-3faa328d203b/run.json",
+    "evidence/20260930T035834-2dfe8c2f7243/run.json",
+    "evidence/20260930T035832-5c12a14eab36/run.json",
+    "evidence/20260930T035835-b1a810c05fca/run.json",
+    "evidence/20260930T035900-d1e877f79cfd/run.json",
+    "evidence/20260930T040027-3fd0a78ffc41/run.json",
+    "evidence/20260930T041346-49cdf398a45e/run.json",
+    "evidence/20260930T041401-3b24fec33c83/run.json",
+    "evidence/20260930T041404-eca428f37325/run.json",
+    "evidence/20260930T041407-4eda09f17efa/run.json",
+    "evidence/20260930T041454-15d0d2c08d6e/run.json",
+    "evidence/20260930T041937-f408573f7f96/run.json",
+    "evidence/20260930T041939-0d47f1022ff7/run.json",
+    "evidence/20260930T041951-748504788fae/run.json",
+    "evidence/20260930T041955-75db1b84fe45/run.json",
+    "evidence/20260930T041955-5f4331498559/run.json",
+    "evidence/20260930T060751-3eee373374b7/run.json",
+    "evidence/20260930T060748-7fcc82f9129e/run.json",
+    "evidence/20260930T060751-ce6a4199bcc8/run.json"
   ],
   "defects": [
     {
@@ -4496,5 +4847,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "Under APR-070, preserve the approved dirty documentation in a local commit, integrate observed origin/main 0f20c00 into the P2 branch, rename only the unmerged Reservation migration 0061 to 0063, update directly affected test imports and migration-count assumptions, and run local non-database checks. Reconcile any changed DESIGN/PLAN hash before further product writes. Do not run MySQL, CI, push, create PR or merge PR. Preserve historic test evidence and the positive Sale→Reservation→FEFO→Allocation→Issue gap."
+  "next_safe_action": "Await Sam HD-075 decision on exact proposed DESIGN 53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce / PLAN ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973 and nine exact shared paths. Existing manifest/approved baselines unchanged. Local coverage and cleanup complete; preserve five implementation/test commits and reports. If approved, apply exact proposal and rebind scoped approvals/fresh coordinated developer evidence; independent P2 code review and publication authority still required. No CI/push/PR/merge."
 }

@@ -1721,7 +1721,9 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "inventory-technical"
+        "inventory-developer",
+        "inventory-p2-database",
+        "inventory-p2-api"
       ]
     },
     {
