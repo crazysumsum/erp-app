@@ -256,3 +256,24 @@ integrationTest("TASK-043: a precheck whose lease expired is redone from the sta
   await assert.rejects(() => service.completePrecheck({ jobId: created.id, leaseOwner: "crashed-worker" }),
     { publicCode: "SUPPLIER_IMPORT_LEASE_LOST" }, "the old owner cannot complete it afterwards");
 });
+
+integrationTest("TASK-043: a precheck claim skips a job another transaction holds instead of waiting for it", async () => {
+  const created = await upload(csv([{ supplierCode: `K-${randomUUID().slice(0, 6)}`, supplierName: "Locked", defaultCurrencyCode: "HKD" }]));
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  let locked;
+  const locking = new Promise((resolve) => { locked = resolve; });
+  const holder = h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [created.id]);
+    locked();
+    await held;
+  });
+  await locking;
+  const started = Date.now();
+  const claimed = await h.worker.importService.claimForPrecheck({ leaseOwner: "other", leaseDurationMs: 60_000 });
+  assert.notEqual(claimed?.id, created.id);
+  assert.ok(Date.now() - started < 3_000, "the claim did not wait for the lock");
+  release();
+  await holder;
+  assert.equal((await precheck(created.id)).status, "ready");
+});

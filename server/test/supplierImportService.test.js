@@ -66,3 +66,18 @@ test("applyRow's connection admits data statements only, however a control state
     assert.doesNotThrow(() => assertRowStatement(sql), sql);
   }
 });
+
+test("upload refuses an empty or oversized file and an unknown mode before anything is written", async () => {
+  const importer = new SupplierImportService({
+    database: { async withTransaction() { throw new Error("must not reach the database"); } }, time: { nowMs: () => 1 }
+  });
+  const upload = (overrides) => importer.createFromUpload({
+    actorId: 1, root: "/nonexistent/supplier-import-root", mode: "create_only", content: Buffer.from("abcd"), maxFileBytes: 4, ...overrides
+  });
+  await assert.rejects(() => upload({ content: Buffer.from("abcde") }), { publicCode: "SUPPLIER_IMPORT_FILE_TOO_LARGE", statusCode: 413 });
+  await assert.rejects(() => upload({ content: Buffer.alloc(0) }), { publicCode: "SUPPLIER_IMPORT_FILE_REQUIRED", statusCode: 400 });
+  await assert.rejects(() => upload({ mode: "replace" }), { publicCode: "SUPPLIER_IMPORT_MODE_INVALID" });
+  await assert.rejects(() => upload({ root: null }), { publicCode: "SUPPLIER_IMPORT_UNAVAILABLE", statusCode: 503 });
+  // 啱啱好喺上限：過咗檢查，去到寫檔（呢個 root 唔存在，所以喺檔案系統度失敗）。
+  await assert.rejects(() => upload({}), { code: "ENOENT" });
+});

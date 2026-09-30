@@ -253,8 +253,11 @@ test("a missing, altered, hard-linked or symlinked source fails the job instead 
       return { storedName, sha256: (await writeSupplierImportSource(instance.root, oneRowCsv())).sha256 };
     },
     symlink: async () => {
+      // 另一個檔：上面嗰個 hard link 令 outside 嘅 nlink 變 2，會喺 O_NOFOLLOW 之前就被 nlink 擋住。
+      const target = path.join(base, "outside-for-symlink.csv");
+      await writeFile(target, oneRowCsv());
       const storedName = "c".repeat(64);
-      await symlink(outside, path.join(instance.root, "source", storedName));
+      await symlink(target, path.join(instance.root, "source", storedName));
       return { storedName, sha256: (await writeSupplierImportSource(instance.root, oneRowCsv())).sha256 };
     }
   };
@@ -279,6 +282,16 @@ test("precheck that cannot finish for another reason keeps the lease for a retry
   await assert.rejects(() => instance.runPrecheck(new AbortController().signal), { code: "BUSINESS_MASTER_NOT_READY" });
   assert.deepEqual(instance.importService.calls, [["claim"]]);
   assert.deepEqual(errors, [["supplier.import.precheck_interrupted", "BUSINESS_MASTER_NOT_READY"]]);
+});
+
+test("shutdown during a precheck stops before the next batch is written and leaves the job to the lease", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 6, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  const claim = instance.importService.claimForPrecheck;
+  instance.importService.claimForPrecheck = async (input) => { const job = await claim(input); await instance.shutdown(); return job; };
+  await assert.rejects(() => instance.runPrecheck(new AbortController().signal), { code: "SUPPLIER_IMPORT_STOPPING" });
+  assert.deepEqual(instance.importService.calls, [["claim"]], "nothing appended, nothing completed");
 });
 
 test("precheck claims nothing without a root, after shutdown or when aborted", async (t) => {
