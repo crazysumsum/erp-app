@@ -126,7 +126,7 @@ given back. The last one first survived and got a test that configures the root 
 
 | Obligation | Status |
 | --- | --- |
-| HD-042: reassess DEF-023 before CSV import accepts account-like columns | **Done, DEF-023 stays accepted.** The CSV path does not widen it: (1) the request log records a multipart body as `[FILE_TRANSFER]` whatever the status, 5xx included — now pinned by `requestLogger.test.js`; (2) a Bank column fails the whole file before any row is stored, and the message names the column by position, not by its text; (3) row errors are fixed strings and never carry a cell value; (4) the integration test scans rows, jobs, audit and both log directories for an IBAN sent under an `IBAN` column and finds none. What remains of DEF-023 is unchanged: the blacklist still guards JSON routes only by field name. |
+| HD-042: reassess DEF-023 before CSV import accepts account-like columns | **Done, DEF-023 stays accepted — first version of this row was wrong, see "REV-064 remediation" below.** The CSV path does not widen it: (1) the request log records a multipart body as `[FILE_TRANSFER]` whatever the status, 5xx included — now pinned by `requestLogger.test.js`; (2) a Bank column fails the whole file before any row is stored, and the message names the column by position, not by its text; (3) row errors are fixed strings and never carry a cell value; (4) the integration test scans rows, jobs, audit and both log directories for an IBAN sent under an `IBAN` column and finds none. What remains of DEF-023 is unchanged: the blacklist still guards JSON routes only by field name. |
 | HD-042: every CSV read and write goes through `csv-parse` / `csv-stringify` | **Done.** Reads: `SupplierImportProcessor.js` only (`csv-parse`). Writes: `supplierCsvSchema.js` only (`csv-stringify/sync`). No `split` in `modules/supplier`, `services/supplierImport` or `handlers/supplier-imports`. |
 | HD-047 (1): startup without `import.root` | **Superseded by HD-050 (a).** Startup is not refused; the worker logs `supplier.import.disabled` and upload answers 503 `SUPPLIER_IMPORT_UNAVAILABLE`. The comment in `server/config/supplier.js` now says so (approved in HD-050). |
 | HD-047 (2): precheck job name | **Done.** `SupplierImportWorkerService.jobs` declares `SUPPLIER_IMPORT_JOB_NAMES.precheck`; the test deep-equals both names. |
@@ -148,7 +148,7 @@ T43 notes:
 
 - **Row numbers** count data rows only (1 = the first row after the header, template description and example rows and blank rows not counted), the same convention as Customer import.
 - **The upload size limit** in the route is read from `config/supplier.js` when the handler module loads; the service checks the normalised `maxFileBytes` again and answers 413.
-- **Name similarity** uses the same `SupplierDuplicateCandidates` default threshold as the create and update API, so precheck and the API agree; it is looked up only for rows with no errors.
+- **Name warnings** (HD-052 A, after REV-064 H-2): precheck warns only on a name identical after normalisation (NFKC, case, spaces) to another row or to an existing Supplier, with one query per 500-row batch. Fuzzy similarity (`SupplierDuplicateCandidates`, 0.85) stays in the UI create/update path; a merely similar name is not flagged in CSV import. The first version looked up fuzzy candidates per row, which never finished a 10,000-row file against a few thousand Suppliers.
 
 ## Mutation record for TASK-043
 
@@ -162,17 +162,63 @@ and `requestLogger.test.js`). Each mutant was applied to a committed tree and re
   removed; similar-name lookup matching the row's own Supplier or run on invalid rows; issues unbounded; control characters
   allowed; payment-term spaces not collapsed; currency not upper-cased; create's required fields unchecked; the address
   normalised over already-bad cells; an unknown `supplierId` not reported.
-- **Service (15):** the claim keeping partial rows, ignoring a live lease or waiting on a locked job (no `SKIP LOCKED`);
+- **Service (14):** the claim keeping partial rows, ignoring a live lease or waiting on a locked job (no `SKIP LOCKED`);
   append or complete without the lease check; a failed precheck keeping its rows; invalid rows not making
   `ready_with_errors`; the upload leaving its file after a failed insert, skipping the actor check, its size limit off by
   one, running without a root; finalize ignoring `total_count` (HD-049); either audit action dropped.
 - **Files (4):** the source written 0644; the read following symlinks, accepting hard links, or skipping the SHA-256.
 - **Worker (5):** completing the job on any error; no `supplier.import.disabled` warning; the configured instead of the
   real root; shutdown not honoured between batches; the precheck job under another name.
-- **Handler, template, request log (4):** the upload buffer kept; the configured root used; the template without the
+- **Handler, template, request log (5):** the upload buffer kept; the configured root used; the template without the
   Bank notice; bare LF/CR cells not quoted; a 5xx multipart body captured by the request log.
 
 Four first survived and each got a test: the similar-name lookup on invalid rows (the test's invalid row had no name),
 a stale owner appending rows, rows left behind by a precheck that fails after its first batch, and bare LF/CR quoting.
 The last is equivalent for our own reader — csv-parse detects the CRLF delimiter and keeps a bare `\n` inside the cell — so
 the test pins the written bytes instead: readers that end a line at `\n` (spreadsheets) would split the row.
+
+
+## REV-064 remediation (HD-052, HD-053)
+
+REV-064 (`67_rev_064_independent_review.md`) found two Highs with one cause — precheck had no terminal state for an error it
+did not expect and no bound on attempts — and a Medium. What changed:
+
+| Finding | Change |
+| --- | --- |
+| H-1: a stray quote threw csv-parse's `INVALID_OPENING_QUOTE`, whose message holds the cell text, to the scheduler, which logged it; the job retried forever | Every `CsvError` fails the file as `SUPPLIER_IMPORT_CSV_MALFORMED`. The worker rethrows only a code, never a message built from the file. A job reclaimed after `MAX_PRECHECK_ATTEMPTS` (3) attempts is failed with `SUPPLIER_IMPORT_PRECHECK_FAILED` (counted from `version`, which only the claim increments while `validating`; no schema change). |
+| H-2: the per-row fuzzy name lookup made a 10,000-row file restart forever | HD-052 (A): exact-name warnings, one query per batch. A 10,000-row file against 2,000 Suppliers now prechecks in about 0.3 s on the test MySQL (the reviewer measured about 5 minutes before); pinned by an acceptance test with a 60 s bound. |
+| M-1: a file failed for a Bank column stayed on disk in plaintext for 365 days | HD-053 (A): the header is read at upload and a Bank column is refused with 400 before anything is stored; every job whose precheck fails gets `files_purged_at` and its source is deleted at once. |
+| L-1 | A failed cleanup after a failed upload or precheck is logged as `supplier.import.source_cleanup_failed` (stored name and error code only). |
+| L-2 | Tests for a directory or an oversized file at the stored name, lease renewal on append, abort between batches, and the catalogue's second page. |
+| L-3 | The mutation harness runs serially and checks an unmutated baseline first. |
+| I-5 | The source is opened with `O_NONBLOCK`. |
+| I-1 | Bucket counts above corrected (Service 14, Handler/template/request log 5; total 58 unchanged). |
+
+**Correction to the DEF-023 row above.** It said nothing on the CSV path widens DEF-023 and that the integration test finds an
+IBAN in no log. That held for the request log and for a Bank *column*, but REV-064 H-1 showed the system log received cell
+text through the scheduler's `scheduler.job.failed` line. After the fix the worker hands the scheduler a code only, and an
+integration test sends an IBAN in `notes` behind a stray quote and finds it in no log and, once the job fails, in no stored file.
+
+New or changed obligations:
+
+| Task | Obligation |
+| --- | --- |
+| T48 | A stored file is unreferenced unless a job names it **and** that job's `files_purged_at` is NULL. Failed prechecks set `files_purged_at` before deleting their source, so a delete that failed (logged) is collected by the same rule (HD-053, extends HD-044). |
+| T44 | REV-064 I-3: with a root configured but the precheck job disabled in `scheduler.jobs`, uploads are accepted and stay `uploaded`. Decide with the job API whether upload should also answer 503 then. |
+| T45 | REV-064 I-4: an update row may target a `pending_approval` Supplier; applying approval-significant fields must invalidate the pending request exactly as `updateSupplier` does (covered by HD-048 (2), named here). |
+| — | REV-064 I-2: design §6.11 lists `CURRENCY_INVALID/INACTIVE` and `PAYMENT_TERM_INVALID/INACTIVE`; the API and precheck use Business Master's `CURRENCY_NOT_ACTIVE` / `PAYMENT_TERM_NOT_ACTIVE`. The design table is stale; not edited here (it moves the DESIGN baseline). |
+| — | REV-064 I-6 (route size limit read from `config/supplier.js` at load, service limit from the normalised config) and I-7 (no per-user upload quota) are recorded, not changed. |
+
+**Mutation after REV-064** (on 7826846, harness serial with an unmutated baseline first; the baseline passed): 74 mutants,
+72 killed. The 58 above (three patterns re-pointed at the changed code), REV-064's L-2 survivors that are not equivalent
+(no lease renewal on append, no abort check between batches, the catalogue's first page only, `SUPPLIER_IMPORT_FILE_TOO_LARGE`
+not a source error), and the remediation: only `CSV_`-prefixed parse errors mapped; the worker rethrowing the original error;
+precheck attempts unbounded or off by one; the cleanup failure not logged; an existing identical name ignored; an update
+flagged against itself; no name query; a Bank-column file stored at upload; the upload header check not trimming; a failed
+or abandoned precheck keeping its source; `files_purged_at` not set.
+
+Two survive and are equivalent: `readSupplierImportSource` without `isFile()` (a directory has `nlink >= 2`, so the
+`nlink === 1` check refuses it first) and without the read-side size check (the processor refuses the same size with the
+same code; the read-side check only saves reading it into memory). REV-064's other equivalent survivors (write without
+`O_NOFOLLOW` or `O_EXCL` with a 256-bit random name, `max_record_size` within the 10 MB limit, `ciphertext` dropped from
+the Bank regex while every unknown header is refused anyway) are accepted for the same reason.
