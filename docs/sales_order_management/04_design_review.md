@@ -1,5 +1,7 @@
 # Sales Order Management Independent Design Review
 
+> **Current readiness (2026-09-30): BLOCKED — candidate baseline refresh.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and proposed disposition are in `09_final_alignment_review.md` §12. No product implementation or acceptance execution has occurred.
+
 ## 0. Reviewer provenance
 
 | Field | Value |
@@ -166,3 +168,14 @@ This document was brought to the Harness 2.0 canonical set on 2026-09-15. The fi
 severities and their dispositions are unchanged from the v1 review; only reviewer provenance, the reviewed baseline and
 the human gate record were added. The gate remains `CONDITIONAL` for implementation entry: planning and estimation may
 proceed, and implementation of an affected Phase stays blocked until that Phase's entry criteria are met.
+
+## 6. Separate-agent refresh review — REV-003 (2026-09-30)
+
+- Method: `SEPARATE_AGENT`; author: Codex `/root`; reviewer: Codex `/root/sales_readiness_review` (separate GPT-6-astra context, read-only).
+- Reviewed source: `dd36250819b80cb679c688bc8a893e694119f66a`.
+- Reviewed DESIGN: `97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2`; reviewed PLAN: `932a40a9b77a1d3d0f56fb701a07b115a155dda21a9b69132fa9eb065413610d`.
+- Actual result: **APPROVE CANDIDATE DOCUMENTATION** after initial and dispatcher-delta review. No new documentation blocker. This is scoped documentation review, not whole-module design approval or implementation authorization.
+- Checked actual five provider diffs/pins, caller-owned boundaries, absent Sales/Inventory reservation/Fulfillment contracts, migration collision, shared SCOPE path precedence, planned developer suite and unchanged formal/Phase gates. Requirement/design/test/UAT/ledger/matrix authorities remain unchanged; only scoped task paths/self-test details changed.
+- Reviewer independently recomputed hashes and observed STRUCTURE_PASS, boundary LOCAL_CHECKS_PASS and DEC-005 OPEN. Product tests/build/Playwright/runtime were NOT_RUN; remote source CI was not independently authenticated by that reviewer.
+- Carried forward: DR-001 and DR-002 are HIGH / OPEN, 0 CRITICAL and 2 HIGH overall. The new review does not accept those risks, fabricate human approval or close the external gates; `risk_approval_id` stays null until the real scoped decision.
+- Source provenance: actual collaboration-agent final responses in this Codex chat from `/root/sales_readiness_review`, including the delta review of the hashes above.
