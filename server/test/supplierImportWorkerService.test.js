@@ -279,9 +279,41 @@ test("precheck that cannot finish for another reason keeps the lease for a retry
   });
   const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
   instance.importService = precheckScript({ id: 4, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
-  await assert.rejects(() => instance.runPrecheck(new AbortController().signal), { code: "BUSINESS_MASTER_NOT_READY" });
+  await assert.rejects(() => instance.runPrecheck(new AbortController().signal), (error) =>
+    error.code === "BUSINESS_MASTER_NOT_READY" && !error.message.includes("not ready"),
+  "the scheduler gets the code only, never the original message (REV-064 H-1)");
   assert.deepEqual(instance.importService.calls, [["claim"]]);
   assert.deepEqual(errors, [["supplier.import.precheck_interrupted", "BUSINESS_MASTER_NOT_READY"]]);
+});
+
+test("a directory or an oversized file at the stored name fails the job instead of being retried", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const directory = "d".repeat(64);
+  await mkdir(path.join(instance.root, "source", directory));
+  instance.importService = precheckScript({ id: 11, mode: "create_only", sourceStoredName: directory, sourceSha256: Buffer.alloc(32) });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls.at(-1),
+    ["complete", { code: "SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", message: "匯入來源檔案無法讀取，請重新上載" }]);
+
+  // 上載之後上限調低咗：讀嗰陣就拒絕，唔會讀晒入記憶體。
+  const stored = await writeSupplierImportSource(instance.root, Buffer.alloc(2_000, 0x41));
+  instance.limits.maxFileBytes = 1_000;
+  instance.importService = precheckScript({ id: 12, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls.at(-1), ["complete", { code: "SUPPLIER_IMPORT_FILE_TOO_LARGE", message: "CSV 檔案超過大小上限" }]);
+});
+
+test("every page of the Business Master catalogue is read, not just the first hundred", async (t) => {
+  const currencies = Array.from({ length: 100 }, (_, index) => ({ code: `C${String(index).padStart(2, "0")}` }));
+  const { instance } = await preparedWorker(t, { businessMaster: {
+    async assertReady() {},
+    async listCurrencies({ page }) { return page === 1 ? currencies : page === 2 ? [{ code: "HKD" }] : []; },
+    async listPaymentTerms() { return []; }
+  } });
+  const stored = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 13, mode: "create_only", sourceStoredName: stored.storedName, sourceSha256: stored.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls[1], ["append", [[1, "valid"]]], "HKD is on the second page");
 });
 
 test("shutdown during a precheck stops before the next batch is written and leaves the job to the lease", async (t) => {

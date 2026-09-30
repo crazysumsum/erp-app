@@ -136,6 +136,31 @@ test("malformed, non-UTF-8, empty, oversized and over-long files are rejected wi
   assert.equal((await run(three, { maxBytes: size - 1 })).jobLevelError.code, "SUPPLIER_IMPORT_FILE_TOO_LARGE");
 });
 
+test("a stray quote in a header or a cell fails the file as malformed and the cell text goes nowhere (REV-064 H-1)", async () => {
+  const header = SUPPLIER_IMPORT_COLUMN_NAMES.join(",");
+  const row = (notes) => SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => ({ ...valid(), notes })[name] ?? "").join(",");
+  for (const [label, text] of [
+    ["quote inside an unquoted cell", `${header}\r\n${row('iban GB29NWBK60161331926819 "x"')}\r\n`],
+    ["space before an opening quote", `${header}\r\n${row(' "GB29NWBK60161331926819"')}\r\n`],
+    ["quote inside a header", `acct"GB29NWBK60161331926819",${header}\r\n`]
+  ]) {
+    const result = await run(text);
+    assert.equal(result.jobLevelError?.code, "SUPPLIER_IMPORT_CSV_MALFORMED", label);
+    assert.equal(JSON.stringify(result).includes("GB29"), false, label);
+  }
+});
+
+test("an abort between batches stops the precheck before the next batch", async () => {
+  const controller = new AbortController();
+  const written = [];
+  await assert.rejects(() => precheckSupplierCsv({
+    source: Buffer.from(csv([valid({ supplierCode: "A" }), valid({ supplierCode: "B" }), valid({ supplierCode: "C" })])),
+    mode: "create_only", connection: noDb, catalog, duplicates: noDuplicates, maxRows: 10, maxBytes: 1_000_000, batchSize: 1,
+    signal: controller.signal, onRows: async (rows) => { written.push(rows); controller.abort(); }
+  }), { name: "AbortError" });
+  assert.equal(written.length, 1);
+});
+
 test("per-row issues are bounded and never echo the cell value", async () => {
   const long = "Z".repeat(1000);   // 30 欄 × 1000 仍然喺 64 KiB 一列嘅上限之內
   const { rows } = await run(csv([Object.fromEntries(SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => [name, long]))]));

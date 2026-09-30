@@ -72,7 +72,8 @@ function sourceError(code, message) {
 export async function readSupplierImportSource(root, storedName, { sha256: expected, maxBytes }) {
   let handle;
   try {
-    handle = await open(supplierImportFilePath(root, "source", storedName), constants.O_RDONLY | constants.O_NOFOLLOW);
+    // O_NONBLOCK：放喺度嘅 FIFO 唔會令 open 卡死（REV-064 I-5）；普通檔冇分別。
+    handle = await open(supplierImportFilePath(root, "source", storedName), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
   } catch (error) {
     if (["ENOENT", "ELOOP", "EMLINK"].includes(error.code)) throw sourceError("SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", "Supplier import source is missing or is a symlink");
     throw error;

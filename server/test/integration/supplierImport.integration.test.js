@@ -403,3 +403,52 @@ integrationTest("TASK-043 manual-check flow over HTTP: template, mixed and Bank 
     ? (await Promise.all((await readdir(requests)).map((name) => readFile(path.join(requests, name), "utf8")))).join("\n") : "";
   assert.equal(logged.includes(BANK_VALUE), false, "the request log never holds the uploaded content");
 });
+
+integrationTest("TASK-043 (REV-064 H-1): a stray quote fails the job as malformed and its cell text reaches no log", async () => {
+  const header = SUPPLIER_IMPORT_COLUMN_NAMES.join(",");
+  const cells = SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => ({
+    supplierCode: `Q-${randomUUID().slice(0, 6)}`, supplierName: "Quote", defaultCurrencyCode: "HKD", notes: `iban ${BANK_VALUE} "x"`
+  })[name] ?? "");
+  const created = await upload(Buffer.from(`${header}\r\n${cells.join(",")}\r\n`));
+  const result = await precheck(created.id);
+  assert.deepEqual([result.status, (await job(created.id)).last_error_code], ["failed", "SUPPLIER_IMPORT_CSV_MALFORMED"]);
+  const logged = [];
+  for (const directory of ["system", "requests"]) {
+    const full = path.join(h.logRoot, directory);
+    if (!fs.existsSync(full)) continue;
+    for (const name of await readdir(full)) logged.push(await readFile(path.join(full, name), "utf8"));
+  }
+  assert.equal(logged.join("\n").includes(BANK_VALUE), false);
+});
+
+integrationTest("TASK-043 (REV-064 H-1/H-2): a precheck that keeps failing is abandoned after three attempts", async () => {
+  const created = await upload(csv([{ supplierCode: `A-${randomUUID().slice(0, 6)}`, supplierName: "Again", defaultCurrencyCode: "HKD" }]));
+  const service = h.worker.importService;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const claimed = await service.claimForPrecheck({ leaseOwner: `crash-${attempt}`, leaseDurationMs: 1000 });
+    assert.equal(claimed?.id, created.id, `attempt ${attempt} is claimed`);
+    clock += 5_000;   // 每次都死咗，lease 過期
+  }
+  assert.equal(await service.claimForPrecheck({ leaseOwner: "crash-4", leaseDurationMs: 1000 }), null);
+  const abandoned = await job(created.id);
+  assert.deepEqual([abandoned.status, abandoned.last_error_code, abandoned.lease_until], ["failed", "SUPPLIER_IMPORT_PRECHECK_FAILED", null]);
+  assert.notEqual(abandoned.completed_at, null);
+  const [[audit]] = await h.db.query(
+    "SELECT detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.precheck'", [created.id]);
+  assert.equal(audit.detail.after.errorCode, "SUPPLIER_IMPORT_PRECHECK_FAILED");
+});
+
+integrationTest("TASK-043 (REV-064 L-2): every appended batch renews the precheck lease", async () => {
+  const created = await upload(csv([{ supplierCode: `R-${randomUUID().slice(0, 6)}`, supplierName: "Renew", defaultCurrencyCode: "HKD" }]));
+  const service = h.worker.importService;
+  const claimed = await service.claimForPrecheck({ leaseOwner: "renewer", leaseDurationMs: 1000 });
+  assert.equal(claimed?.id, created.id);
+  const before = Number((await job(created.id)).lease_until);
+  clock += 500;
+  await service.appendPrecheckRows({ jobId: created.id, leaseOwner: "renewer", leaseDurationMs: 1000, rows: [{
+    rowNumber: 1, operation: "create", matchSupplierId: null, expectedSupplierVersion: null,
+    normalizedPayload: { root: {} }, status: "valid", errors: [], warnings: []
+  }] });
+  assert.equal(Number((await job(created.id)).lease_until), before + 500);
+  await service.completePrecheck({ jobId: created.id, leaseOwner: "renewer" });
+});

@@ -107,10 +107,12 @@ export class SupplierImportWorkerService extends BaseService {
       });
     } catch (error) {
       if (!SOURCE_ERRORS[error?.code]) {
-        // 唔記 message：可能帶 SQL 值。
+        // 唔記、亦唔拋出原本嘅 message：可能帶 SQL 值或者 CSV 內容，而 scheduler 會將拋出嘅 message
+        // 寫入 system log 同 job stats（REV-064 H-1）。只帶 code。次數由 claim 封頂（MAX_PRECHECK_ATTEMPTS）。
         void this.logger?.error?.("supplier.import.precheck_interrupted", "Supplier import precheck stopped and will be retried",
           { jobId: job.id, name: error?.name ?? "Error", code: error?.code ?? null, publicCode: error?.publicCode ?? null });
-        throw error;
+        throw Object.assign(new Error("Supplier import precheck stopped and will be retried"),
+          { code: error?.code ?? null, publicCode: error?.publicCode ?? null });
       }
       outcome = { jobLevelError: { code: error.code, message: SOURCE_ERRORS[error.code] } };
     }

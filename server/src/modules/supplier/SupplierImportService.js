@@ -71,6 +71,9 @@ const JOB_COLUMNS = `id, mode, activation_mode, approver_user_id, approval_setti
 const SUMMARY_COLUMNS = `id, template_version, mode, status, total_count, valid_count, warning_count, invalid_count,
   last_error_code, error_summary, created_at, updated_at, version`;
 const IMPORT_MODES = Object.freeze(["create_only", "upsert"]);
+// Precheck 最多做幾次。上載時 version = 1，之後每次領取 +1（append 唔改 version），所以一個 validating
+// job 已經做過 version - 1 次。夠數仍然未完成，就標 failed，唔好無止境重做（REV-064 H-1、H-2）。
+export const MAX_PRECHECK_ATTEMPTS = 3;
 const MAX_PRECHECK_BATCH = 1000;
 
 /** 對外嘅 job 摘要：唔帶檔名、SHA-256、lease 或者任何路徑（T44 會加欄位）。 */
@@ -183,7 +186,11 @@ export class SupplierImportService {
         return importJobSummary(job);
       });
     } catch (error) {
-      await removeSupplierImportFile(root, "source", stored.storedName).catch(() => {});
+      // 刪唔到就記低（冇內容），等人或者 T48 清理（REV-064 L-1）。
+      await removeSupplierImportFile(root, "source", stored.storedName).catch((cleanupError) => {
+        void this.logger?.error?.("supplier.import.source_cleanup_failed", "Supplier import source could not be removed after a failed upload",
+          { storedName: stored.storedName, code: cleanupError?.code ?? null });
+      });
       throw error;
     }
   }
@@ -199,12 +206,27 @@ export class SupplierImportService {
     return this.database.withTransaction(async (connection) => {
       const nowMs = this.time.nowMs();
       const [[job]] = await connection.query(
-        `SELECT id, mode, status, source_stored_name, source_sha256 FROM supplier_import_jobs
+        `SELECT id, mode, status, source_stored_name, source_sha256, created_by, version FROM supplier_import_jobs
           WHERE status = 'uploaded' OR (status = 'validating' AND (lease_until IS NULL OR lease_until < ?))
           ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED`,
         [nowMs]
       );
       if (!job) return null;
+      if (job.status === "validating" && Number(job.version) - 1 >= MAX_PRECHECK_ATTEMPTS) {
+        assertJobTransition(job.status, "failed");
+        await connection.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [job.id]);
+        await connection.execute(
+          `UPDATE supplier_import_jobs SET status = 'failed', last_error_code = 'SUPPLIER_IMPORT_PRECHECK_FAILED',
+                  error_summary = '預檢多次未能完成，請檢查檔案後重新上載或聯絡系統管理員', lease_owner = '', lease_until = NULL,
+                  completed_at = ?, updated_at = ?, version = version + 1
+            WHERE id = ?`,
+          [nowMs, nowMs, job.id]
+        );
+        await this.#recordPrecheckAudit(connection, job, { after: { status: "failed", errorCode: "SUPPLIER_IMPORT_PRECHECK_FAILED" } });
+        void this.logger?.error?.("supplier.import.precheck_abandoned", "Supplier import precheck failed too often and was abandoned",
+          { jobId: Number(job.id), attempts: Number(job.version) - 1 });
+        return null;
+      }
       assertJobTransition(job.status, "validating");
       await connection.execute(
         `UPDATE supplier_import_jobs SET status = 'validating', lease_owner = ?, lease_until = ?,
@@ -217,6 +239,17 @@ export class SupplierImportService {
         id: Number(job.id), mode: job.mode, sourceStoredName: job.source_stored_name,
         sourceSha256: Buffer.from(job.source_sha256), resumed: job.status === "validating"
       };
+    });
+  }
+
+  /** Precheck 嘅 audit 記喺上載者名下（precheck 冇 request actor）。 */
+  async #recordPrecheckAudit(connection, job, detail) {
+    const [[user]] = job.created_by === null
+      ? [[null]]
+      : await connection.query("SELECT username FROM users WHERE id = ?", [job.created_by]);
+    await this.audit.record(connection, {
+      actorUserId: job.created_by, actorUsername: user?.username ?? "", action: "import.precheck",
+      targetType: "import", targetId: Number(job.id), targetLabel: `import-${job.id}`, detail
     });
   }
 
@@ -290,13 +323,7 @@ export class SupplierImportService {
         );
         detail = { after: { status, totalCount: total, validCount: counts.valid, warningCount: counts.warning, invalidCount: counts.invalid } };
       }
-      const [[user]] = job.created_by === null
-        ? [[null]]
-        : await connection.query("SELECT username FROM users WHERE id = ?", [job.created_by]);
-      await this.audit.record(connection, {
-        actorUserId: job.created_by, actorUsername: user?.username ?? "", action: "import.precheck",
-        targetType: "import", targetId: jobId, targetLabel: `import-${jobId}`, detail
-      });
+      await this.#recordPrecheckAudit(connection, job, detail);
       const [[summary]] = await connection.query(`SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ?`, [jobId]);
       return importJobSummary(summary);
     });

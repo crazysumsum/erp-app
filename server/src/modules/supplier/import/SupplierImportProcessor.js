@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import { parse } from "csv-parse";
+import { CsvError, parse } from "csv-parse";
 
 import { normalizeAddress } from "../SupplierAddressService.js";
 import { normalizeContact } from "../SupplierContactService.js";
@@ -351,7 +351,9 @@ export async function precheckSupplierCsv({
       if (batch.length >= batchSize) await flush();
     }
   } catch (error) {
-    if (error?.code?.startsWith?.("CSV_")) return jobError("SUPPLIER_IMPORT_CSV_MALFORMED", "CSV 格式不符合 RFC 4180（引號或欄數不正確）");
+    // 所有 csv-parse 錯誤（包括 code 唔係 CSV_ 開頭嘅 INVALID_OPENING_QUOTE）都係檔案問題。佢哋嘅
+    // message 帶住 cell 內容，所以唔可以再拋出去（REV-064 H-1）。
+    if (error instanceof CsvError) return jobError("SUPPLIER_IMPORT_CSV_MALFORMED", "CSV 格式不符合 RFC 4180（引號或欄數不正確）");
     throw error;
   }
   if (!headers) return jobError("SUPPLIER_IMPORT_CSV_EMPTY", "CSV 沒有欄位名稱或資料列");

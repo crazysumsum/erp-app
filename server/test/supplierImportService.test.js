@@ -81,3 +81,26 @@ test("upload refuses an empty or oversized file and an unknown mode before anyth
   // 啱啱好喺上限：過咗檢查，去到寫檔（呢個 root 唔存在，所以喺檔案系統度失敗）。
   await assert.rejects(() => upload({}), { code: "ENOENT" });
 });
+
+test("an upload whose file cannot be removed after a failed insert is logged, without content (REV-064 L-1)", async (t) => {
+  const { chmod, mkdtemp, readdir, rm } = await import("node:fs/promises");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const { prepareSupplierImportRoot } = await import("../src/services/supplierImport/supplierImportFiles.js");
+  const base = await mkdtemp(path.join(os.tmpdir(), "supplier-import-cleanup-"));
+  const root = await prepareSupplierImportRoot(path.join(base, "imports"));
+  const source = path.join(root, "source");
+  t.after(async () => { await chmod(source, 0o700); await rm(base, { recursive: true, force: true }); });
+  const logged = [];
+  const importer = new SupplierImportService({
+    database: { async withTransaction(work) { return work({}); } }, time: { nowMs: () => 1 },
+    logger: { error: (event, _message, context) => logged.push([event, context]) },
+    // 驗 actor 嗰陣令 source 目錄唔寫得，再拒絕：刪檔一定失敗。
+    authorize: async () => { await chmod(source, 0o500); throw Object.assign(new Error("stale"), { code: "STALE" }); }
+  });
+  await assert.rejects(() => importer.createFromUpload({
+    actorId: 1, root, mode: "create_only", content: Buffer.from("secret,value"), maxFileBytes: 100
+  }), { code: "STALE" }, "the original error is still what the caller gets");
+  const [stored] = await readdir(source);
+  assert.deepEqual(logged, [["supplier.import.source_cleanup_failed", { storedName: stored, code: "EACCES" }]]);
+});
