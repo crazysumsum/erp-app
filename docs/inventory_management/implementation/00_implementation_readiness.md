@@ -2,10 +2,13 @@
 
 ## Status
 
-`IMPLEMENTING` P2 local verification — Sam approved HD-066's exact DESIGN／PLAN hashes through HD-067, local main integration／migration renumbering through HD-068, and isolated task-owned MySQL checks through HD-069. TASK-001～TASK-018 are integrated into `main` through PR #164. TASK-019～TASK-022 have local developer checks on the P2 branch; TASK-023～TASK-025 remain pending review and complete Phase-gate evidence. P2 has not passed its merge gate, and no formal Technical Acceptance or UAT is claimed.
+`IMPLEMENTING` — P2 is integrated into `main` through PR #171, merge commit `d6397e020dbcbd70194995cd52755b3d91ec94be`. TASK-001～TASK-018 were integrated through PR #164; TASK-019～TASK-025 now satisfy their IMPLEMENT DoD. Sam approved exact head `be171ad` conditionally on CI (APR-081); all five actual CI checks and live-runtime pre-merge `MERGE_READY` passed. Private runtime was precisely cleaned afterward, original evidence retained. Remaining module work starts with P3/TASK-026; the module is not yet `READY_FOR_TESTING`. No formal Technical Acceptance, UAT, business acceptance or production deployment is claimed.
 
 ## Baseline
 
+- Current approved DESIGN: `53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce`.
+- Current approved PLAN: `ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973`.
+- PR #171 approved head: `be171ad87b752104c7a89f023f3c8d4132eecc99`; observed merge: `d6397e020dbcbd70194995cd52755b3d91ec94be`. Earlier approvals and local checkpoints below are retained as history.
 - Historical 0.3 design approval: `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`.
 - Historical 0.3 plan approval: `8a647f900e8b21ba0cacb3361beb489aa30085cec1c2b8d6c043bf0e72e92bbf`.
 - Historical 0.5 DESIGN: `23bdae2d85dc2546e641c19ccf3cd604ef3a068fb43149ae10341f0e54c87eef`.
@@ -379,7 +382,9 @@ Final Harness unit evidence is 155/155 with zero skips, lint and client-build PA
 
 ## Next safe action
 
-Sam 已批准並套用 HD-075 方案 A；精確範圍、baseline approvals 及五組 fresh developer evidence 已完成。Sam 後續回覆「批准發布」（APR-080），授權 push／P2 PR／所需 CI，不是完整 candidate 的獨立 code review 或合併授權。最新 main `8bc4a4c` 已無衝突納入分支，整合後五組 Harness developer checks、client687/687、Inventory Playwright18/18（另一次絕對輸出路徑重驗同樣18/18）及 audit零漏洞均通過；原始證據及一次未執行的 SOURCE_CHANGED preflight 保護原因見 `evidence/local-publication-20260930/README.md`。EXT-115 的隔離 MySQL 已精確清理，合成資料不可恢復。接著發布 PR、觀察實際候選 CI 並供 Sam 審閱，不合併。TASK-023～025 保持 PENDING，不以發布批准或自查代替 DoD／Sam review。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY。
+P2 已完成所需開發驗證、Sam exact-head 批准、五項 CI 及 live-runtime `MERGE_READY`，並於 2026-09-30 合併 PR #171。批准前及發布時的 PENDING／未授權描述保留為歷史，不代表目前狀態。合併前原始 CI、gate 及清理證據見 `evidence/local-merge-20260930/README.md`；EXT-116 合成資料已精確刪除、不可恢復，報告保留。下一步可按既定計劃準備 P3／TASK-026；本次合併請求未執行 P3 程式變更。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY，不以 IMPLEMENT DoD 代替正式驗收。
+
+Sam 於 2026-09-30 要求「進行P2 文件收尾」（APR-082）：僅將合併後 state、readiness、五組原始開發報告及 merge checkpoint 整理為獨立 docs-only commit／PR，已發布為 [PR #172](https://github.com/crazysumsum/erp-app/pull/172)。本次不改 DESIGN／PLAN、產品／測試／migration／CI 設定，不啟動 P3；PR #171 的批准及 CI 不適用於新文件 PR。文件 PR 保持開啟，等待自己的審閱、CI 及合併批准。原始報告中的舊 worktree／runtime 路徑是執行時 provenance，清理後不再可用，不應改寫。
 
 ### HD-075 narrow shared regression-test boundary — historical proposal
 
