@@ -71,6 +71,22 @@
       "side_effects": ["FILES", "ISOLATED_DATA"],
       "env_keys": ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_INTEGRATION_TESTS"],
       "redaction_env_keys": ["DB_PASSWORD"]
+    },
+    {
+      "id": "sales-foundation-developer", "kind": "UNIT",
+      "argv": ["node", "--test", "--import", "./server/test-support/testEnv.js",
+               "--test-reporter=junit", "--test-reporter-destination={run_dir}/sales-foundation.xml",
+               "server/test/uploadLimits.test.js", "server/test/configNormalizers.test.js",
+               "server/test/fileTransfer.test.js", "server/test/fileTransferFailureModes.test.js",
+               "server/test/applicationFactory.test.js", "server/test/permissionCatalogueConventions.test.js",
+               "server/test/permissionCatalogueStartupGuard.test.js", "server/test/directoryLookups.test.js",
+               "server/test/apiDispatcher.test.js", "server/test/sales"],
+      "cwd": ".", "timeout_seconds": 900,
+      "result_adapter": "JUNIT", "result_path": "sales-foundation.xml",
+      "min_tests": 6, "max_skipped": 0, "stages": ["DEVELOPER"],
+      "required_case_ids": ["TC-003", "TC-004", "TC-005", "TC-006", "TC-007", "TC-008"],
+      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."}],
+      "side_effects": ["FILES"], "env_keys": [], "redaction_env_keys": ["DB_PASSWORD"]
     }
   ],
   "ci": {
@@ -79,7 +95,8 @@
       "Dependency audit",
       "Lint",
       "Test (server + client, MySQL integration)",
-      "Build frontend"
+      "Build frontend",
+      "Browser tests (Playwright)"
     ]
   },
   "acceptance": {
