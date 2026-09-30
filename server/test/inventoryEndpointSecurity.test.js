@@ -40,7 +40,7 @@ function strategies() {
 }
 
 test("TASK-018 every Core endpoint fails closed for missing, unauthorized and stale actors", async () => {
-  assert.equal(handlers.length, 24);
+  assert.equal(handlers.length, 25);
   const authentication = strategies();
   const authorization = createAuthorizationPolicyRegistry();
 

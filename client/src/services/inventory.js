@@ -38,5 +38,19 @@ export default {
   listLots(options) { return list("/api/v1/inventory/lots", options); },
   listExpiry(options) { return list("/api/v1/inventory/expiry", options); },
   listMovements(options) { return list("/api/v1/inventory/movements", options); },
-  getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); }
+  getMovement(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/movements/${id}`, { signal }); },
+  postIssue(payload) { return write("/api/v1/inventory/issues", payload); },
+  listReservations(options) { return list("/api/v1/inventory/reservations", options); },
+  getReservation(id, { signal } = {}) { return httpClient.get(`/api/v1/inventory/reservations/${id}`, { signal }); },
+  createReservation(payload) { return write("/api/v1/inventory/reservations/create", payload); },
+  releaseReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/release`, payload); },
+  cancelReservation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/cancel`, payload); },
+  listAllocationCandidates(id, { requestedQuantity, page, signal } = {}) {
+    return httpClient.get(`/api/v1/inventory/reservations/${id}/allocation-candidates`, {
+      params: { requestedQuantity, page }, signal
+    });
+  },
+  createAllocation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/allocations/create`, payload); },
+  releaseAllocation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/allocations/release`, payload); },
+  reallocateAllocation(id, payload) { return write(`/api/v1/inventory/reservations/${id}/allocations/reallocate`, payload); }
 };

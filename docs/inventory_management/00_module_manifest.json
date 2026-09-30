@@ -17,7 +17,11 @@
     "test_paths": [
       "server/test/**/inventory*.test.js",
       "client/test/**/inventory*.test.js",
-      "client/e2e/inventory-management/**"
+      "client/e2e/inventory-management/**",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/inventory_management/**",
@@ -54,7 +58,11 @@
       "docs/items_management/**",
       "docs/purchasing_receiving_management/**",
       "docs/sales_order_management/**",
-      "docs/fulfillment_shipping_management/**"
+      "docs/fulfillment_shipping_management/**",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -76,9 +84,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v7",
+        "version": "planning-v8",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "9df21d75c290dab878991e8e42ec9eeef4c35b0e4a43783b33f7c3c7444b5f92",
+        "sha256": "6fc91e710adc48ec56fb567fa24b8b378741f0b48ffcb115d2a54c08927844ce",
         "consumers": [
           "purchasing-receiving",
           "sales-order",

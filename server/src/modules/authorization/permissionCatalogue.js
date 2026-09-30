@@ -42,7 +42,9 @@ export const PERMISSION_CATALOGUE = Object.freeze([
   Object.freeze({ name: "inventory.operation", description: "執行一般庫存、預留、調撥及盤點操作" }),
   Object.freeze({ name: "inventory.mgmt", description: "管理倉庫、庫位、期初庫存及上線" }),
   Object.freeze({ name: "inventory.adjust", description: "執行庫存調整、狀態轉移、沖銷及盤點過帳" }),
-  Object.freeze({ name: "inventory.fefo.override", description: "在仍符合庫存資格時偏離 FEFO 揀貨次序" })
+  Object.freeze({ name: "inventory.fefo.override", description: "在仍符合庫存資格時偏離 FEFO 揀貨次序" }),
+  Object.freeze({ name: "sales.operation", description: "執行銷售預留及其釋放或取消" }),
+  Object.freeze({ name: "fulfillment.operation", description: "執行履約庫存分配及出庫" })
 ]);
 
 /** 目錄裡所有權限的名字，供比對用。 */

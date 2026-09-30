@@ -125,6 +125,8 @@
         "./server/test-support/testEnv.js",
         "--test-reporter=junit",
         "--test-reporter-destination={run_dir}/inventory-developer.xml",
+        "server/test/inventoryAllocationHandlers.test.js",
+        "server/test/inventoryAllocationTransitions.test.js",
         "server/test/inventoryAuditService.test.js",
         "server/test/inventoryConfig.test.js",
         "server/test/inventoryEndpointSecurity.test.js",
@@ -132,16 +134,22 @@
         "server/test/inventoryFoundation.test.js",
         "server/test/inventoryInquiryHandlers.test.js",
         "server/test/inventoryInquiryService.test.js",
+        "server/test/inventoryIssueService.test.js",
         "server/test/inventoryLockService.test.js",
         "server/test/inventoryMasterHandlers.test.js",
         "server/test/inventoryMasterMigration.test.js",
         "server/test/inventoryMasterService.test.js",
         "server/test/inventoryOperationHash.test.js",
         "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryPickSequence.test.js",
         "server/test/inventoryPostingHandlers.test.js",
         "server/test/inventoryPostingService.test.js",
         "server/test/inventoryProjections.test.js",
+        "server/test/inventoryProviderContracts.test.js",
         "server/test/inventoryQuantity.test.js",
+        "server/test/inventoryReservationHandlers.test.js",
+        "server/test/inventoryReservationInquiryHandlers.test.js",
+        "server/test/inventoryReservationService.test.js",
         "server/test/inventoryTestSupport.test.js",
         "server/test/inventoryValidation.test.js"
       ],
@@ -171,6 +179,70 @@
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
+    },
+    {
+      "id": "inventory-p2-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p2-database.xml",
+        "server/test/integration/inventoryTask022.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p2-database.xml",
+      "min_tests": 7,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": ["mysql", "--version"],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": ["FILES", "ISOLATED_DATA"],
+      "env_keys": ["DB_NAME", "DB_SOCKET", "DB_INTEGRATION_TESTS", "INVENTORY_TASK025_TESTS"],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p2-api",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p2-api.xml",
+        "server/test/integration/inventoryTask025Api.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p2-api.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": ["mysql", "--version"],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": ["FILES", "ISOLATED_DATA"],
+      "env_keys": ["DB_NAME", "DB_SOCKET_PATH", "DB_USER", "DB_PASSWORD", "DB_INTEGRATION_TESTS", "INVENTORY_TASK025_API_TESTS", "SUPPLIER_BANK_ACTIVE_KEY_ID", "SUPPLIER_BANK_ENCRYPTION_KEYS", "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID", "SUPPLIER_BANK_LOOKUP_KEYS", "CUSTOMER_BANK_ACTIVE_KEY_ID", "CUSTOMER_BANK_ENCRYPTION_KEYS", "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID", "CUSTOMER_BANK_LOOKUP_KEYS"],
+      "redaction_env_keys": ["DB_PASSWORD", "SUPPLIER_BANK_ENCRYPTION_KEYS", "SUPPLIER_BANK_LOOKUP_KEYS", "CUSTOMER_BANK_ENCRYPTION_KEYS", "CUSTOMER_BANK_LOOKUP_KEYS"]
     },
     {
       "id": "inventory-technical",

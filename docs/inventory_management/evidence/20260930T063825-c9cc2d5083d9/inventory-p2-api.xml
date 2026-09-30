@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="DEV-025-API-01 real HTTP and provider permission boundaries" time="0.197463" disabled="0" errors="0" tests="1" failures="0" skipped="0" timestamp="2026-09-30T06:38:25.698Z" hostname="samMacBook-Pro.local">
+		<testcase name="DEV-025-API-02 Sales Reservation to FEFO Allocation to Fulfillment Issue" time="0.019274" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask025Api.integration.test.js"/>
+	</testsuite>
+	<!-- tests 2 -->
+	<!-- suites 0 -->
+	<!-- pass 2 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 355.331083 -->
+</testsuites>
