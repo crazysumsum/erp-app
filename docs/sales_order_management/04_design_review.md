@@ -1,5 +1,7 @@
 # Sales Order Management Independent Design Review
 
+> **Current readiness (2026-09-30): PLANNED — scoped TASK-001～008 candidate approved.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and human disposition are in `09_final_alignment_review.md` §12/§14. No product implementation or acceptance execution has occurred.
+
 ## 0. Reviewer provenance
 
 | Field | Value |
@@ -166,3 +168,22 @@ This document was brought to the Harness 2.0 canonical set on 2026-09-15. The fi
 severities and their dispositions are unchanged from the v1 review; only reviewer provenance, the reviewed baseline and
 the human gate record were added. The gate remains `CONDITIONAL` for implementation entry: planning and estimation may
 proceed, and implementation of an affected Phase stays blocked until that Phase's entry criteria are met.
+
+## 6. Separate-agent refresh review — REV-003 (2026-09-30)
+
+- Method: `SEPARATE_AGENT`; author: Codex `/root`; reviewer: Codex `/root/sales_readiness_review` (separate GPT-6-astra context, read-only).
+- Reviewed source: `dd36250819b80cb679c688bc8a893e694119f66a`.
+- Reviewed DESIGN: `97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2`; reviewed PLAN: `932a40a9b77a1d3d0f56fb701a07b115a155dda21a9b69132fa9eb065413610d`.
+- Actual result: **APPROVE CANDIDATE DOCUMENTATION** after initial and dispatcher-delta review. No new documentation blocker. This is scoped documentation review, not whole-module design approval or implementation authorization.
+- Checked actual five provider diffs/pins, caller-owned boundaries, absent Sales/Inventory reservation/Fulfillment contracts, migration collision, shared SCOPE path precedence, planned developer suite and unchanged formal/Phase gates. Requirement/design/test/UAT/ledger/matrix authorities remain unchanged; only scoped task paths/self-test details changed.
+- Reviewer independently recomputed hashes and observed STRUCTURE_PASS, boundary LOCAL_CHECKS_PASS and DEC-005 OPEN. Product tests/build/Playwright/runtime were NOT_RUN; remote source CI was not independently authenticated by that reviewer.
+- Carried forward: DR-001 and DR-002 are HIGH / OPEN, 0 CRITICAL and 2 HIGH overall. The new review does not accept those risks, fabricate human approval or close the external gates; `risk_approval_id` stays null until the real scoped decision.
+- Source provenance: actual collaboration-agent final responses in this Codex chat from `/root/sales_readiness_review`, including the delta review of the hashes above.
+
+## 7. Human scoped approval (2026-09-30)
+
+Sam replied「核准commit 和create pr 合併到main」to the reviewed candidate and publication decision. Fresh DESIGN/PLAN, shared SCOPE, scoped RISK and unchanged NFR-014/015 UAT_NA approvals are recorded in the state at the exact §6 hashes; REV-003 now references APR-RISK-20260930. This supersedes the pending human disposition in §6 without rewriting its original observation. DR-001/002 remain HIGH/OPEN; TASK-001～008 only may enter implementation, with full formal/Phase gates preserved. This approval also authorizes this documentation PR's publication and merge; it grants no later task, formal acceptance or release.
+
+Approval-pointer reconciliation: NFR-014/015 in the ledger now reference `APR-UAT_NA-20260930` instead of the stale historical ID. Final PLAN is `a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966`; DESIGN remains `97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2`. This mechanical recording of the approved carry-forward does not change applicability, requirements, task scope or test gates. Historical §6/§12 hashes remain recorded as reviewed at that time.
+
+Final separate-agent delta review by `/root/sales_readiness_review`: APPROVE final documentation candidate, no new blockers. Reviewer independently verified final DESIGN/PLAN, exactly two ledger approval-pointer replacements and generated matrix, preserved historical approvals, unchanged scope/gates, PLAN_READY LOCAL_CHECKS_PASS and whitespace validation. Source: actual final collaboration-agent response in this Codex chat.

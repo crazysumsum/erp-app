@@ -27,7 +27,16 @@
       "server/test/integration/sales*.integration.test.js",
       "server/test-support/fakeSalesDatabase.js",
       "client/test/**/sales*.test.js",
-      "client/e2e/sales-order-management/**"
+      "client/e2e/sales-order-management/**",
+      "server/test/uploadLimits.test.js",
+      "server/test/configNormalizers.test.js",
+      "server/test/fileTransfer.test.js",
+      "server/test/fileTransferFailureModes.test.js",
+      "server/test/applicationFactory.test.js",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/permissionCatalogueStartupGuard.test.js",
+      "server/test/directoryLookups.test.js",
+      "server/test/apiDispatcher.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -72,7 +81,19 @@
       "docs/fulfillment_shipping_management/**",
       "docs/inventory_management/**",
       "docs/customer_management/**",
-      "docs/items_management/**"
+      "docs/items_management/**",
+      "server/src/services/filetype/FileTypeService.js",
+      "server/src/services/filetype/builtInFileTypes.js",
+      "server/test/uploadLimits.test.js",
+      "server/test/configNormalizers.test.js",
+      "server/test/fileTransfer.test.js",
+      "server/test/fileTransferFailureModes.test.js",
+      "server/test/applicationFactory.test.js",
+      "server/test/permissionCatalogueConventions.test.js",
+      "server/test/permissionCatalogueStartupGuard.test.js",
+      "server/test/directoryLookups.test.js",
+      "server/src/framework/middleware/apiDispatcher.js",
+      "server/test/apiDispatcher.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -116,9 +137,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f",
+        "sha256": "9df21d75c290dab878991e8e42ec9eeef4c35b0e4a43783b33f7c3c7444b5f92",
         "regression_suites": [
           "sales-technical"
         ]
@@ -126,9 +147,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "observed-main-dd36250",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776",
+        "sha256": "ab567021254b09d5103caac5bba9b2e3324c0278e726d84999870abcdd7fe440",
         "regression_suites": [
           "sales-technical"
         ]
@@ -136,9 +157,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-0ca4e9f-PARTIAL",
+        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90",
+        "sha256": "2f6924b6545395a56581619d0f621a215f0aa18115115071cc8ed00d023c685a",
         "regression_suites": [
           "sales-technical"
         ]
@@ -146,9 +167,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-main-0ca4e9f",
+        "version": "observed-main-dd36250",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf",
+        "sha256": "4bf3b094d3f62dd61f89190feb453f156f22a10b1b8cbd9cb4864e4f1b45c80b",
         "regression_suites": [
           "sales-technical"
         ]
@@ -156,9 +177,9 @@
       {
         "module_id": "framework",
         "id": "idempotency-service",
-        "version": "observed-main-0ca4e9f",
+        "version": "observed-main-dd36250",
         "source": "server/src/services/idempotency/IdempotencyService.js",
-        "sha256": "6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925",
+        "sha256": "a4bcd80a3c5b067515b3200ea9de1cad0ec5e6f96f8824c2103cd1af0e97a291",
         "regression_suites": [
           "sales-technical"
         ]

@@ -1,5 +1,7 @@
 # Sales Order Management Final Alignment Review
 
+> **Current readiness (2026-09-30): PLANNED — scoped TASK-001～008 candidate approved.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and human disposition are in `09_final_alignment_review.md` §12/§14. No product implementation or acceptance execution has occurred.
+
 ## 1. Mode, Scope and Baseline
 
 | Item | Result |
@@ -184,3 +186,106 @@ This is why **all eight** v2 modules in this repository report `BLOCKED` on `sta
 
 Scope limits are unchanged: `TASK-009`, `TASK-010`, the `PHASE-001` exit gate and `PHASE-002`–`PHASE-005` stay blocked while `DR-001` and `DR-002` are open.
 
+
+## 12. Current scoped implementation readiness refresh (2026-09-30)
+
+### Scope, authority and observed baseline
+
+- Active mode remains `REVIEW_AND_ALIGN`; this change prepares entry to `IMPLEMENT` and writes only `docs/sales_order_management/**`.
+- User authorization: current Codex chat, 2026-09-30, Sam's exact reply **「同意，請推進」** to the preceding recommendation to repair the planning baseline, scope and self-test configuration, then resume TASK-001～008 after PLAN_READY. This is authority for preparing this candidate; it is not recorded as approval of a future, unseen hash.
+- Fetched default/worktree source: `dd36250819b80cb679c688bc8a893e694119f66a` (`origin/main`; fresh worktree branch `codex/sales-readiness-refresh`). Recovery point is this exact committed source; no source documents were deleted.
+- Candidate DESIGN hash: `97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2`.
+- Candidate PLAN hash: `932a40a9b77a1d3d0f56fb701a07b115a155dda21a9b69132fa9eb065413610d`.
+- Requirement/design narrative, provided Sales contract file, stable FR/DES/PHASE/TASK/TC/UAT IDs and formal acceptance flags are unchanged. Manifest scope/contracts, project profile and task-level path/self-test details changed, so old DESIGN/PLAN/risk/SCOPE/UAT_NA approval use is invalidated by hash; historical records remain intact.
+
+### Reviewed consumed-contract changes
+
+Hash refresh follows the actual diff review above; it is not approval or proof of provider readiness.
+
+| Contract | Prior pinned SHA-256 | Reviewed current SHA-256 | Compatibility and readiness conclusion |
+| --- | --- | --- | --- |
+| `inventory-batch-reserve-release-contract` | `ffbffdf71a6b2cd639ba41f68c5bfe1965310d920387023908ef1070d881790f` | `9df21d75c290dab878991e8e42ec9eeef4c35b0e4a43783b33f7c3c7444b5f92` | Reviewed 44 additions / 37 deletions since ea601dd: exact MySQL 26.7.0, approved Item transaction lookup/SKU name, migration allocations and evidence rules. These do not implement the Sales-specific reserve/release contract. Inventory reservations/allocations are not present on this source baseline; DR-001/002 remain open. |
+| `customer-snapshot-and-credit-contract` | `f132bb6122586508153b0356c5a6c29c8d79a55bb5f0afbe6f8c2b699d445776` | `ab567021254b09d5103caac5bba9b2e3324c0278e726d84999870abcdd7fe440` | Reviewed 25 additions / 3 deletions: Business Master impact checker, bank normalization hardening and durable export. Sales findById(purpose:new_sale)/getCreditPolicy signatures are unchanged and now implemented. Sales consumer integration/owner proof remains TASK-009 work. |
+| `item-lookup-service` | `6aff6504eb3cae4347c05a7deaba1c4c7eb1e2de3142f9a7de1eb4587c2f8d90` | `2f6924b6545395a56581619d0f621a215f0aa18115115071cc8ed00d023c685a` | Reviewed additive skuName and Inventory transaction/UOM helpers. Existing generic lookup remains available; findManyForSale/findSaleUom/searchForSale and suggested-price Sales projection remain absent. Do not replace those contracts with raw table reads. |
+| `permission-catalogue` | `bc0828b5052be1cad23ac6db941f23fde802d482db1c64aa8dadccee87e21fdf` | `4bf3b094d3f62dd61f89190feb453f156f22a10b1b8cbd9cb4864e4f1b45c80b` | Reviewed additive Customer/Supplier/Inventory permissions. Existing permission semantics unchanged; Sales permissions are not seeded or exposed. |
+| `idempotency-service` | `6f0f61e8507c206d3d47d93cbf0d099dc916bb95e3de02f163c4283bd7c17925` | `a4bcd80a3c5b067515b3200ea9de1cad0ec5e6f96f8824c2103cd1af0e97a291` | Reviewed identityScope broadening from jwt-only to authenticated non-public identities; jwt-password/device identities no longer fall back to IP. Existing actor scoping is reused; no Sales-specific bypass. |
+
+### Current provider and migration observations
+
+| Dependency | Observed source | Current disposition |
+| --- | --- | --- |
+| Customer | `server/src/modules/customer/CustomerLookupService.js`: `findById`, `getCreditPolicy`, allowlisted `new_sale` | Core provider exists. Historical "Customer absent" is superseded. TASK-009 and owner/consumer contract proof are not marked DONE or newly authorized. |
+| Item | `server/src/modules/item/ItemLookupService.js` | Generic/batch and Inventory lookup exist; named Sales lookup/price projection still missing. TASK-009 remains blocked for entry. |
+| Inventory | `server/src/modules/inventory/` | Core/master/posting/inquiry exist; `InventoryReservationService`, Sales batch reserve/release and reservation-state lookup are absent. DR-001/002 and TASK-010 remain blocked. |
+| Fulfillment | no `server/src/modules/fulfillment/` | Lifecycle/open-matter/archive coordination unavailable; downstream/archive remain fail closed. |
+| Sales | no Sales source, handlers, UI, jobs, migrations or tests | Product implementation has not started. |
+| Migrations | maximum committed file `0062_create_supplier_import_rows.js`; prefixes unique | Do not infer that `0063` is free: Inventory's design still allocates future `0063`/`0064`, while Supplier occupies earlier Inventory-planned `0061`/`0062`. TASK-001 must coordinate current owners before a Sales migration allocation; no file was renamed or number allocated here. |
+
+### Proposed scoped entry and execution policy
+
+1. Restore entry only for `PHASE-001 / TASK-001`～`TASK-008`. TASK-009～011, PHASE-001 completion and PHASE-002～005 remain unauthorized/blocked. No new provider implementation, public Sales route/menu/job, Channel transport or archive enablement.
+2. Primitives/tests use the existing approved `server/test/sales/**` directory. Shared Upload/FileType/regression paths are now explicitly categorized as approval-required. Requested SCOPE approval covers the exact shared paths added to manifest plus Upload/config, permission catalogue and **only** `server/database/migrations/*_seed_sales_permissions.js` for this scope; it does not authorize all other modules/migrations.
+3. `sales-foundation-developer` is a DEVELOPER-only planned suite for the scoped Task self-check. It requires real JUnit nodes, at least six tests, zero skips and TC-003～008 IDs. Sales cases do not exist yet: no runnable/PASS claim is made. Existing full `sales-technical` suite, all 60 formal cases, every Phase developer/merge/exit gate and UAT requirements remain mandatory. This suite cannot make a partial Phase MERGE_READY.
+4. TASK-006 reuses `assertActorFresh()` and makes the already-approved DR-004 helper obligation explicit. It must additionally reject absent/inactive actors and require current Sales permissions, with actual tests; no permission-query reimplementation.
+5. CI required-check names now include the observed `Browser tests (Playwright)` job. Latest default is PR #169's dependency-fix baseline; its CI was observed **in_progress**, not PASS. The earlier failure on bea7b5f is historical. The fetched dd36250 source CI was subsequently observed **success**: all five jobs passed in https://github.com/crazysumsum/erp-app/actions/runs/36676959943. This is source-baseline evidence, not CI for this documentation candidate or a future product candidate. Current-candidate CI and actual code review remain mandatory before implementation merge.
+6. Runtime remains unallocated except this document worktree. Test schema, ports, private temp directory, actual owner and environment authorization must be observed/checkpointed before executing implementation checks. No shared DB, real transaction or live notification is authorized.
+
+### Approval disposition and current gate
+
+`DEC-005` requests a real human decision on these exact candidate DESIGN/PLAN hashes, limited TASK-001～008 risk disposition (DR-001/002 remain OPEN), the specific shared SCOPE above and carry-forward of the unchanged NFR-014/NFR-015 manual-UAT non-applicability. No prior approval hash or reviewer identity is rewritten.
+
+Current status is **BLOCKED pending candidate-bound review/approvals**. Local structural checks may pass while PLAN_READY correctly stays BLOCKED; neither is product/test acceptance. After the decision, record fresh approvals, rerun PLAN_READY, fetch default again, and enter IMPLEMENT in a fresh implementation worktree with actual runtime observations. No product code is written before that handoff.
+
+### Validation and reviewer provenance
+
+Actual separate-agent review: **APPROVE CANDIDATE DOCUMENTATION** by `/root/sales_readiness_review`; provenance, verified hashes and the two carried-forward HIGH findings are recorded in `04_design_review.md` §6. This does not satisfy the pending human risk decision.
+
+The following read-only commands ran against this worktree before the documentation commit:
+
+| Command | Actual result | Scope |
+| --- | --- | --- |
+| `validate_traceability.py docs/sales_order_management --repo-root /private/tmp/erp-sales-readiness --json` | `STRUCTURE_PASS` | Canonical definitions/relations/profile/matrix only; no business or execution PASS. |
+| `validate_module_boundary.py docs/sales_order_management --repo-root /private/tmp/erp-sales-readiness --base dd36250819b80cb679c688bc8a893e694119f66a --json` | `LOCAL_CHECKS_PASS` | Exactly this module's documentation changes; no product writes. |
+| `state_tool.py inspect docs/sales_order_management --repo-root /private/tmp/erp-sales-readiness --json` | `LOCAL_CHECKS_PASS` before commit | Live worktree/spec/source observations; reconcile code_commit again after publishing or at implementation entry. |
+| `git diff --check` | exit 0 | Patch whitespace. |
+| `verify_gate.py docs/sales_order_management --repo-root /private/tmp/erp-sales-readiness --gate PLAN_READY --json` | `BLOCKED` | Candidate-bound DESIGN/PLAN, NFR-014/015 UAT_NA, risk/review disposition and DEC-005 remain pending. All five CONTRACT_DRIFT errors are resolved. |
+
+No application build, Sales developer suite, formal Technical Acceptance, UAT, business acceptance or release was executed. CI evidence above refers only to the fetched source SHA. Historical validation/approval records were preserved.
+
+Requested new shared SCOPE is limited to these planned TASK-001～008 paths:
+
+- `server/config/api.js`;
+- `server/src/framework/upload/normalizeUploadConfig.js`, `uploadConcurrencyGate.js`, `uploadMiddleware.js`, `cleanupUploadedFiles.js`;
+- `server/src/framework/middleware/apiDispatcher.js`;
+- `server/src/services/filetype/FileTypeService.js`, `builtInFileTypes.js`;
+- `server/src/modules/authorization/permissionCatalogue.js`;
+- `server/database/migrations/*_seed_sales_permissions.js` (number still subject to owner coordination);
+- `server/test/uploadLimits.test.js`, `configNormalizers.test.js`, `fileTransfer.test.js`, `fileTransferFailureModes.test.js`, `applicationFactory.test.js`, `permissionCatalogueConventions.test.js`, `permissionCatalogueStartupGuard.test.js`, `directoryLookups.test.js`, `apiDispatcher.test.js`.
+
+Each basename in a grouped bullet is relative to the directory of its first full path. Existing Sales-owned source/tests remain within their manifest scope. No Customer/Inventory/Item/Fulfillment provider writes or other migrations are granted.
+
+## 13. Publication blocker and preserved local candidate (2026-09-30)
+
+The initial reviewed documentation commit is `3eb2078` on `codex/sales-readiness-refresh`. `git push -u origin codex/sales-readiness-refresh` was rejected by automatic approval review **before process creation**; it did not upload the candidate, and no PR was created. The stated reason was the design/approval payload and lack of confirmed destination trust/explicit publication authorization. No alternate tool or indirect publishing route was attempted.
+
+Read-only `gh repo view crazysumsum/erp-app --json nameWithOwner,isPrivate,viewerPermission,owner,url` subsequently observed `isPrivate:false`, owner `crazysumsum`, and viewer permission `ADMIN`. This repository is PUBLIC; publishing the candidate makes its design/readiness/approval metadata public. The authenticated login was separately read with `gh api user --jq .login`. Ownership/access does not override the rejection or supply publication consent.
+
+`DEC-006` requests explicit authorization to publish this reviewed candidate to `https://github.com/crazysumsum/erp-app` and open its planning PR. Default action is retain the local committed candidate/worktree, preserve the rejection and pending human decision, and perform no remote write. `DEC-005` independently remains OPEN for the exact DESIGN/PLAN hashes in §12, the limited TASK-001～008 shared scope and unchanged risk/UAT_NA disposition. No implementation, merge, acceptance or release is authorized by these local checks.
+
+The publication bookkeeping is outside the canonical specification hashes; DESIGN/PLAN remain exactly those independently reviewed in §12. Complete this human decision before retrying the same standard push/PR workflow; do not use an alternate transport to evade automatic review.
+
+## 14. Human decision and authorized documentation integration (2026-09-30)
+
+Sam's actual reply to the candidate and PUBLIC GitHub publication request was「核准commit 和create pr 合併到main」. DEC-005 and DEC-006 are answered by this chat source. Fresh DESIGN/PLAN, shared SCOPE, limited RISK and unchanged NFR-014/NFR-015 UAT_NA approvals are bound to the exact §12 hashes. No historical approval was rebound. REV-003 is linked to the new scoped risk decision; DR-001/002 remain HIGH/OPEN.
+
+The authorized remote is PUBLIC `https://github.com/crazysumsum/erp-app`; commit, push, create PR and merge this reviewed documentation candidate to `main` are approved. The original rejected push remains recorded. Retry uses the standard Git workflow with this new authorization, current-candidate checks and freshly fetched target reconciliation. This entry records approval, not a claim that publication or merge has already completed.
+
+Scope remains TASK-001～008 and the exact shared paths in §12. TASK-009～011, PHASE-001 exit and later Phases remain blocked; no partial product Phase merge, formal acceptance, business UAT or release is granted. Runtime/schema/port allocation is still required at a fresh IMPLEMENT handoff.
+
+Approval-pointer reconciliation: NFR-014/015 in the ledger now reference `APR-UAT_NA-20260930` instead of the stale historical ID. Final PLAN is `a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966`; DESIGN remains `97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2`. This mechanical recording of the approved carry-forward does not change applicability, requirements, task scope or test gates. Historical §6/§12 hashes remain recorded as reviewed at that time.
+
+Final local validation after recording the real decision: `validate_traceability.py` STRUCTURE_PASS, `validate_module_boundary.py --base dd36250` LOCAL_CHECKS_PASS, `verify_gate.py --gate PLAN_READY` LOCAL_CHECKS_PASS, and `git diff --check` exit 0. These establish scoped planning consistency only; product implementation, developer suites and formal acceptance remain NOT_RUN.
+
+Final separate-agent delta review by `/root/sales_readiness_review`: APPROVE final documentation candidate, no new blockers. Reviewer independently verified final DESIGN/PLAN, exactly two ledger approval-pointer replacements and generated matrix, preserved historical approvals, unchanged scope/gates, PLAN_READY LOCAL_CHECKS_PASS and whitespace validation. Source: actual final collaboration-agent response in this Codex chat.
+
+Observed publication: standard `git push -u origin codex/sales-readiness-refresh` succeeded at `8a4b132bacc9e55b07d35811f5797a1ebfb4a79e` after explicit authorization. `gh pr create` returned [PR #170](https://github.com/crazysumsum/erp-app/pull/170), attached to this Codex chat. This bookkeeping commit will be pushed to that PR; final-head CI, fresh-target reconciliation and observed merge remain to be completed.

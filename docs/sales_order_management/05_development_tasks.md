@@ -87,6 +87,19 @@ npm run verify
 
 ---
 
+### 1.5.1 本次有限開發範圍的自測契約（候選，待新基線批准）
+
+`PHASE-001 / TASK-001`～`TASK-008` 是唯一擬恢復的實作範圍；`TASK-009`～`TASK-011`、PHASE-001 exit及PHASE-002～005仍未獲本次實作授權。Customer／Inventory已有核心程式碼，不代表Sales provider contract或交易鎖順序已通過owner review。
+
+- Task-local developer checks使用profile新增的`sales-foundation-developer`；它執行既有Upload／authorization regression及`server/test/sales`內的新基礎測試，要求至少6個實際testcase、零skip，並要求`TC-003`～`TC-008`出現在當次JUnit。這些ID只標示DEVELOPER證據，不是正式Technical Acceptance。
+- 新套件目前是已具體列明的待實作命令；Sales測試目錄與案例尚未建立，不能宣稱可執行或PASS。TASK-002～005補齊Upload測試；TASK-006補齊permission/config及fresh actor測試；TASK-007～008補齊數值、validation、state/hash測試。缺任一檔案、ID或案例時fail closed。
+- 既有`sales-technical`、所有60個mandatory／blocking TC、所有UAT及Phase merge/exit gate保持不變。Foundation自測通過不能取代完整Phase gate，也不授權部分Phase合併。
+- TASK-006的fresh actor基礎沿用`authorization/directoryLookups.js`的`assertActorFresh()`，增加Sales必要permission與inactive-user拒絕的薄層，禁止另複製一套角色／權限查詢；這是DR-004既有承諾的具體Task範圍。
+- TASK-002的設定／gate與dispatcher啟動預算分為兩個atomic slice；後者使用`server/src/framework/middleware/apiDispatcher.js`及`server/test/apiDispatcher.test.js`，各切片不超過5個主要檔案。現有dispatcher將所有route的request bytes乘memory concurrency；disk mode必須按既定獨立budget接入，不能被當作整檔memory buffer。這兩個shared path同樣須新SCOPE approval。
+- Shared Upload／FileType／authorization regression檔案已列入manifest的approval-required paths；現有scope approval只涵蓋歷史跨模塊文件修復，不能充當本次產品修改批准。批准後才登記新PLAN-bound SCOPE approval。
+- TASK-001重新確認最新migration與其他worktree的配額；本次主幹最高檔案是`0062_create_supplier_import_rows.js`，Inventory設計仍列有`0063`／`0064`後續配置，所以不把`0063`自動分配給Sales。需要owner協調時停止該migration路徑。
+- 在真正執行developer checks前，建立該實作worktree自己的synthetic MySQL schema、web port及private upload temp root，觀察實際owner／資源再checkpoint。當前runtime只觀察到文件worktree，不能把擬用的schema／port記成已保留。
+
 ## 2. Task 索引與依賴摘要
 
 ### Phase 0：Upload、Provider與DB Foundation
@@ -316,7 +329,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P0-T01。
 
-**Files likely touched：** `server/src/modules/authorization/permissionCatalogue.js`、一支動態編號Sales permission migration、`server/config/sales.js`、`server/src/modules/sales/salesConstants.js`、`server/src/modules/sales/salesErrors.js`。
+**Files likely touched：** `server/src/modules/authorization/permissionCatalogue.js`、一支動態編號Sales permission migration、`server/config/sales.js`、`server/src/modules/sales/salesConstants.js`、`server/src/modules/sales/salesErrors.js`；fresh actor薄層與測試另作同Task的獨立atomic slice（`server/src/modules/sales/salesAuthorization.js`、`server/test/sales/salesAuthorization.test.js`、`server/test/sales/salesConfig.test.js`），不改shared authorization查詢語義。
 
 **Acceptance criteria：**
 - [ ] 三項permission無隱式inheritance；seed、catalogue及startup guard一致。
@@ -337,7 +350,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P0-T06。
 
-**Files likely touched：** `server/src/modules/sales/salesMoneyMath.js`、`salesQuantityMath.js`、`salesValidation.js`、`server/test/salesMoneyMath.test.js`、`server/test/salesQuantityValidation.test.js`。
+**Files likely touched：** `server/src/modules/sales/salesMoneyMath.js`、`salesQuantityMath.js`、`salesValidation.js`、`server/test/sales/salesMoneyMath.test.js`、`server/test/sales/salesQuantityValidation.test.js`。
 
 **Acceptance criteria：**
 - [ ] Decimal不經JavaScript Number；rounding、factor、base integer及守恆邊界有測試。
@@ -358,7 +371,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P0-T06。
 
-**Files likely touched：** `server/src/modules/sales/salesOrderStateMachine.js`、`salesQuotationStateMachine.js`、`salesCanonicalHash.js`、`server/test/salesStateMachines.test.js`、`server/test/salesCanonicalHash.test.js`。
+**Files likely touched：** `server/src/modules/sales/salesOrderStateMachine.js`、`salesQuotationStateMachine.js`、`salesCanonicalHash.js`、`server/test/sales/salesStateMachines.test.js`、`server/test/sales/salesCanonicalHash.test.js`。
 
 **Acceptance criteria：**
 - [ ] State machines只允許Design §3列明的transition，effective quotation expiry可重用pure rule。
@@ -2134,7 +2147,7 @@ Commit：`test: prove disk upload memory and cleanup bounds`。
 
 ### Approach
 
-預計變更範圍：`server/src/modules/authorization/permissionCatalogue.js`、一支動態編號Sales permission migration、`server/config/sales.js`、`server/src/modules/sales/salesConstants.js`、`server/src/modules/sales/salesErrors.js`。
+預計變更範圍：`server/src/modules/authorization/permissionCatalogue.js`、一支動態編號Sales permission migration、`server/config/sales.js`、`server/src/modules/sales/salesConstants.js`、`server/src/modules/sales/salesErrors.js`；fresh actor薄層與測試另作同Task的獨立atomic slice（`server/src/modules/sales/salesAuthorization.js`、`server/test/sales/salesAuthorization.test.js`、`server/test/sales/salesConfig.test.js`），不改shared authorization查詢語義。
 
 依賴：P0-T01。
 
@@ -2162,7 +2175,7 @@ Commit：`feat: establish sales permissions and configuration`。
 
 ### Approach
 
-預計變更範圍：`server/src/modules/sales/salesMoneyMath.js`、`salesQuantityMath.js`、`salesValidation.js`、`server/test/salesMoneyMath.test.js`、`server/test/salesQuantityValidation.test.js`。
+預計變更範圍：`server/src/modules/sales/salesMoneyMath.js`、`salesQuantityMath.js`、`salesValidation.js`、`server/test/sales/salesMoneyMath.test.js`、`server/test/sales/salesQuantityValidation.test.js`。
 
 依賴：P0-T06。
 
@@ -2190,7 +2203,7 @@ Commit：`feat: define sales money quantity and validation rules`。
 
 ### Approach
 
-預計變更範圍：`server/src/modules/sales/salesOrderStateMachine.js`、`salesQuotationStateMachine.js`、`salesCanonicalHash.js`、`server/test/salesStateMachines.test.js`、`server/test/salesCanonicalHash.test.js`。
+預計變更範圍：`server/src/modules/sales/salesOrderStateMachine.js`、`salesQuotationStateMachine.js`、`salesCanonicalHash.js`、`server/test/sales/salesStateMachines.test.js`、`server/test/sales/salesCanonicalHash.test.js`。
 
 依賴：P0-T06。
 
