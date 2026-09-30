@@ -1,31 +1,41 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 15,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
-  "status": "PLANNED",
-  "resume_status": null,
-  "current_phase": null,
-  "current_task": null,
+  "revision": 17,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-002",
   "baseline": {
     "design": "97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2",
     "plan": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
-    "code_commit": "8a4b132bacc9e55b07d35811f5797a1ebfb4a79e",
+    "code_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
     "source_fingerprint": "3e00408cd0fafdc047a3d36bca50722384fe6495e3c54adc302a4b668d521e5b",
-    "worktree": "/private/tmp/erp-sales-readiness",
-    "default_commit": "dd36250819b80cb679c688bc8a893e694119f66a",
-    "mode_entry_commit": "dd36250819b80cb679c688bc8a893e694119f66a"
+    "worktree": "/private/tmp/erp-sales-foundation",
+    "default_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
+    "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
-    "instance_id": "sales-readiness-docs",
-    "owner": "Codex current Sales readiness session",
+    "instance_id": "sales-foundation-runtime-smz0nz9e",
+    "owner": "Codex /root Sales foundation session",
     "resources": {
-      "workspace": "/private/tmp/erp-sales-readiness"
+      "workspace": "/private/tmp/erp-sales-foundation",
+      "temp-directory": "/private/tmp/sales-foundation-runtime-smz0nz9e"
     },
     "lease_ref": null
   },
-  "tasks": {},
+  "tasks": {
+    "TASK-001": "DONE",
+    "TASK-002": "IN_PROGRESS",
+    "TASK-003": "PENDING",
+    "TASK-004": "PENDING",
+    "TASK-005": "PENDING",
+    "TASK-006": "PENDING",
+    "TASK-007": "PENDING",
+    "TASK-008": "PENDING"
+  },
   "approvals": [
     {
       "id": "APR-DESIGN-001",
@@ -433,6 +443,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36676959943 — observed via gh run view; fetched source baseline only, not later candidate CI",
       "actor": "GitHub Actions observed by Codex /root",
       "observed_at": "2026-09-30T06:28:08.367760+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-001 observed provider and migration readiness",
+      "code_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
+      "spec_baseline": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+      "source_fingerprint": "3e00408cd0fafdc047a3d36bca50722384fe6495e3c54adc302a4b668d521e5b",
+      "status": "PASS",
+      "source_ref": "implementation/00_implementation_readiness.md; actual focused Node test summaries in current Codex session. PASS describes completion of the read-only inspection, not provider integration/TC-001/002 acceptance.",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T07:08:20.199122+00:00"
     }
   ],
   "pending_decisions": [
@@ -517,6 +538,16 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Scoped TASK-001..008 only; DR-001/002 stay OPEN, full Phase/formal gates unchanged. Commit, publish, create PR and merge this documentation candidate to main authorized."
+    },
+    {
+      "id": "DEC-007",
+      "impact": "MAJOR",
+      "question": "Owner coordination: reserve global migration 0065 for Sales permission seed, retaining active Inventory 0063/0064? No database execution is requested.",
+      "affected_ids": [
+        "TASK-006"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -557,11 +588,19 @@
       "kind": "MERGE",
       "target": "https://github.com/crazysumsum/erp-app/pull/170 -> main after latest-target and final-head checks",
       "idempotency_key": "sales-readiness-merge-20260930",
-      "status": "PLANNED",
-      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14."
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/170 — actual prior-turn gh merge observation: MERGED at 2026-09-30T06:58:44Z, merge commit 8bc4a4cfe68710f384cebca8395b78343bef1db9; current fetched origin/main includes it. Original Sales readiness branch/worktree safely removed."
+    },
+    {
+      "id": "MODE-CHANGE-16",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-16",
+      "status": "CONFIRMED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「開始」authorizes scoped IMPLEMENT TASK-001..008 after merged PR #170"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "PR #170 created and attached; verify final pushed head CI and latest target, merge with authorized exact-head guard, observe remote merge and safely clean local worktree/branches. Then reobserve integrated PLAN_READY. Scoped TASK-001..008 implementation requires a fresh IMPLEMENT worktree/runtime handoff; later tasks/Phase exit/formal acceptance/release remain blocked."
+  "next_safe_action": "IMPLEMENT TASK-001..008 in this isolated worktree; record observed readiness and task-local developer self-tests. Runtime currently has workspace/private temp directory only; no actual MySQL schema or persistent web-port lease allocated, generic runner/full Phase gates remain blocked until separately authorized resources are observed. Do not replay merged PR #170 actions, implement provider contracts or merge partial Phase."
 }
