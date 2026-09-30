@@ -37,7 +37,11 @@
       "server/test/permissionCatalogueStartupGuard.test.js",
       "server/test/directoryLookups.test.js",
       "server/test/apiDispatcher.test.js",
-      "server/test/configuration.test.js"
+      "server/test/configuration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -96,7 +100,11 @@
       "server/src/framework/middleware/apiDispatcher.js",
       "server/test/apiDispatcher.test.js",
       "server/src/framework/configuration/applicationConfiguration.js",
-      "server/test/configuration.test.js"
+      "server/test/configuration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",

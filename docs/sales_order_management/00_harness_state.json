@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 27,
+  "revision": 29,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-006",
   "baseline": {
-    "design": "e9d632b185332a00ed4bd59c86ed73c25a4120a4f6a9affc27c3232b53b625c5",
-    "plan": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
-    "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
-    "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+    "design": "a2a10a5ce6102a0a6c059d1b896e747a3643a2e711be357340204c9ba3067781",
+    "plan": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+    "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+    "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -352,6 +352,25 @@
         "server/test/sales/salesPermissionMigration.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-SALES-PERMISSION-REGRESSION-FIXTURES-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current explicit “核准” to original TASK006 permission seed/catalogue scope; minimal corresponding fixture updates preserve that approved no-role-grant behavior. This records application of the same authorization, not a new global/Phase/risk decision.",
+      "recorded_at": "2026-09-30T10:03:34.433722+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "code_commit": null,
+      "scope": [
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -434,6 +453,18 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "e9d632b185332a00ed4bd59c86ed73c25a4120a4f6a9affc27c3232b53b625c5",
       "source_ref": "implementation/05_approved_memory_and_permission_checkpoint.md; actual separate-agent final APPROVE, independently35testsPASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ADMIN-CLAIMS-FIXTURES-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "a2a10a5ce6102a0a6c059d1b896e747a3643a2e711be357340204c9ba3067781",
+      "source_ref": "implementation/06_admin_permission_fixture_correction.md; actual separate-agent final APPROVE, independent lint/whitespace",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -836,6 +867,39 @@
       "source_ref": "Remaining CONTRACT_DRIFT is Inventory design only; full provider/baseline/Phase readiness not approved",
       "actor": "Codex /root observing actual tools",
       "observed_at": "2026-09-30T09:45:46.866336+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Approved decision candidate four checks passed; MySQL/coverage pending",
+      "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36698198511 — audit/lint/build/browser SUCCESS; MySQL/coverage IN_PROGRESS on actual7928c99 head",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:51:39.045766+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Approved decision head MySQL/coverage check",
+      "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36698198511/job/109831126675 —13 integration fixture failures; memorygatePASS; no localSQL; no completecoveragePASS",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T10:03:34.433722+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Admin claims fixture syntax/lint and focused regression",
+      "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "Four files syntaxPASS; lint/whitespacePASS;240focused testsPASS zero fail/skip; realDB cases await new-head CI",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T10:03:34.433722+00:00"
     }
   ],
   "pending_decisions": [
@@ -1056,11 +1120,27 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation approved memory/0067 corrections",
       "idempotency_key": "sales-approved-decisions-push-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push succeeded; gh pr view observed PR174 head7928c99aa6b679d2b36ef4369d9afb4ab105ab02"
+    },
+    {
+      "id": "PR-UPDATE-SALES-APPROVED-DECISIONS-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-approved-decisions-pr-update-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded for PR174 approved-decision summary."
+    },
+    {
+      "id": "PUSH-SALES-ADMIN-FIXTURE-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation fixture correction",
+      "idempotency_key": "sales-admin-fixture-push-20260930",
       "status": "PLANNED",
-      "source_ref": "Existing user commit/createPR/publication authority plus current two decision approval; independent review/developer checks passed; draft PR174 only."
+      "source_ref": "Existing commit/PR publication authority; corresponding approved permission no-grant regression correction, independent reviewPASS; no partialPhase merge."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit/publish approved memory gate and0067 permission seed, require new-head CI on PR174. Keep full Phase blocked by Inventory contract adoption, baseline reconciliation and TASK009..011; no local SQL, UAT or partial Phase merge."
+  "next_safe_action": "Publish reviewed admin-claim fixture correction, require new exact-head CI to prove13 actualDB cases. Wait pending next-scope question (TASK009..011 contract review only); current product scope1..8. No localSQL, provider writes or partialPhase merge."
 }
