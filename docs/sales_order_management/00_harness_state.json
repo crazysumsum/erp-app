@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 13,
+  "revision": 14,
   "mode": "REVIEW_AND_ALIGN",
   "active_mode": "REVIEW_AND_ALIGN",
-  "status": "BLOCKED",
-  "resume_status": "PLANNED",
+  "status": "PLANNED",
+  "resume_status": null,
   "current_phase": null,
   "current_task": null,
   "baseline": {
     "design": "97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2",
-    "plan": "932a40a9b77a1d3d0f56fb701a07b115a155dda21a9b69132fa9eb065413610d",
-    "code_commit": "dd36250819b80cb679c688bc8a893e694119f66a",
+    "plan": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+    "code_commit": "7841142a07ee30fdf305d78205c57a4d229d41bb",
     "source_fingerprint": "3e00408cd0fafdc047a3d36bca50722384fe6495e3c54adc302a4b668d521e5b",
     "worktree": "/private/tmp/erp-sales-readiness",
     "default_commit": "dd36250819b80cb679c688bc8a893e694119f66a",
@@ -153,6 +153,125 @@
         "NFR-007"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-DESIGN-20260930",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Final PLAN differs only by NFR-014/015 approval_id pointers to this same fresh UAT_NA decision; no applicability, scope or behavior changed.",
+      "recorded_at": "2026-09-30T06:46:43.194774+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PLAN-20260930",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Final PLAN differs only by NFR-014/015 approval_id pointers to this same fresh UAT_NA decision; no applicability, scope or behavior changed.",
+      "recorded_at": "2026-09-30T06:46:43.194774+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-RISK-20260930",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Final PLAN differs only by NFR-014/015 approval_id pointers to this same fresh UAT_NA decision; no applicability, scope or behavior changed.",
+      "recorded_at": "2026-09-30T06:46:43.194774+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "REV-003",
+        "DR-001",
+        "DR-002",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-SCOPE-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Final PLAN differs only by NFR-014/015 approval_id pointers to this same fresh UAT_NA decision; no applicability, scope or behavior changed.",
+      "recorded_at": "2026-09-30T06:46:43.194774+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+      "code_commit": null,
+      "scope": [
+        "server/config/api.js",
+        "server/src/framework/upload/normalizeUploadConfig.js",
+        "server/src/framework/upload/uploadConcurrencyGate.js",
+        "server/src/framework/upload/uploadMiddleware.js",
+        "server/src/framework/upload/cleanupUploadedFiles.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/services/filetype/FileTypeService.js",
+        "server/src/services/filetype/builtInFileTypes.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/database/migrations/*_seed_sales_permissions.js",
+        "server/test/uploadLimits.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/fileTransfer.test.js",
+        "server/test/fileTransferFailureModes.test.js",
+        "server/test/applicationFactory.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/permissionCatalogueStartupGuard.test.js",
+        "server/test/directoryLookups.test.js",
+        "server/test/apiDispatcher.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-UAT_NA-20260930",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Final PLAN differs only by NFR-014/015 approval_id pointers to this same fresh UAT_NA decision; no applicability, scope or behavior changed.",
+      "recorded_at": "2026-09-30T06:46:43.194774+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -190,7 +309,7 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 2,
-      "risk_approval_id": null
+      "risk_approval_id": "APR-RISK-20260930"
     }
   ],
   "observations": [
@@ -386,8 +505,8 @@
         "NFR-014",
         "NFR-015"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Scoped TASK-001..008 only; DR-001/002 stay OPEN, full Phase/formal gates unchanged. Commit, publish, create PR and merge this documentation candidate to main authorized."
     },
     {
       "id": "DEC-006",
@@ -396,8 +515,8 @@
       "affected_ids": [
         "PHASE-001"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Scoped TASK-001..008 only; DR-001/002 stay OPEN, full Phase/formal gates unchanged. Commit, publish, create PR and merge this documentation candidate to main authorized."
     }
   ],
   "external_actions": [
@@ -423,10 +542,26 @@
       "target": "crazysumsum/erp-app main <- codex/sales-readiness-refresh",
       "idempotency_key": "sales-readiness-pr-20260930",
       "status": "PLANNED",
-      "source_ref": null
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14."
+    },
+    {
+      "id": "PUSH-SALES-READINESS-AUTHORIZED-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-readiness-refresh",
+      "idempotency_key": "sales-readiness-authorized-push-20260930",
+      "status": "PLANNED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14."
+    },
+    {
+      "id": "MERGE-SALES-READINESS-20260930",
+      "kind": "MERGE",
+      "target": "crazysumsum/erp-app documentation PR -> main after current-candidate checks and fresh target reconciliation",
+      "idempotency_key": "sales-readiness-merge-20260930",
+      "status": "PLANNED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Local candidate review and structural/boundary validation are complete. Obtain DEC-005 approval for DESIGN 97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2 and PLAN 932a40a9b77a1d3d0f56fb701a07b115a155dda21a9b69132fa9eb065413610d scoped to TASK-001..008, and DEC-006 explicit approval to publish these docs to PUBLIC crazysumsum/erp-app. Auto-review rejected push before execution; PR not created. Preserve local worktree/commits. Do not bypass through alternate tools. After approval rerun normal push/PR and actual PLAN_READY, then enter IMPLEMENT with fresh baseline/runtime observations; later tasks/phases stay blocked."
+  "next_safe_action": "Push the authorized documentation candidate, create/attach its PR, verify current-candidate checks and latest target, merge to main and safely clean this isolated worktree. PLAN_READY is scoped to TASK-001..008 only; implementation requires fresh baseline/runtime observations. DR-001/002 stay OPEN; TASK-009..011, Phase exit and later Phases remain blocked. No formal acceptance or release approval."
 }

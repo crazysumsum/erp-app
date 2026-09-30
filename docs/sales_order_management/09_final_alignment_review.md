@@ -1,6 +1,6 @@
 # Sales Order Management Final Alignment Review
 
-> **Current readiness (2026-09-30): BLOCKED — candidate baseline refresh.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and proposed disposition are in `09_final_alignment_review.md` §12. No product implementation or acceptance execution has occurred.
+> **Current readiness (2026-09-30): PLANNED — scoped TASK-001～008 candidate approved.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and human disposition are in `09_final_alignment_review.md` §12/§14. No product implementation or acceptance execution has occurred.
 
 ## 1. Mode, Scope and Baseline
 
@@ -273,3 +273,17 @@ Read-only `gh repo view crazysumsum/erp-app --json nameWithOwner,isPrivate,viewe
 `DEC-006` requests explicit authorization to publish this reviewed candidate to `https://github.com/crazysumsum/erp-app` and open its planning PR. Default action is retain the local committed candidate/worktree, preserve the rejection and pending human decision, and perform no remote write. `DEC-005` independently remains OPEN for the exact DESIGN/PLAN hashes in §12, the limited TASK-001～008 shared scope and unchanged risk/UAT_NA disposition. No implementation, merge, acceptance or release is authorized by these local checks.
 
 The publication bookkeeping is outside the canonical specification hashes; DESIGN/PLAN remain exactly those independently reviewed in §12. Complete this human decision before retrying the same standard push/PR workflow; do not use an alternate transport to evade automatic review.
+
+## 14. Human decision and authorized documentation integration (2026-09-30)
+
+Sam's actual reply to the candidate and PUBLIC GitHub publication request was「核准commit 和create pr 合併到main」. DEC-005 and DEC-006 are answered by this chat source. Fresh DESIGN/PLAN, shared SCOPE, limited RISK and unchanged NFR-014/NFR-015 UAT_NA approvals are bound to the exact §12 hashes. No historical approval was rebound. REV-003 is linked to the new scoped risk decision; DR-001/002 remain HIGH/OPEN.
+
+The authorized remote is PUBLIC `https://github.com/crazysumsum/erp-app`; commit, push, create PR and merge this reviewed documentation candidate to `main` are approved. The original rejected push remains recorded. Retry uses the standard Git workflow with this new authorization, current-candidate checks and freshly fetched target reconciliation. This entry records approval, not a claim that publication or merge has already completed.
+
+Scope remains TASK-001～008 and the exact shared paths in §12. TASK-009～011, PHASE-001 exit and later Phases remain blocked; no partial product Phase merge, formal acceptance, business UAT or release is granted. Runtime/schema/port allocation is still required at a fresh IMPLEMENT handoff.
+
+Approval-pointer reconciliation: NFR-014/015 in the ledger now reference `APR-UAT_NA-20260930` instead of the stale historical ID. Final PLAN is `a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966`; DESIGN remains `97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2`. This mechanical recording of the approved carry-forward does not change applicability, requirements, task scope or test gates. Historical §6/§12 hashes remain recorded as reviewed at that time.
+
+Final local validation after recording the real decision: `validate_traceability.py` STRUCTURE_PASS, `validate_module_boundary.py --base dd36250` LOCAL_CHECKS_PASS, `verify_gate.py --gate PLAN_READY` LOCAL_CHECKS_PASS, and `git diff --check` exit 0. These establish scoped planning consistency only; product implementation, developer suites and formal acceptance remain NOT_RUN.
+
+Final separate-agent delta review by `/root/sales_readiness_review`: APPROVE final documentation candidate, no new blockers. Reviewer independently verified final DESIGN/PLAN, exactly two ledger approval-pointer replacements and generated matrix, preserved historical approvals, unchanged scope/gates, PLAN_READY LOCAL_CHECKS_PASS and whitespace validation. Source: actual final collaboration-agent response in this Codex chat.

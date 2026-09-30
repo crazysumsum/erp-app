@@ -1,6 +1,6 @@
 # Sales Order Management Existing Artifact Inventory
 
-> **Current readiness (2026-09-30): BLOCKED — candidate baseline refresh.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and proposed disposition are in `09_final_alignment_review.md` §12. No product implementation or acceptance execution has occurred.
+> **Current readiness (2026-09-30): PLANNED — scoped TASK-001～008 candidate approved.** Older sections retain their original review-time facts and approvals; they are historical evidence. The current source observation and human disposition are in `09_final_alignment_review.md` §12/§14. No product implementation or acceptance execution has occurred.
 
 ## 1. Review Context
 
