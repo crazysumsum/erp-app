@@ -201,6 +201,13 @@ test("identifiers with the same value but another type or country are looked up 
   ], { connection });
   assert.deepEqual(rows.map((row) => row.status), ["invalid", "valid"]);
   assert.deepEqual(codes(rows[0]), [["identifierValue", "SUPPLIER_IDENTIFIER_TAKEN"]]);
+
+  // 同類型、同號碼，唔同發證地（REV-067 I-2）。
+  const byCountry = await precheck([
+    create({ supplierCode: "C", supplierName: "C Co", identifierType: "tax", issuerCountryCode: "HK", identifierValue: "SAME1" }),
+    create({ supplierCode: "D", supplierName: "D Co", identifierType: "tax", issuerCountryCode: "SG", identifierValue: "SAME1" })
+  ], { connection: database({ identifierKeys: [["tax", "HK", "SAME1"]] }) });
+  assert.deepEqual(byCountry.rows.map((row) => row.status), ["invalid", "valid"]);
 });
 
 test("a batch runs the same number of queries whether it holds one row or five hundred (REV-064 H-2, REV-065 L-1)", async () => {

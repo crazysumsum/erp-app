@@ -182,6 +182,53 @@ test("a file of 10 MB of commas is refused quickly at upload and at precheck (RE
   assert.ok(Date.now() - started < 500, `precheck took ${Date.now() - started} ms`);
 });
 
+test("a header wider than the field cap is refused as malformed at upload and at precheck (REV-067 I-1)", async () => {
+  const { uploadHeaderError } = await import("../src/modules/supplier/import/SupplierImportProcessor.js");
+  const wide = [...SUPPLIER_IMPORT_COLUMN_NAMES, ...Array.from({ length: 257 - SUPPLIER_IMPORT_COLUMN_NAMES.length }, (_, i) => `extra${i}`)];
+  const text = `${wide.join(",")}\r\n`;
+  assert.equal(uploadHeaderError(Buffer.from(text))?.code, "SUPPLIER_IMPORT_CSV_MALFORMED");
+  // 冇上限嘅話 precheck 會讀到 header 再報 HEADER_UNKNOWN。
+  assert.equal((await run(text)).jobLevelError?.code, "SUPPLIER_IMPORT_CSV_MALFORMED");
+});
+
+test("precheck lets the event loop run while it parses a large file (REV-067 L-1)", async () => {
+  const blank = `${",".repeat(SUPPLIER_IMPORT_COLUMN_NAMES.length - 1)}\r\n`;
+  const source = Buffer.from(`${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\n${blank.repeat(Math.floor(10_000_000 / blank.length))}`);
+  let longest = 0;
+  let last = Date.now();
+  const timer = setInterval(() => { const now = Date.now(); longest = Math.max(longest, now - last); last = now; }, 1);
+  await new Promise((resolve) => { setTimeout(resolve, 10); });
+  last = Date.now();
+  const result = await run(source, { maxBytes: 20_000_000 });
+  longest = Math.max(longest, Date.now() - last);
+  clearInterval(timer);
+  assert.equal(result.jobLevelError?.code, "SUPPLIER_IMPORT_CSV_EMPTY");
+  assert.ok(longest < 200, `the event loop was blocked for ${longest} ms`);
+});
+
+test("a slice boundary never splits a character or a line (REV-067 L-1)", async () => {
+  const { SUPPLIER_CSV_PARSE_SLICE: boundary } = await import("../src/modules/supplier/import/SupplierImportProcessor.js");
+  const rowText = (code, name, notes) => `${line(valid({ supplierCode: code, supplierName: name, notes })).join(",")}\r\n`;
+  let base = `${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\n`;
+  for (let index = 0; base.length < boundary - 3_000; index += 1) base += rowText(`F${index}`, `Filler ${index}`, "x".repeat(2_000));
+  const padRow = (length) => rowText("PAD", "Pad", "y".repeat(length - rowText("PAD", "Pad", "").length));
+
+  // 1) Emoji 嘅高位 surrogate 啱啱喺邊界前最後一格：切開嘅話 csv-parse 會將兩半各自變 U+FFFD。
+  const emojiRow = rowText("Z1", "A😀B", "");
+  const withEmoji = base + padRow(boundary - 1 - base.length - emojiRow.indexOf("😀")) + emojiRow;
+  assert.equal(withEmoji.indexOf("😀"), boundary - 1);
+  const emoji = await run(withEmoji, { maxRows: 1_000, maxBytes: 1_000_000 });
+  assert.equal(emoji.jobLevelError, undefined);
+  assert.equal(emoji.rows.at(-1).normalizedPayload.root.supplierName, "A😀B");
+
+  // 2) CRLF 橫跨邊界：\r 係邊界前最後一格，\n 係下一段第一格。
+  const withCrlf = base + padRow(boundary + 1 - base.length) + rowText("Z2", "Last", "");
+  assert.deepEqual([withCrlf[boundary - 1], withCrlf[boundary]], ["\r", "\n"]);
+  const crlf = await run(withCrlf, { maxRows: 1_000, maxBytes: 1_000_000 });
+  assert.equal(crlf.jobLevelError, undefined);
+  assert.deepEqual(crlf.rows.slice(-2).map((row) => row.normalizedPayload.root.supplierCode), ["PAD", "Z2"]);
+});
+
 test("per-row issues are bounded and never echo the cell value", async () => {
   const long = "Z".repeat(1000);   // 30 欄 × 1000 仍然喺 64 KiB 一列嘅上限之內
   const { rows } = await run(csv([Object.fromEntries(SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => [name, long]))]));

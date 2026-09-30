@@ -70,9 +70,26 @@ function bankColumnMessage(index) {
 // 上載檢查同 precheck 一定要用同一個 decoder 同同一組 parser option：之前上載嗰邊冇 `skip_empty_lines`，
 // 開頭一行空行就令兩邊讀到唔同嘅 header，有 Bank 欄嘅檔照樣存咗落磁碟（REV-065 M-1）。
 // `max_record_size` 只計欄位內容，空欄唔計：10 MB 全逗號會變成一千萬個空欄，上載檢查要卡住 event loop
-// 成秒（REV-066 M-1）。所以喺 parser 入面限制欄數；上限要高過範本欄數，Bank 欄先會照樣報自己嘅錯誤碼。
+// 成秒（REV-066 M-1）。所以喺 parser 入面限制欄數；上限要高過範本欄數，Bank 欄先會照樣報自己嘅錯誤碼
+// （超過 256 欄嘅 header 就算有 Bank 欄都只會報 MALFORMED，一樣拒絕、唔存檔；REV-067 I-3）。
 // 拋 CsvError，兩邊都會當 SUPPLIER_IMPORT_CSV_MALFORMED。
 const MAX_FIELDS = 256;
+// Precheck 喺 API process 嘅 event loop 上面行（scheduler 係 in-process）。成個檔一次過交畀 parser 會喺同一個
+// 同步片段入面 parse 晒（`cast` 令每欄都貴啲），10 MB 空白列可以卡住所有請求成秒（REV-067 L-1）。所以一段段
+// 交，每處理若干列（略過嘅空白列都計）就讓 event loop 做一次其他嘢。
+export const SUPPLIER_CSV_PARSE_SLICE = 65_536;
+const YIELD_EVERY_RECORDS = 1_000;
+
+function* textSlices(text) {
+  for (let start = 0; start < text.length;) {
+    let end = Math.min(start + SUPPLIER_CSV_PARSE_SLICE, text.length);
+    // 唔好喺 surrogate pair 中間切：csv-parse 會逐段轉做 Buffer，半個 pair 會變成 U+FFFD。
+    const last = text.charCodeAt(end - 1);
+    if (end < text.length && last >= 0xd800 && last <= 0xdbff) end += 1;
+    yield text.slice(start, end);
+    start = end;
+  }
+}
 const CSV_OPTIONS = Object.freeze({
   bom: true, skip_empty_lines: true, max_record_size: 65_536,
   cast(value, { index }) {
@@ -379,7 +396,7 @@ export async function precheckSupplierCsv({
     return { jobLevelError: NOT_UTF8 };
   }
 
-  const parser = Readable.from([text]).pipe(parse(CSV_OPTIONS));
+  const parser = Readable.from(textSlices(text)).pipe(parse(CSV_OPTIONS));
   const counts = { total: 0, valid: 0, warning: 0, invalid: 0 };
   const seen = { codes: new Map(), targets: new Map(), identifiers: new Map(), names: new Map() };
   let headers = null;
@@ -400,7 +417,10 @@ export async function precheckSupplierCsv({
   };
   try {
     let rowNumber = 0;
+    let records = 0;
     for await (const values of parser) {
+      records += 1;
+      if (records % YIELD_EVERY_RECORDS === 0) await new Promise(setImmediate);
       if (!headers) {
         headers = headerNames(values);
         const error = headerError(headers);
