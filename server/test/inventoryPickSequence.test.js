@@ -82,3 +82,45 @@ test("TASK-025 candidates fail closed on corrupt quantity and identity rows", as
     JSON.stringify(invalid));
   }
 });
+
+test("TASK-025 pre-Stocktake candidate fallback is allowed only when both P3 tables are absent", async () => {
+  const query = { warehouseId: 2, skuId: 12, currentDate: "2026-09-28",
+    minimumRemainingDays: 0, trackingPolicy: "none" };
+  const missing = new Error("missing table", { cause: { code: "ER_NO_SUCH_TABLE" } });
+  const calls = [];
+  const transaction = { async query(sql) {
+    calls.push(sql);
+    if (calls.length === 1) throw missing;
+    return [[]];
+  } };
+  assert.deepEqual(await loadInventoryCandidates(transaction, query), []);
+  assert.equal(calls.length, 3);
+  assert.doesNotMatch(calls[2], /NOT EXISTS/u);
+  const partial = { async query(sql) {
+    if (sql.includes("information_schema")) return [[{ table_name: "inventory_stocktakes" }]];
+    throw missing;
+  } };
+  await assert.rejects(() => loadInventoryCandidates(partial, query), missing);
+  const failure = Object.assign(new Error("lock failure"), { code: "ER_LOCK_DEADLOCK" });
+  await assert.rejects(() => loadInventoryCandidates({ async query() { throw failure; } }, query), failure);
+  assert.throws(() => recommendInventoryCandidates([], 1),
+    (error) => error.code === "ALLOCATION_INSUFFICIENT");
+});
+
+test("TASK-025 FIFO candidates retain bounded offset and caller lock semantics", async () => {
+  let captured;
+  const transaction = { async query(sql, params) {
+    captured = { sql, params };
+    return [[{ id: 4, bin_id: 3, lot_id: null, version: 2, on_hand_quantity: 8,
+      allocated_quantity: 3, bin_code: "A", normalized_lot_number: null,
+      expiry_date: null, first_receipt_date: null, fifo_anchor_date: "2026-09-01" }]];
+  } };
+  const rows = await loadInventoryCandidates(transaction, {
+    warehouseId: 2, skuId: 12, currentDate: "2026-09-28", minimumRemainingDays: 0,
+    trackingPolicy: "none", limit: 3, offset: 10, locking: true
+  });
+  assert.equal(rows[0].lotId, null);
+  assert.equal(rows[0].freeQuantity, 5);
+  assert.match(captured.sql, /LIMIT \?\s+OFFSET \?\s+FOR SHARE OF b/u);
+  assert.deepEqual(captured.params, [2, 12, "2026-09-28", 3, 10]);
+});
