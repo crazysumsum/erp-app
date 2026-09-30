@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 201,
+  "revision": 203,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
     "plan": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
-    "code_commit": "240d016e3a55b27d38e4479af954133bbc6da978",
+    "code_commit": "794c831e0efffbf3d33919f9ca8383b60645797c",
     "source_fingerprint": "0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
     "default_commit": "0f20c00f443f7ee5bf929d60cedb3f587b8357d3",
@@ -1692,6 +1692,26 @@
         "server/test/integration/passwordChange.integration.test.js",
         "server/test/integration/roleManagement.integration.test.js",
         "server/test/integration/userManagement.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-080",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task Sam reply 批准發布 on 2026-09-30 after candidate 794c831 and explicit next step publication; authorizes push, P2 PR and required CI only; not independent full P2 code approval, merge or production deployment",
+      "recorded_at": "2026-09-30T07:02:49Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "code_commit": "794c831e0efffbf3d33919f9ca8383b60645797c",
+      "scope": [
+        "inventory-management",
+        "publish existing PHASE-003 P2 candidate through push and PR to main; required CI",
+        "normal conflict-free fresh main integration retaining approved Inventory scope",
+        "export reviewed synthetic/minimized developer evidence and documentation; no credentials or production data",
+        "no merge, full P2 code review approval or production deployment"
       ],
       "expires_at": null
     }
@@ -4867,6 +4887,30 @@
       "idempotency_key": "inventory-p2-scope-20260930-0630-xbGP3h",
       "status": "CONFIRMED",
       "source_ref": "Sam APR-071 standing local-resource authorization and HD-075 / APR-077/078/079 exact scope. Fresh five developer suites under PLAN ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973 and source 0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe: lint/build PASS, units155/155, DB7/7, API1/1 JUnit leaf including outer assertions; no suite skips. Verified private socket-only MySQL26.7.0, skip_networking1, initially system-only schemas, 66 migration rows and ISSUE1 after API. Only exact task schema dropped and absent; shutdown, socket/PID absent, ownerSam mode700 no symlinks, exact root removed and absent. Synthetic data unrecoverable; reports retained. No shared/production data, remote CI, push, PR or merge."
+    },
+    {
+      "id": "EXT-112",
+      "kind": "LOCAL_MAIN_INTEGRATION",
+      "target": "codex/inventory-task-013 integrates freshly fetched origin/main 8bc4a4cfe68710f384cebca8395b78343bef1db9; preview merge-tree clean, main adds only Sales docs and compatible dependency patches",
+      "idempotency_key": "inventory-p2-publish-main-20260930-8bc4a4c",
+      "status": "PLANNED",
+      "source_ref": "Sam APR-080 publication plus Git freshness policy; no product contract changes or main merge"
+    },
+    {
+      "id": "EXT-113",
+      "kind": "GIT_PUSH",
+      "target": "origin refs/heads/codex/inventory-task-013, erp-app repository",
+      "idempotency_key": "inventory-p2-publication-push-20260930",
+      "status": "PLANNED",
+      "source_ref": "Sam APR-080; exact integrated candidate to be observed before push; no force push"
+    },
+    {
+      "id": "EXT-114",
+      "kind": "PR_CREATE",
+      "target": "crazysumsum/erp-app head codex/inventory-task-013 base main; P2 Inventory Reservation/Allocation/Issue; required CI auto-triggered",
+      "idempotency_key": "inventory-p2-publication-pr-20260930",
+      "status": "PLANNED",
+      "source_ref": "Sam APR-080; gh PR lookup observed no existing PR for this head; no auto-merge"
     }
   ],
   "evidence_files": [
@@ -4933,5 +4977,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "HD-075 exact scope applied and five fresh local P2 developer suites PASS; commit scope/docs/evidence locally, then obtain Sam independent full P2 candidate code review and separate publication authority. TASK-023/024/025 remain PENDING. Runtime retired after precise cleanup: reports are historical developer evidence, not live MERGE_READY. No CI/push/PR/merge authorized."
+  "next_safe_action": "APR-080 authorizes publication only. Commit provenance, integrate clean fresh main8bc4a4c, reverify integrated candidate, push/open P2 PR and observe five required CI checks. Independent full P2 code review and exact-head merge approval still missing; no production deployment."
 }
