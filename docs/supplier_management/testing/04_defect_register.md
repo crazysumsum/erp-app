@@ -10,7 +10,7 @@ The request log's only protection against a bank plaintext is the field-name bla
 
 **Reassessed at TASK-043 (HD-036 §3, HD-042).** The CSV import does not reach this risk: multipart bodies are logged as `[FILE_TRANSFER]` even on a 5xx (now pinned in `requestLogger.test.js`), a Bank column fails the file before any row is stored, and row errors never carry cell values. The integration test finds an IBAN sent under an `IBAN` column in no row, job, audit or log. The risk on JSON routes is unchanged; DEF-023 stays open and accepted.
 
-**Correction after REV-064 H-1.** The paragraph above missed the system log: a stray quote made csv-parse throw an error whose message held the cell text, and the scheduler logged it. Fixed in T43 (every parse error fails the file; the worker hands the scheduler a code only), with an integration test that puts an IBAN in `notes` behind a stray quote and finds it in no log. Since HD-053 a Bank column is refused at upload, so the file is never stored.
+**Correction after REV-064 H-1.** The paragraph above missed the system log: a stray quote made csv-parse throw an error whose message held the cell text, and the scheduler logged it. Fixed in T43 (every parse error fails the file; the worker hands the scheduler a code only), with an integration test that puts an IBAN in `notes` behind a stray quote and finds it in no log. Since HD-053 a Bank column is refused at upload. REV-065 M-1 found that a leading blank line let such a file past that check (the two parsers disagreed); since HD-054 the upload reads the header exactly as precheck does and refuses any header problem, so a Bank-column file is never stored.
 
 ## DEF-024 — LOW
 

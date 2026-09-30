@@ -102,6 +102,16 @@ test("a Bank column rejects the whole file: no row is produced and the value app
   assert.equal(JSON.stringify(result).includes("accountNumber"), false, "the header text is not echoed either");
 });
 
+test("spaces around a template column name are ignored, at upload and at precheck", async () => {
+  const { uploadHeaderError } = await import("../src/modules/supplier/import/SupplierImportProcessor.js");
+  const spaced = SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => ` ${name} `);
+  const text = stringify([spaced, line(valid())], SUPPLIER_CSV_STRINGIFY_OPTIONS);
+  assert.equal(uploadHeaderError(Buffer.from(text)), null);
+  const { rows, jobLevelError } = await run(text);
+  assert.equal(jobLevelError, undefined);
+  assert.equal(rows[0].status, "valid");
+});
+
 test("header problems reject the whole file", async () => {
   const cases = [
     ["SUPPLIER_IMPORT_HEADER_UNKNOWN", [...SUPPLIER_IMPORT_COLUMN_NAMES, "rating"]],

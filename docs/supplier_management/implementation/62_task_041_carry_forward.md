@@ -186,7 +186,7 @@ did not expect and no bound on attempts — and a Medium. What changed:
 | Finding | Change |
 | --- | --- |
 | H-1: a stray quote threw csv-parse's `INVALID_OPENING_QUOTE`, whose message holds the cell text, to the scheduler, which logged it; the job retried forever | Every `CsvError` fails the file as `SUPPLIER_IMPORT_CSV_MALFORMED`. The worker rethrows only a code, never a message built from the file. A job reclaimed after `MAX_PRECHECK_ATTEMPTS` (3) attempts is failed with `SUPPLIER_IMPORT_PRECHECK_FAILED` (counted from `version`, which only the claim increments while `validating`; no schema change). |
-| H-2: the per-row fuzzy name lookup made a 10,000-row file restart forever | HD-052 (A): exact-name warnings, one query per batch. A 10,000-row file against 2,000 Suppliers now prechecks in about 0.3 s on the test MySQL (the reviewer measured about 5 minutes before); pinned by an acceptance test with a 60 s bound. |
+| H-2: the per-row fuzzy name lookup made a 10,000-row file restart forever | HD-052 (A): exact-name warnings, one query per batch. A 10,000-row file against 2,000 Suppliers now prechecks in about 0.3 s on the test MySQL (the reviewer measured about 5 minutes before). The acceptance test with a 60 s bound did not pin this at first — its Suppliers had no name grams, so the old per-row lookup stayed fast (REV-065 L-1); see "REV-065 remediation". |
 | M-1: a file failed for a Bank column stayed on disk in plaintext for 365 days | HD-053 (A): the header is read at upload and a Bank column is refused with 400 before anything is stored; every job whose precheck fails gets `files_purged_at` and its source is deleted at once. |
 | L-1 | A failed cleanup after a failed upload or precheck is logged as `supplier.import.source_cleanup_failed` (stored name and error code only). |
 | L-2 | Tests for a directory or an oversized file at the stored name, lease renewal on append, abort between batches, and the catalogue's second page. |
@@ -222,3 +222,36 @@ Two survive and are equivalent: `readSupplierImportSource` without `isFile()` (a
 same code; the read-side check only saves reading it into memory). REV-064's other equivalent survivors (write without
 `O_NOFOLLOW` or `O_EXCL` with a 256-bit random name, `max_record_size` within the 10 MB limit, `ciphertext` dropped from
 the Bank regex while every unknown header is refused anyway) are accepted for the same reason.
+
+
+## REV-065 remediation (HD-054, HD-055, HD-056)
+
+REV-065 (`68_rev_065_independent_review.md`) closed REV-064's H-1 and H-2 and approved with conditions:
+
+| Finding | Change |
+| --- | --- |
+| M-1: the upload header check parsed without `skip_empty_lines`, so a Bank-column file with a leading blank line (CRLF, LF or BOM+CRLF) was stored until precheck deleted it | HD-054 (A): upload and precheck share one decoder and one set of parser options (`CSV_OPTIONS`), and the upload refuses with 400 **any** header problem — Bank, unknown, missing or duplicate column, a non-UTF-8 file, a header that does not parse, a file with no header. Every stored file therefore has a valid v1 header. A test feeds the same bytes to both and requires the same accept/refuse verdict (and `BANK_COLUMN_FORBIDDEN` at both for the Bank cases); the codes may differ only where csv-parse reaches a later row's column-count error first. |
+| L-1: the 10,000-row test could not catch the per-row lookup coming back | The seeded Suppliers now get their real name grams (`hashNameBigrams`); a unit test requires the same number of queries for a 1-row and a 500-row batch (at most 3). A mutant that reintroduces the per-row fuzzy lookup is killed. |
+| L-2: nothing tested that an abandoned job's rows are deleted | The abandon test appends a row on each crashed attempt and requires none after abandonment. |
+| L-3: HD-052 departs from BR-009, BR-026 and §16.2 | HD-055 (A): confirmed as a recorded deviation for the CSV channel (HD-052 now names them). §16.2's similar-name exception list for legacy data goes to go-live preparation under TASK-051 (HD-057). |
+| I-4 | Identifiers are looked up by the full unique key `(identifier_type, issuer_country_code, identifier_value_key)`: EXPLAIN on 20,000 rows changes from a covering index scan of 20,000 rows to a range seek. |
+| I-5 | HD-056 (A): PR #169, lockfile only (brace-expansion and fast-uri patch releases). |
+
+Corrections to the text above:
+
+- **Equivalent `isFile()` mutant (REV-065 I-1).** A directory is refused by `nlink === 1` (it has `nlink >= 2`), but a FIFO has `nlink` 1; with `O_NONBLOCK` and no writer it reads as 0 bytes and fails the SHA-256 check. The outcome is the same `SUPPLIER_IMPORT_SOURCE_UNAVAILABLE`; the SHA check, not `nlink`, is what covers a FIFO.
+- **Mutation arithmetic (REV-065 I-2).** "74 mutants" = the 58 of the first record with three of them re-pointed at the changed code (only `CSV_`-prefixed parse errors, an update flagged against itself, an existing identical name ignored), plus 4 L-2 mutants and 12 other remediation mutants. `mut43.py`'s label "name lookup per row instead of per batch" described a mutant that removes the name query; the doc's wording ("no name query") is the right one.
+
+New obligations:
+
+| Task | Obligation |
+| --- | --- |
+| T44 | REV-065 I-3: the precheck attempt bound counts every takeover — shutdown, scheduler timeout, a Business Master or DB outage — so an outage longer than about 3 × 180 s fails pending uploads with `SUPPLIER_IMPORT_PRECHECK_FAILED` and deletes their sources; the job API text and operator notes must say so. The count is `version - 1` while `validating`; any T44 writer that bumps `version` on an `uploaded` or `validating` job (retry, cancel) shifts it — use a dedicated attempts column (schema change, needs approval) if that becomes necessary. |
+| T51 | HD-057: the go-live legacy-data preparation produces the similar-name exception list of requirement §16.2. |
+
+**Mutation after REV-065** (on d4595a2 plus the header-trim test; serial harness, baseline passed): 81 mutants, 79 killed.
+New since the REV-064 round: the upload storing a file with a bad header; header names not trimmed (first survived — a
+test now uploads and prechecks a template whose column names have spaces around them); the upload parser keeping leading
+blank lines (REV-065 M-1); the upload checking only Bank columns; the upload storing a non-UTF-8 file, an unparseable
+header or a blank file; the per-row fuzzy lookup reintroduced (REV-064 H-2, now killed by the 10,000-row test with name
+grams); an abandoned job keeping its rows (REV-065 L-2). Survivors: the same two equivalent read-side mutants as before.
