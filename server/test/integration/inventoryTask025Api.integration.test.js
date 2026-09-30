@@ -3,6 +3,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
+import { InventoryPostingService } from "../../src/modules/inventory/InventoryPostingService.js";
 import { InventoryReservationService } from "../../src/modules/inventory/InventoryReservationService.js";
 
 const enabled = process.env.DB_INTEGRATION_TESTS === "1" &&
@@ -170,6 +171,73 @@ integrationTest("DEV-025-API-01 real HTTP and provider permission boundaries", a
       expectedBalanceVersion: allocated.allocations[0].balanceVersion, quantity: 1 }]
   });
   assert.equal(directIssue.status, 403, JSON.stringify(directIssue));
+
+  await t.test("DEV-025-API-02 Sales Reservation to FEFO Allocation to Fulfillment Issue", async () => {
+    const sale = await db.withTransaction((transaction) =>
+      inventory.createSalesReservationInTransaction(transaction,
+        command(sales, "sales.operation", `sale-issue-${suffix}`,
+          { skuId: sku.insertId, warehouseId: warehouse.insertId, quantity: 1,
+            purpose: "SALE", minimumRemainingDays: 0 })));
+    const candidateResponse = await fetch(
+      `${url}/api/v1/inventory/reservations/${sale.id}/allocation-candidates?requestedQuantity=1`,
+      { headers: { Authorization: `Bearer ${managerToken}` } });
+    assert.equal(candidateResponse.status, 200);
+    const candidates = (await candidateResponse.json()).data;
+    const candidate = candidates.items[0];
+    assert.equal(candidates.reservationVersion, sale.version);
+    assert.equal(candidate.selectionStrategy, "FEFO");
+    assert.equal(candidate.rank, 1);
+    assert.equal(candidate.balanceId, balance.id);
+    const hold = await db.withTransaction((transaction) =>
+      inventory.allocateForFulfillmentInTransaction(transaction,
+        command(fulfillment, "fulfillment.operation", `allocate-issue-${suffix}`,
+          { reservationId: sale.id, expectedVersion: candidates.reservationVersion,
+            allocations: [{ balanceId: candidate.balanceId,
+              expectedVersion: candidate.balanceVersion, quantity: 1 }] })));
+    const [[beforeIssue]] = await db.query(
+      `SELECT b.on_hand_quantity AS on_hand, b.allocated_quantity AS allocated,
+              c.reserved_quantity AS reserved
+         FROM inventory_stock_balances b JOIN inventory_stock_controls c
+           ON c.warehouse_id = b.warehouse_id AND c.sku_id = b.sku_id
+        WHERE b.id = ?`, [balance.id]);
+    const posting = new InventoryPostingService({ database: db,
+      logger: application.services.require("logging").logger,
+      time: application.services.require("time") });
+    const issue = await db.withTransaction((transaction) =>
+      posting.postFulfillmentIssueInTransaction(transaction,
+        command(fulfillment, "fulfillment.operation", `post-issue-${suffix}`,
+          { reservationId: sale.id, expectedVersion: hold.version,
+            lines: [{ allocationId: hold.allocations[0].id,
+              expectedVersion: hold.allocations[0].version, balanceId: balance.id,
+              expectedBalanceVersion: hold.allocations[0].balanceVersion, quantity: 1 }] })));
+    assert.equal(issue.status, "POSTED");
+    assert.equal(issue.quantity, 1);
+    const [[state]] = await db.query(
+      `SELECT r.consumed_quantity AS consumed, r.outstanding_quantity AS outstanding,
+              a.consumed_quantity AS allocation_consumed,
+              a.outstanding_quantity AS allocation_outstanding,
+              b.on_hand_quantity AS on_hand, b.allocated_quantity AS allocated,
+              c.reserved_quantity AS reserved
+         FROM inventory_reservations r
+         JOIN inventory_allocations a ON a.reservation_id = r.id
+         JOIN inventory_stock_balances b ON b.id = a.stock_balance_id
+         JOIN inventory_stock_controls c ON c.warehouse_id = r.warehouse_id AND c.sku_id = r.sku_id
+        WHERE r.id = ?`, [sale.id]);
+    assert.deepEqual([Number(state.consumed), Number(state.outstanding),
+      Number(state.allocation_consumed), Number(state.allocation_outstanding)], [1, 0, 1, 0]);
+    assert.deepEqual([Number(state.on_hand), Number(state.allocated), Number(state.reserved)],
+      [Number(beforeIssue.on_hand) - 1, Number(beforeIssue.allocated) - 1,
+        Number(beforeIssue.reserved) - 1]);
+    const [[movement]] = await db.query(
+      `SELECT movement_type, direction, quantity, operation_request_id
+         FROM inventory_movements WHERE id = ?`, [issue.lines[0].movementId]);
+    assert.deepEqual([movement.movement_type, movement.direction, Number(movement.quantity),
+      Number(movement.operation_request_id)], ["ISSUE", "OUT", 1, issue.operationId]);
+    const [[audit]] = await db.query(
+      "SELECT COUNT(*) AS count FROM inventory_audit_logs WHERE operation_request_id = ? AND action = 'issue.post'",
+      [issue.operationId]);
+    assert.equal(Number(audit.count), 1);
+  });
 
   const [[before]] = await db.query(
     `SELECT (SELECT COUNT(*) FROM inventory_operation_requests) AS operations,
