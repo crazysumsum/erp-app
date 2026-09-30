@@ -276,3 +276,24 @@ Recorded, not changed:
 **Mutation after REV-066** (on aa416df; serial harness, baseline passed): 84 mutants, 82 killed — the 81 above plus no field
 cap, a field cap below the template width, and identifiers keyed by value only. Survivors: the same two equivalent
 read-side mutants.
+
+## REV-067 remediation
+
+REV-067 (`70_rev_067_independent_review.md`) closed REV-066's M-1 (upload refuses every 10 MB shape tried in 110 ms or less;
+comma and quoted-empty floods in about 2 ms) and approved with one condition:
+
+| Finding | Change |
+| --- | --- |
+| L-1: the field-cap `cast` builds an info object per field, so precheck parsed about 2.5–3 times slower, and it parsed the whole file in one synchronous slice on the API process's event loop — 10 MB of blank rows after a valid header blocked it for about 0.75–1.0 s | Precheck feeds the parser in 64 KiB slices (`SUPPLIER_CSV_PARSE_SLICE`, never splitting a surrogate pair) and yields with `setImmediate` every 1,000 records, skipped blank rows included. A test requires the longest event-loop gap during that file to stay under 200 ms; tests put an emoji's surrogate pair and a CRLF across a slice boundary and require the row intact. |
+| I-1: the precheck half of the 10 MB test did not discriminate | A header of 257 fields is `SUPPLIER_IMPORT_CSV_MALFORMED` at both upload and precheck; without the cap precheck would read it and report an unknown column. |
+| I-2: the identifier test pinned type but not country | A second pair with the same type and value in two countries. |
+| I-3 | The cap comment says a header wider than 256 fields reports `MALFORMED` even with a Bank column (still refused, never stored). |
+| I-4 | origin/main 8bc4a4c (sales-order docs only) merged into the branch. |
+
+**Mutation harness note (REV-067 I-5).** `mut43.py` sources `scratchpad/env43.sh`, which sets `DB_NAME=erp_dev`; the
+author's runs therefore used `erp_dev` on the throwaway MySQL at 3443 on purpose (that instance exists only for this task).
+A reviewer re-running the script must point `ENV` at a copy with their own schema; exporting `DB_NAME` first has no effect.
+
+**Mutation after REV-067** (on 5350f16; serial harness, baseline passed): 89 mutants, 87 killed — the 84 above plus the
+precheck parser without the field cap, the identifier key dropping the country, parsing in one slice, never yielding to
+the event loop, and a slice splitting a surrogate pair. Survivors: the same two equivalent read-side mutants.

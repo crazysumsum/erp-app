@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 260,
+  "revision": 261,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -14,7 +14,7 @@
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
     "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t43",
-    "default_commit": "0f20c00f443f7ee5bf929d60cedb3f587b8357d3",
+    "default_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -1661,6 +1661,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 7fd45cc8d67ffd7840ca43ff4748a0dfed0e8f43 (PR #167)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/69_rev_066_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-067",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-043 REV-066 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing b05af92421dc16423f119a7a016de42ea02ea125 (PR #167)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/70_rev_067_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -5315,5 +5327,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-043: REV-066's condition (M-1, field cap) fixed on claude/supplier-task-043 (PR #167); PR #168 and #169 merged. Next: the Product Owner decides whether REV-067 re-reviews the fix before merge."
+  "next_safe_action": "TASK-043: REV-067's condition (L-1, precheck event-loop stall) fixed and main 8bc4a4c merged on claude/supplier-task-043 (PR #167). Next: the Product Owner decides between merge (after green CI) and a further re-review."
 }
