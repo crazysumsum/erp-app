@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 258,
+  "revision": 259,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -939,6 +939,22 @@
         "package-lock.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-056-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-056. Authorises a second lockfile-only PR (claude/deps-audit-fix-2, PR #169) for the brace-expansion and fast-uri advisories.",
+      "recorded_at": "2026-09-30T13:53:55+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "bea7b5f4c61b3993405d892b36a90ac0aa9e6bce",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1624,6 +1640,18 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-065",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-043 REV-064 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 6b5437cde5aa4fe455e05b1b6d1e5e6ec36228ab (PR #167)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/68_rev_065_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -4130,11 +4158,15 @@
       "impact": "MAJOR",
       "question": "REV-064 H-2: the per-row fuzzy name-similarity lookup makes a 10,000-row precheck take ~5 min at 2,000 Suppliers and ~50 min at 20,000, beyond the 150 s job timeout, so it restarts forever. (A) Precheck warns only on names identical after normalisation (one batched query per batch, in-file and against the database); fuzzy similarity stays in the UI create/update path. (B) Keep fuzzy and make precheck resumable (breaks NFR-004 at scale). (C) Keep fuzzy with a capped query.",
       "affected_ids": [
+        "01_requirement_spec.md §16.2",
+        "BR-009",
+        "BR-026",
+        "HD-050",
         "TASK-043",
-        "HD-050"
+        "TASK-051"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-09-30: '決定 1:A'. Replaces the HD-050 default 'precheck warnings are similar names (0.85 threshold)'."
+      "answer_ref": "Product Owner, 2026-09-30: '決定 1:A'. Replaces the HD-050 default 'precheck warnings are similar names (0.85 threshold)'. Confirmed at revision 259 (HD-055) as a recorded deviation from BR-009, BR-026 and requirement §16.2 for the CSV channel."
     },
     {
       "id": "HD-053",
@@ -4147,6 +4179,54 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-09-30: '決定 2:A'. Failed-precheck sources are deleted at once instead of after 365 days; T48 treats a file whose job has files_purged_at set as unreferenced."
+    },
+    {
+      "id": "HD-054",
+      "impact": "MAJOR",
+      "question": "REV-065 M-1: a Bank-column file with a leading blank line passed the upload header check (different parser options from precheck) and was stored until precheck deleted it, so HD-053 (A)'s 'before anything is stored' did not hold. (A) Fail closed at upload: read the header with exactly precheck's decoder and parser options and refuse with 400 on any header problem (Bank, unknown, missing, duplicate), a non-UTF-8 file or an unparseable header, so every stored file has a valid v1 header. (B) Only share the parser options.",
+      "affected_ids": [
+        "TASK-043",
+        "HD-053"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-30: '全部 A'."
+    },
+    {
+      "id": "HD-055",
+      "impact": "MAJOR",
+      "question": "REV-065 L-3: HD-052 (A) makes CSV precheck warn only on identical names, departing for the CSV channel from BR-009 (identical or highly similar), BR-026 (same rules across CSV/UI/API) and requirement §16.2 (legacy import outputs an exception list of similar names). (A) Confirm the deviation, record it on HD-052 and in the carry-forward, and give §16.2's similar-name exception list to go-live legacy-data preparation under TASK-051 (e.g. an offline report). (B) Open a task for a cheaper similar-name warning in the CSV path.",
+      "affected_ids": [
+        "TASK-043",
+        "TASK-051",
+        "HD-052",
+        "BR-009",
+        "BR-026",
+        "01_requirement_spec.md §16.2"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-30: '全部 A'."
+    },
+    {
+      "id": "HD-056",
+      "impact": "MAJOR",
+      "question": "REV-065 I-5: Dependency audit fails again on every branch (new high brace-expansion advisory, moderate fast-uri) in the dev toolchain. (A) A second lockfile-only PR like #168. (B) Leave it; #167 stays red.",
+      "affected_ids": [
+        "TASK-043",
+        "package-lock.json"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-09-30: '全部 A'. PR #169, lockfile only."
+    },
+    {
+      "id": "HD-057",
+      "impact": "MINOR",
+      "question": "Carry-forward from HD-055: before TASK-051 is DONE, confirm the go-live legacy-data preparation produces the similar-name exception list required by requirement §16.2 (the CSV import warns only on identical names since HD-052).",
+      "affected_ids": [
+        "TASK-051",
+        "HD-055"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -5223,5 +5303,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-043 remediating REV-064 on claude/supplier-task-043 (PR #167) under HD-052 (A) and HD-053 (A); PR #168 (HD-051) must merge before #167 can be green. Then REV-065."
+  "next_safe_action": "TASK-043 remediating REV-065 on claude/supplier-task-043 (PR #167) under HD-054 (A); PR #169 (HD-056) must merge before #167's Dependency audit can pass. Then REV-066."
 }
