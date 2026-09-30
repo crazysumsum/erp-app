@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 259,
+  "revision": 260,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1649,6 +1649,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 6b5437cde5aa4fe455e05b1b6d1e5e6ec36228ab (PR #167)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/68_rev_065_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-066",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-043 REV-065 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 7fd45cc8d67ffd7840ca43ff4748a0dfed0e8f43 (PR #167)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/69_rev_066_independent_review.md",
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
@@ -5303,5 +5315,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-043 remediating REV-065 on claude/supplier-task-043 (PR #167) under HD-054 (A); PR #169 (HD-056) must merge before #167's Dependency audit can pass. Then REV-066."
+  "next_safe_action": "TASK-043: REV-066's condition (M-1, field cap) fixed on claude/supplier-task-043 (PR #167); PR #168 and #169 merged. Next: the Product Owner decides whether REV-067 re-reviews the fix before merge."
 }

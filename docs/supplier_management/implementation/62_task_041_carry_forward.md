@@ -255,3 +255,24 @@ test now uploads and prechecks a template whose column names have spaces around 
 blank lines (REV-065 M-1); the upload checking only Bank columns; the upload storing a non-UTF-8 file, an unparseable
 header or a blank file; the per-row fuzzy lookup reintroduced (REV-064 H-2, now killed by the 10,000-row test with name
 grams); an abandoned job keeping its rows (REV-065 L-2). Survivors: the same two equivalent read-side mutants as before.
+
+## REV-066 remediation
+
+REV-066 (`69_rev_066_independent_review.md`) closed REV-065's M-1 (170,072 differential inputs, no file the upload stores
+whose header precheck refuses) and approved with one condition:
+
+| Finding | Change |
+| --- | --- |
+| M-1: the upload header check had no cost bound — `max_record_size` counts field content only, so 10 MB of commas became about ten million empty fields and blocked the event loop for about 1.2 s per request | The shared `CSV_OPTIONS` cap each record at 256 fields (above the template's 30, so a Bank column still gets its own code) through a `cast` that throws a `CsvError`, mapped to `SUPPLIER_IMPORT_CSV_MALFORMED` at both upload and precheck. The same file is now refused in a few milliseconds; a test requires under 100 ms at upload and under 500 ms at precheck. |
+| I-2: nothing tested that identifiers are looked up by type and country as well as value | A unit test with two rows sharing a value under different types, against a fake that answers only the tuples it is asked for. |
+
+Recorded, not changed:
+
+- **I-1.** The index seek of the identifier query (REV-065 I-4) is correct but no test pins the plan; a revert is equivalent in outcome.
+- **I-3.** The upload/precheck parity test is a fixed case list; the reviewer's differential fuzzer found no divergence. Upload and precheck share `CSV_OPTIONS`, `decodeUtf8` and `headerNames`, which is what keeps them identical.
+- **I-4.** Of the nine items listed under "Mutation after REV-065", two ("a file with a bad header stored", "header names not trimmed") are REV-064-round mutants re-pointed at the new code; the count of 81 is right.
+- **I-6.** The header check runs before the actor-freshness check inside the upload transaction. A user whose `supplier.mgmt` was revoked but whose token still claims it gets header answers (fixed messages) instead of `PERMISSION_STALE`, and a valid-header file is written and then removed when `authorize` fails. Since HD-054 such a file cannot hold a Bank column; left as is.
+
+**Mutation after REV-066** (on aa416df; serial harness, baseline passed): 84 mutants, 82 killed — the 81 above plus no field
+cap, a field cap below the template width, and identifiers keyed by value only. Survivors: the same two equivalent
+read-side mutants.
