@@ -4,11 +4,11 @@
 
 | 項目 | 內容 |
 | --- | --- |
-| 文件版本 | 1.0 Candidate — HD-026 Migration Reallocation |
-| 文件日期 | 2026-09-25 |
+| 文件版本 | 1.1 Candidate — HD-066 Migration Reallocation |
+| 文件日期 | 2026-09-30 |
 | Requirement | `docs/inventory_management/01_requirement_spec.md` 0.4 Approved Planning Baseline |
-| Design | `docs/inventory_management/03_design_spec.md` 1.0 Candidate — HD-026 Migration Reallocation |
-| 任務狀態 | Sam已選定`0055`～`0064`連續配置；候選DESIGN／PLAN hash仍待獨立批准，未恢復IMPLEMENT |
+| Design | `docs/inventory_management/03_design_spec.md` 1.1 Candidate — HD-066 Migration Reallocation |
+| 任務狀態 | Sam已選定保留已合併`0055`～`0060`，把未合併Inventory `0061`～`0064`改配`0063`～`0066`；新DESIGN／PLAN hash待批准，P2產品migration尚未改名 |
 | Task list target | 本文件；依使用者指定，不另建 `tasks/plan.md` 或 `tasks/todo.md` |
 | 交付模型 | 6 個獨立 Phase；每個 Phase 使用一個 worktree、分支、PR 及一次完整 Phase 測試 |
 | 技術基線 | Node.js 26、Express 5、MySQL Server 26.7.0、Vue 3、Quasar 2 |
@@ -211,7 +211,7 @@ Phase P0 開始前：
 
 - [ ] 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
 - [ ] Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
-- [ ] 實體配置固定為`0055` permissions、`0056` operations、`0057` audit、`0058` master、`0059` stock、`0060` movements、`0061` reservations、`0062` transfers、`0063` stocktakes、`0064` opening；任何碰撞先停止並重新批准，不自行平移。
+- [ ] 實體配置為已合併`0055` permissions、`0056` operations、`0057` audit、`0058` master、`0059` stock、`0060` movements，及待新hash批准後才改名的`0063` reservations、`0064` transfers、`0065` stocktakes、`0066` opening；`0061`～`0062`屬Supplier；任何再碰撞先停止並重新批准，不自行平移。
 - [ ] Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
 - [ ] `.github/workflows/ci.yml`不再使用`mysql:8.0`；CI及本機整合測試均固定到MySQL Server 26.7.0，並以實際server version assertion防止漂移。
 
@@ -648,11 +648,11 @@ Phase P0 開始前：
 - [ ] Allocation不扣 On Hand；總 outstanding不超過 Reservation，單 Bucket outstanding不超過 On Hand。
 - [ ] 偏離建議只有 `inventory.fefo.override`＋5～500字原因可通過，仍不可選過期、低效期、非 AVAILABLE、Inactive/locked Bin或不足 Bucket。
 
-**Verification（納入 P2-GATE）：** `inventoryFefo.test.js`、Allocation service tests、override Audit及跨 Bin同 Lot integration。
+**Verification（納入 P2-GATE）：** `inventoryPickSequence.test.js`、Allocation service tests、override Audit及跨 Bin同 Lot integration。
 
 **Dependencies：** P2-T02。
 
-**Files likely touched：** `InventoryFefoService.js`、`InventoryReservationService.js`、`inventoryFefo.test.js`、`inventoryReservationService.test.js`、Reservation integration test。
+**Files likely touched：** `InventoryFefoService.js`、`InventoryReservationService.js`、`inventoryPickSequence.test.js`、`inventoryReservationService.test.js`、Reservation integration test。
 
 **Estimated scope：** M。
 
@@ -680,6 +680,8 @@ Phase P0 開始前：
 
 **Description：** 建立 §5.5 全部查詢／command handlers、client methods及 Sales/Fulfillment transaction-aware service entry points；provider固定 caller permission/purpose mapping，不接受 caller自報權限名稱。
 
+**P2授權決策：** Sam批准Sales預留使用`sales.operation`、Fulfillment分配／Issue使用`fulfillment.operation`；兩者由待改名、尚未合併的Inventory `0063` idempotent seed，不修改已合併的`0055`或後續預留的migration序號。直接Inventory HTTP route維持`inventory.view`＋`inventory.operation`，與下游internal入口分開。
+
 **Traceability：** Design §§5.1、5.5、5.11、6.1；SEC-003、SEC-006～008、AC-047～048。
 
 **Acceptance criteria：**
@@ -687,6 +689,7 @@ Phase P0 開始前：
 - [ ] Create/release/cancel/candidates/allocate/release allocation/reallocate route具有 strict schema、version、source及 idempotency。
 - [ ] FEFO candidates query不改資料；所有 command共用既有 caller transaction且提交點重讀 actor permission。
 - [ ] 下游角色不因呼叫 Inventory capability取得 `inventory.view`或管理頁權限。
+- [ ] Inventory `0063` seed兩項下游契約權限且不自動grant；同步更新權限目錄及seed一致性檢查；Sales／Fulfillment provider固定驗其對應權限，caller不能自報替換。
 
 **Verification（納入 P2-GATE）：** handler/client contract tests、internal transaction rollback及 permission revocation integration。
 
@@ -708,7 +711,7 @@ Phase P0 開始前：
 - [ ] 具 override權限才顯示原因操作；無論 UI顯示與否，後端拒絕仍能安全呈現。
 - [ ] 409時保留使用者輸入但強制重載 candidates，不自動改選另一 Lot；keyboard/mobile flow可完成。
 
-**Verification（納入 P2-GATE）：** `inventoryReservations.test.js`、client service tests、production build及 manual FEFO flow。
+**Verification（納入 P2-GATE）：** `client/e2e/inventory-management/inventory-reservations.spec.js`、client service tests、production build及 manual FEFO flow。
 
 **Dependencies：** P2-T05。
 
@@ -1376,13 +1379,21 @@ npm run security:audit
 
 ```bash
 npm run lint
-npm test --workspace server -- test/inventoryReservationService.test.js test/inventoryFefo.test.js test/inventoryPostingService.test.js
-DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/inventoryReservation.integration.test.js test/integration/inventoryPosting.integration.test.js test/integration/inventoryContracts.integration.test.js
-npm test --workspace client -- test/services/inventory.test.js test/pages/inventory/inventoryReservations.test.js
+npm test --workspace server -- test/inventoryReservationService.test.js test/inventoryPickSequence.test.js test/inventoryAllocationTransitions.test.js test/inventoryProviderContracts.test.js test/inventoryPostingService.test.js
+DB_INTEGRATION_TESTS=1 INVENTORY_RESERVATION_MIGRATION_TESTS=1 npm test --workspace server -- test/integration/inventoryReservationMigrations.integration.test.js
+DB_INTEGRATION_TESTS=1 INVENTORY_RESERVATION_TESTS=1 npm test --workspace server -- test/integration/inventoryReservation.integration.test.js
+DB_INTEGRATION_TESTS=1 INVENTORY_ALLOCATION_TESTS=1 npm test --workspace server -- test/integration/inventoryAllocation.integration.test.js
+DB_INTEGRATION_TESTS=1 INVENTORY_POSTING_TESTS=1 npm test --workspace server -- test/integration/inventoryPosting.integration.test.js
+DB_INTEGRATION_TESTS=1 INVENTORY_TASK025_TESTS=1 npm test --workspace server -- test/integration/inventoryTask022.integration.test.js
+DB_INTEGRATION_TESTS=1 INVENTORY_TASK025_API_TESTS=1 npm test --workspace server -- test/integration/inventoryTask025Api.integration.test.js
+npm test --workspace client -- test/services/inventory.test.js
+npx playwright test --config client/e2e/inventory-management/playwright.config.js inventory-reservations.spec.js
 npm run test:coverage
 npm run build --workspace client
 npm run security:audit
 ```
+
+DB整合命令各自需要其測試guard規定的獨立、另行批准的MySQL 26.7.0 schema／socket／環境變數；skip不算PASS。產品migration改名後，須同步更新測試的`0061` import及API測試的migration計數，再以新順序重跑，不能沿用舊編號的開發證據。Playwright目前用攔截API驗證UI；P2-GATE的真實Sales→Reservation→FEFO→Allocation→Issue及DB／Audit正向追溯仍須新增並實際通過，不由現有guarded API測試或模擬UI測試代替。
 
 ### 5.4 P3 Warehouse Operations test cycle
 
@@ -1462,7 +1473,7 @@ P5另須執行非一般 unit command可取代的受控驗證：
 | 風險 | 影響 | 緩解／阻擋點 |
 | --- | --- | --- |
 | Item lifecycle／lookup尚未完成 | Inventory重複或猜錯 SKU資格 | P0-T01硬 gate；只依賴 Item module唯一 contract |
-| Migration與多個模組 worktree碰撞 | DDL無法安全合併或破壞歷史 | 每 Phase起點 fetch並驗證`0055`～`0064`配額；碰撞時停止及重新批准，不自行改號、不修改已套用 migration |
+| Migration與多個模組 worktree碰撞 | DDL無法安全合併或破壞歷史 | 每 Phase起點 fetch並驗證已合併`0055`～`0060`及Inventory待用`0063`～`0066`配額；碰撞時停止及重新批准，不自行改號、不修改已套用 migration |
 | Phase PR過大 | Review遺漏或整合延遲 | Tasks維持 S/M、每2～3項 checkpoint、shared hotspot單一 owner、Phase結果單一 |
 | 同 Warehouse/SKU並發超額 | 負庫存或超 Reserved/Allocation | Warehouse＋Stock Control serialization、fixed lock order、真並發 barrier tests |
 | HTTP重試或下游事件重送 | 重複入出庫 | P0先修 actor scope；HTTP與domain兩層 idempotency；source result lookup |
@@ -1653,7 +1664,7 @@ Implement only the scope and dependencies of legacy task `P0-T01` inside `PHASE-
 ### Acceptance criteria
 - 每個既有 migration 四位前綴唯一，已套用檔名、內容與 checksum 不變。
 - Inventory logical migrations 有明確實際編號及 FK 順序；與其他模組已存在或已批准配額沒有碰撞。
-- 實體配置固定為`0055` permissions、`0056` operations、`0057` audit、`0058` master、`0059` stock、`0060` movements、`0061` reservations、`0062` transfers、`0063` stocktakes、`0064` opening；任何碰撞先停止並重新批准，不自行平移。
+- 實體配置為已合併`0055` permissions、`0056` operations、`0057` audit、`0058` master、`0059` stock、`0060` movements，及待新hash批准後才改名的`0063` reservations、`0064` transfers、`0065` stocktakes、`0066` opening；`0061`～`0062`屬Supplier；任何再碰撞先停止並重新批准，不自行平移。
 - Item lifecycle／lookup contract 已合併；未完成時 P0 停在此 Task，不在 Inventory 複製 SKU 規則。
 - `.github/workflows/ci.yml`不再使用`mysql:8.0`；CI及本機整合測試均固定到MySQL Server 26.7.0，並以實際server version assertion防止漂移。
 
@@ -2004,6 +2015,8 @@ The task diff is scoped, reviewed and covered by its mandatory technical cases; 
 ### Goal
 建立 §5.5 全部查詢／command handlers、client methods及 Sales/Fulfillment transaction-aware service entry points；provider固定 caller permission/purpose mapping，不接受 caller自報權限名稱
 
+Sam批准的固定映射：Sales Reservation create／release／cancel驗`sales.operation`，Fulfillment candidates／Allocation／Issue驗`fulfillment.operation`；待改名、尚未合併的Inventory `0063`負責idempotent seed，`0055`及後續migration序號不變。直接Inventory HTTP route仍用`inventory.view`＋`inventory.operation`，不借此授予下游管理頁權限。
+
 ### Approach
 Implement only the scope and dependencies of legacy task `P2-T05` inside `PHASE-003` using the design decisions mapped in `08_traceability.json`.
 
@@ -2011,6 +2024,7 @@ Implement only the scope and dependencies of legacy task `P2-T05` inside `PHASE-
 - Create/release/cancel/candidates/allocate/release allocation/reallocate route具有 strict schema、version、source及 idempotency。
 - FEFO candidates query不改資料；所有 command共用既有 caller transaction且提交點重讀 actor permission。
 - 下游角色不因呼叫 Inventory capability取得 `inventory.view`或管理頁權限。
+- Inventory `0063` seed兩項下游契約權限且不自動grant；同步更新權限目錄及seed一致性檢查；provider固定purpose／permission，拒絕caller自報替換。
 
 ### Definition of Done
 The task diff is scoped, reviewed and covered by its mandatory technical cases; no formal acceptance is inferred from developer checks.

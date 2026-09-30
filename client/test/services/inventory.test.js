@@ -80,6 +80,91 @@ describe("inventory service", () => {
     ]);
   });
 
+  it("sends Reservation create with the same intent key and without client-side ATP calculation", async () => {
+    const payload = {
+      source: { module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", eventId: "reserve-1" },
+      skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10,
+      idempotencyKey: "reservation-intent-1"
+    };
+    await inventoryService.createReservation(payload);
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/inventory/reservations/create", {
+      idempotent: true, idempotencyKey: "reservation-intent-1",
+      body: { source: payload.source, skuId: 4, warehouseId: 2, quantity: 7, purpose: "SALE", minimumRemainingDays: 10 }
+    });
+  });
+
+  it("sends Reservation release and cancel with path ownership and an intent key", async () => {
+    const source = { module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", eventId: "change-1" };
+    await inventoryService.releaseReservation(7, { source, version: 2, quantity: 3, idempotencyKey: "release-1" });
+    await inventoryService.cancelReservation(7, { source, version: 3, idempotencyKey: "cancel-1" });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/inventory/reservations/7/release", {
+        idempotent: true, idempotencyKey: "release-1", body: { source, version: 2, quantity: 3 }
+      }],
+      ["/api/v1/inventory/reservations/7/cancel", {
+        idempotent: true, idempotencyKey: "cancel-1", body: { source, version: 3 }
+      }]
+    ]);
+  });
+
+  it("forwards allocation candidate quantity and cancellation without calculating a rank", async () => {
+    httpClient.get.mockResolvedValue({ reservationId: 7, items: [{ rank: 1, balanceId: 3 }] });
+    await expect(inventoryService.listAllocationCandidates(7, {
+      requestedQuantity: 3, page: 2, signal: "candidate-signal"
+    })).resolves.toEqual({ reservationId: 7, items: [{ rank: 1, balanceId: 3 }] });
+    expect(httpClient.get).toHaveBeenCalledWith("/api/v1/inventory/reservations/7/allocation-candidates", {
+      params: { requestedQuantity: 3, page: 2 }, signal: "candidate-signal"
+    });
+  });
+
+  it("forwards Allocation create, release and reallocate intents without changing selected buckets", async () => {
+    const source = { module: "FULFILLMENT", documentType: "SHIPMENT", documentId: "S-1", eventId: "change-1" };
+    const allocations = [{ balanceId: 4, expectedVersion: 2, quantity: 3 }];
+    const releases = [{ allocationId: 8, expectedVersion: 1, quantity: 3 }];
+    await inventoryService.createAllocation(7, { source, version: 5, allocations, idempotencyKey: "allocate-1" });
+    await inventoryService.releaseAllocation(7, { source, version: 6, releases, idempotencyKey: "release-1" });
+    await inventoryService.reallocateAllocation(7, {
+      source, version: 7, releases, allocations, overrideReason: "FIFO choice", idempotencyKey: "reallocate-1"
+    });
+    expect(httpClient.post.mock.calls).toEqual([
+      ["/api/v1/inventory/reservations/7/allocations/create", {
+        idempotent: true, idempotencyKey: "allocate-1", body: { source, version: 5, allocations }
+      }],
+      ["/api/v1/inventory/reservations/7/allocations/release", {
+        idempotent: true, idempotencyKey: "release-1", body: { source, version: 6, releases }
+      }],
+      ["/api/v1/inventory/reservations/7/allocations/reallocate", {
+        idempotent: true, idempotencyKey: "reallocate-1",
+        body: { source, version: 7, releases, allocations, overrideReason: "FIFO choice" }
+      }]
+    ]);
+  });
+
+  it("maps Reservation list filters and reads detail without changing server quantities", async () => {
+    httpClient.get.mockResolvedValueOnce({ items: [{ id: 7, outstandingQuantity: 3 }], total: 1 })
+      .mockResolvedValueOnce({ id: 7, outstandingQuantity: 3 });
+    await expect(inventoryService.listReservations({
+      page: 2, rowsPerPage: 20, filter: "SO-1", warehouseId: 2, uncovered: true, signal: "list-signal"
+    })).resolves.toEqual({ rows: [{ id: 7, outstandingQuantity: 3 }], rowsNumber: 1 });
+    await expect(inventoryService.getReservation(7, { signal: "detail-signal" }))
+      .resolves.toEqual({ id: 7, outstandingQuantity: 3 });
+    expect(httpClient.get.mock.calls).toEqual([
+      ["/api/v1/inventory/reservations", {
+        params: { page: 2, pageSize: 20, q: "SO-1", warehouseId: 2, uncovered: true }, signal: "list-signal"
+      }],
+      ["/api/v1/inventory/reservations/7", { signal: "detail-signal" }]
+    ]);
+  });
+
+  it("sends direct Inventory Issue with its source event and exact Allocation versions", async () => {
+    const source = { module: "FULFILLMENT", documentType: "SHIPMENT", documentId: "S-1", eventId: "post-1" };
+    const lines = [{ allocationId: 8, expectedVersion: 2, balanceId: 4, expectedBalanceVersion: 3, quantity: 1 }];
+    await inventoryService.postIssue({ source, reservationId: 7, version: 5, lines, idempotencyKey: "issue-1" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/inventory/issues", {
+      idempotent: true, idempotencyKey: "issue-1", body: { source, reservationId: 7, version: 5, lines }
+    });
+  });
+
   it("does not retry a version conflict", async () => {
     const conflict = Object.assign(new Error("stale"), { code: "VERSION_CONFLICT" });
     httpClient.post.mockRejectedValue(conflict);

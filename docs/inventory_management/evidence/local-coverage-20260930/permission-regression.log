@@ -1,0 +1,43 @@
+✔ 0006 gave users its two password columns, with defaults that leave existing rows alone (456.653416ms)
+✔ 0007 built user_audit_logs with the three indexes and an actor FK that does not cascade (276.657875ms)
+✔ 0038 seeds the Customer catalogue but does not grant bank permissions to system-admin (255.855667ms)
+✔ 0010 seeded item.view/item.mgmt, and gave both to system-admin (252.809542ms)
+✔ 0028 seeded all Supplier permissions and granted each to system-admin (253.250209ms)
+✔ 0011 built item_categories: a generated parent_scope_id blocks duplicate root names too (253.073667ms)
+✔ 0012 built item_brands with a case-insensitive unique name (250.14625ms)
+✔ 0013 built item_uoms with a case-insensitive unique code (249.970875ms)
+✔ 0014 built items with RESTRICT FKs to category and brand (253.360166ms)
+✔ 0015 built item_skus: globally unique sku_code, per-item unique variant_signature, CASCADE from items, RESTRICT to UOMs (255.857ms)
+✔ 0016 built item_sku_uoms: at most one base/default-purchase/default-sale per SKU, CASCADE from SKU, RESTRICT to UOM (252.679541ms)
+✔ 0017 built item_sku_barcodes: globally unique normalized_barcode, at most one primary per SKU UOM, composite FK ownership (252.999625ms)
+✔ 0024 built item_audit_logs with a non-cascading actor FK and no target FK (262.983875ms)
+✔ re-running all twelve migrations changes nothing (286.1425ms)
+✔ create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked (1183.564542ms)
+✔ self-changing to a password with outer whitespace: only the trimmed value logs in (DEF-004) (876.024708ms)
+✔ an unsigned request to an escalation endpoint is refused before it does anything (334.679375ms)
+✔ a replayed device signature nonce is refused on its second use (509.370791ms)
+✔ logging in with an expired temporary password returns TEMPORARY_PASSWORD_EXPIRED (413.702667ms)
+✔ system-admin refuses every write path: update, delete, permissions/assign (737.582125ms)
+✔ an actor holding only role.mgmt cannot grant a role the user.mgmt permission (448.400584ms)
+✔ protected admin delegates Customer bank access through role and user paths without receiving it (884.196333ms)
+✔ assigning permissions with a stale expected set returns ASSIGNMENT_STALE (428.4025ms)
+✔ deleting a role held by users succeeds, and their user_roles rows disappear (CASCADE) (500.280833ms)
+✔ create, list, assign permissions and update a role, with one audit row each (425.89075ms)
+✔ an actor holding only user.mgmt can read GET /api/v1/roles (match: any) (328.839ms)
+✔ an actor holding neither user.mgmt nor role.mgmt cannot read GET /api/v1/roles (327.000541ms)
+✔ create, list, get, update, assign roles, disable and enable walk through with one audit row each (1116.503458ms)
+✔ an actor holding only user.mgmt cannot grant themselves system-admin (449.27875ms)
+✔ a stale actor permission set is rejected before anything else runs (335.236458ms)
+✔ creating a user whose name is already taken returns 409 without a stray audit row (593.385833ms)
+✔ creating a user trims outer whitespace from username before it is stored (515.124ms)
+✔ user.update audit row records the request's X-Request-Id and client IP (422.549042ms)
+✔ only one of two concurrent requests can disable the last two active admins (511.057958ms)
+✔ creating a user without an initial password is rejected by schema validation, not the password policy (417.251833ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 16051.06325

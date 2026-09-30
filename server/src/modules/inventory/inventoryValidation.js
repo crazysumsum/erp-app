@@ -9,6 +9,8 @@ const COMMAND_FIELDS = new Set(["actor", "authorization", "source", "correlation
 const ACTOR_FIELDS = new Set(["userId", "serviceName", "claimedRoles", "claimedPermissions"]);
 const AUTHORIZATION_FIELDS = new Set(["purpose", "requiredCallerPermission"]);
 const SOURCE_FIELDS = new Set(["module", "documentType", "documentId", "lineId", "eventId"]);
+const PROVIDER_COMMAND_FIELDS = new Set(["actor", "source", "correlationId", "payload"]);
+const PROVIDER_SOURCE_FIELDS = new Set(["documentId", "lineId", "eventId"]);
 const LOT_FIELDS = new Set(["trackingPolicy", "lotNumber", "expiryDate", "manufactureDate"]);
 const TRACKING_POLICIES = new Set(["none", "batch", "batch_expiry", "serial"]);
 const STOCK_STATUSES = new Set(INVENTORY_STOCK_STATUSES);
@@ -215,6 +217,27 @@ export function assertInventoryTransaction(transaction) {
     throw new TypeError("Inventory command requires a caller-owned transaction executor with query() and execute()");
   }
   return transaction;
+}
+
+export function providerInventoryCommand(transaction, command, contract) {
+  assertInventoryTransaction(transaction);
+  object(command, "Inventory provider command");
+  object(command.source, "Inventory provider source");
+  for (const field of Object.keys(command)) {
+    if (!PROVIDER_COMMAND_FIELDS.has(field)) throw inventoryError("INVENTORY_INPUT_INVALID", { field });
+  }
+  for (const field of Object.keys(command.source)) {
+    if (!PROVIDER_SOURCE_FIELDS.has(field)) throw inventoryError("INVENTORY_INPUT_INVALID", { field });
+  }
+  return {
+    actor: command.actor,
+    authorization: contract.authorization,
+    source: { module: contract.module, documentType: contract.documentType,
+      documentId: command.source.documentId, lineId: command.source.lineId ?? "",
+      eventId: command.source.eventId },
+    correlationId: command.correlationId,
+    payload: command.payload
+  };
 }
 
 export function validateInventoryCommandContext(transaction, command, expectedAuthorization) {

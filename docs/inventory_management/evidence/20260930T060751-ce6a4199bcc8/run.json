@@ -1,0 +1,95 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20260930T060751-ce6a4199bcc8",
+  "suite_id": "inventory-developer",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a",
+  "source_fingerprint": "0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe",
+  "code_commit": "bbfe0b52892e4ba3d8652527fa38cce77c8da00c",
+  "started_at": "2026-09-30T06:07:51.170786Z",
+  "ended_at": "2026-09-30T06:07:51.745418Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "inventory-coverage-20260930-0403",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "node",
+    "--test",
+    "--import",
+    "./server/test-support/testEnv.js",
+    "--test-reporter=junit",
+    "--test-reporter-destination=/Users/sam/.codex/worktrees/inventory-task-013/erp-app/docs/inventory_management/evidence/20260930T060751-ce6a4199bcc8/inventory-developer.xml",
+    "server/test/inventoryAllocationHandlers.test.js",
+    "server/test/inventoryAllocationTransitions.test.js",
+    "server/test/inventoryAuditService.test.js",
+    "server/test/inventoryConfig.test.js",
+    "server/test/inventoryEndpointSecurity.test.js",
+    "server/test/inventoryExpiry.test.js",
+    "server/test/inventoryFoundation.test.js",
+    "server/test/inventoryInquiryHandlers.test.js",
+    "server/test/inventoryInquiryService.test.js",
+    "server/test/inventoryIssueService.test.js",
+    "server/test/inventoryLockService.test.js",
+    "server/test/inventoryMasterHandlers.test.js",
+    "server/test/inventoryMasterMigration.test.js",
+    "server/test/inventoryMasterService.test.js",
+    "server/test/inventoryOperationHash.test.js",
+    "server/test/inventoryOperationService.test.js",
+    "server/test/inventoryPickSequence.test.js",
+    "server/test/inventoryPostingHandlers.test.js",
+    "server/test/inventoryPostingService.test.js",
+    "server/test/inventoryProjections.test.js",
+    "server/test/inventoryProviderContracts.test.js",
+    "server/test/inventoryQuantity.test.js",
+    "server/test/inventoryReservationHandlers.test.js",
+    "server/test/inventoryReservationInquiryHandlers.test.js",
+    "server/test/inventoryReservationService.test.js",
+    "server/test/inventoryTestSupport.test.js",
+    "server/test/inventoryValidation.test.js"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "686dc74b83313908108e7b5824dcc5c0c791c764e714f2d0f3c84c7f12541664",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 155,
+    "passed": 155,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260930T060751-ce6a4199bcc8/stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260930T060751-ce6a4199bcc8/stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/20260930T060751-ce6a4199bcc8/inventory-developer.xml",
+      "sha256": "37858b3c73e1e4966c8e09e79cdb9a5a004ce46b1dacae9569046026bce4656c",
+      "bytes": 36671
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}
