@@ -60,14 +60,20 @@ function diskTempPath(value, label) {
 
 export function prepareDiskTempDirectory(directory, label = "Disk upload") {
   directory = diskTempPath(directory, label);
+  const checkDirectory = (current) => {
+    const stat = lstatSync(current);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error(`${label} temp directory must not contain a symlink or non-directory`);
+    if ((stat.mode & 0o022) !== 0) throw new Error(`${label} temp directory ancestors must not be group/world writable`);
+    if (process.getuid && stat.uid !== process.getuid() && stat.uid !== 0) throw new Error(`${label} temp directory must have a trusted owner`);
+  };
   let current = serverRoot;
+  checkDirectory(current);
   for (const segment of path.relative(serverRoot, directory).split(path.sep)) {
     current = path.join(current, segment);
     try { mkdirSync(current, { mode: 0o700 }); } catch (error) {
       if (error.code !== "EEXIST") throw error;
     }
-    const stat = lstatSync(current);
-    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error(`${label} temp directory must not contain a symlink or non-directory`);
+    checkDirectory(current);
   }
   if ((lstatSync(directory).mode & 0o222) === 0) throw new Error(`${label} temp directory must be writable`);
   accessSync(directory, constants.W_OK | constants.X_OK);
@@ -114,6 +120,13 @@ export function normalizeUploadConfig(
 
   const storageMode = source.storageMode ?? "memory";
   if (!["memory", "disk"].includes(storageMode)) throw new Error(`${label} storageMode must be memory or disk`);
+  if (storageMode === "disk" && fileTypes && allowedMimeTypes.some((type) => !fileTypes.supportsPrefix(type))) {
+    throw new Error(`${label} disk upload types must provide prefix validation`);
+  }
+  if (storageMode === "disk" && fileTypes && allowedMimeTypes.some((type) =>
+    fileTypes.extensionsFor(type).some((extension) => !/^\.[a-z0-9]+$/.test(extension)))) {
+    throw new Error(`${label} disk upload extensions must be safe filename suffixes`);
+  }
   const memoryOnly = source.memoryOnly === true;
   if (storageMode === "disk" && memoryOnly) throw new Error(`${label} disk storageMode cannot be memoryOnly`);
   const directory = storageMode === "disk"
@@ -182,6 +195,7 @@ export function normalizeUploadConfig(
   return Object.freeze({
     enabled,
     storageMode,
+    ...(storageMode === "disk" ? { diskOrphanMaxAgeSeconds: (apiUpload ?? normalizeApiUploadConfig({})).diskOrphanMaxAgeSeconds } : {}),
     memoryOnly,
     directory: memoryOnly ? null : path.isAbsolute(directory)
       ? directory

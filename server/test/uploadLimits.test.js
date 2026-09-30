@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm, stat, symlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
@@ -11,7 +11,7 @@ import {
   normalizeUploadConfig
 } from "../src/framework/upload/normalizeUploadConfig.js";
 import { createUploadMiddleware } from "../src/framework/upload/uploadMiddleware.js";
-import { cleanupUploadedFiles } from "../src/framework/upload/cleanupUploadedFiles.js";
+import { cleanupUploadedFiles, cleanupOrphanedUploads } from "../src/framework/upload/cleanupUploadedFiles.js";
 import { FileTypeService } from "../src/services/filetype/FileTypeService.js";
 
 // 上傳在校驗通過之前完整累積在記憶體裡（校驗需要完整內容——OLE2 的目錄扇區與
@@ -82,7 +82,7 @@ function uploadConfig(directory, overrides = {}) {
 }
 
 /** 送一個完整的 multipart 請求進中間件，回傳 next() 收到的錯誤（或 null）。 */
-function send(middleware, body, { declareLength = true } = {}) {
+function send(middleware, body, { declareLength = true, signal = null } = {}) {
   const req = new PassThrough();
   req.headers = { "content-type": `multipart/form-data; boundary=${BOUNDARY}` };
 
@@ -92,6 +92,7 @@ function send(middleware, body, { declareLength = true } = {}) {
 
   req.get = (name) => req.headers[String(name).toLowerCase()];
   req.complete = false;
+  if (signal) req.requestTimeout = { signal };
 
   const headers = new Map();
   const res = { setHeader: (name, value) => headers.set(name.toLowerCase(), value) };
@@ -785,6 +786,10 @@ test("TC-005 disk routes use a managed non-symlink writable temp root and privat
   await symlink(await uploadDirectory(t), linked);
   const linkedGlobal = normalizeApiUploadConfig({ diskTempDirectory: linked });
   assert.throws(() => normalizeUploadConfig(source, "test", null, linkedGlobal), /symlink/);
+  await chmod(directory, 0o777);
+  assert.throws(() => normalizeUploadConfig(source, "test", null, global), /group\/world writable/);
+  await chmod(directory, 0o755);
+  assert.equal(normalizeUploadConfig(source, "test", null, global).directory, directory);
   await chmod(directory, 0o500);
   assert.throws(() => normalizeUploadConfig(source, "test", null, global), /writable/);
   await chmod(directory, 0o700);
@@ -831,6 +836,8 @@ test("TC-004 disk uploads expose a bounded prefix and full hash in a private req
   assert.deepEqual(await readFile(file.path), content);
   assert.equal((await stat(file.path)).mode & 0o777, 0o600);
   assert.equal((await stat(path.dirname(file.path))).mode & 0o777, 0o700);
+  assert.equal(gate.stats().active, 1);
+  await cleanupUploadedFiles(req, null, "test_completed");
   await drain();
   assert.equal(gate.stats().bytesInFlight, 0);
 });
@@ -844,4 +851,84 @@ test("TC-005 disk byte limits accept the exact boundary and remove oversized par
   const rejected = await send(middleware, csvMultipart(Buffer.alloc(101, 0x61)), { declareLength: false });
   assert.equal(rejected.error.code, "UPLOAD_FILE_TOO_LARGE");
   assert.deepEqual(await readdir(directory), before);
+});
+
+test("TC-005 disk prefix validation is strict UTF-8 screening and requires a prefix-capable type", async (t) => {
+  const types = new FileTypeService({ config: {}, services: null });
+  assert.equal(types.rejectionReason({ mimeType: "text/csv", fileName: "ok.csv", content: Buffer.from("a,b\n1,2\n"), prefixOnly: true }), null);
+  assert.ok(types.rejectionReason({ mimeType: "text/csv", fileName: "bad.csv", content: Buffer.from([0xff, 0xfe]), prefixOnly: true }));
+  assert.ok(types.rejectionReason({ mimeType: "text/csv", fileName: "bad.csv", content: Buffer.from([0x61, 0x00]), prefixOnly: true }));
+  assert.ok(types.rejectionReason({ mimeType: "text/csv", fileName: "bad.csv", content: Buffer.from([0x61, 0x1b]), prefixOnly: true }));
+  assert.ok(types.rejectionReason({ mimeType: "text/csv", fileName: "bad.csv", content: Buffer.from([0xe4, 0xb8]), prefixOnly: true, complete: true }));
+  assert.equal(types.rejectionReason({ mimeType: "text/csv", fileName: "prefix.csv", content: Buffer.from([0xe4, 0xb8]), prefixOnly: true, complete: false }), null);
+  assert.equal(types.rejectionReason({ mimeType: "application/csv", fileName: "ok.csv", content: Buffer.from("a,b\n"), prefixOnly: true }), null);
+  const directory = await diskDirectory(t);
+  assert.throws(() => diskConfig(directory, { allowedMimeTypes: ["image/png"] }), /prefix/);
+});
+
+test("TC-006 disk request cleanup removes its private directory as well as files", async (t) => {
+  const directory = await diskDirectory(t);
+  const { error, req } = await send(createUploadMiddleware({ config: diskConfig(directory), fileTypes }), csvMultipart(Buffer.from("a,b\n")));
+  assert.equal(error, null);
+  await cleanupUploadedFiles(req, null, "schema_failed");
+  assert.deepEqual(await readdir(directory), []);
+});
+
+
+test("TC-006 orphan cleanup only removes aged owned private request directories", async (t) => {
+  const root = await diskDirectory(t);
+  const owned = await mkdtemp(path.join(root, "upload-"));
+  const other = await mkdtemp(path.join(root, "upload-"));
+  await writeFile(path.join(owned, ".upload-owner"), "erp-disk-upload-v1\n", { mode: 0o600 });
+  await writeFile(path.join(owned, "12345678-1234-1234-1234-123456789abc.csv"), "a,b\n", { mode: 0o600 });
+  await writeFile(path.join(other, "unowned.csv"), "keep");
+  const outside = await uploadDirectory(t);
+  await writeFile(path.join(outside, "keep.csv"), "keep");
+  await symlink(outside, path.join(root, "upload-linked"));
+  const old = new Date(Date.now() - 7200000);
+  await utimes(owned, old, old);
+  await utimes(other, old, old);
+  const removed = await cleanupOrphanedUploads(root, { maxAgeSeconds: 3600 });
+  assert.deepEqual(removed, [path.basename(owned)]);
+  assert.equal(await readFile(path.join(other, "unowned.csv"), "utf8"), "keep");
+  assert.equal(await readFile(path.join(outside, "keep.csv"), "utf8"), "keep");
+});
+
+
+test("TC-006 cleanup refuses a replaced request directory and preserves outside files", async (t) => {
+  const root = await diskDirectory(t);
+  const { req, error } = await send(createUploadMiddleware({ config: diskConfig(root), fileTypes }), csvMultipart(Buffer.from("a,b\n")));
+  assert.equal(error, null);
+  const directory = req.uploadTempDirectory;
+  await rm(directory, { recursive: true });
+  const outside = await uploadDirectory(t);
+  await writeFile(path.join(outside, "keep.csv"), "keep");
+  await symlink(outside, directory);
+  const errors = [];
+  await cleanupUploadedFiles(req, { error: (...args) => errors.push(args) }, "schema_failed");
+  assert.equal(errors.length, 1);
+  assert.equal(await readFile(path.join(outside, "keep.csv"), "utf8"), "keep");
+});
+
+
+test("TC-006 rejected unregistered MIME cleans even a file with no generated extension", async (t) => {
+  const directory = await diskDirectory(t);
+  const { error } = await send(createUploadMiddleware({ config: diskConfig(directory), fileTypes }),
+    csvMultipart(Buffer.from("a,b\n"), { mimeType: "application/unknown" }));
+  assert.equal(error.code, "UPLOAD_TYPE_NOT_ALLOWED");
+  assert.deepEqual(await readdir(directory), []);
+});
+
+
+test("TC-006 pre-aborted disk upload rejects before allocating parser or capacity", async (t) => {
+  const directory = await diskDirectory(t);
+  const controller = new AbortController();
+  controller.abort();
+  const gate = new UploadConcurrencyGate({ maxConcurrentUploads: 1, maxBytesInFlight: 4000000 });
+  const { error } = await send(createUploadMiddleware({ config: diskConfig(directory), fileTypes, gate }),
+    csvMultipart(Buffer.from("a,b\n")), { signal: controller.signal });
+  assert.equal(error.code, "UPLOAD_ABORTED");
+  await drain();
+  assert.equal(gate.stats().active, 0);
+  assert.deepEqual(await readdir(directory), []);
 });

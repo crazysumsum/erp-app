@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdir, rm, mkdtemp, writeFile } from "node:fs/promises";
+import { mkdir, readdir, rm, mkdtemp, writeFile } from "node:fs/promises";
 import { request as httpRequest } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -23,7 +23,7 @@ const silentLogger = {
   isSensitiveField: () => false
 };
 
-function makeHandlers(uploadDirectory) {
+function makeHandlers(uploadDirectory, disk = false, hold = null) {
   const uploadApi = {
     method: "POST",
     path: "/api/v1/documents",
@@ -32,12 +32,14 @@ function makeHandlers(uploadDirectory) {
     authorizationPolicies: [{ name: "allowAll", options: {} }],
     upload: {
       enabled: true,
+      storageMode: disk ? "disk" : "memory",
       directory: uploadDirectory,
       maxFileSizeBytes: 4096,
       maxFieldSizeBytes: 128,
       maxFiles: 1,
-      allowedMimeTypes: ["application/pdf"]
+      allowedMimeTypes: [disk ? "text/csv" : "application/pdf"]
     },
+    ...(disk ? { timeoutMs: 150 } : {}),
     requestSchema: {
       body: {
         type: "object",
@@ -83,6 +85,16 @@ function makeHandlers(uploadDirectory) {
     }
   }
 
+  class HeldUploadHandler extends BaseRequestHandler {
+    static handlerName = "heldUpload";
+    static api = { ...uploadApi, path: "/api/v1/documents/held", timeoutMs: 2000 };
+    async execute(req) {
+      hold?.entered();
+      await hold?.wait;
+      return this.response({ files: req.files.length }, { statusCode: 201 });
+    }
+  }
+
   class SlowDownloadHandler extends BaseRequestHandler {
     static handlerName = "slowDownload";
     static api = {
@@ -118,15 +130,17 @@ function makeHandlers(uploadDirectory) {
     UploadHandler,
     FailingUploadHandler,
     IdempotentUploadHandler,
-    SlowDownloadHandler
+    SlowDownloadHandler,
+    HeldUploadHandler
   };
 }
 
-async function startApplication(t, { limits } = {}) {
-  const uploadDirectory = await mkdtemp(path.join(os.tmpdir(), "erp-upload-fail-"));
+async function startApplication(t, { limits, disk = false, hold = null } = {}) {
+  if (disk) await mkdir(path.resolve("server/storage"), { recursive: true });
+  const uploadDirectory = await mkdtemp(path.join(disk ? path.resolve("server/storage") : os.tmpdir(), "erp-upload-fail-"));
   t.after(() => rm(uploadDirectory, { recursive: true, force: true }));
 
-  const handlers = makeHandlers(uploadDirectory);
+  const handlers = makeHandlers(uploadDirectory, disk, hold);
   const source = defaultConfigurationSource();
   const application = await createApplication({
     configurationSource: {
@@ -135,7 +149,8 @@ async function startApplication(t, { limits } = {}) {
       requestLimiter: { ...source.requestLimiter, ...limits },
       // 這裡測的是上傳與 idempotency 的互動，不是共享 store。假 pool 對每一句
       // SQL 都回成功，mysql adapter 在它上面等於沒有 idempotency。
-      idempotency: { ...source.idempotency, storeAdapter: "memory" }
+      idempotency: { ...source.idempotency, storeAdapter: "memory" },
+      ...(disk ? { api: { ...source.api, upload: { ...source.api.upload, diskTempDirectory: uploadDirectory, maxConcurrentDiskUploads: 1 } } } : {})
     },
     handlerRegistryOptions: {
       moduleUrls: ["virtual:fileTransferFailureModes"],
@@ -371,4 +386,95 @@ test("an idempotent replay does not leave the resent file behind", async (t) => 
   assert.equal(replay.headers.get("idempotency-replayed"), "true");
   // handler 沒有跑，重送的那一份沒有任何東西引用它。
   assert.equal((await readdir(uploadDirectory)).length, 1);
+});
+
+
+async function waitUntil(check) {
+  const deadline = Date.now() + 2000;
+  while (!await check()) {
+    assert.ok(Date.now() < deadline, "Observable cleanup did not complete");
+    await new Promise((resolve) => { setTimeout(resolve, 10); });
+  }
+}
+
+function csvForm(title = "Q3") {
+  const body = new FormData();
+  if (title !== null) body.append("title", title);
+  body.append("file", new Blob(["sku,quantity\nA,1\n"], { type: "text/csv" }), "input.csv");
+  return body;
+}
+
+test("TC-006 disk HTTP success, schema failure, handler failure and replay clean their request directories", async (t) => {
+  const { url, uploadDirectory } = await startApplication(t, { disk: true });
+  for (const [route, title, status, key] of [
+    ["", "Q3", 201], ["", null, 400], ["/failing", "Q3", 500],
+    ["/idempotent", "Q3", 201, "disk-replay-1"], ["/idempotent", "Q3", 201, "disk-replay-1"]
+  ]) {
+    const response = await fetch(`${url}/api/v1/documents${route}`, { method: "POST", body: csvForm(title),
+      headers: key ? { "Idempotency-Key": key } : {} });
+    assert.equal(response.status, status);
+    await response.arrayBuffer();
+    await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
+  }
+});
+
+test("TC-006 disk HTTP partial disconnect releases capacity and removes the partial file", async (t) => {
+  const { url, uploadDirectory } = await startApplication(t, { disk: true });
+  const target = new URL(`${url}/api/v1/documents`);
+  const request = httpRequest(target, { method: "POST", headers: { "content-type": "multipart/form-data; boundary=abort-disk" } });
+  request.on("error", () => {});
+  request.write('--abort-disk\r\nContent-Disposition: form-data; name="file"; filename="input.csv"\r\nContent-Type: text/csv\r\n\r\na,b\n');
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 1);
+  request.destroy();
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
+  const response = await fetch(`${url}/api/v1/documents`, { method: "POST", body: csvForm() });
+  assert.equal(response.status, 201);
+  await response.arrayBuffer();
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
+});
+
+
+test("TC-006 disk HTTP timeout and malformed multipart remove partial files", async (t) => {
+  const { url, uploadDirectory } = await startApplication(t, { disk: true });
+  let slowRequest;
+  const response = await new Promise((resolve, reject) => {
+    const request = httpRequest(new URL(`${url}/api/v1/documents`), { method: "POST",
+      headers: { "content-type": "multipart/form-data; boundary=slow-disk" } }, resolve);
+    request.on("error", reject);
+    request.write('--slow-disk\r\nContent-Disposition: form-data; name="file"; filename="input.csv"\r\nContent-Type: text/csv\r\n\r\na,b\n');
+    slowRequest = request;
+  });
+  assert.equal(response.statusCode, 504);
+  response.resume();
+  slowRequest.destroy();
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
+  const malformed = await fetch(`${url}/api/v1/documents`, { method: "POST",
+    headers: { "content-type": "multipart/form-data; boundary=bad-disk" },
+    body: '--bad-disk\r\nContent-Disposition: form-data; name="file"; filename="input.csv"\r\nContent-Type: text/csv\r\n\r\na,b\n' });
+  assert.equal(malformed.status, 400);
+  await malformed.arrayBuffer();
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
+});
+
+
+test("TC-006 disk capacity stays reserved until a delayed handler releases its file", async (t) => {
+  let release;
+  let entered;
+  const wait = new Promise((resolve) => { release = resolve; });
+  const started = new Promise((resolve) => { entered = resolve; });
+  const { url, uploadDirectory } = await startApplication(t, { disk: true, hold: { entered, wait } });
+  t.after(release);
+  const first = fetch(`${url}/api/v1/documents/held`, { method: "POST", body: csvForm() });
+  await started;
+  const second = await fetch(`${url}/api/v1/documents`, { method: "POST", body: csvForm() });
+  assert.equal(second.status, 503);
+  assert.equal(second.headers.get("retry-after"), "1");
+  await second.arrayBuffer();
+  release();
+  assert.equal((await first).status, 201);
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
+  const third = await fetch(`${url}/api/v1/documents`, { method: "POST", body: csvForm() });
+  assert.equal(third.status, 201);
+  await third.arrayBuffer();
+  await waitUntil(async () => (await readdir(uploadDirectory)).length === 0);
 });

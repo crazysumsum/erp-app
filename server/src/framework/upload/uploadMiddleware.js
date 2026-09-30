@@ -1,11 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
-import { chmod, mkdir, mkdtemp, open, rmdir, unlink, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, open, writeFile } from "node:fs/promises";
 import path from "node:path";
 import busboy from "busboy";
 import { pipeline } from "node:stream/promises";
 import { prepareDiskTempDirectory } from "./normalizeUploadConfig.js";
 import { ApplicationError } from "../errors/ApplicationError.js";
-import { cleanupUploadedFiles } from "./cleanupUploadedFiles.js";
+import { cleanupUploadedFiles, cleanupOrphanedUploads, registerDiskUpload } from "./cleanupUploadedFiles.js";
 
 export class UploadError extends ApplicationError {
   constructor(code, message, statusCode = 400) {
@@ -156,6 +156,11 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     }
 
     const disk = config.storageMode === "disk";
+    if (disk && req.requestTimeout?.signal?.aborted) {
+      const reason = req.requestTimeout.signal.reason;
+      next(reason instanceof ApplicationError ? reason : new UploadError("UPLOAD_ABORTED", "Upload was cancelled", 400));
+      return;
+    }
     const releaseSlot = gate ? gate.acquire(disk ? config.maxRequestBytes : 0) : () => {};
 
     if (!releaseSlot) {
@@ -205,6 +210,8 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     const collectedBuffers = new Set();
     let failure = null;
     let settled = false;
+    let diskStopping = false;
+    let diskHandedOff = false;
     let requestBytes = 0;
     let acceptedFileBytes = 0;
     let streamedFileBytes = 0;
@@ -212,10 +219,8 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     const diskPaths = [];
     const diskAbort = new AbortController();
     const discardDisk = async () => {
-      if (!diskDirectory) return;
-      const directory = await diskDirectory;
-      for (const filePath of diskPaths) await unlink(filePath).catch((error) => { if (error.code !== "ENOENT") throw error; });
-      await rmdir(directory);
+      if (diskDirectory) await diskDirectory.catch(() => {});
+      await cleanupUploadedFiles(req, logger, "disk_request_finished");
     };
 
     // 只記錄第一個失敗原因。串流仍必須讀完——busboy 在任何一個 file stream 未被
@@ -230,7 +235,9 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
     };
 
     const stopDisk = (error) => {
-      if (settled) return;
+      if (diskStopping || diskHandedOff) return;
+      diskStopping = true;
+      failure ||= error;
       settled = true;
       diskAbort.abort();
       req.unpipe(parser);
@@ -270,6 +277,25 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
         )
       );
     };
+
+    if (disk) {
+      const signal = req.requestTimeout?.signal;
+      const onAbort = () => {
+        if (diskHandedOff) void discardDisk().finally(releaseSlot);
+        else stopDisk(signal.reason instanceof ApplicationError ? signal.reason : new UploadError("UPLOAD_ABORTED", "Upload was cancelled", 400));
+      };
+      const onResponseEnd = () => {
+        res.removeListener?.("finish", onResponseEnd);
+        res.removeListener?.("close", onResponseEnd);
+        signal?.removeEventListener("abort", onAbort);
+        if (diskHandedOff) void discardDisk().finally(releaseSlot);
+        else stopDisk(new UploadError("UPLOAD_ABORTED", "Upload response ended before completion", 400));
+      };
+      res.once?.("finish", onResponseEnd);
+      res.once?.("close", onResponseEnd);
+      signal?.addEventListener("abort", onAbort, { once: true });
+      if (signal?.aborted) { onAbort(); return; }
+    }
 
     req.on("close", onRequestClose);
 
@@ -333,8 +359,10 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
         (disk ? (() => {
           diskDirectory ??= Promise.resolve().then(async () => {
             const root = prepareDiskTempDirectory(config.directory);
+            await cleanupOrphanedUploads(root, { maxAgeSeconds: config.diskOrphanMaxAgeSeconds }, logger);
             const directory = await mkdtemp(path.join(root, "upload-"));
             await chmod(directory, 0o700);
+            await registerDiskUpload(req, root, directory, releaseSlot);
             Object.defineProperty(req, "uploadTempDirectory", { value: directory, configurable: true });
             Object.defineProperty(req, "uploadTempRoot", { value: root, configurable: true });
             return directory;
@@ -382,7 +410,9 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
               mimeType: declared,
               fileName: filename,
               // 完整內容：OLE2 這類格式的特徵可能落在檔案尾端。
-              content: disk ? file.prefix : buffer
+              content: disk ? file.prefix : buffer,
+              prefixOnly: disk,
+              complete: !disk || file.size <= file.prefix.length
             });
 
             if (reason) {
@@ -452,12 +482,14 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
 
       Promise.all(pending)
         .then(async () => {
+          if (diskStopping) return;
           if (failure) {
             throw failure;
           }
 
           const files = accepted;
           if (disk) {
+            diskHandedOff = true;
             req.files = Object.freeze(files.map((file) => Object.freeze(file)));
             req.body = { ...fields };
             next();
@@ -542,6 +574,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
           next();
         })
         .catch(async (error) => {
+          if (diskStopping) return;
           wipeCollectedBuffers();
           if (disk) await discardDisk().catch(() => {
             void logger?.error?.("upload.cleanup_failed", "Disk upload cleanup failed", { requestId: req.requestId || null });
@@ -560,7 +593,7 @@ export function createUploadMiddleware({ config, logger, fileTypes, gate = null 
         })
         // 槽位必須在成功與失敗兩條路上都放掉。漏放一次是單向累積的：上傳會在
         // 某個時點之後全部開始回 503，而且沒有任何錯誤指向原因。
-        .finally(releaseSlot);
+        .finally(() => { if (!diskHandedOff) releaseSlot(); });
     });
 
     req.pipe(parser);

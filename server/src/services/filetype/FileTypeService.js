@@ -107,6 +107,9 @@ export class FileTypeService extends BaseService {
       throw new TypeError(`File type "${type}" must provide a matches(buffer) function`);
     }
 
+    if (definition.matchesPrefix !== undefined && typeof definition.matchesPrefix !== "function") {
+      throw new TypeError(`File type "${type}" matchesPrefix must be a function`);
+    }
     const extensions = Array.isArray(definition.extensions)
       ? definition.extensions.map((extension) => String(extension).toLowerCase())
       : [];
@@ -119,13 +122,17 @@ export class FileTypeService extends BaseService {
 
     this.types.set(
       type,
-      Object.freeze({ extensions: Object.freeze(extensions), matches: definition.matches })
+      Object.freeze({ extensions: Object.freeze(extensions), matches: definition.matches, matchesPrefix: definition.matchesPrefix })
     );
     return this;
   }
 
   has(mimeType) {
     return this.types.has(String(mimeType || "").toLowerCase());
+  }
+
+  supportsPrefix(mimeType) {
+    return typeof this.types.get(String(mimeType || "").toLowerCase())?.matchesPrefix === "function";
   }
 
   supported() {
@@ -140,7 +147,7 @@ export class FileTypeService extends BaseService {
    * 宣告型別、副檔名與實際內容三者必須一致。
    * 回傳 null 代表通過，否則回傳可直接對外顯示的原因。
    */
-  rejectionReason({ mimeType, fileName, content }) {
+  rejectionReason({ mimeType, fileName, content, prefixOnly = false, complete = true }) {
     const type = String(mimeType || "").toLowerCase();
     const definition = this.types.get(type);
 
@@ -155,7 +162,8 @@ export class FileTypeService extends BaseService {
       return `file extension does not match ${type}`;
     }
 
-    if (!definition.matches(content)) {
+    const matches = prefixOnly ? definition.matchesPrefix : definition.matches;
+    if (!matches || !matches(content, { complete })) {
       return `file content does not match ${type}`;
     }
 
