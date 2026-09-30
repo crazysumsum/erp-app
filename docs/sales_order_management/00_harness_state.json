@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 17,
+  "revision": 18,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
-  "current_task": "TASK-002",
+  "current_task": "TASK-006",
   "baseline": {
-    "design": "97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2",
-    "plan": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
-    "code_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
-    "source_fingerprint": "3e00408cd0fafdc047a3d36bca50722384fe6495e3c54adc302a4b668d521e5b",
+    "design": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
+    "plan": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+    "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+    "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
     "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
+    "default_commit": "2eccf588343a4c2bc22d578666bfc1f5732c5e37",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -29,12 +29,12 @@
   "tasks": {
     "TASK-001": "DONE",
     "TASK-002": "IN_PROGRESS",
-    "TASK-003": "PENDING",
-    "TASK-004": "PENDING",
-    "TASK-005": "PENDING",
-    "TASK-006": "PENDING",
-    "TASK-007": "PENDING",
-    "TASK-008": "PENDING"
+    "TASK-003": "IN_PROGRESS",
+    "TASK-004": "IN_PROGRESS",
+    "TASK-005": "IN_PROGRESS",
+    "TASK-006": "IN_PROGRESS",
+    "TASK-007": "IN_PROGRESS",
+    "TASK-008": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -282,6 +282,23 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-STARTUP-SCOPE-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat explicit answer “核准補充 startup 整合 scope” to the concrete /private/tmp/sales-startup-integration.patch. Narrow startup/test delta only; prior approvals retained at their historical hashes.",
+      "recorded_at": "2026-09-30T08:46:54.878402+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/applicationFactory.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -320,6 +337,18 @@
       "open_critical": 0,
       "open_high": 2,
       "risk_approval_id": "APR-RISK-20260930"
+    },
+    {
+      "id": "REV-STARTUP-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
+      "source_ref": "implementation/03_startup_and_integrated_checkpoint.md; actual collaboration-agent final response approving four-file startup/discovery delta",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -454,6 +483,50 @@
       "source_ref": "implementation/00_implementation_readiness.md; actual focused Node test summaries in current Codex session. PASS describes completion of the read-only inspection, not provider integration/TC-001/002 acceptance.",
       "actor": "Codex /root",
       "observed_at": "2026-09-30T07:08:20.199122+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Integrated focused developer tests including startup Sales validation",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "PASS",
+      "source_ref": "162 passed, zero failures/skips; /private/tmp/sales-startup-integrated-regression.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Sales foundation literal glob discovery",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "PASS",
+      "source_ref": "11 passed, zero skips; /private/tmp/sales-foundation-discovery-green.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Lint and client production build",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "PASS",
+      "source_ref": "/private/tmp/sales-startup-lint.log; /private/tmp/sales-foundation-client-build.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Provider pins, full Phase and runtime readiness",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "BLOCKED",
+      "source_ref": "implementation/03_startup_and_integrated_checkpoint.md: Inventory/catalogue pins stale; no full MySQL lease/authorization; no approved memory threshold or Sales migration allocation",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
     }
   ],
   "pending_decisions": [
@@ -546,6 +619,36 @@
       "affected_ids": [
         "TASK-006"
       ],
+      "status": "ANSWERED",
+      "answer_ref": "Superseded, not approved: latest main Inventory design reserves 0063–0066. Original 0065 proposal conflicts; DEC-010 replaces it. No Sales allocation or database execution."
+    },
+    {
+      "id": "DEC-008",
+      "impact": "MAJOR",
+      "question": "Approve developer per-request sampled memory increases heap <=16 MiB, external <=32 MiB, RSS <=64 MiB? Measurement alone is not an approved gate.",
+      "affected_ids": [
+        "TASK-005"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "DEC-009",
+      "impact": "MAJOR",
+      "question": "Approve applicationConfiguration.js startup Sales normalizer wiring and corresponding test fixture scope.",
+      "affected_ids": [
+        "TASK-006"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat: Sam “核准補充 startup 整合 scope”. Exact four-line shared startup wiring and related tests; no migration, memory or Phase exception."
+    },
+    {
+      "id": "DEC-010",
+      "impact": "MAJOR",
+      "question": "Reserve Sales permission seed migration 0067, preserving Inventory 0063–0066 and existing sales.operation; supplement sales.view/sales.mgmt and catalogue. File allocation only; no database execution.",
+      "affected_ids": [
+        "TASK-006"
+      ],
       "status": "OPEN",
       "answer_ref": null
     }
@@ -598,9 +701,25 @@
       "idempotency_key": "mode-change-16",
       "status": "CONFIRMED",
       "source_ref": "Current Codex chat 2026-09-30: Sam「開始」authorizes scoped IMPLEMENT TASK-001..008 after merged PR #170"
+    },
+    {
+      "id": "PUSH-SALES-FOUNDATION-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation",
+      "idempotency_key": "push-sales-foundation-20260930",
+      "status": "PLANNED",
+      "source_ref": "Existing Sam commit/create PR/publication authorization; scoped IMPLEMENT checkpoint only, no partial Phase merge."
+    },
+    {
+      "id": "PR-SALES-FOUNDATION-20260930",
+      "kind": "PR_CREATE",
+      "target": "crazysumsum/erp-app main <- codex/sales-foundation, DRAFT only",
+      "idempotency_key": "pr-sales-foundation-20260930",
+      "status": "PLANNED",
+      "source_ref": "Existing Sam commit/create PR/publication authorization; scoped IMPLEMENT checkpoint only, no partial Phase merge."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "IMPLEMENT TASK-001..008 in this isolated worktree; record observed readiness and task-local developer self-tests. Runtime currently has workspace/private temp directory only; no actual MySQL schema or persistent web-port lease allocated, generic runner/full Phase gates remain blocked until separately authorized resources are observed. Do not replay merged PR #170 actions, implement provider contracts or merge partial Phase."
+  "next_safe_action": "Commit approved startup delta/checkpoint, publish draft PR and observe exact-head CI; retain open worktree. Resolve DEC-008/010 and stale dependency pins before full readiness. No migration execution, TASK-009..011, formal acceptance or partial Phase merge."
 }
