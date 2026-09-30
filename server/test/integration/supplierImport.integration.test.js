@@ -255,6 +255,11 @@ integrationTest("TASK-043: a precheck whose lease expired is redone from the sta
   assert.deepEqual((await rows(created.id)).map((row) => [row.row_number, row.status]), [[1, "valid"]], "the partial rows were replaced");
   await assert.rejects(() => service.completePrecheck({ jobId: created.id, leaseOwner: "crashed-worker" }),
     { publicCode: "SUPPLIER_IMPORT_LEASE_LOST" }, "the old owner cannot complete it afterwards");
+  await assert.rejects(() => service.appendPrecheckRows({ jobId: created.id, leaseOwner: "crashed-worker", leaseDurationMs: 1000,
+    rows: [{ rowNumber: 2, operation: "create", matchSupplierId: null, expectedSupplierVersion: null, normalizedPayload: { root: {} },
+      status: "valid", errors: [], warnings: [] }] }),
+  { publicCode: "SUPPLIER_IMPORT_LEASE_LOST" }, "nor add rows to it");
+  assert.equal((await rows(created.id)).length, 1);
 });
 
 integrationTest("TASK-043: a precheck claim skips a job another transaction holds instead of waiting for it", async () => {
@@ -276,4 +281,23 @@ integrationTest("TASK-043: a precheck claim skips a job another transaction hold
   release();
   await holder;
   assert.equal((await precheck(created.id)).status, "ready");
+});
+
+integrationTest("TASK-043: a file that fails after some rows were written leaves no rows behind", async () => {
+  const created = await upload(csv([{ supplierCode: `P-${randomUUID().slice(0, 6)}`, supplierName: "Partial", defaultCurrencyCode: "HKD" }]));
+  const service = h.worker.importService;
+  let claimed;
+  for (let attempt = 0; attempt < 20 && claimed?.id !== created.id; attempt += 1) {
+    claimed = await service.claimForPrecheck({ leaseOwner: "partial", leaseDurationMs: 60_000 });
+    if (claimed && claimed.id !== created.id) throw new Error(`unexpected job ${claimed.id} was waiting`);
+  }
+  // 好似一個 500 列之後先壞嘅檔：第一批已經寫咗，之後先發現問題。
+  await service.appendPrecheckRows({ jobId: created.id, leaseOwner: "partial", leaseDurationMs: 60_000, rows: [{
+    rowNumber: 1, operation: "create", matchSupplierId: null, expectedSupplierVersion: null,
+    normalizedPayload: { root: {} }, status: "valid", errors: [], warnings: []
+  }] });
+  const summary = await service.completePrecheck({ jobId: created.id, leaseOwner: "partial",
+    jobLevelError: { code: "SUPPLIER_IMPORT_CSV_MALFORMED", message: "CSV 格式不符合 RFC 4180（引號或欄數不正確）" } });
+  assert.deepEqual([summary.status, summary.totalCount, summary.lastErrorCode], ["failed", 0, "SUPPLIER_IMPORT_CSV_MALFORMED"]);
+  assert.deepEqual(await rows(created.id), []);
 });

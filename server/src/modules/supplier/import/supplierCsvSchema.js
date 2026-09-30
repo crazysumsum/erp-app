@@ -69,6 +69,7 @@ export function buildSupplierImportTemplate() {
 
 /**
  * CRLF 分列時 csv-stringify 只會為含 `\r\n` 嘅 cell 加引號，淨係 `\n` 或 `\r` 嘅 cell 會原樣
- * 寫出，再讀返就錯位。所以兩者都要強制加引號。T46 嘅結果檔都要用呢組 option。
+ * 寫出。csv-parse 自動認出 CRLF 所以讀得返，但當 `\n` 係換行嘅讀法（例如試算表）會將該列
+ * 拆開。所以兩者都強制加引號。T46 嘅結果檔都要用呢組 option。
  */
 export const SUPPLIER_CSV_STRINGIFY_OPTIONS = Object.freeze({ bom: true, record_delimiter: "windows", quoted_match: /[\r\n]/u });

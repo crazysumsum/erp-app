@@ -179,7 +179,9 @@ test("duplicates within the file and against the database are caught across batc
 
 test("a name like an existing Supplier is a warning, not an error, and an update does not match itself", async () => {
   const duplicates = duplicateFinder(["acme trading"]);
-  const { rows, counts } = await precheck([create(), { supplierId: "7", supplierName: "Acme Trading" }, { supplierCode: "BAD\u0001" }],
+  // 第三列有名但冇貨幣：錯誤列唔使查相似名稱。
+  const { rows, counts } = await precheck([create(), { supplierId: "7", supplierName: "Acme Trading" },
+    { supplierCode: "NEW-X", supplierName: "Acme Trading Two" }],
     { mode: "upsert", connection: database({ suppliers: [existing] }), duplicates });
   assert.deepEqual([rows[0].status, rows[0].warnings.map(({ code }) => code)], ["warning", ["SUPPLIER_IMPORT_NAME_SIMILAR"]]);
   assert.deepEqual(duplicates.calls, [

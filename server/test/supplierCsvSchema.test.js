@@ -58,6 +58,10 @@ test("the downloaded template uploads as an empty file, and with one data row ad
   assert.equal(rows[0].rowNumber, 1);
 });
 
+test("cells holding a bare LF or CR are quoted, so readers that treat LF as a line end keep the row whole", () => {
+  assert.equal(stringify([["a\nb", "c\rd", "plain"]], SUPPLIER_CSV_STRINGIFY_OPTIONS), "\uFEFF\"a\nb\",\"c\rd\",plain\r\n");
+});
+
 test("Bank-like headers are recognised however they are spelled", () => {
   for (const header of ["accountNumber", "Account No.", "account_number", "IBAN", "swift_code", "BIC", "bankName",
     "beneficiaryName", "routingNumber", "accountNumberCiphertext", "blindIndex", "lookupKeyId", "encryption_key"]) {
