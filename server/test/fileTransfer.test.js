@@ -716,8 +716,8 @@ test("a custom type registered in the service is accepted end to end", async (t)
 
 
 // Server and client are separate processes so generated client chunks do not affect server measurements.
-// This records the baseline; a numeric acceptance threshold still needs explicit review disposition.
-test("TC-004 measures warmed 5 MB and 50 MB disk HTTP uploads in an isolated server", { timeout: 30000 }, async (t) => {
+// Sam approved per-request sampled 50 MiB increases: heap 16 MiB, external 32 MiB, RSS 64 MiB.
+test("TC-004 bounds warmed 50 MiB disk HTTP upload memory and records the 5 MiB baseline", { timeout: 30000 }, async (t) => {
   await mkdir(fileURLToPath(new URL("../storage/", import.meta.url)), { recursive: true });
   const root = await mkdtemp(fileURLToPath(new URL("../storage/disk-memory-", import.meta.url)));
   const code = `
@@ -790,6 +790,13 @@ test("TC-004 measures warmed 5 MB and 50 MB disk HTTP uploads in an isolated ser
     const data=JSON.parse(Buffer.concat(chunks)).data;
     assert.equal(data.size,size); assert.equal(data.hasBuffer,false); assert.equal(data.prefixBytes,65536);
     assert.equal(data.hash,hash.digest("hex"));
+    if (size === 50 * 1024 * 1024) {
+      for (const [metric, limitMiB] of [["heapUsed", 16], ["external", 32], ["rss", 64]]) {
+        const increase = data.peak[metric] - data.baseline[metric];
+        assert.ok(increase <= limitMiB * 1024 * 1024,
+          `50 MiB disk upload ${metric} increase ${increase} exceeds ${limitMiB} MiB`);
+      }
+    }
     let post;
     do { child.send("snapshot"); [post]=await once(child,"message"); } while(post.files.length);
     measurements.push({bytes:size,baseline:data.baseline,peak:data.peak,postCleanup:post.memory});
