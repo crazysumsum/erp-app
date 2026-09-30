@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 203,
+  "revision": 206,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,15 +11,15 @@
   "baseline": {
     "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
     "plan": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
-    "code_commit": "794c831e0efffbf3d33919f9ca8383b60645797c",
-    "source_fingerprint": "0884d1d487171ef8164dd3e06f1a962a93befc60a09e4785fc2a048ead3efebe",
+    "code_commit": "52070d40df47178570e217d9f92b2438bcdae785",
+    "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
     "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
-    "default_commit": "0f20c00f443f7ee5bf929d60cedb3f587b8357d3",
+    "default_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Codex /root; EXT-111 private MySQL fully cleaned; original reports retained",
+    "owner": "Codex /root; EXT-115 precisely cleaned, evidence preserved",
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app"
     },
@@ -2749,6 +2749,17 @@
       "source_ref": "docs/inventory_management/evidence/local-coverage-20260930/README.md; archived final stdout SHA256 8b43cc564cb657b5328b0a78a76f13831410038aa31d0883db22d26a5c0639bc",
       "actor": "Codex /root developer self-check: server coverage exit0, 2378 pass/0 fail/14 optional skips; unchanged 92/83/90 and 34 per-file floors; final Inventory unit155/155, lint/build PASS. Not CI, independent review, formal TC or merge evidence. Branch margin very thin. Retired-runtime DB/API reports remain history, not current merge-gate attestations.",
       "observed_at": "2026-09-30T06:08:54Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Integrated P2 client unit, actual Playwright browser and dependency audit developer checks",
+      "code_commit": "52070d40df47178570e217d9f92b2438bcdae785",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "docs/inventory_management/evidence/local-publication-20260930/README.md and original logs/XML; client687/687, Inventory Playwright18/18 plus absolute-output recheck18/18, audit0. Initial API preflight did not execute because misplaced generated XML changed fingerprint, exact relocation restored source; no product changes. Not formal TC/UAT, CI or independent review.",
+      "actor": "Codex /root developer self-check under APR-071/APR-080",
+      "observed_at": "2026-09-30T07:12:00Z"
     }
   ],
   "pending_decisions": [
@@ -4893,8 +4904,8 @@
       "kind": "LOCAL_MAIN_INTEGRATION",
       "target": "codex/inventory-task-013 integrates freshly fetched origin/main 8bc4a4cfe68710f384cebca8395b78343bef1db9; preview merge-tree clean, main adds only Sales docs and compatible dependency patches",
       "idempotency_key": "inventory-p2-publish-main-20260930-8bc4a4c",
-      "status": "PLANNED",
-      "source_ref": "Sam APR-080 publication plus Git freshness policy; no product contract changes or main merge"
+      "status": "CONFIRMED",
+      "source_ref": "Fresh git fetch observed main8bc4a4c; conflict-free merge52070d4. Only upstream Sales readiness docs and existing compatible brace-expansion/fast-uri patches integrated; undici8.11.2 already identical. Inventory product diff unchanged, DESIGN/PLAN hashes unchanged; old source evidence retained as history, fresh integrated checks required."
     },
     {
       "id": "EXT-113",
@@ -4911,6 +4922,14 @@
       "idempotency_key": "inventory-p2-publication-pr-20260930",
       "status": "PLANNED",
       "source_ref": "Sam APR-080; gh PR lookup observed no existing PR for this head; no auto-merge"
+    },
+    {
+      "id": "EXT-115",
+      "kind": "ISOLATED_MYSQL_DEV_VERIFICATION",
+      "target": "Only erp_inventory_task025_publish_20260930_0705 at private socket-only MySQL26.7.0 /private/tmp/erp-inventory-task025-mysql-2670.QXJiMi/mysql.sock and exact owned root; Inventory Playwright localhost5205 when free",
+      "idempotency_key": "inventory-p2-publish-runtime-20260930-QXJiMi",
+      "status": "CONFIRMED",
+      "source_ref": "Private socket-only MySQL26.7.0 and only erp_inventory_task025_publish_20260930_0705; initial system-only DB, skip_networking1. Existing66 migrations and ISSUE1 observed after real API. Fresh lint/build/units155/DB7/API1 developer suites PASS no skips; client687 and Inventory Playwright18 plus absolute-output recheck18 PASS, audit0. Only owned schema dropped and absent, mysqladmin shutdown, socket/PID absent; exact root ownerSam mode700/no symlinks removed and absent. Browser5205 listener absent after tests. Reports retained, synthetic data irrecoverable, no shared/production resources."
     }
   ],
   "evidence_files": [
@@ -4941,7 +4960,12 @@
     "evidence/20260930T063659-80d0b12400e3/run.json",
     "evidence/20260930T063659-0ee3488a79c1/run.json",
     "evidence/20260930T063724-5d6dd00e9ec2/run.json",
-    "evidence/20260930T063825-c9cc2d5083d9/run.json"
+    "evidence/20260930T063825-c9cc2d5083d9/run.json",
+    "evidence/20260930T070647-629230c918e3/run.json",
+    "evidence/20260930T070648-1b09d3355ee5/run.json",
+    "evidence/20260930T070648-2ab23b101a13/run.json",
+    "evidence/20260930T070703-2806f30f672b/run.json",
+    "evidence/20260930T070951-b963f2d28f38/run.json"
   ],
   "defects": [
     {
@@ -4977,5 +5001,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "APR-080 authorizes publication only. Commit provenance, integrate clean fresh main8bc4a4c, reverify integrated candidate, push/open P2 PR and observe five required CI checks. Independent full P2 code review and exact-head merge approval still missing; no production deployment."
+  "next_safe_action": "APR-080 publication-only: commit integrated candidate developer evidence and push/open P2 PR with required CI. Do not claim MERGE_READY: runtime retired, TASK-023/024/025 DoD/independent review and exact-head merge authority missing."
 }

@@ -1,0 +1,13 @@
+
+> @erp/client@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.11 /Users/sam/.codex/worktrees/inventory-task-013/erp-app/client
+
+
+ Test Files  91 passed (91)
+      Tests  687 passed (687)
+   Start at  15:06:59
+   Duration  7.44s (transform 7.79s, setup 0ms, import 24.04s, tests 14.44s, environment 47.02s)
+

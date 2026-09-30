@@ -1,0 +1,25 @@
+
+
+Running 18 tests using 1 worker
+
+
+
+[1/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:81:1 › TC-022 @technical Stock URL state, keyboard drill-down and distinct quantities
+[2/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:103:1 › TC-022 @technical loading failure retries, empty permissions fail closed
+[3/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:121:1 › TC-022 @technical Lot expiry and Movement source/group/reversal are explicit
+[4/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:141:3 › TC-022 @technical 375px inquiry pages remain usable without body overflow
+[5/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:141:3 › TC-022 @technical 768px inquiry pages remain usable without body overflow
+[6/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:141:3 › TC-022 @technical 1024px inquiry pages remain usable without body overflow
+[7/18] [technical] › client/e2e/inventory-management/inventory-inquiries.spec.js:141:3 › TC-022 @technical 1440px inquiry pages remain usable without body overflow
+[8/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:76:1 › TASK-024 @technical Reservation detail shows quantities, uncovered next step and copyable source
+[9/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:97:1 › TASK-024 @technical Allocation conflict retains input and reloads server candidates
+[10/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:122:1 › TASK-024 @technical no FEFO override permission blocks sequence deviation on mobile
+[11/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:137:1 › TASK-024 @technical FEFO override requires an authorized reason
+[12/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:156:1 › TASK-024 @technical invalid quantity and empty candidates do not permit allocation
+[13/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:171:1 › TASK-024 @technical candidate service error is visible and does not submit
+[14/18] [technical] › client/e2e/inventory-management/inventory-reservations.spec.js:184:1 › TASK-024 @technical can load a later candidate page
+[15/18] [technical] › client/e2e/inventory-management/inventory-warehouses.spec.js:53:1 › TC-021 @technical 桌面 master-detail 可查閱 blocker 並執行受保護停用
+[16/18] [technical] › client/e2e/inventory-management/inventory-warehouses.spec.js:74:1 › TC-021 @technical 409 保留表單輸入供重新核對
+[17/18] [technical] › client/e2e/inventory-management/inventory-warehouses.spec.js:84:1 › TC-021 @technical view-only 與錯誤/空狀態明確
+[18/18] [technical] › client/e2e/inventory-management/inventory-warehouses.spec.js:97:1 › TC-021 @technical 375px 以鍵盤順序選倉後進入庫位並可返回
+  18 passed (18.8s)

@@ -379,7 +379,7 @@ Final Harness unit evidence is 155/155 with zero skips, lint and client-build PA
 
 ## Next safe action
 
-Sam 已批准並套用 HD-075 方案 A；精確範圍、baseline approvals 及五組 fresh developer evidence 已完成。下一步是 Sam 對完整 P2 candidate 的獨立 code review，以及另外批准 publication。TASK-023～025 保持 PENDING，不以範圍批准或自查代替 DoD／Sam review。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY；本次沒有推送、PR、CI 或合併授權。
+Sam 已批准並套用 HD-075 方案 A；精確範圍、baseline approvals 及五組 fresh developer evidence 已完成。Sam 後續回覆「批准發布」（APR-080），授權 push／P2 PR／所需 CI，不是完整 candidate 的獨立 code review 或合併授權。最新 main `8bc4a4c` 已無衝突納入分支，整合後五組 Harness developer checks、client687/687、Inventory Playwright18/18（另一次絕對輸出路徑重驗同樣18/18）及 audit零漏洞均通過；原始證據及一次未執行的 SOURCE_CHANGED preflight 保護原因見 `evidence/local-publication-20260930/README.md`。EXT-115 的隔離 MySQL 已精確清理，合成資料不可恢復。接著發布 PR、觀察實際候選 CI 並供 Sam 審閱，不合併。TASK-023～025 保持 PENDING，不以發布批准或自查代替 DoD／Sam review。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY。
 
 ### HD-075 narrow shared regression-test boundary — historical proposal
 
