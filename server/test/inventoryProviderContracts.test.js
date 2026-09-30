@@ -115,3 +115,36 @@ test("TASK-023 Fulfillment candidates require fresh downstream permission and do
     ...request, authorization: { purpose: "allocation.candidates", requiredCallerPermission: "inventory.operation" }
   }), (error) => error.code === "INVENTORY_INPUT_INVALID" && error.details.field === "authorization");
 });
+
+test("TASK-023 malformed provider payloads never authorize or claim an operation", async () => {
+  const cases = [
+    [0, { skuId: 0 }], [0, { warehouseId: 1.5 }], [0, { quantity: 0 }],
+    [0, { purpose: "TRANSFER" }], [0, { minimumRemainingDays: -1 }],
+    [0, { minimumRemainingDays: 36_501 }], [0, { minimumRemainingDays: 1.5 }],
+    [0, { unexpected: true }], [1, { reservationId: 0 }], [1, { expectedVersion: 0 }],
+    [2, { unexpected: true }], [3, { allocations: [] }], [3, { allocations: {} }],
+    [3, { allocations: Array(101).fill({ balanceId: 41, expectedVersion: 1, quantity: 1 }) }],
+    [3, { allocations: [null] }], [3, { allocations: [[]] }],
+    [3, { allocations: [{ balanceId: 0, expectedVersion: 1, quantity: 1 }] }],
+    [3, { allocations: [{ balanceId: 41, expectedVersion: 0, quantity: 1 }] }],
+    [3, { allocations: [{ balanceId: 41, expectedVersion: 1, quantity: 1, unexpected: true }] }],
+    [3, { allocations: Array(2).fill({ balanceId: 41, expectedVersion: 1, quantity: 1 }) }],
+    [4, { releases: [] }], [4, { releases: {} }],
+    [4, { releases: Array(101).fill({ allocationId: 71, expectedVersion: 1, quantity: 1 }) }],
+    [4, { releases: [null] }], [4, { releases: [[]] }],
+    [4, { releases: [{ allocationId: 0, expectedVersion: 1, quantity: 1 }] }],
+    [4, { releases: [{ allocationId: 71, expectedVersion: 0, quantity: 1 }] }],
+    [4, { releases: [{ allocationId: 71, expectedVersion: 1, quantity: 1, unexpected: true }] }],
+    [4, { releases: Array(2).fill({ allocationId: 71, expectedVersion: 1, quantity: 1 }) }],
+    [5, { unexpected: true }]
+  ];
+  for (const [index, invalid] of cases) {
+    const [method, permission, , , payload] = reservationCases[index];
+    const captured = {};
+    await assert.rejects(() => reservationService([permission], captured)[method](transaction,
+      input(permission, { ...payload, ...invalid })),
+    (error) => ["INVENTORY_INPUT_INVALID", "INVENTORY_QUANTITY_INVALID"].includes(error.code),
+    `${method}: ${JSON.stringify(invalid)}`);
+    assert.deepEqual(captured, {}, "invalid input must fail before authorization or durable claim");
+  }
+});

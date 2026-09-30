@@ -49,3 +49,36 @@ test("TASK-021 candidate query is scoped, eligible, versioned and bounded", asyn
   assert.match(calls[0].sql, /LIMIT \?/u);
   assert.deepEqual(calls[0].params, [2, 12, "2026-10-28", 101]);
 });
+
+test("TASK-025 candidate validation rejects invalid bounds before querying", async () => {
+  const transaction = { async query() { assert.fail("invalid input must not query"); } };
+  const query = { warehouseId: 2, skuId: 12, currentDate: "2026-09-28",
+    minimumRemainingDays: 0, trackingPolicy: "none" };
+  for (const invalid of [
+    { warehouseId: 0 }, { skuId: 1.5 }, { limit: 0 }, { limit: 102 }, { limit: 1.5 },
+    { offset: -1 }, { offset: 1.5 }, { offset: 1 }, { trackingPolicy: "unknown" },
+    { minimumRemainingDays: -1 }, { minimumRemainingDays: 36_501 },
+    { minimumRemainingDays: 1.5 }, { currentDate: "invalid" }, { currentDate: "2026-02-30" }
+  ]) {
+    await assert.rejects(() => loadInventoryCandidates(transaction, { ...query, ...invalid }),
+      (error) => error.code === "INVENTORY_INPUT_INVALID", JSON.stringify(invalid));
+  }
+});
+
+test("TASK-025 candidates fail closed on corrupt quantity and identity rows", async () => {
+  const row = { id: 4, bin_id: 3, lot_id: 5, version: 2, on_hand_quantity: 8,
+    allocated_quantity: 3, bin_code: "A", normalized_lot_number: "lot-5",
+    expiry_date: "2026-11-01", first_receipt_date: "2026-09-01", fifo_anchor_date: null };
+  for (const invalid of [
+    { on_hand_quantity: "invalid" }, { allocated_quantity: "invalid" },
+    { allocated_quantity: -1 }, { allocated_quantity: 8 },
+    { id: 0 }, { bin_id: 0 }, { lot_id: 0 }, { version: 0 }
+  ]) {
+    const transaction = { async query() { return [[{ ...row, ...invalid }]]; } };
+    await assert.rejects(() => loadInventoryCandidates(transaction, {
+      warehouseId: 2, skuId: 12, currentDate: "2026-09-28",
+      minimumRemainingDays: 0, trackingPolicy: "batch_expiry"
+    }), (error) => ["INVENTORY_INPUT_INVALID", "INVENTORY_DEPENDENCY_UNAVAILABLE"].includes(error.code),
+    JSON.stringify(invalid));
+  }
+});
