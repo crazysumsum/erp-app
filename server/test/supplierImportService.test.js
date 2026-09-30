@@ -9,6 +9,7 @@ import {
   IMPORT_JOB_TRANSITIONS,
   SupplierImportService
 } from "../src/modules/supplier/SupplierImportService.js";
+import { SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
 
 /**
  * TASK-042：狀態機同統計重建。交易規則（鎖、rollback、marker、lease）喺
@@ -67,14 +68,19 @@ test("applyRow's connection admits data statements only, however a control state
   }
 });
 
+// 上載要一個正確嘅 v1 header 先會寫檔（HD-054 A）。
+const VALID_HEADER = Buffer.from(`${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\n`);
+
 test("upload refuses an empty or oversized file and an unknown mode before anything is written", async () => {
   const importer = new SupplierImportService({
     database: { async withTransaction() { throw new Error("must not reach the database"); } }, time: { nowMs: () => 1 }
   });
   const upload = (overrides) => importer.createFromUpload({
-    actorId: 1, root: "/nonexistent/supplier-import-root", mode: "create_only", content: Buffer.from("abcd"), maxFileBytes: 4, ...overrides
+    actorId: 1, root: "/nonexistent/supplier-import-root", mode: "create_only", content: VALID_HEADER,
+    maxFileBytes: VALID_HEADER.length, ...overrides
   });
-  await assert.rejects(() => upload({ content: Buffer.from("abcde") }), { publicCode: "SUPPLIER_IMPORT_FILE_TOO_LARGE", statusCode: 413 });
+  await assert.rejects(() => upload({ content: Buffer.concat([VALID_HEADER, Buffer.from("x")]) }),
+    { publicCode: "SUPPLIER_IMPORT_FILE_TOO_LARGE", statusCode: 413 });
   await assert.rejects(() => upload({ content: Buffer.alloc(0) }), { publicCode: "SUPPLIER_IMPORT_FILE_REQUIRED", statusCode: 400 });
   await assert.rejects(() => upload({ mode: "replace" }), { publicCode: "SUPPLIER_IMPORT_MODE_INVALID" });
   await assert.rejects(() => upload({ root: null }), { publicCode: "SUPPLIER_IMPORT_UNAVAILABLE", statusCode: 503 });
@@ -99,7 +105,7 @@ test("an upload whose file cannot be removed after a failed insert is logged, wi
     authorize: async () => { await chmod(source, 0o500); throw Object.assign(new Error("stale"), { code: "STALE" }); }
   });
   await assert.rejects(() => importer.createFromUpload({
-    actorId: 1, root, mode: "create_only", content: Buffer.from("secret,value"), maxFileBytes: 100
+    actorId: 1, root, mode: "create_only", content: VALID_HEADER, maxFileBytes: VALID_HEADER.length
   }), { code: "STALE" }, "the original error is still what the caller gets");
   const [stored] = await readdir(source);
   assert.deepEqual(logged, [["supplier.import.source_cleanup_failed", { storedName: stored, code: "EACCES" }]]);
@@ -116,6 +122,51 @@ test("a file with a Bank column is refused at upload before anything is written 
   await assert.rejects(() => upload("\uFEFFsupplierCode, IBAN \r\nS1,GB29NWBK60161331926819\r\n"),
     (error) => error.publicCode === "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN" && error.statusCode === 400 &&
       /第 2 欄/u.test(error.publicMessage) && !JSON.stringify(error).includes("GB29"));
-  // 讀唔到 header（引號錯）就照存，交畀 precheck 判 failed 再刪。
-  await assert.rejects(() => upload('acct"no,x\r\n'), { code: "ENOENT" });
+  // HD-054 A：開頭空行唔可以令上載同 precheck 讀到唔同嘅 header（REV-065 M-1）；讀唔到嘅 header 亦都唔存。
+  for (const [label, content, code] of [
+    ["leading CRLF", "\r\nsupplierCode,IBAN\r\nS1,GB29NWBK60161331926819\r\n", "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN"],
+    ["leading LF", "\nsupplierCode,IBAN\n", "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN"],
+    ["BOM then CRLF", "\uFEFF\r\nsupplierCode,IBAN\r\n", "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN"],
+    ["stray quote in the header", 'acct"no,x\r\n', "SUPPLIER_IMPORT_CSV_MALFORMED"],
+    ["whitespace-only first line", "   \r\nsupplierCode\r\n", "SUPPLIER_IMPORT_HEADER_UNKNOWN"],
+    ["unknown column", "supplierCode,rating\r\n", "SUPPLIER_IMPORT_HEADER_UNKNOWN"],
+    ["blank lines only", "\r\n\r\n", "SUPPLIER_IMPORT_CSV_EMPTY"]
+  ]) {
+    await assert.rejects(() => upload(content), { publicCode: code, statusCode: 400 }, label);
+  }
+  await assert.rejects(() => importer.createFromUpload({ actorId: 1, root: "/nonexistent/supplier-import-root", mode: "create_only",
+    content: Buffer.from([0x73, 0xff, 0x0d, 0x0a]), maxFileBytes: 100 }), { publicCode: "SUPPLIER_IMPORT_CSV_NOT_UTF8", statusCode: 400 });
+});
+
+test("the upload check and precheck read the same header from the same bytes (REV-065 M-1)", async () => {
+  const { precheckSupplierCsv, uploadHeaderError } = await import("../src/modules/supplier/import/SupplierImportProcessor.js");
+  const { SUPPLIER_IMPORT_COLUMN_NAMES } = await import("../src/modules/supplier/import/supplierCsvSchema.js");
+  const template = SUPPLIER_IMPORT_COLUMN_NAMES.join(",");
+  const cases = {
+    "valid header": `${template}\r\n${SUPPLIER_IMPORT_COLUMN_NAMES.map((name) =>
+      ({ supplierCode: "S1", supplierName: "Acme", defaultCurrencyCode: "HKD" })[name] ?? "").join(",")}\r\n`,
+    "leading CRLF + Bank": `\r\n${template},IBAN\r\n`,
+    "leading LF + Bank": `\n${template},IBAN\n`,
+    "BOM + CRLF + Bank": `\uFEFF\r\n${template},IBAN\r\n`,
+    "multi-line quoted Bank header": `"Bank\r\nAccount",${template}\r\n`,
+    "missing column": `${SUPPLIER_IMPORT_COLUMN_NAMES.slice(1).join(",")}\r\n`,
+    "duplicate column": `${template},notes\r\n`,
+    "stray quote": `acct"x,${template}\r\n`,
+    "whitespace line": ` \r\n${template}\r\n`,
+    "blank only": "\r\n"
+  };
+  const headerCodes = new Set(["SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", "SUPPLIER_IMPORT_HEADER_UNKNOWN", "SUPPLIER_IMPORT_HEADER_MISSING",
+    "SUPPLIER_IMPORT_HEADER_DUPLICATE", "SUPPLIER_IMPORT_CSV_MALFORMED", "SUPPLIER_IMPORT_CSV_EMPTY", "SUPPLIER_IMPORT_CSV_NOT_UTF8"]);
+  for (const [label, text] of Object.entries(cases)) {
+    const atUpload = uploadHeaderError(Buffer.from(text))?.code ?? null;
+    const result = await precheckSupplierCsv({
+      source: Buffer.from(text), mode: "create_only", connection: { async query() { return [[]]; } },
+      catalog: { currencies: new Map(), paymentTerms: new Map() }, maxRows: 10, maxBytes: 100_000, onRows: async () => {}
+    });
+    const atPrecheck = headerCodes.has(result.jobLevelError?.code) ? result.jobLevelError.code : null;
+    // 拒唔拒絕一定要一致：上載放行嘅檔，precheck 唔可以喺 header 層面拒絕。代碼可以唔同：csv-parse 一次過
+    // 讀晒成段，precheck 可能先撞到後面一列嘅欄數錯（MALFORMED），上載只讀第一列（例如 HEADER_UNKNOWN）。
+    assert.equal(atUpload !== null, atPrecheck !== null, label);
+    if (label.includes("Bank")) assert.deepEqual([atUpload, atPrecheck], Array(2).fill("SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN"), label);
+  }
 });

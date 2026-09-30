@@ -9,6 +9,7 @@ import { stringify } from "csv-stringify/sync";
 
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
+import { hashNameBigrams } from "../../src/modules/supplier/supplierDuplicateCandidates.js";
 import { SupplierImportWorkerService } from "../../src/services/supplierImport/SupplierImportWorkerService.js";
 import { SUPPLIER_IMPORT_JOB_NAMES } from "../../src/services/supplierImport/supplierImportFiles.js";
 
@@ -263,6 +264,11 @@ integrationTest("TASK-043 IMP-014 (TC-099): a Bank column is refused at upload a
     Array(4).fill(`%${BANK_VALUE}%`));
   assert.deepEqual(Object.values(scan[0]).map(Number), [0, 0, 0, 0]);
   assert.equal(await rootHolds(BANK_VALUE), false, "nothing was stored in the import root");
+  // 開頭一行空行，或者 BOM 之後先空行：上載同 precheck 要讀到同一個 header（REV-065 M-1）。
+  for (const prefix of ["\r\n", "\n", "\uFEFF\r\n"]) {
+    const file = Buffer.concat([Buffer.from(prefix), csv([{ supplierCode: "BANK-2", IBAN: BANK_VALUE }], header)]);
+    await assert.rejects(() => upload(file), { publicCode: "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", statusCode: 400 }, JSON.stringify(prefix));
+  }
   assert.equal(await logsHold(BANK_VALUE), false, "the system and request logs never contain it");
 });
 
@@ -439,6 +445,11 @@ integrationTest("TASK-043 (REV-064 H-1/H-2): a precheck that keeps failing is ab
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     const claimed = await service.claimForPrecheck({ leaseOwner: `crash-${attempt}`, leaseDurationMs: 1000 });
     assert.equal(claimed?.id, created.id, `attempt ${attempt} is claimed`);
+    // 每次都寫低一列先死：放棄嘅時候呢啲列（有名、聯絡資料）要一齊刪（REV-065 L-2）。
+    await service.appendPrecheckRows({ jobId: created.id, leaseOwner: `crash-${attempt}`, leaseDurationMs: 1000, rows: [{
+      rowNumber: 1, operation: "create", matchSupplierId: null, expectedSupplierVersion: null,
+      normalizedPayload: { root: { supplierName: "Again" } }, status: "valid", errors: [], warnings: []
+    }] });
     clock += 5_000;   // 每次都死咗，lease 過期
   }
   const stored = (await job(created.id)).source_stored_name;
@@ -447,6 +458,7 @@ integrationTest("TASK-043 (REV-064 H-1/H-2): a precheck that keeps failing is ab
   assert.deepEqual([abandoned.status, abandoned.last_error_code, abandoned.lease_until], ["failed", "SUPPLIER_IMPORT_PRECHECK_FAILED", null]);
   assert.notEqual(abandoned.completed_at, null);
   assert.notEqual(abandoned.files_purged_at, null);
+  assert.deepEqual(await rows(created.id), [], "the abandoned job keeps no row payloads");
   await assert.rejects(() => stat(path.join(h.worker.preparedRoot, "source", stored)), { code: "ENOENT" }, "its source is deleted");
   const [[audit]] = await h.db.query(
     "SELECT detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.precheck'", [created.id]);
@@ -478,7 +490,16 @@ integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes pre
   await h.db.query(
     `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
        status, created_at, updated_at) VALUES ?`, [seeded]);
-  t.after(() => h.db.query("DELETE FROM suppliers WHERE supplier_code_key LIKE ?", [`sd-${tag.toLowerCase()}-%`]));
+  // 真 Supplier 一定有 name grams；冇嘅話，逐列模糊比對（H-2 嘅成因）放返入去都唔會慢，測試就捉唔到（REV-065 L-1）。
+  const [seededRows] = await h.db.query("SELECT id, supplier_name_key FROM suppliers WHERE supplier_code_key LIKE ?", [`sd-${tag.toLowerCase()}-%`]);
+  const grams = seededRows.flatMap((row) => hashNameBigrams(row.supplier_name_key).map((hash) => [row.id, hash]));
+  for (let start = 0; start < grams.length; start += 5_000) {
+    await h.db.query("INSERT INTO supplier_name_grams (supplier_id, gram_hash) VALUES ?", [grams.slice(start, start + 5_000)]);
+  }
+  t.after(async () => {
+    await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [seededRows.map((row) => row.id)]);
+    await h.db.query("DELETE FROM suppliers WHERE supplier_code_key LIKE ?", [`sd-${tag.toLowerCase()}-%`]);
+  });
   const records = Array.from({ length: 10_000 }, (_, index) => ({
     supplierCode: `BIG-${tag}-${index}`, supplierName: `Imported ${index} Trading Company Limited ${tag}`, defaultCurrencyCode: "HKD"
   }));

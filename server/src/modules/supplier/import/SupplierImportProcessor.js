@@ -67,20 +67,42 @@ function bankColumnMessage(index) {
   return `CSV 第 ${index + 1} 欄是銀行資料欄位；一般匯入不接受銀行資料，請刪除該欄`;
 }
 
+// 上載檢查同 precheck 一定要用同一個 decoder 同同一組 parser option：之前上載嗰邊冇 `skip_empty_lines`，
+// 開頭一行空行就令兩邊讀到唔同嘅 header，有 Bank 欄嘅檔照樣存咗落磁碟（REV-065 M-1）。
+const CSV_OPTIONS = Object.freeze({ bom: true, skip_empty_lines: true, max_record_size: 65_536 });
+const NOT_UTF8 = Object.freeze({ code: "SUPPLIER_IMPORT_CSV_NOT_UTF8", message: "CSV 必須使用 UTF-8 編碼" });
+const MALFORMED = Object.freeze({ code: "SUPPLIER_IMPORT_CSV_MALFORMED", message: "CSV 格式不符合 RFC 4180（引號或欄數不正確）" });
+const EMPTY = Object.freeze({ code: "SUPPLIER_IMPORT_CSV_EMPTY", message: "CSV 沒有欄位名稱或資料列" });
+
+function decodeUtf8(buffer) {
+  return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+}
+
+function headerNames(values) {
+  return values.map((value) => value.trim());
+}
+
 /**
- * 上載時先睇 header（HD-053 A）：有 Bank 欄就唔好存個檔。回 `{ code, message }` 或 null。
- * 讀唔到 header（唔係 UTF-8、引號錯）就回 null：個檔照存，precheck 會判 failed 再即刻刪走佢。
+ * 上載時用 precheck 一模一樣嘅方法讀 header（HD-054 A）：header 有任何問題（Bank、未知、缺少、重複）、
+ * 唔係 UTF-8、或者 header 讀唔到，都即刻拒絕，一個 byte 都唔存。咁存落磁碟嘅檔一定有正確嘅 v1 header，
+ * 冇可能有 Bank 欄。回 `{ code, message }` 或 null。
  */
 export function uploadHeaderError(content) {
-  let headers;
+  let text;
   try {
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(content);
-    [headers = []] = parseSync(text, { bom: true, to: 1, max_record_size: 65_536 });
+    text = decodeUtf8(content);
   } catch {
-    return null;
+    return NOT_UTF8;
   }
-  const bank = headers.map((header) => header.trim()).findIndex(isBankColumn);
-  return bank === -1 ? null : { code: "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", message: bankColumnMessage(bank) };
+  let records;
+  try {
+    records = parseSync(text, { ...CSV_OPTIONS, to: 1 });
+  } catch (error) {
+    if (error instanceof CsvError) return MALFORMED;
+    throw error;
+  }
+  if (records.length === 0) return EMPTY;
+  return headerError(headerNames(records[0]))?.jobLevelError ?? null;
 }
 
 function headerError(headers) {
@@ -108,7 +130,7 @@ function isTemplateRow(firstCell) {
 async function loadBatchLookups(connection, records) {
   const ids = new Set();
   const codeKeys = new Set();
-  const identifierKeys = new Set();
+  const identifierKeys = new Map();
   const nameKeys = new Set();
   for (const record of records) {
     try { if (record.supplierName) nameKeys.add(normalizeSupplierName(record.supplierName).key); } catch { /* 列驗證會報 */ }
@@ -116,9 +138,11 @@ async function loadBatchLookups(connection, records) {
     try { if (record.supplierCode) codeKeys.add(normalizeSupplierCode(record.supplierCode).key); } catch { /* 列驗證會報 */ }
     try {
       if (record.identifierValue) {
-        identifierKeys.add(normalizeIdentifier({
+        const identifier = normalizeIdentifier({
           type: record.identifierType, issuerCountryCode: record.issuerCountryCode, value: record.identifierValue
-        }).key);
+        });
+        identifierKeys.set(`${identifier.type}\u0000${identifier.issuerCountryCode}\u0000${identifier.key}`,
+          [identifier.type, identifier.issuerCountryCode, identifier.key]);
       }
     } catch { /* 列驗證會報 */ }
   }
@@ -131,8 +155,9 @@ async function loadBatchLookups(connection, records) {
     : [[]];
   const [identifiers] = identifierKeys.size
     ? await connection.query(
+      // 用成個 unique key 查，先用得到 uq_supplier_identifier_value；淨係 value key 會成個 index 掃（REV-065 I-4）。
       `SELECT identifier_type, issuer_country_code, identifier_value_key FROM supplier_identifiers
-        WHERE identifier_value_key IN (?)`, [[...identifierKeys]])
+        WHERE (identifier_type, issuer_country_code, identifier_value_key) IN (?)`, [[...identifierKeys.values()]])
     : [[]];
   // 名稱完全相同（正規化之後）先警告，一批一條 query（HD-052 A）。唔做模糊比對：逐列查 name grams 嘅成本
   // 跟 Supplier 數目線性上升，大檔永遠做唔完（REV-064 H-2）；相似名稱提示留喺 UI 逐個新增／修改。
@@ -339,12 +364,12 @@ export async function precheckSupplierCsv({
   if (source.length > maxBytes) return jobError("SUPPLIER_IMPORT_FILE_TOO_LARGE", "CSV 檔案超過大小上限");
   let text;
   try {
-    text = new TextDecoder("utf-8", { fatal: true }).decode(source);
+    text = decodeUtf8(source);
   } catch {
-    return jobError("SUPPLIER_IMPORT_CSV_NOT_UTF8", "CSV 必須使用 UTF-8 編碼");
+    return { jobLevelError: NOT_UTF8 };
   }
 
-  const parser = Readable.from([text]).pipe(parse({ bom: true, skip_empty_lines: true, max_record_size: 65_536 }));
+  const parser = Readable.from([text]).pipe(parse(CSV_OPTIONS));
   const counts = { total: 0, valid: 0, warning: 0, invalid: 0 };
   const seen = { codes: new Map(), targets: new Map(), identifiers: new Map(), names: new Map() };
   let headers = null;
@@ -367,7 +392,7 @@ export async function precheckSupplierCsv({
     let rowNumber = 0;
     for await (const values of parser) {
       if (!headers) {
-        headers = values.map((value) => value.trim());
+        headers = headerNames(values);
         const error = headerError(headers);
         if (error) return error;
         continue;
@@ -383,10 +408,10 @@ export async function precheckSupplierCsv({
   } catch (error) {
     // 所有 csv-parse 錯誤（包括 code 唔係 CSV_ 開頭嘅 INVALID_OPENING_QUOTE）都係檔案問題。佢哋嘅
     // message 帶住 cell 內容，所以唔可以再拋出去（REV-064 H-1）。
-    if (error instanceof CsvError) return jobError("SUPPLIER_IMPORT_CSV_MALFORMED", "CSV 格式不符合 RFC 4180（引號或欄數不正確）");
+    if (error instanceof CsvError) return { jobLevelError: MALFORMED };
     throw error;
   }
-  if (!headers) return jobError("SUPPLIER_IMPORT_CSV_EMPTY", "CSV 沒有欄位名稱或資料列");
+  if (!headers) return { jobLevelError: EMPTY };
   await flush();
   if (counts.total === 0) return jobError("SUPPLIER_IMPORT_CSV_EMPTY", "CSV 沒有資料列");
   return { counts };

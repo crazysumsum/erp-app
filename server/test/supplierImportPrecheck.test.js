@@ -185,3 +185,15 @@ test("a name identical to an existing Supplier's is a warning, not an error, and
   assert.deepEqual(counts, { total: 3, valid: 1, warning: 2, invalid: 0 });
   assert.equal(connection.statements.filter((sql) => /supplier_name_key IN/u.test(sql)).length, 1, "one name query for the whole batch");
 });
+
+test("a batch runs the same number of queries whether it holds one row or five hundred (REV-064 H-2, REV-065 L-1)", async () => {
+  const rowsOf = (count) => Array.from({ length: count }, (_, index) => create({
+    supplierCode: `Q-${index}`, supplierName: `Name ${index}`, identifierType: "tax", issuerCountryCode: "HK", identifierValue: `T${index}`
+  }));
+  const one = database();
+  await precheck(rowsOf(1), { connection: one, batchSize: 500 });
+  const many = database();
+  await precheck(rowsOf(500), { connection: many, batchSize: 500 });
+  assert.equal(many.statements.length, one.statements.length);
+  assert.ok(one.statements.length <= 3, `${one.statements.length} queries per batch`);
+});

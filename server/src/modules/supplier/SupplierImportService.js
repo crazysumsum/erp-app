@@ -166,9 +166,9 @@ export class SupplierImportService {
       throw invalidSupplierInput("SUPPLIER_IMPORT_FILE_REQUIRED", "請選擇一個非空白的 CSV 檔案");
     }
     if (content.length > maxFileBytes) throw supplierImportError("SUPPLIER_IMPORT_FILE_TOO_LARGE", 413, "CSV 檔案超過大小上限");
-    // 有 Bank 欄嘅檔一個 byte 都唔落磁碟（HD-053 A；REV-064 M-1）。
-    const bankHeader = uploadHeaderError(content);
-    if (bankHeader) throw invalidSupplierInput(bankHeader.code, bankHeader.message);
+    // Header 有問題（包括 Bank 欄）嘅檔一個 byte 都唔落磁碟（HD-053 A、HD-054 A；REV-064 M-1、REV-065 M-1）。
+    const headerProblem = uploadHeaderError(content);
+    if (headerProblem) throw invalidSupplierInput(headerProblem.code, headerProblem.message);
     const stored = await writeSupplierImportSource(root, content);
     try {
       return await this.database.withTransaction(async (connection) => {
