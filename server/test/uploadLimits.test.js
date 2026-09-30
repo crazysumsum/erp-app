@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { UploadConcurrencyGate } from "../src/framework/upload/uploadConcurrencyGate.js";
 import {
   normalizeApiUploadConfig,
@@ -766,7 +767,7 @@ test("TC-006 disk settings default to a separate capacity and reject invalid val
 });
 
 test("TC-005 disk routes use a managed non-symlink writable temp root and private modes", async (t) => {
-  const storage = path.resolve("server/storage");
+  const storage = fileURLToPath(new URL("../storage/", import.meta.url));
   await mkdir(storage, { recursive: true });
   const directory = await mkdtemp(path.join(storage, "disk-config-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
@@ -796,7 +797,7 @@ test("TC-005 disk routes use a managed non-symlink writable temp root and privat
 });
 
 async function diskDirectory(t) {
-  const storage = path.resolve("server/storage");
+  const storage = fileURLToPath(new URL("../storage/", import.meta.url));
   await mkdir(storage, { recursive: true });
   const directory = await mkdtemp(path.join(storage, "disk-upload-test-"));
   t.after(() => rm(directory, { recursive: true, force: true }));

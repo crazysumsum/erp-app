@@ -15,6 +15,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { BaseRequestHandler } from "../src/framework/api/BaseRequestHandler.js";
 import { createApplication } from "../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../src/framework/configuration/applicationConfiguration.js";
@@ -717,8 +718,8 @@ test("a custom type registered in the service is accepted end to end", async (t)
 // Server and client are separate processes so generated client chunks do not affect server measurements.
 // This records the baseline; a numeric acceptance threshold still needs explicit review disposition.
 test("TC-004 measures warmed 5 MB and 50 MB disk HTTP uploads in an isolated server", { timeout: 30000 }, async (t) => {
-  await mkdir(path.resolve("server/storage"), { recursive: true });
-  const root = await mkdtemp(path.resolve("server/storage/disk-memory-"));
+  await mkdir(fileURLToPath(new URL("../storage/", import.meta.url)), { recursive: true });
+  const root = await mkdtemp(fileURLToPath(new URL("../storage/disk-memory-", import.meta.url)));
   const code = `
     import { createApplication } from "./server/src/framework/application/createApplication.js";
     import { defaultConfigurationSource } from "./server/src/framework/configuration/applicationConfiguration.js";
@@ -760,7 +761,7 @@ test("TC-004 measures warmed 5 MB and 50 MB disk HTTP uploads in an isolated ser
     });
   `;
   const child = spawn(process.execPath, ["--expose-gc", "--input-type=module", "--import", "./server/test-support/testEnv.js", "-e", code], {
-    cwd: path.resolve("."), env: { ...process.env, SALES_MEMORY_TEST_ROOT: root }, stdio: ["ignore", "ignore", "pipe", "ipc"]
+    cwd: fileURLToPath(new URL("../../", import.meta.url)), env: { ...process.env, SALES_MEMORY_TEST_ROOT: root }, stdio: ["ignore", "ignore", "pipe", "ipc"]
   });
   t.after(async () => {
     if (child.exitCode === null) { child.kill(); await once(child, "exit"); }

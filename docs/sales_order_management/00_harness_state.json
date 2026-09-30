@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 19,
+  "revision": 22,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-006",
   "baseline": {
-    "design": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
-    "plan": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
-    "code_commit": "ee52af113a776f252dc470b760894d1385541880",
-    "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+    "design": "35affda2c8cc0837de1fe3016a1ced6982437a74d87198c3571aa32b115d2c3b",
+    "plan": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+    "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+    "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -299,6 +299,22 @@
         "server/test/applicationFactory.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-STARTUP-CORRESPONDING-TEST-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Existing explicit answer “核准補充 startup 整合 scope” to application startup integration and corresponding tests. Minimal existing configuration.test.js assertions follow that authorization; this record is a narrow application of the same decision, not a new global DESIGN/PLAN/risk decision.",
+      "recorded_at": "2026-09-30T09:06:43.324570+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "code_commit": null,
+      "scope": [
+        "server/test/configuration.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -357,6 +373,18 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
       "source_ref": "implementation/03_startup_and_integrated_checkpoint.md; actual separate-agent final response at ee52af1 vs ad27a180",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CWD-FIXTURE-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "35affda2c8cc0837de1fe3016a1ced6982437a74d87198c3571aa32b115d2c3b",
+      "source_ref": "implementation/04_workspace_test_correction.md; actual separate-agent APPROVE response, independently 79 tests pass from server cwd",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -572,6 +600,72 @@
       "source_ref": "Two CONTRACT_DRIFT pins and prior shared-path approvals bound to older PLAN; current startup scope only. No broader reapproval fabricated.",
       "actor": "Codex /root",
       "observed_at": "2026-09-30T08:50:31.285487+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Five mandatory checks on draft PR #174",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36692309650 — all five IN_PROGRESS at initial actual observation; no PASS claimed",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T08:52:13.982419+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #174 mandatory Browser tests (Playwright)",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36692309650/job/109812114325 — existing Supplier approval spec line 274 reads lookup.query before async lookup is guaranteed; TypeError. Client/test/workflow unchanged vs latest main. 23 Supplier browser tests pass, one fails. No CI retry or outside-scope fix.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T08:59:13.176079+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Existing Supplier approval flow Playwright diagnostic",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "Installed Playwright skill/repository test, original spec repeated three times: 3 passed in actual browser; /private/tmp/sales-playwright-diagnostic.log. Does not override CI FAIL; synthetic API, private report path, reuseExistingServer=false; server shut down.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T08:59:13.176079+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Focused upload per-file coverage diagnostic",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "Partial diagnostic only: middleware lines 568/601, branches 127/142; gate lines 76/76, branches 22/22, functions 4/4; dispatcher lines 486/532, branches 92/115. Existing respective floors met. Partial aggregate coverage is not a full coverage PASS.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T08:59:13.176079+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Initial PR mandatory MySQL/coverage check",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36692309650/job/109812114183 — 16 Sales fixture failures; latest-main migrations succeeded. No aggregate/per-file PASS inferred.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:06:43.324570+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Corrected CI workspace and root developer fixtures",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "239 combined tests server cwd; 79 affected tests root cwd; zero fail/skip; lint/whitespace pass; implementation/04_workspace_test_correction.md",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:06:43.324570+00:00"
     }
   ],
   "pending_decisions": [
@@ -752,19 +846,35 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation",
       "idempotency_key": "push-sales-foundation-20260930",
-      "status": "PLANNED",
-      "source_ref": "Existing Sam commit/create PR/publication authorization; scoped IMPLEMENT checkpoint only, no partial Phase merge."
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; origin/codex/sales-foundation at 8226ea230e8dcaac998fc79abe93bbf3a75d541d"
     },
     {
       "id": "PR-SALES-FOUNDATION-20260930",
       "kind": "PR_CREATE",
       "target": "crazysumsum/erp-app main <- codex/sales-foundation, DRAFT only",
       "idempotency_key": "pr-sales-foundation-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/174 — OPEN DRAFT, exact head 8226ea230e8dcaac998fc79abe93bbf3a75d541d; created and attached to this Codex chat"
+    },
+    {
+      "id": "PR-UPDATE-SALES-FOUNDATION-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-foundation-pr-body-ci-triage",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: https://github.com/crazysumsum/erp-app/pull/174 records initial CI failure."
+    },
+    {
+      "id": "PUSH-SALES-CWD-FIXTURE-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation correction commit",
+      "idempotency_key": "sales-cwd-fixture-push-20260930",
       "status": "PLANNED",
-      "source_ref": "Existing Sam commit/create PR/publication authorization; scoped IMPLEMENT checkpoint only, no partial Phase merge."
+      "source_ref": "Existing commit/public PR authorization; fixes reproduced developer fixture failures with independently reviewed GREEN, no merge."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit approved startup delta/checkpoint, publish draft PR and observe exact-head CI; retain open worktree. Resolve DEC-008/010 and stale dependency pins before full readiness. No migration execution, TASK-009..011, formal acceptance or partial Phase merge."
+  "next_safe_action": "Publish corrected PR #174 checkpoint and observe its new exact-head CI. Await DEC-008/010; stale pins and historical approval bindings keep full readiness blocked. No unrelated frontend fix, local schema execution or partial Phase merge."
 }

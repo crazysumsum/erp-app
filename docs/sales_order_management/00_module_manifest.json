@@ -36,7 +36,8 @@
       "server/test/permissionCatalogueConventions.test.js",
       "server/test/permissionCatalogueStartupGuard.test.js",
       "server/test/directoryLookups.test.js",
-      "server/test/apiDispatcher.test.js"
+      "server/test/apiDispatcher.test.js",
+      "server/test/configuration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -94,7 +95,8 @@
       "server/test/directoryLookups.test.js",
       "server/src/framework/middleware/apiDispatcher.js",
       "server/test/apiDispatcher.test.js",
-      "server/src/framework/configuration/applicationConfiguration.js"
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/configuration.test.js"
     ],
     "forbidden_paths": [
       ".env",

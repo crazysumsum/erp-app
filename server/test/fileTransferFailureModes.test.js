@@ -4,6 +4,7 @@ import { request as httpRequest } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { BaseRequestHandler } from "../src/framework/api/BaseRequestHandler.js";
 import { createApplication } from "../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../src/framework/configuration/applicationConfiguration.js";
@@ -136,8 +137,8 @@ function makeHandlers(uploadDirectory, disk = false, hold = null) {
 }
 
 async function startApplication(t, { limits, disk = false, hold = null } = {}) {
-  if (disk) await mkdir(path.resolve("server/storage"), { recursive: true });
-  const uploadDirectory = await mkdtemp(path.join(disk ? path.resolve("server/storage") : os.tmpdir(), "erp-upload-fail-"));
+  if (disk) await mkdir(fileURLToPath(new URL("../storage/", import.meta.url)), { recursive: true });
+  const uploadDirectory = await mkdtemp(path.join(disk ? fileURLToPath(new URL("../storage/", import.meta.url)) : os.tmpdir(), "erp-upload-fail-"));
   t.after(() => rm(uploadDirectory, { recursive: true, force: true }));
 
   const handlers = makeHandlers(uploadDirectory, disk, hold);
