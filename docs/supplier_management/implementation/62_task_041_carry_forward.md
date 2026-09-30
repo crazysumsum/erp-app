@@ -121,3 +121,58 @@ given back. The last one first survived and got a test that configures the root 
   containing `/*!`. None occurs in the codebase; a T45 helper that needs one can be rewritten.
 - **I-26, accepted.** Both log lines are written before `COMMIT`, so a failed commit leaves one line per attempt that
   describes a state that was rolled back. `withTransaction` does not retry, so nothing is duplicated.
+
+## Status after TASK-043
+
+| Obligation | Status |
+| --- | --- |
+| HD-042: reassess DEF-023 before CSV import accepts account-like columns | **Done, DEF-023 stays accepted.** The CSV path does not widen it: (1) the request log records a multipart body as `[FILE_TRANSFER]` whatever the status, 5xx included — now pinned by `requestLogger.test.js`; (2) a Bank column fails the whole file before any row is stored, and the message names the column by position, not by its text; (3) row errors are fixed strings and never carry a cell value; (4) the integration test scans rows, jobs, audit and both log directories for an IBAN sent under an `IBAN` column and finds none. What remains of DEF-023 is unchanged: the blacklist still guards JSON routes only by field name. |
+| HD-042: every CSV read and write goes through `csv-parse` / `csv-stringify` | **Done.** Reads: `SupplierImportProcessor.js` only (`csv-parse`). Writes: `supplierCsvSchema.js` only (`csv-stringify/sync`). No `split` in `modules/supplier`, `services/supplierImport` or `handlers/supplier-imports`. |
+| HD-047 (1): startup without `import.root` | **Superseded by HD-050 (a).** Startup is not refused; the worker logs `supplier.import.disabled` and upload answers 503 `SUPPLIER_IMPORT_UNAVAILABLE`. The comment in `server/config/supplier.js` now says so (approved in HD-050). |
+| HD-047 (2): precheck job name | **Done.** `SupplierImportWorkerService.jobs` declares `SUPPLIER_IMPORT_JOB_NAMES.precheck`; the test deep-equals both names. |
+| HD-047 (3): stored names only from the helpers | **Done for upload and precheck.** `writeSupplierImportSource` takes its name from `newSupplierImportStoredName()` and its path from `supplierImportFilePath()`; `readSupplierImportSource` also goes through `supplierImportFilePath()`. |
+| HD-049: finalize checks `total_count = applied + failed + skipped` | **Done for T43's half.** Precheck sets `total_count` from the rows; `finalizeExecution` fails the job with `SUPPLIER_IMPORT_COUNT_MISMATCH` and logs `supplier.import.count_mismatch` when the rows no longer add up. T46 still owns the result file's counts. |
+
+New obligations T43 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T45 | Precheck is a snapshot. Re-check at execution everything it checked: Code and Identifier still free, the target not archived, `expected_supplier_version`, currency and payment term still active. |
+| T45 | An update row that changes `defaultCurrencyCode` needs a reason in `SupplierAdminService`; the CSV has no reason column, so `applyRow` must supply one (for example the import job ID). |
+| T45 | The Address and Contact in the payload are the output of the exported `normalizeAddress` / `normalizeContact`; apply them through the same services' connection-taking helpers (HD-048). |
+| T44 / T45 / T46 | A stored file is read the way `readSupplierImportSource` does it: `O_NOFOLLOW`, `fstat` regular file with `nlink === 1`, and the recorded SHA-256 (HD-043). |
+| T46 | The result CSV is written with `SUPPLIER_CSV_STRINGIFY_OPTIONS`: with CRLF records, csv-stringify quotes a cell only when it holds `\r\n`, so a bare `\n` or `\r` would split the row. Formula-risk cells are guarded there too (design §6.9). |
+| T48 | Upload writes the source before it inserts the job, so a crash between the two leaves a stored file no job references. The purge deletes such files once they are older than a day (HD-044, added by HD-050). |
+
+T43 notes:
+
+- **Row numbers** count data rows only (1 = the first row after the header, template description and example rows and blank rows not counted), the same convention as Customer import.
+- **The upload size limit** in the route is read from `config/supplier.js` when the handler module loads; the service checks the normalised `maxFileBytes` again and answers 413.
+- **Name similarity** uses the same `SupplierDuplicateCandidates` default threshold as the create and update API, so precheck and the API agree; it is looked up only for rows with no errors.
+
+## Mutation record for TASK-043
+
+58 mutants against the T43 code, all killed on 05d8122 (unit files, the two import integration files on real MySQL,
+and `requestLogger.test.js`). Each mutant was applied to a committed tree and restored from the saved bytes.
+
+- **Processor (30):** Bank header not special; unknown, missing or duplicate header allowed; template or blank rows not
+  skipped; row and byte limits off by one; UTF-8 not fatal; parse errors rethrown; child columns allowed on update; a blank
+  root cell clearing on update; the ID/Code cross-check removed; `create_only` accepting a taken Code or a `supplierId`;
+  archived Suppliers allowed; in-file Code, target, Identifier and name duplicates ignored; the database Identifier check
+  removed; similar-name lookup matching the row's own Supplier or run on invalid rows; issues unbounded; control characters
+  allowed; payment-term spaces not collapsed; currency not upper-cased; create's required fields unchecked; the address
+  normalised over already-bad cells; an unknown `supplierId` not reported.
+- **Service (15):** the claim keeping partial rows, ignoring a live lease or waiting on a locked job (no `SKIP LOCKED`);
+  append or complete without the lease check; a failed precheck keeping its rows; invalid rows not making
+  `ready_with_errors`; the upload leaving its file after a failed insert, skipping the actor check, its size limit off by
+  one, running without a root; finalize ignoring `total_count` (HD-049); either audit action dropped.
+- **Files (4):** the source written 0644; the read following symlinks, accepting hard links, or skipping the SHA-256.
+- **Worker (5):** completing the job on any error; no `supplier.import.disabled` warning; the configured instead of the
+  real root; shutdown not honoured between batches; the precheck job under another name.
+- **Handler, template, request log (4):** the upload buffer kept; the configured root used; the template without the
+  Bank notice; bare LF/CR cells not quoted; a 5xx multipart body captured by the request log.
+
+Four first survived and each got a test: the similar-name lookup on invalid rows (the test's invalid row had no name),
+a stale owner appending rows, rows left behind by a precheck that fails after its first batch, and bare LF/CR quoting.
+The last is equivalent for our own reader — csv-parse detects the CRLF delimiter and keeps a bare `\n` inside the cell — so
+the test pins the written bytes instead: readers that end a line at `\n` (spreadsheets) would split the row.
