@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
@@ -732,4 +732,59 @@ test("a file arriving in many chunks is stored byte-for-byte", async (t) => {
   const stored = await readFile(req.files[0].path);
   assert.equal(stored.length, content.length, "落盤大小與來源不符");
   assert.ok(stored.equals(content), "落盤內容與來源不符");
+});
+
+// TC-004/TC-006 developer coverage: independent opt-in disk budgets.
+test("TC-006 disk gate reserves byte capacity independently and releases once", () => {
+  const gate = new UploadConcurrencyGate({ maxConcurrentUploads: 3, maxBytesInFlight: 100 });
+  const first = gate.acquire(60);
+  assert.equal(typeof first, "function");
+  assert.equal(gate.acquire(50), null);
+  const second = gate.acquire(40);
+  assert.equal(typeof second, "function");
+  assert.equal(gate.acquire(1), null);
+  first(); first(); second();
+  assert.equal(gate.stats().bytesInFlight, 0);
+  assert.equal(typeof gate.acquire(100), "function");
+  assert.throws(() => gate.acquire(-1), /bytes/);
+  assert.throws(() => new UploadConcurrencyGate({ maxConcurrentUploads: 1, maxBytesInFlight: 0 }), /bytes/i);
+});
+
+test("TC-006 disk settings default to a separate capacity and reject invalid values", () => {
+  const config = normalizeApiUploadConfig({});
+  assert.equal(config.maxConcurrentDiskUploads, 4);
+  assert.equal(config.maxDiskUploadBytesInFlight, 200 * 1024 * 1024);
+  assert.equal(config.diskOrphanMaxAgeSeconds, 3600);
+  for (const input of [
+    { maxConcurrentDiskUploads: 0 }, { maxConcurrentDiskUploads: 1.5 },
+    { maxDiskUploadBytesInFlight: 0 }, { diskOrphanMaxAgeSeconds: 0 },
+    { diskTempDirectory: "/private/tmp/outside-upload" },
+    { diskTempDirectory: "storage/../outside" }
+  ]) assert.throws(() => normalizeApiUploadConfig(input));
+});
+
+test("TC-005 disk routes use a managed non-symlink writable temp root and private modes", async (t) => {
+  const storage = path.resolve("server/storage");
+  await mkdir(storage, { recursive: true });
+  const directory = await mkdtemp(path.join(storage, "disk-config-"));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  const source = { enabled: true, storageMode: "disk", maxFileSizeBytes: 50 * 1024 * 1024,
+    maxFiles: 1, allowedMimeTypes: ["text/csv"] };
+  const global = normalizeApiUploadConfig({ diskTempDirectory: directory });
+  const config = normalizeUploadConfig(source, "test disk", null, global);
+  assert.equal(config.storageMode, "disk");
+  assert.equal(config.directory, directory);
+  assert.equal(config.fileMode, 0o600);
+  assert.equal(config.directoryMode, 0o700);
+  assert.equal(normalizeUploadConfig({ ...source, storageMode: "memory", directory }).storageMode, "memory");
+  assert.throws(() => normalizeUploadConfig({ ...source, storageMode: "other" }, "test", null, global), /storageMode/);
+  assert.throws(() => normalizeUploadConfig({ ...source, memoryOnly: true }, "test", null, global), /memoryOnly/);
+  assert.throws(() => normalizeUploadConfig({ ...source, fileMode: 0o644 }, "test", null, global), /mode/i);
+  const linked = path.join(directory, "linked");
+  await symlink(await uploadDirectory(t), linked);
+  const linkedGlobal = normalizeApiUploadConfig({ diskTempDirectory: linked });
+  assert.throws(() => normalizeUploadConfig(source, "test", null, linkedGlobal), /symlink/);
+  await chmod(directory, 0o500);
+  assert.throws(() => normalizeUploadConfig(source, "test", null, global), /writable/);
+  await chmod(directory, 0o700);
 });

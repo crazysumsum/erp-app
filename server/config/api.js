@@ -40,6 +40,7 @@ const apiConfig = {
       // 是否接受 multipart/form-data。啟用後該 route 不再解析 JSON body，
       // 表單的文字欄位會放進 req.body，檔案放進 req.files。
       enabled: false,
+      storageMode: "memory",
 
       // 檔案落盤目錄。相對路徑以 server 目錄為基準，不存在時自動建立。
       directory: "storage/uploads",
@@ -142,7 +143,11 @@ const apiConfig = {
     //
     // 啟動時若乘積超過這個數字就拒絕啟動。調整時請對著容器的記憶體上限來設，
     // 並留出應用程式本身的用量。
-    maxUploadMemoryBytes: 268435456
+    maxUploadMemoryBytes: 268435456,
+    maxConcurrentDiskUploads: 4,
+    maxDiskUploadBytesInFlight: 200 * 1024 * 1024,
+    diskTempDirectory: "storage/uploads/tmp",
+    diskOrphanMaxAgeSeconds: 3600
   }
 };
 
