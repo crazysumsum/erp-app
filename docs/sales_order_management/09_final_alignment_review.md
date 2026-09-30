@@ -263,3 +263,13 @@ Requested new shared SCOPE is limited to these planned TASK-001～008 paths:
 - `server/test/uploadLimits.test.js`, `configNormalizers.test.js`, `fileTransfer.test.js`, `fileTransferFailureModes.test.js`, `applicationFactory.test.js`, `permissionCatalogueConventions.test.js`, `permissionCatalogueStartupGuard.test.js`, `directoryLookups.test.js`, `apiDispatcher.test.js`.
 
 Each basename in a grouped bullet is relative to the directory of its first full path. Existing Sales-owned source/tests remain within their manifest scope. No Customer/Inventory/Item/Fulfillment provider writes or other migrations are granted.
+
+## 13. Publication blocker and preserved local candidate (2026-09-30)
+
+The initial reviewed documentation commit is `3eb2078` on `codex/sales-readiness-refresh`. `git push -u origin codex/sales-readiness-refresh` was rejected by automatic approval review **before process creation**; it did not upload the candidate, and no PR was created. The stated reason was the design/approval payload and lack of confirmed destination trust/explicit publication authorization. No alternate tool or indirect publishing route was attempted.
+
+Read-only `gh repo view crazysumsum/erp-app --json nameWithOwner,isPrivate,viewerPermission,owner,url` subsequently observed `isPrivate:false`, owner `crazysumsum`, and viewer permission `ADMIN`. This repository is PUBLIC; publishing the candidate makes its design/readiness/approval metadata public. The authenticated login was separately read with `gh api user --jq .login`. Ownership/access does not override the rejection or supply publication consent.
+
+`DEC-006` requests explicit authorization to publish this reviewed candidate to `https://github.com/crazysumsum/erp-app` and open its planning PR. Default action is retain the local committed candidate/worktree, preserve the rejection and pending human decision, and perform no remote write. `DEC-005` independently remains OPEN for the exact DESIGN/PLAN hashes in §12, the limited TASK-001～008 shared scope and unchanged risk/UAT_NA disposition. No implementation, merge, acceptance or release is authorized by these local checks.
+
+The publication bookkeeping is outside the canonical specification hashes; DESIGN/PLAN remain exactly those independently reviewed in §12. Complete this human decision before retrying the same standard push/PR workflow; do not use an alternate transport to evade automatic review.
