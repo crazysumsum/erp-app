@@ -29,3 +29,11 @@ Local diagnostic logs are private under `/private/tmp/sales-startup-*.log`, `/pr
 ## Remaining gates
 
 TASK-002..008 remain IN_PROGRESS until their complete DoD is verified. Numeric memory limits (proposed heap 16 MiB/external 32 MiB/RSS 64 MiB), Sales migration owner allocation, complete runtime authorization/resources, current full mandatory CI, refreshed provider/design approval and TASK-009..011 remain outstanding. A draft PR preserves a reviewable checkpoint; no partial Phase merge is authorized.
+
+## Subsequent latest-main integration
+
+Before publication, authoritative main advanced again to `ad27a1806071057f7671d2c6a91d47423d13eeea` (Supplier PR #167). Integrated without conflicts at `ee52af113a776f252dc470b760894d1385541880`; DESIGN/PLAN hashes above are unchanged. Combined focused developer regression, including new Supplier import/CSV/upload/worker and request-logger tests, passed **230 tests, zero failures, zero skips**. Lint, repeated client build and whitespace checks passed. Logs remain private: `/private/tmp/sales-supplier-integrated-regression.log`, `-lint.log`, `-build.log`.
+
+Independent reviewer `/root/sales_readiness_review` approved scoped compatibility at `ee52af1` against main `ad27a180`: actual Supplier handler configuration retains memory mode, complete file buffer/form fields, no disk path and released memory capacity. Existing Supplier parser/full-content screening is unchanged. No broader scope, numeric threshold or acceptance was granted.
+
+Current structural validators remain BLOCKED: two dependency CONTRACT_DRIFT findings and historical shared-path approvals bound to the previous PLAN hash. The new narrow startup approval is current; historical approvals are preserved, not mechanically rebound. These conditions prevent merge/readiness claims. The boundary check against the freshly integrated main contains no Supplier changes; the earlier read-only check against a concurrently advanced ref included target-only Supplier differences and is superseded for candidate-scope interpretation.

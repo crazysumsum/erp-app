@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 18,
+  "revision": 19,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
     "plan": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
-    "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
-    "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+    "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+    "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
     "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "2eccf588343a4c2bc22d578666bfc1f5732c5e37",
+    "default_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -349,6 +349,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-SUPPLIER-INTEGRATION-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
+      "source_ref": "implementation/03_startup_and_integrated_checkpoint.md; actual separate-agent final response at ee52af1 vs ad27a180",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -527,6 +539,39 @@
       "source_ref": "implementation/03_startup_and_integrated_checkpoint.md: Inventory/catalogue pins stale; no full MySQL lease/authorization; no approved memory threshold or Sales migration allocation",
       "actor": "Codex /root",
       "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Latest-main integration developer regression",
+      "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "230 passed, zero failures/skips; /private/tmp/sales-supplier-integrated-regression.log; lint/build/whitespace passed",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:50:31.285487+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Latest-main Supplier upload compatibility independent review",
+      "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final response: APPROVE scoped compatibility at ee52af1; actual memory-mode handler configuration verified",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:50:31.285487+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Traceability and module boundary validators",
+      "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "BLOCKED",
+      "source_ref": "Two CONTRACT_DRIFT pins and prior shared-path approvals bound to older PLAN; current startup scope only. No broader reapproval fabricated.",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:50:31.285487+00:00"
     }
   ],
   "pending_decisions": [
