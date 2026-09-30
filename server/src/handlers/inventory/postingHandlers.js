@@ -2,6 +2,8 @@ import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { InventoryPostingService } from "../../modules/inventory/InventoryPostingService.js";
 import {
   EMPTY,
+  ISSUE_CREATE,
+  ISSUE_RESPONSE,
   OPERATION_POLICY,
   RECEIPT_CREATE,
   RECEIPT_RESPONSE
@@ -41,6 +43,40 @@ export class PostInventoryReceiptHandler extends BaseRequestHandler {
       source,
       correlationId: req.requestId ?? "",
       payload
+    }));
+  }
+}
+
+export class PostInventoryIssueHandler extends BaseRequestHandler {
+  static handlerName = "postInventoryIssue";
+  static api = {
+    method: "POST", path: "/api/v1/inventory/issues",
+    description: "消耗同一預留的匹配分配並原子過帳出庫。",
+    authorizationPolicies: OPERATION_POLICY,
+    idempotency: Object.freeze({ enabled: true }),
+    requestSchema: { params: EMPTY, query: EMPTY, body: ISSUE_CREATE },
+    responseSchema: { 200: ISSUE_RESPONSE }
+  };
+
+  constructor(services = {}) {
+    super(services);
+    this.inventory = new InventoryPostingService({
+      database: services.require("mysqldatabase"),
+      logger: services.require("logging").logger,
+      time: services.require("time")
+    });
+  }
+
+  async execute(req) {
+    const { source, version, ...payload } = req.input.body;
+    return this.response(await this.inventory.postIssue({
+      actor: {
+        userId: Number(req.auth.claims.sub), serviceName: "",
+        claimedRoles: req.auth.claims.roles, claimedPermissions: req.auth.claims.permissions
+      },
+      authorization: { purpose: "issue.post", requiredCallerPermission: "inventory.operation" },
+      source, correlationId: req.requestId ?? "",
+      payload: { ...payload, expectedVersion: version }
     }));
   }
 }

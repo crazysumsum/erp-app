@@ -12,6 +12,7 @@ import {
   inventoryRemainingLifeDays,
   isInventoryLotExpired,
   meetsMinimumRemainingLife,
+  providerInventoryCommand,
   toBaseQuantity,
   validateInventoryCommandContext,
   validateInventoryLotInput,
@@ -21,6 +22,15 @@ import {
 const RECEIPT_AUTHORIZATION = Object.freeze({
   purpose: "receipt.post",
   requiredCallerPermission: "inventory.operation"
+});
+const ISSUE_AUTHORIZATION = Object.freeze({
+  purpose: "issue.post",
+  requiredCallerPermission: "inventory.operation"
+});
+const FULFILLMENT_ISSUE = Object.freeze({
+  authorization: Object.freeze({ purpose: "issue.post", requiredCallerPermission: "fulfillment.operation" }),
+  module: "FULFILLMENT",
+  documentType: "SHIPMENT"
 });
 const RECEIVING_RECEIPT = Object.freeze({
   authorization: Object.freeze({
@@ -49,6 +59,10 @@ const PAYLOAD_FIELDS = new Set([
 const OVERRIDE_FIELDS = new Set([
   "permission", "reason", "minimumLifeDaysApplied", "actualRemainingLifeDays", "actorId",
   "receiptId", "requestId"
+]);
+const ISSUE_FIELDS = new Set(["reservationId", "expectedVersion", "lines"]);
+const ISSUE_LINE_FIELDS = new Set([
+  "allocationId", "expectedVersion", "balanceId", "expectedBalanceVersion", "quantity"
 ]);
 
 function object(value, label) {
@@ -98,6 +112,48 @@ function receiptPayload(payload) {
     stockStatus: validateInventoryStockStatus(payload.stockStatus),
     minimumLifeOverride: payload.minimumLifeOverride ?? null
   };
+}
+
+function issuePayload(payload) {
+  exactFields(payload, ISSUE_FIELDS, "payload");
+  if (!Array.isArray(payload.lines) || payload.lines.length === 0 || payload.lines.length > 100) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
+  }
+  const lines = payload.lines.map((line) => {
+    exactFields(line, ISSUE_LINE_FIELDS, "line");
+    return {
+      allocationId: positiveId(line.allocationId, "allocationId"),
+      expectedVersion: positiveId(line.expectedVersion, "expectedVersion"),
+      balanceId: positiveId(line.balanceId, "balanceId"),
+      expectedBalanceVersion: positiveId(line.expectedBalanceVersion, "expectedBalanceVersion"),
+      quantity: inventoryPositiveInteger(line.quantity)
+    };
+  });
+  if (new Set(lines.map(({ allocationId }) => allocationId)).size !== lines.length) {
+    throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
+  }
+  const quantity = lines.reduce((total, line) => total + line.quantity, 0);
+  if (!Number.isSafeInteger(quantity)) throw inventoryError("INVENTORY_QUANTITY_INVALID", { field: "quantity" });
+  return { reservationId: positiveId(payload.reservationId, "reservationId"),
+    expectedVersion: positiveId(payload.expectedVersion, "expectedVersion"), lines, quantity };
+}
+
+function safeQuantity(value, field) {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number < 0) {
+    throw inventoryError("INVENTORY_QUANTITY_INVALID", { field });
+  }
+  return number;
+}
+
+function issueFromSummary(summary, payload) {
+  const movementIds = JSON.parse(summary.allocationSnapshot);
+  return { status: summary.status, operationId: Number(summary.operationId),
+    movementGroupId: summary.movementGroupId, reservationId: Number(summary.reservationId),
+    version: Number(summary.version), quantity: Number(summary.quantity),
+    lines: payload.lines.map((line, index) => ({ movementId: Number(movementIds[index]),
+      allocationId: line.allocationId, balanceId: line.balanceId, quantity: line.quantity,
+      allocationVersion: line.expectedVersion + 1, balanceVersion: line.expectedBalanceVersion + 1 })) };
 }
 
 function providerReceiptCommand(command, contract) {
@@ -253,6 +309,243 @@ export class InventoryPostingService {
       providerReceiptCommand(command, CUSTOMER_RETURN_RECEIPT),
       CUSTOMER_RETURN_RECEIPT.authorization
     );
+  }
+
+  postIssue(command) {
+    return this.database.withTransaction((transaction) => this.postIssueInTransaction(transaction, command));
+  }
+
+  postIssueInTransaction(transaction, command) {
+    return this.#postIssueInTransaction(transaction, command, ISSUE_AUTHORIZATION);
+  }
+
+  postFulfillmentIssueInTransaction(transaction, command) {
+    return this.#postIssueInTransaction(transaction,
+      providerInventoryCommand(transaction, command, FULFILLMENT_ISSUE), FULFILLMENT_ISSUE.authorization);
+  }
+
+  async #postIssueInTransaction(transaction, command, expectedAuthorization) {
+    const context = validateInventoryCommandContext(transaction, command, expectedAuthorization);
+    if (context.actor.userId === null) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
+    const payload = issuePayload(context.payload);
+    const actor = await this.authorize(transaction, {
+      actorId: context.actor.userId,
+      claimedRoles: context.actor.claimedRoles,
+      claimedPermissions: context.actor.claimedPermissions
+    });
+    if (!actor?.permissions?.includes(expectedAuthorization.requiredCallerPermission)) {
+      throw inventoryError("PERMISSION_STALE");
+    }
+    const postedAt = this.time.nowMs();
+    const actorLabel = actor.username || `user:${context.actor.userId}`;
+    const claim = await this.operations.claim(transaction, {
+      commandType: "ISSUE_POST", source: context.source, payload: context.payload,
+      actorUserId: context.actor.userId, actorLabel,
+      requestId: context.correlationId, correlationId: context.correlationId, createdAt: postedAt
+    });
+    checkpoint(transaction, "operation");
+    if (claim.replay) return issueFromSummary(claim.replay.resultSummary, payload);
+
+    const [[scope]] = await transaction.query(
+      "SELECT * FROM inventory_reservations WHERE id = ?", [payload.reservationId]
+    );
+    if (!scope) throw inventoryError("INVENTORY_RESOURCE_NOT_FOUND");
+    const warehouseId = positiveId(scope.warehouse_id, "warehouseId");
+    const skuId = positiveId(scope.sku_id, "skuId");
+    const allocationIds = payload.lines.map(({ allocationId }) => allocationId).sort((a, b) => a - b);
+    const [references] = await transaction.query(
+      `SELECT a.id, a.reservation_id, a.stock_balance_id,
+              b.warehouse_id, b.sku_id, b.bin_id, b.lot_id, b.stock_status
+         FROM inventory_allocations a JOIN inventory_stock_balances b ON b.id = a.stock_balance_id
+        WHERE a.id IN (${allocationIds.map(() => "?").join(", ")}) ORDER BY a.id`, allocationIds
+    );
+    if (references.length !== payload.lines.length || references.some((row) =>
+      Number(row.reservation_id) !== payload.reservationId ||
+      Number(row.warehouse_id) !== warehouseId || Number(row.sku_id) !== skuId)) {
+      throw inventoryError("ALLOCATION_STATE_CONFLICT");
+    }
+    const byReference = new Map(references.map((row) => [Number(row.id), row]));
+    if (payload.lines.some((line) => Number(byReference.get(line.allocationId)?.stock_balance_id) !== line.balanceId)) {
+      throw inventoryError("ALLOCATION_STATE_CONFLICT");
+    }
+    const locked = await this.locks.lockForCommand(transaction, {
+      warehouseIds: [warehouseId], stockControls: [{ warehouseId, skuId }],
+      binIds: references.map((row) => Number(row.bin_id)),
+      balances: references.map((row) => ({ warehouseId, skuId, binId: Number(row.bin_id),
+        lotId: row.lot_id === null ? null : Number(row.lot_id), stockStatus: row.stock_status })),
+      reservationIds: [payload.reservationId], now: postedAt
+    });
+    const warehouse = locked.warehouses.find((row) => Number(row.id) === warehouseId);
+    if (!warehouse || warehouse.status !== "ACTIVE") throw inventoryError("WAREHOUSE_INVALID");
+    if (locked.binLocks.length) throw inventoryError("BIN_LOCKED_BY_STOCKTAKE");
+    const control = locked.stockControls.find((row) => Number(row.warehouse_id) === warehouseId &&
+      Number(row.sku_id) === skuId);
+    const reservation = locked.reservations.find((row) => Number(row.id) === payload.reservationId);
+    if (!control || !reservation || Number(reservation.warehouse_id) !== warehouseId ||
+        Number(reservation.sku_id) !== skuId) throw inventoryError("CONCURRENT_OPERATION");
+    if (Number(reservation.version) !== payload.expectedVersion) throw inventoryError("VERSION_CONFLICT");
+    if (!["ACTIVE", "PARTIALLY_CONSUMED"].includes(reservation.status)) {
+      throw inventoryError("RESERVATION_STATE_CONFLICT");
+    }
+    const original = safeQuantity(reservation.original_quantity, "originalQuantity");
+    const consumed = safeQuantity(reservation.consumed_quantity, "consumedQuantity");
+    const released = safeQuantity(reservation.released_quantity, "releasedQuantity");
+    const outstanding = safeQuantity(reservation.outstanding_quantity, "outstandingQuantity");
+    const reserved = safeQuantity(control.reserved_quantity, "reservedQuantity");
+    if (original !== consumed + released + outstanding || payload.quantity > outstanding ||
+        reserved < outstanding) throw inventoryError("RESERVATION_STATE_CONFLICT");
+    const profile = await this.itemLookup.getInventoryProfileInTransaction(transaction, skuId);
+    assertProfile(profile);
+    const lotIds = [...new Set(references.flatMap((row) => row.lot_id === null ? [] : [Number(row.lot_id)]))];
+    const [lots] = lotIds.length ? await transaction.query(
+      `SELECT id, sku_id, lot_number, DATE_FORMAT(expiry_date, '%Y-%m-%d') AS expiry_date
+         FROM inventory_lots WHERE id IN (${lotIds.map(() => "?").join(", ")})`, lotIds
+    ) : [[]];
+    const lotById = new Map(lots.map((row) => [Number(row.id), row]));
+    const [allocations] = await transaction.query(
+      `SELECT * FROM inventory_allocations WHERE id IN (${allocationIds.map(() => "?").join(", ")})
+        ORDER BY id FOR UPDATE`, allocationIds
+    );
+    const byAllocation = new Map(allocations.map((row) => [Number(row.id), row]));
+    const workingBalances = new Map(locked.balances.map((row) => [Number(row.id), {
+      row, onHand: safeQuantity(row.on_hand_quantity, "onHandQuantity"),
+      allocated: safeQuantity(row.allocated_quantity, "allocatedQuantity"), version: Number(row.version)
+    }]));
+    const currentDate = this.time.fileDate();
+    const movementGroupId = this.createMovementGroupId();
+    const resultLines = [];
+    for (const line of payload.lines) {
+      const reference = byReference.get(line.allocationId);
+      const allocation = byAllocation.get(line.allocationId);
+      const balance = workingBalances.get(line.balanceId);
+      const bin = locked.bins.find((row) => Number(row.id) === Number(reference.bin_id));
+      const lot = reference.lot_id === null ? null : lotById.get(Number(reference.lot_id));
+      if (!allocation || Number(allocation.reservation_id) !== payload.reservationId ||
+          Number(allocation.stock_balance_id) !== line.balanceId || !balance ||
+          Number(balance.row.warehouse_id) !== warehouseId || Number(balance.row.sku_id) !== skuId ||
+          Number(balance.row.bin_id) !== Number(reference.bin_id) ||
+          (balance.row.lot_id === null ? null : Number(balance.row.lot_id)) !==
+            (reference.lot_id === null ? null : Number(reference.lot_id)) ||
+          balance.row.stock_status !== reference.stock_status) throw inventoryError("ALLOCATION_STATE_CONFLICT");
+      if (!bin || Number(bin.warehouse_id) !== warehouseId || bin.status !== "ACTIVE") {
+        throw inventoryError("BIN_INVALID");
+      }
+      if (balance.row.stock_status !== "AVAILABLE") throw inventoryError("STOCK_STATUS_INELIGIBLE");
+      if ((profile.trackingPolicy === "none" && lot !== null) ||
+          (profile.trackingPolicy !== "none" && (!lot || Number(lot.sku_id) !== skuId)) ||
+          (profile.trackingPolicy === "batch_expiry" && !lot?.expiry_date)) {
+        throw inventoryError("ALLOCATION_STATE_CONFLICT");
+      }
+      if (lot?.expiry_date && isInventoryLotExpired(lot.expiry_date, currentDate)) {
+        throw inventoryError("LOT_EXPIRED");
+      }
+      if (!meetsMinimumRemainingLife(lot?.expiry_date ?? null, currentDate,
+        Number(reservation.minimum_remaining_days))) throw inventoryError("LOT_MINIMUM_LIFE_FAILED");
+      if (Number(allocation.version) !== line.expectedVersion || balance.version !== line.expectedBalanceVersion) {
+        throw inventoryError("VERSION_CONFLICT");
+      }
+      if (!["ACTIVE", "PARTIALLY_CONSUMED"].includes(allocation.status)) {
+        throw inventoryError("ALLOCATION_STATE_CONFLICT");
+      }
+      const allocationOriginal = safeQuantity(allocation.allocated_quantity, "allocatedQuantity");
+      const allocationConsumed = safeQuantity(allocation.consumed_quantity, "consumedQuantity");
+      const allocationReleased = safeQuantity(allocation.released_quantity, "releasedQuantity");
+      const allocationOutstanding = safeQuantity(allocation.outstanding_quantity, "outstandingQuantity");
+      if (allocationOriginal !== allocationConsumed + allocationReleased + allocationOutstanding ||
+          line.quantity > allocationOutstanding || line.quantity > balance.onHand ||
+          line.quantity > balance.allocated) throw inventoryError("ALLOCATION_INSUFFICIENT");
+      const nextOnHand = balance.onHand - line.quantity;
+      const nextAllocated = balance.allocated - line.quantity;
+      const nextAllocationOutstanding = allocationOutstanding - line.quantity;
+      const nextAllocationConsumed = allocationConsumed + line.quantity;
+      const allocationStatus = nextAllocationOutstanding === 0 ? "CONSUMED" : "PARTIALLY_CONSUMED";
+      const [balanceUpdate] = await transaction.execute(
+        `UPDATE inventory_stock_balances SET on_hand_quantity = ?, allocated_quantity = ?,
+                fifo_anchor_date = IF(? = 0, NULL, fifo_anchor_date),
+                version = version + 1, updated_at = ? WHERE id = ? AND version = ?`,
+        [nextOnHand, nextAllocated, nextOnHand, postedAt, line.balanceId, balance.version]
+      );
+      if (Number(balanceUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+      const [allocationUpdate] = await transaction.execute(
+        `UPDATE inventory_allocations SET consumed_quantity = ?, outstanding_quantity = ?,
+                status = ?, version = version + 1, updated_at = ?, updated_by = ?
+          WHERE id = ? AND version = ?`,
+        [nextAllocationConsumed, nextAllocationOutstanding, allocationStatus, postedAt,
+          context.actor.userId, line.allocationId, line.expectedVersion]
+      );
+      if (Number(allocationUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+      checkpoint(transaction, "current_state");
+      const [movement] = await transaction.execute(
+        `INSERT INTO inventory_movements
+           (movement_group_id, operation_request_id, movement_type, location_kind,
+            warehouse_id, bin_id, sku_id, lot_id, stock_status, direction, quantity,
+            balance_before, balance_after, balance_version_after, reservation_id, allocation_id,
+            transfer_id, transfer_line_id, stocktake_id, stocktake_line_id,
+            reversal_of_movement_id, reason_category, reason_text, sku_code_snapshot,
+            sku_name_snapshot, warehouse_code_snapshot, bin_code_snapshot, lot_number_snapshot,
+            expiry_date_snapshot, posted_at, posted_by, posted_by_label)
+         VALUES (?, ?, 'ISSUE', 'BIN', ?, ?, ?, ?, 'AVAILABLE', 'OUT', ?, ?, ?, ?, ?, ?,
+                 NULL, NULL, NULL, NULL, NULL, '', '', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [movementGroupId, claim.operationId, warehouseId, Number(bin.id), skuId,
+          lot ? Number(lot.id) : null, line.quantity, balance.onHand, nextOnHand, balance.version + 1,
+          payload.reservationId, line.allocationId, profile.skuCode, profile.skuName,
+          warehouse.warehouse_code, bin.bin_code, lot?.lot_number ?? "", lot?.expiry_date ?? null,
+          postedAt, context.actor.userId, actorLabel]
+      );
+      const movementId = Number(movement.insertId);
+      checkpoint(transaction, "movement");
+      resultLines.push({ movementId, allocationId: line.allocationId, balanceId: line.balanceId,
+        quantity: line.quantity, allocationVersion: line.expectedVersion + 1,
+        balanceVersion: balance.version + 1 });
+      balance.onHand = nextOnHand;
+      balance.allocated = nextAllocated;
+      balance.version += 1;
+    }
+    const nextConsumed = consumed + payload.quantity;
+    const nextOutstanding = outstanding - payload.quantity;
+    const status = nextOutstanding === 0 ? "CONSUMED" : "PARTIALLY_CONSUMED";
+    if (!Number.isSafeInteger(nextConsumed) || original !== nextConsumed + released + nextOutstanding) {
+      throw inventoryError("INVENTORY_QUANTITY_INVALID", { field: "quantity" });
+    }
+    const [controlUpdate] = await transaction.execute(
+      `UPDATE inventory_stock_controls SET reserved_quantity = ?, version = version + 1,
+              updated_at = ? WHERE id = ? AND version = ?`,
+      [reserved - payload.quantity, postedAt, Number(control.id), Number(control.version)]
+    );
+    if (Number(controlUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+    const [reservationUpdate] = await transaction.execute(
+      `UPDATE inventory_reservations SET consumed_quantity = ?, outstanding_quantity = ?,
+              status = ?, version = version + 1, updated_at = ?, updated_by = ?
+        WHERE id = ? AND version = ?`,
+      [nextConsumed, nextOutstanding, status, postedAt, context.actor.userId,
+        payload.reservationId, payload.expectedVersion]
+    );
+    if (Number(reservationUpdate.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+    await this.audit.recordSucceeded(transaction, {
+      actorUserId: context.actor.userId, actorLabel,
+      action: "issue.post", targetType: "movement_group", targetId: resultLines[0].movementId,
+      targetLabel: movementGroupId,
+      beforeSummary: { reservationId: payload.reservationId, outstandingQuantity: outstanding,
+        reservedQuantity: reserved },
+      afterSummary: { reservationId: payload.reservationId, outstandingQuantity: nextOutstanding,
+        consumedQuantity: nextConsumed, reservedQuantity: reserved - payload.quantity,
+        quantity: payload.quantity, rowCount: resultLines.length, movementGroupId },
+      operationRequestId: claim.operationId, requestId: context.correlationId,
+      correlationId: context.correlationId, ip: ""
+    });
+    checkpoint(transaction, "audit");
+    const result = { status: "POSTED", operationId: claim.operationId, movementGroupId,
+      reservationId: payload.reservationId, version: payload.expectedVersion + 1,
+      quantity: payload.quantity, lines: resultLines };
+    await this.operations.complete(transaction, {
+      operationId: claim.operationId, resultType: "MOVEMENT_GROUP", resultId: movementGroupId,
+      resultSummary: { status: result.status, operationId: result.operationId,
+        movementGroupId, reservationId: result.reservationId, version: result.version,
+        quantity: result.quantity, rowCount: result.lines.length,
+        allocationSnapshot: JSON.stringify(result.lines.map(({ movementId }) => movementId)) },
+      completedAt: postedAt
+    });
+    return result;
   }
 
   async #postReceiptInTransaction(transaction, command, expectedAuthorization) {

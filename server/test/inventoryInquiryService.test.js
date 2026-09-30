@@ -80,6 +80,56 @@ test("TASK-016 Stock inquiry uses bounded filters, exact search priority and exp
   assert.equal(Object.hasOwn(page.items[0], "internal_cost"), false);
 });
 
+test("TASK-023 Reservation list filters uncovered scope and returns an allowlisted quantity breakdown", async () => {
+  const database = databaseWith(
+    [[{ total: "1" }]],
+    [[{
+      id: "7", warehouse_id: "1", warehouse_code: "WH-A", sku_id: "3", sku_code: "SKU-3", sku_name: "Widget",
+      source_module: "SALES", source_document_type: "SALES_ORDER", source_document_id: "SO-1",
+      source_line_id: "1", source_event_id: "reserve-1", purpose: "SALE", minimum_remaining_days: "7",
+      original_quantity: "10", consumed_quantity: "2", released_quantity: "1", outstanding_quantity: "7",
+      eligible_on_hand: "5", reserved_quantity: "7", status: "PARTIALLY_CONSUMED", version: "3",
+      created_at: "100", updated_at: "200", request_hash: "secret"
+    }]]
+  );
+  const service = new InventoryInquiryService({ database, time });
+  const result = await service.listReservations({ sourceDocumentId: "SO-1", warehouseId: 1, uncovered: true });
+  assert.equal(result.total, 1);
+  assert.deepEqual(result.items[0].availability, {
+    eligibleOnHand: 5, reserved: 7, rawAtp: -2, atp: 0, uncoveredReserved: 2
+  });
+  assert.deepEqual(result.items[0].source, {
+    module: "SALES", documentType: "SALES_ORDER", documentId: "SO-1", lineId: "1", eventId: "reserve-1"
+  });
+  assert.equal(result.items[0].outstandingQuantity, 7);
+  assert.equal(Object.hasOwn(result.items[0], "request_hash"), false);
+  assert.match(database.calls[0].sql, /uncovered_reserved > 0/);
+  assert.ok(database.calls[0].params.includes("SO-1"));
+});
+
+test("TASK-023 Reservation detail scopes Allocation children and rejects unknown IDs", async () => {
+  const row = {
+    id: "7", warehouse_id: "1", warehouse_code: "WH-A", sku_id: "3", sku_code: "SKU-3", sku_name: "Widget",
+    source_module: "SALES", source_document_type: "SALES_ORDER", source_document_id: "SO-1",
+    source_line_id: "1", source_event_id: "reserve-1", purpose: "SALE", minimum_remaining_days: "7",
+    original_quantity: "10", consumed_quantity: "2", released_quantity: "1", outstanding_quantity: "7",
+    eligible_on_hand: "12", reserved_quantity: "7", status: "PARTIALLY_CONSUMED", version: "3",
+    created_at: "100", updated_at: "200"
+  };
+  const database = databaseWith([[row]], [[{
+    id: "8", stock_balance_id: "12", bin_id: "2", lot_id: "4", expiry_date: "2026-10-31",
+    allocated_quantity: "5", consumed_quantity: "2", released_quantity: "1", outstanding_quantity: "2",
+    selection_strategy: "FEFO", is_sequence_override: 0, override_reason: "", status: "PARTIALLY_CONSUMED",
+    version: "2", balance_version: "4"
+  }]]);
+  const result = await new InventoryInquiryService({ database, time }).getReservation(7);
+  assert.equal(result.id, 7);
+  assert.equal(result.allocations[0].outstandingQuantity, 2);
+  assert.deepEqual(database.calls[1].params, [7]);
+  await assert.rejects(new InventoryInquiryService({ database: databaseWith([[]]), time }).getReservation(999),
+    (error) => error.code === "INVENTORY_RESOURCE_NOT_FOUND");
+});
+
 test("TASK-016 Stock inquiry rejects non-allowlisted sorting before querying", async () => {
   const database = databaseWith();
   const service = new InventoryInquiryService({ database, time });

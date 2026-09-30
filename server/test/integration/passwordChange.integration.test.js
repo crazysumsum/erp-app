@@ -110,7 +110,8 @@ async function signedAuthed(device, token, { path, body }) {
 // 遷移後的實際角色權限，否則測試會先撞 PERMISSION_STALE。
 const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
   .map(({ name }) => name)
-  .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory."));
+  .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
+    name !== "sales.operation" && name !== "fulfillment.operation");
 
 test("create -> forced login -> blocked management action -> change password -> old token dead -> fresh login -> unblocked", { skip }, async (t) => {
   const application = await startApplication();

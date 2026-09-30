@@ -173,6 +173,24 @@ test("InventoryAuditService accepts Receipt quantity and minimum-life evidence",
   assert.equal(afterSummary.requestId, "request-1");
 });
 
+test("InventoryAuditService accepts bounded Allocation and Issue quantity evidence", async () => {
+  let afterSummary;
+  const service = new InventoryAuditService({
+    database: { async withTransaction() {} }, logger: logger(), time: { nowMs: () => NOW_MS }
+  });
+  await service.recordSucceeded({
+    async execute(_sql, params) { afterSummary = JSON.parse(params[11]); }
+  }, input({
+    action: "issue.post",
+    beforeSummary: { reservationId: 17, outstandingQuantity: 4,
+      reservedQuantity: 4, balanceAllocated: 3 },
+    afterSummary: { reservationId: 17, outstandingQuantity: 1, releasedQuantity: 1,
+      consumedQuantity: 2, reservedQuantity: 1, balanceAllocated: 0 }
+  }));
+  assert.deepEqual(afterSummary, { reservationId: 17, outstandingQuantity: 1,
+    releasedQuantity: 1, consumedQuantity: 2, reservedQuantity: 1, balanceAllocated: 0 });
+});
+
 test("InventoryAuditService records rejection and failure after rollback without a success projection", async () => {
   const calls = [];
   const database = {

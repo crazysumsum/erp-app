@@ -1,5 +1,7 @@
 import {
+  INVENTORY_ALLOCATION_STATUSES,
   INVENTORY_MASTER_STATUSES,
+  INVENTORY_RESERVATION_STATUSES,
   INVENTORY_STOCK_STATUSES
 } from "../../modules/inventory/inventoryConstants.js";
 
@@ -18,6 +20,8 @@ export const OPERATION_POLICY = Object.freeze([Object.freeze({
 })]);
 
 const ID = Object.freeze({ type: "integer", minimum: 1, maximum: Number.MAX_SAFE_INTEGER });
+const NON_NEGATIVE_QUANTITY = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
+const SIGNED_QUANTITY = Object.freeze({ type: "integer", minimum: -Number.MAX_SAFE_INTEGER, maximum: Number.MAX_SAFE_INTEGER });
 const VERSION = Object.freeze({ type: "integer", minimum: 1, maximum: 4_294_967_295 });
 const TIMESTAMP = Object.freeze({ type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER });
 const STATUS = Object.freeze({ type: "string", enum: [...INVENTORY_MASTER_STATUSES] });
@@ -207,6 +211,222 @@ export const RECEIPT_CREATE = Object.freeze({
     manufactureDate: DATE_ONLY,
     stockStatus: { type: "string", enum: [...INVENTORY_STOCK_STATUSES] },
     minimumLifeOverride: MINIMUM_LIFE_OVERRIDE
+  }
+});
+
+export const ISSUE_CREATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["source", "reservationId", "version", "lines"],
+  properties: {
+    source: SOURCE, reservationId: ID, version: VERSION,
+    lines: { type: "array", minItems: 1, maxItems: 100, items: {
+      type: "object", additionalProperties: false,
+      required: ["allocationId", "expectedVersion", "balanceId", "expectedBalanceVersion", "quantity"],
+      properties: {
+        allocationId: ID, expectedVersion: VERSION, balanceId: ID,
+        expectedBalanceVersion: VERSION, quantity: ID
+      }
+    } }
+  }
+});
+export const ISSUE_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["status", "operationId", "movementGroupId", "reservationId", "version", "quantity", "lines"],
+  properties: {
+    status: { const: "POSTED" }, operationId: ID,
+    movementGroupId: { type: "string", minLength: 1, maxLength: 100 },
+    reservationId: ID, version: VERSION, quantity: ID,
+    lines: { type: "array", minItems: 1, maxItems: 100, items: {
+      type: "object", additionalProperties: false,
+      required: ["movementId", "allocationId", "balanceId", "quantity", "allocationVersion", "balanceVersion"],
+      properties: {
+        movementId: ID, allocationId: ID, balanceId: ID, quantity: ID,
+        allocationVersion: VERSION, balanceVersion: VERSION
+      }
+    } }
+  }
+});
+
+export const RESERVATION_CREATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["source", "skuId", "warehouseId", "quantity", "purpose", "minimumRemainingDays"],
+  properties: {
+    source: SOURCE, skuId: ID, warehouseId: ID, quantity: ID,
+    purpose: { const: "SALE" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36_500 }
+  }
+});
+
+export const RESERVATION_ID_PARAMS = Object.freeze({
+  type: "object", additionalProperties: false, required: ["id"], properties: { id: ID }
+});
+export const RESERVATION_RELEASE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version", "quantity"],
+  properties: { source: SOURCE, version: VERSION, quantity: ID }
+});
+export const RESERVATION_CANCEL = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version"],
+  properties: { source: SOURCE, version: VERSION }
+});
+export const ALLOCATION_CANDIDATES_QUERY = Object.freeze({
+  type: "object", additionalProperties: false, required: ["requestedQuantity"],
+  properties: { requestedQuantity: ID, page: { type: "integer", minimum: 1, default: 1 } }
+});
+export const ALLOCATION_CANDIDATES_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["reservationId", "requestedQuantity", "asOf", "reservationVersion", "unallocatedQuantity", "page", "hasMore", "items"],
+  properties: {
+    reservationId: ID, requestedQuantity: ID, asOf: { type: "string", pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    reservationVersion: VERSION, unallocatedQuantity: { type: "integer", minimum: 0 },
+    page: ID, hasMore: { type: "boolean" },
+    items: { type: "array", items: {
+      type: "object", additionalProperties: false,
+      required: ["balanceId", "binId", "lotId", "expiryDate", "firstReceiptDate", "fifoAnchorDate",
+        "freeQuantity", "balanceVersion", "selectionStrategy", "rank"],
+      properties: {
+        balanceId: ID, binId: ID, lotId: { type: ["integer", "null"], minimum: 1 },
+        expiryDate: DATE_ONLY, firstReceiptDate: DATE_ONLY, fifoAnchorDate: DATE_ONLY,
+        freeQuantity: ID, balanceVersion: VERSION, selectionStrategy: { type: "string", enum: ["FEFO", "FIFO"] }, rank: ID
+      }
+    } }
+  }
+});
+
+const ALLOCATION_LINE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["balanceId", "expectedVersion", "quantity"],
+  properties: { balanceId: ID, expectedVersion: VERSION, quantity: ID }
+});
+const ALLOCATION_RELEASE_LINE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["allocationId", "expectedVersion", "quantity"],
+  properties: { allocationId: ID, expectedVersion: VERSION, quantity: ID }
+});
+const ALLOCATION_LINES = Object.freeze({ type: "array", minItems: 1, maxItems: 100, items: ALLOCATION_LINE });
+const ALLOCATION_RELEASE_LINES = Object.freeze({ type: "array", minItems: 1, maxItems: 100, items: ALLOCATION_RELEASE_LINE });
+export const ALLOCATION_CREATE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version", "allocations"],
+  properties: { source: SOURCE, version: VERSION, allocations: ALLOCATION_LINES, overrideReason: REASON }
+});
+export const ALLOCATION_RELEASE = Object.freeze({
+  type: "object", additionalProperties: false, required: ["source", "version", "releases"],
+  properties: { source: SOURCE, version: VERSION, releases: ALLOCATION_RELEASE_LINES }
+});
+export const ALLOCATION_REALLOCATE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["source", "version", "releases", "allocations"],
+  properties: {
+    source: SOURCE, version: VERSION, releases: ALLOCATION_RELEASE_LINES,
+    allocations: ALLOCATION_LINES, overrideReason: REASON
+  }
+});
+const ALLOCATION_CREATED_RESULT = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "balanceId", "quantity", "version", "balanceVersion", "selectionStrategy", "isSequenceOverride"],
+  properties: {
+    id: ID, balanceId: ID, quantity: ID, version: VERSION, balanceVersion: VERSION,
+    selectionStrategy: { type: "string", enum: ["FEFO", "FIFO"] }, isSequenceOverride: { type: "boolean" }
+  }
+});
+const ALLOCATION_RELEASED_RESULT = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "balanceId", "quantity", "releasedQuantity", "outstandingQuantity", "status", "version", "balanceVersion"],
+  properties: {
+    id: ID, balanceId: ID, quantity: ID, releasedQuantity: NON_NEGATIVE_QUANTITY,
+    outstandingQuantity: NON_NEGATIVE_QUANTITY,
+    status: { type: "string", enum: ["ACTIVE", "PARTIALLY_CONSUMED", "RELEASED"] },
+    version: VERSION, balanceVersion: VERSION
+  }
+});
+function allocationResponse(item) {
+  return Object.freeze({
+    type: "object", additionalProperties: false,
+    required: ["reservationId", "operationId", "version", "quantity", "allocations"],
+    properties: {
+      reservationId: ID, operationId: ID, version: VERSION, quantity: ID,
+      allocations: { type: "array", minItems: 1, maxItems: 100, items: item }
+    }
+  });
+}
+export const ALLOCATION_CREATE_RESPONSE = allocationResponse(ALLOCATION_CREATED_RESULT);
+export const ALLOCATION_RELEASE_RESPONSE = allocationResponse(ALLOCATION_RELEASED_RESULT);
+
+const AVAILABILITY_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved"],
+  properties: {
+    eligibleOnHand: NON_NEGATIVE_QUANTITY, reserved: NON_NEGATIVE_QUANTITY,
+    rawAtp: SIGNED_QUANTITY, atp: NON_NEGATIVE_QUANTITY, uncoveredReserved: NON_NEGATIVE_QUANTITY
+  }
+});
+export const RESERVATION_RESPONSE = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "operationId", "warehouseId", "skuId", "purpose", "minimumRemainingDays",
+    "originalQuantity", "consumedQuantity", "releasedQuantity", "outstandingQuantity", "status", "version"],
+  properties: {
+    id: ID, operationId: ID, warehouseId: ID, skuId: ID, purpose: { const: "SALE" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36_500 },
+    originalQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
+    releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
+    status: { type: "string", enum: [...INVENTORY_RESERVATION_STATUSES] }, version: VERSION,
+    availability: AVAILABILITY_RESPONSE
+  }
+});
+
+export const RESERVATION_LIST_QUERY = Object.freeze({
+  type: "object", additionalProperties: false,
+  properties: {
+    page: { type: "integer", minimum: 1, default: 1 },
+    pageSize: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+    q: { type: "string", trim: true, maxLength: 190, default: "" },
+    warehouseId: ID, skuId: ID,
+    sourceModule: { type: "string", minLength: 1, maxLength: 40 },
+    sourceDocumentType: { type: "string", minLength: 1, maxLength: 50 },
+    sourceDocumentId: { type: "string", minLength: 1, maxLength: 100 },
+    status: { type: "string", enum: ["ALL", ...INVENTORY_RESERVATION_STATUSES], default: "ALL" },
+    uncovered: { type: "boolean" },
+    sortBy: { type: "string", enum: ["updatedAt", "createdAt", "status", "skuCode"], default: "updatedAt" },
+    descending: { type: "boolean", default: true }
+  }
+});
+const RESERVATION_INQUIRY = Object.freeze({
+  type: "object", additionalProperties: false,
+  required: ["id", "warehouse", "sku", "source", "purpose", "minimumRemainingDays", "originalQuantity",
+    "consumedQuantity", "releasedQuantity", "outstandingQuantity", "status", "version", "createdAt", "updatedAt", "availability"],
+  properties: {
+    id: ID,
+    warehouse: { type: "object", additionalProperties: false, required: ["warehouseId", "code"],
+      properties: { warehouseId: ID, code: { type: "string" } } },
+    sku: { type: "object", additionalProperties: false, required: ["skuId", "code", "name"],
+      properties: { skuId: ID, code: { type: "string" }, name: { type: "string" } } },
+    source: SOURCE, purpose: { const: "SALE" },
+    minimumRemainingDays: { type: "integer", minimum: 0, maximum: 36_500 },
+    originalQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
+    releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
+    status: { type: "string", enum: [...INVENTORY_RESERVATION_STATUSES] }, version: VERSION,
+    createdAt: TIMESTAMP, updatedAt: TIMESTAMP, availability: AVAILABILITY_RESPONSE
+  }
+});
+export const RESERVATION_LIST_RESPONSE = listResponse(RESERVATION_INQUIRY);
+export const RESERVATION_DETAIL_RESPONSE = Object.freeze({
+  ...RESERVATION_INQUIRY,
+  required: [...RESERVATION_INQUIRY.required, "allocations"],
+  properties: { ...RESERVATION_INQUIRY.properties,
+    allocations: { type: "array", items: {
+      type: "object", additionalProperties: false,
+      required: ["id", "balanceId", "binId", "lotId", "expiryDate", "allocatedQuantity", "consumedQuantity",
+        "releasedQuantity", "outstandingQuantity", "selectionStrategy", "isSequenceOverride", "overrideReason", "status",
+        "version", "balanceVersion"],
+      properties: {
+        id: ID, balanceId: ID, binId: ID, lotId: { type: ["integer", "null"], minimum: 1 }, expiryDate: DATE_ONLY,
+        allocatedQuantity: NON_NEGATIVE_QUANTITY, consumedQuantity: NON_NEGATIVE_QUANTITY,
+        releasedQuantity: NON_NEGATIVE_QUANTITY, outstandingQuantity: NON_NEGATIVE_QUANTITY,
+        selectionStrategy: { type: "string", enum: ["FEFO", "FIFO"] }, isSequenceOverride: { type: "boolean" },
+        overrideReason: { type: "string", maxLength: 500 },
+        status: { type: "string", enum: [...INVENTORY_ALLOCATION_STATUSES] },
+        version: VERSION, balanceVersion: VERSION
+      }
+    } }
   }
 });
 

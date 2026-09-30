@@ -142,12 +142,15 @@ test("0038 seeds the Customer catalogue but does not grant bank permissions to s
     heldNames.sort(),
     PERMISSION_CATALOGUE
       .map((permission) => permission.name)
-      .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory."))
+      .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
+        name !== "sales.operation" && name !== "fulfillment.operation")
       .sort()
   );
   assert.equal(heldNames.includes("customer.bank.view"), false);
   assert.equal(heldNames.includes("customer.bank.mgmt"), false);
   assert.equal(heldNames.some((name) => name.startsWith("inventory.")), false);
+  assert.equal(heldNames.includes("sales.operation"), false);
+  assert.equal(heldNames.includes("fulfillment.operation"), false);
 });
 
 test("0010 seeded item.view/item.mgmt, and gave both to system-admin", { skip }, async (t) => {

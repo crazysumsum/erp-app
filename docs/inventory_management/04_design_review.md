@@ -2,7 +2,7 @@
 
 ## Review result
 
-`CHANGES_REQUESTED` for the 1.0 candidate until DESIGN `567a0cbe46596cad8cd763b4343ce2133b327c0f7bd565f071b38cf4b51954f7` and PLAN `124950a3fdcd8236ef5a519b47e4f8d779fda8da9696dcb40937d66389dfc2e8` receive Sam's independent approval. The semantic direction is approved by `HD-026`: main owns `0054_create_customer_export_jobs.js`, so Inventory shifts as one contiguous block from `0054`～`0063` to `0055`～`0064` without changing dependency order.
+`APPROVED` for the HD-066 rebaseline: Sam independently approved exact DESIGN `f58d1223371a6e53fe78c34403e3172f7ab497a38a1ff0b6994095c0e920f7df` and PLAN `b86a59d33a73f5649aaff4ad0e8c086b29049b3d45965d47e024dc2638d4335b` in the active Codex task on 2026-09-30 (`HD-067`; no detailed findings supplied). Already merged Inventory `0055`～`0060` stays fixed; unmerged Inventory Reservation／Transfer／Stocktake／Opening is allocated `0063`～`0066` because main owns Supplier `0061`～`0062`. This document's older findings below are historical; this approval does not authorize product migration renumbering, main integration, MySQL execution, CI, push, PR or merge.
 
 ## Reviewer provenance
 

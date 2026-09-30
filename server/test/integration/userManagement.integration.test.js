@@ -129,7 +129,8 @@ function tokenIssuer(application) {
 // 遷移後的實際角色權限，否則測試會先撞 PERMISSION_STALE。
 const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
   .map(({ name }) => name)
-  .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory."));
+  .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
+    name !== "sales.operation" && name !== "fulfillment.operation");
 
 function authed(token, body) {
   return {

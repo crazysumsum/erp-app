@@ -1,0 +1,62 @@
+{
+  "schema_version": "2.0",
+  "module_id": "inventory-management",
+  "run_id": "20260930T041404-eca428f37325",
+  "suite_id": "client-build",
+  "stage": "DEVELOPER",
+  "result": "PASS",
+  "spec_baseline": "ed7a585e86f53eead71c3b1f4681b9ab1245ad135dec6f6cacbeb0e8f9e4887a",
+  "source_fingerprint": "ca11cc21ccbcb2b3e96d1b855f5415a7169332e77b9e93aa2168fe93ec1717d0",
+  "code_commit": "143a04a261ab118a21cf89d2f3c03558524a49be",
+  "started_at": "2026-09-30T04:14:04.698284Z",
+  "ended_at": "2026-09-30T04:14:05.575906Z",
+  "environment_id": "inventory-isolated-test",
+  "runtime_instance_id": "inventory-p2-final-20260930",
+  "data_reference": "Synthetic Inventory fixtures defined in 06_technical_test_cases.md; no production data",
+  "command": [
+    "npm",
+    "run",
+    "build",
+    "--workspace",
+    "client"
+  ],
+  "cwd": ".",
+  "command_contract_sha256": "6c93f2b0ad4edee06fbef51a3028f476695c6716f11bdd4a85edeae6b1a4fb09",
+  "exit_code": 0,
+  "timed_out": false,
+  "counts": {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "not_run": 0
+  },
+  "cases": [],
+  "artifacts": [
+    {
+      "path": "evidence/20260930T041404-eca428f37325/stdout.log",
+      "sha256": "2f025d638a8c77606b2238e160f90c72ac9e3dee1ca7655732c67474207a1aa6",
+      "bytes": 636
+    },
+    {
+      "path": "evidence/20260930T041404-eca428f37325/stderr.log",
+      "sha256": "351b524197fb492920789369e7f1a271420c757633fbb553b280a181ac4c31a4",
+      "bytes": 360
+    }
+  ],
+  "tools": [
+    {
+      "argv": [
+        "node",
+        "--version"
+      ],
+      "output": "v26.6.0\n",
+      "matched": true
+    }
+  ],
+  "code_unchanged": true,
+  "spec_unchanged": true,
+  "limitations": [
+    "Local observation only; external services/config/data and secret redaction completeness require review."
+  ]
+}

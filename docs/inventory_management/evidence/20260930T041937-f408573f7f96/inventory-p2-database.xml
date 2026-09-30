@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="TASK-022 real MySQL Allocation transitions and Issue consume" time="0.225179" disabled="0" errors="0" tests="7" failures="0" skipped="0" timestamp="2026-09-30T04:19:37.562Z" hostname="samMacBook-Pro.local">
+		<testcase name="DEV-022-DB-01 releases, reallocates and cancels only matching holds" time="0.026312" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+		<testcase name="DEV-022-DB-02 posts a two-line Issue once with matching persisted quantities" time="0.011463" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+		<testcase name="DEV-022-DB-03 rejects mismatch, expiry and required-Audit failure without writes" time="0.010655" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+		<testcase name="DEV-022-DB-04 serializes competing Issue and Allocation release" time="0.009222" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+		<testcase name="DEV-025-DB-01 concurrent 7+7 Reservations cannot oversell ATP 10" time="0.002975" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+		<testcase name="DEV-025-DB-02 Allocation, Issue and release serialize on one Balance" time="0.010790" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+		<testcase name="DEV-025-DB-03 FEFO permission and ineligible buckets fail closed" time="0.028593" classname="test" file="/Users/sam/.codex/worktrees/inventory-task-013/erp-app/server/test/integration/inventoryTask022.integration.test.js"/>
+	</testsuite>
+	<!-- tests 8 -->
+	<!-- suites 0 -->
+	<!-- pass 8 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 311.649833 -->
+</testsuites>

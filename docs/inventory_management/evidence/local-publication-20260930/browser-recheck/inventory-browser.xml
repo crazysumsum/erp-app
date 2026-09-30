@@ -1,0 +1,44 @@
+<testsuites id="" name="" tests="18" failures="0" skipped="0" errors="0" time="17.318168999999997">
+<testsuite name="inventory-inquiries.spec.js" timestamp="2026-09-30T07:09:56.054Z" hostname="technical" tests="7" failures="0" skipped="0" time="5.691" errors="0">
+<testcase name="TC-022 @technical Stock URL state, keyboard drill-down and distinct quantities" classname="inventory-inquiries.spec.js" time="0.429">
+</testcase>
+<testcase name="TC-022 @technical loading failure retries, empty permissions fail closed" classname="inventory-inquiries.spec.js" time="1.465">
+</testcase>
+<testcase name="TC-022 @technical Lot expiry and Movement source/group/reversal are explicit" classname="inventory-inquiries.spec.js" time="0.668">
+</testcase>
+<testcase name="TC-022 @technical 375px inquiry pages remain usable without body overflow" classname="inventory-inquiries.spec.js" time="0.782">
+</testcase>
+<testcase name="TC-022 @technical 768px inquiry pages remain usable without body overflow" classname="inventory-inquiries.spec.js" time="0.779">
+</testcase>
+<testcase name="TC-022 @technical 1024px inquiry pages remain usable without body overflow" classname="inventory-inquiries.spec.js" time="0.782">
+</testcase>
+<testcase name="TC-022 @technical 1440px inquiry pages remain usable without body overflow" classname="inventory-inquiries.spec.js" time="0.786">
+</testcase>
+</testsuite>
+<testsuite name="inventory-reservations.spec.js" timestamp="2026-09-30T07:09:56.054Z" hostname="technical" tests="7" failures="0" skipped="0" time="7.407" errors="0">
+<testcase name="TASK-024 @technical Reservation detail shows quantities, uncovered next step and copyable source" classname="inventory-reservations.spec.js" time="0.449">
+</testcase>
+<testcase name="TASK-024 @technical Allocation conflict retains input and reloads server candidates" classname="inventory-reservations.spec.js" time="1.767">
+</testcase>
+<testcase name="TASK-024 @technical no FEFO override permission blocks sequence deviation on mobile" classname="inventory-reservations.spec.js" time="0.885">
+</testcase>
+<testcase name="TASK-024 @technical FEFO override requires an authorized reason" classname="inventory-reservations.spec.js" time="1.706">
+</testcase>
+<testcase name="TASK-024 @technical invalid quantity and empty candidates do not permit allocation" classname="inventory-reservations.spec.js" time="0.786">
+</testcase>
+<testcase name="TASK-024 @technical candidate service error is visible and does not submit" classname="inventory-reservations.spec.js" time="0.882">
+</testcase>
+<testcase name="TASK-024 @technical can load a later candidate page" classname="inventory-reservations.spec.js" time="0.932">
+</testcase>
+</testsuite>
+<testsuite name="inventory-warehouses.spec.js" timestamp="2026-09-30T07:09:56.054Z" hostname="technical" tests="4" failures="0" skipped="0" time="3.424" errors="0">
+<testcase name="TC-021 @technical 桌面 master-detail 可查閱 blocker 並執行受保護停用" classname="inventory-warehouses.spec.js" time="1.035">
+</testcase>
+<testcase name="TC-021 @technical 409 保留表單輸入供重新核對" classname="inventory-warehouses.spec.js" time="0.783">
+</testcase>
+<testcase name="TC-021 @technical view-only 與錯誤/空狀態明確" classname="inventory-warehouses.spec.js" time="1.227">
+</testcase>
+<testcase name="TC-021 @technical 375px 以鍵盤順序選倉後進入庫位並可返回" classname="inventory-warehouses.spec.js" time="0.379">
+</testcase>
+</testsuite>
+</testsuites>
