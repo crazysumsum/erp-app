@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { once } from "node:events";
+import { request as httpRequest } from "node:http";
 import {
+  mkdir,
   mkdtemp,
   readdir,
   readFile,
@@ -706,4 +711,88 @@ test("a custom type registered in the service is accepted end to end", async (t)
   const rejected = await fetch(`${url}/api/v1/diagrams`, { method: "POST", body: bad });
   assert.equal(rejected.status, 415);
   assert.equal((await rejected.json()).error.code, "UPLOAD_TYPE_MISMATCH");
+});
+
+
+// Server and client are separate processes so generated client chunks do not affect server measurements.
+// This records the baseline; a numeric acceptance threshold still needs explicit review disposition.
+test("TC-004 measures warmed 5 MB and 50 MB disk HTTP uploads in an isolated server", { timeout: 30000 }, async (t) => {
+  await mkdir(path.resolve("server/storage"), { recursive: true });
+  const root = await mkdtemp(path.resolve("server/storage/disk-memory-"));
+  const code = `
+    import { createApplication } from "./server/src/framework/application/createApplication.js";
+    import { defaultConfigurationSource } from "./server/src/framework/configuration/applicationConfiguration.js";
+    import { BaseRequestHandler } from "./server/src/framework/api/BaseRequestHandler.js";
+    import { fakeDatabaseOptions } from "./server/test-support/fakeMySqlPool.js";
+    import { readdir } from "node:fs/promises";
+    const root = process.env.SALES_MEMORY_TEST_ROOT;
+    const logger = { debug: async()=>{}, info: async()=>{}, warn: async()=>{}, error: async()=>{}, flush: async()=>{}, isSensitiveField: ()=>false };
+    class Upload extends BaseRequestHandler {
+      static handlerName = "diskMemory";
+      static api = { method:"POST", path:"/api/v1/disk-memory", description:"Disk memory developer measurement", authType:"public",
+        authorizationPolicies:[{name:"allowAll",options:{}}], upload:{enabled:true, storageMode:"disk", maxFiles:1,
+          maxFileSizeBytes:50*1024*1024, maxTotalFileBytes:50*1024*1024, maxRequestBytes:50*1024*1024+65536, allowedMimeTypes:["text/csv"]},
+        requestSchema:{body:{type:"object",additionalProperties:false}}, responseSchema:{200:{type:"object",additionalProperties:true}} };
+      async execute(req) {
+        if (!req.sampleMemory) throw new Error("Measurement request logger did not run");
+        req.sampleMemory();
+        const file = req.files[0];
+        return this.response({size:file.size, prefixBytes:file.prefix.length, hash:file.contentHash,
+          hasBuffer:Buffer.isBuffer(file.buffer), baseline:req.memoryBaseline, peak:req.memoryPeak});
+      }
+    }
+    const source = defaultConfigurationSource();
+    const app = await createApplication({configurationSource:{...source,
+      application:{...source.application,port:0,shutdownTimeoutMs:2000},
+      api:{...source.api,upload:{...source.api.upload,diskTempDirectory:root,maxConcurrentDiskUploads:1}}},
+      handlerRegistryOptions:{moduleUrls:["virtual:diskMemory"],moduleLoader:async()=>({Upload})},logger,
+      requestLogger:(req,res,next)=>{
+        global.gc();
+        req.memoryBaseline=process.memoryUsage(); req.memoryPeak={...req.memoryBaseline};
+        req.sampleMemory=()=>{const usage=process.memoryUsage();for(const key of Object.keys(usage))req.memoryPeak[key]=Math.max(req.memoryPeak[key],usage[key]);};
+        const timer=setInterval(req.sampleMemory,1);
+        res.once("finish",()=>clearInterval(timer));res.once("close",()=>clearInterval(timer));next();
+      },serviceOptions:{mysqldatabase:fakeDatabaseOptions()}});
+    const {url}=await app.start();process.send({url});
+    process.on("message",async(message)=>{
+      if(message==="snapshot"){global.gc();process.send({memory:process.memoryUsage(),files:await readdir(root)});}
+      if(message==="stop"){await app.shutdown("memory_test_complete");process.exit(0);}
+    });
+  `;
+  const child = spawn(process.execPath, ["--expose-gc", "--input-type=module", "--import", "./server/test-support/testEnv.js", "-e", code], {
+    cwd: path.resolve("."), env: { ...process.env, SALES_MEMORY_TEST_ROOT: root }, stdio: ["ignore", "ignore", "pipe", "ipc"]
+  });
+  t.after(async () => {
+    if (child.exitCode === null) { child.kill(); await once(child, "exit"); }
+    await rm(root, { recursive: true, force: true });
+  });
+  let startupError = "";
+  child.stderr.on("data", (chunk) => { startupError += chunk; });
+  const [ready] = await Promise.race([once(child, "message"), once(child, "exit").then(() => { throw new Error(`Measurement server startup failed: ${startupError}`); })]);
+  const measurements = [];
+  for (const size of [1024*1024, 5*1024*1024, 50*1024*1024]) {
+    const head = Buffer.from('--memory-boundary\r\nContent-Disposition: form-data; name="file"; filename="input.csv"\r\nContent-Type: text/csv\r\n\r\n');
+    const tail = Buffer.from('\r\n--memory-boundary--\r\n');
+    const chunk = Buffer.from("a,b\n".repeat(16384));
+    const hash = createHash("sha256");
+    const request = httpRequest(`${ready.url}/api/v1/disk-memory`, { method:"POST", headers:{"content-type":"multipart/form-data; boundary=memory-boundary"} });
+    const responsePromise = once(request, "response");
+    request.write(head);
+    for (let sent=0;sent<size;sent+=chunk.length) {
+      const piece=chunk.subarray(0,Math.min(chunk.length,size-sent)); hash.update(piece);
+      if (!request.write(piece)) await once(request,"drain");
+    }
+    request.end(tail);
+    const [response] = await responsePromise;
+    const chunks=[]; for await (const piece of response) chunks.push(piece);
+    assert.equal(response.statusCode,200);
+    const data=JSON.parse(Buffer.concat(chunks)).data;
+    assert.equal(data.size,size); assert.equal(data.hasBuffer,false); assert.equal(data.prefixBytes,65536);
+    assert.equal(data.hash,hash.digest("hex"));
+    let post;
+    do { child.send("snapshot"); [post]=await once(child,"message"); } while(post.files.length);
+    measurements.push({bytes:size,baseline:data.baseline,peak:data.peak,postCleanup:post.memory});
+  }
+  console.log("Sales disk HTTP memory measurements:", JSON.stringify(measurements));
+  child.send("stop"); await once(child,"exit");
 });
