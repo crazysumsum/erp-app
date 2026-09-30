@@ -14,7 +14,7 @@ const catalog = {
   paymentTerms: new Map([["NET 30", { id: 3, code: "NET 30" }]])
 };
 
-function database({ suppliers = [], identifiers = [], names = [] } = {}) {
+function database({ suppliers = [], identifiers = [], names = [], identifierKeys = null } = {}) {
   const statements = [];
   return {
     statements,
@@ -23,7 +23,13 @@ function database({ suppliers = [], identifiers = [], names = [] } = {}) {
       if (!/^\s*SELECT/iu.test(sql)) throw new Error(`precheck must not write: ${sql}`);
       if (/FROM suppliers WHERE supplier_name_key IN/u.test(sql)) return [names.filter((row) => params[0].includes(row.supplier_name_key))];
       if (/FROM suppliers/u.test(sql)) return [suppliers];
-      if (/FROM supplier_identifiers/u.test(sql)) return [identifiers];
+      if (/FROM supplier_identifiers/u.test(sql)) {
+        if (!identifierKeys) return [identifiers];
+        // 好似 MySQL 咁照 (type, country, key) 配對：只回傳被問到嘅組合。
+        const asked = new Set(params[0].map((tuple) => tuple.join("\u0000")));
+        return [identifierKeys.filter((tuple) => asked.has(tuple.join("\u0000")))
+          .map(([type, country, key]) => ({ identifier_type: type, issuer_country_code: country, identifier_value_key: key }))];
+      }
       throw new Error(`unexpected query ${sql} ${JSON.stringify(params)}`);
     }
   };
@@ -184,6 +190,17 @@ test("a name identical to an existing Supplier's is a warning, not an error, and
   assert.deepEqual([rows[2].status, rows[2].warnings], ["valid", []], "a merely similar name is not flagged by CSV precheck");
   assert.deepEqual(counts, { total: 3, valid: 1, warning: 2, invalid: 0 });
   assert.equal(connection.statements.filter((sql) => /supplier_name_key IN/u.test(sql)).length, 1, "one name query for the whole batch");
+});
+
+test("identifiers with the same value but another type or country are looked up separately (REV-066 I-2)", async () => {
+  const connection = database({ identifierKeys: [["tax", "HK", "SAME1"]] });
+  const { rows } = await precheck([
+    // 已被使用嗰個放第一列：如果查詢只用 value 做 key，後一列會蓋過佢，就查唔到。
+    create({ supplierCode: "A", supplierName: "A Co", identifierType: "tax", issuerCountryCode: "HK", identifierValue: "SAME1" }),
+    create({ supplierCode: "B", supplierName: "B Co", identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: "SAME1" })
+  ], { connection });
+  assert.deepEqual(rows.map((row) => row.status), ["invalid", "valid"]);
+  assert.deepEqual(codes(rows[0]), [["identifierValue", "SUPPLIER_IDENTIFIER_TAKEN"]]);
 });
 
 test("a batch runs the same number of queries whether it holds one row or five hundred (REV-064 H-2, REV-065 L-1)", async () => {

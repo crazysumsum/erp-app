@@ -69,7 +69,17 @@ function bankColumnMessage(index) {
 
 // 上載檢查同 precheck 一定要用同一個 decoder 同同一組 parser option：之前上載嗰邊冇 `skip_empty_lines`，
 // 開頭一行空行就令兩邊讀到唔同嘅 header，有 Bank 欄嘅檔照樣存咗落磁碟（REV-065 M-1）。
-const CSV_OPTIONS = Object.freeze({ bom: true, skip_empty_lines: true, max_record_size: 65_536 });
+// `max_record_size` 只計欄位內容，空欄唔計：10 MB 全逗號會變成一千萬個空欄，上載檢查要卡住 event loop
+// 成秒（REV-066 M-1）。所以喺 parser 入面限制欄數；上限要高過範本欄數，Bank 欄先會照樣報自己嘅錯誤碼。
+// 拋 CsvError，兩邊都會當 SUPPLIER_IMPORT_CSV_MALFORMED。
+const MAX_FIELDS = 256;
+const CSV_OPTIONS = Object.freeze({
+  bom: true, skip_empty_lines: true, max_record_size: 65_536,
+  cast(value, { index }) {
+    if (index >= MAX_FIELDS) throw new CsvError("CSV_TOO_MANY_FIELDS", `a record has more than ${MAX_FIELDS} fields`, {});
+    return value;
+  }
+});
 const NOT_UTF8 = Object.freeze({ code: "SUPPLIER_IMPORT_CSV_NOT_UTF8", message: "CSV 必須使用 UTF-8 編碼" });
 const MALFORMED = Object.freeze({ code: "SUPPLIER_IMPORT_CSV_MALFORMED", message: "CSV 格式不符合 RFC 4180（引號或欄數不正確）" });
 const EMPTY = Object.freeze({ code: "SUPPLIER_IMPORT_CSV_EMPTY", message: "CSV 沒有欄位名稱或資料列" });

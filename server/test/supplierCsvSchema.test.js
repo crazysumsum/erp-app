@@ -170,6 +170,18 @@ test("an abort between batches stops the precheck before the next batch", async 
   assert.equal(written.length, 1);
 });
 
+test("a file of 10 MB of commas is refused quickly at upload and at precheck (REV-066 M-1)", async () => {
+  const { uploadHeaderError } = await import("../src/modules/supplier/import/SupplierImportProcessor.js");
+  const commas = Buffer.alloc(10_000_000, 0x2c);
+  let started = Date.now();
+  assert.equal(uploadHeaderError(commas)?.code, "SUPPLIER_IMPORT_CSV_MALFORMED");
+  assert.ok(Date.now() - started < 100, `upload check took ${Date.now() - started} ms`);
+  const flood = Buffer.concat([Buffer.from(`${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\n`), commas]);
+  started = Date.now();
+  assert.equal((await run(flood, { maxBytes: 20_000_000 })).jobLevelError?.code, "SUPPLIER_IMPORT_CSV_MALFORMED");
+  assert.ok(Date.now() - started < 500, `precheck took ${Date.now() - started} ms`);
+});
+
 test("per-row issues are bounded and never echo the cell value", async () => {
   const long = "Z".repeat(1000);   // 30 欄 × 1000 仍然喺 64 KiB 一列嘅上限之內
   const { rows } = await run(csv([Object.fromEntries(SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => [name, long]))]));
