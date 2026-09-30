@@ -170,9 +170,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-main-dd36250",
+        "version": "observed-sales-foundation-0067-source-only",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "4bf3b094d3f62dd61f89190feb453f156f22a10b1b8cbd9cb4864e4f1b45c80b",
+        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
         "regression_suites": [
           "sales-technical"
         ]

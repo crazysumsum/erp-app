@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 22,
+  "revision": 27,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-006",
   "baseline": {
-    "design": "35affda2c8cc0837de1fe3016a1ced6982437a74d87198c3571aa32b115d2c3b",
-    "plan": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
-    "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
-    "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+    "design": "e9d632b185332a00ed4bd59c86ed73c25a4120a4f6a9affc27c3232b53b625c5",
+    "plan": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+    "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+    "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -315,6 +315,43 @@
         "server/test/configuration.test.js"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-MEMORY-20260930",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat explicit “核准” to both stated decisions; scoped continuation of original TASK005/006. No broader global risk/Phase disposition. implementation/05_approved_memory_and_permission_checkpoint.md",
+      "recorded_at": "2026-09-30T09:45:46.866336+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "code_commit": null,
+      "scope": [
+        "TASK-005",
+        "TC-004"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-MIGRATION-0067-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat explicit “核准” to both stated decisions; scoped continuation of original TASK005/006. No broader global risk/Phase disposition. implementation/05_approved_memory_and_permission_checkpoint.md",
+      "recorded_at": "2026-09-30T09:45:46.866336+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "code_commit": null,
+      "scope": [
+        "TASK-006",
+        "server/database/migrations/0067_seed_sales_permissions.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/sales/salesPermissionMigration.test.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -385,6 +422,18 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "35affda2c8cc0837de1fe3016a1ced6982437a74d87198c3571aa32b115d2c3b",
       "source_ref": "implementation/04_workspace_test_correction.md; actual separate-agent APPROVE response, independently 79 tests pass from server cwd",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-APPROVED-MEMORY-PERMISSION-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "e9d632b185332a00ed4bd59c86ed73c25a4120a4f6a9affc27c3232b53b625c5",
+      "source_ref": "implementation/05_approved_memory_and_permission_checkpoint.md; actual separate-agent final APPROVE, independently35testsPASS",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -666,6 +715,127 @@
       "source_ref": "239 combined tests server cwd; 79 affected tests root cwd; zero fail/skip; lint/whitespace pass; implementation/04_workspace_test_correction.md",
       "actor": "Codex /root observing actual tools",
       "observed_at": "2026-09-30T09:06:43.324570+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Corrected candidate audit/lint/frontend build",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — all three observed SUCCESS on actual head 57b39c7",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:09:14.139217+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Corrected candidate browser and MySQL/coverage checks",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — both IN_PROGRESS at actual observation; prior run remains failed history",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:09:14.139217+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Corrected head latest check snapshot",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — observed audit, lint, frontend build and Browser tests SUCCESS; MySQL/coverage still IN_PROGRESS. No complete CI PASS or merge claim.",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:14:59.443708+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126785+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126843+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126844+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126845+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126847+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Approved memory and permission focused developer regression",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "PASS",
+      "source_ref": "240 passed, zero failures/skips; lint/whitespace passed; /private/tmp/sales-approved-combined.log",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:45:46.866336+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Independent memory and permission developer review",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "PASS",
+      "source_ref": "35 passed, zero failures/skips; reviewer peak8.54/24.40/20.53MiB within16/32/64 limits; actual separate-agent final response",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:45:46.866336+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Traceability after permission pin reconciliation",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "BLOCKED",
+      "source_ref": "Remaining CONTRACT_DRIFT is Inventory design only; full provider/baseline/Phase readiness not approved",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:45:46.866336+00:00"
     }
   ],
   "pending_decisions": [
@@ -768,8 +938,8 @@
       "affected_ids": [
         "TASK-005"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam “核准” to memory limits16/32/64MiB and migration0067 allocation. Original approved TASK006 requires view/mgmt/import; omitted import in the summary was transparently corrected. No local SQL execution or partial Phase merge."
     },
     {
       "id": "DEC-009",
@@ -788,8 +958,8 @@
       "affected_ids": [
         "TASK-006"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam “核准” to memory limits16/32/64MiB and migration0067 allocation. Original approved TASK006 requires view/mgmt/import; omitted import in the summary was transparently corrected. No local SQL execution or partial Phase merge."
     }
   ],
   "external_actions": [
@@ -870,11 +1040,27 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation correction commit",
       "idempotency_key": "sales-cwd-fixture-push-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push succeeded; PR #174 head 57b39c762a7af61838affdf75c5d8418af2bc8f6 observed via gh pr view"
+    },
+    {
+      "id": "PR-UPDATE-SALES-CORRECTED-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-corrected-pr-body-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: PR #174 current correction/CI/blocker summary"
+    },
+    {
+      "id": "PUSH-SALES-APPROVED-DECISIONS-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation approved memory/0067 corrections",
+      "idempotency_key": "sales-approved-decisions-push-20260930",
       "status": "PLANNED",
-      "source_ref": "Existing commit/public PR authorization; fixes reproduced developer fixture failures with independently reviewed GREEN, no merge."
+      "source_ref": "Existing user commit/createPR/publication authority plus current two decision approval; independent review/developer checks passed; draft PR174 only."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Publish corrected PR #174 checkpoint and observe its new exact-head CI. Await DEC-008/010; stale pins and historical approval bindings keep full readiness blocked. No unrelated frontend fix, local schema execution or partial Phase merge."
+  "next_safe_action": "Commit/publish approved memory gate and0067 permission seed, require new-head CI on PR174. Keep full Phase blocked by Inventory contract adoption, baseline reconciliation and TASK009..011; no local SQL, UAT or partial Phase merge."
 }
