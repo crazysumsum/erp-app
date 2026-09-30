@@ -1008,6 +1008,20 @@ test("an upload budget the instance cannot afford stops startup", async (t) => {
   assert.doesNotThrow(() =>
     build({ maxConcurrentUploads: 10, maxUploadMemoryBytes: 268435456 })
   );
+
+  // TC-004/TC-006: disk routes consume their own process-wide budget.
+  fileTypes.register("text/csv", { extensions: [".csv"], matches: () => true, matchesPrefix: () => true }, { override: true });
+  routes[0].upload.storageMode = "disk";
+  routes[0].upload.allowedMimeTypes = ["text/csv"];
+  assert.doesNotThrow(() => build({
+    maxConcurrentUploads: 10, maxUploadMemoryBytes: 1,
+    maxConcurrentDiskUploads: 2, maxDiskUploadBytesInFlight: 2 * 10485760
+  }));
+  assert.throws(() => build({
+    maxConcurrentUploads: 10, maxUploadMemoryBytes: 268435456,
+    maxConcurrentDiskUploads: 2, maxDiskUploadBytesInFlight: 10485760
+  }), /maxDiskUploadBytesInFlight/);
+
 });
 
 // ApplicationError 有兩個獨立的 detail 欄位：.details 只會流進伺服器端的
