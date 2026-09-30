@@ -384,7 +384,7 @@ Final Harness unit evidence is 155/155 with zero skips, lint and client-build PA
 
 P2 已完成所需開發驗證、Sam exact-head 批准、五項 CI 及 live-runtime `MERGE_READY`，並於 2026-09-30 合併 PR #171。批准前及發布時的 PENDING／未授權描述保留為歷史，不代表目前狀態。合併前原始 CI、gate 及清理證據見 `evidence/local-merge-20260930/README.md`；EXT-116 合成資料已精確刪除、不可恢復，報告保留。下一步可按既定計劃準備 P3／TASK-026；本次合併請求未執行 P3 程式變更。正式 `TC-004`／`TC-005` 留待 TEST_AND_VERIFY，不以 IMPLEMENT DoD 代替正式驗收。
 
-Sam 於 2026-09-30 要求「進行P2 文件收尾」（APR-082）：僅將合併後 state、readiness、五組原始開發報告及 merge checkpoint 整理為獨立 docs-only commit／PR。本次不改 DESIGN／PLAN、產品／測試／migration／CI 設定，不啟動 P3；PR #171 的批准及 CI 不適用於新文件 PR。文件 PR 保持開啟，等待自己的審閱、CI 及合併批准。原始報告中的舊 worktree／runtime 路徑是執行時 provenance，清理後不再可用，不應改寫。
+Sam 於 2026-09-30 要求「進行P2 文件收尾」（APR-082）：僅將合併後 state、readiness、五組原始開發報告及 merge checkpoint 整理為獨立 docs-only commit／PR，已發布為 [PR #172](https://github.com/crazysumsum/erp-app/pull/172)。本次不改 DESIGN／PLAN、產品／測試／migration／CI 設定，不啟動 P3；PR #171 的批准及 CI 不適用於新文件 PR。文件 PR 保持開啟，等待自己的審閱、CI 及合併批准。原始報告中的舊 worktree／runtime 路徑是執行時 provenance，清理後不再可用，不應改寫。
 
 ### HD-075 narrow shared regression-test boundary — historical proposal
 
