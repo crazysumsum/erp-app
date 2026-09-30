@@ -1,5 +1,5 @@
-import { randomBytes } from "node:crypto";
-import { chmod, lstat, mkdir, readdir, realpath } from "node:fs/promises";
+import { createHash, randomBytes } from "node:crypto";
+import { chmod, constants, lstat, mkdir, open, readdir, realpath, unlink } from "node:fs/promises";
 import path from "node:path";
 
 /**
@@ -29,6 +29,64 @@ export function supplierImportFilePath(root, kind, storedName) {
   if (!KINDS.includes(kind)) throw new TypeError("Supplier import file kind is invalid");
   if (!STORED_NAME.test(String(storedName ?? ""))) throw new TypeError("Supplier import stored name is invalid");
   return path.join(root, kind, storedName);
+}
+
+function sha256(content) {
+  return createHash("sha256").update(content).digest();
+}
+
+/**
+ * Upload 將來源檔寫入 `<root>/source`（T43）。`root` 係 prepareSupplierImportRoot 回嘅真實路徑。
+ * `O_EXCL`＋`O_NOFOLLOW`：已經有同名檔或者 symlink 都唔會寫；0600，寫完 fsync 先回。
+ */
+export async function writeSupplierImportSource(root, content) {
+  const storedName = newSupplierImportStoredName();
+  const file = supplierImportFilePath(root, "source", storedName);
+  const handle = await open(file, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600);
+  try {
+    await handle.writeFile(content);
+    await handle.sync();
+  } catch (error) {
+    await handle.close();
+    await unlink(file).catch(() => {});
+    throw error;
+  }
+  await handle.close();
+  return { storedName, sha256: sha256(content) };
+}
+
+export async function removeSupplierImportFile(root, kind, storedName) {
+  await unlink(supplierImportFilePath(root, kind, storedName)).catch((error) => {
+    if (error.code !== "ENOENT") throw error;
+  });
+}
+
+function sourceError(code, message) {
+  return Object.assign(new Error(message), { code });
+}
+
+/**
+ * Precheck 讀返來源檔：唔跟 symlink；一定要係普通檔而且只有一個 hard link —— 喺 root 入面
+ * 種一個 hard link 就可以讀到 root 以外嘅內容（REV-059 I-6）；內容要同 job 記低嘅 SHA-256 一樣。
+ */
+export async function readSupplierImportSource(root, storedName, { sha256: expected, maxBytes }) {
+  let handle;
+  try {
+    handle = await open(supplierImportFilePath(root, "source", storedName), constants.O_RDONLY | constants.O_NOFOLLOW);
+  } catch (error) {
+    if (["ENOENT", "ELOOP", "EMLINK"].includes(error.code)) throw sourceError("SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", "Supplier import source is missing or is a symlink");
+    throw error;
+  }
+  try {
+    const info = await handle.stat();
+    if (!info.isFile() || info.nlink !== 1) throw sourceError("SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", "Supplier import source is not a single-link regular file");
+    if (info.size > maxBytes) throw sourceError("SUPPLIER_IMPORT_FILE_TOO_LARGE", "Supplier import source exceeds the size limit");
+    const content = await handle.readFile();
+    if (!sha256(content).equals(expected)) throw sourceError("SUPPLIER_IMPORT_SOURCE_UNAVAILABLE", "Supplier import source does not match its recorded SHA-256");
+    return content;
+  } finally {
+    await handle.close();
+  }
 }
 
 async function realDirectory(directory, lstatFn) {

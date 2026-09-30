@@ -1,10 +1,14 @@
-import { supplierConflict } from "./supplierErrors.js";
+import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { removeSupplierImportFile, writeSupplierImportSource } from "../../services/supplierImport/supplierImportFiles.js";
+import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
+import { invalidSupplierInput, supplierConflict, supplierImportError } from "./supplierErrors.js";
+import { SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
 
 /**
  * Supplier import 嘅狀態機同逐列執行 contract（T42；設計 §5.13、§8.8）。
  *
- * T42 只定骨架：job 點樣被 worker 用 lease 領取、每一列點樣喺一個 transaction 入面同
- * Supplier 一齊 commit、做完點樣由 rows 重建統計。上載同 precheck（T43）、confirm 同
+ * T42 定骨架：job 點樣被 worker 用 lease 領取、每一列點樣喺一個 transaction 入面同
+ * Supplier 一齊 commit、做完點樣由 rows 重建統計。T43 加上載同 precheck。confirm 同
  * 真正寫 Supplier 嘅 applyRow（T45）、結果檔（T46）都唔喺度。
  *
  * 逐列 contract（設計 §8.8，唔可以拆）：
@@ -24,7 +28,8 @@ export const IMPORT_JOB_STATUSES = Object.freeze([
 
 export const IMPORT_JOB_TRANSITIONS = Object.freeze({
   uploaded: Object.freeze(["validating", "failed", "cancelled"]),
-  validating: Object.freeze(["ready", "ready_with_errors", "failed"]),
+  // validating → validating：precheck lease 過期之後由另一個 worker 重新做。
+  validating: Object.freeze(["validating", "ready", "ready_with_errors", "failed"]),
   ready: Object.freeze(["queued", "cancelled"]),
   ready_with_errors: Object.freeze(["queued", "cancelled"]),
   queued: Object.freeze(["running", "failed", "cancelled"]),
@@ -62,14 +67,29 @@ export function countsFromRows(rows) {
 }
 
 const JOB_COLUMNS = `id, mode, activation_mode, approver_user_id, approval_setting_value, approval_setting_version,
-  status, lease_owner, lease_until, confirmed_by, confirmed_at, version`;
+  status, total_count, lease_owner, lease_until, confirmed_by, confirmed_at, version`;
+const SUMMARY_COLUMNS = `id, template_version, mode, status, total_count, valid_count, warning_count, invalid_count,
+  last_error_code, error_summary, created_at, updated_at, version`;
+const IMPORT_MODES = Object.freeze(["create_only", "upsert"]);
+const MAX_PRECHECK_BATCH = 1000;
+
+/** 對外嘅 job 摘要：唔帶檔名、SHA-256、lease 或者任何路徑（T44 會加欄位）。 */
+export function importJobSummary(row) {
+  return {
+    id: Number(row.id), templateVersion: row.template_version, mode: row.mode, status: row.status,
+    totalCount: Number(row.total_count), validCount: Number(row.valid_count), warningCount: Number(row.warning_count),
+    invalidCount: Number(row.invalid_count), lastErrorCode: row.last_error_code, errorSummary: row.error_summary,
+    createdAt: Number(row.created_at), updatedAt: Number(row.updated_at), version: Number(row.version)
+  };
+}
 
 function positiveInteger(value) {
   return Number.isSafeInteger(value) && value > 0;
 }
 
-function assertLease(job, leaseOwner, nowMs) {
-  if (!job || job.status !== "running" || job.lease_owner !== leaseOwner || Number(job.lease_until) < nowMs) {
+function assertLease(job, leaseOwner, nowMs, status = "running") {
+  if (!job || job.status !== status || job.lease_owner !== leaseOwner || job.lease_until === null ||
+      Number(job.lease_until) < nowMs) {
     throw supplierConflict("SUPPLIER_IMPORT_LEASE_LOST", "匯入工作已由其他處理程序接手");
   }
 }
@@ -120,11 +140,166 @@ function rowConnection(connection) {
 }
 
 export class SupplierImportService {
-  constructor({ database, time, logger = null } = {}) {
+  constructor({ database, time, logger = null, authorize = assertActorFresh, audit } = {}) {
     if (!database || !time) throw new TypeError("SupplierImportService requires database and time");
     this.database = database;
     this.time = time;
     this.logger = logger;
+    this.authorize = authorize;
+    // SupplierAuditLogService.record 唔用 logger；worker 單元測試冇 logger 都要建到。
+    this.audit = audit ?? new SupplierAuditLogService({ database, logger: logger ?? {}, time });
+  }
+
+  /**
+   * 上載（T43）：先將檔寫入 `<root>/source`（名由 server 產生），再喺一個 transaction 入面驗
+   * actor、插 job（uploaded）同寫 audit。插唔到就刪返個檔。兩步之間 crash 會留低一個冇 job
+   * 指住嘅檔 —— T48 嘅清理要一併刪（HD-050、HD-044）。重送由 route idempotency 處理。
+   */
+  async createFromUpload({ actorId, claimedRoles, claimedPermissions, root, mode, content, maxFileBytes, requestId = "", ip = "" }) {
+    if (!root) throw supplierImportError("SUPPLIER_IMPORT_UNAVAILABLE", 503, "供應商匯入功能目前未啟用");
+    if (!IMPORT_MODES.includes(mode)) throw invalidSupplierInput("SUPPLIER_IMPORT_MODE_INVALID", "匯入模式必須是 create_only 或 upsert");
+    if (!Buffer.isBuffer(content) || content.length === 0) {
+      throw invalidSupplierInput("SUPPLIER_IMPORT_FILE_REQUIRED", "請選擇一個非空白的 CSV 檔案");
+    }
+    if (content.length > maxFileBytes) throw supplierImportError("SUPPLIER_IMPORT_FILE_TOO_LARGE", 413, "CSV 檔案超過大小上限");
+    const stored = await writeSupplierImportSource(root, content);
+    try {
+      return await this.database.withTransaction(async (connection) => {
+        const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+        const nowMs = this.time.nowMs();
+        const [inserted] = await connection.execute(
+          `INSERT INTO supplier_import_jobs
+             (template_version, source_stored_name, source_sha256, mode, status, created_by, created_at, updated_at)
+           VALUES (?, ?, ?, ?, 'uploaded', ?, ?, ?)`,
+          [SUPPLIER_IMPORT_TEMPLATE_VERSION, stored.storedName, stored.sha256, mode, actorId, nowMs, nowMs]
+        );
+        const jobId = Number(inserted.insertId);
+        await this.audit.record(connection, {
+          actorUserId: actorId, actorUsername: actor.username, action: "import.upload", targetType: "import",
+          targetId: jobId, targetLabel: `import-${jobId}`,
+          detail: { after: { mode, templateVersion: SUPPLIER_IMPORT_TEMPLATE_VERSION } }, requestId, ip
+        });
+        const [[job]] = await connection.query(`SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ?`, [jobId]);
+        return importJobSummary(job);
+      });
+    } catch (error) {
+      await removeSupplierImportFile(root, "source", stored.storedName).catch(() => {});
+      throw error;
+    }
+  }
+
+  /**
+   * 領取一個要 precheck 嘅 job：`uploaded`，或者 `validating` 但 lease 過期。上一次做到一半
+   * 寫低嘅 rows 喺同一個 transaction 刪走，所以重做一定由頭開始。
+   */
+  async claimForPrecheck({ leaseOwner, leaseDurationMs }) {
+    if (!String(leaseOwner ?? "").trim() || !positiveInteger(leaseDurationMs)) {
+      throw new TypeError("Supplier import lease is invalid");
+    }
+    return this.database.withTransaction(async (connection) => {
+      const nowMs = this.time.nowMs();
+      const [[job]] = await connection.query(
+        `SELECT id, mode, status, source_stored_name, source_sha256 FROM supplier_import_jobs
+          WHERE status = 'uploaded' OR (status = 'validating' AND (lease_until IS NULL OR lease_until < ?))
+          ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED`,
+        [nowMs]
+      );
+      if (!job) return null;
+      assertJobTransition(job.status, "validating");
+      await connection.execute(
+        `UPDATE supplier_import_jobs SET status = 'validating', lease_owner = ?, lease_until = ?,
+                updated_at = ?, version = version + 1
+          WHERE id = ?`,
+        [leaseOwner, nowMs + leaseDurationMs, nowMs, job.id]
+      );
+      await connection.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [job.id]);
+      return {
+        id: Number(job.id), mode: job.mode, sourceStoredName: job.source_stored_name,
+        sourceSha256: Buffer.from(job.source_sha256), resumed: job.status === "validating"
+      };
+    });
+  }
+
+  /** 寫一批 precheck 結果，順手續 lease。 */
+  async appendPrecheckRows({ jobId, leaseOwner, leaseDurationMs, rows }) {
+    if (!positiveInteger(jobId) || !positiveInteger(leaseDurationMs) || !Array.isArray(rows) ||
+        rows.length < 1 || rows.length > MAX_PRECHECK_BATCH) {
+      throw new TypeError("Supplier import precheck batch is invalid");
+    }
+    return this.database.withTransaction(async (connection) => {
+      const nowMs = this.time.nowMs();
+      const [[job]] = await connection.query(`SELECT ${JOB_COLUMNS} FROM supplier_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
+      assertLease(job, leaseOwner, nowMs, "validating");
+      await connection.query(
+        `INSERT INTO supplier_import_rows
+           (job_id, \`row_number\`, operation, match_supplier_id, expected_supplier_version, normalized_payload,
+            status, errors, warnings, created_at, updated_at)
+         VALUES ?`,
+        [rows.map((row) => [
+          jobId, row.rowNumber, row.operation, row.matchSupplierId, row.expectedSupplierVersion,
+          JSON.stringify(row.normalizedPayload), row.status, JSON.stringify(row.errors), JSON.stringify(row.warnings), nowMs, nowMs
+        ])]
+      );
+      await connection.execute(
+        "UPDATE supplier_import_jobs SET lease_until = ?, updated_at = ? WHERE id = ?",
+        [nowMs + leaseDurationMs, nowMs, jobId]
+      );
+    });
+  }
+
+  /**
+   * 收尾：成個檔有問題就刪走 rows、標 failed 同記原因；否則由 rows 計統計（唯一真相係 rows），
+   * 有 invalid 就 ready_with_errors。`total_count` 喺呢度定，T45 finalize 會用佢對數（HD-049）。
+   */
+  async completePrecheck({ jobId, leaseOwner, jobLevelError = null }) {
+    if (!positiveInteger(jobId)) throw new TypeError("Supplier import precheck completion input is invalid");
+    return this.database.withTransaction(async (connection) => {
+      const nowMs = this.time.nowMs();
+      const [[job]] = await connection.query(
+        `SELECT ${JOB_COLUMNS}, created_by FROM supplier_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
+      assertLease(job, leaseOwner, nowMs, "validating");
+      let detail;
+      if (jobLevelError) {
+        assertJobTransition(job.status, "failed");
+        await connection.execute("DELETE FROM supplier_import_rows WHERE job_id = ?", [jobId]);
+        await connection.execute(
+          `UPDATE supplier_import_jobs SET status = 'failed', total_count = 0, valid_count = 0, warning_count = 0,
+                  invalid_count = 0, last_error_code = ?, error_summary = ?, lease_owner = '', lease_until = NULL,
+                  completed_at = ?, updated_at = ?, version = version + 1
+            WHERE id = ?`,
+          [String(jobLevelError.code).slice(0, 80), String(jobLevelError.message).slice(0, 500), nowMs, nowMs, jobId]
+        );
+        detail = { after: { status: "failed", errorCode: String(jobLevelError.code) } };
+      } else {
+        const [grouped] = await connection.query(
+          "SELECT status, COUNT(*) AS total FROM supplier_import_rows WHERE job_id = ? GROUP BY status", [jobId]);
+        const by = Object.fromEntries(grouped.map((row) => [row.status, Number(row.total)]));
+        const counts = { valid: by.valid ?? 0, warning: by.warning ?? 0, invalid: by.invalid ?? 0 };
+        const total = counts.valid + counts.warning + counts.invalid;
+        if (total === 0 || total !== grouped.reduce((sum, row) => sum + Number(row.total), 0)) {
+          throw new TypeError("Supplier import precheck rows are missing or in an unexpected status");
+        }
+        const status = counts.invalid > 0 ? "ready_with_errors" : "ready";
+        assertJobTransition(job.status, status);
+        await connection.execute(
+          `UPDATE supplier_import_jobs SET status = ?, total_count = ?, valid_count = ?, warning_count = ?,
+                  invalid_count = ?, last_error_code = '', error_summary = '', lease_owner = '', lease_until = NULL,
+                  updated_at = ?, version = version + 1
+            WHERE id = ?`,
+          [status, total, counts.valid, counts.warning, counts.invalid, nowMs, jobId]
+        );
+        detail = { after: { status, totalCount: total, validCount: counts.valid, warningCount: counts.warning, invalidCount: counts.invalid } };
+      }
+      const [[user]] = job.created_by === null
+        ? [[null]]
+        : await connection.query("SELECT username FROM users WHERE id = ?", [job.created_by]);
+      await this.audit.record(connection, {
+        actorUserId: job.created_by, actorUsername: user?.username ?? "", action: "import.precheck",
+        targetType: "import", targetId: jobId, targetLabel: `import-${jobId}`, detail
+      });
+      const [[summary]] = await connection.query(`SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ?`, [jobId]);
+      return importJobSummary(summary);
+    });
   }
 
   /**
@@ -266,6 +441,21 @@ export class SupplierImportService {
         "SELECT status, COUNT(*) AS total FROM supplier_import_rows WHERE job_id = ? GROUP BY status", [jobId]))[0]);
       if (counts.pending > 0) {
         throw supplierConflict("SUPPLIER_IMPORT_ROWS_PENDING", "匯入仍有資料列尚未處理");
+      }
+      // precheck 定咗 total_count；rows 對唔上即係有列喺 precheck 之後被加或者刪咗（HD-049，
+      // REV-061 I-13）。唔可以報 completed：標 failed 同記錄，等人查。
+      if (counts.total !== Number(job.total_count)) {
+        assertJobTransition(job.status, "failed");
+        await connection.execute(
+          `UPDATE supplier_import_jobs SET status = 'failed', applied_count = ?, failed_count = ?, skipped_count = ?,
+                  last_error_code = 'SUPPLIER_IMPORT_COUNT_MISMATCH', error_summary = '匯入資料列數目與預檢不一致',
+                  lease_owner = '', lease_until = NULL, completed_at = ?, updated_at = ?, version = version + 1
+            WHERE id = ?`,
+          [counts.applied, counts.failed, counts.skipped, nowMs, nowMs, jobId]
+        );
+        void this.logger?.error?.("supplier.import.count_mismatch", "Supplier import rows do not match the precheck total",
+          { jobId, expected: Number(job.total_count), actual: counts.total });
+        return { id: jobId, status: "failed", ...counts };
       }
       const status = counts.failed > 0 ? "completed_with_errors" : "completed";
       assertJobTransition(job.status, status);

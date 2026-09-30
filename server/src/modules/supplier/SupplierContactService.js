@@ -30,7 +30,7 @@ function phone(value, field) {
   return normalized;
 }
 
-function normalizeContact(input) {
+export function normalizeContact(input) {
   const purposes = input.purposes ?? [];
   if (!Array.isArray(purposes) || new Set(purposes.map((purpose) => purpose.purposeCode)).size !== purposes.length) {
     throw invalidSupplierInput("SUPPLIER_CONTACT_PURPOSE_INVALID", "聯絡人用途不可重複");
