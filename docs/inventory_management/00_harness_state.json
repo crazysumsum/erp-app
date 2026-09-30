@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 206,
+  "revision": 217,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,17 +11,17 @@
   "baseline": {
     "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
     "plan": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
-    "code_commit": "52070d40df47178570e217d9f92b2438bcdae785",
+    "code_commit": "140f9d0d9021a915505e0c198048e844fb9c42a1",
     "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
-    "worktree": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app",
-    "default_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
+    "worktree": "/Users/sam/.codex/worktrees/inventory-p2-doc-closeout/erp-app",
+    "default_commit": "d6397e020dbcbd70194995cd52755b3d91ec94be",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
     "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Codex /root; EXT-115 precisely cleaned, evidence preserved",
+    "owner": "Codex /root; EXT-116 cleaned after observed merge, original evidence preserved",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/inventory-task-013/erp-app"
+      "workspace": "/Users/sam/.codex/worktrees/inventory-p2-doc-closeout/erp-app"
     },
     "lease_ref": null
   },
@@ -48,9 +48,9 @@
     "TASK-020": "DONE",
     "TASK-021": "DONE",
     "TASK-022": "DONE",
-    "TASK-023": "PENDING",
-    "TASK-024": "PENDING",
-    "TASK-025": "PENDING",
+    "TASK-023": "DONE",
+    "TASK-024": "DONE",
+    "TASK-025": "DONE",
     "TASK-026": "PENDING",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
@@ -1714,6 +1714,46 @@
         "no merge, full P2 code review approval or production deployment"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-081",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task Sam reply 批准CI通過就合併 on2026-09-30 directly to PR171 headbe171ad review/merge handoff; conditional merge after mandatory CI; no detailed review findings supplied, no formal acceptance or deployment",
+      "recorded_at": "2026-09-30T07:26:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "scope": [
+        "inventory-management",
+        "independent human disposition of full PR171 P2 candidate at exact head be171ad87b752104c7a89f023f3c8d4132eecc99",
+        "merge only after all five required current-candidate CI checks and other planned gates pass, with main freshness verified",
+        "safe exact cleanup of resolved branch/worktree, preserving audit records",
+        "no changed-head approval, CI waiver, formal TC/UAT acceptance or production deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-082",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task Sam request 進行P2 文件收尾 on 2026-09-30, following the proposed separate docs-only commit/PR for post-merge audit records; not approval to merge this new PR",
+      "recorded_at": "2026-09-30T07:54:26Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "code_commit": "d6397e020dbcbd70194995cd52755b3d91ec94be",
+      "scope": [
+        "inventory-management P2 post-merge documentation closeout only",
+        "00_harness_state.json, implementation/00_implementation_readiness.md, five original 20260930T0728/0730 run directories and evidence/local-merge-20260930",
+        "isolated codex/inventory-p2-doc-closeout branch/worktree, local document validation, commit, push and separate PR to main",
+        "preserve original reports, hashes, failed history and exact-head approval/CI provenance",
+        "no merge of the new PR, P3 implementation, formal TC/UAT acceptance or deployment"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2204,6 +2244,18 @@
       "reviewer": "Sam (ERP Product Owner and independent reviewer)",
       "reviewed_baseline": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
       "source_ref": "Sam active Codex reply 方案A on 2026-09-30 to exact HD-075 boundary DESIGN/PLAN proposal; no detailed findings supplied; not full P2 implementation/code approval",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-047",
+      "method": "HUMAN",
+      "author": "Codex /root P2 implementation author",
+      "reviewer": "Sam (independent human reviewer)",
+      "reviewed_baseline": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
+      "source_ref": "Sam active reply 批准CI通過就合併 to PR171 exact-head handoff; actual human approval/disposition of candidate be171ad, no detailed findings supplied; conditional on CI and gates, not formal acceptance",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2760,6 +2812,83 @@
       "source_ref": "docs/inventory_management/evidence/local-publication-20260930/README.md and original logs/XML; client687/687, Inventory Playwright18/18 plus absolute-output recheck18/18, audit0. Initial API preflight did not execute because misplaced generated XML changed fingerprint, exact relocation restored source; no product changes. Not formal TC/UAT, CI or independent review.",
       "actor": "Codex /root developer self-check under APR-071/APR-080",
       "observed_at": "2026-09-30T07:12:00Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR171 P2 human conditional current-head merge approval",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "Sam active Codex reply 批准CI通過就合併 on2026-09-30 to exact PR171 be171ad handoff; no detailed findings, conditional on all required CI/gates; not a GitHub submitted review",
+      "actor": "Sam (independent human reviewer)",
+      "observed_at": "2026-09-30T07:26:09Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36682733166/job/109781576561",
+      "actor": "GitHub Actions CI observed through trusted gh run view by Codex /root",
+      "observed_at": "2026-09-30T07:30:02Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36682733166/job/109781576792",
+      "actor": "GitHub Actions CI observed through trusted gh run view by Codex /root",
+      "observed_at": "2026-09-30T07:30:02Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36682733166/job/109781576818",
+      "actor": "GitHub Actions CI observed through trusted gh run view by Codex /root",
+      "observed_at": "2026-09-30T07:30:02Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36682733166/job/109781576852",
+      "actor": "GitHub Actions CI observed through trusted gh run view by Codex /root",
+      "observed_at": "2026-09-30T07:30:02Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36682733166/job/109781577629",
+      "actor": "GitHub Actions CI observed through trusted gh run view by Codex /root",
+      "observed_at": "2026-09-30T07:30:02Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P2 TASK-023/024/025 IMPLEMENT Definition of Done reconciliation",
+      "code_commit": "be171ad87b752104c7a89f023f3c8d4132eecc99",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "Scoped diff relative main8bc4a4c passes module boundary; approved P2 units155/155, DB7/7, API1/1 leaf includes outer security/revocation and positive downstream trace, no skips. Current-source client687/687 and actual Inventory Playwright18/18 plus recheck18/18 retained. Sam APR-081/REV-047 current-head human approval; all five exact-head CI checks PASS run36682733166. Covers approved IMPLEMENT developer cases; not formal TC-004/005, UAT or business acceptance.",
+      "actor": "Codex /root developer DoD reconciliation; independent disposition by Sam",
+      "observed_at": "2026-09-30T07:30:02Z"
     }
   ],
   "pending_decisions": [
@@ -4912,16 +5041,16 @@
       "kind": "GIT_PUSH",
       "target": "origin refs/heads/codex/inventory-task-013, erp-app repository",
       "idempotency_key": "inventory-p2-publication-push-20260930",
-      "status": "PLANNED",
-      "source_ref": "Sam APR-080; exact integrated candidate to be observed before push; no force push"
+      "status": "CONFIRMED",
+      "source_ref": "git push completed; git ls-remote origin refs/heads/codex/inventory-task-013 observed exact be171ad87b752104c7a89f023f3c8d4132eecc99. No force push, no main change."
     },
     {
       "id": "EXT-114",
       "kind": "PR_CREATE",
-      "target": "crazysumsum/erp-app head codex/inventory-task-013 base main; P2 Inventory Reservation/Allocation/Issue; required CI auto-triggered",
+      "target": "https://github.com/crazysumsum/erp-app/pull/171",
       "idempotency_key": "inventory-p2-publication-pr-20260930",
-      "status": "PLANNED",
-      "source_ref": "Sam APR-080; gh PR lookup observed no existing PR for this head; no auto-merge"
+      "status": "CONFIRMED",
+      "source_ref": "gh pr create returned PR171; trusted gh pr view observed OPEN, head be171ad87b752104c7a89f023f3c8d4132eecc99, base8bc4a4cfe68710f384cebca8395b78343bef1db9, autoMergeRequest null. PR attached to current Codex task. GitHub Actions CI run36682733166 https://github.com/crazysumsum/erp-app/actions/runs/36682733166 observed2026-09-30T07:16:28Z for exact head, all five required checks IN_PROGRESS, not PASS."
     },
     {
       "id": "EXT-115",
@@ -4930,6 +5059,54 @@
       "idempotency_key": "inventory-p2-publish-runtime-20260930-QXJiMi",
       "status": "CONFIRMED",
       "source_ref": "Private socket-only MySQL26.7.0 and only erp_inventory_task025_publish_20260930_0705; initial system-only DB, skip_networking1. Existing66 migrations and ISSUE1 observed after real API. Fresh lint/build/units155/DB7/API1 developer suites PASS no skips; client687 and Inventory Playwright18 plus absolute-output recheck18 PASS, audit0. Only owned schema dropped and absent, mysqladmin shutdown, socket/PID absent; exact root ownerSam mode700/no symlinks removed and absent. Browser5205 listener absent after tests. Reports retained, synthetic data irrecoverable, no shared/production resources."
+    },
+    {
+      "id": "EXT-116",
+      "kind": "ISOLATED_MYSQL_MERGE_VERIFICATION",
+      "target": "Only task-owned schema erp_inventory_task025_merge_20260930_0726, private socket-only MySQL26.7.0 /private/tmp/erp-inventory-task025-mysql-2670.jtnUvH/mysql.sock and exact root",
+      "idempotency_key": "inventory-p2-merge-runtime-20260930-jtnUvH",
+      "status": "CONFIRMED",
+      "source_ref": "Fresh same-candidate lint/build/units155/155/DB7/API1 leaf allPASS zero skips. Runtime remained real/live through pre-merge MERGE_READY and PR merge; MySQL26.7.0 skip_networking1, only task schema plus system schemas,66 migrations and ISSUE1. After merge dropped only erp_inventory_task025_merge_20260930_0726 and confirmed absent, shutdown, socket/PID absent, root ownerSam mode700/no symlinks, exact root removed and absent. Synthetic data irrecoverable, original reports retained; no shared/production resources."
+    },
+    {
+      "id": "EXT-117",
+      "kind": "PR_MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/171 at exact head be171ad87b752104c7a89f023f3c8d4132eecc99 to verified main",
+      "idempotency_key": "inventory-p2-merge-pr171-be171ad-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Trusted gh pr view observed PR171 MERGED2026-09-30T07:33:23Z, exact headbe171ad87b752104c7a89f023f3c8d4132eecc99, merge commitd6397e020dbcbd70194995cd52755b3d91ec94be. Standard match-head merge, no admin bypass. Original all-five CI success and pre-merge MERGE_READY pass retained."
+    },
+    {
+      "id": "EXT-118",
+      "kind": "RESOLVED_BRANCH_WORKTREE_CLEANUP",
+      "target": "Only codex/inventory-task-013 local/remote branch and /Users/sam/.codex/worktrees/inventory-task-013/erp-app; PR171 merged, no other branch observed depends on approved head. Preserve only Inventory audit bookkeeping/reports through recoverable Git stash, restore into clean main workspace before removal",
+      "idempotency_key": "inventory-p2-pr171-cleanup-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Verified PR171 merged atd6397e0 and approved head ancestor of origin/main; no other dependent topic refs. Original dirty audit records snapshotted in Git stash edbe3de2c5a4e1323c8ed1e694f9eed89b5883f0, restored into initially clean primary main successfully. Exact topic worktree removed without force, local codex/inventory-task-013 deleted with -d, remote exact branch deleted. git worktree list and target-path test verify absence; git show-ref/ls-remote verify no local/remote topic ref. Primary mainHEADd6397e0; unrelated Sales/Supplier worktrees untouched. New post-merge audit records remain uncommitted in primary workspace, with recovery snapshot retained; product commits preserved in main."
+    },
+    {
+      "id": "EXT-119",
+      "kind": "GIT_PUSH",
+      "target": "Only docs-only codex/inventory-p2-doc-closeout on origin, based on observed main d6397e020dbcbd70194995cd52755b3d91ec94be; no force push",
+      "idempotency_key": "inventory-p2-doc-closeout-push-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "APR-082. Initial git push succeeded and trusted git ls-remote observed exact 140f9d0d9021a915505e0c198048e844fb9c42a1 on the named branch. This follow-up records that observed publication; no force push, main change or merge. Original PR171 CI/approval stays bound to be171ad; observe remote head before retry or review."
+    },
+    {
+      "id": "EXT-120",
+      "kind": "PR_CREATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/172; codex/inventory-p2-doc-closeout to main, no auto-merge",
+      "idempotency_key": "inventory-p2-doc-closeout-pr-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "APR-082. gh pr create returned PR172; trusted gh pr view observed OPEN, initial head140f9d0d9021a915505e0c198048e844fb9c42a1, base d6397e020dbcbd70194995cd52755b3d91ec94be and autoMergeRequest null. PR attached to current task. CI run36687156769 was partial/in progress, not all-green; no merge approval. Reobserve final candidate head/CI rather than reuse this initial observation."
+    },
+    {
+      "id": "EXT-121",
+      "kind": "PRIMARY_AUDIT_RECOVERY",
+      "target": "Only the two duplicate Inventory audit files and six exact evidence directories in primary main; PR172's committed original reports preserved",
+      "idempotency_key": "inventory-p2-doc-closeout-primary-recovery-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "After initial docs commit/push/PR was observed, exact primary audit payload at revision215 was recoverably stashed with path-limited include-untracked. New recovery snapshot 1625d29d76a70b466399e096859f057b3fbbd278; original snapshot edbe3de2c5a4e1323c8ed1e694f9eed89b5883f0 retained. Primary git status became clean; no unrelated files, branches or worktrees changed. Do not blindly reapply stale state; current closeout lives in the open PR172 worktree."
     }
   ],
   "evidence_files": [
@@ -4965,7 +5142,12 @@
     "evidence/20260930T070648-1b09d3355ee5/run.json",
     "evidence/20260930T070648-2ab23b101a13/run.json",
     "evidence/20260930T070703-2806f30f672b/run.json",
-    "evidence/20260930T070951-b963f2d28f38/run.json"
+    "evidence/20260930T070951-b963f2d28f38/run.json",
+    "evidence/20260930T072821-b73f90d31f4d/run.json",
+    "evidence/20260930T072823-f332180736ae/run.json",
+    "evidence/20260930T072823-c3972e8dcd5c/run.json",
+    "evidence/20260930T072828-479b722c09fb/run.json",
+    "evidence/20260930T073001-b2b61b9f86cb/run.json"
   ],
   "defects": [
     {
@@ -5001,5 +5183,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "APR-080 publication-only: commit integrated candidate developer evidence and push/open P2 PR with required CI. Do not claim MERGE_READY: runtime retired, TASK-023/024/025 DoD/independent review and exact-head merge authority missing."
+  "next_safe_action": "P2 docs-only closeout published as PR172; this bookkeeping follow-up records observed initial publication and primary recovery. Keep PR172/branch/worktree open for Sam's review, final-head CI and new merge authorization; do not reuse PR171 authority/CI. Verify current remote head before continuing. PR171 merged at d6397e0, TASK019-025 DONE, original be171ad evidence preserved as history; P3/TASK026 remains PENDING, no formal acceptance/deployment. Primary main is clean with recovery snapshots edbe3de2 and1625d29 retained; use the PR172 worktree for current closeout state, not a blind stash restore."
 }
