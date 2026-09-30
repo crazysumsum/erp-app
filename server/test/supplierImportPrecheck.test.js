@@ -14,13 +14,14 @@ const catalog = {
   paymentTerms: new Map([["NET 30", { id: 3, code: "NET 30" }]])
 };
 
-function database({ suppliers = [], identifiers = [] } = {}) {
+function database({ suppliers = [], identifiers = [], names = [] } = {}) {
   const statements = [];
   return {
     statements,
     async query(sql, params) {
       statements.push(sql);
       if (!/^\s*SELECT/iu.test(sql)) throw new Error(`precheck must not write: ${sql}`);
+      if (/FROM suppliers WHERE supplier_name_key IN/u.test(sql)) return [names.filter((row) => params[0].includes(row.supplier_name_key))];
       if (/FROM suppliers/u.test(sql)) return [suppliers];
       if (/FROM supplier_identifiers/u.test(sql)) return [identifiers];
       throw new Error(`unexpected query ${sql} ${JSON.stringify(params)}`);
@@ -28,23 +29,12 @@ function database({ suppliers = [], identifiers = [] } = {}) {
   };
 }
 
-function duplicateFinder(matchingKeys = []) {
-  const calls = [];
-  return {
-    calls,
-    async find(_connection, input) {
-      calls.push(input);
-      return matchingKeys.includes(input.nameKey) ? [{ id: 99 }] : [];
-    }
-  };
-}
-
-async function precheck(records, { mode = "create_only", connection = database(), duplicates = duplicateFinder(), batchSize } = {}) {
+async function precheck(records, { mode = "create_only", connection = database(), batchSize } = {}) {
   const batches = [];
   const text = stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...records.map((record) => SUPPLIER_IMPORT_COLUMN_NAMES.map((name) => record[name] ?? ""))],
     SUPPLIER_CSV_STRINGIFY_OPTIONS);
   const result = await precheckSupplierCsv({
-    source: Buffer.from(text), mode, connection, catalog, duplicates, maxRows: 1000, maxBytes: 1_000_000,
+    source: Buffer.from(text), mode, connection, catalog, maxRows: 1000, maxBytes: 1_000_000,
     ...(batchSize ? { batchSize } : {}), onRows: async (rows) => batches.push(rows)
   });
   return { ...result, batches, rows: batches.flat() };
@@ -177,16 +167,21 @@ test("duplicates within the file and against the database are caught across batc
   assert.ok(connection.statements.every((sql) => /^\s*SELECT/iu.test(sql)), "precheck only reads");
 });
 
-test("a name like an existing Supplier is a warning, not an error, and an update does not match itself", async () => {
-  const duplicates = duplicateFinder(["acme trading"]);
-  // 第三列有名但冇貨幣：錯誤列唔使查相似名稱。
-  const { rows, counts } = await precheck([create(), { supplierId: "7", supplierName: "Acme Trading" },
-    { supplierCode: "NEW-X", supplierName: "Acme Trading Two" }],
-    { mode: "upsert", connection: database({ suppliers: [existing] }), duplicates });
-  assert.deepEqual([rows[0].status, rows[0].warnings.map(({ code }) => code)], ["warning", ["SUPPLIER_IMPORT_NAME_SIMILAR"]]);
-  assert.deepEqual(duplicates.calls, [
-    { nameKey: "acme trading", excludeSupplierId: null },
-    { nameKey: "acme trading", excludeSupplierId: 7 }
-  ], "the invalid third row is not looked up");
-  assert.deepEqual(counts, { total: 3, valid: 0, warning: 2, invalid: 1 });
+test("a name identical to an existing Supplier's is a warning, not an error, and an update does not match itself (HD-052 A)", async () => {
+  const connection = database({
+    suppliers: [existing],
+    names: [{ id: 7, supplier_name_key: "acme trading" }, { id: 8, supplier_name_key: "acme  trading ltd" }]
+  });
+  const { rows, counts } = await precheck([
+    create(),
+    { supplierId: "7", supplierName: "ACME   Trading" },
+    create({ supplierCode: "NEW-2", supplierName: "Acme Trading Limited" })
+  ], { mode: "upsert", connection });
+  assert.deepEqual([rows[0].status, rows[0].warnings.map(({ code }) => code)], ["warning", ["SUPPLIER_IMPORT_NAME_EXISTS"]],
+    "same name after NFKC, case and space folding");
+  assert.deepEqual(rows[1].warnings.map(({ code }) => code), ["SUPPLIER_IMPORT_NAME_DUPLICATED_IN_FILE"],
+    "the Supplier being updated is not a duplicate of itself; row 1 in the file is");
+  assert.deepEqual([rows[2].status, rows[2].warnings], ["valid", []], "a merely similar name is not flagged by CSV precheck");
+  assert.deepEqual(counts, { total: 3, valid: 1, warning: 2, invalid: 0 });
+  assert.equal(connection.statements.filter((sql) => /supplier_name_key IN/u.test(sql)).length, 1, "one name query for the whole batch");
 });

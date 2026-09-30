@@ -15,13 +15,12 @@ import {
  */
 const catalog = { currencies: new Map([["HKD", { code: "HKD" }]]), paymentTerms: new Map() };
 const noDb = { async query(sql) { if (/^\s*SELECT/iu.test(sql)) return [[]]; throw new Error(`unexpected write ${sql}`); } };
-const noDuplicates = { async find() { return []; } };
 
 async function run(source, { maxRows = 100, maxBytes = 1_000_000 } = {}) {
   const rows = [];
   const result = await precheckSupplierCsv({
     source: Buffer.isBuffer(source) ? source : Buffer.from(source), mode: "create_only", connection: noDb, catalog,
-    duplicates: noDuplicates, maxRows, maxBytes, onRows: async (batch) => rows.push(...batch)
+    maxRows, maxBytes, onRows: async (batch) => rows.push(...batch)
   });
   return { ...result, rows };
 }
@@ -155,7 +154,7 @@ test("an abort between batches stops the precheck before the next batch", async 
   const written = [];
   await assert.rejects(() => precheckSupplierCsv({
     source: Buffer.from(csv([valid({ supplierCode: "A" }), valid({ supplierCode: "B" }), valid({ supplierCode: "C" })])),
-    mode: "create_only", connection: noDb, catalog, duplicates: noDuplicates, maxRows: 10, maxBytes: 1_000_000, batchSize: 1,
+    mode: "create_only", connection: noDb, catalog, maxRows: 10, maxBytes: 1_000_000, batchSize: 1,
     signal: controller.signal, onRows: async (rows) => { written.push(rows); controller.abort(); }
   }), { name: "AbortError" });
   assert.equal(written.length, 1);

@@ -3,6 +3,7 @@ import { removeSupplierImportFile, writeSupplierImportSource } from "../../servi
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierImportError } from "./supplierErrors.js";
 import { SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
+import { uploadHeaderError } from "./import/SupplierImportProcessor.js";
 
 /**
  * Supplier import 嘅狀態機同逐列執行 contract（T42；設計 §5.13、§8.8）。
@@ -165,6 +166,9 @@ export class SupplierImportService {
       throw invalidSupplierInput("SUPPLIER_IMPORT_FILE_REQUIRED", "請選擇一個非空白的 CSV 檔案");
     }
     if (content.length > maxFileBytes) throw supplierImportError("SUPPLIER_IMPORT_FILE_TOO_LARGE", 413, "CSV 檔案超過大小上限");
+    // 有 Bank 欄嘅檔一個 byte 都唔落磁碟（HD-053 A；REV-064 M-1）。
+    const bankHeader = uploadHeaderError(content);
+    if (bankHeader) throw invalidSupplierInput(bankHeader.code, bankHeader.message);
     const stored = await writeSupplierImportSource(root, content);
     try {
       return await this.database.withTransaction(async (connection) => {
@@ -218,14 +222,15 @@ export class SupplierImportService {
         await connection.execute(
           `UPDATE supplier_import_jobs SET status = 'failed', last_error_code = 'SUPPLIER_IMPORT_PRECHECK_FAILED',
                   error_summary = '預檢多次未能完成，請檢查檔案後重新上載或聯絡系統管理員', lease_owner = '', lease_until = NULL,
-                  completed_at = ?, updated_at = ?, version = version + 1
+                  files_purged_at = ?, completed_at = ?, updated_at = ?, version = version + 1
             WHERE id = ?`,
-          [nowMs, nowMs, job.id]
+          [nowMs, nowMs, nowMs, job.id]
         );
         await this.#recordPrecheckAudit(connection, job, { after: { status: "failed", errorCode: "SUPPLIER_IMPORT_PRECHECK_FAILED" } });
         void this.logger?.error?.("supplier.import.precheck_abandoned", "Supplier import precheck failed too often and was abandoned",
           { jobId: Number(job.id), attempts: Number(job.version) - 1 });
-        return null;
+        // 失敗嘅 job 冇結果可以下載：來源檔即刻刪（HD-053 A）。呢度冇 root，交返 worker 刪。
+        return { id: Number(job.id), abandoned: true, sourceStoredName: job.source_stored_name };
       }
       assertJobTransition(job.status, "validating");
       await connection.execute(
@@ -281,7 +286,8 @@ export class SupplierImportService {
   }
 
   /**
-   * 收尾：成個檔有問題就刪走 rows、標 failed 同記原因；否則由 rows 計統計（唯一真相係 rows），
+   * 收尾：成個檔有問題就刪走 rows、標 failed、記原因同 `files_purged_at`（來源檔由 worker 即刻刪，HD-053 A）；
+   * 否則由 rows 計統計（唯一真相係 rows），
    * 有 invalid 就 ready_with_errors。`total_count` 喺呢度定，T45 finalize 會用佢對數（HD-049）。
    */
   async completePrecheck({ jobId, leaseOwner, jobLevelError = null }) {
@@ -298,9 +304,9 @@ export class SupplierImportService {
         await connection.execute(
           `UPDATE supplier_import_jobs SET status = 'failed', total_count = 0, valid_count = 0, warning_count = 0,
                   invalid_count = 0, last_error_code = ?, error_summary = ?, lease_owner = '', lease_until = NULL,
-                  completed_at = ?, updated_at = ?, version = version + 1
+                  files_purged_at = ?, completed_at = ?, updated_at = ?, version = version + 1
             WHERE id = ?`,
-          [String(jobLevelError.code).slice(0, 80), String(jobLevelError.message).slice(0, 500), nowMs, nowMs, jobId]
+          [String(jobLevelError.code).slice(0, 80), String(jobLevelError.message).slice(0, 500), nowMs, nowMs, nowMs, jobId]
         );
         detail = { after: { status: "failed", errorCode: String(jobLevelError.code) } };
       } else {

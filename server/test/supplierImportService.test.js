@@ -104,3 +104,18 @@ test("an upload whose file cannot be removed after a failed insert is logged, wi
   const [stored] = await readdir(source);
   assert.deepEqual(logged, [["supplier.import.source_cleanup_failed", { storedName: stored, code: "EACCES" }]]);
 });
+
+test("a file with a Bank column is refused at upload before anything is written (HD-053 A)", async () => {
+  const importer = new SupplierImportService({
+    database: { async withTransaction() { throw new Error("must not reach the database"); } }, time: { nowMs: () => 1 }
+  });
+  // 呢個 root 唔存在：如果檢查喺寫檔之後，會見到 ENOENT 而唔係 400。
+  const upload = (content) => importer.createFromUpload({
+    actorId: 1, root: "/nonexistent/supplier-import-root", mode: "create_only", content: Buffer.from(content), maxFileBytes: 10_000
+  });
+  await assert.rejects(() => upload("\uFEFFsupplierCode, IBAN \r\nS1,GB29NWBK60161331926819\r\n"),
+    (error) => error.publicCode === "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN" && error.statusCode === 400 &&
+      /第 2 欄/u.test(error.publicMessage) && !JSON.stringify(error).includes("GB29"));
+  // 讀唔到 header（引號錯）就照存，交畀 precheck 判 failed 再刪。
+  await assert.rejects(() => upload('acct"no,x\r\n'), { code: "ENOENT" });
+});

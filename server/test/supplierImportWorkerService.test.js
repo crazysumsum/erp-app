@@ -286,6 +286,26 @@ test("precheck that cannot finish for another reason keeps the lease for a retry
   assert.deepEqual(errors, [["supplier.import.precheck_interrupted", "BUSINESS_MASTER_NOT_READY"]]);
 });
 
+test("a failed precheck deletes its source at once; a successful one keeps it (HD-053 A)", async (t) => {
+  const { instance } = await preparedWorker(t);
+  const bad = await writeSupplierImportSource(instance.root, Buffer.from(`${SUPPLIER_IMPORT_COLUMN_NAMES.join(",")}\r\nx,y"z\r\n`));
+  instance.importService = precheckScript({ id: 21, mode: "create_only", sourceStoredName: bad.storedName, sourceSha256: bad.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.equal(instance.importService.calls.at(-1)[1].code, "SUPPLIER_IMPORT_CSV_MALFORMED");
+  await assert.rejects(() => stat(path.join(instance.root, "source", bad.storedName)), { code: "ENOENT" });
+
+  const good = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 22, mode: "create_only", sourceStoredName: good.storedName, sourceSha256: good.sha256 });
+  await instance.runPrecheck(new AbortController().signal);
+  assert.equal((await stat(path.join(instance.root, "source", good.storedName))).isFile(), true, "kept for confirm and the result");
+
+  const abandoned = await writeSupplierImportSource(instance.root, oneRowCsv());
+  instance.importService = precheckScript({ id: 23, abandoned: true, sourceStoredName: abandoned.storedName });
+  assert.deepEqual(await instance.runPrecheck(new AbortController().signal), { claimed: true, jobId: 23, status: "failed" });
+  assert.deepEqual(instance.importService.calls, [["claim"]], "an abandoned job is not read or completed again");
+  await assert.rejects(() => stat(path.join(instance.root, "source", abandoned.storedName)), { code: "ENOENT" });
+});
+
 test("a directory or an oversized file at the stored name fails the job instead of being retried", async (t) => {
   const { instance } = await preparedWorker(t);
   const directory = "d".repeat(64);

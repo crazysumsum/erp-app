@@ -202,7 +202,7 @@ integrationTest("TASK-043 IMP-004/005/011 (TC-090, TC-096): precheck classifies 
     [1, "create", "valid"], [2, "create", "warning"], [3, "create", "invalid"], [4, "update", "valid"],
     [5, "update", "invalid"], [6, "update", "invalid"], [7, "update", "invalid"], [8, "create", "invalid"]
   ]);
-  assert.deepEqual(checked[1].warnings, ["SUPPLIER_IMPORT_NAME_SIMILAR"]);
+  assert.deepEqual(checked[1].warnings, ["SUPPLIER_IMPORT_NAME_EXISTS"]);
   assert.deepEqual(checked[2].errors, [["defaultCurrencyCode", "SUPPLIER_IMPORT_REQUIRED_FIELD"]]);
   assert.equal(Number(checked[3].match_supplier_id), existingId);
   assert.deepEqual(checked[3].normalized_payload, { root: { notes: "updated note" } }, "blank optional cells keep the stored value");
@@ -217,6 +217,9 @@ integrationTest("TASK-043 IMP-004/005/011 (TC-090, TC-096): precheck classifies 
   assert.deepEqual([summary.status, summary.total_count, summary.valid_count, summary.warning_count, summary.invalid_count].map(String),
     ["ready_with_errors", "8", "2", "1", "5"], "the summary equals the rows");
   assert.deepEqual([summary.lease_owner, summary.lease_until], ["", null]);
+  assert.equal((await stat(path.join(h.worker.preparedRoot, "source", summary.source_stored_name))).isFile(), true,
+    "a job that is ready keeps its source for confirm and the result");
+  assert.equal(summary.files_purged_at, null);
   const [[audit]] = await h.db.query(
     "SELECT actor_user_id, detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.precheck'",
     [created.id]);
@@ -224,17 +227,34 @@ integrationTest("TASK-043 IMP-004/005/011 (TC-090, TC-096): precheck classifies 
   assert.equal(audit.detail.after.totalCount, 8);
 });
 
-integrationTest("TASK-043 IMP-014 (TC-099): a Bank column fails the file and its value reaches no row, job, audit or log", async () => {
-  const header = [...SUPPLIER_IMPORT_COLUMN_NAMES, "IBAN"];
-  const created = await upload(csv([{ supplierCode: "BANK-1", supplierName: "Bank Co", defaultCurrencyCode: "HKD", IBAN: BANK_VALUE }], header));
-  const result = await precheck(created.id);
-  assert.equal(result.status, "failed");
-  const failed = await job(created.id);
-  assert.deepEqual([failed.last_error_code, Number(failed.total_count)], ["SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", 0]);
-  assert.match(failed.error_summary, /銀行/u);
-  assert.equal(failed.completed_at !== null, true);
-  assert.deepEqual(await rows(created.id), []);
+/** Root 入面有冇檔含呢個值（IMP-014 嘅 files 通道；REV-064 M-1）。 */
+async function rootHolds(value) {
+  for (const kind of ["source", "result"]) {
+    const directory = path.join(h.worker.preparedRoot, kind);
+    for (const name of await readdir(directory)) {
+      if ((await readFile(path.join(directory, name), "utf8")).includes(value)) return true;
+    }
+  }
+  return false;
+}
 
+async function logsHold(value) {
+  const logged = [];
+  for (const directory of ["system", "requests"]) {
+    const full = path.join(h.logRoot, directory);
+    if (!fs.existsSync(full)) continue;
+    for (const name of await readdir(full)) logged.push(await readFile(path.join(full, name), "utf8"));
+  }
+  return logged.join("\n").includes(value);
+}
+
+integrationTest("TASK-043 IMP-014 (TC-099): a Bank column is refused at upload and its value reaches no row, job, file, audit or log", async () => {
+  const header = [...SUPPLIER_IMPORT_COLUMN_NAMES, "IBAN"];
+  const [[{ n: jobsBefore }]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_import_jobs");
+  await assert.rejects(() => upload(csv([{ supplierCode: "BANK-1", supplierName: "Bank Co", defaultCurrencyCode: "HKD", IBAN: BANK_VALUE }], header)),
+    (error) => error.publicCode === "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN" && error.statusCode === 400 && /銀行/u.test(error.publicMessage));
+  const [[{ n: jobsAfter }]] = await h.db.query("SELECT COUNT(*) AS n FROM supplier_import_jobs");
+  assert.equal(Number(jobsAfter), Number(jobsBefore), "no job");
   const [scan] = await h.db.query(
     `SELECT (SELECT COUNT(*) FROM supplier_import_rows WHERE CAST(normalized_payload AS CHAR) LIKE ?) AS payload,
             (SELECT COUNT(*) FROM supplier_import_jobs WHERE error_summary LIKE ?) AS jobs,
@@ -242,13 +262,8 @@ integrationTest("TASK-043 IMP-014 (TC-099): a Bank column fails the file and its
             (SELECT COUNT(*) FROM suppliers WHERE notes LIKE ?) AS suppliers`,
     Array(4).fill(`%${BANK_VALUE}%`));
   assert.deepEqual(Object.values(scan[0]).map(Number), [0, 0, 0, 0]);
-  const logged = [];
-  for (const directory of ["system", "requests"]) {
-    const full = path.join(h.logRoot, directory);
-    if (!fs.existsSync(full)) continue;
-    for (const name of await readdir(full)) logged.push(await readFile(path.join(full, name), "utf8"));
-  }
-  assert.equal(logged.join("\n").includes(BANK_VALUE), false, "the system and request logs never contain it");
+  assert.equal(await rootHolds(BANK_VALUE), false, "nothing was stored in the import root");
+  assert.equal(await logsHold(BANK_VALUE), false, "the system and request logs never contain it");
 });
 
 integrationTest("TASK-043: a precheck whose lease expired is redone from the start by the next worker", async () => {
@@ -393,9 +408,9 @@ integrationTest("TASK-043 manual-check flow over HTTP: template, mixed and Bank 
 
   const bank = await httpUpload(manager, csv([{ supplierCode: `HB-${tag}`, accountNumber: BANK_VALUE }],
     [...SUPPLIER_IMPORT_COLUMN_NAMES, "accountNumber"]));
-  assert.equal(bank.status, 201);
-  assert.equal((await precheck(bank.job.id)).status, "failed");
-  assert.equal((await job(bank.job.id)).last_error_code, "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN");
+  assert.equal(bank.status, 400, "a Bank column is refused at upload (HD-053 A)");
+  assert.equal(JSON.stringify(bank.body).includes("SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN"), true);
+  assert.equal(await rootHolds(BANK_VALUE), false);
 
   await h.application.services.require("logging").logger.flush?.();
   const requests = path.join(h.logRoot, "requests");
@@ -411,14 +426,11 @@ integrationTest("TASK-043 (REV-064 H-1): a stray quote fails the job as malforme
   })[name] ?? "");
   const created = await upload(Buffer.from(`${header}\r\n${cells.join(",")}\r\n`));
   const result = await precheck(created.id);
-  assert.deepEqual([result.status, (await job(created.id)).last_error_code], ["failed", "SUPPLIER_IMPORT_CSV_MALFORMED"]);
-  const logged = [];
-  for (const directory of ["system", "requests"]) {
-    const full = path.join(h.logRoot, directory);
-    if (!fs.existsSync(full)) continue;
-    for (const name of await readdir(full)) logged.push(await readFile(path.join(full, name), "utf8"));
-  }
-  assert.equal(logged.join("\n").includes(BANK_VALUE), false);
+  const failed = await job(created.id);
+  assert.deepEqual([result.status, failed.last_error_code], ["failed", "SUPPLIER_IMPORT_CSV_MALFORMED"]);
+  assert.notEqual(failed.files_purged_at, null, "a failed precheck purges its source at once (HD-053 A)");
+  assert.equal(await rootHolds(BANK_VALUE), false, "the stored file with the value in it is gone");
+  assert.equal(await logsHold(BANK_VALUE), false);
 });
 
 integrationTest("TASK-043 (REV-064 H-1/H-2): a precheck that keeps failing is abandoned after three attempts", async () => {
@@ -429,10 +441,13 @@ integrationTest("TASK-043 (REV-064 H-1/H-2): a precheck that keeps failing is ab
     assert.equal(claimed?.id, created.id, `attempt ${attempt} is claimed`);
     clock += 5_000;   // 每次都死咗，lease 過期
   }
-  assert.equal(await service.claimForPrecheck({ leaseOwner: "crash-4", leaseDurationMs: 1000 }), null);
+  const stored = (await job(created.id)).source_stored_name;
+  assert.deepEqual(await h.worker.runPrecheck(new AbortController().signal), { claimed: true, jobId: created.id, status: "failed" });
   const abandoned = await job(created.id);
   assert.deepEqual([abandoned.status, abandoned.last_error_code, abandoned.lease_until], ["failed", "SUPPLIER_IMPORT_PRECHECK_FAILED", null]);
   assert.notEqual(abandoned.completed_at, null);
+  assert.notEqual(abandoned.files_purged_at, null);
+  await assert.rejects(() => stat(path.join(h.worker.preparedRoot, "source", stored)), { code: "ENOENT" }, "its source is deleted");
   const [[audit]] = await h.db.query(
     "SELECT detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.precheck'", [created.id]);
   assert.equal(audit.detail.after.errorCode, "SUPPLIER_IMPORT_PRECHECK_FAILED");
@@ -451,4 +466,28 @@ integrationTest("TASK-043 (REV-064 L-2): every appended batch renews the prechec
   }] });
   assert.equal(Number((await job(created.id)).lease_until), before + 500);
   await service.completePrecheck({ jobId: created.id, leaseOwner: "renewer" });
+});
+
+integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes precheck against 2,000 Suppliers well inside the job timeout", async (t) => {
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const now = clock;
+  const seeded = Array.from({ length: 2_000 }, (_, index) => {
+    const name = `Seeded ${index} Trading Company Limited ${tag}`;
+    return [`SD-${tag}-${index}`, `sd-${tag.toLowerCase()}-${index}`, name, name.toLowerCase(), "HKD", "active", now, now];
+  });
+  await h.db.query(
+    `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
+       status, created_at, updated_at) VALUES ?`, [seeded]);
+  t.after(() => h.db.query("DELETE FROM suppliers WHERE supplier_code_key LIKE ?", [`sd-${tag.toLowerCase()}-%`]));
+  const records = Array.from({ length: 10_000 }, (_, index) => ({
+    supplierCode: `BIG-${tag}-${index}`, supplierName: `Imported ${index} Trading Company Limited ${tag}`, defaultCurrencyCode: "HKD"
+  }));
+  const created = await upload(csv(records));
+  const started = Date.now();
+  const result = await precheck(created.id);
+  const elapsed = Date.now() - started;
+  assert.equal(result.status, "ready");
+  assert.equal(Number((await job(created.id)).total_count), 10_000);
+  t.diagnostic(`10,000-row precheck against 2,000 Suppliers took ${elapsed} ms`);
+  assert.ok(elapsed < 60_000, `took ${elapsed} ms; the job timeout is 150 s`);
 });

@@ -7,7 +7,9 @@ import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessM
 import { precheckSupplierCsv } from "../../modules/supplier/import/SupplierImportProcessor.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import { SupplierImportService } from "../../modules/supplier/SupplierImportService.js";
-import { prepareSupplierImportRoot, readSupplierImportSource, SUPPLIER_IMPORT_JOB_NAMES } from "./supplierImportFiles.js";
+import {
+  prepareSupplierImportRoot, readSupplierImportSource, removeSupplierImportFile, SUPPLIER_IMPORT_JOB_NAMES
+} from "./supplierImportFiles.js";
 
 const LEASE_MS = 660_000;
 const PRECHECK_LEASE_MS = 180_000;
@@ -91,6 +93,10 @@ export class SupplierImportWorkerService extends BaseService {
     if (!this.root || this.stopping || signal?.aborted) return { claimed: false };
     const job = await this.importService.claimForPrecheck({ leaseOwner: this.leaseOwner, leaseDurationMs: PRECHECK_LEASE_MS });
     if (!job) return { claimed: false };
+    if (job.abandoned) {
+      await this.#discardSource(job);
+      return { claimed: true, jobId: job.id, status: "failed" };
+    }
     let outcome;
     try {
       const source = await readSupplierImportSource(this.root, job.sourceStoredName,
@@ -119,11 +125,23 @@ export class SupplierImportWorkerService extends BaseService {
     const summary = await this.importService.completePrecheck({
       jobId: job.id, leaseOwner: this.leaseOwner, jobLevelError: outcome.jobLevelError ?? null
     });
+    if (summary.status === "failed") await this.#discardSource(job);
     void this.logger?.info?.("supplier.import.prechecked", "Supplier import precheck finished", {
       jobId: job.id, status: summary.status, errorCode: summary.lastErrorCode || null, total: summary.totalCount,
       valid: summary.validCount, warning: summary.warningCount, invalid: summary.invalidCount
     });
     return { claimed: true, jobId: job.id, status: summary.status };
+  }
+
+  /**
+   * Precheck 失敗嘅 job 冇結果可以下載，來源檔（可能有個人或者銀行資料）即刻刪（HD-053 A）。job 已經記咗
+   * `files_purged_at`；刪唔到就記低，T48 會將呢類檔當冇人用嘅檔清走。
+   */
+  async #discardSource(job) {
+    await removeSupplierImportFile(this.root, "source", job.sourceStoredName).catch((error) => {
+      void this.logger?.error?.("supplier.import.source_cleanup_failed", "Supplier import source could not be removed after a failed precheck",
+        { jobId: job.id, storedName: job.sourceStoredName, code: error?.code ?? null });
+    });
   }
 
   /** Business Master 啟用中嘅貨幣同付款條款（兩個都係細目錄），逐頁讀晒。 */

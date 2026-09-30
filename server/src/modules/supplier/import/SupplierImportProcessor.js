@@ -1,9 +1,9 @@
 import { Readable } from "node:stream";
 import { CsvError, parse } from "csv-parse";
+import { parse as parseSync } from "csv-parse/sync";
 
 import { normalizeAddress } from "../SupplierAddressService.js";
 import { normalizeContact } from "../SupplierContactService.js";
-import { SupplierDuplicateCandidates } from "../supplierDuplicateCandidates.js";
 import {
   normalizeContactEmail, normalizeIdentifier, normalizeSupplierCode, normalizeSupplierName,
   normalizeSupplierOptionalText, normalizeSupplierUrl
@@ -17,7 +17,7 @@ import {
  * Supplier CSV 預檢（T43；設計 §6.9、§8.8）。
  *
  * 讀 CSV、逐列正規化同驗證，將結果交畀 `onRows` 寫入 import rows。**唔寫任何 Supplier 表**：
- * 對資料庫只有讀（配對現有 Supplier、Identifier 撞號、名稱相似）。
+ * 對資料庫只有讀（配對現有 Supplier、Identifier 撞號、名稱相同）。
  *
  * - 檔案層面嘅問題（唔係 UTF-8、RFC 4180 格式錯、header 重複／缺少／未知、Bank 欄位、超過上限）
  *   令成個 job 失敗，一列都唔寫：Bank 值因此冇可能落到資料庫（AC-034）。
@@ -63,6 +63,26 @@ function domain(errors, fieldMap, fallbackField, fn) {
   }
 }
 
+function bankColumnMessage(index) {
+  return `CSV 第 ${index + 1} 欄是銀行資料欄位；一般匯入不接受銀行資料，請刪除該欄`;
+}
+
+/**
+ * 上載時先睇 header（HD-053 A）：有 Bank 欄就唔好存個檔。回 `{ code, message }` 或 null。
+ * 讀唔到 header（唔係 UTF-8、引號錯）就回 null：個檔照存，precheck 會判 failed 再即刻刪走佢。
+ */
+export function uploadHeaderError(content) {
+  let headers;
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(content);
+    [headers = []] = parseSync(text, { bom: true, to: 1, max_record_size: 65_536 });
+  } catch {
+    return null;
+  }
+  const bank = headers.map((header) => header.trim()).findIndex(isBankColumn);
+  return bank === -1 ? null : { code: "SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", message: bankColumnMessage(bank) };
+}
+
 function headerError(headers) {
   const seen = new Set();
   for (const header of headers) {
@@ -72,7 +92,7 @@ function headerError(headers) {
   // Bank 先於「未知」：兩者都拒絕，但要講清楚係因為銀行資料。只講第幾欄，唔重複 header 內容。
   const bank = headers.findIndex(isBankColumn);
   if (bank !== -1) {
-    return jobError("SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", `CSV 第 ${bank + 1} 欄是銀行資料欄位；一般匯入不接受銀行資料，請刪除該欄`);
+    return jobError("SUPPLIER_IMPORT_BANK_COLUMN_FORBIDDEN", bankColumnMessage(bank));
   }
   const unknown = headers.findIndex((header) => !SUPPLIER_IMPORT_COLUMN_NAMES.includes(header));
   if (unknown !== -1) return jobError("SUPPLIER_IMPORT_HEADER_UNKNOWN", `CSV 第 ${unknown + 1} 欄不是範本 v1 的欄位`);
@@ -89,7 +109,9 @@ async function loadBatchLookups(connection, records) {
   const ids = new Set();
   const codeKeys = new Set();
   const identifierKeys = new Set();
+  const nameKeys = new Set();
   for (const record of records) {
+    try { if (record.supplierName) nameKeys.add(normalizeSupplierName(record.supplierName).key); } catch { /* 列驗證會報 */ }
     if (/^[1-9][0-9]{0,15}$/u.test(record.supplierId)) ids.add(Number(record.supplierId));
     try { if (record.supplierCode) codeKeys.add(normalizeSupplierCode(record.supplierCode).key); } catch { /* 列驗證會報 */ }
     try {
@@ -112,7 +134,15 @@ async function loadBatchLookups(connection, records) {
       `SELECT identifier_type, issuer_country_code, identifier_value_key FROM supplier_identifiers
         WHERE identifier_value_key IN (?)`, [[...identifierKeys]])
     : [[]];
+  // 名稱完全相同（正規化之後）先警告，一批一條 query（HD-052 A）。唔做模糊比對：逐列查 name grams 嘅成本
+  // 跟 Supplier 數目線性上升，大檔永遠做唔完（REV-064 H-2）；相似名稱提示留喺 UI 逐個新增／修改。
+  const [named] = nameKeys.size
+    ? await connection.query("SELECT id, supplier_name_key FROM suppliers WHERE supplier_name_key IN (?)", [[...nameKeys]])
+    : [[]];
+  const byName = new Map();
+  for (const row of named) byName.set(row.supplier_name_key, [...(byName.get(row.supplier_name_key) ?? []), Number(row.id)]);
   return {
+    byName,
     byId: new Map(suppliers.map((row) => [Number(row.id), row])),
     byCode: new Map(suppliers.map((row) => [row.supplier_code_key, row])),
     identifiers: new Set(identifiers.map((row) => `${row.identifier_type}\u0000${row.issuer_country_code}\u0000${row.identifier_value_key}`))
@@ -241,7 +271,7 @@ function childPayload(record, errors, bad) {
 }
 
 async function checkRow(record, rowNumber, context) {
-  const { mode, catalog, lookups, seen, connection, duplicates } = context;
+  const { mode, catalog, lookups, seen } = context;
   const errors = [];
   const warnings = [];
   const bad = checkCells(record, errors);
@@ -278,9 +308,9 @@ async function checkRow(record, rowNumber, context) {
     const first = seen.names.get(nameKey);
     if (first) issue(warnings, "supplierName", "SUPPLIER_IMPORT_NAME_DUPLICATED_IN_FILE", `供應商名稱與第 ${first} 列相同`);
     else seen.names.set(nameKey, rowNumber);
-    // 同 create／update API 一樣只係提示（設計：名稱重覆只 warning）。錯誤列唔使查。
-    if (errors.length === 0 && (await duplicates.find(connection, { nameKey, excludeSupplierId: target ? Number(target.id) : null })).length > 0) {
-      issue(warnings, "supplierName", "SUPPLIER_IMPORT_NAME_SIMILAR", "與現有供應商名稱相同或相似，請確認不是重覆建立");
+    // 只係提示（設計：名稱重覆只 warning）；更新列唔同自己比。
+    if ((lookups.byName.get(nameKey) ?? []).some((id) => id !== Number(target?.id))) {
+      issue(warnings, "supplierName", "SUPPLIER_IMPORT_NAME_EXISTS", "與現有供應商名稱相同，請確認不是重覆建立");
     }
   }
   return {
@@ -298,7 +328,7 @@ async function checkRow(record, rowNumber, context) {
  * （code → {code}）同付款條款（code → {id}）。回 `{ counts }` 或 `{ jobLevelError }`。
  */
 export async function precheckSupplierCsv({
-  source, mode, connection, catalog, duplicates = new SupplierDuplicateCandidates(),
+  source, mode, connection, catalog,
   maxRows, maxBytes, batchSize = 500, onRows, signal
 } = {}) {
   if (!Buffer.isBuffer(source) || !MODES.includes(mode) || typeof connection?.query !== "function" ||
@@ -325,7 +355,7 @@ export async function precheckSupplierCsv({
     const lookups = await loadBatchLookups(connection, batch.map(({ record }) => record));
     const rows = [];
     for (const { record, rowNumber } of batch) {
-      const row = await checkRow(record, rowNumber, { mode, catalog, lookups, seen, connection, duplicates });
+      const row = await checkRow(record, rowNumber, { mode, catalog, lookups, seen });
       counts.total += 1;
       counts[row.status] += 1;
       rows.push(row);
