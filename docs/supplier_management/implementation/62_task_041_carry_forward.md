@@ -279,7 +279,7 @@ read-side mutants.
 
 ## REV-067 remediation
 
-REV-067 (`70_rev_067_independent_review.md`) closed REV-066's M-1 (upload refuses every 10 MB shape tried in 110 ms or less;
+REV-067 (`70_rev_067_independent_review.md`) closed REV-066's M-1 (upload finishes every 10 MB shape tried in 110 ms or less;
 comma and quoted-empty floods in about 2 ms) and approved with one condition:
 
 | Finding | Change |
@@ -297,3 +297,25 @@ A reviewer re-running the script must point `ENV` at a copy with their own schem
 **Mutation after REV-067** (on 5350f16; serial harness, baseline passed): 89 mutants, 87 killed — the 84 above plus the
 precheck parser without the field cap, the identifier key dropping the country, parsing in one slice, never yielding to
 the event loop, and a slice splitting a surrogate pair. Survivors: the same two equivalent read-side mutants.
+
+
+## REV-068 (approved)
+
+REV-068 (`71_rev_068_independent_review.md`) approved 369b989 with no conditions: REV-067's L-1 is closed (10 MB of blank
+rows after a valid header: longest event-loop gap on the real worker path 1,424 ms before, 18–25 ms after), slicing is
+value-preserving (0 divergences over 100,000 fuzzed inputs at 9 slice sizes, while the same fuzzer finds thousands with the
+surrogate guard removed), and the mutation counts reproduce (89, 87 killed, #63 and #64 equivalent). Its Info items:
+
+- **I-1, recorded, not changed.** The yield counts records, not bytes. Files with very wide rows (about 20 KB each) still
+  parse up to the first 500-row flush without a macrotask boundary: about 0.13–0.20 s at the default 10 MB, 0.3–0.38 s at
+  the configurable 100 MB ceiling — the same as before REV-067's fix, not a regression. The reviewer verified an optional
+  fix (also yield after every 1 MiB of parser progress: 32–45 ms); left for a later change if the stall matters.
+- **I-2.** A CSV error in the middle of a file now surfaces after earlier slices' batches were checked and appended; the
+  failing `completePrecheck` deletes them in the same transaction that marks the job failed, so the end state is unchanged.
+  The processor's header comment now says so. **T44 obligation:** the row-read endpoint must never serve rows of a
+  `validating` job.
+- **I-3.** The 200 ms gap assertion pins the order of magnitude (about 12× headroom normally, 2× under heavy CPU load), not
+  the slice size or yield constants.
+- **I-4.** origin/main d6397e0 (inventory reservations, migration 0063, permission catalogue, lockfile) merged into the
+  branch before merge.
+- **I-5.** Wording in this doc corrected ("finishes", not "refuses").

@@ -20,7 +20,8 @@ import {
  * 對資料庫只有讀（配對現有 Supplier、Identifier 撞號、名稱相同）。
  *
  * - 檔案層面嘅問題（唔係 UTF-8、RFC 4180 格式錯、header 重複／缺少／未知、Bank 欄位、超過上限）
- *   令成個 job 失敗，一列都唔寫：Bank 值因此冇可能落到資料庫（AC-034）。
+ *   令成個 job 失敗，最後唔留任何列：Bank 欄喺 header 就拒絕，Bank 值因此冇可能落到資料庫（AC-034）。檔案中間先
+ *   出錯嘅話，之前幾批可能已經交咗畀 `onRows`，由 completePrecheck 喺標 failed 嘅同一個 transaction 刪走（REV-068 I-2）。
  * - 列層面嘅規則同 API 一樣（BR-026）：用同一批 normalizer，錯誤用同一套公開 code。
  * - 錯誤訊息全部係固定字串，唔會帶 CSV 嘅值；每列最多 MAX_ISSUES 個（設計 §10：有界）。
  * - 配對、狀態等結果只係預檢時嘅快照，T45 執行時要再驗。
