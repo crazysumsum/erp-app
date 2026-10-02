@@ -1072,3 +1072,72 @@ integrationTest("TASK-045 (HD-060 5A): a confirmer who loses supplier.mgmt stops
     ["failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED", 1, 2, ""]);
   assert.equal(await supplierByCode(`V2-${tag}`), undefined);
 });
+
+/** 起一個真 worker process，做到 `point` 就 SIGKILL 自己；回佢點樣死。 */
+async function crashWorker(point) {
+  const { spawn } = await import("node:child_process");
+  const child = spawn(process.execPath, ["--import", "./test-support/testEnv.js", "test-support/supplierImportCrashChild.js",
+    point, path.join(h.importBase, "imports"), h.logRoot], { cwd: path.resolve(import.meta.dirname, "../.."), env: process.env, stdio: "ignore" });
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error("crash worker did not die in time")); }, 60_000);
+    child.on("exit", (code, signal) => { clearTimeout(timer); resolve({ code, signal }); });
+  });
+}
+
+integrationTest("TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once", async () => {
+  const owner = await makeUser("kl", ["supplier.mgmt"], { withPassword: true });
+  for (const point of ["before", "after"]) {
+    const tag = randomUUID().slice(0, 6).toUpperCase();
+    const codes = [1, 2, 3].map((n) => `K${n}-${tag}`);
+    const { id, version } = await readyJob(owner, codes.map((code) => ({ supplierCode: code, supplierName: `Killed ${code}`, defaultCurrencyCode: "HKD" })));
+    assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+    assert.deepEqual(await crashWorker(point), { code: null, signal: "SIGKILL" }, `${point}: the worker died by SIGKILL`);
+
+    const stored = await job(id);
+    assert.equal(stored.status, "running", `${point}: the dead worker still holds the lease`);
+    const first = await supplierByCode(codes[0]);
+    if (point === "before") {
+      assert.equal(first, undefined, "killed before commit: no Supplier");
+      assert.deepEqual(await rowOutcomes(id), [[1, "valid", null], [2, "valid", null], [3, "valid", null]], "and no marker");
+    } else {
+      assert.ok(first, "killed after commit: the Supplier is there");
+      assert.deepEqual((await rowOutcomes(id))[0], [1, "applied", null], "and so is its marker");
+    }
+    // 下一個 worker：lease 過期之後接手（佢用測試時鐘）。
+    clock = Number(stored.lease_until) + 1;
+    const result = await execute(id);
+    assert.deepEqual([result.status, (await rowOutcomes(id)).map(([, status]) => status)], ["completed", ["applied", "applied", "applied"]]);
+    for (const code of codes) {
+      assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1,
+        `${point}: ${code} applied exactly once`);
+    }
+  }
+});
+
+integrationTest("TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing", async () => {
+  const owner = await makeUser("tw", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const codes = [1, 2, 3].map((n) => `W${n}-${tag}`);
+  const { id, version } = await readyJob(owner, codes.map((code) => ({ supplierCode: code, supplierName: `Twin ${code}`, defaultCurrencyCode: "HKD" })));
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const first = h.worker.importService;
+  const second = new SupplierImportService({ database: h.db, time, logger: h.worker.logger });
+  const claims = await Promise.all([first, second].map((service, index) =>
+    service.claimForExecution({ leaseOwner: `twin-${index}`, leaseDurationMs: 1_000 })));
+  assert.equal(claims.filter((claim) => claim?.id === id).length, 1, "exactly one worker claims the job");
+  const [owning, waiting] = claims[0]?.id === id ? [[first, "twin-0"], [second, "twin-1"]] : [[second, "twin-1"], [first, "twin-0"]];
+  const step = ([service, leaseOwner]) => service.processNextRow({ jobId: id, leaseOwner, leaseDurationMs: 1_000, applyRow: h.worker.applyRow });
+  assert.equal((await step(owning)).status, "applied");
+  clock += 2_000; // 第一個 worker 停咗，lease 過期
+  assert.equal((await waiting[0].claimForExecution({ leaseOwner: waiting[1], leaseDurationMs: 1_000 }))?.id, id, "the other worker takes over");
+  const [stale, fresh] = await Promise.allSettled([step(owning), step(waiting)]);
+  assert.equal(stale.reason?.publicCode, "SUPPLIER_IMPORT_LEASE_LOST", "the old owner cannot write");
+  assert.equal(fresh.value?.status, "applied");
+  while (await step(waiting)) { /* 做完 */ }
+  await waiting[0].finalizeExecution({ jobId: id, leaseOwner: waiting[1] });
+  const [applied] = await h.db.query("SELECT applied_supplier_id AS id FROM supplier_import_rows WHERE job_id = ?", [id]);
+  h.supplierIds.push(...applied.map((row) => Number(row.id)));
+  for (const code of codes) {
+    assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1, code);
+  }
+});

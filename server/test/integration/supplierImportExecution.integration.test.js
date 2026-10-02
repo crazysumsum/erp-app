@@ -480,3 +480,23 @@ integrationTest("TASK-042: applyRow cannot commit the Supplier ahead of its mark
     refusals.every(([, , context]) => context.causeCode === "SUPPLIER_IMPORT_STATEMENT_REFUSED"),
   "the log names a guard refusal as such, not as a bare TypeError (REV-063 L-9)");
 });
+
+integrationTest("TASK-045 (HD-060 4A): a deadlock, lock-wait or transaction timeout fails the row with a code that says it can be retried", async () => {
+  clock += 1_000_000;
+  await quiesce();
+  const jobId = await seedJob({ rows: ["valid", "valid", "valid", "valid"] });
+  const importer = service({ error() {} });
+  await importer.claimForExecution({ leaseOwner: "me", leaseDurationMs: 60_000 });
+  // 驅動嘅錯誤（code 喺最外層）同 database service 包過嘅錯誤（code 喺 cause 入面）都要認到。
+  const driver = (code) => async () => { throw Object.assign(new Error(`driver ${code}`), { code }); };
+  const wrapped = (code) => async () => {
+    throw new ApplicationError("wrapped", { code: "DATABASE_OPERATION_FAILED", statusCode: 500, cause: Object.assign(new Error("x"), { code }) });
+  };
+  for (const applyRow of [driver("ER_LOCK_DEADLOCK"), wrapped("ER_LOCK_WAIT_TIMEOUT"), wrapped("DATABASE_TRANSACTION_TIMEOUT"),
+    driver("ER_NO_SUCH_TABLE")]) {
+    assert.equal((await importer.processNextRow({ jobId, leaseOwner: "me", leaseDurationMs: 60_000, applyRow })).status, "failed");
+  }
+  assert.deepEqual((await rows(jobId)).map((row) => row.errors[0].code),
+    ["SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_BUSY", "SUPPLIER_IMPORT_ROW_FAILED"],
+    "only lock and timeout failures are marked retryable");
+});

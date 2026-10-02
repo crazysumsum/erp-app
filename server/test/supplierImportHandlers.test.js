@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  CancelSupplierImportHandler, GetSupplierImportHandler, ListSupplierImportsHandler
+  CancelSupplierImportHandler, ConfirmSupplierImportHandler, GetSupplierImportHandler, ListSupplierImportsHandler
 } from "../src/handlers/supplier-imports/jobHandlers.js";
 import { CANCELLABLE_JOB_STATUSES, importJobSummary, importRowView, SupplierImportService } from "../src/modules/supplier/SupplierImportService.js";
 
@@ -125,4 +125,39 @@ test("list, get and cancel refuse malformed input before touching the database",
   await assert.rejects(() => importer.get({ ...actor, id: 1, rowStatus: "nope" }), TypeError);
   await assert.rejects(() => importer.cancel({ ...actor, id: 1, version: 0 }), TypeError);
   await assert.rejects(() => importer.cancel({ ...actor, id: "1", version: 1 }), TypeError);
+});
+
+test("T45: confirm re-asks the password, is idempotent, and its body is closed and requires the mode", () => {
+  const { api } = ConfirmSupplierImportHandler;
+  assert.deepEqual([api.method, api.path, api.authType, api.idempotency.enabled], ["POST", "/api/v1/supplier-imports/:id/confirm", "jwt-password", true]);
+  assert.deepEqual(api.authorizationPolicies[0].options.permissions, ["supplier.mgmt"]);
+  const { body } = api.requestSchema;
+  assert.deepEqual([body.additionalProperties, body.required], [false, ["version", "activationMode", "password"]]);
+  assert.deepEqual(body.properties.activationMode.enum, ["draft", "activate"]);
+  assert.equal(api.responseSchema[200], CancelSupplierImportHandler.api.responseSchema[200]);
+});
+
+test("T45: confirm hands the mode and approver to the service, never the password", async () => {
+  const calls = [];
+  const handler = new ConfirmSupplierImportHandler(services());
+  handler.imports = { async confirm(input) { calls.push(input); return { id: 9 }; } };
+  for (const body of [{ version: 2, activationMode: "draft", password: "pw" },
+    { version: 2, activationMode: "activate", approverUserId: 5, password: "pw" }]) {
+    await handler.execute({ auth, input: { params: { id: 9 }, body }, requestId: "r", ip: "10.0.0.1" });
+  }
+  const actor = { actorId: 12, claimedRoles: ["buyer"], claimedPermissions: ["supplier.mgmt"] };
+  assert.deepEqual(calls, [
+    { ...actor, id: 9, version: 2, activationMode: "draft", approverUserId: null, requestId: "r", ip: "10.0.0.1" },
+    { ...actor, id: 9, version: 2, activationMode: "activate", approverUserId: 5, requestId: "r", ip: "10.0.0.1" }
+  ]);
+});
+
+test("T45: confirm refuses malformed input before touching the database", async () => {
+  const database = { query() { throw new Error("must not be reached"); }, withTransaction() { throw new Error("must not be reached"); } };
+  const importer = new SupplierImportService({ database, time: { nowMs: () => 1 } });
+  const actor = { actorId: 12, claimedRoles: [], claimedPermissions: [] };
+  for (const input of [{ id: 0, version: 1, activationMode: "draft" }, { id: 1, version: 0, activationMode: "draft" },
+    { id: 1, version: 1, activationMode: "live" }, { id: 1, version: 1, activationMode: "activate", approverUserId: 0 }]) {
+    await assert.rejects(() => importer.confirm({ ...actor, ...input }), TypeError, JSON.stringify(input));
+  }
 });
