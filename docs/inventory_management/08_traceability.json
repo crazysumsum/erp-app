@@ -1815,7 +1815,24 @@
       "developer_suites": [
         "lint",
         "client-build",
-        "inventory-technical"
+        "inventory-developer",
+        "inventory-p2-database",
+        "inventory-p2-api",
+        "inventory-task026-unit",
+        "inventory-task026-database",
+        "inventory-p3-unit",
+        "inventory-p3-transfer-database",
+        "inventory-p3-movement-database",
+        "inventory-p3-api",
+        "inventory-p3-transfers-client",
+        "inventory-p3-movements-client",
+        "inventory-p3-adjustments-client",
+        "inventory-p3-server-coverage",
+        "inventory-p3-coverage-floors",
+        "inventory-p3-client-coverage",
+        "inventory-p3-dependency-audit",
+        "inventory-p3-browser",
+        "inventory-p3-browser-regression"
       ]
     },
     {

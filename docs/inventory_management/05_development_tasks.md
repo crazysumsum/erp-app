@@ -1397,15 +1397,41 @@ DB整合命令各自需要其測試guard規定的獨立、另行批准的MySQL 2
 
 ### 5.4 P3 Warehouse Operations test cycle
 
-```bash
-npm run lint
-npm test --workspace server -- test/inventoryTransferService.test.js test/inventoryPostingService.test.js test/inventoryStateMachines.test.js
-DB_INTEGRATION_TESTS=1 npm test --workspace server -- test/integration/inventoryMovement.integration.test.js test/integration/inventoryTransfer.integration.test.js test/integration/inventoryPosting.integration.test.js test/integration/inventoryReservation.integration.test.js
-npm test --workspace client -- test/services/inventory.test.js test/pages/inventory/inventoryTransfers.test.js test/pages/inventory/inventoryMovements.test.js test/pages/inventory/inventoryAdjustments.test.js
-npm run test:coverage
-npm run build --workspace client
-npm run security:audit
-```
+本節只固定 `IMPLEMENT` 的 P3 developer commands。正式 `inventory-technical` 套件的 argv、stages、TC-001～010、`max_skipped=0` 與全部正式 technical／regression／UAT mappings 原封保留；只解除 PHASE-004 對其 DEVELOPER 使用。TASK-026 局部結果不等於完整 P3-GATE，也不等於正式 Technical Acceptance。
+
+PHASE-004 完整 developer gate 必須執行 ledger 的全部 `developer_suites`：既有 `lint`、`client-build`、`inventory-developer`（108 leaf floor）、`inventory-p2-database`（7）、`inventory-p2-api`（1，包含其全部現有 assertions），以及以下套件。精確 argv、cwd、timeout、env allowlist 與 adapter 以 `00_project_profile.json` 為準。下表的最低數是 planned execution floors，不是已發現／已通過的測試數；必測 case 不能以湊數、少檔、跳過或改斷言代替。
+
+| Suite | 必須覆蓋的範圍 | 最低 executed leaves | 首次適用 |
+| --- | --- | ---: | --- |
+| `inventory-task026-unit` | Transfer migration 靜態合約＋合法狀態／整張操作拒絕規則 | 12 | TASK-026 |
+| `inventory-task026-database` | 真 MySQL DDL、重跑保留資料、索引、ownership FK、值／operation constraints | 6 | TASK-026 |
+| `inventory-p3-unit` | Draft domain、Dispatch／Receive 與 handler 權限／payload／version | 12 | TASK-027～029 |
+| `inventory-p3-transfer-database` | 完整 Dispatch／Receive、partial rejection、multi-line rollback、replay、Issue race、In Transit 對賬 | 12 | TASK-027～028、034 |
+| `inventory-p3-movement-database` | Bin Move、Adjustment、Status Transfer、Reversal、Reserved／Allocation 保護、same-version races／failure rollback | 12 | TASK-030～032、034 |
+| `inventory-p3-api` | 真 HTTP 正向過帳、cross-owner、ordinary JWT high-risk、撤權、source tampering、Audit rollback | 8 | TASK-029～034 |
+| `inventory-p3-transfers-client` | Draft／In Transit／Receive、quantity／line-set／Bin 驗證與 conflict states | 4 | TASK-029 |
+| `inventory-p3-movements-client` | 完整 group／reversal 雙向追溯、eligible action 與錯誤 states | 4 | TASK-033 |
+| `inventory-p3-adjustments-client` | 高風險 reason／reauth／timeout、permission 與敏感 state 不保存 | 4 | TASK-033 |
+| `inventory-p3-server-coverage` | 全 server root unit regression；92% lines／83% branches／90% functions；108 是既有 Inventory 最低 leaf floor，不是預測總數 | 108 | 完整 Phase |
+| `inventory-p3-coverage-floors` | 既有全部高風險 per-file coverage floors，消費當輪已核對 hash 的 LCOV | 0 | 完整 Phase |
+| `inventory-p3-client-coverage` | 全 client regression／coverage；保留 Vitest 設定；baseline 687 leaves 下限 | 687 | 完整 Phase |
+| `inventory-p3-dependency-audit` | 既有 npm audit --audit-level=high；非測試的靜態相依檢查 | 0 | 完整 Phase |
+| `inventory-p3-browser` | 真瀏覽器＋真本機 API：Transfer、Move、Adjustment、Status、Reversal、錯誤／權限、keyboard、refresh；禁止 route.fulfill 代替 | 8 | TASK-029、033～034 |
+| `inventory-p3-browser-regression` | 既有 Warehouse／Inquiry／Reservation Playwright regression；模擬 UI 不能替代上列 live P3 | 18 | 完整 Phase |
+
+所有新增測試 suite 只允許 DEVELOPER、JUnit、非零最低測試數、`max_skipped=0`；不偽裝成 TC/UAT 結果。Coverage-floors／dependency-audit 與既有 lint/build 是非測試品質檢查，EXIT_CODE 不代表測試執行。新套件的檔案按其 Task 到期實作；缺檔／工具／環境／證據或不足最低數均保持 NOT_READY，不建立 placeholder tests。完整 Phase 前不得把尚缺的套件移出必測清單。
+
+TASK-026 先執行其兩個 focused suites、既有 Inventory unit regression 及適用 lint/build。純規則與 DDL／FK／indexes 採 red→green；migration 0064 只在新鮮 allocation 檢查與精確 shared-path scope 批准後才寫入。真 DB 用 task-owned 一次性 `erp_inventory_task026_*` schema、socket-only MySQL 26.7.0、合成 fixtures；依 Sam APR-071 使用本機資源並精確清理，不接觸共用／正式資料庫。
+
+到完整 P3 cycle 時，P2 的 `erp_inventory_task025_*` regression、TASK-026 migration 與每項 P3 DB/API fixture 各有自己的合成 schema；保持既有 guard，不把不同 test-owned namespace 強行共用。P3 DB/API suite 必須檢查實際 server version 26.7.0、socket／schema ownership 與 `skip_networking=1`，使用新 `erp_inventory_p3_*` schemas；API test 必須驗證真成功效果與拒絕後零差異，不能只有負向驗證。新增 migration 後，P2 API 的既有 migration-history assertion 須按真實最新 migration 列表更新並重跑；不沿用舊 66-row 結果作新 baseline 證據。
+
+Server coverage 執行全部 `server/test/*.test.js`，保留現有 92／83／90 floors，不加 coverage-exclude、不改高風險 per-file floors。Guarded DB integration 不在此 unit discovery；它們由上述 zero-skip 真 DB/API suites 另行執行。原 §5.4 的全專案 `npm run test:coverage` 仍是 Phase 必測命令，不能以這個 zero-skip unit coverage suite 取代；其中任何 guard skip 必須逐一分類並指向本輪獨立非 skip 的適用 DB 證據，缺少任何必測 evidence 就不通過。額外影響到的 Item／Auth／shared migration consumer regression 仍按設計及實際 diff 執行。
+
+Coverage-floors 在本輪 server coverage 成功後執行：先將新 evidence run 內原始 `server-coverage.lcov` 按位元複製到 ignored `server/coverage/lcov.info`，核對 SHA-256 相等、source／PLAN baseline 相同、該 worktree 沒有競爭 writer，再執行既有 `checkCoverageFloors.js`。保存原始 LCOV 到 producer evidence，記錄 producer→consumer/hash 關係；舊報告或未知 producer 不算 PASS。Client coverage 執行全部 client tests，不刪除原有 tests、不改 coverage include 或設定。
+
+P3 live Playwright 透過 `VITE_API_BASE_URL`／`INVENTORY_P3_API_ORIGIN` 指向 task-owned 本機真 API，僅使用合成資料及本次 process 的 credentials；不得持久化 session 或密碼。現有 5205 web port 必須確認僅屬本次 worktree，不能 reuse 別人的 server；無法隔離便 BLOCKED。實際 browser 必須檢查主要成功流程、validation／error／empty／loading、navigation／refresh、keyboard 與相關 console/network，模擬 regression 不證明交易／授權／DB 正確性。
+
+五項既有 mandatory CI、獨立 Sam review、單一完整 P3 PR／merge group `inventory-p3`、fresh main 與清理規則不變。TASK-027～034、CI、push／PR／merge、正式驗收及 deployment 均不由配置批准自動授權；本次產品啟動仍只限 TASK-026。
 
 ### 5.5 P4 Stocktake test cycle
 

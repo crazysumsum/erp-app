@@ -310,6 +310,645 @@
       "redaction_env_keys": [
         "DB_PASSWORD"
       ]
+    },
+    {
+      "id": "inventory-task026-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task026-unit.xml",
+        "server/test/inventoryTransferMigration.test.js",
+        "server/test/inventoryStateMachines.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task026-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task026-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task026-database.xml",
+        "server/test/integration/inventoryTransferMigrations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task026-database.xml",
+      "min_tests": 6,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_TRANSFER_MIGRATION_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-unit.xml",
+        "server/test/inventoryTransferService.test.js",
+        "server/test/inventoryTransferHandlers.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-transfer-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-transfer-database.xml",
+        "server/test/integration/inventoryTransfer.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-transfer-database.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_TRANSFER_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-movement-database",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-movement-database.xml",
+        "server/test/integration/inventoryMovement.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-movement-database.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_MOVEMENT_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-api",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-api.xml",
+        "server/test/integration/inventoryWarehouseOperationsApi.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-api.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)(mysql.*26\\.7\\.0|26\\.7\\.0.*mysql)"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_NAME",
+        "DB_SOCKET_PATH",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_INTEGRATION_TESTS",
+        "INVENTORY_WAREHOUSE_OPERATIONS_API_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "inventory-p3-transfers-client",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryTransfers.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-transfers-client.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-transfers-client.xml",
+      "min_tests": 4,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-movements-client",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryMovements.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-movements-client.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-movements-client.xml",
+      "min_tests": 4,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-adjustments-client",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "test/pages/inventory/inventoryAdjustments.test.js",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-adjustments-client.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-adjustments-client.xml",
+      "min_tests": 4,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-server-coverage",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./test-support/testEnv.js",
+        "--experimental-test-coverage",
+        "--test-coverage-lines=92",
+        "--test-coverage-branches=83",
+        "--test-coverage-functions=90",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-p3-server-coverage.xml",
+        "--test-reporter=lcov",
+        "--test-reporter-destination={run_dir}/server-coverage.lcov",
+        "test/*.test.js"
+      ],
+      "cwd": "server",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-server-coverage.xml",
+      "min_tests": 108,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-coverage-floors",
+      "kind": "LINT",
+      "argv": [
+        "node",
+        "server/scripts/checkCoverageFloors.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "coverage-floors-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-client-coverage",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--workspace",
+        "client",
+        "--",
+        "--reporter=junit",
+        "--outputFile={run_dir}/inventory-p3-client-coverage.xml"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-client-coverage.xml",
+      "min_tests": 687,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-dependency-audit",
+      "kind": "LINT",
+      "argv": [
+        "npm",
+        "run",
+        "security:audit"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "dependency-audit-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-browser",
+      "kind": "UI",
+      "argv": [
+        "npx",
+        "--no-install",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/inventory-management/playwright.config.js",
+        "inventory-warehouse-operations.spec.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-browser.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "VITE_API_BASE_URL",
+        "INVENTORY_P3_API_ORIGIN",
+        "INVENTORY_P3_BROWSER_TESTS"
+      ],
+      "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-p3-browser-regression",
+      "kind": "UI",
+      "argv": [
+        "npx",
+        "--no-install",
+        "playwright",
+        "test",
+        "--config",
+        "client/e2e/inventory-management/playwright.config.js",
+        "inventory-warehouses.spec.js",
+        "inventory-inquiries.spec.js",
+        "inventory-reservations.spec.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-p3-browser-regression.xml",
+      "min_tests": 18,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v26\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": []
     }
   ],
   "ci": {
