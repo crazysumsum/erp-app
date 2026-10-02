@@ -457,9 +457,14 @@ Three first survived: a deactivated confirmer (only a lost permission was tested
 share lock on the policy (a test now holds the settings row in a rolled-back transaction and requires confirm to wait); and
 the default-writer mutant, which was itself wrong (`null ?? x` is `x`) and was rewritten.
 
-**Shared settings in tests.** `supplier_settings` is a singleton that the parallel test files share, and the settings tests
-change it only inside a rolled-back transaction. A first version of the T45 tests committed approval on and off and broke
-`supplierSettings.integration.test.js` in a parallel run. Confirm's policy reader is now injectable
-(`SupplierImportService({ activationPolicy })`); approval-on cases confirm through a service with an injected policy, and the
-HTTP path reads the real (off) setting. The tests add short-lived currencies, as `customerIdentifierCredit` does, and
-remove them afterwards.
+**Shared state in tests.** `supplier_settings` is a singleton that the parallel test files share, and the settings tests
+change it only inside a rolled-back transaction. A first version of the T45 tests committed approval on and off, which
+breaks that rule; confirm's policy reader is now injectable (`SupplierImportService({ activationPolicy })`), approval-on
+cases confirm through a service with an injected policy, and the HTTP path reads the real (off) setting. The tests add
+short-lived currencies, as `customerIdentifierCredit` does, and remove them afterwards.
+
+The parallel failure of `supplierSettings.integration.test.js` that prompted this had a different cause, found in the InnoDB
+deadlock report: T43's 10,000-row test cleaned up with `DELETE FROM suppliers WHERE supplier_code_key LIKE …`, a full scan
+that locks every Supplier row, and deadlocked the settings test's request insert. It now deletes by ID. A first guess
+(a gap lock taken by the identifier helper on a new pending Supplier) was tested both ways, did not reproduce, and was
+dropped with its code change.

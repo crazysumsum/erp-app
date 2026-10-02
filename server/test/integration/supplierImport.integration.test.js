@@ -507,7 +507,9 @@ integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes pre
   }
   t.after(async () => {
     await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [seededRows.map((row) => row.id)]);
-    await h.db.query("DELETE FROM suppliers WHERE supplier_code_key LIKE ?", [`sd-${tag.toLowerCase()}-%`]);
+    // 按 id 刪：`supplier_code_key LIKE` 會 full scan 兼鎖晒成張 suppliers 表，並行跑嘅其他測試檔會同佢互鎖
+    // （T45 實測：supplierSettings 嘅申請 insert 俾佢鎖死，ER_LOCK_DEADLOCK）。
+    await h.db.query("DELETE FROM suppliers WHERE id IN (?)", [seededRows.map((row) => row.id)]);
   });
   const records = Array.from({ length: 10_000 }, (_, index) => ({
     supplierCode: `BIG-${tag}-${index}`, supplierName: `Imported ${index} Trading Company Limited ${tag}`, defaultCurrencyCode: "HKD"
@@ -1213,3 +1215,4 @@ integrationTest("TASK-045 (AC-013): confirm reads the policy under a share lock,
   assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
   await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version + 1 }, key: randomUUID() });
 });
+
