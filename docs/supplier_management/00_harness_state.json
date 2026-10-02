@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 269,
+  "revision": 270,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4344,6 +4344,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-02: '全部按建議' - 1A, 2A, 3A, 4A, 5A."
+    },
+    {
+      "id": "HD-061",
+      "impact": "MAJOR",
+      "question": "REV-071 follow-ups for TASK-045. (1) L-1: a job whose rows are all applied is failed if the confirmer loses access before the final call — select the next row first, finalize when none is left, re-check the confirmer only when a row exists, with a test. (2) L-2: a real lock wait longer than the timeout budget leaves the row valid (retried after the 660 s lease) instead of failing it as SUPPLIER_IMPORT_ROW_BUSY: (A) correct HD-060 4A's wording — short conflicts fail the row as BUSY, long waits leave it pending for the lease — and add a real lock-hold test; (B) mark the row with NOWAIT so 4A holds literally. (3) L-3: the T43 cleanup's id IN (2000 ids) still full-scans; delete in primary-key chunks of at most 500 and correct the carry-forward. (4) I-1 test the in-transaction SUPPLIER_CODE_TAKEN mapping with an injected race; I-2 a deleted approver fails the row as APPROVER_NOT_ELIGIBLE; I-3 record for T46 that the snapshot can activate directly after approval was switched on; I-4 imported audits carry requestId import-<jobId>. Recommended: 1 fix, 2A, 3 fix, I-1..I-4 as suggested.",
+      "affected_ids": [
+        "TASK-045",
+        "TASK-046",
+        "HD-060",
+        "REV-071"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-02: '全部按建議' - L-1 fix, L-2 (A), L-3 fix, I-1..I-4 as suggested."
     }
   ],
   "external_actions": [
@@ -5420,5 +5433,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-045: REV-071 APPROVED 1138dc5 with L-1..L-3 and I-1..I-4 open; awaiting the Product Owner's choice on them. PR #177 CI green on 1138dc5. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-045: REV-071 follow-ups per HD-061 on claude/supplier-task-045 (PR #177); then tests, mutants, CI and REV-072. Merge only on the Product Owner's word."
 }
