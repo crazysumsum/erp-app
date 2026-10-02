@@ -1153,3 +1153,30 @@ integrationTest("TASK-045 (HD-060 5A): a confirmer whose account was deactivated
   assert.deepEqual(await rowOutcomes(id), [[1, "failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED"]]);
   assert.equal(await supplierByCode(`DX-${tag}`), undefined);
 });
+
+integrationTest("TASK-045 (HD-048 3): each row, job lock included, finishes far inside DB_TRANSACTION_TIMEOUT_MS", async (t) => {
+  const owner = await makeUser("tm", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const records = Array.from({ length: 300 }, (_, index) => ({
+    supplierCode: `TM${index}-${tag}`, supplierName: `Timed ${index} Trading ${tag}`, defaultCurrencyCode: "HKD",
+    addressLabel: "Office", addressPurpose: "office", addressLine1: `${index} Road`, contactName: `Contact ${index}`, contactPurpose: "orders",
+    identifierType: "tax", issuerCountryCode: "HK", identifierValue: `TM${tag}${index}`
+  }));
+  const { id, version } = await readyJob(owner, records);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "timer", leaseDurationMs: 600_000 }))?.id, id);
+  let slowest = 0;
+  const started = Date.now();
+  for (;;) {
+    const before = Date.now();
+    const row = await service.processNextRow({ jobId: id, leaseOwner: "timer", leaseDurationMs: 600_000, applyRow: h.worker.applyRow });
+    if (!row) break;
+    assert.equal(row.status, "applied");
+    h.supplierIds.push(row.appliedSupplierId);
+    slowest = Math.max(slowest, Date.now() - before);
+  }
+  await service.finalizeExecution({ jobId: id, leaseOwner: "timer" });
+  t.diagnostic(`300 full rows in ${Date.now() - started} ms; slowest row ${slowest} ms (DB_TRANSACTION_TIMEOUT_MS defaults to 20,000)`);
+  assert.ok(slowest < 2_000, `slowest row took ${slowest} ms`);
+});
