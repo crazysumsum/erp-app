@@ -39,12 +39,10 @@ async function setup(t) {
     await db.execute(`INSERT INTO inventory_stock_balances (warehouse_id, bin_id, sku_id, lot_id, stock_status, on_hand_quantity, created_at, updated_at)
       VALUES (?, ?, ?, ?, 'AVAILABLE', 5, ?, ?)`, [warehouseId, binId, skuId, lotId, now, now]);
   }
-  const sources = [];
   cleanup = async () => {
-    await db.execute("DELETE FROM inventory_audit_logs WHERE actor_user_id = ?", [userId]);
+    // Immutable audit and its referenced operation evidence remain in the disposable CI schema.
     await db.execute("DELETE FROM inventory_allocations WHERE reservation_id IN (SELECT id FROM inventory_reservations WHERE warehouse_id = ?)", [warehouseId]);
     await db.execute("DELETE FROM inventory_reservations WHERE warehouse_id = ?", [warehouseId]);
-    for (const source of sources) await db.execute("DELETE FROM inventory_operation_requests WHERE source_module = 'SALES' AND source_document_id = ?", [source]);
     await db.execute("DELETE FROM inventory_stock_balances WHERE warehouse_id = ?", [warehouseId]);
     await db.execute("DELETE FROM inventory_stock_controls WHERE warehouse_id = ?", [warehouseId]);
     await db.execute("DELETE FROM inventory_lots WHERE sku_id IN (?, ?)", skuIds);
@@ -64,7 +62,6 @@ async function setup(t) {
   const service = new InventoryReservationService({ database: db, logger: app.services.require("logging").logger,
     time: { nowMs: () => now, fileDate: () => "2026-10-02" } });
   const command = (documentId, payload, eventId = randomUUID()) => {
-    if (!sources.includes(String(documentId))) sources.push(String(documentId));
     return { actor: { userId, serviceName: "", claimedRoles: [roleName], claimedPermissions: ["sales.mgmt"] },
       source: { documentId: String(documentId), eventId }, correlationId: eventId, payload };
   };
@@ -87,7 +84,7 @@ integrationTest("Sales batches serialize reverse demand, replay unchanged and re
   });
   const released = await f.db.withTransaction(consume);
   assert.deepEqual(await f.db.withTransaction(consume), released);
-  const [[plan]] = await f.db.query(`EXPLAIN SELECT id FROM inventory_operation_requests WHERE source_module = 'SALES'
+  const [[plan]] = await f.db.query(`EXPLAIN FORMAT=TRADITIONAL SELECT id FROM inventory_operation_requests WHERE source_module = 'SALES'
     AND source_document_type = 'SALES_ORDER' AND source_document_id = '70001' AND source_event_id = ? AND source_line_id <> '' AND id > 0 ORDER BY id LIMIT 100`, [release.source.eventId]);
   assert.ok(Number.isFinite(Number(plan.rows)));
   t.diagnostic(`Batch member query plan: type=${plan.type}, key=${plan.key}, estimatedRows=${plan.rows}`);
