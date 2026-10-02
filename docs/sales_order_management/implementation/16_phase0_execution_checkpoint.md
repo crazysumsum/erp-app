@@ -27,3 +27,11 @@ PLAN_READY currently reports stale/missing current DESIGN, PLAN and unchanged NF
 ## Supporting report repair
 
 Actual Harness parsing exposed an ambiguous provider title containing both TC018 and TC027; those are upstream cases, not Sales case evidence. The minimal stdlib Python adapter runs the exact reviewed provider file list, retains original JUnit names/statuses in original-provider-tests.xml and captured stdout, and emits HARNESS_JSON without case-ID claims. Its real rerun197PASS/0FAIL/0SKIP parses successfully through the unchanged Harness parser, with no Sales cases returned. One runnable stdlib unittest verifies mixed statuses, original names, absence of IDs and DTD rejection. Original failed parser observation and reports remain retained; no unrelated provider test was renamed.
+
+## Final observed candidate CI and review
+
+Exact candidate835d98d9f277caf8bfe3de0c56f56e3ae038bbce, CI36981692327: all five mandatory jobs PASS. Server2519PASS/0FAIL/14 documented upstream opt-in skips; original global coverage93.89% lines/84.15% branches/92.26% functions and34per-file floors PASS. Client92testfiles PASS, original floors PASS. The ten required Inventorynative suites were actually executed locally as described above; no new skip allowance is inferred from the repository CI skips. Original private log /private/tmp/sales-835-green-ci.log.
+
+Actual independent final PR/code review APPROVE by /root/sales_readiness_review at exact835d98d/base95946469, sourceFP5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62, DESIGN9cb5c5/PLANe24686; no unresolved findings in the reviewed scoped changes. The final-baseline question DEC014 is pending, not answered by Sam's later status message「？」.
+
+All four owned disposable MySQL instances were safely stopped after actual VERSION/datadir/socket/pid verification while that required human decision is pending; schemas and restart argv are retained privately. The live mysql-instance resource was removed from state, so no runner can mistake a stopped runtime for an available one. Full resource destruction/worktree cleanup follows completed verification/merge. PR174 remains OPEN DRAFT. No registered Harness execution or formal/merge readiness is claimed.

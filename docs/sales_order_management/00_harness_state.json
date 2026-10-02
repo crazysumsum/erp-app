@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 53,
+  "revision": 58,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-011",
   "baseline": {
     "design": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
     "plan": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
-    "code_commit": "069327e8ed2e9527828b22de33158808dfad49d6",
+    "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
     "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
@@ -22,23 +22,23 @@
     "owner": "Codex /root authorized DEC013",
     "resources": {
       "workspace": "/private/tmp/erp-sales-foundation",
-      "mysql-instance": "/private/tmp/sales-phase0-hlnxwrb1; dedicated per-suite schemas and021/022/025 socket-only instances; /private/tmp/sales-phase0-runtime.json",
-      "temp-directory": "/private/tmp/sales-phase0-hlnxwrb1"
+      "temp-directory": "/private/tmp/sales-phase0-hlnxwrb1",
+      "mysql-instance": "/private/tmp/sales-phase0-hlnxwrb1 +dedicated021/022/025socket-onlyroots; exact26.7.0 VERSION/datadir/socket/skip_networkingre-observed; unused gate_91f44916 schemas; /private/tmp/sales-phase0-runtime.json"
     },
     "lease_ref": null
   },
   "tasks": {
     "TASK-001": "DONE",
-    "TASK-002": "IN_PROGRESS",
-    "TASK-003": "IN_PROGRESS",
-    "TASK-004": "IN_PROGRESS",
-    "TASK-005": "IN_PROGRESS",
-    "TASK-006": "IN_PROGRESS",
-    "TASK-007": "IN_PROGRESS",
-    "TASK-008": "IN_PROGRESS",
-    "TASK-009": "IN_PROGRESS",
-    "TASK-010": "IN_PROGRESS",
-    "TASK-011": "IN_PROGRESS"
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
+    "TASK-009": "DONE",
+    "TASK-010": "DONE",
+    "TASK-011": "DONE"
   },
   "approvals": [
     {
@@ -583,6 +583,125 @@
         "server/test-support/fakeSalesDatabase.js",
         "server/database/migrations/0068_create_sales_document_sequences.js",
         "server/database/migrations/0069_create_sales_operation_requests.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-DESIGN-20261002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-PLAN-20261002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-SCOPE-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "code_commit": null,
+      "scope": [
+        "docs/customer_management/00_module_manifest.json",
+        "docs/customer_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/items_management/00_module_manifest.json",
+        "docs/items_management/03_design_spec.md",
+        "server/config/api.js",
+        "server/database/migrations/0067_seed_sales_permissions.js",
+        "server/database/migrations/0068_create_sales_document_sequences.js",
+        "server/database/migrations/0069_create_sales_operation_requests.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/upload/cleanupUploadedFiles.js",
+        "server/src/framework/upload/normalizeUploadConfig.js",
+        "server/src/framework/upload/uploadConcurrencyGate.js",
+        "server/src/framework/upload/uploadMiddleware.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/filetype/FileTypeService.js",
+        "server/src/services/filetype/builtInFileTypes.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/applicationFactory.test.js",
+        "server/test/configuration.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/fileTransfer.test.js",
+        "server/test/fileTransferFailureModes.test.js",
+        "server/test/integration/inventoryTask025Api.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/uploadLimits.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-UATNA-20261002",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
       ],
       "expires_at": null
     }
@@ -1638,6 +1757,72 @@
       "source_ref": "implementation/16_phase0_execution_checkpoint.md; originalprivateJUNIT/observations",
       "actor": "Codex /root actualcommands",
       "observed_at": "2026-10-02T07:52:54.877806+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Scoped finalcandidate independentPR/codereview",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final APPROVE835d98d vs95946469, sourceFP501302; no findings, humanbinding/registeredruns remainedpending; implementation/16",
+      "actor": "Codex separate agent /root/sales_readiness_review",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
     }
   ],
   "pending_decisions": [
@@ -1807,8 +1992,8 @@
         "NFR-014",
         "NFR-015"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization."
     }
   ],
   "external_actions": [
@@ -2057,11 +2242,61 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation finalreviewedexecutioncontract",
       "idempotency_key": "sales-final-report-adapter-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush835d98d9f277caf8bfe3de0c56f56e3ae038bbce; PR174observed exacthead andCI36981692327 underway."
+    },
+    {
+      "id": "PR-UPDATE-SALES-DEC013-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-dec013-current-pr-body-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgh pr edit succeeded withcurrent835head/run36981692327, directvalidation anddraftgate; /private/tmp/sales-pr-phase0-current-body.md."
+    },
+    {
+      "id": "STOP-SALES-OWNED-MYSQL-20261002",
+      "kind": "OTHER",
+      "target": "Four owned MySQL instances in /private/tmp/sales-phase0-runtime.json",
+      "idempotency_key": "sales-owned-mysql-stop-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual VERSION/datadir/socket/pid validation andmysqladminshutdown succeeded allfour. runningFalse; ownedfreshschemas/datadirs and exactrestartargv retained. No sharedserver affected."
+    },
+    {
+      "id": "RESTART-SALES-OWNED-MYSQL-20261002",
+      "kind": "OTHER",
+      "target": "Four verified owned datadirs from /private/tmp/sales-phase0-runtime.json restart_commands",
+      "idempotency_key": "sales-owned-mysql-restart-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualmysqldrestart success allfour and nativeCLIversion/datadir/socket/skip_networkingchecksPASS; runningTrue inprivate metadata."
+    },
+    {
+      "id": "PUSH-SALES-PHASE0-DOD-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation finalapproval/DoD/evidence-pointer bookkeeping",
+      "idempotency_key": "sales-phase0-dod-checkpoint-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Existingauthorization; actualindependentfinalreview, completeconcretepacket17; finalcurrentheadCIrequired."
+      "source_ref": "Sam finalbaseline approval and existingcommit/push/PRauthorization; source/PLANunchanged actual17runs complete."
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "evidence/20261002T082352-6348f9bfb59e/run.json",
+    "evidence/20261002T082356-3a41c6441c78/run.json",
+    "evidence/20261002T082358-103146e2489f/run.json",
+    "evidence/20261002T082401-08cab88b9e0d/run.json",
+    "evidence/20261002T082406-d463a9c65f55/run.json",
+    "evidence/20261002T082415-bcc6554d2cb8/run.json",
+    "evidence/20261002T082431-88e1f465b9d8/run.json",
+    "evidence/20261002T082433-531dfa97667d/run.json",
+    "evidence/20261002T082435-922900dbcf5a/run.json",
+    "evidence/20261002T082436-1d3ad96bd407/run.json",
+    "evidence/20261002T082437-456765debf24/run.json",
+    "evidence/20261002T082438-9544bbc4f694/run.json",
+    "evidence/20261002T082439-7e6b3c7cb9dc/run.json",
+    "evidence/20261002T082440-7111d47cf1e8/run.json",
+    "evidence/20261002T082441-69d774f8ceb4/run.json",
+    "evidence/20261002T082442-885c8d3a9852/run.json",
+    "evidence/20261002T082443-40e35f31ce9d/run.json"
+  ],
   "defects": [],
-  "next_safe_action": "Await actualDEC014finalbaselineanswer forregisteredHarness; meanwhile finishauthorizedpush/currentheadCI/freshdisposablebindingpreparation. No merge until completePHASE001gate."
+  "next_safe_action": "All17 actualHarnessdeveloper runs PASS437/0FAIL/0SKIP/0NOT_RUN, exact835 CIallfivePASS/reviewAPPROVE. Publish approval/DoD/evidence-pointer bookkeeping candidate then require that exactheadCI/independentreview/freshmain andcompletePHASE001 MERGE_READY before authorizedmerge; private raw evidence notexported."
 }

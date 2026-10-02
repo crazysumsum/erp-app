@@ -63,3 +63,7 @@ Option A (recommended): approve this finalized binding, then run registered deve
 Option B: preserve this concrete candidate as draft with approval-blocked gate.
 
 Policy source: software-engineering-harness/references/19-state-and-recovery.md requires a new baseline-bound decision rather than rewriting old approval hashes; this is the final binding step expressly retained in DEC013 proposal step6.
+
+## Actual final human decision
+
+Sam answered「核准」in the current Codex chat directly to this final binding request. DEC014 is ANSWERED. New DESIGN/PLAN/shared-scope/UAT_NA records bind the exact hashes above; all historical approval records are retained. No new scope or formal waiver is inferred.
