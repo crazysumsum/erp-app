@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 39,
+  "revision": 40,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,12 +9,12 @@
   "current_phase": "PHASE-001",
   "current_task": "TASK-009",
   "baseline": {
-    "design": "7024ff059a7e2ac0fe2490372e240fc55a6bae0a87bda3380d3d6f9b4e84badf",
-    "plan": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
-    "code_commit": "5f4c9eb8c4723e65af5235ac0f7bebd748388df0",
-    "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+    "design": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
+    "plan": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+    "code_commit": "34258a36f426aaedcef33a4de22e022a5f9253b2",
+    "source_fingerprint": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
     "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
+    "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -497,6 +497,91 @@
         "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-GRAPH-DESIGN-20261002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Sam adoption DEC012 includes precise Item/FK graph review before implementation. Canonical §2.8 now records actual reviewer graph; localized existing isolation option is technical implementation of adopted reference protection, no new owner business rule/permission/Phase scope. implementation/09_customer_snapshot_checkpoint.md; graph independent APPROVE actual collaboration response.",
+      "recorded_at": "2026-10-02T03:55:29.202596+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-GRAPH-PLAN-20261002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Sam adoption DEC012 includes precise Item/FK graph review before implementation. Canonical §2.8 now records actual reviewer graph; localized existing isolation option is technical implementation of adopted reference protection, no new owner business rule/permission/Phase scope. implementation/09_customer_snapshot_checkpoint.md; graph independent APPROVE actual collaboration response.",
+      "recorded_at": "2026-10-02T03:55:29.202596+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-GRAPH-SCOPE-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Sam adoption DEC012 includes precise Item/FK graph review before implementation. Canonical §2.8 now records actual reviewer graph; localized existing isolation option is technical implementation of adopted reference protection, no new owner business rule/permission/Phase scope. implementation/09_customer_snapshot_checkpoint.md; graph independent APPROVE actual collaboration response.",
+      "recorded_at": "2026-10-02T03:55:29.202596+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "code_commit": null,
+      "scope": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "docs/sales_order_management/**",
+        "docs/customer_management/**",
+        "docs/items_management/**",
+        "docs/inventory_management/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/inventoryValidation.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/customerCreditService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test/sales/**",
+        "server/test-support/fakeSalesDatabase.js",
+        "server/database/migrations/0068_create_sales_document_sequences.js",
+        "server/database/migrations/0069_create_sales_operation_requests.js"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -603,6 +688,42 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e",
       "source_ref": "docs/sales_order_management/implementation/08_provider_review_decision.md; actual separate-agent final response APPROVE as human/owner decision proposal, not adoption or implementation. Earlier release/replay/advisory findings corrected, Item writer compatibility included.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CUSTOMER-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual read-only collaboration review responses",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CUSTOMER-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual read-only collaboration review responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-GRAPH-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual read-only collaboration review responses",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1148,6 +1269,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36951579935",
       "actor": "GitHub Actions observed by Codex /root",
       "observed_at": "2026-10-02T03:46:40.053560+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Customer snapshot/credit unit18PASS/0FAIL/0SKIP; focused lint PASS. Actual MySQL snapshot concurrency pending CI; no local SQL/formal acceptance.",
+      "code_commit": "34258a36f426aaedcef33a4de22e022a5f9253b2",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
+      "status": "PASS",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual Node/ESLint output in current chat",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T03:55:29.202596+00:00"
     }
   ],
   "pending_decisions": [
@@ -1446,5 +1578,5 @@
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Implement adopted TASK009..011 in thin slices; precise Item/FK graph review before Item source; Customer snapshot independent first. Reconcile canonical approved deltas and fresh main; no local SQL/partial Phase merge."
+  "next_safe_action": "Customer scoped source independently approved, real DB pending CI. Implement Item named Sales snapshots using reviewed SHARE graph; stable writer follows in separate slice. TASK010/011 still pending, full Phase not complete."
 }

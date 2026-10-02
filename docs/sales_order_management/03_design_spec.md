@@ -440,19 +440,18 @@ SalesBackorderAllocationJob / manual trigger
 
 ### 2.8 全域 lock order
 
-所有 Sales 寫入 transaction 必須按以下順序，不能依畫面行順序：
+完成的 domain operation 先驗 fresh actor、aggregate access 及 immutable event/hash 後 replay；不重驗 mutable Customer/Item/ATP。NEW_EXECUTION 依以下順序，不能依畫面行順序：
 
-1. `sales_operation_requests`／Job lease row。
-2. `sales_document_sequences`（只在建立文件）。
-3. `sales_external_order_keys`（只在 intake 建單）。
-4. `sales_quotations`，按 ID 升序。
-5. `sales_orders`，按 ID 升序。
-6. `sales_quotation_lines`／`sales_order_lines`，按 ID 升序。
-7. `sales_backorder_entries` 及 `sales_order_line_reservations`，按 ID 升序。
-8. Inventory batch contract：Inventory operation claims → Warehouse → Stock Controls → Reservation rows。
-9. Current projection update、History、Audit append。
+1. Sales operation／Job lease → sequence（create/convert）→ external key（intake）→ Quotation → Order → Lines → Backorder/mappings；各類 ascending ID。
+2. Customer FOR UPDATE → credit FOR UPDATE；不存在 credit 亦由 Customer root 序列化。
+3. Business Master document Currency按code → Payment Term按ID；credit currency僅advisory原樣保存。
+4. Item snapshots：先發現完整 IDs，UOM SHARE → Item SHARE → SKU SHARE → mapping SHARE，各類 ascending ID。鎖定後重驗association；改變則abort/retry，不晚取 earlier-rank lock。SHARE与Inventory隱式SKU FK SHARE相容。
+5. Inventory root → 全 deterministic child operation claims → Warehouse → Stock Controls → Bins/active bin locks → Lots → Balances → Reservations → Transfers → Stocktakes。Completed root立即bounded驗全部原children及count/digest後返回，不做mutable eligibility或stock mutation；new root才執行新效果。
+6. Child summaries → root complete → Sales current projection／History／Audit／operation result；全部caller transaction，無line/page commit。
 
-Archive transaction 只鎖已符合資格且沒有進行中 operation 的 finalized SO；不呼叫 Inventory。任何 Inventory workflow 不得持有 Inventory lock 後反向取得 Sales lock。Deadlock／lock timeout映射為可重試 `CONCURRENT_OPERATION`，同一業務意圖仍使用原 eventId 查結果。
+Item writer相容依 UOM SHARE → Item SHARE → SKU UPDATE → mappings UPDATE → barcode mutations；ID discovery鎖後重驗。Draft刪除先鎖Item/SKU roots再刪children；cascade先Item再SKU。Guarded updateSku用既有局部READ COMMITTED交易選項及SKU/mapping鎖後nonlocking reference probes，避免authorization/discovery的舊RR snapshot與Sales/Inventory反向child locks。清除待變default slots後再設定，保留DB uniqueness。
+
+此精確圖經2026-10-02 `/root/sales_readiness_review` 獨立read-only review APPROVE實作方向，真MySQL並發/rollback仍pending。既有InventoryPosting first-receipt/plain-RR profile race為歷史問題，未包含本slice修正；不得聲稱全系統無deadlock。Future Fulfillment僅沿用Sales → Fulfillment → Inventory原則，細節仍由後續owner gate處理。Archive不呼叫Inventory；持有Inventory stock locks後不得反向取得Sales或新Item locks。Deadlock／lock timeout沿原event回可重試CONCURRENT_OPERATION。
 
 ---
 
