@@ -1405,6 +1405,7 @@ PHASE-004 完整 developer gate 必須執行 ledger 的全部 `developer_suites`
 | --- | --- | ---: | --- |
 | `inventory-task026-unit` | Transfer migration 靜態合約＋合法狀態／整張操作拒絕規則 | 12 | TASK-026 |
 | `inventory-task026-database` | 真 MySQL DDL、重跑保留資料、索引、ownership FK、值／operation constraints | 6 | TASK-026 |
+| `inventory-task027-unit` | TASK-027 Draft create／full replace／cancel／query 與版本、ownership、Audit rollback；只供本 Task 中間驗證，不替代任何完整 PHASE-004 developer suite、server coverage／floors 或正式 TC／UAT。既有全 server JUnit 多 TC ID 解析阻擋仍須在完整 P3 gate 前修復。 | 12 | TASK-027 |
 | `inventory-p3-unit` | Draft domain、Dispatch／Receive 與 handler 權限／payload／version | 12 | TASK-027～029 |
 | `inventory-p3-transfer-database` | 完整 Dispatch／Receive、partial rejection、multi-line rollback、replay、Issue race、In Transit 對賬 | 12 | TASK-027～028、034 |
 | `inventory-p3-movement-database` | Bin Move、Adjustment、Status Transfer、Reversal、Reserved／Allocation 保護、same-version races／failure rollback | 12 | TASK-030～032、034 |

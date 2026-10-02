@@ -1,0 +1,49 @@
+diff --git a/docs/inventory_management/00_project_profile.json b/docs/inventory_management/00_project_profile.json
+--- a/docs/inventory_management/00_project_profile.json
++++ b/docs/inventory_management/00_project_profile.json
+@@ -942,6 +942,33 @@
+       "env_keys": [],
+       "redaction_env_keys": []
+-    }
++    },
++    {
++      "id": "inventory-task027-unit",
++      "kind": "UNIT",
++      "argv": [
++        "node",
++        "--test",
++        "--test-concurrency=1",
++        "--import",
++        "./server/test-support/testEnv.js",
++        "--test-reporter=junit",
++        "--test-reporter-destination={run_dir}/inventory-task027-unit.xml",
++        "server/test/inventoryTransferService.test.js",
++        "server/test/inventoryInquiryService.test.js"
++      ],
++      "cwd": ".",
++      "timeout_seconds": 1800,
++      "result_adapter": "JUNIT",
++      "result_path": "inventory-task027-unit.xml",
++      "min_tests": 12,
++      "max_skipped": 0,
++      "stages": ["DEVELOPER"],
++      "required_case_ids": [],
++      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v26\\."}],
++      "side_effects": ["FILES"],
++      "env_keys": [],
++      "redaction_env_keys": []
++    }
+   ],
+   "ci": {
+     "provider": "GitHub Actions (.github/workflows/ci.yml)",
+diff --git a/docs/inventory_management/05_development_tasks.md b/docs/inventory_management/05_development_tasks.md
+--- a/docs/inventory_management/05_development_tasks.md
++++ b/docs/inventory_management/05_development_tasks.md
+@@ -1405,6 +1405,7 @@
+ | --- | --- | ---: | --- |
+ | `inventory-task026-unit` | Transfer migration 靜態合約＋合法狀態／整張操作拒絕規則 | 12 | TASK-026 |
+ | `inventory-task026-database` | 真 MySQL DDL、重跑保留資料、索引、ownership FK、值／operation constraints | 6 | TASK-026 |
++| `inventory-task027-unit` | TASK-027 Draft create／full replace／cancel／query 與版本、ownership、Audit rollback；只供本 Task 中間驗證，不替代任何完整 PHASE-004 developer suite、server coverage／floors 或正式 TC／UAT。既有全 server JUnit 多 TC ID 解析阻擋仍須在完整 P3 gate 前修復。 | 12 | TASK-027 |
+ | `inventory-p3-unit` | Draft domain、Dispatch／Receive 與 handler 權限／payload／version | 12 | TASK-027～029 |
+ | `inventory-p3-transfer-database` | 完整 Dispatch／Receive、partial rejection、multi-line rollback、replay、Issue race、In Transit 對賬 | 12 | TASK-027～028、034 |
+ | `inventory-p3-movement-database` | Bin Move、Adjustment、Status Transfer、Reversal、Reserved／Allocation 保護、same-version races／failure rollback | 12 | TASK-030～032、034 |
