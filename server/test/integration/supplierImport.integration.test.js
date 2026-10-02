@@ -1188,3 +1188,28 @@ integrationTest("TASK-045 (HD-048 3): each row, job lock included, finishes far 
   t.diagnostic(`300 full rows in ${Date.now() - started} ms; slowest row ${slowest} ms (DB_TRANSACTION_TIMEOUT_MS defaults to 20,000)`);
   assert.ok(slowest < 2_000, `slowest row took ${slowest} ms`);
 });
+
+integrationTest("TASK-045 (AC-013): confirm reads the policy under a share lock, so it waits for a settings write in flight", async () => {
+  const owner = await makeUser("sl", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `SL-${tag}`, supplierName: `Share Lock ${tag}`, defaultCurrencyCode: "HKD" }]);
+  let pending;
+  let settledWhileHeld;
+  // 好似 supplierSettings 測試咁：鎖住設定行嘅 transaction 一定 rollback，其他測試檔睇唔到中間值。
+  const run = async (connection) => {
+    await connection.query("SELECT version FROM supplier_settings WHERE id = 1 FOR UPDATE");
+    let settled = false;
+    pending = confirmJob(owner, id, { version, activationMode: "draft" });
+    pending.then(() => { settled = true; });
+    await new Promise((resolve) => { setTimeout(resolve, 400); });
+    settledWhileHeld = settled;
+    throw new Error("roll back the settings lock");
+  };
+  await h.db.withTransaction(run).catch((error) => {
+    if (!/roll back the settings lock/u.test(`${error?.message} ${error?.cause?.message}`)) throw error;
+  });
+  assert.equal(settledWhileHeld, false, "confirm waited for the settings row");
+  const confirmed = await pending;
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version + 1 }, key: randomUUID() });
+});
