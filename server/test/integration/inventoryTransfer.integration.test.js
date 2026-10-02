@@ -497,3 +497,114 @@ integrationTest("TASK-028 concurrent Issue cannot let Dispatch consume allocated
   assert.equal((await inquiry.getTransfer(f.draft.id)).status, "DRAFT");
   assert.equal((await postingRows(f.draft.id)).length, 0);
 });
+
+integrationTest("TASK-028 same-version competing Dispatch and Receive each have one whole-document winner", async () => {
+  const f = await postingFixture({ copies: 2 });
+  let header = f.draft;
+  for (const action of ["dispatch", "receive"]) {
+    const barrier = createInventoryBarrier();
+    const real = new InventoryOperationService();
+    const competing = new InventoryTransferService({ database, logger, time, operations: {
+      claim: async (...args) => { const result = await real.claim(...args); await barrier.wait(); return result; },
+      complete: (...args) => real.complete(...args)
+    } });
+    const first = action === "dispatch" ? f.dispatch : await receiveInput(header);
+    const second = { ...first, source: { ...first.source, eventId: randomUUID() } };
+    const results = await Promise.allSettled([competing[action](first), competing[action](second)]);
+    assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
+    assert.ok(["TRANSFER_STATE_CONFLICT", "VERSION_CONFLICT", "CONCURRENT_OPERATION"].includes(results.find((r) => r.status === "rejected").reason.code));
+    header = results.find((r) => r.status === "fulfilled").value;
+  }
+  assert.equal(header.status, "RECEIVED");
+  const [[source]] = await pool.query("SELECT on_hand_quantity AS quantity FROM inventory_stock_balances WHERE id = ?", [f.balanceId]);
+  assert.equal(Number(source.quantity), 10);
+  const [[destination]] = await pool.query("SELECT on_hand_quantity AS quantity FROM inventory_stock_balances WHERE warehouse_id = 2 AND sku_id = ?", [f.skuId]);
+  assert.equal(Number(destination.quantity), 10);
+  assert.equal((await postingRows(f.draft.id)).length, 8);
+});
+
+integrationTest("TASK-028 failure between paired legs or after an earlier line has no partial effects", async () => {
+  const f = await postingFixture({ copies: 2 });
+  for (const point of ["INSERT INTO inventory_movements", "UPDATE inventory_transfer_lines"]) {
+    let writes = 0;
+    const failingDb = { withTransaction: (work) => database.withTransaction((tx) => work({
+      query: tx.query.bind(tx), execute: (sql, params) => {
+        if (sql.includes(point) && ++writes === 2) throw new Error("synthetic mid-post failure");
+        return tx.execute(sql, params);
+      }
+    })) };
+    const failing = new InventoryTransferService({ database: failingDb, logger, time });
+    const before = await snapshot();
+    await assert.rejects(failing.dispatch(f.dispatch), /synthetic mid-post failure/u);
+    assert.deepEqual(await snapshot(), before);
+  }
+});
+
+integrationTest("TASK-028 protects each Reservation's stricter remaining-life snapshot, not just total AVAILABLE", async () => {
+  const f = await postingFixture({ tracking: "batch_expiry", onHand: 10 });
+  const [shortLot] = await pool.execute(`INSERT INTO inventory_lots
+    (sku_id,lot_number,normalized_lot_number,expiry_date,first_receipt_date,sku_code_snapshot,created_at)
+    VALUES (?,? ,?,'2026-10-20','2026-01-02',?,1)`, [f.skuId, `SHORT-${f.skuId}`, `SHORT-${f.skuId}`, `SKU-${f.skuId}`]);
+  await pool.execute(`INSERT INTO inventory_stock_balances
+    (warehouse_id,bin_id,sku_id,lot_id,stock_status,on_hand_quantity,allocated_quantity,version,created_at,updated_at)
+    VALUES (1,1,?,?,'AVAILABLE',20,0,1,1,1)`, [f.skuId, shortLot.insertId]);
+  const reservations = new InventoryReservationService({ database, logger, time });
+  const input = command("create", { skuId: f.skuId, warehouseId: 1, quantity: 7, purpose: "SALE", minimumRemainingDays: 60 });
+  input.authorization.purpose = "reservation.create";
+  await reservations.create(input);
+  await rejectsUnchanged(() => service.dispatch(f.dispatch), "INSUFFICIENT_ATP");
+});
+
+integrationTest("TASK-028 Receive rejects disabled/unknown Bins and destination Stocktake lock without clearing In Transit", async () => {
+  const f = await postingFixture();
+  const dispatched = await service.dispatch(f.dispatch);
+  await pool.query("UPDATE inventory_bins SET status = 'INACTIVE' WHERE id = 2");
+  try { await rejectsUnchanged(async () => service.receive(await receiveInput(dispatched)), "BIN_INVALID"); }
+  finally { await pool.query("UPDATE inventory_bins SET status = 'ACTIVE' WHERE id = 2"); }
+  const input = await receiveInput(dispatched);
+  await rejectsUnchanged(() => service.receive({ ...input, payload: { ...input.payload,
+    lines: input.payload.lines.map((r) => ({ ...r, destinationBinId: 999999 })) } }), "BIN_INVALID");
+  const locks = new InventoryLockService();
+  const blocked = new InventoryTransferService({ database, logger, time, locks: {
+    lockForCommand: async (...args) => ({ ...await locks.lockForCommand(...args), binLocks: [{ bin_id: 2 }] })
+  } });
+  await rejectsUnchanged(() => blocked.receive(input), "BIN_LOCKED_BY_STOCKTAKE");
+});
+
+integrationTest("TASK-028 Receive preserves physical quantity/Lot/Expiry even when expiry elapses in transit", async () => {
+  const f = await postingFixture({ tracking: "batch_expiry" });
+  const dispatched = await service.dispatch(f.dispatch);
+  const later = new InventoryTransferService({ database, logger,
+    time: { nowMs: () => 1798848000000, fileDate: () => "2027-01-02" } });
+  await later.receive(await receiveInput(dispatched));
+  const actual = await rows(f.draft.id);
+  assert.equal(Number(actual[0].lot_id), f.lotId);
+  assert.equal(actual[0].expiry_date_snapshot.getFullYear(), 2026);
+  assert.equal(Number(actual[0].in_transit_quantity), 0);
+  const [[bucket]] = await pool.query("SELECT on_hand_quantity AS quantity FROM inventory_stock_balances WHERE warehouse_id = 2 AND sku_id = ?", [f.skuId]);
+  assert.equal(Number(bucket.quantity), 5);
+});
+
+integrationTest("TASK-028 keeping QUARANTINED/DAMAGED needs no new status-change reason and drains FIFO anchor", async () => {
+  for (const status of ["QUARANTINED", "DAMAGED"]) {
+    const f = await postingFixture({ status, quantity: 5, onHand: 5 });
+    const dispatched = await service.dispatch(f.dispatch);
+    await service.receive(await receiveInput(dispatched));
+    const [[source]] = await pool.query("SELECT * FROM inventory_stock_balances WHERE id = ?", [f.balanceId]);
+    assert.equal(Number(source.on_hand_quantity), 0);
+    assert.equal(source.fifo_anchor_date, null);
+    const [[destination]] = await pool.query(`SELECT stock_status, DATE_FORMAT(fifo_anchor_date, '%Y-%m-%d') AS anchor
+      FROM inventory_stock_balances WHERE warehouse_id = 2 AND sku_id = ?`, [f.skuId]);
+    assert.equal(destination.stock_status, status);
+    assert.equal(destination.anchor, "2026-10-02");
+  }
+});
+
+integrationTest("TASK-028 destination quantity overflow cannot clear In Transit or create a Movement", async () => {
+  const f = await postingFixture();
+  const dispatched = await service.dispatch(f.dispatch);
+  await pool.execute(`INSERT INTO inventory_stock_balances
+    (warehouse_id,bin_id,sku_id,stock_status,on_hand_quantity,allocated_quantity,version,created_at,updated_at)
+    VALUES (2,2,?,'AVAILABLE',?,0,1,1,1)`, [f.skuId, Number.MAX_SAFE_INTEGER]);
+  await rejectsUnchanged(async () => service.receive(await receiveInput(dispatched)), "INVENTORY_QUANTITY_INVALID");
+});
