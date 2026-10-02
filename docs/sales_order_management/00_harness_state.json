@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 45,
+  "revision": 46,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -785,6 +785,30 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
       "source_ref": "docs/sales_order_management/implementation/12_item_inventory_profile_checkpoint.md; actual agent final review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-RISK-TASK009-011-20261002"
+    },
+    {
+      "id": "REV-INVENTORY-BATCH-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "620dc68f2558e88e9677eccd95a744efb6a85b7d20fa18c744952eda02fb1119",
+      "source_ref": "docs/sales_order_management/implementation/13_inventory_batch_checkpoint.md; actual agent review",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": "APR-RISK-TASK009-011-20261002"
+    },
+    {
+      "id": "REV-INVENTORY-BATCH-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "7db3a0d1b8ddb81b64ec8752c2c53932444f3561f8a59c4c45eeda1be2e1dfb8",
+      "source_ref": "docs/sales_order_management/implementation/13_inventory_batch_checkpoint.md; actual agent review",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1701,11 +1725,19 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation reviewed bulk profile and password fixture",
       "idempotency_key": "sales-bulk-profile-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push and gh pr view confirm e5bd6d35116b987867a36f9dfe1bc20b305b8d73; run36971696011 four checksPASS/Testpending."
+    },
+    {
+      "id": "PUSH-SALES-INVENTORY-BATCH-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation independently reviewed TASK010 batch candidate",
+      "idempotency_key": "sales-inventory-batch-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Sam adopted TASK009-011; actual independent review APPROVE and44PASS; latestCI remains failed until rerun"
+      "source_ref": "User adoption TASK009-011; developer26PASS/reviewer33PASS; realDBCIpending"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Push only reviewed Item bulk profile/password fixture; finish separately dirty TASK010 batch tests, independent review and CI; then TASK011 foundations. No local SQL/partial merge."
+  "next_safe_action": "Commit/push independently reviewed Inventory batch candidate; integrate fresh main8630ac1, implement allocated0068/0069 foundations and tests. Observe current CI; no local SQL/partial merge."
 }
