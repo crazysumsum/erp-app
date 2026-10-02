@@ -300,7 +300,7 @@ composables/sales/
 CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { atMs })
 ```
 
-確認點用 caller-owned transaction，依 Customer → credit FOR UPDATE 取得一致快照；不得 pool read 或自行 commit。回 customerId／customerCode／legalName／defaultCurrencyCode／defaultPaymentTermId／status／customerVersion 及 credit configured／creditLimit decimal string or null／currencyCode／status／policyVersion，無 Bank、Address、Contact、notes。Owner 實際字面值 `active`／`on_hold`／`not_configured` 由 Sales 明確映射；Customer 非 active 或 credit on_hold 阻止確認。零／未設定 credit 不混淆，limit 僅 advisory，不以 credit currency new_assignment 查詢阻擋。Document Currency／Payment Term 使用既有 BusinessMasterProvider transaction asserts。
+確認點用 caller-owned transaction，依 Customer → credit FOR UPDATE 取得一致快照；不得 pool read 或自行 commit。回 customerId／customerCode／legalName／defaultCurrencyCode／defaultPaymentTermId／status／customerVersion 及 credit configured／creditLimit decimal string or null／currencyCode／status／policyVersion，無 Bank、Address、Contact、notes。Customer status `active`；credit 實際字面值 `normal`／`on_hold`／`not_configured` 由 Sales 明確映射；Customer 非 active 或 credit on_hold 阻止確認。零／未設定 credit 不混淆，limit 僅 advisory，不以 credit currency new_assignment 查詢阻擋。Document Currency／Payment Term 使用既有 BusinessMasterProvider transaction asserts。
 
 #### Item provider
 
@@ -310,6 +310,7 @@ CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { a
 ItemLookupService.findManyForSale(skuIds, { atMs, purpose: "new_sale" })
 ItemLookupService.findSaleUom(skuId, skuUomId, { atMs })
 ItemLookupService.getSalesSnapshotsInTransaction(transaction, requests, { atMs })
+ItemLookupService.getSalesInventoryProfilesInTransaction(transaction, skuIds, { atMs })
 ItemLookupService.searchForSale({ q, barcode, page, pageSize, atMs })
 ```
 
@@ -328,6 +329,8 @@ InventoryReservationService.getSalesReservationStatesInTransaction(transaction, 
 `reserveAvailableForSalesBatchInTransaction()` 接受一個 Warehouse 及按 `(skuId, sourceLineId)` 排序的 demand lines。Inventory 在自己的固定 lock order 內鎖 Warehouse／Stock Controls，重新計算 ATP，為每行建立 `0..orderedBaseQuantity` 的確切 Reservation，並回 `reservedBaseQuantity`、`uncoveredBaseQuantity`、`reservationId`。這不是放寬 generic Reservation 的「部分成功」：每個真正建立的 Reservation 仍以其確切數量全有或全無；uncovered demand 由 Sales 建 Backorder。
 
 同一 SO 確認只有一個 Warehouse，整批在同一 DB transaction 完成。禁止 Sales 逐行呼叫 generic create，否則多 SKU 會以使用者行順序取得 Inventory lock，破壞全域鎖順序。
+
+Inventory具體manual command/input/output及root/children persistence依owner Design §5.7.1；release results iterator須在caller transaction完整消費。Batch及兩張foundation tables為本Phase source candidate，later TASK015 sequence/operation services、Fulfillment、UI/jobs未因此提前授權。
 
 #### Fulfillment consumer boundary
 

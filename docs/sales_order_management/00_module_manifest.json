@@ -157,9 +157,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107",
+        "sha256": "cf4cb43b84698637a70cc742e48a9c85a736c18b3ebb91b5a70119a59e547b68",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -171,9 +171,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED",
+        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "9df21d75c290dab878991e8e42ec9eeef4c35b0e4a43783b33f7c3c7444b5f92",
+        "sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
         "regression_suites": [
           "sales-technical"
         ]
@@ -181,9 +181,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "observed-main-dd36250",
+        "version": "observed-main-dd36250; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "ab567021254b09d5103caac5bba9b2e3324c0278e726d84999870abcdd7fe440",
+        "sha256": "1ff3954f4c925d9a5b972fb8c55676731dd0cfa7861f280b2c0ceccb4795d73d",
         "regression_suites": [
           "sales-technical"
         ]
@@ -191,9 +191,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED",
+        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "2f6924b6545395a56581619d0f621a215f0aa18115115071cc8ed00d023c685a",
+        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
         "regression_suites": [
           "sales-technical"
         ]

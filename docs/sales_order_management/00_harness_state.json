@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 46,
+  "revision": 47,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-010",
+  "current_task": "TASK-011",
   "baseline": {
-    "design": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
-    "plan": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
-    "code_commit": "c22eff96a4f8ee83f3665d943354745cced4cdb4",
-    "source_fingerprint": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+    "design": "a3883251acdc897e5d485e529cfcdf21e977cb860af7b98c58a209fc0fa73bef",
+    "plan": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+    "code_commit": "664f12dcdc6dc2fbc251373df9eb687d7806ae6c",
+    "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
     "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
+    "default_commit": "8630ac1dcd961464817636ef319963a43ea93b19",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -36,7 +36,8 @@
     "TASK-007": "IN_PROGRESS",
     "TASK-008": "IN_PROGRESS",
     "TASK-009": "IN_PROGRESS",
-    "TASK-010": "IN_PROGRESS"
+    "TASK-010": "IN_PROGRESS",
+    "TASK-011": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -788,7 +789,7 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
-      "risk_approval_id": "APR-RISK-TASK009-011-20261002"
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
     },
     {
       "id": "REV-INVENTORY-BATCH-INITIAL-20261002",
@@ -800,7 +801,7 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
-      "risk_approval_id": "APR-RISK-TASK009-011-20261002"
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
     },
     {
       "id": "REV-INVENTORY-BATCH-FINAL-20261002",
@@ -812,7 +813,43 @@
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
-      "risk_approval_id": "APR-RISK-TASK009-011-20261002"
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-MIGRATIONS-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "decf0c8566ec2dbc1bf1194382f56bad234aa5b93765ad3f9e61dd4b6b6863e8",
+      "source_ref": "docs/sales_order_management/implementation/14_foundation_schema_checkpoint.md; actual independent final review scoped to source/fixtures/docs",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-MIGRATIONS-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "f65b3767a8edec0bf0f2c2df736e6da8fc2eaac48a39f435e36abaaca58b0db8",
+      "source_ref": "docs/sales_order_management/implementation/14_foundation_schema_checkpoint.md; actual independent final review scoped to source/fixtures/docs",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-INTEGRATED-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "source_ref": "docs/sales_order_management/implementation/14_foundation_schema_checkpoint.md; actual independent final review scoped to source/fixtures/docs",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
     }
   ],
   "observations": [
@@ -1409,6 +1446,39 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36964284356; implementation/12_item_inventory_profile_checkpoint.md",
       "actor": "GitHub Actions observed via gh",
       "observed_at": "2026-10-02T06:02:10.291789+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "mandatory repositorychecks; Testfailed",
+      "code_commit": "f0920be6018cbb09ffae3b250842ae45dfbc48cd",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "503da2ea8230be0f02843d629f26d6a6b29265642d2cc202a9f19d412c38921b",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36972422671; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:34:38.260327+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "mandatory Test cancelled by newerpush; other4checksPASS",
+      "code_commit": "e5bd6d35116b987867a36f9dfe1bc20b305b8d73",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "fc9d4aa84de666ba65955d9441276bb15b169da63de46feb7fb223631736bd11",
+      "status": "BLOCKED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36971696011; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:34:38.260327+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEVELOPER scoped local affected regression433PASS/0FAIL/0SKIP, rootlint/buildPASS, audit0vulnerabilities; noformalTC/SQL",
+      "code_commit": "664f12dcdc6dc2fbc251373df9eb687d7806ae6c",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "implementation/14_foundation_schema_checkpoint.md; /private/tmp/sales-phase-foundation-regression.log, /private/tmp/sales-full-lint.log, /private/tmp/sales-client-build.log, /private/tmp/sales-security-audit.log",
+      "actor": "Codex /root observed test/command output",
+      "observed_at": "2026-10-02T06:34:38.260327+00:00"
     }
   ],
   "pending_decisions": [
@@ -1733,11 +1803,27 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation independently reviewed TASK010 batch candidate",
       "idempotency_key": "sales-inventory-batch-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush/ghhead f0920be6018cbb09ffae3b250842ae45dfbc48cd; CI36972422671 failed fixtureformat/immutablecleanup, productassertions reached; implementation/14 recordscorrection."
+    },
+    {
+      "id": "PUSH-SALES-FOUNDATIONS-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation finalPHASE001sourcecandidate",
+      "idempotency_key": "sales-foundations-candidate-push-20261002",
       "status": "PLANNED",
-      "source_ref": "User adoption TASK009-011; developer26PASS/reviewer33PASS; realDBCIpending"
+      "source_ref": "UserauthorizedTASK009-011 and commit/PR/mergesubjecttofullPhasegates; developer/independentreviewdone, CIrequired"
+    },
+    {
+      "id": "PR-UPDATE-SALES-FOUNDATIONS-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-foundations-candidate-pr-update-20261002",
+      "status": "PLANNED",
+      "source_ref": "Concrete implementedfoundation/scopedevidence/failurehistory/latestCIpending summary"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit/push independently reviewed Inventory batch candidate; integrate fresh main8630ac1, implement allocated0068/0069 foundations and tests. Observe current CI; no local SQL/partial merge."
+  "next_safe_action": "Commit/push reviewed0068/0069 and correctedfixture/providerpublication; updatePR174. Observe mandatory latestheadCI before task/PhaseDoD; fetch/integratemainagainbeforeauthorizedmerge. No localSQL/formalacceptance/laterPhase/partialmerge."
 }

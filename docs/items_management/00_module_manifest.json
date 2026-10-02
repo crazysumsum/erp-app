@@ -107,9 +107,9 @@
     "provided": [
       {
         "id": "item-sku-uom-provider",
-        "version": "aligned-design-v2",
+        "version": "aligned-design-v2; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/items_management/03_design_spec.md",
-        "sha256": "5c193e20a3e7fec1cd02f3ea76969d616af74a62cde599eac6202c468d8e8ecd",
+        "sha256": "a058ede481d1a6d9c7bd2bdf67039e48b361cdeeaa789a6873fa50b905c05b7c",
         "consumers": [
           "supplier-management",
           "purchasing-receiving",
