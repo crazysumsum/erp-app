@@ -365,3 +365,26 @@ Four first survived and each got a test: the status filter and the list offset (
 cancelled and only page 1 was read), `appliedCount` (the unit fixture had equal applied and valid counts), and the
 field-less execution error (that mutant was first run against the unit files only; it dies on the integration test that
 serves a failed row).
+
+## REV-069 remediation (HD-059)
+
+REV-069 (`72_rev_069_independent_review.md`) requested changes on f43196f; the Product Owner chose every recommendation (HD-059).
+
+- **M-1, fixed.** The cancel's `UPDATE` now carries the status it read under the lock (`WHERE id = ? AND status = ?`) and
+  answers 409 `SUPPLIER_IMPORT_NOT_CANCELLABLE` unless exactly one row changed. A regression test holds the job in another
+  transaction, moves it uploaded→validating and queued→running, and requires the cancel to wait and then refuse, with the
+  source kept. The lock and the guard are each enough on their own: removing either alone passes every test (mutants #42 and
+  #43, equivalent by design), removing both — with or without the `affectedRows` check — is killed (#40, #41).
+- **L-1, fixed.** Cancel first reads ownership without a lock and answers 404 for a foreign or missing job before it takes
+  `FOR UPDATE`, so a stranger neither waits on nor locks someone else's job. The locking read is by ID only, since ownership
+  never changes. A test cancels a foreign job while it is locked and requires 404 in under a second (#44 killed).
+- **L-2, accepted (HD-059 3A).** HD-058 1A is a guarantee of the job API only. The Supplier audit API shows the import
+  lifecycle (uploader username, IP, status changes, precheck counts — never CSV content, stored names or paths) to its
+  readers on purpose, like every other Supplier action. The IMP-015 test title now says "the job API tells no one else".
+- **L-3, fixed.** A test whose transaction fails after the cancel's work requires the job to stay `uploaded` and its source
+  to remain (#45 killed).
+- **I-1.** The client comment now says each call sends a new key, so a second press gets 409 rather than a second cancel.
+- **I-2 to I-4** recorded, no change.
+
+The mutation list is now 45: the 39 above with three patterns updated for the new code, plus the six REV-069 mutants.
+43 killed; #42 and #43 survive as described.
