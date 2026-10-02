@@ -1,27 +1,27 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 217,
+  "revision": 238,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
-  "current_phase": "PHASE-003",
-  "current_task": "TASK-025",
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
+  "current_phase": "PHASE-004",
+  "current_task": "TASK-026",
   "baseline": {
     "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
-    "plan": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
-    "code_commit": "140f9d0d9021a915505e0c198048e844fb9c42a1",
-    "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
-    "worktree": "/Users/sam/.codex/worktrees/inventory-p2-doc-closeout/erp-app",
-    "default_commit": "d6397e020dbcbd70194995cd52755b3d91ec94be",
+    "plan": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+    "code_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
+    "source_fingerprint": "aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9",
+    "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
+    "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
-    "instance_id": "DOCUMENT-ONLY-NO-RUNTIME",
-    "owner": "Codex /root; EXT-116 cleaned after observed merge, original evidence preserved",
+    "instance_id": "TASK026-CLEANED-NO-RUNTIME",
+    "owner": "Codex /root",
     "resources": {
-      "workspace": "/Users/sam/.codex/worktrees/inventory-p2-doc-closeout/erp-app"
+      "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app"
     },
     "lease_ref": null
   },
@@ -51,7 +51,7 @@
     "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
-    "TASK-026": "PENDING",
+    "TASK-026": "IN_PROGRESS",
     "TASK-027": "PENDING",
     "TASK-028": "PENDING",
     "TASK-029": "PENDING",
@@ -1754,6 +1754,102 @@
         "no merge of the new PR, P3 implementation, formal TC/UAT acceptance or deployment"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-083",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Active Codex task Sam reply 批准CI通過就合併 on 2026-09-30 directly to PR172 final-head92e5702 docs-only handoff; conditional merge after all five current-head CI checks, no detailed findings supplied",
+      "recorded_at": "2026-09-30T08:13:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "scope": [
+        "inventory-management PR172 P2 docs-only closeout at exact head92e5702daada89dde973ec90494015f93a2f38f8",
+        "merge only after all five actual current-head CI checks pass, document integrity/review checks pass and latest main freshness is verified",
+        "safe resolved branch/worktree cleanup with current local audit checkpoint preserved",
+        "no changed-head approval, CI waiver, P3 implementation, formal acceptance or deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-084",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex request 開始P3 on 2026-09-30, following P2 completion and the proposed TASK-026 start; not a new PLAN or shared-path approval",
+      "recorded_at": "2026-09-30T09:08:53Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "code_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
+      "scope": [
+        "inventory-management P3 local start, beginning with TASK-026 only",
+        "fresh default-based isolated codex/inventory-p3-operations worktree; preserve P2 post-merge audit records",
+        "APR-071 standing isolated task-owned local resource authority remains available; no runtime started yet",
+        "no unapproved developer gate/PLAN/shared-path change, remote CI, push, PR, merge, formal acceptance or deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-085",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex reply A to HD-076 direction question on 2026-09-30; APR-085. Prepare exact proposed configuration/new PLAN, retain gates, submit for new approval before applying. Not approval of unseen new hash or migration shared-path grant.",
+      "recorded_at": "2026-09-30T09:30:13Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "code_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
+      "scope": [
+        "HD-076 option A: prepare P3 developer/formal-acceptance separation proposal only",
+        "exact not-applied profile/PHASE-004 suite mapping/plan 5.4 patch and local structural checks",
+        "preserve existing quality/coverage/CI/Phase-merge/independent-review/formal test requirements",
+        "no unseen new PLAN approval, product/migration change, runtime execution, remote action, formal acceptance or deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-086",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex reply 批准 to the exact PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19 and local TASK-026 including 0064_create_inventory_transfers.js question on 2026-09-30; no detailed findings supplied; no remote or later-Task authority; module-qualified scope normalized to inventory-management, same actual Sam decision; no scope expansion",
+      "recorded_at": "2026-09-30T09:41:19Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+      "code_commit": null,
+      "scope": [
+        "inventory-management",
+        "inventory-management exact P3 developer command PLAN a1bb358b",
+        "apply only approved three-file proposal patch b86ffb6c; DESIGN and all formal/CI/coverage/merge requirements unchanged",
+        "new PLAN review only; not complete P3 product review or acceptance"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-087",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner and independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex reply 批准 to the exact PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19 and local TASK-026 including 0064_create_inventory_transfers.js question on 2026-09-30; no detailed findings supplied; no remote or later-Task authority",
+      "recorded_at": "2026-09-30T09:41:19Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+      "code_commit": null,
+      "scope": [
+        "server/database/migrations/0064_create_inventory_transfers.js",
+        "rebind APR-084 start to approved PLAN; TASK-026 source/tests/local verification only",
+        "fresh main and global allocation before writing 0064; no automatic renumbering",
+        "APR-071 standing private local resources with synthetic data, MySQL26.7.0 DDL and exact cleanup",
+        "no TASK-027..034, remote CI/push/PR/merge, formal acceptance or deployment"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2256,6 +2352,42 @@
       "reviewer": "Sam (independent human reviewer)",
       "reviewed_baseline": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
       "source_ref": "Sam active reply 批准CI通過就合併 to PR171 exact-head handoff; actual human approval/disposition of candidate be171ad, no detailed findings supplied; conditional on CI and gates, not formal acceptance",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-048",
+      "method": "HUMAN",
+      "author": "Codex /root P2 documentation closeout author",
+      "reviewer": "Sam (independent human reviewer)",
+      "reviewed_baseline": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
+      "source_ref": "Sam actual reply 批准CI通過就合併 to PR172 final-head92e5702 docs-only handoff, conditional on current-head CI. No detailed human findings or GitHub submitted review claimed; APR-083 records exact scope.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-049",
+      "method": "HUMAN",
+      "author": "Codex /root proposal author",
+      "reviewer": "Sam (independent human reviewer)",
+      "reviewed_baseline": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+      "source_ref": "Sam actual active Codex reply 批准 to the exact PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19 and local TASK-026 including 0064_create_inventory_transfers.js question on 2026-09-30; no detailed findings supplied; no remote or later-Task authority",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-050",
+      "method": "SELF_REVIEW",
+      "author": "Codex /root",
+      "reviewer": "Codex /root same author, NOT independent",
+      "reviewed_baseline": "aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9",
+      "source_ref": "implementation/phase-PHASE-004-report.md five-axis self-review and exact final five developer evidence; no unresolved critical/high self finding; Sam independent code review still pending",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2889,6 +3021,94 @@
       "source_ref": "Scoped diff relative main8bc4a4c passes module boundary; approved P2 units155/155, DB7/7, API1/1 leaf includes outer security/revocation and positive downstream trace, no skips. Current-source client687/687 and actual Inventory Playwright18/18 plus recheck18/18 retained. Sam APR-081/REV-047 current-head human approval; all five exact-head CI checks PASS run36682733166. Covers approved IMPLEMENT developer cases; not formal TC-004/005, UAT or business acceptance.",
       "actor": "Codex /root developer DoD reconciliation; independent disposition by Sam",
       "observed_at": "2026-09-30T07:30:02Z"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "PR172 docs-only conditional current-head merge approval",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "Sam actual active reply 批准CI通過就合併 to exact PR172 head92e5702 handoff; APR-083/REV-048, conditional on all five CI. Not a fabricated GitHub review or formal acceptance.",
+      "actor": "Sam (independent human reviewer)",
+      "observed_at": "2026-09-30T08:13:46Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "PR172 documentation-only publication gate applicability and self-review",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "All23 changed paths are docs only, no specifications/profile/product/tests/CI changes. Traceability STRUCTURE_PASS, PLAN_READY/boundary LOCAL_CHECKS_PASS, authored MD/JSON whitespace clean,13 artifact hashes/byte counts verified, credential-pattern scan no matches. Five-axis docs self-review found no blocking issue, preserves historical failed/pending/approval/report identities. Harness implementation-phase MERGE_READY diagnostic is BLOCKED for retired runtime/old absolute paths and missing current observations; it is not the applicable product-integration gate for this archive-only publication and is not claimed PASS. Apply documents-only publication checks plus actual new-head mandatory CI and Sam approval; no phase integration policy, profile or acceptance bar changed.",
+      "actor": "Codex /root documentation self-review; independent disposition by Sam",
+      "observed_at": "2026-09-30T08:13:46Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36687500157/job/109796849168",
+      "actor": "GitHub Actions observed through trusted gh pr view and gh run view by Codex /root",
+      "observed_at": "2026-09-30T08:18:28Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36687500157/job/109796848939",
+      "actor": "GitHub Actions observed through trusted gh pr view and gh run view by Codex /root",
+      "observed_at": "2026-09-30T08:18:28Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36687500157/job/109796849192",
+      "actor": "GitHub Actions observed through trusted gh pr view and gh run view by Codex /root",
+      "observed_at": "2026-09-30T08:18:28Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36687500157/job/109796849322",
+      "actor": "GitHub Actions observed through trusted gh pr view and gh run view by Codex /root",
+      "observed_at": "2026-09-30T08:18:28Z"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "92e5702daada89dde973ec90494015f93a2f38f8",
+      "spec_baseline": "ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973",
+      "source_fingerprint": "5d0662b6ac0296e9660d1352f164bba0f768bffa1ea2978f35d94356da9b495c",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36687500157/job/109796849216",
+      "actor": "GitHub Actions observed through trusted gh pr view and gh run view by Codex /root",
+      "observed_at": "2026-09-30T08:18:28Z"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "HD-077 not-applied P3 developer command contract structural checks only",
+      "code_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
+      "spec_baseline": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+      "source_fingerprint": "455935422f70cc24c5b8adde6bc8f50ab7b5d5a72d8d8d21e7434da6edb0f8a4",
+      "status": "PASS",
+      "source_ref": "Draft under /private/tmp/inventory-p3-plan.JN96Nl: typed profile/ledger, canonical definitions, relationships and byte-identical generated matrix validated through Harness validate_trace with no issues; exact three-file patch git apply --check passed. Patch saved and cmp/SHA-256 verified at implementation/p3-developer-contract-proposal.patch: b86ffb6cbb3c94310b463032217990ab25b66f4c1eb88e0567442becc32a9f51. Original profile suites/formal TC/UAT/CI and DESIGN asserted unchanged; only PHASE-004 suite relation changed. Current canonical profile/ledger/plan remain unchanged. No product tests or gate execution; future planned files/counts not claimed implemented, discovered or PASS.",
+      "actor": "Codex /root preparation/self-check only; Sam exact new PLAN review pending, not independent approval",
+      "observed_at": "2026-09-30T09:30:13Z"
     }
   ],
   "pending_decisions": [
@@ -4097,6 +4317,48 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Sam active Codex user reply 方案A on 2026-09-30 approving exact HD-075 proposal, recorded APR-077/078/079"
+    },
+    {
+      "id": "HD-076",
+      "impact": "MAJOR",
+      "question": "P3 preparation: PHASE-004 currently requires inventory-technical as a DEVELOPER suite. That suite runs all server/test and requires TC-001 through TC-010 with max_skipped=0, including P4/P5 formal scenarios; it cannot honestly prove a P3 developer gate. Does Sam choose A: authorize preparation of a P3-only developer command-contract/PLAN revision separating developer unit, real MySQL integration/concurrency/security, client/build/coverage and required Playwright checks from formal acceptance, retaining all existing P3-GATE requirements, all mandatory CI checks, zero mandatory skips and the unchanged formal inventory-technical suite/TC-001..010; or B: leave the current PLAN unchanged and hold the affected P3 gate? Recommendation A. This is a direction decision against current PLAN ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973; exact proposed file changes and new PLAN hash must be presented for approval before applying revised configuration. No product code or migration execution has occurred. Shared migration 0064 scope must be explicitly recorded before writing it.",
+      "affected_ids": [
+        "PHASE-004",
+        "TASK-026",
+        "TASK-034"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex reply A to HD-076 direction question on 2026-09-30; APR-085. Prepare exact proposed configuration/new PLAN, retain gates, submit for new approval before applying. Not approval of unseen new hash or migration shared-path grant."
+    },
+    {
+      "id": "HD-077",
+      "impact": "MAJOR",
+      "question": "Does Sam independently approve exact proposed PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19 (unchanged DESIGN 53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce) and applying the not-applied three-file P3 developer contract patch b86ffb6cbb3c94310b463032217990ab25b66f4c1eb88e0567442becc32a9f51 at implementation/p3-developer-contract-proposal.patch? Only append 15 reviewed DEVELOPER suites, replace PHASE-004 developer_suites and update plan 5.4; original suites, formal TC/UAT mappings, manifest/scope, coverage floors, five CI checks, full-Phase PR/review and merge boundaries remain unchanged. Test floors are planned obligations, not observed results. Approval also binds APR-084 local TASK-026 start to the new PLAN and grants only server/database/migrations/0064_create_inventory_transfers.js as shared-path product scope, subject to fresh main/global quota verification before writing. APR-071 already permits private task-owned local resources and exact cleanup; no repeat resource grant requested. TASK-027..034, remote CI/push/PR/merge, formal acceptance and deployment remain excluded. Recommendation approve after inspecting the patch; alternative retain current PLAN and keep affected work BLOCKED.",
+      "affected_ids": [
+        "PHASE-004",
+        "TASK-026",
+        "TASK-027",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033",
+        "TASK-034"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex reply 批准 to the exact PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19 and local TASK-026 including 0064_create_inventory_transfers.js question on 2026-09-30; no detailed findings supplied; no remote or later-Task authority; APR-086/087, REV-049"
+    },
+    {
+      "id": "HD-078",
+      "impact": "MAJOR",
+      "question": "Sam independent code review required for local TASK-026 under PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19, exact source fingerprint aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9. Review0064 schema/rerun/ownership constraints, pure whole-transfer rules, tests and phase-PHASE-004-report.md. Five current-source local checks PASS (15unit,7DB,155regression,lint/build); original FAIL/guard rejection evidence retained, private runtime precisely cleaned. Approve this Task code DoD after review or request revisions; recommendation approve if satisfied. Until answered TASK-026 remains IN_PROGRESS; no TASK-027..034, remote CI/push/PR/merge, formal acceptance or deployment authority is requested/granted.",
+      "affected_ids": [
+        "TASK-026",
+        "PHASE-004"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -5090,7 +5352,7 @@
       "target": "Only docs-only codex/inventory-p2-doc-closeout on origin, based on observed main d6397e020dbcbd70194995cd52755b3d91ec94be; no force push",
       "idempotency_key": "inventory-p2-doc-closeout-push-20260930",
       "status": "CONFIRMED",
-      "source_ref": "APR-082. Initial git push succeeded and trusted git ls-remote observed exact 140f9d0d9021a915505e0c198048e844fb9c42a1 on the named branch. This follow-up records that observed publication; no force push, main change or merge. Original PR171 CI/approval stays bound to be171ad; observe remote head before retry or review."
+      "source_ref": "APR-082. Initial git push and ls-remote confirmed 140f9d0d9021a915505e0c198048e844fb9c42a1; bookkeeping follow-up pushed normally, trusted ls-remote and gh pr view confirmed final head 92e5702daada89dde973ec90494015f93a2f38f8. No force push, main change or merge. Original PR171 CI/approval stays bound to be171ad. This local post-publication checkpoint is not another PR commit."
     },
     {
       "id": "EXT-120",
@@ -5107,6 +5369,46 @@
       "idempotency_key": "inventory-p2-doc-closeout-primary-recovery-20260930",
       "status": "CONFIRMED",
       "source_ref": "After initial docs commit/push/PR was observed, exact primary audit payload at revision215 was recoverably stashed with path-limited include-untracked. New recovery snapshot 1625d29d76a70b466399e096859f057b3fbbd278; original snapshot edbe3de2c5a4e1323c8ed1e694f9eed89b5883f0 retained. Primary git status became clean; no unrelated files, branches or worktrees changed. Do not blindly reapply stale state; current closeout lives in the open PR172 worktree."
+    },
+    {
+      "id": "EXT-122",
+      "kind": "PR_MERGE",
+      "target": "Only https://github.com/crazysumsum/erp-app/pull/172 exact head92e5702daada89dde973ec90494015f93a2f38f8 to freshly verified main; standard match-head merge, no admin bypass",
+      "idempotency_key": "inventory-p2-doc-pr172-merge-92e5702-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Sam APR-083 exact-head docs approval; all five actual CI SUCCESS run36687500157. Immediately rechecked fresh main d6397e0, PR OPEN/CLEAN/MERGEABLE and exact head92e5702. Standard gh pr merge172 --merge --match-head-commit92e5702 with no admin bypass. Trusted gh pr view observed MERGED at2026-09-30T08:20:00Z, approved head92e5702daada89dde973ec90494015f93a2f38f8 and merge commit2eccf588343a4c2bc22d578666bfc1f5732c5e37; fresh origin/main also2eccf58. Generic product-phase MERGE_READY diagnostic was not falsely marked PASS; docs-only publication checks, actual new-head CI and human review passed."
+    },
+    {
+      "id": "EXT-123",
+      "kind": "RESOLVED_BRANCH_WORKTREE_CLEANUP",
+      "target": "Only codex/inventory-p2-doc-closeout local/remote refs and managed worktree /Users/sam/.codex/worktrees/inventory-p2-doc-closeout/erp-app, after PR172 observed merged; preserve local audit checkpoint before removal",
+      "idempotency_key": "inventory-p2-doc-pr172-cleanup-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "PR172 observed MERGED2eccf58, approved92e5702 ancestor of origin/main; no other dependent topic refs or open PR uses the branch. Previously clean primary main fast-forwarded only to2eccf58. Managed archive removed exact worktree and retained recoverable snapshot f6cf8c6df442e5329d0c473498963570ee72b978 with PR172 identity; byte comparison verified exact state/readiness/README payload. Those files were mechanically handed off to primary before final checkpoint. Only local codex/inventory-p2-doc-closeout deleted with -d and exact remote ref deleted; worktree list/path, local ref and ls-remote verify absence. Sales/Supplier worktrees untouched. Only three Inventory post-merge audit files remain uncommitted in primary; program/docs commits remain in main, old recovery stashes retained, no product/UI/database runtime created for this docs merge."
+    },
+    {
+      "id": "EXT-124",
+      "kind": "LOCAL_P3_WORKTREE_PREPARATION",
+      "target": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
+      "idempotency_key": "inventory-p3-start-ad27a180-preserve-p2-audit-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Trusted git fetch origin --prune observed origin/main ad27a1806071057f7671d2c6a91d47423d13eeea; diff since P2 docs merge contains no Inventory docs or migrations, only Supplier work. Main and Sales approved branch migration paths contain no 0064-or-higher allocation. App create_worktree operation 0ae82bfc-735d-4fcf-a952-64ad9745db20 completed at exact ad27a18; git switch created codex/inventory-p3-operations. Exactly three owned P2 audit files copied from primary and each cmp succeeded before state reconciliation. Primary then saved those exact paths in recovery stash 326d17895571f7a36563813be6a89f1d7964531d; primary git status clean. Historical P2 approval, CI, evidence paths/hashes retained, not relabeled as new-head evidence."
+    },
+    {
+      "id": "EXT-125",
+      "kind": "APPLY_APPROVED_P3_PLAN",
+      "target": "00_project_profile.json,08_traceability.json,05_development_tasks.md",
+      "idempotency_key": "inventory-p3-plan-a1bb358b-apply-once-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Sam actual active Codex reply 批准 to the exact PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19 and local TASK-026 including 0064_create_inventory_transfers.js question on 2026-09-30; no detailed findings supplied; no remote or later-Task authority; initial converted apply_patch matched repeated suite context in PHASE-001, caught by exact PLAN assertion before product execution; repaired using unique inventory-p0/inventory-p3 merge_group context; all three files byte-identical to approved drafts; actual Harness PLAN exactly a1bb358b; original DESIGN unchanged"
+    },
+    {
+      "id": "EXT-126",
+      "kind": "TASK026_PRIVATE_RUNTIME",
+      "target": "/private/tmp/erp-inventory-task026-mysql-2670.yipk2y0e; erp_inventory_task026_b96a99b7a37e",
+      "idempotency_key": "erp_inventory_task026_b96a99b7a37e",
+      "status": "CONFIRMED",
+      "source_ref": "Private synthetic schema erp_inventory_task026_b96a99b7a37e dropped and absence observed; exact own mysqld PID 49567 shut down with exit0; controller port lease released. Only task root /private/tmp/erp-inventory-task026-mysql-2670.yipk2y0e remains for precise removal; no shared/prod data or other runtime touched.; actual root directory removed after own PID/socket/listener absence checks; no resource remains, no worktree/stash cleanup (unmerged work retained)"
     }
   ],
   "evidence_files": [
@@ -5147,7 +5449,28 @@
     "evidence/20260930T072823-f332180736ae/run.json",
     "evidence/20260930T072823-c3972e8dcd5c/run.json",
     "evidence/20260930T072828-479b722c09fb/run.json",
-    "evidence/20260930T073001-b2b61b9f86cb/run.json"
+    "evidence/20260930T073001-b2b61b9f86cb/run.json",
+    "evidence/20260930T100355-db0eabc65b0c/run.json",
+    "evidence/20260930T100356-33cdec0aefa1/run.json",
+    "evidence/20260930T100356-556d45d2d91c/run.json",
+    "evidence/20260930T100357-b500d1d5aa05/run.json",
+    "evidence/20260930T100613-baf4fd0e286d/run.json",
+    "evidence/20260930T100615-2dde26d846e0/run.json",
+    "evidence/20260930T100802-ce7a9ebfe342/run.json",
+    "evidence/20260930T101022-30d42eabacba/run.json",
+    "evidence/20260930T101025-45d99ad5301d/run.json",
+    "evidence/20260930T101025-85e66b22a0a8/run.json",
+    "evidence/20260930T101026-8bd149f75de2/run.json",
+    "evidence/20260930T101028-f39e4f579cd4/run.json",
+    "evidence/20261002T005559-44561cc7cdfe/run.json",
+    "evidence/20261002T005647-fd6f475742a7/run.json",
+    "evidence/20261002T005734-7ba409af6709/run.json",
+    "evidence/20261002T005908-86ec6c7c0fc9/run.json",
+    "evidence/20261002T005917-4a9579bcd22c/run.json",
+    "evidence/20261002T005922-2708f52305a1/run.json",
+    "evidence/20261002T005924-d6e2a3bead14/run.json",
+    "evidence/20261002T005925-a1bb4d476881/run.json",
+    "evidence/20261002T005929-857c246bf5a5/run.json"
   ],
   "defects": [
     {
@@ -5183,5 +5506,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "P2 docs-only closeout published as PR172; this bookkeeping follow-up records observed initial publication and primary recovery. Keep PR172/branch/worktree open for Sam's review, final-head CI and new merge authorization; do not reuse PR171 authority/CI. Verify current remote head before continuing. PR171 merged at d6397e0, TASK019-025 DONE, original be171ad evidence preserved as history; P3/TASK026 remains PENDING, no formal acceptance/deployment. Primary main is clean with recovery snapshots edbe3de2 and1625d29 retained; use the PR172 worktree for current closeout state, not a blind stash restore."
+  "next_safe_action": "HD-078: independent Sam code review of local TASK-026 exact source fingerprint aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9; local developer verification complete, not DoD/Phase/merge completion. Private resources precisely cleaned and original failure evidence retained. Save local scoped commits, bind code checkpoint afterward; no remote/later Task action."
 }
