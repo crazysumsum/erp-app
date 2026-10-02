@@ -8,6 +8,7 @@ import path from "node:path";
 import { stringify } from "csv-stringify/sync";
 
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
+import { ISO_4217_LEGAL_TENDER_CODES } from "../../src/modules/businessMaster/iso4217Snapshot.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
 import { hashNameBigrams } from "../../src/modules/supplier/supplierDuplicateCandidates.js";
 import { SupplierImportWorkerService } from "../../src/services/supplierImport/SupplierImportWorkerService.js";
@@ -506,14 +507,18 @@ integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes pre
     await h.db.query("INSERT INTO supplier_name_grams (supplier_id, gram_hash) VALUES ?", [grams.slice(start, start + 5_000)]);
   }
   t.after(async () => {
-    // 按 id 分批刪，每批最多 500：`supplier_code_key LIKE` 會 full scan 兼鎖晒成張 suppliers 表，並行跑嘅其他測試檔
-    // 會同佢互鎖（實測 supplierSettings 嘅申請 insert 俾佢鎖死）。一次 IN 2,000 個 id 一樣係 full scan，500 個先用
-    // PRIMARY 做 range（REV-071 L-3 用 EXPLAIN 量過）。
+    // `supplier_code_key LIKE` 會 full scan 兼鎖晒成張 suppliers 表，並行跑嘅其他測試檔會同佢互鎖（實測
+    // supplierSettings 嘅申請 insert 俾佢鎖死）。按 id 刪都唔夠：每批佔張表三成以上時，optimizer 寧願 full scan
+    // （2,000 個 id 一次、或者分批嘅第 2 批起都係，REV-071 L-3、REV-072 L-1 用 EXPLAIN 量過）。所以分批兼強制用 PRIMARY，
+    // 並且驗住個 plan，唔再靠估。
     const ids = seededRows.map((row) => row.id);
     for (let start = 0; start < ids.length; start += 500) {
       const chunk = ids.slice(start, start + 500);
       await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [chunk]);
-      await h.db.query("DELETE FROM suppliers WHERE id IN (?)", [chunk]);
+      const delete_ = "DELETE /*+ INDEX(suppliers PRIMARY) */ FROM suppliers WHERE id IN (?)";
+      const [[plan]] = await h.db.query(`EXPLAIN FORMAT=TRADITIONAL ${delete_}`, [chunk]);
+      assert.deepEqual([plan.type, plan.key], ["range", "PRIMARY"], "the cleanup locks only the seeded rows");
+      await h.db.query(delete_, [chunk]);
     }
   });
   const records = Array.from({ length: 10_000 }, (_, index) => ({
@@ -836,6 +841,24 @@ async function rowOutcomes(jobId) {
   return result.map((row) => [Number(row.row_number), row.status, row.errors.map((error) => error.code)[0] ?? null]);
 }
 
+/**
+ * 一個只供測試用、已啟用嘅 currency（after() 會刪）。代碼唔可以係真 ISO 4217（開發庫可能已經有 CAD、QAR……），
+ * 亦唔可以已經存在（REV-072 I-1）。
+ */
+async function testCurrency(name) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const code = Array.from({ length: 3 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+    if (ISO_4217_LEGAL_TENDER_CODES.has(code)) continue;
+    const [inserted] = await h.db.execute(`INSERT IGNORE INTO currencies (code, name, decimal_places, status, version, created_at, updated_at)
+      VALUES (?, ?, 2, 'ACTIVE', 1, ?, ?)`, [code, name, clock, clock]);
+    if (inserted.affectedRows === 1) {
+      h.currencies.push(code);
+      return code;
+    }
+  }
+  throw new Error("no free test currency code");
+}
+
 const supplierByCode = async (code) => (await h.db.query("SELECT * FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0];
 
 integrationTest("TASK-045: confirm needs the uploader's password, a ready job at its version and, to activate with approval on, an eligible approver", async () => {
@@ -972,10 +995,7 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
   const owner = await makeUser("up", ["supplier.mgmt"], { withPassword: true });
   const approver = await makeUser("uq", ["supplier.view", "supplier.approval"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
-  const other = `Q${tag.slice(0, 2)}`.replace(/[^A-Z]/gu, "Q").padEnd(3, "Q").slice(0, 3);
-  await h.db.execute(`INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at)
-    VALUES (?, 'T45 test currency', 2, 'ACTIVE', 1, ?, ?)`, [other, clock, clock]);
-  h.currencies.push(other);
+  const other = await testCurrency("T45 test currency");
   // 兩個 pending（各有申請）同一個 active Supplier，經匯入整出嚟。
   const seed = await readyJob(owner, [
     { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", notes: "keep me" },
@@ -1013,10 +1033,7 @@ integrationTest("TASK-045: update rows change root fields only, keep blank cells
 integrationTest("TASK-045: execution re-checks what precheck saw — a Code or Identifier taken since, an archived target, a moved version, a retired currency", async () => {
   const owner = await makeUser("rc", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
-  const retired = `R${tag.replace(/[^A-Z]/gu, "R").slice(0, 2)}`.padEnd(3, "R");
-  await h.db.execute(`INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at)
-    VALUES (?, 'T45 retired currency', 2, 'ACTIVE', 1, ?, ?)`, [retired, clock, clock]);
-  h.currencies.push(retired);
+  const retired = await testCurrency("T45 retired currency");
   const archivedId = await seedSupplier({ code: `X1-${tag}`, name: `Archive Me ${tag}` });
   const movedId = await seedSupplier({ code: `X2-${tag}`, name: `Move Me ${tag}` });
   const { id, version } = await readyJob(owner, [
@@ -1259,10 +1276,7 @@ integrationTest("TASK-045 (REV-071 I-1): a Code taken by another transaction bet
   const owner = await makeUser("ct", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
   // 另一個幣別：同幣別嘅建立會喺幣別行嘅 X 鎖排隊，race 就唔會發生。
-  const otherCurrency = `C${tag.replace(/[^A-Z]/gu, "C").slice(0, 2)}`.padEnd(3, "C");
-  await h.db.execute(`INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at)
-    VALUES (?, 'T45 race currency', 2, 'ACTIVE', 1, ?, ?)`, [otherCurrency, clock, clock]);
-  h.currencies.push(otherCurrency);
+  const otherCurrency = await testCurrency("T45 race currency");
   const code = `CT-${tag}`;
   const { id, version } = await readyJob(owner, [{ supplierCode: code, supplierName: `Code Race ${tag}`, defaultCurrencyCode: "HKD" }]);
   assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);

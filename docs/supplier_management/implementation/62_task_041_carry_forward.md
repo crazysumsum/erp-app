@@ -408,7 +408,7 @@ were decided in HD-060 (1A 2A 3A 4A 5A).
 | HD-048 (3): a row, job lock included, inside `DB_TRANSACTION_TIMEOUT_MS` | **Measured.** 300 rows with address, contact and identifier: about 6 ms a row, slowest 11 ms, against 20,000 ms. Pinned loosely (< 2 s). |
 | HD-048 (4): real `applyRow`, failure after the Supplier write | **Done.** No Supplier, contact, identifier, name gram or audit row survives. |
 | REV-061 I-4: domain errors carry a Chinese `publicMessage` | **Holds.** Every refusal the helpers raise is a Supplier domain error with a Chinese message; generic failures still store the fixed pair. |
-| REV-061 I-3: retry transient errors? | **Decided, HD-060 4A, refined by HD-061 2A.** A deadlock or a lock wait the server reports within the budget fails the row as `SUPPLIER_IMPORT_ROW_BUSY` (driver or wrapped cause); the user re-imports the row. A wait longer than the transaction budget leaves the row `valid`: the timed-out row transaction still holds the job lock on the server, so the fail-marking transaction cannot mark it, and the next worker resumes the row after the lease (REV-071 L-2, tested with a real lock). |
+| REV-061 I-3: retry transient errors? | **Decided, HD-060 4A, refined by HD-061 2A; wording measured by REV-072 L-2.** A deadlock, or a lock wait that clears before the row transaction's budget plus one more fail-marking wait (about 30 s with the defaults: 20 s transaction, 10 s query), fails the row as `SUPPLIER_IMPORT_ROW_BUSY` (driver or wrapped cause); the user re-imports the row. With the server's 50 s `innodb_lock_wait_timeout`, a lock wait reaches BUSY through `DATABASE_QUERY_TIMEOUT` / `DATABASE_TRANSACTION_TIMEOUT`, not `ER_LOCK_WAIT_TIMEOUT`. A longer wait leaves the row `valid`: the timed-out row transaction still holds the job lock on the server, so the fail-marking transaction cannot mark it in time, and the next worker resumes the row after the lease. Either way no Supplier and no marker are written (REV-071 L-2 and REV-072 L-2 measured both ends with a real lock; the test pins the long-wait end). |
 | Re-check the confirmer before each row | **Done (HD-060 5A).** Inactive, or without `supplier.mgmt`: pending rows fail with `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED`, applied rows stay, the job fails with counts rebuilt from rows. This also covers a confirmer whose user was deleted (`confirmed_by` NULL). |
 | Re-check at execution everything precheck checked | **Done.** Code taken since, Identifier taken since, target archived, expected version moved, currency retired: each fails its row with its domain code; other rows apply. |
 | Currency change needs a reason | **Done.** `CSV 匯入 #<job>`, visible in the `supplier.update` audit. |
@@ -469,7 +469,11 @@ deadlock report: T43's 10,000-row test cleaned up with `DELETE FROM suppliers WH
 that locks every Supplier row, and deadlocked the settings test's request insert. A first guess (a gap lock taken by the
 identifier helper on a new pending Supplier) was tested both ways, did not reproduce, and was dropped with its code change.
 The first fix (`id IN (<2,000 ids>)`) was wrong too: REV-071 L-3 showed, and `EXPLAIN FORMAT=TRADITIONAL` confirms, that
-2,000 IDs still plan as `type ALL` while 500 plan as `range` on `PRIMARY`. The cleanup now deletes in chunks of 500.
+2,000 IDs still plan as `type ALL`. The second (chunks of 500) was wrong as well: REV-072 L-1 showed, and EXPLAIN confirms,
+that only the first chunk plans as `range` on `PRIMARY`; once a chunk is about a third of the shrinking table the optimizer
+picks a full scan again. The cleanup now deletes in chunks of 500 with `/*+ INDEX(suppliers PRIMARY) */` and asserts the
+plan before each chunk (all four chunks `range/PRIMARY`; without the hint the assertion fails on chunk 2). The tests'
+throw-away currencies are random codes outside ISO 4217 and absent from the database (REV-072 I-1).
 
 ## REV-071 remediation (HD-061)
 
@@ -489,3 +493,7 @@ every recommendation (HD-061).
 
 The mutation list is now 38 (the 34 above, three patterns updated for the moved code, and four for L-1, I-1, I-2, I-4); all
 38 are killed.
+
+REV-072 (`75_rev_072_independent_review.md`) approved 7608699 with two Low and one Info finding, all test or wording only, and
+all three are closed above: the cleanup now forces `PRIMARY` and pins the plan (L-1), the 4A wording gives the measured
+boundary (L-2), and test currencies can no longer collide with real ISO codes (I-1).
