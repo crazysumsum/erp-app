@@ -36,6 +36,12 @@ before(async () => {
     "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', 'Import confirmer', ?, ?)",
     [`imp-${randomUUID().slice(0, 8)}`, Date.now(), Date.now()]);
   h.userId = Number(user.insertId);
+  // T45 每列之前再驗確認人（HD-060 5A）：要 active 而且有 supplier.mgmt。
+  const [role] = await h.db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`imp-confirmer-${randomUUID().slice(0, 8)}`, Date.now()]);
+  h.roleId = Number(role.insertId);
+  const [[permission]] = await h.db.query("SELECT id FROM permissions WHERE name = 'supplier.mgmt'");
+  await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [h.roleId, permission.id]);
+  await h.db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [h.userId, h.roleId]);
 });
 
 after(async () => {
@@ -45,6 +51,11 @@ after(async () => {
   for (const id of h.supplierIds) {
     await h.db.execute("DELETE FROM supplier_audit_logs WHERE supplier_id = ?", [id]);
     await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
+  }
+  if (h.userId) await h.db.execute("DELETE FROM user_roles WHERE user_id = ?", [h.userId]);
+  if (h.roleId) {
+    await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [h.roleId]);
+    await h.db.execute("DELETE FROM roles WHERE id = ?", [h.roleId]);
   }
   if (h.userId) await h.db.execute("DELETE FROM users WHERE id = ?", [h.userId]);
   await h.application.shutdown("test");

@@ -16,6 +16,13 @@ export default {
     }).then(({ job, rows, total }) => ({ job, rows, rowsNumber: total }));
   },
 
+  /** 確認要密碼（jwt-password）。每次呼叫一條新 idempotency key；重按會收到 409，唔會確認兩次。 */
+  confirmJob(id, { version, activationMode, approverUserId, password }) {
+    return httpClient.post(`/api/v1/supplier-imports/${id}/confirm`, {
+      body: { version, activationMode, approverUserId: approverUserId ?? null, password }, idempotent: true
+    });
+  },
+
   /** 每次呼叫一條新 idempotency key；重按會收到 409（version 已經變），唔會取消兩次。 */
   cancelJob(id, version) {
     return httpClient.post(`/api/v1/supplier-imports/${id}/cancel`, { body: { version }, idempotent: true });

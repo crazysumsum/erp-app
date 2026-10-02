@@ -26,6 +26,12 @@ describe("supplier import service (T44)", () => {
       { params: { page: 1, pageSize: 50, rowStatus: "invalid" }, signal: undefined });
   });
 
+  it("confirms with the mode, the approver or null, the password and an idempotency key", async () => {
+    await supplierImportService.confirmJob(7, { version: 3, activationMode: "draft", password: "pw" });
+    expect(httpClient.post).toHaveBeenCalledWith("/api/v1/supplier-imports/7/confirm",
+      { body: { version: 3, activationMode: "draft", approverUserId: null, password: "pw" }, idempotent: true });
+  });
+
   it("cancels with the job version and an idempotency key", async () => {
     await supplierImportService.cancelJob(7, 4);
     expect(httpClient.post).toHaveBeenCalledWith("/api/v1/supplier-imports/7/cancel", { body: { version: 4 }, idempotent: true });
