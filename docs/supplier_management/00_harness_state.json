@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 266,
+  "revision": 267,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t44",
-    "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t44-close",
+    "default_commit": "8630ac1dcd961464817636ef319963a43ea93b19",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -71,7 +71,7 @@
     "TASK-041": "DONE",
     "TASK-042": "DONE",
     "TASK-043": "DONE",
-    "TASK-044": "IN_PROGRESS",
+    "TASK-044": "DONE",
     "TASK-045": "PENDING",
     "TASK-046": "PENDING",
     "TASK-047": "PENDING",
@@ -4104,11 +4104,12 @@
     {
       "id": "HD-043",
       "impact": "MINOR",
-      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-044, TASK-045 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: stored names come from the job row, never the request; refuse nlink > 1 before serving a file.",
+      "question": "Carry-forward from TASK-041 (REV-059/060): before TASK-044, TASK-045 is DONE, confirm it discharged its rows in docs/supplier_management/implementation/62_task_041_carry_forward.md: stored names come from the job row, never the request; refuse nlink > 1 before serving a file. TASK-044 serves no file: its part (stored name from the job row, refuse nlink > 1 before serving) moved to TASK-046's download endpoint by HD-058 (4A), recorded at revision 267.",
       "affected_ids": [
         "TASK-044",
         "TASK-045",
-        "TASK-041"
+        "TASK-041",
+        "TASK-046"
       ],
       "status": "OPEN",
       "answer_ref": null
@@ -4159,8 +4160,8 @@
         "TASK-044",
         "TASK-042"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Discharged. TASK-043's part at revision 263 (PR #167). TASK-044's part by PR #175 (merged at 8630ac1, main CI run 36970945400 green): cancel removes the source through removeSupplierImportFile / supplierImportFilePath with the stored name read from the locked job row; T44 serves no file. Recorded in implementation/62_task_041_carry_forward.md 'Status after TASK-044'. Reviewed by REV-069 (CHANGES_REQUESTED) and REV-070 (APPROVED)."
     },
     {
       "id": "HD-048",
@@ -5393,5 +5394,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-044: REV-070 APPROVED a2d577e (Info only; wording fixed after approval). PR #175 waits for CI on the head and the Product Owner's word to merge; check main has not moved and merge with --match-head-commit."
+  "next_safe_action": "TASK-044 is DONE (PR #175 merged at 8630ac1, main CI run 36970945400 green). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting. Open carry-forward: HD-043 (T45/T46), HD-044 (T48), HD-048 (T45), HD-049 (T46), HD-057 (T51), and the T45/T46/T48 obligations in implementation/62_task_041_carry_forward.md ('Status after TASK-044' adds: confirm ownership rule for T45; 410 and file-serving rules for T46; handler file-name order for T46)."
 }
