@@ -438,12 +438,12 @@ New obligations T45 creates:
 
 ## Mutation record for TASK-045
 
-33 mutants against the T45 code, all killed (unit files and both import integration files on real MySQL, serial, each
+34 mutants against the T45 code, all killed (unit files and both import integration files on real MySQL, serial, each
 mutant applied to a committed tree and restored from the saved bytes):
 
-- **Confirm (9):** reaching another user's job; any state; ignoring the version; never requiring approval; skipping the
-  approver's eligibility; accepting an approver when none is needed; not snapshotting the policy value or version; not
-  auditing.
+- **Confirm (10):** reaching another user's job; any state; ignoring the version; never requiring approval; skipping the
+  approver's eligibility; accepting an approver when none is needed; not snapshotting the policy value or version; reading
+  the policy without `FOR SHARE`; not auditing.
 - **Execution (9):** no confirmer re-check; its permission or active check dropped; revocation leaving pending rows or losing
   the applied count; `SUPPLIER_IMPORT_ROW_BUSY` never set, ignoring wrapped causes, or missing deadlock; `applyRow` writing
   on a second connection.
@@ -453,5 +453,13 @@ mutant applied to a committed tree and restored from the saved bytes):
 - **Helpers, worker, route (4):** the identifier unique error not mapped inside the row; no default writer; confirm without
   the password; confirm not idempotent.
 
-Two first survived: a deactivated confirmer (only a lost permission was tested; a test now deactivates the account) and the
-default-writer mutant, which was itself wrong (`null ?? x` is `x`) and was rewritten.
+Three first survived: a deactivated confirmer (only a lost permission was tested; a test now deactivates the account); the
+share lock on the policy (a test now holds the settings row in a rolled-back transaction and requires confirm to wait); and
+the default-writer mutant, which was itself wrong (`null ?? x` is `x`) and was rewritten.
+
+**Shared settings in tests.** `supplier_settings` is a singleton that the parallel test files share, and the settings tests
+change it only inside a rolled-back transaction. A first version of the T45 tests committed approval on and off and broke
+`supplierSettings.integration.test.js` in a parallel run. Confirm's policy reader is now injectable
+(`SupplierImportService({ activationPolicy })`); approval-on cases confirm through a service with an injected policy, and the
+HTTP path reads the real (off) setting. The tests add short-lived currencies, as `customerIdentifierCredit` does, and
+remove them afterwards.
