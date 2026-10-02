@@ -4,11 +4,21 @@
 
 `IMPLEMENTING` — P2 is integrated into `main` through PR #171, merge commit `d6397e020dbcbd70194995cd52755b3d91ec94be`. TASK-001～TASK-018 were integrated through PR #164; TASK-019～TASK-025 now satisfy their IMPLEMENT DoD. Sam approved exact head `be171ad` conditionally on CI (APR-081); all five actual CI checks and live-runtime pre-merge `MERGE_READY` passed. Private runtime was precisely cleaned afterward, original evidence retained. Remaining module work starts with P3/TASK-026; the module is not yet `READY_FOR_TESTING`. No formal Technical Acceptance, UAT, business acceptance or production deployment is claimed.
 
-## Current P3 developer checkpoint — TASK-026
+## Current P3 checkpoint — TASK-027 developer verified / independent review pending
+
+`BLOCKED / INDEPENDENT_REVIEW_PENDING` (2026-10-02). Sam's actual `A` answered HD-079 and approved its exact two-file Task-local command proposal (APR-090/091, REV-052). Applied PLAN is `54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494`; DESIGN is unchanged. PLAN_READY passed before implementation; Task-local boundary/state checks pass at closeout. TASK-027 remains IN_PROGRESS pending HD-080: Sam independent review of the new product baseline, saved in local commit `0ce2eb88c86d3d378a2525c3071d9a061df7e2ce`. TASK-026's approval does not approve TASK-027.
+
+Draft create, atomic complete line replacement, Draft-only cancellation and paged list/consistent detail are implemented. Fixed `inventory.operation` is verified against current actor permissions; caller-selected permissions, foreign child IDs, stale versions and invalid ownership reject safely. Draft commands use existing operation claims, sorted locks and mandatory same-transaction Audit, without touching stock balances/controls, Reserved/Allocated/In Transit or Movements. Query date bounds are internal epoch milliseconds, following Movement inquiry; company-calendar HTTP conversion and all HTTP/UI work remain TASK-029.
+
+Current-source DEVELOPER checks pass: 25 Task-local unit leaves, 14 actual private MySQL26.7.0 Draft cases, 158 existing Inventory regression leaves, lint and client build, all test suites zero-skip. All five share source fingerprint `0837d0eede203c7c3e9ef777b84c3b1d8cf7de4ee6df25bcf55ca992f8d8e8d9`; artifact hashes were rechecked. See [actual runs and limits](phase-PHASE-004-report.md). The DB evidence is domain-only with synthetic parents and real Inventory migrations, auth, Item lookup, Audit, operation claims, locks and transactions; not full application/API/Dispatch/Receive evidence.
+
+The original full-server JUnit incompatibility (DEF-003) is retained as a full-P3 completion/merge blocker. APR-092 temporarily permits only Task-local work; no existing Phase suite, coverage threshold/floor, formal mapping or CI/merge gate was weakened. Full Phase unit still needs TASK-029's actual handler tests, not placeholders. No TASK-028+, push, PR, remote CI, merge, formal acceptance, UAT or deployment was performed. EXT-128 schema/own process/socket/PID file/port lease were precisely cleaned and the verified owned root removed. Synthetic data is not recoverable; reports, the unmerged worktree and P2 recovery stash remain retained. Old runtime evidence is not a current MERGE_READY lease.
+
+## Historical approved P3 checkpoint — TASK-026
 
 Sam approved HD-077's exact PLAN `a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19` and local TASK-026/0064 scope (APR-086/087). The three-file patch is applied exactly and PLAN_READY passed. Branch safely fast-forwarded to fresh main `29893c304eac11716b1758d9b5e25bd8f0080a7e`; final fetch confirmed main had not advanced again. The original proposal history below and P2 recovery stash remain intact.
 
-TASK-026 product and developer tests are implemented: 15 focused unit tests, 7 real MySQL26.7.0 migration tests and 155 existing Inventory regression tests passed with zero skips; lint/build passed on the same final source fingerprint. See [P3 checkpoint and original evidence](phase-PHASE-004-report.md). Private synthetic schema/process/port are cleaned, with no shared database access. TASK-026 remains IN_PROGRESS pending Sam's independent code review, not because of a failing latest developer run. TASK-027～034, full-P3 gate, remote publication/CI/merge, formal acceptance and deployment remain unstarted/unapproved.
+TASK-026 is DONE: Sam's actual `已審閱，批准 TASK-026` reply on 2026-10-02 (Asia/Hong_Kong) approved code `0d4d0c2203edd3127bea0b06df99b8ef91c38c63` under HD-078 / APR-088 / REV-051. Its retained 15 focused unit tests, 7 real MySQL26.7.0 migration tests and 155 Inventory regression tests passed with zero skips; lint/build passed on the same source fingerprint. Closeout reverified source/spec and evidence artifact hashes without new execution. See [P3 checkpoint and original evidence](phase-PHASE-004-report.md). Private resources remain cleaned; old runtime evidence is not a current MERGE_READY result. Await separate direction for TASK-027. TASK-027～034, full-P3 gate, remote publication/CI/merge, formal acceptance and deployment remain unstarted/unapproved.
 
 ## Historical P3 start and not-yet-applied proposal — HD-076 / HD-077
 
@@ -26,7 +36,7 @@ HD-077 asks Sam to review the exact proposed PLAN and approve applying the three
 
 - P2 documentation closeout: [PR #172](https://github.com/crazysumsum/erp-app/pull/172) merged at `2eccf588343a4c2bc22d578666bfc1f5732c5e37` on 2026-09-30 after Sam approved exact head `92e5702` and all five current-head CI checks passed. Its earlier OPEN/no-merge-approval narrative is retained as publication history. P3/TASK-026 remains unstarted; no formal acceptance or deployment.
 - Current approved DESIGN: `53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce`.
-- Current approved PLAN: `a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19`.
+- Current approved PLAN: `54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494` (Sam HD-079 / APR-090; prior TASK-026 PLAN retained in history).
 - Prior P2 approved PLAN: `ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973` (historical evidence retained).
 - PR #171 approved head: `be171ad87b752104c7a89f023f3c8d4132eecc99`; observed merge: `d6397e020dbcbd70194995cd52755b3d91ec94be`. Earlier approvals and local checkpoints below are retained as history.
 - Historical 0.3 design approval: `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`.
