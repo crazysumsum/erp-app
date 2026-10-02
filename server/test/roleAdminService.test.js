@@ -222,7 +222,7 @@ function seedWithAdmin(overrides = {}) {
   });
 }
 
-test("constructor requires database, logger and time", () => {
+test("RoleAdminService: constructor requires database, logger and time", () => {
   assert.throws(() => new RoleAdminService({}), TypeError);
 });
 
@@ -544,7 +544,7 @@ test("listPermissions returns the read-only catalogue", async () => {
 
 // --- §1.4 第四道 ---------------------------------------------------------------
 
-test("every write rejects with PERMISSION_STALE when the actor's permissions changed", async () => {
+test("RoleAdminService: every write rejects with PERMISSION_STALE when the actor's permissions changed", async () => {
   const database = seedWithAdmin();
   const { service } = createService({ database });
 
