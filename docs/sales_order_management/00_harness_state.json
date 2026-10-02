@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 41,
+  "revision": 42,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1597,6 +1597,14 @@
       "idempotency_key": "sales-contract-review-pr-update-20261002",
       "status": "CONFIRMED",
       "source_ref": "Actual gh pr edit succeeded: PR174 describes reviewed5f4c9eb proposal, DEC012 and current CI history."
+    },
+    {
+      "id": "PUSH-SALES-SNAPSHOTS-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation Customer/Item scoped snapshots",
+      "idempotency_key": "sales-snapshots-push-20261002",
+      "status": "PLANNED",
+      "source_ref": "Sam adopted TASK009..011; current snapshots developer verified/reviewed, MySQL tests pending CI."
     }
   ],
   "evidence_files": [],
