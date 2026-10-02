@@ -13,6 +13,7 @@ import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { hashPassword } from "../../src/modules/user/passwordHash.js";
+import { ItemAdminService } from "../../src/modules/item/ItemAdminService.js";
 
 const skip =
   process.env.DB_INTEGRATION_TESTS === "1"
@@ -105,7 +106,7 @@ async function withManager(t, application) {
     await role.cleanup();
   });
 
-  return { db, token, actorId: actor.userId };
+  return { db, token, actorId: actor.userId, roleName: role.roleName };
 }
 
 async function seedCatalog(db) {
@@ -202,6 +203,71 @@ function statusCounts(results) {
     return acc;
   }, {});
 }
+
+test("Sales reference committed while an Item writer waits is visible to its current reference guard", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, actorId, roleName } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSkus(db, catalog);
+  const table = `sales_uom_race_${randomUUID().replaceAll("-", "")}`;
+  await db.execute(`CREATE TABLE ${table} (sku_id BIGINT UNSIGNED NOT NULL, sku_uom_id BIGINT UNSIGNED NOT NULL,
+    FOREIGN KEY (sku_id) REFERENCES item_skus(id), FOREIGN KEY (sku_uom_id) REFERENCES item_sku_uoms(id)) ENGINE=InnoDB`);
+  t.after(async () => {
+    await db.execute(`DROP TABLE ${table}`); await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("sales_item_reference_race_complete");
+  });
+  const [mappingRows] = await db.query("SELECT * FROM item_sku_uoms WHERE sku_id = ? ORDER BY id", [fixture.skuId]);
+  let reachedSkuLock;
+  const atSkuLock = new Promise(resolve => { reachedSkuLock = resolve; });
+  const wrappedDatabase = {
+    query: db.query.bind(db),
+    withTransaction(work, options) {
+      return db.withTransaction(connection => work({
+        execute: connection.execute.bind(connection),
+        async query(sql, params) {
+          if (sql === "SELECT * FROM item_skus WHERE id = ? FOR UPDATE") reachedSkuLock();
+          return connection.query(sql, params);
+        }
+      }), options);
+    }
+  };
+  const service = new ItemAdminService({ database: wrappedDatabase, logger: application.services.require("logging").logger, time: application.services.require("time") });
+  let rejectedWriter;
+  await db.withTransaction(async (sales) => {
+    await sales.query("SELECT id FROM item_skus WHERE id = ? FOR SHARE", [fixture.skuId]);
+    rejectedWriter = assert.rejects(() => service.updateSku({ actorId, claimedRoles: [roleName], claimedPermissions: ["item.view", "item.mgmt"],
+      id: fixture.skuId, version: 1, skuName: "Conversion race", trackingPolicy: "none", inventoryTracked: true, purchasable: true, sellable: true,
+      suggestedPriceAmount: "200.0000", reason: "Referenced factor change", barcodes: [],
+      uoms: mappingRows.map(row => ({ id: Number(row.id), uomId: Number(row.uom_id),
+        toBaseFactor: row.is_base ? 1 : 13, isBase: Boolean(row.is_base), isDefaultSale: Boolean(row.is_default_sale) }))
+    }), { code: "UOM_CHANGE_BLOCKED" });
+    await Promise.race([atSkuLock, rejectedWriter.then(() => { throw new Error("Writer rejected before reaching the SKU lock"); })]);
+    await sales.execute(`INSERT INTO ${table} (sku_id, sku_uom_id) VALUES (?, ?)`, [fixture.skuId, Number(mappingRows[1].id)]);
+  });
+  await rejectedWriter;
+  const [[sku]] = await db.query("SELECT version, suggested_price_amount FROM item_skus WHERE id = ?", [fixture.skuId]);
+  assert.equal(Number(sku.version), 1);
+  assert.equal(String(sku.suggested_price_amount), "100.0000");
+});
+
+test("SKU stable writer and Draft deletion serialize through roots without a child-lock inversion", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSkus(db, catalog, { itemStatus: "draft", skuStatuses: ["draft"] });
+  t.after(async () => { await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("sales_item_delete_race_complete"); });
+  const [rows] = await db.query("SELECT * FROM item_sku_uoms WHERE sku_id = ?", [fixture.skuId]);
+  const { url } = await application.start();
+  const [edited, deleted] = await Promise.all([
+    post(`${url}/api/v1/skus/${fixture.skuId}/update`, token, { version: 1, skuName: "Draft price edit", trackingPolicy: "none",
+      inventoryTracked: true, purchasable: true, sellable: true, suggestedPriceAmount: "150.0000", barcodes: [],
+      uoms: rows.map(row => ({ id: Number(row.id), uomId: Number(row.uom_id), toBaseFactor: Number(row.to_base_factor),
+        isBase: Boolean(row.is_base), isDefaultSale: Boolean(row.is_default_sale) })) }),
+    post(`${url}/api/v1/items/${fixture.itemId}/delete`, token, { version: 1, reason: "Delete synthetic Draft" })
+  ]);
+  assert.equal(deleted.status, 200, JSON.stringify(deleted.body));
+  assert.ok([200, 404].includes(edited.status), JSON.stringify(edited.body));
+  assert.equal((await db.query("SELECT id FROM item_skus WHERE item_id = ?", [fixture.itemId]))[0].length, 0);
+});
 
 // --- Version race：Item update ------------------------------------------------
 

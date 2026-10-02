@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 43,
+  "revision": 44,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
     "plan": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
-    "code_commit": "596aafb6257109fc2ea6df9ce0a4c393f0576d89",
-    "source_fingerprint": "edae1dbf29591d1d7a8218b5ea826f10340b80b22e5aadd9022b000c5ed383e7",
+    "code_commit": "c22eff96a4f8ee83f3665d943354745cced4cdb4",
+    "source_fingerprint": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -740,6 +740,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-WRITER-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; implementation/09_customer_snapshot_checkpoint.md; actual independent collaboration responses",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-WRITER-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; implementation/09_customer_snapshot_checkpoint.md; actual independent collaboration responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CUSTOMER-WRAPPER-CORRECTION-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; implementation/09_customer_snapshot_checkpoint.md; actual independent collaboration responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1314,6 +1350,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36962811955; /private/tmp/sales-snapshot-ci.log",
       "actor": "GitHub Actions observed by Codex /root",
       "observed_at": "2026-10-02T04:20:45.678601+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Necessary Item writer compatibility4PASS/0FAIL/0SKIP; affectedItem112PASS/0FAIL/0SKIP; focusedlintPASS. MySQL newwriter/integration tests pending CI.",
+      "code_commit": "c22eff96a4f8ee83f3665d943354745cced4cdb4",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "status": "PASS",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; /private/tmp/sales-uom-regression.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T04:22:24.524126+00:00"
     }
   ],
   "pending_decisions": [
@@ -1616,9 +1663,17 @@
       "idempotency_key": "sales-snapshots-push-20261002",
       "status": "CONFIRMED",
       "source_ref": "Actual git push succeeded; gh PR174 head4407305141b7bbcbf90047ae61bd605d98be324f, run36962811955 observed."
+    },
+    {
+      "id": "PUSH-SALES-UOM-WRITER-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation corrected snapshots + UOM writer",
+      "idempotency_key": "sales-uom-writer-push-20261002",
+      "status": "PLANNED",
+      "source_ref": "Sam adopted necessary writer scope; local112PASS+independentreviewAPPROVE; realDBCIpending."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Implement approved necessary Item stable mapping writer/ref guards as separate TASK009 slice; then Inventory batch and foundation0068/69. MySQL snapshot CI still pending, no local SQL/partial merge."
+  "next_safe_action": "Push independently reviewed Item writer + Customerfixture correction for real MySQL CI; implement TASK010 bounded manual Inventory batch, then TASK011 foundation. TASK009 stays IN_PROGRESS until database consumer/concurrency checks pass; no local SQL/partial merge."
 }
