@@ -547,6 +547,7 @@ integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a 
 
   const mine = await api(owner, "GET", "/api/v1/supplier-imports");
   assert.deepEqual([mine.status, mine.data.items.map((item) => item.id), mine.data.total], [200, [id], 1]);
+  assert.equal((await api(owner, "GET", "/api/v1/supplier-imports?status=ready")).data.total, 0, "the status filter applies");
   const theirs = await api(other, "GET", "/api/v1/supplier-imports");
   assert.deepEqual([theirs.status, theirs.data.items, theirs.data.total], [200, [], 0], "another manager's list is empty");
 
@@ -622,6 +623,13 @@ integrationTest("TASK-044: detail pages the rows by row number, filters by statu
   }
   assert.equal((await api(owner, "GET", "/api/v1/supplier-imports?status=nope")).status, 400);
   assert.equal((await api(owner, "GET", "/api/v1/supplier-imports/abc")).status, 400);
+  // T45 嘅執行錯誤冇 field（rowError 只有 code 同 message）；response schema 一樣要收。
+  await h.db.execute("UPDATE supplier_import_rows SET status = 'failed', errors = ? WHERE job_id = ? AND `row_number` = 1",
+    [JSON.stringify([{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]), id]);
+  const failed = await api(owner, "GET", `/api/v1/supplier-imports/${id}?rowStatus=failed`);
+  assert.equal(failed.status, 200, JSON.stringify(failed.body));
+  assert.deepEqual(failed.data.rows.map((row) => [row.rowNumber, row.errors]),
+    [[1, [{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]]]);
   const text = JSON.stringify(page2.body) + JSON.stringify(invalid.body);
   const stored = await job(id);
   for (const secret of [h.worker.preparedRoot, stored.source_stored_name, Buffer.from(stored.source_sha256).toString("hex")]) {
@@ -672,6 +680,8 @@ integrationTest("TASK-044 (HD-058 2A/3A): cancel ends the job, deletes the sourc
   assert.notEqual(next.jobId, uploaded.job.id, "precheck never picks a cancelled job");
   const filtered = await api(owner, "GET", "/api/v1/supplier-imports?status=cancelled&pageSize=1");
   assert.deepEqual([filtered.data.total, filtered.data.items.map((item) => item.id)], [2, [uploaded.job.id]], "newest first");
+  const second = await api(owner, "GET", "/api/v1/supplier-imports?status=cancelled&pageSize=1&page=2");
+  assert.deepEqual(second.data.items.map((item) => item.id), [id], "page 2 is the older one");
 });
 
 integrationTest("TASK-044 (HD-058 3A): a source that cannot be deleted is logged and left for T48; the cancel still stands", async () => {

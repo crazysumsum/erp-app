@@ -90,12 +90,12 @@ test("only jobs not yet prechecking or running can be cancelled (HD-058 2A)", ()
 
 test("the summary projects every public field and says whether the files are gone", () => {
   const row = { id: "4", template_version: "v1", mode: "upsert", activation_mode: "draft", status: "completed_with_errors",
-    total_count: "6", valid_count: "3", warning_count: "1", invalid_count: "2", applied_count: "3", failed_count: "1",
+    total_count: "6", valid_count: "4", warning_count: "1", invalid_count: "2", applied_count: "3", failed_count: "1",
     skipped_count: "2", last_error_code: "", error_summary: "", created_at: "10", updated_at: "30", confirmed_at: "15",
     completed_at: "30", files_purged_at: "30", version: "5", source_stored_name: "a".repeat(64), lease_owner: "w" };
   assert.deepEqual(importJobSummary(row), {
     id: 4, templateVersion: "v1", mode: "upsert", activationMode: "draft", status: "completed_with_errors", totalCount: 6,
-    validCount: 3, warningCount: 1, invalidCount: 2, appliedCount: 3, failedCount: 1, skippedCount: 2, lastErrorCode: "",
+    validCount: 4, warningCount: 1, invalidCount: 2, appliedCount: 3, failedCount: 1, skippedCount: 2, lastErrorCode: "",
     errorSummary: "", filesPurged: true, createdAt: 10, updatedAt: 30, confirmedAt: 15, completedAt: 30, version: 5
   });
   const fresh = importJobSummary({ ...row, activation_mode: null, confirmed_at: null, completed_at: null, files_purged_at: null });
