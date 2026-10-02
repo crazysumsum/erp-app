@@ -44,3 +44,13 @@ Independent four-file delta APPROVE; reviewer independently observed21PASS/0SKIP
 | TC010 | Current-head lint/build/audit/coverage/provider/native CI plus developer regressions and independent review | Still NOT_READY until executable Phase contract, baseline approval and final-head CI are reconciled. |
 
 The current repository-wide JUnit discovery can conflate bare TC identifiers from different modules. A Phase0 developer contract must attribute assertions to Sales explicitly. The original formal60-case contract, all coverage floors, zero skipped required Sales cases and full-Phase merge boundary remain unchanged; no checker bypass or partial merge is approved.
+
+## Latest CI failure and allocation correction
+
+Run36975679470 at94b5cca completed all five mandatory checks successfully, before the subsequent source correction. Run [36976791261](https://github.com/crazysumsum/erp-app/actions/runs/36976791261) at71e0680 failed Test; other four checks passed. The new unsupported-route fixture was unauthenticated and returned401 before route resolution, preventing the native acknowledgement scenario from reaching its assertions. Corrected it to use the fixture actor's real JWT/current token version before asserting404.
+
+The same failed run also measured50MiB upload external increase41,102,917bytes, exceeding the unchanged approved32MiB ceiling. Inspection of local Node26.6 internals confirmed async iteration can combine queued byte chunks into another copied Buffer; this is avoidable allocation churn, not conclusive attribution of the entire failed peak. Replaced the disk collector's async-generator transform with native byte-mode Transform/64KiB high-water mark forwarding each original buffer. Size/aggregate limits, fixed64KiB prefix, SHA256, pipeline abort and cleanup are retained. No upload-time GC, sampling changes, relaxed threshold or retry-to-hide-failure.
+
+Unchanged upload regression70PASS/0FAIL/0SKIP; observed50MiB increases heap4.868MiB/external13.766MiB/RSS14.25MiB. Full affected regression435PASS/0FAIL/0SKIP and rootlintPASS. Independent actual two-file reviewAPPROVE and targetedlintPASS; native acknowledgement and repaired memory proof still require fresh candidate CI. Upload SHA256b9ce2029f6cbc3ef36bbd077f9e016c5739b02e93b4e6ec4a6a067fdf3e2f486; native fixture SHA256b428b452365a7154ab4da9f5eaf3b591f17c6456cb783f3b6942da9cfa659b3a.
+
+Reviewed consolidated validation/runtime proposal: implementation/15_phase0_validation_decision.md. It retains ten named Inventory native regressions and identifies only four large performance deferrals; no quota-based14-skip waiver. Nothing in the proposal has been applied or authorized by its independent review. No localSQL was executed.

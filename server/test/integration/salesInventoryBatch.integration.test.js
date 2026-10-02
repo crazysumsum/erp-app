@@ -65,7 +65,7 @@ async function setup(t) {
     return { actor: { userId, serviceName: "", claimedRoles: [roleName], claimedPermissions: ["sales.mgmt"] },
       source: { documentId: String(documentId), eventId }, correlationId: eventId, payload };
   };
-  return { app, db, service, command, skuIds, warehouseId, binId, now };
+  return { app, db, service, command, skuIds, warehouseId, binId, userId, now };
 }
 
 integrationTest("Sales batches serialize reverse demand, replay unchanged and release original complete membership", async t => {
@@ -152,8 +152,13 @@ integrationTest("Sales release handles 300 mappings in bounded pages and rolls b
 integrationTest("Sales reserve and release reconcile a lost native COMMIT acknowledgement without duplicate effects", async t => {
   const f = await setup(t);
   const { url } = await f.app.start();
+  const token = await f.app.services.require("jwt").issue({ roles: [], permissions: [] }, {
+    subject: String(f.userId), version: await f.app.services.require("tokenRevocation").currentVersion(String(f.userId)),
+    authTime: Math.floor(Date.now() / 1000)
+  });
   for (const route of ["/api/sales/orders", "/api/salesOrdersCreate"]) {
-    assert.equal((await fetch(new URL(route, url))).status, 404, "Phase 0 must not expose a Sales command route");
+    assert.equal((await fetch(new URL(route, url), { headers: { Authorization: `Bearer ${token}` } })).status, 404,
+      "Phase 0 must not expose a Sales command route to an authenticated actor");
   }
   const reserve = f.command(70006, { warehouseId: f.warehouseId, expectedOrderVersion: 1,
     lines: [{ sourceLineId: 1, skuId: f.skuIds[0], orderedBaseQuantity: 3, minimumRemainingDays: 0 }] });

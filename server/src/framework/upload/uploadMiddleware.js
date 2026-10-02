@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { chmod, mkdir, mkdtemp, open, writeFile } from "node:fs/promises";
 import path from "node:path";
 import busboy from "busboy";
+import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { prepareDiskTempDirectory } from "./normalizeUploadConfig.js";
 import { ApplicationError } from "../errors/ApplicationError.js";
@@ -87,17 +88,19 @@ async function collectDisk(stream, { directory, storedName, limitBytes, onBytes,
   const hash = createHash("sha256");
   try {
     await handle.chmod(0o600);
-    await pipeline(stream, async function* (source) {
-      for await (const chunk of source) {
-        size += chunk.length;
-        if (size > limitBytes) throw new UploadError("UPLOAD_FILE_TOO_LARGE", `File exceeds the ${limitBytes} byte limit`, 413);
-        onBytes(chunk.length);
-        hash.update(chunk);
-        const copied = chunk.copy(prefix, prefixSize, 0, Math.min(chunk.length, 65536 - prefixSize));
-        prefixSize += copied;
-        yield chunk;
+    await pipeline(stream, new Transform({
+      highWaterMark: 65536,
+      transform(chunk, _encoding, callback) {
+        try {
+          size += chunk.length;
+          if (size > limitBytes) throw new UploadError("UPLOAD_FILE_TOO_LARGE", `File exceeds the ${limitBytes} byte limit`, 413);
+          onBytes(chunk.length);
+          hash.update(chunk);
+          prefixSize += chunk.copy(prefix, prefixSize, 0, Math.min(chunk.length, 65536 - prefixSize));
+          callback(null, chunk);
+        } catch (error) { callback(error); }
       }
-    }, handle.createWriteStream(), { signal });
+    }), handle.createWriteStream(), { signal });
     return { path: filePath, storedName, size, prefix: prefix.subarray(0, prefixSize), contentHash: hash.digest("hex") };
   } finally {
     await handle.close();
