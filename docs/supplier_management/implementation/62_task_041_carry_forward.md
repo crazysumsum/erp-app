@@ -408,7 +408,7 @@ were decided in HD-060 (1A 2A 3A 4A 5A).
 | HD-048 (3): a row, job lock included, inside `DB_TRANSACTION_TIMEOUT_MS` | **Measured.** 300 rows with address, contact and identifier: about 6 ms a row, slowest 11 ms, against 20,000 ms. Pinned loosely (< 2 s). |
 | HD-048 (4): real `applyRow`, failure after the Supplier write | **Done.** No Supplier, contact, identifier, name gram or audit row survives. |
 | REV-061 I-4: domain errors carry a Chinese `publicMessage` | **Holds.** Every refusal the helpers raise is a Supplier domain error with a Chinese message; generic failures still store the fixed pair. |
-| REV-061 I-3: retry transient errors? | **Decided, HD-060 4A.** Deadlock, lock-wait, transaction or query timeout fail the row as `SUPPLIER_IMPORT_ROW_BUSY` (driver or wrapped cause); the user re-imports the row. |
+| REV-061 I-3: retry transient errors? | **Decided, HD-060 4A, refined by HD-061 2A.** A deadlock or a lock wait the server reports within the budget fails the row as `SUPPLIER_IMPORT_ROW_BUSY` (driver or wrapped cause); the user re-imports the row. A wait longer than the transaction budget leaves the row `valid`: the timed-out row transaction still holds the job lock on the server, so the fail-marking transaction cannot mark it, and the next worker resumes the row after the lease (REV-071 L-2, tested with a real lock). |
 | Re-check the confirmer before each row | **Done (HD-060 5A).** Inactive, or without `supplier.mgmt`: pending rows fail with `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED`, applied rows stay, the job fails with counts rebuilt from rows. This also covers a confirmer whose user was deleted (`confirmed_by` NULL). |
 | Re-check at execution everything precheck checked | **Done.** Code taken since, Identifier taken since, target archived, expected version moved, currency retired: each fails its row with its domain code; other rows apply. |
 | Currency change needs a reason | **Done.** `CSV 匯入 #<job>`, visible in the `supplier.update` audit. |
@@ -434,6 +434,7 @@ New obligations T45 creates:
 | --- | --- |
 | T46 | The confirm step must send the password and, for activate with approval on, an approver chosen from the eligible list; refresh must not resend confirm (the client creates a new key per call, so a second press answers 409). |
 | T46 | Show `SUPPLIER_IMPORT_ROW_BUSY` rows as retryable and `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED` as a job-level stop. |
+| T46 | Say in the confirm step that the approval setting is read at confirm: a job confirmed with approval off activates its Suppliers directly even if approval is switched on before it runs (REV-071 I-3, AC-013). |
 | T49 | Execution throughput at 10,000 rows is not measured here (about 6 ms a row in the 300-row test). |
 
 ## Mutation record for TASK-045
@@ -465,6 +466,26 @@ short-lived currencies, as `customerIdentifierCredit` does, and remove them afte
 
 The parallel failure of `supplierSettings.integration.test.js` that prompted this had a different cause, found in the InnoDB
 deadlock report: T43's 10,000-row test cleaned up with `DELETE FROM suppliers WHERE supplier_code_key LIKE …`, a full scan
-that locks every Supplier row, and deadlocked the settings test's request insert. It now deletes by ID. A first guess
-(a gap lock taken by the identifier helper on a new pending Supplier) was tested both ways, did not reproduce, and was
-dropped with its code change.
+that locks every Supplier row, and deadlocked the settings test's request insert. A first guess (a gap lock taken by the
+identifier helper on a new pending Supplier) was tested both ways, did not reproduce, and was dropped with its code change.
+The first fix (`id IN (<2,000 ids>)`) was wrong too: REV-071 L-3 showed, and `EXPLAIN FORMAT=TRADITIONAL` confirms, that
+2,000 IDs still plan as `type ALL` while 500 plan as `range` on `PRIMARY`. The cleanup now deletes in chunks of 500.
+
+## REV-071 remediation (HD-061)
+
+REV-071 (`74_rev_071_independent_review.md`) approved 1138dc5 with three Low and four Info findings; the Product Owner chose
+every recommendation (HD-061).
+
+- **L-1, fixed.** `processNextRow` selects the next row before re-checking the confirmer; with no row left it returns `null`
+  and the job finalizes, so a fully applied job no longer fails when the confirmer loses access before the final call.
+- **L-2, wording corrected (HD-061 2A)** in the table above; a test holds HKD in another transaction past a 1.5 s
+  transaction budget in a real worker process and requires the row to stay `valid`, then the next worker to apply it once.
+- **L-3, fixed** as described under "Shared state in tests".
+- **I-1, tested.** A wrapped connection commits the same Code (in another currency, so it does not queue on HKD) between
+  the Code check and the insert; the row must fail as `SUPPLIER_CODE_TAKEN`.
+- **I-2, fixed.** An activating row whose snapshot needs approval but whose approver is NULL (the user was deleted; FK SET
+  NULL) fails as `APPROVER_NOT_ELIGIBLE`.
+- **I-3** recorded as a T46 obligation above. **I-4, fixed:** imported audits carry `requestId` `import-<jobId>`.
+
+The mutation list is now 38 (the 34 above, three patterns updated for the moved code, and four for L-1, I-1, I-2, I-4); all
+38 are killed.
