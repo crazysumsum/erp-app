@@ -125,12 +125,12 @@ function tokenIssuer(application) {
   };
 }
 
-// Customer bank 與 Inventory 權限存在於目錄，但 migrations 刻意不授予 system-admin；claims 要反映
+// Customer bank、Inventory 與 Sales 權限存在於目錄，但 migrations 刻意不授予 system-admin；claims 要反映
 // 遷移後的實際角色權限，否則測試會先撞 PERMISSION_STALE。
 const ADMIN_PERMISSIONS = PERMISSION_CATALOGUE
   .map(({ name }) => name)
   .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
-    name !== "sales.operation" && name !== "fulfillment.operation");
+    !name.startsWith("sales.") && name !== "fulfillment.operation");
 
 function authed(token, body) {
   return {

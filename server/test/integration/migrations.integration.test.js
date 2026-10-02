@@ -143,13 +143,13 @@ test("0038 seeds the Customer catalogue but does not grant bank permissions to s
     PERMISSION_CATALOGUE
       .map((permission) => permission.name)
       .filter((name) => !name.startsWith("customer.bank.") && !name.startsWith("inventory.") &&
-        name !== "sales.operation" && name !== "fulfillment.operation")
+        !name.startsWith("sales.") && name !== "fulfillment.operation")
       .sort()
   );
   assert.equal(heldNames.includes("customer.bank.view"), false);
   assert.equal(heldNames.includes("customer.bank.mgmt"), false);
   assert.equal(heldNames.some((name) => name.startsWith("inventory.")), false);
-  assert.equal(heldNames.includes("sales.operation"), false);
+  assert.equal(heldNames.some((name) => name.startsWith("sales.")), false);
   assert.equal(heldNames.includes("fulfillment.operation"), false);
 });
 

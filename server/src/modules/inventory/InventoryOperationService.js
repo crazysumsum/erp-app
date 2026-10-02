@@ -19,7 +19,9 @@ const RESULT_SUMMARY_FIELDS = new Set([
   "allocationId", "transferId", "stocktakeId", "openingJobId", "purpose",
   "minimumRemainingDays", "originalQuantity", "consumedQuantity", "releasedQuantity",
   "outstandingQuantity", "eligibleOnHand", "reserved", "rawAtp", "atp", "uncoveredReserved",
-  "allocationSnapshot"
+  "allocationSnapshot", "sourceLineId", "rootOperationId", "rootRequestHash", "expectedOrderVersion",
+  "orderedBaseQuantity", "reservedBaseQuantity", "uncoveredBaseQuantity", "membershipDigest",
+  "expectedVersion", "releaseQuantity", "lineCount"
 ]);
 
 function assertExecutor(executor, method = "execute") {
@@ -154,6 +156,35 @@ export class InventoryOperationService {
       [type, resultIdentifier, summary, timestamp(completedAt, "completed at"), id]
     );
     if (Number(result.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+  }
+
+  async stageSalesBatchMember(connection, { operationId, resultSummary }) {
+    assertExecutor(connection);
+    const summary = serializeInventorySummary(resultSummary, RESULT_SUMMARY_FIELDS, "Inventory result summary");
+    const [result] = await connection.execute(
+      `UPDATE inventory_operation_requests SET result_summary = ?
+        WHERE id = ? AND command_type = 'SALES_LINE_RELEASE' AND completed_at IS NULL AND result_summary IS NULL`,
+      [summary, positiveId(operationId, "operation id")]
+    );
+    if (Number(result.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+  }
+
+  async listSalesBatchMembers(connection, { source: requestedSource, afterId = 0 }) {
+    assertExecutor(connection, "query");
+    const source = sourceTuple(requestedSource);
+    if (source.module !== "SALES" || source.documentType !== "SALES_ORDER" ||
+        !Number.isSafeInteger(afterId) || afterId < 0) throw new TypeError("Invalid Sales batch member query");
+    const [rows] = await connection.query(
+      `SELECT id, command_type, source_line_id, request_hash, result_type, result_id, result_summary, completed_at
+         FROM inventory_operation_requests
+        WHERE source_module = ? AND source_document_type = ? AND source_document_id = ?
+          AND source_event_id = ? AND source_line_id <> '' AND id > ?
+        ORDER BY id LIMIT 100 FOR SHARE`,
+      [source.module, source.documentType, source.documentId, source.eventId, afterId]
+    );
+    return rows.map(row => ({ operationId: Number(row.id), commandType: row.command_type,
+      sourceLineId: row.source_line_id, requestHash: row.request_hash,
+      ...resultFromRow(row), completedAt: row.completed_at === null ? null : Number(row.completed_at) }));
   }
 
   async findBySource(executor, { source: requestedSource }) {

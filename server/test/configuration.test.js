@@ -27,6 +27,7 @@ test("global configuration validation normalizes every configuration section", (
     "request",
     // 限流器是一個 service，所以它的設定自己一個區塊、自己一個檔案。
     "requestLimiter",
+    "sales",
     "scheduler",
     "security",
     "supplier",
@@ -44,6 +45,7 @@ test("global configuration validation normalizes every configuration section", (
   assert.equal(configuration.idempotency.storeAdapter, "mysql");
   assert.equal(configuration.inventory.openingLeaseMs, 60000);
   assert.equal(configuration.item.categoryMaxDepth, 8);
+  assert.equal(configuration.sales.manualConfirmationWaitMs, 2500);
   assert.equal(configuration.supplier.duplicateNameThreshold, 0.85);
   assert.match(configuration.item.mediaDirectory, /storage\/items$/);
   assert.equal(configuration.logging.loggers.request.filePrefix, "requests");
@@ -148,7 +150,7 @@ test("global configuration validation reports errors from multiple sections", ()
       assert.equal(error.code, "CONFIGURATION_INVALID");
       assert.deepEqual(
         error.details.map(({ section }) => section),
-        ["application", "api", "database", "requestLimiter"]
+        ["application", "sales", "api", "database", "requestLimiter"]
       );
       return true;
     }

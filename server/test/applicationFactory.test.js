@@ -126,6 +126,7 @@ test("application factory builds a startable and stoppable API with injected res
         requestTimeoutMs: 100,
         shutdownTimeoutMs: 1000
       },
+      sales: { ...source.sales, manualConfirmationWaitMs: 50 },
       // route 逾時縮到 100ms，DB 的預算就得跟著縮——啟動時的交叉檢查要求
       // 資料庫先於 route 放棄。
       database: {
@@ -591,4 +592,14 @@ test("application creation fails and cleans up when an eager service cannot init
     logger.entries.some((entry) => entry.event === "application.factory.created"),
     false
   );
+});
+
+test("TC-007 application startup rejects invalid Sales config before creating the database pool", async () => {
+  const source = defaultConfigurationSource();
+  let poolFactoryCalls = 0;
+  await assert.rejects(createApplication({ configurationSource: { ...source,
+    sales: { ...source.sales, manualConfirmationWaitMs: source.application.requestTimeoutMs } },
+    serviceOptions: { mysqldatabase: { poolFactory: () => { poolFactoryCalls++; return {}; } } }
+  }), (error) => error instanceof ConfigurationError && error.details.some((detail) => detail.section === "sales"));
+  assert.equal(poolFactoryCalls, 0);
 });

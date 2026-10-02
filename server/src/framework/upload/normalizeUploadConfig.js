@@ -1,4 +1,5 @@
 import path from "node:path";
+import { accessSync, constants, lstatSync, mkdirSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const serverRoot = fileURLToPath(new URL("../../../", import.meta.url));
@@ -17,7 +18,7 @@ const MAX_FILES_CEILING = 20;
 function positiveInteger(value, key, label, { maximum } = {}) {
   const number = Number(value);
 
-  if (!Number.isInteger(number) || number <= 0) {
+  if (!Number.isSafeInteger(number) || number <= 0) {
     throw new Error(`${label} "${key}" must be a positive integer`);
   }
 
@@ -46,6 +47,40 @@ function permissionMode(value, key, label, fallback) {
   return mode;
 }
 
+// Disk uploads stay below server/storage; every ancestor is checked before use.
+function diskTempPath(value, label) {
+  if (typeof value !== "string" || !value.trim()) throw new Error(`${label} diskTempDirectory must be a non-empty string`);
+  const directory = path.resolve(serverRoot, value.trim());
+  const relative = path.relative(path.join(serverRoot, "storage"), directory);
+  if (!relative || relative.startsWith(`..${path.sep}`) || relative === ".." || path.isAbsolute(relative)) {
+    throw new Error(`${label} diskTempDirectory must be below managed server/storage`);
+  }
+  return directory;
+}
+
+export function prepareDiskTempDirectory(directory, label = "Disk upload") {
+  directory = diskTempPath(directory, label);
+  const checkDirectory = (current) => {
+    const stat = lstatSync(current);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new Error(`${label} temp directory must not contain a symlink or non-directory`);
+    if ((stat.mode & 0o022) !== 0) throw new Error(`${label} temp directory ancestors must not be group/world writable`);
+    if (process.getuid && stat.uid !== process.getuid() && stat.uid !== 0) throw new Error(`${label} temp directory must have a trusted owner`);
+  };
+  let current = serverRoot;
+  checkDirectory(current);
+  for (const segment of path.relative(serverRoot, directory).split(path.sep)) {
+    current = path.join(current, segment);
+    try { mkdirSync(current, { mode: 0o700 }); } catch (error) {
+      if (error.code !== "EEXIST") throw error;
+    }
+    checkDirectory(current);
+  }
+  if ((lstatSync(directory).mode & 0o222) === 0) throw new Error(`${label} temp directory must be writable`);
+  accessSync(directory, constants.W_OK | constants.X_OK);
+  if (realpathSync(directory) !== directory) throw new Error(`${label} temp directory must not contain a symlink`);
+  return directory;
+}
+
 /**
  * 上傳設定的正規化。
  *
@@ -57,7 +92,8 @@ function permissionMode(value, key, label, fallback) {
 export function normalizeUploadConfig(
   source,
   label = "API defaults config upload",
-  fileTypes = null
+  fileTypes = null,
+  apiUpload = null
 ) {
   if (source === null || typeof source !== "object" || Array.isArray(source)) {
     throw new Error(`${label} must be an object`);
@@ -82,8 +118,24 @@ export function normalizeUploadConfig(
     }
   }
 
+  const storageMode = source.storageMode ?? "memory";
+  if (!["memory", "disk"].includes(storageMode)) throw new Error(`${label} storageMode must be memory or disk`);
+  if (storageMode === "disk" && fileTypes && allowedMimeTypes.some((type) => !fileTypes.supportsPrefix(type))) {
+    throw new Error(`${label} disk upload types must provide prefix validation`);
+  }
+  if (storageMode === "disk" && fileTypes && allowedMimeTypes.some((type) =>
+    fileTypes.extensionsFor(type).some((extension) => !/^\.[a-z0-9]+$/.test(extension)))) {
+    throw new Error(`${label} disk upload extensions must be safe filename suffixes`);
+  }
   const memoryOnly = source.memoryOnly === true;
-  const directory = String(source.directory || "").trim();
+  if (storageMode === "disk" && memoryOnly) throw new Error(`${label} disk storageMode cannot be memoryOnly`);
+  const directory = storageMode === "disk"
+    ? prepareDiskTempDirectory((apiUpload ?? normalizeApiUploadConfig({})).diskTempDirectory, label)
+    : String(source.directory || "").trim();
+  if (storageMode === "disk" && (permissionMode(source.fileMode, "fileMode", label, 0o600) !== 0o600 ||
+      permissionMode(source.directoryMode, "directoryMode", label, 0o700) !== 0o700)) {
+    throw new Error(`${label} disk upload modes must be 0600/0700`);
+  }
 
   if (!memoryOnly && !directory) {
     throw new Error(`${label} "directory" must be a non-empty string`);
@@ -142,6 +194,8 @@ export function normalizeUploadConfig(
 
   return Object.freeze({
     enabled,
+    storageMode,
+    ...(storageMode === "disk" ? { diskOrphanMaxAgeSeconds: (apiUpload ?? normalizeApiUploadConfig({})).diskOrphanMaxAgeSeconds } : {}),
     memoryOnly,
     directory: memoryOnly ? null : path.isAbsolute(directory)
       ? directory
@@ -175,6 +229,10 @@ export function normalizeApiUploadConfig(source, label = "API config upload") {
   }
 
   return Object.freeze({
+    maxConcurrentDiskUploads: positiveInteger(source.maxConcurrentDiskUploads ?? 4, "maxConcurrentDiskUploads", label, { maximum: 2000 }),
+    maxDiskUploadBytesInFlight: positiveInteger(source.maxDiskUploadBytesInFlight ?? 209715200, "maxDiskUploadBytesInFlight", label),
+    diskTempDirectory: diskTempPath(source.diskTempDirectory ?? "storage/uploads/tmp", label),
+    diskOrphanMaxAgeSeconds: positiveInteger(source.diskOrphanMaxAgeSeconds ?? 3600, "diskOrphanMaxAgeSeconds", label),
     maxConcurrentUploads: positiveInteger(
       source.maxConcurrentUploads ?? 10,
       "maxConcurrentUploads",

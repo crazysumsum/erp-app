@@ -4,89 +4,1335 @@
   "environment": {
     "id": "sales-isolated-test",
     "kind": "LOCAL_ISOLATED",
-    "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md §2.2; no production data, no real customer address, phone, email or bank data",
-    "authorization_ref": null
+    "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md \u00a72.2; no production data, no real customer address, phone, email or bank data",
+    "authorization_ref": "Current Codex chat DEC-013: \u6838\u51c6 Phase 0 \u9a57\u8b49\u65b9\u6848\u53ca\u9694\u96e2 MySQL\uff08\u5efa\u8b70\uff09; implementation/15_phase0_validation_decision.md"
   },
   "permissions": {
-    "product_write": ["IMPLEMENT"],
-    "test_script_write": ["IMPLEMENT", "TEST_AND_VERIFY"],
-    "docs_write": ["DESIGN_AND_PLAN", "IMPLEMENT", "TEST_AND_VERIFY", "REVIEW_AND_ALIGN"],
-    "isolated_data_write": ["IMPLEMENT", "TEST_AND_VERIFY"],
-    "schema_execute": ["IMPLEMENT"],
+    "product_write": [
+      "IMPLEMENT"
+    ],
+    "test_script_write": [
+      "IMPLEMENT",
+      "TEST_AND_VERIFY"
+    ],
+    "docs_write": [
+      "DESIGN_AND_PLAN",
+      "IMPLEMENT",
+      "TEST_AND_VERIFY",
+      "REVIEW_AND_ALIGN"
+    ],
+    "isolated_data_write": [
+      "IMPLEMENT",
+      "TEST_AND_VERIFY"
+    ],
+    "schema_execute": [
+      "IMPLEMENT"
+    ],
     "deployment": [],
     "external_effects": [],
     "evidence_export": []
   },
   "runtime_policy": {
     "strategy": "ISOLATED",
-    "required_resources": ["workspace", "mysql-schema", "web-port"],
+    "required_resources": [
+      "workspace",
+      "mysql-instance",
+      "temp-directory"
+    ],
     "cleanup_owner": "Executing Phase owner"
   },
   "suites": [
     {
-      "id": "lint", "kind": "LINT",
-      "argv": ["npm", "run", "lint"], "cwd": ".", "timeout_seconds": 600,
-      "result_adapter": "EXIT_CODE", "result_path": "lint-result.json",
-      "min_tests": 0, "max_skipped": 0, "stages": ["DEVELOPER"], "required_case_ids": [],
-      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."}],
-      "side_effects": ["FILES"], "env_keys": [], "redaction_env_keys": ["DB_PASSWORD"]
+      "id": "lint",
+      "kind": "LINT",
+      "argv": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "lint-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
     },
     {
-      "id": "client-build", "kind": "BUILD",
-      "argv": ["npm", "run", "build", "--workspace", "client"], "cwd": ".", "timeout_seconds": 900,
-      "result_adapter": "EXIT_CODE", "result_path": "client-build-result.json",
-      "min_tests": 0, "max_skipped": 0, "stages": ["DEVELOPER"], "required_case_ids": [],
-      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."}],
-      "side_effects": ["FILES"], "env_keys": [], "redaction_env_keys": ["DB_PASSWORD"]
+      "id": "client-build",
+      "kind": "BUILD",
+      "argv": [
+        "npm",
+        "run",
+        "build",
+        "--workspace",
+        "client"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 900,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "client-build-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
     },
     {
-      "id": "security-audit", "kind": "LINT",
-      "argv": ["npm", "run", "security:audit"], "cwd": ".", "timeout_seconds": 600,
-      "result_adapter": "EXIT_CODE", "result_path": "security-audit-result.json",
-      "min_tests": 0, "max_skipped": 0, "stages": ["DEVELOPER"], "required_case_ids": [],
-      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."}],
-      "side_effects": ["FILES"], "env_keys": [], "redaction_env_keys": ["DB_PASSWORD"]
+      "id": "security-audit",
+      "kind": "LINT",
+      "argv": [
+        "npm",
+        "run",
+        "security:audit"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 600,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "security-audit-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
     },
     {
-      "id": "sales-technical", "kind": "INTEGRATION",
-      "argv": ["node", "--test", "--import", "./server/test-support/testEnv.js",
-               "--test-reporter=junit", "--test-reporter-destination={run_dir}/sales-technical.xml",
-               "server/test"],
-      "cwd": ".", "timeout_seconds": 3600,
-      "result_adapter": "JUNIT", "result_path": "sales-technical.xml",
-      "min_tests": 1, "max_skipped": 0,
-      "stages": ["DEVELOPER", "TECHNICAL", "REGRESSION"],
+      "id": "sales-technical",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/sales-technical.xml",
+        "server/test"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3600,
+      "result_adapter": "JUNIT",
+      "result_path": "sales-technical.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER",
+        "TECHNICAL",
+        "REGRESSION"
+      ],
       "required_case_ids": [
-        "TC-001","TC-002","TC-003","TC-004","TC-005","TC-006","TC-007","TC-008","TC-009","TC-010",
-        "TC-011","TC-012","TC-013","TC-014","TC-015","TC-016","TC-017","TC-018","TC-019","TC-020",
-        "TC-021","TC-022","TC-023","TC-024","TC-025","TC-026","TC-027","TC-028","TC-029","TC-030",
-        "TC-031","TC-032","TC-033","TC-034","TC-035","TC-036","TC-037","TC-038","TC-039","TC-040",
-        "TC-041","TC-042","TC-043","TC-044","TC-045","TC-046","TC-047","TC-048","TC-049","TC-050",
-        "TC-051","TC-052","TC-053","TC-054","TC-055","TC-056","TC-057","TC-058","TC-059","TC-060"
+        "TC-001",
+        "TC-002",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009",
+        "TC-010",
+        "TC-011",
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-015",
+        "TC-016",
+        "TC-017",
+        "TC-018",
+        "TC-019",
+        "TC-020",
+        "TC-021",
+        "TC-022",
+        "TC-023",
+        "TC-024",
+        "TC-025",
+        "TC-026",
+        "TC-027",
+        "TC-028",
+        "TC-029",
+        "TC-030",
+        "TC-031",
+        "TC-032",
+        "TC-033",
+        "TC-034",
+        "TC-035",
+        "TC-036",
+        "TC-037",
+        "TC-038",
+        "TC-039",
+        "TC-040",
+        "TC-041",
+        "TC-042",
+        "TC-043",
+        "TC-044",
+        "TC-045",
+        "TC-046",
+        "TC-047",
+        "TC-048",
+        "TC-049",
+        "TC-050",
+        "TC-051",
+        "TC-052",
+        "TC-053",
+        "TC-054",
+        "TC-055",
+        "TC-056",
+        "TC-057",
+        "TC-058",
+        "TC-059",
+        "TC-060"
       ],
       "tool_probes": [
-        {"argv": ["node", "--version"], "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."},
-        {"argv": ["mysql", "--version"], "version_pattern": "(?i)mysql"}
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "mysql",
+            "--version"
+          ],
+          "version_pattern": "(?i)mysql"
+        }
       ],
-      "side_effects": ["FILES", "ISOLATED_DATA"],
-      "env_keys": ["DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_INTEGRATION_TESTS"],
-      "redaction_env_keys": ["DB_PASSWORD"]
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_INTEGRATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
     },
     {
-      "id": "sales-foundation-developer", "kind": "UNIT",
-      "argv": ["node", "--test", "--import", "./server/test-support/testEnv.js",
-               "--test-reporter=junit", "--test-reporter-destination={run_dir}/sales-foundation.xml",
-               "server/test/uploadLimits.test.js", "server/test/configNormalizers.test.js",
-               "server/test/fileTransfer.test.js", "server/test/fileTransferFailureModes.test.js",
-               "server/test/applicationFactory.test.js", "server/test/permissionCatalogueConventions.test.js",
-               "server/test/permissionCatalogueStartupGuard.test.js", "server/test/directoryLookups.test.js",
-               "server/test/apiDispatcher.test.js", "server/test/sales"],
-      "cwd": ".", "timeout_seconds": 900,
-      "result_adapter": "JUNIT", "result_path": "sales-foundation.xml",
-      "min_tests": 6, "max_skipped": 0, "stages": ["DEVELOPER"],
-      "required_case_ids": ["TC-003", "TC-004", "TC-005", "TC-006", "TC-007", "TC-008"],
-      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."}],
-      "side_effects": ["FILES"], "env_keys": [], "redaction_env_keys": ["DB_PASSWORD"]
+      "id": "sales-foundation-developer",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/uploadLimits.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/fileTransfer.test.js",
+        "server/test/fileTransferFailureModes.test.js",
+        "server/test/applicationFactory.test.js",
+        "server/test/configuration.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/permissionCatalogueStartupGuard.test.js",
+        "server/test/directoryLookups.test.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/sales/foundationMigrations.test.js",
+        "server/test/sales/inventoryBatch.test.js",
+        "server/test/sales/itemUomCompatibility.test.js",
+        "server/test/sales/salesAuthorization.test.js",
+        "server/test/sales/salesCanonicalHash.test.js",
+        "server/test/sales/salesConfig.test.js",
+        "server/test/sales/salesMoneyMath.test.js",
+        "server/test/sales/salesPermissionMigration.test.js",
+        "server/test/sales/salesQuantityValidation.test.js",
+        "server/test/sales/salesStateMachines.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 6,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-001",
+        "TC-003",
+        "TC-004",
+        "TC-005",
+        "TC-006",
+        "TC-007",
+        "TC-008",
+        "TC-009"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-phase001-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/salesCustomerSnapshot.integration.test.js",
+        "server/test/integration/salesFoundationMigrations.integration.test.js",
+        "server/test/integration/salesInventoryBatch.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-002",
+        "TC-009"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-item-compatibility-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-provider-regression",
+      "kind": "UNIT",
+      "argv": [
+        "{python}",
+        "server/test-support/salesProviderReport.py",
+        "server/test/customerLookupService.test.js",
+        "server/test/customerCreditService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/itemCatalogService.test.js",
+        "server/test/itemAuditLogService.test.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/inventoryAuditService.test.js",
+        "server/test/idempotencyService.test.js",
+        "server/test/requestLogger.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "HARNESS_JSON",
+      "result_path": "provider-tests.json",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-007",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryLockService.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_LOCK_SMOKE_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-008",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryMasterMigration.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_MASTER_MIGRATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-009",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryMaster.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_MASTER_RACE_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-012",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryStockMovementMigrations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_STOCK_MIGRATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-014",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryPosting.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_POSTING_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-019",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryReservationMigrations.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_RESERVATION_MIGRATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-020",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryReservation.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_RESERVATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-021",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryAllocation.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_ALLOCATION_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-022",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryTask022.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_TASK022_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-inventory-native-025",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/inventoryTask025Api.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 1,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "INVENTORY_TASK025_API_TESTS"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
     }
   ],
   "ci": {

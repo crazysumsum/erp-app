@@ -14,6 +14,44 @@ const activeCustomer = {
   version: 3
 };
 
+test("Sales snapshot locks Customer before credit in the caller transaction and returns only safe fields", async () => {
+  const calls = [];
+  const credit = { credit_limit: "0.0000", credit_currency_code: "HKD", credit_status: "on_hold", credit_version: 8, notes: "private" };
+  const transaction = { async query(sql, params) {
+    calls.push({ sql, params });
+    return [[calls.length === 1 ? { ...activeCustomer, notes: "private", general_email: "private" } : credit]];
+  } };
+  const lookup = new CustomerLookupService({ database: { async query() { throw new Error("pool read forbidden"); } } });
+  const snapshot = await lookup.getSalesSnapshotInTransaction(transaction, 4, { atMs: 30 });
+  assert.deepEqual(snapshot, {
+    customerId: 4, customerCode: "C-004", legalName: "Acme Limited",
+    defaultCurrencyCode: "HKD", defaultPaymentTermId: 7, status: "active", customerVersion: 3,
+    credit: { configured: true, creditLimit: "0.0000", currencyCode: "HKD", status: "on_hold", policyVersion: 8 }
+  });
+  assert.equal(Object.isFrozen(snapshot), true);
+  assert.equal(Object.isFrozen(snapshot.credit), true);
+  assert.match(calls[0].sql, /FROM customers WHERE id = \? FOR UPDATE/);
+  assert.match(calls[1].sql, /FROM customer_credit_profiles WHERE customer_id = \? FOR UPDATE/);
+  assert.deepEqual(calls.map(({ params }) => params), [[4], [4]]);
+});
+
+test("Sales snapshot preserves absent credit and inactive Customer facts, and rejects invalid input before SQL", async () => {
+  let calls = 0;
+  const transaction = { async query() { calls += 1; return calls % 2 ? [[{ ...activeCustomer, status: "blocked", default_payment_term_id: null }]] : [[]]; } };
+  const lookup = new CustomerLookupService({ database: { async query() { throw new Error("pool read forbidden"); } } });
+  await assert.rejects(() => lookup.getSalesSnapshotInTransaction(null, 4), TypeError);
+  await assert.rejects(() => lookup.getSalesSnapshotInTransaction(transaction, 0), TypeError);
+  await assert.rejects(() => lookup.getSalesSnapshotInTransaction(transaction, 4, { atMs: -1 }), TypeError);
+  assert.equal(calls, 0);
+  const snapshot = await lookup.getSalesSnapshotInTransaction(transaction, 4);
+  assert.equal(snapshot.status, "blocked");
+  assert.equal(snapshot.defaultPaymentTermId, null);
+  assert.deepEqual(snapshot.credit, { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null });
+  calls = 0;
+  await assert.rejects(() => lookup.getSalesSnapshotInTransaction({ async query() { calls += 1; return [[]]; } }, 999), error => error.code === "CUSTOMER_NOT_FOUND");
+  assert.equal(calls, 1);
+});
+
 test("TC-027 rejects an unknown purpose before querying and exposes the versioned contract", async () => {
   let queries = 0;
   const lookup = new CustomerLookupService({ database: { async query() { queries += 1; return [[]]; } } });
