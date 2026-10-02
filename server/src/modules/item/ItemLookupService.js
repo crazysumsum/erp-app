@@ -16,7 +16,7 @@ import {
   skuNotUsable,
   uomConversionInvalid
 } from "./itemErrors.js";
-import { ITEM_LOOKUP_PURPOSES } from "./itemConstants.js";
+import { ITEM_LOOKUP_PURPOSES, ITEM_PRICE_CURRENCY, ITEM_PRICE_TAX_BASIS } from "./itemConstants.js";
 
 const SKU_JOIN_ITEM_SELECT = `
   SELECT s.id, s.sku_code, s.sku_name, s.status AS sku_status, s.purchasable, s.sellable, s.inventory_tracked,
@@ -25,6 +25,38 @@ const SKU_JOIN_ITEM_SELECT = `
          i.id AS item_id, i.name AS item_name, i.product_type, i.status AS item_status
     FROM item_skus s
     JOIN items i ON i.id = s.item_id`;
+
+const SALES_SKU_SELECT = SKU_JOIN_ITEM_SELECT.replace("SELECT s.id,", "SELECT s.version AS sku_version, i.version AS item_version, s.suggested_price_amount, s.id,");
+
+function positiveId(value) {
+  if (!Number.isSafeInteger(value) || value < 1) throw new TypeError("Sales lookup IDs must be positive safe integers");
+  return value;
+}
+
+function saleIds(values) {
+  if (!Array.isArray(values)) throw new TypeError("Sales lookup IDs must be an array");
+  const ids = new Set();
+  for (const value of values) {
+    ids.add(positiveId(value));
+    if (ids.size > 100) throw new TypeError("Sales lookup supports at most 100 unique requests");
+  }
+  return [...ids].sort((a, b) => a - b);
+}
+
+function placeholders(ids) { return ids.map(() => "?").join(","); }
+
+function saleUomProjection(row) {
+  const factor = Number(row.to_base_factor);
+  if (!Number.isSafeInteger(factor) || factor < 1 || factor > 1_000_000 || (row.is_base && factor !== 1)) {
+    throw uomConversionInvalid("Sales UOM factor must be an integer from 1 to 1000000; Base UOM factor must be 1");
+  }
+  return Object.freeze({
+    skuUomId: Number(row.id), uomId: Number(row.uom_id), uomCode: row.uom_code, uomName: row.uom_name,
+    status: row.uom_status, uomVersion: Number(row.uom_version), mappingVersion: Number(row.version),
+    toBaseFactor: factor, isBase: Boolean(row.is_base),
+    isDefaultPurchase: Boolean(row.is_default_purchase), isDefaultSale: Boolean(row.is_default_sale)
+  });
+}
 
 /** 掃描器輸入通常唔會夾埋話你聽係邊種 barcodeType，唔似寫入路徑（見
  * barcodeValidation.js 嘅 `normalizeBarcode()`）可以攞住 type 驗證兼正規
@@ -103,6 +135,94 @@ export class ItemLookupService {
       result.set(Number(row.id), this.#toProjection(row, uomRowsBySkuId.get(Number(row.id)) ?? [], options));
     }
     return result;
+  }
+
+  async findManyForSale(skuIds, { atMs, purpose = "new_sale" } = {}) {
+    if (purpose !== "new_sale") throw new TypeError("Sales lookup purpose must be new_sale");
+    const nowMs = this.#saleTime(atMs);
+    const ids = saleIds(skuIds);
+    if (!ids.length) return new Map();
+    const [rows] = await this.database.query(`${SALES_SKU_SELECT} WHERE s.id IN (${placeholders(ids)}) ORDER BY s.id`, ids);
+    const uoms = await this.#loadUomRows(rows.map(row => Number(row.id)));
+    return new Map(rows.map(row => [Number(row.id), this.#saleProjection(row, uoms.get(Number(row.id)) ?? [], nowMs)]));
+  }
+
+  async findSaleUom(skuId, skuUomId, { atMs } = {}) {
+    positiveId(skuUomId);
+    const sku = (await this.findManyForSale([skuId], { atMs })).get(skuId);
+    if (!sku?.usable) return null;
+    return sku.uoms.find(uom => uom.skuUomId === skuUomId && uom.status === "active") ?? null;
+  }
+
+  async getSalesSnapshotsInTransaction(transaction, requests, { atMs } = {}) {
+    this.#assertExecutor(transaction);
+    const nowMs = this.#saleTime(atMs);
+    if (!Array.isArray(requests)) throw new TypeError("Sales snapshot requests must be an array");
+    const unique = new Map();
+    for (const request of requests) {
+      const skuId = positiveId(request?.skuId), skuUomId = positiveId(request?.skuUomId);
+      unique.set(`${skuId}:${skuUomId}`, { skuId, skuUomId });
+      if (unique.size > 100) throw new TypeError("Sales lookup supports at most 100 unique requests");
+    }
+    const wanted = [...unique.values()].sort((a, b) => a.skuId - b.skuId || a.skuUomId - b.skuUomId);
+    if (!wanted.length) return Object.freeze([]);
+    const skuIds = saleIds(wanted.map(request => request.skuId));
+    // Discover first; every returned value below comes from current locked reads.
+    const [discovered] = await transaction.query(
+      `SELECT s.id AS sku_id, s.item_id, su.id, su.uom_id
+         FROM item_skus s LEFT JOIN item_sku_uoms su ON su.sku_id = s.id
+        WHERE s.id IN (${placeholders(skuIds)}) ORDER BY s.id, su.id`, skuIds
+    );
+    for (const id of skuIds) if (!discovered.some(row => Number(row.sku_id) === id)) throw skuNotFound(id);
+    const itemIds = [...new Set(discovered.map(row => Number(row.item_id)))].sort((a, b) => a - b);
+    const uomIds = [...new Set(discovered.filter(row => row.id !== null).map(row => Number(row.uom_id)))].sort((a, b) => a - b);
+    if (!uomIds.length) throw uomConversionInvalid("Sales SKU has no UOM associations");
+    const [uoms] = await transaction.query(
+      `SELECT id, code, name, status, version FROM item_uoms WHERE id IN (${placeholders(uomIds)}) ORDER BY id FOR SHARE`, uomIds
+    );
+    const [items] = await transaction.query(
+      `SELECT id, name, product_type, status, version FROM items WHERE id IN (${placeholders(itemIds)}) ORDER BY id FOR SHARE`, itemIds
+    );
+    const [skus] = await transaction.query(
+      `SELECT s.*, s.status AS sku_status, s.version AS sku_version FROM item_skus s
+        WHERE s.id IN (${placeholders(skuIds)}) ORDER BY s.id FOR SHARE`, skuIds
+    );
+    const [mappings] = await transaction.query(
+      `SELECT * FROM item_sku_uoms WHERE sku_id IN (${placeholders(skuIds)}) ORDER BY id FOR SHARE`, skuIds
+    );
+    const byUom = new Map(uoms.map(row => [Number(row.id), row]));
+    const byItem = new Map(items.map(row => [Number(row.id), row]));
+    const bySku = new Map(skus.map(row => [Number(row.id), row]));
+    const original = new Map(discovered.filter(row => row.id !== null).map(row => [Number(row.id), row]));
+    if (mappings.length !== original.size) throw uomConversionInvalid("SKU UOM associations changed; retry the transaction");
+    const byMapping = new Map();
+    for (const mapping of mappings) {
+      const before = original.get(Number(mapping.id));
+      const sku = bySku.get(Number(mapping.sku_id));
+      const uom = byUom.get(Number(mapping.uom_id));
+      if (!before || !sku || !uom || Number(before.sku_id) !== Number(mapping.sku_id) ||
+          Number(before.uom_id) !== Number(mapping.uom_id) || Number(before.item_id) !== Number(sku.item_id)) {
+        throw uomConversionInvalid("SKU UOM associations changed; retry the transaction");
+      }
+      byMapping.set(Number(mapping.id), { ...mapping, uom_code: uom.code, uom_name: uom.name, uom_status: uom.status, uom_version: uom.version });
+    }
+    const projections = new Map();
+    for (const sku of skus) {
+      const item = byItem.get(Number(sku.item_id));
+      if (!item) throw skuNotFound(Number(sku.id));
+      const projection = this.#saleProjection({ ...sku, item_id: item.id, item_name: item.name, item_status: item.status,
+        product_type: item.product_type, item_version: item.version },
+      [...byMapping.values()].filter(row => Number(row.sku_id) === Number(sku.id)), nowMs);
+      if (!projection.usable) throw skuNotUsable(projection.skuId, "new_sale", projection.reasons);
+      projections.set(projection.skuId, projection);
+    }
+    return Object.freeze(wanted.map(({ skuId, skuUomId }) => {
+      const sku = projections.get(skuId);
+      if (!sku) throw skuNotFound(skuId);
+      const salesUom = sku.uoms.find(uom => uom.skuUomId === skuUomId);
+      if (!salesUom || salesUom.status !== "active") throw uomConversionInvalid("Sales UOM is missing, inactive or belongs to another SKU");
+      return Object.freeze({ ...sku, salesUom });
+    }));
   }
 
   /** 搵唔到就拋 `SKU_NOT_FOUND`；搵到但唔啱呢個 purpose 就拋 `SKU_NOT_
@@ -194,7 +314,8 @@ export class ItemLookupService {
 
     const placeholders = uniqueIds.map(() => "?").join(",");
     const [rows] = await executor.query(
-      `SELECT su.sku_id, su.uom_id, u.code AS uom_code, su.to_base_factor, su.is_base,
+      `SELECT su.id, su.sku_id, su.uom_id, su.version, u.code AS uom_code,
+              u.name AS uom_name, u.status AS uom_status, u.version AS uom_version, su.to_base_factor, su.is_base,
               su.is_default_purchase, su.is_default_sale
          FROM item_sku_uoms su
          JOIN item_uoms u ON u.id = su.uom_id
@@ -216,6 +337,23 @@ export class ItemLookupService {
     if (!executor || typeof executor.query !== "function") {
       throw new TypeError("ItemLookupService transaction executor must provide query()");
     }
+  }
+
+  #saleTime(atMs) {
+    const nowMs = atMs ?? this.time.nowMs();
+    if (!Number.isSafeInteger(nowMs) || nowMs < 0) throw new TypeError("atMs must be a non-negative safe integer");
+    return nowMs;
+  }
+
+  #saleProjection(row, uomRows, atMs) {
+    const projection = this.#toProjection(row, uomRows, { purpose: "sale", atMs });
+    const reasons = projection.reasons.filter(reason => reason !== "STATUS_NOT_SELLABLE");
+    if (row.item_status !== "active" || row.sku_status !== "active") reasons.push("STATUS_NOT_ACTIVE");
+    if (row.tracking_policy === "serial") reasons.push("SERIAL_NOT_SUPPORTED");
+    return Object.freeze({ ...projection, skuVersion: Number(row.sku_version), itemVersion: Number(row.item_version),
+      suggestedPrice: row.suggested_price_amount === null ? null : Object.freeze({
+        amount: String(row.suggested_price_amount), currency: ITEM_PRICE_CURRENCY, taxBasis: ITEM_PRICE_TAX_BASIS
+      }), uoms: Object.freeze(uomRows.map(saleUomProjection)), usable: reasons.length === 0, reasons: Object.freeze(reasons) });
   }
 
   #toProjection(row, uomRows, { purpose, atMs, includeInactive = false } = {}) {
