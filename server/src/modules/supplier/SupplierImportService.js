@@ -9,7 +9,7 @@ import { uploadHeaderError } from "./import/SupplierImportProcessor.js";
  * Supplier import 嘅狀態機同逐列執行 contract（T42；設計 §5.13、§8.8）。
  *
  * T42 定骨架：job 點樣被 worker 用 lease 領取、每一列點樣喺一個 transaction 入面同
- * Supplier 一齊 commit、做完點樣由 rows 重建統計。T43 加上載同 precheck。confirm 同
+ * Supplier 一齊 commit、做完點樣由 rows 重建統計。T43 加上載同 precheck，T44 加 list／get／cancel。confirm 同
  * 真正寫 Supplier 嘅 applyRow（T45）、結果檔（T46）都唔喺度。
  *
  * 逐列 contract（設計 §8.8，唔可以拆）：
@@ -69,26 +69,62 @@ export function countsFromRows(rows) {
 
 const JOB_COLUMNS = `id, mode, activation_mode, approver_user_id, approval_setting_value, approval_setting_version,
   status, total_count, lease_owner, lease_until, confirmed_by, confirmed_at, version`;
-const SUMMARY_COLUMNS = `id, template_version, mode, status, total_count, valid_count, warning_count, invalid_count,
-  last_error_code, error_summary, created_at, updated_at, version`;
+const SUMMARY_COLUMNS = `id, template_version, mode, activation_mode, status, total_count, valid_count, warning_count,
+  invalid_count, applied_count, failed_count, skipped_count, last_error_code, error_summary, created_at, updated_at,
+  confirmed_at, completed_at, files_purged_at, version`;
 const IMPORT_MODES = Object.freeze(["create_only", "upsert"]);
 // Precheck 最多做幾次。上載時 version = 1，之後每次領取 +1（append 唔改 version），所以一個 validating
 // job 已經做過 version - 1 次。夠數仍然未完成，就標 failed，唔好無止境重做（REV-064 H-1、H-2）。
 export const MAX_PRECHECK_ATTEMPTS = 3;
 const MAX_PRECHECK_BATCH = 1000;
 
-/** 對外嘅 job 摘要：唔帶檔名、SHA-256、lease 或者任何路徑（T44 會加欄位）。 */
+const nullableNumber = (value) => (value === null ? null : Number(value));
+
+/**
+ * 對外嘅 job 摘要：唔帶檔名、SHA-256、lease 或者任何路徑。`filesPurged` 話俾 client 知來源／結果檔
+ * 已經冇咗（預檢失敗、取消或者到期清理）；檔案下載同 410 係 T46 嘅（HD-058 4A）。
+ */
 export function importJobSummary(row) {
   return {
-    id: Number(row.id), templateVersion: row.template_version, mode: row.mode, status: row.status,
-    totalCount: Number(row.total_count), validCount: Number(row.valid_count), warningCount: Number(row.warning_count),
-    invalidCount: Number(row.invalid_count), lastErrorCode: row.last_error_code, errorSummary: row.error_summary,
-    createdAt: Number(row.created_at), updatedAt: Number(row.updated_at), version: Number(row.version)
+    id: Number(row.id), templateVersion: row.template_version, mode: row.mode, activationMode: row.activation_mode,
+    status: row.status, totalCount: Number(row.total_count), validCount: Number(row.valid_count),
+    warningCount: Number(row.warning_count), invalidCount: Number(row.invalid_count), appliedCount: Number(row.applied_count),
+    failedCount: Number(row.failed_count), skippedCount: Number(row.skipped_count), lastErrorCode: row.last_error_code,
+    errorSummary: row.error_summary, filesPurged: row.files_purged_at !== null, createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at), confirmedAt: nullableNumber(row.confirmed_at), completedAt: nullableNumber(row.completed_at),
+    version: Number(row.version)
   };
 }
 
 function positiveInteger(value) {
   return Number.isSafeInteger(value) && value > 0;
+}
+
+export const IMPORT_ROW_STATUSES = Object.freeze(["valid", "warning", "invalid", "applied", "failed", "skipped"]);
+// 取消只限未開始預檢或執行嘅 job（HD-058 2A）：validating 要等預檢做完，running 之後已經寫緊 Supplier。
+export const CANCELLABLE_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors", "queued"]);
+// 預檢未完成就冇列俾人睇：validating 嘅列可能係做到一半、之後會被刪嘅批次（REV-068 I-2）。
+const ROWS_HIDDEN_STATUSES = new Set(["uploaded", "validating"]);
+const MAX_PAGE_SIZE = 100;
+
+function paging(page, pageSize) {
+  const offset = (page - 1) * pageSize;
+  if (!positiveInteger(page) || !positiveInteger(pageSize) || pageSize > MAX_PAGE_SIZE || !Number.isSafeInteger(offset)) {
+    throw new TypeError("Supplier import paging is invalid");
+  }
+  return { page, pageSize, offset };
+}
+
+// 唔係自己嘅 job 同唔存在嘅 job 答案一樣，唔洩漏存在性（HD-058 1A）。
+const importJobNotFound = () => supplierImportError("SUPPLIER_IMPORT_NOT_FOUND", 404, "找不到指定的匯入工作");
+
+/** 對外嘅列：只係 precheck／執行結果，冇 lease、冇預期版本。 */
+function importRowView(row) {
+  return {
+    rowNumber: Number(row.row_number), operation: row.operation, status: row.status,
+    matchSupplierId: nullableNumber(row.match_supplier_id), appliedSupplierId: nullableNumber(row.applied_supplier_id),
+    normalizedPayload: row.normalized_payload, errors: row.errors ?? [], warnings: row.warnings ?? []
+  };
 }
 
 function assertLease(job, leaseOwner, nowMs, status = "running") {
@@ -197,6 +233,89 @@ export class SupplierImportService {
       });
       throw error;
     }
+  }
+
+  /** 自己上載嘅 job，新嘅先。其他人嘅 job 唔會出現（HD-058 1A）。 */
+  async list({ actorId, claimedRoles, claimedPermissions, page = 1, pageSize = 20, status }) {
+    const paged = paging(page, pageSize);
+    if (status !== undefined && !IMPORT_JOB_STATUSES.includes(status)) throw new TypeError("Supplier import status is invalid");
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const where = status === undefined ? "created_by = ?" : "created_by = ? AND status = ?";
+    const params = status === undefined ? [actorId] : [actorId, status];
+    const [[[count]], [jobs]] = await Promise.all([
+      this.database.query(`SELECT COUNT(*) AS total FROM supplier_import_jobs WHERE ${where}`, params),
+      this.database.query(
+        `SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`,
+        [...params, paged.pageSize, paged.offset])
+    ]);
+    return { items: jobs.map(importJobSummary), total: Number(count.total), page: paged.page, pageSize: paged.pageSize };
+  }
+
+  /** Job 摘要加逐列結果（按行號分頁）。預檢未完成嘅 job 唔回任何列。 */
+  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus }) {
+    if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
+    const paged = paging(page, pageSize);
+    if (rowStatus !== undefined && !IMPORT_ROW_STATUSES.includes(rowStatus)) throw new TypeError("Supplier import row status is invalid");
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[job]] = await this.database.query(
+      `SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ? AND created_by = ?`, [id, actorId]);
+    if (!job) throw importJobNotFound();
+    const result = { job: importJobSummary(job), rows: [], total: 0, page: paged.page, pageSize: paged.pageSize };
+    // ready 之後列唔會再被重寫（只有 uploaded → validating 會），所以讀完 job 再讀列唔會撈到半套。
+    if (ROWS_HIDDEN_STATUSES.has(job.status)) return result;
+    const where = rowStatus === undefined ? "job_id = ?" : "job_id = ? AND status = ?";
+    const params = rowStatus === undefined ? [id] : [id, rowStatus];
+    const [[[count]], [rows]] = await Promise.all([
+      this.database.query(`SELECT COUNT(*) AS total FROM supplier_import_rows WHERE ${where}`, params),
+      this.database.query(
+        `SELECT \`row_number\`, operation, status, match_supplier_id, applied_supplier_id, normalized_payload, errors, warnings
+           FROM supplier_import_rows WHERE ${where} ORDER BY \`row_number\` LIMIT ? OFFSET ?`,
+        [...params, paged.pageSize, paged.offset])
+    ]);
+    return { ...result, rows: rows.map(importRowView), total: Number(count.total) };
+  }
+
+  /**
+   * 取消（HD-058 2A、3A）：只限自己、未開始預檢或執行嘅 job。同預檢失敗一樣，來源檔之後唔會再用：
+   * 同一個 transaction 記 `files_purged_at`，commit 之後即刻刪；刪唔到就記低，由 T48 清理（HD-044）。
+   * 摘要同逐列結果保留。
+   */
+  async cancel({ actorId, claimedRoles, claimedPermissions, id, version, root, requestId = "", ip = "" }) {
+    if (!positiveInteger(id) || !positiveInteger(version)) throw new TypeError("Supplier import cancel input is invalid");
+    const { summary, sourceStoredName } = await this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const [[job]] = await connection.query(
+        "SELECT id, status, source_stored_name, version FROM supplier_import_jobs WHERE id = ? AND created_by = ? FOR UPDATE",
+        [id, actorId]);
+      if (!job) throw importJobNotFound();
+      if (!CANCELLABLE_JOB_STATUSES.includes(job.status)) {
+        throw supplierConflict("SUPPLIER_IMPORT_NOT_CANCELLABLE", "匯入工作正在預檢、執行或已結束，不可取消");
+      }
+      if (Number(job.version) !== version) throw supplierConflict("VERSION_CONFLICT", "匯入工作已被其他人修改，請重新載入");
+      assertJobTransition(job.status, "cancelled");
+      const nowMs = this.time.nowMs();
+      await connection.execute(
+        `UPDATE supplier_import_jobs SET status = 'cancelled', lease_owner = '', lease_until = NULL, files_purged_at = ?,
+                completed_at = ?, updated_at = ?, version = version + 1
+          WHERE id = ?`,
+        [nowMs, nowMs, nowMs, id]
+      );
+      await this.audit.record(connection, {
+        actorUserId: actorId, actorUsername: actor.username, action: "import.cancel", targetType: "import",
+        targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: { status: "cancelled" } },
+        requestId, ip
+      });
+      const [[updated]] = await connection.query(`SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ?`, [id]);
+      return { summary: importJobSummary(updated), sourceStoredName: job.source_stored_name };
+    });
+    try {
+      if (!root) throw Object.assign(new Error("Supplier import root is not prepared"), { code: "SUPPLIER_IMPORT_UNAVAILABLE" });
+      await removeSupplierImportFile(root, "source", sourceStoredName);
+    } catch (cleanupError) {
+      void this.logger?.error?.("supplier.import.source_cleanup_failed", "Supplier import source could not be removed after a cancel",
+        { jobId: id, storedName: sourceStoredName, code: cleanupError?.code ?? null });
+    }
+    return summary;
   }
 
   /**
