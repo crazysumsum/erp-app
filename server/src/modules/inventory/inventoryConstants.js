@@ -26,5 +26,6 @@ export const INVENTORY_AUDIT_ACTIONS = Object.freeze([
 ]);
 
 export const INVENTORY_COMMAND_TYPES = Object.freeze(
-  INVENTORY_AUDIT_ACTIONS.map((action) => action.replaceAll(".", "_").toUpperCase())
+  [...INVENTORY_AUDIT_ACTIONS.map((action) => action.replaceAll(".", "_").toUpperCase()),
+    "SALES_BATCH_RESERVE", "SALES_LINE_RESERVE", "SALES_BATCH_RELEASE", "SALES_LINE_RELEASE"]
 );
