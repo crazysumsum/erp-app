@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 58,
+  "revision": 64,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
     "plan": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
-    "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
-    "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+    "code_commit": "ad8d535eee961255bea27a970acd3be056a3c7e1",
+    "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
     "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
+    "default_commit": "a343677e1d65011b79f1fe08a053c81bb0c8355a",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -23,7 +23,7 @@
     "resources": {
       "workspace": "/private/tmp/erp-sales-foundation",
       "temp-directory": "/private/tmp/sales-phase0-hlnxwrb1",
-      "mysql-instance": "/private/tmp/sales-phase0-hlnxwrb1 +dedicated021/022/025socket-onlyroots; exact26.7.0 VERSION/datadir/socket/skip_networkingre-observed; unused gate_91f44916 schemas; /private/tmp/sales-phase0-runtime.json"
+      "mysql-instance": "Actual ownedMySQL26.7.0 fourinstances verified; freshgate_c2925553 schemas/fullSales025migration; /private/tmp/sales-phase0-runtime.json"
     },
     "lease_ref": null
   },
@@ -1823,6 +1823,83 @@
       "source_ref": "Actual /root/sales_readiness_review final APPROVE835d98d vs95946469, sourceFP501302; no findings, humanbinding/registeredruns remainedpending; implementation/16",
       "actor": "Codex separate agent /root/sales_readiness_review",
       "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Finalcandidate independentPR/codereview",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final APPROVE e197e8038c895f38d9af8f43290cd3efaf291e2c; independently verified17registeredruns/artifact hashes437PASSzero failures/skips/notrun; no remainingfindings",
+      "actor": "Codex separate agent /root/sales_readiness_review",
+      "observed_at": "2026-10-02T08:33:48.930769+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Affected integratedSupplierimportunitregression68PASS/0FAIL/0SKIP",
+      "code_commit": "ad8d535eee961255bea27a970acd3be056a3c7e1",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "/private/tmp/sales-main-t045-supplier-regression.log; actualnodeunitcommand syntheticprivatekeys",
+      "actor": "Codex /root observedtestcommand",
+      "observed_at": "2026-10-02T08:50:01.335795+00:00"
     }
   ],
   "pending_decisions": [
@@ -2274,8 +2351,48 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation finalapproval/DoD/evidence-pointer bookkeeping",
       "idempotency_key": "sales-phase0-dod-checkpoint-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpushaccc0f80abb3ace3b882e2bb0e6bb83d7e580a43 then report-only correction e197e80; originalpublication retained. CIaccc superseded by finalreport correction; source/spec/evidence unchanged."
+    },
+    {
+      "id": "PUSH-SALES-DOD-ATTRIBUTION-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation report18correction",
+      "idempotency_key": "sales-dod-attribution-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush succeeded finale197e8038c895f38d9af8f43290cd3efaf291e2c; minor reporttasklabels correction independentlyrequested; no new product/acceptance decision."
+    },
+    {
+      "id": "MERGE-SALES-PHASE0-20261002",
+      "kind": "MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 main<-codex/sales-foundation e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "idempotency_key": "sales-phase0-full-merge-20261002",
       "status": "PLANNED",
-      "source_ref": "Sam finalbaseline approval and existingcommit/push/PRauthorization; source/PLANunchanged actual17runs complete."
+      "source_ref": "ActualSamcommit/PR/mergeauthorization andDEC014finalbinding approval; executeonlyafterexactheadCI/freshmain/completePHASE001 MERGE_READY."
+    },
+    {
+      "id": "READY-SALES-PHASE0-PR-20261002",
+      "kind": "PR_UPDATE",
+      "target": "PR174 readyforreview",
+      "idempotency_key": "sales-phase0-pr-ready-20261002",
+      "status": "PLANNED",
+      "source_ref": "Sammergeauthorization; finaldeveloper/currentCI/independentreview complete, subjectto fullGatefinalverification."
+    },
+    {
+      "id": "INTEGRATE-SALES-SUPPLIER-T045-20261002",
+      "kind": "OTHER",
+      "target": "origin/main a343677e1d65011b79f1fe08a053c81bb0c8355a into codex/sales-foundation",
+      "idempotency_key": "sales-main-t045-integrate-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualortmerge completed cleanly ad8d535eee961255bea27a970acd3be056a3c7e1 includesmaina343677/PR177; ownerSupplierchanges unmodified. Prior e197gate superseded forintegrationverification."
+    },
+    {
+      "id": "PUSH-SALES-MAIN-T045-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation integratedmaina343677+currentevidencecheckpoint",
+      "idempotency_key": "sales-main-t045-integrated-push-20261002",
+      "status": "PLANNED",
+      "source_ref": "Existingauthorizedmerge/commit/PR; all17actualregisteredintegrationdeveloperchecksPASS437 andSupplier68PASS; design/plan unchanged."
     }
   ],
   "evidence_files": [
@@ -2295,8 +2412,25 @@
     "evidence/20261002T082440-7111d47cf1e8/run.json",
     "evidence/20261002T082441-69d774f8ceb4/run.json",
     "evidence/20261002T082442-885c8d3a9852/run.json",
-    "evidence/20261002T082443-40e35f31ce9d/run.json"
+    "evidence/20261002T082443-40e35f31ce9d/run.json",
+    "evidence/20261002T084744-6840a9a9500a/run.json",
+    "evidence/20261002T084749-fe5d712f0897/run.json",
+    "evidence/20261002T084750-0be52badd508/run.json",
+    "evidence/20261002T084753-bf2376b3e9a2/run.json",
+    "evidence/20261002T084759-ab0a127b4d27/run.json",
+    "evidence/20261002T084808-bbeb1fa65a9c/run.json",
+    "evidence/20261002T084825-92930bd9d12f/run.json",
+    "evidence/20261002T084827-8d7d3adc85b0/run.json",
+    "evidence/20261002T084829-932b0fbd150d/run.json",
+    "evidence/20261002T084830-0d083888ceb9/run.json",
+    "evidence/20261002T084831-3b72a7c3c584/run.json",
+    "evidence/20261002T084832-1183de610b98/run.json",
+    "evidence/20261002T084833-22eab0d90922/run.json",
+    "evidence/20261002T084834-b16cdc40e06b/run.json",
+    "evidence/20261002T084835-52df376c56ed/run.json",
+    "evidence/20261002T084836-3cbc746f9335/run.json",
+    "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "All17 actualHarnessdeveloper runs PASS437/0FAIL/0SKIP/0NOT_RUN, exact835 CIallfivePASS/reviewAPPROVE. Publish approval/DoD/evidence-pointer bookkeeping candidate then require that exactheadCI/independentreview/freshmain andcompletePHASE001 MERGE_READY before authorizedmerge; private raw evidence notexported."
+  "next_safe_action": "Publish integratedmaina343677 currentsource25de0074 full17developer437PASS/zero skips +Supplier68PASS. Require newexactheadCI, independentreview andfreshmain/fullPHASE001 MERGE_READY beforeauthorizedmerge."
 }
