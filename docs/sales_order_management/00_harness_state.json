@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 47,
+  "revision": 48,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "a3883251acdc897e5d485e529cfcdf21e977cb860af7b98c58a209fc0fa73bef",
     "plan": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
-    "code_commit": "664f12dcdc6dc2fbc251373df9eb687d7806ae6c",
-    "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+    "code_commit": "1881f2555190d14a84afd885ef21252686260b33",
+    "source_fingerprint": "c80556f9acd0a2aae6149c092e764b34eb164a7118858b322c7676a28cd7723f",
     "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "8630ac1dcd961464817636ef319963a43ea93b19",
+    "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -1479,6 +1479,61 @@
       "source_ref": "implementation/14_foundation_schema_checkpoint.md; /private/tmp/sales-phase-foundation-regression.log, /private/tmp/sales-full-lint.log, /private/tmp/sales-client-build.log, /private/tmp/sales-security-audit.log",
       "actor": "Codex /root observed test/command output",
       "observed_at": "2026-10-02T06:34:38.260327+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
     }
   ],
   "pending_decisions": [
@@ -1811,19 +1866,27 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation finalPHASE001sourcecandidate",
       "idempotency_key": "sales-foundations-candidate-push-20261002",
-      "status": "PLANNED",
-      "source_ref": "UserauthorizedTASK009-011 and commit/PR/mergesubjecttofullPhasegates; developer/independentreviewdone, CIrequired"
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push and gh PR174 observation confirm head48391c83baa9b440a7a1fbf4c2e446d6974c3d10; CI36974328029 allfivePASS."
     },
     {
       "id": "PR-UPDATE-SALES-FOUNDATIONS-20261002",
       "kind": "PR_UPDATE",
       "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
       "idempotency_key": "sales-foundations-candidate-pr-update-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded; PR174 reviewed provider/foundation scope and evidence summary."
+    },
+    {
+      "id": "PUSH-SALES-LATEST-MAIN-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation latestmain integration/evidence checkpoint",
+      "idempotency_key": "sales-latest-main-candidate-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Concrete implementedfoundation/scopedevidence/failurehistory/latestCIpending summary"
+      "source_ref": "Freshmain9594646 integrated1881f255; actual finalhead mandatoryCI required; no merge yet."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit/push reviewed0068/0069 and correctedfixture/providerpublication; updatePR174. Observe mandatory latestheadCI before task/PhaseDoD; fetch/integratemainagainbeforeauthorizedmerge. No localSQL/formalacceptance/laterPhase/partialmerge."
+  "next_safe_action": "Commit/push latest-main integration and CI reconciliation; observe final-head mandatory CI and independent Phase DoD review. Preserve baseline approval and executable gate blockers; no local SQL/formal acceptance/later Phase/partial merge."
 }
