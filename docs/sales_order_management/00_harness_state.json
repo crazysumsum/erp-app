@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 48,
+  "revision": 49,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "a3883251acdc897e5d485e529cfcdf21e977cb860af7b98c58a209fc0fa73bef",
     "plan": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
-    "code_commit": "1881f2555190d14a84afd885ef21252686260b33",
-    "source_fingerprint": "c80556f9acd0a2aae6149c092e764b34eb164a7118858b322c7676a28cd7723f",
+    "code_commit": "94b5cca7012b681698ecc2918d68206f2234b27e",
+    "source_fingerprint": "24cb566e5799030ed18743fe131d7719edb7ad9d7e7e0601a8a66d8b65b27d0b",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -850,6 +850,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-PHASE-OBLIGATIONS-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "24cb566e5799030ed18743fe131d7719edb7ad9d7e7e0601a8a66d8b65b27d0b",
+      "source_ref": "Actual independent agent final delta review; implementation/14_foundation_schema_checkpoint.md; four scoped files hashes and21PASS preserved",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
     }
   ],
   "observations": [
@@ -1534,6 +1546,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
       "actor": "GitHub Actions observed via gh",
       "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEVELOPER final435PASS/0FAIL/0SKIP and rootlintPASS; native acknowledgement-loss NOT_RUN locally",
+      "code_commit": "94b5cca7012b681698ecc2918d68206f2234b27e",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "24cb566e5799030ed18743fe131d7719edb7ad9d7e7e0601a8a66d8b65b27d0b",
+      "status": "PASS",
+      "source_ref": "implementation/14_foundation_schema_checkpoint.md; /private/tmp/sales-final-regression.log; /private/tmp/sales-final-lint.log",
+      "actor": "Codex /root observed commands",
+      "observed_at": "2026-10-02T07:05:34.721428+00:00"
     }
   ],
   "pending_decisions": [
@@ -1882,11 +1905,19 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation latestmain integration/evidence checkpoint",
       "idempotency_key": "sales-latest-main-candidate-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push and gh PR174 observation confirm94b5cca7012b681698ecc2918d68206f2234b27e; run36975679470 observed underway, superseded for new source correction."
+    },
+    {
+      "id": "PUSH-SALES-PHASE-OBLIGATIONS-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation reviewed dependency guard and native acknowledgement evidence",
+      "idempotency_key": "sales-phase-obligations-candidate-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Freshmain9594646 integrated1881f255; actual finalhead mandatoryCI required; no merge yet."
+      "source_ref": "Existing TASK009-011 authorization; independent delta reviewAPPROVE; final-head nativeCI mandatory."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Commit/push latest-main integration and CI reconciliation; observe final-head mandatory CI and independent Phase DoD review. Preserve baseline approval and executable gate blockers; no local SQL/formal acceptance/later Phase/partial merge."
+  "next_safe_action": "Commit/push reviewed Phase foundation gap corrections; require native acknowledgement/audit scenario and mandatory final-head CI. Prepare one consolidated Phase developer-execution contract and exact-baseline decision; retain full formal60-case obligations. No localSQL/laterPhase/partialmerge."
 }

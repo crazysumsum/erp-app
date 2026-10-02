@@ -148,3 +148,55 @@ integrationTest("Sales release handles 300 mappings in bounded pages and rolls b
   });
   t.diagnostic(`300-mapping release including consumption: ${Math.round(performance.now() - started)}ms; one caller transaction`);
 });
+
+integrationTest("Sales reserve and release reconcile a lost native COMMIT acknowledgement without duplicate effects", async t => {
+  const f = await setup(t);
+  const { url } = await f.app.start();
+  for (const route of ["/api/sales/orders", "/api/salesOrdersCreate"]) {
+    assert.equal((await fetch(new URL(route, url))).status, 404, "Phase 0 must not expose a Sales command route");
+  }
+  const reserve = f.command(70006, { warehouseId: f.warehouseId, expectedOrderVersion: 1,
+    lines: [{ sourceLineId: 1, skuId: f.skuIds[0], orderedBaseQuantity: 3, minimumRemainingDays: 0 }] });
+  const release = f.command(70006, { warehouseId: f.warehouseId, expectedOrderVersion: 1, intent: "ALL_OUTSTANDING" });
+  const consume = async (tx, cmd) => {
+    if (cmd === reserve) return f.service.reserveAvailableForSalesBatchInTransaction(tx, cmd);
+    const result = await f.service.releaseSalesBatchInTransaction(tx, cmd);
+    const lines = []; for await (const page of result.results) lines.push(...page);
+    return { lineCount: result.lineCount, lines };
+  };
+  for (const cmd of [reserve, release]) {
+    const acquire = f.db.acquireConnection;
+    let committedResult;
+    f.db.acquireConnection = async function (...args) {
+      const connection = await acquire.apply(this, args);
+      const commit = connection.commit.bind(connection);
+      connection.commit = async () => {
+        await commit();
+        throw Object.assign(new Error("Synthetic lost COMMIT acknowledgement"), { code: "ECONNRESET" });
+      };
+      return connection;
+    };
+    try {
+      await assert.rejects(() => f.db.withTransaction(async tx => {
+        committedResult = await consume(tx, cmd);
+        return committedResult;
+      }), { code: "DATABASE_TRANSACTION_INDETERMINATE" });
+    } finally { f.db.acquireConnection = acquire; }
+    assert.deepEqual(await f.db.withTransaction(tx => consume(tx, cmd)), committedResult);
+    const [[operations]] = await f.db.query(`SELECT COUNT(*) AS n FROM inventory_operation_requests
+      WHERE source_module = 'SALES' AND source_document_id = '70006' AND source_event_id = ?`, [cmd.source.eventId]);
+    assert.equal(Number(operations.n), 2);
+    const [audit] = await f.db.query(`SELECT request_id, correlation_id, before_summary, after_summary
+      FROM inventory_audit_logs WHERE correlation_id = ?`, [cmd.correlationId]);
+    assert.equal(audit.length, 1);
+    assert.equal(audit[0].request_id, cmd.correlationId);
+    assert.equal(audit[0].correlation_id, cmd.correlationId);
+    const summary = typeof audit[0].after_summary === "string" ? JSON.parse(audit[0].after_summary) : audit[0].after_summary;
+    assert.deepEqual(Object.keys(summary).sort(), ["quantity", "reservationId", "status", "version"]);
+  }
+  const [[reservation]] = await f.db.query(`SELECT COUNT(*) AS n, SUM(released_quantity) AS released,
+    SUM(outstanding_quantity) AS outstanding FROM inventory_reservations WHERE warehouse_id = ?`, [f.warehouseId]);
+  assert.equal(Number(reservation.n), 1);
+  assert.equal(Number(reservation.released), 3);
+  assert.equal(Number(reservation.outstanding), 0);
+});

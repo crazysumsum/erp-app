@@ -139,6 +139,23 @@ test("Sales batch rollback removes all claims, reservations and controls after a
   await assert.rejects(() => h.run(tx => h.s.reserveAvailableForSalesBatchInTransaction(tx, reserveCommand())), /audit failure/u);
   assert.equal(h.state.operations.length, 0); assert.equal(h.state.reservations.length, 0); assert.equal(h.state.control.reserved_quantity, 0);
 });
+test("Sales batch fails closed on absent or incompatible Item providers and incomplete or UNKNOWN projections", async () => {
+  for (const lookup of [null, {}, { getSalesInventoryProfilesInTransaction: "old-version" },
+    { async getSalesInventoryProfilesInTransaction() { return {}; } },
+    ...[{}, { inventoryTracked: true, trackingPolicy: "UNKNOWN", minimumSaleLifeDays: 0 },
+      { inventoryTracked: true, trackingPolicy: "none" },
+      { inventoryTracked: "UNKNOWN", trackingPolicy: "none", minimumSaleLifeDays: 0 }].map(profile => ({
+      async getSalesInventoryProfilesInTransaction() { return new Map([[12, profile]]); }
+    }))]) {
+    const h = harness(); h.s.itemLookup = lookup;
+    await assert.rejects(() => h.run(tx => h.s.reserveAvailableForSalesBatchInTransaction(tx, reserveCommand())),
+      { code: "INVENTORY_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
+    assert.equal(h.state.operations.length, 0);
+    assert.equal(h.state.reservations.length, 0);
+    assert.equal(h.state.control.reserved_quantity, 0);
+    assert.ok(!h.state.events.includes("stock-lock"));
+  }
+});
 test("Sales release traverses over 100 mappings atomically and replays original membership after release", async () => {
   const h = harness({ stock: 1000 });
   for (let i = 0; i < 3; i++) await h.s.reserveAvailableForSalesBatchInTransaction(h.transaction,

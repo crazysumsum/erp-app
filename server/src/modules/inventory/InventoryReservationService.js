@@ -319,10 +319,16 @@ export class InventoryReservationService {
       members.push({ ...line, operationId: child.operationId });
     }
     const skuIds = [...new Set(members.map(line => line.skuId))];
+    if (typeof this.itemLookup?.getSalesInventoryProfilesInTransaction !== "function") throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
     const profiles = await this.itemLookup.getSalesInventoryProfilesInTransaction(transaction, skuIds, { atMs: context.timestamp });
+    if (!(profiles instanceof Map)) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
     for (const line of members) {
       const profile = profiles.get(line.skuId);
-      if (!profile?.inventoryTracked) throw inventoryError("SKU_NOT_INVENTORY_TRACKED");
+      if (typeof profile?.inventoryTracked !== "boolean" || !["none", "batch", "batch_expiry", "serial"].includes(profile.trackingPolicy) ||
+          (profile.minimumSaleLifeDays !== null && (!Number.isSafeInteger(profile.minimumSaleLifeDays) || profile.minimumSaleLifeDays < 0 || profile.minimumSaleLifeDays > 36_500))) {
+        throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      }
+      if (!profile.inventoryTracked) throw inventoryError("SKU_NOT_INVENTORY_TRACKED");
       if (profile.trackingPolicy === "serial") throw inventoryError("SERIAL_TRACKING_UNSUPPORTED");
       line.minimumRemainingDays = Math.max(line.minimumRemainingDays, nonNegativeInteger(profile.minimumSaleLifeDays ?? 0, "minimumSaleLifeDays"));
     }
