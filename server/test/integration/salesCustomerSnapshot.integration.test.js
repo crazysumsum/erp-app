@@ -70,6 +70,6 @@ integrationTest("Sales Customer snapshot serializes status and absent/created/cl
     assert.deepEqual(snapshot.credit, { configured: false, creditLimit: null, currencyCode: null, status: "not_configured", policyVersion: null });
     await transaction.execute("UPDATE customers SET status = 'active' WHERE id = ?", [customerId]);
     throw new Error("caller rollback");
-  }), /caller rollback/);
+  }), error => error.code === "DATABASE_TRANSACTION_FAILED" && error.cause?.message === "caller rollback");
   assert.equal((await database.query("SELECT status FROM customers WHERE id = ?", [customerId]))[0][0].status, "blocked");
 });

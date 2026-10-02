@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 42,
+  "revision": 43,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1303,6 +1303,17 @@
       "source_ref": "implementation/10_item_snapshot_checkpoint.md; /private/tmp/sales-task9-providers.log",
       "actor": "Codex /root",
       "observed_at": "2026-10-02T04:01:58.802458+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Snapshot head4407305/run36962811955 fourjobsPASS, TestFAIL: one Customer rollbackfixture regex mismatch with existing transaction error wrapping. Item realMySQL locks PASS. Preserve failure, correct exact code/causeassertion then rerun candidate.",
+      "code_commit": "4407305141b7bbcbf90047ae61bd605d98be324f",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "edae1dbf29591d1d7a8218b5ea826f10340b80b22e5aadd9022b000c5ed383e7",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36962811955; /private/tmp/sales-snapshot-ci.log",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-10-02T04:20:45.678601+00:00"
     }
   ],
   "pending_decisions": [
@@ -1603,8 +1614,8 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation Customer/Item scoped snapshots",
       "idempotency_key": "sales-snapshots-push-20261002",
-      "status": "PLANNED",
-      "source_ref": "Sam adopted TASK009..011; current snapshots developer verified/reviewed, MySQL tests pending CI."
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; gh PR174 head4407305141b7bbcbf90047ae61bd605d98be324f, run36962811955 observed."
     }
   ],
   "evidence_files": [],
