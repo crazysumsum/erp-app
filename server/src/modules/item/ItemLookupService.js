@@ -225,6 +225,27 @@ export class ItemLookupService {
     }));
   }
 
+  async getSalesInventoryProfilesInTransaction(transaction, skuIds, { atMs } = {}) {
+    this.#assertExecutor(transaction);
+    const nowMs = this.#saleTime(atMs);
+    const ids = saleIds(skuIds);
+    if (!ids.length) return new Map();
+    const [bases] = await transaction.query(
+      `SELECT sku_id, id FROM item_sku_uoms WHERE sku_id IN (${placeholders(ids)}) AND is_base = 1 ORDER BY sku_id`, ids
+    );
+    if (bases.length !== ids.length || new Set(bases.map(row => Number(row.sku_id))).size !== ids.length) {
+      throw uomConversionInvalid("Every Sales SKU requires exactly one Base UOM");
+    }
+    const snapshots = await this.getSalesSnapshotsInTransaction(transaction,
+      bases.map(row => ({ skuId: Number(row.sku_id), skuUomId: Number(row.id) })), { atMs: nowMs });
+    for (const snapshot of snapshots) {
+      const currentBases = snapshot.uoms.filter(uom => uom.isBase);
+      if (currentBases.length !== 1 || currentBases[0].skuUomId !== snapshot.salesUom.skuUomId ||
+          snapshot.salesUom.toBaseFactor !== 1) throw uomConversionInvalid("Base UOM changed; retry the transaction");
+    }
+    return new Map(snapshots.map(snapshot => [snapshot.skuId, snapshot]));
+  }
+
   /** 搵唔到就拋 `SKU_NOT_FOUND`；搵到但唔啱呢個 purpose 就拋 `SKU_NOT_
    * USABLE`（帶埋 `reasons`）；兩種都啱先返個 projection。 */
   async assertUsable(skuId, options = {}) {

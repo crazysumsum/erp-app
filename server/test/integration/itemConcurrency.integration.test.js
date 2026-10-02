@@ -262,7 +262,7 @@ test("SKU stable writer and Draft deletion serialize through roots without a chi
       inventoryTracked: true, purchasable: true, sellable: true, suggestedPriceAmount: "150.0000", barcodes: [],
       uoms: rows.map(row => ({ id: Number(row.id), uomId: Number(row.uom_id), toBaseFactor: Number(row.to_base_factor),
         isBase: Boolean(row.is_base), isDefaultSale: Boolean(row.is_default_sale) })) }),
-    post(`${url}/api/v1/items/${fixture.itemId}/delete`, token, { version: 1, reason: "Delete synthetic Draft" })
+    post(`${url}/api/v1/items/${fixture.itemId}/delete`, token, { version: 1, reason: "Delete synthetic Draft", password: PASSWORD })
   ]);
   assert.equal(deleted.status, 200, JSON.stringify(deleted.body));
   assert.ok([200, 404].includes(edited.status), JSON.stringify(edited.body));

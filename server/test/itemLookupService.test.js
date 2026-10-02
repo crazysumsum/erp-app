@@ -173,6 +173,41 @@ test("Sales snapshots reject changed associations, cross-SKU mapping, inactive U
   await assert.rejects(() => service.getSalesSnapshotsInTransaction(saleTransaction(), Array.from({ length: 101 }, (_, i) => ({ skuId: i + 1, skuUomId: i + 1 }))), TypeError);
 });
 
+test("Sales Inventory profiles reuse current snapshots with six caller-only queries for 1/100 SKUs", async () => {
+  for (const count of [1, 100]) {
+    const snapshots = saleTransaction(count);
+    const calls = [];
+    const ids = Array.from({ length: count }, (_, i) => i + 10);
+    const transaction = { async query(sql, params) {
+      calls.push({ sql, params });
+      if (calls.length === 1) return [ids.map(id => ({ sku_id: id, id: id + 81 }))];
+      return snapshots.query(sql, params);
+    } };
+    const database = fakeDatabase([]);
+    const { service } = createService({ database });
+    const profiles = await service.getSalesInventoryProfilesInTransaction(transaction, ids, { atMs: NOW_MS });
+    assert.equal(profiles.size, count);
+    assert.equal(profiles.get(10).salesUom.isBase, true);
+    assert.equal(profiles.get(10).minimumSaleLifeDays, null);
+    assert.equal(calls.length, 6);
+    assert.equal(database.calls.length, 0);
+  }
+});
+
+test("Sales Inventory profile discovery rejects 101 SKUs, missing Base and current Base reassignment", async () => {
+  const { service } = createService({ database: fakeDatabase([]) });
+  const transaction = fakeDatabase([]);
+  await assert.rejects(() => service.getSalesInventoryProfilesInTransaction(transaction, Array.from({ length: 101 }, (_, i) => i + 1)), TypeError);
+  assert.equal(transaction.calls.length, 0);
+  await assert.rejects(() => service.getSalesInventoryProfilesInTransaction(fakeDatabase([[]]), [10]), { code: "UOM_CONVERSION_INVALID" });
+  const current = saleTransaction(1, { mapping: { is_base: 0 } });
+  let calls = 0;
+  await assert.rejects(() => service.getSalesInventoryProfilesInTransaction({ async query(sql, params) {
+    if (calls++ === 0) return [[{ sku_id: 10, id: 91 }]];
+    return current.query(sql, params);
+  } }, [10]), { code: "UOM_CONVERSION_INVALID" });
+});
+
 test("ItemLookupService constructor requires database, logger and time", () => {
   assert.throws(() => new ItemLookupService({}), TypeError);
   assert.throws(() => new ItemLookupService({ database: {} }), TypeError);

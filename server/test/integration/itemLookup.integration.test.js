@@ -154,6 +154,9 @@ test("Sales named lookup and caller snapshots preserve mapping identity and hold
     assert.equal(snapshot.salesUom.skuUomId, fixture.skuUomIdA);
     assert.equal(snapshot.skuVersion, 1);
     assert.equal(snapshot.itemVersion, 1);
+    const inventoryProfiles = await service.getSalesInventoryProfilesInTransaction(transaction, [fixture.skuId]);
+    assert.equal(inventoryProfiles.get(fixture.skuId).salesUom.skuUomId, fixture.skuUomIdA);
+    assert.equal(inventoryProfiles.get(fixture.skuId).salesUom.toBaseFactor, 1);
     for (const [table, id, assignments] of [
       ["item_skus", fixture.skuId, "suggested_price_amount = '200.0000'"],
       ["items", fixture.itemId, "status = 'inactive'"],

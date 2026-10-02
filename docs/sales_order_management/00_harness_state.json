@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 44,
+  "revision": 45,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-001",
-  "current_task": "TASK-009",
+  "current_task": "TASK-010",
   "baseline": {
     "design": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
     "plan": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
@@ -35,7 +35,8 @@
     "TASK-006": "IN_PROGRESS",
     "TASK-007": "IN_PROGRESS",
     "TASK-008": "IN_PROGRESS",
-    "TASK-009": "IN_PROGRESS"
+    "TASK-009": "IN_PROGRESS",
+    "TASK-010": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -776,6 +777,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-BULK-PROFILE-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+      "source_ref": "docs/sales_order_management/implementation/12_item_inventory_profile_checkpoint.md; actual agent final review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-RISK-TASK009-011-20261002"
     }
   ],
   "observations": [
@@ -1361,6 +1374,17 @@
       "source_ref": "implementation/11_item_uom_writer_checkpoint.md; /private/tmp/sales-uom-regression.log",
       "actor": "Codex /root",
       "observed_at": "2026-10-02T04:22:24.524126+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 writer candidate mandatory checks",
+      "code_commit": "c67238ef08c66a8e15076e29d5454bbfbf8938e7",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36964284356; implementation/12_item_inventory_profile_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:02:10.291789+00:00"
     }
   ],
   "pending_decisions": [
@@ -1669,11 +1693,19 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation corrected snapshots + UOM writer",
       "idempotency_key": "sales-uom-writer-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push and gh pr view confirmed c67238ef08c66a8e15076e29d5454bbfbf8938e7; CI36964284356 Test FAIL sole PASSWORD_REQUIRED fixture, other four checks PASS."
+    },
+    {
+      "id": "PUSH-SALES-BULK-PROFILE-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation reviewed bulk profile and password fixture",
+      "idempotency_key": "sales-bulk-profile-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Sam adopted necessary writer scope; local112PASS+independentreviewAPPROVE; realDBCIpending."
+      "source_ref": "Sam adopted TASK009-011; actual independent review APPROVE and44PASS; latestCI remains failed until rerun"
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Push independently reviewed Item writer + Customerfixture correction for real MySQL CI; implement TASK010 bounded manual Inventory batch, then TASK011 foundation. TASK009 stays IN_PROGRESS until database consumer/concurrency checks pass; no local SQL/partial merge."
+  "next_safe_action": "Push only reviewed Item bulk profile/password fixture; finish separately dirty TASK010 batch tests, independent review and CI; then TASK011 foundations. No local SQL/partial merge."
 }
