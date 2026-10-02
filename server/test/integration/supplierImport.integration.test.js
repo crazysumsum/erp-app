@@ -710,3 +710,35 @@ integrationTest("TASK-044: a manager whose permission was withdrawn after the to
   assert.equal((await job(created.job.id)).status, "uploaded", "the cancel did nothing");
   await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [created.job.id]);
 });
+
+integrationTest("TASK-044 (REV-069 M-1): cancel waits for a claim that holds the job, then refuses the job it moved on", async () => {
+  const service = h.worker.importService;
+  const actor = { actorId: h.userId, claimedRoles: [], claimedPermissions: [] };
+  for (const [from, to] of [["uploaded", "validating"], ["queued", "running"]]) {
+    const created = await upload(csv([{ supplierCode: `R-${randomUUID().slice(0, 6)}`, supplierName: "Race", defaultCurrencyCode: "HKD" }]));
+    if (from === "queued") {
+      await h.db.execute("UPDATE supplier_import_jobs SET status = 'queued', confirmed_by = ?, confirmed_at = ? WHERE id = ?",
+        [h.userId, clock, created.id]);
+    }
+    let pending;
+    let settled = false;
+    let settledWhileHeld;
+    // 一個未 commit 嘅 claim：鎖住 job、改咗狀態。Cancel 要等佢，見到新狀態就拒絕。
+    await h.db.withTransaction(async (connection) => {
+      await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [created.id]);
+      await connection.execute("UPDATE supplier_import_jobs SET status = ?, lease_owner = 'race', lease_until = ? WHERE id = ?",
+        [to, clock + 60_000, created.id]);
+      pending = service.cancel({ ...actor, id: created.id, version: 1, root: h.worker.preparedRoot }).then(
+        (value) => ({ value }), (error) => ({ error }));
+      pending.then(() => { settled = true; });
+      await new Promise((resolve) => { setTimeout(resolve, 300); });
+      settledWhileHeld = settled;
+    });
+    const outcome = await pending;
+    assert.equal(settledWhileHeld, false, `${from}: cancel waited for the claim`);
+    assert.equal(outcome.error?.publicCode, "SUPPLIER_IMPORT_NOT_CANCELLABLE", `${from} -> ${to}`);
+    assert.equal((await job(created.id)).status, to);
+    assert.equal(await sourceExists(created.id), true, "the claimed job keeps its source");
+    await h.db.execute("UPDATE supplier_import_jobs SET status = 'failed', lease_owner = '', lease_until = NULL WHERE id = ?", [created.id]);
+  }
+});
