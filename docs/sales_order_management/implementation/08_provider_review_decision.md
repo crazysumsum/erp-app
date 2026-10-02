@@ -36,3 +36,7 @@ Trade-offs：新增provider方法、Item writer必要相容變更與operation記
 Recommendation：選A。Default action在實際答覆前是保留可審查結果，不改shared product code、不配置0068/0069、不做部分Phase merge。精確Item/FK鎖序、worker delegation及formal/Phase驗證仍依相應原gates處理，不能默認通過。
 
 此確認依據 [software-engineering-harness SKILL.md](/Users/sam/.agents/skills/software-engineering-harness/SKILL.md)：「Major impact means ask a human before choosing.」及references/08-implement.md：「Do not silently change architecture, transaction semantics, security model, public interface, data ownership, acceptance criteria, or Phase boundaries.」本次涉及新增internal provider契約、manual batch權限選擇、UOM相容性及migration配額；與已核准的review scope不同。
+
+## 實際人類決策
+
+2026-10-02 current Codex chat，Sam「採納並授權 TASK-009～011 實作」。採納上述選項A及完整reviewed proposal；包含必要Item writer相容及0068／0069檔案配額。不授權local SQL或partial Phase merge。原未核准敘述保留為決策前歷史，精確鎖圖及實作／CI證據仍须實際完成。

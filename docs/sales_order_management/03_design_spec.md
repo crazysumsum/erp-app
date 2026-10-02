@@ -1,3 +1,5 @@
+> 2026-10-02 Sam 已採納 [provider contract proposal](implementation/07_provider_contract_review.md)（reviewed SHA fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e）並授權 TASK-009～011；該採納補充 reserve/release root＋child、replay、完整 release membership及精確鎖序驗證義務。Later Phase、worker delegation、formal/UAT及local SQL未授權；舊 readiness 敘述為歷史觀察。
+
 # Sales Order Management 系統設計規格（Harness Aligned）
 
 ## 0. 文件資訊
@@ -295,11 +297,10 @@ composables/sales/
 使用既定 contract：
 
 ```js
-CustomerLookupService.findById(customerId, { purpose: "new_sale", atMs })
-CustomerLookupService.getCreditPolicy(customerId, { atMs })
+CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { atMs })
 ```
 
-確認點要求 Customer `ACTIVE`。回傳最小 projection：ID、Code、Legal Name、Default Currency、Payment Term、Credit Status／Version；不得回 Bank 或 Address。Credit `ON_HOLD` 阻止確認；Limit／Currency 只產生 warning snapshot，直至 AR Exposure contract 落地。
+確認點用 caller-owned transaction，依 Customer → credit FOR UPDATE 取得一致快照；不得 pool read 或自行 commit。回 customerId／customerCode／legalName／defaultCurrencyCode／defaultPaymentTermId／status／customerVersion 及 credit configured／creditLimit decimal string or null／currencyCode／status／policyVersion，無 Bank、Address、Contact、notes。Owner 實際字面值 `active`／`on_hold`／`not_configured` 由 Sales 明確映射；Customer 非 active 或 credit on_hold 阻止確認。零／未設定 credit 不混淆，limit 僅 advisory，不以 credit currency new_assignment 查詢阻擋。Document Currency／Payment Term 使用既有 BusinessMasterProvider transaction asserts。
 
 #### Item provider
 
@@ -308,10 +309,11 @@ CustomerLookupService.getCreditPolicy(customerId, { atMs })
 ```js
 ItemLookupService.findManyForSale(skuIds, { atMs, purpose: "new_sale" })
 ItemLookupService.findSaleUom(skuId, skuUomId, { atMs })
+ItemLookupService.getSalesSnapshotsInTransaction(transaction, requests, { atMs })
 ItemLookupService.searchForSale({ q, barcode, page, pageSize, atMs })
 ```
 
-回傳 Active／Sellable／effective SKU、SKU／Item display snapshot、Sales UOM、`toBaseFactor`、tracking minimum-sale-life 及 Suggested Price `{amount,currency,taxBasis}`。不同 Currency 不由 Sales 自動換算。
+具名 Sales 用 Item active＋SKU active＋sellable＋有效日期，保留 generic sale 的 discontinued 語意。Confirmation requests `{skuId,skuUomId}` 去重後最多100、常數查詢，skuUomId 為 association ID而非 master uomId。回 Item/SKU版本、display/tracking/minimum-sale-life、mapping/master UOM ID/code/name/status、factor1–1,000,000/default flag及 stored Suggested Price decimal string/null，currency HKD／taxBasis tax_not_applicable；不同 Currency 不換算。必要 Item writer 相容：仍存在的 association 更新原 row 保留 ID；新增才 insert，移除／referenced conversion 依 reference/FK 保護 fail closed，default unique-slot 交換必須維持單一default；不以理由繞過 guard。
 
 #### Inventory provider
 
@@ -320,7 +322,7 @@ ItemLookupService.searchForSale({ q, barcode, page, pageSize, atMs })
 ```js
 InventoryReservationService.reserveAvailableForSalesBatchInTransaction(transaction, command)
 InventoryReservationService.releaseSalesBatchInTransaction(transaction, command)
-InventoryLookupService.getSalesReservationStates(transaction, query)
+InventoryReservationService.getSalesReservationStatesInTransaction(transaction, query)
 ```
 
 `reserveAvailableForSalesBatchInTransaction()` 接受一個 Warehouse 及按 `(skuId, sourceLineId)` 排序的 demand lines。Inventory 在自己的固定 lock order 內鎖 Warehouse／Stock Controls，重新計算 ATP，為每行建立 `0..orderedBaseQuantity` 的確切 Reservation，並回 `reservedBaseQuantity`、`uncoveredBaseQuantity`、`reservationId`。這不是放寬 generic Reservation 的「部分成功」：每個真正建立的 Reservation 仍以其確切數量全有或全無；uncovered demand 由 Sales 建 Backorder。
@@ -1576,9 +1578,9 @@ Detail／Edit routes 不放獨立 Menu item，由 List navigation。Router guard
 
 `convert`：
 
-1. claim operation，鎖 Quotation／Lines，重驗 effective `ISSUED` 及未有 conversion。
+1. claim operation → 取得 SO sequence → 鎖 Quotation／Lines，重驗 effective `ISSUED` 及未有 conversion；失敗同 transaction rollback，不提交空 SO 或號碼。
 2. 接受使用者提交的完整 Draft SO editable input，而非先建空 SO 再更新。
-3. 使用同一 validators 建 SO Header／Lines、分配 SO Number。
+3. 使用同一 validators 建 SO Header／Lines，使用步驟1同 transaction 分配的 SO Number。
 4. 以 SKU ID＋UOM ID 比較 quotation lines 與 target lines，產生固定結構 difference summary：added、removed、quantityChanged、priceChanged；每組只保存 IDs、line numbers、before／after decimal strings。
 5. 插入 conversion unique rows、Quotation `CONVERTED`、雙 Audit 及 operation result，同 transaction commit。
 

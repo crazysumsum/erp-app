@@ -41,7 +41,16 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test/customerLookupService.test.js",
+      "server/test/customerCreditService.test.js",
+      "server/test/itemLookupService.test.js",
+      "server/test/inventoryProviderContracts.test.js",
+      "server/test/inventoryOperationService.test.js",
+      "server/test/inventoryLockService.test.js",
+      "server/test/integration/itemLookup.integration.test.js",
+      "server/test/integration/itemUpdate.integration.test.js",
+      "server/test/integration/itemConcurrency.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -104,7 +113,17 @@
       "server/test/integration/migrations.integration.test.js",
       "server/test/integration/passwordChange.integration.test.js",
       "server/test/integration/roleManagement.integration.test.js",
-      "server/test/integration/userManagement.integration.test.js"
+      "server/test/integration/userManagement.integration.test.js",
+      "server/src/modules/item/ItemAdminService.js",
+      "server/test/customerLookupService.test.js",
+      "server/test/customerCreditService.test.js",
+      "server/test/itemLookupService.test.js",
+      "server/test/inventoryProviderContracts.test.js",
+      "server/test/inventoryOperationService.test.js",
+      "server/test/inventoryLockService.test.js",
+      "server/test/integration/itemLookup.integration.test.js",
+      "server/test/integration/itemUpdate.integration.test.js",
+      "server/test/integration/itemConcurrency.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -116,7 +135,11 @@
       "docs/business_master/**",
       "docs/invoicing_accounts_receivable_management/**"
     ],
-    "schema_paths": [],
+    "schema_paths": [
+      "server/database/migrations/0067_seed_sales_permissions.js",
+      "server/database/migrations/0068_create_sales_document_sequences.js",
+      "server/database/migrations/0069_create_sales_operation_requests.js"
+    ],
     "shared_resources": [
       "global-migration-sequence",
       "authorization-permission-catalogue",

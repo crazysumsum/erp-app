@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 35,
+  "revision": 39,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-009",
   "baseline": {
-    "design": "a2a10a5ce6102a0a6c059d1b896e747a3643a2e711be357340204c9ba3067781",
-    "plan": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
-    "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+    "design": "7024ff059a7e2ac0fe2490372e240fc55a6bae0a87bda3380d3d6f9b4e84badf",
+    "plan": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+    "code_commit": "5f4c9eb8c4723e65af5235ac0f7bebd748388df0",
     "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "ad27a1806071057f7671d2c6a91d47423d13eeea",
@@ -34,7 +34,8 @@
     "TASK-005": "IN_PROGRESS",
     "TASK-006": "IN_PROGRESS",
     "TASK-007": "IN_PROGRESS",
-    "TASK-008": "IN_PROGRESS"
+    "TASK-008": "IN_PROGRESS",
+    "TASK-009": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -388,6 +389,112 @@
         "TASK-009 contract reconciliation and review only",
         "TASK-010 contract reconciliation and review only",
         "TASK-011 contract reconciliation and review only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-DESIGN-20261002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "7024ff059a7e2ac0fe2490372e240fc55a6bae0a87bda3380d3d6f9b4e84badf",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-PLAN-20261002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-SCOPE-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+      "code_commit": null,
+      "scope": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "docs/sales_order_management/**",
+        "docs/customer_management/**",
+        "docs/items_management/**",
+        "docs/inventory_management/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/inventoryValidation.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/customerCreditService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test/sales/**",
+        "server/test-support/fakeSalesDatabase.js",
+        "server/database/migrations/0068_create_sales_document_sequences.js",
+        "server/database/migrations/0069_create_sales_operation_requests.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-RISK-20261002",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
       ],
       "expires_at": null
     }
@@ -1019,6 +1126,28 @@
       "source_ref": "/private/tmp/sales-contract-existing-tests.log; implementation/07_provider_contract_review.md",
       "actor": "Codex /root",
       "observed_at": "2026-10-02T01:33:48.184288+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 docs-only head5f4c9eb, run36951579935: audit/lint/build PASS; browser and MySQL integration IN_PROGRESS. Source fingerprint unchanged, prior062c188 all-five PASS retained as historical evidence only.",
+      "code_commit": "5f4c9eb8c4723e65af5235ac0f7bebd748388df0",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36951579935",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-10-02T01:36:05.563858+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 head5f4c9eb/run36951579935 completed: dependency audit, lint, browser Playwright, server/client + MySQL integration tests and frontend build all PASS; historical candidate only.",
+      "code_commit": "5f4c9eb8c4723e65af5235ac0f7bebd748388df0",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36951579935",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-10-02T03:46:40.053560+00:00"
     }
   ],
   "pending_decisions": [
@@ -1155,6 +1284,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Current Codex chat 2026-10-02 Sam “繼續” in response to TASK009..011 contract reconciliation and review only. Product source implementation, new schema allocation/execution and partial Phase merge are not included."
+    },
+    {
+      "id": "DEC-012",
+      "impact": "MAJOR",
+      "question": "Adopt independently reviewed TASK009..011 provider contract proposal and authorize scoped product implementation including necessary Item writer mapping-ID compatibility, manual Sales batch fresh sales.mgmt, root+line operations, precise lock-order review, and foundation file allocation0068/0069? See implementation/08_provider_review_decision.md and actual asynchronous question. No localSQL/partialPhase merge/laterUI/jobs.",
+      "affected_ids": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge."
     }
   ],
   "external_actions": [
@@ -1291,11 +1432,19 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation reviewed proposal documents",
       "idempotency_key": "sales-contract-review-push-20261002",
-      "status": "PLANNED",
-      "source_ref": "Existing authorized commit/PR publication, current approved contract-review-only scope; no product source or schema changes."
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; gh pr view174 observed head 5f4c9eb8c4723e65af5235ac0f7bebd748388df0"
+    },
+    {
+      "id": "PR-UPDATE-SALES-CONTRACT-REVIEW-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-contract-review-pr-update-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: PR174 describes reviewed5f4c9eb proposal, DEC012 and current CI history."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Reviewed TASK009..011 contract proposal complete; record/publish review docs and pose consolidated owner/implementation decision from08_provider_review_decision.md. Existing product scope remains TASK001..008. No0068/0069 allocation, localSQL, provider source or partialPhase merge before answer."
+  "next_safe_action": "Implement adopted TASK009..011 in thin slices; precise Item/FK graph review before Item source; Customer snapshot independent first. Reconcile canonical approved deltas and fresh main; no local SQL/partial Phase merge."
 }

@@ -1,3 +1,5 @@
+> Current implementation authority: TASK-001～011；2026-10-02 scoped contract adoption supersedes historical TASK-009～011 entry block only. Completion and merge still require all original Phase gates.
+
 # Sales Order Management 開發執行計劃（Harness Aligned）
 
 ## 0. 文件資訊
@@ -89,7 +91,7 @@ npm run verify
 
 ### 1.5.1 本次有限開發範圍的自測契約（候選，待新基線批准）
 
-`PHASE-001 / TASK-001`～`TASK-008` 是唯一擬恢復的實作範圍；`TASK-009`～`TASK-011`、PHASE-001 exit及PHASE-002～005仍未獲本次實作授權。Customer／Inventory已有核心程式碼，不代表Sales provider contract或交易鎖順序已通過owner review。
+2026-10-02 Sam 採納 implementation/07_provider_contract_review.md（reviewed SHA fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e）及08 decision option A，授權 TASK-009～011的 Customer/Item snapshots、必要UOM writer相容、Inventory manual batch及0068／0069 foundation。精確Item/FK鎖圖先審查，實際DB並發／rollback及完整Phase developer/CI/review gate仍須完成；不允許partial Phase merge、local SQL、later Phase或worker delegation。
 
 - Task-local developer checks使用profile新增的`sales-foundation-developer`；它執行既有Upload／authorization regression及`server/test/sales`內的新基礎測試，要求至少6個實際testcase、零skip，並要求`TC-003`～`TC-008`出現在當次JUnit。這些ID只標示DEVELOPER證據，不是正式Technical Acceptance。
 - 新套件目前是已具體列明的待實作命令；Sales測試目錄與案例尚未建立，不能宣稱可執行或PASS。TASK-002～005補齊Upload測試；TASK-006補齊permission/config及fresh actor測試；TASK-007～008補齊數值、validation、state/hash測試。缺任一檔案、ID或案例時fail closed。
