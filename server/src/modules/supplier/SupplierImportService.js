@@ -281,8 +281,9 @@ export class SupplierImportService {
    * 摘要同逐列結果保留。
    *
    * 併發（REV-069）：claim 同 cancel 都鎖 job 行。先用唔鎖嘅讀核對擁有權 —— 唔係自己嘅 job 即刻 404，
-   * 唔會等人哋把鎖（等鎖嘅時間會洩漏 job 存在，L-1）。擁有權唔會變，之後先 `FOR UPDATE`。UPDATE 再帶返
-   * 讀到嘅狀態做條件：就算將來有人拎走把鎖，一個啱啱被 claim 嘅 job 都唔會被改做 cancelled（M-1）。
+   * 唔會等人哋把鎖（等鎖嘅時間會洩漏 job 存在，L-1）。擁有權只會被清走（上載者被刪），唔會轉俾第二個人，
+   * 所以之後用 ID `FOR UPDATE` 就得。UPDATE 再帶返讀到嘅狀態做條件：就算將來有人拎走把鎖，一個啱啱
+   * 被 claim 嘅 job 都唔會被改做 cancelled（M-1）。
    */
   async cancel({ actorId, claimedRoles, claimedPermissions, id, version, root, requestId = "", ip = "" }) {
     if (!positiveInteger(id) || !positiveInteger(version)) throw new TypeError("Supplier import cancel input is invalid");
