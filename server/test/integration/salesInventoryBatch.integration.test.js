@@ -149,16 +149,20 @@ integrationTest("Sales release handles 300 mappings in bounded pages and rolls b
   t.diagnostic(`300-mapping release including consumption: ${Math.round(performance.now() - started)}ms; one caller transaction`);
 });
 
-integrationTest("Sales reserve and release reconcile a lost native COMMIT acknowledgement without duplicate effects", async t => {
+integrationTest("TC-009 Sales reserve and release reconcile a lost native COMMIT acknowledgement without duplicate effects", async t => {
   const f = await setup(t);
   const { url } = await f.app.start();
   const token = await f.app.services.require("jwt").issue({ roles: [], permissions: [] }, {
     subject: String(f.userId), version: await f.app.services.require("tokenRevocation").currentVersion(String(f.userId)),
     authTime: Math.floor(Date.now() / 1000)
   });
+  const headers = { Authorization: `Bearer ${token}` };
+  assert.equal((await fetch(new URL("/api/v1/user/me", url), { headers })).status, 200);
   for (const route of ["/api/sales/orders", "/api/salesOrdersCreate"]) {
-    assert.equal((await fetch(new URL(route, url), { headers: { Authorization: `Bearer ${token}` } })).status, 404,
-      "Phase 0 must not expose a Sales command route to an authenticated actor");
+    const response = await fetch(new URL(route, url), { headers });
+    // The existing dispatcher rejects unregistered /api routes with this fixed 401 envelope.
+    assert.equal(response.status, 401);
+    assert.equal((await response.json()).error.code, "Unauthorized Access");
   }
   const reserve = f.command(70006, { warehouseId: f.warehouseId, expectedOrderVersion: 1,
     lines: [{ sourceLineId: 1, skuId: f.skuIds[0], orderedBaseQuantity: 3, minimumRemainingDays: 0 }] });

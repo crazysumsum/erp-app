@@ -1,28 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 50,
+  "revision": 52,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-001",
   "current_task": "TASK-011",
   "baseline": {
-    "design": "a3883251acdc897e5d485e529cfcdf21e977cb860af7b98c58a209fc0fa73bef",
-    "plan": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
-    "code_commit": "5f59331c482762190816f41f4166054f334cb0a7",
-    "source_fingerprint": "30bec8594508baa546c74520de13a3937656c496abe0fee3cd213d5f1515c5fb",
+    "design": "8a5844f9483b6c6cc54ba4b0c728fb8f77c95f46d8e133c9c98899b723312082",
+    "plan": "677f2f8cff30c0064f18fb427b3a518ec4e1ac91d00bafa1f48dcecec64a4ab3",
+    "code_commit": "c99da0e471c2693801b66dbd510f392f6b5bcdc7",
+    "source_fingerprint": "b272cb2c8c1c5db2128b1f3cd95245aeaa42d8555bd379a595d3ed5c40d627f4",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
-    "instance_id": "sales-foundation-runtime-smz0nz9e",
-    "owner": "Codex /root Sales foundation session",
+    "instance_id": "sales-phase0-hlnxwrb1",
+    "owner": "Codex /root authorized DEC013",
     "resources": {
       "workspace": "/private/tmp/erp-sales-foundation",
-      "temp-directory": "/private/tmp/sales-foundation-runtime-smz0nz9e"
+      "mysql-instance": "/private/tmp/sales-phase0-hlnxwrb1; dedicated per-suite schemas and021/022/025 socket-only instances; /private/tmp/sales-phase0-runtime.json",
+      "temp-directory": "/private/tmp/sales-phase0-hlnxwrb1"
     },
     "lease_ref": null
   },
@@ -874,6 +875,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-PHASE0-CONTRACT-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "8a5844f9483b6c6cc54ba4b0c728fb8f77c95f46d8e133c9c98899b723312082",
+      "source_ref": "Actual independent agent final APPROVE contract DESIGN8a5844/PLAN35f9d8; current fixture code correction requires delta review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -1591,6 +1604,28 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36975679470; implementation/14_foundation_schema_checkpoint.md; actual gh inspection",
       "actor": "GitHub Actions observed via gh",
       "observed_at": "2026-10-02T07:23:29.032679+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "c99 TestFAIL dueexisting /api catchall401 vsfixture404; uploadmemory test passed; otherfourjobsPASS",
+      "code_commit": "c99da0e471c2693801b66dbd510f392f6b5bcdc7",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "30bec8594508baa546c74520de13a3937656c496abe0fee3cd213d5f1515c5fb",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36978401179; /private/tmp/sales-c99-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T07:48:38.776881+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Directdeveloper17suites successfulruns437PASS/0FAIL/0SKIP, lint/build/auditPASS; runtimeenv/prereqfailurespreserved, notregisteredHarness",
+      "code_commit": "c99da0e471c2693801b66dbd510f392f6b5bcdc7",
+      "spec_baseline": "35f9d8b2e2cbf3cfc5a2e90fbe3dd009d199a8fa012ef63121b39bcc910ce1ab",
+      "source_fingerprint": "b272cb2c8c1c5db2128b1f3cd95245aeaa42d8555bd379a595d3ed5c40d627f4",
+      "status": "PASS",
+      "source_ref": "implementation/16_phase0_execution_checkpoint.md; originalprivateJUNIT/observations",
+      "actor": "Codex /root actualcommands",
+      "observed_at": "2026-10-02T07:52:54.877806+00:00"
     }
   ],
   "pending_decisions": [
@@ -1748,8 +1783,8 @@
         "PHASE-001",
         "TASK-011"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat explicit DEC-013 answer: 核准 Phase 0 驗證方案及隔離 MySQL（建議）; adopts implementation/15_phase0_validation_decision.md, final baseline binding pending."
     }
   ],
   "external_actions": [
@@ -1974,11 +2009,27 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation decision/evidence state reconciliation",
       "idempotency_key": "sales-gate-decision-checkpoint-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush and observed CI36978401179 confirm c99da0e471c2693801b66dbd510f392f6b5bcdc7; CI Test failed unknown-route404 fixture; other four PASS."
+    },
+    {
+      "id": "MYSQL-SALES-DEC013-20261002",
+      "kind": "MIGRATION",
+      "target": "Dedicated disposable roots/schemas in /private/tmp/sales-phase0-runtime.json",
+      "idempotency_key": "sales-mysql-dec013-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Current Codex chat explicit DEC-013 answer: 核准 Phase 0 驗證方案及隔離 MySQL（建議）; adopts implementation/15_phase0_validation_decision.md, final baseline binding pending. ActualMySQL26.7.0 ownserver metadata andfullmigrationlogs retained; no existing schema touched. Creation preceded checkpoint; recorded retrospective observation honestly."
+    },
+    {
+      "id": "PUSH-SALES-DEC013-CONTRACT-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation approvedvalidationcontract andnativefixture",
+      "idempotency_key": "sales-dec013-contract-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Bookkeeping only; concreteproposal/code alreadypushed5f59331; mandatoryfinalheadCIneeded."
+      "source_ref": "Existing Sam commit/push/PRauthorization; DEC13contractadoption; allrequiredsuitecommandsdirectlyverified andindependentreview."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Push reconciled decision/evidence checkpoint and updatePR174. Observe finalheadCI; request DEC013 concrete Phase0 developer-contract/private-runtime disposition. Product corrections are authorized; do not apply profile/localSQL/merge before disposition and fullgates."
+  "next_safe_action": "Finish direct native checks, preserve actual failures, final reviewed contract baseline HUMAN binding and registered Harness runs required; exactheadCI andcompletePHASE001 MERGE_READY beforemerge."
 }

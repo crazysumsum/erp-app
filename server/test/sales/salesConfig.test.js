@@ -14,7 +14,7 @@ test("TC-007 Sales deployment config rejects invalid limits and timeout relation
   assert.throws(() => normalizeSalesConfig(defaults));
 });
 
-test("TC-007 error catalogue exposes stable codes and only safe field metadata", () => {
+test("TC-009 Sales error catalogue exposes stable codes and only safe field metadata", () => {
   assert.equal(SALES_ERROR_STATUS.SALES_PRICE_INVALID, 400);
   assert.equal(SALES_ERROR_STATUS.SALES_QUANTITY_INVALID, 400);
   assert.equal(SALES_ERROR_STATUS.SALES_DEPENDENCY_UNAVAILABLE, 503);

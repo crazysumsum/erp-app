@@ -27,7 +27,7 @@ async function setup(t) {
     sequenceConnection: scoped("sales_document_sequences", sequence), operationConnection: scoped("sales_operation_requests", operation) };
 }
 
-integrationTest("Sales foundations create from empty, preserve upgrade data on rerun and reject schema drift", async t => {
+integrationTest("TC-002 Sales foundations create from empty, preserve upgrade data on rerun and reject schema drift", async t => {
   const f = await setup(t);
   assert.equal(await inspectSalesSequenceSchema(f.db), true);
   assert.equal(await inspectSalesOperationSchema(f.db), true);

@@ -50,7 +50,8 @@
       "server/test/inventoryLockService.test.js",
       "server/test/integration/itemLookup.integration.test.js",
       "server/test/integration/itemUpdate.integration.test.js",
-      "server/test/integration/itemConcurrency.integration.test.js"
+      "server/test/integration/itemConcurrency.integration.test.js",
+      "server/test/integration/inventoryTask025Api.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -123,7 +124,8 @@
       "server/test/inventoryLockService.test.js",
       "server/test/integration/itemLookup.integration.test.js",
       "server/test/integration/itemUpdate.integration.test.js",
-      "server/test/integration/itemConcurrency.integration.test.js"
+      "server/test/integration/itemConcurrency.integration.test.js",
+      "server/test/integration/inventoryTask025Api.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -267,7 +269,8 @@
       "lint",
       "client-build",
       "security-audit",
-      "sales-technical"
+      "sales-foundation-developer",
+      "sales-provider-regression"
     ],
     "technical": [
       "sales-technical"

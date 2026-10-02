@@ -54,3 +54,7 @@ Native source files, respectively:
 8. server/test/integration/inventoryStockMovementMigrations.integration.test.js
 9. server/test/integration/inventoryTask022.integration.test.js
 10. server/test/integration/inventoryTask025Api.integration.test.js
+
+## Actual decision disposition
+
+Sam answered DEC-013 in the current Codex chat: 「核准 Phase 0 驗證方案及隔離 MySQL（建議）」. Option A is adopted. The proposal's historical context above is retained; local SQL is now authorized and has actually executed in owned disposable instances. Final DESIGN/PLAN/shared-scope and unchanged NFR014/015 N/A binding remains a separate exact-baseline disposition under step6, without rewriting historical approval hashes.

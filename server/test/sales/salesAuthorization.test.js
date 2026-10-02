@@ -8,7 +8,7 @@ function connection({ active = true, roles = [], permissions = [] } = {}) {
     (sql.includes("SELECT DISTINCT") ? permissions : roles).map((name) => ({ name }))] };
 }
 
-test("Sales foundation permission matrix requires each exact permission, including actors with none", async () => {
+test("TC-003 Sales foundation permission matrix requires each exact permission, including actors with none", async () => {
   for (const granted of [null, ...SALES_PERMISSIONS, "sales.operation"]) {
     for (const required of SALES_PERMISSIONS) {
       const claims = { actorId: 1, claimedRoles: [], claimedPermissions: granted ? [granted] : [] };

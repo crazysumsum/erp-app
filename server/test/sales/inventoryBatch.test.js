@@ -139,7 +139,7 @@ test("Sales batch rollback removes all claims, reservations and controls after a
   await assert.rejects(() => h.run(tx => h.s.reserveAvailableForSalesBatchInTransaction(tx, reserveCommand())), /audit failure/u);
   assert.equal(h.state.operations.length, 0); assert.equal(h.state.reservations.length, 0); assert.equal(h.state.control.reserved_quantity, 0);
 });
-test("Sales batch fails closed on absent or incompatible Item providers and incomplete or UNKNOWN projections", async () => {
+test("TC-001 Sales batch fails closed on absent or incompatible Item providers and incomplete or UNKNOWN projections", async () => {
   for (const lookup of [null, {}, { getSalesInventoryProfilesInTransaction: "old-version" },
     { async getSalesInventoryProfilesInTransaction() { return {}; } },
     ...[{}, { inventoryTracked: true, trackingPolicy: "UNKNOWN", minimumSaleLifeDays: 0 },

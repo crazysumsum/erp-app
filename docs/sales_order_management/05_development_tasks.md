@@ -1855,11 +1855,11 @@ Latest main; Customer/Item/Inventory owners; disk storage/test DB。另須滿足
 
 ### Acceptance criteria
 
-TC-001–010 plus provider/migration/50 MB memory gate。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+Phase 0 developer TC-001–009 foundation assertions plus provider/migration/50 MB memory gate；TC-010 為全部 developer suites、原 coverage floor、當前 CI 與 review 的集合 Gate，不建立假單元測試代表整體 PASS。各案例的 Phase 0 範圍／來源見 implementation/14_foundation_schema_checkpoint.md，未實作的後續 UI／worker 斷言及全部 60 正式案例仍待其 Phase／TEST_AND_VERIFY。全部 required developer assertions 必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
 
 ### Integration and regression
 
-必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+必跑 developer 套件依 PHASE-001 ledger：`lint`、`client-build`、`security-audit`、`sales-foundation-developer`、`sales-provider-regression`、Sales/Item native 與十項具名 Inventory native 回歸。正式 `sales-technical` 全 60 案例保留於 TECHNICAL/REGRESSION。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
 
 ### Git and merge plan
 
@@ -1871,7 +1871,7 @@ One foundation PR or ordered upload/provider/schema PRs; opt-in flags permit saf
 
 ### Exit criteria
 
-全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-001–010 plus provider/migration/50 MB memory gate 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-001–005。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-001–010 plus provider/migration/50 MB memory gate 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：實作／驗證中，DEC-013 已核准 Phase 0 developer 契約與一次性隔離 MySQL；四項具名上游效能驗證依 implementation/15_phase0_validation_decision.md 保留原正式義務，十項 Inventory native 回歸不可 skip。Gate 失敗時須重新執行整個對應 Phase 測試週期。
 
 ## PHASE-002 — Quotation, manual Draft SO, inquiry and accessible UI without Inventory commitment.
 
