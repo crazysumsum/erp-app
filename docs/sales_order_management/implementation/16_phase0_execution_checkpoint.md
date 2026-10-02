@@ -23,3 +23,7 @@ Failures are retained honestly: the first private runtime helper generated diffe
 ## Remaining gate
 
 PLAN_READY currently reports stale/missing current DESIGN, PLAN and unchanged NFR014/015 N/A approvals. Final current-baseline shared-path approvals are also required for MERGE_READY. Historical approvals remain intact. A prospective APR-PHASE0-UATNA-20261002 pointer is prepared for the same unchanged N/A policy; it does not claim a human approval. The reviewed finalized candidate must be presented for the exact-baseline disposition, then run_check must actually execute/register each suite against fresh bindings. Candidate-head changes require fresh CI. Tasks/fullPHASE001 gate remain pending; later product phases, formal60-case execution, UAT and business/release signoffs remain unimplemented/unexecuted.
+
+## Supporting report repair
+
+Actual Harness parsing exposed an ambiguous provider title containing both TC018 and TC027; those are upstream cases, not Sales case evidence. The minimal stdlib Python adapter runs the exact reviewed provider file list, retains original JUnit names/statuses in original-provider-tests.xml and captured stdout, and emits HARNESS_JSON without case-ID claims. Its real rerun197PASS/0FAIL/0SKIP parses successfully through the unchanged Harness parser, with no Sales cases returned. One runnable stdlib unittest verifies mixed statuses, original names, absence of IDs and DTD rejection. Original failed parser observation and reports remain retained; no unrelated provider test was renamed.

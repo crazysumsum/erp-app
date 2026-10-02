@@ -51,7 +51,8 @@
       "server/test/integration/itemLookup.integration.test.js",
       "server/test/integration/itemUpdate.integration.test.js",
       "server/test/integration/itemConcurrency.integration.test.js",
-      "server/test/integration/inventoryTask025Api.integration.test.js"
+      "server/test/integration/inventoryTask025Api.integration.test.js",
+      "server/test-support/salesProviderReport.py"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -73,7 +74,8 @@
       "server/test/integration/sales*.integration.test.js",
       "server/test-support/fakeSalesDatabase.js",
       "client/test/**/sales*.test.js",
-      "client/e2e/sales-order-management/**"
+      "client/e2e/sales-order-management/**",
+      "server/test-support/salesProviderReport.py"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",

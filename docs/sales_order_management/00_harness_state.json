@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 52,
+  "revision": 53,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-001",
   "current_task": "TASK-011",
   "baseline": {
-    "design": "8a5844f9483b6c6cc54ba4b0c728fb8f77c95f46d8e133c9c98899b723312082",
-    "plan": "677f2f8cff30c0064f18fb427b3a518ec4e1ac91d00bafa1f48dcecec64a4ab3",
-    "code_commit": "c99da0e471c2693801b66dbd510f392f6b5bcdc7",
-    "source_fingerprint": "b272cb2c8c1c5db2128b1f3cd95245aeaa42d8555bd379a595d3ed5c40d627f4",
+    "design": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
+    "plan": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+    "code_commit": "069327e8ed2e9527828b22de33158808dfad49d6",
+    "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
     "worktree": "/private/tmp/erp-sales-foundation",
     "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -883,6 +883,18 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "8a5844f9483b6c6cc54ba4b0c728fb8f77c95f46d8e133c9c98899b723312082",
       "source_ref": "Actual independent agent final APPROVE contract DESIGN8a5844/PLAN35f9d8; current fixture code correction requires delta review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PHASE0-REPORT-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
+      "source_ref": "Actual independent final APPROVE repairedtechnicalbaseline DESIGN9cb5c5/PLANe24686, independently197providerresults/adapterunittest/trace PASS; packet17pathlistpopulated afterreview, hashesunchanged",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1785,6 +1797,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Current Codex chat explicit DEC-013 answer: 核准 Phase 0 驗證方案及隔離 MySQL（建議）; adopts implementation/15_phase0_validation_decision.md, final baseline binding pending."
+    },
+    {
+      "id": "DEC-014",
+      "impact": "MAJOR",
+      "question": "Final reviewed Phase0 DESIGN9cb5c5/PLANe24686 and43sharedpaths plusunchangedNFR014/015 UAT_NA binding; implementation/17_phase0_baseline_binding.md; actual asynchronous question. No repeatedSQL/commit/PR/providerdecision.",
+      "affected_ids": [
+        "PHASE-001",
+        "NFR-014",
+        "NFR-015"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -2025,11 +2049,19 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation approvedvalidationcontract andnativefixture",
       "idempotency_key": "sales-dec013-contract-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitpush succeeded069327e8ed2e9527828b22de33158808dfad49d6; laterreportparsercorrection necessary, retained."
+    },
+    {
+      "id": "PUSH-SALES-REPORT-ADAPTER-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation finalreviewedexecutioncontract",
+      "idempotency_key": "sales-final-report-adapter-push-20261002",
       "status": "PLANNED",
-      "source_ref": "Existing Sam commit/push/PRauthorization; DEC13contractadoption; allrequiredsuitecommandsdirectlyverified andindependentreview."
+      "source_ref": "Existingauthorization; actualindependentfinalreview, completeconcretepacket17; finalcurrentheadCIrequired."
     }
   ],
   "evidence_files": [],
   "defects": [],
-  "next_safe_action": "Finish direct native checks, preserve actual failures, final reviewed contract baseline HUMAN binding and registered Harness runs required; exactheadCI andcompletePHASE001 MERGE_READY beforemerge."
+  "next_safe_action": "Await actualDEC014finalbaselineanswer forregisteredHarness; meanwhile finishauthorizedpush/currentheadCI/freshdisposablebindingpreparation. No merge until completePHASE001gate."
 }
