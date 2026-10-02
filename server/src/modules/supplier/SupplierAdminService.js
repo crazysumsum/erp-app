@@ -104,6 +104,37 @@ function requireReason(value, message = "這項修改必須填寫原因") {
   return reason;
 }
 
+/** 建立同更新共用嘅欄位正規化；錯就拋 domain 錯誤。 */
+function updateFields(input) {
+  return {
+    name: normalizeSupplierName(input.supplierName),
+    displayName: normalizeSupplierOptionalText(input.displayName, { field: "displayName", maxLength: 190 }),
+    website: normalizeSupplierUrl(input.website),
+    email: normalizeContactEmail(input.generalEmail),
+    generalPhone: normalizeSupplierOptionalText(input.generalPhone, { field: "generalPhone", maxLength: 50 }),
+    notes: normalizeSupplierOptionalText(input.notes, { field: "notes", maxLength: 2000 })
+  };
+}
+
+function createFields(input) {
+  const writable = {
+    supplierCode: input.supplierCode,
+    supplierName: input.supplierName,
+    displayName: input.displayName,
+    defaultCurrencyCode: input.defaultCurrencyCode,
+    defaultCurrencyVersion: input.defaultCurrencyVersion,
+    defaultPaymentTermId: input.defaultPaymentTermId,
+    defaultPaymentTermVersion: input.defaultPaymentTermVersion,
+    website: input.website,
+    generalPhone: input.generalPhone,
+    generalEmail: input.generalEmail,
+    notes: input.notes,
+    activate: input.activate
+  };
+  assertKnownSupplierFields(Object.fromEntries(Object.entries(writable).filter(([, value]) => value !== undefined)));
+  return { code: normalizeSupplierCode(input.supplierCode), ...updateFields(input) };
+}
+
 function assertExpectedVersion(current, expected) {
   if (Number(current.version) !== Number(expected)) {
     throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
@@ -142,248 +173,151 @@ export class SupplierAdminService {
   }
 
   async createSupplier(input) {
-    const writable = {
-      supplierCode: input.supplierCode,
-      supplierName: input.supplierName,
-      displayName: input.displayName,
-      defaultCurrencyCode: input.defaultCurrencyCode,
-      defaultCurrencyVersion: input.defaultCurrencyVersion,
-      defaultPaymentTermId: input.defaultPaymentTermId,
-      defaultPaymentTermVersion: input.defaultPaymentTermVersion,
-      website: input.website,
-      generalPhone: input.generalPhone,
-      generalEmail: input.generalEmail,
-      notes: input.notes,
-      activate: input.activate
-    };
-    assertKnownSupplierFields(Object.fromEntries(Object.entries(writable).filter(([, value]) => value !== undefined)));
-    const code = normalizeSupplierCode(input.supplierCode);
-    const name = normalizeSupplierName(input.supplierName);
-    const displayName = normalizeSupplierOptionalText(input.displayName, { field: "displayName", maxLength: 190 });
-    const website = normalizeSupplierUrl(input.website);
-    const email = normalizeContactEmail(input.generalEmail);
-    const generalPhone = normalizeSupplierOptionalText(input.generalPhone, { field: "generalPhone", maxLength: 50 });
-    const notes = normalizeSupplierOptionalText(input.notes, { field: "notes", maxLength: 2000 });
-    let duplicateCandidates = [];
-
-    let supplierId;
+    // 喺開 transaction 之前驗輸入，錯咗唔使掂資料庫；helper 入面會再做一次。
+    createFields(input);
+    let created;
     try {
-      supplierId = await this.database.withTransaction(async (connection) => {
+      created = await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, {
           actorId: input.actorId,
           claimedRoles: input.claimedRoles,
           claimedPermissions: input.claimedPermissions
         });
-        // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
-        // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
-        // currencies -> settings，而 #changeStatus 係 settings -> currencies，夾埋一個
-        // 等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK。
-        const activationRequested = Boolean(input.activate);
-        const approvalRequired = activationRequested && await this.approvalRequired(connection);
-        const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
-          currencyCode: input.defaultCurrencyCode,
-          currencyVersion: input.defaultCurrencyVersion,
-          paymentTermId: input.defaultPaymentTermId ?? null,
-          paymentTermVersion: input.defaultPaymentTermVersion,
-          purpose: "new_assignment"
-        });
-        const [[existing]] = await connection.query(
-          "SELECT id FROM suppliers WHERE supplier_code_key = ? LIMIT 1",
-          [code.key]
-        );
-        if (existing) {
-          throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
-        }
-        duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
-        // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
-        // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
-        if (!approvalRequired && input.approverUserId !== undefined && input.approverUserId !== null) {
-          throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
-        }
-        if (activationRequested) {
-          assertSupplierActivatable({
-            supplierCode: code.value,
-            supplierName: name.value,
-            status: "draft",
-            defaultCurrency: defaults.currency
-          });
-        }
-        const status = activationRequested ? (approvalRequired ? "pending_approval" : "active") : "draft";
-        const nowMs = this.time.nowMs();
-        const [result] = await connection.execute(
-          `INSERT INTO suppliers
-            (supplier_code, supplier_code_key, supplier_name, supplier_name_key, display_name,
-             default_currency_code, default_payment_term_id, website, general_phone, general_email,
-             notes, status, version, created_at, updated_at, created_by, updated_by)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
-          [
-            code.value, code.key, name.value, name.key, displayName,
-            defaults.currency.code, defaults.paymentTerm?.id ?? null, website,
-            generalPhone, email.value, notes,
-            status, nowMs, nowMs, input.actorId, input.actorId
-          ]
-        );
-        const id = Number(result.insertId);
-        await this.replaceNameGrams(connection, id, name.key);
-        if (approvalRequired) {
-          // 新建嘅 Supplier 仲未有 identifier，所以 snapshot 淨係得 root 欄位。
-          await this.approvals.openRequest(connection, {
-            supplierId: id,
-            supplierVersion: 1,
-            actorId: input.actorId,
-            actorUsername: actor.username,
-            approverUserId: input.approverUserId,
-            summary: buildApprovalSummary({
-              supplier_code: code.value, supplier_name: name.value, display_name: displayName,
-              default_currency_code: defaults.currency.code, default_payment_term_id: defaults.paymentTerm?.id ?? null
-            }),
-            requestNote: input.requestNote,
-            requestId: input.requestId,
-            ip: input.ip
-          });
-        }
-        await this.audit.record(connection, {
-          actorUserId: input.actorId,
-          actorUsername: actor.username,
-          action: "supplier.create",
-          targetType: "supplier",
-          targetId: id,
-          supplierId: id,
-          targetLabel: code.value,
-          detail: { after: { status, currencyCode: defaults.currency.code, paymentTermId: defaults.paymentTerm?.id ?? null } },
-          requestId: input.requestId,
-          ip: input.ip
-        });
-        return id;
+        return this.createSupplierInTransaction(connection, { actor, input });
       });
     } catch (error) {
       if (duplicateEntry(error)) {
-        throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
+        throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: normalizeSupplierCode(input.supplierCode).value });
       }
       throw error;
     }
 
-    const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [supplierId]);
-    if (!row) throw supplierNotFound(supplierId);
+    const [[row]] = await this.database.query("SELECT * FROM suppliers WHERE id = ?", [created.id]);
+    if (!row) throw supplierNotFound(created.id);
     const warnings = supplierCompletenessWarnings({ defaultPaymentTermId: row.default_payment_term_id });
-    return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates };
+    return { ...toSupplierDetailResponse(row, { warnings }), duplicateCandidates: created.duplicateCandidates };
+  }
+
+  /**
+   * 建立嘅核心，喺 caller 嘅 transaction 入面做（CSV 匯入同 Supplier、marker 一齊 commit，HD-060 2A）。
+   *
+   * - `actor`：已經驗過嘅 `{ username }`。
+   * - `approvalRequired(connection)`：預設讀設定（`FOR SHARE`）；匯入用 confirm 嗰陣嘅 snapshot（AC-013）。
+   * - `addChildren(supplierId)`：Supplier 插入之後、開審批申請之前寫子資料，所以申請嘅 snapshot 包括
+   *   同一次建立嘅 Identifier。
+   *
+   * 回 `{ id, duplicateCandidates }`。
+   */
+  async createSupplierInTransaction(connection, { actor, input, approvalRequired = this.approvalRequired, addChildren = null }) {
+    const { code, name, displayName, website, email, generalPhone, notes } = createFields(input);
+    // 設計 2.6 嘅鎖序由 settings 行先。Business Master 會攞 currencies 嘅 X 鎖，
+    // 所以政策讀取（settings 嘅 S 鎖）一定要喺佢之前 —— 否則 createSupplier 係
+    // currencies -> settings，而 #changeStatus 係 settings -> currencies，夾埋一個
+    // 等緊 settings X 嘅 updateSettings 就砌成三方循環，實測會 ER_LOCK_DEADLOCK。
+    const activationRequested = Boolean(input.activate);
+    const needsApproval = activationRequested && await approvalRequired(connection);
+    const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
+      currencyCode: input.defaultCurrencyCode,
+      currencyVersion: input.defaultCurrencyVersion,
+      paymentTermId: input.defaultPaymentTermId ?? null,
+      paymentTermVersion: input.defaultPaymentTermVersion,
+      purpose: "new_assignment"
+    });
+    const [[existing]] = await connection.query(
+      "SELECT id FROM suppliers WHERE supplier_code_key = ? LIMIT 1",
+      [code.key]
+    );
+    if (existing) {
+      throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
+    }
+    const duplicateCandidates = await this.duplicates.find(connection, { nameKey: name.key });
+    // 設計 4.4：設定開啟時 draft -> pending_approval，關閉時 draft -> active。
+    // 政策喺提交嗰一刻讀一次並且 snapshot 落 request，所以之後改設定唔追溯。
+    if (!needsApproval && input.approverUserId !== undefined && input.approverUserId !== null) {
+      throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
+    }
+    if (activationRequested) {
+      assertSupplierActivatable({
+        supplierCode: code.value,
+        supplierName: name.value,
+        status: "draft",
+        defaultCurrency: defaults.currency
+      });
+    }
+    const status = activationRequested ? (needsApproval ? "pending_approval" : "active") : "draft";
+    const nowMs = this.time.nowMs();
+    let result;
+    try {
+      [result] = await connection.execute(
+        `INSERT INTO suppliers
+          (supplier_code, supplier_code_key, supplier_name, supplier_name_key, display_name,
+           default_currency_code, default_payment_term_id, website, general_phone, general_email,
+           notes, status, version, created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+        [
+          code.value, code.key, name.value, name.key, displayName,
+          defaults.currency.code, defaults.paymentTerm?.id ?? null, website,
+          generalPhone, email.value, notes,
+          status, nowMs, nowMs, input.actorId, input.actorId
+        ]
+      );
+    } catch (error) {
+      // 同一個 transaction 入面撞 unique：轉做 domain 錯誤，唔好俾 caller 包成 500。
+      if (duplicateEntry(error)) throw supplierConflict("SUPPLIER_CODE_TAKEN", "這個 Supplier Code 已被使用", { supplierCode: code.value });
+      throw error;
+    }
+    const id = Number(result.insertId);
+    await this.replaceNameGrams(connection, id, name.key);
+    if (addChildren) await addChildren(id);
+    if (needsApproval) {
+      const [identifiers] = await connection.query(
+        "SELECT identifier_type, issuer_country_code, identifier_value FROM supplier_identifiers WHERE supplier_id = ? ORDER BY id",
+        [id]
+      );
+      await this.approvals.openRequest(connection, {
+        supplierId: id,
+        supplierVersion: 1,
+        actorId: input.actorId,
+        actorUsername: actor.username,
+        approverUserId: input.approverUserId,
+        summary: buildApprovalSummary({
+          supplier_code: code.value, supplier_name: name.value, display_name: displayName,
+          default_currency_code: defaults.currency.code, default_payment_term_id: defaults.paymentTerm?.id ?? null
+        }, identifiers),
+        requestNote: input.requestNote,
+        requestId: input.requestId,
+        ip: input.ip
+      });
+    }
+    await this.audit.record(connection, {
+      actorUserId: input.actorId,
+      actorUsername: actor.username,
+      action: "supplier.create",
+      targetType: "supplier",
+      targetId: id,
+      supplierId: id,
+      targetLabel: code.value,
+      detail: { after: { status, currencyCode: defaults.currency.code, paymentTermId: defaults.paymentTerm?.id ?? null } },
+      requestId: input.requestId,
+      ip: input.ip
+    });
+    return { id, duplicateCandidates };
   }
 
   async updateSupplier(input) {
     if (Object.hasOwn(input, "supplierCode")) {
       throw supplierConflict("SUPPLIER_CODE_CHANGE_REQUIRED", "Supplier Code 只能透過受控修正功能修改");
     }
-    const name = normalizeSupplierName(input.supplierName);
-    const displayName = normalizeSupplierOptionalText(input.displayName, { field: "displayName", maxLength: 190 });
-    const website = normalizeSupplierUrl(input.website);
-    const email = normalizeContactEmail(input.generalEmail);
-    const generalPhone = normalizeSupplierOptionalText(input.generalPhone, { field: "generalPhone", maxLength: 50 });
-    const notes = normalizeSupplierOptionalText(input.notes, { field: "notes", maxLength: 2000 });
-    let duplicateCandidates = [];
-    let approvalInvalidated = false;
-
+    // 喺開 transaction 之前驗輸入；helper 入面會再做一次。
+    updateFields(input);
+    let outcome;
     await this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, {
         actorId: input.actorId,
         claimedRoles: input.claimedRoles,
         claimedPermissions: input.claimedPermissions
       });
-      const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
-      if (!current) throw supplierNotFound(input.id);
-      assertExpectedVersion(current, input.version);
-      if (current.status === "archived") {
-        throw supplierConflict("SUPPLIER_UPDATE_NOT_ALLOWED", "已封存供應商不可修改一般資料", { status: current.status });
-      }
-
-      const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
-        currencyCode: input.defaultCurrencyCode,
-        currencyVersion: input.defaultCurrencyVersion,
-        paymentTermId: input.defaultPaymentTermId ?? null,
-        paymentTermVersion: input.defaultPaymentTermVersion,
-        purpose: "new_assignment"
-      });
-      const currencyChanged = current.default_currency_code !== defaults.currency.code;
-      const reason = currencyChanged ? requireReason(input.reason, "修改預設幣別必須填寫原因") : String(input.reason ?? "").trim();
-      duplicateCandidates = (await this.duplicates.find(connection, { nameKey: name.key }))
-        .filter((candidate) => Number(candidate.supplierId) !== Number(input.id));
-      const nowMs = this.time.nowMs();
-      const next = {
-        supplierName: name.value,
-        displayName,
-        defaultCurrencyCode: defaults.currency.code,
-        defaultPaymentTermId: defaults.paymentTerm?.id ?? null,
-        website,
-        generalPhone,
-        generalEmail: email.value,
-        notes
-      };
-      const [result] = await connection.execute(
-        `UPDATE suppliers
-            SET supplier_name = ?, supplier_name_key = ?, display_name = ?, default_currency_code = ?,
-                default_payment_term_id = ?, website = ?, general_phone = ?, general_email = ?, notes = ?,
-                version = version + 1, updated_at = ?, updated_by = ?
-          WHERE id = ? AND version = ?`,
-        [
-          next.supplierName, name.key, next.displayName, next.defaultCurrencyCode,
-          next.defaultPaymentTermId, next.website, next.generalPhone, next.generalEmail, next.notes,
-          nowMs, input.actorId, input.id, input.version
-        ]
-      );
-      if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
-      if (current.supplier_name_key !== name.key) await this.replaceNameGrams(connection, input.id, name.key);
-      // 設計 4.5：Pending 期間改動任何 approval-significant 欄位，原申請即時失效、
-      // Supplier 回 draft，全部喺同一個交易入面，再回 approvalInvalidated: true。
-      // Address／Contact／Notes／Bank 唔喺內，所以佢哋改動唔會令申請失效。
-      if (current.status === "pending_approval") {
-        const changedSignificant = SIGNIFICANT_UPDATE_FIELDS
-          .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
-          .map(([, name_]) => name_);
-        if (changedSignificant.length > 0) {
-          await this.approvals.invalidateForSignificantChange(connection, {
-            supplierId: input.id,
-            actorId: input.actorId,
-            actorUsername: actor.username,
-            supplierCode: current.supplier_code,
-            changedFields: changedSignificant,
-            reason,
-            requestId: input.requestId,
-            ip: input.ip
-          });
-          approvalInvalidated = true;
-        } else {
-          // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
-          // request 記住嗰個 version，否則佢會永遠 stale。
-          await this.approvals.syncOpenRequestSupplierVersion(connection, {
-            supplierId: input.id,
-            supplierVersion: Number(current.version) + 1
-          });
-        }
-      }
-      await this.audit.record(connection, {
-        actorUserId: input.actorId,
-        actorUsername: actor.username,
-        action: "supplier.update",
-        targetType: "supplier",
-        targetId: input.id,
-        supplierId: input.id,
-        targetLabel: current.supplier_code,
-        reason,
-        detail: {
-          before: {
-            supplierName: current.supplier_name,
-            displayName: current.display_name,
-            defaultCurrencyCode: current.default_currency_code,
-            defaultPaymentTermId: current.default_payment_term_id,
-            website: current.website,
-            generalPhone: current.general_phone,
-            generalEmail: current.general_email,
-            notes: current.notes
-          },
-          after: next
-        },
-        requestId: input.requestId,
-        ip: input.ip
-      });
+      outcome = await this.updateSupplierInTransaction(connection, { actor, input });
     });
 
     const detail = await this.getSupplier({
@@ -392,7 +326,113 @@ export class SupplierAdminService {
       claimedPermissions: input.claimedPermissions,
       id: input.id
     });
-    return { ...detail, duplicateCandidates, approvalInvalidated };
+    return { ...detail, ...outcome };
+  }
+
+  /**
+   * 更新嘅核心，喺 caller 嘅 transaction 入面做（HD-060 2A）。`input` 要帶齊所有一般欄位同
+   * `version`；回 `{ duplicateCandidates, approvalInvalidated }`。
+   */
+  async updateSupplierInTransaction(connection, { actor, input }) {
+    const { name, displayName, website, email, generalPhone, notes } = updateFields(input);
+    let approvalInvalidated = false;
+    const [[current]] = await connection.query("SELECT * FROM suppliers WHERE id = ? FOR UPDATE", [input.id]);
+    if (!current) throw supplierNotFound(input.id);
+    assertExpectedVersion(current, input.version);
+    if (current.status === "archived") {
+      throw supplierConflict("SUPPLIER_UPDATE_NOT_ALLOWED", "已封存供應商不可修改一般資料", { status: current.status });
+    }
+
+    const defaults = await this.businessMaster.assertSupplierDefaultsInTransaction(connection, {
+      currencyCode: input.defaultCurrencyCode,
+      currencyVersion: input.defaultCurrencyVersion,
+      paymentTermId: input.defaultPaymentTermId ?? null,
+      paymentTermVersion: input.defaultPaymentTermVersion,
+      purpose: "new_assignment"
+    });
+    const currencyChanged = current.default_currency_code !== defaults.currency.code;
+    const reason = currencyChanged ? requireReason(input.reason, "修改預設幣別必須填寫原因") : String(input.reason ?? "").trim();
+    const duplicateCandidates = (await this.duplicates.find(connection, { nameKey: name.key }))
+      .filter((candidate) => Number(candidate.supplierId) !== Number(input.id));
+    const nowMs = this.time.nowMs();
+    const next = {
+      supplierName: name.value,
+      displayName,
+      defaultCurrencyCode: defaults.currency.code,
+      defaultPaymentTermId: defaults.paymentTerm?.id ?? null,
+      website,
+      generalPhone,
+      generalEmail: email.value,
+      notes
+    };
+    const [result] = await connection.execute(
+      `UPDATE suppliers
+          SET supplier_name = ?, supplier_name_key = ?, display_name = ?, default_currency_code = ?,
+              default_payment_term_id = ?, website = ?, general_phone = ?, general_email = ?, notes = ?,
+              version = version + 1, updated_at = ?, updated_by = ?
+        WHERE id = ? AND version = ?`,
+      [
+        next.supplierName, name.key, next.displayName, next.defaultCurrencyCode,
+        next.defaultPaymentTermId, next.website, next.generalPhone, next.generalEmail, next.notes,
+        nowMs, input.actorId, input.id, input.version
+      ]
+    );
+    if (result.affectedRows === 0) throw supplierConflict("VERSION_CONFLICT", "供應商已被其他人修改，請重新載入");
+    if (current.supplier_name_key !== name.key) await this.replaceNameGrams(connection, input.id, name.key);
+    // 設計 4.5：Pending 期間改動任何 approval-significant 欄位，原申請即時失效、
+    // Supplier 回 draft，全部喺同一個交易入面，再回 approvalInvalidated: true。
+    // Address／Contact／Notes／Bank 唔喺內，所以佢哋改動唔會令申請失效。
+    if (current.status === "pending_approval") {
+      const changedSignificant = SIGNIFICANT_UPDATE_FIELDS
+        .filter(([field]) => String(current[field] ?? "") !== String(next[NEXT_FIELD_NAMES[field]] ?? ""))
+        .map(([, name_]) => name_);
+      if (changedSignificant.length > 0) {
+        await this.approvals.invalidateForSignificantChange(connection, {
+          supplierId: input.id,
+          actorId: input.actorId,
+          actorUsername: actor.username,
+          supplierCode: current.supplier_code,
+          changedFields: changedSignificant,
+          reason,
+          requestId: input.requestId,
+          ip: input.ip
+        });
+        approvalInvalidated = true;
+      } else {
+        // 唔顯著嘅改動唔會令申請失效，但 version 已經 bump 咗，所以要同步返
+        // request 記住嗰個 version，否則佢會永遠 stale。
+        await this.approvals.syncOpenRequestSupplierVersion(connection, {
+          supplierId: input.id,
+          supplierVersion: Number(current.version) + 1
+        });
+      }
+    }
+    await this.audit.record(connection, {
+      actorUserId: input.actorId,
+      actorUsername: actor.username,
+      action: "supplier.update",
+      targetType: "supplier",
+      targetId: input.id,
+      supplierId: input.id,
+      targetLabel: current.supplier_code,
+      reason,
+      detail: {
+        before: {
+          supplierName: current.supplier_name,
+          displayName: current.display_name,
+          defaultCurrencyCode: current.default_currency_code,
+          defaultPaymentTermId: current.default_payment_term_id,
+          website: current.website,
+          generalPhone: current.general_phone,
+          generalEmail: current.general_email,
+          notes: current.notes
+        },
+        after: next
+      },
+      requestId: input.requestId,
+      ip: input.ip
+    });
+    return { duplicateCandidates, approvalInvalidated };
   }
 
   async changeSupplierCode(input) {

@@ -1,5 +1,6 @@
-import { assertActorFresh } from "../authorization/directoryLookups.js";
+import { assertActorFresh, loadPermissionNamesForUser } from "../authorization/directoryLookups.js";
 import { removeSupplierImportFile, writeSupplierImportSource } from "../../services/supplierImport/supplierImportFiles.js";
+import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierImportError } from "./supplierErrors.js";
 import { SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
@@ -103,6 +104,8 @@ function positiveInteger(value) {
 export const IMPORT_ROW_STATUSES = Object.freeze(["valid", "warning", "invalid", "applied", "failed", "skipped"]);
 // 取消只限未開始預檢或執行嘅 job（HD-058 2A）：validating 要等預檢做完，running 之後已經寫緊 Supplier。
 export const CANCELLABLE_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors", "queued"]);
+const CONFIRMABLE_JOB_STATUSES = Object.freeze(["ready", "ready_with_errors"]);
+const ACTIVATION_MODES = Object.freeze(["draft", "activate"]);
 // 預檢未完成就冇列俾人睇：validating 嘅列可能係做到一半、之後會被刪嘅批次（REV-068 I-2）。
 const ROWS_HIDDEN_STATUSES = new Set(["uploaded", "validating"]);
 const MAX_PAGE_SIZE = 100;
@@ -113,6 +116,16 @@ function paging(page, pageSize) {
     throw new TypeError("Supplier import paging is invalid");
   }
   return { page, pageSize, offset };
+}
+
+/**
+ * Confirm 嗰陣嘅審批設定（值同 version），`FOR SHARE`：同一個 transaction 入面唔會變，設定寫入要等 confirm 做完。
+ * 可以注入：設定係全庫共用嘅 singleton，測試唔可以 commit 改佢（見 supplierSettings 整合測試）。
+ */
+async function readActivationPolicySnapshot(connection) {
+  const [[setting]] = await connection.query("SELECT require_activation_approval, version FROM supplier_settings WHERE id = 1 FOR SHARE");
+  if (!setting) throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
+  return { value: Number(setting.require_activation_approval), version: Number(setting.version) };
 }
 
 // 唔係自己嘅 job 同唔存在嘅 job 答案一樣，唔洩漏存在性（HD-058 1A）。
@@ -140,7 +153,17 @@ function assertLease(job, leaseOwner, nowMs, status = "running") {
  * 內部 message（可能帶 CSV 或 SQL 值）都唔可以落入結果（REV-061 M-1）。
  */
 const GENERIC_PUBLIC_CODES = new Set(["INTERNAL_SERVER_ERROR", "SERVICE_UNAVAILABLE"]);
+// 暫時性錯誤（HD-060 4A）：deadlock、等鎖逾時、transaction 或者 query 逾時。嗰列唔重試，用一個分得出嘅
+// code 話俾用家知可以重新匯入。錯誤可能包咗幾層，逐層睇 code。
+const BUSY_CODES = new Set(["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT", "DATABASE_TRANSACTION_TIMEOUT", "DATABASE_QUERY_TIMEOUT"]);
+function busy(error) {
+  for (let link = error, depth = 0; link && depth < 5; link = link.cause, depth += 1) {
+    if (BUSY_CODES.has(link.code)) return true;
+  }
+  return false;
+}
 function rowError(error) {
+  if (busy(error)) return [{ code: "SUPPLIER_IMPORT_ROW_BUSY", message: "資料暫時被其他操作佔用，請稍後重新匯入此列" }];
   const code = error?.publicCode;
   return !code || GENERIC_PUBLIC_CODES.has(code)
     ? [{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]
@@ -180,7 +203,8 @@ function rowConnection(connection) {
 }
 
 export class SupplierImportService {
-  constructor({ database, time, logger = null, authorize = assertActorFresh, audit } = {}) {
+  constructor({ database, time, logger = null, authorize = assertActorFresh, audit, approvals,
+    loadPermissions = loadPermissionNamesForUser, activationPolicy = readActivationPolicySnapshot } = {}) {
     if (!database || !time) throw new TypeError("SupplierImportService requires database and time");
     this.database = database;
     this.time = time;
@@ -188,6 +212,9 @@ export class SupplierImportService {
     this.authorize = authorize;
     // SupplierAuditLogService.record 唔用 logger；worker 單元測試冇 logger 都要建到。
     this.audit = audit ?? new SupplierAuditLogService({ database, logger: logger ?? {}, time });
+    this.approvals = approvals ?? new SupplierApprovalService({ database, logger: logger ?? {}, time, audit: this.audit });
+    this.loadPermissions = loadPermissions;
+    this.activationPolicy = activationPolicy;
   }
 
   /**
@@ -324,6 +351,58 @@ export class SupplierImportService {
         { jobId: id, storedName: sourceStoredName, code: cleanupError?.code ?? null });
     }
     return summary;
+  }
+
+  /**
+   * 確認（T45；設計 §6.9、§8.8）：只限上載者（HD-060 1A，同 cancel 一樣先用唔鎖嘅讀核對擁有權）、只限
+   * ready／ready_with_errors 而 version 對得上。同一個 transaction 保存模式、當時嘅審批設定值同 version、
+   * 審批人同確認人，轉 queued；執行用呢份 snapshot，之後改設定唔追溯（AC-013）。啟用而設定要審批，就要
+   * 一位而家仍然有資格、而且唔係確認人嘅審批人（BR-012）。
+   */
+  async confirm({ actorId, claimedRoles, claimedPermissions, id, version, activationMode, approverUserId = null,
+    requestId = "", ip = "" }) {
+    if (!positiveInteger(id) || !positiveInteger(version) || !ACTIVATION_MODES.includes(activationMode) ||
+        (approverUserId !== null && !positiveInteger(approverUserId))) {
+      throw new TypeError("Supplier import confirm input is invalid");
+    }
+    return this.database.withTransaction(async (connection) => {
+      const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const [[owned]] = await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? AND created_by = ?", [id, actorId]);
+      if (!owned) throw importJobNotFound();
+      const [[job]] = await connection.query("SELECT id, status, version FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [id]);
+      if (!CONFIRMABLE_JOB_STATUSES.includes(job.status)) {
+        throw supplierConflict("SUPPLIER_IMPORT_NOT_CONFIRMABLE", "匯入工作尚未完成預檢或已確認，不可確認");
+      }
+      if (Number(job.version) !== version) throw supplierConflict("VERSION_CONFLICT", "匯入工作已被其他人修改，請重新載入");
+      const setting = await this.activationPolicy(connection);
+      const approvalRequired = activationMode === "activate" && setting.value === 1;
+      let approver = null;
+      if (approvalRequired) {
+        approver = await this.approvals.assertEligibleApprover(connection, { approverUserId, requesterId: actorId });
+      } else if (approverUserId !== null) {
+        throw invalidSupplierInput("APPROVER_NOT_REQUIRED", "目前設定不需要指定審批人", { field: "approverUserId" });
+      }
+      assertJobTransition(job.status, "queued");
+      const nowMs = this.time.nowMs();
+      const [queued] = await connection.execute(
+        `UPDATE supplier_import_jobs SET status = 'queued', activation_mode = ?, approver_user_id = ?,
+                approval_setting_value = ?, approval_setting_version = ?, confirmed_by = ?, confirmed_at = ?,
+                updated_at = ?, version = version + 1
+          WHERE id = ? AND status = ? AND version = ?`,
+        [activationMode, approver?.id ?? null, setting.value, setting.version, actorId,
+          nowMs, nowMs, id, job.status, version]
+      );
+      if (queued.affectedRows !== 1) throw supplierConflict("SUPPLIER_IMPORT_NOT_CONFIRMABLE", "匯入工作尚未完成預檢或已確認，不可確認");
+      await this.audit.record(connection, {
+        actorUserId: actorId, actorUsername: actor.username, action: "import.confirm", targetType: "import",
+        targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: {
+          status: "queued", activationMode, approvalRequired, approverUserId: approver?.id ?? null,
+          approvalSettingVersion: setting.version } },
+        requestId, ip
+      });
+      const [[updated]] = await connection.query(`SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ?`, [id]);
+      return importJobSummary(updated);
+    });
   }
 
   /**
@@ -535,8 +614,15 @@ export class SupplierImportService {
           [jobId]
         );
         if (!row) return null;
+        // 每列之前再驗確認人（HD-060 5A）：停用咗或者冇咗 supplier.mgmt，就停晒成個 job。冇列剩就唔驗 ——
+        // 全部做完嘅 job 照常收尾，唔會因為收尾前失去權限而報失敗（REV-071 L-1）。
+        const actor = await this.#executionActor(connection, job);
+        if (!actor) {
+          await this.#failRevoked(connection, jobId, nowMs);
+          return { rowNumber: null, status: "revoked", appliedSupplierId: null };
+        }
         rowNumber = Number(row.row_number);
-        const appliedSupplierId = Number(await applyRow(rowConnection(connection), { job, row, nowMs }));
+        const appliedSupplierId = Number(await applyRow(rowConnection(connection), { job, row, actor, nowMs }));
         if (!positiveInteger(appliedSupplierId)) {
           throw Object.assign(new TypeError("applyRow must return the Supplier ID it wrote"),
             { code: "SUPPLIER_IMPORT_NO_SUPPLIER_ID" });
@@ -585,6 +671,39 @@ export class SupplierImportService {
         return { rowNumber, status: marked.affectedRows === 1 ? "failed" : "unchanged", appliedSupplierId: null };
       });
     }
+  }
+
+  /** 確認人仲係 active 而且有 supplier.mgmt 就回 `{ id, username, permissions }`，否則 null。 */
+  async #executionActor(connection, job) {
+    if (job.confirmed_by === null) return null;
+    const [[user]] = await connection.query("SELECT id, username FROM users WHERE id = ? AND status = 'active'", [job.confirmed_by]);
+    if (!user) return null;
+    const permissions = await this.loadPermissions(connection, Number(user.id));
+    return permissions.includes("supplier.mgmt") ? { id: Number(user.id), username: user.username, permissions } : null;
+  }
+
+  /**
+   * 確認人失去權限：未處理嘅列全部標 failed（已 applied 嘅保留），job 標 failed，統計由 rows 重建。
+   * Caller 已經揸住 job 嘅鎖同 lease。
+   */
+  async #failRevoked(connection, jobId, nowMs) {
+    await connection.execute(
+      `UPDATE supplier_import_rows SET status = 'failed', errors = ?, completed_at = ?, updated_at = ?
+        WHERE job_id = ? AND status IN ('valid', 'warning')`,
+      [JSON.stringify([{ code: "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED", message: "確認人的供應商管理權限已失效" }]), nowMs, nowMs, jobId]
+    );
+    const counts = countsFromRows((await connection.query(
+      "SELECT status, COUNT(*) AS total FROM supplier_import_rows WHERE job_id = ? GROUP BY status", [jobId]))[0]);
+    assertJobTransition("running", "failed");
+    await connection.execute(
+      `UPDATE supplier_import_jobs SET status = 'failed', applied_count = ?, failed_count = ?, skipped_count = ?,
+              last_error_code = 'SUPPLIER_IMPORT_AUTHORIZATION_REVOKED', error_summary = '確認人的供應商管理權限已失效',
+              lease_owner = '', lease_until = NULL, completed_at = ?, updated_at = ?, version = version + 1
+        WHERE id = ?`,
+      [counts.applied, counts.failed, counts.skipped, nowMs, nowMs, jobId]
+    );
+    void this.logger?.error?.("supplier.import.authorization_revoked", "Supplier import confirmer lost access; the job was failed",
+      { jobId, applied: counts.applied, failed: counts.failed });
   }
 
   /** 所有列都 terminal 之後，由 rows 重建統計，收尾做 completed 或 completed_with_errors。 */

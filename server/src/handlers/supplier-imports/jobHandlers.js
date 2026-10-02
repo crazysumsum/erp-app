@@ -2,14 +2,14 @@ import { BaseRequestHandler } from "../../framework/api/BaseRequestHandler.js";
 import { SupplierImportService } from "../../modules/supplier/SupplierImportService.js";
 import { SUPPLIER_MGMT_POLICY } from "../suppliers/supplierSchemas.js";
 import {
-  SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA, SUPPLIER_IMPORT_DETAIL_RESPONSE_SCHEMA, SUPPLIER_IMPORT_EMPTY_SCHEMA,
+  SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA, SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA, SUPPLIER_IMPORT_DETAIL_RESPONSE_SCHEMA, SUPPLIER_IMPORT_EMPTY_SCHEMA,
   SUPPLIER_IMPORT_GET_QUERY_SCHEMA, SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, SUPPLIER_IMPORT_JOB_SCHEMA,
   SUPPLIER_IMPORT_LIST_QUERY_SCHEMA, SUPPLIER_IMPORT_LIST_RESPONSE_SCHEMA
 } from "./importSchemas.js";
 
 /**
- * Supplier import job 查詢同取消（T44；設計 §6.9）。每個 job 只有上載者睇到同取消到，其他人一律
- * 404（HD-058 1A）。檔案下載同 410 係 T46 嘅（HD-058 4A）。
+ * Supplier import job 查詢、取消（T44）同確認（T45；設計 §6.9）。每個 job 只有上載者睇到、取消到同確認到，
+ * 其他人一律 404（HD-058 1A、HD-060 1A）。檔案下載同 410 係 T46 嘅（HD-058 4A）。
  *
  * 檔名要排喺 `importTemplateUploadHandlers.js` 後面：handler 按檔名次序註冊，Express 5 冇得限制
  * `:id` 嘅格式，排前咗 `GET /:id` 會食咗 `GET /template`（變 400）。整合測試嘅 template 下載會捉到。
@@ -93,6 +93,35 @@ export class CancelSupplierImportHandler extends BaseRequestHandler {
   async execute(req) {
     return this.response(await this.imports.cancel({
       ...actor(req), id: req.input.params.id, version: req.input.body.version, root: this.importRoot(),
+      requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || ""
+    }));
+  }
+}
+
+export class ConfirmSupplierImportHandler extends BaseRequestHandler {
+  static handlerName = "confirmSupplierImport";
+
+  static api = {
+    method: "POST",
+    path: "/api/v1/supplier-imports/:id/confirm",
+    description: "確認自己已完成預檢的供應商匯入（需要密碼）：選擇草稿或啟用；啟用而設定要求審批時須指定另一位有審批權限的使用者。"
+      + "確認後背景逐列寫入，合法列寫入、錯誤列略過；已寫入的列不會因其他列失敗而回滾。",
+    authType: "jwt-password",
+    authorizationPolicies: SUPPLIER_MGMT_POLICY,
+    idempotency: { enabled: true },
+    requestSchema: { params: SUPPLIER_IMPORT_ID_PARAMS_SCHEMA, query: SUPPLIER_IMPORT_EMPTY_SCHEMA, body: SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA },
+    responseSchema: { 200: SUPPLIER_IMPORT_JOB_SCHEMA }
+  };
+
+  constructor(services = {}) {
+    super(services);
+    this.imports = importService(services);
+  }
+
+  async execute(req) {
+    const { version, activationMode, approverUserId = null } = req.input.body;
+    return this.response(await this.imports.confirm({
+      ...actor(req), id: req.input.params.id, version, activationMode, approverUserId,
       requestId: req.requestId ?? "", ip: req.ip || req.socket?.remoteAddress || ""
     }));
   }
