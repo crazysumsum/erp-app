@@ -118,6 +118,16 @@ function paging(page, pageSize) {
   return { page, pageSize, offset };
 }
 
+/**
+ * Confirm 嗰陣嘅審批設定（值同 version），`FOR SHARE`：同一個 transaction 入面唔會變，設定寫入要等 confirm 做完。
+ * 可以注入：設定係全庫共用嘅 singleton，測試唔可以 commit 改佢（見 supplierSettings 整合測試）。
+ */
+async function readActivationPolicySnapshot(connection) {
+  const [[setting]] = await connection.query("SELECT require_activation_approval, version FROM supplier_settings WHERE id = 1 FOR SHARE");
+  if (!setting) throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
+  return { value: Number(setting.require_activation_approval), version: Number(setting.version) };
+}
+
 // 唔係自己嘅 job 同唔存在嘅 job 答案一樣，唔洩漏存在性（HD-058 1A）。
 const importJobNotFound = () => supplierImportError("SUPPLIER_IMPORT_NOT_FOUND", 404, "找不到指定的匯入工作");
 
@@ -194,7 +204,7 @@ function rowConnection(connection) {
 
 export class SupplierImportService {
   constructor({ database, time, logger = null, authorize = assertActorFresh, audit, approvals,
-    loadPermissions = loadPermissionNamesForUser } = {}) {
+    loadPermissions = loadPermissionNamesForUser, activationPolicy = readActivationPolicySnapshot } = {}) {
     if (!database || !time) throw new TypeError("SupplierImportService requires database and time");
     this.database = database;
     this.time = time;
@@ -204,6 +214,7 @@ export class SupplierImportService {
     this.audit = audit ?? new SupplierAuditLogService({ database, logger: logger ?? {}, time });
     this.approvals = approvals ?? new SupplierApprovalService({ database, logger: logger ?? {}, time, audit: this.audit });
     this.loadPermissions = loadPermissions;
+    this.activationPolicy = activationPolicy;
   }
 
   /**
@@ -363,10 +374,8 @@ export class SupplierImportService {
         throw supplierConflict("SUPPLIER_IMPORT_NOT_CONFIRMABLE", "匯入工作尚未完成預檢或已確認，不可確認");
       }
       if (Number(job.version) !== version) throw supplierConflict("VERSION_CONFLICT", "匯入工作已被其他人修改，請重新載入");
-      const [[setting]] = await connection.query(
-        "SELECT require_activation_approval, version FROM supplier_settings WHERE id = 1 FOR SHARE");
-      if (!setting) throw supplierConflict("SUPPLIER_SETTINGS_MISSING", "供應商設定尚未初始化");
-      const approvalRequired = activationMode === "activate" && Number(setting.require_activation_approval) === 1;
+      const setting = await this.activationPolicy(connection);
+      const approvalRequired = activationMode === "activate" && setting.value === 1;
       let approver = null;
       if (approvalRequired) {
         approver = await this.approvals.assertEligibleApprover(connection, { approverUserId, requesterId: actorId });
@@ -380,7 +389,7 @@ export class SupplierImportService {
                 approval_setting_value = ?, approval_setting_version = ?, confirmed_by = ?, confirmed_at = ?,
                 updated_at = ?, version = version + 1
           WHERE id = ? AND status = ? AND version = ?`,
-        [activationMode, approver?.id ?? null, Number(setting.require_activation_approval), Number(setting.version), actorId,
+        [activationMode, approver?.id ?? null, setting.value, setting.version, actorId,
           nowMs, nowMs, id, job.status, version]
       );
       if (queued.affectedRows !== 1) throw supplierConflict("SUPPLIER_IMPORT_NOT_CONFIRMABLE", "匯入工作尚未完成預檢或已確認，不可確認");
@@ -388,7 +397,7 @@ export class SupplierImportService {
         actorUserId: actorId, actorUsername: actor.username, action: "import.confirm", targetType: "import",
         targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: {
           status: "queued", activationMode, approvalRequired, approverUserId: approver?.id ?? null,
-          approvalSettingVersion: Number(setting.version) } },
+          approvalSettingVersion: setting.version } },
         requestId, ip
       });
       const [[updated]] = await connection.query(`SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ?`, [id]);
