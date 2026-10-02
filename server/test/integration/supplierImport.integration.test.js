@@ -512,3 +512,267 @@ integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes pre
   t.diagnostic(`10,000-row precheck against 2,000 Suppliers took ${elapsed} ms`);
   assert.ok(elapsed < 60_000, `took ${elapsed} ms; the job timeout is 150 s`);
 });
+
+/** TASK-044：叫 job API，回 `{ status, data, body }`。每個 IP 每秒 20 個請求：429 就照 Retry-After 等。 */
+async function api(user, method, url, { body, key } = {}) {
+  const headers = { authorization: `Bearer ${user.token}` };
+  if (body !== undefined) headers["content-type"] = "application/json";
+  if (key) headers["idempotency-key"] = key;
+  let response;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    response = await fetch(`${h.url}${url}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    if (response.status !== 429) break;
+    await response.arrayBuffer();
+    await new Promise((resolve) => { setTimeout(resolve, 1000 * Number(response.headers.get("retry-after") ?? 1)); });
+  }
+  const parsed = await response.json().catch(() => null);
+  return { status: response.status, body: parsed, data: parsed?.data ?? parsed };
+}
+
+const errorCode = (result) => JSON.stringify(result.body).match(/"(?:code|publicCode)":"([A-Z_]+)"/u)?.[1];
+
+async function sourceExists(jobId) {
+  const { source_stored_name: name } = await job(jobId);
+  return fs.existsSync(path.join(h.worker.preparedRoot, "source", name));
+}
+
+integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a job; the job API tells no one else it exists", async () => {
+  const owner = await makeUser("own", ["supplier.mgmt"]);
+  const other = await makeUser("oth", ["supplier.mgmt"]);
+  const viewer = await makeUser("v44", ["supplier.view"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const created = await httpUpload(owner, csv([{ supplierCode: `O-${tag}`, supplierName: `Owner ${tag}`, defaultCurrencyCode: "HKD" }]));
+  assert.equal(created.status, 201);
+  const id = created.job.id;
+
+  const mine = await api(owner, "GET", "/api/v1/supplier-imports");
+  assert.deepEqual([mine.status, mine.data.items.map((item) => item.id), mine.data.total], [200, [id], 1]);
+  assert.equal((await api(owner, "GET", "/api/v1/supplier-imports?status=ready")).data.total, 0, "the status filter applies");
+  const theirs = await api(other, "GET", "/api/v1/supplier-imports");
+  assert.deepEqual([theirs.status, theirs.data.items, theirs.data.total], [200, [], 0], "another manager's list is empty");
+
+  const [[{ maxId }]] = await h.db.query("SELECT MAX(id) AS maxId FROM supplier_import_jobs");
+  const missing = Number(maxId) + 1000;
+  for (const [method, suffix, body] of [["GET", "", undefined], ["POST", "/cancel", { version: 1 }]]) {
+    const foreign = await api(other, method, `/api/v1/supplier-imports/${id}${suffix}`, { body, key: randomUUID() });
+    const absent = await api(other, method, `/api/v1/supplier-imports/${missing}${suffix}`, { body, key: randomUUID() });
+    assert.deepEqual([foreign.status, errorCode(foreign)], [404, "SUPPLIER_IMPORT_NOT_FOUND"], `${method} ${suffix}`);
+    assert.deepEqual([absent.status, errorCode(absent)], [foreign.status, errorCode(foreign)], "same answer as a job that does not exist");
+    assert.equal(foreign.body?.error?.message ?? foreign.body?.message, absent.body?.error?.message ?? absent.body?.message);
+    assert.equal((await api(viewer, method, `/api/v1/supplier-imports/${id}${suffix}`, { body, key: randomUUID() })).status, 403,
+      "supplier.view is not enough");
+  }
+  assert.equal((await api(viewer, "GET", "/api/v1/supplier-imports")).status, 403);
+  assert.equal((await job(id)).status, "uploaded", "nobody else changed it");
+  assert.equal(await sourceExists(id), true);
+  // template 仲係 template，唔係 `/:id`（handler 註冊次序）。
+  assert.equal((await api(owner, "GET", "/api/v1/supplier-imports/template")).status, 200);
+  const own = await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: 1 }, key: randomUUID() });
+  assert.deepEqual([own.status, own.data.status], [200, "cancelled"], "the uploader can");
+});
+
+integrationTest("TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes", async () => {
+  const owner = await makeUser("det", ["supplier.mgmt"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const existing = await seedSupplier({ code: `D6-${tag}`, name: `Detail Six ${tag}` });
+  const created = await httpUpload(owner, csv([
+    { supplierCode: `D1-${tag}`, supplierName: `Detail One ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `D2-${tag}`, supplierName: `Detail Two ${tag}` },
+    { supplierCode: `D3-${tag}`, supplierName: `Detail Three ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `D4-${tag}`, supplierName: `Detail Four ${tag}` },
+    { supplierCode: `D5-${tag}`, supplierName: `Detail Five ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `D6-${tag}`, supplierName: `Detail Six Renamed ${tag}` }
+  ]), { mode: "upsert" });
+  const id = created.job.id;
+  const before = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
+  assert.deepEqual([before.status, before.data.job.status, before.data.rows, before.data.total], [200, "uploaded", [], 0]);
+
+  // validating：rows 已經寫咗一批，但未完成嘅預檢一列都唔回（REV-068 I-2）。
+  const service = h.worker.importService;
+  const claimed = await service.claimForPrecheck({ leaseOwner: "t44", leaseDurationMs: 60_000 });
+  assert.equal(claimed?.id, id, "this test's job is the only one waiting");
+  await service.appendPrecheckRows({ jobId: id, leaseOwner: "t44", leaseDurationMs: 60_000, rows: [{
+    rowNumber: 1, operation: "create", matchSupplierId: null, expectedSupplierVersion: null,
+    normalizedPayload: { root: { supplierCode: `D1-${tag}` } }, status: "valid", errors: [], warnings: []
+  }] });
+  const during = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
+  assert.deepEqual([during.data.job.status, during.data.rows, during.data.total], ["validating", [], 0]);
+  assert.equal((await rows(id)).length, 1, "the rows exist; they are just not served");
+  const busy = await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: during.data.job.version }, key: randomUUID() });
+  assert.deepEqual([busy.status, errorCode(busy)], [409, "SUPPLIER_IMPORT_NOT_CANCELLABLE"], "a prechecking job cannot be cancelled");
+  clock += 120_000;
+  assert.equal((await precheck(id)).status, "ready_with_errors");
+
+  const page2 = await api(owner, "GET", `/api/v1/supplier-imports/${id}?page=2&pageSize=2`);
+  assert.equal(page2.status, 200);
+  assert.deepEqual([page2.data.total, page2.data.page, page2.data.pageSize, page2.data.rows.map((row) => row.rowNumber)], [6, 2, 2, [3, 4]]);
+  const page3 = await api(owner, "GET", `/api/v1/supplier-imports/${id}?page=3&pageSize=2`);
+  assert.deepEqual(page3.data.rows.map((row) => [row.rowNumber, row.operation, row.matchSupplierId, row.appliedSupplierId]),
+    [[5, "create", null, null], [6, "update", existing, null]]);
+  assert.deepEqual(page2.data.job, (await api(owner, "GET", "/api/v1/supplier-imports")).data.items[0], "list and detail agree");
+  assert.deepEqual([page2.data.job.totalCount, page2.data.job.validCount, page2.data.job.invalidCount, page2.data.job.filesPurged],
+    [6, 4, 2, false]);
+  const invalid = await api(owner, "GET", `/api/v1/supplier-imports/${id}?rowStatus=invalid`);
+  assert.deepEqual(invalid.data.rows.map((row) => [row.rowNumber, row.status, row.errors[0].field]),
+    [[2, "invalid", "defaultCurrencyCode"], [4, "invalid", "defaultCurrencyCode"]]);
+  assert.equal(invalid.data.total, 2);
+  assert.equal(invalid.data.rows[0].normalizedPayload.root.supplierCode, `D2-${tag}`);
+
+  for (const query of ["pageSize=101", "pageSize=0", "page=0", "rowStatus=nope", "extra=1"]) {
+    assert.equal((await api(owner, "GET", `/api/v1/supplier-imports/${id}?${query}`)).status, 400, query);
+  }
+  assert.equal((await api(owner, "GET", "/api/v1/supplier-imports?status=nope")).status, 400);
+  assert.equal((await api(owner, "GET", "/api/v1/supplier-imports/abc")).status, 400);
+  // T45 嘅執行錯誤冇 field（rowError 只有 code 同 message）；response schema 一樣要收。
+  await h.db.execute("UPDATE supplier_import_rows SET status = 'failed', errors = ? WHERE job_id = ? AND `row_number` = 1",
+    [JSON.stringify([{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]), id]);
+  const failed = await api(owner, "GET", `/api/v1/supplier-imports/${id}?rowStatus=failed`);
+  assert.equal(failed.status, 200, JSON.stringify(failed.body));
+  assert.deepEqual(failed.data.rows.map((row) => [row.rowNumber, row.errors]),
+    [[1, [{ code: "SUPPLIER_IMPORT_ROW_FAILED", message: "匯入資料列處理失敗" }]]]);
+  const text = JSON.stringify(page2.body) + JSON.stringify(invalid.body);
+  const stored = await job(id);
+  for (const secret of [h.worker.preparedRoot, stored.source_stored_name, Buffer.from(stored.source_sha256).toString("hex")]) {
+    assert.equal(text.includes(secret), false, "no path, stored name or hash in a response");
+  }
+});
+
+integrationTest("TASK-044 (HD-058 2A/3A): cancel ends the job, deletes the source, keeps the rows and is replay-safe", async () => {
+  const owner = await makeUser("can", ["supplier.mgmt"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const ready = await httpUpload(owner, csv([{ supplierCode: `C1-${tag}`, supplierName: `Cancel ${tag}`, defaultCurrencyCode: "HKD" }]));
+  assert.equal((await precheck(ready.job.id)).status, "ready");
+  const id = ready.job.id;
+  const { version } = (await api(owner, "GET", `/api/v1/supplier-imports/${id}`)).data.job;
+
+  const stale = await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version - 1 }, key: randomUUID() });
+  assert.deepEqual([stale.status, errorCode(stale)], [409, "VERSION_CONFLICT"]);
+  assert.equal((await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version } })).status, 400,
+    "an idempotency key is required");
+
+  const key = randomUUID();
+  const cancelled = await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version }, key });
+  assert.equal(cancelled.status, 200, JSON.stringify(cancelled.body));
+  assert.deepEqual([cancelled.data.status, cancelled.data.filesPurged, cancelled.data.version], ["cancelled", true, version + 1]);
+  assert.ok(cancelled.data.completedAt > 0);
+  assert.equal(await sourceExists(id), false, "the source file is gone");
+  const replay = await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version }, key });
+  assert.deepEqual([replay.status, replay.data], [200, cancelled.data], "the same key replays the first answer");
+  const again = await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version + 1 }, key: randomUUID() });
+  assert.deepEqual([again.status, errorCode(again)], [409, "SUPPLIER_IMPORT_NOT_CANCELLABLE"], "a cancelled job stays cancelled");
+
+  const detail = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
+  assert.deepEqual([detail.data.job.status, detail.data.total, detail.data.rows[0].status], ["cancelled", 1, "valid"],
+    "summary and rows are kept");
+  const [audits] = await h.db.query(
+    "SELECT actor_user_id, detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.cancel'", [id]);
+  assert.equal(audits.length, 1, "one audit row, however often it was sent");
+  assert.equal(Number(audits[0].actor_user_id), owner.userId);
+  assert.deepEqual(typeof audits[0].detail === "string" ? JSON.parse(audits[0].detail) : audits[0].detail,
+    { before: { status: "ready" }, after: { status: "cancelled" } });
+
+  // uploaded 都取消得，取消咗嘅 job precheck 唔會再領。
+  const uploaded = await httpUpload(owner, csv([{ supplierCode: `C2-${tag}`, supplierName: `Cancel Two ${tag}`, defaultCurrencyCode: "HKD" }]));
+  const early = await api(owner, "POST", `/api/v1/supplier-imports/${uploaded.job.id}/cancel`, { body: { version: 1 }, key: randomUUID() });
+  assert.deepEqual([early.status, early.data.status], [200, "cancelled"]);
+  assert.equal(await sourceExists(uploaded.job.id), false);
+  const next = await h.worker.runPrecheck(new AbortController().signal);
+  assert.notEqual(next.jobId, uploaded.job.id, "precheck never picks a cancelled job");
+  const filtered = await api(owner, "GET", "/api/v1/supplier-imports?status=cancelled&pageSize=1");
+  assert.deepEqual([filtered.data.total, filtered.data.items.map((item) => item.id)], [2, [uploaded.job.id]], "newest first");
+  const second = await api(owner, "GET", "/api/v1/supplier-imports?status=cancelled&pageSize=1&page=2");
+  assert.deepEqual(second.data.items.map((item) => item.id), [id], "page 2 is the older one");
+});
+
+integrationTest("TASK-044 (HD-058 3A): a source that cannot be deleted is logged and left for T48; the cancel still stands", async () => {
+  const errors = [];
+  const service = new SupplierImportService({ database: h.db, time, logger: { error: (...entry) => errors.push(entry) } });
+  const created = await upload(csv([{ supplierCode: `N-${randomUUID().slice(0, 6)}`, supplierName: "No Root", defaultCurrencyCode: "HKD" }]));
+  const cancelled = await service.cancel({ actorId: h.userId, claimedRoles: [], claimedPermissions: [], id: created.id, version: 1, root: null });
+  assert.deepEqual([cancelled.status, cancelled.filesPurged], ["cancelled", true]);
+  assert.equal(await sourceExists(created.id), true, "nothing could delete it without a root");
+  assert.deepEqual(errors.map(([event, , detail]) => [event, detail.jobId, detail.code]),
+    [["supplier.import.source_cleanup_failed", created.id, "SUPPLIER_IMPORT_UNAVAILABLE"]]);
+  const { source_stored_name: name } = await job(created.id);
+  fs.rmSync(path.join(h.worker.preparedRoot, "source", name));
+});
+
+integrationTest("TASK-044: a manager whose permission was withdrawn after the token was issued is refused at once", async () => {
+  const owner = await makeUser("stl", ["supplier.mgmt"]);
+  const created = await httpUpload(owner, csv([{ supplierCode: `S-${randomUUID().slice(0, 6)}`, supplierName: "Stale", defaultCurrencyCode: "HKD" }]));
+  await h.db.execute(
+    "DELETE rp FROM role_permissions rp JOIN user_roles ur ON ur.role_id = rp.role_id WHERE ur.user_id = ?", [owner.userId]);
+  for (const [method, url, body] of [["GET", "/api/v1/supplier-imports", undefined], ["GET", `/api/v1/supplier-imports/${created.job.id}`, undefined],
+    ["POST", `/api/v1/supplier-imports/${created.job.id}/cancel`, { version: 1 }]]) {
+    const refused = await api(owner, method, url, { body, key: randomUUID() });
+    assert.deepEqual([refused.status, errorCode(refused)], [403, "PERMISSION_STALE"], `${method} ${url}`);
+  }
+  assert.equal((await job(created.job.id)).status, "uploaded", "the cancel did nothing");
+  await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [created.job.id]);
+});
+
+integrationTest("TASK-044 (REV-069 M-1): cancel waits for a claim that holds the job, then refuses the job it moved on", async () => {
+  const service = h.worker.importService;
+  const actor = { actorId: h.userId, claimedRoles: [], claimedPermissions: [] };
+  for (const [from, to] of [["uploaded", "validating"], ["queued", "running"]]) {
+    const created = await upload(csv([{ supplierCode: `R-${randomUUID().slice(0, 6)}`, supplierName: "Race", defaultCurrencyCode: "HKD" }]));
+    if (from === "queued") {
+      await h.db.execute("UPDATE supplier_import_jobs SET status = 'queued', confirmed_by = ?, confirmed_at = ? WHERE id = ?",
+        [h.userId, clock, created.id]);
+    }
+    let pending;
+    let settled = false;
+    let settledWhileHeld;
+    // 一個未 commit 嘅 claim：鎖住 job、改咗狀態。Cancel 要等佢，見到新狀態就拒絕。
+    await h.db.withTransaction(async (connection) => {
+      await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [created.id]);
+      await connection.execute("UPDATE supplier_import_jobs SET status = ?, lease_owner = 'race', lease_until = ? WHERE id = ?",
+        [to, clock + 60_000, created.id]);
+      pending = service.cancel({ ...actor, id: created.id, version: 1, root: h.worker.preparedRoot }).then(
+        (value) => ({ value }), (error) => ({ error }));
+      pending.then(() => { settled = true; });
+      await new Promise((resolve) => { setTimeout(resolve, 300); });
+      settledWhileHeld = settled;
+    });
+    const outcome = await pending;
+    assert.equal(settledWhileHeld, false, `${from}: cancel waited for the claim`);
+    assert.equal(outcome.error?.publicCode, "SUPPLIER_IMPORT_NOT_CANCELLABLE", `${from} -> ${to}`);
+    assert.equal((await job(created.id)).status, to);
+    assert.equal(await sourceExists(created.id), true, "the claimed job keeps its source");
+    await h.db.execute("UPDATE supplier_import_jobs SET status = 'failed', lease_owner = '', lease_until = NULL WHERE id = ?", [created.id]);
+  }
+});
+
+integrationTest("TASK-044 (REV-069 L-1): another user's cancel answers 404 at once, without waiting on a job someone holds", async () => {
+  const stranger = { actorId: h.userId, claimedRoles: [], claimedPermissions: [] };
+  const owner = await makeUser("lck", ["supplier.mgmt"]);
+  const created = await httpUpload(owner, csv([{ supplierCode: `L-${randomUUID().slice(0, 6)}`, supplierName: "Locked", defaultCurrencyCode: "HKD" }]));
+  let elapsed;
+  let outcome;
+  await h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [created.job.id]);
+    const started = Date.now();
+    outcome = await h.worker.importService.cancel({ ...stranger, id: created.job.id, version: 1, root: h.worker.preparedRoot })
+      .then((value) => ({ value }), (error) => ({ error }));
+    elapsed = Date.now() - started;
+  });
+  assert.equal(outcome.error?.publicCode, "SUPPLIER_IMPORT_NOT_FOUND");
+  assert.ok(elapsed < 1_000, `answered in ${elapsed} ms while the job was locked`);
+  const own = await api(owner, "POST", `/api/v1/supplier-imports/${created.job.id}/cancel`, { body: { version: 1 }, key: randomUUID() });
+  assert.equal(own.data.status, "cancelled");
+});
+
+integrationTest("TASK-044 (REV-069 L-3, HD-058 3A): the source is deleted only after the cancel commits", async () => {
+  const created = await upload(csv([{ supplierCode: `T-${randomUUID().slice(0, 6)}`, supplierName: "Rolled Back", defaultCurrencyCode: "HKD" }]));
+  // 成個 cancel 做完先拋：等同 commit 失敗，transaction rollback。
+  const failingCommit = { withTransaction: (work) => h.db.withTransaction(async (connection) => {
+    await work(connection);
+    throw new Error("commit failed");
+  }) };
+  const service = new SupplierImportService({ database: failingCommit, time, logger: {} });
+  await assert.rejects(() => service.cancel({ actorId: h.userId, claimedRoles: [], claimedPermissions: [], id: created.id, version: 1,
+    root: h.worker.preparedRoot }), (error) => error.cause?.message === "commit failed" || error.message === "commit failed");
+  assert.equal((await job(created.id)).status, "uploaded", "the cancel rolled back");
+  assert.equal(await sourceExists(created.id), true, "so the source is still there");
+  await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [created.id]);
+});
