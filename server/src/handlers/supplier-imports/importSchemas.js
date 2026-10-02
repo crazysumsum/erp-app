@@ -38,6 +38,19 @@ export const SUPPLIER_IMPORT_CANCEL_BODY_SCHEMA = Object.freeze({
   properties: { version: { type: "integer", minimum: 1 } }
 });
 
+// jwt-password：body 一定要宣告 password（設計 §6.1），框架驗完就唔會再傳落 service。
+export const SUPPLIER_IMPORT_CONFIRM_BODY_SCHEMA = Object.freeze({
+  type: "object",
+  required: ["version", "activationMode", "password"],
+  additionalProperties: false,
+  properties: {
+    version: { type: "integer", minimum: 1 },
+    activationMode: { type: "string", enum: ["draft", "activate"] },
+    approverUserId: { type: ["integer", "null"], minimum: 1, maximum: Number.MAX_SAFE_INTEGER },
+    password: { type: "string", minLength: 1, maxLength: 1024 }
+  }
+});
+
 const COUNT = Object.freeze({ type: "integer", minimum: 0 });
 const NULLABLE_ID = Object.freeze({ type: ["integer", "null"], minimum: 1 });
 const NULLABLE_EPOCH = Object.freeze({ type: ["integer", "null"], minimum: 0 });
