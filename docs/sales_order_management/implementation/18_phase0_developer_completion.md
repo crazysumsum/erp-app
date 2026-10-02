@@ -13,9 +13,9 @@ Runtime MySQL26.7.0 with owned dedicated datadirs/sockets; actual per-suite fres
 ## Task evidence
 
 - TASK001 readiness: actual providers now exist; reviewed adoptedcontracts and real native assertions, exact migration0067–0069 allocation, freshmain95946469.
-- TASK002–005 foundation: strict amount/quantity/hash/state transitions and supporting snapshots/math assertions exercised in sales-foundation-developer; no production fake.
-- TASK006 startup configuration, permission boundaries, registeredframeworkcontracts, failure/rollback/safe errors exercised in core/provider/native suites.
-- TASK007–008 disk/memory upload compatibility, bounded50MiB sampled memory, limits/abort/timeout/cleanup/concurrency, permission seed/idempotency scopes exercised in core/currentCI/native migration suites. Earlier memory/auth/fixture failures and corrections remain in checkpoint14/16; no floors relaxed.
+- TASK002–005 upload foundation: opt-in disk budgets/configuration, streaming/prefix/hash, secure validation/cleanup, bounded50MiB sampled memory and memory-mode compatibility exercised in sales-foundation-developer/currentCI; original floors retained.
+- TASK006 startup configuration, exact permission boundaries/catalogue/seed, constants and safe public errors exercised in core/provider/native migration suites; Sales menu/handlers remain absent.
+- TASK007–008 strict money/quantity/validation, canonical hashing and state-transition primitives exercised in sales-foundation-developer; no production fake. Earlier memory/auth/fixture failures and corrections remain in checkpoint14/16; no floors relaxed.
 - TASK009 Customer/Item caller-ownedTX snapshots, current lock graph/mapping version/reference protection verified with core/provider/Salesnative/Itemcompatibility runs; stable Item writer/root-first deletion compatibility is reviewed and tested.
 - TASK010 immutable root+line batch reserve/release replay, sorted locks, current Item eligibility/ATP/expiry, conservation,300member boundedpaging, second-page rollback and actualnativeCOMMIT followed by injectedackloss+freshTXretry withoutduplication verified in core/Salesnative. Physicalnetworksever not simulated.
 - TASK011 fresh/upgrade/rerun/drift detection, sequence/operation identity/FKs/native concurrency/rollback and safe retainedresults verified in migration suites; later SequenceService/recoveryjobs remain pending.
@@ -25,3 +25,5 @@ Supporting provider normalization retains original197 test names/statuses and JU
 ## Candidate integration gate
 
 Source/spec baseline is unchanged by these approval/evidence/status report updates. Exact835CI36981692327 allfivePASS and actualindependentPRreviewAPPROVE are retained, but publishing this bookkeeping requires new exact-head CI/review observations before merge. Original global/per-file coverage floors remain required. Fetchmain again before merging; integrate/reverify if target moved. Merge only thecompletePHASE001 group after MERGE_READY succeeds, then retain private evidence and safely clean all owned runtime/worktree/branch resources.
+
+Independent review verified all17 registered runs/artifact hashes/parsed results (437PASS, zero failures/skips/not-run). It caught the initial report-only002–005/007–008 attribution swap; the bullets above are corrected against the canonical task definitions. No production source, plan/design baseline or evidence was changed.
