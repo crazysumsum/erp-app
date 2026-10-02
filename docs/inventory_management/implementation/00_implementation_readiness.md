@@ -4,7 +4,13 @@
 
 `IMPLEMENTING` — P2 is integrated into `main` through PR #171, merge commit `d6397e020dbcbd70194995cd52755b3d91ec94be`. TASK-001～TASK-018 were integrated through PR #164; TASK-019～TASK-025 now satisfy their IMPLEMENT DoD. Sam approved exact head `be171ad` conditionally on CI (APR-081); all five actual CI checks and live-runtime pre-merge `MERGE_READY` passed. Private runtime was precisely cleaned afterward, original evidence retained. Remaining module work starts with P3/TASK-026; the module is not yet `READY_FOR_TESTING`. No formal Technical Acceptance, UAT, business acceptance or production deployment is claimed.
 
-## Current P3 checkpoint — TASK-028 developer-verified / pending independent review
+## Current P3 checkpoint — TASK-028 DONE / independently approved
+
+`IMPLEMENTING / TASK-028 DONE` (2026-10-02). Sam's actual `已審閱，批准 TASK-028` answered HD-082 and independently approved exact full local review baseline `14421131ba15036aba2fd849b7fb8c4167c524b8` (product savepoint `3be8d4b3e8650d7f0b89db6ea54ead5207b4964f`), recorded as APR-098 / REV-057. The unchanged PLAN `0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29`, DESIGN and source fingerprint were reverified, along with all five retained developer reports and their13 original artifact hashes/lengths; no new test execution or runtime allocation. TASK-028 now satisfies its local IMPLEMENT DoD. TASK-026/027 remain DONE; TASK-029～034 remain PENDING and require separate direction.
+
+This approval does not authorize later Tasks, remote publication/CI/merge, full-P3 readiness, formal Technical Acceptance/UAT or deployment. DEF-003 and current-PLAN re-confirmation of the previously approved, unchanged0064 shared-path scope remain full-P3 completion/publication prerequisites, not waived by this Task approval. Private runtime remains precisely cleaned; original evidence, the unmerged Phase worktree/branch and P2 recovery stash remain. See [reviewed result and evidence](phase-PHASE-004-report.md).
+
+## Historical TASK-028 developer checkpoint — HD-082 (now independently approved)
 
 `BLOCKED / HD-082 / TASK-028 IN_PROGRESS` (2026-10-02). Sam's actual `A` answered HD-081: the exact two-file command patch is applied and byte-compared with the approved proposal; current PLAN `0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29`, DESIGN unchanged. APR-095/096/097 and REV-055 record the actual plan/start/risk disposition, not code approval. Local PLAN_READY passed after correcting the approval's module-subject metadata; authority remains limited to TASK-028 and the exact command-only change.
 
@@ -54,7 +60,7 @@ HD-077 asks Sam to review the exact proposed PLAN and approve applying the three
 
 - P2 documentation closeout: [PR #172](https://github.com/crazysumsum/erp-app/pull/172) merged at `2eccf588343a4c2bc22d578666bfc1f5732c5e37` on 2026-09-30 after Sam approved exact head `92e5702` and all five current-head CI checks passed. Its earlier OPEN/no-merge-approval narrative is retained as publication history. P3/TASK-026 remains unstarted; no formal acceptance or deployment.
 - Current approved DESIGN: `53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce`.
-- Current approved PLAN: `54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494` (Sam HD-079 / APR-090; prior TASK-026 PLAN retained in history).
+- Current approved PLAN: `0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29` (Sam HD-081 / APR-095; prior TASK-026/027 PLAN approvals retained in history).
 - Prior P2 approved PLAN: `ec0d27569a86720d4e263103d14e429aa01682a6946f3a65de1bbf02d684c973` (historical evidence retained).
 - PR #171 approved head: `be171ad87b752104c7a89f023f3c8d4132eecc99`; observed merge: `d6397e020dbcbd70194995cd52755b3d91ec94be`. Earlier approvals and local checkpoints below are retained as history.
 - Historical 0.3 design approval: `fabc75e34e1331570e6a276cabd7392ee598b1e992dc6e8b9402e638bab63273`.

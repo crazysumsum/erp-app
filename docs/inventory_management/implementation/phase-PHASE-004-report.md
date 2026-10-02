@@ -1,6 +1,12 @@
 # P3 developer checkpoints
 
-## Current TASK-028 result — developer-verified / pending Sam independent code review
+## Current TASK-028 result — DONE / independently approved
+
+Sam's actual `已審閱，批准 TASK-028` on 2026-10-02 (Asia/Hong_Kong) answered HD-082 and approved exact full local review checkpoint `14421131ba15036aba2fd849b7fb8c4167c524b8`, including product savepoint `3be8d4b3e8650d7f0b89db6ea54ead5207b4964f`, original developer evidence and the report below. APR-098 / REV-057 record real HUMAN independent review; no detailed review findings were supplied. TASK-028 is DONE, overall IMPLEMENTING; TASK-026/027 remain DONE and TASK-029～034 remain PENDING. Await separate direction for TASK-029.
+
+Closeout reverified unchanged source `5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6`, PLAN `0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29` and DESIGN, and all five final DEVELOPER reports with13 original artifact hashes/lengths. Retained results remain13unit/31realMySQL26.7.0/158Inventory regression leaves, zero skips, lint/build PASS. No tests were rerun, private resources were not recreated, and historical failures were not modified. This is only local TASK-028 DoD completion, not full-P3 completion/MERGE_READY, future Task/remote authority, formal Technical Acceptance/UAT or deployment. DEF-003 and unchanged0064 current-PLAN scope re-confirmation remain full-P3 completion/publication prerequisites. Exact cleaned runtime and retained unmerged worktree/branch/recovery stash remain as documented below.
+
+## Historical TASK-028 result — developer-verified / HD-082 pending at that checkpoint
 
 Sam's actual `A` answered HD-081 and approved exact command patch `18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd`; canonical two-file bytes matched the reviewed scratch proposal. Current PLAN `0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29`, unchanged DESIGN `53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce`; APR-095/096/097 / REV-055 retain actual plan, local start and narrow TASK-028 DEF-003 continuation disposition. Initial PLAN_READY lacked the module subject in APR-095 scope; correcting that metadata (without broadening Task authority) restored LOCAL_CHECKS_PASS. This plan review is not independent product approval.
 

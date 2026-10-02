@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 283,
+  "revision": 285,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
   "current_task": "TASK-028",
   "baseline": {
     "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
     "plan": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
-    "code_commit": "3be8d4b3e8650d7f0b89db6ea54ead5207b4964f",
+    "code_commit": "14421131ba15036aba2fd849b7fb8c4167c524b8",
     "source_fingerprint": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
     "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
@@ -53,7 +53,7 @@
     "TASK-025": "DONE",
     "TASK-026": "DONE",
     "TASK-027": "DONE",
-    "TASK-028": "IN_PROGRESS",
+    "TASK-028": "DONE",
     "TASK-029": "PENDING",
     "TASK-030": "PENDING",
     "TASK-031": "PENDING",
@@ -2045,6 +2045,26 @@
         "not full-P3 readiness/merge, coverage/CI or formal gate waiver"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-098",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-028 on 2026-10-02 Asia/Hong_Kong, answering HD-082 exact full local review baseline 14421131ba15036aba2fd849b7fb8c4167c524b8 (product savepoint 3be8d4b3e8650d7f0b89db6ea54ead5207b4964f); actual independent human code approval; no detailed findings supplied. TASK-028 local DoD only; not TASK-029+, push/PR/remote CI/merge, full-P3 readiness, unchanged0064 current-PLAN scope re-confirmation, DEF-003 waiver, formal acceptance/UAT or deployment.",
+      "recorded_at": "2026-10-02T07:06:41.468940Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+      "code_commit": "14421131ba15036aba2fd849b7fb8c4167c524b8",
+      "scope": [
+        "inventory-management",
+        "TASK-028",
+        "independent code review and local TASK-028 DoD completion only",
+        "13unit/31MySQL26.7.0/158Inventory regression/lint/build retained evidence; unchanged source/spec",
+        "no later Task or remote action; full-P3 blockers and gates retained"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2655,6 +2675,18 @@
       "reviewer": "Codex /root",
       "reviewed_baseline": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
       "source_ref": "implementation/phase-PHASE-004-report.md TASK-028 five-axis self-review: current-source 13unit/31realMySQL/158Inventory regression leaves, zero skips; lint/build PASS, all artifact hashes verified. Product savepoints44b73b0/3be8d4b; no critical/high Task product finding identified. Not independent approval or full-P3 gate. DEF-003 and earlier0064 current-PLAN scope re-confirmation remain full-P3 publication/merge prerequisites; TASK-028 diff relative to actual prior local baseline50a43f8 passed module boundary and does not change0064.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-057",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam (independent human reviewer)",
+      "reviewed_baseline": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
+      "source_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-028 on 2026-10-02 Asia/Hong_Kong, answering HD-082 exact full local review baseline 14421131ba15036aba2fd849b7fb8c4167c524b8 (product savepoint 3be8d4b3e8650d7f0b89db6ea54ead5207b4964f); actual independent human code approval; no detailed findings supplied. TASK-028 local DoD only; not TASK-029+, push/PR/remote CI/merge, full-P3 readiness, unchanged0064 current-PLAN scope re-confirmation, DEF-003 waiver, formal acceptance/UAT or deployment.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4663,13 +4695,13 @@
     {
       "id": "HD-082",
       "impact": "MAJOR",
-      "question": "Sam independent TASK-028 code review required: whole atomic Transfer Dispatch/Receive, exact product savepoint3be8d4b3e8650d7f0b89db6ea54ead5207b4964f, current source 5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6, approved PLAN 0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29. Review implementation/phase-PHASE-004-report.md and Transfer service/unit/realDB tests. 13unit/31trueMySQL26.7.0/158Inventory regression leaves and lint/build PASS on same final source/spec, zero skips; original artifact hashes retained and checked. Approve this local Task DoD only if satisfied or request changes. No TASK-029+, HTTP/UI, push/PR/remote CI/merge, Phase gate waiver, formal acceptance/UAT or deployment. Private synthetic runtime precisely cleaned; old reports cannot back current MERGE_READY. Original DEF-003 remains unresolved full-P3 gate; full-Phase boundary additionally needs actual re-confirmation of already unchanged0064 scope under new PLAN, not silently granted here.",
+      "question": "Sam independent TASK-028 code review required: whole atomic Transfer Dispatch/Receive, exact product savepoint3be8d4b3e8650d7f0b89db6ea54ead5207b4964f, current source 5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6, approved PLAN 0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29. Review implementation/phase-PHASE-004-report.md and Transfer service/unit/realDB tests. 13unit/31trueMySQL26.7.0/158Inventory regression leaves and lint/build PASS on same final source/spec, zero skips; original artifact hashes retained and checked. Approve this local Task DoD only if satisfied or request changes. No TASK-029+, HTTP/UI, push/PR/remote CI/merge, Phase gate waiver, formal acceptance/UAT or deployment. Private synthetic runtime precisely cleaned; old reports cannot back current MERGE_READY. Original DEF-003 remains unresolved full-P3 gate; full-Phase boundary additionally needs actual re-confirmation of already unchanged0064 scope under new PLAN, not silently granted here. Exact full local review checkpoint 14421131ba15036aba2fd849b7fb8c4167c524b8 includes the tested product savepoint, original developer evidence and review reports; source/spec bytes are unchanged. No actual human code approval has been received.",
       "affected_ids": [
         "TASK-028",
         "PHASE-004"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-028 on 2026-10-02 Asia/Hong_Kong, answering HD-082 exact full local review baseline 14421131ba15036aba2fd849b7fb8c4167c524b8 (product savepoint 3be8d4b3e8650d7f0b89db6ea54ead5207b4964f); actual independent human code approval; no detailed findings supplied. TASK-028 local DoD only; not TASK-029+, push/PR/remote CI/merge, full-P3 readiness, unchanged0064 current-PLAN scope re-confirmation, DEF-003 waiver, formal acceptance/UAT or deployment.; APR-098 / REV-057"
     }
   ],
   "external_actions": [
@@ -5886,5 +5918,5 @@
       "risk_approval_id": "APR-097"
     }
   ],
-  "next_safe_action": "Await actual Sam independent TASK-028 code review HD-082; keep Task IN_PROGRESS until actual approval. Verify exact full review checkpoint/source/spec and evidence before marking DONE. No later Task or remote actions authorized. Preserve DEF-003 full-P3 completion/merge blocker and note unchanged0064 scoped approval is stale against new PLAN for full-Phase boundary; require actual disposition before full-P3 publication. TASK-028 own diff boundary PASS. Runtime EXT-129/130 precisely cleaned; no live lease or acceptance claim. Preserve original evidence, approvals, unmerged worktree and P2 recovery stash."
+  "next_safe_action": "TASK-028 independently approved DONE under HD-082 / APR-098 / REV-057 at exact local review baseline 14421131ba15036aba2fd849b7fb8c4167c524b8. Await separate direction for TASK-029; no later Task or remote action is authorized. Preserve original evidence, unchanged DESIGN/PLAN/source, cleaned EXT-129/130 runtime, unmerged worktree and P2 recovery stash. DEF-003 and unchanged0064 current-PLAN scope re-confirmation remain full-P3 completion/publication prerequisites; all complete Phase/coverage/CI/formal gates remain unchanged."
 }
