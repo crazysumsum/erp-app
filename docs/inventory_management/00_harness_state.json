@@ -1,29 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "inventory-management",
-  "revision": 238,
+  "revision": 283,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-004",
-  "current_task": "TASK-026",
+  "current_task": "TASK-028",
   "baseline": {
     "design": "53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce",
-    "plan": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
-    "code_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
-    "source_fingerprint": "aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9",
+    "plan": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+    "code_commit": "3be8d4b3e8650d7f0b89db6ea54ead5207b4964f",
+    "source_fingerprint": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
     "worktree": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app",
     "default_commit": "29893c304eac11716b1758d9b5e25bd8f0080a7e",
     "mode_entry_commit": "5402118617442d4d0651a3245a7b57bf1e30cc43"
   },
   "runtime": {
-    "instance_id": "TASK026-CLEANED-NO-RUNTIME",
-    "owner": "Codex /root",
+    "instance_id": "TASK028-CLEANED-NO-RUNTIME",
+    "owner": "Codex /root TASK-028",
     "resources": {
       "workspace": "/Users/sam/.codex/worktrees/inventory-p3-operations/erp-app"
     },
-    "lease_ref": null
+    "lease_ref": "EXT-129/130 precisely cleaned; no current execution/merge lease"
   },
   "tasks": {
     "TASK-001": "DONE",
@@ -51,9 +51,9 @@
     "TASK-023": "DONE",
     "TASK-024": "DONE",
     "TASK-025": "DONE",
-    "TASK-026": "IN_PROGRESS",
-    "TASK-027": "PENDING",
-    "TASK-028": "PENDING",
+    "TASK-026": "DONE",
+    "TASK-027": "DONE",
+    "TASK-028": "IN_PROGRESS",
     "TASK-029": "PENDING",
     "TASK-030": "PENDING",
     "TASK-031": "PENDING",
@@ -1850,6 +1850,201 @@
         "no TASK-027..034, remote CI/push/PR/merge, formal acceptance or deployment"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-088",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-026 on 2026-10-02 Asia/Hong_Kong, answering HD-078 exact local code checkpoint 0d4d0c2203edd3127bea0b06df99b8ef91c38c63; actual independent human approval; no detailed findings supplied; TASK-026 DoD only, not TASK-027, remote CI/push/PR/merge or formal acceptance/deployment",
+      "recorded_at": "2026-10-02T01:10:09Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+      "code_commit": "0d4d0c2203edd3127bea0b06df99b8ef91c38c63",
+      "scope": [
+        "TASK-026",
+        "independent code review and local TASK-026 DoD completion only",
+        "retained 15unit/7MySQL/155Inventory/lint/build developer evidence with unchanged source/spec; private runtime cleaned",
+        "no later Task, remote publication/CI/merge, formal acceptance or deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-089",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Actual active Codex user reply 開始 on 2026-10-02 Asia/Hong_Kong, answering next step TASK-027 Draft Transfer domain/query after APR-088 TASK-026 independent approval. Local TASK-027 only; no TASK-028+, HTTP/UI, remote push/CI/PR/merge or formal acceptance.",
+      "recorded_at": "2026-10-02T01:23:48Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19",
+      "code_commit": "0d4d0c2203edd3127bea0b06df99b8ef91c38c63",
+      "scope": [
+        "TASK-027",
+        "server/src/modules/inventory/**",
+        "server/test/**/inventory*.test.js",
+        "docs/inventory_management/**",
+        "local developer checks and standing APR-071 task-owned local runtime/precise cleanup"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-090",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply A on 2026-10-02 Asia/Hong_Kong, answering HD-079 and choosing the exact two-file TASK-027 developer-command proposal above; continue local TASK-027 only, temporarily isolate known full-server JUnit parsing defect from Task-local work, retain it as full-P3 completion/merge blocker. No coverage/CI/formal gate waived and no TASK-028+, remote or shared-path new implementation granted.; module-qualified PLAN subject normalized to inventory-management, same actual Sam decision; no scope expansion",
+      "recorded_at": "2026-10-02T03:43:32Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494",
+      "code_commit": "0d4d0c2203edd3127bea0b06df99b8ef91c38c63",
+      "scope": [
+        "inventory-management",
+        "HD-079",
+        "exact two-file task027-developer-contract-proposal.patch only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-091",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply A on 2026-10-02 Asia/Hong_Kong, answering HD-079 and choosing the exact two-file TASK-027 developer-command proposal above; continue local TASK-027 only, temporarily isolate known full-server JUnit parsing defect from Task-local work, retain it as full-P3 completion/merge blocker. No coverage/CI/formal gate waived and no TASK-028+, remote or shared-path new implementation granted.",
+      "recorded_at": "2026-10-02T03:43:32Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494",
+      "code_commit": "0d4d0c2203edd3127bea0b06df99b8ef91c38c63",
+      "scope": [
+        "TASK-027",
+        "server/src/modules/inventory/**",
+        "server/test/**/inventory*.test.js",
+        "docs/inventory_management/**",
+        "APR-089 local start authority rebound to approved command-only PLAN; APR-071 owned runtime unchanged"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-092",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply A on 2026-10-02 Asia/Hong_Kong, answering HD-079 and choosing the exact two-file TASK-027 developer-command proposal above; continue local TASK-027 only, temporarily isolate known full-server JUnit parsing defect from Task-local work, retain it as full-P3 completion/merge blocker. No coverage/CI/formal gate waived and no TASK-028+, remote or shared-path new implementation granted.",
+      "recorded_at": "2026-10-02T03:43:32Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494",
+      "code_commit": "0d4d0c2203edd3127bea0b06df99b8ef91c38c63",
+      "scope": [
+        "DEF-003",
+        "temporary Task-local developer execution only",
+        "no full-P3 readiness, merge, coverage or CI risk waiver; root report incompatibility remains unresolved"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-093",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (independent human reviewer)",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-027 on 2026-10-02 Asia/Hong_Kong, answering HD-080 exact full local review baseline 50a43f83a478a62a1c462d71c5b9e5943acc9ca3 (product savepoint 0ce2eb88c86d3d378a2525c3071d9a061df7e2ce); actual independent human code approval; no detailed findings supplied; TASK-027 local DoD only, not TASK-028+, push/PR/remote CI/merge, full-P3 readiness, formal acceptance/UAT or deployment.",
+      "recorded_at": "2026-10-02T05:56:00Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494",
+      "code_commit": "50a43f83a478a62a1c462d71c5b9e5943acc9ca3",
+      "scope": [
+        "inventory-management",
+        "TASK-027",
+        "independent code review and local TASK-027 DoD completion only",
+        "retained 25unit/14MySQL26.7.0/158Inventory regression/lint/build evidence; unchanged source/spec; runtime cleaned",
+        "no later Task, remote publication/CI/merge, Phase gate waiver, formal acceptance/UAT or deployment"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-094",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user request 開始TASK-028 on 2026-10-02 Asia/Hong_Kong; start local whole-document Transfer Dispatch/Receive under approved DESIGN/PLAN, dependencies TASK-026/027 independently approved DONE. This does not approve an unseen new command PLAN, broaden TASK-027 DEF-003 risk disposition, authorize TASK-029+, remote publication/CI/merge or formal acceptance/UAT/deployment.",
+      "recorded_at": "2026-10-02T06:11:46Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494",
+      "code_commit": "50a43f83a478a62a1c462d71c5b9e5943acc9ca3",
+      "scope": [
+        "inventory-management",
+        "TASK-028",
+        "local preparation and approved implementation",
+        "server/src/modules/inventory/**",
+        "server/test/**/inventory*.test.js",
+        "docs/inventory_management/**",
+        "APR-071 owned local runtime unchanged",
+        "HD-081 must be answered before new command execution/product implementation"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-095",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply A, answering HD-081 exact two-file TASK-028 developer-command proposal SHA256 18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd; approve new PLAN and local whole Dispatch/Receive continuation, temporary DEF-003 disposition only for TASK-028, retaining full-P3 completion/merge blocker and all full Phase/coverage/floors/CI and formal gates. No HTTP/UI, TASK-029+, remote publication/CI/merge or acceptance/deployment.",
+      "recorded_at": "2026-10-02T06:14:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+      "code_commit": "50a43f83a478a62a1c462d71c5b9e5943acc9ca3",
+      "scope": [
+        "inventory-management",
+        "TASK-028",
+        "exact two-file developer command proposal; no original suite changes"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-096",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply A, answering HD-081 exact two-file TASK-028 developer-command proposal SHA256 18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd; approve new PLAN and local whole Dispatch/Receive continuation, temporary DEF-003 disposition only for TASK-028, retaining full-P3 completion/merge blocker and all full Phase/coverage/floors/CI and formal gates. No HTTP/UI, TASK-029+, remote publication/CI/merge or acceptance/deployment.",
+      "recorded_at": "2026-10-02T06:14:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+      "code_commit": "50a43f83a478a62a1c462d71c5b9e5943acc9ca3",
+      "scope": [
+        "TASK-028",
+        "APR-094 actual local start rebound to new PLAN",
+        "server/src/modules/inventory/**",
+        "server/test/**/inventory*.test.js",
+        "docs/inventory_management/**",
+        "standing APR-071 owned runtime unchanged"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-097",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam",
+      "decision": "APPROVED",
+      "source_ref": "Sam actual active Codex user reply A, answering HD-081 exact two-file TASK-028 developer-command proposal SHA256 18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd; approve new PLAN and local whole Dispatch/Receive continuation, temporary DEF-003 disposition only for TASK-028, retaining full-P3 completion/merge blocker and all full Phase/coverage/floors/CI and formal gates. No HTTP/UI, TASK-029+, remote publication/CI/merge or acceptance/deployment.",
+      "recorded_at": "2026-10-02T06:14:56Z",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+      "code_commit": "50a43f83a478a62a1c462d71c5b9e5943acc9ca3",
+      "scope": [
+        "DEF-003",
+        "temporary local TASK-028 continuation only",
+        "not full-P3 readiness/merge, coverage/CI or formal gate waiver"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2388,6 +2583,78 @@
       "reviewer": "Codex /root same author, NOT independent",
       "reviewed_baseline": "aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9",
       "source_ref": "implementation/phase-PHASE-004-report.md five-axis self-review and exact final five developer evidence; no unresolved critical/high self finding; Sam independent code review still pending",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-051",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam (independent human reviewer)",
+      "reviewed_baseline": "aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9",
+      "source_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-026 on 2026-10-02 Asia/Hong_Kong, answering HD-078 exact local code checkpoint 0d4d0c2203edd3127bea0b06df99b8ef91c38c63; actual independent human approval; no detailed findings supplied; TASK-026 DoD only, not TASK-027, remote CI/push/PR/merge or formal acceptance/deployment",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-052",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam",
+      "reviewed_baseline": "54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494",
+      "source_ref": "Sam actual active Codex user reply A on 2026-10-02 Asia/Hong_Kong, answering HD-079 and choosing the exact two-file TASK-027 developer-command proposal above; continue local TASK-027 only, temporarily isolate known full-server JUnit parsing defect from Task-local work, retain it as full-P3 completion/merge blocker. No coverage/CI/formal gate waived and no TASK-028+, remote or shared-path new implementation granted.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-053",
+      "method": "SELF_REVIEW",
+      "author": "Codex /root",
+      "reviewer": "Codex /root",
+      "reviewed_baseline": "0837d0eede203c7c3e9ef777b84c3b1d8cf7de4ee6df25bcf55ca992f8d8e8d9",
+      "source_ref": "implementation/phase-PHASE-004-report.md Current TASK-027 five-axis self-review; exact product savepoint 0ce2eb88c86d3d378a2525c3071d9a061df7e2ce; same-source 25unit/14actualMySQL/158regression zero skips plus lint/build PASS, artifact hashes verified. No independent review or full-P3 coverage/CI/formal acceptance inferred. DEF-003 remains full-P3 completion/merge blocker.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-054",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam (independent human reviewer)",
+      "reviewed_baseline": "0837d0eede203c7c3e9ef777b84c3b1d8cf7de4ee6df25bcf55ca992f8d8e8d9",
+      "source_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-027 on 2026-10-02 Asia/Hong_Kong, answering HD-080 exact full local review baseline 50a43f83a478a62a1c462d71c5b9e5943acc9ca3 (product savepoint 0ce2eb88c86d3d378a2525c3071d9a061df7e2ce); actual independent human code approval; no detailed findings supplied; TASK-027 local DoD only, not TASK-028+, push/PR/remote CI/merge, full-P3 readiness, formal acceptance/UAT or deployment.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-055",
+      "method": "HUMAN",
+      "author": "Codex /root",
+      "reviewer": "Sam",
+      "reviewed_baseline": "0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29",
+      "source_ref": "Sam actual active Codex user reply A, answering HD-081 exact two-file TASK-028 developer-command proposal SHA256 18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd; approve new PLAN and local whole Dispatch/Receive continuation, temporary DEF-003 disposition only for TASK-028, retaining full-P3 completion/merge blocker and all full Phase/coverage/floors/CI and formal gates. No HTTP/UI, TASK-029+, remote publication/CI/merge or acceptance/deployment.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-056",
+      "method": "SELF_REVIEW",
+      "author": "Codex /root",
+      "reviewer": "Codex /root",
+      "reviewed_baseline": "5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6",
+      "source_ref": "implementation/phase-PHASE-004-report.md TASK-028 five-axis self-review: current-source 13unit/31realMySQL/158Inventory regression leaves, zero skips; lint/build PASS, all artifact hashes verified. Product savepoints44b73b0/3be8d4b; no critical/high Task product finding identified. Not independent approval or full-P3 gate. DEF-003 and earlier0064 current-PLAN scope re-confirmation remain full-P3 publication/merge prerequisites; TASK-028 diff relative to actual prior local baseline50a43f8 passed module boundary and does not change0064.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4352,9 +4619,53 @@
     {
       "id": "HD-078",
       "impact": "MAJOR",
-      "question": "Sam independent code review required for local TASK-026 under PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19, exact source fingerprint aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9. Review0064 schema/rerun/ownership constraints, pure whole-transfer rules, tests and phase-PHASE-004-report.md. Five current-source local checks PASS (15unit,7DB,155regression,lint/build); original FAIL/guard rejection evidence retained, private runtime precisely cleaned. Approve this Task code DoD after review or request revisions; recommendation approve if satisfied. Until answered TASK-026 remains IN_PROGRESS; no TASK-027..034, remote CI/push/PR/merge, formal acceptance or deployment authority is requested/granted.",
+      "question": "Sam independent code review required for local TASK-026 under PLAN a1bb358b929a2d9a59e4e77d89458943ee8a828cdce8c3c78864da03aa520d19, exact source fingerprint aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9. Review0064 schema/rerun/ownership constraints, pure whole-transfer rules, tests and phase-PHASE-004-report.md. Five current-source local checks PASS (15unit,7DB,155regression,lint/build); original FAIL/guard rejection evidence retained, private runtime precisely cleaned. Approve this Task code DoD after review or request revisions; recommendation approve if satisfied. Until answered TASK-026 remains IN_PROGRESS; no TASK-027..034, remote CI/push/PR/merge, formal acceptance or deployment authority is requested/granted.; exact local candidate commit 0d4d0c2203edd3127bea0b06df99b8ef91c38c63 (plan commit b55f81e preceding it); post-savepoint fingerprint/spec unchanged. Only local state bookkeeping remains dirty.",
       "affected_ids": [
         "TASK-026",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-026 on 2026-10-02 Asia/Hong_Kong, answering HD-078 exact local code checkpoint 0d4d0c2203edd3127bea0b06df99b8ef91c38c63; actual independent human approval; no detailed findings supplied; TASK-026 DoD only, not TASK-027, remote CI/push/PR/merge or formal acceptance/deployment; APR-088 / REV-051"
+    },
+    {
+      "id": "HD-079",
+      "impact": "MAJOR",
+      "question": "Approve exact not-applied two-file TASK-027 developer-contract patch 05050679e4d46a2c46836f00576404ff9f424224ac60a71edb2f55073e4392fb at implementation/task027-developer-contract-proposal.patch, proposed PLAN 54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494, unchanged DESIGN 53fe56c4bc2f45fb053036de71801ed6d0e8507887cd95b35e4645b9e87adfce? A adds only local inventory-task027-unit: node --test --test-concurrency=1 --import ./server/test-support/testEnv.js --test-reporter=junit --test-reporter-destination={run_dir}/inventory-task027-unit.xml server/test/inventoryTransferService.test.js server/test/inventoryInquiryService.test.js; cwd root, DEVELOPER only, JUNIT, min12/zero skip, timeout1800, FILES, Node26 probe. Add only Task-local plan row, not Phase ledger replacement. B keep approved plan and stop TASK-027 until full root JUnit adapter incompatibility is resolved separately. Recommendation A for genuine incremental task tests, but existing full-P3 checks/coverage92/83/90/floors/CI/formal tests remain unchanged and root ambiguity still blocks Phase completion/merge; no fake future handler tests, parser edits, scope expansion, remote actions or later Tasks. Bind actual APR-089 TASK-027 start authority to new PLAN only if Sam independently approves. Failed raw parse/counts0 not product RED/PASS proof; retained run identifies TC-018 and TC-027 label ambiguity. Proposed typed profile/traceability/matrix and git apply check pass only as configuration checks.",
+      "affected_ids": [
+        "TASK-027",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex user reply A on 2026-10-02 Asia/Hong_Kong, answering HD-079 and choosing the exact two-file TASK-027 developer-command proposal above; continue local TASK-027 only, temporarily isolate known full-server JUnit parsing defect from Task-local work, retain it as full-P3 completion/merge blocker. No coverage/CI/formal gate waived and no TASK-028+, remote or shared-path new implementation granted.; APR-090/091/092"
+    },
+    {
+      "id": "HD-080",
+      "impact": "MAJOR",
+      "question": "Sam independent code review required for TASK-027 Draft Transfer create/atomic complete replacement/cancel/list/detail, exact local product savepoint 0ce2eb88c86d3d378a2525c3071d9a061df7e2ce, source 0837d0eede203c7c3e9ef777b84c3b1d8cf7de4ee6df25bcf55ca992f8d8e8d9, approved PLAN 54635da0d969d7ee82bc7b77c60459214a53eff6e5b3bcda98fcd861cd09f494. Review implementation/phase-PHASE-004-report.md, service/inquiry and actual unit/DB tests. Current-source 25unit,14MySQL26.7.0 domain cases,158Inventory regression leaves pass with zero skips; lint/build and artifact hashes pass. Choose approval of this Task code DoD after review or request revisions; recommendation approve only if satisfied. TASK-027 remains IN_PROGRESS until actual review. No TASK-028+, HTTP/UI, remote CI/push/PR/merge, formal acceptance/UAT or deployment authority requested. Original full-P3 JUnit/coverage parsing DEF-003 remains unresolved for Phase completion/merge; all later Phase checks unchanged. Private synthetic runtime precisely cleaned; historical runtime cannot back a current MERGE_READY claim.; complete local review baseline 50a43f83a478a62a1c462d71c5b9e5943acc9ca3 includes product savepoint 0ce2eb88 and documentation/original evidence savepoint only; identical source/spec after both commits. Remaining dirty state is local checkpoint metadata only.",
+      "affected_ids": [
+        "TASK-027",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex user reply 已審閱，批准 TASK-027 on 2026-10-02 Asia/Hong_Kong, answering HD-080 exact full local review baseline 50a43f83a478a62a1c462d71c5b9e5943acc9ca3 (product savepoint 0ce2eb88c86d3d378a2525c3071d9a061df7e2ce); actual independent human code approval; no detailed findings supplied; TASK-027 local DoD only, not TASK-028+, push/PR/remote CI/merge, full-P3 readiness, formal acceptance/UAT or deployment.; APR-093 / REV-054"
+    },
+    {
+      "id": "HD-081",
+      "impact": "MAJOR",
+      "question": "Approve exact not-applied two-file TASK-028 developer-command patch 18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd at implementation/task028-developer-contract-proposal.patch, proposed PLAN 0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29, unchanged DESIGN? A adds inventory-task028-unit: node --test --test-concurrency=1 --import ./server/test-support/testEnv.js --test-reporter=junit --test-reporter-destination={run_dir}/inventory-task028-unit.xml server/test/inventoryTransferService.test.js; root cwd, Node26, DEVELOPER/FILES only, JUNIT, min12/zero skips, timeout1800; one Task-local §5.4 plan row, no ledger replacement. Use existing real MySQL Transfer suite, Inventory regression, lint/build. Approve temporary DEF-003 disposition for local TASK-028 only; root parser issue still blocks full-P3 completion/merge, all Phase suites/coverage/floors/CI/formal mappings unchanged. Full Phase unit awaits actual TASK-029 handler test; no fake placeholder/parser edit/shared-path expansion. B retains current PLAN and pauses TASK-028 until root/full-unit gap resolved separately. Recommend A for genuine incremental checks; default no application/implementation. APR-094 actual start may be rebound only after actual new PLAN decision. Proposal git apply check and scratch profile/traceability passed as configuration checks, not tests or approval.",
+      "affected_ids": [
+        "TASK-028",
+        "PHASE-004"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Sam actual active Codex user reply A, answering HD-081 exact two-file TASK-028 developer-command proposal SHA256 18aa317d88c940407ee53d9ae22d24d681b5b044bad04ca3bcb793955e2f71bd; approve new PLAN and local whole Dispatch/Receive continuation, temporary DEF-003 disposition only for TASK-028, retaining full-P3 completion/merge blocker and all full Phase/coverage/floors/CI and formal gates. No HTTP/UI, TASK-029+, remote publication/CI/merge or acceptance/deployment.; APR-095/096/097 / REV-055"
+    },
+    {
+      "id": "HD-082",
+      "impact": "MAJOR",
+      "question": "Sam independent TASK-028 code review required: whole atomic Transfer Dispatch/Receive, exact product savepoint3be8d4b3e8650d7f0b89db6ea54ead5207b4964f, current source 5a514df1ffec98155e7f2ebdf0dcc4b5e2ecf8f6dcc51cb05f3915e2626395b6, approved PLAN 0cc924725bf59d8773b1d8df6d3e018ac2886ba0fd0998a2622c2119dde3cf29. Review implementation/phase-PHASE-004-report.md and Transfer service/unit/realDB tests. 13unit/31trueMySQL26.7.0/158Inventory regression leaves and lint/build PASS on same final source/spec, zero skips; original artifact hashes retained and checked. Approve this local Task DoD only if satisfied or request changes. No TASK-029+, HTTP/UI, push/PR/remote CI/merge, Phase gate waiver, formal acceptance/UAT or deployment. Private synthetic runtime precisely cleaned; old reports cannot back current MERGE_READY. Original DEF-003 remains unresolved full-P3 gate; full-Phase boundary additionally needs actual re-confirmation of already unchanged0064 scope under new PLAN, not silently granted here.",
+      "affected_ids": [
+        "TASK-028",
         "PHASE-004"
       ],
       "status": "OPEN",
@@ -5409,6 +5720,38 @@
       "idempotency_key": "erp_inventory_task026_b96a99b7a37e",
       "status": "CONFIRMED",
       "source_ref": "Private synthetic schema erp_inventory_task026_b96a99b7a37e dropped and absence observed; exact own mysqld PID 49567 shut down with exit0; controller port lease released. Only task root /private/tmp/erp-inventory-task026-mysql-2670.yipk2y0e remains for precise removal; no shared/prod data or other runtime touched.; actual root directory removed after own PID/socket/listener absence checks; no resource remains, no worktree/stash cleanup (unmerged work retained)"
+    },
+    {
+      "id": "EXT-127",
+      "kind": "TASK027_PRIVATE_RUNTIME",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.d37p2q4a; erp_inventory_p3_08d4cdc47765",
+      "idempotency_key": "erp_inventory_p3_08d4cdc47765",
+      "status": "CONFIRMED",
+      "source_ref": "Private synthetic schema erp_inventory_p3_08d4cdc47765 dropped and absence observed; exact own mysqld PID 55846 shut down with exit0; controller port lease released. Only task root /private/tmp/erp-inventory-p3-mysql-2670.d37p2q4a remains for precise removal; no shared/prod data or other runtime touched.; owner/no-symlink verified; socket/PID-file absent; PID55846 absent and port62479 bindable; exact root removed and absence observed. No migration/DB domain test ran."
+    },
+    {
+      "id": "EXT-128",
+      "kind": "TASK027_PRIVATE_RUNTIME",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.h_0k7o89; erp_inventory_p3_7d2503e5757f",
+      "idempotency_key": "erp_inventory_p3_7d2503e5757f",
+      "status": "CONFIRMED",
+      "source_ref": "Private synthetic schema erp_inventory_p3_7d2503e5757f dropped and absence observed; exact own mysqld PID 58949 shut down with exit0; controller port lease released. Only task root /private/tmp/erp-inventory-p3-mysql-2670.h_0k7o89 remains for precise removal; no shared/prod data or other runtime touched.; exact root removed after non-symlink/owner/runtime-identity/PID/socket/pidfile/port-release checks; root absence confirmed. Synthetic data is not recoverable; original reports and unmerged worktree retained."
+    },
+    {
+      "id": "EXT-129",
+      "kind": "TASK028_PRIVATE_RUNTIME",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.xpi0yf6g; erp_inventory_p3_5ac0eab1f0a2",
+      "idempotency_key": "erp_inventory_p3_5ac0eab1f0a2",
+      "status": "CONFIRMED",
+      "source_ref": "Private synthetic schema erp_inventory_p3_5ac0eab1f0a2 dropped and absence observed; exact own mysqld PID 67455 shut down with exit0; controller port lease released. Only task root /private/tmp/erp-inventory-p3-mysql-2670.xpi0yf6g remains for precise removal; no shared/prod data or other runtime touched.; EXT-129 private schema absence/own daemon exit0 observed; root identity/owner700/non-symlink and absence of owned PID67455/socket/pidfile plus port54687 release independently checked; only exact /private/tmp/erp-inventory-p3-mysql-2670.xpi0yf6g removed and absence verified. Synthetic data irrecoverable; all original reports/artifact hashes and unmerged worktree/branch/stash retained."
+    },
+    {
+      "id": "EXT-130",
+      "kind": "TASK028_PRECISE_RUNTIME_CLEANUP",
+      "target": "/private/tmp/erp-inventory-p3-mysql-2670.xpi0yf6g; erp_inventory_p3_5ac0eab1f0a2; own mysqld67455; held port54687",
+      "idempotency_key": "erp_inventory_p3_5ac0eab1f0a2-cleanup",
+      "status": "CONFIRMED",
+      "source_ref": "EXT-129 private schema absence/own daemon exit0 observed; root identity/owner700/non-symlink and absence of owned PID67455/socket/pidfile plus port54687 release independently checked; only exact /private/tmp/erp-inventory-p3-mysql-2670.xpi0yf6g removed and absence verified. Synthetic data irrecoverable; all original reports/artifact hashes and unmerged worktree/branch/stash retained."
     }
   ],
   "evidence_files": [
@@ -5470,7 +5813,33 @@
     "evidence/20261002T005922-2708f52305a1/run.json",
     "evidence/20261002T005924-d6e2a3bead14/run.json",
     "evidence/20261002T005925-a1bb4d476881/run.json",
-    "evidence/20261002T005929-857c246bf5a5/run.json"
+    "evidence/20261002T005929-857c246bf5a5/run.json",
+    "evidence/20261002T012718-0d37682dfc22/run.json",
+    "evidence/20261002T034512-bc333a40b910/run.json",
+    "evidence/20261002T034816-bf67e3eabb96/run.json",
+    "evidence/20261002T040046-ba2af73b3b6c/run.json",
+    "evidence/20261002T040354-9788b76d9bb2/run.json",
+    "evidence/20261002T040541-36caa56ba86a/run.json",
+    "evidence/20261002T040607-a08e8279dcdc/run.json",
+    "evidence/20261002T040839-080673e8bd03/run.json",
+    "evidence/20261002T040839-79e6d0708d71/run.json",
+    "evidence/20261002T040840-5374d9cfb1b8/run.json",
+    "evidence/20261002T040840-767650988ca5/run.json",
+    "evidence/20261002T040840-db4800a1215c/run.json",
+    "evidence/20261002T062104-a92011597f78/run.json",
+    "evidence/20261002T062512-f37992fb5a46/run.json",
+    "evidence/20261002T063037-74fa48c2755c/run.json",
+    "evidence/20261002T063109-6d05551a2b92/run.json",
+    "evidence/20261002T063304-aff30d5925ad/run.json",
+    "evidence/20261002T063339-3687cebff04a/run.json",
+    "evidence/20261002T063618-e9e523520a16/run.json",
+    "evidence/20261002T063642-2146820226cb/run.json",
+    "evidence/20261002T063642-c56af37cb5d6/run.json",
+    "evidence/20261002T063957-1d3dddedec66/run.json",
+    "evidence/20261002T063957-7478228064d2/run.json",
+    "evidence/20261002T063957-c715858bb13a/run.json",
+    "evidence/20261002T063957-fa65b6d1e87a/run.json",
+    "evidence/20261002T063958-82efbefcb4f0/run.json"
   ],
   "defects": [
     {
@@ -5504,7 +5873,18 @@
         "Exact disposable schema and private runtime removed and confirmed absent (EXT-071)"
       ],
       "risk_approval_id": null
+    },
+    {
+      "id": "DEF-003",
+      "severity": "HIGH",
+      "status": "DEFERRED",
+      "source_ids": [
+        "TASK-027",
+        "PHASE-004"
+      ],
+      "closure_evidence": [],
+      "risk_approval_id": "APR-097"
     }
   ],
-  "next_safe_action": "HD-078: independent Sam code review of local TASK-026 exact source fingerprint aea05c3ea0f821cb9898a7222badd78dd77df7a0ebea945f4cea92bc63a042b9; local developer verification complete, not DoD/Phase/merge completion. Private resources precisely cleaned and original failure evidence retained. Save local scoped commits, bind code checkpoint afterward; no remote/later Task action."
+  "next_safe_action": "Await actual Sam independent TASK-028 code review HD-082; keep Task IN_PROGRESS until actual approval. Verify exact full review checkpoint/source/spec and evidence before marking DONE. No later Task or remote actions authorized. Preserve DEF-003 full-P3 completion/merge blocker and note unchanged0064 scoped approval is stale against new PLAN for full-Phase boundary; require actual disposition before full-P3 publication. TASK-028 own diff boundary PASS. Runtime EXT-129/130 precisely cleaned; no live lease or acceptance claim. Preserve original evidence, approvals, unmerged worktree and P2 recovery stash."
 }
