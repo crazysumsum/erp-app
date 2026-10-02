@@ -976,6 +976,32 @@
       "side_effects": ["FILES"],
       "env_keys": [],
       "redaction_env_keys": []
+    },
+    {
+      "id": "inventory-task028-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/inventory-task028-unit.xml",
+        "server/test/inventoryTransferService.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "inventory-task028-unit.xml",
+      "min_tests": 12,
+      "max_skipped": 0,
+      "stages": ["DEVELOPER"],
+      "required_case_ids": [],
+      "tool_probes": [{"argv": ["node", "--version"], "version_pattern": "^v26\\."}],
+      "side_effects": ["FILES"],
+      "env_keys": [],
+      "redaction_env_keys": []
     }
   ],
   "ci": {

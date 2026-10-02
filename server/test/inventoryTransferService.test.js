@@ -114,3 +114,66 @@ test("TASK-027 cancellation requires a bounded nonblank reason and integer heade
     assert.deepEqual(f.database.state, { headers: [], lines: [], audits: [] });
   }
 });
+
+test("TASK-028 Dispatch rejects caller quantities, lines, status and unsafe identity/version", async () => {
+  const base = { transferId: 41, expectedVersion: 1 };
+  for (const payload of [{ ...base, quantity: 3 }, { ...base, lines: [] },
+    { ...base, status: "RECEIVED" }, { ...base, transferId: "41" }, { ...base, expectedVersion: 0 }]) {
+    const f = fixture();
+    await assert.rejects(f.service.dispatch(command("dispatch", { payload })), { code: "INVENTORY_INPUT_INVALID" });
+    assert.deepEqual(f.database.state, { headers: [], lines: [], audits: [] });
+  }
+});
+
+test("TASK-028 Receive requires a bounded nonempty whole-line array", async () => {
+  for (const lines of [undefined, [], {}, Array(101).fill({ id: 51, quantity: 5, destinationBinId: 4 })]) {
+    const f = fixture();
+    await assert.rejects(f.service.receive(command("receive", {
+      payload: { transferId: 41, expectedVersion: 2, ...(lines === undefined ? {} : { lines }) }
+    })), { code: "INVENTORY_INPUT_INVALID" });
+  }
+});
+
+test("TASK-028 Receive rejects caller SKU/Lot/Expiry snapshots and malformed line identities", async () => {
+  const line = { id: 51, quantity: 5, destinationBinId: 4 };
+  for (const invalid of [{ ...line, skuId: 12 }, { ...line, lotId: 1 },
+    { ...line, expiryDate: "2026-12-31" }, { ...line, id: "51" }, { ...line, destinationBinId: 0 }]) {
+    const f = fixture();
+    await assert.rejects(f.service.receive(command("receive", {
+      payload: { transferId: 41, expectedVersion: 2, lines: [invalid] }
+    })), { code: "INVENTORY_INPUT_INVALID" });
+  }
+});
+
+test("TASK-028 Receive rejects nonpositive, fractional or unsafe quantities", async () => {
+  for (const quantity of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+    const f = fixture();
+    await assert.rejects(f.service.receive(command("receive", {
+      payload: { transferId: 41, expectedVersion: 2, lines: [{ id: 51, quantity, destinationBinId: 4 }] }
+    })), { code: "INVENTORY_QUANTITY_INVALID" });
+  }
+});
+
+test("TASK-028 posting revalidates current permission and rejects caller-selected contracts", async () => {
+  const f = fixture({ authorize: async () => ({ permissions: [] }) });
+  for (const action of ["dispatch", "receive"]) {
+    await assert.rejects(f.service[action](command(action)), { code: "PERMISSION_STALE" });
+    await assert.rejects(f.service[action](command(action, {
+      authorization: { purpose: `transfer.${action}`, requiredCallerPermission: "receiving.operation" }
+    })), /authorization contract mismatch/u);
+  }
+  assert.deepEqual(f.database.state, { headers: [], lines: [], audits: [] });
+});
+
+for (const action of ["dispatch", "receive"]) {
+  test(`TASK-028 ${action} replays the original receipt without reloading or mutating a later state`, async () => {
+    const receipt = { id: 41, operationId: 21, version: action === "dispatch" ? 2 : 3,
+      status: action === "dispatch" ? "IN_TRANSIT" : "RECEIVED", rowCount: 1 };
+    const f = fixture({ operations: { claim: async () => ({ replay: { resultSummary: receipt } }) } });
+    const payload = { transferId: 41, expectedVersion: action === "dispatch" ? 1 : 2,
+      ...(action === "receive" ? { lines: [{ id: 51, quantity: 5, destinationBinId: 4 }] } : {}) };
+    assert.deepEqual(await f.service[action](command(action, { payload })), receipt);
+    assert.deepEqual(f.database.state, { headers: [], lines: [], audits: [] });
+    assert.equal(f.database.calls.length, 0);
+  });
+}
