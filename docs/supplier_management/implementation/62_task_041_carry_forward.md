@@ -319,3 +319,49 @@ surrogate guard removed), and the mutation counts reproduce (89, 87 killed, #63 
 - **I-4.** origin/main d6397e0 (inventory reservations, migration 0063, permission catalogue, lockfile) merged into the
   branch before merge.
 - **I-5.** Wording in this doc corrected ("finishes", not "refuses").
+
+## Status after TASK-044
+
+T44 adds `GET /api/v1/supplier-imports`, `GET /api/v1/supplier-imports/:id` and `POST /api/v1/supplier-imports/:id/cancel`
+(`handlers/supplier-imports/jobHandlers.js`, `SupplierImportService.list/get/cancel`) and the client service
+`client/src/services/supplierImport.js`. The open points were decided in HD-058 (1A 2A 3A 4A 5B).
+
+| Obligation | Status |
+| --- | --- |
+| REV-068 I-2: never serve rows of a `validating` job | **Done.** `get` answers no rows while the job is `uploaded` or `validating`; the integration test writes a batch into a validating job and sees none served. |
+| REV-064 I-3: uploads while the precheck job is disabled | **Decided, HD-058 5B.** Upload stays open; the job waits in `uploaded` and can be cancelled. The upload route description says so. |
+| REV-065 I-3: the precheck attempt bound must be stated | **Done.** The upload and detail route descriptions state the three-attempt bound and that a long outage fails the job. Cancel cannot touch a `validating` job (HD-058 2A) and is terminal, so it never shifts the `version - 1` attempt count. |
+| HD-043, T44 part: stored name from the job row; refuse `nlink > 1` before serving | **Moved to T46 by HD-058 4A.** T44 serves no file. Cancel deletes the source by the stored name it reads from the locked job row. |
+| HD-047 (3), T44 part: stored names only from the helpers | **Done.** Cancel removes the source through `removeSupplierImportFile` → `supplierImportFilePath`. |
+| T44 criterion "a purged file answers 410" | **Moved to T46 by HD-058 4A.** The job summary carries `filesPurged`; the 410 belongs to the download endpoint. |
+
+New obligations T44 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T45 | HD-058 1A covers list, get and cancel. Confirm must take a position too: a non-uploader cannot read the job (404), so the simplest consistent rule is that only the uploader confirms. Raise it with the confirm design if T45 wants otherwise. |
+| T45 | Confirm reads the job `WHERE id = ? AND created_by = ?` like cancel, so a foreign or missing job is the same 404. |
+| T46 | The result download answers 410 when `files_purged_at` is set, takes the stored name from the job row, reads the file the way `readSupplierImportSource` does (`O_NOFOLLOW`, regular file, `nlink === 1`, recorded SHA-256), and applies the uploader-only 404. |
+| T46 | Handlers register in file-name order and Express 5 cannot constrain `:id`. `jobHandlers.js` sorts after `importTemplateUploadHandlers.js` so `GET /:id` does not swallow `GET /template`. Any new static `GET /api/v1/supplier-imports/<word>` must sit in a file that sorts before `jobHandlers.js`. The integration test's template download catches a break. |
+| T48 | A cancelled job has `files_purged_at` set and its source is deleted at once; a delete that failed (logged as `supplier.import.source_cleanup_failed`) leaves a file whose job has `files_purged_at` set, which HD-044 already treats as unreferenced. |
+| Operations | HD-058 1A: a job whose uploader's user is deleted (`created_by` becomes NULL) is visible to no one through the API. It stays in the database with its audit; a `ready` job of that kind waits for T48's purge. |
+
+## Mutation record for TASK-044
+
+39 mutants against the T44 code, all killed (unit files and the two import integration files on real MySQL, run serially,
+each mutant applied to a committed tree and restored from the saved bytes):
+
+- **Service (33):** list, get or cancel reaching another user's job; the fresh-actor check dropped from each; list ignoring
+  the status filter or the offset, or sorting oldest first; get serving rows while prechecking (twice: the guard, and
+  `validating` dropped from the hidden set), ignoring the row-status filter or the offset; the page size unbounded or the
+  offset overflow unchecked; cancel in any state, `validating` cancellable, `queued` not; cancel ignoring the version, not
+  setting `files_purged_at` or `completed_at`, not bumping the version, keeping the source, not reporting a missing root,
+  not logging a failed delete, not auditing, or losing the before-state; the summary's `filesPurged` inverted and
+  `confirmedAt`, `completedAt` or `appliedCount` wrong; the row's `matchSupplierId` or `appliedSupplierId` dropped.
+- **Handlers and schemas (6):** cancel getting no root; list dropping the query; cancel not idempotent; the page size
+  1,000; the job schema open; an execution error without `field` rejected by the row schema.
+
+Four first survived and each got a test: the status filter and the list offset (the test user's two jobs were both
+cancelled and only page 1 was read), `appliedCount` (the unit fixture had equal applied and valid counts), and the
+field-less execution error (that mutant was first run against the unit files only; it dies on the integration test that
+serves a failed row).
