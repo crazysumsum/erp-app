@@ -1141,3 +1141,15 @@ integrationTest("TASK-045: two workers never apply a row twice — one claim win
     assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1, code);
   }
 });
+
+integrationTest("TASK-045 (HD-060 5A): a confirmer whose account was deactivated after confirm writes nothing", async () => {
+  const owner = await makeUser("dx", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `DX-${tag}`, supplierName: `Deactivated ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  await h.db.execute("UPDATE users SET status = 'disabled' WHERE id = ?", [owner.userId]);
+  const result = await execute(id);
+  assert.equal(result.status, "failed");
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED"]]);
+  assert.equal(await supplierByCode(`DX-${tag}`), undefined);
+});
