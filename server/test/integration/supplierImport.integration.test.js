@@ -573,13 +573,15 @@ integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a 
 integrationTest("TASK-044: detail pages the rows by row number, filters by status, and serves none before precheck finishes", async () => {
   const owner = await makeUser("det", ["supplier.mgmt"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
+  const existing = await seedSupplier({ code: `D6-${tag}`, name: `Detail Six ${tag}` });
   const created = await httpUpload(owner, csv([
     { supplierCode: `D1-${tag}`, supplierName: `Detail One ${tag}`, defaultCurrencyCode: "HKD" },
     { supplierCode: `D2-${tag}`, supplierName: `Detail Two ${tag}` },
     { supplierCode: `D3-${tag}`, supplierName: `Detail Three ${tag}`, defaultCurrencyCode: "HKD" },
     { supplierCode: `D4-${tag}`, supplierName: `Detail Four ${tag}` },
-    { supplierCode: `D5-${tag}`, supplierName: `Detail Five ${tag}`, defaultCurrencyCode: "HKD" }
-  ]));
+    { supplierCode: `D5-${tag}`, supplierName: `Detail Five ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `D6-${tag}`, supplierName: `Detail Six Renamed ${tag}` }
+  ]), { mode: "upsert" });
   const id = created.job.id;
   const before = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
   assert.deepEqual([before.status, before.data.job.status, before.data.rows, before.data.total], [200, "uploaded", [], 0]);
@@ -602,10 +604,13 @@ integrationTest("TASK-044: detail pages the rows by row number, filters by statu
 
   const page2 = await api(owner, "GET", `/api/v1/supplier-imports/${id}?page=2&pageSize=2`);
   assert.equal(page2.status, 200);
-  assert.deepEqual([page2.data.total, page2.data.page, page2.data.pageSize, page2.data.rows.map((row) => row.rowNumber)], [5, 2, 2, [3, 4]]);
+  assert.deepEqual([page2.data.total, page2.data.page, page2.data.pageSize, page2.data.rows.map((row) => row.rowNumber)], [6, 2, 2, [3, 4]]);
+  const page3 = await api(owner, "GET", `/api/v1/supplier-imports/${id}?page=3&pageSize=2`);
+  assert.deepEqual(page3.data.rows.map((row) => [row.rowNumber, row.operation, row.matchSupplierId, row.appliedSupplierId]),
+    [[5, "create", null, null], [6, "update", existing, null]]);
   assert.deepEqual(page2.data.job, (await api(owner, "GET", "/api/v1/supplier-imports")).data.items[0], "list and detail agree");
   assert.deepEqual([page2.data.job.totalCount, page2.data.job.validCount, page2.data.job.invalidCount, page2.data.job.filesPurged],
-    [5, 3, 2, false]);
+    [6, 4, 2, false]);
   const invalid = await api(owner, "GET", `/api/v1/supplier-imports/${id}?rowStatus=invalid`);
   assert.deepEqual(invalid.data.rows.map((row) => [row.rowNumber, row.status, row.errors[0].field]),
     [[2, "invalid", "defaultCurrencyCode"], [4, "invalid", "defaultCurrencyCode"]]);
@@ -680,4 +685,18 @@ integrationTest("TASK-044 (HD-058 3A): a source that cannot be deleted is logged
     [["supplier.import.source_cleanup_failed", created.id, "SUPPLIER_IMPORT_UNAVAILABLE"]]);
   const { source_stored_name: name } = await job(created.id);
   fs.rmSync(path.join(h.worker.preparedRoot, "source", name));
+});
+
+integrationTest("TASK-044: a manager whose permission was withdrawn after the token was issued is refused at once", async () => {
+  const owner = await makeUser("stl", ["supplier.mgmt"]);
+  const created = await httpUpload(owner, csv([{ supplierCode: `S-${randomUUID().slice(0, 6)}`, supplierName: "Stale", defaultCurrencyCode: "HKD" }]));
+  await h.db.execute(
+    "DELETE rp FROM role_permissions rp JOIN user_roles ur ON ur.role_id = rp.role_id WHERE ur.user_id = ?", [owner.userId]);
+  for (const [method, url, body] of [["GET", "/api/v1/supplier-imports", undefined], ["GET", `/api/v1/supplier-imports/${created.job.id}`, undefined],
+    ["POST", `/api/v1/supplier-imports/${created.job.id}/cancel`, { version: 1 }]]) {
+    const refused = await api(owner, method, url, { body, key: randomUUID() });
+    assert.deepEqual([refused.status, errorCode(refused)], [403, "PERMISSION_STALE"], `${method} ${url}`);
+  }
+  assert.equal((await job(created.job.id)).status, "uploaded", "the cancel did nothing");
+  await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [created.job.id]);
 });

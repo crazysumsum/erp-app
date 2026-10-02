@@ -119,7 +119,7 @@ function paging(page, pageSize) {
 const importJobNotFound = () => supplierImportError("SUPPLIER_IMPORT_NOT_FOUND", 404, "找不到指定的匯入工作");
 
 /** 對外嘅列：只係 precheck／執行結果，冇 lease、冇預期版本。 */
-function importRowView(row) {
+export function importRowView(row) {
   return {
     rowNumber: Number(row.row_number), operation: row.operation, status: row.status,
     matchSupplierId: nullableNumber(row.match_supplier_id), appliedSupplierId: nullableNumber(row.applied_supplier_id),

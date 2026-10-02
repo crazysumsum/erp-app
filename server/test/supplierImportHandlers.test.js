@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   CancelSupplierImportHandler, GetSupplierImportHandler, ListSupplierImportsHandler
 } from "../src/handlers/supplier-imports/jobHandlers.js";
-import { CANCELLABLE_JOB_STATUSES, importJobSummary, SupplierImportService } from "../src/modules/supplier/SupplierImportService.js";
+import { CANCELLABLE_JOB_STATUSES, importJobSummary, importRowView, SupplierImportService } from "../src/modules/supplier/SupplierImportService.js";
 
 /** TASK-044：job list／get／cancel 嘅 route contract 同 handler 行為（service 用替身）。真 SQL 喺整合測試。 */
 function services({ preparedRoot = "/srv/imports/real", worker = true } = {}) {
@@ -88,14 +88,30 @@ test("only jobs not yet prechecking or running can be cancelled (HD-058 2A)", ()
   assert.deepEqual([...CANCELLABLE_JOB_STATUSES], ["uploaded", "ready", "ready_with_errors", "queued"]);
 });
 
-test("the summary says whether the files are gone, and maps nullable times", () => {
-  const row = { id: "4", template_version: "v1", mode: "upsert", activation_mode: null, status: "cancelled", total_count: "3",
-    valid_count: "2", warning_count: "0", invalid_count: "1", applied_count: "0", failed_count: "0", skipped_count: "0",
-    last_error_code: "", error_summary: "", created_at: "10", updated_at: "20", confirmed_at: null, completed_at: "20",
-    files_purged_at: "20", version: "2" };
-  const summary = importJobSummary(row);
-  assert.deepEqual([summary.filesPurged, summary.confirmedAt, summary.completedAt, summary.activationMode], [true, null, 20, null]);
-  assert.equal(importJobSummary({ ...row, files_purged_at: null }).filesPurged, false);
+test("the summary projects every public field and says whether the files are gone", () => {
+  const row = { id: "4", template_version: "v1", mode: "upsert", activation_mode: "draft", status: "completed_with_errors",
+    total_count: "6", valid_count: "3", warning_count: "1", invalid_count: "2", applied_count: "3", failed_count: "1",
+    skipped_count: "2", last_error_code: "", error_summary: "", created_at: "10", updated_at: "30", confirmed_at: "15",
+    completed_at: "30", files_purged_at: "30", version: "5", source_stored_name: "a".repeat(64), lease_owner: "w" };
+  assert.deepEqual(importJobSummary(row), {
+    id: 4, templateVersion: "v1", mode: "upsert", activationMode: "draft", status: "completed_with_errors", totalCount: 6,
+    validCount: 3, warningCount: 1, invalidCount: 2, appliedCount: 3, failedCount: 1, skippedCount: 2, lastErrorCode: "",
+    errorSummary: "", filesPurged: true, createdAt: 10, updatedAt: 30, confirmedAt: 15, completedAt: 30, version: 5
+  });
+  const fresh = importJobSummary({ ...row, activation_mode: null, confirmed_at: null, completed_at: null, files_purged_at: null });
+  assert.deepEqual([fresh.filesPurged, fresh.confirmedAt, fresh.completedAt, fresh.activationMode], [false, null, null, null]);
+});
+
+test("a row projects its outcome but not its expected version", () => {
+  const payload = { root: { supplierCode: "S-1" } };
+  const row = { job_id: "4", row_number: "7", operation: "update", status: "applied", match_supplier_id: "11",
+    expected_supplier_version: "3", applied_supplier_id: "11", normalized_payload: payload,
+    errors: [], warnings: [{ field: "supplierName", code: "W", message: "m" }] };
+  assert.deepEqual(importRowView(row), { rowNumber: 7, operation: "update", status: "applied", matchSupplierId: 11, appliedSupplierId: 11,
+    normalizedPayload: payload, errors: [], warnings: [{ field: "supplierName", code: "W", message: "m" }] });
+  const created = importRowView({ ...row, operation: "create", status: "valid", match_supplier_id: null, applied_supplier_id: null,
+    errors: null, warnings: null });
+  assert.deepEqual([created.matchSupplierId, created.appliedSupplierId, created.errors, created.warnings], [null, null, [], []]);
 });
 
 test("list, get and cancel refuse malformed input before touching the database", async () => {
