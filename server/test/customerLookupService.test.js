@@ -140,7 +140,7 @@ test("TC-027 credit lookup preserves absent, zero and on-hold semantics without 
   await assert.rejects(() => lookup.getCreditPolicy(999), (error) => error.code === "CUSTOMER_NOT_FOUND");
 });
 
-test("TC-018 and TC-027 address lookup returns only active owned purpose rows and safe fields", async () => {
+test("TC-027 address lookup returns only active owned purpose rows and safe fields", async () => {
   const row = {
     id: 11, customer_id: 4, label: "Warehouse", recipient_company_department: "Receiving",
     address_line1: "1 Main Street", address_line2: "", address_line3: "", city: "Hong Kong",
