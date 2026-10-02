@@ -1,4 +1,4 @@
-import { supplierNotFound } from "../supplierErrors.js";
+import { invalidSupplierInput, supplierNotFound } from "../supplierErrors.js";
 
 /**
  * 真正寫 Supplier 嘅 applyRow（T45；設計 §6.9、§8.8；HD-060）。
@@ -16,16 +16,23 @@ export function createSupplierImportApplier({ suppliers, addresses, contacts, id
     const payload = typeof row.normalized_payload === "string" ? JSON.parse(row.normalized_payload) : row.normalized_payload;
     const root = payload?.root ?? {};
     const note = `CSV 匯入 #${job.id}`;
-    const base = { actorId: actor.id, requestId: "", ip: "" };
+    // requestId 指返個 job，audit 查得返係邊次匯入寫嘅（REV-071 I-4）。
+    const base = { actorId: actor.id, requestId: `import-${job.id}`, ip: "" };
+    const activate = job.activation_mode === "activate";
+    const approvalRequired = Number(job.approval_setting_value) === 1;
 
     if (row.operation === "create") {
+      // 審批人個 user 俾人刪咗（FK SET NULL）：同「冇資格」一樣處理，唔好報「未指定」（REV-071 I-2，HD-060 3A）。
+      if (activate && approvalRequired && job.approver_user_id === null) {
+        throw invalidSupplierInput("APPROVER_NOT_ELIGIBLE", "指定的審批人不是有效使用者", { field: "approverUserId" });
+      }
       const { id } = await suppliers.createSupplierInTransaction(connection, {
         actor,
         input: {
-          ...base, ...root, activate: job.activation_mode === "activate",
+          ...base, ...root, activate,
           approverUserId: job.approver_user_id === null ? undefined : Number(job.approver_user_id), requestNote: note
         },
-        approvalRequired: async () => Number(job.approval_setting_value) === 1,
+        approvalRequired: async () => approvalRequired,
         addChildren: async (supplierId) => {
           if (payload.address) await addresses.createInTransaction(connection, { actor, input: { ...base, ...payload.address, supplierId } });
           if (payload.contact) await contacts.createInTransaction(connection, { actor, input: { ...base, ...payload.contact, supplierId } });

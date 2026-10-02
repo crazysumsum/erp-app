@@ -1,10 +1,11 @@
 /**
- * TASK-045 fault injection：一個真 worker process，執行指定 job 到某一點就 SIGKILL 自己。
+ * TASK-045 fault injection：一個真 worker process。
  *
- *   node --import ./test-support/testEnv.js test-support/supplierImportCrashChild.js <before|after> <importRoot> <logRoot>
+ *   node --import ./test-support/testEnv.js test-support/supplierImportCrashChild.js <before|after|run> <importRoot> <logRoot>
  *
- * - before：真 applyRow 寫完 Supplier（未 commit）就殺 —— MySQL 見 connection 斷咗會 rollback。
- * - after：第一列 commit 咗、未做下一列就殺。
+ * - before：真 applyRow 寫完 Supplier（未 commit）就 SIGKILL 自己 —— MySQL 見 connection 斷咗會 rollback。
+ * - after：第一列 commit 咗、未做下一列就 SIGKILL 自己。
+ * - run：照常執行（用 caller 俾嘅環境，例如好短嘅 DB timeout），將拋出嘅錯誤 code 以 JSON 印出嚟。
  * 放喺 test-support 而唔係 test/：`node --test` 會將 test/ 下面所有 .js 當測試跑。
  */
 import path from "node:path";
@@ -28,6 +29,12 @@ const die = () => {
   process.kill(process.pid, "SIGKILL");
   return new Promise(() => {});
 };
+if (point === "run") {
+  const outcome = await worker.runExecution(new AbortController().signal)
+    .then((result) => ({ status: result.status }), (error) => ({ code: error?.code ?? null, causeCode: error?.cause?.code ?? null }));
+  process.stdout.write(`${JSON.stringify(outcome)}\n`);
+  process.exit(0);
+}
 if (point === "before") {
   const real = worker.applyRow;
   worker.applyRow = async (connection, context) => {

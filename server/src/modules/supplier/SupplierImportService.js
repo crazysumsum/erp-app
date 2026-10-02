@@ -605,12 +605,6 @@ export class SupplierImportService {
         const [[job]] = await connection.query(
           `SELECT ${JOB_COLUMNS} FROM supplier_import_jobs WHERE id = ? FOR UPDATE`, [jobId]);
         assertLease(job, leaseOwner, nowMs);
-        // 每列之前再驗確認人（HD-060 5A）：停用咗或者冇咗 supplier.mgmt，就停晒成個 job。
-        const actor = await this.#executionActor(connection, job);
-        if (!actor) {
-          await this.#failRevoked(connection, jobId, nowMs);
-          return { rowNumber: null, status: "revoked", appliedSupplierId: null };
-        }
         const [[row]] = await connection.query(
           `SELECT job_id, \`row_number\`, operation, match_supplier_id, expected_supplier_version,
                   normalized_payload, status, warnings
@@ -620,6 +614,13 @@ export class SupplierImportService {
           [jobId]
         );
         if (!row) return null;
+        // 每列之前再驗確認人（HD-060 5A）：停用咗或者冇咗 supplier.mgmt，就停晒成個 job。冇列剩就唔驗 ——
+        // 全部做完嘅 job 照常收尾，唔會因為收尾前失去權限而報失敗（REV-071 L-1）。
+        const actor = await this.#executionActor(connection, job);
+        if (!actor) {
+          await this.#failRevoked(connection, jobId, nowMs);
+          return { rowNumber: null, status: "revoked", appliedSupplierId: null };
+        }
         rowNumber = Number(row.row_number);
         const appliedSupplierId = Number(await applyRow(rowConnection(connection), { job, row, actor, nowMs }));
         if (!positiveInteger(appliedSupplierId)) {

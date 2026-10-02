@@ -506,10 +506,15 @@ integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes pre
     await h.db.query("INSERT INTO supplier_name_grams (supplier_id, gram_hash) VALUES ?", [grams.slice(start, start + 5_000)]);
   }
   t.after(async () => {
-    await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [seededRows.map((row) => row.id)]);
-    // 按 id 刪：`supplier_code_key LIKE` 會 full scan 兼鎖晒成張 suppliers 表，並行跑嘅其他測試檔會同佢互鎖
-    // （T45 實測：supplierSettings 嘅申請 insert 俾佢鎖死，ER_LOCK_DEADLOCK）。
-    await h.db.query("DELETE FROM suppliers WHERE id IN (?)", [seededRows.map((row) => row.id)]);
+    // 按 id 分批刪，每批最多 500：`supplier_code_key LIKE` 會 full scan 兼鎖晒成張 suppliers 表，並行跑嘅其他測試檔
+    // 會同佢互鎖（實測 supplierSettings 嘅申請 insert 俾佢鎖死）。一次 IN 2,000 個 id 一樣係 full scan，500 個先用
+    // PRIMARY 做 range（REV-071 L-3 用 EXPLAIN 量過）。
+    const ids = seededRows.map((row) => row.id);
+    for (let start = 0; start < ids.length; start += 500) {
+      const chunk = ids.slice(start, start + 500);
+      await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [chunk]);
+      await h.db.query("DELETE FROM suppliers WHERE id IN (?)", [chunk]);
+    }
   });
   const records = Array.from({ length: 10_000 }, (_, index) => ({
     supplierCode: `BIG-${tag}-${index}`, supplierName: `Imported ${index} Trading Company Limited ${tag}`, defaultCurrencyCode: "HKD"
@@ -919,6 +924,8 @@ integrationTest("TASK-045: a draft import writes each valid row as one Supplier 
   assert.deepEqual(audits.map((audit) => audit.action).sort(),
     ["supplier.address.create", "supplier.contact.create", "supplier.create", "supplier.identifier.create"]);
   assert.ok(audits.every((audit) => Number(audit.actor_user_id) === owner.userId));
+  const [traced] = await h.db.query("SELECT DISTINCT request_id FROM supplier_audit_logs WHERE supplier_id = ?", [one.id]);
+  assert.deepEqual(traced.map((audit) => audit.request_id), [`import-${id}`], "every audit names the import job (REV-071 I-4)");
   const [[marker]] = await h.db.query("SELECT applied_supplier_id FROM supplier_import_rows WHERE job_id = ? AND `row_number` = 1", [id]);
   assert.equal(Number(marker.applied_supplier_id), Number(one.id));
   const detail = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
@@ -1083,14 +1090,17 @@ integrationTest("TASK-045 (HD-060 5A): a confirmer who loses supplier.mgmt stops
   assert.equal(await supplierByCode(`V2-${tag}`), undefined);
 });
 
-/** 起一個真 worker process，做到 `point` 就 SIGKILL 自己；回佢點樣死。 */
-async function crashWorker(point) {
+/** 起一個真 worker process，做到 `point` 就 SIGKILL 自己；回佢點樣死（`run` 模式仲回佢印出嚟嘅結果）。 */
+async function crashWorker(point, env = {}) {
   const { spawn } = await import("node:child_process");
   const child = spawn(process.execPath, ["--import", "./test-support/testEnv.js", "test-support/supplierImportCrashChild.js",
-    point, path.join(h.importBase, "imports"), h.logRoot], { cwd: path.resolve(import.meta.dirname, "../.."), env: process.env, stdio: "ignore" });
+    point, path.join(h.importBase, "imports"), h.logRoot], { cwd: path.resolve(import.meta.dirname, "../.."), env: { ...process.env, ...env },
+    stdio: ["ignore", "pipe", "ignore"] });
+  let output = "";
+  child.stdout.on("data", (chunk) => { output += chunk; });
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error("crash worker did not die in time")); }, 60_000);
-    child.on("exit", (code, signal) => { clearTimeout(timer); resolve({ code, signal }); });
+    child.on("exit", (code, signal) => { clearTimeout(timer); resolve({ code, signal, ...(output.trim() ? { output: JSON.parse(output.trim()) } : {}) }); });
   });
 }
 
@@ -1216,3 +1226,92 @@ integrationTest("TASK-045 (AC-013): confirm reads the policy under a share lock,
   await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version + 1 }, key: randomUUID() });
 });
 
+
+integrationTest("TASK-045 (REV-071 L-1): a job whose rows are all applied completes even if the confirmer loses access before it finalizes", async () => {
+  const owner = await makeUser("lf", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `LF-${tag}`, supplierName: `Last First ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "lf", leaseDurationMs: 60_000 }))?.id, id);
+  const applied = await service.processNextRow({ jobId: id, leaseOwner: "lf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow });
+  h.supplierIds.push(applied.appliedSupplierId);
+  await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [owner.roleId]);
+  assert.equal(await service.processNextRow({ jobId: id, leaseOwner: "lf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow }), null,
+    "no row is left, so nothing is refused");
+  assert.equal((await service.finalizeExecution({ jobId: id, leaseOwner: "lf" })).status, "completed");
+});
+
+integrationTest("TASK-045 (REV-071 I-2): an approver whose user was deleted after confirm fails the row as not eligible", async () => {
+  const owner = await makeUser("ad", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("ae", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `AD-${tag}`, supplierName: `Approver Deleted ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmWithApprovalOn(owner, id, { version, activationMode: "activate", approverUserId: approver.userId })).value?.status, "queued");
+  // FK 係 ON DELETE SET NULL：刪 user 嘅效果。
+  await h.db.execute("UPDATE supplier_import_jobs SET approver_user_id = NULL WHERE id = ?", [id]);
+  await execute(id);
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "APPROVER_NOT_ELIGIBLE"]]);
+  assert.equal(await supplierByCode(`AD-${tag}`), undefined);
+});
+
+integrationTest("TASK-045 (REV-071 I-1): a Code taken by another transaction between the check and the insert fails the row as taken", async () => {
+  const owner = await makeUser("ct", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  // 另一個幣別：同幣別嘅建立會喺幣別行嘅 X 鎖排隊，race 就唔會發生。
+  const otherCurrency = `C${tag.replace(/[^A-Z]/gu, "C").slice(0, 2)}`.padEnd(3, "C");
+  await h.db.execute(`INSERT INTO currencies (code, name, decimal_places, status, version, created_at, updated_at)
+    VALUES (?, 'T45 race currency', 2, 'ACTIVE', 1, ?, ?)`, [otherCurrency, clock, clock]);
+  h.currencies.push(otherCurrency);
+  const code = `CT-${tag}`;
+  const { id, version } = await readyJob(owner, [{ supplierCode: code, supplierName: `Code Race ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "race", leaseDurationMs: 60_000 }))?.id, id);
+  let raced = false;
+  const applyRow = (connection, context) => h.worker.applyRow({
+    async query(sql, ...rest) {
+      const result = await connection.query(sql, ...rest);
+      if (!raced && String(sql).includes("FROM suppliers WHERE supplier_code_key = ?")) {
+        raced = true;
+        const [racer] = await h.db.execute(
+          `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
+             status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)`,
+          [code, code.toLowerCase(), `Racer ${tag}`, `racer ${tag.toLowerCase()}`, otherCurrency, clock, clock]);
+        h.supplierIds.push(Number(racer.insertId));
+      }
+      return result;
+    },
+    execute: (...args) => connection.execute(...args)
+  }, context);
+  const outcome = await service.processNextRow({ jobId: id, leaseOwner: "race", leaseDurationMs: 60_000, applyRow });
+  assert.ok(raced, "the competing Code was committed between the check and the insert");
+  assert.equal(outcome.status, "failed");
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "SUPPLIER_CODE_TAKEN"]]);
+  await service.finalizeExecution({ jobId: id, leaseOwner: "race" });
+});
+
+integrationTest("TASK-045 (REV-071 L-2, HD-061 2A): a lock wait past the transaction budget leaves the row pending, and the next worker applies it once", async () => {
+  const owner = await makeUser("lw", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const code = `LW-${tag}`;
+  const { id, version } = await readyJob(owner, [{ supplierCode: code, supplierName: `Lock Wait ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  // 另一個 transaction 鎖住 HKD（Business Master 檢查幣別時要 X 鎖），鎖長過 worker 嘅 transaction 預算（1.5 秒）。
+  // Worker 嘅列 transaction 逾時之後，伺服器嗰邊仲揸住 job 嘅鎖等緊，所以標 failed 嘅 transaction 都等唔到：
+  // 嗰列留喺 valid，lease 過期之後由下一個 worker 接手（HD-061 2A）。
+  let outcome;
+  await h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT code FROM currencies WHERE code = 'HKD' FOR UPDATE");
+    outcome = await crashWorker("run", { DB_TRANSACTION_TIMEOUT_MS: "1500" });
+  });
+  assert.equal(outcome.code, 0);
+  assert.equal(outcome.output.code, "DATABASE_TRANSACTION_TIMEOUT", JSON.stringify(outcome.output));
+  const waiting = await job(id);
+  assert.equal(waiting.status, "running", "the job keeps its lease");
+  assert.deepEqual(await rowOutcomes(id), [[1, "valid", null]], "the row is left pending, not failed");
+  assert.equal(await supplierByCode(code), undefined, "and nothing was written");
+  clock = Number(waiting.lease_until) + 1;
+  assert.equal((await execute(id)).status, "completed");
+  assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1);
+});
