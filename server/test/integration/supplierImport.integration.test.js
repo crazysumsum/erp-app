@@ -536,7 +536,7 @@ async function sourceExists(jobId) {
   return fs.existsSync(path.join(h.worker.preparedRoot, "source", name));
 }
 
-integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a job; anyone else cannot tell it exists", async () => {
+integrationTest("TASK-044 IMP-015: only the uploader lists, reads and cancels a job; the job API tells no one else it exists", async () => {
   const owner = await makeUser("own", ["supplier.mgmt"]);
   const other = await makeUser("oth", ["supplier.mgmt"]);
   const viewer = await makeUser("v44", ["supplier.view"]);
@@ -741,4 +741,38 @@ integrationTest("TASK-044 (REV-069 M-1): cancel waits for a claim that holds the
     assert.equal(await sourceExists(created.id), true, "the claimed job keeps its source");
     await h.db.execute("UPDATE supplier_import_jobs SET status = 'failed', lease_owner = '', lease_until = NULL WHERE id = ?", [created.id]);
   }
+});
+
+integrationTest("TASK-044 (REV-069 L-1): another user's cancel answers 404 at once, without waiting on a job someone holds", async () => {
+  const stranger = { actorId: h.userId, claimedRoles: [], claimedPermissions: [] };
+  const owner = await makeUser("lck", ["supplier.mgmt"]);
+  const created = await httpUpload(owner, csv([{ supplierCode: `L-${randomUUID().slice(0, 6)}`, supplierName: "Locked", defaultCurrencyCode: "HKD" }]));
+  let elapsed;
+  let outcome;
+  await h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [created.job.id]);
+    const started = Date.now();
+    outcome = await h.worker.importService.cancel({ ...stranger, id: created.job.id, version: 1, root: h.worker.preparedRoot })
+      .then((value) => ({ value }), (error) => ({ error }));
+    elapsed = Date.now() - started;
+  });
+  assert.equal(outcome.error?.publicCode, "SUPPLIER_IMPORT_NOT_FOUND");
+  assert.ok(elapsed < 1_000, `answered in ${elapsed} ms while the job was locked`);
+  const own = await api(owner, "POST", `/api/v1/supplier-imports/${created.job.id}/cancel`, { body: { version: 1 }, key: randomUUID() });
+  assert.equal(own.data.status, "cancelled");
+});
+
+integrationTest("TASK-044 (REV-069 L-3, HD-058 3A): the source is deleted only after the cancel commits", async () => {
+  const created = await upload(csv([{ supplierCode: `T-${randomUUID().slice(0, 6)}`, supplierName: "Rolled Back", defaultCurrencyCode: "HKD" }]));
+  // 成個 cancel 做完先拋：等同 commit 失敗，transaction rollback。
+  const failingCommit = { withTransaction: (work) => h.db.withTransaction(async (connection) => {
+    await work(connection);
+    throw new Error("commit failed");
+  }) };
+  const service = new SupplierImportService({ database: failingCommit, time, logger: {} });
+  await assert.rejects(() => service.cancel({ actorId: h.userId, claimedRoles: [], claimedPermissions: [], id: created.id, version: 1,
+    root: h.worker.preparedRoot }), (error) => error.cause?.message === "commit failed" || error.message === "commit failed");
+  assert.equal((await job(created.id)).status, "uploaded", "the cancel rolled back");
+  assert.equal(await sourceExists(created.id), true, "so the source is still there");
+  await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [created.id]);
 });

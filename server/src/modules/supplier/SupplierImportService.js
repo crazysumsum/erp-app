@@ -279,27 +279,34 @@ export class SupplierImportService {
    * 取消（HD-058 2A、3A）：只限自己、未開始預檢或執行嘅 job。同預檢失敗一樣，來源檔之後唔會再用：
    * 同一個 transaction 記 `files_purged_at`，commit 之後即刻刪；刪唔到就記低，由 T48 清理（HD-044）。
    * 摘要同逐列結果保留。
+   *
+   * 併發（REV-069）：claim 同 cancel 都鎖 job 行。先用唔鎖嘅讀核對擁有權 —— 唔係自己嘅 job 即刻 404，
+   * 唔會等人哋把鎖（等鎖嘅時間會洩漏 job 存在，L-1）。擁有權唔會變，之後先 `FOR UPDATE`。UPDATE 再帶返
+   * 讀到嘅狀態做條件：就算將來有人拎走把鎖，一個啱啱被 claim 嘅 job 都唔會被改做 cancelled（M-1）。
    */
   async cancel({ actorId, claimedRoles, claimedPermissions, id, version, root, requestId = "", ip = "" }) {
     if (!positiveInteger(id) || !positiveInteger(version)) throw new TypeError("Supplier import cancel input is invalid");
     const { summary, sourceStoredName } = await this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, { actorId, claimedRoles, claimedPermissions });
+      const [[owned]] = await connection.query("SELECT id FROM supplier_import_jobs WHERE id = ? AND created_by = ?", [id, actorId]);
+      if (!owned) throw importJobNotFound();
       const [[job]] = await connection.query(
-        "SELECT id, status, source_stored_name, version FROM supplier_import_jobs WHERE id = ? AND created_by = ? FOR UPDATE",
-        [id, actorId]);
-      if (!job) throw importJobNotFound();
+        "SELECT id, status, source_stored_name, version FROM supplier_import_jobs WHERE id = ? FOR UPDATE", [id]);
       if (!CANCELLABLE_JOB_STATUSES.includes(job.status)) {
         throw supplierConflict("SUPPLIER_IMPORT_NOT_CANCELLABLE", "匯入工作正在預檢、執行或已結束，不可取消");
       }
       if (Number(job.version) !== version) throw supplierConflict("VERSION_CONFLICT", "匯入工作已被其他人修改，請重新載入");
       assertJobTransition(job.status, "cancelled");
       const nowMs = this.time.nowMs();
-      await connection.execute(
+      const [cancelled] = await connection.execute(
         `UPDATE supplier_import_jobs SET status = 'cancelled', lease_owner = '', lease_until = NULL, files_purged_at = ?,
                 completed_at = ?, updated_at = ?, version = version + 1
-          WHERE id = ?`,
-        [nowMs, nowMs, nowMs, id]
+          WHERE id = ? AND status = ?`,
+        [nowMs, nowMs, nowMs, id, job.status]
       );
+      if (cancelled.affectedRows !== 1) {
+        throw supplierConflict("SUPPLIER_IMPORT_NOT_CANCELLABLE", "匯入工作正在預檢、執行或已結束，不可取消");
+      }
       await this.audit.record(connection, {
         actorUserId: actorId, actorUsername: actor.username, action: "import.cancel", targetType: "import",
         targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: { status: "cancelled" } },

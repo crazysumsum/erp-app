@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 264,
+  "revision": 265,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1686,6 +1686,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/71_rev_068_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-069",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-044)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing f43196f67c73350719caefafe616aa9c3e3e3853 (PR #175)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/72_rev_069_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -4281,6 +4293,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-02: '全部按建議' - 1A, 2A, 3A, 4A, 5B."
+    },
+    {
+      "id": "HD-059",
+      "impact": "MAJOR",
+      "question": "REV-069 remediation for TASK-044. (1) M-1, the cancel row lock is the only race guard and no test caught its removal: (A) keep the new regression test and also guard the cancel UPDATE with the status it read (WHERE id = ? AND status = ?, affectedRows must be 1, else 409); (B) test only. (2) L-1, another user's cancel waits on a locked job, so latency shows the job exists: (A) read ownership without a lock first and answer 404 before taking FOR UPDATE; (B) accept and document. (3) L-2, the Supplier audit API shows every user's import lifecycle (username, IP) to supplier.view: (A) HD-058 1A covers the job API only, auditors see import lifecycle on purpose; reword the test title; (B) a new decision to filter import.* audit entries. (4) L-3, delete-after-commit not pinned: (A) add a test where the commit fails and the source must remain; (B) no test. (5) I-1: reword the client cancel comment only.",
+      "affected_ids": [
+        "TASK-044",
+        "REV-069",
+        "HD-058"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-02: '全部按你建議做' - 1A, 2A, 3A, 4A, 5 comment only."
     }
   ],
   "external_actions": [
@@ -5357,5 +5381,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-044 in progress on claude/supplier-task-044 per HD-058 (1A 2A 3A 4A 5B): service list/get/cancel, handlers, client mapping, tests; then PR, CI, independent review. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-044 REV-069 remediation per HD-059 on claude/supplier-task-044 (PR #175); then mutation re-run, CI, REV-070. Merge only on the Product Owner's word."
 }

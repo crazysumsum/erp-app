@@ -16,7 +16,7 @@ export default {
     }).then(({ job, rows, total }) => ({ job, rows, rowsNumber: total }));
   },
 
-  /** 帶 idempotency key：網絡重送唔會變成第二次取消（409）。 */
+  /** 每次呼叫一條新 idempotency key；重按會收到 409（version 已經變），唔會取消兩次。 */
   cancelJob(id, version) {
     return httpClient.post(`/api/v1/supplier-imports/${id}/cancel`, { body: { version }, idempotent: true });
   }
