@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 272,
+  "revision": 273,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -953,6 +953,25 @@
       "code_commit": "bea7b5f4c61b3993405d892b36a90ac0aa9e6bce",
       "scope": [
         "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-062-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-062. Authorises a separate PR (claude/deps-drop-nodemon, PR #179) that removes the nodemon devDependency, switches the server dev script to node --watch, updates the lockfile and the framework_readme dev-server sentence.",
+      "recorded_at": "2026-10-05T09:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
+      "scope": [
+        "server/package.json",
+        "package-lock.json",
+        "framework_readme.md",
+        "framework_readme.en.md"
       ],
       "expires_at": null
     }
@@ -4369,6 +4388,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-02: '全部按建議' - L-1 fix, L-2 (A), L-3 fix, I-1..I-4 as suggested."
+    },
+    {
+      "id": "HD-062",
+      "impact": "MAJOR",
+      "question": "Dependency audit fails on every branch: GHSA-vfj7-8cjw-p6xm (high) in braces <=3.0.3 with no patched release, reached only via the server devDependency nodemon -> chokidar 3; nodemon 3.1.14 still requires chokidar ^3. (A) Remove nodemon and use Node's built-in --watch for the server dev script (package.json, lockfile, framework_readme sentence) in a separate PR. (B) npm overrides forcing chokidar 4 under nodemon. (C) Relax the audit (--omit=dev or an exception list). (D) Wait for upstream with CI red.",
+      "affected_ids": [
+        "package.json",
+        "server/package.json",
+        "package-lock.json",
+        "framework_readme.md"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-05: 'A'. PR #179 (claude/deps-drop-nodemon)."
     }
   ],
   "external_actions": [
