@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 76,
+  "revision": 77,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-015",
+  "current_task": "TASK-016",
   "baseline": {
     "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
     "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
-    "code_commit": "07f761186e98f907d1b29f19c6bfc85192d44485",
-    "source_fingerprint": "1aed1b18e6103825cb2eb7e366b44f347e59f61c5bb24c80d887e11805c92b90",
+    "code_commit": "62ecd4ec37b125f7d3e32d9419adc232c62632dc",
+    "source_fingerprint": "fdd16c5f84af5322f79e763f9520bb0468682df87debdb3f76ef01d926c45c66",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -42,7 +42,8 @@
     "TASK-012": "DONE",
     "TASK-013": "DONE",
     "TASK-014": "DONE",
-    "TASK-015": "IN_PROGRESS"
+    "TASK-015": "DONE",
+    "TASK-016": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1246,6 +1247,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK015-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "ee8f3415aef3d5778a8708923a0af32b6fae36be601f2dbca10c10fc954cd26c",
+      "source_ref": "Actual independent review found configurable timezone and incorrect Order Audit target; reproduced and repaired.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK015-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "fdd16c5f84af5322f79e763f9520bb0468682df87debdb3f76ef01d926c45c66",
+      "source_ref": "Actual independent R2 APPROVE; both regressions red→green, independentunit10/lint/diff PASS and native16loginspected; no independent SQL.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2249,6 +2274,17 @@
       "source_ref": "Actual fetch+merge origin/main e3bfb02(PR179) into feature 07f7611 clean; module boundary PASS against fresh main. Raw task diagnostics retained privately under evidence/task012-014 and referenced by reports; state.evidence_files lists only actual runner JSON records as required by gate parser. D/P decisions unchanged; final full P1 verification must use current candidate.",
       "actor": "Codex /root",
       "observed_at": "2026-10-05T03:14:05.586959+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK015 developer self-test and owned runtime observation",
+      "code_commit": "62ecd4ec37b125f7d3e32d9419adc232c62632dc",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "fdd16c5f84af5322f79e763f9520bb0468682df87debdb3f76ef01d926c45c66",
+      "status": "PASS",
+      "source_ref": "implementation/25_task015_developer_report.md; actualunit10/native16 zeroFAIL/SKIP; server2158PASS0FAIL425optins; lintPASS. Private runtime-observed.log verifies MySQL26.7.0 datadir/socket/schema/PID3466 owned. Private raw task015-*.log retained, no new runner records claimed.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-05T03:36:27.267811+00:00"
     }
   ],
   "pending_decisions": [
@@ -2833,5 +2869,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "TASK-015 sequence/operation/audit services RED/GREEN with real concurrency/rollback; P1 full Gate pending."
+  "next_safe_action": "TASK016 quotation Draft commands: approved scope and own runtime; tests first, provider revalidation/fresh actor/CAS/Audit rollback, then per-task DoD. Whole P1 developer23/CI/current review/merge gate remains pending."
 }

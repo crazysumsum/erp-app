@@ -1,0 +1,9 @@
+# TASK-015 developer checkpoint
+
+Implemented caller-owned transactional SO/QT sequence allocation, P1 event claim/replay/actor-and-intent binding, safe operation lookup/result completion and unknown-COMMIT projection; fixed action-specific Audit builders propagate required write failures. No P2 confirmation/lease behavior is introduced. Sales business periods explicitly use HKT independently of configurable application timezone; Order Audit target is ORDER (operation target remains SALES_ORDER).
+
+Initial missing-service RED preserved privately. R1 separate review found configurable-timezone numbering and Audit target mismatch; both reproduced as failing unit regressions, corrected and R2 independently APPROVED by /root/sales_readiness_review against source fingerprint `fdd16c5f84af5322f79e763f9520bb0468682df87debdb3f76ef01d926c45c66`.
+
+Final developer evidence: unit10 PASS; combined persistence/service native16 PASS, zero failure/skip, including 100 concurrent real quotation-header creates, HKT boundary, exhaustion/rollback, competing event replay, real COMMIT followed by synthetic acknowledgment loss and safe original-event recovery, and real Audit INSERT-trigger failure rolling back document/operation/sequence. Final server regression2158 PASS, zero failure,425 opt-in skips; mandatory native tests ran separately. Final lint PASS. Private raw diagnostics retained under /private/tmp/sales-p1-private/task015-*.log and referenced by the checkpoint, not misclassified as runner JSON.
+
+Actual runtime query verified MySQL26.7.0, owned datadir/socket/schema and PID3466, with no credentials emitted. Existing TC-013↔TASK-015 typed traceability remains correct and unchanged; developer evidence does not claim formal acceptance. Fresh actor/aggregate authorization is the command caller's responsibility and will be checked by TASK016/017 integration. P1 full23-suite/current CI/PR/merge Gate remains pending; TASK-016 next.
