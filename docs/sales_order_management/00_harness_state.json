@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 71,
+  "revision": 72,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-013",
+  "current_task": "TASK-014",
   "baseline": {
     "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
     "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
@@ -40,7 +40,8 @@
     "TASK-010": "DONE",
     "TASK-011": "DONE",
     "TASK-012": "DONE",
-    "TASK-013": "IN_PROGRESS"
+    "TASK-013": "DONE",
+    "TASK-014": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1184,6 +1185,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK013-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "ec80fb92745db7d992c2902a001e65f717ab3a70332d77f777f5fa786721c7d2",
+      "source_ref": "Actual review: schema guard mislabeled TC017; no product defect.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK013-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "462c1b1ce05c4c10dd95a277fd172d6834e5b54782a314f305b67c61e2b30449",
+      "source_ref": "Actual review APPROVE after attribution correction; independent focused tests/lint; native3PASS inspected, no SQL executed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2143,6 +2168,17 @@
       "source_ref": "implementation/21_task012_developer_report.md and private evidence/task012; native4 zero failures/skips; fresh/upgrade migration and lint PASS; non-DB regression2147PASS,413 documented opt-ins; final separate review APPROVE.",
       "actor": "Codex /root",
       "observed_at": "2026-10-05T01:36:55.443818+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-013 developer DoD",
+      "code_commit": "9c211b78142f9ae296cfff90d534a73838b56306",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "462c1b1ce05c4c10dd95a277fd172d6834e5b54782a314f305b67c61e2b30449",
+      "status": "PASS",
+      "source_ref": "implementation/22_task013_developer_report.md; final native3PASS, empty/upgrade/lintPASS, server2148PASS0FAIL416optins; scoped independent APPROVE.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-05T01:45:36.961524+00:00"
     }
   ],
   "pending_decisions": [
@@ -2714,8 +2750,14 @@
     "evidence/task012/task012-green.log",
     "evidence/task012/task012-server-regression.log",
     "evidence/task012/task012-lint.log",
-    "evidence/task012/task012-red.log"
+    "evidence/task012/task012-red.log",
+    "evidence/task013/task013-empty.log",
+    "evidence/task013/task013-server-regression.log",
+    "evidence/task013/task013-lint.log",
+    "evidence/task013/task013-green.log",
+    "evidence/task013/task013-red.log",
+    "evidence/task013/task013-upgrade.log"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK-013 with native RED/GREEN and verify FK/index/decimal/quantity guards; P1 full 23-suite gate remains pending."
+  "next_safe_action": "TASK-014 History/Audit/Conversion persistence RED/GREEN; entire P1 Gate pending."
 }
