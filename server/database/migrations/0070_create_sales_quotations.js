@@ -1,6 +1,14 @@
 // These two aggregate migrations use the same schema contract for creation and drift checks.
 // Column tuples: SQL type, nullable, default, explicit collation, extra.
-export async function inspectSalesTable(connection, { table, columns, indexes, foreignKeys, checks }) {
+function normalizeSQL(value, removeParentheses = false) {
+  return value.replace(/\\'/gu, "'").split(/('(?:[^']|'')*')/u).map((part, index, parts) => {
+    if (index % 2) return part;
+    if (index < parts.length - 1) part = part.replace(/_[a-z0-9]+$/u, "");
+    return part.replace(removeParentheses ? /[`()\s]/gu : /[`\s]/gu, "").toLowerCase();
+  }).join("");
+}
+
+export async function inspectSalesTable(connection, { table, columns, indexes, foreignKeys, checks, triggers = {} }, { allowMissingTriggers = false } = {}) {
   const fail = detail => { throw new Error(`Incompatible existing Sales schema: ${table} ${detail}`); };
   const [found] = await connection.query(`SELECT column_name AS name,column_type AS type,is_nullable AS nullable,
     column_default AS default_value,collation_name AS collation,extra AS extra FROM information_schema.columns
@@ -46,31 +54,42 @@ export async function inspectSalesTable(connection, { table, columns, indexes, f
     ON cc.constraint_schema=tc.constraint_schema AND cc.constraint_name=tc.constraint_name
     WHERE tc.constraint_schema=DATABASE() AND tc.table_name=? AND tc.constraint_type='CHECK'`, [table]);
   // Contracts below contain only associative AND comparisons/BETWEEN/IN; MySQL adds parentheses and charset introducers.
-  const normalized = value => value.replace(/\\'/gu, "'").split(/('(?:[^']|'')*')/u).map((part, index, parts) => {
-    if (index % 2) return part;
-    if (index < parts.length - 1) part = part.replace(/_[a-z0-9]+$/u, "");
-    return part.replace(/[`()\s]/gu, "").toLowerCase();
-  }).join("");
+  const normalized = value => normalizeSQL(value, true);
   const requiredClauses = new Set(Object.values(checks).map(normalized));
   if (checkRows.length !== requiredClauses.size) fail("checks");
   for (const row of checkRows) {
     // Probe names are nonce-prefixed, so compare clauses rather than global constraint names.
     if (row.enforced !== "YES" || !requiredClauses.delete(normalized(row.clause))) fail("check clause");
   }
-  const [triggers] = await connection.query("SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?", [table]);
-  if (triggers.length) fail("unexpected triggers");
+  const [triggerRows] = await connection.query(`SELECT trigger_name AS name,event_manipulation AS event,action_timing AS timing,
+    action_orientation AS orientation,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table=?`, [table]);
+  const foundTriggers = new Set();
+  for (const row of triggerRows) {
+    const expected = triggers[row.name];
+    if (!expected || row.event !== expected[0] || row.timing !== "BEFORE" || row.orientation !== "ROW" ||
+        normalizeSQL(row.statement) !== normalizeSQL(expected[1])) fail(`trigger ${row.name}`);
+    foundTriggers.add(row.name);
+  }
+  if (!allowMissingTriggers && Object.keys(triggers).some(name => !foundTriggers.has(name))) fail("missing triggers");
   return true;
 }
 
 export async function createSalesTable(connection, contract) {
-  if (await inspectSalesTable(connection, contract)) return;
-  const { table, columns, indexes, foreignKeys, checks } = contract;
+  const exists = await inspectSalesTable(connection, contract, { allowMissingTriggers: true });
+  const { table, columns, indexes, foreignKeys, checks, triggers = {} } = contract;
+  if (!exists) {
   const definitions = Object.entries(columns).map(([name, [type, nullable = false, defaultValue = null, collation, extra = ""]]) =>
     `${name} ${type}${collation ? ` CHARACTER SET ${collation.split("_")[0]} COLLATE ${collation}` : ""} ${nullable ? "NULL" : "NOT NULL"}${defaultValue === null ? "" : ` DEFAULT '${defaultValue}'`}${extra ? ` ${extra}` : ""}`);
   for (const [name, [nonUnique, fields]] of Object.entries(indexes)) definitions.push(name === "PRIMARY" ? `PRIMARY KEY (${fields})` : `${nonUnique ? "KEY" : "UNIQUE KEY"} ${name} (${fields})`);
   for (const [field, [target, key, rule]] of Object.entries(foreignKeys)) definitions.push(`CONSTRAINT fk_${table}_${field} FOREIGN KEY (${field}) REFERENCES ${target} (${key}) ON DELETE ${rule}`);
   for (const [name, clause] of Object.entries(checks)) definitions.push(`CONSTRAINT ${name} CHECK (${clause})`);
   await connection.query(`CREATE TABLE IF NOT EXISTS ${table} (${definitions.join(",\n")}) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
+  }
+  // DDL commits separately: resume a valid table with missing triggers, but never replace a drifted trigger.
+  for (const [name, [event, statement]] of Object.entries(triggers)) {
+    const [found] = await connection.query("SELECT trigger_name FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND trigger_name=?", [name]);
+    if (!found.length) await connection.query(`CREATE TRIGGER ${name} BEFORE ${event} ON ${table} FOR EACH ROW ${statement}`);
+  }
   if (!await inspectSalesTable(connection, contract)) throw new Error(`Sales schema was not created: ${table}`);
 }
 

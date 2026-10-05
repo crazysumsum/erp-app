@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 72,
+  "revision": 73,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-014",
+  "current_task": "TASK-015",
   "baseline": {
     "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
     "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
@@ -23,7 +23,7 @@
     "resources": {
       "workspace": "/private/tmp/erp-sales-p1",
       "temp-directory": "/private/tmp/sales-p1-private",
-      "mysql-instance": "MySQL 26.7.0; /private/tmp/sales-p1-private/mysql-primary; pid 3466; socket /private/tmp/sales-p1-private/mysql-primary/mysql.sock; synthetic schema erp_sales_phase1_feda1a7d31"
+      "mysql-instance": "MySQL 26.7.0; /private/tmp/sales-p1-private/mysql-primary; pid 3466; socket /private/tmp/sales-p1-private/mysql-primary/mysql.sock; synthetic schema erp_sales_phase1_empty_f17653fb30; prior owned schemas retained"
     },
     "lease_ref": null
   },
@@ -41,7 +41,8 @@
     "TASK-011": "DONE",
     "TASK-012": "DONE",
     "TASK-013": "DONE",
-    "TASK-014": "IN_PROGRESS"
+    "TASK-014": "DONE",
+    "TASK-015": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1209,6 +1210,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK014-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "7f60ffdaef16d0c66c36cc56ffa3df58d1936913904e51b35a2fd50b7255f67b",
+      "source_ref": "Actual review: PAD SPACE conversion immutability and misattributed TC013; corrected.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK014-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "4f0afb10a9a3a5bae377d780d262d71e72e527ac215ac7cfd9dc48e694cf09e0",
+      "source_ref": "Actual independent APPROVE binary immutable comparison and TC015 foundation; focused lint/diff; native11PASS inspected, no SQL executed independently.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2179,6 +2204,17 @@
       "source_ref": "implementation/22_task013_developer_report.md; final native3PASS, empty/upgrade/lintPASS, server2148PASS0FAIL416optins; scoped independent APPROVE.",
       "actor": "Codex /root",
       "observed_at": "2026-10-05T01:45:36.961524+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-014 developer DoD",
+      "code_commit": "de573607cb58bf67249c36a51c64c8ff6e054458",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "4f0afb10a9a3a5bae377d780d262d71e72e527ac215ac7cfd9dc48e694cf09e0",
+      "status": "PASS",
+      "source_ref": "implementation/23_task014_developer_report.md; native11PASS0FAIL0SKIP, finalempty+P0upgrade+lintPASS, server2148PASS0FAIL420documentedoptins; actual scoped separateAPPROVE.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-05T03:10:33.521003+00:00"
     }
   ],
   "pending_decisions": [
@@ -2708,6 +2744,14 @@
       "idempotency_key": "mysql-sales-p1-primary",
       "status": "CONFIRMED",
       "source_ref": "DEC015 authorized. Actual initialize/start + disposable schema migration observed successful; private runtime.json/initialize.log; no shared DB."
+    },
+    {
+      "id": "MYSQL-SALES-P1-FINAL-PERSISTENCE-BINDING",
+      "kind": "RUNTIME_CREATE",
+      "target": "erp_sales_phase1_empty_f17653fb30",
+      "idempotency_key": "sales-p1-final-persistence-schema",
+      "status": "CONFIRMED",
+      "source_ref": "DEC015 owned disposable authorization; actual primary mainbbb P0 migrator then P1final8 migrations succeeded; runtime.json binds new schema, old experimental schemas preserved."
     }
   ],
   "evidence_files": [
@@ -2756,8 +2800,15 @@
     "evidence/task013/task013-lint.log",
     "evidence/task013/task013-green.log",
     "evidence/task013/task013-red.log",
-    "evidence/task013/task013-upgrade.log"
+    "evidence/task013/task013-upgrade.log",
+    "evidence/task014/task014-native.log",
+    "evidence/task014/task014-red.log",
+    "evidence/task014/task014-final-empty.log",
+    "evidence/task014/task014-p0-baseline-empty.log",
+    "evidence/task014/task014-lint.log",
+    "evidence/task014/task014-final-upgrade.log",
+    "evidence/task014/task014-server-regression.log"
   ],
   "defects": [],
-  "next_safe_action": "TASK-014 History/Audit/Conversion persistence RED/GREEN; entire P1 Gate pending."
+  "next_safe_action": "TASK-015 sequence/operation/audit services RED/GREEN with real concurrency/rollback; P1 full Gate pending."
 }

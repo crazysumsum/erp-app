@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import test from "node:test";
 import mysql from "mysql2/promise";
+import { createTestCurrency, lockSalesFixture } from "../sales/phase1/fixtures.js";
 import { up as headerUp, inspectSalesQuotationSchema } from "../../database/migrations/0070_create_sales_quotations.js";
 import { up as lineUp, inspectSalesQuotationLineSchema } from "../../database/migrations/0071_create_sales_quotation_lines.js";
 
@@ -20,14 +21,14 @@ async function setup(t) {
   } };
   const cleanup = [];
   t.after(async () => { try { await db.query(`DROP TABLE IF EXISTS ${lines}`); await db.query(`DROP TABLE IF EXISTS ${header}`);
-    for (const [sql, args] of cleanup.reverse()) await db.execute(sql, args); } finally { await db.end(); } });
+    for (const action of cleanup.reverse()) if (typeof action === "function") await action(); else await db.execute(...action); } finally { await db.end(); } });
   const now = Date.now(), code = `SQ-${suffix.slice(0, 10)}`;
-  const [currency] = await db.execute("INSERT IGNORE INTO currencies (code,name,decimal_places,status,version,created_at,updated_at) VALUES ('HKD', 'Hong Kong Dollar', 2, 'active', 1, ?, ?)", [now, now]);
-  if (currency.affectedRows) cleanup.push(["DELETE FROM currencies WHERE code = 'HKD'", []]);
+  await lockSalesFixture(db);
+  const currency = await createTestCurrency(db, cleanup, now);
   const [uom] = await db.execute("INSERT INTO item_uoms (code,name,created_at,updated_at) VALUES (?, 'Each', ?, ?)", [code, now, now]);
   cleanup.push(["DELETE FROM item_uoms WHERE id = ?", [uom.insertId]]);
   const [customer] = await db.execute(`INSERT INTO customers (customer_code,customer_code_key,legal_name,legal_name_key,
-    default_currency_code,status,version,created_at,updated_at) VALUES (?, ?, ?, ?, 'HKD', 'active', 1, ?, ?)`, [code, code.toLowerCase(), code, code.toLowerCase(), now, now]);
+    default_currency_code,status,version,created_at,updated_at) VALUES (?, ?, ?, ?, ?, 'active', 1, ?, ?)`, [code, code.toLowerCase(), code, code.toLowerCase(), currency, now, now]);
   cleanup.push(["DELETE FROM customers WHERE id = ?", [customer.insertId]]);
   const [item] = await db.execute("INSERT INTO items (name,status,created_at,updated_at) VALUES (?, 'active', ?, ?)", [code, now, now]);
   cleanup.push(["DELETE FROM items WHERE id = ?", [item.insertId]]);
@@ -37,7 +38,7 @@ async function setup(t) {
   cleanup.push(["DELETE FROM users WHERE id = ?", [user.insertId]]);
   const insertHeader = async (overrides = {}) => {
     const row = { quotation_number: code, status: "DRAFT", customer_id: customer.insertId, customer_code_snapshot: code,
-      customer_name_snapshot: code, currency_code: "HKD", quotation_date: "2026-10-05", valid_until: "2026-10-06",
+      customer_name_snapshot: code, currency_code: currency, quotation_date: "2026-10-05", valid_until: "2026-10-06",
       line_count: 1, total_amount: "0.0000", created_at: now, updated_at: now, last_business_updated_at: now, created_by: user.insertId, ...overrides };
     const [result] = await db.query(`INSERT INTO ${header} SET ?`, row); return result.insertId;
   };
