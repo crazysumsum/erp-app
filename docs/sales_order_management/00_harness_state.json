@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 69,
+  "revision": 71,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-012",
+  "current_task": "TASK-013",
   "baseline": {
     "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
     "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
@@ -18,12 +18,12 @@
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
-    "instance_id": "sales-p1-preparation",
-    "owner": "Codex /root; P1 runtime execution pending DEC015",
+    "instance_id": "sales-p1-development",
+    "owner": "Codex /root",
     "resources": {
       "workspace": "/private/tmp/erp-sales-p1",
       "temp-directory": "/private/tmp/sales-p1-private",
-      "mysql-instance": "NOT_ALLOCATED; pending DEC015 approval"
+      "mysql-instance": "MySQL 26.7.0; /private/tmp/sales-p1-private/mysql-primary; pid 3466; socket /private/tmp/sales-p1-private/mysql-primary/mysql.sock; synthetic schema erp_sales_phase1_feda1a7d31"
     },
     "lease_ref": null
   },
@@ -39,7 +39,8 @@
     "TASK-009": "DONE",
     "TASK-010": "DONE",
     "TASK-011": "DONE",
-    "TASK-012": "IN_PROGRESS"
+    "TASK-012": "DONE",
+    "TASK-013": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1147,6 +1148,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK012-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "46bdfef67d60bb9ae2b3711b4430d430dfbf73b17a56c8d91745f9d2e18f29c6",
+      "source_ref": "Actual agent review: P2 case/space literal normalization defect; test title inaccurate.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK012-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "cd37b550b7e3183bf3abd59e9c3614444235c868bcac0f62620decd98a14c905",
+      "source_ref": "Actual agent review: charset suffix inside literals still erased.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK012-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "011f798066de9367015de408e25d043807498e87f3ce625b89b6c53e629dcb54",
+      "source_ref": "Actual separate agent APPROVE scoped TASK-012; independently verified inspector behavior and lint; native4PASS log inspected; not whole Phase review.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2095,6 +2132,17 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36986307700; actual gh current-head completed/success observation retained /private/tmp/sales-final-697-ci.json",
       "actor": "GitHub Actions observed via gh",
       "observed_at": "2026-10-02T09:03:16.723598+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-012 developer DoD",
+      "code_commit": "3632f03dbc186125cf98cd9bac6f773f80b4ec25",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "011f798066de9367015de408e25d043807498e87f3ce625b89b6c53e629dcb54",
+      "status": "PASS",
+      "source_ref": "implementation/21_task012_developer_report.md and private evidence/task012; native4 zero failures/skips; fresh/upgrade migration and lint PASS; non-DB regression2147PASS,413 documented opt-ins; final separate review APPROVE.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-05T01:36:55.443818+00:00"
     }
   ],
   "pending_decisions": [
@@ -2616,6 +2664,14 @@
       "idempotency_key": "sales-p1-preparation-recovery-20261005",
       "status": "CONFIRMED",
       "source_ref": "Actual freshfetch mainbbb2383; PR174 actualMERGED verified via gh; imported retained final P0 audit and all34privateoriginalruns from /private/tmp/sales-phase0-retained-evidence-hlnxwrb1; P0 scope approvals untouched; no productcode orSQL executed."
+    },
+    {
+      "id": "MYSQL-SALES-P1-PRIMARY",
+      "kind": "RUNTIME_CREATE",
+      "target": "owned /private/tmp/sales-p1-private/mysql-primary MySQL 26.7.0; synthetic schemas only",
+      "idempotency_key": "mysql-sales-p1-primary",
+      "status": "CONFIRMED",
+      "source_ref": "DEC015 authorized. Actual initialize/start + disposable schema migration observed successful; private runtime.json/initialize.log; no shared DB."
     }
   ],
   "evidence_files": [
@@ -2652,8 +2708,14 @@
     "evidence/20261002T084834-b16cdc40e06b/run.json",
     "evidence/20261002T084835-52df376c56ed/run.json",
     "evidence/20261002T084836-3cbc746f9335/run.json",
-    "evidence/20261002T084837-25f943c95931/run.json"
+    "evidence/20261002T084837-25f943c95931/run.json",
+    "evidence/task012/task012-empty.log",
+    "evidence/task012/task012-upgrade.log",
+    "evidence/task012/task012-green.log",
+    "evidence/task012/task012-server-regression.log",
+    "evidence/task012/task012-lint.log",
+    "evidence/task012/task012-red.log"
   ],
   "defects": [],
-  "next_safe_action": "Implement approved TASK012 Quotation persistence on freshmainbbb2383; reproduce native/unit failure then migrations/test green; sequential TASK013..027,23developer checks,realPlaywright,currentCI/review andfullP1mergeGate. Existing source/code approvals need not be requested again. Never claim formalacceptance/UAT."
+  "next_safe_action": "Implement TASK-013 with native RED/GREEN and verify FK/index/decimal/quantity guards; P1 full 23-suite gate remains pending."
 }
