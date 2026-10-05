@@ -1,4 +1,4 @@
-> Current implementation authority: TASK-001～011；2026-10-02 scoped contract adoption supersedes historical TASK-009～011 entry block only. Completion and merge still require all original Phase gates.
+> Proposed P1 activation (DEC-015, pending human decision): TASK-012~027 / PHASE-002; P0 merged via PR #174. Historical TASK-001~011 approvals remain valid for their recorded baselines. No P1 implementation until the proposed scope/contract is approved.
 
 # Sales Order Management 開發執行計劃（Harness Aligned）
 
@@ -497,13 +497,15 @@ P0 Inventory contract ─────────┘          |
 
 ### Task P1-T02：建立Sales Order core persistence
 
-**Outcome：** 建立`sales_orders`及`sales_order_lines`的Draft／confirmed-ready schema與核心索引。
+**Outcome：** 先建立 Design §4.7／§4.22 的 `sales_external_order_keys` parent foundation，再建立`sales_orders`及`sales_order_lines`的Draft／confirmed-ready schema與核心索引。
 
 **Dependencies：** P1-T01。
 
-**Files likely touched：** 兩支動態編號migrations、`server/test/integration/salesOrderMigrations.integration.test.js`、`server/test/migrate.test.js`。
+**Files likely touched：** 三支動態編號migrations（External Key parent、Order header、Order lines）、`server/test/integration/salesOrderMigrations.integration.test.js`、`server/test/migrate.test.js`。
 
 **Acceptance criteria：**
+
+- [ ] External Key parent 先於 Order header 建立；`external_order_key_id` FK RESTRICT 及 External Key 原 unique／hash／routing schema 由真 MySQL 驗證。P1 只建 persistence，不啟用 CSV／Channel claim 或 intake。
 - [ ] Header保存source、customer／warehouse／currency snapshot、money totals、status、version及business timestamps。
 - [ ] Lines保存ordered／reserved／backorder／fulfilled／cancelled projections並具唯一SKU＋UOM及守恆guard。
 - [ ] 常用Active list及exact number索引由production-like explain fixture驗證可使用。
@@ -1078,7 +1080,7 @@ P0 Inventory contract ─────────┘          |
 
 ### Task P3-T01：建立External Key及Import／Intake persistence
 
-**Outcome：** 建立`sales_external_order_keys`、`sales_import_jobs`、`sales_intake_orders`及`sales_intake_errors`。
+**Outcome：** 驗證並重用 TASK-013 已建立的 `sales_external_order_keys`（不重建），建立`sales_import_jobs`、`sales_intake_orders`及`sales_intake_errors`。
 
 **Dependencies：** Phase 2 PR已合併；P1-T02、P2-T03。
 
@@ -1096,6 +1098,9 @@ P0 Inventory contract ─────────┘          |
 **Traceability：** FR-CSV-001～020、FR-CH-001～013、BR-028～035；Design §4.7、§4.14–4.16。
 
 **Estimated scope：** M（3–5個主要檔案）。
+
+
+External Key schema creation 依 DEC-015 提案前移至 TASK-013，以滿足 Sales Order FK；本 Task 保留 unique／hash／routing metadata、existing-schema drift 及 native regression 驗證，CSV／Channel claim／dedupe／Intake business functionality 仍在原 P3 Tasks，沒有提前啟用。
 
 ### Task P3-T02：完成CSV V1 parser與template
 
@@ -1887,11 +1892,11 @@ PHASE-001。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；�
 
 ### Acceptance criteria
 
-TC-011–020; UAT-008–037 and relevant AUTH/INQ。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+Formal acceptance references remain TC-011–020; UAT-008–037 and relevant AUTH/INQ, executed later under TEST_AND_VERIFY against an immutable implemented baseline. IMPLEMENT merge readiness uses the scoped developer assertion sets and complete developer Phase gate in §13. Formal PASS/business acceptance is not inferred from developer results. Zero discovered tests, skipped required developer cases or missing evidence block this implementation merge.
 
 ### Integration and regression
 
-必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+必跑套件：§13 及 PHASE-002 ledger 所列的 23 組 developer suites。`sales-technical` 的全部 60 個正式案例保留於正式 Technical／Regression stage，不要求尚未實作 P2～P4 的案例在 P1 developer stage 假通過。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
 
 ### Git and merge plan
 
@@ -1903,7 +1908,7 @@ One reviewable vertical-slice PR; routes/menu feature-disabled until exit。已�
 
 ### Exit criteria
 
-全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-011–020; UAT-008–037 and relevant AUTH/INQ 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；所有 §13 developer assertions／suite／coverage／真應用 Playwright 通過，完整 TC-020 developer Phase gate 通過；TC-011–020 與 UAT-008–037 的正式驗收仍保留，於 TEST_AND_VERIFY 執行，不在 IMPLEMENT 合併時冒稱 PASS；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED。Gate 失敗時須重新執行整個對應 Phase 測試週期。
 
 ## PHASE-003 — Durable confirmation, Reservation/Backorder and lifecycle/recovery.
 
@@ -2341,17 +2346,19 @@ Commit：`feat: add sales quotation persistence`。
 
 ### Goal
 
-建立`sales_orders`及`sales_order_lines`的Draft／confirmed-ready schema與核心索引。 （Legacy identity：`P1-T02`；規模估算：M（3–5個主要檔案）。）
+先建立 Design §4.7／§4.22 的 `sales_external_order_keys` parent foundation，再建立`sales_orders`及`sales_order_lines`的Draft／confirmed-ready schema與核心索引。 （Legacy identity：`P1-T02`；規模估算：M（3–5個主要檔案）。）
 
 ### Approach
 
-預計變更範圍：兩支動態編號migrations、`server/test/integration/salesOrderMigrations.integration.test.js`、`server/test/migrate.test.js`。
+預計變更範圍：三支動態編號migrations（External Key parent、Order header、Order lines）、`server/test/integration/salesOrderMigrations.integration.test.js`、`server/test/migrate.test.js`。
 
 依賴：P1-T01。
 
 規格追溯：FR-SO-001～024、BR-001～027；Design §4.8–4.9。
 
 ### Acceptance criteria
+
+- [ ] External Key parent 先於 Order header 建立；`external_order_key_id` FK RESTRICT 及 External Key 原 unique／hash／routing schema 由真 MySQL 驗證。P1 只建 persistence，不啟用 CSV／Channel claim 或 intake。
 
 - [ ] Header保存source、customer／warehouse／currency snapshot、money totals、status、version及business timestamps。
 - [ ] Lines保存ordered／reserved／backorder／fulfilled／cancelled projections並具唯一SKU＋UOM及守恆guard。
@@ -3041,7 +3048,7 @@ Commit：`test: validate sales commitment concurrency and recovery`。
 
 ### Goal
 
-建立`sales_external_order_keys`、`sales_import_jobs`、`sales_intake_orders`及`sales_intake_errors`。 （Legacy identity：`P3-T01`；規模估算：M（3–5個主要檔案）。）
+驗證並重用 TASK-013 已建立的 `sales_external_order_keys`（不重建），建立`sales_import_jobs`、`sales_intake_orders`及`sales_intake_errors`。 （Legacy identity：`P3-T01`；規模估算：M（3–5個主要檔案）。）
 
 ### Approach
 
@@ -3064,6 +3071,9 @@ Commit：`test: validate sales commitment concurrency and recovery`。
 Commit：`feat: add sales intake and import persistence`。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+
+External Key schema creation 依 DEC-015 提案前移至 TASK-013，以滿足 Sales Order FK；本 Task 保留 unique／hash／routing metadata、existing-schema drift 及 native regression 驗證，CSV／Channel claim／dedupe／Intake business functionality 仍在原 P3 Tasks，沒有提前啟用。
 
 ## TASK-039 — 完成CSV V1 parser與template
 
@@ -3764,3 +3774,16 @@ Commit：`feat: reconcile and observe sales order processing`。
 Commit：`test: complete sales order release evidence`。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+
+## 13. Proposed P1 developer contract (DEC-015)
+
+PHASE-002 requires all 17 existing P0 developer/regression suites plus six new P1 suites: unit, native, client, real-application Playwright, server coverage and client coverage. The four report-based P1 suites each require at least eight actual tests, zero failures/skips/not-run; unit and native each map TC-011..018 and browser maps TC-019. TC-017 developer evidence covers Draft-save optimistic concurrency only; P2 confirmation concurrency remains mandatory in the unchanged formal specification. TC-018 developer evidence covers P1 lookup and command-submit revalidation only; P2 confirmation-time revalidation remains mandatory in the unchanged formal specification. Native IDs require actual SQL/HTTP assertions, including sequence/conversion/version races; title labels alone are insufficient. TC-020 is the complete Phase gate, never a synthetic passing unit. Coverage suites use the Harness BUILD category solely for supported exit-code coverage gates (not test-case evidence); retain the existing npm commands and thresholds, record exit status only and retain their original output; case counts are supplied by test reports, not these exit-code gates. All 60 formal tests, later-Phase suites, acceptance criteria and coverage/memory floors remain unchanged.
+
+P1 unit tests live under server/test/sales/phase1. Native tests: salesQuotationMigrations, salesOrderMigrations, salesAuditConversionMigrations, salesSequenceOperation, salesQuotationExpiry, salesPhase1 and salesOrderRead under server/test/integration, with .integration.test.js suffixes. Client service uses the existing planned client/src/services/sales.js; pages/components tests use client/test/pages/sales and client/test/components/sales. Browser config uses client/e2e/sales-order-management/playwright.config.js and actual HTTP application plus disposable DB; mocked API responses cannot replace end-to-end evidence. The exact argv, environment keys, adapters and thresholds are recorded in 00_project_profile.json.
+
+Shared writes are limited to the eight semantic Sales migration names in the manifest, server/test/migrate.test.js, server/config/scheduler.js and client/config/menu.js. Migration numbers are allocated from fresh main immediately before implementation, never reserved; current maximum is 0069. Table/column semantics still follow Design sections 4.4-4.6, 4.8-4.9, 4.12 and 4.18. DEC-015 also proposes owned disposable MySQL 26.7.0/schema/socket/web ports with synthetic data and cleanup; existing databases are excluded. Existing publication/PR/merge authorization remains subject to complete Phase, fresh target, exact candidate CI and separate review.
+
+P1 handler destinations follow Design §9.3: six exact Sales Order/lookup files in server/src/handlers/sales (manifest lists each), plus the existing sales-quotations scope. TASK-021 runtime and expiry job follow Design §9.2/§12.2 under server/src/services/salesJobs with two exact manifest paths; no framework scheduler rewrite. The environment authorization reference is explicitly PENDING DEC-015. NFR-014/015 retain their reasons and use prospective approval ID APR-PHASE1-UATNA-DEC015; only an actual human decision may create that approval record.
+
+DEC-015 also proposes one explicit dependency correction: move only External Key parent table creation from TASK-038/P3-T01 into TASK-013/P1-T02, matching Design §4.22 and preserving the required RESTRICT FK from initial Sales Order creation. TASK-038 consumes and verifies the existing schema; all CSV/Channel APIs, intake, claims/dedupe and formal acceptance remain in P3. No staged weakening or omitted FK is authorized.

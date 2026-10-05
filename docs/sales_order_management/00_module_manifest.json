@@ -20,7 +20,16 @@
       "client/src/services/salesQuotation.js",
       "client/src/services/salesOrder.js",
       "client/src/pages/sales/**",
-      "client/src/components/sales/**"
+      "client/src/components/sales/**",
+      "client/src/services/sales.js",
+      "server/src/services/salesJobs/SalesJobRuntimeService.js",
+      "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+      "server/src/handlers/sales/salesSchemas.js",
+      "server/src/handlers/sales/listSalesOrdersHandler.js",
+      "server/src/handlers/sales/getSalesOrderHandler.js",
+      "server/src/handlers/sales/createSalesOrderHandler.js",
+      "server/src/handlers/sales/updateSalesOrderHandler.js",
+      "server/src/handlers/sales/salesLookupHandlers.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -52,7 +61,11 @@
       "server/test/integration/itemUpdate.integration.test.js",
       "server/test/integration/itemConcurrency.integration.test.js",
       "server/test/integration/inventoryTask025Api.integration.test.js",
-      "server/test-support/salesProviderReport.py"
+      "server/test-support/salesProviderReport.py",
+      "server/test/migrate.test.js",
+      "client/test/pages/sales/**",
+      "client/test/components/sales/**",
+      "client/test/services/sales.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -75,7 +88,30 @@
       "server/test-support/fakeSalesDatabase.js",
       "client/test/**/sales*.test.js",
       "client/e2e/sales-order-management/**",
-      "server/test-support/salesProviderReport.py"
+      "server/test-support/salesProviderReport.py",
+      "client/src/services/sales.js",
+      "client/test/pages/sales/**",
+      "client/test/components/sales/**",
+      "client/test/services/sales.test.js",
+      "server/test/migrate.test.js",
+      "server/config/scheduler.js",
+      "client/config/menu.js",
+      "server/database/migrations/*_create_sales_quotations.js",
+      "server/database/migrations/*_create_sales_quotation_lines.js",
+      "server/database/migrations/*_create_sales_orders.js",
+      "server/database/migrations/*_create_sales_order_lines.js",
+      "server/database/migrations/*_create_sales_order_status_history.js",
+      "server/database/migrations/*_create_sales_audit_logs.js",
+      "server/database/migrations/*_create_sales_quotation_conversions.js",
+      "server/src/services/salesJobs/SalesJobRuntimeService.js",
+      "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+      "server/src/handlers/sales/salesSchemas.js",
+      "server/src/handlers/sales/listSalesOrdersHandler.js",
+      "server/src/handlers/sales/getSalesOrderHandler.js",
+      "server/src/handlers/sales/createSalesOrderHandler.js",
+      "server/src/handlers/sales/updateSalesOrderHandler.js",
+      "server/src/handlers/sales/salesLookupHandlers.js",
+      "server/database/migrations/*_create_sales_external_order_keys.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -127,7 +163,9 @@
       "server/test/integration/itemLookup.integration.test.js",
       "server/test/integration/itemUpdate.integration.test.js",
       "server/test/integration/itemConcurrency.integration.test.js",
-      "server/test/integration/inventoryTask025Api.integration.test.js"
+      "server/test/integration/inventoryTask025Api.integration.test.js",
+      "server/test/migrate.test.js",
+      "server/config/scheduler.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -142,7 +180,15 @@
     "schema_paths": [
       "server/database/migrations/0067_seed_sales_permissions.js",
       "server/database/migrations/0068_create_sales_document_sequences.js",
-      "server/database/migrations/0069_create_sales_operation_requests.js"
+      "server/database/migrations/0069_create_sales_operation_requests.js",
+      "server/database/migrations/*_create_sales_quotations.js",
+      "server/database/migrations/*_create_sales_quotation_lines.js",
+      "server/database/migrations/*_create_sales_orders.js",
+      "server/database/migrations/*_create_sales_order_lines.js",
+      "server/database/migrations/*_create_sales_order_status_history.js",
+      "server/database/migrations/*_create_sales_audit_logs.js",
+      "server/database/migrations/*_create_sales_quotation_conversions.js",
+      "server/database/migrations/*_create_sales_external_order_keys.js"
     ],
     "shared_resources": [
       "global-migration-sequence",

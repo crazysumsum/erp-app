@@ -4,8 +4,8 @@
   "environment": {
     "id": "sales-isolated-test",
     "kind": "LOCAL_ISOLATED",
-    "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md \u00a72.2; no production data, no real customer address, phone, email or bank data",
-    "authorization_ref": "Current Codex chat DEC-013: \u6838\u51c6 Phase 0 \u9a57\u8b49\u65b9\u6848\u53ca\u9694\u96e2 MySQL\uff08\u5efa\u8b70\uff09; implementation/15_phase0_validation_decision.md"
+    "data_reference": "Synthetic sales quotation/order/intake/archive fixtures defined in 06_technical_test_cases.md and 07_uat_test_cases.md §2.2; no production data, no real customer address, phone, email or bank data",
+    "authorization_ref": "PENDING DEC-015 human approval: proposed P1 owned disposable MySQL/browser runtime; implementation/20_phase1_activation_decision.md. Prior DEC-013 authorized P0 only; no P1 SQL/runtime executed."
   },
   "permissions": {
     "product_write": [
@@ -1332,6 +1332,401 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-phase002-unit",
+      "kind": "UNIT",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/sales/phase1/*.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-011",
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-015",
+        "TC-016",
+        "TC-017",
+        "TC-018"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-phase002-native",
+      "kind": "INTEGRATION",
+      "argv": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--import",
+        "./server/test-support/testEnv.js",
+        "--test-reporter=junit",
+        "--test-reporter-destination={run_dir}/tests.xml",
+        "server/test/integration/salesQuotationMigrations.integration.test.js",
+        "server/test/integration/salesOrderMigrations.integration.test.js",
+        "server/test/integration/salesAuditConversionMigrations.integration.test.js",
+        "server/test/integration/salesSequenceOperation.integration.test.js",
+        "server/test/integration/salesQuotationExpiry.integration.test.js",
+        "server/test/integration/salesPhase1.integration.test.js",
+        "server/test/integration/salesOrderRead.integration.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-011",
+        "TC-012",
+        "TC-013",
+        "TC-014",
+        "TC-015",
+        "TC-016",
+        "TC-017",
+        "TC-018"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-phase002-client",
+      "kind": "UNIT",
+      "argv": [
+        "npm",
+        "test",
+        "--workspace",
+        "client",
+        "--",
+        "--reporter=junit",
+        "--outputFile={run_dir}/tests.xml",
+        "test/pages/sales",
+        "test/components/sales",
+        "test/services/sales.test.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 1800,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
+      ]
+    },
+    {
+      "id": "sales-phase002-browser",
+      "kind": "UI",
+      "argv": [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--config",
+        "client/e2e/sales-order-management/playwright.config.js"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 2400,
+      "result_adapter": "JUNIT",
+      "result_path": "tests.xml",
+      "min_tests": 8,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [
+        "TC-019"
+      ],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        },
+        {
+          "argv": [
+            "node",
+            "node_modules/@playwright/test/cli.js",
+            "--version"
+          ],
+          "version_pattern": "^Version 1\\.63\\.0"
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET",
+        "SALES_E2E_BASE_URL",
+        "SALES_E2E_API_URL",
+        "SALES_E2E_AUTH_FILE"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "SALES_E2E_AUTH_FILE"
+      ]
+    },
+    {
+      "id": "sales-phase002-server-coverage",
+      "kind": "BUILD",
+      "argv": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--workspace",
+        "server"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3600,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "coverage-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        },
+        {
+          "argv": [
+            "/usr/local/mysql/bin/mysql",
+            "--version"
+          ],
+          "version_pattern": "Ver 26\\.7\\.0 "
+        }
+      ],
+      "side_effects": [
+        "FILES",
+        "ISOLATED_DATA"
+      ],
+      "env_keys": [
+        "DB_HOST",
+        "DB_PORT",
+        "DB_USER",
+        "DB_PASSWORD",
+        "DB_NAME",
+        "DB_SOCKET",
+        "DB_SOCKET_PATH",
+        "DB_INTEGRATION_TESTS",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "JWT_SECRET"
+      ],
+      "redaction_env_keys": [
+        "DB_PASSWORD",
+        "JWT_SECRET",
+        "SUPPLIER_BANK_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_ENCRYPTION_KEYS",
+        "SUPPLIER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "SUPPLIER_BANK_LOOKUP_KEYS",
+        "CUSTOMER_BANK_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_ENCRYPTION_KEYS",
+        "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
+        "CUSTOMER_BANK_LOOKUP_KEYS"
+      ]
+    },
+    {
+      "id": "sales-phase002-client-coverage",
+      "kind": "BUILD",
+      "argv": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--workspace",
+        "client"
+      ],
+      "cwd": ".",
+      "timeout_seconds": 3600,
+      "result_adapter": "EXIT_CODE",
+      "result_path": "coverage-result.json",
+      "min_tests": 0,
+      "max_skipped": 0,
+      "stages": [
+        "DEVELOPER"
+      ],
+      "required_case_ids": [],
+      "tool_probes": [
+        {
+          "argv": [
+            "node",
+            "--version"
+          ],
+          "version_pattern": "^v(2[6-9]|[3-9]\\d)\\."
+        }
+      ],
+      "side_effects": [
+        "FILES"
+      ],
+      "env_keys": [],
+      "redaction_env_keys": [
+        "DB_PASSWORD"
       ]
     }
   ],

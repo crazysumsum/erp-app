@@ -1,29 +1,29 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 64,
+  "revision": 69,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-001",
-  "current_task": "TASK-011",
+  "current_phase": "PHASE-002",
+  "current_task": "TASK-012",
   "baseline": {
-    "design": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
-    "plan": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
-    "code_commit": "ad8d535eee961255bea27a970acd3be056a3c7e1",
+    "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
+    "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+    "code_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
     "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
-    "worktree": "/private/tmp/erp-sales-foundation",
-    "default_commit": "a343677e1d65011b79f1fe08a053c81bb0c8355a",
+    "worktree": "/private/tmp/erp-sales-p1",
+    "default_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
-    "instance_id": "sales-phase0-hlnxwrb1",
-    "owner": "Codex /root authorized DEC013",
+    "instance_id": "sales-p1-preparation",
+    "owner": "Codex /root; P1 runtime execution pending DEC015",
     "resources": {
-      "workspace": "/private/tmp/erp-sales-foundation",
-      "temp-directory": "/private/tmp/sales-phase0-hlnxwrb1",
-      "mysql-instance": "Actual ownedMySQL26.7.0 fourinstances verified; freshgate_c2925553 schemas/fullSales025migration; /private/tmp/sales-phase0-runtime.json"
+      "workspace": "/private/tmp/erp-sales-p1",
+      "temp-directory": "/private/tmp/sales-p1-private",
+      "mysql-instance": "NOT_ALLOCATED; pending DEC015 approval"
     },
     "lease_ref": null
   },
@@ -38,7 +38,8 @@
     "TASK-008": "DONE",
     "TASK-009": "DONE",
     "TASK-010": "DONE",
-    "TASK-011": "DONE"
+    "TASK-011": "DONE",
+    "TASK-012": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -704,6 +705,98 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-DESIGN-DEC015",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「批準」directly approves DEC015 question/packet20 (sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41): exactDESIGN392a6fa2/PLAN1f55b21a; TASK012..027,23developer suites/stagecontract,8Salesmigrationpatterns inclExternalKey parent creationTASK038->013 only,sharedmenu/scheduler/migrationtest+Sales paths,owneddisposableMySQL26.7/schema/socket/webports/syntheticdata/cleanup andunchangedNFR014/015UAT_NA rebinding. Retains existingcommit/push/PR/mainmergeauthorization withfullPhase/freshmain/currentCI/reviewgates.",
+      "recorded_at": "2026-10-05T01:17:01.232665+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-PLAN-DEC015",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「批準」directly approves DEC015 question/packet20 (sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41): exactDESIGN392a6fa2/PLAN1f55b21a; TASK012..027,23developer suites/stagecontract,8Salesmigrationpatterns inclExternalKey parent creationTASK038->013 only,sharedmenu/scheduler/migrationtest+Sales paths,owneddisposableMySQL26.7/schema/socket/webports/syntheticdata/cleanup andunchangedNFR014/015UAT_NA rebinding. Retains existingcommit/push/PR/mainmergeauthorization withfullPhase/freshmain/currentCI/reviewgates.",
+      "recorded_at": "2026-10-05T01:17:01.232665+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-002",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-SCOPE-DEC015",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「批準」directly approves DEC015 question/packet20 (sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41): exactDESIGN392a6fa2/PLAN1f55b21a; TASK012..027,23developer suites/stagecontract,8Salesmigrationpatterns inclExternalKey parent creationTASK038->013 only,sharedmenu/scheduler/migrationtest+Sales paths,owneddisposableMySQL26.7/schema/socket/webports/syntheticdata/cleanup andunchangedNFR014/015UAT_NA rebinding. Retains existingcommit/push/PR/mainmergeauthorization withfullPhase/freshmain/currentCI/reviewgates.",
+      "recorded_at": "2026-10-05T01:17:01.232665+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "code_commit": null,
+      "scope": [
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-UATNA-DEC015",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「批準」directly approves DEC015 question/packet20 (sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41): exactDESIGN392a6fa2/PLAN1f55b21a; TASK012..027,23developer suites/stagecontract,8Salesmigrationpatterns inclExternalKey parent creationTASK038->013 only,sharedmenu/scheduler/migrationtest+Sales paths,owneddisposableMySQL26.7/schema/socket/webports/syntheticdata/cleanup andunchangedNFR014/015UAT_NA rebinding. Retains existingcommit/push/PR/mainmergeauthorization withfullPhase/freshmain/currentCI/reviewgates.",
+      "recorded_at": "2026-10-05T01:17:01.232665+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1014,6 +1107,42 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
       "source_ref": "Actual independent final APPROVE repairedtechnicalbaseline DESIGN9cb5c5/PLANe24686, independently197providerresults/adapterunittest/trace PASS; packet17pathlistpopulated afterreview, hashesunchanged",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P1-ACTIVATION-R1-20261005",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "f926b2e756100885598312568b886eda372f109064eb469446851d5f753d3140",
+      "source_ref": "Actual independent CHANGES_REQUESTED initialPLAN950b11: unsupportedEXIT_CODE coverage category, Node directory discovery, canonicalexit conflict, job/handlerpaths mismatch and newapproval/envbinding pointers. All five corrected in revisedproposal; finalindependentreview pending. No initialapproval claimed.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P1-ACTIVATION-R2-20261005",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "7a1c4f4032ed850957dcfe0ab815a4dd9998cb0e6ad940b0f57ef35be4412f4c",
+      "source_ref": "Actual independent CHANGES_REQUESTED PLAN927d4c: prior5findings repaired; remaining SalesOrder FK dependency requires ExternalKey parent creation beforeOrders althoughTask038 originallyP3. Proposed table-only move intoTASK013 and8thmigrationpath added; finalreview pending. NoSQLexecuted.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P1-ACTIVATION-R3-20261005",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
+      "source_ref": "Actual independent APPROVE finalR3: DESIGN392a6fa2/PLAN1f55b21a/source25de; packet20sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41. Priorfiveprofile/scope/bindingfindings andExternalKey orderingblocker repaired. Allold suites/formalTC/UAT/historicalapprovals/otherPhaseledger preserved,23P1checks anddiff/trace validatorsPASS. Technicalproposal only; SamDEC015stillpending.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -1900,6 +2029,72 @@
       "source_ref": "/private/tmp/sales-main-t045-supplier-regression.log; actualnodeunitcommand syntheticprivatekeys",
       "actor": "Codex /root observedtestcommand",
       "observed_at": "2026-10-02T08:50:01.335795+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Finallatestmainintegratedcandidate independentreview",
+      "code_commit": "697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final APPROVE697b434 vs a343677; all20incomingfilesbyte-for-byte identicalmain; all34runrecords/artifactshashes verified,17current-source437PASS/zero fail/skip/notrun",
+      "actor": "Codex separate agent /root/sales_readiness_review",
+      "observed_at": "2026-10-02T08:53:59.700814+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36986307700; actual gh current-head completed/success observation retained /private/tmp/sales-final-697-ci.json",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T09:03:16.723598+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36986307700; actual gh current-head completed/success observation retained /private/tmp/sales-final-697-ci.json",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T09:03:16.723598+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36986307700; actual gh current-head completed/success observation retained /private/tmp/sales-final-697-ci.json",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T09:03:16.723598+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36986307700; actual gh current-head completed/success observation retained /private/tmp/sales-final-697-ci.json",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T09:03:16.723598+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36986307700; actual gh current-head completed/success observation retained /private/tmp/sales-final-697-ci.json",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T09:03:16.723598+00:00"
     }
   ],
   "pending_decisions": [
@@ -2071,6 +2266,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization."
+    },
+    {
+      "id": "DEC-015",
+      "impact": "MAJOR",
+      "question": "Proposed P1 TASK012..027 scope +23developer suites + IMPLEMENT/formal stage contract + ownedisolatedMySQL/browser + unchangedNFR014/015UAT_NA rebinding + ExternalKey parent table creation moveTASK038->TASK013 only (FK required; CSV/Channel remainP3); exactDESIGN392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132/PLAN1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71; packet20; no source/SQL before actualdecision.",
+      "affected_ids": [
+        "PHASE-002",
+        "NFR-014",
+        "NFR-015"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam「批準」directly approves DEC015 question/packet20 (sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41): exactDESIGN392a6fa2/PLAN1f55b21a; TASK012..027,23developer suites/stagecontract,8Salesmigrationpatterns inclExternalKey parent creationTASK038->013 only,sharedmenu/scheduler/migrationtest+Sales paths,owneddisposableMySQL26.7/schema/socket/webports/syntheticdata/cleanup andunchangedNFR014/015UAT_NA rebinding. Retains existingcommit/push/PR/mainmergeauthorization withfullPhase/freshmain/currentCI/reviewgates."
     }
   ],
   "external_actions": [
@@ -2365,18 +2572,18 @@
     {
       "id": "MERGE-SALES-PHASE0-20261002",
       "kind": "MERGE",
-      "target": "https://github.com/crazysumsum/erp-app/pull/174 main<-codex/sales-foundation e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 main<-codex/sales-foundation 697b434a7d741b49a5e7adde3e38715ac4e5c5d6",
       "idempotency_key": "sales-phase0-full-merge-20261002",
-      "status": "PLANNED",
-      "source_ref": "ActualSamcommit/PR/mergeauthorization andDEC014finalbinding approval; executeonlyafterexactheadCI/freshmain/completePHASE001 MERGE_READY."
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh merge and remote observation: MERGED at 2026-10-02T09:04:25Z, merge commit bbb2383ab3be94e79cade34fc584f8e538ddcfaf; source697b434, finalCI36986307700 allfivePASS, fullPhase001gatePASS; no protection bypass."
     },
     {
       "id": "READY-SALES-PHASE0-PR-20261002",
       "kind": "PR_UPDATE",
       "target": "PR174 readyforreview",
       "idempotency_key": "sales-phase0-pr-ready-20261002",
-      "status": "PLANNED",
-      "source_ref": "Sammergeauthorization; finaldeveloper/currentCI/independentreview complete, subjectto fullGatefinalverification."
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr ready174 succeeded; subsequent remote observation isDraftFalse; https://github.com/crazysumsum/erp-app/pull/174"
     },
     {
       "id": "INTEGRATE-SALES-SUPPLIER-T045-20261002",
@@ -2391,8 +2598,24 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-foundation integratedmaina343677+currentevidencecheckpoint",
       "idempotency_key": "sales-main-t045-integrated-push-20261002",
-      "status": "PLANNED",
-      "source_ref": "Existingauthorizedmerge/commit/PR; all17actualregisteredintegrationdeveloperchecksPASS437 andSupplier68PASS; design/plan unchanged."
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitpush697b434a7d741b49a5e7adde3e38715ac4e5c5d6 success; CI36986307700 underway; currentboundaryfreshmaina343 PASS."
+    },
+    {
+      "id": "CLEANUP-SALES-PHASE0-20261002",
+      "kind": "OTHER",
+      "target": "Four owned disposable MySQL roots and Sales feature worktree/local+remote branch only",
+      "idempotency_key": "sales-phase0-safe-cleanup-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual fourownedmysql datadir/socket/pid verification+shutdown+removal; all132 evidencefiles copied and hashesverified; cleanmerged Sales worktree removed; local nonforce branch deletion and remote deletion confirmed; primarymain cleanbbb2383. Private completion.json/runtime metadata retains observations."
+    },
+    {
+      "id": "P1-PREPARE-RECOVERY-20261005",
+      "kind": "OTHER",
+      "target": "/private/tmp/erp-sales-p1 at mainbbb2383; proposed docs only",
+      "idempotency_key": "sales-p1-preparation-recovery-20261005",
+      "status": "CONFIRMED",
+      "source_ref": "Actual freshfetch mainbbb2383; PR174 actualMERGED verified via gh; imported retained final P0 audit and all34privateoriginalruns from /private/tmp/sales-phase0-retained-evidence-hlnxwrb1; P0 scope approvals untouched; no productcode orSQL executed."
     }
   ],
   "evidence_files": [
@@ -2432,5 +2655,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Publish integratedmaina343677 currentsource25de0074 full17developer437PASS/zero skips +Supplier68PASS. Require newexactheadCI, independentreview andfreshmain/fullPHASE001 MERGE_READY beforeauthorizedmerge."
+  "next_safe_action": "Implement approved TASK012 Quotation persistence on freshmainbbb2383; reproduce native/unit failure then migrations/test green; sequential TASK013..027,23developer checks,realPlaywright,currentCI/review andfullP1mergeGate. Existing source/code approvals need not be requested again. Never claim formalacceptance/UAT."
 }
