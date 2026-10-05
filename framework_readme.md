@@ -98,7 +98,7 @@ cd server && npm run migrate
 npm run dev
 ```
 
-同時啟動 API 伺服器（`server/`，`nodemon` 監控變更自動重啟）與 Vue 前端（`client/`，Vite）。也可以分開啟動：
+同時啟動 API 伺服器（`server/`，Node 內建 `--watch` 監控變更自動重啟）與 Vue 前端（`client/`，Vite）。也可以分開啟動：
 
 ```bash
 npm run dev:server
