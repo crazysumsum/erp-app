@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 73,
+  "revision": 76,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
     "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
-    "code_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
-    "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+    "code_commit": "07f761186e98f907d1b29f19c6bfc85192d44485",
+    "source_fingerprint": "1aed1b18e6103825cb2eb7e366b44f347e59f61c5bb24c80d887e11805c92b90",
     "worktree": "/private/tmp/erp-sales-p1",
-    "default_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
+    "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -1234,6 +1234,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-DIAGNOSTIC-RECOVERY-AFTER",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "3702712f36f4d4c60857ab5472f97938f29911080cc56474c94b140647b87acb",
+      "source_ref": "Actual after-diff independent APPROVE revision75 vs exactrev73 snapshot: all34runner records and19raw files/hashes/history preserved; zero state issues; D/P/mode-entry unchanged. No SQL or file edits.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2215,6 +2227,28 @@
       "source_ref": "implementation/23_task014_developer_report.md; native11PASS0FAIL0SKIP, finalempty+P0upgrade+lintPASS, server2148PASS0FAIL420documentedoptins; actual scoped separateAPPROVE.",
       "actor": "Codex /root",
       "observed_at": "2026-10-05T03:10:33.521003+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Raw diagnostic evidence classification recovery",
+      "code_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "implementation/24_diagnostic_reference_recovery.md; exact retained diagnostic inventory=[{\"path\":\"evidence/task012/task012-empty.log\",\"bytes\":3784,\"sha256\":\"63b461f24fd3d26db08e2185e03fe61ca3a503f5128b3a8efe326ba6c432d53f\"},{\"path\":\"evidence/task012/task012-upgrade.log\",\"bytes\":4957,\"sha256\":\"abdb536899192acf1a6f458caa7b439bb8f4e0cd8cd07365fac3cab82e8a5ae6\"},{\"path\":\"evidence/task012/task012-green.log\",\"bytes\":547,\"sha256\":\"9a08e541a1ca84ad3f2837a7833df250b0897c942ca71507c59cec85f8ddee9a\"},{\"path\":\"evidence/task012/task012-server-regression.log\",\"bytes\":258476,\"sha256\":\"78e74c32f3f65bfd341d272abe99986a33bd6ec354be422cf7717b4b0859b8cf\"},{\"path\":\"evidence/task012/task012-lint.log\",\"bytes\":34,\"sha256\":\"6bb1ee595ad4a18e79d4765b8d4ac46297b3f844e713cdf91411b06c8ede59e2\"},{\"path\":\"evidence/task012/task012-red.log\",\"bytes\":1602,\"sha256\":\"8141c2bd0d28f0f754f6ba89b93ce291ffc7158c6c41601abca935d0098a0553\"},{\"path\":\"evidence/task013/task013-empty.log\",\"bytes\":3943,\"sha256\":\"d6f8c6562fc3f2045e5d9f67ccddefdd1fc20e4fa746afb57b27878b68a273d5\"},{\"path\":\"evidence/task013/task013-server-regression.log\",\"bytes\":258881,\"sha256\":\"027b3406bfeda2e7600d630ba570caf2895d3c601e9b21555a80e7651db9ff9f\"},{\"path\":\"evidence/task013/task013-lint.log\",\"bytes\":34,\"sha256\":\"6bb1ee595ad4a18e79d4765b8d4ac46297b3f844e713cdf91411b06c8ede59e2\"},{\"path\":\"evidence/task013/task013-green.log\",\"bytes\":453,\"sha256\":\"2bb1062ba9c7b4056ca0ffa3bbf82e0d7d616fd592206e55213258faa9cd2cde\"},{\"path\":\"evidence/task013/task013-red.log\",\"bytes\":1596,\"sha256\":\"46c46ed85d9686f4bde57abd17383b1092b1affb3d84dbc67db236d54b60a84c\"},{\"path\":\"evidence/task013/task013-upgrade.log\",\"bytes\":5150,\"sha256\":\"3cbbc31af4d0f57b69e4230f6c33e28dd652ea5d8765bf4373bc5a6980bc0de9\"},{\"path\":\"evidence/task014/task014-native.log\",\"bytes\":1327,\"sha256\":\"51358c69ef3dcbc4473f8cc8937461e11fa732c32922a864af5af127916c0700\"},{\"path\":\"evidence/task014/task014-red.log\",\"bytes\":1646,\"sha256\":\"20866f1ffbd4950ec555d523fb0b29df62d6716c3ea607309fc360431537b5a9\"},{\"path\":\"evidence/task014/task014-final-empty.log\",\"bytes\":4117,\"sha256\":\"e563bf6a76896f4abed3491e65ce9f9f61f0ebdedaee9461ffde72b6c91cf83b\"},{\"path\":\"evidence/task014/task014-p0-baseline-empty.log\",\"bytes\":3677,\"sha256\":\"8170548290eee84a4a71f90af5913fb9887f993399098b6cc1b65bd9cce29bc2\"},{\"path\":\"evidence/task014/task014-lint.log\",\"bytes\":34,\"sha256\":\"6bb1ee595ad4a18e79d4765b8d4ac46297b3f844e713cdf91411b06c8ede59e2\"},{\"path\":\"evidence/task014/task014-final-upgrade.log\",\"bytes\":5290,\"sha256\":\"b231b7722a2c243b1f4c15248254ac693005f11f0329416b3298699df9db6bb0\"},{\"path\":\"evidence/task014/task014-server-regression.log\",\"bytes\":259313,\"sha256\":\"57fdfd8f43c07ed5b06815c15f4f7cf12abed5a70f180669f59dac2719f1c5c9\"}]",
+      "actor": "Codex /root; actual separate reviewer /root/sales_readiness_review approved narrower recovery",
+      "observed_at": "2026-10-05T03:18:30.215453+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Fresh main integration and evidence manifest reconciliation",
+      "code_commit": "07f761186e98f907d1b29f19c6bfc85192d44485",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "1aed1b18e6103825cb2eb7e366b44f347e59f61c5bb24c80d887e11805c92b90",
+      "status": "PASS",
+      "source_ref": "Actual fetch+merge origin/main e3bfb02(PR179) into feature 07f7611 clean; module boundary PASS against fresh main. Raw task diagnostics retained privately under evidence/task012-014 and referenced by reports; state.evidence_files lists only actual runner JSON records as required by gate parser. D/P decisions unchanged; final full P1 verification must use current candidate.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-05T03:14:05.586959+00:00"
     }
   ],
   "pending_decisions": [
@@ -2752,6 +2786,14 @@
       "idempotency_key": "sales-p1-final-persistence-schema",
       "status": "CONFIRMED",
       "source_ref": "DEC015 owned disposable authorization; actual primary mainbbb P0 migrator then P1final8 migrations succeeded; runtime.json binds new schema, old experimental schemas preserved."
+    },
+    {
+      "id": "MERGE-LATEST-MAIN-INTO-P1-20261005",
+      "kind": "MERGE",
+      "target": "origin/main e3bfb02 into codex/sales-order-phase-1-draft",
+      "idempotency_key": "sales-p1-main-e3bfb02",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git fetch/prune + merge succeeded; HEAD07f761186e98f907d1b29f19c6bfc85192d44485; no conflicts/no direct main mutation."
     }
   ],
   "evidence_files": [
@@ -2788,26 +2830,7 @@
     "evidence/20261002T084834-b16cdc40e06b/run.json",
     "evidence/20261002T084835-52df376c56ed/run.json",
     "evidence/20261002T084836-3cbc746f9335/run.json",
-    "evidence/20261002T084837-25f943c95931/run.json",
-    "evidence/task012/task012-empty.log",
-    "evidence/task012/task012-upgrade.log",
-    "evidence/task012/task012-green.log",
-    "evidence/task012/task012-server-regression.log",
-    "evidence/task012/task012-lint.log",
-    "evidence/task012/task012-red.log",
-    "evidence/task013/task013-empty.log",
-    "evidence/task013/task013-server-regression.log",
-    "evidence/task013/task013-lint.log",
-    "evidence/task013/task013-green.log",
-    "evidence/task013/task013-red.log",
-    "evidence/task013/task013-upgrade.log",
-    "evidence/task014/task014-native.log",
-    "evidence/task014/task014-red.log",
-    "evidence/task014/task014-final-empty.log",
-    "evidence/task014/task014-p0-baseline-empty.log",
-    "evidence/task014/task014-lint.log",
-    "evidence/task014/task014-final-upgrade.log",
-    "evidence/task014/task014-server-regression.log"
+    "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
   "next_safe_action": "TASK-015 sequence/operation/audit services RED/GREEN with real concurrency/rollback; P1 full Gate pending."
