@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 267,
+  "revision": 271,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-044",
+  "current_task": "TASK-045",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t44-close",
-    "default_commit": "8630ac1dcd961464817636ef319963a43ea93b19",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t45",
+    "default_commit": "95946469bde5fe4b64e185ce253baf9ef9d82e61",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -72,7 +72,7 @@
     "TASK-042": "DONE",
     "TASK-043": "DONE",
     "TASK-044": "DONE",
-    "TASK-045": "PENDING",
+    "TASK-045": "IN_PROGRESS",
     "TASK-046": "PENDING",
     "TASK-047": "PENDING",
     "TASK-048": "PENDING",
@@ -1709,6 +1709,30 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing a2d577ef6f8d715773d98969e4c0a5bb10f2d2e1 (PR #175)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/73_rev_070_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-071",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-045)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 1138dc50cadce650a89e3d563c3157aad973d6b3 (PR #177)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/74_rev_071_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-072",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-045 REV-071 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 7608699 (PR #177)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/75_rev_072_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4318,6 +4342,33 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-02: '全部按你建議做' - 1A, 2A, 3A, 4A, 5 comment only."
+    },
+    {
+      "id": "HD-060",
+      "impact": "MAJOR",
+      "question": "TASK-045 confirm and per-row execution, five points. (1) Who confirms: (A) only the uploader, others 404 like cancel (HD-058 1A); (B) any supplier.mgmt holder. (2) Writing Supplier inside the row transaction: (A) extract connection-taking helpers from SupplierAdminService create/update and the Address/Contact/Identifier create methods, used by both the public methods and import, so the rules stay single (BR-026); (B) an import-only applyRow with its own SQL, like Customer. (3) Approver no longer eligible at execution: (A) each activating create row fails with APPROVER_NOT_ELIGIBLE and no Supplier is created; (B) create as draft with a warning. (4) Transient errors (deadlock, lock wait, transaction timeout): (A) the row fails with a distinct code SUPPLIER_IMPORT_ROW_BUSY; (B) retry the row up to twice in the same run. (5) Confirmer loses supplier.mgmt or is deactivated during execution: (A) as Customer, re-check before each row; on loss fail the job with SUPPLIER_IMPORT_AUTHORIZATION_REVOKED, applied rows kept, pending rows failed; (B) carry on. Defaults stated in the same message: confirm is jwt-password with route idempotency, only ready/ready_with_errors with matching version; the policy value/version, approver and confirmer are snapshotted at confirm and used at execution (AC-013); create rows write Supplier, children, audit and the applied marker in one commit, the approval request snapshot includes the identifier; update rows change root fields only, re-check expected version, invalidate a pending request on significant change, and give 'CSV 匯入 #job' as the currency-change reason; everything precheck checked is re-checked; fault injection with the real applyRow, process kill before/after commit and lease takeover, and two workers.",
+      "affected_ids": [
+        "TASK-045",
+        "HD-048",
+        "HD-058",
+        "REV-061",
+        "REV-064"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-02: '全部按建議' - 1A, 2A, 3A, 4A, 5A."
+    },
+    {
+      "id": "HD-061",
+      "impact": "MAJOR",
+      "question": "REV-071 follow-ups for TASK-045. (1) L-1: a job whose rows are all applied is failed if the confirmer loses access before the final call — select the next row first, finalize when none is left, re-check the confirmer only when a row exists, with a test. (2) L-2: a real lock wait longer than the timeout budget leaves the row valid (retried after the 660 s lease) instead of failing it as SUPPLIER_IMPORT_ROW_BUSY: (A) correct HD-060 4A's wording — short conflicts fail the row as BUSY, long waits leave it pending for the lease — and add a real lock-hold test; (B) mark the row with NOWAIT so 4A holds literally. (3) L-3: the T43 cleanup's id IN (2000 ids) still full-scans; delete in primary-key chunks of at most 500 and correct the carry-forward. (4) I-1 test the in-transaction SUPPLIER_CODE_TAKEN mapping with an injected race; I-2 a deleted approver fails the row as APPROVER_NOT_ELIGIBLE; I-3 record for T46 that the snapshot can activate directly after approval was switched on; I-4 imported audits carry requestId import-<jobId>. Recommended: 1 fix, 2A, 3 fix, I-1..I-4 as suggested.",
+      "affected_ids": [
+        "TASK-045",
+        "TASK-046",
+        "HD-060",
+        "REV-071"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-02: '全部按建議' - L-1 fix, L-2 (A), L-3 fix, I-1..I-4 as suggested."
     }
   ],
   "external_actions": [
@@ -5394,5 +5445,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-044 is DONE (PR #175 merged at 8630ac1, main CI run 36970945400 green). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting. Open carry-forward: HD-043 (T45/T46), HD-044 (T48), HD-048 (T45), HD-049 (T46), HD-057 (T51), and the T45/T46/T48 obligations in implementation/62_task_041_carry_forward.md ('Status after TASK-044' adds: confirm ownership rule for T45; 410 and file-serving rules for T46; handler file-name order for T46)."
+  "next_safe_action": "TASK-045: REV-072 APPROVED 7608699; its two Low and one Info findings (test and wording only) closed within HD-061 after approval, not re-reviewed. PR #177 waits for CI on the new head and the Product Owner's word to merge; check main has not moved and merge with --match-head-commit."
 }

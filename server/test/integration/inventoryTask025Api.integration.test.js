@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
+import { readdir } from "node:fs/promises";
 import test from "node:test";
 import { createApplication } from "../../src/framework/application/createApplication.js";
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
@@ -51,8 +52,11 @@ integrationTest("DEV-025-API-01 real HTTP and provider permission boundaries", a
   assert.equal(server.version, "26.7.0");
   assert.equal(Number(server.skip_networking), 1);
   assert.equal(server.db_name, process.env.DB_NAME);
-  const [[migrations]] = await db.query("SELECT COUNT(*) AS count FROM fr_schema_migrations");
-  assert.equal(Number(migrations.count), 66);
+  const migrations = (await readdir(new URL("../../database/migrations/", import.meta.url)))
+    .filter(name => /\.(?:js|sql)$/u.test(name)).map(name => `migrations/${name}`);
+  const [applied] = await db.query("SELECT name FROM fr_schema_migrations ORDER BY name");
+  assert.deepEqual(applied.map(row => row.name), [...migrations,
+    "framework/idempotency.sql", "framework/jwt.sql", "framework/scheduler.sql"].sort());
 
   const now = Date.now();
   const suffix = randomUUID().slice(0, 8);

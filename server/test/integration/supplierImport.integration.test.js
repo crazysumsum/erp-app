@@ -8,6 +8,7 @@ import path from "node:path";
 import { stringify } from "csv-stringify/sync";
 
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
+import { ISO_4217_LEGAL_TENDER_CODES } from "../../src/modules/businessMaster/iso4217Snapshot.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
 import { hashNameBigrams } from "../../src/modules/supplier/supplierDuplicateCandidates.js";
 import { SupplierImportWorkerService } from "../../src/services/supplierImport/SupplierImportWorkerService.js";
@@ -21,7 +22,7 @@ import { SUPPLIER_IMPORT_JOB_NAMES } from "../../src/services/supplierImport/sup
  */
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 const h = { application: null, url: "", db: null, jwt: null, logRoot: "", importBase: "", worker: null, jobIds: [], supplierIds: [],
-  userId: null, roleIds: [], userIds: [] };
+  userId: null, roleIds: [], userIds: [], currencies: [] };
 const BANK_VALUE = "GB29NWBK60161331926819";
 let clock = Date.now();
 const time = { nowMs: () => clock };
@@ -66,9 +67,15 @@ after(async () => {
     await h.db.execute("DELETE FROM supplier_import_jobs WHERE id = ?", [id]);
   }
   for (const id of h.supplierIds) {
-    await h.db.execute("DELETE FROM supplier_identifiers WHERE supplier_id = ?", [id]);
+    // T45 嘅執行會整齊成個 aggregate（子資料、name grams、審批申請、audit）。
+    for (const table of ["supplier_address_purposes", "supplier_addresses", "supplier_contact_purposes", "supplier_contacts",
+      "supplier_identifiers", "supplier_name_grams", "supplier_activation_requests", "supplier_audit_logs"]) {
+      await h.db.execute(`DELETE FROM ${table} WHERE supplier_id = ?`, [id]);
+    }
     await h.db.execute("DELETE FROM suppliers WHERE id = ?", [id]);
   }
+  for (const code of h.currencies) await h.db.execute("DELETE FROM currencies WHERE code = ?", [code]);
+
   if (h.userId) await h.db.execute("DELETE FROM users WHERE id = ?", [h.userId]);
   for (const id of h.userIds) {
     await h.db.execute("DELETE FROM supplier_audit_logs WHERE actor_user_id = ?", [id]);
@@ -338,8 +345,9 @@ integrationTest("TASK-043: a file that fails after some rows were written leaves
   assert.deepEqual(await rows(created.id), []);
 });
 
-/** 一個有指定權限嘅用戶同佢嘅 JWT（呢兩條 route 係 jwt，唔使設備簽章）。 */
-async function makeUser(label, permissions) {
+/** 一個有指定權限嘅用戶同佢嘅 JWT（呢啲 route 係 jwt 或 jwt-password，唔使設備簽章）。 */
+const PASSWORD = "Imp0rt-Pa55-T45";
+async function makeUser(label, permissions, { withPassword = false } = {}) {
   const now = Date.now();
   const suffix = randomUUID().slice(0, 8);
   const [role] = await h.db.execute("INSERT INTO roles (name, created_at) VALUES (?, ?)", [`imp43-${label}-${suffix}`, now]);
@@ -349,16 +357,18 @@ async function makeUser(label, permissions) {
     const [[permission]] = await h.db.query("SELECT id FROM permissions WHERE name = ?", [name]);
     await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [roleId, permission.id]);
   }
+  // confirm 係 jwt-password：要真 hash，password re-auth 先驗得到。
+  const passwordHash = withPassword ? await (await import("../../src/modules/user/passwordHash.js")).hashPassword(PASSWORD) : "x";
   const [user] = await h.db.execute(
-    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, 'x', ?, ?, ?)",
-    [`imp43-${label}-${suffix}`, `Import ${label}`, now, now]);
+    "INSERT INTO users (username, password_hash, display_name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    [`imp43-${label}-${suffix}`, passwordHash, `Import ${label}`, now, now]);
   const userId = Number(user.insertId);
   h.userIds.push(userId);
   await h.db.execute("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)", [userId, roleId]);
   const version = await h.application.services.require("tokenRevocation").currentVersion(String(userId));
   const token = await h.jwt.issue({ roles: [`imp43-${label}-${suffix}`], permissions },
     { subject: String(userId), version, authTime: Math.floor(Date.now() / 1000) });
-  return { userId, token };
+  return { userId, token, roleId, roleName: `imp43-${label}-${suffix}`, permissions };
 }
 
 async function httpUpload(user, content, { key = randomUUID(), mode = "create_only", type = "text/csv" } = {}) {
@@ -497,8 +507,19 @@ integrationTest("TASK-043 (REV-064 H-2, IMP-003): a 10,000-row file finishes pre
     await h.db.query("INSERT INTO supplier_name_grams (supplier_id, gram_hash) VALUES ?", [grams.slice(start, start + 5_000)]);
   }
   t.after(async () => {
-    await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [seededRows.map((row) => row.id)]);
-    await h.db.query("DELETE FROM suppliers WHERE supplier_code_key LIKE ?", [`sd-${tag.toLowerCase()}-%`]);
+    // `supplier_code_key LIKE` 會 full scan 兼鎖晒成張 suppliers 表，並行跑嘅其他測試檔會同佢互鎖（實測
+    // supplierSettings 嘅申請 insert 俾佢鎖死）。按 id 刪都唔夠：每批佔張表三成以上時，optimizer 寧願 full scan
+    // （2,000 個 id 一次、或者分批嘅第 2 批起都係，REV-071 L-3、REV-072 L-1 用 EXPLAIN 量過）。所以分批兼強制用 PRIMARY，
+    // 並且驗住個 plan，唔再靠估。
+    const ids = seededRows.map((row) => row.id);
+    for (let start = 0; start < ids.length; start += 500) {
+      const chunk = ids.slice(start, start + 500);
+      await h.db.query("DELETE FROM supplier_name_grams WHERE supplier_id IN (?)", [chunk]);
+      const delete_ = "DELETE /*+ INDEX(suppliers PRIMARY) */ FROM suppliers WHERE id IN (?)";
+      const [[plan]] = await h.db.query(`EXPLAIN FORMAT=TRADITIONAL ${delete_}`, [chunk]);
+      assert.deepEqual([plan.type, plan.key], ["range", "PRIMARY"], "the cleanup locks only the seeded rows");
+      await h.db.query(delete_, [chunk]);
+    }
   });
   const records = Array.from({ length: 10_000 }, (_, index) => ({
     supplierCode: `BIG-${tag}-${index}`, supplierName: `Imported ${index} Trading Company Limited ${tag}`, defaultCurrencyCode: "HKD"
@@ -775,4 +796,536 @@ integrationTest("TASK-044 (REV-069 L-3, HD-058 3A): the source is deleted only a
   assert.equal((await job(created.id)).status, "uploaded", "the cancel rolled back");
   assert.equal(await sourceExists(created.id), true, "so the source is still there");
   await h.db.execute("UPDATE supplier_import_jobs SET status = 'cancelled' WHERE id = ?", [created.id]);
+});
+
+/* ---------------------------------------------------------------- TASK-045 ---------------------------------------------------------------- */
+
+const confirmJob = (user, id, body, key = randomUUID()) =>
+  api(user, "POST", `/api/v1/supplier-imports/${id}/confirm`, { body: { password: PASSWORD, ...body }, key });
+
+/**
+ * 審批設定係全庫共用嘅 singleton，其他測試檔會並行讀寫佢：呢度唔 commit 改佢（見 supplierSettings 整合測試）。
+ * 要「審批開啟」就用一個注入咗設定嘅 service 喺 service 層確認；HTTP 走真設定（seed 係關）。
+ */
+const APPROVAL_ON = Object.freeze({ value: 1, version: 7_777 });
+async function confirmWithApprovalOn(user, id, input) {
+  const service = new SupplierImportService({ database: h.db, time, logger: h.worker.logger, activationPolicy: async () => APPROVAL_ON });
+  return service.confirm({ actorId: user.userId, claimedRoles: [user.roleName], claimedPermissions: user.permissions, id, ...input })
+    .then((value) => ({ value }), (error) => ({ code: error.publicCode, status: error.statusCode }));
+}
+
+/** 上載、預檢，回 `{ id, version }`（ready 或 ready_with_errors）。 */
+async function readyJob(owner, records, { mode = "create_only" } = {}) {
+  const created = await httpUpload(owner, csv(records), { mode });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  const result = await precheck(created.job.id);
+  assert.ok(["ready", "ready_with_errors"].includes(result.status), result.status);
+  return { id: created.job.id, version: Number((await job(created.job.id)).version) };
+}
+
+/** 用 app 嘅 worker（真 applyRow）做完指定 job；之後記低佢寫過嘅 Supplier 等 after() 清走。 */
+async function execute(jobId) {
+  let result;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    result = await h.worker.runExecution(new AbortController().signal);
+    if (!result.claimed || result.jobId === jobId) break;
+  }
+  const [applied] = await h.db.query("SELECT applied_supplier_id AS id FROM supplier_import_rows WHERE job_id = ? AND applied_supplier_id IS NOT NULL", [jobId]);
+  h.supplierIds.push(...applied.map((row) => Number(row.id)));
+  return result;
+}
+
+async function rowOutcomes(jobId) {
+  const [result] = await h.db.query(
+    "SELECT `row_number`, status, applied_supplier_id, errors FROM supplier_import_rows WHERE job_id = ? ORDER BY `row_number`", [jobId]);
+  return result.map((row) => [Number(row.row_number), row.status, row.errors.map((error) => error.code)[0] ?? null]);
+}
+
+/**
+ * 一個只供測試用、已啟用嘅 currency（after() 會刪）。代碼唔可以係真 ISO 4217（開發庫可能已經有 CAD、QAR……），
+ * 亦唔可以已經存在（REV-072 I-1）。
+ */
+async function testCurrency(name) {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const code = Array.from({ length: 3 }, () => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join("");
+    if (ISO_4217_LEGAL_TENDER_CODES.has(code)) continue;
+    const [inserted] = await h.db.execute(`INSERT IGNORE INTO currencies (code, name, decimal_places, status, version, created_at, updated_at)
+      VALUES (?, ?, 2, 'ACTIVE', 1, ?, ?)`, [code, name, clock, clock]);
+    if (inserted.affectedRows === 1) {
+      h.currencies.push(code);
+      return code;
+    }
+  }
+  throw new Error("no free test currency code");
+}
+
+const supplierByCode = async (code) => (await h.db.query("SELECT * FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0];
+
+integrationTest("TASK-045: confirm needs the uploader's password, a ready job at its version and, to activate with approval on, an eligible approver", async () => {
+  const owner = await makeUser("cf", ["supplier.mgmt"], { withPassword: true });
+  const outsider = await makeUser("cx", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("ap", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const early = await httpUpload(owner, csv([{ supplierCode: `E-${tag}`, supplierName: `Early ${tag}`, defaultCurrencyCode: "HKD" }]));
+  const notYet = await confirmJob(owner, early.job.id, { version: 1, activationMode: "draft" });
+  assert.deepEqual([notYet.status, errorCode(notYet)], [409, "SUPPLIER_IMPORT_NOT_CONFIRMABLE"], "an unprechecked job cannot be confirmed");
+  await api(owner, "POST", `/api/v1/supplier-imports/${early.job.id}/cancel`, { body: { version: 1 }, key: randomUUID() });
+
+  const { id, version } = await readyJob(owner, [{ supplierCode: `C-${tag}`, supplierName: `Confirm ${tag}`, defaultCurrencyCode: "HKD" }]);
+  const foreign = await confirmJob(outsider, id, { version, activationMode: "draft" });
+  assert.deepEqual([foreign.status, errorCode(foreign)], [404, "SUPPLIER_IMPORT_NOT_FOUND"], "only the uploader confirms (HD-060 1A)");
+  const noPassword = await api(owner, "POST", `/api/v1/supplier-imports/${id}/confirm`, { body: { version, activationMode: "draft" }, key: randomUUID() });
+  assert.equal(noPassword.status, 400, "the password is required");
+  const wrongPassword = await confirmJob(owner, id, { version, activationMode: "draft", password: "not-it" });
+  assert.deepEqual([wrongPassword.status, errorCode(wrongPassword)], [403, "PASSWORD_INVALID"]);
+  const stale = await confirmJob(owner, id, { version: version - 1, activationMode: "draft" });
+  assert.deepEqual([stale.status, errorCode(stale)], [409, "VERSION_CONFLICT"]);
+
+  // 真設定（seed 係關）：唔使審批人，俾咗就拒絕。
+  const [[live]] = await h.db.query("SELECT require_activation_approval AS value, version FROM supplier_settings WHERE id = 1");
+  assert.equal(Number(live.value), 0, "the shared setting is off; this file never commits a change to it");
+  const notRequired = await confirmJob(owner, id, { version, activationMode: "activate", approverUserId: approver.userId });
+  assert.deepEqual([notRequired.status, errorCode(notRequired)], [400, "APPROVER_NOT_REQUIRED"]);
+  // 審批開啟：要另一位而家有 supplier.approval 嘅用戶（BR-012）。
+  for (const [approverUserId, code] of [[null, "APPROVER_REQUIRED"], [owner.userId, "APPROVER_MUST_DIFFER"],
+    [outsider.userId, "APPROVER_NOT_ELIGIBLE"]]) {
+    const refused = await confirmWithApprovalOn(owner, id, { version, activationMode: "activate", approverUserId });
+    assert.deepEqual([refused.status, refused.code], [400, code], String(approverUserId));
+  }
+  assert.equal((await job(id)).status, "ready", "no refusal changed the job");
+
+  const key = randomUUID();
+  const confirmed = await confirmJob(owner, id, { version, activationMode: "activate" }, key);
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  assert.deepEqual([confirmed.data.status, confirmed.data.activationMode, confirmed.data.version], ["queued", "activate", version + 1]);
+  assert.ok(confirmed.data.confirmedAt > 0);
+  const stored = await job(id);
+  assert.deepEqual([stored.approver_user_id, stored.approval_setting_value, stored.approval_setting_version, stored.confirmed_by].map((v) => (v === null ? null : Number(v))),
+    [null, 0, Number(live.version), owner.userId], "the policy and confirmer are snapshotted (AC-013)");
+  const replay = await confirmJob(owner, id, { version, activationMode: "activate" }, key);
+  assert.deepEqual([replay.status, replay.data], [200, confirmed.data], "the same key replays the first answer");
+  const again = await confirmJob(owner, id, { version: version + 1, activationMode: "draft" });
+  assert.deepEqual([again.status, errorCode(again)], [409, "SUPPLIER_IMPORT_NOT_CONFIRMABLE"]);
+  const [audits] = await h.db.query("SELECT detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.confirm'", [id]);
+  assert.equal(audits.length, 1);
+  assert.deepEqual(audits[0].detail.after, { status: "queued", activationMode: "activate", approvalRequired: false,
+    approverUserId: null, approvalSettingVersion: Number(live.version) });
+  await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version + 1 }, key: randomUUID() });
+
+  // 審批開啟嘅成功確認：snapshot 係確認嗰刻讀到嘅值同 version。
+  const second = await readyJob(owner, [{ supplierCode: `C2-${tag}`, supplierName: `Confirm Two ${tag}`, defaultCurrencyCode: "HKD" }]);
+  const approved = await confirmWithApprovalOn(owner, second.id, { version: second.version, activationMode: "activate", approverUserId: approver.userId });
+  assert.equal(approved.value?.status, "queued", JSON.stringify(approved));
+  const snap = await job(second.id);
+  assert.deepEqual([snap.approver_user_id, snap.approval_setting_value, snap.approval_setting_version].map(Number), [approver.userId, 1, APPROVAL_ON.version]);
+  await api(owner, "POST", `/api/v1/supplier-imports/${second.id}/cancel`, { body: { version: second.version + 1 }, key: randomUUID() });
+});
+
+integrationTest("TASK-045: a draft import writes each valid row as one Supplier aggregate with its children and audit, and skips invalid rows", async () => {
+  const owner = await makeUser("dr", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [
+    { supplierCode: `A1-${tag}`, supplierName: `Aggregate One ${tag}`, defaultCurrencyCode: "HKD", displayName: "Agg One",
+      addressLabel: "Head office", addressPurpose: "office", addressLine1: "1 Example Road", city: "Hong Kong", countryCode: "HK",
+      contactName: "Alex Chan", contactPurpose: "orders", contactEmail: `alex.${tag.toLowerCase()}@example.com`,
+      identifierType: "tax", issuerCountryCode: "HK", identifierValue: `T${tag}01` },
+    { supplierCode: `A2-${tag}`, supplierName: `Aggregate Two ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `A3-${tag}`, supplierName: `Aggregate Three ${tag}` }
+  ]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const result = await execute(id);
+  assert.deepEqual([result.status, result.applied], ["completed", 2]);
+  assert.deepEqual(await rowOutcomes(id), [[1, "applied", null], [2, "applied", null], [3, "skipped", "SUPPLIER_IMPORT_REQUIRED_FIELD"]]);
+
+  const one = await supplierByCode(`A1-${tag}`);
+  assert.deepEqual([one.status, one.display_name, Number(one.created_by)], ["draft", "Agg One", owner.userId], "the confirmer is the actor");
+  const count = async (table) => Number((await h.db.query(`SELECT COUNT(*) AS n FROM ${table} WHERE supplier_id = ?`, [one.id]))[0][0].n);
+  assert.deepEqual(await Promise.all(["supplier_addresses", "supplier_address_purposes", "supplier_contacts", "supplier_contact_purposes",
+    "supplier_identifiers"].map(count)), [1, 1, 1, 1, 1]);
+  assert.ok(await count("supplier_name_grams") > 0, "name grams are written as by the UI");
+  const [audits] = await h.db.query("SELECT action, actor_user_id FROM supplier_audit_logs WHERE supplier_id = ? ORDER BY id", [one.id]);
+  assert.deepEqual(audits.map((audit) => audit.action).sort(),
+    ["supplier.address.create", "supplier.contact.create", "supplier.create", "supplier.identifier.create"]);
+  assert.ok(audits.every((audit) => Number(audit.actor_user_id) === owner.userId));
+  const [traced] = await h.db.query("SELECT DISTINCT request_id FROM supplier_audit_logs WHERE supplier_id = ?", [one.id]);
+  assert.deepEqual(traced.map((audit) => audit.request_id), [`import-${id}`], "every audit names the import job (REV-071 I-4)");
+  const [[marker]] = await h.db.query("SELECT applied_supplier_id FROM supplier_import_rows WHERE job_id = ? AND `row_number` = 1", [id]);
+  assert.equal(Number(marker.applied_supplier_id), Number(one.id));
+  const detail = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
+  assert.deepEqual([detail.data.job.status, detail.data.job.appliedCount, detail.data.job.failedCount, detail.data.job.skippedCount],
+    ["completed", 2, 0, 1]);
+});
+
+integrationTest("TASK-045 (AC-013, BR-012): activation follows the policy snapshotted at confirm; with approval it opens a request that already lists the new identifier", async () => {
+  const owner = await makeUser("ac", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("aa", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const pendingJob = await readyJob(owner, [{ supplierCode: `P-${tag}`, supplierName: `Pending ${tag}`, defaultCurrencyCode: "HKD",
+    identifierType: "business_registration", issuerCountryCode: "HK", identifierValue: `BR${tag}` }]);
+  // 確認嗰刻審批係開；執行嗰陣真設定係關 —— 執行一定要跟 snapshot（唔追溯）。
+  assert.equal((await confirmWithApprovalOn(owner, pendingJob.id, { version: pendingJob.version, activationMode: "activate",
+    approverUserId: approver.userId })).value?.status, "queued");
+  const directJob = await readyJob(owner, [{ supplierCode: `D-${tag}`, supplierName: `Direct ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, directJob.id, { version: directJob.version, activationMode: "activate" })).status, 200);
+  await execute(pendingJob.id);
+  await execute(directJob.id);
+
+  const pending = await supplierByCode(`P-${tag}`);
+  assert.equal(pending.status, "pending_approval", "approval was on at confirm, so the live setting (off) does not apply");
+  const [[request]] = await h.db.query("SELECT assigned_approver_id, requested_by, status, summary FROM supplier_activation_requests WHERE supplier_id = ?", [pending.id]);
+  assert.deepEqual([Number(request.assigned_approver_id), Number(request.requested_by), request.status], [approver.userId, owner.userId, "pending"]);
+  assert.equal(request.summary.identifierCount, 1, "the request's snapshot includes the identifier created in the same row");
+  assert.equal((await supplierByCode(`D-${tag}`)).status, "active", "approval off at confirm: active at once");
+});
+
+integrationTest("TASK-045 (HD-060 3A): an approver who lost the permission after confirm fails every activating row, and no Supplier is left", async () => {
+  const owner = await makeUser("al", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("ag", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `G-${tag}`, supplierName: `Gone ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmWithApprovalOn(owner, id, { version, activationMode: "activate", approverUserId: approver.userId })).value?.status, "queued");
+  await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [approver.roleId]);
+  const result = await execute(id);
+  assert.equal(result.status, "completed_with_errors");
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "APPROVER_NOT_ELIGIBLE"]]);
+  assert.equal(await supplierByCode(`G-${tag}`), undefined);
+});
+
+integrationTest("TASK-045: update rows change root fields only, keep blank cells, and treat a pending Supplier as the UI does", async () => {
+  const owner = await makeUser("up", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("uq", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const other = await testCurrency("T45 test currency");
+  // 兩個 pending（各有申請）同一個 active Supplier，經匯入整出嚟。
+  const seed = await readyJob(owner, [
+    { supplierCode: `U1-${tag}`, supplierName: `Update One ${tag}`, defaultCurrencyCode: "HKD", notes: "keep me" },
+    { supplierCode: `U2-${tag}`, supplierName: `Update Two ${tag}`, defaultCurrencyCode: "HKD" }
+  ]);
+  await confirmWithApprovalOn(owner, seed.id, { version: seed.version, activationMode: "activate", approverUserId: approver.userId });
+  await execute(seed.id);
+  const active = await readyJob(owner, [{ supplierCode: `U3-${tag}`, supplierName: `Update Three ${tag}`, defaultCurrencyCode: "HKD", displayName: "Three" }]);
+  await confirmJob(owner, active.id, { version: active.version, activationMode: "activate" });
+  await execute(active.id);
+
+  const update = await readyJob(owner, [
+    { supplierCode: `U1-${tag}`, generalPhone: "+852 2000 0001" },                  // 唔顯著：申請保留
+    { supplierCode: `U2-${tag}`, supplierName: `Update Two Renamed ${tag}` },       // 顯著：申請失效、回 draft
+    { supplierCode: `U3-${tag}`, defaultCurrencyCode: other }                      // 改幣別：要原因
+  ], { mode: "upsert" });
+  assert.equal((await confirmJob(owner, update.id, { version: update.version, activationMode: "activate" })).status, 200);
+  const result = await execute(update.id);
+  assert.equal(result.status, "completed", JSON.stringify(await rowOutcomes(update.id)));
+
+  const one = await supplierByCode(`U1-${tag}`);
+  assert.deepEqual([one.status, one.general_phone, one.notes, one.supplier_name], ["pending_approval", "+852 2000 0001", "keep me", `Update One ${tag}`],
+    "blank cells keep their values; an update never changes the status");
+  const [[kept]] = await h.db.query("SELECT status, supplier_version FROM supplier_activation_requests WHERE supplier_id = ?", [one.id]);
+  assert.deepEqual([kept.status, Number(kept.supplier_version)], ["pending", Number(one.version)], "the request follows the new version");
+  const two = await supplierByCode(`U2-${tag}`);
+  const [[invalidated]] = await h.db.query("SELECT status FROM supplier_activation_requests WHERE supplier_id = ?", [two.id]);
+  assert.deepEqual([two.status, invalidated.status], ["draft", "invalidated"], "a significant change invalidates the request (REV-064 I-4)");
+  const three = await supplierByCode(`U3-${tag}`);
+  assert.deepEqual([three.status, three.default_currency_code, three.display_name], ["active", other, "Three"]);
+  const [[audit]] = await h.db.query("SELECT reason FROM supplier_audit_logs WHERE supplier_id = ? AND action = 'supplier.update'", [three.id]);
+  assert.equal(audit.reason, `CSV 匯入 #${update.id}`, "the currency change carries the import as its reason");
+});
+
+integrationTest("TASK-045: execution re-checks what precheck saw — a Code or Identifier taken since, an archived target, a moved version, a retired currency", async () => {
+  const owner = await makeUser("rc", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const retired = await testCurrency("T45 retired currency");
+  const archivedId = await seedSupplier({ code: `X1-${tag}`, name: `Archive Me ${tag}` });
+  const movedId = await seedSupplier({ code: `X2-${tag}`, name: `Move Me ${tag}` });
+  const { id, version } = await readyJob(owner, [
+    { supplierCode: `X1-${tag}`, notes: "archived later" },
+    { supplierCode: `X2-${tag}`, notes: "version moves" },
+    { supplierCode: `N1-${tag}`, supplierName: `Code Taken ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `N2-${tag}`, supplierName: `Identifier Taken ${tag}`, defaultCurrencyCode: "HKD",
+      identifierType: "tax", issuerCountryCode: "HK", identifierValue: `ID${tag}` },
+    { supplierCode: `N3-${tag}`, supplierName: `Retired Currency ${tag}`, defaultCurrencyCode: retired },
+    { supplierCode: `N4-${tag}`, supplierName: `Still Fine ${tag}`, defaultCurrencyCode: "HKD" }
+  ], { mode: "upsert" });
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  await h.db.execute("UPDATE suppliers SET status = 'archived' WHERE id = ?", [archivedId]);
+  await h.db.execute("UPDATE suppliers SET version = version + 1 WHERE id = ?", [movedId]);
+  await seedSupplier({ code: `N1-${tag}`, name: `Squatter ${tag}` });
+  await seedSupplier({ code: `S-${tag}`, name: `Holder ${tag}`, identifier: `ID${tag}` });
+  await h.db.execute("UPDATE currencies SET status = 'INACTIVE' WHERE code = ?", [retired]);
+
+  const result = await execute(id);
+  assert.equal(result.status, "completed_with_errors");
+  const outcomes = await rowOutcomes(id);
+  assert.deepEqual(outcomes.map(([row, status]) => [row, status]),
+    [[1, "failed"], [2, "failed"], [3, "failed"], [4, "failed"], [5, "failed"], [6, "applied"]]);
+  assert.deepEqual(outcomes.slice(0, 4).map(([, , code]) => code),
+    ["SUPPLIER_UPDATE_NOT_ALLOWED", "VERSION_CONFLICT", "SUPPLIER_CODE_TAKEN", "SUPPLIER_IDENTIFIER_TAKEN"]);
+  assert.match(outcomes[4][2], /CURRENCY/u, "a currency retired since precheck is refused by Business Master");
+  assert.equal(await supplierByCode(`N2-${tag}`), undefined, "the identifier failure rolled back the Supplier it would have joined");
+});
+
+integrationTest("TASK-045 (HD-048 4): a failure after the real Supplier write leaves no Supplier, child, name gram or audit behind", async () => {
+  const owner = await makeUser("fw", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `F-${tag}`, supplierName: `Fails Late ${tag}`, defaultCurrencyCode: "HKD",
+    contactName: "Late Contact", contactPurpose: "general", identifierType: "tax", issuerCountryCode: "HK", identifierValue: `FL${tag}` }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "late", leaseDurationMs: 60_000 }))?.id, id);
+  let written;
+  const outcome = await service.processNextRow({ jobId: id, leaseOwner: "late", leaseDurationMs: 60_000,
+    applyRow: async (connection, context) => {
+      written = await h.worker.applyRow(connection, context);
+      throw new Error("injected after the Supplier write");
+    } });
+  assert.ok(written > 0, "the real writer ran");
+  assert.equal(outcome.status, "failed");
+  assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE id = ?", [written]))[0][0].n), 0);
+  for (const table of ["supplier_name_grams", "supplier_contacts", "supplier_identifiers", "supplier_audit_logs"]) {
+    assert.equal(Number((await h.db.query(`SELECT COUNT(*) AS n FROM ${table} WHERE supplier_id = ?`, [written]))[0][0].n), 0, table);
+  }
+  await service.finalizeExecution({ jobId: id, leaseOwner: "late" });
+});
+
+integrationTest("TASK-045 (HD-060 5A): a confirmer who loses supplier.mgmt stops the job; applied rows stay, the rest fail", async () => {
+  const owner = await makeUser("rv", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [1, 2, 3].map((n) => ({ supplierCode: `V${n}-${tag}`, supplierName: `Revoked ${n} ${tag}`, defaultCurrencyCode: "HKD" })));
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "rv", leaseDurationMs: 60_000 }))?.id, id);
+  const first = await service.processNextRow({ jobId: id, leaseOwner: "rv", leaseDurationMs: 60_000, applyRow: h.worker.applyRow });
+  assert.equal(first.status, "applied");
+  h.supplierIds.push(first.appliedSupplierId);
+  await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [owner.roleId]);
+  const stopped = await service.processNextRow({ jobId: id, leaseOwner: "rv", leaseDurationMs: 60_000, applyRow: h.worker.applyRow });
+  assert.equal(stopped.status, "revoked");
+  assert.deepEqual(await rowOutcomes(id), [[1, "applied", null], [2, "failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED"],
+    [3, "failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED"]]);
+  const stored = await job(id);
+  assert.deepEqual([stored.status, stored.last_error_code, Number(stored.applied_count), Number(stored.failed_count), stored.lease_owner],
+    ["failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED", 1, 2, ""]);
+  assert.equal(await supplierByCode(`V2-${tag}`), undefined);
+});
+
+/** 起一個真 worker process，做到 `point` 就 SIGKILL 自己；回佢點樣死（`run` 模式仲回佢印出嚟嘅結果）。 */
+async function crashWorker(point, env = {}) {
+  const { spawn } = await import("node:child_process");
+  const child = spawn(process.execPath, ["--import", "./test-support/testEnv.js", "test-support/supplierImportCrashChild.js",
+    point, path.join(h.importBase, "imports"), h.logRoot], { cwd: path.resolve(import.meta.dirname, "../.."), env: { ...process.env, ...env },
+    stdio: ["ignore", "pipe", "ignore"] });
+  let output = "";
+  child.stdout.on("data", (chunk) => { output += chunk; });
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { child.kill("SIGKILL"); reject(new Error("crash worker did not die in time")); }, 60_000);
+    child.on("exit", (code, signal) => { clearTimeout(timer); resolve({ code, signal, ...(output.trim() ? { output: JSON.parse(output.trim()) } : {}) }); });
+  });
+}
+
+integrationTest("TASK-045 fault injection: a worker killed before or after a row's commit leaves both or neither, and the next worker finishes once", async () => {
+  const owner = await makeUser("kl", ["supplier.mgmt"], { withPassword: true });
+  for (const point of ["before", "after"]) {
+    const tag = randomUUID().slice(0, 6).toUpperCase();
+    const codes = [1, 2, 3].map((n) => `K${n}-${tag}`);
+    const { id, version } = await readyJob(owner, codes.map((code) => ({ supplierCode: code, supplierName: `Killed ${code}`, defaultCurrencyCode: "HKD" })));
+    assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+    assert.deepEqual(await crashWorker(point), { code: null, signal: "SIGKILL" }, `${point}: the worker died by SIGKILL`);
+
+    const stored = await job(id);
+    assert.equal(stored.status, "running", `${point}: the dead worker still holds the lease`);
+    const first = await supplierByCode(codes[0]);
+    if (point === "before") {
+      assert.equal(first, undefined, "killed before commit: no Supplier");
+      assert.deepEqual(await rowOutcomes(id), [[1, "valid", null], [2, "valid", null], [3, "valid", null]], "and no marker");
+    } else {
+      assert.ok(first, "killed after commit: the Supplier is there");
+      assert.deepEqual((await rowOutcomes(id))[0], [1, "applied", null], "and so is its marker");
+    }
+    // 下一個 worker：lease 過期之後接手（佢用測試時鐘）。
+    clock = Number(stored.lease_until) + 1;
+    const result = await execute(id);
+    assert.deepEqual([result.status, (await rowOutcomes(id)).map(([, status]) => status)], ["completed", ["applied", "applied", "applied"]]);
+    for (const code of codes) {
+      assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1,
+        `${point}: ${code} applied exactly once`);
+    }
+  }
+});
+
+integrationTest("TASK-045: two workers never apply a row twice — one claim wins, and a worker that lost its lease writes nothing", async () => {
+  const owner = await makeUser("tw", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const codes = [1, 2, 3].map((n) => `W${n}-${tag}`);
+  const { id, version } = await readyJob(owner, codes.map((code) => ({ supplierCode: code, supplierName: `Twin ${code}`, defaultCurrencyCode: "HKD" })));
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const first = h.worker.importService;
+  const second = new SupplierImportService({ database: h.db, time, logger: h.worker.logger });
+  const claims = await Promise.all([first, second].map((service, index) =>
+    service.claimForExecution({ leaseOwner: `twin-${index}`, leaseDurationMs: 1_000 })));
+  assert.equal(claims.filter((claim) => claim?.id === id).length, 1, "exactly one worker claims the job");
+  const [owning, waiting] = claims[0]?.id === id ? [[first, "twin-0"], [second, "twin-1"]] : [[second, "twin-1"], [first, "twin-0"]];
+  const step = ([service, leaseOwner]) => service.processNextRow({ jobId: id, leaseOwner, leaseDurationMs: 1_000, applyRow: h.worker.applyRow });
+  assert.equal((await step(owning)).status, "applied");
+  clock += 2_000; // 第一個 worker 停咗，lease 過期
+  assert.equal((await waiting[0].claimForExecution({ leaseOwner: waiting[1], leaseDurationMs: 1_000 }))?.id, id, "the other worker takes over");
+  const [stale, fresh] = await Promise.allSettled([step(owning), step(waiting)]);
+  assert.equal(stale.reason?.publicCode, "SUPPLIER_IMPORT_LEASE_LOST", "the old owner cannot write");
+  assert.equal(fresh.value?.status, "applied");
+  while (await step(waiting)) { /* 做完 */ }
+  await waiting[0].finalizeExecution({ jobId: id, leaseOwner: waiting[1] });
+  const [applied] = await h.db.query("SELECT applied_supplier_id AS id FROM supplier_import_rows WHERE job_id = ?", [id]);
+  h.supplierIds.push(...applied.map((row) => Number(row.id)));
+  for (const code of codes) {
+    assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1, code);
+  }
+});
+
+integrationTest("TASK-045 (HD-060 5A): a confirmer whose account was deactivated after confirm writes nothing", async () => {
+  const owner = await makeUser("dx", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `DX-${tag}`, supplierName: `Deactivated ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  await h.db.execute("UPDATE users SET status = 'disabled' WHERE id = ?", [owner.userId]);
+  const result = await execute(id);
+  assert.equal(result.status, "failed");
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED"]]);
+  assert.equal(await supplierByCode(`DX-${tag}`), undefined);
+});
+
+integrationTest("TASK-045 (HD-048 3): each row, job lock included, finishes far inside DB_TRANSACTION_TIMEOUT_MS", async (t) => {
+  const owner = await makeUser("tm", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const records = Array.from({ length: 300 }, (_, index) => ({
+    supplierCode: `TM${index}-${tag}`, supplierName: `Timed ${index} Trading ${tag}`, defaultCurrencyCode: "HKD",
+    addressLabel: "Office", addressPurpose: "office", addressLine1: `${index} Road`, contactName: `Contact ${index}`, contactPurpose: "orders",
+    identifierType: "tax", issuerCountryCode: "HK", identifierValue: `TM${tag}${index}`
+  }));
+  const { id, version } = await readyJob(owner, records);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "timer", leaseDurationMs: 600_000 }))?.id, id);
+  let slowest = 0;
+  const started = Date.now();
+  for (;;) {
+    const before = Date.now();
+    const row = await service.processNextRow({ jobId: id, leaseOwner: "timer", leaseDurationMs: 600_000, applyRow: h.worker.applyRow });
+    if (!row) break;
+    assert.equal(row.status, "applied");
+    h.supplierIds.push(row.appliedSupplierId);
+    slowest = Math.max(slowest, Date.now() - before);
+  }
+  await service.finalizeExecution({ jobId: id, leaseOwner: "timer" });
+  t.diagnostic(`300 full rows in ${Date.now() - started} ms; slowest row ${slowest} ms (DB_TRANSACTION_TIMEOUT_MS defaults to 20,000)`);
+  assert.ok(slowest < 2_000, `slowest row took ${slowest} ms`);
+});
+
+integrationTest("TASK-045 (AC-013): confirm reads the policy under a share lock, so it waits for a settings write in flight", async () => {
+  const owner = await makeUser("sl", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `SL-${tag}`, supplierName: `Share Lock ${tag}`, defaultCurrencyCode: "HKD" }]);
+  let pending;
+  let settledWhileHeld;
+  // 好似 supplierSettings 測試咁：鎖住設定行嘅 transaction 一定 rollback，其他測試檔睇唔到中間值。
+  const run = async (connection) => {
+    await connection.query("SELECT version FROM supplier_settings WHERE id = 1 FOR UPDATE");
+    let settled = false;
+    pending = confirmJob(owner, id, { version, activationMode: "draft" });
+    pending.then(() => { settled = true; });
+    await new Promise((resolve) => { setTimeout(resolve, 400); });
+    settledWhileHeld = settled;
+    throw new Error("roll back the settings lock");
+  };
+  await h.db.withTransaction(run).catch((error) => {
+    if (!/roll back the settings lock/u.test(`${error?.message} ${error?.cause?.message}`)) throw error;
+  });
+  assert.equal(settledWhileHeld, false, "confirm waited for the settings row");
+  const confirmed = await pending;
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  await api(owner, "POST", `/api/v1/supplier-imports/${id}/cancel`, { body: { version: version + 1 }, key: randomUUID() });
+});
+
+
+integrationTest("TASK-045 (REV-071 L-1): a job whose rows are all applied completes even if the confirmer loses access before it finalizes", async () => {
+  const owner = await makeUser("lf", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `LF-${tag}`, supplierName: `Last First ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "lf", leaseDurationMs: 60_000 }))?.id, id);
+  const applied = await service.processNextRow({ jobId: id, leaseOwner: "lf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow });
+  h.supplierIds.push(applied.appliedSupplierId);
+  await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [owner.roleId]);
+  assert.equal(await service.processNextRow({ jobId: id, leaseOwner: "lf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow }), null,
+    "no row is left, so nothing is refused");
+  assert.equal((await service.finalizeExecution({ jobId: id, leaseOwner: "lf" })).status, "completed");
+});
+
+integrationTest("TASK-045 (REV-071 I-2): an approver whose user was deleted after confirm fails the row as not eligible", async () => {
+  const owner = await makeUser("ad", ["supplier.mgmt"], { withPassword: true });
+  const approver = await makeUser("ae", ["supplier.view", "supplier.approval"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [{ supplierCode: `AD-${tag}`, supplierName: `Approver Deleted ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmWithApprovalOn(owner, id, { version, activationMode: "activate", approverUserId: approver.userId })).value?.status, "queued");
+  // FK 係 ON DELETE SET NULL：刪 user 嘅效果。
+  await h.db.execute("UPDATE supplier_import_jobs SET approver_user_id = NULL WHERE id = ?", [id]);
+  await execute(id);
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "APPROVER_NOT_ELIGIBLE"]]);
+  assert.equal(await supplierByCode(`AD-${tag}`), undefined);
+});
+
+integrationTest("TASK-045 (REV-071 I-1): a Code taken by another transaction between the check and the insert fails the row as taken", async () => {
+  const owner = await makeUser("ct", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  // 另一個幣別：同幣別嘅建立會喺幣別行嘅 X 鎖排隊，race 就唔會發生。
+  const otherCurrency = await testCurrency("T45 race currency");
+  const code = `CT-${tag}`;
+  const { id, version } = await readyJob(owner, [{ supplierCode: code, supplierName: `Code Race ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "race", leaseDurationMs: 60_000 }))?.id, id);
+  let raced = false;
+  const applyRow = (connection, context) => h.worker.applyRow({
+    async query(sql, ...rest) {
+      const result = await connection.query(sql, ...rest);
+      if (!raced && String(sql).includes("FROM suppliers WHERE supplier_code_key = ?")) {
+        raced = true;
+        const [racer] = await h.db.execute(
+          `INSERT INTO suppliers (supplier_code, supplier_code_key, supplier_name, supplier_name_key, default_currency_code,
+             status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?)`,
+          [code, code.toLowerCase(), `Racer ${tag}`, `racer ${tag.toLowerCase()}`, otherCurrency, clock, clock]);
+        h.supplierIds.push(Number(racer.insertId));
+      }
+      return result;
+    },
+    execute: (...args) => connection.execute(...args)
+  }, context);
+  const outcome = await service.processNextRow({ jobId: id, leaseOwner: "race", leaseDurationMs: 60_000, applyRow });
+  assert.ok(raced, "the competing Code was committed between the check and the insert");
+  assert.equal(outcome.status, "failed");
+  assert.deepEqual(await rowOutcomes(id), [[1, "failed", "SUPPLIER_CODE_TAKEN"]]);
+  await service.finalizeExecution({ jobId: id, leaseOwner: "race" });
+});
+
+integrationTest("TASK-045 (REV-071 L-2, HD-061 2A): a lock wait past the transaction budget leaves the row pending, and the next worker applies it once", async () => {
+  const owner = await makeUser("lw", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const code = `LW-${tag}`;
+  const { id, version } = await readyJob(owner, [{ supplierCode: code, supplierName: `Lock Wait ${tag}`, defaultCurrencyCode: "HKD" }]);
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  // 另一個 transaction 鎖住 HKD（Business Master 檢查幣別時要 X 鎖），鎖長過 worker 嘅 transaction 預算（1.5 秒）。
+  // Worker 嘅列 transaction 逾時之後，伺服器嗰邊仲揸住 job 嘅鎖等緊，所以標 failed 嘅 transaction 都等唔到：
+  // 嗰列留喺 valid，lease 過期之後由下一個 worker 接手（HD-061 2A）。
+  let outcome;
+  await h.db.withTransaction(async (connection) => {
+    await connection.query("SELECT code FROM currencies WHERE code = 'HKD' FOR UPDATE");
+    outcome = await crashWorker("run", { DB_TRANSACTION_TIMEOUT_MS: "1500" });
+  });
+  assert.equal(outcome.code, 0);
+  assert.equal(outcome.output.code, "DATABASE_TRANSACTION_TIMEOUT", JSON.stringify(outcome.output));
+  const waiting = await job(id);
+  assert.equal(waiting.status, "running", "the job keeps its lease");
+  assert.deepEqual(await rowOutcomes(id), [[1, "valid", null]], "the row is left pending, not failed");
+  assert.equal(await supplierByCode(code), undefined, "and nothing was written");
+  clock = Number(waiting.lease_until) + 1;
+  assert.equal((await execute(id)).status, "completed");
+  assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1);
 });

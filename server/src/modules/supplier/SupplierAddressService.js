@@ -94,30 +94,39 @@ export class SupplierAddressService {
   }
 
   async create(input) {
-    const address = normalizeAddress(input);
+    normalizeAddress(input);
     return this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, input);
-      await this.#supplierForUpdate(connection, input.supplierId);
-      const nowMs = this.time.nowMs();
-      const [result] = await connection.execute(
-        `INSERT INTO supplier_addresses
-          (supplier_id, label, address_line1, address_line2, address_line3, city, state_region, postal_code,
-           country_code, phone, notes, status, version, created_at, updated_at, created_by, updated_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
-        [input.supplierId, address.label, address.addressLine1, address.addressLine2, address.addressLine3,
-          address.city, address.stateRegion, address.postalCode, address.countryCode, address.phone, address.notes,
-          nowMs, nowMs, input.actorId, input.actorId]
-      );
-      const addressId = Number(result.insertId);
-      await this.#replacePurposes(connection, { supplierId: input.supplierId, addressId, purposes: address.purposes, actorId: input.actorId, nowMs, replace: false });
-      const projected = await this.#project(connection, input.supplierId, addressId);
-      await this.audit.record(connection, {
-        actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.address.create",
-        targetType: "address", targetId: addressId, supplierId: input.supplierId, targetLabel: address.label,
-        detail: { after: { purposes: address.purposes } }, requestId: input.requestId, ip: input.ip
-      });
-      return projected;
+      return this.createInTransaction(connection, { actor, input });
     });
+  }
+
+  /**
+   * 建立嘅核心，喺 caller 嘅 transaction 入面做（CSV 匯入同 Supplier 一齊 commit，HD-060 2A）。
+   * `actor` 係已經驗過嘅 `{ username }`。
+   */
+  async createInTransaction(connection, { actor, input }) {
+    const address = normalizeAddress(input);
+    await this.#supplierForUpdate(connection, input.supplierId);
+    const nowMs = this.time.nowMs();
+    const [result] = await connection.execute(
+      `INSERT INTO supplier_addresses
+        (supplier_id, label, address_line1, address_line2, address_line3, city, state_region, postal_code,
+         country_code, phone, notes, status, version, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
+      [input.supplierId, address.label, address.addressLine1, address.addressLine2, address.addressLine3,
+        address.city, address.stateRegion, address.postalCode, address.countryCode, address.phone, address.notes,
+        nowMs, nowMs, input.actorId, input.actorId]
+    );
+    const addressId = Number(result.insertId);
+    await this.#replacePurposes(connection, { supplierId: input.supplierId, addressId, purposes: address.purposes, actorId: input.actorId, nowMs, replace: false });
+    const projected = await this.#project(connection, input.supplierId, addressId);
+    await this.audit.record(connection, {
+      actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.address.create",
+      targetType: "address", targetId: addressId, supplierId: input.supplierId, targetLabel: address.label,
+      detail: { after: { purposes: address.purposes } }, requestId: input.requestId, ip: input.ip
+    });
+    return projected;
   }
 
   async update(input) {

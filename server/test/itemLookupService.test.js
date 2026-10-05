@@ -76,6 +76,138 @@ function uomRow(overrides = {}) {
   };
 }
 
+const saleSku = () => skuRow({ sku_version: 3, item_version: 2, suggested_price_amount: "12.3400" });
+const saleUom = (overrides = {}) => uomRow({ id: 91, uom_name: "Each", uom_status: "active", uom_version: 4, version: 5, ...overrides });
+
+test("Sales named lookup includes mapping identity, versions and exact stored price with a constant query budget", async () => {
+  const database = fakeDatabase([[saleSku()], [saleUom()]]);
+  const { service } = createService({ database });
+  const result = await service.findManyForSale([10, 10], { atMs: NOW_MS });
+  assert.equal(database.calls.length, 2);
+  assert.equal(result.size, 1);
+  assert.equal(result.get(10).skuVersion, 3);
+  assert.equal(result.get(10).itemVersion, 2);
+  assert.deepEqual(result.get(10).suggestedPrice, { amount: "12.3400", currency: "HKD", taxBasis: "tax_not_applicable" });
+  assert.deepEqual(result.get(10).uoms[0], {
+    skuUomId: 91, uomId: 5, uomCode: "EA", uomName: "Each", status: "active",
+    uomVersion: 4, mappingVersion: 5, toBaseFactor: 1, isBase: true, isDefaultPurchase: false, isDefaultSale: true
+  });
+  const lookup = createService({ database: fakeDatabase([[saleSku()], [saleUom()]]) }).service;
+  assert.equal((await lookup.findSaleUom(10, 91)).skuUomId, 91);
+  const wrongId = createService({ database: fakeDatabase([[saleSku()], [saleUom()]]) }).service;
+  assert.equal(await wrongId.findSaleUom(10, 5), null, "master UOM ID is not mapping ID");
+});
+
+test("Sales named eligibility is Active-only without changing generic clearance sales", async () => {
+  for (const [overrides, reason] of [
+    [{ sku_status: "discontinued" }, "STATUS_NOT_ACTIVE"],
+    [{ item_status: "discontinued" }, "STATUS_NOT_ACTIVE"],
+    [{ sellable: 0 }, "NOT_SELLABLE"],
+    [{ effective_from: NOW_MS + 1 }, "OUTSIDE_EFFECTIVE_RANGE"],
+    [{ effective_to: NOW_MS - 1 }, "OUTSIDE_EFFECTIVE_RANGE"],
+    [{ tracking_policy: "serial" }, "SERIAL_NOT_SUPPORTED"]
+  ]) {
+    const { service } = createService({ database: fakeDatabase([[{ ...saleSku(), ...overrides }], [saleUom()]]) });
+    const result = (await service.findManyForSale([10])).get(10);
+    assert.equal(result.usable, false);
+    assert.ok(result.reasons.includes(reason));
+  }
+  const { service } = createService({ database: fakeDatabase([[saleSku()], [saleUom()]]) });
+  assert.equal((await service.findManyForSale([10], { atMs: NOW_MS })).get(10).usable, true);
+});
+
+test("Sales lookup validates bounds before SQL and fails closed for invalid conversion", async () => {
+  const database = fakeDatabase([]);
+  const { service } = createService({ database });
+  for (const ids of [[0], [1.5], Array.from({ length: 101 }, (_, i) => i + 1)]) {
+    await assert.rejects(() => service.findManyForSale(ids), TypeError);
+  }
+  await assert.rejects(() => service.findManyForSale([10], { purpose: "sale" }), TypeError);
+  await assert.rejects(() => service.findManyForSale([10], { atMs: -1 }), TypeError);
+  assert.equal((await service.findManyForSale([])).size, 0);
+  assert.equal(database.calls.length, 0);
+  for (const factor of [0, 1.5, 1_000_001, 2]) {
+    const invalid = createService({ database: fakeDatabase([[saleSku()], [saleUom({ to_base_factor: factor })]]) }).service;
+    await assert.rejects(() => invalid.findManyForSale([10]), { code: "UOM_CONVERSION_INVALID" });
+  }
+});
+
+function saleTransaction(count = 1, { mapping = {}, sku = {}, uom = {} } = {}) {
+  const ids = Array.from({ length: count }, (_, i) => i + 10);
+  return fakeDatabase([
+    ids.map(id => ({ sku_id: id, item_id: 1, id: id + 81, uom_id: 5 })),
+    [{ id: 5, code: "EA", name: "Each", status: "active", version: 4, ...uom }],
+    [{ id: 1, name: "Item 1", product_type: "standard", status: "active", version: 2 }],
+    ids.map(id => ({ ...saleSku(), id, item_id: 1, ...sku })),
+    ids.map(id => ({ ...saleUom(), id: id + 81, sku_id: id, ...mapping }))
+  ]);
+}
+
+test("Sales transaction snapshots use UOM→Item→SKU→mapping SHARE locks and fixed queries for 1 or 100 lines", async () => {
+  for (const count of [1, 100]) {
+    const transaction = saleTransaction(count);
+    const database = fakeDatabase([]);
+    const { service } = createService({ database });
+    const requests = Array.from({ length: count }, (_, i) => ({ skuId: i + 10, skuUomId: i + 91 })).reverse();
+    const result = await service.getSalesSnapshotsInTransaction(transaction, [...requests, requests[0]], { atMs: NOW_MS });
+    assert.equal(result.length, count);
+    assert.equal(result[0].skuId, 10);
+    assert.equal(result[0].salesUom.skuUomId, 91);
+    assert.equal(result[0].suggestedPrice.amount, "12.3400");
+    assert.equal(transaction.calls.length, 5);
+    assert.equal(database.calls.length, 0);
+    for (const [index, table] of [[1, "item_uoms"], [2, "items"], [3, "item_skus"], [4, "item_sku_uoms"]]) {
+      assert.match(transaction.calls[index].sql, new RegExp(`FROM ${table} .*ORDER BY (?:s\\.)?id FOR SHARE`, "s"));
+      assert.doesNotMatch(transaction.calls[index].sql, /FOR UPDATE/);
+    }
+  }
+});
+
+test("Sales snapshots reject changed associations, cross-SKU mapping, inactive UOM and unavailable SKU", async () => {
+  const { service } = createService({ database: fakeDatabase([]) });
+  for (const options of [{ mapping: { uom_id: 6 } }, { mapping: { sku_id: 11 } }, { uom: { status: "inactive" } }]) {
+    await assert.rejects(() => service.getSalesSnapshotsInTransaction(saleTransaction(1, options), [{ skuId: 10, skuUomId: 91 }]), { code: "UOM_CONVERSION_INVALID" });
+  }
+  await assert.rejects(() => service.getSalesSnapshotsInTransaction(saleTransaction(1, { sku: { sku_status: "inactive" } }), [{ skuId: 10, skuUomId: 91 }]), { code: "SKU_NOT_USABLE" });
+  await assert.rejects(() => service.getSalesSnapshotsInTransaction(null, []), TypeError);
+  await assert.rejects(() => service.getSalesSnapshotsInTransaction(saleTransaction(), Array.from({ length: 101 }, (_, i) => ({ skuId: i + 1, skuUomId: i + 1 }))), TypeError);
+});
+
+test("Sales Inventory profiles reuse current snapshots with six caller-only queries for 1/100 SKUs", async () => {
+  for (const count of [1, 100]) {
+    const snapshots = saleTransaction(count);
+    const calls = [];
+    const ids = Array.from({ length: count }, (_, i) => i + 10);
+    const transaction = { async query(sql, params) {
+      calls.push({ sql, params });
+      if (calls.length === 1) return [ids.map(id => ({ sku_id: id, id: id + 81 }))];
+      return snapshots.query(sql, params);
+    } };
+    const database = fakeDatabase([]);
+    const { service } = createService({ database });
+    const profiles = await service.getSalesInventoryProfilesInTransaction(transaction, ids, { atMs: NOW_MS });
+    assert.equal(profiles.size, count);
+    assert.equal(profiles.get(10).salesUom.isBase, true);
+    assert.equal(profiles.get(10).minimumSaleLifeDays, null);
+    assert.equal(calls.length, 6);
+    assert.equal(database.calls.length, 0);
+  }
+});
+
+test("Sales Inventory profile discovery rejects 101 SKUs, missing Base and current Base reassignment", async () => {
+  const { service } = createService({ database: fakeDatabase([]) });
+  const transaction = fakeDatabase([]);
+  await assert.rejects(() => service.getSalesInventoryProfilesInTransaction(transaction, Array.from({ length: 101 }, (_, i) => i + 1)), TypeError);
+  assert.equal(transaction.calls.length, 0);
+  await assert.rejects(() => service.getSalesInventoryProfilesInTransaction(fakeDatabase([[]]), [10]), { code: "UOM_CONVERSION_INVALID" });
+  const current = saleTransaction(1, { mapping: { is_base: 0 } });
+  let calls = 0;
+  await assert.rejects(() => service.getSalesInventoryProfilesInTransaction({ async query(sql, params) {
+    if (calls++ === 0) return [[{ sku_id: 10, id: 91 }]];
+    return current.query(sql, params);
+  } }, [10]), { code: "UOM_CONVERSION_INVALID" });
+});
+
 test("ItemLookupService constructor requires database, logger and time", () => {
   assert.throws(() => new ItemLookupService({}), TypeError);
   assert.throws(() => new ItemLookupService({ database: {} }), TypeError);

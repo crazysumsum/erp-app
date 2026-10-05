@@ -7,6 +7,17 @@ import {
   startsWith
 } from "../../framework/upload/signatureMatchers.js";
 
+// CSV has no signature: this screens a bounded prefix; the import parser validates all bytes.
+function csvPrefix(buffer, { complete = true } = {}) {
+  for (const byte of buffer) {
+    if ((byte < 0x20 && ![0x09, 0x0a, 0x0d].includes(byte)) || byte === 0x7f) return false;
+  }
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(buffer, { stream: !complete });
+    return true;
+  } catch { return false; }
+}
+
 /**
  * 框架預設提供的檔案型別。
  *
@@ -133,6 +144,7 @@ export const BUILT_IN_FILE_TYPES = Object.freeze([
 
   // ---- 純文字 ----------------------------------------------------------
   // 無簽章可比對，只能排除二進位內容。
-  ["text/csv", { extensions: [".csv"], matches: isProbablyText }],
+  ["text/csv", { extensions: [".csv"], matches: isProbablyText, matchesPrefix: csvPrefix }],
+  ["application/csv", { extensions: [".csv"], matches: isProbablyText, matchesPrefix: csvPrefix }],
   ["text/plain", { extensions: [".txt"], matches: isProbablyText }]
 ]);

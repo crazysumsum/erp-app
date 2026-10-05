@@ -138,6 +138,55 @@ async function seedBarcode(db, { skuId, skuUomId, barcode }) {
   return row.insertId;
 }
 
+test("Sales named lookup and caller snapshots preserve mapping identity and hold current SHARE locks", { skip }, async (t) => {
+  const application = await startApplication();
+  const db = application.services.require("mysqldatabase");
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSku(db, catalog);
+  t.after(async () => {
+    await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("sales_item_snapshot_complete");
+  });
+  const service = lookupService(application);
+  assert.equal((await service.findManyForSale([fixture.skuId])).get(fixture.skuId).suggestedPrice.amount, "100.0000");
+  assert.equal((await service.findSaleUom(fixture.skuId, fixture.skuUomIdA)).uomId, catalog.uomIdA);
+  await db.withTransaction(async (transaction) => {
+    const [snapshot] = await service.getSalesSnapshotsInTransaction(transaction, [{ skuId: fixture.skuId, skuUomId: fixture.skuUomIdA }]);
+    assert.equal(snapshot.salesUom.skuUomId, fixture.skuUomIdA);
+    assert.equal(snapshot.skuVersion, 1);
+    assert.equal(snapshot.itemVersion, 1);
+    const inventoryProfiles = await service.getSalesInventoryProfilesInTransaction(transaction, [fixture.skuId]);
+    assert.equal(inventoryProfiles.get(fixture.skuId).salesUom.skuUomId, fixture.skuUomIdA);
+    assert.equal(inventoryProfiles.get(fixture.skuId).salesUom.toBaseFactor, 1);
+    for (const [table, id, assignments] of [
+      ["item_skus", fixture.skuId, "suggested_price_amount = '200.0000'"],
+      ["items", fixture.itemId, "status = 'inactive'"],
+      ["item_uoms", catalog.uomIdA, "status = 'inactive'"],
+      ["item_sku_uoms", fixture.skuUomIdA, "to_base_factor = 2"]
+    ]) {
+      await assert.rejects(() => db.withTransaction(async (writer) => {
+        const [[{ lockWait }]] = await writer.query("SELECT @@SESSION.innodb_lock_wait_timeout AS lockWait");
+        try {
+          await writer.query("SET SESSION innodb_lock_wait_timeout = 1");
+          await writer.execute(`UPDATE ${table} SET ${assignments} WHERE id = ?`, [id]);
+        } finally {
+          await writer.query("SET SESSION innodb_lock_wait_timeout = ?", [Number(lockWait)]);
+        }
+      }), error => error.code === "ER_LOCK_WAIT_TIMEOUT" || error.cause?.code === "ER_LOCK_WAIT_TIMEOUT");
+    }
+    assert.deepEqual((await service.getSalesSnapshotsInTransaction(transaction, [{ skuId: fixture.skuId, skuUomId: fixture.skuUomIdA }]))[0], snapshot);
+    // Inventory child inserts take a parent FK share lock: another SHARE remains compatible.
+    await db.withTransaction(async (other) => {
+      const [[row]] = await other.query("SELECT id FROM item_skus WHERE id = ? FOR SHARE", [fixture.skuId]);
+      assert.equal(Number(row.id), fixture.skuId);
+    });
+  });
+  await db.execute("UPDATE item_skus SET status = 'discontinued' WHERE id = ?", [fixture.skuId]);
+  assert.equal((await service.findById(fixture.skuId, { purpose: "sale" })).usable, true);
+  assert.equal((await service.findManyForSale([fixture.skuId])).get(fixture.skuId).usable, false);
+  await assert.rejects(() => db.withTransaction(transaction => service.getSalesSnapshotsInTransaction(transaction,
+    [{ skuId: fixture.skuId, skuUomId: fixture.skuUomIdA }])), { code: "SKU_NOT_USABLE" });
+});
+
 test("findById：真 JOIN 返正確嘅 Item／SKU／UOM 資料", { skip }, async (t) => {
   const application = await startApplication();
   const db = application.services.require("mysqldatabase");

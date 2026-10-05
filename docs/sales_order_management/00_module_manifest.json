@@ -36,7 +36,23 @@
       "server/test/permissionCatalogueConventions.test.js",
       "server/test/permissionCatalogueStartupGuard.test.js",
       "server/test/directoryLookups.test.js",
-      "server/test/apiDispatcher.test.js"
+      "server/test/apiDispatcher.test.js",
+      "server/test/configuration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js",
+      "server/test/customerLookupService.test.js",
+      "server/test/customerCreditService.test.js",
+      "server/test/itemLookupService.test.js",
+      "server/test/inventoryProviderContracts.test.js",
+      "server/test/inventoryOperationService.test.js",
+      "server/test/inventoryLockService.test.js",
+      "server/test/integration/itemLookup.integration.test.js",
+      "server/test/integration/itemUpdate.integration.test.js",
+      "server/test/integration/itemConcurrency.integration.test.js",
+      "server/test/integration/inventoryTask025Api.integration.test.js",
+      "server/test-support/salesProviderReport.py"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -58,7 +74,8 @@
       "server/test/integration/sales*.integration.test.js",
       "server/test-support/fakeSalesDatabase.js",
       "client/test/**/sales*.test.js",
-      "client/e2e/sales-order-management/**"
+      "client/e2e/sales-order-management/**",
+      "server/test-support/salesProviderReport.py"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -93,7 +110,24 @@
       "server/test/permissionCatalogueStartupGuard.test.js",
       "server/test/directoryLookups.test.js",
       "server/src/framework/middleware/apiDispatcher.js",
-      "server/test/apiDispatcher.test.js"
+      "server/test/apiDispatcher.test.js",
+      "server/src/framework/configuration/applicationConfiguration.js",
+      "server/test/configuration.test.js",
+      "server/test/integration/migrations.integration.test.js",
+      "server/test/integration/passwordChange.integration.test.js",
+      "server/test/integration/roleManagement.integration.test.js",
+      "server/test/integration/userManagement.integration.test.js",
+      "server/src/modules/item/ItemAdminService.js",
+      "server/test/customerLookupService.test.js",
+      "server/test/customerCreditService.test.js",
+      "server/test/itemLookupService.test.js",
+      "server/test/inventoryProviderContracts.test.js",
+      "server/test/inventoryOperationService.test.js",
+      "server/test/inventoryLockService.test.js",
+      "server/test/integration/itemLookup.integration.test.js",
+      "server/test/integration/itemUpdate.integration.test.js",
+      "server/test/integration/itemConcurrency.integration.test.js",
+      "server/test/integration/inventoryTask025Api.integration.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -105,7 +139,11 @@
       "docs/business_master/**",
       "docs/invoicing_accounts_receivable_management/**"
     ],
-    "schema_paths": [],
+    "schema_paths": [
+      "server/database/migrations/0067_seed_sales_permissions.js",
+      "server/database/migrations/0068_create_sales_document_sequences.js",
+      "server/database/migrations/0069_create_sales_operation_requests.js"
+    ],
     "shared_resources": [
       "global-migration-sequence",
       "authorization-permission-catalogue",
@@ -123,9 +161,9 @@
     "provided": [
       {
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
-        "version": "planning-only-NOT_IMPLEMENTED",
+        "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107",
+        "sha256": "cf4cb43b84698637a70cc742e48a9c85a736c18b3ebb91b5a70119a59e547b68",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -137,9 +175,9 @@
       {
         "module_id": "inventory-management",
         "id": "inventory-batch-reserve-release-contract",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED",
+        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "9df21d75c290dab878991e8e42ec9eeef4c35b0e4a43783b33f7c3c7444b5f92",
+        "sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
         "regression_suites": [
           "sales-technical"
         ]
@@ -147,9 +185,9 @@
       {
         "module_id": "customer-management",
         "id": "customer-snapshot-and-credit-contract",
-        "version": "observed-main-dd36250",
+        "version": "observed-main-dd36250; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/customer_management/03_design_spec.md",
-        "sha256": "ab567021254b09d5103caac5bba9b2e3324c0278e726d84999870abcdd7fe440",
+        "sha256": "1ff3954f4c925d9a5b972fb8c55676731dd0cfa7861f280b2c0ceccb4795d73d",
         "regression_suites": [
           "sales-technical"
         ]
@@ -157,9 +195,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED",
+        "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "2f6924b6545395a56581619d0f621a215f0aa18115115071cc8ed00d023c685a",
+        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
         "regression_suites": [
           "sales-technical"
         ]
@@ -167,9 +205,9 @@
       {
         "module_id": "authorization",
         "id": "permission-catalogue",
-        "version": "observed-main-dd36250",
+        "version": "observed-sales-foundation-0067-source-only",
         "source": "server/src/modules/authorization/permissionCatalogue.js",
-        "sha256": "4bf3b094d3f62dd61f89190feb453f156f22a10b1b8cbd9cb4864e4f1b45c80b",
+        "sha256": "e6363b8928b0f86d8c3ebba0a25695e9879dbb05d0bf9992fcdd175aa389cc0e",
         "regression_suites": [
           "sales-technical"
         ]
@@ -233,7 +271,8 @@
       "lint",
       "client-build",
       "security-audit",
-      "sales-technical"
+      "sales-foundation-developer",
+      "sales-provider-regression"
     ],
     "technical": [
       "sales-technical"

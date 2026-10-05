@@ -84,9 +84,9 @@
     "provided": [
       {
         "id": "inventory-domain-contract",
-        "version": "planning-v8",
+        "version": "planning-v8; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "6fc91e710adc48ec56fb567fa24b8b378741f0b48ffcb115d2a54c08927844ce",
+        "sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
         "consumers": [
           "purchasing-receiving",
           "sales-order",
@@ -99,9 +99,9 @@
       {
         "module_id": "item-management",
         "id": "item-lookup-service",
-        "version": "transaction-v1",
+        "version": "transaction-v1; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "2f6924b6545395a56581619d0f621a215f0aa18115115071cc8ed00d023c685a",
+        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
         "regression_suites": [
           "inventory-technical"
         ]

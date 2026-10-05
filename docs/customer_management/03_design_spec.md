@@ -1090,6 +1090,7 @@ CustomerLookupService.findById(customerId, { purpose, atMs })
 CustomerLookupService.findByCode(customerCode, { purpose, atMs })
 CustomerLookupService.listActive({ q, page, pageSize, purpose, atMs })
 CustomerLookupService.getCreditPolicy(customerId, { atMs })
+CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { atMs })
 CustomerLookupService.listAddresses(customerId, { purpose: "shipping", atMs })
 CustomerLookupService.assertAddressUsable(customerId, addressId, { purpose, atMs })
 CustomerLookupService.assertAddressUsableInTransaction(transaction, customerId, addressId, { purpose, expectedVersion, atMs })
@@ -1101,6 +1102,8 @@ CustomerLookupService.assertContactUsableInTransaction(transaction, customerId, 
 Purpose必須使用已註冊值，未知purpose fail closed：`new_sale`及`manual_invoice`只接受Active；`existing_order_fulfillment`、`invoice_existing_shipment`、`ar_existing_document`、`historical_return`、`refund_existing_transaction`及`history`不會只因Customer後來變成Suspended／Blocked／Archived而拒絕既有合法流程。Fulfillment地址仍只回active＋shipping，Refund銀行仍須active、owned且目的授權。
 
 一般assert只供非transaction read／precheck。會在同一MySQL schema完成跨模組寫入的Shipment等流程，必須使用`*InTransaction`版本，傳入caller現有executor及畫面選擇時的expected version；方法在同一觀察點重驗Customer status、child ownership、active、purpose及version並回必要snapshot，沒有transaction立即throw `TypeError`。下游把code／name／address／contact／currency／term／credit policy version的必要值存入自己的snapshot，Customer模組不寫Sales／Shipment tables。
+
+Sales確認使用具名`getSalesSnapshotInTransaction`，在caller-owned transaction依Customer→credit current FOR UPDATE取得customerId/code/legalName/defaultCurrencyCode/defaultPaymentTermId/status/customerVersion及原credit configured/creditLimit/currencyCode/status/policyVersion；credit status實際為`normal`／`on_hold`，未設定為`not_configured`。不回Bank/Address/Contact/notes，不要求lookup舊version作CAS，不自行commit或pool read。Sales自行驗Customer active／credit hold及aggregate權限；Document Currency/Term由Business Master provider處理。此為2026-10-02 Sam採納TASK009的source candidate，真MySQL CI仍待最終candidate驗證。
 
 Payment／Refund未落地前不提供明文bank resolver。其實作時加入目的限定的`CustomerBankService.resolveForRefund()`，要求payment workflow context、active bank、Customer ownership及獨立audit；不得讓任意module直接呼叫crypto.decrypt。
 

@@ -107,36 +107,51 @@ export class SupplierIdentifierService {
 
   async create(input) {
     const identifier = normalizedInput(input);
-    let approvalInvalidated = false;
     try {
       return await this.database.withTransaction(async (connection) => {
         const actor = await this.authorize(connection, input);
-        const supplier = await this.#supplierForUpdate(connection, input.supplierId);
-        approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
-        const nowMs = this.time.nowMs();
-        const [result] = await connection.execute(
-          `INSERT INTO supplier_identifiers
-            (supplier_id, identifier_type, issuer_country_code, identifier_value, identifier_value_key, notes,
-             version, created_at, updated_at, created_by, updated_by)
-           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
-          [input.supplierId, identifier.type, identifier.issuerCountryCode, identifier.value, identifier.key,
-            identifier.notes, nowMs, nowMs, input.actorId, input.actorId]
-        );
-        const identifierId = Number(result.insertId);
-        const projected = await this.#project(connection, input.supplierId, identifierId);
-        await this.audit.record(connection, {
-          actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.identifier.create",
-          targetType: "identifier", targetId: identifierId, supplierId: input.supplierId,
-          targetLabel: `${identifier.type}:${identifier.issuerCountryCode}`,
-          detail: { after: { identifierType: identifier.type, issuerCountryCode: identifier.issuerCountryCode, identifierValue: identifier.value } },
-          requestId: input.requestId, ip: input.ip
-        });
-        return { ...projected, approvalInvalidated };
+        return this.createInTransaction(connection, { actor, input });
       });
     } catch (error) {
       if (duplicateEntry(error)) throw taken(identifier);
       throw error;
     }
+  }
+
+  /**
+   * 建立嘅核心，喺 caller 嘅 transaction 入面做（CSV 匯入同 Supplier 一齊 commit，HD-060 2A）。
+   * `actor` 係已經驗過嘅 `{ username }`。撞 unique 喺呢度就轉做 domain 錯誤：caller 嘅
+   * transaction 會將原本嘅 SQL 錯誤包成 500。
+   */
+  async createInTransaction(connection, { actor, input }) {
+    const identifier = normalizedInput(input);
+    const supplier = await this.#supplierForUpdate(connection, input.supplierId);
+    const approvalInvalidated = await this.#invalidateApprovalIfPending(connection, supplier, { ...input, actorUsername: actor.username }, "identifiers");
+    const nowMs = this.time.nowMs();
+    let result;
+    try {
+      [result] = await connection.execute(
+        `INSERT INTO supplier_identifiers
+          (supplier_id, identifier_type, issuer_country_code, identifier_value, identifier_value_key, notes,
+           version, created_at, updated_at, created_by, updated_by)
+         VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+        [input.supplierId, identifier.type, identifier.issuerCountryCode, identifier.value, identifier.key,
+          identifier.notes, nowMs, nowMs, input.actorId, input.actorId]
+      );
+    } catch (error) {
+      if (duplicateEntry(error)) throw taken(identifier);
+      throw error;
+    }
+    const identifierId = Number(result.insertId);
+    const projected = await this.#project(connection, input.supplierId, identifierId);
+    await this.audit.record(connection, {
+      actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.identifier.create",
+      targetType: "identifier", targetId: identifierId, supplierId: input.supplierId,
+      targetLabel: `${identifier.type}:${identifier.issuerCountryCode}`,
+      detail: { after: { identifierType: identifier.type, issuerCountryCode: identifier.issuerCountryCode, identifierValue: identifier.value } },
+      requestId: input.requestId, ip: input.ip
+    });
+    return { ...projected, approvalInvalidated };
   }
 
   async update(input) {

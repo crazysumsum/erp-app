@@ -1231,7 +1231,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-UAT_NA-20260930"
+        "approval_id": "APR-PHASE0-UATNA-20261002"
       }
     },
     {
@@ -1239,7 +1239,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-UAT_NA-20260930"
+        "approval_id": "APR-PHASE0-UATNA-20261002"
       }
     },
     {
@@ -2482,7 +2482,20 @@
         "lint",
         "client-build",
         "security-audit",
-        "sales-technical"
+        "sales-foundation-developer",
+        "sales-provider-regression",
+        "sales-phase001-native",
+        "sales-item-compatibility-native",
+        "sales-inventory-native-007",
+        "sales-inventory-native-008",
+        "sales-inventory-native-009",
+        "sales-inventory-native-012",
+        "sales-inventory-native-014",
+        "sales-inventory-native-019",
+        "sales-inventory-native-020",
+        "sales-inventory-native-021",
+        "sales-inventory-native-022",
+        "sales-inventory-native-025"
       ]
     },
     {

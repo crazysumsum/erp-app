@@ -112,29 +112,38 @@ export class SupplierContactService {
   }
 
   async create(input) {
-    const contact = normalizeContact(input);
+    normalizeContact(input);
     return this.database.withTransaction(async (connection) => {
       const actor = await this.authorize(connection, input);
-      await this.#supplierForUpdate(connection, input.supplierId);
-      const nowMs = this.time.nowMs();
-      const [result] = await connection.execute(
-        `INSERT INTO supplier_contacts
-          (supplier_id, name, job_title, department, email, phone, mobile, preferred_language, notes,
-           status, version, created_at, updated_at, created_by, updated_by)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
-        [input.supplierId, contact.name, contact.jobTitle, contact.department, contact.email, contact.phone,
-          contact.mobile, contact.preferredLanguage, contact.notes, nowMs, nowMs, input.actorId, input.actorId]
-      );
-      const contactId = Number(result.insertId);
-      await this.#replacePurposes(connection, { supplierId: input.supplierId, contactId, purposes: contact.purposes, actorId: input.actorId, nowMs, replace: false });
-      const projected = await this.#project(connection, input.supplierId, contactId);
-      await this.audit.record(connection, {
-        actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.contact.create",
-        targetType: "contact", targetId: contactId, supplierId: input.supplierId, targetLabel: contact.name,
-        detail: { after: { purposes: contact.purposes } }, requestId: input.requestId, ip: input.ip
-      });
-      return projected;
+      return this.createInTransaction(connection, { actor, input });
     });
+  }
+
+  /**
+   * 建立嘅核心，喺 caller 嘅 transaction 入面做（CSV 匯入同 Supplier 一齊 commit，HD-060 2A）。
+   * `actor` 係已經驗過嘅 `{ username }`。
+   */
+  async createInTransaction(connection, { actor, input }) {
+    const contact = normalizeContact(input);
+    await this.#supplierForUpdate(connection, input.supplierId);
+    const nowMs = this.time.nowMs();
+    const [result] = await connection.execute(
+      `INSERT INTO supplier_contacts
+        (supplier_id, name, job_title, department, email, phone, mobile, preferred_language, notes,
+         status, version, created_at, updated_at, created_by, updated_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, ?)`,
+      [input.supplierId, contact.name, contact.jobTitle, contact.department, contact.email, contact.phone,
+        contact.mobile, contact.preferredLanguage, contact.notes, nowMs, nowMs, input.actorId, input.actorId]
+    );
+    const contactId = Number(result.insertId);
+    await this.#replacePurposes(connection, { supplierId: input.supplierId, contactId, purposes: contact.purposes, actorId: input.actorId, nowMs, replace: false });
+    const projected = await this.#project(connection, input.supplierId, contactId);
+    await this.audit.record(connection, {
+      actorUserId: input.actorId, actorUsername: actor?.username ?? "", action: "supplier.contact.create",
+      targetType: "contact", targetId: contactId, supplierId: input.supplierId, targetLabel: contact.name,
+      detail: { after: { purposes: contact.purposes } }, requestId: input.requestId, ip: input.ip
+    });
+    return projected;
   }
 
   async update(input) {

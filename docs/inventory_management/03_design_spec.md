@@ -1107,6 +1107,18 @@ Internal `command`必須包括：
 - Fulfillment batch allocation由Inventory計算完整推薦序列及`FEFO／FIFO`偏離類型；caller不可自報`selectionStrategy`以降低權限。
 - `reverseFulfillmentIssueAndRestoreReservationBatchInTransaction()`只接受已成功且未沖銷的Fulfillment Shipment Issue references，整批回補原bucket及原Reservation；它不修改或重開原Allocation，generic HTTP reversal endpoint亦不可呼叫此能力。
 
+### 5.7.1 Manual Sales batch（2026-10-02採納；source candidate）
+
+`InventoryReservationService.reserveAvailableForSalesBatchInTransaction(transaction,command)`、`releaseSalesBatchInTransaction(transaction,command)`及`getSalesReservationStatesInTransaction(transaction,command)`使用同一caller executor；固定fresh `sales.mgmt`與`SALES/SALES_ORDER`，manual actor userId必填、serviceName/lineId空字串，order ID為safe numeric string。Sales caller仍須自己的view/mgmt及aggregate access/locks。既有單行Sales adapters的`sales.operation`不變，不自動grant、不授權background delegation。
+
+Reserve payload `{warehouseId,expectedOrderVersion,lines:[{sourceLineId,skuId,orderedBaseQuantity,minimumRemainingDays}]}`：numeric safe IDs，1–100 unique demand IDs，64KiB canonical input上限。按SKU/line排序，root及全部children先claim；new execution在stock前取Item current minimum life，再完整Warehouse/control鎖定。Lots按SKU/normalized lot number分頁SHARE，ATP current query同時SHARE balances/lots，AVAILABLE與effective life=`max(caller,current Item)`；逐line扣本批reserved，回partial/zero與conservation。Root source line空、child使用numeric line string；positive Reservation各自綁child operation，zero結果仍保存。
+
+Release payload `{warehouseId,expectedOrderVersion,intent:"ALL_OUTSTANDING"}`不接受client任意Reservation IDs。Owner以reservation ID keyset每頁100列舉全部outstanding mappings，child identity `reservation:<id>`；保存原sourceLineId/SKU/version/exact quantity/root ID/hash，全部claims與immutable scalar staging在stock locks前。取得完整sorted controls後current reservation version/conservation及active allocation guard重驗；全部pages同transaction，final current owned outstanding check拒絕RR漏項/競態並rollback，沒有total mapping cap或page commit。結果`{operationId,lineCount,membershipDigest,results}`的async iterator每頁≤100，caller必須於同transaction完整消費並驗EOF count/digest再完成Sales mappings。State payload `{warehouseId,afterId?}`回owned current `{rows,nextCursor}` page。
+
+四個command types `SALES_BATCH_RESERVE/SALES_LINE_RESERVE/SALES_BATCH_RELEASE/SALES_LINE_RELEASE`重用既有operation table與8192-byte scalar summaries；root只存identity/count/digest，children先complete、root最後complete。Completed replay先驗fresh權限/source/hash與root result type/id與原children command/root identity/hash/count/digest及completion，不讀mutable Item、不重新算ATP或以目前outstanding set重建membership。Incomplete/unknown outcome維持原event查詢，不構成Sales lease/recovery worker。
+
+1/100 demand的Item snapshot與ATP聚合查詢數為常數；child claims/completions及Reservation/audit writes按line數增加，release及lot/result traversal每頁100僅保證returned memory pages；完整control scope仍按unique SKUs，既有indexes的scan/lock footprint需CI EXPLAIN及實際並發/300 mappings計時，不聲稱LIMIT100等於bounded DB work。所有新MySQL回歸只在CI執行，本地SQL未授權；Fulfillment全域互鎖/worker delegation/後續formal acceptance仍pending。
+
 ---
 
 ## 6. 權限、安全與威脅模型
