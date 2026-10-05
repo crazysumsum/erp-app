@@ -98,7 +98,7 @@ This runs the files under `database/framework/` (framework-owned tables, all pre
 npm run dev
 ```
 
-This starts both the API server (`server/`, auto-restarting via `nodemon` on change) and the Vue frontend (`client/`, Vite). You can also start them separately:
+This starts both the API server (`server/`, auto-restarting on change via Node's built-in `--watch`) and the Vue frontend (`client/`, Vite). You can also start them separately:
 
 ```bash
 npm run dev:server
