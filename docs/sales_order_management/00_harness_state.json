@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 77,
+  "revision": 82,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-016",
+  "current_task": "TASK-017",
   "baseline": {
-    "design": "392a6fa2d020bb49c16c8d5a337f2c19cf1c4740f52ea45e0cefcc1cdfd6e132",
-    "plan": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
-    "code_commit": "62ecd4ec37b125f7d3e32d9419adc232c62632dc",
-    "source_fingerprint": "fdd16c5f84af5322f79e763f9520bb0468682df87debdb3f76ef01d926c45c66",
+    "design": "06115a6e665375a3c2178ad707ced603ecddc9fd8fee4b523c9e887b2a62a885",
+    "plan": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+    "code_commit": "e22be9887331fcd7cf5bb478b78df65ebe471aa1",
+    "source_fingerprint": "a8f23e03dd5a032b0fe9d26cf6dd2649b94090d75558b29762f48d7936f7ba13",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -43,7 +43,8 @@
     "TASK-013": "DONE",
     "TASK-014": "DONE",
     "TASK-015": "DONE",
-    "TASK-016": "IN_PROGRESS"
+    "TASK-016": "DONE",
+    "TASK-017": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -801,6 +802,92 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-DESIGN-DEC016",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「按你的意見推進」after DEC016 packet26, subsequent explicit next-step recommendation to approve DEC016: adopts recommended exact patch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a and new DESIGN06115a6e/PLAN83e09740. Supplemental preflight/security scope and unchanged NFR014/015 businessUATNA rebinding approved. AllP1 tests/currentCI/review/freshmain/fullPhase gates remain; existing runtime/commit/push/PR/mainmerge authorization persists.",
+      "recorded_at": "2026-10-06T03:03:32.940607+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "06115a6e665375a3c2178ad707ced603ecddc9fd8fee4b523c9e887b2a62a885",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-PLAN-DEC016",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「按你的意見推進」after DEC016 packet26, subsequent explicit next-step recommendation to approve DEC016: adopts recommended exact patch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a and new DESIGN06115a6e/PLAN83e09740. Supplemental preflight/security scope and unchanged NFR014/015 businessUATNA rebinding approved. AllP1 tests/currentCI/review/freshmain/fullPhase gates remain; existing runtime/commit/push/PR/mainmerge authorization persists.",
+      "recorded_at": "2026-10-06T03:03:32.940607+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-002",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-SCOPE-DEC016",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「按你的意見推進」after DEC016 packet26, subsequent explicit next-step recommendation to approve DEC016: adopts recommended exact patch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a and new DESIGN06115a6e/PLAN83e09740. Supplemental preflight/security scope and unchanged NFR014/015 businessUATNA rebinding approved. AllP1 tests/currentCI/review/freshmain/fullPhase gates remain; existing runtime/commit/push/PR/mainmerge authorization persists.",
+      "recorded_at": "2026-10-06T03:03:32.940607+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/test/apiDispatcher.test.js",
+        "server/src/modules/sales/salesAuthorization.js",
+        "server/src/modules/sales/SalesQuotationService.js",
+        "server/src/handlers/sales-quotations/**"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-UATNA-DEC016",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「按你的意見推進」after DEC016 packet26, subsequent explicit next-step recommendation to approve DEC016: adopts recommended exact patch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a and new DESIGN06115a6e/PLAN83e09740. Supplemental preflight/security scope and unchanged NFR014/015 businessUATNA rebinding approved. AllP1 tests/currentCI/review/freshmain/fullPhase gates remain; existing runtime/commit/push/PR/mainmerge authorization persists.",
+      "recorded_at": "2026-10-06T03:03:32.940607+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1267,6 +1354,78 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "fdd16c5f84af5322f79e763f9520bb0468682df87debdb3f76ef01d926c45c66",
       "source_ref": "Actual independent R2 APPROVE; both regressions red→green, independentunit10/lint/diff PASS and native16loginspected; no independent SQL.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC016-DIRECTION",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "d4c9b15633fe25fd37789a599cc46d9e673258cd71f77d45058329c1a01038cd",
+      "source_ref": "Actualdirectionreview approvedminimaloptinpreflight; requiredexacttrue/startup/cancellationguards andhumanapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC016-PATCH-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "a26bf88f6cee151e746b3ecfebc148024412d0c4dfd89ea3a5cecf52ed76b57e",
+      "source_ref": "Actualexactpatchreview found Design1.2 ONLYUpload contradiction; corrected.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC016-PATCH-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a",
+      "source_ref": "Actualexactproposalreview reconfirmed patch/D/P andapplycheck; noremainingfindings; implementation/runtime notapprovedexecuted.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK016-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "1baeb5f7f2998bb107b948c0063c368e64bb993e61fcc79beb56217adefb9e3f",
+      "source_ref": "ActualreviewP2: duplicate line merged-away ID bypasses aggregate ownership; focused26PASS/lintPASS; nativeRED reproduced.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC016-APPLIED",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "1baeb5f7f2998bb107b948c0063c368e64bb993e61fcc79beb56217adefb9e3f",
+      "source_ref": "Actualnarrowappliedpreflightreview: D/Pmatch,36unitPASS/lintPASS/noSQL; concurrent source22fd5ea noted, approval only unchangedpreflightfiles dispatcherSHA8b07c965fd91cdcaebd99ccfdc0e008e280c6c48d3ba7e2f1e1c39cf4c6f2127, notwholeTask.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK016-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "a8f23e03dd5a032b0fe9d26cf6dd2649b94090d75558b29762f48d7936f7ba13",
+      "source_ref": "Actualindependent implementationreview verified fingerprint+input.lines correction/nativeRED-GREEN7PASS; reviewerfocused6PASS/lintPASS; noSQL; noPhase/mergeapproval.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2285,6 +2444,39 @@
       "source_ref": "implementation/25_task015_developer_report.md; actualunit10/native16 zeroFAIL/SKIP; server2158PASS0FAIL425optins; lintPASS. Private runtime-observed.log verifies MySQL26.7.0 datadir/socket/schema/PID3466 owned. Private raw task015-*.log retained, no new runner records claimed.",
       "actor": "Codex /root",
       "observed_at": "2026-10-05T03:36:27.267811+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK016 HTTP stale authorization developer failure; supplemental DEC016",
+      "code_commit": "e22be9887331fcd7cf5bb478b78df65ebe471aa1",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "55162853374b7ec29bfc4cab9a77bc3ac8072cdbd178eefaf413e669dc52d348",
+      "status": "FAIL",
+      "source_ref": "Actualprivate task016-http-native.log:4PASS1FAIL; revokedpermission cachedreplay201 instead403, immutablefailure retained. Exactuncommittedfailurefingerprint notcaptured; latercandidate differs. Separatecurrent-read race RED task016-replay-race-red.log nowgreen FORSHARE. unit16PASS/server2164PASS0FAIL431optins unaffected; notPhasePASS. Packet26 reviewed; frameworkpatchunapplied.; fingerprint identifies later audit observation, not exact original failing candidate. Retained log records the actual failure.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T01:11:55.103462+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK016 current developer checks while DEC016 pending",
+      "code_commit": "e22be9887331fcd7cf5bb478b78df65ebe471aa1",
+      "spec_baseline": "1f55b21a394b90cebfaacfde07d5ec9e991fc8349cc60943c78f18b2189efd71",
+      "source_fingerprint": "55162853374b7ec29bfc4cab9a77bc3ac8072cdbd178eefaf413e669dc52d348",
+      "status": "FAIL",
+      "source_ref": "Actual /private/tmp/sales-p1-private/task016-service-native.log: 5 PASS, 1 FAIL, 0 SKIP. Attempted test-name filter did not exclude HTTP: disabled-account cached replay returned201 expected403 at integration test line133. This is a retained actual failure, not a focused-suite PASS. /private/tmp/sales-p1-private/task016-pending-scope-lint.log: npm run lint exit0. Supplemental patch unapplied and DEC016 unanswered.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T01:16:10.733632+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK016 final developer self-test after DEC016 + ownership correction",
+      "code_commit": "e22be9887331fcd7cf5bb478b78df65ebe471aa1",
+      "spec_baseline": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "source_fingerprint": "a8f23e03dd5a032b0fe9d26cf6dd2649b94090d75558b29762f48d7936f7ba13",
+      "status": "PASS",
+      "source_ref": "Actual current logs /private/tmp/sales-p1-private/task016-review-final-{unit,regression,lint}.log:36PASS0skip/2167PASS0fail432optinskips/lintPASS; task016-line-id-green.log realnative7PASS0skip. Retained RED/failures unchanged; report27. Not23-suitePhase/formal PASS.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T03:09:13.515612+00:00"
     }
   ],
   "pending_decisions": [
@@ -2468,6 +2660,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Current Codex chat Sam「批準」directly approves DEC015 question/packet20 (sha25670c52980b9ef43a3ebf870dabe3444948be25c49bc18e1a7002a5f9be0da7e41): exactDESIGN392a6fa2/PLAN1f55b21a; TASK012..027,23developer suites/stagecontract,8Salesmigrationpatterns inclExternalKey parent creationTASK038->013 only,sharedmenu/scheduler/migrationtest+Sales paths,owneddisposableMySQL26.7/schema/socket/webports/syntheticdata/cleanup andunchangedNFR014/015UAT_NA rebinding. Retains existingcommit/push/PR/mainmergeauthorization withfullPhase/freshmain/currentCI/reviewgates."
+    },
+    {
+      "id": "DEC-016",
+      "impact": "MAJOR",
+      "question": "Approve supplemental opt-in dispatcher fresh-authorization preflight before framework cached replay, Sales guards, tests and canonicalDesign/task scope: packet26 SHAdc85a10c7626ed4a3b86b4e8b3fbbf9d60ecc938fc7cf4a4bf6bb637719d50c8; exactpatch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a; newD06115a6e665375a3c2178ad707ced603ecddc9fd8fee4b523c9e887b2a62a885/P83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e; retain oldapprovals, allgates andunchangedbusinessUATNA rebinding. Productframeworkpatch notapplied beforehumanapproval.",
+      "affected_ids": [
+        "TASK-016",
+        "PHASE-002",
+        "NFR-014",
+        "NFR-015"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam「按你的意見推進」after DEC016 packet26, subsequent explicit next-step recommendation to approve DEC016: adopts recommended exact patch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a and new DESIGN06115a6e/PLAN83e09740. Supplemental preflight/security scope and unchanged NFR014/015 businessUATNA rebinding approved. AllP1 tests/currentCI/review/freshmain/fullPhase gates remain; existing runtime/commit/push/PR/mainmerge authorization persists."
     }
   ],
   "external_actions": [
@@ -2869,5 +3074,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "TASK016 quotation Draft commands: approved scope and own runtime; tests first, provider revalidation/fresh actor/CAS/Audit rollback, then per-task DoD. Whole P1 developer23/CI/current review/merge gate remains pending."
+  "next_safe_action": "Commit reviewed TASK016 atomic slice; resolve approved TASK015 lock-error projection follow-up; implement TASK017 lifecycle/conversion with RED then developerchecks/review. FullP1 TASK017..027 and23mandatory/currentCI/freshmain/review gates pending."
 }

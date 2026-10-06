@@ -40,9 +40,10 @@ export const SALES_ERROR_STATUS = Object.freeze({
   SALES_LINE_MERGE_CONFLICT: 409,
 });
 
-export function salesError(code, { field } = {}) {
+export function salesError(code, { field, currentVersion } = {}) {
   if (!Object.hasOwn(SALES_ERROR_STATUS, code)) throw new TypeError("Unknown Sales error code");
   if (field !== undefined && (typeof field !== "string" || !/^[a-zA-Z][a-zA-Z0-9.[\]]{0,99}$/.test(field))) throw new TypeError("Invalid Sales error field");
+  if (currentVersion !== undefined && (code !== "VERSION_CONFLICT" || !Number.isSafeInteger(currentVersion) || currentVersion < 1)) throw new TypeError("Invalid Sales conflict version");
   return new ApplicationError(code, { code, statusCode: SALES_ERROR_STATUS[code],
-    publicMessage: "銷售操作未能完成，請檢查輸入或重新讀取資料", publicDetails: field ? { field } : undefined });
+    publicMessage: "銷售操作未能完成，請檢查輸入或重新讀取資料", publicDetails: currentVersion !== undefined ? { currentVersion } : field ? { field } : undefined });
 }

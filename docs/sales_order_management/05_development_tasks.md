@@ -2436,7 +2436,7 @@ Commit：`feat: add sales sequence operation and audit services`。
 
 ### Approach
 
-預計變更範圍：`SalesQuotationService.js`、`salesQuotationSchemas.js`、create／update handlers及`server/test/salesQuotationService.test.js`；list/detail handlers移至P1-T07。
+預計變更範圍：`SalesQuotationService.js`、`salesQuotationSchemas.js`、create／update handlers及`server/test/salesQuotationService.test.js`；list/detail handlers移至P1-T07。補充 `salesAuthorization.js`、`server/src/framework/middleware/apiDispatcher.js` 及 `server/test/apiDispatcher.test.js`：optional fresh-authorization preflight 在 framework replay 前執行；既有未宣告 hook 的 handlers 行為不變。
 
 依賴：P1-T04、P0-T08～P0-T09。
 

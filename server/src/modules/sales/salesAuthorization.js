@@ -10,3 +10,10 @@ export async function requireSalesActor(connection, claims, permission) {
   }
   return actor;
 }
+
+
+export async function requireSalesWriteActor(connection, claims) {
+  const actor = await requireSalesActor(connection, claims, "sales.mgmt");
+  if (!actor.permissions.includes("sales.view")) throw new ApplicationError("Sales view permission is required", { code: "FORBIDDEN", statusCode: 403 });
+  return actor;
+}

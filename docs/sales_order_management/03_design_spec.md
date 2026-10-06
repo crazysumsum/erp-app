@@ -108,7 +108,7 @@
 - API 成功信封為 `{ success, data, meta }`，錯誤為 `{ success:false, error, meta }`。
 - 前端使用 Vue 3 Composition API、Quasar、auto-discovered pages、`HttpClient`、`DataTable`、`FormPanel`、`PageHeader` 及 `notify`。
 - MySQL 最低 5.7；不能依賴 MySQL 8 專有功能、partial indexes 或 enforced CHECK constraints。
-- 現有 Upload Framework 是完整檔案記憶體緩衝後再落盤，預設單檔 10 MB；這不能滿足本模組 50 MB 且 memory-bounded 的要求。唯一必要的 framework 變更是 §9.1 的 opt-in disk-stream mode，既有 routes 繼續使用 `memory` mode且行為不變。
+- 現有 Upload Framework 是完整檔案記憶體緩衝後再落盤，預設單檔 10 MB；這不能滿足本模組 50 MB 且 memory-bounded 的要求。必要的 framework 變更是 §9.1 的 opt-in disk-stream mode 及 Sales replay fresh-authorization preflight，既有 routes 繼續使用 `memory` mode且行為不變。
 - 現有已落地 Migration 最後序號可能在開發前改變；Sales Migration 實作時按目標分支下一個連續可用序號命名，本文件不用固定號碼搶佔序號。
 
 ### 1.4 開發與驗證命令
@@ -1780,6 +1780,7 @@ Channel `submit()` 先做 boundary schema／identity validation，durably insert
 | `server/config/api.js` | 新增 global disk-upload concurrency／temporary-directory budget；既有 memory upload預設及10 MB限制不變。 |
 | `server/config/scheduler.js` | 加具名 Sales Job overrides示例；實際 Job仍由 Service static jobs註冊。 |
 | `server/scripts/checkCoverageFloors.js` | 把確認、生命週期、Backorder、Intake及Archive高風險 Services加入 per-file門檻。 |
+| `server/src/framework/middleware/apiDispatcher.js` | 在既有 JWT／route policies 之後、upload／validation／framework idempotency replay 之前 await optional `handler.authorizeRequest(req)`。Hook 只讀已認證 claims、不依赖 body／不改 request；未宣告則略過，宣告必為 function 且 fulfilled result 必為 true，否則 fail closed；启动拒絕錯誤型別。Sales write handlers 使用既有 directory guard 重驗當前 actor／view＋mgmt；business transaction 內仍再驗。沿用 request cancellation signal，hook 後再次檢查 abort。未宣告 hook 的既有 handler 行為不變。 |
 | `server/src/framework/upload/normalizeUploadConfig.js` | 加 `storageMode:"memory"\|"disk"`，預設 `memory`；分開驗證 memory及disk budgets，disk route仍強制單檔／總檔案／request byte limits。 |
 | `server/src/framework/upload/uploadMiddleware.js` | 保留現有 memory path；disk mode把 Busboy file stream直接 pipe到 request-scoped隨機 temp file（directory `0700`、file `0600`），同時累計 SHA-256、size及bounded prefix，不使用 client filename作路徑。 |
 | `server/src/framework/upload/uploadConcurrencyGate.js` | 分開但同樣強制 memory／disk slots；disk滿載回503＋`Retry-After`，不得繞過全域 upload gate。 |
@@ -1790,7 +1791,7 @@ Channel `submit()` 先做 boundary schema／identity validation，durably insert
 | Inventory module files（落地時） | 新增 §2.4 Sales batch reservation／release contract及consumer tests。 |
 | Customer module files（落地時） | 確保 new_sale及credit provider contract符合已核准Customer設計。 |
 
-除上述已確認的 Upload 缺口外，不修改 `BaseRequestHandler`、Handler Discovery、`HttpClient` envelope、`DataTable` 或 `FormPanel`。Disk mode必須是獨立 Phase 0提交及framework tests；若實作發現還要改其他 framework能力，先更新設計並取得確認。
+除上述已確認的 Upload 缺口及 Sales replay fresh-authorization preflight 外，不修改 `BaseRequestHandler`、Handler Discovery、`HttpClient` envelope、`DataTable` 或 `FormPanel`。Disk mode必須是獨立 Phase 0提交及framework tests；若實作發現還要改其他 framework能力，先更新設計並取得確認。
 
 ### 9.2 新增 Backend config／domain files
 
