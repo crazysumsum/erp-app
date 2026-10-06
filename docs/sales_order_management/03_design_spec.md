@@ -302,6 +302,14 @@ CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { a
 
 確認點用 caller-owned transaction，依 Customer → credit FOR UPDATE 取得一致快照；不得 pool read 或自行 commit。回 customerId／customerCode／legalName／defaultCurrencyCode／defaultPaymentTermId／status／customerVersion 及 credit configured／creditLimit decimal string or null／currencyCode／status／policyVersion，無 Bank、Address、Contact、notes。Customer status `active`；credit 實際字面值 `normal`／`on_hold`／`not_configured` 由 Sales 明確映射；Customer 非 active 或 credit on_hold 阻止確認。零／未設定 credit 不混淆，limit 僅 advisory，不以 credit currency new_assignment 查詢阻擋。Document Currency／Payment Term 使用既有 BusinessMasterProvider transaction asserts。
 
+#### Sales consumer impact checker（DEC-020）
+
+Business Master 使用既有 consumer checker contract；Sales 自有 `SalesBusinessMasterImpactChecker`，由既有 `businessMasterFactory` 接線，不新增 public service／API。只讀 Sales Quotation／Order 的 document `currency_code`、`payment_term_id`；`activeDefaultCount=0`。`openUseCount` 為 persisted Quotation `DRAFT/ISSUED` 及 Order `DRAFT/CONFIRMING/CONFIRMED/PARTIALLY_FULFILLED`；`historicalCount` 為 Quotation `EXPIRED/CONVERTED/CANCELLED` 及 Order `COMPLETED/CLOSED/CANCELLED`。尚未由 expiry job 固化的 ISSUED 保守計入 open use，並不改變既有 effective expiry／轉單規則。Snapshot credit currency 不作 document Currency reference；既有 Customer／credit consumer 責任不移入 Sales。
+
+單一 parameterized UNION ALL statement 統計兩種 document 的 status/count/version sum/max updated time/max ID，同一 statement snapshot；watermark 為此聚合投影的 deterministic SHA-256，preview token 沿用既有 actor/version/change/expiry/recompute 規則。只回 counts/watermark，無 customer name、notes、bank/address/contact；unknown status、SQL failure、不安全整數、部分安裝及已安裝 archive table 一律 fail closed；兩張 active table 全未安裝才可 NOT_INSTALLED。P1 不實作 Archive，Phase 4 安裝 `sales_orders_archive` 前必須擴充此 checker；不得在 installed archive 時回零或只計 active。
+
+管理者仍依 Business Master 既有 impact confirmation policy 操作；此補正不新增「引用大於零即禁止停用」規則，不降低 UNKNOWN/error 阻擋。
+
 #### Item provider
 
 新增具名 consumer contract，不讓 Sales 直接讀 Item tables：

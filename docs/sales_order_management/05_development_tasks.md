@@ -2606,6 +2606,8 @@ Commit：`feat: expire sales quotations consistently`。
 
 預計變更範圍：`server/src/handlers/sales-lookups/salesLookupHandlers.js`、`server/src/handlers/sales/salesSchemas.js`、`server/test/sales/phase1/SalesLookupHandlers.test.js`、`client/src/services/sales.js`、`client/test/services/sales.test.js`；補完 Design §2.4 已定義但未落地的 `ItemLookupService.searchForSale()` 及 provider tests，Sales 僅委派與具名投影，不直接讀 Item tables。
 
+DEC-020 補充整合 scope：Sales consumer impact checker、其 unit／真 MySQL reference tests、既有 Business Master factory 與 HTTP integration assertion；Sales native migration fixture 的 admin trigger-DDL connection，以及 CI 的 ephemeral admin env。主應用交易仍以 ordinary DB_USER 執行；不改 binary logging、trust setting、app grants、coverage floor、原案例／skip門檻／formal驗收範圍。P1 native developer suite 增列上述 reference integration case，server coverage／native profile 明列並遮蔽 DB_ADMIN_USER/PASSWORD。具體路徑與 patch 見 implementation/42_phase1_business_master_fixture_decision.md。
+
 依賴：P0-T09、P1-T07。
 
 規格追溯：FR-SO-003～010、FR-CSV-004；Design §5.6。

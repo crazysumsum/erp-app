@@ -23,16 +23,30 @@ export async function createTestCurrency(db, cleanup, now) {
 export async function migrationFixture(t, tables) {
   const db = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
     socketPath: process.env.DB_SOCKET_PATH, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
+  let admin;
+  const ddl = { async query(sql, args = []) {
+    if (!/^\s*(CREATE|DROP) TRIGGER\b/iu.test(sql)) throw new TypeError("Sales fixture admin connection is for trigger DDL only");
+    if (!admin) {
+      if (process.env.DB_ADMIN_USER === undefined && process.env.DB_ADMIN_PASSWORD === undefined) admin = db;
+      else {
+        if (!process.env.DB_ADMIN_USER || process.env.DB_ADMIN_PASSWORD === undefined) throw new Error("Sales fixture requires both DB_ADMIN_USER and DB_ADMIN_PASSWORD");
+        admin = await mysql.createConnection({ host: process.env.DB_HOST, port: Number(process.env.DB_PORT || 3306),
+          socketPath: process.env.DB_SOCKET_PATH, user: process.env.DB_ADMIN_USER, password: process.env.DB_ADMIN_PASSWORD, database: process.env.DB_NAME });
+      }
+    }
+    return admin.query(sql, args);
+  } };
   const prefix = `p1_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
   const names = Object.fromEntries(tables.map((table, index) => [table, `${prefix}_${index}`]));
   const cleanup = [], beforeParents = [];
   t.after(async () => { try { for (const table of Object.values(names).reverse()) await db.query(`DROP TABLE IF EXISTS ${table}`);
-    for (const action of [...beforeParents.reverse(), ...cleanup.reverse()]) await action(); } finally { await db.end(); } });
+    for (const action of [...beforeParents.reverse(), ...cleanup.reverse()]) await action(); } finally { try { if (admin && admin !== db) await admin.end(); } finally { await db.end(); } } });
   await lockSalesFixture(db);
   const scoped = { async query(sql, args = []) {
     for (const [source, target] of Object.entries(names)) sql = sql.replace(new RegExp(`\\b${source}\\b`, "gu"), target);
     sql = sql.replace(/\b(fk|chk|trg)_sales_([a-z_]+)\b/gu, `$1_${prefix}_$2`);
-    const result = await db.query(sql, args.map(arg => names[arg] ?? (typeof arg === "string" ? arg.replace(/^trg_sales_/u, `trg_${prefix}_`) : arg)));
+    const connection = /^\s*CREATE TRIGGER\b/iu.test(sql) ? ddl : db;
+    const result = await connection.query(sql, args.map(arg => names[arg] ?? (typeof arg === "string" ? arg.replace(/^trg_sales_/u, `trg_${prefix}_`) : arg)));
     if (Array.isArray(result[0])) for (const row of result[0]) {
       const original = Object.keys(names).find(name => names[name] === row.target);
       if (original) row.target = original;
@@ -57,5 +71,5 @@ export async function migrationFixture(t, tables) {
     is_default_sale: 1, created_at: now, updated_at: now });
   const warehouseId = await insert("inventory_warehouses", { warehouse_code: prefix, normalized_code: prefix, warehouse_name: prefix,
     status: "ACTIVE", created_at: now, updated_at: now });
-  return { db, scoped, names, now, currency, customerId, itemId, skuId, skuUomId, warehouseId, insert, cleanup, beforeParents };
+  return { db, ddl, scoped, names, now, currency, customerId, itemId, skuId, skuUomId, warehouseId, insert, cleanup, beforeParents };
 }

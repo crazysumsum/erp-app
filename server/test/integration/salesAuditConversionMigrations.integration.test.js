@@ -72,6 +72,6 @@ integrationTest("Append-only migrations repair interrupted missing triggers and 
   assert.match(trigger.name, /^[a-z0-9_]+$/u);
   await f.db.query(`DROP TRIGGER ${trigger.name}`); await auditUp(f.scoped);
   await f.db.query(`DROP TRIGGER ${trigger.name}`);
-  await f.db.query(`CREATE TRIGGER ${trigger.name} BEFORE UPDATE ON ${table} FOR EACH ROW SET NEW.outcome = OLD.outcome`);
+  await f.ddl.query(`CREATE TRIGGER ${trigger.name} BEFORE UPDATE ON ${table} FOR EACH ROW SET NEW.outcome = OLD.outcome`);
   await assert.rejects(() => auditUp(f.scoped), /trigger/u);
 });

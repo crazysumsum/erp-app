@@ -28,7 +28,9 @@
       "server/src/handlers/sales/salesLookupHandlers.js",
       "server/src/handlers/sales-lookups/salesLookupHandlers.js",
       "server/src/modules/item/ItemLookupService.js",
-      "README.md"
+      "README.md",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      ".github/workflows/ci.yml"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -65,7 +67,8 @@
       "client/test/pages/sales/**",
       "client/test/components/sales/**",
       "client/test/services/sales.test.js",
-      "server/test/serviceContainer.test.js"
+      "server/test/serviceContainer.test.js",
+      "server/test/business-master/http.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -111,7 +114,10 @@
       "server/src/handlers/sales-lookups/salesLookupHandlers.js",
       "server/src/modules/item/ItemLookupService.js",
       "server/test/serviceContainer.test.js",
-      "README.md"
+      "README.md",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/test/business-master/http.integration.test.js",
+      ".github/workflows/ci.yml"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -165,7 +171,10 @@
       "server/test/integration/itemConcurrency.integration.test.js",
       "server/test/integration/inventoryTask025Api.integration.test.js",
       "server/test/migrate.test.js",
-      "server/config/scheduler.js"
+      "server/config/scheduler.js",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/test/business-master/http.integration.test.js",
+      ".github/workflows/ci.yml"
     ],
     "forbidden_paths": [
       ".env",
@@ -209,7 +218,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "b55de3f450b0054423fc52d1bb1a100bee7b7e8580265b09b426c5509a744038",
+        "sha256": "ce126dda3c217576cce1efd0d7558ac07e87f5eeb2bae13234e454185bef7ac0",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

@@ -107,7 +107,7 @@ integrationTest("Sales unknown commit outcome is resolved by original event with
 
 integrationTest("Sales required Audit failure rolls back document, operation and sequence together", async t => {
   const f = await setup(t), request = { eventId: randomUUID(), commandType: "CREATE_QUOTATION", payload: { customerId: f.customerId }, actor: f.actor, nowMs: f.now };
-  await f.db.query(`CREATE TRIGGER ${f.names.sales_audit_logs}_fail BEFORE INSERT ON ${f.names.sales_audit_logs}
+  await f.ddl.query(`CREATE TRIGGER ${f.names.sales_audit_logs}_fail BEFORE INSERT ON ${f.names.sales_audit_logs}
     FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Required audit probe failure'`);
   await assert.rejects(() => f.run(async tx => {
     const claim = await f.operations.claim(tx, request);

@@ -1419,7 +1419,8 @@
         "server/test/integration/salesSequenceOperation.integration.test.js",
         "server/test/integration/salesQuotationExpiry.integration.test.js",
         "server/test/integration/salesPhase1.integration.test.js",
-        "server/test/integration/salesOrderRead.integration.test.js"
+        "server/test/integration/salesOrderRead.integration.test.js",
+        "server/test/integration/salesBusinessMasterImpact.integration.test.js"
       ],
       "cwd": ".",
       "timeout_seconds": 2400,
@@ -1477,7 +1478,9 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1489,7 +1492,9 @@
         "CUSTOMER_BANK_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "CUSTOMER_BANK_LOOKUP_KEYS"
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
       ]
     },
     {
@@ -1677,7 +1682,9 @@
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_LOOKUP_KEYS",
-        "JWT_SECRET"
+        "JWT_SECRET",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
       ],
       "redaction_env_keys": [
         "DB_PASSWORD",
@@ -1689,7 +1696,9 @@
         "CUSTOMER_BANK_ACTIVE_KEY_ID",
         "CUSTOMER_BANK_ENCRYPTION_KEYS",
         "CUSTOMER_BANK_LOOKUP_ACTIVE_KEY_ID",
-        "CUSTOMER_BANK_LOOKUP_KEYS"
+        "CUSTOMER_BANK_LOOKUP_KEYS",
+        "DB_ADMIN_USER",
+        "DB_ADMIN_PASSWORD"
       ]
     },
     {

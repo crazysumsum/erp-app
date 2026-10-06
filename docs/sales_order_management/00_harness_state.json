@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 119,
+  "revision": 146,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -9,10 +9,10 @@
   "current_phase": "PHASE-002",
   "current_task": "TASK-027",
   "baseline": {
-    "design": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
-    "plan": "24280ccf2c73a9ab243d6fa635c58ab0c896be7fc5e6d61f6b145817d53eaa26",
-    "code_commit": "53e5471fd0b769ae115ab4825e81816bd88c6ee8",
-    "source_fingerprint": "f68595a942d95617f406250790fc134230e59db4d38a8cfbc699f1383f394760",
+    "design": "52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d",
+    "plan": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+    "code_commit": "c3bda27236dc91761487faefdac4765534cfd7fe",
+    "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "7717702acf7c40bad188ba61fb48c8e90b309be1",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -23,8 +23,8 @@
     "resources": {
       "workspace": "/private/tmp/erp-sales-p1",
       "temp-directory": "/private/tmp/sales-p1-private",
-      "mysql-instance": "Owned26.7 primary running pid59095 socket/private/tmp/sales-p1-private/mysql-primary/mysql.sock; serialSales/browser ownerCodex/root; private runtime.json/dec019-runtime-bindings.json actualrestartverified.",
-      "mysql-inventory-diagnostics": "Owned26.7 secondary localhostpid59107 port55800 +3actualdedicated021/022/025 instances,10freshguarded schemas; private dec019-runtime-bindings.json; Codex/root owns all, no concurrentsharedprimary use."
+      "mysql-instance": "Owned primary26.7 PID68197 socket/private/tmp/sales-p1-private/mysql-primary/mysql.sock; fresh r2 schema erp_sales_phase1_r2_225666137376 ordinary app/admin; serial coordinator.",
+      "mysql-inventory-diagnostics": "Owned secondary26.7 localhost63960 plus3dedicated021/022/025;fresh r2 tenInventory+coverage schemas;private dec020-r2-runtime-bindings.json."
     },
     "lease_ref": null
   },
@@ -50,12 +50,12 @@
     "TASK-019": "DONE",
     "TASK-022": "DONE",
     "TASK-020": "DONE",
-    "TASK-021": "IN_PROGRESS",
-    "TASK-023": "IN_PROGRESS",
-    "TASK-024": "IN_PROGRESS",
-    "TASK-025": "IN_PROGRESS",
-    "TASK-026": "IN_PROGRESS",
-    "TASK-027": "IN_PROGRESS"
+    "TASK-021": "DONE",
+    "TASK-023": "DONE",
+    "TASK-024": "DONE",
+    "TASK-025": "DONE",
+    "TASK-026": "DONE",
+    "TASK-027": "DONE"
   },
   "approvals": [
     {
@@ -1436,6 +1436,111 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」 directly answers delivered DEC-020 recommendation/packet42: exact patch75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, Sales consumer impact classification and three shared factory/HTTP-test/CI scopes, admin-only fixture trigger DDL, new D52bcb72e/Pf6020e25, unchanged UAT-NA and narrowly bounded hash/source-pin/matrix/reference alignment. Existing commit/PR/main merge/owned synthetic SQL/browser authority retained. No later material change, production grants/deployment or lowered gates authorized.",
+      "recorded_at": "2026-10-06T07:55:33.303909+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-PHASE1-DESIGN-DEC020",
+      "kind": "DESIGN",
+      "scope": [
+        "sales-order-management"
+      ],
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d"
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」 directly answers delivered DEC-020 recommendation/packet42: exact patch75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, Sales consumer impact classification and three shared factory/HTTP-test/CI scopes, admin-only fixture trigger DDL, new D52bcb72e/Pf6020e25, unchanged UAT-NA and narrowly bounded hash/source-pin/matrix/reference alignment. Existing commit/PR/main merge/owned synthetic SQL/browser authority retained. No later material change, production grants/deployment or lowered gates authorized.",
+      "recorded_at": "2026-10-06T07:55:33.303909+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-PHASE1-PLAN-DEC020",
+      "kind": "PLAN",
+      "scope": [
+        "sales-order-management",
+        "PHASE-002",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027"
+      ],
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8"
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」 directly answers delivered DEC-020 recommendation/packet42: exact patch75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, Sales consumer impact classification and three shared factory/HTTP-test/CI scopes, admin-only fixture trigger DDL, new D52bcb72e/Pf6020e25, unchanged UAT-NA and narrowly bounded hash/source-pin/matrix/reference alignment. Existing commit/PR/main merge/owned synthetic SQL/browser authority retained. No later material change, production grants/deployment or lowered gates authorized.",
+      "recorded_at": "2026-10-06T07:55:33.303909+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-PHASE1-SCOPE-DEC020",
+      "kind": "SCOPE",
+      "scope": [
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/test/apiDispatcher.test.js",
+        "server/src/modules/sales/salesAuthorization.js",
+        "server/src/modules/sales/SalesQuotationService.js",
+        "server/src/handlers/sales-quotations/**",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/serviceContainer.test.js",
+        "README.md",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/test/business-master/http.integration.test.js",
+        ".github/workflows/ci.yml"
+      ],
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8"
+    },
+    {
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」 directly answers delivered DEC-020 recommendation/packet42: exact patch75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, Sales consumer impact classification and three shared factory/HTTP-test/CI scopes, admin-only fixture trigger DDL, new D52bcb72e/Pf6020e25, unchanged UAT-NA and narrowly bounded hash/source-pin/matrix/reference alignment. Existing commit/PR/main merge/owned synthetic SQL/browser authority retained. No later material change, production grants/deployment or lowered gates authorized.",
+      "recorded_at": "2026-10-06T07:55:33.303909+00:00",
+      "code_commit": null,
+      "expires_at": null,
+      "id": "APR-PHASE1-UATNA-DEC020",
+      "kind": "UAT_NA",
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8"
     }
   ],
   "reviews": [
@@ -2298,6 +2403,102 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
       "source_ref": "Actual independent APPROVEcurrentDdebc1b85/P24280ccf: exact approvedpatches +onlysourcepin/twoUATNAreferences reconciled; original/reconciled/R1histories retained; HUMANauthority vsCodexcomputedhash distinguished. Independent validate_traceability--check-approvals STRUCTURE_PASS0issues, renderer/matrixbyteequality andsourcepinPASS. Metadatareview only; runtime/product/Phasegate notclaimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PHASE002-INTEGRATED-R3-DEC019",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "f68595a942d95617f406250790fc134230e59db4d38a8cfbc699f1383f394760",
+      "source_ref": "Actual final scopedimplementationAPPROVE atc3bda27236dc91761487faefdac4765534cfd7fe vsfreshmain7717702; sourcef68595a9/Ddebc1/P24280c independentlyverified. OriginalHIGH5.7 resolved by actualSam-adopted26.7policy explicitlyappliedDesign/README; exactregistrystrictassertion retained.58registry/P1unit andlintPASS0skip.85priorfunctional/testfilebytes unchangeddigest927e5483; prior13realbrowser/PDFproof mapping verified. No remainingimplementationfinding; running23currentchecks/CI/Phase notclaimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PHASE002-COVERAGE-TRIAGE-R4",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "f68595a942d95617f406250790fc134230e59db4d38a8cfbc699f1383f394760",
+      "source_ref": "Actual independent classified all80local terminalfailureblocks atc3bda27 stdoutSHAe9cc9aea89611b06ef7abeecc5a729bd07a8dd75d522aa5a4366a342a397dadf:78ECONNREFUSED3306,1missingDB_ADMIN_USER,1genuineBusinessMaster503SalescheckerUNKNOWN aftersales_ordersinstalled. Currentfactoryreadinessfallback andImpactRegistrystrictrejection confirmed; existingHTTPexpectsSalesNOT_INSTALLEDnowwrong. No edits/SQL; actualTCP rerunpending andnotPASS.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC020-PROPOSAL-IMPLEMENTATION-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d",
+      "source_ref": "Actual separate reviewer final APPROVE at patch 75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, base c3/f685; independently computed D52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d Pf6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8. Apply-check and 4 candidate unit PASS. Native required columns/code_key inspected; no native execution, proposed code remains unapplied.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC020-PROPOSAL-READINESS-FINAL",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d",
+      "source_ref": "Actual separate reviewer final APPROVE at patch 75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, base c3/f685; independently computed D52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d Pf6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8. Apply-check and 4 candidate unit PASS. All four actual TCP coverage failures and old CI1+9+1 classification confirmed; preserves scope/profile/thresholds/formal60/history. No human approval or merge/Phase PASS.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC020-APPLIED-READINESS-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d",
+      "source_ref": "Actual applied independent APPROVE:14 files byte-identical approved finalpatch,6 sourcepins match, actual Sam approval refs/fixed UATNA/current D/P preserve historical approvals; matrix renderer equality and traceability approval checks0issues. During restart gate onlyUNKNOWN_EXTERNAL_ACTION; restart now actually confirmed, new gate required. No SQL/browser/developer/CI/Phase claim. Sourcefd5575b8ae1a861534decf0930fc3f280ed2bbbe9f7ae75bb3107fdee635d09d.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC020-MINOR-METADATA-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "source_ref": "Actual separate reviewer satisfactory/no newfinding: fixed three-name COUNT/SUM semantically preserves presence0NOT_INSTALLED,exact2/archive0READY,partial/archive/errorfailclosed;matchesexistingCOUNTstubconvention,onlySaleschecker+ownunit changed,no originalsharedtests edited. BoundUNION/watermark/status/key/admin boundary/D/P unchanged. Independent12 provider+Salesunit0skip/scopedlintPASS,96pathdigeststableb7a283808ad53f5be33d0c8a1b06ba247fa3bc4663a2616bed41328ed7b67bb7. Final implementation disposition awaitsnew23actualevidence.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P1-DEC020-final-R2-20261006",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "source_ref": "Actual final implementation APPROVE; 23 runs/64 artifact hashes and contracts checked; native47/unit51/client58/real browser8 PASS, no open HIGH/CRITICAL; scoped checker/admin and COUNT corrections approved. Source 3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372; D52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d Pf6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8. Actual collaboration final message P1-DEC020-final-R2-20261006",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P1-DEC020-final-evidence-R2-20261006",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "source_ref": "Actual final evidence APPROVE at state145; all23 required suites/64 artifacts/606 typed PASS0fail/skip/notrun; raw2670/2656PASS0FAIL14optin skips,34floors PASS; trace/matrix/gate consistency0issues. Source 3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372; D52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d Pf6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8. Actual collaboration final message P1-DEC020-final-evidence-R2-20261006",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3536,6 +3737,39 @@
       "source_ref": "Actual CI37427146618: audit/lint/build/browserPASS, TestFAIL exact serviceContainer expected-registry missing2Salesentries. Actual gh failed log confirms serviceContainer.test.js146 diff; approved c6254b01 now applied, newcandidate/currentCI required. Oldfailure retained; no green result inferred.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T07:13:55.608890+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Correction of historical P1 draft CI failure classification",
+      "code_commit": "53e5471fd0b769ae115ab4825e81816bd88c6ee8",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "FAIL",
+      "source_ref": "Actual CI37427146618 Test has 11 terminal failures: 1 Business Master Sales checker UNKNOWN/503, 9 Sales native CREATE TRIGGER ER_BINLOG_CREATE_ROUTINE_NEED_SUPER, 1 strict registry missing two Sales entries. Audit/lint/build/browser PASS. This corrects incomplete registry-only earlier observation without overwriting history. Independently verified by /root/sales_readiness_review; exact private failed log retained. New current candidate CI not observed. https://github.com/crazysumsum/erp-app/actions/runs/37427146618",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:49:59.938037+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P1 developer full server coverage TCP retry triage; FAIL with owned-child interruption",
+      "code_commit": "c3bda27236dc91761487faefdac4765534cfd7fe",
+      "spec_baseline": "24280ccf2c73a9ab243d6fa635c58ab0c896be7fc5e6d61f6b145817d53eaa26",
+      "source_fingerprint": "f68595a942d95617f406250790fc134230e59db4d38a8cfbc699f1383f394760",
+      "status": "FAIL",
+      "source_ref": "Actual evidence/20261006T072659-a76ce254c212/run.json exit1/FAIL, stdout SHA77dab64db3fbc50b5bf96f00254e6e398c39983cd40c61200a0282c745f1bc33. Raw2665 tests,2647PASS,4FAIL,14 opt-in skips; typed EXIT_CODE counts0. Failures: BM503, Item missing admin, Supplier restore missing admin/open connection hang, Supplier import empty admin user AccessDenied. Exact owned child63438 signaled SIGTERM after PLANNED/STARTED, parent collector completed others. Independent final triage confirms; no full PASS/formal claim. Latest22/23 required developer suites pass, coverage blocks Phase.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:49:59.938037+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Observed P1 draft CI and merge gate at DEC020 human decision handoff",
+      "code_commit": "53e5471fd0b769ae115ab4825e81816bd88c6ee8",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "FAIL",
+      "source_ref": "Fresh actual gh pr view184: OPEN/draft remote53; audit/lint/browser/build SUCCESS, Test FAILURE. Actual local current MERGE_READY PHASE002 BLOCKED14 issues: HUMAN_DECISION_REQUIRED,EVIDENCE_NOT_PASS,TASK_INCOMPLETE,CI_MISSING_OR_STALE,PR_REVIEW_MISSING; private dec020-pending-merge-gate.json. No push of localc3/DEC020 and no current-candidate CI/merge inferred. https://github.com/crazysumsum/erp-app/pull/184",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:53:48.507406+00:00"
     }
   ],
   "pending_decisions": [
@@ -3780,6 +4014,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment. DEC018 original canonical82cef6e2 unapplied superseded by consolidated72490c58; original record/proposal preserved."
+    },
+    {
+      "id": "DEC-020",
+      "impact": "MAJOR",
+      "question": "DEC-020: Approve concrete Sales-owned Business Master Currency/Payment Term checker and persisted open/historical counts, shared factory/HTTP-test/CI env supplemental scope, admin fixture trigger DDL while ordinary app DML stays DB_USER, new DESIGN 52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d / PLAN f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8, stable original UAT-NA and narrowly bounded mechanical alignment. Exact patch 75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8; packet implementation/42_phase1_business_master_fixture_decision.md. Human question pending; no patch applied. Existing commit/PR/main merge and owned synthetic runtime authorization persists.",
+      "affected_ids": [
+        "DES-003",
+        "TASK-021",
+        "TASK-022",
+        "PHASE-002"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual current Codex chat 2026-10-06 Sam「同意」 directly answers delivered DEC-020 recommendation/packet42: exact patch75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, Sales consumer impact classification and three shared factory/HTTP-test/CI scopes, admin-only fixture trigger DDL, new D52bcb72e/Pf6020e25, unchanged UAT-NA and narrowly bounded hash/source-pin/matrix/reference alignment. Existing commit/PR/main merge/owned synthetic SQL/browser authority retained. No later material change, production grants/deployment or lowered gates authorized."
     }
   ],
   "external_actions": [
@@ -4174,6 +4421,54 @@
       "idempotency_key": "sales-p1-dec019-owned-restart-checks-20261006",
       "status": "CONFIRMED",
       "source_ref": "Actual private prepare_dec019_runtimes.py verified VERSION26.7.0/datadir/socket for5owned restarts, created10fresh Inventoryguarded schemas, originalmigrator applied025 successfully; bindings/private migrationlog retained. Primarypid59095; otherexactPIDs/socket/port/schema privatelyrecorded. No unrelated DB."
+    },
+    {
+      "id": "MYSQL-SALES-P1-INVENTORY019-RETRY-20261006",
+      "kind": "RUNTIME_CREATE",
+      "target": "Owned secondary26.7 localhost, fresh erp_inventory_task019_* schema; original TCP guard path",
+      "idempotency_key": "sales-p1-inventory019-tcp-retry-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual owned secondary socket CREATE DATABASE succeeded; private dec019-inventory019-retry-binding.json. Use original TCP fallback with DB_SOCKET unset, existing profile command; failed arbitrarysocket guard evidence retained."
+    },
+    {
+      "id": "MYSQL-SALES-P1-COVERAGE-TCP-RETRY-20261006",
+      "kind": "RUNTIME_CREATE",
+      "target": "Owned secondary26.7 localhost55800; fresh synthetic Sales coverage schema and original full migrator",
+      "idempotency_key": "sales-p1-server-coverage-tcp-retry-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual freshowned secondaryschema creation/fullmigrator succeeded; private dec019-coverage-migration.log andenv600. All DBhost/port/socket point same verifiedownedsecondary26.7; rerun exactoriginalcoverageprofile/floors."
+    },
+    {
+      "id": "COVERAGE-SUPPLIER-HANG-STOP-20261006",
+      "kind": "CLEANUP",
+      "target": "Owned coverage child PID63438, PPID62105, supplierBankRestore.integration.test.js; parent run_check PID62075 captures remaining full-suite evidence",
+      "idempotency_key": "sales-p1-coverage-supplier-admin-hang-stop-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual readonly process tree and owned-schema processlist show Supplier restore child active13+min and connection534 Sleep821sec. Code opens source connection then asserts missing DB_ADMIN before registering cleanup. Stop only exact owned test child, retain FAIL/interruption evidence; no passing coverage inferred. Actual exactPID/PPID/file rechecked immediately before SIGTERM; signal returnedsuccess. Parent collector remainsrunning."
+    },
+    {
+      "id": "MYSQL-SALES-P1-DEC020-PENDING-SHUTDOWN-20261006",
+      "kind": "CLEANUP",
+      "target": "59095 /private/tmp/sales-p1-private/mysql-primary/mysql.sock; 59107 /private/tmp/sales-p1-private/mysql-inventory-final/mysql.sock; 59125 /private/tmp/erp-inventory-task021-mysql-2670.u3185j0z/mysql.sock; 59131 /private/tmp/erp-inventory-task022-mysql-2670.mz168mu2/mysql.sock; 59137 /private/tmp/erp-inventory-task025-mysql-2670.0ohsjmmb/mysql.sock",
+      "idempotency_key": "sales-p1-dec020-pending-owned-mysql-shutdown-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual5 owned server UID/PID/argv/datadir/socket/version and idle schema state verified; private dec020-shutdown-targets.json. Graceful mysqladmin shutdown only, preserve synthetic datadirs/logs/evidence and open-PR worktree/branch; unrelated processes/resources untouched. All5 mysqladmin shutdown returned0, exact owned PIDs and sockets subsequently absent. Private dec020-shutdown-results.json; datadirs preserved, no unmerged worktree/branch cleanup."
+    },
+    {
+      "id": "MYSQL-SALES-P1-DEC020-RUNTIME-20261006",
+      "kind": "RUNTIME_CREATE",
+      "target": "Five stopped owned MySQL26.7 datadirs/sockets from verified dec020-shutdown-targets.json; new guarded Inventory schemas, fresh private Sales/native+coverage schemas erp_sales_phase1_dec020_a0134bf1920a/erp_sales_phase1_cov020_e950a5fc960d; synthetic separate ordinary app and admin fixture accounts on primary/secondary only",
+      "idempotency_key": "sales-p1-dec020-owned-runtime-admin-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual5 stopped owned instances restored and socket/version/datadir verified;10 fresh Inventory schemas including025 full migration. Primary/secondary each fresh full-migrated synthetic Sales schema with separate synthetic admin and ordinary app; app SUPER=N, MySQL26.7.0/binlog1/trust0 verified. Private dec020 runtime bindings/env/accounts600 and migration logs. Sam DEC020 authority; no shared/production grants."
+    },
+    {
+      "id": "MYSQL-SALES-P1-DEC020-R2-SCHEMAS-20261006",
+      "kind": "RUNTIME_CREATE",
+      "target": "Current verified owned5 MySQL26.7 instances;12 unique fresh synthetic schemas for23suite rerun, with app schema grants only, existing synthetic admin; no reset/drop/server restart",
+      "idempotency_key": "sales-p1-dec020-r2-fresh-owned-schemas-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual private refresh_dec020_r2.mjs succeeded:12 newunique owned synthetic schemas, primary/coverage/025 full migrator passed;socket/version/datadir checked before every creation; existing ordinary app schema grants/admin accounts preserved, no reset/drop/server policy change. Private r2 env600/bindings/migrationlogs retained."
     }
   ],
   "evidence_files": [
@@ -4232,8 +4527,79 @@
     "evidence/20261006T064259-63b233b184d5/run.json",
     "evidence/20261006T064303-61a6d6576bcc/run.json",
     "evidence/20261006T064251-f3c2e1be8806/run.json",
-    "evidence/20261006T064255-816810f42270/run.json"
+    "evidence/20261006T064255-816810f42270/run.json",
+    "evidence/20261006T071826-647cd85e2943/run.json",
+    "evidence/20261006T071831-93a92f78d6f4/run.json",
+    "evidence/20261006T071832-79d264902853/run.json",
+    "evidence/20261006T071835-c3764152343f/run.json",
+    "evidence/20261006T071840-18279232bed7/run.json",
+    "evidence/20261006T071842-0cebcd8106e8/run.json",
+    "evidence/20261006T071851-0ea02be0f47a/run.json",
+    "evidence/20261006T071908-0301b3cda6e4/run.json",
+    "evidence/20261006T071910-b9034e8963cd/run.json",
+    "evidence/20261006T071911-78b5888f9ccb/run.json",
+    "evidence/20261006T071912-afaccd6dda75/run.json",
+    "evidence/20261006T071913-74e18315f59e/run.json",
+    "evidence/20261006T071914-5e6adda35e6e/run.json",
+    "evidence/20261006T071915-991aece7754c/run.json",
+    "evidence/20261006T071916-89a81c79e09c/run.json",
+    "evidence/20261006T071917-dd2867c7d773/run.json",
+    "evidence/20261006T071918-7f7053222975/run.json",
+    "evidence/20261006T071919-128975fe674a/run.json",
+    "evidence/20261006T071921-ecf618882a7d/run.json",
+    "evidence/20261006T071935-a741249ac0f2/run.json",
+    "evidence/20261006T071938-3423d07453b1/run.json",
+    "evidence/20261006T072001-caf1210c97dc/run.json",
+    "evidence/20261006T072443-45b4aa491f88/run.json",
+    "evidence/20261006T072047-2b998571ebbf/run.json",
+    "evidence/20261006T072659-a76ce254c212/run.json",
+    "evidence/20261006T080002-0f0aefed6c8c/run.json",
+    "evidence/20261006T080007-901c806aa6fb/run.json",
+    "evidence/20261006T080008-63396d812551/run.json",
+    "evidence/20261006T080011-ba5f2103114c/run.json",
+    "evidence/20261006T080017-87559dfba1ec/run.json",
+    "evidence/20261006T080019-0a529285f560/run.json",
+    "evidence/20261006T080029-08ad74dad02b/run.json",
+    "evidence/20261006T080047-359421ff7b7a/run.json",
+    "evidence/20261006T080049-fd1e44fc1a2f/run.json",
+    "evidence/20261006T080050-27c7b74ad16d/run.json",
+    "evidence/20261006T080052-d74e6954b044/run.json",
+    "evidence/20261006T080053-dc4768847dd4/run.json",
+    "evidence/20261006T080054-989907aee250/run.json",
+    "evidence/20261006T080055-b702a75e4035/run.json",
+    "evidence/20261006T080056-36cee419a7b6/run.json",
+    "evidence/20261006T080057-caabff8ddac1/run.json",
+    "evidence/20261006T080058-c5cd36690f5c/run.json",
+    "evidence/20261006T080100-2cc81a7a014b/run.json",
+    "evidence/20261006T080101-420c465b0282/run.json",
+    "evidence/20261006T080117-73e59a8c5c82/run.json",
+    "evidence/20261006T080120-92f79a88f045/run.json",
+    "evidence/20261006T080144-5f6d3d8cd3e1/run.json",
+    "evidence/20261006T080646-e6e4a49cbef0/run.json",
+    "evidence/20261006T081228-515109cc8fc7/run.json",
+    "evidence/20261006T081233-0ba35dff5795/run.json",
+    "evidence/20261006T081234-57ac6ea67a9b/run.json",
+    "evidence/20261006T081237-e4763597b0c5/run.json",
+    "evidence/20261006T081243-0e0844070330/run.json",
+    "evidence/20261006T081245-c99f452df3d5/run.json",
+    "evidence/20261006T081254-52c058c06bf6/run.json",
+    "evidence/20261006T081311-39b44a9de887/run.json",
+    "evidence/20261006T081313-423aa25f25ab/run.json",
+    "evidence/20261006T081314-925034c6a2ab/run.json",
+    "evidence/20261006T081315-3b2db564d00d/run.json",
+    "evidence/20261006T081316-8cbf60c83c5e/run.json",
+    "evidence/20261006T081317-76671412febc/run.json",
+    "evidence/20261006T081318-53b9dac695e8/run.json",
+    "evidence/20261006T081319-c5eca0bb773c/run.json",
+    "evidence/20261006T081320-24d18556d507/run.json",
+    "evidence/20261006T081322-e4e210bd0435/run.json",
+    "evidence/20261006T081323-819c6afbb369/run.json",
+    "evidence/20261006T081324-f42a7b9494a6/run.json",
+    "evidence/20261006T081339-8279321fefd4/run.json",
+    "evidence/20261006T081342-9ae36caf75b2/run.json",
+    "evidence/20261006T081405-dc647e942b6a/run.json",
+    "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Actual DEC019+018 approved and exact patches applied; restore verified owned26.7 runtime, execute23mandatory DEVELOPER suites with fresh per-Inventory schemas/exact socket guards, independent final review and freshmain integration/currentCI; mark Phase DoD only when all gates observed then authorized merge and safe cleanup."
+  "next_safe_action": "Current23 developer suites allPASS at3e5e7400/approvedD52bc Pf602; actualservercoverage0fail/global+34perfilefloorsPASS. Await final separate implementation/readiness evidence inspection; then freeze exactsource/docs, push candidate, require5currentCI/actualPRreview/freshmain/MERGE_READY beforeauthorizedmerge. No formal/UAT/globalREADY claim."
 }
