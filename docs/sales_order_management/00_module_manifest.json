@@ -25,11 +25,9 @@
       "server/src/services/salesJobs/SalesJobRuntimeService.js",
       "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
       "server/src/handlers/sales/salesSchemas.js",
-      "server/src/handlers/sales/listSalesOrdersHandler.js",
-      "server/src/handlers/sales/getSalesOrderHandler.js",
-      "server/src/handlers/sales/createSalesOrderHandler.js",
-      "server/src/handlers/sales/updateSalesOrderHandler.js",
-      "server/src/handlers/sales/salesLookupHandlers.js"
+      "server/src/handlers/sales/salesLookupHandlers.js",
+      "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+      "server/src/modules/item/ItemLookupService.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -106,12 +104,10 @@
       "server/src/services/salesJobs/SalesJobRuntimeService.js",
       "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
       "server/src/handlers/sales/salesSchemas.js",
-      "server/src/handlers/sales/listSalesOrdersHandler.js",
-      "server/src/handlers/sales/getSalesOrderHandler.js",
-      "server/src/handlers/sales/createSalesOrderHandler.js",
-      "server/src/handlers/sales/updateSalesOrderHandler.js",
       "server/src/handlers/sales/salesLookupHandlers.js",
-      "server/database/migrations/*_create_sales_external_order_keys.js"
+      "server/database/migrations/*_create_sales_external_order_keys.js",
+      "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+      "server/src/modules/item/ItemLookupService.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -209,7 +205,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "cf4cb43b84698637a70cc742e48a9c85a736c18b3ebb91b5a70119a59e547b68",
+        "sha256": "6b107778d1b0df00e7e3bf5358221405af0f91378f6797c090b7ebb0bef6cfd9",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -243,7 +239,7 @@
         "id": "item-lookup-service",
         "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
         "regression_suites": [
           "sales-technical"
         ]

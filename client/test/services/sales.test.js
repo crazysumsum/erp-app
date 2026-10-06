@@ -26,4 +26,11 @@ describe("Sales Quotation client contract", () => {
     await sales.createQuotation({ ...payload, idempotencyKey: "explicit-key" });
     expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-quotations/create", { idempotent: true, idempotencyKey: "explicit-key", body: payload });
   });
+  it("forwards bounded Sales lookup queries and abort signals to their purpose routes", async () => {
+    for (const [method, kind] of [["lookupCustomers", "customers"], ["lookupSkus", "skus"], ["lookupWarehouses", "warehouses"], ["lookupChannels", "channels"]]) {
+      httpClient.get.mockResolvedValue({ items: [], total: 0, page: 1, pageSize: 20 });
+      await expect(sales[method]({ q: "probe", page: 1, pageSize: 20, signal: "abort" })).resolves.toEqual({ items: [], total: 0, page: 1, pageSize: 20 });
+      expect(httpClient.get).toHaveBeenLastCalledWith(`/api/v1/sales-lookups/${kind}`, { params: { q: "probe", page: 1, pageSize: 20 }, signal: "abort" });
+    }
+  });
 });

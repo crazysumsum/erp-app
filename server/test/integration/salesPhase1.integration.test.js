@@ -329,3 +329,59 @@ integrationTest("TC-011/018 Quotation query pagination/effective status and fres
   await f.db.execute("DELETE FROM role_permissions WHERE role_id=?", [f.roleId]);
   await assert.rejects(() => f.quotation.get({ claims: viewer, id: created.quotation.id }), { code: "PERMISSION_STALE" });
 });
+integrationTest("TC-018 Sales entry lookups enforce fresh write/view permissions and current saleable projections", async t => {
+  const { SalesLookupService } = await import("../../src/modules/sales/SalesLookupService.js");
+  const f = await setup(t), lookup = new SalesLookupService({ database: f.database, time: f.time, logger: f.logger });
+  const [[customer]] = await f.db.query("SELECT customer_code FROM customers WHERE id=?", [f.customerId]);
+  const request = (kind, input) => lookup.list({ claims: f.claims, kind, input });
+  const customers = await request("customers", { q: customer.customer_code, page: 1, pageSize: 10 });
+  assert.equal(customers.total, 1);assert.equal(customers.items[0].customerId, f.customerId);
+  assert.equal(customers.items[0].credit.configured, false);assert.equal(customers.items[0].defaultCurrencyCode, f.currency);
+  assert.equal(Object.hasOwn(customers.items[0], "generalPhone"), false);
+  const [[sku]] = await f.db.query("SELECT sku_code FROM item_skus WHERE id=?", [f.skuId]);
+  const skus = await request("skus", { q: sku.sku_code, currencyCode: "HKD" });
+  assert.equal(skus.total, 1);assert.equal(skus.items[0].skuId, f.skuId);assert.equal(skus.items[0].uoms[0].skuUomId, f.skuUomId);
+  assert.equal(skus.items[0].suggestedPrice.amount, "3.3333");assert.equal(skus.items[0].priceCurrencyMatches, true);
+  assert.equal((await request("skus", { q: sku.sku_code, currencyCode: "USD" })).items[0].priceCurrencyMatches, false);
+  const barcode = `sales-native-${randomUUID()}`;
+  await f.insert("item_sku_barcodes", { sku_id: f.skuId, sku_uom_id: f.skuUomId, barcode, normalized_barcode: barcode, barcode_type: "internal", created_at: f.now, updated_at: f.now });
+  assert.equal((await request("skus", { barcode })).items[0].skuId, f.skuId);
+  assert.equal((await request("skus", { barcode: `${barcode}-missing` })).total, 0);
+  await f.db.execute("UPDATE item_uoms SET status='inactive' WHERE id=(SELECT uom_id FROM item_sku_uoms WHERE id=?)", [f.skuUomId]);
+  assert.equal((await request("skus", { q: sku.sku_code })).total, 0);
+  await f.db.execute("UPDATE item_uoms SET status='active' WHERE id=(SELECT uom_id FROM item_sku_uoms WHERE id=?)", [f.skuUomId]);
+  const [[warehouse]] = await f.db.query("SELECT warehouse_code FROM inventory_warehouses WHERE id=?", [f.warehouseId]);
+  const warehouses = await request("warehouses", { q: warehouse.warehouse_code });
+  assert.equal(warehouses.total, 1);assert.equal(warehouses.items[0].id, f.warehouseId);
+  await f.db.execute("UPDATE inventory_warehouses SET status='INACTIVE' WHERE id=?", [f.warehouseId]);
+  assert.equal((await request("warehouses", { q: warehouse.warehouse_code })).total, 0);
+  await f.db.execute("UPDATE item_skus SET status='inactive' WHERE id=?", [f.skuId]);
+  assert.equal((await request("skus", { q: sku.sku_code })).total, 0);
+  await f.db.execute("UPDATE customers SET status='blocked' WHERE id=?", [f.customerId]);
+  assert.equal((await request("customers", { q: customer.customer_code })).total, 0);
+  for (const input of [{ page: 0 }, { pageSize: 101 }, { q: "x".repeat(191) }, { q: "\n" }, { unexpected: 1 }])
+    await assert.rejects(() => request("customers", input), { code: "SALES_INPUT_INVALID" });
+  await assert.rejects(() => request("channels", {}), { code: "FORBIDDEN" });
+  await f.db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name='sales.import'", [f.roleId]);
+  const importing = { ...f.claims, claimedPermissions: ["sales.view", "sales.mgmt", "sales.import"] };
+  assert.deepEqual(await lookup.list({ claims: importing, kind: "channels", input: {} }), { items: [], total: 0, page: 1, pageSize: 20 });
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.view'", [f.roleId]);
+  const withoutView = { ...f.claims, claimedPermissions: ["sales.mgmt", "sales.import"] };
+  for (const kind of ["customers", "channels"]) await assert.rejects(() => lookup.list({ claims: withoutView, kind, input: {} }), { code: "FORBIDDEN" });
+  await f.db.execute("INSERT INTO role_permissions (role_id,permission_id) SELECT ?,id FROM permissions WHERE name='sales.view'", [f.roleId]);
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.import'", [f.roleId]);
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.mgmt'", [f.roleId]);
+  await assert.rejects(() => lookup.list({ claims: { ...f.claims, claimedPermissions: ["sales.view"] }, kind: "customers", input: {} }), { code: "FORBIDDEN" });
+});
+integrationTest("TC-018 Actual HTTP Sales lookup contracts retain permission and strict query validation", async t => {
+  const f = await setup(t), { url } = await f.app.start();
+  const token = await f.app.services.require("jwt").issue({ roles: f.claims.claimedRoles, permissions: f.claims.claimedPermissions },
+    { subject: String(f.userId), version: await f.app.services.require("tokenRevocation").currentVersion(String(f.userId)), authTime: Math.floor(f.now / 1000) });
+  for (const kind of ["customers", "skus", "warehouses"]) {
+    const response = await fetch(`${url}/api/v1/sales-lookups/${kind}?pageSize=10`, { headers: { Authorization: `Bearer ${token}` } });
+    const result = await response.json();assert.equal(response.status, 200, JSON.stringify(result));assert.equal(result.data.pageSize, 10);
+  }
+  assert.equal((await fetch(`${url}/api/v1/sales-lookups/channels`, { headers: { Authorization: `Bearer ${token}` } })).status, 403);
+  assert.equal((await fetch(`${url}/api/v1/sales-lookups/customers?pageSize=101`, { headers: { Authorization: `Bearer ${token}` } })).status, 400);
+  assert.equal((await fetch(`${url}/api/v1/sales-lookups/customers`)).status, 401);
+});

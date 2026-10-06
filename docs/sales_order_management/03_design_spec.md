@@ -102,7 +102,7 @@
 
 - 後端使用原生 ESM JavaScript、Express 5、AJV、mysql2；不引入 ORM、queue broker 或 TypeScript。
 - `server/src/framework/` 是 framework，業務功能放 `server/src/modules/sales/`。
-- 一支 API 一個 Handler，按 URL prefix 放 `server/src/handlers/sales/`、`sales-imports/` 等目錄。
+- 一支 API 一個 Handler，按 URL prefix 放 `server/src/handlers/sales-orders/`、`sales-lookups/`、`sales-imports/` 等目錄；共用 schema 可留在 `handlers/sales/`，不得在該共用目錄 export URL prefix 不符的 Handler。
 - 業務 Service 不進 framework service discovery；Handler 直接建立並注入 Database、Logging、Time、Scheduler 等依賴。
 - 寫入使用 `MySqlDatabaseService.withTransaction()`；金額及 quantity 不使用 JavaScript 浮點數運算。
 - API 成功信封為 `{ success, data, meta }`，錯誤為 `{ success:false, error, meta }`。
@@ -1849,15 +1849,25 @@ Runtime只負責 service discovery、dependency injection、Scheduler registrati
 ```text
 server/src/handlers/sales/
   salesSchemas.js
+
+server/src/handlers/sales-lookups/
+  salesLookupHandlers.js
+
+server/src/handlers/sales-orders/
   listSalesOrdersHandler.js
   getSalesOrderHandler.js
   createSalesOrderHandler.js
   updateSalesOrderHandler.js
   confirmSalesOrderHandler.js
   salesOrderLifecycleHandlers.js
-  salesLookupHandlers.js
+
+server/src/handlers/sales-backorders/
   runSalesBackorderAllocationHandler.js
+
+server/src/handlers/sales-operations/
   salesOperationLookupHandler.js
+
+server/src/handlers/sales-audit-logs/
   salesAuditHandler.js
 
 server/src/handlers/outstanding-sales-orders/

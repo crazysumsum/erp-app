@@ -2,8 +2,13 @@ import { httpClient } from "@/framework/http/HttpClient.js";
 
 export const service = { name: "sales" };
 const write = (path, { idempotencyKey, ...body } = {}) => httpClient.post(path, { idempotent: true, idempotencyKey: idempotencyKey ?? body.eventId, body });
+const lookup = (kind, { signal, ...params } = {}) => httpClient.get(`/api/v1/sales-lookups/${kind}`, { params, signal });
 
 export default {
+  lookupCustomers(query) { return lookup("customers", query); },
+  lookupSkus(query) { return lookup("skus", query); },
+  lookupWarehouses(query) { return lookup("warehouses", query); },
+  lookupChannels(query) { return lookup("channels", query); },
   listQuotations({ rowsPerPage, filter, signal, ...query } = {}) {
     const params = Object.fromEntries(Object.entries({ ...query, pageSize: rowsPerPage ?? query.pageSize, q: filter ?? query.q })
       .filter(([, value]) => value !== undefined && value !== null && value !== ""));

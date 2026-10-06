@@ -2604,7 +2604,7 @@ Commit：`feat: expire sales quotations consistently`。
 
 ### Approach
 
-預計變更範圍：`salesLookupHandlers.js`、`salesSchemas.js`、`server/test/salesLookupHandlers.test.js`、`client/src/services/sales.js`、`client/test/services/sales.test.js`。
+預計變更範圍：`server/src/handlers/sales-lookups/salesLookupHandlers.js`、`server/src/handlers/sales/salesSchemas.js`、`server/test/sales/phase1/SalesLookupHandlers.test.js`、`client/src/services/sales.js`、`client/test/services/sales.test.js`；補完 Design §2.4 已定義但未落地的 `ItemLookupService.searchForSale()` 及 provider tests，Sales 僅委派與具名投影，不直接讀 Item tables。
 
 依賴：P0-T09、P1-T07。
 
