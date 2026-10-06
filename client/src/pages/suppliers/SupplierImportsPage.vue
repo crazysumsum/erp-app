@@ -251,7 +251,8 @@ onUnmounted(stopPolling);
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="showDetail" @hide="closeDetail">
+    <!-- no-route-dismiss：開詳情會寫 ?job= 入 URL，Quasar 預設一轉 route 就收埋 dialog（Playwright 捉到）。 -->
+    <q-dialog v-model="showDetail" no-route-dismiss @hide="closeDetail">
       <q-card style="width: 760px; max-width: 94vw">
         <q-card-section><h2 class="text-h6 q-ma-none">匯入工作 #{{ detailId }}</h2></q-card-section>
         <q-card-section class="q-pt-none">
