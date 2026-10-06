@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 105,
+  "revision": 110,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-002",
   "current_task": "TASK-027",
   "baseline": {
     "design": "d4d43f935cda896d10cc47aa651645d76db0a105ae1f6de41249158892e9993b",
     "plan": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
-    "code_commit": "f0506a9dc0c7f26e8bcbf5f99e3f5474ea4c3ddb",
-    "source_fingerprint": "c586ec6d7d9cc1df6664b851099038347642b09e0ea0b447d0707e1766ecaddf",
+    "code_commit": "9c94039b7ec2f7d9022257ac99b039594f044ccf",
+    "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
     "worktree": "/private/tmp/erp-sales-p1",
-    "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
+    "default_commit": "7717702acf7c40bad188ba61fb48c8e90b309be1",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
@@ -23,7 +23,8 @@
     "resources": {
       "workspace": "/private/tmp/erp-sales-p1",
       "temp-directory": "/private/tmp/sales-p1-private",
-      "mysql-instance": "MySQL 26.7.0; /private/tmp/sales-p1-private/mysql-primary; pid 3466; socket /private/tmp/sales-p1-private/mysql-primary/mysql.sock; synthetic schema erp_sales_phase1_empty_f17653fb30; prior owned schemas retained"
+      "mysql-instance": "MySQL 26.7.0; /private/tmp/sales-p1-private/mysql-primary; pid 3466; socket /private/tmp/sales-p1-private/mysql-primary/mysql.sock; synthetic schema erp_sales_phase1_empty_f17653fb30; prior owned schemas retained",
+      "mysql-inventory-diagnostics": "Owned secondary26.7 root/private/tmp/sales-p1-private/mysql-inventory-final pid56799 port54434 socket verified then shutdown; 4 exact dedicated021/022/025 roots from private runtime.json records all shutdown; private data/logs retained. Retrospective actual observation, not original reservation."
     },
     "lease_ref": null
   },
@@ -1935,6 +1936,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-PHASE002-INTEGRATED-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "9858638e0e3907f3bc17e53ad7ace8b6f07ba62b1c3f56bb20a8e4bc3b30e317",
+      "source_ref": "Actual independent CHANGES_REQUESTED atHEAD8f6dd476 vsmain7717702: Sales0070/all8migrations modernCHECKmetadata conflictsapprovedDesign5.7minimum; integerwidthmetadataalso incompatible. OfficialMySQL8.0 CHECK_CONSTRAINTS docs supports8.0.16boundary. Current111server/763client/lint/buildPASS; nootherintegrationfinding.85 product/testfiledigest89a0bd9bdfbd660b81ab2f161e9e656beb621548e99f0ce5c9f27a383b761e7d heldunchanged; no5.7execution/compatibilityclaim. DEC018registryseparateknownpending. Actualintegratedbrowserpending runtimelease; requireshumanplatformchoiceDEC019 orapprovedcompatibleimplementation beforePhase/merge.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC019-PROPOSAL-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6",
+      "source_ref": "Actual independent APPROVEunappliedpacket41: canonical72490c58/registryc6254b01 apply-checkPASS; D9002b250/P89b5896b recomputed; explicitSales26.7supportchoice andqualifiedREADMEscope, retainsServicevalidation/physicalguards/unchangedcommands/60formal/UAT/gates andoldhistory; narrowfuturemechanicalauthorityexcludesmaterialchanges. ReviewerdoesnotchooseforSam; actualhumanquestionaccepted answerpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PHASE002-INTEGRATED-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "source_ref": "Actual final13browser/2page printPASS and three title-only corrections accepted. Overall CHANGES_REQUESTED remains oneHIGH: approved5.7 support conflicts modern enforcedCHECKmigration metadata, DEC019 actualhuman choice pending; DEC018 registry scope pending. No Phase/currentCI/merge approval. Source24f31 and scoped85filedigest927e5483 unchanged. ExistingR1 history retained.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -3092,6 +3129,61 @@
       "source_ref": "Primary42unit/lintPASS/native26PASS0skip. Fullserver knownexactregistryfailureonly; independentfunctionalAPPROVE42unit/22native+2extraPASS. Historicalstrictresponse500 trackingPolicy lowercase corrected uppercase projection retained logs. DEC018pending; task remainsIN_PROGRESS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T06:01:04.013988+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P1 developer case-identity diagnostics",
+      "code_commit": "8f6dd4761f88d845c953be84a3b5487957e0aa07",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "PASS",
+      "source_ref": "Actual original profile commands/JUnit parser:47unit,58client,46native PASS, zero failures/skips, required TC011..018 present. Private identity-diagnostics-summary.json/native-identity-diagnostics-summary.json under /private/tmp/sales-p1-private. Only three test titles corrected, assertions/parser/requirements unchanged. Source held before/after; executed at8f6 before title-only commit9c94039. Diagnostic observations, not typed Phase gate under pending DEC019.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:00:21.697137+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Inventory original isolated native diagnostics",
+      "code_commit": "8f6dd4761f88d845c953be84a3b5487957e0aa07",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "FAIL",
+      "source_ref": "Actual original commands007/008/009/012/014/019/020 PASS.021/022/025 initially failed guard due incompatible shared socket environment. Later dedicated021/022 PASS,025 failed missing fr_token_versions before application startup. Both failed summary/log/XML histories preserved private inventory-diagnostics-summary.json/inventory-dedicated-diagnostics-summary.json. No native tests or safety guards weakened; not typed Phase gate.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:00:21.697137+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "All ten Inventory native developer diagnostics with corrected owned runtimes",
+      "code_commit": "8f6dd4761f88d845c953be84a3b5487957e0aa07",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "PASS",
+      "source_ref": "Actual original profile commands all10 passed,14JUnit cases total,zero failures/skips.007/008/009/012/014/019/020 use fresh per-suite schemas on owned26.7 localhost56799;021/022 use distinct exact owned socket roots;025 own exact socket/fresh schema with existing server/scripts/migrate.js pre-run then original native command1PASS. Final summaries inventory-diagnostics-summary.json (first7PASS), inventory-dedicated-diagnostics-summary.json (021/022PASS), inventory-dedicated-migrated-diagnostics-summary.json (025PASS), private raw evidence. All4 dedicated processes shut down finally; verified secondary56799 shut down after tests. No source/command changes; diagnostic only while DEC019 OPEN.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:00:21.697137+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Independent integrated actual browser and print developer verification",
+      "code_commit": "8f6dd4761f88d845c953be84a3b5487957e0aa07",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_p1_review13PlaywrightPASS0skip, no relevant unexpected console/network;25line quotation PDF2A4pages rendered and both visually inspected totals166.6650/repeated headers/no clipping. Private p1-integrated-reviewer-browser.log/p1-integrated-reviewer-print.log/p1-integrated-reviewer-print-25lines.pdf. Source24f31 held;85filedigest927e5483a98bedbbf7d47b7163c0c46d1fbd81c47e86ca1e8a10a771ab916565. Runtime/fixtures cleaned; no formal/UAT/Phase approval.",
+      "actor": "Codex /root/sales_p1_review",
+      "observed_at": "2026-10-06T07:00:21.697137+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Inventory diagnostic count correction",
+      "code_commit": "8f6dd4761f88d845c953be84a3b5487957e0aa07",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "PASS",
+      "source_ref": "Prior revision109 summary arithmetic says14; actual seven1-case suites +TASK0213 +TASK0224 +TASK0251 =15reportedPASS cases across10suites, all zero skip. Original JSON/XML and old observation retained; report40 corrected before commit. No execution or result change.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:00:36.558205+00:00"
     }
   ],
   "pending_decisions": [
@@ -3311,6 +3403,24 @@
       "impact": "MINOR",
       "question": "Minor reversible test-registry/scope-binding correction; no product boundary/semantics change. Approve packet34 exact12lineexpectedregistrypatchc6254b01 andcanonical82cef6e2 (oneexistingtestscope,Task021description,unchangedUATNA refs), D49f38335/P9db8622d/newhistorypreservingbinding; narrowfuturepuremechanicalP1hash/reference/matrix/bindingsauthority no newpaths/tasks/rules/permissions/semantics/weakerchecks. request_user_input_async accepted actualanswer pending; oldcommitPRmerge/runtimeauthorityretained.",
       "affected_ids": [
+        "TASK-021",
+        "PHASE-002",
+        "NFR-014",
+        "NFR-015"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
+    },
+    {
+      "id": "DEC-019",
+      "impact": "MAJOR",
+      "question": "Choose Sales26.7.0 explicit support baseline vsretain5.7andcompatiblemigration/runtime. Consolidatedpacket41/newcanonical72490c58 incorporatespendingDEC018 registryc6254b01/scope/tasktext+qualifiedREADMEonepathsupplement/4designstatements/unchangedUATNA/newD9002b250/P89b5896b andnarrowpuremechanicalbindingmaintenance preservinghistory. Old82canonicalunappliedsupersededonlyifadopted. request_user_input_async accepted; actualanswerpending. Noapply/merge/5.7claim; existingcommitPRmerge/ownedruntimeauthorityretained.",
+      "affected_ids": [
+        "DES-002",
+        "DES-007",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
         "TASK-021",
         "PHASE-002",
         "NFR-014",
@@ -3680,6 +3790,14 @@
       "idempotency_key": "sales-p1-main-e3bfb02",
       "status": "CONFIRMED",
       "source_ref": "Actual git fetch/prune + merge succeeded; HEAD07f761186e98f907d1b29f19c6bfc85192d44485; no conflicts/no direct main mutation."
+    },
+    {
+      "id": "PUSH-SALES-P1-DRAFT-20261006",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-order-phase-1-draft reviewable draft only, pending DEC018/019; no merge candidate",
+      "idempotency_key": "sales-p1-reviewable-draft-push-20261006",
+      "status": "PLANNED",
+      "source_ref": "Existing Sam commit/PR authorization retained. No P1 remote PR observed via gh head query; save reviewed implementation and honest pending decisions, no raw evidence/runtime/secrets publication."
     }
   ],
   "evidence_files": [
@@ -3716,8 +3834,30 @@
     "evidence/20261002T084834-b16cdc40e06b/run.json",
     "evidence/20261002T084835-52df376c56ed/run.json",
     "evidence/20261002T084836-3cbc746f9335/run.json",
-    "evidence/20261002T084837-25f943c95931/run.json"
+    "evidence/20261002T084837-25f943c95931/run.json",
+    "evidence/20261006T064252-29539ddb1d85/run.json",
+    "evidence/20261006T064309-3e1c2be39752/run.json",
+    "evidence/20261006T064327-c2aedea905b6/run.json",
+    "evidence/20261006T064328-ff2356bfb598/run.json",
+    "evidence/20261006T064329-aa53a2ff9551/run.json",
+    "evidence/20261006T064330-971ebe517b83/run.json",
+    "evidence/20261006T064331-e97ddf41d23e/run.json",
+    "evidence/20261006T064332-05f40ec9fbbe/run.json",
+    "evidence/20261006T064333-03a16f0584af/run.json",
+    "evidence/20261006T064334-cad96c3a74d7/run.json",
+    "evidence/20261006T064335-54d7a0e37ca5/run.json",
+    "evidence/20261006T064336-0195bb4e7ff8/run.json",
+    "evidence/20261006T064337-c1b5b53433cb/run.json",
+    "evidence/20261006T064352-4d60527f2558/run.json",
+    "evidence/20261006T064251-b0a73eac1585/run.json",
+    "evidence/20261006T064303-5507d574b4c3/run.json",
+    "evidence/20261006T064306-b52f2234d685/run.json",
+    "evidence/20261006T064249-9862011fd616/run.json",
+    "evidence/20261006T064259-63b233b184d5/run.json",
+    "evidence/20261006T064303-61a6d6576bcc/run.json",
+    "evidence/20261006T064251-f3c2e1be8806/run.json",
+    "evidence/20261006T064255-816810f42270/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Integrate fetched authoritative main7717702acf7c40bad188ba61fb48c8e90b309be1 into the isolated P1 branch; then reverify unchanged approved contract on integrated source. Actual DEC018 human answer remains pending; no registry/canonical patch applied and no Phase/merge readiness claimed."
+  "next_safe_action": "Await actual Sam DEC019+018 combined choice (packet41); before approval apply neither patch. Reviewable draft PR may be published under existing authority, with currentCI/review/23typeddeveloper gates pending. On actual approval apply exact reviewed patches, append fresh D/P/scope/UATNA bindings preserving history, rerun23mandatory checks/currentreview/freshmain/currentCI before authorized merge."
 }
