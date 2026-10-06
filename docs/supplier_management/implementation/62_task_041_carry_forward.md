@@ -651,3 +651,24 @@ New obligations T47 creates:
 | Task | Obligation |
 | --- | --- |
 | T49 | Measure the export at 10,000 rows (built in memory, one query plus one Business Master lookup per distinct payment term). |
+
+## Mutation record for TASK-047
+
+25 mutants, all killed. Each was applied to a committed tree and restored from the saved bytes. They ran against server unit
+tests, integration tests on real MySQL, client vitest and the mocked Playwright spec.
+
+- **Server (16):**
+  - **row cap:** no cap; the query not asking for one row over the cap;
+  - **audit:** no audit; a wrong count;
+  - **content:** the filters ignored; no formula guard; the payment-term code dropped; no BOM or CRLF options;
+  - **access:** the fresh-actor check skipped; no password (`jwt` instead of `jwt-password`); no permission policy; paging
+    accepted as a filter;
+  - **headers:** no `Pragma`; `Content-Disposition` not exposed;
+  - **import:** the guard apostrophe kept; every leading apostrophe stripped.
+- **Client (9):**
+  - **file name:** not read; `filename*` ignored; the server's name ignored by the export, and by the template download;
+  - **request:** `postBlob` sending GET; the sort or the status not sent;
+  - **button:** offered to viewers; a cancelled prompt still exporting.
+
+The fresh-actor mutant survived the first run. A test was then added for a manager whose permission is withdrawn after the
+token was issued (403 `PERMISSION_STALE`, no audit), and it kills the mutant.
