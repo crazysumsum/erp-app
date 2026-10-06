@@ -173,7 +173,7 @@ constructor(services = {}) {
 
 - Node.js 26+
 - npm 10+
-- MySQL 5.7+
+- MySQL 5.7+；Sales Order Management 的支援及驗證基準為 MySQL 26.7.0（與 CI 相同），不承諾 5.7 相容性。
 
 ### Step 1：安裝依賴
 

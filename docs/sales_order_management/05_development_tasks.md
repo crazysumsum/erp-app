@@ -2576,7 +2576,7 @@ Commit：`feat: add quotation inquiry and print views`。
 
 ### Approach
 
-預計變更範圍：`SalesQuotationExpiryJob.js`、`SalesJobRuntimeService.js`、`server/test/salesQuotationExpiryJob.test.js`、`server/config/scheduler.js`。
+預計變更範圍：`SalesQuotationExpiryJob.js`、`SalesJobRuntimeService.js`、`server/test/salesQuotationExpiryJob.test.js`、`server/config/scheduler.js`；既有 `server/test/serviceContainer.test.js` 僅補列兩個新 service 的 expected registry，保留完整 exact assertion。
 
 依賴：P1-T06、P0-T08。
 

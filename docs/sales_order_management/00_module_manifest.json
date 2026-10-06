@@ -27,7 +27,8 @@
       "server/src/handlers/sales/salesSchemas.js",
       "server/src/handlers/sales/salesLookupHandlers.js",
       "server/src/handlers/sales-lookups/salesLookupHandlers.js",
-      "server/src/modules/item/ItemLookupService.js"
+      "server/src/modules/item/ItemLookupService.js",
+      "README.md"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -63,7 +64,8 @@
       "server/test/migrate.test.js",
       "client/test/pages/sales/**",
       "client/test/components/sales/**",
-      "client/test/services/sales.test.js"
+      "client/test/services/sales.test.js",
+      "server/test/serviceContainer.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -107,7 +109,9 @@
       "server/src/handlers/sales/salesLookupHandlers.js",
       "server/database/migrations/*_create_sales_external_order_keys.js",
       "server/src/handlers/sales-lookups/salesLookupHandlers.js",
-      "server/src/modules/item/ItemLookupService.js"
+      "server/src/modules/item/ItemLookupService.js",
+      "server/test/serviceContainer.test.js",
+      "README.md"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -205,7 +209,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "6b107778d1b0df00e7e3bf5358221405af0f91378f6797c090b7ebb0bef6cfd9",
+        "sha256": "b55de3f450b0054423fc52d1bb1a100bee7b7e8580265b09b426c5509a744038",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

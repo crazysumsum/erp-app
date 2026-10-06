@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 110,
+  "revision": 119,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-002",
   "current_task": "TASK-027",
   "baseline": {
-    "design": "d4d43f935cda896d10cc47aa651645d76db0a105ae1f6de41249158892e9993b",
-    "plan": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
-    "code_commit": "9c94039b7ec2f7d9022257ac99b039594f044ccf",
-    "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+    "design": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
+    "plan": "24280ccf2c73a9ab243d6fa635c58ab0c896be7fc5e6d61f6b145817d53eaa26",
+    "code_commit": "53e5471fd0b769ae115ab4825e81816bd88c6ee8",
+    "source_fingerprint": "f68595a942d95617f406250790fc134230e59db4d38a8cfbc699f1383f394760",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "7717702acf7c40bad188ba61fb48c8e90b309be1",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -23,8 +23,8 @@
     "resources": {
       "workspace": "/private/tmp/erp-sales-p1",
       "temp-directory": "/private/tmp/sales-p1-private",
-      "mysql-instance": "MySQL 26.7.0; /private/tmp/sales-p1-private/mysql-primary; pid 3466; socket /private/tmp/sales-p1-private/mysql-primary/mysql.sock; synthetic schema erp_sales_phase1_empty_f17653fb30; prior owned schemas retained",
-      "mysql-inventory-diagnostics": "Owned secondary26.7 root/private/tmp/sales-p1-private/mysql-inventory-final pid56799 port54434 socket verified then shutdown; 4 exact dedicated021/022/025 roots from private runtime.json records all shutdown; private data/logs retained. Retrospective actual observation, not original reservation."
+      "mysql-instance": "Owned26.7 primary running pid59095 socket/private/tmp/sales-p1-private/mysql-primary/mysql.sock; serialSales/browser ownerCodex/root; private runtime.json/dec019-runtime-bindings.json actualrestartverified.",
+      "mysql-inventory-diagnostics": "Owned26.7 secondary localhostpid59107 port55800 +3actualdedicated021/022/025 instances,10freshguarded schemas; private dec019-runtime-bindings.json; Codex/root owns all, no concurrentsharedprimary use."
     },
     "lease_ref": null
   },
@@ -1130,6 +1130,312 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-DESIGN-DEC019",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:13:55.608890+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9002b250fd8ba66d64b1a727aa4a79b476e3a301a150e2b76f382f616d98484b",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-PLAN-DEC019",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:13:55.608890+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-002",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-SCOPE-DEC019",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:13:55.608890+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/test/apiDispatcher.test.js",
+        "server/src/modules/sales/salesAuthorization.js",
+        "server/src/modules/sales/SalesQuotationService.js",
+        "server/src/handlers/sales-quotations/**",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/serviceContainer.test.js",
+        "README.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-UATNA-DEC019",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:13:55.608890+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-DESIGN-DEC019-RECONCILED",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-DESIGN-DEC019 9002b250fd8ba66d64b1a727aa4a79b476e3a301a150e2b76f382f616d98484b retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:14:39.873369+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-PLAN-DEC019-RECONCILED",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-PLAN-DEC019 89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6 retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:14:39.873369+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "055af7ba0490f78530f7345f21e5ea5fed39b10ab302946586dcc160b1a04e52",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-002",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-SCOPE-DEC019-RECONCILED",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-SCOPE-DEC019 89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6 retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:14:39.873369+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "055af7ba0490f78530f7345f21e5ea5fed39b10ab302946586dcc160b1a04e52",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/test/apiDispatcher.test.js",
+        "server/src/modules/sales/salesAuthorization.js",
+        "server/src/modules/sales/SalesQuotationService.js",
+        "server/src/handlers/sales-quotations/**",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/serviceContainer.test.js",
+        "README.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-UATNA-DEC019-RECONCILED",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-UATNA-DEC019 89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6 retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:14:39.873369+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "055af7ba0490f78530f7345f21e5ea5fed39b10ab302946586dcc160b1a04e52",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-DESIGN-DEC019-FINAL",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical final binding by Codex under actual Sam「同意」DEC019+018/packet41; two unchanged UATNA ledger refs now point the fixed FINAL ID before hash computation. No policy/scope/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-DESIGN-DEC019-RECONCILED debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0 retained verbatim. DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-DESIGN-DEC019 9002b250fd8ba66d64b1a727aa4a79b476e3a301a150e2b76f382f616d98484b retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:15:55.966029+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-PLAN-DEC019-FINAL",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical final binding by Codex under actual Sam「同意」DEC019+018/packet41; two unchanged UATNA ledger refs now point the fixed FINAL ID before hash computation. No policy/scope/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-PLAN-DEC019-RECONCILED 055af7ba0490f78530f7345f21e5ea5fed39b10ab302946586dcc160b1a04e52 retained verbatim. DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-PLAN-DEC019 89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6 retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:15:55.966029+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "24280ccf2c73a9ab243d6fa635c58ab0c896be7fc5e6d61f6b145817d53eaa26",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-002",
+        "TASK-012",
+        "TASK-013",
+        "TASK-014",
+        "TASK-015",
+        "TASK-016",
+        "TASK-017",
+        "TASK-018",
+        "TASK-019",
+        "TASK-020",
+        "TASK-021",
+        "TASK-022",
+        "TASK-023",
+        "TASK-024",
+        "TASK-025",
+        "TASK-026",
+        "TASK-027"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-SCOPE-DEC019-FINAL",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical final binding by Codex under actual Sam「同意」DEC019+018/packet41; two unchanged UATNA ledger refs now point the fixed FINAL ID before hash computation. No policy/scope/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-SCOPE-DEC019-RECONCILED 055af7ba0490f78530f7345f21e5ea5fed39b10ab302946586dcc160b1a04e52 retained verbatim. DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-SCOPE-DEC019 89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6 retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:15:55.966029+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "24280ccf2c73a9ab243d6fa635c58ab0c896be7fc5e6d61f6b145817d53eaa26",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/test/apiDispatcher.test.js",
+        "server/src/modules/sales/salesAuthorization.js",
+        "server/src/modules/sales/SalesQuotationService.js",
+        "server/src/handlers/sales-quotations/**",
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/serviceContainer.test.js",
+        "README.md"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-UATNA-DEC019-FINAL",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical final binding by Codex under actual Sam「同意」DEC019+018/packet41; two unchanged UATNA ledger refs now point the fixed FINAL ID before hash computation. No policy/scope/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-UATNA-DEC019-RECONCILED 055af7ba0490f78530f7345f21e5ea5fed39b10ab302946586dcc160b1a04e52 retained verbatim. DERIVED mechanical binding by Codex under actual Sam「同意」DEC019+018/packet41 narrowly bounded maintenance: refresh the provided contract source SHA to actual approved Design bytes, no scope/rule/interface/command/acceptance change. Human did not separately inspect this computed hash. Original APR-PHASE1-UATNA-DEC019 89b5896beb4bd02b39c7a6702603e0768c60a1e7e4933cce1f8f7ff581ce7aa6 retained verbatim. Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment.",
+      "recorded_at": "2026-10-06T07:15:55.966029+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "24280ccf2c73a9ab243d6fa635c58ab0c896be7fc5e6d61f6b145817d53eaa26",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1971,6 +2277,30 @@
       "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC019-APPLIED-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
+      "source_ref": "Actual independent CHANGES_REQUESTED atDdebc1/P055af7: exact appliedpatches andsourcepin/history/unchanged specsPASS, two NA_APPROVAL_STALE refs stilloriginalAPRinsteadRECONCILED. Original failure retained; finaltwo-reference correction underalreadyapprovedmechanicalmaintenance nowapplied, rereviewpending.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC019-APPLIED-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "debc1b85f553f6baa4c024fb08fbeb11a63643f2866bb2af91881db1e20242d0",
+      "source_ref": "Actual independent APPROVEcurrentDdebc1b85/P24280ccf: exact approvedpatches +onlysourcepin/twoUATNAreferences reconciled; original/reconciled/R1histories retained; HUMANauthority vsCodexcomputedhash distinguished. Independent validate_traceability--check-approvals STRUCTURE_PASS0issues, renderer/matrixbyteequality andsourcepinPASS. Metadatareview only; runtime/product/Phasegate notclaimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
       "risk_approval_id": null
     }
   ],
@@ -3184,6 +3514,28 @@
       "source_ref": "Prior revision109 summary arithmetic says14; actual seven1-case suites +TASK0213 +TASK0224 +TASK0251 =15reportedPASS cases across10suites, all zero skip. Original JSON/XML and old observation retained; report40 corrected before commit. No execution or result change.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T07:00:36.558205+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "P1 draft initial CI observation",
+      "code_commit": "53e5471fd0b769ae115ab4825e81816bd88c6ee8",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "PENDING",
+      "source_ref": "Actual gh pr view184 statusCheckRollup: CI37427146618 Dependency audit/Lint/Browser tests/Test/Build allIN_PROGRESS; https://github.com/crazysumsum/erp-app/actions/runs/37427146618",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:02:22.158776+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Historical initial P1 draft CI registry failure",
+      "code_commit": "53e5471fd0b769ae115ab4825e81816bd88c6ee8",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "24f31c942eda490e0ee1ce0b08cd85bab509c3e988ff7a5030d203335b81bc23",
+      "status": "FAIL",
+      "source_ref": "Actual CI37427146618: audit/lint/build/browserPASS, TestFAIL exact serviceContainer expected-registry missing2Salesentries. Actual gh failed log confirms serviceContainer.test.js146 diff; approved c6254b01 now applied, newcandidate/currentCI required. Oldfailure retained; no green result inferred.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T07:13:55.608890+00:00"
     }
   ],
   "pending_decisions": [
@@ -3408,8 +3760,8 @@
         "NFR-014",
         "NFR-015"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment. DEC018 original canonical82cef6e2 unapplied superseded by consolidated72490c58; original record/proposal preserved."
     },
     {
       "id": "DEC-019",
@@ -3426,8 +3778,8 @@
         "NFR-014",
         "NFR-015"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual current Codex chat 2026-10-06 Sam「同意」in direct response to recommendation DEC019+018: Sales MySQL26.7.0 explicit support and exact registry correction, packet41/canonical72490c58/registryc6254b01; adopts newD9002b250/P89b5896b, supplementalREADME/testscope and unchangedUATNA/newhistory-preserving bindings plus narrowly bounded mechanical maintenance from combined proposal. Existing commit/PR/mainmerge/owned runtime authority persists. Does not authorize later material change, weaken checks, production upgrade or deployment. DEC018 original canonical82cef6e2 unapplied superseded by consolidated72490c58; original record/proposal preserved."
     }
   ],
   "external_actions": [
@@ -3796,8 +4148,32 @@
       "kind": "PUSH",
       "target": "origin/codex/sales-order-phase-1-draft reviewable draft only, pending DEC018/019; no merge candidate",
       "idempotency_key": "sales-p1-reviewable-draft-push-20261006",
-      "status": "PLANNED",
-      "source_ref": "Existing Sam commit/PR authorization retained. No P1 remote PR observed via gh head query; save reviewed implementation and honest pending decisions, no raw evidence/runtime/secrets publication."
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push -u created origin/codex/sales-order-phase-1-draft HEAD53e5471fd0b769ae115ab4825e81816bd88c6ee8; no merge. Pending decisions unchanged; no raw evidence publication."
+    },
+    {
+      "id": "PR-SALES-P1-DRAFT-20261006",
+      "kind": "PR_CREATE",
+      "target": "crazysumsum/erp-app main<-codex/sales-order-phase-1-draft draft",
+      "idempotency_key": "sales-p1-draft-pr-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr create/view: https://github.com/crazysumsum/erp-app/pull/184 OPEN isDrafttrue HEAD53e5471fd0b769ae115ab4825e81816bd88c6ee8 base7717702; attached through Codex artifact tool. Actual CI37427146618 all5IN_PROGRESS; no currentCI PASS or merge."
+    },
+    {
+      "id": "STOP-SALES-P1-PRIMARY-PENDING-DECISION-20261006",
+      "kind": "OTHER",
+      "target": "Verified owned MySQL26.7.0 primary pid3466/socket/private/tmp/sales-p1-private/mysql-primary",
+      "idempotency_key": "sales-p1-owned-primary-stop-pending-decision-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual mysqladmin shutdown returned0 after actual SQL version/datadir/socket/pidfile ownership verification; socket absent, private data retained. Retrospective entry: attempted pre-action recovery/ledger preparation failed because sandbox forbade ps; subsequent stop still executed under prior verified ownership. No fictitious STARTED record created. Exact restart argv saved privately, runtime runningfalse. No unrelated DB affected."
+    },
+    {
+      "id": "RESTART-SALES-P1-DEC019-CHECKS-20261006",
+      "kind": "RUNTIME_CREATE",
+      "target": "Verified owned primary and dedicated Inventory26.7 datadirs in private runtime records; fresh synthetic per-suite schemas/socket guards",
+      "idempotency_key": "sales-p1-dec019-owned-restart-checks-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual private prepare_dec019_runtimes.py verified VERSION26.7.0/datadir/socket for5owned restarts, created10fresh Inventoryguarded schemas, originalmigrator applied025 successfully; bindings/private migrationlog retained. Primarypid59095; otherexactPIDs/socket/port/schema privatelyrecorded. No unrelated DB."
     }
   ],
   "evidence_files": [
@@ -3859,5 +4235,5 @@
     "evidence/20261006T064255-816810f42270/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Await actual Sam DEC019+018 combined choice (packet41); before approval apply neither patch. Reviewable draft PR may be published under existing authority, with currentCI/review/23typeddeveloper gates pending. On actual approval apply exact reviewed patches, append fresh D/P/scope/UATNA bindings preserving history, rerun23mandatory checks/currentreview/freshmain/currentCI before authorized merge."
+  "next_safe_action": "Actual DEC019+018 approved and exact patches applied; restore verified owned26.7 runtime, execute23mandatory DEVELOPER suites with fresh per-Inventory schemas/exact socket guards, independent final review and freshmain integration/currentCI; mark Phase DoD only when all gates observed then authorized merge and safe cleanup."
 }

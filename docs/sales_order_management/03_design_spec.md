@@ -11,7 +11,7 @@
 | 建立日期 | 2026-09-08 |
 | 依據 | `docs/sales_order_management/01_requirement_spec.md` |
 | UI／UX 基準 | `docs/frontend-design.md` |
-| 目標技術棧 | Node.js 26、Express 5、MySQL 5.7+、Vue 3、Quasar 2 |
+| 目標技術棧 | Node.js 26、Express 5、MySQL 26.7.0、Vue 3、Quasar 2 |
 
 ### 0.1 文件目的
 
@@ -107,7 +107,7 @@
 - 寫入使用 `MySqlDatabaseService.withTransaction()`；金額及 quantity 不使用 JavaScript 浮點數運算。
 - API 成功信封為 `{ success, data, meta }`，錯誤為 `{ success:false, error, meta }`。
 - 前端使用 Vue 3 Composition API、Quasar、auto-discovered pages、`HttpClient`、`DataTable`、`FormPanel`、`PageHeader` 及 `notify`。
-- MySQL 最低 5.7；不能依賴 MySQL 8 專有功能、partial indexes 或 enforced CHECK constraints。
+- Sales 支援及驗證基準為 MySQL 26.7.0，與專案 CI 固定版本一致；不承諾 MySQL 5.7 相容性。可使用 enforced CHECK 作為資料庫第二層保護，但所有 Service 仍須驗證輸入及業務不變量；不使用 partial indexes。
 - 現有 Upload Framework 是完整檔案記憶體緩衝後再落盤，預設單檔 10 MB；這不能滿足本模組 50 MB 且 memory-bounded 的要求。必要的 framework 變更是 §9.1 的 opt-in disk-stream mode 及 Sales replay fresh-authorization preflight，既有 routes 繼續使用 `memory` mode且行為不變。
 - 現有已落地 Migration 最後序號可能在開發前改變；Sales Migration 實作時按目標分支下一個連續可用序號命名，本文件不用固定號碼搶佔序號。
 
@@ -584,7 +584,7 @@ Provider unavailable 回 `UNKNOWN`，不得當作 `CLOSED`。Fulfillment 是 req
 - Primary key：`BIGINT UNSIGNED AUTO_INCREMENT`；API 只接受 positive safe integer。
 - Timestamp：`BIGINT UNSIGNED` epoch milliseconds；Business Date：`DATE`。
 - Money：`DECIMAL(19,4)`；輸入 quantity：`DECIMAL(20,6)`；Inventory Base Quantity：`BIGINT UNSIGNED`。
-- Boolean：`TINYINT(1)`，由 Service 限定 0／1。MySQL 5.7 CHECK 不視作唯一保護。
+- Boolean：`TINYINT(1)`，由 Service 限定 0／1。Enforced CHECK 不視作唯一保護。
 - 可變 row 有 `version INT UNSIGNED NOT NULL DEFAULT 1`，更新使用 `WHERE id=? AND version=?` 並 `version=version+1`。
 - Snapshot 文字 `NOT NULL`，沒有值用空字串；正式 snapshot 不以 `NULL` 表示「之後再取主檔」。
 - Active tables 對 Customer、Item、Warehouse 等使用 FK `ON DELETE RESTRICT`；Archive Tables 不依賴會變動的 master FK，只保存原 ID 及 snapshot。
@@ -1073,7 +1073,7 @@ sales_orders_archive 1 ── * archive child tables
 
 Archive Tables 使用 Active 表的原始 ID 作 PK，另加 `archive_batch_id`、`archived_at` 及 `row_hash`。不 `AUTO_INCREMENT`、不對 active master 建 FK、所有 enum／decimal／snapshot 欄位型別與 Active 相同。
 
-第一階段不使用 table partitioning：MySQL 5.7 對 partitioned InnoDB及foreign key有實質限制，而本設計要保留 Archive Aggregate的FK完整性。以Active／Archive物理分表、bounded date filters及covering indexes達標；只有production-like explain／load test證明不達門檻時才另開schema review，不預先移除FK或加第二套storage。Archive Job也不自動執行 `OPTIMIZE TABLE`，避免長時間metadata lock。
+第一階段不使用 table partitioning：本設計要保留 Archive Aggregate的FK完整性。以Active／Archive物理分表、bounded date filters及covering indexes達標；只有production-like explain／load test證明不達門檻時才另開schema review，不預先移除FK或加第二套storage。Archive Job也不自動執行 `OPTIMIZE TABLE`，避免長時間metadata lock。
 
 #### 4.20.1 `sales_orders_archive`
 
