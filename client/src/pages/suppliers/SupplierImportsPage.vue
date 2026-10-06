@@ -65,6 +65,10 @@ let pollTimer = null;
 let latestRowsRequest = null;
 // 只接受正整數嘅 `?job=`：舊連結或者手改嘅 URL 唔好開一個 #NaN 嘅空 dialog（REV-073 L-3）。
 const JOB_ID = /^[1-9]\d{0,15}$/u;
+// 行號：伺服器只收 1 至 1,000,000 嘅整數；其他值唔送出去，喺欄位度講（REV-074 L-4）。
+const MAX_ROW_NUMBER = 1_000_000;
+const validRowNumber = (value) => Number.isInteger(value) && value >= 1 && value <= MAX_ROW_NUMBER;
+const rowNumberRules = [(value) => value === null || value === "" || validRowNumber(value) || "行號須為 1 至 1,000,000 的整數"];
 
 const columns = [
   { name: "id", label: "工作編號", field: "id", align: "left" },
@@ -93,18 +97,20 @@ function fetchJobs({ page, rowsPerPage }) {
 }
 function fetchRows({ page, rowsPerPage }) {
   const request = supplierImportService.getJob(detailId.value, {
-    page, rowsPerPage, rowStatus: rowStatus.value, rowNumber: rowNumber.value || undefined, signal
+    page, rowsPerPage, rowStatus: rowStatus.value, rowNumber: validRowNumber(rowNumber.value) ? rowNumber.value : undefined, signal
   });
   latestRowsRequest = request;
-  // 最後發出嗰個請求先算：打字或者輪詢令舊回應遲到嗰陣，改用最新嗰個，唔好顯示另一行（REV-073 L-2）。
-  return request.then(() => latestRowsRequest).then((result) => {
+  // 最後發出嗰個請求先算：打字或者輪詢令舊回應（成功或者失敗）遲到嗰陣，都改用最新嗰個，唔好顯示另一行或者
+  // 一個已經過時嘅錯誤（REV-073 L-2、REV-074 L-1）。
+  const latest = () => latestRowsRequest;
+  return request.then(latest, latest).then((result) => {
     job.value = result.job;
     if (POLLABLE.has(result.job.status) && pollTimer === null) pollTimer = setInterval(() => detailTable.value?.reload(), 2000);
     if (!POLLABLE.has(result.job.status)) stopPolling();
     return { rows: result.rows, rowsNumber: result.rowsNumber };
   }).catch((error) => {
-    // 唔係自己嘅 job、或者唔存在（例如 URL 舊咗）：關返個詳情。
-    if (error?.status === 404) { notifyError("找不到這個匯入工作"); showDetail.value = false; }
+    // 唔係自己嘅 job、或者唔存在（例如 URL 舊咗）：關返個詳情。舊請求都會收到最新嗰個錯誤，只通知一次（REV-074 I-2）。
+    if (error?.status === 404 && request === latestRowsRequest) { notifyError("找不到這個匯入工作"); showDetail.value = false; }
     throw error;
   });
 }
@@ -128,7 +134,10 @@ function closeDetail() {
   router.replace({ query: rest });
   table.value?.reload();
 }
-function reloadRows() { detailTable.value?.reload(); }
+function reloadRows() {
+  if (rowNumber.value !== null && rowNumber.value !== "" && !validRowNumber(rowNumber.value)) return;
+  detailTable.value?.reload();
+}
 function formatDate(value) { return new Date(value).toLocaleString("zh-HK", { timeZone: "Asia/Hong_Kong" }); }
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -213,7 +222,8 @@ async function downloadResult() {
 onMounted(() => {
   void loadApprovalContext();
   const requested = route.query.job;
-  if (typeof requested === "string" && JOB_ID.test(requested)) openDetail(requested);
+  // 16 位數都可能超過 Number 嘅安全範圍，要再驗（REV-074 L-3）。
+  if (typeof requested === "string" && JOB_ID.test(requested) && Number.isSafeInteger(Number(requested))) openDetail(requested);
   else if (requested !== undefined) {
     const { job: _, ...rest } = route.query;
     router.replace({ query: rest });
@@ -309,6 +319,7 @@ onUnmounted(stopPolling);
             <q-select v-model="rowStatus" dense outlined emit-value map-options :options="rowStatusOptions" label="列狀態" style="width: 150px"
               @update:model-value="reloadRows" />
             <q-input v-model.number="rowNumber" dense outlined type="number" min="1" label="行號" style="width: 120px" clearable
+              :rules="rowNumberRules" hide-bottom-space
               debounce="300" @update:model-value="reloadRows" />
           </div>
           <DataTable v-show="job" ref="detailTable" :fetch="fetchRows" :columns="rowColumns" row-key="rowNumber">

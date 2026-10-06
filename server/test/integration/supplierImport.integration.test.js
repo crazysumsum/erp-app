@@ -1350,11 +1350,16 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
   const outsider = await makeUser("rx", ["supplier.mgmt"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const existing = await seedSupplier({ code: `RU-${tag}`, name: `Result Update ${tag}` });
+  const idTarget = await seedSupplier({ code: `RE-${tag}`, name: `Result ID Target ${tag}` });
+  await seedSupplier({ code: `RD-${tag}`, name: `Result Other Code ${tag}` });
   const { id, version } = await readyJob(owner, [
     { supplierCode: `R1-${tag}`, supplierName: `Result One ${tag}`, defaultCurrencyCode: "HKD" },
     { supplierCode: `R2-${tag}`, supplierName: `Result Two ${tag}` },
-    { supplierCode: `RU-${tag}`, notes: "updated by import" },
-    { supplierId: "999999999", supplierCode: `RX-${tag}`, notes: "no such Supplier" }
+    // 細楷：配對唔分大細楷；已寫入嘅列要顯示儲存嘅 Code（REV-074 I-1）。
+    { supplierCode: `ru-${tag}`, notes: "updated by import" },
+    { supplierId: "999999999", supplierCode: `RX-${tag}`, notes: "no such Supplier" },
+    // ID 指住 RE，Code 寫 RD：衝突。結果要顯示用家寫嘅 RD（REV-073 I-3 嘅「CSV Code 優先」，REV-074 L-5）。
+    { supplierId: String(idTarget), supplierCode: `RD-${tag}`, notes: "conflict" }
   ], { mode: "upsert" });
   const notYet = await downloadResult(owner, id);
   assert.deepEqual([notYet.status, notYet.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a ready job has no result yet");
@@ -1377,7 +1382,8 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
     ["2", "create", "skipped", `R2-${tag}`, "", "SUPPLIER_IMPORT_REQUIRED_FIELD"],
     ["3", "update", "applied", `RU-${tag}`, String(existing), ""],
     // REV-073 I-3：ID 搵唔到嘅更新列，都用 CSV 寫嘅 Code 認返。
-    ["4", "update", "skipped", `RX-${tag}`, "", "SUPPLIER_NOT_FOUND"]
+    ["4", "update", "skipped", `RX-${tag}`, "", "SUPPLIER_NOT_FOUND"],
+    ["5", "update", "skipped", `RD-${tag}`, "", "SUPPLIER_IMPORT_MATCH_CONFLICT"]
   ]);
   const text = result.bytes.toString("utf8");
   assert.equal(text.includes("updated by import") || text.includes(`Result One ${tag}`), false, "no payload beyond the Code");
@@ -1390,7 +1396,7 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
   const expired = await downloadResult(owner, id);
   assert.deepEqual([expired.status, expired.body?.error?.code], [410, "IMPORT_FILE_EXPIRED"]);
   const after = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
-  assert.deepEqual([after.status, after.data.job.filesPurged, after.data.total], [200, true, 4]);
+  assert.deepEqual([after.status, after.data.job.filesPurged, after.data.total], [200, true, 5]);
 });
 
 integrationTest("TASK-046 (HD-063 2A): a job that failed after it started running still has a result; one that never ran does not", async () => {

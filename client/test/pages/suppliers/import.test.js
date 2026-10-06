@@ -153,7 +153,7 @@ describe("supplier import page (T46)", () => {
   });
 
   it("REV-073 L-3: a malformed ?job= opens nothing and is dropped from the URL", async () => {
-    for (const job of ["abc", "0", "-1", "1.5", "7x"]) {
+    for (const job of ["abc", "0", "-1", "1.5", "7x", "9007199254740992", "9999999999999999"]) {
       let router;
       ({ wrapper, router } = await mountPage({ job }));
       expect(supplierImportService.getJob).not.toHaveBeenCalled();
@@ -178,5 +178,47 @@ describe("supplier import page (T46)", () => {
     const fromOlder = await older;
     expect(fromNewer.rows.map((row) => row.rowNumber)).toEqual([12]);
     expect(fromOlder.rows.map((row) => row.rowNumber)).toEqual([12]);
+  });
+
+  it("REV-074 L-1/I-2: a late failure of an older request neither blanks the newer rows nor repeats a notice", async () => {
+    ({ wrapper } = await mountPage({ job: "7" }));
+    let failOld;
+    supplierImportService.getJob
+      .mockImplementationOnce(() => new Promise((_, reject) => { failOld = () => reject(Object.assign(new Error("網路錯誤"), { code: "NETWORK_ERROR" })); }))
+      .mockResolvedValueOnce({ job: JOB, rows: [{ rowNumber: 12, operation: "create", status: "valid", errors: [], warnings: [] }], rowsNumber: 1 });
+    const vm = wrapper.findComponent(SupplierImportsPage).vm;
+    const older = vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 });
+    const newer = vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 });
+    expect((await newer).rows.map((row) => row.rowNumber)).toEqual([12]);
+    failOld();
+    expect((await older).rows.map((row) => row.rowNumber)).toEqual([12]);
+
+    const gone = Object.assign(new Error("not found"), { status: 404 });
+    let releaseOld;
+    supplierImportService.getJob
+      .mockImplementationOnce(() => new Promise((resolve) => { releaseOld = () => resolve({ job: JOB, rows: [], rowsNumber: 0 }); }))
+      .mockRejectedValueOnce(gone);
+    const pending = vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 }).catch((error) => error);
+    const latest = vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 }).catch((error) => error);
+    expect(await latest).toBe(gone);
+    releaseOld();
+    expect(await pending).toBe(gone);
+    expect(notifyError.mock.calls.filter(([message]) => message === "找不到這個匯入工作")).toHaveLength(1);
+  });
+
+  it("REV-074 L-4: a row number the server would refuse is never sent", async () => {
+    ({ wrapper } = await mountPage({ job: "7" }));
+    const vm = wrapper.findComponent(SupplierImportsPage).vm;
+    for (const value of [-1, 1.5, 0, 2_000_000]) {
+      supplierImportService.getJob.mockClear();
+      vm.$.setupState.rowNumber = value;
+      vm.$.setupState.reloadRows();
+      await vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 });
+      await flushPromises();
+      expect(supplierImportService.getJob.mock.calls.every(([, options]) => options.rowNumber === undefined), String(value)).toBe(true);
+    }
+    vm.$.setupState.rowNumber = 1_000_000;
+    await vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 });
+    expect(supplierImportService.getJob).toHaveBeenLastCalledWith(7, expect.objectContaining({ rowNumber: 1_000_000 }));
   });
 });
