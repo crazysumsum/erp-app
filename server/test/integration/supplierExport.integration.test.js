@@ -236,6 +236,12 @@ integrationTest("TASK-047 (HD-067 1A): password, permission and the 10,000-row c
   const anonymous = await fetch(`${h.url}/api/v1/supplier-exports`, { method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ password: PASSWORD }) });
   assert.equal(anonymous.status, 401);
+  // 權限喺 token 發出之後被收回：token 仲話有 supplier.mgmt，但 service 讀資料庫就知（fresh-actor check）。
+  const revoked = await makeUser("rev", ["supplier.mgmt"]);
+  await h.db.execute("DELETE FROM role_permissions WHERE role_id = (SELECT role_id FROM user_roles WHERE user_id = ?)", [revoked.userId]);
+  const stale = await exportCsv(revoked, { password: PASSWORD, filters: { q: tag } });
+  assert.deepEqual([stale.status, stale.code], [403, "PERMISSION_STALE"]);
+  assert.equal((await exportAudits(revoked.userId)).length, 0);
   const unknownFilter = await exportCsv(manager, { password: PASSWORD, filters: { page: 2 } });
   assert.equal(unknownFilter.status, 400, "paging is not a filter");
   assert.equal((await exportAudits(manager.userId)).length, 0, "a refused export leaves no audit");
