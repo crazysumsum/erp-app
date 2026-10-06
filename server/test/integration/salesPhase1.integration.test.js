@@ -161,6 +161,17 @@ integrationTest("TC-011/012 Quotation HTTP contracts preserve decimal types and 
   assert.equal(converted.status, 201, JSON.stringify(converted.data));
   assert.equal(converted.data.data.salesOrder.status, "DRAFT");
   assert.deepEqual((await request(conversionPath, conversionInput, conversionKey)).data.data.salesOrder, converted.data.data.salesOrder);
+  const detail = await request(`/api/v1/sales-quotations/${created.data.data.quotation.id}`);
+  assert.equal(detail.status, 200, JSON.stringify(detail.data));
+  assert.deepEqual(detail.data.data.allowedActions, ["print"]);
+  assert.equal(detail.data.data.conversion.salesOrderId, converted.data.data.salesOrder.id);
+  assert.equal(detail.data.data.conversion.salesOrderNumber, converted.data.data.salesOrder.number);
+  assert.deepEqual(detail.data.data.conversion.differenceSummary, converted.data.data.differenceSummary);
+  const listed = await request(`/api/v1/sales-quotations?customerId=${f.customerId}&page=1&pageSize=1&descending=false&status=CONVERTED`);
+  assert.equal(listed.status, 200, JSON.stringify(listed.data));
+  assert.equal(listed.data.data.total, 1);assert.equal(listed.data.data.items[0].id, detail.data.data.id);
+  for (const query of ["pageSize=101", "sortBy=number%3BDROP", "unexpected=1", "validUntilFrom=2026-02-30"])
+    assert.equal((await request(`/api/v1/sales-quotations?${query}`)).status, 400);
   await f.db.execute("UPDATE users SET status='inactive' WHERE id=?", [f.userId]);
   assert.equal((await request(conversionPath, conversionInput, conversionKey)).status, 403);
   assert.equal((await request("/api/v1/sales-quotations/create", input, key)).status, 403);
@@ -292,4 +303,29 @@ integrationTest("TC-015 Existing conversion replays in an exhausted period witho
     await f.quotation.issue({ claims: f.claims, id: newQuote.quotation.id, input: { eventId: randomUUID(), version: 1 } });
     await assert.rejects(() => f.quotation.convert({ claims: f.claims, id: newQuote.quotation.id, input: request() }), { code: "SALES_SEQUENCE_EXHAUSTED" });
   } finally { await f.db.execute("UPDATE sales_document_sequences SET next_value=? WHERE document_type='SALES_ORDER' AND period_key=?", [before, period]); }
+});
+integrationTest("TC-011/018 Quotation query pagination/effective status and fresh view permissions are consistent", async t => {
+  const f = await setup(t), created = await f.quotation.create({ claims: f.claims, input: f.input() });
+  const expired = await f.quotation.create({ claims: f.claims, input: { ...f.input(), quotationDate: "2000-01-01", validUntil: "2000-01-02" } });
+  await f.db.execute("UPDATE sales_quotations SET status='ISSUED' WHERE id=?", [expired.quotation.id]);
+  const result = await f.quotation.list({ claims: f.claims, input: { customerId: f.customerId, page: 1, pageSize: 1, sortBy: "number", descending: false } });
+  assert.equal(result.items.length, 1); assert.equal(result.total, 2);
+  const filtered = await f.quotation.list({ claims: f.claims, input: { customerId: f.customerId, status: ["EXPIRED"] } });
+  assert.equal(filtered.total, 1);assert.equal(filtered.items[0].status, "EXPIRED");assert.equal(filtered.items[0].id, expired.quotation.id);
+  const detail = await f.quotation.get({ claims: f.claims, id: created.quotation.id });
+  assert.deepEqual(detail.allowedActions, ["edit", "issue", "cancel"]);assert.equal(detail.conversion, null);assert.equal(detail.lines[0].unitSellingPrice, "3.3333");
+  for (const input of [{ sortBy: "id; DROP TABLE sales_quotations" }, { page: 0 }, { pageSize: 101 }, { status: ["UNKNOWN"] }, { quotationDateFrom: "2026-02-30" }])
+    await assert.rejects(() => f.quotation.list({ claims: f.claims, input }), error => ["SALES_INPUT_INVALID", "SALES_DATE_INVALID"].includes(error.code));
+  await f.db.execute("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id WHERE rp.role_id=? AND p.name='sales.mgmt'", [f.roleId]);
+  const viewer = { ...f.claims, claimedPermissions: ["sales.view"] };
+  assert.deepEqual((await f.quotation.get({ claims: viewer, id: created.quotation.id })).allowedActions, []);
+  assert.deepEqual((await f.quotation.get({ claims: viewer, id: expired.quotation.id })).allowedActions, ["print"]);
+  assert.equal((await f.quotation.list({ claims: viewer, input: { customerId: f.customerId } })).total, 2);
+  assert.equal((await f.quotation.list({ claims: viewer, input: { customerId: f.customerId, q: "%" } })).total, 0);
+  const secondPage = await f.quotation.list({ claims: viewer, input: { customerId: f.customerId, page: 2, pageSize: 1, sortBy: "number", descending: false } });
+  assert.notEqual(secondPage.items[0].id, result.items[0].id);
+  assert.equal((await f.quotation.list({ claims: viewer, input: { customerId: f.customerId, validUntilTo: "2000-01-02" } })).total, 1);
+  await assert.rejects(() => f.quotation.create({ claims: viewer, input: f.input() }), { code: "FORBIDDEN" });
+  await f.db.execute("DELETE FROM role_permissions WHERE role_id=?", [f.roleId]);
+  await assert.rejects(() => f.quotation.get({ claims: viewer, id: created.quotation.id }), { code: "PERMISSION_STALE" });
 });

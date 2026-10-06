@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 85,
+  "revision": 86,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-018",
+  "current_task": "TASK-019",
   "baseline": {
     "design": "06115a6e665375a3c2178ad707ced603ecddc9fd8fee4b523c9e887b2a62a885",
     "plan": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
-    "code_commit": "1474a9f0a806749be54e7d4e85f9aa2771cfea1f",
-    "source_fingerprint": "0b11b9d1aa5f6bf7901cde1d2c908629ec1a80005d2d97b387faa2f3697aea35",
+    "code_commit": "95a16156ac47362670522f8dc149c8d9d079bda0",
+    "source_fingerprint": "2f5666215c5c66600397e66753973db448a54602cec94c2e35c05f16b67c5c9a",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -45,7 +45,8 @@
     "TASK-015": "DONE",
     "TASK-016": "DONE",
     "TASK-017": "DONE",
-    "TASK-018": "IN_PROGRESS"
+    "TASK-018": "DONE",
+    "TASK-019": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1498,6 +1499,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK018-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "2f5666215c5c66600397e66753973db448a54602cec94c2e35c05f16b67c5c9a",
+      "source_ref": "Actual independent APPROVE TASK018 fingerprint2f5666215c5c66600397e66753973db448a54602cec94c2e35c05f16b67c5c9a; independently13unitPASS/client3PASS/focusedlintPASS; native16/server2175/build inspected, noSQL/browser executed by reviewer. Not wholePhase/mergeapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2567,6 +2580,17 @@
       "source_ref": "Private actual task017-review-green.log15nativePASS0skip, final-unit10PASS, reviewed-final-regression2172PASS0FAIL440optinskips/lintPASS; report28. OriginalmissingmethodsRED4fail+1cancelled/PS protocol/nullproviderfail/reviewerRED2fail retained. Alllaternativecompletednormally. Noformal/fullPhasePASS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T03:23:47.707588+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK018 API/client developer verification and recovery",
+      "code_commit": "95a16156ac47362670522f8dc149c8d9d079bda0",
+      "spec_baseline": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "source_fingerprint": "2f5666215c5c66600397e66753973db448a54602cec94c2e35c05f16b67c5c9a",
+      "status": "PASS",
+      "source_ref": "Actual native16PASS0FAIL0SKIP, unit3PASS, client3PASS/full694PASS, server2175PASS0FAIL441optinSKIP, buildPASS. Browser actualPlaywright1PASS0mock/noJSerror/nofailedrequest; owned app/Vite closed and fixture cleaned. Initial native missinglist RED and HTTPquery adapter failure preserved; sandbox EPERM fullserver retained and corrected by authorized localhost run. Raw logs private task018-*.log, not typed mandatory Phase evidence. Review actual /root/sales_p1_review APPROVE at same source. FullPhase gates remain pending.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T03:34:18.549959+00:00"
     }
   ],
   "pending_decisions": [
@@ -3164,5 +3188,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit reviewed TASK017 lifecycle/conversion slice; implement TASK018 Quotation list/detail/query policies and existing HttpClient Sales client contracts. P1 fullgates remainpending, finalruntimefreshschema required beforePhasevalidation."
+  "next_safe_action": "Commit reviewed TASK018 query/client slice; implement TASK019 Quotation form/create/edit/conversion differences within approved scope, real browser verification against owned synthetic runtime. FullP1 23suite/currentCI/freshmain merge gates pending."
 }

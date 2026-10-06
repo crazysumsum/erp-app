@@ -7,12 +7,39 @@ import { BusinessMasterRepository } from "../businessMaster/BusinessMasterReposi
 import { SalesSequenceService } from "./SalesSequenceService.js";
 import { SalesOperationService } from "./SalesOperationService.js";
 import { SalesAuditService } from "./SalesAuditService.js";
-import { requireSalesWriteActor } from "./salesAuthorization.js";
-import { validateSalesDocument, salesEventId, salesReason } from "./salesValidation.js";
-import { assertQuotationEditable, transitionQuotation } from "./salesQuotationStateMachine.js";
+import { requireSalesActor, requireSalesWriteActor } from "./salesAuthorization.js";
+import { validateSalesDocument, salesEventId, salesReason, salesDate } from "./salesValidation.js";
+import { assertQuotationEditable, transitionQuotation, effectiveQuotationStatus } from "./salesQuotationStateMachine.js";
 import { documentTotal, lineAmount, normalizeMoney } from "./salesMoneyMath.js";
 import { orderedBaseQuantity } from "./salesQuantityMath.js";
 import { salesError } from "./salesErrors.js";
+
+const quotationSort = { number: "quotation_number", customerCode: "customer_code_snapshot", customerName: "customer_name_snapshot",
+  quotationDate: "quotation_date", validUntil: "valid_until", totalAmount: "total_amount", updatedAt: "updated_at", status: "effective_status" };
+const quotationStatuses = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED"];
+export function validateQuotationQuery(input = {}) {
+  const fields = ["page", "pageSize", "q", "number", "customerId", "status", "quotationDateFrom", "quotationDateTo", "validUntilFrom", "validUntilTo", "sortBy", "descending"];
+  if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some(key => !fields.includes(key))) throw salesError("SALES_INPUT_INVALID");
+  const query = { ...input, page: input.page ?? 1, pageSize: input.pageSize ?? 20, sortBy: input.sortBy ?? "updatedAt", descending: input.descending ?? true };
+  if (!Number.isSafeInteger(query.page) || query.page < 1 || !Number.isSafeInteger(query.pageSize) || query.pageSize < 1 || query.pageSize > 100 ||
+      !Number.isSafeInteger((query.page - 1) * query.pageSize) || !Object.hasOwn(quotationSort, query.sortBy) || typeof query.descending !== "boolean") throw salesError("SALES_INPUT_INVALID");
+  if (query.customerId !== undefined && (!Number.isSafeInteger(query.customerId) || query.customerId < 1)) throw salesError("SALES_INPUT_INVALID", { field: "customerId" });
+  for (const field of ["q", "number"]) if (query[field] !== undefined && (typeof query[field] !== "string" || query[field].length > 190)) throw salesError("SALES_INPUT_INVALID", { field });
+  if (query.status !== undefined) {
+    query.status = Array.isArray(query.status) ? query.status : [query.status];
+    if (!query.status.length || query.status.length > quotationStatuses.length || query.status.some(status => !quotationStatuses.includes(status))) throw salesError("SALES_INPUT_INVALID", { field: "status" });
+  }
+  for (const prefix of ["quotationDate", "validUntil"]) {
+    for (const suffix of ["From", "To"]) if (query[prefix + suffix] !== undefined) salesDate(query[prefix + suffix], prefix + suffix);
+    if (query[prefix + "From"] && query[prefix + "To"] && query[prefix + "From"] > query[prefix + "To"]) throw salesError("SALES_INPUT_INVALID", { field: prefix });
+  }
+  return query;
+}
+export function toQuotationSummary(row) {
+  return { id: Number(row.id), number: row.quotation_number, status: row.effective_status, version: Number(row.version), customerId: Number(row.customer_id),
+    customerCode: row.customer_code_snapshot, customerName: row.customer_name_snapshot, currencyCode: row.currency_code, quotationDate: row.quotation_date,
+    validUntil: row.valid_until, lineCount: Number(row.line_count), totalAmount: String(row.total_amount), createdAt: Number(row.created_at), updatedAt: Number(row.updated_at) };
+}
 
 export function toQuotationDetail(row, lines) {
   return { id: Number(row.id), number: row.quotation_number, status: row.status, version: Number(row.version),
@@ -69,6 +96,48 @@ export class SalesQuotationService {
   create(request) { return this.#save(request, false); }
   update(request) { return this.#save(request, true); }
 
+  async get({ claims, id }) {
+    if (!Number.isSafeInteger(id) || id < 1) throw salesError("SALES_INPUT_INVALID", { field: "id" });
+    return this.database.withTransaction(async tx => {
+      const actor = await requireSalesActor(tx, claims, "sales.view");
+      const detail = await this.#detail(tx, id, false), conversion = await this.#conversion(tx, id, false);
+      detail.status = effectiveQuotationStatus(detail.status, detail.validUntil, formatDateForFile(this.time.at(this.time.nowMs()), "Asia/Hong_Kong"));
+      const management = actor.permissions.includes("sales.mgmt");
+      const allowedActions = detail.status === "DRAFT" ? management ? ["edit", "issue", "cancel"] : [] :
+        detail.status === "ISSUED" ? management ? ["print", "convert", "cancel"] : ["print"] :
+          ["EXPIRED", "CONVERTED"].includes(detail.status) ? ["print"] : [];
+      return { ...detail, allowedActions, conversion: conversion ? { salesOrderId: conversion.salesOrder.id,
+        salesOrderNumber: conversion.salesOrder.number, differenceSummary: conversion.differenceSummary } : null };
+    });
+  }
+  async list({ claims, input = {} }) {
+    const query = validateQuotationQuery(input);
+    return this.database.withTransaction(async tx => {
+      await requireSalesActor(tx, claims, "sales.view");
+      const today = formatDateForFile(this.time.at(this.time.nowMs()), "Asia/Hong_Kong");
+      const effective = "CASE WHEN status='ISSUED' AND valid_until < ? THEN 'EXPIRED' ELSE status END";
+      const clauses = [], values = [];
+      if (query.customerId !== undefined) { clauses.push("customer_id=?"); values.push(query.customerId); }
+      if (query.number) { clauses.push("quotation_number=?"); values.push(query.number); }
+      if (query.q) {
+        const pattern = `%${query.q.replace(/[!%_]/gu, match => `!${match}`)}%`;
+        clauses.push("(quotation_number LIKE ? ESCAPE '!' OR customer_code_snapshot LIKE ? ESCAPE '!' OR customer_name_snapshot LIKE ? ESCAPE '!')");
+        values.push(pattern, pattern, pattern);
+      }
+      if (query.status) { clauses.push(`${effective} IN (${query.status.map(() => "?").join(",")})`); values.push(today, ...query.status); }
+      for (const [prefix, column] of [["quotationDate", "quotation_date"], ["validUntil", "valid_until"]]) for (const [suffix, operator] of [["From", ">="], ["To", "<="]]) {
+        if (query[prefix + suffix] !== undefined) { clauses.push(`${column}${operator}?`); values.push(query[prefix + suffix]); }
+      }
+      const where = clauses.length ? ` WHERE ${clauses.join(" AND ")}` : "";
+      const [[count]] = await tx.query(`SELECT COUNT(*) AS total FROM sales_quotations${where}`, values);
+      const [rows] = await tx.query(`SELECT id,quotation_number,${effective} AS effective_status,version,customer_id,customer_code_snapshot,customer_name_snapshot,
+        currency_code,DATE_FORMAT(quotation_date,'%Y-%m-%d') AS quotation_date,DATE_FORMAT(valid_until,'%Y-%m-%d') AS valid_until,line_count,total_amount,created_at,updated_at
+        FROM sales_quotations${where} ORDER BY ${quotationSort[query.sortBy]} ${query.descending ? "DESC" : "ASC"},id ${query.descending ? "DESC" : "ASC"} LIMIT ? OFFSET ?`,
+      [today, ...values, query.pageSize, (query.page - 1) * query.pageSize]);
+      return { items: rows.map(toQuotationSummary), total: Number(count.total), page: query.page, pageSize: query.pageSize };
+    });
+  }
+
   issue(request) { return this.#transition(request, "ISSUE"); }
   cancel(request) { return this.#transition(request, "CANCEL"); }
 
@@ -111,10 +180,10 @@ export class SalesQuotationService {
     });
   }
 
-  async #conversion(tx, id) {
-    const [[row]] = await tx.query(`SELECT sales_order_id,sales_order_number_snapshot,difference_summary FROM sales_quotation_conversions WHERE quotation_id=? FOR UPDATE`, [id]);
+  async #conversion(tx, id, lock = true) {
+    const [[row]] = await tx.query(`SELECT sales_order_id,sales_order_number_snapshot,difference_summary FROM sales_quotation_conversions WHERE quotation_id=?${lock ? " FOR UPDATE" : ""}`, [id]);
     if (!row) return null;
-    const [[order]] = await tx.query("SELECT id,sales_order_number,status,version FROM sales_orders WHERE id=? LOCK IN SHARE MODE", [row.sales_order_id]);
+    const [[order]] = await tx.query(`SELECT id,sales_order_number,status,version FROM sales_orders WHERE id=?${lock ? " LOCK IN SHARE MODE" : ""}`, [row.sales_order_id]);
     if (!order) throw salesError("SALES_ORDER_NOT_FOUND");
     return { salesOrder: { id: Number(order.id), number: order.sales_order_number, status: order.status, version: Number(order.version) },
       differenceSummary: typeof row.difference_summary === "string" ? JSON.parse(row.difference_summary) : row.difference_summary };
@@ -266,14 +335,14 @@ export class SalesQuotationService {
     return { customer, term, lines, snapshots };
   }
 
-  async #detail(tx, id) {
+  async #detail(tx, id, lock = true) {
     const [[row]] = await tx.query(`SELECT id,quotation_number,status,version,customer_id,customer_code_snapshot,customer_name_snapshot,currency_code,
       payment_term_id,payment_term_code_snapshot,payment_term_name_snapshot,DATE_FORMAT(quotation_date,'%Y-%m-%d') AS quotation_date,
-      DATE_FORMAT(valid_until,'%Y-%m-%d') AS valid_until,external_reference,notes,line_count,total_amount,created_at,updated_at FROM sales_quotations WHERE id=? LOCK IN SHARE MODE`, [id]);
+      DATE_FORMAT(valid_until,'%Y-%m-%d') AS valid_until,external_reference,notes,line_count,total_amount,created_at,updated_at FROM sales_quotations WHERE id=?${lock ? " LOCK IN SHARE MODE" : ""}`, [id]);
     if (!row) throw salesError("SALES_QUOTATION_NOT_FOUND");
     const [lines] = await tx.query(`SELECT id,line_no,sku_id,sku_uom_id,item_name_snapshot,sku_code_snapshot,sku_name_snapshot,uom_code_snapshot,
       uom_name_snapshot,to_base_factor_snapshot,quantity,CAST(base_quantity AS CHAR) AS base_quantity,unit_selling_price,price_source,line_amount,line_note
-      FROM sales_quotation_lines WHERE quotation_id=? ORDER BY line_no LOCK IN SHARE MODE`, [id]);
+      FROM sales_quotation_lines WHERE quotation_id=? ORDER BY line_no${lock ? " LOCK IN SHARE MODE" : ""}`, [id]);
     return toQuotationDetail(row, lines);
   }
 }

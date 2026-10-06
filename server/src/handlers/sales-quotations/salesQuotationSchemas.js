@@ -73,3 +73,28 @@ export const QUOTATION_DIFFERENCE = { type: "object", additionalProperties: fals
   quantityChanged: differenceGroup(["skuId", "skuUomId", "fromLineNo", "toLineNo", "beforeQuantity", "afterQuantity"]), priceChanged: differenceGroup(["skuId", "skuUomId", "fromLineNo", "toLineNo", "beforePrice", "afterPrice"]) } };
 export const QUOTATION_CONVERT_RESPONSE = { type: "object", additionalProperties: false, required: ["quotation", "salesOrder", "differenceSummary", "operation", "warnings"],
   properties: { ...QUOTATION_COMMAND_RESPONSE.properties, salesOrder: ORDER_RESULT, operation: ORDER_RESULT, differenceSummary: QUOTATION_DIFFERENCE } };
+
+export const SALES_READ_POLICY = { name: "hasPermission", options: { permissions: ["sales.view"] } };
+export const QUOTATION_LIST_QUERY = { type: "object", additionalProperties: false, properties: {
+  page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 }, q: { type: "string", maxLength: 190 }, number: { type: "string", maxLength: 190 }, customerId: ID,
+  status: { anyOf: [RESULT.properties.status, { type: "array", minItems: 1, maxItems: 5, items: RESULT.properties.status }] },
+  quotationDateFrom: { type: "string", format: "date" }, quotationDateTo: { type: "string", format: "date" },
+  validUntilFrom: { type: "string", format: "date" }, validUntilTo: { type: "string", format: "date" },
+  sortBy: { type: "string", enum: ["number", "customerCode", "customerName", "quotationDate", "validUntil", "totalAmount", "updatedAt", "status"] }, descending: { type: "boolean" } } };
+const queryValidator = new RequestValidator({ config: { enabled: true, allErrors: true, coerceTypes: true, useDefaults: false, removeAdditional: false,
+  maxErrors: 20, includeErrorDetailsInResponse: false } }).compile({ query: QUOTATION_LIST_QUERY }, "Sales Quotation list query");
+export function quotationListRequest(req) {
+  const request = { query: structuredClone(req.input.query) };
+  try { queryValidator(request); }
+  catch (error) { if (error.code === "REQUEST_VALIDATION_FAILED") throw salesError("SALES_INPUT_INVALID"); throw error; }
+  return { claims: quotationActorClaims(req), input: request.input.query };
+}
+const summaryFields = ["id", "number", "status", "version", "customerId", "customerCode", "customerName", "currencyCode", "quotationDate", "validUntil", "lineCount", "totalAmount", "createdAt", "updatedAt"];
+const summary = { type: "object", additionalProperties: false, required: summaryFields,
+  properties: Object.fromEntries(summaryFields.map(field => [field, QUOTATION_DETAIL.properties[field]])) };
+export const QUOTATION_LIST_RESPONSE = { type: "object", additionalProperties: false, required: ["items", "total", "page", "pageSize"],
+  properties: { items: { type: "array", maxItems: 100, items: summary }, total: { type: "integer", minimum: 0 }, page: ID, pageSize: { type: "integer", minimum: 1, maximum: 100 } } };
+export const QUOTATION_READ_RESPONSE = { ...QUOTATION_DETAIL, required: [...QUOTATION_DETAIL.required, "allowedActions", "conversion"], properties: {
+  ...QUOTATION_DETAIL.properties, allowedActions: { type: "array", uniqueItems: true, items: { enum: ["edit", "issue", "cancel", "convert", "print"] } },
+  conversion: { anyOf: [{ type: "null" }, { type: "object", additionalProperties: false, required: ["salesOrderId", "salesOrderNumber", "differenceSummary"],
+    properties: { salesOrderId: ID, salesOrderNumber: ORDER_RESULT.properties.number, differenceSummary: QUOTATION_DIFFERENCE } }] } } };
