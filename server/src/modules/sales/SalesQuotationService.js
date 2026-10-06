@@ -141,6 +141,39 @@ export class SalesQuotationService {
   issue(request) { return this.#transition(request, "ISSUE"); }
   cancel(request) { return this.#transition(request, "CANCEL"); }
 
+  async expire({ signal } = {}) {
+    const nowMs = this.time.nowMs(), today = formatDateForFile(this.time.at(nowMs), "Asia/Hong_Kong");
+    const result = { processed: 0, expired: 0, batches: 0, lastId: 0 };
+    for (let batch = 0; batch < 5; batch++) {
+      signal?.throwIfAborted();
+      const page = await this.database.withTransaction(async tx => {
+        const [rows] = await tx.query(`SELECT id,quotation_number,status,version,DATE_FORMAT(valid_until,'%Y-%m-%d') AS valid_until
+          FROM sales_quotations WHERE status='ISSUED' AND valid_until < ? AND id > ? ORDER BY id LIMIT ?`, [today, result.lastId, 100]);
+        let expired = 0;
+        for (const candidate of rows) {
+          signal?.throwIfAborted();
+          // Lock existing primary keys in order; range locks on the mutable status index can deadlock overlapping runs.
+          const [[row]] = await tx.query(`SELECT id,quotation_number,status,version,DATE_FORMAT(valid_until,'%Y-%m-%d') AS valid_until
+            FROM sales_quotations WHERE id=? FOR UPDATE`, [candidate.id]);
+          if (!row) continue;
+          if (row.status !== "ISSUED" || effectiveQuotationStatus(row.status, row.valid_until, today) !== "EXPIRED") continue;
+          const [written] = await tx.execute(`UPDATE sales_quotations SET status='EXPIRED',version=version+1,updated_at=?,last_business_updated_at=?,updated_by=NULL
+            WHERE id=? AND status='ISSUED' AND version=?`, [nowMs, nowMs, row.id, row.version]);
+          if (written.affectedRows !== 1) throw salesError("CONCURRENT_OPERATION");
+          await this.audit.record(tx, { actor: { id: null, username: "sales.quotationExpire" }, action: "sales_quotation.expired",
+            targetId: Number(row.id), targetNumber: row.quotation_number, eventId: randomUUID(), nowMs,
+            details: { fromStatus: "ISSUED", toStatus: "EXPIRED", version: Number(row.version) + 1 } });
+          expired++;
+        }
+        signal?.throwIfAborted();
+        return { processed: rows.length, expired, lastId: rows.length ? Number(rows.at(-1).id) : result.lastId };
+      }, { signal });
+      result.processed += page.processed; result.expired += page.expired; result.lastId = page.lastId; result.batches++;
+      if (page.processed < 100) break;
+    }
+    return result;
+  }
+
   async #lockQuotation(tx, id) {
     if (!Number.isSafeInteger(id) || id < 1) throw salesError("SALES_INPUT_INVALID", { field: "id" });
     const [[row]] = await tx.query("SELECT id FROM sales_quotations WHERE id=? FOR UPDATE", [id]);
