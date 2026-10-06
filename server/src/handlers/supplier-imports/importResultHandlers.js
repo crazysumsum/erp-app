@@ -32,7 +32,7 @@ export class DownloadSupplierImportResultHandler extends BaseRequestHandler {
       actorId: Number(req.auth.claims.sub), claimedRoles: req.auth.claims.roles, claimedPermissions: req.auth.claims.permissions,
       id: req.input.params.id
     });
-    res.setHeader("Cache-Control", "no-store");
+    // Cache-Control: private, no-store 由框架嘅 file response 寫（REV-073 I-1）；Pragma 俾 HTTP/1.0 cache。
     res.setHeader("Pragma", "no-cache");
     return this.file({ buffer: Buffer.from(content, "utf8"), fileName, contentType: "text/csv; charset=utf-8" });
   }

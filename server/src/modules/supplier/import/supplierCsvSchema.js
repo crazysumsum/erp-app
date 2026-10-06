@@ -80,12 +80,12 @@ export const SUPPLIER_IMPORT_RESULT_COLUMNS = Object.freeze([
 ]);
 
 /**
- * 試算表公式注入（設計 §6.9）：以 `=`、`+`、`-`、`@`、Tab 或換行開頭嘅 cell 會被 Excel 當公式，
- * 前面加 `'` 令佢變返文字。
+ * 試算表公式注入（設計 §6.9）：以 `=`、`+`、`-`、`@`、Tab 或換行開頭嘅 cell 會被試算表當公式，
+ * 前面加 `'` 令佢變返文字。全形嘅 `＝＋－＠` 都計（OWASP CSV Injection；REV-073 L-1）。
  */
 export function guardSpreadsheetCell(value) {
   const text = value === null || value === undefined ? "" : String(value);
-  return /^[=+\-@\t\r\n]/u.test(text) ? `'${text}` : text;
+  return /^[=+\-@\t\r\n＝＋－＠]/u.test(text) ? `'${text}` : text;
 }
 
 /** `rows`：`{ rowNumber, operation, status, supplierCode, appliedSupplierId, errors, warnings }`，已按行號排好。 */

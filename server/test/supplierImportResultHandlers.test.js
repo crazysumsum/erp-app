@@ -28,14 +28,17 @@ test("the handler serves the service's CSV under the server's file name, uncache
   const file = await handler.execute({ auth: { claims: { sub: "12", roles: ["r"], permissions: ["supplier.mgmt"] } }, input: { params: { id: 9 } } },
     { setHeader: (name, value) => { headers[name] = value; } });
   assert.deepEqual(received, { actorId: 12, claimedRoles: ["r"], claimedPermissions: ["supplier.mgmt"], id: 9 });
-  assert.deepEqual([headers["Cache-Control"], headers.Pragma], ["no-store", "no-cache"]);
+  // Cache-Control 由框架嘅 file response 定（private, no-store；整合測試驗）；handler 只加 Pragma 俾 HTTP/1.0 cache。
+  assert.deepEqual([headers["Cache-Control"], headers.Pragma], [undefined, "no-cache"]);
   const body = file.buffer ?? file.body?.buffer ?? file.file?.buffer;
   assert.equal(body.toString("utf8"), "﻿a\r\n");
   assert.equal(file.fileName ?? file.file?.fileName ?? file.body?.fileName, "supplier-import-9-result.csv");
 });
 
 test("a cell that a spreadsheet would run as a formula is turned into text", () => {
-  for (const risky of ["=1+1", "+1", "-1", "@SUM(A1)", "\tx", "\rx", "\nx"]) assert.equal(guardSpreadsheetCell(risky), `'${risky}`, JSON.stringify(risky));
+  for (const risky of ["=1+1", "+1", "-1", "@SUM(A1)", "\tx", "\rx", "\nx", "＝1+1", "＋1", "－1", "＠SUM(A1)"]) {
+    assert.equal(guardSpreadsheetCell(risky), `'${risky}`, JSON.stringify(risky));
+  }
   for (const safe of ["SUP-1", "a=b", "", "1", "供應商"]) assert.equal(guardSpreadsheetCell(safe), safe);
   assert.equal(guardSpreadsheetCell(null), "");
   assert.equal(guardSpreadsheetCell(5), "5");

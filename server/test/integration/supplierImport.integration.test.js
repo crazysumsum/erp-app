@@ -213,7 +213,8 @@ integrationTest("TASK-043 IMP-004/005/011 (TC-090, TC-096): precheck classifies 
   assert.deepEqual(checked[1].warnings, ["SUPPLIER_IMPORT_NAME_EXISTS"]);
   assert.deepEqual(checked[2].errors, [["defaultCurrencyCode", "SUPPLIER_IMPORT_REQUIRED_FIELD"]]);
   assert.equal(Number(checked[3].match_supplier_id), existingId);
-  assert.deepEqual(checked[3].normalized_payload, { root: { notes: "updated note" } }, "blank optional cells keep the stored value");
+  assert.deepEqual(checked[3].normalized_payload.root, { notes: "updated note" }, "blank optional cells keep the stored value");
+  assert.deepEqual(Object.keys(checked[3].normalized_payload.identity), ["supplierCode"], "the CSV's Code stays outside root");
   assert.deepEqual(checked[4].errors, [["children", "IMPORT_CHILD_UPDATE_UNSUPPORTED"]]);
   assert.equal(Number(checked[4].match_supplier_id), childTargetId, "matched by code alone");
   assert.deepEqual(checked[5].errors, [["supplierCode", "SUPPLIER_IMPORT_MATCH_CONFLICT"]]);
@@ -1352,7 +1353,8 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
   const { id, version } = await readyJob(owner, [
     { supplierCode: `R1-${tag}`, supplierName: `Result One ${tag}`, defaultCurrencyCode: "HKD" },
     { supplierCode: `R2-${tag}`, supplierName: `Result Two ${tag}` },
-    { supplierCode: `RU-${tag}`, notes: "updated by import" }
+    { supplierCode: `RU-${tag}`, notes: "updated by import" },
+    { supplierId: "999999999", supplierCode: `RX-${tag}`, notes: "no such Supplier" }
   ], { mode: "upsert" });
   const notYet = await downloadResult(owner, id);
   assert.deepEqual([notYet.status, notYet.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a ready job has no result yet");
@@ -1365,7 +1367,7 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
   assert.equal(result.status, 200, result.bytes.toString("utf8"));
   assert.match(result.headers.get("content-type"), /^text\/csv/u);
   assert.match(result.headers.get("content-disposition"), new RegExp(`supplier-import-${id}-result\\.csv`, "u"));
-  assert.match(result.headers.get("cache-control"), /no-store/u);
+  assert.deepEqual([result.headers.get("cache-control"), result.headers.get("pragma")], ["private, no-store", "no-cache"]);
   assert.ok(result.bytes.toString("utf8").startsWith("﻿"), "a BOM, so a spreadsheet reads UTF-8");
   const { parse } = await import("csv-parse/sync");
   const records = parse(result.bytes, { bom: true, columns: true });
@@ -1373,7 +1375,9 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
   assert.deepEqual(records.map((record) => [record.rowNumber, record.operation, record.outcome, record.supplierCode, record.appliedSupplierId, record.errorCodes]), [
     ["1", "create", "applied", `R1-${tag}`, String(one.id), ""],
     ["2", "create", "skipped", `R2-${tag}`, "", "SUPPLIER_IMPORT_REQUIRED_FIELD"],
-    ["3", "update", "applied", `RU-${tag}`, String(existing), ""]
+    ["3", "update", "applied", `RU-${tag}`, String(existing), ""],
+    // REV-073 I-3：ID 搵唔到嘅更新列，都用 CSV 寫嘅 Code 認返。
+    ["4", "update", "skipped", `RX-${tag}`, "", "SUPPLIER_NOT_FOUND"]
   ]);
   const text = result.bytes.toString("utf8");
   assert.equal(text.includes("updated by import") || text.includes(`Result One ${tag}`), false, "no payload beyond the Code");
@@ -1386,7 +1390,7 @@ integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for t
   const expired = await downloadResult(owner, id);
   assert.deepEqual([expired.status, expired.body?.error?.code], [410, "IMPORT_FILE_EXPIRED"]);
   const after = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
-  assert.deepEqual([after.status, after.data.job.filesPurged, after.data.total], [200, true, 3]);
+  assert.deepEqual([after.status, after.data.job.filesPurged, after.data.total], [200, true, 4]);
 });
 
 integrationTest("TASK-046 (HD-063 2A): a job that failed after it started running still has a result; one that never ran does not", async () => {

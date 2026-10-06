@@ -376,10 +376,12 @@ export class SupplierImportService {
     if (job.files_purged_at !== null) {
       throw supplierImportError("IMPORT_FILE_EXPIRED", 410, "匯入結果已過保留期限；工作摘要及逐列結果仍可查閱");
     }
-    // Code：寫咗嘅 Supplier 用佢而家嘅 Code；冇寫到嘅新增列用 CSV 入面嘅 Code。
+    // Code：用家喺 CSV 寫嘅 Code 優先（佢認得返嗰列；ID 搵唔到或者 ID 同 Code 對唔上嗰陣都係，REV-073 I-3），
+    // CSV 冇寫 Code（只用 supplierId）先用 Supplier 而家嘅 Code。
     const [rows] = await this.database.query(
       `SELECT r.\`row_number\`, r.operation, r.status, r.applied_supplier_id, r.errors, r.warnings,
-              COALESCE(s.supplier_code, JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.root.supplierCode'))) AS supplier_code
+              COALESCE(JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.root.supplierCode')),
+                       JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.identity.supplierCode')), s.supplier_code) AS supplier_code
          FROM supplier_import_rows r
          LEFT JOIN suppliers s ON s.id = COALESCE(r.applied_supplier_id, r.match_supplier_id)
         WHERE r.job_id = ? ORDER BY r.\`row_number\``, [id]);
