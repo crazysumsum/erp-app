@@ -1403,6 +1403,8 @@ integrationTest("TASK-046 (HD-063 2A): a job that failed after it started runnin
   await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [owner.roleId]);
   assert.equal((await service.processNextRow({ jobId: id, leaseOwner: "rf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow })).status, "revoked");
   // 確認人冇權嗰陣佢自己落載都會被拒（PERMISSION_STALE）；畀返權限再落載，證明 failed 嘅 job 都有結果。
+  const stale = await downloadResult(owner, id);
+  assert.deepEqual([stale.status, stale.body?.error?.code], [403, "PERMISSION_STALE"], "a withdrawn permission is refused at once");
   const [[permission]] = await h.db.query("SELECT id FROM permissions WHERE name = 'supplier.mgmt'");
   await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [owner.roleId, permission.id]);
   const revoked = await downloadResult(owner, id);
