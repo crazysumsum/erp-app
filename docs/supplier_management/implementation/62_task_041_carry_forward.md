@@ -497,3 +497,72 @@ The mutation list is now 38 (the 34 above, three patterns updated for the moved 
 REV-072 (`75_rev_072_independent_review.md`) approved 7608699 with two Low and one Info finding, all test or wording only, and
 all three are closed above: the cleanup now forces `PRIMARY` and pins the plan (L-1), the 4A wording gives the measured
 boundary (L-2), and test currencies can no longer collide with real ISO codes (I-1).
+
+## Status after TASK-046
+
+T46 adds `GET /api/v1/supplier-imports/:id/result` (`handlers/supplier-imports/importResultHandlers.js`,
+`SupplierImportService.resultCsv`), a `rowNumber` filter on `GET /:id`, the client service, and the page
+`client/src/pages/suppliers/SupplierImportsPage.vue` at `/suppliers/imports`. The open points were decided in HD-063 (1B 2A 3A).
+
+| Obligation | Status |
+| --- | --- |
+| HD-063 1B: result file | **No stored file.** The CSV is built from `supplier_import_rows` on each download; `result_stored_name` / `result_sha256` stay unused. The row count is bounded by `import.maxRows`, so it is built in memory. |
+| HD-043, T46 part: stored name from the job row, `nlink`, SHA when serving | **Not applicable (HD-063 1B).** No import file is served. HD-043 can close when T48, which only deletes files, is done with its own HD-044 rules. |
+| HD-049, T46 part: the result file's counts | **Holds by construction.** The file and the summary counts both come from the rows; a test compares them. |
+| T43: the result CSV uses `SUPPLIER_CSV_STRINGIFY_OPTIONS`, formula-risk cells guarded | **Done.** `buildSupplierImportResult` in `supplierCsvSchema.js` (all CSV writes stay there); cells starting with `=`, `+`, `-`, `@`, Tab, CR or LF are prefixed with `'`. BOM and CRLF as in the template. |
+| T44: 410 for a purged file; result route order | **Done.** 410 `IMPORT_FILE_EXPIRED` once `files_purged_at` is set on an executed job (summary and rows still readable); 409 `SUPPLIER_IMPORT_RESULT_NOT_READY` for jobs that never ran (including cancelled and precheck-failed ones, which also have `files_purged_at`). `/:id/result` has two segments, so it cannot collide with `GET /template`. |
+| T45: confirm UI — password, eligible approver, no resend on refresh | **Done.** The approver list excludes the user; refresh reopens the job from `?job=` and sends nothing. |
+| T45: `SUPPLIER_IMPORT_ROW_BUSY` retryable, `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED` a job-level stop | **Done.** A "可重新匯入" badge on busy rows; a banner for a revoked job. |
+| REV-071 I-3: say that the approval setting is read at confirm | **Done** in the confirm step. |
+
+Notes:
+
+- **Download file name.** The browser saves the result as `supplier-import-<id>-result.csv`, the same fixed name the server
+  sends in `Content-Disposition`. `HttpClient.getBlob` (client framework, outside this module's write paths) does not expose
+  that header, so the client uses the server's pattern rather than reading it; no user input reaches the name.
+- **Quasar dismisses a dialog on route change.** Opening a job writes `?job=` to the URL, so the details dialog uses
+  `no-route-dismiss`. Unit tests could not see this; the browser spec caught it, and a mutant that removes the prop is killed.
+
+**Real-browser validation (CLAUDE.md §9).** The mocked spec `client/e2e/supplier-management/supplier-imports.spec.js` runs in
+CI. In addition the real app was driven with Playwright, using the real API on port 3000 against the T46 MySQL, the real
+scheduler and worker, and Vite on 5203. Results:
+
+- **Template:** downloaded with a BOM.
+- **Upload and precheck:** an upload with one valid and one invalid row was prechecked by the worker, giving `ready_with_errors`.
+- **Wrong password:** HTTP 403 `PASSWORD_INVALID`, a "請確認你目前的密碼" notification, and the job stayed ready.
+- **Reload:** reloading reopened the job without resending confirm.
+- **Confirm and run:** confirming as draft ran on the worker, giving `completed`; the Supplier was written as draft by the confirmer.
+- **Filter:** filtering by "略過" showed row 2.
+- **Result CSV:** contained exactly the two outcome rows.
+- **Cancel:** a cancelled job offers no download.
+- **Approval on:** the approver list held only the other user, and the Supplier became `pending_approval` assigned to them.
+- **Retention:** after `files_purged_at` was set, the download explained the 410 and a reload showed the summary with the expiry badge.
+- **Errors:** console and network showed only the expected 403 (device check at first login, wrong password) and 410.
+- **Fix from screenshots:** the screenshots showed long row messages cut off; they now wrap.
+
+New obligations T46 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T48 | At retention, set `files_purged_at` on executed jobs too (that is what turns the result download into 410) and delete their source; jobs that never ran already have it. |
+| T49 | Measure the result download at 10,000 rows (built in memory from rows). |
+
+## Mutation record for TASK-046
+
+24 mutants, all killed (server unit and integration on real MySQL, client vitest, and the mocked Playwright spec; each mutant
+applied to a committed tree and restored from the saved bytes):
+
+- **Server (14):**
+  - access: a result for anyone's job; the fresh-actor check dropped;
+  - availability: a result before execution; none for a job that failed while running; a result for a failed precheck; no 410 after retention;
+  - row lookup: the Code from the CSV only; the row-number filter ignored or missing from the schema;
+  - CSV safety: no formula guard; the guard missing `-`; no BOM or quoting options; no error messages; a cacheable response.
+- **Client (10):**
+  - the dialog closing on the `?job=` route change; refresh losing the job;
+  - approvals: an approver never required; the user offered as approver; an approver sent when approval is off;
+  - results: no result for a job that failed while running; a download offered after retention;
+  - status display: the revoked stop or the busy badge not shown;
+  - the service dropping the row number.
+
+One first survived: the fresh-actor check on the download. The revoked test now asserts 403 `PERMISSION_STALE` while the
+permission is withdrawn.
