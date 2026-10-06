@@ -637,9 +637,13 @@ integrationTest("TASK-044: detail pages the rows by row number, filters by statu
   assert.deepEqual(invalid.data.rows.map((row) => [row.rowNumber, row.status, row.errors[0].field]),
     [[2, "invalid", "defaultCurrencyCode"], [4, "invalid", "defaultCurrencyCode"]]);
   assert.equal(invalid.data.total, 2);
+  const fourth = await api(owner, "GET", `/api/v1/supplier-imports/${id}?rowNumber=4`);
+  assert.deepEqual([fourth.data.total, fourth.data.rows.map((row) => row.rowNumber)], [1, [4]], "T46: jump to a row by number");
+  const both = await api(owner, "GET", `/api/v1/supplier-imports/${id}?rowNumber=4&rowStatus=valid`);
+  assert.deepEqual([both.data.total, both.data.rows], [0, []], "and the filters combine");
   assert.equal(invalid.data.rows[0].normalizedPayload.root.supplierCode, `D2-${tag}`);
 
-  for (const query of ["pageSize=101", "pageSize=0", "page=0", "rowStatus=nope", "extra=1"]) {
+  for (const query of ["pageSize=101", "pageSize=0", "page=0", "rowStatus=nope", "rowNumber=0", "extra=1"]) {
     assert.equal((await api(owner, "GET", `/api/v1/supplier-imports/${id}?${query}`)).status, 400, query);
   }
   assert.equal((await api(owner, "GET", "/api/v1/supplier-imports?status=nope")).status, 400);

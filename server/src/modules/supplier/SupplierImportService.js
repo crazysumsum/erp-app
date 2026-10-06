@@ -282,10 +282,11 @@ export class SupplierImportService {
   }
 
   /** Job 摘要加逐列結果（按行號分頁）。預檢未完成嘅 job 唔回任何列。 */
-  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus }) {
+  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus, rowNumber }) {
     if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
     const paged = paging(page, pageSize);
     if (rowStatus !== undefined && !IMPORT_ROW_STATUSES.includes(rowStatus)) throw new TypeError("Supplier import row status is invalid");
+    if (rowNumber !== undefined && !positiveInteger(rowNumber)) throw new TypeError("Supplier import row number is invalid");
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[job]] = await this.database.query(
       `SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ? AND created_by = ?`, [id, actorId]);
@@ -293,8 +294,10 @@ export class SupplierImportService {
     const result = { job: importJobSummary(job), rows: [], total: 0, page: paged.page, pageSize: paged.pageSize };
     // ready 之後列唔會再被重寫（只有 uploaded → validating 會），所以讀完 job 再讀列唔會撈到半套。
     if (ROWS_HIDDEN_STATUSES.has(job.status)) return result;
-    const where = rowStatus === undefined ? "job_id = ?" : "job_id = ? AND status = ?";
-    const params = rowStatus === undefined ? [id] : [id, rowStatus];
+    // 狀態同行號（T46：UI 按行號跳去嗰列）可以疊埋用。
+    const filters = [["status = ?", rowStatus], ["`row_number` = ?", rowNumber]].filter(([, value]) => value !== undefined);
+    const where = ["job_id = ?", ...filters.map(([clause]) => clause)].join(" AND ");
+    const params = [id, ...filters.map(([, value]) => value)];
     const [[[count]], [rows]] = await Promise.all([
       this.database.query(`SELECT COUNT(*) AS total FROM supplier_import_rows WHERE ${where}`, params),
       this.database.query(
