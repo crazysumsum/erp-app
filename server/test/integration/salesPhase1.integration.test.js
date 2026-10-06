@@ -6,6 +6,7 @@ import { createApplication } from "../../src/framework/application/createApplica
 import { defaultConfigurationSource } from "../../src/framework/configuration/applicationConfiguration.js";
 import { formatDateForFile } from "../../src/services/time/timeFormat.js";
 import { SalesAuditService } from "../../src/modules/sales/SalesAuditService.js";
+import { SalesOrderService } from "../../src/modules/sales/SalesOrderService.js";
 import { SalesQuotationService } from "../../src/modules/sales/SalesQuotationService.js";
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
@@ -384,4 +385,33 @@ integrationTest("TC-018 Actual HTTP Sales lookup contracts retain permission and
   assert.equal((await fetch(`${url}/api/v1/sales-lookups/channels`, { headers: { Authorization: `Bearer ${token}` } })).status, 403);
   assert.equal((await fetch(`${url}/api/v1/sales-lookups/customers?pageSize=101`, { headers: { Authorization: `Bearer ${token}` } })).status, 400);
   assert.equal((await fetch(`${url}/api/v1/sales-lookups/customers`)).status, 401);
+});
+
+function manualOrderService(f,options={}) { return new SalesOrderService({database:f.database,time:f.time,logger:f.logger,...options}); }
+integrationTest("TC-016 Manual Draft SO creates exact merged quantities, snapshots, history and no commitment",async t=>{
+ const f=await setup(t),order=manualOrderService(f),input=orderInput(f);input.lines.push({...input.lines[0]});const created=await order.create({claims:f.claims,input});
+ assert.equal(created.salesOrder.sourceType,"MANUAL");assert.equal(created.salesOrder.status,"DRAFT");assert.equal(created.salesOrder.totalAmount,"13.3332");assert.equal(created.salesOrder.lines.length,1);assert.equal(created.salesOrder.lines[0].quantity,"4.000000");assert.equal(created.salesOrder.lines[0].orderedBaseQuantity,"4");assert.equal(created.salesOrder.lines[0].reservedBaseQuantity,"0");
+ assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_order_status_history WHERE sales_order_id=?",[created.salesOrder.id]))[0][0].n,1);
+ assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM inventory_reservations WHERE sku_id=?",[f.skuId]))[0][0].n,0);
+ await f.db.execute("UPDATE item_skus SET status='inactive' WHERE id=?",[f.skuId]);assert.deepEqual((await order.create({claims:f.claims,input})).operation,created.operation);assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_orders WHERE customer_id=?",[f.customerId]))[0][0].n,1);
+});
+integrationTest("TC-017 Manual Draft SO optimistic edit race keeps one winner and rejects foreign merged line IDs",async t=>{
+ const f=await setup(t),order=manualOrderService(f),created=await order.create({claims:f.claims,input:orderInput(f)}),foreign=await order.create({claims:f.claims,input:orderInput(f)});
+ const invalid={...orderInput(f),version:1};invalid.lines.push({...invalid.lines[0],id:foreign.salesOrder.lines[0].id});await assert.rejects(()=>order.update({claims:f.claims,id:created.salesOrder.id,input:invalid}),{code:"SALES_INPUT_INVALID"});
+ const results=await Promise.allSettled(["Editor A","Editor B"].map(notes=>order.update({claims:f.claims,id:created.salesOrder.id,input:{...orderInput(f),version:1,notes}})));assert.equal(results.filter(r=>r.status==="fulfilled").length,1);assert.equal(results.find(r=>r.status==="rejected").reason.code,"VERSION_CONFLICT");assert.deepEqual(results.find(r=>r.status==="rejected").reason.publicDetails,{currentVersion:2});
+ await f.db.execute("UPDATE sales_orders SET status='CONFIRMED' WHERE id=?",[created.salesOrder.id]);await assert.rejects(()=>order.update({claims:f.claims,id:created.salesOrder.id,input:{...orderInput(f),version:2}}),{code:"SALES_STATE_CONFLICT"});
+});
+integrationTest("TC-016/018 Manual Draft SO revalidates Warehouse/master choices and rolls failed audit back atomically",async t=>{
+ const f=await setup(t),order=manualOrderService(f),input=orderInput(f);
+ await f.db.execute("UPDATE inventory_warehouses SET status='INACTIVE' WHERE id=?",[f.warehouseId]);await assert.rejects(()=>order.create({claims:f.claims,input}),{code:"WAREHOUSE_INVALID"});await f.db.execute("UPDATE inventory_warehouses SET status='ACTIVE' WHERE id=?",[f.warehouseId]);
+ const failing=manualOrderService(f,{audit:{async record(){throw new Error("required audit failure");}}});await assert.rejects(()=>failing.create({claims:f.claims,input}));assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_orders WHERE customer_id=?",[f.customerId]))[0][0].n,0);assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_operation_requests WHERE actor_user_id=?",[f.userId]))[0][0].n,0);
+ const created=await order.create({claims:f.claims,input});await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[f.roleId]);await assert.rejects(()=>order.create({claims:f.claims,input}),{code:"PERMISSION_STALE"});assert.equal(created.salesOrder.version,1);
+});
+integrationTest("TC-016/017/018 Manual Draft SO HTTP contracts preserve exact decimals and fresh replay permissions",async t=>{
+ const f=await setup(t),version=await f.app.services.require("tokenRevocation").currentVersion(String(f.userId)),token=await f.app.services.require("jwt").issue({roles:f.claims.claimedRoles,permissions:f.claims.claimedPermissions},{subject:String(f.userId),version,authTime:Math.floor(f.now/1000)}),{url}=await f.app.start();
+ async function request(path,body,key=body.eventId){const response=await fetch(url+path,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json","Idempotency-Key":key},body:JSON.stringify(body)});return {status:response.status,data:await response.json()};}
+ const input=orderInput(f),created=await request("/api/v1/sales-orders/create",input);assert.equal(created.status,201,JSON.stringify(created.data));assert.equal(created.data.data.salesOrder.totalAmount,"6.6666");assert.equal(created.data.data.salesOrder.lines[0].orderedBaseQuantity,"2");assert.deepEqual((await request("/api/v1/sales-orders/create",input)).data.data.operation,created.data.data.operation);
+ const id=created.data.data.salesOrder.id;assert.equal((await request(`/api/v1/sales-orders/${id}/update`,{...orderInput(f),version:1})).status,200);const stale=await request(`/api/v1/sales-orders/${id}/update`,{...orderInput(f),version:1});assert.equal(stale.status,409);assert.deepEqual(stale.data.error.details,{currentVersion:2});
+ for(const patch of [{sourceType:"CHANNEL"},{shippingAddress:"spoof"},{lines:[{...input.lines[0],unitSellingPrice:1}]}])assert.equal((await request("/api/v1/sales-orders/create",{...orderInput(f),...patch})).status,400);
+ await f.db.execute("UPDATE users SET status='inactive' WHERE id=?",[f.userId]);assert.equal((await request("/api/v1/sales-orders/create",input)).status,403);
 });

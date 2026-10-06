@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { formatDateForFile } from "../../services/time/timeFormat.js";
 import { salesPayloadHash } from "./salesCanonicalHash.js";
 import { CustomerLookupService } from "../customer/CustomerLookupService.js";
@@ -10,8 +11,8 @@ import { SalesAuditService } from "./SalesAuditService.js";
 import { requireSalesActor, requireSalesWriteActor } from "./salesAuthorization.js";
 import { validateSalesDocument, salesEventId, salesReason, salesDate } from "./salesValidation.js";
 import { assertQuotationEditable, transitionQuotation, effectiveQuotationStatus } from "./salesQuotationStateMachine.js";
-import { documentTotal, lineAmount, normalizeMoney } from "./salesMoneyMath.js";
-import { orderedBaseQuantity } from "./salesQuantityMath.js";
+import { documentTotal } from "./salesMoneyMath.js";
+import { prepareSalesDocument } from "./prepareSalesDocument.js";
 import { salesError } from "./salesErrors.js";
 
 const quotationSort = { number: "quotation_number", customerCode: "customer_code_snapshot", customerName: "customer_name_snapshot",
@@ -195,7 +196,7 @@ export class SalesQuotationService {
         if (before.validUntil < today) throw salesError("QUOTATION_STATE_CONFLICT");
         const document = { customerId: before.customerId, currencyCode: before.currencyCode, paymentTermId: before.paymentTermId,
           lines: before.lines.map(line => ({ skuId: line.skuId, skuUomId: line.skuUomId, quantity: line.quantity, unitSellingPrice: line.unitSellingPrice, lineNote: line.lineNote })) };
-        const prepared = await this.#prepare(tx, document, nowMs);
+        const prepared = await prepareSalesDocument(tx, document, nowMs, this);
         await tx.execute(`UPDATE sales_quotations SET customer_code_snapshot=?,customer_name_snapshot=?,payment_term_code_snapshot=?,payment_term_name_snapshot=? WHERE id=?`,
           [prepared.customer.customerCode, prepared.customer.legalName, prepared.term?.code ?? "", prepared.term?.name ?? "", id]);
         for (const [index, line] of prepared.lines.entries()) await tx.execute(`UPDATE sales_quotation_lines SET ${Object.keys(line).map(field => `${field}=?`).join(",")},updated_at=? WHERE id=? AND quotation_id=?`,
@@ -245,7 +246,7 @@ export class SalesQuotationService {
       if (exhausted) throw exhausted;
       if (before.version !== command.version) throw salesError("VERSION_CONFLICT", { currentVersion: before.version });
       transitionQuotation(before.status, "CONVERT", { validUntil: before.validUntil, currentDate: formatDateForFile(this.time.at(nowMs), "Asia/Hong_Kong") });
-      const prepared = await this.#prepare(tx, document, nowMs);
+      const prepared = await prepareSalesDocument(tx, document, nowMs, this);
       const [[warehouse]] = await tx.query("SELECT id,warehouse_code,warehouse_name,status FROM inventory_warehouses WHERE id=? LOCK IN SHARE MODE", [document.fulfillmentWarehouseId]);
       if (!warehouse || warehouse.status !== "ACTIVE") throw salesError("WAREHOUSE_INVALID");
       const header = { sales_order_number: number, status: "DRAFT", source_type: "QUOTATION", source_quotation_id: id,
@@ -303,7 +304,7 @@ export class SalesQuotationService {
         const [existing] = await tx.query("SELECT id,sku_id,sku_uom_id FROM sales_quotation_lines WHERE quotation_id=? ORDER BY id FOR UPDATE", [id]);
         for (const line of input.lines) if (line.id !== undefined && !existing.some(row => Number(row.id) === line.id && Number(row.sku_id) === line.skuId && Number(row.sku_uom_id) === line.skuUomId)) throw salesError("SALES_INPUT_INVALID", { field: "lines" });
       } else { number = await this.sequence.nextNumberInTransaction(tx, { documentType: "QUOTATION", nowMs }); version = 1; }
-      const prepared = await this.#prepare(tx, document, nowMs);
+      const prepared = await prepareSalesDocument(tx, document, nowMs, this);
       const header = { customer_id: document.customerId, customer_code_snapshot: prepared.customer.customerCode,
         customer_name_snapshot: prepared.customer.legalName, currency_code: document.currencyCode, payment_term_id: prepared.term?.id ?? null,
         payment_term_code_snapshot: prepared.term?.code ?? "", payment_term_name_snapshot: prepared.term?.name ?? "",
@@ -334,39 +335,6 @@ export class SalesQuotationService {
     });
   }
 
-  async #prepare(tx, document, nowMs) {
-    let customer;
-    try { customer = await this.customers.getSalesSnapshotInTransaction(tx, document.customerId, { atMs: nowMs }); }
-    catch (error) { if (error.code === "CUSTOMER_NOT_FOUND") throw salesError("CUSTOMER_NOT_SALEABLE"); throw error; }
-    if (customer.status !== "active") throw salesError("CUSTOMER_NOT_SALEABLE");
-    const termId = document.paymentTermId === undefined ? customer.defaultPaymentTermId : document.paymentTermId;
-    let term;
-    try {
-      await this.businessMaster.assertCurrencyUsableInTransaction(tx, { code: document.currencyCode });
-      if (termId !== null && termId !== undefined) term = await this.businessMaster.assertPaymentTermUsableInTransaction(tx, { id: termId });
-    } catch (error) {
-      if (["CURRENCY_NOT_ACTIVE", "PAYMENT_TERM_NOT_ACTIVE"].includes(error.code)) throw salesError("SALES_INPUT_INVALID", { field: error.code === "CURRENCY_NOT_ACTIVE" ? "currencyCode" : "paymentTermId" });
-      throw error;
-    }
-    let snapshots;
-    try { snapshots = await this.items.getSalesSnapshotsInTransaction(tx, document.lines, { atMs: nowMs }); }
-    catch (error) {
-      if (["SKU_NOT_FOUND", "SKU_NOT_USABLE"].includes(error.code)) throw salesError("SKU_NOT_SALEABLE");
-      if (error.code === "UOM_CONVERSION_INVALID") throw salesError("SKU_UOM_INVALID");
-      throw error;
-    }
-    const lines = document.lines.map(line => {
-      const snapshot = snapshots.find(row => row.skuId === line.skuId && row.salesUom.skuUomId === line.skuUomId);
-      if (!snapshot) throw salesError("SKU_UOM_INVALID");
-      return { sku_id: line.skuId, sku_uom_id: line.skuUomId, item_name_snapshot: snapshot.itemName, sku_code_snapshot: snapshot.skuCode,
-        sku_name_snapshot: snapshot.skuName, uom_code_snapshot: snapshot.salesUom.uomCode, uom_name_snapshot: snapshot.salesUom.uomName,
-        to_base_factor_snapshot: snapshot.salesUom.toBaseFactor, quantity: line.quantity, base_quantity: orderedBaseQuantity(line.quantity, snapshot.salesUom.toBaseFactor),
-        unit_selling_price: line.unitSellingPrice, price_source: snapshot.suggestedPrice?.currency === document.currencyCode &&
-          normalizeMoney(snapshot.suggestedPrice.amount) === line.unitSellingPrice ? "SUGGESTED" : "MANUAL",
-        line_amount: lineAmount(line.quantity, line.unitSellingPrice), line_note: line.lineNote };
-    });
-    return { customer, term, lines, snapshots };
-  }
 
   async #detail(tx, id, lock = true) {
     const [[row]] = await tx.query(`SELECT id,quotation_number,status,version,customer_id,customer_code_snapshot,customer_name_snapshot,currency_code,
