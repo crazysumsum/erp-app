@@ -3,7 +3,7 @@ import { removeSupplierImportFile, writeSupplierImportSource } from "../../servi
 import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierImportError } from "./supplierErrors.js";
-import { SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
+import { buildSupplierImportResult, SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
 import { uploadHeaderError } from "./import/SupplierImportProcessor.js";
 
 /**
@@ -105,6 +105,9 @@ export const IMPORT_ROW_STATUSES = Object.freeze(["valid", "warning", "invalid",
 // 取消只限未開始預檢或執行嘅 job（HD-058 2A）：validating 要等預檢做完，running 之後已經寫緊 Supplier。
 export const CANCELLABLE_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors", "queued"]);
 const CONFIRMABLE_JOB_STATUSES = Object.freeze(["ready", "ready_with_errors"]);
+// 有結果可以下載嘅 job（HD-063 2A）：做完嘅，加上已經開始執行但收尾失敗嘅（確認人失權、統計對唔上）——
+// 佢哋已經寫咗部分 Supplier，用家要知寫咗邊啲。
+const RESULT_JOB_STATUSES = new Set(["completed", "completed_with_errors"]);
 const ACTIVATION_MODES = Object.freeze(["draft", "activate"]);
 // 預檢未完成就冇列俾人睇：validating 嘅列可能係做到一半、之後會被刪嘅批次（REV-068 I-2）。
 const ROWS_HIDDEN_STATUSES = new Set(["uploaded", "validating"]);
@@ -279,10 +282,11 @@ export class SupplierImportService {
   }
 
   /** Job 摘要加逐列結果（按行號分頁）。預檢未完成嘅 job 唔回任何列。 */
-  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus }) {
+  async get({ actorId, claimedRoles, claimedPermissions, id, page = 1, pageSize = 20, rowStatus, rowNumber }) {
     if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
     const paged = paging(page, pageSize);
     if (rowStatus !== undefined && !IMPORT_ROW_STATUSES.includes(rowStatus)) throw new TypeError("Supplier import row status is invalid");
+    if (rowNumber !== undefined && !positiveInteger(rowNumber)) throw new TypeError("Supplier import row number is invalid");
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
     const [[job]] = await this.database.query(
       `SELECT ${SUMMARY_COLUMNS} FROM supplier_import_jobs WHERE id = ? AND created_by = ?`, [id, actorId]);
@@ -290,8 +294,10 @@ export class SupplierImportService {
     const result = { job: importJobSummary(job), rows: [], total: 0, page: paged.page, pageSize: paged.pageSize };
     // ready 之後列唔會再被重寫（只有 uploaded → validating 會），所以讀完 job 再讀列唔會撈到半套。
     if (ROWS_HIDDEN_STATUSES.has(job.status)) return result;
-    const where = rowStatus === undefined ? "job_id = ?" : "job_id = ? AND status = ?";
-    const params = rowStatus === undefined ? [id] : [id, rowStatus];
+    // 狀態同行號（T46：UI 按行號跳去嗰列）可以疊埋用。
+    const filters = [["status = ?", rowStatus], ["`row_number` = ?", rowNumber]].filter(([, value]) => value !== undefined);
+    const where = ["job_id = ?", ...filters.map(([clause]) => clause)].join(" AND ");
+    const params = [id, ...filters.map(([, value]) => value)];
     const [[[count]], [rows]] = await Promise.all([
       this.database.query(`SELECT COUNT(*) AS total FROM supplier_import_rows WHERE ${where}`, params),
       this.database.query(
@@ -351,6 +357,42 @@ export class SupplierImportService {
         { jobId: id, storedName: sourceStoredName, code: cleanupError?.code ?? null });
     }
     return summary;
+  }
+
+  /**
+   * 逐列結果 CSV（T46；HD-063 1B）：唔存實體檔，每次由 rows 即時生成，所以統計一定同 rows 一致（HD-049）。
+   * 只限上載者（HD-058 1A）。未執行完 → 409；保留期過咗（T48 寫 `files_purged_at`）→ 410，摘要同逐列結果照查到。
+   * 列數有上限（`import.maxRows`），所以一次過喺記憶體砌。
+   */
+  async resultCsv({ actorId, claimedRoles, claimedPermissions, id }) {
+    if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[job]] = await this.database.query(
+      "SELECT id, status, confirmed_at, files_purged_at FROM supplier_import_jobs WHERE id = ? AND created_by = ?", [id, actorId]);
+    if (!job) throw importJobNotFound();
+    if (!RESULT_JOB_STATUSES.has(job.status) && !(job.status === "failed" && job.confirmed_at !== null)) {
+      throw supplierImportError("SUPPLIER_IMPORT_RESULT_NOT_READY", 409, "匯入尚未執行完成，沒有結果可下載");
+    }
+    if (job.files_purged_at !== null) {
+      throw supplierImportError("IMPORT_FILE_EXPIRED", 410, "匯入結果已過保留期限；工作摘要及逐列結果仍可查閱");
+    }
+    // Code：已寫入嘅列用 Supplier 儲存嘅 Code（CSV 可能係細楷，REV-074 I-1）；其餘用家喺 CSV 寫嘅 Code 優先（佢認得返嗰列；
+    // ID 搵唔到或者 ID 同 Code 對唔上嗰陣都係，REV-073 I-3）；CSV 冇寫 Code（只用 supplierId）先用 Supplier 而家嘅 Code。
+    const [rows] = await this.database.query(
+      `SELECT r.\`row_number\`, r.operation, r.status, r.applied_supplier_id, r.errors, r.warnings,
+              COALESCE(CASE WHEN r.applied_supplier_id IS NOT NULL THEN s.supplier_code END,
+                       JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.root.supplierCode')),
+                       JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.identity.supplierCode')), s.supplier_code) AS supplier_code
+         FROM supplier_import_rows r
+         LEFT JOIN suppliers s ON s.id = COALESCE(r.applied_supplier_id, r.match_supplier_id)
+        WHERE r.job_id = ? ORDER BY r.\`row_number\``, [id]);
+    return {
+      fileName: `supplier-import-${id}-result.csv`,
+      content: buildSupplierImportResult(rows.map((row) => ({
+        rowNumber: Number(row.row_number), operation: row.operation, status: row.status, supplierCode: row.supplier_code ?? "",
+        appliedSupplierId: nullableNumber(row.applied_supplier_id), errors: row.errors, warnings: row.warnings
+      })))
+    };
   }
 
   /**

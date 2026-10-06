@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 273,
+  "revision": 279,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-045",
+  "current_task": "TASK-046",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t45-close",
-    "default_commit": "bbb2383ab3be94e79cade34fc584f8e538ddcfaf",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t46",
+    "default_commit": "f81feb8ee37871fe600352d6cc3ae92147ec4323",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -73,7 +73,7 @@
     "TASK-043": "DONE",
     "TASK-044": "DONE",
     "TASK-045": "DONE",
-    "TASK-046": "PENDING",
+    "TASK-046": "IN_PROGRESS",
     "TASK-047": "PENDING",
     "TASK-048": "PENDING",
     "TASK-049": "PENDING",
@@ -1752,6 +1752,30 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 7608699 (PR #177)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/75_rev_072_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-073",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-046)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 5ab6ab1104ed29d6aa857ec49ce53237a39664c2 (PR #181)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/76_rev_073_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-074",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-046 REV-073 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 4a1f488274afa8bedcbd7476cade04b798f11e6c (PR #181)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/77_rev_074_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4401,6 +4425,54 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-05: 'A'. PR #179 (claude/deps-drop-nodemon)."
+    },
+    {
+      "id": "HD-063",
+      "impact": "MAJOR",
+      "question": "TASK-046 import result and UI, three points. (1) Result file: (A) write a stored result CSV at finalize as design §5.13 describes (result_stored_name/SHA, crash window, HD-043 serving rules, T48 purge); (B) no stored file: stream the CSV from supplier_import_rows at download; 410 IMPORT_FILE_EXPIRED once files_purged_at is set by retention, job and row summaries still readable; HD-043 becomes not applicable and result_stored_name stays unused. (2) Downloadable jobs: (A) completed, completed_with_errors, and failed jobs that had started executing (confirmer revoked, count mismatch); others 409 SUPPLIER_IMPORT_RESULT_NOT_READY; (B) completed ones only. (3) Result CSV content: (A) row number, operation, outcome, Supplier Code, applied Supplier ID, error codes, error messages, warning codes, written with SUPPLIER_CSV_STRINGIFY_OPTIONS and a BOM, formula-risk cells prefixed with an apostrophe, no other payload; (B) also the Supplier name. Defaults stated in the same message: SupplierImportsPage.vue at /suppliers/imports (supplier.mgmt) with template, upload/precheck, confirm (mode, eligible approver, password, policy-at-confirm note), polling progress, row filters, BUSY and revoked shown distinctly; uploader-only GET /:id/result in a handler file sorted before jobHandlers.js; Playwright browser validation.",
+      "affected_ids": [
+        "TASK-046",
+        "TASK-048",
+        "HD-043",
+        "HD-049",
+        "HD-058"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: '全部按建議' - 1B, 2A, 3A."
+    },
+    {
+      "id": "HD-064",
+      "impact": "MINOR",
+      "question": "REV-073 follow-ups for TASK-046: L-1 full-width formula guard; L-2 latest row request wins and debounce; L-3 malformed ?job= ignored; L-4 test for failed precheck; I-1 Cache-Control owned by the framework; I-2 file name from Content-Disposition (needs server/config/security.js and the shared client HttpClient); I-3 the CSV Code of update rows shown in the result.",
+      "affected_ids": [
+        "TASK-046",
+        "REV-073"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: '修三REV-073的所有問題' (fix all REV-073 issues). Done for L-1..L-4, I-1, I-3; I-2 needs changes outside the module and was raised for a separate decision."
+    },
+    {
+      "id": "HD-065",
+      "impact": "MINOR",
+      "question": "After REV-073: (1) merge the new main (with PR #182, the dependency-audit fix) into PR #181 so CI reruns; (2) I-2, reading the result file name from Content-Disposition, needs server/config/security.js and the shared client HttpClient.getBlob: (A) a separate PR, (B) keep the fixed name as a known limitation; (3) open REV-074 on the follow-ups.",
+      "affected_ids": [
+        "TASK-046",
+        "REV-073",
+        "HD-064"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: '全部按建議' - merge main, I-2 (B), open REV-074."
+    },
+    {
+      "id": "HD-066",
+      "impact": "MINOR",
+      "question": "REV-074 follow-ups for TASK-046: fix within the module L-1 (a late older failure must not beat the newer success) with I-2 (one 404 notice), L-3 (?job= beyond Number.MAX_SAFE_INTEGER), L-4 (row-number input sends only integers 1..1,000,000), L-5 (test the CSV-Code-first order with an ID/Code conflict row), I-1 (applied rows show the stored Code); record L-2 (pager page from a late older request, rooted in the shared DataTable.vue) as a known limitation; I-3 needs nothing.",
+      "affected_ids": [
+        "TASK-046",
+        "REV-074"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: '建議' - as recommended."
     }
   ],
   "external_actions": [
@@ -5477,5 +5549,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-045 is DONE (PR #177 merged at a343677, main CI green). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting. Open carry-forward: HD-043 (T46), HD-044 (T48), HD-049 (T46), HD-057 (T51), and the T46/T48/T49 obligations in implementation/62_task_041_carry_forward.md."
+  "next_safe_action": "TASK-046: REV-074 follow-ups done per HD-066 (L-2 recorded as a framework limitation); 35 mutants killed. PR #181 waits for CI and the Product Owner's word. Merge only on the Product Owner's word."
 }
