@@ -16,6 +16,7 @@ import {
   validateApiConfig
 } from "../src/framework/middleware/apiDispatcher.js";
 import { createErrorHandler } from "../src/framework/middleware/errorHandler.js";
+import { ApplicationError } from "../src/framework/errors/ApplicationError.js";
 import { skuCodeTaken } from "../src/modules/item/itemErrors.js";
 import { IdempotencyService } from "../src/services/idempotency/IdempotencyService.js";
 import { MemoryIdempotencyStore } from "../src/services/idempotency/IdempotencyStore.js";
@@ -1064,4 +1065,71 @@ test("an ApplicationError's publicDetails, not just details, reaches the HTTP re
   assert.equal(response.status, 409);
   assert.equal(body.error.code, "SKU_CODE_TAKEN");
   assert.deepEqual(body.error.details, { skuCode: "VC-001" });
+});
+
+
+test("handler authorization preflight is awaited before initial execution and cached replay", async t => {
+  let revoked = false, preflights = 0, executions = 0;
+  const handler = new TestHandler("guardedCommand", function () {
+    executions++;
+    assert.equal(preflights, 1);
+    return this.response({ id: 1 });
+  });
+  handler.authorizeRequest = async () => {
+    await Promise.resolve();
+    preflights++;
+    if (revoked) throw new ApplicationError("Permission revoked", { code: "PERMISSION_STALE", statusCode: 403 });
+    return true;
+  };
+  const dispatcher = createApiDispatcher({ routes: [{ ...apiRouteDefaults, method: "POST", path: "/api/v1/guarded-command",
+    description: "Guard cached command responses", authType: "jwt", idempotency: { enabled: true },
+    requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: "guardedCommand" }],
+  handlers: { guardedCommand: handler }, logger: silentLogger });
+  const url = await startTestServer(t, dispatcher), token = await issueAccessToken({}, { subject: "7" });
+  const send = () => fetch(`${url}/api/v1/guarded-command`, { method: "POST", headers: { Authorization: `Bearer ${token}`, "Idempotency-Key": "guarded-1" } });
+  assert.equal((await send()).status, 200);
+  const replay = await send();
+  assert.equal(replay.status, 200);
+  assert.equal(replay.headers.get("idempotency-replayed"), "true");
+  revoked = true;
+  const denied = await send();
+  assert.equal(denied.status, 403);
+  assert.equal((await denied.json()).error.code, "PERMISSION_STALE");
+  assert.equal(preflights, 3);
+  assert.equal(executions, 1);
+});
+
+test("authorization preflight denies false/failure and rejects malformed declarations", async t => {
+  for (const mode of ["false", "failure"]) {
+    let executions = 0;
+    const handler = new TestHandler(`preflight_${mode}`, () => { executions++; return {}; });
+    handler.authorizeRequest = async () => {
+      if (mode === "failure") throw new ApplicationError("Database unavailable", { code: "SALES_DEPENDENCY_UNAVAILABLE", statusCode: 503 });
+      return false;
+    };
+    const route = { ...apiRouteDefaults, method: "POST", path: `/api/v1/preflight-${mode}`, description: "Fail closed",
+      authType: "public", requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: handler.handlerName };
+    const dispatcher = createApiDispatcher({ routes: [route], handlers: { [handler.handlerName]: handler }, logger: silentLogger });
+    const url = await startTestServer(t, dispatcher);
+    assert.equal((await fetch(`${url}${route.path}`, { method: "POST" })).status, mode === "false" ? 403 : 503);
+    assert.equal(executions, 0);
+    handler.authorizeRequest = true;
+    assert.throws(() => createApiDispatcher({ routes: [route], handlers: { [handler.handlerName]: handler }, logger: silentLogger }), /Invalid authorization preflight/u);
+  }
+});
+
+test("request timeout cancels an authorization preflight before command execution", async t => {
+  let executions = 0, aborted = false;
+  const handler = new TestHandler("timedPreflight", () => { executions++; return {}; });
+  handler.authorizeRequest = req => new Promise(resolve => {
+    req.requestTimeout.signal.addEventListener("abort", () => { aborted = true; resolve(true); }, { once: true });
+  });
+  const route = { ...apiRouteDefaults, method: "POST", path: "/api/v1/timed-preflight", description: "Cancel pending preflight",
+    timeoutMs: 30, authType: "public", requestSchema: emptyRequestSchema, responseSchema: anySuccessResponseSchema, handler: "timedPreflight" };
+  const dispatcher = createApiDispatcher({ routes: [route], handlers: { timedPreflight: handler }, logger: silentLogger });
+  const url = await startTestServer(t, dispatcher);
+  const response = await fetch(`${url}${route.path}`, { method: "POST" });
+  assert.equal(response.status, 504);
+  assert.equal(aborted, true);
+  assert.equal(executions, 0);
 });

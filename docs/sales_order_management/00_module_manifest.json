@@ -20,7 +20,17 @@
       "client/src/services/salesQuotation.js",
       "client/src/services/salesOrder.js",
       "client/src/pages/sales/**",
-      "client/src/components/sales/**"
+      "client/src/components/sales/**",
+      "client/src/services/sales.js",
+      "server/src/services/salesJobs/SalesJobRuntimeService.js",
+      "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+      "server/src/handlers/sales/salesSchemas.js",
+      "server/src/handlers/sales/salesLookupHandlers.js",
+      "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+      "server/src/modules/item/ItemLookupService.js",
+      "README.md",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      ".github/workflows/ci.yml"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -52,7 +62,13 @@
       "server/test/integration/itemUpdate.integration.test.js",
       "server/test/integration/itemConcurrency.integration.test.js",
       "server/test/integration/inventoryTask025Api.integration.test.js",
-      "server/test-support/salesProviderReport.py"
+      "server/test-support/salesProviderReport.py",
+      "server/test/migrate.test.js",
+      "client/test/pages/sales/**",
+      "client/test/components/sales/**",
+      "client/test/services/sales.test.js",
+      "server/test/serviceContainer.test.js",
+      "server/test/business-master/http.integration.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -75,7 +91,33 @@
       "server/test-support/fakeSalesDatabase.js",
       "client/test/**/sales*.test.js",
       "client/e2e/sales-order-management/**",
-      "server/test-support/salesProviderReport.py"
+      "server/test-support/salesProviderReport.py",
+      "client/src/services/sales.js",
+      "client/test/pages/sales/**",
+      "client/test/components/sales/**",
+      "client/test/services/sales.test.js",
+      "server/test/migrate.test.js",
+      "server/config/scheduler.js",
+      "client/config/menu.js",
+      "server/database/migrations/*_create_sales_quotations.js",
+      "server/database/migrations/*_create_sales_quotation_lines.js",
+      "server/database/migrations/*_create_sales_orders.js",
+      "server/database/migrations/*_create_sales_order_lines.js",
+      "server/database/migrations/*_create_sales_order_status_history.js",
+      "server/database/migrations/*_create_sales_audit_logs.js",
+      "server/database/migrations/*_create_sales_quotation_conversions.js",
+      "server/src/services/salesJobs/SalesJobRuntimeService.js",
+      "server/src/services/salesJobs/jobs/SalesQuotationExpiryJob.js",
+      "server/src/handlers/sales/salesSchemas.js",
+      "server/src/handlers/sales/salesLookupHandlers.js",
+      "server/database/migrations/*_create_sales_external_order_keys.js",
+      "server/src/handlers/sales-lookups/salesLookupHandlers.js",
+      "server/src/modules/item/ItemLookupService.js",
+      "server/test/serviceContainer.test.js",
+      "README.md",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/test/business-master/http.integration.test.js",
+      ".github/workflows/ci.yml"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -127,7 +169,12 @@
       "server/test/integration/itemLookup.integration.test.js",
       "server/test/integration/itemUpdate.integration.test.js",
       "server/test/integration/itemConcurrency.integration.test.js",
-      "server/test/integration/inventoryTask025Api.integration.test.js"
+      "server/test/integration/inventoryTask025Api.integration.test.js",
+      "server/test/migrate.test.js",
+      "server/config/scheduler.js",
+      "server/src/modules/businessMaster/businessMasterFactory.js",
+      "server/test/business-master/http.integration.test.js",
+      ".github/workflows/ci.yml"
     ],
     "forbidden_paths": [
       ".env",
@@ -142,7 +189,15 @@
     "schema_paths": [
       "server/database/migrations/0067_seed_sales_permissions.js",
       "server/database/migrations/0068_create_sales_document_sequences.js",
-      "server/database/migrations/0069_create_sales_operation_requests.js"
+      "server/database/migrations/0069_create_sales_operation_requests.js",
+      "server/database/migrations/*_create_sales_quotations.js",
+      "server/database/migrations/*_create_sales_quotation_lines.js",
+      "server/database/migrations/*_create_sales_orders.js",
+      "server/database/migrations/*_create_sales_order_lines.js",
+      "server/database/migrations/*_create_sales_order_status_history.js",
+      "server/database/migrations/*_create_sales_audit_logs.js",
+      "server/database/migrations/*_create_sales_quotation_conversions.js",
+      "server/database/migrations/*_create_sales_external_order_keys.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -163,7 +218,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "cf4cb43b84698637a70cc742e48a9c85a736c18b3ebb91b5a70119a59e547b68",
+        "sha256": "ce126dda3c217576cce1efd0d7558ac07e87f5eeb2bae13234e454185bef7ac0",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -197,7 +252,7 @@
         "id": "item-lookup-service",
         "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
         "regression_suites": [
           "sales-technical"
         ]

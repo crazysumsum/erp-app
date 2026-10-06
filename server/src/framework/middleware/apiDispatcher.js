@@ -2,7 +2,7 @@ import { Router } from "express";
 import apiConfig from "../../../config/api.js";
 import applicationConfig from "../../../config/application.js";
 import { BaseRequestHandler } from "../api/BaseRequestHandler.js";
-import { createAuthorizationPolicyRegistry } from "../authorization/authorizationPolicyRegistry.js";
+import { AuthorizationError, createAuthorizationPolicyRegistry } from "../authorization/authorizationPolicyRegistry.js";
 import { sendError } from "../http/apiResponse.js";
 import {
   markRequestProcessingCompleted,
@@ -148,6 +148,10 @@ export function validateApiConfig(
 
     if (!(handlers[route.handler] instanceof BaseRequestHandler)) {
       throw new Error(`Handler not found for ${routeKey}: ${route.handler}`);
+    }
+
+    if (handlers[route.handler].authorizeRequest !== undefined && typeof handlers[route.handler].authorizeRequest !== "function") {
+      throw new TypeError(`Invalid authorization preflight for ${routeKey}`);
     }
 
     const timeoutMs = Number(route.timeoutMs ?? defaultRequestTimeoutMs);
@@ -369,6 +373,10 @@ export function createApiDispatcher({
             registeredApi
           );
           context.update({ authorizationPolicies: policies });
+          if (handler.authorizeRequest) {
+            if (await handler.authorizeRequest(req) !== true) throw new AuthorizationError();
+            req.requestTimeout?.signal.throwIfAborted();
+          }
 
           // 上傳解析刻意排在認證與授權之後：先驗證身分，未通過的請求連
           // multipart body 都不會被讀取，避免匿名流量佔用解析與磁碟資源。

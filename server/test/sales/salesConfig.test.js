@@ -19,7 +19,8 @@ test("TC-009 Sales error catalogue exposes stable codes and only safe field meta
   assert.equal(SALES_ERROR_STATUS.SALES_QUANTITY_INVALID, 400);
   assert.equal(SALES_ERROR_STATUS.SALES_DEPENDENCY_UNAVAILABLE, 503);
   assert.equal(SALES_ERROR_STATUS.TRANSACTION_OUTCOME_UNKNOWN, 500);
-  assert.equal(Object.keys(SALES_ERROR_STATUS).length, 36);
+  assert.equal(SALES_ERROR_STATUS.SALES_SEQUENCE_EXHAUSTED, 409);
+  assert.equal(Object.keys(SALES_ERROR_STATUS).length, 37);
   for (const [code, statusCode] of Object.entries(SALES_ERROR_STATUS)) {
     const error = salesError(code, { field: "lines[0].quantity" });
     assert.equal(error.publicCode, code); assert.equal(error.statusCode, statusCode);
