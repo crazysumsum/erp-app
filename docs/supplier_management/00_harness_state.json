@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 277,
+  "revision": 278,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4462,6 +4462,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-06: '全部按建議' - merge main, I-2 (B), open REV-074."
+    },
+    {
+      "id": "HD-066",
+      "impact": "MINOR",
+      "question": "REV-074 follow-ups for TASK-046: fix within the module L-1 (a late older failure must not beat the newer success) with I-2 (one 404 notice), L-3 (?job= beyond Number.MAX_SAFE_INTEGER), L-4 (row-number input sends only integers 1..1,000,000), L-5 (test the CSV-Code-first order with an ID/Code conflict row), I-1 (applied rows show the stored Code); record L-2 (pager page from a late older request, rooted in the shared DataTable.vue) as a known limitation; I-3 needs nothing.",
+      "affected_ids": [
+        "TASK-046",
+        "REV-074"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: '建議' - as recommended."
     }
   ],
   "external_actions": [
@@ -5538,5 +5549,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-046: REV-074 APPROVED 4a1f488 with five Low and three Info findings awaiting the Product Owner's choice. PR #181 CI: one framework memory test (fileTransfer TC-004) failed once; main is green on the same base. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-046: REV-074 follow-ups per HD-066 on claude/supplier-task-046 (PR #181). Merge only on the Product Owner's word."
 }
