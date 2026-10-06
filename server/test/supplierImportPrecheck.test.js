@@ -3,7 +3,9 @@ import test from "node:test";
 import { stringify } from "csv-stringify/sync";
 
 import { precheckSupplierCsv } from "../src/modules/supplier/import/SupplierImportProcessor.js";
-import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../src/modules/supplier/import/supplierCsvSchema.js";
+import {
+  guardSpreadsheetCell, SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES, unguardSpreadsheetCell
+} from "../src/modules/supplier/import/supplierCsvSchema.js";
 
 /**
  * TASK-043：逐列預檢嘅業務規則（設計 §6.9、§8.8；FR-IMPORT-003、FR-IMPORT-006、BR-026）。
@@ -60,6 +62,23 @@ test("a minimal create row is valid; blanks become empty values and the payload 
       displayName: "", website: "", generalPhone: "", generalEmail: "", notes: ""
     } }
   });
+});
+
+test("the apostrophe the export adds before a formula character is taken off again; other apostrophes stay (HD-068 A)", async () => {
+  const { rows } = await precheck([create({
+    supplierName: guardSpreadsheetCell("=Beta Formula Ltd"), displayName: guardSpreadsheetCell("＠Beta"),
+    generalPhone: guardSpreadsheetCell("+852 2123 4567"), notes: "'quoted on purpose", website: ""
+  })]);
+  assert.equal(rows[0].status, "valid", JSON.stringify(rows[0].errors));
+  const { supplierName, displayName, generalPhone, notes } = rows[0].normalizedPayload.root;
+  assert.deepEqual([supplierName, displayName, generalPhone, notes], ["=Beta Formula Ltd", "＠Beta", "+852 2123 4567", "'quoted on purpose"]);
+});
+
+test("unguard is exactly the inverse of guard", () => {
+  for (const value of ["=1", "+852", "-2", "@x", "\tx", "\rx", "\nx", "＝1", "＋1", "－1", "＠x", "plain", "", "'x", "''=x", "a'=b"]) {
+    assert.equal(unguardSpreadsheetCell(guardSpreadsheetCell(value)), value, JSON.stringify(value));
+  }
+  for (const untouched of ["'x", "'", "''=x", "' +852"]) assert.equal(unguardSpreadsheetCell(untouched), untouched);
 });
 
 test("create requires Supplier Code, name and currency, and uses the API's rules for everything else", async () => {

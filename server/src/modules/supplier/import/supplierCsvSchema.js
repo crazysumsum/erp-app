@@ -83,9 +83,20 @@ export const SUPPLIER_IMPORT_RESULT_COLUMNS = Object.freeze([
  * 試算表公式注入（設計 §6.9）：以 `=`、`+`、`-`、`@`、Tab 或換行開頭嘅 cell 會被試算表當公式，
  * 前面加 `'` 令佢變返文字。全形嘅 `＝＋－＠` 都計（OWASP CSV Injection；REV-073 L-1）。
  */
+const FORMULA_LEAD = /^[=+\-@\t\r\n＝＋－＠]/u;
+const GUARDED_FORMULA_LEAD = /^'[=+\-@\t\r\n＝＋－＠]/u;
+
 export function guardSpreadsheetCell(value) {
   const text = value === null || value === undefined ? "" : String(value);
-  return /^[=+\-@\t\r\n＝＋－＠]/u.test(text) ? `'${text}` : text;
+  return FORMULA_LEAD.test(text) ? `'${text}` : text;
+}
+
+/**
+ * `guardSpreadsheetCell` 嘅相反，匯入時用（HD-068 A）：`'` 後面係會觸發公式嘅字元先拎走，所以匯出（T47）嘅檔
+ * 可以原封不動匯返入，`+852 …` 電話唔會變成 `'+852 …`。其他以 `'` 開頭嘅值照原樣保留。
+ */
+export function unguardSpreadsheetCell(text) {
+  return GUARDED_FORMULA_LEAD.test(text) ? text.slice(1) : text;
 }
 
 /** `rows`：`{ rowNumber, operation, status, supplierCode, appliedSupplierId, errors, warnings }`，已按行號排好。 */

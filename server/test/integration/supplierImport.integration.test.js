@@ -9,6 +9,9 @@ import { stringify } from "csv-stringify/sync";
 
 import { SUPPLIER_CSV_STRINGIFY_OPTIONS, SUPPLIER_IMPORT_COLUMN_NAMES } from "../../src/modules/supplier/import/supplierCsvSchema.js";
 import { ISO_4217_LEGAL_TENDER_CODES } from "../../src/modules/businessMaster/iso4217Snapshot.js";
+import { BusinessMasterProvider } from "../../src/modules/businessMaster/BusinessMasterProvider.js";
+import { BusinessMasterRepository } from "../../src/modules/businessMaster/BusinessMasterRepository.js";
+import { SupplierExportService } from "../../src/modules/supplier/SupplierExportService.js";
 import { SupplierImportService } from "../../src/modules/supplier/SupplierImportService.js";
 import { hashNameBigrams } from "../../src/modules/supplier/supplierDuplicateCandidates.js";
 import { SupplierImportWorkerService } from "../../src/services/supplierImport/SupplierImportWorkerService.js";
@@ -1434,4 +1437,38 @@ integrationTest("TASK-046 (HD-063 2A): a job that failed after it started runnin
   assert.equal((await precheck(broken.job.id)).status, "failed");
   const neverRan = await downloadResult(owner, broken.job.id);
   assert.deepEqual([neverRan.status, neverRan.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a failed precheck has no result");
+});
+
+/* ---------------------------------------------------------------- TASK-047 ---------------------------------------------------------------- */
+
+integrationTest("TASK-047 (HD-067 2A, HD-068 A): an exported file re-imports as upsert and changes no field, formula-guarded ones included", async () => {
+  const owner = await makeUser("rt", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const id = await seedSupplier({ code: `RT-${tag}`, name: `=Round Trip ${tag}` });
+  await h.db.execute(
+    "UPDATE suppliers SET display_name = '＠RT', general_phone = '+852 2123 4567', general_email = 'rt@example.com', notes = '-plain' WHERE id = ?",
+    [id]);
+  const fields = (row) => [row.supplier_name, row.display_name, row.general_phone, row.general_email, row.notes, row.website,
+    row.default_currency_code, row.default_payment_term_id, row.status];
+  const before = fields(await supplierByCode(`RT-${tag}`));
+
+  const exporter = new SupplierExportService({ database: h.db, time,
+    businessMaster: new BusinessMasterProvider({ database: h.db, repository: new BusinessMasterRepository() }) });
+  const { content } = await exporter.exportCsv({
+    actorId: owner.userId, claimedRoles: [owner.roleName], claimedPermissions: owner.permissions, filters: { q: `RT-${tag}` } });
+  assert.match(content, /'\+852 2123 4567/u, "the exported file carries the formula guard");
+
+  const created = await httpUpload(owner, Buffer.from(content, "utf8"), { mode: "upsert" });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  assert.equal((await precheck(created.job.id)).status, "ready");
+  const [[row]] = await h.db.query("SELECT operation, status, normalized_payload FROM supplier_import_rows WHERE job_id = ?", [created.job.id]);
+  assert.deepEqual([row.operation, row.status, row.normalized_payload.root.generalPhone, row.normalized_payload.root.supplierName],
+    ["update", "valid", "+852 2123 4567", `=Round Trip ${tag}`]);
+
+  const { version } = await job(created.job.id);
+  const confirmed = await confirmJob(owner, created.job.id, { version: Number(version), activationMode: "draft" });
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  await execute(created.job.id);
+  assert.deepEqual(await rowOutcomes(created.job.id), [[1, "applied", null]]);
+  assert.deepEqual(fields(await supplierByCode(`RT-${tag}`)), before, "every field is as it was");
 });

@@ -10,7 +10,7 @@ import {
 } from "../supplierNormalization.js";
 import {
   isBankColumn, SUPPLIER_IMPORT_CHILD_COLUMNS, SUPPLIER_IMPORT_COLUMN_NAMES, SUPPLIER_IMPORT_COLUMNS,
-  SUPPLIER_IMPORT_TEMPLATE_DESCRIPTION_MARKER, SUPPLIER_IMPORT_TEMPLATE_EXAMPLE_MARKER
+  SUPPLIER_IMPORT_TEMPLATE_DESCRIPTION_MARKER, SUPPLIER_IMPORT_TEMPLATE_EXAMPLE_MARKER, unguardSpreadsheetCell
 } from "./supplierCsvSchema.js";
 
 /**
@@ -434,8 +434,9 @@ export async function precheckSupplierCsv({
       if (isTemplateRow(values[0] ?? "") || values.every((value) => !value.trim())) continue;
       rowNumber += 1;
       if (rowNumber > maxRows) return jobError("SUPPLIER_IMPORT_TOO_MANY_ROWS", `CSV 超過 ${maxRows} 列上限`);
-      // 前導零、中英文照原樣保留；只去頭尾空白。
-      batch.push({ rowNumber, record: Object.fromEntries(headers.map((name, index) => [name, String(values[index] ?? "").trim()])) });
+      // 前導零、中英文照原樣保留；只去頭尾空白，同埋拎走匯出防公式加嘅 `'`（HD-068 A）。
+      batch.push({ rowNumber, record: Object.fromEntries(headers.map((name, index) =>
+        [name, unguardSpreadsheetCell(String(values[index] ?? "").trim())])) });
       if (batch.length >= batchSize) await flush();
     }
   } catch (error) {
