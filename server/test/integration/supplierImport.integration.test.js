@@ -1329,3 +1329,86 @@ integrationTest("TASK-045 (REV-071 L-2, HD-061 2A): a lock wait past the transac
   assert.equal((await execute(id)).status, "completed");
   assert.equal(Number((await h.db.query("SELECT COUNT(*) AS n FROM suppliers WHERE supplier_code_key = ?", [code.toLowerCase()]))[0][0].n), 1);
 });
+
+/* ---------------------------------------------------------------- TASK-046 ---------------------------------------------------------------- */
+
+async function downloadResult(user, id) {
+  const response = await fetch(`${h.url}/api/v1/supplier-imports/${id}/result`, { headers: { authorization: `Bearer ${user.token}` } });
+  const bytes = Buffer.from(await response.arrayBuffer());
+  let body = null;
+  try { body = JSON.parse(bytes.toString("utf8")); } catch { /* CSV */ }
+  return { status: response.status, headers: response.headers, bytes, body };
+}
+
+integrationTest("TASK-046 (HD-063): the result CSV is built from the rows, for the uploader only, once the job has run", async () => {
+  const owner = await makeUser("rs", ["supplier.mgmt"], { withPassword: true });
+  const outsider = await makeUser("rx", ["supplier.mgmt"]);
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const existing = await seedSupplier({ code: `RU-${tag}`, name: `Result Update ${tag}` });
+  const { id, version } = await readyJob(owner, [
+    { supplierCode: `R1-${tag}`, supplierName: `Result One ${tag}`, defaultCurrencyCode: "HKD" },
+    { supplierCode: `R2-${tag}`, supplierName: `Result Two ${tag}` },
+    { supplierCode: `RU-${tag}`, notes: "updated by import" }
+  ], { mode: "upsert" });
+  const notYet = await downloadResult(owner, id);
+  assert.deepEqual([notYet.status, notYet.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a ready job has no result yet");
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  await execute(id);
+
+  const foreign = await downloadResult(outsider, id);
+  assert.deepEqual([foreign.status, foreign.body?.error?.code], [404, "SUPPLIER_IMPORT_NOT_FOUND"]);
+  const result = await downloadResult(owner, id);
+  assert.equal(result.status, 200, result.bytes.toString("utf8"));
+  assert.match(result.headers.get("content-type"), /^text\/csv/u);
+  assert.match(result.headers.get("content-disposition"), new RegExp(`supplier-import-${id}-result\\.csv`, "u"));
+  assert.match(result.headers.get("cache-control"), /no-store/u);
+  assert.ok(result.bytes.toString("utf8").startsWith("﻿"), "a BOM, so a spreadsheet reads UTF-8");
+  const { parse } = await import("csv-parse/sync");
+  const records = parse(result.bytes, { bom: true, columns: true });
+  const one = await supplierByCode(`R1-${tag}`);
+  assert.deepEqual(records.map((record) => [record.rowNumber, record.operation, record.outcome, record.supplierCode, record.appliedSupplierId, record.errorCodes]), [
+    ["1", "create", "applied", `R1-${tag}`, String(one.id), ""],
+    ["2", "create", "skipped", `R2-${tag}`, "", "SUPPLIER_IMPORT_REQUIRED_FIELD"],
+    ["3", "update", "applied", `RU-${tag}`, String(existing), ""]
+  ]);
+  const text = result.bytes.toString("utf8");
+  assert.equal(text.includes("updated by import") || text.includes(`Result One ${tag}`), false, "no payload beyond the Code");
+  const summary = (await api(owner, "GET", `/api/v1/supplier-imports/${id}`)).data.job;
+  assert.deepEqual([summary.appliedCount, summary.skippedCount], [records.filter((r) => r.outcome === "applied").length,
+    records.filter((r) => r.outcome === "skipped").length], "the file and the summary agree (HD-049)");
+
+  // 保留期過咗（T48 會寫 files_purged_at）：410，但摘要同逐列結果照查得到。
+  await h.db.execute("UPDATE supplier_import_jobs SET files_purged_at = ? WHERE id = ?", [clock, id]);
+  const expired = await downloadResult(owner, id);
+  assert.deepEqual([expired.status, expired.body?.error?.code], [410, "IMPORT_FILE_EXPIRED"]);
+  const after = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
+  assert.deepEqual([after.status, after.data.job.filesPurged, after.data.total], [200, true, 3]);
+});
+
+integrationTest("TASK-046 (HD-063 2A): a job that failed after it started running still has a result; one that never ran does not", async () => {
+  const owner = await makeUser("rf", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const { id, version } = await readyJob(owner, [1, 2].map((n) => ({ supplierCode: `RF${n}-${tag}`, supplierName: `Result Fail ${n} ${tag}`, defaultCurrencyCode: "HKD" })));
+  assert.equal((await confirmJob(owner, id, { version, activationMode: "draft" })).status, 200);
+  const service = h.worker.importService;
+  assert.equal((await service.claimForExecution({ leaseOwner: "rf", leaseDurationMs: 60_000 }))?.id, id);
+  const first = await service.processNextRow({ jobId: id, leaseOwner: "rf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow });
+  h.supplierIds.push(first.appliedSupplierId);
+  const running = await downloadResult(owner, id);
+  assert.equal(running.status, 409, "a running job has no result yet");
+  await h.db.execute("DELETE FROM role_permissions WHERE role_id = ?", [owner.roleId]);
+  assert.equal((await service.processNextRow({ jobId: id, leaseOwner: "rf", leaseDurationMs: 60_000, applyRow: h.worker.applyRow })).status, "revoked");
+  // 確認人冇權嗰陣佢自己落載都會被拒（PERMISSION_STALE）；畀返權限再落載，證明 failed 嘅 job 都有結果。
+  const [[permission]] = await h.db.query("SELECT id FROM permissions WHERE name = 'supplier.mgmt'");
+  await h.db.execute("INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)", [owner.roleId, permission.id]);
+  const revoked = await downloadResult(owner, id);
+  assert.equal(revoked.status, 200, revoked.bytes.toString("utf8"));
+  const { parse } = await import("csv-parse/sync");
+  assert.deepEqual(parse(revoked.bytes, { bom: true, columns: true }).map((record) => [record.outcome, record.errorCodes]),
+    [["applied", ""], ["failed", "SUPPLIER_IMPORT_AUTHORIZATION_REVOKED"]]);
+
+  const cancelled = await readyJob(owner, [{ supplierCode: `RC-${tag}`, supplierName: `Result Cancel ${tag}`, defaultCurrencyCode: "HKD" }]);
+  await api(owner, "POST", `/api/v1/supplier-imports/${cancelled.id}/cancel`, { body: { version: cancelled.version }, key: randomUUID() });
+  const none = await downloadResult(owner, cancelled.id);
+  assert.deepEqual([none.status, none.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a cancelled job never ran, so it is not 'expired'");
+});

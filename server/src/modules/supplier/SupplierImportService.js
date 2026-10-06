@@ -3,7 +3,7 @@ import { removeSupplierImportFile, writeSupplierImportSource } from "../../servi
 import { SupplierApprovalService } from "./SupplierApprovalService.js";
 import { SupplierAuditLogService } from "./SupplierAuditLogService.js";
 import { invalidSupplierInput, supplierConflict, supplierImportError } from "./supplierErrors.js";
-import { SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
+import { buildSupplierImportResult, SUPPLIER_IMPORT_TEMPLATE_VERSION } from "./import/supplierCsvSchema.js";
 import { uploadHeaderError } from "./import/SupplierImportProcessor.js";
 
 /**
@@ -105,6 +105,9 @@ export const IMPORT_ROW_STATUSES = Object.freeze(["valid", "warning", "invalid",
 // 取消只限未開始預檢或執行嘅 job（HD-058 2A）：validating 要等預檢做完，running 之後已經寫緊 Supplier。
 export const CANCELLABLE_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors", "queued"]);
 const CONFIRMABLE_JOB_STATUSES = Object.freeze(["ready", "ready_with_errors"]);
+// 有結果可以下載嘅 job（HD-063 2A）：做完嘅，加上已經開始執行但收尾失敗嘅（確認人失權、統計對唔上）——
+// 佢哋已經寫咗部分 Supplier，用家要知寫咗邊啲。
+const RESULT_JOB_STATUSES = new Set(["completed", "completed_with_errors"]);
 const ACTIVATION_MODES = Object.freeze(["draft", "activate"]);
 // 預檢未完成就冇列俾人睇：validating 嘅列可能係做到一半、之後會被刪嘅批次（REV-068 I-2）。
 const ROWS_HIDDEN_STATUSES = new Set(["uploaded", "validating"]);
@@ -351,6 +354,39 @@ export class SupplierImportService {
         { jobId: id, storedName: sourceStoredName, code: cleanupError?.code ?? null });
     }
     return summary;
+  }
+
+  /**
+   * 逐列結果 CSV（T46；HD-063 1B）：唔存實體檔，每次由 rows 即時生成，所以統計一定同 rows 一致（HD-049）。
+   * 只限上載者（HD-058 1A）。未執行完 → 409；保留期過咗（T48 寫 `files_purged_at`）→ 410，摘要同逐列結果照查到。
+   * 列數有上限（`import.maxRows`），所以一次過喺記憶體砌。
+   */
+  async resultCsv({ actorId, claimedRoles, claimedPermissions, id }) {
+    if (!positiveInteger(id)) throw new TypeError("Supplier import job ID is invalid");
+    await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
+    const [[job]] = await this.database.query(
+      "SELECT id, status, confirmed_at, files_purged_at FROM supplier_import_jobs WHERE id = ? AND created_by = ?", [id, actorId]);
+    if (!job) throw importJobNotFound();
+    if (!RESULT_JOB_STATUSES.has(job.status) && !(job.status === "failed" && job.confirmed_at !== null)) {
+      throw supplierImportError("SUPPLIER_IMPORT_RESULT_NOT_READY", 409, "匯入尚未執行完成，沒有結果可下載");
+    }
+    if (job.files_purged_at !== null) {
+      throw supplierImportError("IMPORT_FILE_EXPIRED", 410, "匯入結果已過保留期限；工作摘要及逐列結果仍可查閱");
+    }
+    // Code：寫咗嘅 Supplier 用佢而家嘅 Code；冇寫到嘅新增列用 CSV 入面嘅 Code。
+    const [rows] = await this.database.query(
+      `SELECT r.\`row_number\`, r.operation, r.status, r.applied_supplier_id, r.errors, r.warnings,
+              COALESCE(s.supplier_code, JSON_UNQUOTE(JSON_EXTRACT(r.normalized_payload, '$.root.supplierCode'))) AS supplier_code
+         FROM supplier_import_rows r
+         LEFT JOIN suppliers s ON s.id = COALESCE(r.applied_supplier_id, r.match_supplier_id)
+        WHERE r.job_id = ? ORDER BY r.\`row_number\``, [id]);
+    return {
+      fileName: `supplier-import-${id}-result.csv`,
+      content: buildSupplierImportResult(rows.map((row) => ({
+        rowNumber: Number(row.row_number), operation: row.operation, status: row.status, supplierCode: row.supplier_code ?? "",
+        appliedSupplierId: nullableNumber(row.applied_supplier_id), errors: row.errors, warnings: row.warnings
+      })))
+    };
   }
 
   /**
