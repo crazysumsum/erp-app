@@ -304,7 +304,8 @@ onUnmounted(stopPolling);
             <template #body-cell-operation="{ value }"><q-td class="text-left">{{ OPERATION_LABEL[value] ?? value }}</q-td></template>
             <template #body-cell-status="{ value }"><q-td class="text-left">{{ ROW_LABEL[value] ?? value }}</q-td></template>
             <template #body-cell-issues="{ row }">
-              <q-td class="text-left">
+              <!-- 原因可以好長：要換行，唔好俾表格截走（真瀏覽器截圖見到）。 -->
+              <q-td class="text-left" style="white-space: normal; min-width: 260px">
                 <div v-for="issue in [...row.errors, ...row.warnings]" :key="`${issue.field ?? ''}-${issue.code}`" class="text-caption">
                   <q-badge v-if="issue.code === 'SUPPLIER_IMPORT_ROW_BUSY'" color="orange" label="可重新匯入" class="q-mr-xs" />
                   <span v-if="issue.field">{{ issue.field }} · </span>{{ issue.code }} · {{ issue.message }}
