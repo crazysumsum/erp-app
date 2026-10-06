@@ -19,7 +19,7 @@ const select = label => wrapper.findAllComponents(QSelect).find(field => field.p
 async function submit(){ await wrapper.find("form").trigger("submit"); await flushPromises(); }
 beforeEach(() => { vi.clearAllMocks();sales.lookupCustomers.mockResolvedValue({items:[customer],total:1});sales.lookupSkus.mockResolvedValue({items:[sku],total:1});sales.lookupWarehouses.mockResolvedValue({items:[{id:6,code:"W6",name:"倉庫"}],total:1}); });
 afterEach(() => { wrapper?.unmount();wrapper=null;vi.restoreAllMocks();window.document.body.innerHTML=""; });
-describe("TC-016 TC-019 Manual Draft SO form", () => {
+describe("TC-019 Manual Draft SO form", () => {
  it("sends only editable strings and owned IDs, preserving server source and quantities", async () => {
   const save=vi.fn().mockResolvedValue({salesOrder:order});await mountForm({document:order,onSave:save});await submit();
   expect(save).toHaveBeenCalledOnce();expect(save.mock.calls[0][0]).toEqual({eventId:expect.any(String),version:2,customerId:2,currencyCode:"HKD",paymentTermId:4,fulfillmentWarehouseId:6,orderDate:"2026-10-06",requestedDeliveryDate:null,customerPoReference:"",notes:"",lines:[{id:11,skuId:3,skuUomId:5,quantity:"2.000000",unitSellingPrice:"3.3333",lineNote:""}]});
