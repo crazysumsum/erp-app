@@ -58,3 +58,16 @@ export const SALES_ORDER_COMMAND_RESPONSE=object({salesOrder:SALES_ORDER_DETAIL,
   warnings:{type:"array",items:object({code:STRING,field:STRING})}});
 
 export function salesOrderCommandRequest(req,update=false){return {claims:salesActorClaims(req),input:validateSalesOrderInput(req.input.body,update),trace:{requestId:req.requestId ?? "",correlationId:req.correlationId ?? "",ipAddress:req.ip ?? ""}};}
+
+export const SALES_ORDER_READ_POLICY={name:"hasPermission",options:{permissions:["sales.view"]}};
+const oneOrMany=values=>({anyOf:[{enum:values},{type:"array",minItems:1,maxItems:values.length,items:{enum:values}}]});
+export const SALES_ORDER_LIST_QUERY={type:"object",additionalProperties:false,properties:{page:ID,pageSize:{type:"integer",minimum:1,maximum:100},q:{type:"string",maxLength:190},number:{type:"string",maxLength:190},
+ status:oneOrMany(SALES_ORDER_STATUSES),sourceType:oneOrMany(["MANUAL","QUOTATION","CSV","CHANNEL"]),channelCode:{type:"string",maxLength:50},externalOrderId:{type:"string",maxLength:190},customerId:ID,warehouseId:ID,hasBackorder:{type:"boolean"},
+ orderDateFrom:{type:"string",format:"date"},orderDateTo:{type:"string",format:"date"},updatedFrom:timestamp,updatedTo:timestamp,sortBy:{enum:["number","customerCode","customerName","orderDate","updatedAt","status","sourceType","totalAmount"]},descending:{type:"boolean"}}};
+const validateOrderQuery=validator.compile({query:SALES_ORDER_LIST_QUERY},"Sales Order list query");
+export function salesOrderListRequest(req){const request={query:structuredClone(req.input.query)};try{validateOrderQuery(request);}catch(error){if(error.code==="REQUEST_VALIDATION_FAILED")throw salesError("SALES_INPUT_INVALID");throw error;}return {claims:salesActorClaims(req),input:request.input.query};}
+const summaryFields=["id","number","status","sourceType","sourceQuotationId","channelCode","externalOrderId","version","customerId","customerCode","customerName","currencyCode","fulfillmentWarehouseId","warehouseCode","warehouseName","orderDate","lineCount","totalAmount","hasBackorder","backorderLineCount","createdAt","updatedAt"];
+export const SALES_ORDER_LIST_RESPONSE=object({items:{type:"array",maxItems:100,items:object(Object.fromEntries(summaryFields.map(field=>[field,SALES_ORDER_DETAIL.properties[field]])))},total:{type:"integer",minimum:0},page:ID,pageSize:{type:"integer",minimum:1,maximum:100}});
+export const SALES_ORDER_READ_RESPONSE=object({...SALES_ORDER_DETAIL.properties,isArchived:{const:false},allowedActions:{type:"array",uniqueItems:true,items:{enum:["edit"]}},historyTruncated:{type:"boolean"},
+ history:{type:"array",maxItems:100,items:object({id:ID,sequence:ID,fromStatus:{type:["string","null"]},toStatus:STRING,action:STRING,reason:STRING,version:ID,actorLabel:STRING,occurredAt:timestamp})},
+ currentMaster:object({customer:{anyOf:[{type:"null"},object({customerCode:STRING,customerName:STRING,status:STRING})]},skus:{type:"array",maxItems:100,items:object({skuId:ID,skuCode:STRING,skuName:STRING,itemName:STRING,skuStatus:STRING,itemStatus:STRING})}})});
