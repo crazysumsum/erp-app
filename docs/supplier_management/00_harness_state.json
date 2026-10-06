@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 281,
+  "revision": 282,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -4505,6 +4505,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-06: '全部按建議' - 1A, 2A, 10,000-row cap, client button."
+    },
+    {
+      "id": "HD-068",
+      "impact": "MAJOR",
+      "question": "TASK-047 round trip: the formula guard prefixes ' to cells starting with = + - @ (and full-width forms, Tab, CR, LF), and the import kept the apostrophe, so re-importing an export turned '+852 2123 4567' into \"'+852 2123 4567\" and '=Beta' into \"'=Beta\" (seen in the real app at precheck; the job was cancelled). (A) The import strips exactly the apostrophe the guard adds (only when the next character is one the guard covers), in SupplierImportProcessor; a value genuinely starting with ' followed by such a character loses the apostrophe. (B) Leave the import and document that guarded cells must be edited before re-import. (C) Stop guarding the export (violates SEC-012).",
+      "affected_ids": [
+        "TASK-047",
+        "TASK-043",
+        "HD-067",
+        "SEC-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: 'A'."
     }
   ],
   "external_actions": [
@@ -5581,5 +5594,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-047 in progress on claude/supplier-task-047 per HD-067 (1A, 2A, 10,000-row cap, client button): service, handler, shared HttpClient/CORS change, client button, tests, Playwright; then PR, CI, independent review. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-047 on claude/supplier-task-047 per HD-067 and HD-068 (A): implemented and tested; mutation sweep, PR, CI and independent review next. Merge only on the Product Owner's word."
 }
