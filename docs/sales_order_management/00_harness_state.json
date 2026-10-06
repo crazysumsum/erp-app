@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 97,
+  "revision": 105,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-020",
+  "current_task": "TASK-027",
   "baseline": {
     "design": "d4d43f935cda896d10cc47aa651645d76db0a105ae1f6de41249158892e9993b",
     "plan": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
-    "code_commit": "8b30dea523439f4b8944ef6fb45598d79e310be7",
-    "source_fingerprint": "cb5d85befa6206973176db6ae47cd1ad1b6139998758572c1ee261fa7e36e17d",
+    "code_commit": "f0506a9dc0c7f26e8bcbf5f99e3f5474ea4c3ddb",
+    "source_fingerprint": "c586ec6d7d9cc1df6664b851099038347642b09e0ea0b447d0707e1766ecaddf",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -48,7 +48,13 @@
     "TASK-018": "DONE",
     "TASK-019": "DONE",
     "TASK-022": "DONE",
-    "TASK-020": "DONE"
+    "TASK-020": "DONE",
+    "TASK-021": "IN_PROGRESS",
+    "TASK-023": "IN_PROGRESS",
+    "TASK-024": "IN_PROGRESS",
+    "TASK-025": "IN_PROGRESS",
+    "TASK-026": "IN_PROGRESS",
+    "TASK-027": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1845,6 +1851,90 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK021-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "d74cc70c18b29a2480d062f1c20baa0fd9d13e20ebfaf8a14b8d73b1752a67c9",
+      "source_ref": "Actual independent CHANGES_REQUESTED solelyunappliedregistrytest: focused8/lintPASS/native4PASSzero skip; private exactregistrycopy11PASS patchtechnicallyAPPROVE; livecurrentregistry10PASS1FAIL. Productnoadditionalfindings. ScopeDEC018 neededbeforeapply/fullregression. Private reviewerlog; noPhasecompletion.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC018-PROPOSAL-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "9db8622d96cdb91392630176a5a14f2df481fb381b8a7023b30d9d1fce18d099",
+      "source_ref": "Actual independent APPROVEunappliedpacket34; testpatchc6254b01/canonical82cef6e2 match2metadata entries, exactassertionretained; only1testscope+Taskdescription+2unchangedUATrefs; unchangedcommands/classifications/gates; recomputedD49f38335/P9db8622d; futuremechanicalauthorityexplicitlybounded. Nohumanansweryet/noapply.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK023-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "017d5a670a413362328fd434f780154813f528cd76f374057a1aaa5e7b0329df",
+      "source_ref": "Actual received TASK023 functional APPROVE and reconfirmation; 42unit/lintPASS/22native zero skip plus2native convertedDraft provenance and required audit rollback probesPASS. Private task023-reviewer-native.log/task023-reviewer-extra-corrected.log. Registry/DEC018/fullregression prevent TASK DONE or Phase/mergeapproval. No source changes since review.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK026-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "a860ed68ea780e76ec7691de1fbd62719744e48df04c715ad100e329c14095fe",
+      "source_ref": "Actual R1 CHANGES_REQUESTED P2 directwideprojectionpage differsapprovedIDpagecontract. 5unit/lint/4native zero skip+1binaryexactforgedhashprobePASS. Reviewer scopehashesfiletask026-reviewer-scope-hashes-r1.json isolates6serverfiles while027clientchanges; no otherfindings. Corrected count->IDs->projection awaitingR2; allR1historyretained.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK026-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "df6e4e4f50a79e42adc2f876ea89d77b3f8d94187be23f55c5ff3d40711fea30",
+      "source_ref": "Actual received independent R2 APPROVE: count -> bounded IDs -> safe projection meets Design7.9. Unit5/lint/native4 zero skips PASS plus actual forged binary-key exactness probe PASS. Scope6-file digest6bea73f4b9d924f47f09542fcd66eab7a41a311ad3fb5c2f5f13400000f40ffe unchanged during review; private task026-reviewer-native-r2.log and scope-hashes-r2-end.json. Later technical-case title prefixes only; final full Phase candidate review/checks remain mandatory. R1 findings preserved; no Phase/merge approval claimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK024-025-027-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "75c7324a7bdd8d541db26e399ad33313bde6a650d61ce3e74c464dbcca43a489",
+      "source_ref": "Actual independent CHANGES_REQUESTED 3 P2: initial list pagination synchronization clears draft input plus late old-filter response rewrites new page; off-page Customer/Warehouse unavailable through fields; saved valid190-character snapshot causes375px ->1658px mobile overflow. Actual27focusedPASS +23related dirtyguardPASS, scoped lint/buildPASS, real11browser7PASS4FAIL, APIs not mocked. Scoped21-file digest101df1804a1739455c64a02c47d81c539b855b9e91f0d6e3e8223ed73949dbe7 held unchanged; private task027-reviewer-browser.log. Root correction unit RED2FAIL6PASS then GREEN8PASS. R2 current actual full8 browser in progress; no DONE or Phase/merge claim.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK024-025-027-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "bb7b999852b9a2602160a15c09e06520d55fcc7ac4e804c9000ea816f55c0ab9",
+      "source_ref": "Actual independent R2 APPROVE.46focused/lint/buildPASS; real11browserPASS0skip +clean mobile visual1PASS. All3R1 P2s corrected:375px valid190snapshot wraps; delayed actual response preserves new page; Viewer typed offpageCustomer+Warehouse IDs/refresh works without privilegedlookup. Scoped21-file digest9681d0b1df5240bc6a8d6070faf5644aab9a866bfd2b6c36415807aeebcfedfa held unchanged. Private task027-reviewer-browser-r2.log/task027-reviewer-visual-r2.log +visually inspected clean snapshot. Later test-only case separately independentlyAPPROVED9PASS fileSHA1afe7977d4adf2fc25dfe07378b90a04896992cacf6bfa87d6a4410becc88b92. NoPhase/CI/merge or business acceptance claimed.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2980,6 +3070,28 @@
       "source_ref": "Focused11/fullclient721/build/lintPASS; independent actualPlaywright2PASS and rendered25rowtwo-pageA4money/tokenchecks. Report33/rawprivate task020-final-client/final-build/final-lint/reviewerfinalbrowser logs. HistoricalRED/visualfailure retained. Noformal/fullPhasePASS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T04:22:55.646393+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK021 developer verification and required registry mismatch",
+      "code_commit": "ed5cdb1d75c534d5a43d3b36c0d788dae0af1c2b",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "d74cc70c18b29a2480d062f1c20baa0fd9d13e20ebfaf8a14b8d73b1752a67c9",
+      "status": "FAIL",
+      "source_ref": "Currentfocused8/lintPASS/native22PASSzero skip; independentnative4PASS. Fullserver2187PASS1FAIL447optinskips expectednewservices missing; private proposedregistry11PASSnotlivefullPASS. Historicalmissingjob/provider/loggerfixturefail/range-indexdeadlock/EXPIREDrecheck/CWDwrongcommandfail retainedprivate/chat. DEC018pendingexactsharedtestscope.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T04:29:11.082578+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK023 Manual Draft SO developer verification",
+      "code_commit": "ed5cdb1d75c534d5a43d3b36c0d788dae0af1c2b",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "017d5a670a413362328fd434f780154813f528cd76f374057a1aaa5e7b0329df",
+      "status": "FAIL",
+      "source_ref": "Primary42unit/lintPASS/native26PASS0skip. Fullserver knownexactregistryfailureonly; independentfunctionalAPPROVE42unit/22native+2extraPASS. Historicalstrictresponse500 trackingPolicy lowercase corrected uppercase projection retained logs. DEC018pending; task remainsIN_PROGRESS.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T06:01:04.013988+00:00"
     }
   ],
   "pending_decisions": [
@@ -3193,6 +3305,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actualcurrentchat Sam explicitly chose「批准 DEC-017 補正方案（建議）」in direct response to full DEC017 packet30/question: canonicalpatch38b6783e/producte5618577, D baff3b97/P90eebe73 and supplemental Item owner/path scope+prior approval/UATNA carryforward. Existing commit/PR/mainmerge/runtime authority and all23developer/currentCI/review/freshmain/Phase gates retained."
+    },
+    {
+      "id": "DEC-018",
+      "impact": "MINOR",
+      "question": "Minor reversible test-registry/scope-binding correction; no product boundary/semantics change. Approve packet34 exact12lineexpectedregistrypatchc6254b01 andcanonical82cef6e2 (oneexistingtestscope,Task021description,unchangedUATNA refs), D49f38335/P9db8622d/newhistorypreservingbinding; narrowfuturepuremechanicalP1hash/reference/matrix/bindingsauthority no newpaths/tasks/rules/permissions/semantics/weakerchecks. request_user_input_async accepted actualanswer pending; oldcommitPRmerge/runtimeauthorityretained.",
+      "affected_ids": [
+        "TASK-021",
+        "PHASE-002",
+        "NFR-014",
+        "NFR-015"
+      ],
+      "status": "OPEN",
+      "answer_ref": null
     }
   ],
   "external_actions": [
@@ -3594,5 +3719,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit independently approved TASK020; implement TASK021 hourly bounded quotation expiry, thenTASK023..027. Current-source23suites/CI/finalreview/freshmain required beforemerge."
+  "next_safe_action": "Integrate fetched authoritative main7717702acf7c40bad188ba61fb48c8e90b309be1 into the isolated P1 branch; then reverify unchanged approved contract on integrated source. Actual DEC018 human answer remains pending; no registry/canonical patch applied and no Phase/merge readiness claimed."
 }
