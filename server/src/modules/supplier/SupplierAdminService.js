@@ -96,6 +96,65 @@ function supplierSortColumn(sortBy) {
   return SUPPLIER_SORT_COLUMNS[sortBy] ?? SUPPLIER_SORT_COLUMNS.updatedAt;
 }
 
+/**
+ * 供應商列表嘅篩選同排序（alias `s`）。一般匯出（T47，FR-IMPORT-009）用同一個函式，保證匯出嘅就係列表見到嘅。
+ */
+export function supplierListQuery({
+  q = "", status, currencyCode, paymentTermId, updatedFrom, updatedTo, includeArchived = false, sortBy = "updatedAt", descending = true
+} = {}) {
+  const conditions = [];
+  const params = [];
+  if (status) {
+    conditions.push("s.status = ?");
+    params.push(status);
+  } else if (!includeArchived) {
+    conditions.push("s.status != 'archived'");
+  }
+  if (currencyCode) {
+    conditions.push("s.default_currency_code = ?");
+    params.push(currencyCode);
+  }
+  if (paymentTermId !== undefined) {
+    if (paymentTermId === null) conditions.push("s.default_payment_term_id IS NULL");
+    else {
+      conditions.push("s.default_payment_term_id = ?");
+      params.push(paymentTermId);
+    }
+  }
+  if (updatedFrom !== undefined) {
+    conditions.push("s.updated_at >= ?");
+    params.push(updatedFrom);
+  }
+  if (updatedTo !== undefined) {
+    conditions.push("s.updated_at <= ?");
+    params.push(updatedTo);
+  }
+
+  const search = String(q ?? "").normalize("NFKC").trim();
+  let exactCodeKey = null;
+  if (search) {
+    const escaped = escapeLikeTerm(search);
+    exactCodeKey = search.toLowerCase();
+    conditions.push(`(
+      s.supplier_code_key LIKE ? ESCAPE '\\\\'
+      OR s.supplier_name LIKE ? ESCAPE '\\\\'
+      OR s.display_name LIKE ? ESCAPE '\\\\'
+      OR s.general_phone LIKE ? ESCAPE '\\\\'
+      OR s.general_email LIKE ? ESCAPE '\\\\'
+    )`);
+    params.push(`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`);
+  }
+
+  const direction = descending ? "DESC" : "ASC";
+  const exactOrder = exactCodeKey ? "CASE WHEN s.supplier_code_key = ? THEN 0 ELSE 1 END, " : "";
+  return {
+    where: conditions.length ? `WHERE ${conditions.join(" AND ")}` : "",
+    params,
+    orderBy: `${exactOrder}${supplierSortColumn(sortBy)} ${direction}, s.id ${direction}`,
+    orderParams: exactCodeKey ? [exactCodeKey] : []
+  };
+}
+
 function requireReason(value, message = "這項修改必須填寫原因") {
   const reason = String(value ?? "").trim();
   if (reason.length < 5 || reason.length > 500) {
@@ -713,56 +772,12 @@ export class SupplierAdminService {
     descending = true
   }) {
     await this.authorize(this.database, { actorId, claimedRoles, claimedPermissions });
-    const conditions = [];
-    const params = [];
-    if (status) {
-      conditions.push("s.status = ?");
-      params.push(status);
-    } else if (!includeArchived) {
-      conditions.push("s.status != 'archived'");
-    }
-    if (currencyCode) {
-      conditions.push("s.default_currency_code = ?");
-      params.push(currencyCode);
-    }
-    if (paymentTermId !== undefined) {
-      if (paymentTermId === null) conditions.push("s.default_payment_term_id IS NULL");
-      else {
-        conditions.push("s.default_payment_term_id = ?");
-        params.push(paymentTermId);
-      }
-    }
-    if (updatedFrom !== undefined) {
-      conditions.push("s.updated_at >= ?");
-      params.push(updatedFrom);
-    }
-    if (updatedTo !== undefined) {
-      conditions.push("s.updated_at <= ?");
-      params.push(updatedTo);
-    }
-
-    const search = String(q ?? "").normalize("NFKC").trim();
-    let exactCodeKey = null;
-    if (search) {
-      const escaped = escapeLikeTerm(search);
-      exactCodeKey = search.toLowerCase();
-      conditions.push(`(
-        s.supplier_code_key LIKE ? ESCAPE '\\\\'
-        OR s.supplier_name LIKE ? ESCAPE '\\\\'
-        OR s.display_name LIKE ? ESCAPE '\\\\'
-        OR s.general_phone LIKE ? ESCAPE '\\\\'
-        OR s.general_email LIKE ? ESCAPE '\\\\'
-      )`);
-      params.push(`${escaped.toLowerCase()}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`, `%${escaped}%`);
-    }
-
-    const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-    const direction = descending ? "DESC" : "ASC";
-    const stableSort = `${supplierSortColumn(sortBy)} ${direction}, s.id ${direction}`;
-    const exactOrder = exactCodeKey ? "CASE WHEN s.supplier_code_key = ? THEN 0 ELSE 1 END, " : "";
+    const { where, params, orderBy, orderParams } = supplierListQuery({
+      q, status, currencyCode, paymentTermId, updatedFrom, updatedTo, includeArchived, sortBy, descending
+    });
     const offset = (page - 1) * pageSize;
     const [countRows] = await this.database.query(`SELECT COUNT(*) AS total FROM suppliers s ${where}`, params);
-    const listParams = exactCodeKey ? [...params, exactCodeKey, pageSize, offset] : [...params, pageSize, offset];
+    const listParams = [...params, ...orderParams, pageSize, offset];
     const [rows] = await this.database.query(
       `SELECT s.id, s.supplier_code, s.supplier_name, s.display_name,
               s.default_currency_code, s.default_payment_term_id, s.status, s.version, s.updated_at,
@@ -773,7 +788,7 @@ export class SupplierAdminService {
                   AND c.status = 'active'
                 LIMIT 1) AS primary_contact_name
          FROM suppliers s ${where}
-        ORDER BY ${exactOrder}${stableSort}
+        ORDER BY ${orderBy}
         LIMIT ? OFFSET ?`,
       listParams
     );

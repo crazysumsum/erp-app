@@ -45,7 +45,8 @@ const securityConfig = {
       "Sunset",
       "Link",
       "Idempotency-Replayed",
-      "Retry-After"
+      "Retry-After",
+      "Content-Disposition"
     ],
 
     // 是否允許跨域 cookie/credentials。目前 JWT 使用 Authorization header，因此預設關閉。

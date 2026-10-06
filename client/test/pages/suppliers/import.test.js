@@ -68,6 +68,22 @@ describe("supplier import page (T46)", () => {
     expect(text()).toContain("待確認（有錯誤列）");
   });
 
+  it("saves downloads under the server's file name, or the old default when the header is unreadable (T46 I-2)", async () => {
+    const names = [];
+    URL.createObjectURL = vi.fn(() => "blob:x");
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function record() { names.push(this.download); });
+    supplierImportService.downloadTemplate.mockResolvedValueOnce({ blob: new Blob(["x"]), fileName: "供應商範本.csv" })
+      .mockResolvedValueOnce({ blob: new Blob(["x"]), fileName: null });
+    ({ wrapper } = await mountPage());
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      [...document.body.querySelectorAll("button")].find((button) => button.textContent.includes("下載範本")).click();
+      await flushPromises();
+    }
+    expect(names).toEqual(["供應商範本.csv", "supplier-import-template-v1.csv"]);
+    click.mockRestore();
+  });
+
   it("reopens the job named in the URL after a refresh, and records the open job in the URL", async () => {
     let router;
     ({ wrapper, router } = await mountPage({ job: "7" }));

@@ -164,7 +164,10 @@ async function loadApprovalContext() {
 
 async function downloadTemplate() {
   busy.value = true;
-  try { downloadBlob((await supplierImportService.downloadTemplate({ signal })).blob, "supplier-import-template-v1.csv"); }
+  try {
+    const { blob, fileName } = await supplierImportService.downloadTemplate({ signal });
+    downloadBlob(blob, fileName ?? "supplier-import-template-v1.csv");
+  }
   catch (error) { notifyError(error.message || "下載範本失敗"); }
   finally { busy.value = false; }
 }
@@ -211,8 +214,11 @@ async function cancelJob() {
 }
 async function downloadResult() {
   busy.value = true;
-  // 檔名同伺服器嘅 Content-Disposition 一樣（伺服器定，唔包任何使用者輸入）。
-  try { downloadBlob((await supplierImportService.downloadResult(job.value.id, { signal })).blob, `supplier-import-${job.value.id}-result.csv`); }
+  // 檔名由伺服器嘅 Content-Disposition 定（T46 I-2；HD-067 1A）；讀唔到先用同一個預設名。
+  try {
+    const { blob, fileName } = await supplierImportService.downloadResult(job.value.id, { signal });
+    downloadBlob(blob, fileName ?? `supplier-import-${job.value.id}-result.csv`);
+  }
   catch (error) {
     notifyError(error?.status === 410 ? "結果已過保留期限；工作摘要及逐列結果仍可在此查閱" : (error.message || "下載結果失敗"));
     detailTable.value?.reload();
