@@ -594,3 +594,21 @@ killed.
 treats `-U` and `501` as further patterns after the first one, so every process of the user with "501" in its command line
 was killed — including the throw-away MySQL and anything under `/private/tmp/claude-501/`. MySQL was restarted on the same
 data; the Product Owner was told at once. Review prompts now say to stop servers by PID.
+
+## REV-074 remediation (HD-066)
+
+REV-074 (`77_rev_074_independent_review.md`) approved 4a1f488 with five Low and three Info findings; the Product Owner chose
+the recommendations (HD-066).
+
+- **L-1 / I-2, fixed.** A late *failure* of an older row request now also resolves to the latest request, so it neither
+  blanks the newer rows nor shows a stale error; a 404 is notified once, by the latest request.
+- **L-3, fixed.** `?job=` must also be a safe integer (`9007199254740992` and up are dropped from the URL).
+- **L-4, fixed.** The row-number filter sends only integers 1–1,000,000; anything else is not requested and the field says why.
+- **L-5, tested.** The T46 result test has an ID/Code conflict row (the CSV's Code is shown) and a lower-case Code.
+- **I-1, fixed.** Applied rows show the stored Supplier Code; unapplied rows keep the CSV's Code first.
+- **L-2, known limitation.** When an older request answers late, `client/src/framework/ui/DataTable.vue` keeps that request's
+  page number in the pager (rows are right; the footer can read e.g. "21–9 of 9"). The cause is in the shared DataTable,
+  outside this module's write paths; a request sequence in `DataTable.onRequest` would fix it for every page.
+- **I-3** (the debounce flushes once on close) needs nothing.
+
+The T46 mutation list is now 35 (five more for HD-066, and patterns updated for the changed code); all 35 are killed.

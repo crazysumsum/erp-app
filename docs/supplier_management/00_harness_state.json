@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 278,
+  "revision": 279,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -5549,5 +5549,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-046: REV-074 follow-ups per HD-066 on claude/supplier-task-046 (PR #181). Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-046: REV-074 follow-ups done per HD-066 (L-2 recorded as a framework limitation); 35 mutants killed. PR #181 waits for CI and the Product Owner's word. Merge only on the Product Owner's word."
 }
