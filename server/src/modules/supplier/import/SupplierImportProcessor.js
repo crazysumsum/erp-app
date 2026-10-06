@@ -370,7 +370,9 @@ async function checkRow(record, rowNumber, context) {
     rowNumber, operation,
     matchSupplierId: target ? Number(target.id) : null,
     expectedSupplierVersion: target ? Number(target.version) : null,
-    normalizedPayload: { root, ...children },
+    // 更新列嘅 root 永遠唔帶 Code（Code 唔經匯入改）。CSV 寫咗嘅 Code 另外放喺 identity，淨係俾結果檔認返
+    // 邊一列用（ID 搵唔到、或者 ID 同 Code 對唔上嗰陣都認得到；REV-073 I-3）；T45 唔會讀佢。
+    normalizedPayload: { root, ...children, ...(operation === "update" && code ? { identity: { supplierCode: code.value } } : {}) },
     status: errors.length ? "invalid" : warnings.length ? "warning" : "valid",
     errors, warnings
   };

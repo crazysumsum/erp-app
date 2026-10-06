@@ -120,7 +120,8 @@ test("upsert matches by supplierId first and cross-checks the code; code alone a
     create({ supplierCode: "NEW-1" })
   ], { mode: "upsert", connection });
   assert.deepEqual([rows[0].operation, rows[0].matchSupplierId, rows[0].expectedSupplierVersion, rows[0].status], ["update", 7, 4, "valid"]);
-  assert.deepEqual(rows[0].normalizedPayload, { root: { supplierName: "Renamed" } }, "blank optional cells mean no change");
+  assert.deepEqual(rows[0].normalizedPayload, { root: { supplierName: "Renamed" }, identity: { supplierCode: "SUP-7" } },
+    "blank optional cells mean no change; the CSV's Code is kept outside root, for the result file only (REV-073 I-3)");
   assert.deepEqual(codes(rows[1]), [["supplierCode", "SUPPLIER_IMPORT_MATCH_CONFLICT"]]);
   assert.deepEqual([rows[2].operation, rows[2].matchSupplierId], ["update", 8]);
   assert.deepEqual(codes(rows[3]), [["supplierId", "SUPPLIER_NOT_FOUND"]]);
@@ -137,7 +138,9 @@ test("update rows reject child columns and archived Suppliers, and never carry t
   ], { mode: "upsert", connection });
   assert.deepEqual(codes(rows[0]), [["children", "IMPORT_CHILD_UPDATE_UNSUPPORTED"]]);
   assert.deepEqual(codes(rows[1]), [["supplierId", "SUPPLIER_UPDATE_NOT_ALLOWED"]]);
-  assert.deepEqual(rows[2].normalizedPayload, { root: { notes: "kept" } });
+  assert.deepEqual(rows[2].normalizedPayload.root, { notes: "kept" }, "root never carries the Code an update cannot change");
+  assert.deepEqual(rows[2].normalizedPayload.identity, { supplierCode: "SUP-7" });
+  assert.equal(Object.hasOwn(rows[0].normalizedPayload, "identity"), false, "a row matched by ID alone has no CSV Code to keep");
 });
 
 test("create_only never updates: an existing code is taken and a supplierId is refused", async () => {

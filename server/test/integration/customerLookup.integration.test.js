@@ -8,7 +8,7 @@ import { CustomerLookupService } from "../../src/modules/customer/CustomerLookup
 
 const integrationTest = process.env.DB_INTEGRATION_TESTS === "1" ? test : test.skip;
 
-integrationTest("TC-018 and TC-027 real MySQL lookup enforces status, ownership, purpose and version", async (t) => {
+integrationTest("TC-027 real MySQL lookup enforces status, ownership, purpose and version", async (t) => {
   const source = defaultConfigurationSource();
   const application = await createApplication({ configurationSource: { ...source, application: { ...source.application, port: 0 } } });
   const database = application.services.require("mysqldatabase");
