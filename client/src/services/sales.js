@@ -19,5 +19,8 @@ export default {
   updateQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/update`, payload); },
   issueQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/issue`, payload); },
   cancelQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/cancel`, payload); },
-  convertQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/convert`, payload); }
+  convertQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/convert`, payload); },
+  getOrder(id, { signal } = {}) { return httpClient.get(`/api/v1/sales-orders/${id}`, { signal }); },
+  createOrder(payload) { return write("/api/v1/sales-orders/create", payload); },
+  updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); }
 };

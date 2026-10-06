@@ -33,4 +33,10 @@ describe("Sales Quotation client contract", () => {
       expect(httpClient.get).toHaveBeenLastCalledWith(`/api/v1/sales-lookups/${kind}`, { params: { q: "probe", page: 1, pageSize: 20 }, signal: "abort" });
     }
   });
+  it("preserves Manual SO write intents and forwards detail cancellation", async () => {
+    const payload={eventId:"order-intent",version:2,lines:[{quantity:"2.000000",unitSellingPrice:"3.3333"}]};
+    await sales.createOrder(payload);expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-orders/create",{idempotent:true,idempotencyKey:"order-intent",body:payload});
+    await sales.updateOrder(8,payload);expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-orders/8/update",{idempotent:true,idempotencyKey:"order-intent",body:payload});
+    await sales.getOrder(8,{signal:"abort-order"});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/sales-orders/8",{signal:"abort-order"});
+  });
 });
