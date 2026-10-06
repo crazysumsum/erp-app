@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 94,
+  "revision": 97,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "d4d43f935cda896d10cc47aa651645d76db0a105ae1f6de41249158892e9993b",
     "plan": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
-    "code_commit": "176de72ab2fb926f8e962648e764262ae8c668bc\n",
-    "source_fingerprint": "b4239ae67f61e79dda5bdfa136e9a9d5ea4977f914854ccde1036192ae1850aa",
+    "code_commit": "8b30dea523439f4b8944ef6fb45598d79e310be7",
+    "source_fingerprint": "cb5d85befa6206973176db6ae47cd1ad1b6139998758572c1ee261fa7e36e17d",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -47,7 +47,8 @@
     "TASK-017": "DONE",
     "TASK-018": "DONE",
     "TASK-019": "DONE",
-    "TASK-022": "DONE"
+    "TASK-022": "DONE",
+    "TASK-020": "DONE"
   },
   "approvals": [
     {
@@ -1820,6 +1821,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK020-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "5cae407fe04e45abf3ea5cd3c3a1bd9509a3a235a65e8ab96a9e3de8834f31bc",
+      "source_ref": "Actual separate review focused11/lintPASS; actualbrowser2PASS corrected selector #app (old private selectorfailure preserved). 25real lines detailpagination/allprintrows/stale cancellation+reload/uncertainroute reuse passed. PDF rendered: exact price and amount broken across lines; P2 caller print numeric whitespace correction required. No completePhase/formalclaim.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK020-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "cb5d85befa6206973176db6ae47cd1ad1b6139998758572c1ee261fa7e36e17d",
+      "source_ref": "Actual received independent final APPROVE focused11/lintPASS/browser2PASS. Rendered25rowtwo-page A4 actualvisuallyreviewed with intactmoneytokens/header/allrows/total/no clipping; stalecancel/reload/uncertainroute+no unexpectedconsole/network; private finalbrowserlog/PDF; Report33. Ownappclosed/fixtureleasefreed. NoPhase/formal/mergeapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2944,6 +2969,17 @@
       "source_ref": "Focused15/fullclient710/build/lintPASS. PrimaryactualPlaywright1PASS thenindependentfinal2PASS+48diff/network1PASS oncurrentfp; Report32; private task019corrected/reviewerlogs/screenshots. Expectedstale409/actualoffline failures distinguished. REDoutputs retainedinchat; rawbrowserfailuresprivate. Noformal/wholePhasePASS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T04:12:29.411612+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK020 current-source developer UI verification",
+      "code_commit": "8b30dea523439f4b8944ef6fb45598d79e310be7",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "cb5d85befa6206973176db6ae47cd1ad1b6139998758572c1ee261fa7e36e17d",
+      "status": "PASS",
+      "source_ref": "Focused11/fullclient721/build/lintPASS; independent actualPlaywright2PASS and rendered25rowtwo-pageA4money/tokenchecks. Report33/rawprivate task020-final-client/final-build/final-lint/reviewerfinalbrowser logs. HistoricalRED/visualfailure retained. Noformal/fullPhasePASS.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T04:22:55.646393+00:00"
     }
   ],
   "pending_decisions": [
@@ -3558,5 +3594,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Implement approved TASK020 quotation list/detail/browserA4print with currentserver allowedActions; focused/fullclient/lint/build and realPlaywright UI +independentreview thenatomiccommit. CompleteTASK021/023..027 andall23finalcurrent-source/fullPhase/freshmain/CIgates beforemerge."
+  "next_safe_action": "Commit independently approved TASK020; implement TASK021 hourly bounded quotation expiry, thenTASK023..027. Current-source23suites/CI/finalreview/freshmain required beforemerge."
 }
