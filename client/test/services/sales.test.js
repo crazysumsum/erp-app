@@ -39,4 +39,5 @@ describe("Sales Quotation client contract", () => {
     await sales.updateOrder(8,payload);expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-orders/8/update",{idempotent:true,idempotencyKey:"order-intent",body:payload});
     await sales.getOrder(8,{signal:"abort-order"});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/sales-orders/8",{signal:"abort-order"});
   });
+  it("maps bounded Active SO pagination and exact source filters",async()=>{httpClient.get.mockResolvedValue({items:[{id:8}],total:11});await expect(sales.listOrders({page:2,rowsPerPage:10,filter:"customer",number:"SO-202610-000008",externalOrderId:"case_%",channelCode:"WEB",hasBackorder:false,status:["DRAFT"],signal:"abort"})).resolves.toEqual({rows:[{id:8}],rowsNumber:11});expect(httpClient.get).toHaveBeenCalledWith("/api/v1/sales-orders",{params:{page:2,pageSize:10,q:"customer",number:"SO-202610-000008",externalOrderId:"case_%",channelCode:"WEB",hasBackorder:false,status:["DRAFT"]},signal:"abort"});});
 });

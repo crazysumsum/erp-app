@@ -1,5 +1,5 @@
 <script>
-export const page = { name: "sales-quotations", path: "/sales/quotations", title: "報價單", requires: { permissions: ["sales.view"] } };
+export const page = { name: "sales-quotations", path: "/sales/quotations", title: "報價單", requires: { permissions: ["sales.view"] }, menu: {group:"salesOrderManagement",icon:"request_quote",order:10} };
 </script>
 <script setup>
 import { computed, onBeforeUnmount, reactive, watch } from "vue";

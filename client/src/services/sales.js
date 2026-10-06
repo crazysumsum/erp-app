@@ -21,6 +21,10 @@ export default {
   cancelQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/cancel`, payload); },
   convertQuotation(id, payload) { return write(`/api/v1/sales-quotations/${id}/convert`, payload); },
   getOrder(id, { signal } = {}) { return httpClient.get(`/api/v1/sales-orders/${id}`, { signal }); },
+  listOrders({ rowsPerPage, filter, signal, ...query } = {}) {
+    const params=Object.fromEntries(Object.entries({...query,pageSize:rowsPerPage??query.pageSize,q:filter??query.q}).filter(([,value])=>value!==undefined&&value!==null&&value!==""));
+    return httpClient.get("/api/v1/sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
+  },
   createOrder(payload) { return write("/api/v1/sales-orders/create", payload); },
   updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); }
 };
