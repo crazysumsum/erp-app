@@ -161,6 +161,12 @@ test("trusted addresses stop at the first stranger, whatever the chain length", 
   );
 });
 
+test("proxy trust does not accept a forged client IP through an underspecified IPv4-mapped subnet", async (t) => {
+  // GHSA-jqcg-44mw-7w3h: a short IPv6 prefix must not trust every IPv4 peer.
+  assert.equal(await clientIpFor(t, "::ffff:10.0.0.0/8", "203.0.113.7"), "127.0.0.1");
+  assert.equal(await clientIpFor(t, "::ffff:127.0.0.0/104", "203.0.113.7"), "203.0.113.7");
+});
+
 test("HTTPS enforcement trusts only the configured reverse proxy hop", async (t) => {
   const security = normalizeSecurityConfig({
     ...securityConfig,
