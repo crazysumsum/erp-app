@@ -74,6 +74,7 @@ export class SalesOperationService {
     try { return await database.withTransaction(work); }
     catch (error) {
       if (error.code === "DATABASE_TRANSACTION_INDETERMINATE") throw salesError("TRANSACTION_OUTCOME_UNKNOWN");
+      if (["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"].includes(error.cause?.code ?? error.code)) throw salesError("CONCURRENT_OPERATION");
       throw error;
     }
   }

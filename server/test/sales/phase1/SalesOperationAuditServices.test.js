@@ -73,3 +73,15 @@ test("Sales Audit uses ORDER target identity distinct from the operation SALES_O
       details: { version: 1, lineCount: 1, totalAmount: "0.0000", currencyCode: "HKD" } });
   assert.equal(target, "ORDER");
 });
+test("Sales operation projects raw and wrapped lock failures without retry or masking unknown commit", async () => {
+  const service = new SalesOperationService();
+  for (const code of ["ER_LOCK_DEADLOCK", "ER_LOCK_WAIT_TIMEOUT"]) for (const wrapped of [false, true]) {
+    let calls = 0;
+    const cause = Object.assign(new Error("synthetic SQL lock failure"), { code });
+    const database = { async withTransaction() { calls++; throw wrapped ? Object.assign(new Error("database query failed", { cause }), { code: "DATABASE_QUERY_FAILED" }) : cause; } };
+    await assert.rejects(() => service.run(database, () => {}), { code: "CONCURRENT_OPERATION", statusCode: 409 });
+    assert.equal(calls, 1);
+  }
+  const cause = Object.assign(new Error("lock while committing"), { code: "ER_LOCK_DEADLOCK" });
+  await assert.rejects(() => service.run({ async withTransaction() { throw Object.assign(new Error("unknown", { cause }), { code: "DATABASE_TRANSACTION_INDETERMINATE" }); } }, () => {}), { code: "TRANSACTION_OUTCOME_UNKNOWN" });
+});

@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 82,
+  "revision": 84,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "06115a6e665375a3c2178ad707ced603ecddc9fd8fee4b523c9e887b2a62a885",
     "plan": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
-    "code_commit": "e22be9887331fcd7cf5bb478b78df65ebe471aa1",
-    "source_fingerprint": "a8f23e03dd5a032b0fe9d26cf6dd2649b94090d75558b29762f48d7936f7ba13",
+    "code_commit": "7048ee449be8f1de01a69ed9798b87b22c09db7c",
+    "source_fingerprint": "b85c6d253e58b7404401db3b0e36c5075ef7bb3e600bbd0656c865d79409ce07",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -888,6 +888,37 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PHASE1-COMBINED-SCOPE-DEC016",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「按你的意見推進」after DEC016 packet26, subsequent explicit next-step recommendation to approve DEC016: adopts recommended exact patch71553c3c127cc8d558ec6c09341da8e0a2e3d803844c5b9094dff65a26eee29a and new DESIGN06115a6e/PLAN83e09740. Supplemental preflight/security scope and unchanged NFR014/015 businessUATNA rebinding approved. AllP1 tests/currentCI/review/freshmain/fullPhase gates remain; existing runtime/commit/push/PR/mainmerge authorization persists. DEC016 packet explicitly retains prior P1 scope/authorization; this record binds their union to new PLAN and preserves original records. Initial boundary check lacked the carry-forward binding; no extra scope is added.",
+      "recorded_at": "2026-10-06T03:09:33.010740+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "code_commit": null,
+      "scope": [
+        "server/database/migrations/*_create_sales_quotations.js",
+        "server/database/migrations/*_create_sales_quotation_lines.js",
+        "server/database/migrations/*_create_sales_orders.js",
+        "server/database/migrations/*_create_sales_order_lines.js",
+        "server/database/migrations/*_create_sales_order_status_history.js",
+        "server/database/migrations/*_create_sales_audit_logs.js",
+        "server/database/migrations/*_create_sales_quotation_conversions.js",
+        "server/database/migrations/*_create_sales_external_order_keys.js",
+        "server/test/migrate.test.js",
+        "server/config/scheduler.js",
+        "client/config/menu.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/test/apiDispatcher.test.js",
+        "server/src/modules/sales/salesAuthorization.js",
+        "server/src/modules/sales/SalesQuotationService.js",
+        "server/src/handlers/sales-quotations/**"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1426,6 +1457,18 @@
       "reviewer": "Codex /root/sales_p1_review",
       "reviewed_baseline": "a8f23e03dd5a032b0fe9d26cf6dd2649b94090d75558b29762f48d7936f7ba13",
       "source_ref": "Actualindependent implementationreview verified fingerprint+input.lines correction/nativeRED-GREEN7PASS; reviewerfocused6PASS/lintPASS; noSQL; noPhase/mergeapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK015-LOCK-FOLLOWUP",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "b85c6d253e58b7404401db3b0e36c5075ef7bb3e600bbd0656c865d79409ce07",
+      "source_ref": "Actual narrowreview APPROVED: raw/wrapped mapping, indeterminatepriority, no retry; independently8PASS/lintPASS, inspectedRED/GREEN/frameworkwrapping, noSQL.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -2477,6 +2520,17 @@
       "source_ref": "Actual current logs /private/tmp/sales-p1-private/task016-review-final-{unit,regression,lint}.log:36PASS0skip/2167PASS0fail432optinskips/lintPASS; task016-line-id-green.log realnative7PASS0skip. Retained RED/failures unchanged; report27. Not23-suitePhase/formal PASS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T03:09:13.515612+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK015 lock-error projection follow-up",
+      "code_commit": "7048ee449be8f1de01a69ed9798b87b22c09db7c",
+      "spec_baseline": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "source_fingerprint": "b85c6d253e58b7404401db3b0e36c5075ef7bb3e600bbd0656c865d79409ce07",
+      "status": "PASS",
+      "source_ref": "Actual private task015-lock-projection-red7PASS1FAIL→green8PASS0skip; task015-lock-final-regression2168PASS0FAIL432optinskips and task015-lock-final-lintPASS; reviewer actual8PASS/lint. Noformal/PhasePASS.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T03:10:46.192199+00:00"
     }
   ],
   "pending_decisions": [
@@ -3074,5 +3128,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit reviewed TASK016 atomic slice; resolve approved TASK015 lock-error projection follow-up; implement TASK017 lifecycle/conversion with RED then developerchecks/review. FullP1 TASK017..027 and23mandatory/currentCI/freshmain/review gates pending."
+  "next_safe_action": "Commit TASK015 approved-scope lock projection correction and DEC016 combined-scope binding; continue TASK017 lifecycle/conversion RED→GREEN. FullP1 remaininggates unchanged."
 }
