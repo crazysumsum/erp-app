@@ -446,7 +446,7 @@ test("the store refuses to build without a database or a time service", () => {
   );
 });
 
-test("a missing table says which SQL file creates it", async () => {
+test("MySqlIdempotencyStore: a missing table says which SQL file creates it", async () => {
   const database = fakeDatabase();
   database.execute = async () => {
     throw Object.assign(new Error("MySQL database execute failed"), {
