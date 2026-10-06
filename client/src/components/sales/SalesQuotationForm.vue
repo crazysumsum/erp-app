@@ -12,7 +12,7 @@ const barcode = ref("");
 const paymentTerms = computed(() => { const id=customer.value?.defaultPaymentTermId ?? props.document?.paymentTermId;return id?[{value:id,label:props.document?.paymentTermId===id?props.document.paymentTermName:"客戶預設條款"}]:[]; });
 const lookupError = ref(""), lookupBusy = reactive({ customers: false, skus: false, warehouses: false });
 const stale = ref(false), intent = ref(null), uncertain = ref(false), root = ref(null), duplicateMessage = ref("");
-let pristine = "";
+const pristine = ref("");
 const controllers = {};
 function reset(document) {
  Object.assign(form, { customerId: document?.customerId ?? null, currencyCode: document?.currencyCode ?? "", paymentTermId: document?.paymentTermId ?? null,
@@ -20,10 +20,10 @@ function reset(document) {
   fulfillmentWarehouseId: null, orderDate: today(), requestedDeliveryDate: null, customerPoReference: "",
   lines: (document?.lines ?? []).map(line => ({ ...line })) });
  customer.value = document ? { customerId: document.customerId, customerCode: document.customerCode, displayName: document.customerName, defaultCurrencyCode: document.currencyCode, defaultPaymentTermId: document.paymentTermId } : null;
- pristine = JSON.stringify(form);stale.value=false;intent.value=null;uncertain.value=false;
+ pristine.value = JSON.stringify(form);stale.value=false;intent.value=null;uncertain.value=false;
 }
 watch(() => props.document, reset, { immediate: true });
-const dirty = computed(() => JSON.stringify(form) !== pristine);
+const dirty = computed(() => JSON.stringify(form) !== pristine.value);
 function beforeUnload(event) { if (dirty.value || uncertain.value) { event.preventDefault();event.returnValue=""; } }
 window.addEventListener("beforeunload", beforeUnload);
 const canLeave = () => (!dirty.value && !uncertain.value) || window.confirm("有未儲存或結果尚未確認的變更，確定離開？");
@@ -72,7 +72,7 @@ async function save() {
  if(stale.value)throw new Error("資料已被修改；你的輸入仍保留，請明確載入最新資料。");
  if(!form.lines.length)throw new Error("請新增至少一項明細。");
  if(!intent.value)intent.value={...payload(),eventId:crypto.randomUUID()};
- try { const result=await props.onSave(structuredClone(toRaw(intent.value)));pristine=JSON.stringify(form);intent.value=null;uncertain.value=false;emit("saved",result);return result; }
+ try { const result=await props.onSave(structuredClone(toRaw(intent.value)));pristine.value=JSON.stringify(form);intent.value=null;uncertain.value=false;emit("saved",result);return result; }
  catch(error) {
   uncertain.value=["TIMEOUT","NETWORK_ERROR","TRANSACTION_OUTCOME_UNKNOWN","IDEMPOTENCY_IN_PROGRESS"].includes(error.code) || error.status>=500;
   if(!uncertain.value)intent.value=null;
