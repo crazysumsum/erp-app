@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 92,
+  "revision": 94,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-019",
+  "current_task": "TASK-020",
   "baseline": {
     "design": "d4d43f935cda896d10cc47aa651645d76db0a105ae1f6de41249158892e9993b",
     "plan": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
-    "code_commit": "aa044a3db2fee5e0375a37d29c72d310b135fd9d",
-    "source_fingerprint": "3a88a667662ee16c343e0d4f00a4840f7d3a43eed5d3369f52c6267902edb011",
+    "code_commit": "176de72ab2fb926f8e962648e764262ae8c668bc\n",
+    "source_fingerprint": "b4239ae67f61e79dda5bdfa136e9a9d5ea4977f914854ccde1036192ae1850aa",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -46,7 +46,7 @@
     "TASK-016": "DONE",
     "TASK-017": "DONE",
     "TASK-018": "DONE",
-    "TASK-019": "PENDING",
+    "TASK-019": "DONE",
     "TASK-022": "DONE"
   },
   "approvals": [
@@ -1784,6 +1784,42 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK019-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "e93f34902e11e8eba3254fbf47119b9f508e6f192984e7d5fad85bb0710f3534",
+      "source_ref": "Actual independent same-route dirtydata-loss and100line duplicate-focus findings; reproducedRED12PASS2FAIL thenfixed.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK019-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "6980ad4286fc591a19eb96e57b5c8d7b2da84d6fc33ebfdd151154623e5b1190",
+      "source_ref": "Actual independent UI1PASS/static14PASS; screenshot identifies DataTable localrows servercount0 andunpageable >20differences; caller-only fix, historical failure preserved.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK019-R3",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "b4239ae67f61e79dda5bdfa136e9a9d5ea4977f914854ccde1036192ae1850aa",
+      "source_ref": "Actual independent APPROVE focused15/lintPASS; actualPlaywright final2PASS plus48difference/network1PASS (labels difference-red ranGREENafterfix, notRED). Covers actual UI create/edit/refresh/stale/offline/reusedroute cancel-confirm/conversionremove-add/qtyprice/warehouse/targetDraft/48diff3pages,375px anddesktop inspected,noAPImocks,zero relevant unexpectedconsole/network; ownappclosed/fixturecleaned/lease released. NoPhase/merge/formalapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2897,6 +2933,17 @@
       "source_ref": "Actual finalserver2180PASS0FAIL443optinskips (mandatory natives separate), native18PASS0FAIL0SKIP, provider+lookup45PASS, client4/full695PASS, build/lintPASS; actualPlaywright1PASS zeroJS/console errors orfailedrequests. Actual separate implementation andmetadata reviews. All RED/failure logs retained private; wrong npm script attempt retained asdiagnostic. Noformal/wholePhasePASS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T03:55:30.494907+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK019 actual developer UI verification",
+      "code_commit": "176de72ab2fb926f8e962648e764262ae8c668bc\n",
+      "spec_baseline": "af42d241f6c75f6e3114e8737dc835f974daa893f1e2fdb86b2ea1e6fe035c71",
+      "source_fingerprint": "b4239ae67f61e79dda5bdfa136e9a9d5ea4977f914854ccde1036192ae1850aa",
+      "status": "PASS",
+      "source_ref": "Focused15/fullclient710/build/lintPASS. PrimaryactualPlaywright1PASS thenindependentfinal2PASS+48diff/network1PASS oncurrentfp; Report32; private task019corrected/reviewerlogs/screenshots. Expectedstale409/actualoffline failures distinguished. REDoutputs retainedinchat; rawbrowserfailuresprivate. Noformal/wholePhasePASS.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T04:12:29.411612+00:00"
     }
   ],
   "pending_decisions": [
@@ -3511,5 +3558,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Implement approved TASK019 quotation create/edit/conversion editor; realPlaywright UI mandatory, then review and atomic commit. All23Phasechecks/currentCI/freshmain/wholePhase gate pending."
+  "next_safe_action": "Implement approved TASK020 quotation list/detail/browserA4print with currentserver allowedActions; focused/fullclient/lint/build and realPlaywright UI +independentreview thenatomiccommit. CompleteTASK021/023..027 andall23finalcurrent-source/fullPhase/freshmain/CIgates beforemerge."
 }
