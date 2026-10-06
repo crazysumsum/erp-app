@@ -1415,4 +1415,11 @@ integrationTest("TASK-046 (HD-063 2A): a job that failed after it started runnin
   await api(owner, "POST", `/api/v1/supplier-imports/${cancelled.id}/cancel`, { body: { version: cancelled.version }, key: randomUUID() });
   const none = await downloadResult(owner, cancelled.id);
   assert.deepEqual([none.status, none.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a cancelled job never ran, so it is not 'expired'");
+
+  // 預檢失敗嘅 job 都係 failed，但從來冇執行過：冇結果。
+  const broken = await httpUpload(owner, Buffer.concat([csv([]), Buffer.from(`RB-${tag},"broken\r\n`)]));
+  assert.equal(broken.status, 201, JSON.stringify(broken.body));
+  assert.equal((await precheck(broken.job.id)).status, "failed");
+  const neverRan = await downloadResult(owner, broken.job.id);
+  assert.deepEqual([neverRan.status, neverRan.body?.error?.code], [409, "SUPPLIER_IMPORT_RESULT_NOT_READY"], "a failed precheck has no result");
 });
