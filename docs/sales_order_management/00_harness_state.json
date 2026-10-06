@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 84,
+  "revision": 85,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-002",
-  "current_task": "TASK-017",
+  "current_task": "TASK-018",
   "baseline": {
     "design": "06115a6e665375a3c2178ad707ced603ecddc9fd8fee4b523c9e887b2a62a885",
     "plan": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
-    "code_commit": "7048ee449be8f1de01a69ed9798b87b22c09db7c",
-    "source_fingerprint": "b85c6d253e58b7404401db3b0e36c5075ef7bb3e600bbd0656c865d79409ce07",
+    "code_commit": "1474a9f0a806749be54e7d4e85f9aa2771cfea1f",
+    "source_fingerprint": "0b11b9d1aa5f6bf7901cde1d2c908629ec1a80005d2d97b387faa2f3697aea35",
     "worktree": "/private/tmp/erp-sales-p1",
     "default_commit": "e3bfb02a3e48aac121386f6c5c9693487d17f346",
     "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
@@ -44,7 +44,8 @@
     "TASK-014": "DONE",
     "TASK-015": "DONE",
     "TASK-016": "DONE",
-    "TASK-017": "IN_PROGRESS"
+    "TASK-017": "DONE",
+    "TASK-018": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -1473,6 +1474,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK017-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "be96b979f2b7019a16c761541a0809a33d152d427773944711acdb2a903c8391",
+      "source_ref": "ActualP2currencyprovenance andexhaustedperiodreplay findings; reviewer10unitPASS/lint.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK017-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "0b11b9d1aa5f6bf7901cde1d2c908629ec1a80005d2d97b387faa2f3697aea35",
+      "source_ref": "Actualindependent implementationreview verifies source/lockorder/corrections,10unitPASS/lint; actualnative15PASS0skip/fullserver2172PASS0fail440optin skips inspected, noSQL. NoPhaseapproval.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -2531,6 +2556,17 @@
       "source_ref": "Actual private task015-lock-projection-red7PASS1FAIL→green8PASS0skip; task015-lock-final-regression2168PASS0FAIL432optinskips and task015-lock-final-lintPASS; reviewer actual8PASS/lint. Noformal/PhasePASS.",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T03:10:46.192199+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK017 final developer tests and retained failures",
+      "code_commit": "1474a9f0a806749be54e7d4e85f9aa2771cfea1f",
+      "spec_baseline": "83e09740f5051a60cfdf7a76a774f2361e4c79b81aa8dd070a0e91ec4fafe99e",
+      "source_fingerprint": "0b11b9d1aa5f6bf7901cde1d2c908629ec1a80005d2d97b387faa2f3697aea35",
+      "status": "PASS",
+      "source_ref": "Private actual task017-review-green.log15nativePASS0skip, final-unit10PASS, reviewed-final-regression2172PASS0FAIL440optinskips/lintPASS; report28. OriginalmissingmethodsRED4fail+1cancelled/PS protocol/nullproviderfail/reviewerRED2fail retained. Alllaternativecompletednormally. Noformal/fullPhasePASS.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T03:23:47.707588+00:00"
     }
   ],
   "pending_decisions": [
@@ -3128,5 +3164,5 @@
     "evidence/20261002T084837-25f943c95931/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit TASK015 approved-scope lock projection correction and DEC016 combined-scope binding; continue TASK017 lifecycle/conversion RED→GREEN. FullP1 remaininggates unchanged."
+  "next_safe_action": "Commit reviewed TASK017 lifecycle/conversion slice; implement TASK018 Quotation list/detail/query policies and existing HttpClient Sales client contracts. P1 fullgates remainpending, finalruntimefreshschema required beforePhasevalidation."
 }

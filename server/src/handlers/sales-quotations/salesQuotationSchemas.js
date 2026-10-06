@@ -46,3 +46,30 @@ export function quotationCommandRequest(req, update = false) {
   return { claims: quotationActorClaims(req),
     input: validateQuotationInput(req.input.body, update), trace: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ipAddress: req.ip ?? "" } };
 }
+
+const { eventId: _event, quotationDate: _date, validUntil: _until, externalReference: _reference, ...orderProperties } = QUOTATION_CREATE_INPUT.properties;
+export const CONVERSION_ORDER_INPUT = { type: "object", additionalProperties: false, required: ["customerId", "currencyCode", "fulfillmentWarehouseId", "orderDate", "lines"],
+  properties: { ...orderProperties, fulfillmentWarehouseId: ID, orderDate: { type: "string", format: "date" },
+    requestedDeliveryDate: { type: ["string", "null"], format: "date" }, customerPoReference: { type: "string", maxLength: 190 } } };
+export const QUOTATION_ISSUE_INPUT = { type: "object", additionalProperties: false, required: ["eventId", "version"], properties: { eventId: EVENT, version: ID } };
+export const QUOTATION_CANCEL_INPUT = { ...QUOTATION_ISSUE_INPUT, required: ["eventId", "version", "reason"],
+  properties: { ...QUOTATION_ISSUE_INPUT.properties, reason: { type: "string", minLength: 5, maxLength: 500 } } };
+export const QUOTATION_CONVERT_INPUT = { ...QUOTATION_ISSUE_INPUT, required: ["eventId", "version", "order"],
+  properties: { ...QUOTATION_ISSUE_INPUT.properties, order: CONVERSION_ORDER_INPUT } };
+const lifecycleValidators = Object.fromEntries(Object.entries({ ISSUE: QUOTATION_ISSUE_INPUT, CANCEL: QUOTATION_CANCEL_INPUT, CONVERT: QUOTATION_CONVERT_INPUT })
+  .map(([event, body]) => [event, validator.compile({ body }, `Sales Quotation ${event} body`)]));
+export function quotationLifecycleRequest(req, event) {
+  try { lifecycleValidators[event]({ body: req.input.body }); }
+  catch (error) { if (error.code === "REQUEST_VALIDATION_FAILED") throw salesError("SALES_INPUT_INVALID"); throw error; }
+  return { claims: quotationActorClaims(req), id: Number(req.input.params.id), input: req.input.body,
+    trace: { requestId: req.requestId ?? "", correlationId: req.correlationId ?? "", ipAddress: req.ip ?? "" } };
+}
+const ORDER_RESULT = { ...RESULT, properties: { ...RESULT.properties, number: { type: "string", pattern: "^SO-\\d{6}-\\d{6}$" }, status: { const: "DRAFT" } } };
+const differenceFields = { skuId: ID, skuUomId: ID, fromLineNo: ID, toLineNo: ID, beforeQuantity: QUANTITY, afterQuantity: QUANTITY, beforePrice: MONEY, afterPrice: MONEY };
+const differenceGroup = fields => ({ type: "array", maxItems: 100, items: { type: "object", additionalProperties: false, required: fields,
+  properties: Object.fromEntries(fields.map(field => [field, differenceFields[field]])) } });
+export const QUOTATION_DIFFERENCE = { type: "object", additionalProperties: false, required: ["added", "removed", "quantityChanged", "priceChanged"], properties: {
+  added: differenceGroup(["skuId", "skuUomId", "toLineNo", "afterQuantity", "afterPrice"]), removed: differenceGroup(["skuId", "skuUomId", "fromLineNo", "beforeQuantity", "beforePrice"]),
+  quantityChanged: differenceGroup(["skuId", "skuUomId", "fromLineNo", "toLineNo", "beforeQuantity", "afterQuantity"]), priceChanged: differenceGroup(["skuId", "skuUomId", "fromLineNo", "toLineNo", "beforePrice", "afterPrice"]) } };
+export const QUOTATION_CONVERT_RESPONSE = { type: "object", additionalProperties: false, required: ["quotation", "salesOrder", "differenceSummary", "operation", "warnings"],
+  properties: { ...QUOTATION_COMMAND_RESPONSE.properties, salesOrder: ORDER_RESULT, operation: ORDER_RESULT, differenceSummary: QUOTATION_DIFFERENCE } };

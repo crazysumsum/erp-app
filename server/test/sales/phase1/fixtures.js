@@ -25,9 +25,9 @@ export async function migrationFixture(t, tables) {
     socketPath: process.env.DB_SOCKET_PATH, user: process.env.DB_USER, password: process.env.DB_PASSWORD, database: process.env.DB_NAME });
   const prefix = `p1_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
   const names = Object.fromEntries(tables.map((table, index) => [table, `${prefix}_${index}`]));
-  const cleanup = [];
+  const cleanup = [], beforeParents = [];
   t.after(async () => { try { for (const table of Object.values(names).reverse()) await db.query(`DROP TABLE IF EXISTS ${table}`);
-    for (const action of cleanup.reverse()) await action(); } finally { await db.end(); } });
+    for (const action of [...beforeParents.reverse(), ...cleanup.reverse()]) await action(); } finally { await db.end(); } });
   await lockSalesFixture(db);
   const scoped = { async query(sql, args = []) {
     for (const [source, target] of Object.entries(names)) sql = sql.replace(new RegExp(`\\b${source}\\b`, "gu"), target);
@@ -57,5 +57,5 @@ export async function migrationFixture(t, tables) {
     is_default_sale: 1, created_at: now, updated_at: now });
   const warehouseId = await insert("inventory_warehouses", { warehouse_code: prefix, normalized_code: prefix, warehouse_name: prefix,
     status: "ACTIVE", created_at: now, updated_at: now });
-  return { db, scoped, names, now, currency, customerId, itemId, skuId, skuUomId, warehouseId, insert, cleanup };
+  return { db, scoped, names, now, currency, customerId, itemId, skuId, skuUomId, warehouseId, insert, cleanup, beforeParents };
 }
