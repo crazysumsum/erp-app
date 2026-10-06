@@ -566,3 +566,30 @@ applied to a committed tree and restored from the saved bytes):
 
 One first survived: the fresh-actor check on the download. The revoked test now asserts 403 `PERMISSION_STALE` while the
 permission is withdrawn.
+
+## REV-073 remediation (HD-064)
+
+REV-073 (`76_rev_073_independent_review.md`) approved 5ab6ab1 with four Low and three Info findings. The Product Owner asked
+for all of them to be fixed (HD-064). Every fix's test was checked to fail with the fix removed.
+
+- **L-1:** the formula guard also covers the full-width `＝＋－＠`.
+- **L-2:** the latest row request wins over a late older answer (typing or polling), and the row-number input is debounced
+  (300 ms). A browser test delays `rowNumber=1` while "12" is typed.
+- **L-3:** only a positive-integer `?job=` opens a job; anything else is removed from the URL.
+- **L-4:** a unit test covers that a failed precheck offers no download.
+- **I-1:** `Cache-Control` belongs to the framework's file response (`private, no-store`); the handler adds only `Pragma`, and
+  the integration test pins both exact values.
+- **I-3:** update rows keep the CSV's Supplier Code in `normalizedPayload.identity`. `root` still never carries a Code (T43's
+  invariant: an update cannot change it), and T45's writer does not read `identity`. The result prefers the CSV's Code, so a
+  row with an unknown ID or an ID/Code conflict shows what the user typed.
+- **I-2 (file name from `Content-Disposition`)** needs changes outside the module: `server/config/security.js` (approval
+  required) to expose the header, and the shared client `HttpClient.getBlob` (Customer and Item use it) to return it. Raised
+  with the Product Owner, not made.
+
+The mutation list for T46 is now 30 (three patterns updated for the changed code, plus six for the REV-073 fixes); all 30 are
+killed.
+
+**Incident during REV-073.** The reviewer stopped its server with `pkill -f "node src/index.js" -U $(id -u)`. macOS `pkill`
+treats `-U` and `501` as further patterns after the first one, so every process of the user with "501" in its command line
+was killed — including the throw-away MySQL and anything under `/private/tmp/claude-501/`. MySQL was restarted on the same
+data; the Product Owner was told at once. Review prompts now say to stop servers by PID.
