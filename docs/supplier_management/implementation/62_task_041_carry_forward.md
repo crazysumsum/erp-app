@@ -583,8 +583,9 @@ for all of them to be fixed (HD-064). Every fix's test was checked to fail with 
   invariant: an update cannot change it), and T45's writer does not read `identity`. The result prefers the CSV's Code, so a
   row with an unknown ID or an ID/Code conflict shows what the user typed.
 - **I-2 (file name from `Content-Disposition`)** needs changes outside the module: `server/config/security.js` (approval
-  required) to expose the header, and the shared client `HttpClient.getBlob` (Customer and Item use it) to return it. Raised
-  with the Product Owner, not made.
+  required) to expose the header, and the shared client `HttpClient.getBlob` (Customer and Item use it) to return it.
+  **Kept as a known limitation (HD-065 B):** the client saves the result under the server's fixed name
+  `supplier-import-<id>-result.csv`; no user input reaches it. A framework change can take it up later.
 
 The mutation list for T46 is now 30 (three patterns updated for the changed code, plus six for the REV-073 fixes); all 30 are
 killed.
