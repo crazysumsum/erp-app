@@ -62,6 +62,9 @@ const approvalRequired = ref(null);
 const approverUserId = ref(null);
 const approverOptions = ref([]);
 let pollTimer = null;
+let latestRowsRequest = null;
+// 只接受正整數嘅 `?job=`：舊連結或者手改嘅 URL 唔好開一個 #NaN 嘅空 dialog（REV-073 L-3）。
+const JOB_ID = /^[1-9]\d{0,15}$/u;
 
 const columns = [
   { name: "id", label: "工作編號", field: "id", align: "left" },
@@ -89,9 +92,12 @@ function fetchJobs({ page, rowsPerPage }) {
   return supplierImportService.listJobs({ page, rowsPerPage, status: statusFilter.value, signal });
 }
 function fetchRows({ page, rowsPerPage }) {
-  return supplierImportService.getJob(detailId.value, {
+  const request = supplierImportService.getJob(detailId.value, {
     page, rowsPerPage, rowStatus: rowStatus.value, rowNumber: rowNumber.value || undefined, signal
-  }).then((result) => {
+  });
+  latestRowsRequest = request;
+  // 最後發出嗰個請求先算：打字或者輪詢令舊回應遲到嗰陣，改用最新嗰個，唔好顯示另一行（REV-073 L-2）。
+  return request.then(() => latestRowsRequest).then((result) => {
     job.value = result.job;
     if (POLLABLE.has(result.job.status) && pollTimer === null) pollTimer = setInterval(() => detailTable.value?.reload(), 2000);
     if (!POLLABLE.has(result.job.status)) stopPolling();
@@ -206,7 +212,12 @@ async function downloadResult() {
 
 onMounted(() => {
   void loadApprovalContext();
-  if (route.query.job) openDetail(route.query.job);
+  const requested = route.query.job;
+  if (typeof requested === "string" && JOB_ID.test(requested)) openDetail(requested);
+  else if (requested !== undefined) {
+    const { job: _, ...rest } = route.query;
+    router.replace({ query: rest });
+  }
 });
 onUnmounted(stopPolling);
 </script>
@@ -298,7 +309,7 @@ onUnmounted(stopPolling);
             <q-select v-model="rowStatus" dense outlined emit-value map-options :options="rowStatusOptions" label="列狀態" style="width: 150px"
               @update:model-value="reloadRows" />
             <q-input v-model.number="rowNumber" dense outlined type="number" min="1" label="行號" style="width: 120px" clearable
-              @update:model-value="reloadRows" />
+              debounce="300" @update:model-value="reloadRows" />
           </div>
           <DataTable v-show="job" ref="detailTable" :fetch="fetchRows" :columns="rowColumns" row-key="rowNumber">
             <template #body-cell-operation="{ value }"><q-td class="text-left">{{ OPERATION_LABEL[value] ?? value }}</q-td></template>

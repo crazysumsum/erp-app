@@ -84,6 +84,8 @@ async function installApi(page, options = {}) {
       }
       const rowStatus = url.searchParams.get("rowStatus");
       const rowNumber = url.searchParams.get("rowNumber");
+      // REV-073 L-2：令某個行號嘅回應遲到，模擬慢網絡。
+      if (rowNumber && options.slowRowNumber === rowNumber) await new Promise((resolve) => { setTimeout(resolve, 1500); });
       const rows = ["uploaded", "validating"].includes(state.job.status) ? [] : state.rows
         .filter((row) => !rowStatus || row.status === rowStatus)
         .filter((row) => !rowNumber || row.rowNumber === Number(rowNumber));
@@ -229,4 +231,29 @@ test("@technical the details button opens the job and keeps it in the URL; closi
   await expect(page.getByRole("heading", { name: "匯入工作 #7" })).toBeHidden();
   await expect(page).not.toHaveURL(/job=/u);
   expect(problems).toEqual([]);
+});
+
+test("@technical a malformed ?job= opens nothing and is dropped from the URL (REV-073 L-3)", async ({ page }) => {
+  const problems = collectProblems(page);
+  const state = await installApi(page, { job: baseJob({ status: "ready", totalCount: 1, validCount: 1, version: 3 }), rows: [PRECHECK_ROWS[0]] });
+  await page.goto("/suppliers/imports?job=abc");
+  await expect(page.getByRole("heading", { name: "供應商匯入" })).toBeVisible();
+  await expect(page).not.toHaveURL(/job=/u);
+  await expect(page.getByRole("heading", { name: /匯入工作 #/u })).toHaveCount(0);
+  expect(state.calls.some((call) => /\/supplier-imports\/(?!template)[^/]+$/u.test(call.path) && call.method === "GET" && call.path !== "/api/v1/supplier-imports")).toBe(false);
+  expect(problems).toEqual([]);
+});
+
+test("@technical typing a row number shows that row even when an earlier keystroke answers late (REV-073 L-2)", async ({ page }) => {
+  const rows = Array.from({ length: 12 }, (_, index) => ({ ...PRECHECK_ROWS[0], rowNumber: index + 1 }));
+  await installApi(page, { slowRowNumber: "1", job: baseJob({ status: "ready", totalCount: 12, validCount: 12, version: 3 }), rows });
+  await page.goto("/suppliers/imports?job=7");
+  const rowNumberInput = page.locator(".q-dialog").getByLabel("行號");
+  const late = page.waitForResponse((response) => new URL(response.url()).searchParams.get("rowNumber") === "1");
+  await rowNumberInput.pressSequentially("1", { delay: 350 });
+  await rowNumberInput.pressSequentially("2");
+  await late; // 遲到嘅 rowNumber=1 回應返咗嚟之後，表格仍然要係第 12 列
+  await expect.poll(() => page.locator(".q-dialog tbody tr td:first-child").allInnerTexts()).toEqual(["12"]);
+  await page.waitForLoadState("networkidle");
+  expect(await page.locator(".q-dialog tbody tr td:first-child").allInnerTexts()).toEqual(["12"]);
 });

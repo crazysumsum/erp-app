@@ -143,4 +143,40 @@ describe("supplier import page (T46)", () => {
     await flushPromises();
     expect(supplierImportService.getJob).toHaveBeenLastCalledWith(7, expect.objectContaining({ rowStatus: "invalid", rowNumber: 3 }));
   });
+
+  it("REV-073 L-4: a failed precheck never ran, so it offers neither a download nor an expiry note", async () => {
+    detail({ status: "failed", confirmedAt: null, filesPurged: true, lastErrorCode: "SUPPLIER_IMPORT_CSV_MALFORMED", errorSummary: "CSV 格式錯誤" });
+    ({ wrapper } = await mountPage({ job: "7" }));
+    expect(text()).toContain("CSV 格式錯誤");
+    expect(text()).not.toContain("下載結果");
+    expect(text()).not.toContain("結果已過保留期限");
+  });
+
+  it("REV-073 L-3: a malformed ?job= opens nothing and is dropped from the URL", async () => {
+    for (const job of ["abc", "0", "-1", "1.5", "7x"]) {
+      let router;
+      ({ wrapper, router } = await mountPage({ job }));
+      expect(supplierImportService.getJob).not.toHaveBeenCalled();
+      expect(text()).not.toContain("匯入工作 #");
+      expect(router.currentRoute.value.query.job).toBeUndefined();
+      wrapper.unmount();
+      wrapper = null;
+    }
+  });
+
+  it("REV-073 L-2: a late answer to an older row request does not replace the newer one", async () => {
+    ({ wrapper } = await mountPage({ job: "7" }));
+    let releaseOld;
+    supplierImportService.getJob
+      .mockImplementationOnce(() => new Promise((resolve) => { releaseOld = () => resolve({ job: JOB, rows: [{ rowNumber: 1, operation: "create", status: "valid", errors: [], warnings: [] }], rowsNumber: 1 }); }))
+      .mockResolvedValueOnce({ job: JOB, rows: [{ rowNumber: 12, operation: "create", status: "valid", errors: [], warnings: [] }], rowsNumber: 1 });
+    const vm = wrapper.findComponent(SupplierImportsPage).vm;
+    const older = vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 });
+    const newer = vm.$.setupState.fetchRows({ page: 1, rowsPerPage: 20 });
+    const fromNewer = await newer;
+    releaseOld();
+    const fromOlder = await older;
+    expect(fromNewer.rows.map((row) => row.rowNumber)).toEqual([12]);
+    expect(fromOlder.rows.map((row) => row.rowNumber)).toEqual([12]);
+  });
 });
