@@ -42,6 +42,8 @@ import {
   standardSkuHasVariantValues,
   statusTransitionInvalid,
   uomConversionInvalid,
+  uomChangeBlocked,
+  trackingPolicyChangeBlocked,
   uomNotFound,
   variantCombinationTaken,
   variantValuesRequired,
@@ -484,17 +486,9 @@ export class ItemAdminService {
    * 唔喺呢度（readonly，特批修改留返獨立、未建嘅高強度端點）；
    * `variantValues` 同樣未開放（T23）。
    *
-   * UOM／Barcode 用「刪晒重插」而唔係逐行 diff：design_spec §6.3 本身就
-   * 形容呢個係「完整集合連同 version 一次提交」，子表本身冇對外承諾嘅
-   * 穩定 id——呼叫端提交嘅舊 id 只係用嚟做「呢個 id 係咪真係屬於呢個
-   * SKU」嘅擁有權檢查（`SKU_CHILD_MISMATCH`），檢查完之後點樣重建都可以，
-   * 冇任何需求要求呢啲 id 跨次更新保持穩定。呢個做法明顯比逐行
-   * update／insert／delete 三分支簡單。
-   *
-   * 「關鍵變更」（Base UOM、任何 UOM 嘅換算係數、追蹤政策）冇填 `reason`
-   * 會被拒絕；本期未有交易／庫存表可以查，所以未去到「已有交易就直接
-   * 擋」嗰層（`uomChangeBlocked()`／`trackingPolicyChangeBlocked()`，留返
-   * 第一個真引用出現先接上，見 design_spec §8.4）。
+   * Retained SKU/UOM associations keep their IDs for downstream RESTRICT FKs.
+   * Guard conversion/tracking changes against installed transaction references;
+   * a reason never overrides an existing reference. Barcodes retain ownership checks.
    */
   async updateSku({
     actorId,
@@ -522,18 +516,32 @@ export class ItemAdminService {
     const skuId = await this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
 
-      const [[current]] = await connection.query("SELECT * FROM item_skus WHERE id = ?", [id]);
-      if (!current) {
-        throw skuNotFound(id);
+      const [[discoveredSku]] = await connection.query("SELECT item_id FROM item_skus WHERE id = ?", [id]);
+      if (!discoveredSku) throw skuNotFound(id);
+      const [discoveredUoms] = await connection.query("SELECT id, uom_id FROM item_sku_uoms WHERE sku_id = ? ORDER BY id", [id]);
+      const uomIds = [...new Set([...discoveredUoms.map(row => Number(row.uom_id)), ...uoms.map(row => row.uomId)])].sort((a, b) => a - b);
+      if (uomIds.length) {
+        const [lockedUoms] = await connection.query(
+          `SELECT id FROM item_uoms WHERE id IN (${uomIds.map(() => "?").join(",")}) ORDER BY id FOR SHARE`, uomIds
+        );
+        const found = new Set(lockedUoms.map(row => Number(row.id)));
+        for (const uomId of uomIds) if (!found.has(uomId)) throw uomNotFound(uomId);
       }
-
+      await connection.query("SELECT id FROM items WHERE id = ? FOR SHARE", [discoveredSku.item_id]);
+      const [[current]] = await connection.query("SELECT * FROM item_skus WHERE id = ? FOR UPDATE", [id]);
+      if (!current) throw skuNotFound(id);
+      if (Number(current.item_id) !== Number(discoveredSku.item_id)) throw versionConflict();
       const [currentUomRows] = await connection.query(
-        "SELECT id, uom_id, to_base_factor, is_base FROM item_sku_uoms WHERE sku_id = ?",
-        [id]
+        "SELECT id, uom_id, to_base_factor, is_base FROM item_sku_uoms WHERE sku_id = ? ORDER BY id FOR UPDATE", [id]
       );
+      const discoveredIds = new Map(discoveredUoms.map(row => [Number(row.id), Number(row.uom_id)]));
+      if (currentUomRows.length !== discoveredIds.size || currentUomRows.some(row => discoveredIds.get(Number(row.id)) !== Number(row.uom_id))) {
+        throw versionConflict();
+      }
       const currentUomIds = new Set(currentUomRows.map((row) => Number(row.id)));
       for (const row of uoms) {
-        if (row.id !== undefined && row.id !== null && !currentUomIds.has(row.id)) {
+        if (row.id !== undefined && row.id !== null && (!currentUomIds.has(row.id) ||
+            Number(currentUomRows.find(current => Number(current.id) === row.id)?.uom_id) !== row.uomId)) {
           throw skuChildMismatch("uom", row.id);
         }
       }
@@ -562,6 +570,18 @@ export class ItemAdminService {
       });
       if (isCritical && !String(reason ?? "").trim()) {
         throw criticalChangeReasonRequired();
+      }
+
+      const nextByUom = new Map(uoms.map(row => [row.uomId, row]));
+      const removedMappingIds = currentUomRows.filter(row => !nextByUom.has(Number(row.uom_id))).map(row => Number(row.id));
+      if (removedMappingIds.length && await this.#hasSkuTransactionReferences(connection, id, removedMappingIds)) throw uomChangeBlocked();
+      const conversionChanged = currentUomRows.some(row => {
+        const next = nextByUom.get(Number(row.uom_id));
+        return next ? Number(row.to_base_factor) !== next.toBaseFactor || Boolean(row.is_base) !== Boolean(next.isBase) : Boolean(row.is_base);
+      }) || uoms.some(row => row.isBase && !currentUomRows.some(current => Number(current.uom_id) === row.uomId && current.is_base));
+      if ((conversionChanged || current.tracking_policy !== trackingPolicy) && await this.#hasSkuTransactionReferences(connection, id)) {
+        if (current.tracking_policy !== trackingPolicy) throw trackingPolicyChangeBlocked();
+        throw uomChangeBlocked();
       }
 
       const nowMs = this.time.nowMs();
@@ -602,32 +622,40 @@ export class ItemAdminService {
         throw versionConflict();
       }
 
-      // 刪晒重插：barcode 先行——佢哋靠 RESTRICT FK 指住 item_sku_uoms，要喺
-      // 刪 UOM 之前先冇晒依賴。
       await connection.execute("DELETE FROM item_sku_barcodes WHERE sku_id = ?", [id]);
-      await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ?", [id]);
-
+      for (const row of currentUomRows) {
+        if (!nextByUom.has(Number(row.uom_id))) {
+          try {
+            await connection.execute("DELETE FROM item_sku_uoms WHERE sku_id = ? AND id = ?", [id, row.id]);
+          } catch (error) {
+            if ((error?.cause?.code ?? error?.code) === "ER_ROW_IS_REFERENCED_2") throw uomChangeBlocked();
+            throw error;
+          }
+        }
+      }
+      // Release unique slots before assigning their new owners in this transaction.
+      await connection.execute("UPDATE item_sku_uoms SET is_base = 0, is_default_purchase = 0, is_default_sale = 0 WHERE sku_id = ?", [id]);
+      const retained = new Map(currentUomRows.map(row => [Number(row.uom_id), row]));
       const uomIdToSkuUomId = new Map();
       for (const uom of uoms) {
-        const [uomResult] = await connection.execute(
-          `INSERT INTO item_sku_uoms
-             (sku_id, uom_id, to_base_factor, is_base, is_default_purchase, is_default_sale,
-              version, created_at, updated_at, created_by, updated_by)
-           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
-          [
-            id,
-            uom.uomId,
-            uom.toBaseFactor,
-            uom.isBase ? 1 : 0,
-            uom.isDefaultPurchase ? 1 : 0,
-            uom.isDefaultSale ? 1 : 0,
-            nowMs,
-            nowMs,
-            actorId,
-            actorId
-          ]
-        );
-        uomIdToSkuUomId.set(uom.uomId, uomResult.insertId);
+        const existing = retained.get(uom.uomId);
+        if (existing) {
+          await connection.execute(
+            `UPDATE item_sku_uoms SET to_base_factor = ?, is_base = ?, is_default_purchase = ?, is_default_sale = ?,
+               updated_at = ?, updated_by = ?, version = version + 1 WHERE id = ? AND sku_id = ?`,
+            [uom.toBaseFactor, uom.isBase ? 1 : 0, uom.isDefaultPurchase ? 1 : 0, uom.isDefaultSale ? 1 : 0,
+              nowMs, actorId, existing.id, id]
+          );
+          uomIdToSkuUomId.set(uom.uomId, Number(existing.id));
+        } else {
+          const [created] = await connection.execute(
+            `INSERT INTO item_sku_uoms (sku_id, uom_id, to_base_factor, is_base, is_default_purchase, is_default_sale,
+               version, created_at, updated_at, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+            [id, uom.uomId, uom.toBaseFactor, uom.isBase ? 1 : 0, uom.isDefaultPurchase ? 1 : 0,
+              uom.isDefaultSale ? 1 : 0, nowMs, nowMs, actorId, actorId]
+          );
+          uomIdToSkuUomId.set(uom.uomId, Number(created.insertId));
+        }
       }
 
       this.#assertBarcodeShapeValid(barcodes, uomIdToSkuUomId);
@@ -696,7 +724,7 @@ export class ItemAdminService {
       });
 
       return id;
-    });
+    }, { isolationLevel: "READ COMMITTED" });
 
     return this.getSku({ actorId, claimedRoles, claimedPermissions, id: skuId });
   }
@@ -1002,7 +1030,7 @@ export class ItemAdminService {
     await this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
 
-      const [[current]] = await connection.query("SELECT name, status FROM items WHERE id = ?", [id]);
+      const [[current]] = await connection.query("SELECT name, status FROM items WHERE id = ? FOR UPDATE", [id]);
       if (!current) {
         throw itemNotFound(id);
       }
@@ -1010,7 +1038,7 @@ export class ItemAdminService {
         throw itemDeleteRequiresDraft(current.status);
       }
 
-      const [skuRows] = await connection.query("SELECT id FROM item_skus WHERE item_id = ?", [id]);
+      const [skuRows] = await connection.query("SELECT id FROM item_skus WHERE item_id = ? ORDER BY id FOR UPDATE", [id]);
       const skuIds = skuRows.map((row) => row.id);
       if (skuIds.length > 0) {
         const placeholders = skuIds.map(() => "?").join(",");
@@ -1411,9 +1439,11 @@ export class ItemAdminService {
     await this.database.withTransaction(async (connection) => {
       const actor = await assertActorFresh(connection, { actorId, claimedRoles, claimedPermissions });
 
+      const [[discovered]] = await connection.query("SELECT item_id FROM item_skus WHERE id = ?", [id]);
+      if (!discovered) throw skuNotFound(id);
+      await connection.query("SELECT id FROM items WHERE id = ? FOR UPDATE", [discovered.item_id]);
       const [[current]] = await connection.query(
-        "SELECT item_id, sku_code, status FROM item_skus WHERE id = ?",
-        [id]
+        "SELECT item_id, sku_code, status FROM item_skus WHERE id = ? FOR UPDATE", [id]
       );
       if (!current) {
         throw skuNotFound(id);
@@ -1756,6 +1786,34 @@ export class ItemAdminService {
     }
 
     return currentSet.some((value, index) => value !== nextSet[index]);
+  }
+
+  async #hasSkuTransactionReferences(connection, skuId, mappingIds = null) {
+    // Native FK metadata identifies installed Inventory/Sales consumers, including new line tables.
+    // These are nonlocking READ COMMITTED probes: never take a downstream aggregate lock after Item.
+    const [references] = await connection.query(
+      `SELECT DISTINCT table_name AS tableName, column_name AS columnName FROM information_schema.key_column_usage
+        WHERE table_schema = DATABASE() AND referenced_table_schema = DATABASE()
+          AND referenced_table_name = ? AND referenced_column_name = 'id'
+          AND (LEFT(table_name, 6) = 'sales_' OR LEFT(table_name, 10) = 'inventory_')`,
+      [mappingIds ? "item_sku_uoms" : "item_skus"]
+    );
+    for (const row of references) {
+      const table = String(row.tableName).replaceAll("`", "``");
+      const column = String(row.columnName).replaceAll("`", "``");
+      const ids = mappingIds ?? [skuId];
+      const [found] = await connection.query(`SELECT 1 AS found FROM \`${table}\` WHERE \`${column}\` IN (${ids.map(() => "?").join(",")}) LIMIT 1`, ids);
+      if (found.length) return true;
+    }
+    const [installed] = await connection.query("SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'sales_order_lines_archive'");
+    if (installed.length) {
+      const [rows] = await connection.query(
+        `SELECT 1 AS found FROM sales_order_lines_archive WHERE sku_id = ?${mappingIds ? ` AND sku_uom_id IN (${mappingIds.map(() => "?").join(",")})` : ""} LIMIT 1`,
+        [skuId, ...(mappingIds ?? [])]
+      );
+      if (rows.length) return true;
+    }
+    return false;
   }
 
   async #assertCategoryExists(connection, categoryId) {

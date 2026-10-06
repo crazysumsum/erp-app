@@ -39,7 +39,9 @@ export class UploadSupplierImportHandler extends BaseRequestHandler {
   static api = {
     method: "POST",
     path: "/api/v1/supplier-imports/upload",
-    description: "上載供應商 CSV，建立匯入工作並在背景預檢；預檢不寫入供應商資料。",
+    // HD-058 5B：預檢工作喺 scheduler.jobs 停用時照收，job 停喺 uploaded（REV-064 I-3）。
+    description: "上載供應商 CSV，建立匯入工作並在背景預檢；預檢不寫入供應商資料。預檢排程暫停期間工作停在 uploaded，"
+      + "恢復後才預檢，期間可取消；預檢最多嘗試三次，服務中斷較長時工作會失敗，須重新上載。",
     authorizationPolicies: SUPPLIER_MGMT_POLICY,
     idempotency: { enabled: true },
     upload: {

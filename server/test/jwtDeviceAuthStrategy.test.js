@@ -333,7 +333,7 @@ test("verifies against the stored key and refuses a bad signature", async () => 
   );
 });
 
-test("a clock skew rejection is told apart, because only the user can fix that one", async () => {
+test("JwtDeviceAuthStrategy: a clock skew rejection is told apart, because only the user can fix that one", async () => {
   const deviceBinding = fakeDeviceBinding({
     verification: { ok: false, reason: "timestamp_stale" }
   });

@@ -1,31 +1,45 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 15,
-  "mode": "REVIEW_AND_ALIGN",
-  "active_mode": "REVIEW_AND_ALIGN",
-  "status": "PLANNED",
+  "revision": 64,
+  "mode": "IMPLEMENT",
+  "active_mode": "IMPLEMENT",
+  "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": null,
-  "current_task": null,
+  "current_phase": "PHASE-001",
+  "current_task": "TASK-011",
   "baseline": {
-    "design": "97b111294cbb55350d8318ab20c1a203bbba3f3e3fdd6d4063beba6288ea23a2",
-    "plan": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
-    "code_commit": "8a4b132bacc9e55b07d35811f5797a1ebfb4a79e",
-    "source_fingerprint": "3e00408cd0fafdc047a3d36bca50722384fe6495e3c54adc302a4b668d521e5b",
-    "worktree": "/private/tmp/erp-sales-readiness",
-    "default_commit": "dd36250819b80cb679c688bc8a893e694119f66a",
-    "mode_entry_commit": "dd36250819b80cb679c688bc8a893e694119f66a"
+    "design": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
+    "plan": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+    "code_commit": "ad8d535eee961255bea27a970acd3be056a3c7e1",
+    "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+    "worktree": "/private/tmp/erp-sales-foundation",
+    "default_commit": "a343677e1d65011b79f1fe08a053c81bb0c8355a",
+    "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
   },
   "runtime": {
-    "instance_id": "sales-readiness-docs",
-    "owner": "Codex current Sales readiness session",
+    "instance_id": "sales-phase0-hlnxwrb1",
+    "owner": "Codex /root authorized DEC013",
     "resources": {
-      "workspace": "/private/tmp/erp-sales-readiness"
+      "workspace": "/private/tmp/erp-sales-foundation",
+      "temp-directory": "/private/tmp/sales-phase0-hlnxwrb1",
+      "mysql-instance": "Actual ownedMySQL26.7.0 fourinstances verified; freshgate_c2925553 schemas/fullSales025migration; /private/tmp/sales-phase0-runtime.json"
     },
     "lease_ref": null
   },
-  "tasks": {},
+  "tasks": {
+    "TASK-001": "DONE",
+    "TASK-002": "DONE",
+    "TASK-003": "DONE",
+    "TASK-004": "DONE",
+    "TASK-005": "DONE",
+    "TASK-006": "DONE",
+    "TASK-007": "DONE",
+    "TASK-008": "DONE",
+    "TASK-009": "DONE",
+    "TASK-010": "DONE",
+    "TASK-011": "DONE"
+  },
   "approvals": [
     {
       "id": "APR-DESIGN-001",
@@ -272,6 +286,424 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-STARTUP-SCOPE-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat explicit answer “核准補充 startup 整合 scope” to the concrete /private/tmp/sales-startup-integration.patch. Narrow startup/test delta only; prior approvals retained at their historical hashes.",
+      "recorded_at": "2026-09-30T08:46:54.878402+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "code_commit": null,
+      "scope": [
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/test/applicationFactory.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-STARTUP-CORRESPONDING-TEST-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Existing explicit answer “核准補充 startup 整合 scope” to application startup integration and corresponding tests. Minimal existing configuration.test.js assertions follow that authorization; this record is a narrow application of the same decision, not a new global DESIGN/PLAN/risk decision.",
+      "recorded_at": "2026-09-30T09:06:43.324570+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "code_commit": null,
+      "scope": [
+        "server/test/configuration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-MEMORY-20260930",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat explicit “核准” to both stated decisions; scoped continuation of original TASK005/006. No broader global risk/Phase disposition. implementation/05_approved_memory_and_permission_checkpoint.md",
+      "recorded_at": "2026-09-30T09:45:46.866336+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "code_commit": null,
+      "scope": [
+        "TASK-005",
+        "TC-004"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-MIGRATION-0067-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat explicit “核准” to both stated decisions; scoped continuation of original TASK005/006. No broader global risk/Phase disposition. implementation/05_approved_memory_and_permission_checkpoint.md",
+      "recorded_at": "2026-09-30T09:45:46.866336+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "code_commit": null,
+      "scope": [
+        "TASK-006",
+        "server/database/migrations/0067_seed_sales_permissions.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/sales/salesPermissionMigration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-SALES-PERMISSION-REGRESSION-FIXTURES-20260930",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current explicit “核准” to original TASK006 permission seed/catalogue scope; minimal corresponding fixture updates preserve that approved no-role-grant behavior. This records application of the same authorization, not a new global/Phase/risk decision.",
+      "recorded_at": "2026-09-30T10:03:34.433722+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "code_commit": null,
+      "scope": [
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-CONTRACT-REVIEW-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam “繼續” to proposed TASK009..011 contract reconciliation/review only; read-only provider analysis and Sales-owned review documents, not product implementation/owner contract adoption/SQL/partial merge.",
+      "recorded_at": "2026-10-02T01:09:46.440415+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "code_commit": null,
+      "scope": [
+        "docs/sales_order_management/**",
+        "TASK-009 contract reconciliation and review only",
+        "TASK-010 contract reconciliation and review only",
+        "TASK-011 contract reconciliation and review only"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-DESIGN-20261002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "7024ff059a7e2ac0fe2490372e240fc55a6bae0a87bda3380d3d6f9b4e84badf",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-PLAN-20261002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-SCOPE-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+      "code_commit": null,
+      "scope": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "docs/sales_order_management/**",
+        "docs/customer_management/**",
+        "docs/items_management/**",
+        "docs/inventory_management/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/inventoryValidation.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/customerCreditService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test/sales/**",
+        "server/test-support/fakeSalesDatabase.js",
+        "server/database/migrations/0068_create_sales_document_sequences.js",
+        "server/database/migrations/0069_create_sales_operation_requests.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-RISK-20261002",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge. Canonical changes only transcribe adopted provider/scoped plan; no new requirement/permission/acceptance choice.",
+      "recorded_at": "2026-10-02T03:48:46.175105+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "255d4d1fbe2efc0d61af563d4ef2c81cae2599e4cdf1dc5ea47e9ed9574eb7e1",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-GRAPH-DESIGN-20261002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Sam adoption DEC012 includes precise Item/FK graph review before implementation. Canonical §2.8 now records actual reviewer graph; localized existing isolation option is technical implementation of adopted reference protection, no new owner business rule/permission/Phase scope. implementation/09_customer_snapshot_checkpoint.md; graph independent APPROVE actual collaboration response.",
+      "recorded_at": "2026-10-02T03:55:29.202596+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-GRAPH-PLAN-20261002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Sam adoption DEC012 includes precise Item/FK graph review before implementation. Canonical §2.8 now records actual reviewer graph; localized existing isolation option is technical implementation of adopted reference protection, no new owner business rule/permission/Phase scope. implementation/09_customer_snapshot_checkpoint.md; graph independent APPROVE actual collaboration response.",
+      "recorded_at": "2026-10-02T03:55:29.202596+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "DR-001/002 adopted provider contracts only; precise graph/live DB/remaining Fulfillment not waived"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PROVIDER-GRAPH-SCOPE-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Sam adoption DEC012 includes precise Item/FK graph review before implementation. Canonical §2.8 now records actual reviewer graph; localized existing isolation option is technical implementation of adopted reference protection, no new owner business rule/permission/Phase scope. implementation/09_customer_snapshot_checkpoint.md; graph independent APPROVE actual collaboration response.",
+      "recorded_at": "2026-10-02T03:55:29.202596+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "code_commit": null,
+      "scope": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011",
+        "docs/sales_order_management/**",
+        "docs/customer_management/**",
+        "docs/items_management/**",
+        "docs/inventory_management/**",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/inventoryValidation.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/customerCreditService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/sales*.integration.test.js",
+        "server/test/sales/**",
+        "server/test-support/fakeSalesDatabase.js",
+        "server/database/migrations/0068_create_sales_document_sequences.js",
+        "server/database/migrations/0069_create_sales_operation_requests.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-DESIGN-20261002",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-PLAN-20261002",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-001",
+        "TASK-001",
+        "TASK-002",
+        "TASK-003",
+        "TASK-004",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-009",
+        "TASK-010",
+        "TASK-011"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-SCOPE-20261002",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "code_commit": null,
+      "scope": [
+        "docs/customer_management/00_module_manifest.json",
+        "docs/customer_management/03_design_spec.md",
+        "docs/inventory_management/00_module_manifest.json",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/items_management/00_module_manifest.json",
+        "docs/items_management/03_design_spec.md",
+        "server/config/api.js",
+        "server/database/migrations/0067_seed_sales_permissions.js",
+        "server/database/migrations/0068_create_sales_document_sequences.js",
+        "server/database/migrations/0069_create_sales_operation_requests.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/upload/cleanupUploadedFiles.js",
+        "server/src/framework/upload/normalizeUploadConfig.js",
+        "server/src/framework/upload/uploadConcurrencyGate.js",
+        "server/src/framework/upload/uploadMiddleware.js",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/modules/customer/CustomerLookupService.js",
+        "server/src/modules/inventory/InventoryOperationService.js",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/filetype/FileTypeService.js",
+        "server/src/services/filetype/builtInFileTypes.js",
+        "server/test/apiDispatcher.test.js",
+        "server/test/applicationFactory.test.js",
+        "server/test/configuration.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/fileTransfer.test.js",
+        "server/test/fileTransferFailureModes.test.js",
+        "server/test/integration/inventoryTask025Api.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/uploadLimits.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE0-UATNA-20261002",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization.",
+      "recorded_at": "2026-10-02T08:22:22.633230+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -310,6 +742,282 @@
       "open_critical": 0,
       "open_high": 2,
       "risk_approval_id": "APR-RISK-20260930"
+    },
+    {
+      "id": "REV-STARTUP-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
+      "source_ref": "implementation/03_startup_and_integrated_checkpoint.md; actual collaboration-agent final response approving four-file startup/discovery delta",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-SUPPLIER-INTEGRATION-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "995fae117d0b6557af40bda0f07fabe1dc78555c7df44161d17efdb6e3be667f",
+      "source_ref": "implementation/03_startup_and_integrated_checkpoint.md; actual separate-agent final response at ee52af1 vs ad27a180",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CWD-FIXTURE-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "35affda2c8cc0837de1fe3016a1ced6982437a74d87198c3571aa32b115d2c3b",
+      "source_ref": "implementation/04_workspace_test_correction.md; actual separate-agent APPROVE response, independently 79 tests pass from server cwd",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-APPROVED-MEMORY-PERMISSION-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "e9d632b185332a00ed4bd59c86ed73c25a4120a4f6a9affc27c3232b53b625c5",
+      "source_ref": "implementation/05_approved_memory_and_permission_checkpoint.md; actual separate-agent final APPROVE, independently35testsPASS",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ADMIN-CLAIMS-FIXTURES-20260930",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "a2a10a5ce6102a0a6c059d1b896e747a3643a2e711be357340204c9ba3067781",
+      "source_ref": "implementation/06_admin_permission_fixture_correction.md; actual separate-agent final APPROVE, independent lint/whitespace",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PROVIDER-PROPOSAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e",
+      "source_ref": "docs/sales_order_management/implementation/08_provider_review_decision.md; actual separate-agent final response APPROVE as human/owner decision proposal, not adoption or implementation. Earlier release/replay/advisory findings corrected, Item writer compatibility included.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CUSTOMER-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual read-only collaboration review responses",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CUSTOMER-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual read-only collaboration review responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-GRAPH-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "471cfdae2899b897be304e79d6c36a3066a2be429c007d067f9734eff64b6980",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual read-only collaboration review responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-SNAPSHOT-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "e74d02477366a4a21b96e7284d0e3d7d32afba4673e5d1f580432179c8a3fdf0",
+      "source_ref": "implementation/10_item_snapshot_checkpoint.md; actual separate-agent APPROVE response",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-WRITER-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; implementation/09_customer_snapshot_checkpoint.md; actual independent collaboration responses",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-WRITER-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; implementation/09_customer_snapshot_checkpoint.md; actual independent collaboration responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-CUSTOMER-WRAPPER-CORRECTION-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; implementation/09_customer_snapshot_checkpoint.md; actual independent collaboration responses",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-ITEM-BULK-PROFILE-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "558139b78cd6dabcd6edd6a7bca93e12b6724c9519eb1e87900b43ce21c76662",
+      "source_ref": "docs/sales_order_management/implementation/12_item_inventory_profile_checkpoint.md; actual agent final review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-INVENTORY-BATCH-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "620dc68f2558e88e9677eccd95a744efb6a85b7d20fa18c744952eda02fb1119",
+      "source_ref": "docs/sales_order_management/implementation/13_inventory_batch_checkpoint.md; actual agent review",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-INVENTORY-BATCH-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "7db3a0d1b8ddb81b64ec8752c2c53932444f3561f8a59c4c45eeda1be2e1dfb8",
+      "source_ref": "docs/sales_order_management/implementation/13_inventory_batch_checkpoint.md; actual agent review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-MIGRATIONS-INITIAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "decf0c8566ec2dbc1bf1194382f56bad234aa5b93765ad3f9e61dd4b6b6863e8",
+      "source_ref": "docs/sales_order_management/implementation/14_foundation_schema_checkpoint.md; actual independent final review scoped to source/fixtures/docs",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-MIGRATIONS-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "f65b3767a8edec0bf0f2c2df736e6da8fc2eaac48a39f435e36abaaca58b0db8",
+      "source_ref": "docs/sales_order_management/implementation/14_foundation_schema_checkpoint.md; actual independent final review scoped to source/fixtures/docs",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-INTEGRATED-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "source_ref": "docs/sales_order_management/implementation/14_foundation_schema_checkpoint.md; actual independent final review scoped to source/fixtures/docs",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-PHASE-OBLIGATIONS-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "24cb566e5799030ed18743fe131d7719edb7ad9d7e7e0601a8a66d8b65b27d0b",
+      "source_ref": "Actual independent agent final delta review; implementation/14_foundation_schema_checkpoint.md; four scoped files hashes and21PASS preserved",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-SALES-TRANSFORM-ACK-CORRECTION-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "30bec8594508baa546c74520de13a3937656c496abe0fee3cd213d5f1515c5fb",
+      "source_ref": "Actual agent final two-file code review; implementation/14 and15; proposal approach approved for human decision only",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": "APR-PROVIDER-RISK-20261002"
+    },
+    {
+      "id": "REV-PHASE0-CONTRACT-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "8a5844f9483b6c6cc54ba4b0c728fb8f77c95f46d8e133c9c98899b723312082",
+      "source_ref": "Actual independent agent final APPROVE contract DESIGN8a5844/PLAN35f9d8; current fixture code correction requires delta review",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-PHASE0-REPORT-FINAL-20261002",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b",
+      "source_ref": "Actual independent final APPROVE repairedtechnicalbaseline DESIGN9cb5c5/PLANe24686, independently197providerresults/adapterunittest/trace PASS; packet17pathlistpopulated afterreview, hashesunchanged",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -433,6 +1141,765 @@
       "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36676959943 — observed via gh run view; fetched source baseline only, not later candidate CI",
       "actor": "GitHub Actions observed by Codex /root",
       "observed_at": "2026-09-30T06:28:08.367760+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK-001 observed provider and migration readiness",
+      "code_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9",
+      "spec_baseline": "a1292e22cfc2854a1ecb8025042851880315e6a553087e6d4cbfe11359783966",
+      "source_fingerprint": "3e00408cd0fafdc047a3d36bca50722384fe6495e3c54adc302a4b668d521e5b",
+      "status": "PASS",
+      "source_ref": "implementation/00_implementation_readiness.md; actual focused Node test summaries in current Codex session. PASS describes completion of the read-only inspection, not provider integration/TC-001/002 acceptance.",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T07:08:20.199122+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Integrated focused developer tests including startup Sales validation",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "PASS",
+      "source_ref": "162 passed, zero failures/skips; /private/tmp/sales-startup-integrated-regression.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Sales foundation literal glob discovery",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "PASS",
+      "source_ref": "11 passed, zero skips; /private/tmp/sales-foundation-discovery-green.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Lint and client production build",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "PASS",
+      "source_ref": "/private/tmp/sales-startup-lint.log; /private/tmp/sales-foundation-client-build.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Provider pins, full Phase and runtime readiness",
+      "code_commit": "ced0a7dfd720e2c07d805afd85dd1be04b146e93",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "1c347dd8aef610b59fff0e0d1527adfe5eb875f7828ee653dd2d5520caaf366e",
+      "status": "BLOCKED",
+      "source_ref": "implementation/03_startup_and_integrated_checkpoint.md: Inventory/catalogue pins stale; no full MySQL lease/authorization; no approved memory threshold or Sales migration allocation",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:46:54.878402+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Latest-main integration developer regression",
+      "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "230 passed, zero failures/skips; /private/tmp/sales-supplier-integrated-regression.log; lint/build/whitespace passed",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:50:31.285487+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Latest-main Supplier upload compatibility independent review",
+      "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final response: APPROVE scoped compatibility at ee52af1; actual memory-mode handler configuration verified",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:50:31.285487+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Traceability and module boundary validators",
+      "code_commit": "ee52af113a776f252dc470b760894d1385541880",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "BLOCKED",
+      "source_ref": "Two CONTRACT_DRIFT pins and prior shared-path approvals bound to older PLAN; current startup scope only. No broader reapproval fabricated.",
+      "actor": "Codex /root",
+      "observed_at": "2026-09-30T08:50:31.285487+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Five mandatory checks on draft PR #174",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36692309650 — all five IN_PROGRESS at initial actual observation; no PASS claimed",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T08:52:13.982419+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR #174 mandatory Browser tests (Playwright)",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36692309650/job/109812114325 — existing Supplier approval spec line 274 reads lookup.query before async lookup is guaranteed; TypeError. Client/test/workflow unchanged vs latest main. 23 Supplier browser tests pass, one fails. No CI retry or outside-scope fix.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T08:59:13.176079+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Existing Supplier approval flow Playwright diagnostic",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "Installed Playwright skill/repository test, original spec repeated three times: 3 passed in actual browser; /private/tmp/sales-playwright-diagnostic.log. Does not override CI FAIL; synthetic API, private report path, reuseExistingServer=false; server shut down.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T08:59:13.176079+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Focused upload per-file coverage diagnostic",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "PASS",
+      "source_ref": "Partial diagnostic only: middleware lines 568/601, branches 127/142; gate lines 76/76, branches 22/22, functions 4/4; dispatcher lines 486/532, branches 92/115. Existing respective floors met. Partial aggregate coverage is not a full coverage PASS.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T08:59:13.176079+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Initial PR mandatory MySQL/coverage check",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "84dee454bbdadb3b818f12ce5b481dce70235b87321c4f27adbf8148fd8abead",
+      "source_fingerprint": "e856b11baf013577661c42b18b6056e3249a31b2ebd2cbe2cd0e6f2a381f4774",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36692309650/job/109812114183 — 16 Sales fixture failures; latest-main migrations succeeded. No aggregate/per-file PASS inferred.",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:06:43.324570+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Corrected CI workspace and root developer fixtures",
+      "code_commit": "8226ea230e8dcaac998fc79abe93bbf3a75d541d",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "239 combined tests server cwd; 79 affected tests root cwd; zero fail/skip; lint/whitespace pass; implementation/04_workspace_test_correction.md",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:06:43.324570+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Corrected candidate audit/lint/frontend build",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — all three observed SUCCESS on actual head 57b39c7",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:09:14.139217+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Corrected candidate browser and MySQL/coverage checks",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — both IN_PROGRESS at actual observation; prior run remains failed history",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:09:14.139217+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Corrected head latest check snapshot",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — observed audit, lint, frontend build and Browser tests SUCCESS; MySQL/coverage still IN_PROGRESS. No complete CI PASS or merge claim.",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:14:59.443708+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126785+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126843+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126844+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126845+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "345848c49c2cdbdcc6970c014f83b96ce512908b2e2f2bffdd82a4e850811c01",
+      "source_fingerprint": "287546788d5cf82e32c929082773c3dd40ea57222b4ca4df9470ad3f331b7b17",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36694008122 — actual gh pr view confirmed all five SUCCESS at head 57b39c762a7af61838affdf75c5d8418af2bc8f6; complete mandatory CI, not formal acceptance",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:19:41.126847+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Approved memory and permission focused developer regression",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "PASS",
+      "source_ref": "240 passed, zero failures/skips; lint/whitespace passed; /private/tmp/sales-approved-combined.log",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:45:46.866336+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Independent memory and permission developer review",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "PASS",
+      "source_ref": "35 passed, zero failures/skips; reviewer peak8.54/24.40/20.53MiB within16/32/64 limits; actual separate-agent final response",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:45:46.866336+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Traceability after permission pin reconciliation",
+      "code_commit": "57b39c762a7af61838affdf75c5d8418af2bc8f6",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "BLOCKED",
+      "source_ref": "Remaining CONTRACT_DRIFT is Inventory design only; full provider/baseline/Phase readiness not approved",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T09:45:46.866336+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Approved decision candidate four checks passed; MySQL/coverage pending",
+      "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36698198511 — audit/lint/build/browser SUCCESS; MySQL/coverage IN_PROGRESS on actual7928c99 head",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T09:51:39.045766+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Approved decision head MySQL/coverage check",
+      "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+      "spec_baseline": "e93b9beea40f9c707cf5ea39b75293d79f5ecd461297c0ba4a55c58b55a614f3",
+      "source_fingerprint": "4ae02323f85cb4bbb26a8b999b12a336188c0332d28ab949bf61f46857622431",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36698198511/job/109831126675 —13 integration fixture failures; memorygatePASS; no localSQL; no completecoveragePASS",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T10:03:34.433722+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Admin claims fixture syntax/lint and focused regression",
+      "code_commit": "7928c99aa6b679d2b36ef4369d9afb4ab105ab02",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "Four files syntaxPASS; lint/whitespacePASS;240focused testsPASS zero fail/skip; realDB cases await new-head CI",
+      "actor": "Codex /root observing actual tools",
+      "observed_at": "2026-09-30T10:03:34.433722+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 run36700077774: audit/lint/build/browser PASS, MySQL integration/coverage IN_PROGRESS",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36700077774",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-09-30T10:09:34.599930+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit PASS on current PR174 head; server2463PASS/14conditionalSKIP/0FAIL, client687PASS; scoped Sales tests and corrected admin cases executed. Repository CI success is not formal Phase acceptance.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36700077774",
+      "actor": "GitHub Actions, completed checks independently observed by Codex /root",
+      "observed_at": "2026-10-02T00:56:28.046548+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint PASS on current PR174 head; server2463PASS/14conditionalSKIP/0FAIL, client687PASS; scoped Sales tests and corrected admin cases executed. Repository CI success is not formal Phase acceptance.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36700077774",
+      "actor": "GitHub Actions, completed checks independently observed by Codex /root",
+      "observed_at": "2026-10-02T00:56:28.046548+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend PASS on current PR174 head; server2463PASS/14conditionalSKIP/0FAIL, client687PASS; scoped Sales tests and corrected admin cases executed. Repository CI success is not formal Phase acceptance.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36700077774",
+      "actor": "GitHub Actions, completed checks independently observed by Codex /root",
+      "observed_at": "2026-10-02T00:56:28.046548+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright) PASS on current PR174 head; server2463PASS/14conditionalSKIP/0FAIL, client687PASS; scoped Sales tests and corrected admin cases executed. Repository CI success is not formal Phase acceptance.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36700077774",
+      "actor": "GitHub Actions, completed checks independently observed by Codex /root",
+      "observed_at": "2026-10-02T00:56:28.046548+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration) PASS on current PR174 head; server2463PASS/14conditionalSKIP/0FAIL, client687PASS; scoped Sales tests and corrected admin cases executed. Repository CI success is not formal Phase acceptance.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36700077774",
+      "actor": "GitHub Actions, completed checks independently observed by Codex /root",
+      "observed_at": "2026-10-02T00:56:28.046548+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Module boundary check against integrated origin/main ad27: no outside-module changes; shared-path approval hashes remain historical after approved narrow deltas. Generic gate BLOCKED; no fresh global approval fabricated.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "BLOCKED",
+      "source_ref": "/private/tmp/sales-final-boundary.json",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T00:56:28.046548+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Existing Customer/Item/Inventory/Idempotency unit suites93PASS/0FAIL/0SKIP; existing behavior only, no new-contract/live-DB proof.",
+      "code_commit": "062c1880605a966086a0d8ec2702ff097027af58",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "/private/tmp/sales-contract-existing-tests.log; implementation/07_provider_contract_review.md",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T01:33:48.184288+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 docs-only head5f4c9eb, run36951579935: audit/lint/build PASS; browser and MySQL integration IN_PROGRESS. Source fingerprint unchanged, prior062c188 all-five PASS retained as historical evidence only.",
+      "code_commit": "5f4c9eb8c4723e65af5235ac0f7bebd748388df0",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PENDING",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36951579935",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-10-02T01:36:05.563858+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 head5f4c9eb/run36951579935 completed: dependency audit, lint, browser Playwright, server/client + MySQL integration tests and frontend build all PASS; historical candidate only.",
+      "code_commit": "5f4c9eb8c4723e65af5235ac0f7bebd748388df0",
+      "spec_baseline": "98dd16b2de8a9c69364c20affe0d4d8730247deb4e49bdbbcf1d749751089f0d",
+      "source_fingerprint": "992d115c206995cc189f1910e521ecbd57e0d838dac05ddfef2c42a0be9b0e34",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36951579935",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-10-02T03:46:40.053560+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Customer snapshot/credit unit18PASS/0FAIL/0SKIP; focused lint PASS. Actual MySQL snapshot concurrency pending CI; no local SQL/formal acceptance.",
+      "code_commit": "34258a36f426aaedcef33a4de22e022a5f9253b2",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "57cb1322d4759c834109c142c5ae08a45246b4fc88530c2dcccdbf49e0fee95a",
+      "status": "PASS",
+      "source_ref": "implementation/09_customer_snapshot_checkpoint.md; actual Node/ESLint output in current chat",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T03:55:29.202596+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Item unit38PASS, affected Customer/Item/Inventory-provider60PASS; lint/whitespace PASS. Actual MySQL locks pending CI.",
+      "code_commit": "596aafb6257109fc2ea6df9ce0a4c393f0576d89",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "edae1dbf29591d1d7a8218b5ea826f10340b80b22e5aadd9022b000c5ed383e7",
+      "status": "PASS",
+      "source_ref": "implementation/10_item_snapshot_checkpoint.md; /private/tmp/sales-task9-providers.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T04:01:58.802458+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Snapshot head4407305/run36962811955 fourjobsPASS, TestFAIL: one Customer rollbackfixture regex mismatch with existing transaction error wrapping. Item realMySQL locks PASS. Preserve failure, correct exact code/causeassertion then rerun candidate.",
+      "code_commit": "4407305141b7bbcbf90047ae61bd605d98be324f",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "edae1dbf29591d1d7a8218b5ea826f10340b80b22e5aadd9022b000c5ed383e7",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36962811955; /private/tmp/sales-snapshot-ci.log",
+      "actor": "GitHub Actions observed by Codex /root",
+      "observed_at": "2026-10-02T04:20:45.678601+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Necessary Item writer compatibility4PASS/0FAIL/0SKIP; affectedItem112PASS/0FAIL/0SKIP; focusedlintPASS. MySQL newwriter/integration tests pending CI.",
+      "code_commit": "c22eff96a4f8ee83f3665d943354745cced4cdb4",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "status": "PASS",
+      "source_ref": "implementation/11_item_uom_writer_checkpoint.md; /private/tmp/sales-uom-regression.log",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-02T04:22:24.524126+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "PR174 writer candidate mandatory checks",
+      "code_commit": "c67238ef08c66a8e15076e29d5454bbfbf8938e7",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "94dc64ee80ca8d241b780c947097bfe4978b236e4a5f2d857213be3bad0aa74e",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36964284356; implementation/12_item_inventory_profile_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:02:10.291789+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "mandatory repositorychecks; Testfailed",
+      "code_commit": "f0920be6018cbb09ffae3b250842ae45dfbc48cd",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "503da2ea8230be0f02843d629f26d6a6b29265642d2cc202a9f19d412c38921b",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36972422671; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:34:38.260327+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "mandatory Test cancelled by newerpush; other4checksPASS",
+      "code_commit": "e5bd6d35116b987867a36f9dfe1bc20b305b8d73",
+      "spec_baseline": "f1152a4811260e384593424e504eddf85b51c3910afd861816dfa270e1104752",
+      "source_fingerprint": "fc9d4aa84de666ba65955d9441276bb15b169da63de46feb7fb223631736bd11",
+      "status": "BLOCKED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36971696011; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:34:38.260327+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEVELOPER scoped local affected regression433PASS/0FAIL/0SKIP, rootlint/buildPASS, audit0vulnerabilities; noformalTC/SQL",
+      "code_commit": "664f12dcdc6dc2fbc251373df9eb687d7806ae6c",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "implementation/14_foundation_schema_checkpoint.md; /private/tmp/sales-phase-foundation-regression.log, /private/tmp/sales-full-lint.log, /private/tmp/sales-client-build.log, /private/tmp/sales-security-audit.log",
+      "actor": "Codex /root observed test/command output",
+      "observed_at": "2026-10-02T06:34:38.260327+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "48391c83baa9b440a7a1fbf4c2e446d6974c3d10",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "e6ec4cb019b658d1a095665278ea65997613c8c2a56df92152bb1d03e65101cc",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36974328029; actual gh run view confirms completed/success; implementation/14_foundation_schema_checkpoint.md",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T06:52:15.591752+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "DEVELOPER final435PASS/0FAIL/0SKIP and rootlintPASS; native acknowledgement-loss NOT_RUN locally",
+      "code_commit": "94b5cca7012b681698ecc2918d68206f2234b27e",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "24cb566e5799030ed18743fe131d7719edb7ad9d7e7e0601a8a66d8b65b27d0b",
+      "status": "PASS",
+      "source_ref": "implementation/14_foundation_schema_checkpoint.md; /private/tmp/sales-final-regression.log; /private/tmp/sales-final-lint.log",
+      "actor": "Codex /root observed commands",
+      "observed_at": "2026-10-02T07:05:34.721428+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test failed: unauthenticated routefixture prevented acknowledgementtest; externalmemory41,102,917>32MiB",
+      "code_commit": "71e0680d297f1e81efb3a4f84bbe7e3c364f5419",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "24cb566e5799030ed18743fe131d7719edb7ad9d7e7e0601a8a66d8b65b27d0b",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36976791261; implementation/14_foundation_schema_checkpoint.md; actual gh inspection",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T07:23:29.032679+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "allfive mandatorychecks before later sourcecorrection",
+      "code_commit": "94b5cca7012b681698ecc2918d68206f2234b27e",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "c80556f9acd0a2aae6149c092e764b34eb164a7118858b322c7676a28cd7723f",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36975679470; implementation/14_foundation_schema_checkpoint.md; actual gh inspection",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T07:23:29.032679+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "c99 TestFAIL dueexisting /api catchall401 vsfixture404; uploadmemory test passed; otherfourjobsPASS",
+      "code_commit": "c99da0e471c2693801b66dbd510f392f6b5bcdc7",
+      "spec_baseline": "b1b4ed4a46b081b7d1989e344f4452f09790b064e0ae4c006d1206f7915769f3",
+      "source_fingerprint": "30bec8594508baa546c74520de13a3937656c496abe0fee3cd213d5f1515c5fb",
+      "status": "FAIL",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36978401179; /private/tmp/sales-c99-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T07:48:38.776881+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Directdeveloper17suites successfulruns437PASS/0FAIL/0SKIP, lint/build/auditPASS; runtimeenv/prereqfailurespreserved, notregisteredHarness",
+      "code_commit": "c99da0e471c2693801b66dbd510f392f6b5bcdc7",
+      "spec_baseline": "35f9d8b2e2cbf3cfc5a2e90fbe3dd009d199a8fa012ef63121b39bcc910ce1ab",
+      "source_fingerprint": "b272cb2c8c1c5db2128b1f3cd95245aeaa42d8555bd379a595d3ed5c40d627f4",
+      "status": "PASS",
+      "source_ref": "implementation/16_phase0_execution_checkpoint.md; originalprivateJUNIT/observations",
+      "actor": "Codex /root actualcommands",
+      "observed_at": "2026-10-02T07:52:54.877806+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36981692327; actual gh observed allfivePASS; /private/tmp/sales-835-green-ci.log",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Scoped finalcandidate independentPR/codereview",
+      "code_commit": "835d98d9f277caf8bfe3de0c56f56e3ae038bbce",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final APPROVE835d98d vs95946469, sourceFP501302; no findings, humanbinding/registeredruns remainedpending; implementation/16",
+      "actor": "Codex separate agent /root/sales_readiness_review",
+      "observed_at": "2026-10-02T08:19:40.786481+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "Finalcandidate independentPR/codereview",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_readiness_review final APPROVE e197e8038c895f38d9af8f43290cd3efaf291e2c; independently verified17registeredruns/artifact hashes437PASSzero failures/skips/notrun; no remainingfindings",
+      "actor": "Codex separate agent /root/sales_readiness_review",
+      "observed_at": "2026-10-02T08:33:48.930769+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "5013021977ab5cc254dcf31957adb2a745de0ca8b878e60752bc733c8f96be62",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/36984458404; actualgh observed completed allfivePASS on e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "actor": "GitHub Actions observed via gh",
+      "observed_at": "2026-10-02T08:45:13.119641+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Affected integratedSupplierimportunitregression68PASS/0FAIL/0SKIP",
+      "code_commit": "ad8d535eee961255bea27a970acd3be056a3c7e1",
+      "spec_baseline": "e24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40",
+      "source_fingerprint": "25de0074c3963ab24f587e2c57f6db35e988c9accc9b03c2cbfabe825aee0266",
+      "status": "PASS",
+      "source_ref": "/private/tmp/sales-main-t045-supplier-regression.log; actualnodeunitcommand syntheticprivatekeys",
+      "actor": "Codex /root observedtestcommand",
+      "observed_at": "2026-10-02T08:50:01.335795+00:00"
     }
   ],
   "pending_decisions": [
@@ -517,6 +1984,93 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14. Scoped TASK-001..008 only; DR-001/002 stay OPEN, full Phase/formal gates unchanged. Commit, publish, create PR and merge this documentation candidate to main authorized."
+    },
+    {
+      "id": "DEC-007",
+      "impact": "MAJOR",
+      "question": "Owner coordination: reserve global migration 0065 for Sales permission seed, retaining active Inventory 0063/0064? No database execution is requested.",
+      "affected_ids": [
+        "TASK-006"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Superseded, not approved: latest main Inventory design reserves 0063–0066. Original 0065 proposal conflicts; DEC-010 replaces it. No Sales allocation or database execution."
+    },
+    {
+      "id": "DEC-008",
+      "impact": "MAJOR",
+      "question": "Approve developer per-request sampled memory increases heap <=16 MiB, external <=32 MiB, RSS <=64 MiB? Measurement alone is not an approved gate.",
+      "affected_ids": [
+        "TASK-005"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam “核准” to memory limits16/32/64MiB and migration0067 allocation. Original approved TASK006 requires view/mgmt/import; omitted import in the summary was transparently corrected. No local SQL execution or partial Phase merge."
+    },
+    {
+      "id": "DEC-009",
+      "impact": "MAJOR",
+      "question": "Approve applicationConfiguration.js startup Sales normalizer wiring and corresponding test fixture scope.",
+      "affected_ids": [
+        "TASK-006"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat: Sam “核准補充 startup 整合 scope”. Exact four-line shared startup wiring and related tests; no migration, memory or Phase exception."
+    },
+    {
+      "id": "DEC-010",
+      "impact": "MAJOR",
+      "question": "Reserve Sales permission seed migration 0067, preserving Inventory 0063–0066 and existing sales.operation; supplement sales.view/sales.mgmt and catalogue. File allocation only; no database execution.",
+      "affected_ids": [
+        "TASK-006"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam “核准” to memory limits16/32/64MiB and migration0067 allocation. Original approved TASK006 requires view/mgmt/import; omitted import in the summary was transparently corrected. No local SQL execution or partial Phase merge."
+    },
+    {
+      "id": "DEC-011",
+      "impact": "MAJOR",
+      "question": "Authorize contract reconciliation and review only for original TASK009..011 before product implementation? Proposal /private/tmp/sales-next-scope-decision.md; owner/global-lock-order review required, no new product implementation/migration allocation/local SQL/partial Phase merge implied.",
+      "affected_ids": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat 2026-10-02 Sam “繼續” in response to TASK009..011 contract reconciliation and review only. Product source implementation, new schema allocation/execution and partial Phase merge are not included."
+    },
+    {
+      "id": "DEC-012",
+      "impact": "MAJOR",
+      "question": "Adopt independently reviewed TASK009..011 provider contract proposal and authorize scoped product implementation including necessary Item writer mapping-ID compatibility, manual Sales batch fresh sales.mgmt, root+line operations, precise lock-order review, and foundation file allocation0068/0069? See implementation/08_provider_review_decision.md and actual asynchronous question. No localSQL/partialPhase merge/laterUI/jobs.",
+      "affected_ids": [
+        "TASK-009",
+        "TASK-010",
+        "TASK-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat 2026-10-02 Sam「採納並授權 TASK-009～011 實作」adopts implementation/08_provider_review_decision.md option A and reviewed proposal fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e, including Item writer compatibility/manual sales.mgmt/0068–0069 file allocation. No local SQL/later Phase/partial merge."
+    },
+    {
+      "id": "DEC-013",
+      "impact": "MAJOR",
+      "question": "Approve the independently reviewed Phase0 developer execution-contract reconciliation preserving formal60, ten native Inventory regressions, four exact performance deferrals, zero skipped required foundation cases and existing floors; authorize only disposable private localMySQL26.7.0 runtime? See implementation/15_phase0_validation_decision.md. Final current-baseline HUMAN binding remains required; no laterPhase/partialmerge implied.",
+      "affected_ids": [
+        "PHASE-001",
+        "TASK-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat explicit DEC-013 answer: 核准 Phase 0 驗證方案及隔離 MySQL（建議）; adopts implementation/15_phase0_validation_decision.md, final baseline binding pending."
+    },
+    {
+      "id": "DEC-014",
+      "impact": "MAJOR",
+      "question": "Final reviewed Phase0 DESIGN9cb5c5/PLANe24686 and43sharedpaths plusunchangedNFR014/015 UAT_NA binding; implementation/17_phase0_baseline_binding.md; actual asynchronous question. No repeatedSQL/commit/PR/providerdecision.",
+      "affected_ids": [
+        "PHASE-001",
+        "NFR-014",
+        "NFR-015"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Current Codex chat Sam「核准」in direct response to finalPhase0baselinebinding DEC014/packet17, DESIGN9cb5c5b2c618ba4f67f82a5d20a4796175dfa539fd17e375f75fb641ebf25a2b / PLANe24686d1a20c78a25f5a1e84c0373b4909642988a741f6cf75b1dd131c727a40, exact43sharedpaths andunchangedNFR014/015 UAT_NA; retains existing commit/PR/SQL/merge authorization."
     }
   ],
   "external_actions": [
@@ -557,11 +2111,326 @@
       "kind": "MERGE",
       "target": "https://github.com/crazysumsum/erp-app/pull/170 -> main after latest-target and final-head checks",
       "idempotency_key": "sales-readiness-merge-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/170 — actual prior-turn gh merge observation: MERGED at 2026-09-30T06:58:44Z, merge commit 8bc4a4cfe68710f384cebca8395b78343bef1db9; current fetched origin/main includes it. Original Sales readiness branch/worktree safely removed."
+    },
+    {
+      "id": "MODE-CHANGE-16",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-16",
+      "status": "CONFIRMED",
+      "source_ref": "Current Codex chat 2026-09-30: Sam「開始」authorizes scoped IMPLEMENT TASK-001..008 after merged PR #170"
+    },
+    {
+      "id": "PUSH-SALES-FOUNDATION-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation",
+      "idempotency_key": "push-sales-foundation-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; origin/codex/sales-foundation at 8226ea230e8dcaac998fc79abe93bbf3a75d541d"
+    },
+    {
+      "id": "PR-SALES-FOUNDATION-20260930",
+      "kind": "PR_CREATE",
+      "target": "crazysumsum/erp-app main <- codex/sales-foundation, DRAFT only",
+      "idempotency_key": "pr-sales-foundation-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "https://github.com/crazysumsum/erp-app/pull/174 — OPEN DRAFT, exact head 8226ea230e8dcaac998fc79abe93bbf3a75d541d; created and attached to this Codex chat"
+    },
+    {
+      "id": "PR-UPDATE-SALES-FOUNDATION-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-foundation-pr-body-ci-triage",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: https://github.com/crazysumsum/erp-app/pull/174 records initial CI failure."
+    },
+    {
+      "id": "PUSH-SALES-CWD-FIXTURE-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation correction commit",
+      "idempotency_key": "sales-cwd-fixture-push-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push succeeded; PR #174 head 57b39c762a7af61838affdf75c5d8418af2bc8f6 observed via gh pr view"
+    },
+    {
+      "id": "PR-UPDATE-SALES-CORRECTED-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-corrected-pr-body-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: PR #174 current correction/CI/blocker summary"
+    },
+    {
+      "id": "PUSH-SALES-APPROVED-DECISIONS-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation approved memory/0067 corrections",
+      "idempotency_key": "sales-approved-decisions-push-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push succeeded; gh pr view observed PR174 head7928c99aa6b679d2b36ef4369d9afb4ab105ab02"
+    },
+    {
+      "id": "PR-UPDATE-SALES-APPROVED-DECISIONS-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-approved-decisions-pr-update-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded for PR174 approved-decision summary."
+    },
+    {
+      "id": "PUSH-SALES-ADMIN-FIXTURE-20260930",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation fixture correction",
+      "idempotency_key": "sales-admin-fixture-push-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; gh pr view confirms PR174 head 062c1880605a966086a0d8ec2702ff097027af58"
+    },
+    {
+      "id": "PR-UPDATE-SALES-ADMIN-FIXTURE-20260930",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-admin-fixture-pr-update-20260930",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: https://github.com/crazysumsum/erp-app/pull/174; current head062c188 and fixture/CI history reconciled."
+    },
+    {
+      "id": "PR-UPDATE-SALES-FINAL-CI-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-final-ci-pr-update-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: PR174 body now records current062c188/run36700077774 all-five PASS and remaining scoped/full-Phase boundaries."
+    },
+    {
+      "id": "PUSH-SALES-CONTRACT-REVIEW-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation reviewed proposal documents",
+      "idempotency_key": "sales-contract-review-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; gh pr view174 observed head 5f4c9eb8c4723e65af5235ac0f7bebd748388df0"
+    },
+    {
+      "id": "PR-UPDATE-SALES-CONTRACT-REVIEW-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-contract-review-pr-update-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded: PR174 describes reviewed5f4c9eb proposal, DEC012 and current CI history."
+    },
+    {
+      "id": "PUSH-SALES-SNAPSHOTS-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation Customer/Item scoped snapshots",
+      "idempotency_key": "sales-snapshots-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push succeeded; gh PR174 head4407305141b7bbcbf90047ae61bd605d98be324f, run36962811955 observed."
+    },
+    {
+      "id": "PUSH-SALES-UOM-WRITER-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation corrected snapshots + UOM writer",
+      "idempotency_key": "sales-uom-writer-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push and gh pr view confirmed c67238ef08c66a8e15076e29d5454bbfbf8938e7; CI36964284356 Test FAIL sole PASSWORD_REQUIRED fixture, other four checks PASS."
+    },
+    {
+      "id": "PUSH-SALES-BULK-PROFILE-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation reviewed bulk profile and password fixture",
+      "idempotency_key": "sales-bulk-profile-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push and gh pr view confirm e5bd6d35116b987867a36f9dfe1bc20b305b8d73; run36971696011 four checksPASS/Testpending."
+    },
+    {
+      "id": "PUSH-SALES-INVENTORY-BATCH-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation independently reviewed TASK010 batch candidate",
+      "idempotency_key": "sales-inventory-batch-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush/ghhead f0920be6018cbb09ffae3b250842ae45dfbc48cd; CI36972422671 failed fixtureformat/immutablecleanup, productassertions reached; implementation/14 recordscorrection."
+    },
+    {
+      "id": "PUSH-SALES-FOUNDATIONS-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation finalPHASE001sourcecandidate",
+      "idempotency_key": "sales-foundations-candidate-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual git push and gh PR174 observation confirm head48391c83baa9b440a7a1fbf4c2e446d6974c3d10; CI36974328029 allfivePASS."
+    },
+    {
+      "id": "PR-UPDATE-SALES-FOUNDATIONS-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-foundations-candidate-pr-update-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual gh pr edit succeeded; PR174 reviewed provider/foundation scope and evidence summary."
+    },
+    {
+      "id": "PUSH-SALES-LATEST-MAIN-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation latestmain integration/evidence checkpoint",
+      "idempotency_key": "sales-latest-main-candidate-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual push and gh PR174 observation confirm94b5cca7012b681698ecc2918d68206f2234b27e; run36975679470 observed underway, superseded for new source correction."
+    },
+    {
+      "id": "PUSH-SALES-PHASE-OBLIGATIONS-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation reviewed dependency guard and native acknowledgement evidence",
+      "idempotency_key": "sales-phase-obligations-candidate-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush and gh run observation confirm71e0680d297f1e81efb3a4f84bbe7e3c364f5419, CI36976791261 TestFAIL/authfixture andmemory; corrections/review preserved."
+    },
+    {
+      "id": "PUSH-SALES-TRANSFORM-ACK-CORRECTION-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation reviewed uploadallocation/authfixture correction",
+      "idempotency_key": "sales-transform-ack-correction-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush observed5f59331c482762190816f41f4166054f334cb0a7. Prior checkpoint rejected OPEN-major decision withIMPLEMENTINGstatus, so corrected BLOCKED/resumeIMPLEMENTING; existing user sourcefix authorization unchanged."
+    },
+    {
+      "id": "PUSH-SALES-GATE-DECISION-CHECKPOINT-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation decision/evidence state reconciliation",
+      "idempotency_key": "sales-gate-decision-checkpoint-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush and observed CI36978401179 confirm c99da0e471c2693801b66dbd510f392f6b5bcdc7; CI Test failed unknown-route404 fixture; other four PASS."
+    },
+    {
+      "id": "MYSQL-SALES-DEC013-20261002",
+      "kind": "MIGRATION",
+      "target": "Dedicated disposable roots/schemas in /private/tmp/sales-phase0-runtime.json",
+      "idempotency_key": "sales-mysql-dec013-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Current Codex chat explicit DEC-013 answer: 核准 Phase 0 驗證方案及隔離 MySQL（建議）; adopts implementation/15_phase0_validation_decision.md, final baseline binding pending. ActualMySQL26.7.0 ownserver metadata andfullmigrationlogs retained; no existing schema touched. Creation preceded checkpoint; recorded retrospective observation honestly."
+    },
+    {
+      "id": "PUSH-SALES-DEC013-CONTRACT-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation approvedvalidationcontract andnativefixture",
+      "idempotency_key": "sales-dec013-contract-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgitpush succeeded069327e8ed2e9527828b22de33158808dfad49d6; laterreportparsercorrection necessary, retained."
+    },
+    {
+      "id": "PUSH-SALES-REPORT-ADAPTER-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation finalreviewedexecutioncontract",
+      "idempotency_key": "sales-final-report-adapter-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush835d98d9f277caf8bfe3de0c56f56e3ae038bbce; PR174observed exacthead andCI36981692327 underway."
+    },
+    {
+      "id": "PR-UPDATE-SALES-DEC013-20261002",
+      "kind": "PR_UPDATE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 body",
+      "idempotency_key": "sales-dec013-current-pr-body-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualgh pr edit succeeded withcurrent835head/run36981692327, directvalidation anddraftgate; /private/tmp/sales-pr-phase0-current-body.md."
+    },
+    {
+      "id": "STOP-SALES-OWNED-MYSQL-20261002",
+      "kind": "OTHER",
+      "target": "Four owned MySQL instances in /private/tmp/sales-phase0-runtime.json",
+      "idempotency_key": "sales-owned-mysql-stop-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actual VERSION/datadir/socket/pid validation andmysqladminshutdown succeeded allfour. runningFalse; ownedfreshschemas/datadirs and exactrestartargv retained. No sharedserver affected."
+    },
+    {
+      "id": "RESTART-SALES-OWNED-MYSQL-20261002",
+      "kind": "OTHER",
+      "target": "Four verified owned datadirs from /private/tmp/sales-phase0-runtime.json restart_commands",
+      "idempotency_key": "sales-owned-mysql-restart-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualmysqldrestart success allfour and nativeCLIversion/datadir/socket/skip_networkingchecksPASS; runningTrue inprivate metadata."
+    },
+    {
+      "id": "PUSH-SALES-PHASE0-DOD-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation finalapproval/DoD/evidence-pointer bookkeeping",
+      "idempotency_key": "sales-phase0-dod-checkpoint-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpushaccc0f80abb3ace3b882e2bb0e6bb83d7e580a43 then report-only correction e197e80; originalpublication retained. CIaccc superseded by finalreport correction; source/spec/evidence unchanged."
+    },
+    {
+      "id": "PUSH-SALES-DOD-ATTRIBUTION-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation report18correction",
+      "idempotency_key": "sales-dod-attribution-push-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualpush succeeded finale197e8038c895f38d9af8f43290cd3efaf291e2c; minor reporttasklabels correction independentlyrequested; no new product/acceptance decision."
+    },
+    {
+      "id": "MERGE-SALES-PHASE0-20261002",
+      "kind": "MERGE",
+      "target": "https://github.com/crazysumsum/erp-app/pull/174 main<-codex/sales-foundation e197e8038c895f38d9af8f43290cd3efaf291e2c",
+      "idempotency_key": "sales-phase0-full-merge-20261002",
       "status": "PLANNED",
-      "source_ref": "Current Codex chat 2026-09-30: Sam「核准commit 和create pr 合併到main」in response to the reviewed candidate, exact DESIGN/PLAN and scoped decisions, and explicit PUBLIC crazysumsum/erp-app publication request; see 09_final_alignment_review.md §14."
+      "source_ref": "ActualSamcommit/PR/mergeauthorization andDEC014finalbinding approval; executeonlyafterexactheadCI/freshmain/completePHASE001 MERGE_READY."
+    },
+    {
+      "id": "READY-SALES-PHASE0-PR-20261002",
+      "kind": "PR_UPDATE",
+      "target": "PR174 readyforreview",
+      "idempotency_key": "sales-phase0-pr-ready-20261002",
+      "status": "PLANNED",
+      "source_ref": "Sammergeauthorization; finaldeveloper/currentCI/independentreview complete, subjectto fullGatefinalverification."
+    },
+    {
+      "id": "INTEGRATE-SALES-SUPPLIER-T045-20261002",
+      "kind": "OTHER",
+      "target": "origin/main a343677e1d65011b79f1fe08a053c81bb0c8355a into codex/sales-foundation",
+      "idempotency_key": "sales-main-t045-integrate-20261002",
+      "status": "CONFIRMED",
+      "source_ref": "Actualortmerge completed cleanly ad8d535eee961255bea27a970acd3be056a3c7e1 includesmaina343677/PR177; ownerSupplierchanges unmodified. Prior e197gate superseded forintegrationverification."
+    },
+    {
+      "id": "PUSH-SALES-MAIN-T045-20261002",
+      "kind": "PUSH",
+      "target": "origin/codex/sales-foundation integratedmaina343677+currentevidencecheckpoint",
+      "idempotency_key": "sales-main-t045-integrated-push-20261002",
+      "status": "PLANNED",
+      "source_ref": "Existingauthorizedmerge/commit/PR; all17actualregisteredintegrationdeveloperchecksPASS437 andSupplier68PASS; design/plan unchanged."
     }
   ],
-  "evidence_files": [],
+  "evidence_files": [
+    "evidence/20261002T082352-6348f9bfb59e/run.json",
+    "evidence/20261002T082356-3a41c6441c78/run.json",
+    "evidence/20261002T082358-103146e2489f/run.json",
+    "evidence/20261002T082401-08cab88b9e0d/run.json",
+    "evidence/20261002T082406-d463a9c65f55/run.json",
+    "evidence/20261002T082415-bcc6554d2cb8/run.json",
+    "evidence/20261002T082431-88e1f465b9d8/run.json",
+    "evidence/20261002T082433-531dfa97667d/run.json",
+    "evidence/20261002T082435-922900dbcf5a/run.json",
+    "evidence/20261002T082436-1d3ad96bd407/run.json",
+    "evidence/20261002T082437-456765debf24/run.json",
+    "evidence/20261002T082438-9544bbc4f694/run.json",
+    "evidence/20261002T082439-7e6b3c7cb9dc/run.json",
+    "evidence/20261002T082440-7111d47cf1e8/run.json",
+    "evidence/20261002T082441-69d774f8ceb4/run.json",
+    "evidence/20261002T082442-885c8d3a9852/run.json",
+    "evidence/20261002T082443-40e35f31ce9d/run.json",
+    "evidence/20261002T084744-6840a9a9500a/run.json",
+    "evidence/20261002T084749-fe5d712f0897/run.json",
+    "evidence/20261002T084750-0be52badd508/run.json",
+    "evidence/20261002T084753-bf2376b3e9a2/run.json",
+    "evidence/20261002T084759-ab0a127b4d27/run.json",
+    "evidence/20261002T084808-bbeb1fa65a9c/run.json",
+    "evidence/20261002T084825-92930bd9d12f/run.json",
+    "evidence/20261002T084827-8d7d3adc85b0/run.json",
+    "evidence/20261002T084829-932b0fbd150d/run.json",
+    "evidence/20261002T084830-0d083888ceb9/run.json",
+    "evidence/20261002T084831-3b72a7c3c584/run.json",
+    "evidence/20261002T084832-1183de610b98/run.json",
+    "evidence/20261002T084833-22eab0d90922/run.json",
+    "evidence/20261002T084834-b16cdc40e06b/run.json",
+    "evidence/20261002T084835-52df376c56ed/run.json",
+    "evidence/20261002T084836-3cbc746f9335/run.json",
+    "evidence/20261002T084837-25f943c95931/run.json"
+  ],
   "defects": [],
-  "next_safe_action": "PR #170 created and attached; verify final pushed head CI and latest target, merge with authorized exact-head guard, observe remote merge and safely clean local worktree/branches. Then reobserve integrated PLAN_READY. Scoped TASK-001..008 implementation requires a fresh IMPLEMENT worktree/runtime handoff; later tasks/Phase exit/formal acceptance/release remain blocked."
+  "next_safe_action": "Publish integratedmaina343677 currentsource25de0074 full17developer437PASS/zero skips +Supplier68PASS. Require newexactheadCI, independentreview andfreshmain/fullPHASE001 MERGE_READY beforeauthorizedmerge."
 }

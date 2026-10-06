@@ -257,11 +257,17 @@ export function createApiDispatcher({
     requestReceiveTimeoutMs
   );
 
+  apiUpload = normalizeApiUploadConfig(apiUpload);
   const router = Router();
   const registeredApis = [];
   // 一個閘門，所有 route 共用——每條 route 各自一個等於沒有全域上限。
   const uploadGate = new UploadConcurrencyGate({
     maxConcurrentUploads: apiUpload.maxConcurrentUploads
+  });
+
+  const diskUploadGate = new UploadConcurrencyGate({
+    maxConcurrentUploads: apiUpload.maxConcurrentDiskUploads,
+    maxBytesInFlight: apiUpload.maxDiskUploadBytesInFlight
   });
 
   for (const route of routes) {
@@ -279,7 +285,7 @@ export function createApiDispatcher({
       DISABLED_ROUTE_IDEMPOTENCY;
     const logging = normalizeRouteLogging(route.logging, routeKey);
     const upload = route.upload
-      ? normalizeUploadConfig(route.upload, `upload config for ${routeKey}`, fileTypes)
+      ? normalizeUploadConfig(route.upload, `upload config for ${routeKey}`, fileTypes, apiUpload)
       : null;
     const download = normalizeDownloadConfig(
       route.download || {},
@@ -290,7 +296,7 @@ export function createApiDispatcher({
           config: upload,
           logger: activeLogger,
           fileTypes,
-          gate: uploadGate
+          gate: upload.storageMode === "disk" ? diskUploadGate : uploadGate
         })
       : null;
     const validateRequest = activeValidator.compile(route.requestSchema, routeKey);
@@ -312,6 +318,7 @@ export function createApiDispatcher({
       upload: upload?.enabled
         ? Object.freeze({
             enabled: true,
+            storageMode: upload.storageMode,
             maxFileSizeBytes: upload.maxFileSizeBytes,
             maxFiles: upload.maxFiles,
             maxFieldCount: upload.maxFieldCount,
@@ -436,7 +443,20 @@ export function createApiDispatcher({
   // 所以這裡把乘積算出來，對著 maxUploadMemoryBytes 檢查，再寫進啟動日誌。
   // 乘積本身一直是被強制的（gate 管併發數，每條 route 的 maxRequestBytes 管
   // 單一請求），缺的一直是「這台機器負擔不負擔得起」這個判斷。
-  const uploadApis = registeredApis.filter(({ upload }) => upload.enabled);
+  const uploadApis = registeredApis.filter(({ upload }) => upload.enabled && upload.storageMode === "memory");
+  const diskApis = registeredApis.filter(({ upload }) => upload.enabled && upload.storageMode === "disk");
+  if (diskApis.length > 0) {
+    const largestRequestBytes = Math.max(...diskApis.map(({ upload }) => upload.maxRequestBytes));
+    const worstCaseBytes = apiUpload.maxConcurrentDiskUploads * largestRequestBytes;
+    if (!Number.isSafeInteger(worstCaseBytes) || worstCaseBytes > apiUpload.maxDiskUploadBytesInFlight) {
+      throw new Error(`Disk upload configuration allows ${worstCaseBytes} bytes in flight, which exceeds api.upload.maxDiskUploadBytesInFlight (${apiUpload.maxDiskUploadBytesInFlight})`);
+    }
+    void activeLogger.info("api.disk_upload_budget", "Disk upload budget", {
+      maxConcurrentDiskUploads: apiUpload.maxConcurrentDiskUploads,
+      largestRequestBytes, worstCaseBytes,
+      maxDiskUploadBytesInFlight: apiUpload.maxDiskUploadBytesInFlight
+    });
+  }
 
   if (uploadApis.length > 0) {
     const largestRequestBytes = Math.max(

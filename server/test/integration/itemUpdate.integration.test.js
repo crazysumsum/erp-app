@@ -318,6 +318,10 @@ test("TC-007 更新 SKU：淨係改 RRP，唔使填 reason，audit 保存前後 
   assert.equal(status, 200, JSON.stringify(body));
   assert.equal(body.data.suggestedRetailPrice.amount, "150.0000");
   assert.equal(body.data.version, 2);
+  assert.equal(body.data.uoms[0].id, fixture.skuUomId, "ordinary price edits preserve the referenced mapping identity");
+  assert.equal(body.data.uoms[0].toBaseFactor, 1);
+  assert.equal(body.data.barcodes[0].barcode, fixture.barcodeValue);
+  assert.equal(body.data.barcodes[0].skuUomId, fixture.skuUomId);
 
   const [auditRows] = await db.query(
     "SELECT detail, reason FROM item_audit_logs WHERE target_type='sku' AND target_id=? AND action='sku.update'",
@@ -328,6 +332,63 @@ test("TC-007 更新 SKU：淨係改 RRP，唔使填 reason，audit 保存前後 
   assert.equal(auditRows[0].detail.suggestedRetailPrice.after.amount, "150.0000");
   assert.equal(auditRows[0].detail.suggestedRetailPrice.after.currency, "HKD");
   assert.equal(auditRows[0].detail.suggestedRetailPrice.after.taxBasis, "tax_not_applicable");
+});
+
+test("Sales UOM references permit price/default swaps but protect conversion/removal and rollback", { skip }, async (t) => {
+  const application = await startApplication();
+  const { db, token } = await withManager(t, application);
+  const catalog = await seedCatalog(db);
+  const fixture = await seedItemWithSku(db, catalog);
+  const referenceTable = `sales_uom_compat_${randomUUID().replaceAll("-", "")}`;
+  const nowMs = Date.now();
+  const [pack] = await db.execute(
+    `INSERT INTO item_sku_uoms (sku_id, uom_id, to_base_factor, is_base, is_default_purchase, created_at, updated_at)
+     VALUES (?, ?, 12, 0, 1, ?, ?)`, [fixture.skuId, catalog.uomIdB, nowMs, nowMs]
+  );
+  const packId = Number(pack.insertId);
+  // Isolated synthetic FK consumer, not a premature Sales document table or migration.
+  await db.execute(`CREATE TABLE ${referenceTable} (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    sku_id BIGINT UNSIGNED NOT NULL, sku_uom_id BIGINT UNSIGNED NOT NULL,
+    FOREIGN KEY (sku_id) REFERENCES item_skus(id) ON DELETE RESTRICT,
+    FOREIGN KEY (sku_uom_id) REFERENCES item_sku_uoms(id) ON DELETE RESTRICT
+  ) ENGINE=InnoDB`);
+  t.after(async () => {
+    await db.execute(`DROP TABLE ${referenceTable}`);
+    await fixture.cleanup(); await catalog.cleanup(); await application.shutdown("sales_uom_compat_complete");
+  });
+  await db.execute(`INSERT INTO ${referenceTable} (sku_id, sku_uom_id) VALUES (?, ?)`, [fixture.skuId, packId]);
+  const { url } = await application.start();
+  const uoms = [
+    { id: fixture.skuUomId, uomId: catalog.uomId, toBaseFactor: 1, isBase: true, isDefaultPurchase: true, isDefaultSale: false },
+    { id: packId, uomId: catalog.uomIdB, toBaseFactor: 12, isBase: false, isDefaultPurchase: false, isDefaultSale: true }
+  ];
+  let result = await post(`${url}/api/v1/skus/${fixture.skuId}/update`, token, baseSkuPayload(fixture, catalog, {
+    suggestedPriceAmount: "150.0000", uoms
+  }));
+  assert.equal(result.status, 200, JSON.stringify(result.body));
+  assert.deepEqual(result.body.data.uoms.map(row => Number(row.id)).sort((a, b) => a - b), [fixture.skuUomId, packId]);
+  const [[referenced]] = await db.query(`SELECT sku_uom_id FROM ${referenceTable}`);
+  assert.equal(Number(referenced.sku_uom_id), packId);
+  const [[slots]] = await db.query("SELECT SUM(is_base) AS base, SUM(is_default_purchase) AS purchase, SUM(is_default_sale) AS sale FROM item_sku_uoms WHERE sku_id = ?", [fixture.skuId]);
+  assert.deepEqual([Number(slots.base), Number(slots.purchase), Number(slots.sale)], [1, 1, 1]);
+  const barcodes = [{ barcode: fixture.barcodeValue, barcodeType: "internal", uomId: catalog.uomId, isPrimary: true }];
+  for (const [overrides, expected] of [
+    [{ uoms: [uoms[0]] }, "UOM_CHANGE_BLOCKED"],
+    [{ uoms: [uoms[0], { ...uoms[1], toBaseFactor: 13 }] }, "UOM_CHANGE_BLOCKED"],
+    [{ trackingPolicy: "batch" }, "TRACKING_POLICY_CHANGE_BLOCKED"]
+  ]) {
+    result = await post(`${url}/api/v1/skus/${fixture.skuId}/update`, token, baseSkuPayload(fixture, catalog, {
+      version: 2, suggestedPriceAmount: "999.0000", uoms, barcodes, reason: "A reason cannot override existing references", ...overrides
+    }));
+    assert.equal(result.status, 409, JSON.stringify(result.body));
+    assert.equal(result.body.error.code, expected);
+    const [[sku]] = await db.query("SELECT version, suggested_price_amount FROM item_skus WHERE id = ?", [fixture.skuId]);
+    assert.equal(Number(sku.version), 2);
+    assert.equal(String(sku.suggested_price_amount), "150.0000");
+    const [[mapping]] = await db.query("SELECT to_base_factor FROM item_sku_uoms WHERE id = ?", [packId]);
+    assert.equal(Number(mapping.to_base_factor), 12);
+  }
 });
 
 test("更新 SKU：改追蹤政策（關鍵變更）冇填 reason：400 CRITICAL_CHANGE_REASON_REQUIRED，UOM／Barcode 完全冇被刪重插", {

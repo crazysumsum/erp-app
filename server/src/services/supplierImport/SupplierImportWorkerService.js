@@ -4,7 +4,12 @@ import { BaseService } from "../../framework/services/BaseService.js";
 import { BusinessMasterProvider } from "../../modules/businessMaster/BusinessMasterProvider.js";
 import { BusinessMasterReadinessService } from "../../modules/businessMaster/BusinessMasterReadinessService.js";
 import { BusinessMasterRepository } from "../../modules/businessMaster/BusinessMasterRepository.js";
+import { createSupplierImportApplier } from "../../modules/supplier/import/applySupplierImportRow.js";
 import { precheckSupplierCsv } from "../../modules/supplier/import/SupplierImportProcessor.js";
+import { SupplierAddressService } from "../../modules/supplier/SupplierAddressService.js";
+import { SupplierAdminService } from "../../modules/supplier/SupplierAdminService.js";
+import { SupplierContactService } from "../../modules/supplier/SupplierContactService.js";
+import { SupplierIdentifierService } from "../../modules/supplier/SupplierIdentifierService.js";
 import { BusinessMasterLookupProvider } from "../../modules/supplier/providers/BusinessMasterLookupProvider.js";
 import { SupplierImportService } from "../../modules/supplier/SupplierImportService.js";
 import {
@@ -29,8 +34,8 @@ const SOURCE_ERRORS = Object.freeze({
  *   lease，過期之後由下一個 worker 接手續做（resume）。
  * - Precheck（T43）：領取 `uploaded` 或 lease 過期嘅 `validating` job，讀來源檔、逐列預檢、寫 rows。
  * - 未設定 import root 就乜都唔做，開機寫一條 warning：import 未部署，upload 回 503（HD-050）。
- * - 真正寫 Supplier 嘅 `applyRow` 由 T45 接入；未接入之前 worker 唔領取任何 job，免得將
- *   job 領咗又做唔到。
+ * - 執行（T45）：`applyRow` 用 `createSupplierImportApplier`，經 UI／API 共用嘅 connection-taking helper
+ *   喺列嘅 transaction 入面寫 Supplier（HD-060 2A）。
  */
 export class SupplierImportWorkerService extends BaseService {
   static service = Object.freeze({
@@ -53,15 +58,20 @@ export class SupplierImportWorkerService extends BaseService {
     // 開機驗過嘅真實路徑；upload handler 只用呢個（HD-050：null 即係未部署，回 503）。
     this.preparedRoot = null;
     this.limits = { maxFileBytes: config?.supplier?.import?.maxFileBytes, maxRows: config?.supplier?.import?.maxRows };
-    this.applyRow = options.applyRow ?? null;
     this.leaseOwner = options.instanceId || randomUUID();
     this.database = services.require("mysqldatabase");
-    this.importService = new SupplierImportService({
-      database: this.database, time: services.require("time"), logger: this.logger
-    });
+    const time = services.require("time");
+    this.importService = new SupplierImportService({ database: this.database, time, logger: this.logger });
     this.businessMaster = options.businessMaster ?? new BusinessMasterLookupProvider({
       provider: new BusinessMasterProvider({ database: this.database, repository: new BusinessMasterRepository() }),
       readiness: new BusinessMasterReadinessService({ database: this.database, checkerIds: ["supplier"] })
+    });
+    const writers = { database: this.database, logger: this.logger, time };
+    this.applyRow = options.applyRow ?? createSupplierImportApplier({
+      suppliers: new SupplierAdminService({ ...writers, businessMaster: this.businessMaster }),
+      addresses: new SupplierAddressService(writers),
+      contacts: new SupplierContactService(writers),
+      identifiers: new SupplierIdentifierService(writers)
     });
     this.stopping = false;
   }
@@ -86,7 +96,7 @@ export class SupplierImportWorkerService extends BaseService {
   }
 
   #mayWork(signal) {
-    return Boolean(this.root && this.applyRow) && !this.stopping && !signal?.aborted;
+    return Boolean(this.root) && !this.stopping && !signal?.aborted;
   }
 
   async runPrecheck(signal) {
@@ -179,6 +189,9 @@ export class SupplierImportWorkerService extends BaseService {
         void this.logger?.info?.("supplier.import.completed", "Supplier import completed",
           { jobId: job.id, status: result.status, applied: result.applied, failed: result.failed, skipped: result.skipped });
         return { claimed: true, jobId: job.id, applied, failed, status: result.status };
+      }
+      if (row.status === "revoked") {
+        return { claimed: true, jobId: job.id, applied, failed, status: "failed" };
       }
       if (row.status === "applied") applied += 1;
       else if (row.status === "failed") failed += 1;

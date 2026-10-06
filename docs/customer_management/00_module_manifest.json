@@ -138,9 +138,9 @@
       },
       {
         "id": "customer-purpose-provider-contracts",
-        "version": "aligned-design-2.0",
+        "version": "aligned-design-2.0; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/customer_management/03_design_spec.md",
-      "sha256": "ab567021254b09d5103caac5bba9b2e3324c0278e726d84999870abcdd7fe440",
+        "sha256": "1ff3954f4c925d9a5b972fb8c55676731dd0cfa7861f280b2c0ceccb4795d73d",
         "consumers": [
           "sales-order-management",
           "fulfillment-shipping-management",
@@ -164,9 +164,9 @@
       {
         "module_id": "sales-order-management",
         "id": "customer-consumer-contract",
-        "version": "observed-main-design",
+        "version": "observed-main-design; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "f68844a0bf8238fdd90ce3be6392fc489fd5d44973f87a77780880f0e1275107",
+        "sha256": "cf4cb43b84698637a70cc742e48a9c85a736c18b3ebb91b5a70119a59e547b68",
         "regression_suites": [
           "customer-server-technical"
         ]

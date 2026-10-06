@@ -170,6 +170,25 @@ export class CustomerLookupService {
     return creditProjection(row);
   }
 
+  async getSalesSnapshotInTransaction(transaction, customerId, { atMs } = {}) {
+    requireExecutor(transaction); requireId(customerId, "customerId"); requireAtMs(atMs);
+    const [[customer]] = await transaction.query(
+      `SELECT ${CUSTOMER_SELECT} FROM customers WHERE id = ? FOR UPDATE`, [customerId]
+    );
+    if (!customer) throw customerNotFound(customerId);
+    const [[credit]] = await transaction.query(
+      `SELECT credit_limit, credit_currency_code, credit_status, version AS credit_version
+         FROM customer_credit_profiles WHERE customer_id = ? FOR UPDATE`, [customerId]
+    );
+    return Object.freeze({
+      customerId: Number(customer.id), customerCode: customer.customer_code, legalName: customer.legal_name,
+      defaultCurrencyCode: customer.default_currency_code,
+      defaultPaymentTermId: customer.default_payment_term_id === null ? null : Number(customer.default_payment_term_id),
+      status: customer.status, customerVersion: Number(customer.version),
+      credit: creditProjection(credit ?? { credit_version: null })
+    });
+  }
+
   async listAddresses(customerId, { purpose, atMs } = {}) {
     requireId(customerId, "customerId"); requirePurpose(purpose, ADDRESS_PURPOSES); requireAtMs(atMs);
     const [rows] = await this.database.query(

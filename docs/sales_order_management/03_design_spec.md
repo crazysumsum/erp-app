@@ -1,3 +1,5 @@
+> 2026-10-02 Sam 已採納 [provider contract proposal](implementation/07_provider_contract_review.md)（reviewed SHA fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e）並授權 TASK-009～011；該採納補充 reserve/release root＋child、replay、完整 release membership及精確鎖序驗證義務。Later Phase、worker delegation、formal/UAT及local SQL未授權；舊 readiness 敘述為歷史觀察。
+
 # Sales Order Management 系統設計規格（Harness Aligned）
 
 ## 0. 文件資訊
@@ -295,11 +297,10 @@ composables/sales/
 使用既定 contract：
 
 ```js
-CustomerLookupService.findById(customerId, { purpose: "new_sale", atMs })
-CustomerLookupService.getCreditPolicy(customerId, { atMs })
+CustomerLookupService.getSalesSnapshotInTransaction(transaction, customerId, { atMs })
 ```
 
-確認點要求 Customer `ACTIVE`。回傳最小 projection：ID、Code、Legal Name、Default Currency、Payment Term、Credit Status／Version；不得回 Bank 或 Address。Credit `ON_HOLD` 阻止確認；Limit／Currency 只產生 warning snapshot，直至 AR Exposure contract 落地。
+確認點用 caller-owned transaction，依 Customer → credit FOR UPDATE 取得一致快照；不得 pool read 或自行 commit。回 customerId／customerCode／legalName／defaultCurrencyCode／defaultPaymentTermId／status／customerVersion 及 credit configured／creditLimit decimal string or null／currencyCode／status／policyVersion，無 Bank、Address、Contact、notes。Customer status `active`；credit 實際字面值 `normal`／`on_hold`／`not_configured` 由 Sales 明確映射；Customer 非 active 或 credit on_hold 阻止確認。零／未設定 credit 不混淆，limit 僅 advisory，不以 credit currency new_assignment 查詢阻擋。Document Currency／Payment Term 使用既有 BusinessMasterProvider transaction asserts。
 
 #### Item provider
 
@@ -308,10 +309,12 @@ CustomerLookupService.getCreditPolicy(customerId, { atMs })
 ```js
 ItemLookupService.findManyForSale(skuIds, { atMs, purpose: "new_sale" })
 ItemLookupService.findSaleUom(skuId, skuUomId, { atMs })
+ItemLookupService.getSalesSnapshotsInTransaction(transaction, requests, { atMs })
+ItemLookupService.getSalesInventoryProfilesInTransaction(transaction, skuIds, { atMs })
 ItemLookupService.searchForSale({ q, barcode, page, pageSize, atMs })
 ```
 
-回傳 Active／Sellable／effective SKU、SKU／Item display snapshot、Sales UOM、`toBaseFactor`、tracking minimum-sale-life 及 Suggested Price `{amount,currency,taxBasis}`。不同 Currency 不由 Sales 自動換算。
+具名 Sales 用 Item active＋SKU active＋sellable＋有效日期，保留 generic sale 的 discontinued 語意。Confirmation requests `{skuId,skuUomId}` 去重後最多100、常數查詢，skuUomId 為 association ID而非 master uomId。回 Item/SKU版本、display/tracking/minimum-sale-life、mapping/master UOM ID/code/name/status、factor1–1,000,000/default flag及 stored Suggested Price decimal string/null，currency HKD／taxBasis tax_not_applicable；不同 Currency 不換算。必要 Item writer 相容：仍存在的 association 更新原 row 保留 ID；新增才 insert，移除／referenced conversion 依 reference/FK 保護 fail closed，default unique-slot 交換必須維持單一default；不以理由繞過 guard。
 
 #### Inventory provider
 
@@ -320,12 +323,14 @@ ItemLookupService.searchForSale({ q, barcode, page, pageSize, atMs })
 ```js
 InventoryReservationService.reserveAvailableForSalesBatchInTransaction(transaction, command)
 InventoryReservationService.releaseSalesBatchInTransaction(transaction, command)
-InventoryLookupService.getSalesReservationStates(transaction, query)
+InventoryReservationService.getSalesReservationStatesInTransaction(transaction, query)
 ```
 
 `reserveAvailableForSalesBatchInTransaction()` 接受一個 Warehouse 及按 `(skuId, sourceLineId)` 排序的 demand lines。Inventory 在自己的固定 lock order 內鎖 Warehouse／Stock Controls，重新計算 ATP，為每行建立 `0..orderedBaseQuantity` 的確切 Reservation，並回 `reservedBaseQuantity`、`uncoveredBaseQuantity`、`reservationId`。這不是放寬 generic Reservation 的「部分成功」：每個真正建立的 Reservation 仍以其確切數量全有或全無；uncovered demand 由 Sales 建 Backorder。
 
 同一 SO 確認只有一個 Warehouse，整批在同一 DB transaction 完成。禁止 Sales 逐行呼叫 generic create，否則多 SKU 會以使用者行順序取得 Inventory lock，破壞全域鎖順序。
+
+Inventory具體manual command/input/output及root/children persistence依owner Design §5.7.1；release results iterator須在caller transaction完整消費。Batch及兩張foundation tables為本Phase source candidate，later TASK015 sequence/operation services、Fulfillment、UI/jobs未因此提前授權。
 
 #### Fulfillment consumer boundary
 
@@ -438,19 +443,18 @@ SalesBackorderAllocationJob / manual trigger
 
 ### 2.8 全域 lock order
 
-所有 Sales 寫入 transaction 必須按以下順序，不能依畫面行順序：
+完成的 domain operation 先驗 fresh actor、aggregate access 及 immutable event/hash 後 replay；不重驗 mutable Customer/Item/ATP。NEW_EXECUTION 依以下順序，不能依畫面行順序：
 
-1. `sales_operation_requests`／Job lease row。
-2. `sales_document_sequences`（只在建立文件）。
-3. `sales_external_order_keys`（只在 intake 建單）。
-4. `sales_quotations`，按 ID 升序。
-5. `sales_orders`，按 ID 升序。
-6. `sales_quotation_lines`／`sales_order_lines`，按 ID 升序。
-7. `sales_backorder_entries` 及 `sales_order_line_reservations`，按 ID 升序。
-8. Inventory batch contract：Inventory operation claims → Warehouse → Stock Controls → Reservation rows。
-9. Current projection update、History、Audit append。
+1. Sales operation／Job lease → sequence（create/convert）→ external key（intake）→ Quotation → Order → Lines → Backorder/mappings；各類 ascending ID。
+2. Customer FOR UPDATE → credit FOR UPDATE；不存在 credit 亦由 Customer root 序列化。
+3. Business Master document Currency按code → Payment Term按ID；credit currency僅advisory原樣保存。
+4. Item snapshots：先發現完整 IDs，UOM SHARE → Item SHARE → SKU SHARE → mapping SHARE，各類 ascending ID。鎖定後重驗association；改變則abort/retry，不晚取 earlier-rank lock。SHARE与Inventory隱式SKU FK SHARE相容。
+5. Inventory root → 全 deterministic child operation claims → Warehouse → Stock Controls → Bins/active bin locks → Lots → Balances → Reservations → Transfers → Stocktakes。Completed root立即bounded驗全部原children及count/digest後返回，不做mutable eligibility或stock mutation；new root才執行新效果。
+6. Child summaries → root complete → Sales current projection／History／Audit／operation result；全部caller transaction，無line/page commit。
 
-Archive transaction 只鎖已符合資格且沒有進行中 operation 的 finalized SO；不呼叫 Inventory。任何 Inventory workflow 不得持有 Inventory lock 後反向取得 Sales lock。Deadlock／lock timeout映射為可重試 `CONCURRENT_OPERATION`，同一業務意圖仍使用原 eventId 查結果。
+Item writer相容依 UOM SHARE → Item SHARE → SKU UPDATE → mappings UPDATE → barcode mutations；ID discovery鎖後重驗。Draft刪除先鎖Item/SKU roots再刪children；cascade先Item再SKU。Guarded updateSku用既有局部READ COMMITTED交易選項及SKU/mapping鎖後nonlocking reference probes，避免authorization/discovery的舊RR snapshot與Sales/Inventory反向child locks。清除待變default slots後再設定，保留DB uniqueness。
+
+此精確圖經2026-10-02 `/root/sales_readiness_review` 獨立read-only review APPROVE實作方向，真MySQL並發/rollback仍pending。既有InventoryPosting first-receipt/plain-RR profile race為歷史問題，未包含本slice修正；不得聲稱全系統無deadlock。Future Fulfillment僅沿用Sales → Fulfillment → Inventory原則，細節仍由後續owner gate處理。Archive不呼叫Inventory；持有Inventory stock locks後不得反向取得Sales或新Item locks。Deadlock／lock timeout沿原event回可重試CONCURRENT_OPERATION。
 
 ---
 
@@ -1576,9 +1580,9 @@ Detail／Edit routes 不放獨立 Menu item，由 List navigation。Router guard
 
 `convert`：
 
-1. claim operation，鎖 Quotation／Lines，重驗 effective `ISSUED` 及未有 conversion。
+1. claim operation → 取得 SO sequence → 鎖 Quotation／Lines，重驗 effective `ISSUED` 及未有 conversion；失敗同 transaction rollback，不提交空 SO 或號碼。
 2. 接受使用者提交的完整 Draft SO editable input，而非先建空 SO 再更新。
-3. 使用同一 validators 建 SO Header／Lines、分配 SO Number。
+3. 使用同一 validators 建 SO Header／Lines，使用步驟1同 transaction 分配的 SO Number。
 4. 以 SKU ID＋UOM ID 比較 quotation lines 與 target lines，產生固定結構 difference summary：added、removed、quantityChanged、priceChanged；每組只保存 IDs、line numbers、before／after decimal strings。
 5. 插入 conversion unique rows、Quotation `CONVERTED`、雙 Audit 及 operation result，同 transaction commit。
 

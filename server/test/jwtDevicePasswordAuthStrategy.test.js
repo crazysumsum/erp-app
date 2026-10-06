@@ -150,7 +150,7 @@ function alwaysCorrectPassword() {
   };
 }
 
-test("authType and service metadata are declared correctly", () => {
+test("JwtDevicePasswordAuthStrategy: authType and service metadata are declared correctly", () => {
   assert.equal(JwtDevicePasswordAuthStrategy.authType, "jwt-device-password");
   assert.equal(JwtDevicePasswordAuthStrategy.service.name, "auth.jwtDevicePassword");
   assert.deepEqual(

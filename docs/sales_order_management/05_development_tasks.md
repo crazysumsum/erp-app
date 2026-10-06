@@ -1,3 +1,5 @@
+> Current implementation authority: TASK-001～011；2026-10-02 scoped contract adoption supersedes historical TASK-009～011 entry block only. Completion and merge still require all original Phase gates.
+
 # Sales Order Management 開發執行計劃（Harness Aligned）
 
 ## 0. 文件資訊
@@ -89,7 +91,7 @@ npm run verify
 
 ### 1.5.1 本次有限開發範圍的自測契約（候選，待新基線批准）
 
-`PHASE-001 / TASK-001`～`TASK-008` 是唯一擬恢復的實作範圍；`TASK-009`～`TASK-011`、PHASE-001 exit及PHASE-002～005仍未獲本次實作授權。Customer／Inventory已有核心程式碼，不代表Sales provider contract或交易鎖順序已通過owner review。
+2026-10-02 Sam 採納 implementation/07_provider_contract_review.md（reviewed SHA fa3352d7098e8551a27ea691c7d388321a1417088c8dc3b62753587044836a6e）及08 decision option A，授權 TASK-009～011的 Customer/Item snapshots、必要UOM writer相容、Inventory manual batch及0068／0069 foundation。精確Item/FK鎖圖先審查，實際DB並發／rollback及完整Phase developer/CI/review gate仍須完成；不允許partial Phase merge、local SQL、later Phase或worker delegation。
 
 - Task-local developer checks使用profile新增的`sales-foundation-developer`；它執行既有Upload／authorization regression及`server/test/sales`內的新基礎測試，要求至少6個實際testcase、零skip，並要求`TC-003`～`TC-008`出現在當次JUnit。這些ID只標示DEVELOPER證據，不是正式Technical Acceptance。
 - 新套件目前是已具體列明的待實作命令；Sales測試目錄與案例尚未建立，不能宣稱可執行或PASS。TASK-002～005補齊Upload測試；TASK-006補齊permission/config及fresh actor測試；TASK-007～008補齊數值、validation、state/hash測試。缺任一檔案、ID或案例時fail closed。
@@ -1853,11 +1855,11 @@ Latest main; Customer/Item/Inventory owners; disk storage/test DB。另須滿足
 
 ### Acceptance criteria
 
-TC-001–010 plus provider/migration/50 MB memory gate。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+Phase 0 developer TC-001–009 foundation assertions plus provider/migration/50 MB memory gate；TC-010 為全部 developer suites、原 coverage floor、當前 CI 與 review 的集合 Gate，不建立假單元測試代表整體 PASS。各案例的 Phase 0 範圍／來源見 implementation/14_foundation_schema_checkpoint.md，未實作的後續 UI／worker 斷言及全部 60 正式案例仍待其 Phase／TEST_AND_VERIFY。全部 required developer assertions 必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
 
 ### Integration and regression
 
-必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+必跑 developer 套件依 PHASE-001 ledger：`lint`、`client-build`、`security-audit`、`sales-foundation-developer`、`sales-provider-regression`、Sales/Item native 與十項具名 Inventory native 回歸。正式 `sales-technical` 全 60 案例保留於 TECHNICAL/REGRESSION。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
 
 ### Git and merge plan
 
@@ -1869,7 +1871,7 @@ One foundation PR or ordered upload/provider/schema PRs; opt-in flags permit saf
 
 ### Exit criteria
 
-全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-001–010 plus provider/migration/50 MB memory gate 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-001–005。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-001–010 plus provider/migration/50 MB memory gate 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：實作／驗證中，DEC-013 已核准 Phase 0 developer 契約與一次性隔離 MySQL；四項具名上游效能驗證依 implementation/15_phase0_validation_decision.md 保留原正式義務，十項 Inventory native 回歸不可 skip。Gate 失敗時須重新執行整個對應 Phase 測試週期。
 
 ## PHASE-002 — Quotation, manual Draft SO, inquiry and accessible UI without Inventory commitment.
 

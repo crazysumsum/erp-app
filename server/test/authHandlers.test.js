@@ -1042,6 +1042,48 @@ test("refresh never reports a negative session remainder, even right on the boun
   assert.equal(response.data.sessionExpiresInSeconds, 0);
 });
 
+test("RefreshTokenHandler preserves mandatory-password-change claims and request provenance", async () => {
+  const { handler, jwt, logger } = createRefreshHandler({
+    userService: { async findActiveById() { return { ...SAMPLE_USER, mustChangePassword: true }; } }
+  });
+  const request = refreshRequest();
+  request.requestId = "refresh-password-change";
+
+  const response = await handler.execute(request);
+
+  assert.equal(response.data.user.mustChangePassword, true);
+  assert.equal(jwt.issued.length, 1);
+  assert.deepEqual(jwt.issued[0].payload, {
+    roles: SAMPLE_USER.roles, permissions: SAMPLE_USER.permissions, did: DEVICE_ID, mcp: true
+  });
+  assert.deepEqual(jwt.issued[0].options, {
+    subject: "7", version: 9, authTime: request.auth.claims.auth_time
+  });
+  const entry = logger.entries.find((entry) => entry.event === "auth.token.refreshed");
+  assert.equal(entry.context.requestId, "refresh-password-change");
+});
+
+test("RefreshTokenHandler refuses a missing token version without issuing or marking the device used", async () => {
+  const deviceBinding = fakeDeviceBinding();
+  const { handler, jwt, logger } = createRefreshHandler({ deviceBinding });
+  const request = refreshRequest();
+  request.requestId = "refresh-missing-version";
+  delete request.auth.claims.ver;
+
+  await assert.rejects(() => handler.execute(request), (error) => {
+    assert.equal(error.code, "TOKEN_VERSION_STALE");
+    assert.equal(error.statusCode, 401);
+    assert.equal(error.publicCode, "Unauthorized Access");
+    return true;
+  });
+  assert.deepEqual(jwt.issued, []);
+  assert.deepEqual(deviceBinding.used, []);
+  const entry = logger.entries.find((entry) => entry.event === "auth.token.version_stale");
+  assert.equal(entry.context.requestId, "refresh-missing-version");
+  assert.equal(entry.context.tokenVersion, null);
+  assert.equal(entry.context.currentVersion, 9);
+});
+
 test("a disabled account cannot refresh, which is what ends its session", async () => {
   const { handler } = createRefreshHandler({
     userService: {

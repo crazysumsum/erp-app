@@ -148,7 +148,7 @@ test("a refresh that fails open still fails the job", async () => {
   assert.deepEqual(refreshed, ["refresh"]);
 });
 
-test("the job is discovered by the ordinary service mechanism", async () => {
+test("TokenRevocationJobs: the job is discovered by the ordinary service mechanism", async () => {
   const definitions = await discoverServiceDefinitions();
   const names = definitions.map(({ name }) => name);
 

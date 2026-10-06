@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
+
 import { assertActorFresh } from "../authorization/directoryLookups.js";
 import { ItemLookupService } from "../item/ItemLookupService.js";
 import { InventoryAuditService } from "./InventoryAuditService.js";
 import { InventoryLockService } from "./InventoryLockService.js";
-import { InventoryOperationService } from "./InventoryOperationService.js";
+import { InventoryOperationService, inventoryOperationHash } from "./InventoryOperationService.js";
 import { loadInventoryCandidates, recommendInventoryCandidates } from "./InventoryPickSequenceService.js";
 import { inventoryError } from "./inventoryErrors.js";
 import {
@@ -194,6 +196,294 @@ export class InventoryReservationService {
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
     this.operations = operations ?? new InventoryOperationService();
     this.locks = locks ?? new InventoryLockService();
+  }
+
+  async #salesBatchContext(transaction, command, action) {
+    const raw = command?.payload;
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
+    exactFields(raw, new Set(action === "reserve" ? ["warehouseId", "expectedOrderVersion", "lines"] :
+      action === "release" ? ["warehouseId", "expectedOrderVersion", "intent"] : ["warehouseId", "afterId"]));
+    const payload = { warehouseId: positiveId(raw.warehouseId, "warehouseId") };
+    if (action === "states") {
+      payload.afterId = raw.afterId ?? 0;
+      if (!Number.isSafeInteger(payload.afterId) || payload.afterId < 0) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "afterId" });
+    } else payload.expectedOrderVersion = positiveId(raw.expectedOrderVersion, "expectedOrderVersion");
+    if (action === "reserve") {
+      if (!Array.isArray(raw.lines) || !raw.lines.length || raw.lines.length > 100) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
+      payload.lines = raw.lines.map(line => {
+        if (!line || typeof line !== "object" || Array.isArray(line)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "lines" });
+        exactFields(line, new Set(["sourceLineId", "skuId", "orderedBaseQuantity", "minimumRemainingDays"]));
+        return { sourceLineId: positiveId(line.sourceLineId, "sourceLineId"), skuId: positiveId(line.skuId, "skuId"),
+          orderedBaseQuantity: inventoryPositiveInteger(line.orderedBaseQuantity),
+          minimumRemainingDays: nonNegativeInteger(line.minimumRemainingDays, "minimumRemainingDays") };
+      }).sort((a, b) => a.skuId - b.skuId || a.sourceLineId - b.sourceLineId);
+      if (new Set(payload.lines.map(line => line.sourceLineId)).size !== payload.lines.length) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "sourceLineId" });
+    } else if (action === "release") {
+      if (raw.intent !== "ALL_OUTSTANDING") throw inventoryError("INVENTORY_INPUT_INVALID", { field: "intent" });
+      payload.intent = raw.intent;
+    }
+    // Fixed scalars and 100 demand lines bound serialization before the generic JSON copier/hash.
+    if (Buffer.byteLength(JSON.stringify(payload)) > 65_536) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
+    const contract = { module: "SALES", documentType: "SALES_ORDER",
+      authorization: { purpose: `sales.batch.${action}`, requiredCallerPermission: "sales.mgmt" } };
+    const context = validateInventoryCommandContext(transaction,
+      providerInventoryCommand(transaction, { ...command, payload }, contract), contract.authorization);
+    if (context.actor.userId === null || context.actor.serviceName !== "" || context.source.lineId !== "" ||
+        !/^[1-9][0-9]*$/u.test(context.source.documentId) || !Number.isSafeInteger(Number(context.source.documentId))) {
+      throw inventoryError("INVENTORY_INPUT_INVALID", { field: "source/actor" });
+    }
+    const actor = await this.authorize(transaction, { actorId: context.actor.userId,
+      claimedRoles: context.actor.claimedRoles, claimedPermissions: context.actor.claimedPermissions });
+    if (!actor?.permissions?.includes("sales.mgmt")) throw inventoryError("PERMISSION_STALE");
+    return { ...context, actorLabel: actor.username || `user:${context.actor.userId}`, timestamp: this.time.nowMs() };
+  }
+
+  #salesClaimInput(context, commandType, payload, lineId = "") {
+    return { commandType, payload, source: { ...context.source, lineId }, actorUserId: context.actor.userId,
+      actorLabel: context.actorLabel, requestId: context.correlationId, correlationId: context.correlationId, createdAt: context.timestamp };
+  }
+
+  async #salesStockScope(transaction, context, skuIds) {
+    const locked = await this.locks.lockForCommand(transaction, { warehouseIds: [context.payload.warehouseId],
+      stockControls: skuIds.map(skuId => ({ warehouseId: context.payload.warehouseId, skuId })), now: context.timestamp });
+    if (locked.warehouses[0]?.status !== "ACTIVE") throw inventoryError("WAREHOUSE_INVALID");
+    const controls = new Map(locked.stockControls.map(row => [Number(row.sku_id), { ...row, reserved: safeQuantity(row.reserved_quantity, "reserved") }]));
+    if (controls.size !== skuIds.length) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    return controls;
+  }
+
+  async #saveSalesControls(transaction, context, controls) {
+    for (const control of controls.values()) {
+      if (control.reserved === Number(control.reserved_quantity)) continue;
+      const [updated] = await transaction.execute(
+        `UPDATE inventory_stock_controls SET reserved_quantity = ?, version = version + 1, updated_at = ? WHERE id = ? AND version = ?`,
+        [control.reserved, context.timestamp, Number(control.id), Number(control.version)]);
+      if (Number(updated.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+    }
+  }
+
+  async #verifySalesMembers(transaction, context, root, rootHash, type, expectedLines = null) {
+    const summary = root.replay.resultSummary;
+    if (!summary || root.replay.resultType !== (type === "SALES_LINE_RESERVE" ? "SALES_RESERVATION_BATCH" : "SALES_RELEASE_BATCH") ||
+        root.replay.resultId !== context.source.documentId || summary.operationId !== root.operationId || summary.warehouseId !== context.payload.warehouseId ||
+        summary.expectedOrderVersion !== context.payload.expectedOrderVersion || !Number.isSafeInteger(summary.lineCount) || summary.lineCount < 0) {
+      throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    }
+    let afterId = 0, count = 0;
+    const digest = createHash("sha256");
+    const lines = [];
+    for (;;) {
+      const page = await this.operations.listSalesBatchMembers(transaction, { source: context.source, afterId });
+      if (!page.length) break;
+      for (const member of page) {
+        const s = member.resultSummary;
+        if (member.operationId <= afterId || member.commandType !== type || member.completedAt === null || member.completedAt === undefined ||
+            !s || s.rootOperationId !== root.operationId || s.rootRequestHash !== rootHash) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+        const input = type === "SALES_LINE_RESERVE" ? expectedLines?.[count] : {
+          reservationId: s.reservationId, sourceLineId: s.sourceLineId, skuId: s.skuId,
+          expectedVersion: s.expectedVersion, releaseQuantity: s.releaseQuantity };
+        if (!input || member.sourceLineId !== (type === "SALES_LINE_RESERVE" ? String(input.sourceLineId) : `reservation:${input.reservationId}`) ||
+            member.requestHash !== inventoryOperationHash({ commandType: type, payload: { rootOperationId: root.operationId, rootRequestHash: rootHash, ...input } })) {
+          throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+        }
+        digest.update(`${member.sourceLineId}:${member.requestHash}\n`);
+        if (expectedLines) {
+          if (s.sourceLineId !== input.sourceLineId || s.skuId !== input.skuId ||
+              safeQuantity(s.reservedBaseQuantity, "reserved") + safeQuantity(s.uncoveredBaseQuantity, "uncovered") !== input.orderedBaseQuantity ||
+              (s.reservedBaseQuantity === 0 ? s.reservationId !== null || s.version !== null : !Number.isSafeInteger(s.reservationId) || s.reservationId <= 0 || s.version !== 1)) {
+            throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+          }
+          lines.push(s);
+        }
+        afterId = member.operationId;
+        count++;
+      }
+    }
+    if (count !== summary.lineCount || (expectedLines && count !== expectedLines.length) || digest.digest("hex") !== summary.membershipDigest) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    return { operationId: root.operationId, lineCount: count, membershipDigest: summary.membershipDigest, ...(expectedLines ? { lines } : {}) };
+  }
+
+  async reserveAvailableForSalesBatchInTransaction(transaction, command) {
+    const context = await this.#salesBatchContext(transaction, command, "reserve");
+    const rootInput = this.#salesClaimInput(context, "SALES_BATCH_RESERVE", context.payload);
+    const rootHash = inventoryOperationHash(rootInput);
+    const root = await this.operations.claim(transaction, rootInput);
+    if (root.replay) return this.#verifySalesMembers(transaction, context, root, rootHash, "SALES_LINE_RESERVE", context.payload.lines);
+    const digest = createHash("sha256");
+    const members = [];
+    for (const line of context.payload.lines) {
+      const input = this.#salesClaimInput(context, "SALES_LINE_RESERVE", { rootOperationId: root.operationId, rootRequestHash: rootHash, ...line }, String(line.sourceLineId));
+      const child = await this.operations.claim(transaction, input);
+      if (child.replay) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+      digest.update(`${input.source.lineId}:${inventoryOperationHash(input)}\n`);
+      members.push({ ...line, operationId: child.operationId });
+    }
+    const skuIds = [...new Set(members.map(line => line.skuId))];
+    if (typeof this.itemLookup?.getSalesInventoryProfilesInTransaction !== "function") throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    const profiles = await this.itemLookup.getSalesInventoryProfilesInTransaction(transaction, skuIds, { atMs: context.timestamp });
+    if (!(profiles instanceof Map)) throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+    for (const line of members) {
+      const profile = profiles.get(line.skuId);
+      if (typeof profile?.inventoryTracked !== "boolean" || !["none", "batch", "batch_expiry", "serial"].includes(profile.trackingPolicy) ||
+          (profile.minimumSaleLifeDays !== null && (!Number.isSafeInteger(profile.minimumSaleLifeDays) || profile.minimumSaleLifeDays < 0 || profile.minimumSaleLifeDays > 36_500))) {
+        throw inventoryError("INVENTORY_DEPENDENCY_UNAVAILABLE");
+      }
+      if (!profile.inventoryTracked) throw inventoryError("SKU_NOT_INVENTORY_TRACKED");
+      if (profile.trackingPolicy === "serial") throw inventoryError("SERIAL_TRACKING_UNSUPPORTED");
+      line.minimumRemainingDays = Math.max(line.minimumRemainingDays, nonNegativeInteger(profile.minimumSaleLifeDays ?? 0, "minimumSaleLifeDays"));
+    }
+    const controls = await this.#salesStockScope(transaction, context, skuIds);
+    // Lock current lots before balances, in bounded pages; all stock writers share the control scope.
+    let lotSku = 0, lotNumber = "";
+    for (;;) {
+      const [lots] = await transaction.query(
+        `SELECT sku_id, normalized_lot_number FROM inventory_lots WHERE sku_id IN (${skuIds.map(() => "?").join(",")})
+           AND (sku_id > ? OR (sku_id = ? AND normalized_lot_number > ?))
+         ORDER BY sku_id, normalized_lot_number LIMIT 100 FOR SHARE`, [...skuIds, lotSku, lotSku, lotNumber]);
+      if (!lots.length) break;
+      lotSku = Number(lots.at(-1).sku_id); lotNumber = lots.at(-1).normalized_lot_number;
+    }
+    const [available] = await transaction.query(
+      `SELECT d.source_line_id, COALESCE(SUM(b.on_hand_quantity), 0) AS eligible_on_hand
+         FROM (${members.map(() => "SELECT ? AS source_line_id, ? AS sku_id, ? AS cutoff").join(" UNION ALL ")}) d
+         LEFT JOIN inventory_stock_balances b ON b.warehouse_id = ? AND b.sku_id = d.sku_id AND b.stock_status = 'AVAILABLE'
+         LEFT JOIN inventory_lots l ON l.id = b.lot_id
+        WHERE l.expiry_date IS NULL OR l.expiry_date >= d.cutoff
+        GROUP BY d.source_line_id FOR SHARE OF b, l`,
+      [...members.flatMap(line => [line.sourceLineId, line.skuId, cutoffDate(this.time.fileDate(), line.minimumRemainingDays)]), context.payload.warehouseId]);
+    const quantities = new Map(available.map(row => [Number(row.source_line_id), safeQuantity(row.eligible_on_hand, "eligibleOnHand")]));
+    const lines = [];
+    for (const line of members) {
+      const control = controls.get(line.skuId);
+      const reserved = Math.min(line.orderedBaseQuantity, Math.max((quantities.get(line.sourceLineId) ?? 0) - control.reserved, 0));
+      control.reserved = safeQuantity(control.reserved + reserved, "reserved");
+      let reservationId = null;
+      if (reserved) {
+        const [inserted] = await transaction.execute(
+          `INSERT INTO inventory_reservations (create_operation_id, warehouse_id, sku_id, original_quantity, outstanding_quantity,
+             minimum_remaining_days, purpose, status, created_at, updated_at, created_by, updated_by)
+           VALUES (?, ?, ?, ?, ?, ?, 'SALE', 'ACTIVE', ?, ?, ?, ?)`,
+          [line.operationId, context.payload.warehouseId, line.skuId, reserved, reserved, line.minimumRemainingDays,
+            context.timestamp, context.timestamp, context.actor.userId, context.actor.userId]);
+        reservationId = positiveId(Number(inserted.insertId), "reservationId");
+        await this.audit.recordSucceeded(transaction, { actorUserId: context.actor.userId, actorLabel: context.actorLabel,
+          action: "reservation.create", targetType: "reservation", targetId: reservationId, targetLabel: String(reservationId),
+          beforeSummary: null, afterSummary: { reservationId, quantity: reserved, status: "ACTIVE", version: 1 },
+          operationRequestId: line.operationId, requestId: context.correlationId, correlationId: context.correlationId, ip: "" });
+      }
+      const result = { rootOperationId: root.operationId, rootRequestHash: rootHash, sourceLineId: line.sourceLineId, skuId: line.skuId,
+        orderedBaseQuantity: line.orderedBaseQuantity, reservedBaseQuantity: reserved, uncoveredBaseQuantity: line.orderedBaseQuantity - reserved,
+        reservationId, version: reserved ? 1 : null, minimumRemainingDays: line.minimumRemainingDays };
+      await this.operations.complete(transaction, { operationId: line.operationId, resultType: "SALES_RESERVATION_LINE",
+        resultId: String(line.sourceLineId), resultSummary: result, completedAt: context.timestamp });
+      lines.push(result);
+    }
+    await this.#saveSalesControls(transaction, context, controls);
+    const membershipDigest = digest.digest("hex");
+    await this.operations.complete(transaction, { operationId: root.operationId, resultType: "SALES_RESERVATION_BATCH", resultId: context.source.documentId,
+      resultSummary: { operationId: root.operationId, warehouseId: context.payload.warehouseId, expectedOrderVersion: context.payload.expectedOrderVersion,
+        lineCount: lines.length, membershipDigest }, completedAt: context.timestamp });
+    return { operationId: root.operationId, lineCount: lines.length, membershipDigest, lines };
+  }
+
+  async getSalesReservationStatesInTransaction(transaction, command) {
+    const context = await this.#salesBatchContext(transaction, command, "states");
+    return this.#salesOwnedReservationPage(transaction, context, context.payload.afterId, false, true);
+  }
+
+  async #salesOwnedReservationPage(transaction, context, afterId, outstandingOnly, current = false) {
+    const [rows] = await transaction.query(
+      `SELECT r.*, o.source_line_id FROM inventory_reservations r JOIN inventory_operation_requests o ON o.id = r.create_operation_id
+        WHERE o.source_module = 'SALES' AND o.source_document_type = 'SALES_ORDER' AND o.source_document_id = ?
+          AND r.warehouse_id = ? AND r.id > ? ${outstandingOnly ? "AND r.outstanding_quantity > 0" : ""}
+        ORDER BY r.id LIMIT 100 ${current ? "FOR SHARE OF r, o" : ""}`, [context.source.documentId, context.payload.warehouseId, afterId]);
+    return { rows, nextCursor: rows.length === 100 ? Number(rows.at(-1).id) : null };
+  }
+
+  async releaseSalesBatchInTransaction(transaction, command) {
+    const context = await this.#salesBatchContext(transaction, command, "release");
+    const rootInput = this.#salesClaimInput(context, "SALES_BATCH_RELEASE", context.payload);
+    const rootHash = inventoryOperationHash(rootInput);
+    const root = await this.operations.claim(transaction, rootInput);
+    const skuIds = new Set();
+    if (!root.replay) {
+      let afterId = 0, lineCount = 0;
+      const digest = createHash("sha256");
+      for (;;) {
+        const { rows } = await this.#salesOwnedReservationPage(transaction, context, afterId, true);
+        if (!rows.length) break;
+        for (const row of rows) {
+          const reservationId = positiveId(Number(row.id), "reservationId");
+          if (reservationId <= afterId || !/^[1-9][0-9]*$/u.test(row.source_line_id)) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+          const member = { reservationId, sourceLineId: positiveId(Number(row.source_line_id), "sourceLineId"), skuId: positiveId(Number(row.sku_id), "skuId"),
+            expectedVersion: positiveId(Number(row.version), "expectedVersion"), releaseQuantity: inventoryPositiveInteger(Number(row.outstanding_quantity)) };
+          skuIds.add(member.skuId);
+          const input = this.#salesClaimInput(context, "SALES_LINE_RELEASE", { rootOperationId: root.operationId, rootRequestHash: rootHash, ...member }, `reservation:${reservationId}`);
+          const child = await this.operations.claim(transaction, input);
+          if (child.replay) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+          await this.operations.stageSalesBatchMember(transaction, { operationId: child.operationId, resultSummary: input.payload });
+          digest.update(`${input.source.lineId}:${inventoryOperationHash(input)}\n`);
+          afterId = reservationId; lineCount++;
+        }
+      }
+      const controls = await this.#salesStockScope(transaction, context, [...skuIds].sort((a, b) => a - b));
+      let childId = 0, completed = 0;
+      for (;;) {
+        const page = await this.operations.listSalesBatchMembers(transaction, { source: context.source, afterId: childId });
+        if (!page.length) break;
+        const ids = page.map(member => member.resultSummary.reservationId);
+        const [rows] = await transaction.query(`SELECT * FROM inventory_reservations WHERE id IN (${ids.map(() => "?").join(",")}) ORDER BY id FOR UPDATE`, ids);
+        const [allocations] = await transaction.query(`SELECT reservation_id, COALESCE(SUM(outstanding_quantity), 0) AS outstanding
+          FROM inventory_allocations WHERE reservation_id IN (${ids.map(() => "?").join(",")}) GROUP BY reservation_id FOR SHARE`, ids);
+        const byId = new Map(rows.map(row => [Number(row.id), row]));
+        if (allocations.some(row => safeQuantity(row.outstanding, "allocatedOutstanding") !== 0)) throw inventoryError("RESERVATION_STATE_CONFLICT");
+        for (const child of page) {
+          const s = child.resultSummary, row = byId.get(s.reservationId), control = controls.get(s.skuId);
+          if (child.commandType !== "SALES_LINE_RELEASE" || child.completedAt || !row || !control ||
+              s.rootOperationId !== root.operationId || s.rootRequestHash !== rootHash || Number(row.warehouse_id) !== context.payload.warehouseId ||
+              Number(row.sku_id) !== s.skuId || Number(row.version) !== s.expectedVersion ||
+              safeQuantity(row.outstanding_quantity, "outstanding") !== s.releaseQuantity) throw inventoryError("VERSION_CONFLICT");
+          const original = safeQuantity(row.original_quantity, "original"), consumed = safeQuantity(row.consumed_quantity, "consumed"), released = safeQuantity(row.released_quantity, "released");
+          if (!["ACTIVE", "PARTIALLY_CONSUMED"].includes(row.status) || original !== consumed + released + s.releaseQuantity || control.reserved < s.releaseQuantity) throw inventoryError("RESERVATION_STATE_CONFLICT");
+          const version = safeQuantity(s.expectedVersion + 1, "version"), nextReleased = safeQuantity(released + s.releaseQuantity, "released");
+          const [updated] = await transaction.execute(`UPDATE inventory_reservations SET released_quantity = ?, outstanding_quantity = 0,
+            status = 'RELEASED', version = version + 1, updated_at = ?, updated_by = ? WHERE id = ? AND version = ?`,
+          [nextReleased, context.timestamp, context.actor.userId, s.reservationId, s.expectedVersion]);
+          if (Number(updated.affectedRows) !== 1) throw inventoryError("CONCURRENT_OPERATION");
+          control.reserved -= s.releaseQuantity;
+          await this.audit.recordSucceeded(transaction, { actorUserId: context.actor.userId, actorLabel: context.actorLabel,
+            action: "reservation.release", targetType: "reservation", targetId: s.reservationId, targetLabel: String(s.reservationId),
+            beforeSummary: { reservationId: s.reservationId, quantity: s.releaseQuantity, status: row.status, version: s.expectedVersion },
+            afterSummary: { reservationId: s.reservationId, quantity: 0, status: "RELEASED", version }, operationRequestId: child.operationId,
+            requestId: context.correlationId, correlationId: context.correlationId, ip: "" });
+          await this.operations.complete(transaction, { operationId: child.operationId, resultType: "SALES_RELEASE_LINE", resultId: String(s.reservationId),
+            resultSummary: { ...s, version, releasedQuantity: nextReleased, outstandingQuantity: 0, status: "RELEASED" }, completedAt: context.timestamp });
+          childId = child.operationId; completed++;
+        }
+      }
+      if (completed !== lineCount) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+      // Discovery can predate a waiting claim under RR. Current locked ownership must contain no omitted outstanding member.
+      if ((await this.#salesOwnedReservationPage(transaction, context, 0, true, true)).rows.length) throw inventoryError("CONCURRENT_OPERATION");
+      await this.#saveSalesControls(transaction, context, controls);
+      const summary = { operationId: root.operationId, warehouseId: context.payload.warehouseId, expectedOrderVersion: context.payload.expectedOrderVersion,
+        lineCount, membershipDigest: digest.digest("hex") };
+      await this.operations.complete(transaction, { operationId: root.operationId, resultType: "SALES_RELEASE_BATCH", resultId: context.source.documentId, resultSummary: summary, completedAt: context.timestamp });
+      root.replay = { resultType: "SALES_RELEASE_BATCH", resultId: context.source.documentId, resultSummary: summary };
+    }
+    const result = await this.#verifySalesMembers(transaction, context, root, rootHash, "SALES_LINE_RELEASE");
+    const operations = this.operations;
+    result.results = (async function* () {
+      let afterId = 0, count = 0;
+      const digest = createHash("sha256");
+      for (;;) {
+        const page = await operations.listSalesBatchMembers(transaction, { source: context.source, afterId });
+        if (!page.length) break;
+        for (const child of page) { digest.update(`${child.sourceLineId}:${child.requestHash}\n`); count++; afterId = child.operationId; }
+        yield page.map(child => child.resultSummary);
+      }
+      if (count !== result.lineCount || digest.digest("hex") !== result.membershipDigest) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
+    })();
+    return result;
   }
 
   create(command) {

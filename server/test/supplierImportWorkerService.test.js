@@ -63,13 +63,28 @@ test("the worker's scheduled jobs carry the names T41 reserved for them", () => 
   }
 });
 
-test("with no import root or no row writer, the worker claims nothing", async () => {
-  for (const [label, options] of [["no root (import not deployed)", { root: null }], ["no applyRow until T45", { applyRow: null }]]) {
-    const { instance } = worker(options);
-    instance.importService = scripted(2);
-    assert.deepEqual(await instance.runExecution(), { claimed: false }, label);
-    assert.deepEqual(instance.importService.calls, [], label);
-  }
+test("with no import root the worker claims nothing", async () => {
+  const { instance } = worker({ root: null });
+  instance.importService = scripted(2);
+  assert.deepEqual(await instance.runExecution(), { claimed: false });
+  assert.deepEqual(instance.importService.calls, []);
+});
+
+test("T45: the real row writer is wired by default", () => {
+  const { instance } = worker({ applyRow: null });
+  assert.equal(instance.applyRow.name, "applySupplierImportRow");
+});
+
+test("T45: a job whose confirmer lost access stops at once and reports failed", async () => {
+  const { instance } = worker();
+  instance.importService = scripted(3, { onRow: () => {} });
+  instance.importService.processNextRow = async () => {
+    instance.importService.calls.push("row");
+    return { rowNumber: null, status: "revoked", appliedSupplierId: null };
+  };
+  const result = await instance.runExecution(new AbortController().signal);
+  assert.deepEqual(instance.importService.calls, ["claim", "row"], "no finalize: the job is already failed");
+  assert.deepEqual(result, { claimed: true, jobId: 7, applied: 0, failed: 0, status: "failed" });
 });
 
 test("the worker processes rows in order until none are left, then finalizes", async () => {

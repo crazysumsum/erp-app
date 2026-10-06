@@ -67,7 +67,7 @@ test("record writes into item_audit_logs, defaulting reason and detail", async (
   ]);
 });
 
-test("record writes the caller's requestId and ip instead of the empty-string default", async () => {
+test("ItemAuditLogService: record writes the caller's requestId and ip instead of the empty-string default", async () => {
   const { service } = createService();
   const connection = fakeConnection();
 
@@ -105,7 +105,7 @@ test("record accepts a null actorUserId and targetId", async () => {
   assert.equal(params[5], null);
 });
 
-test("record keeps the reason text verbatim", async () => {
+test("ItemAuditLogService: record keeps the reason text verbatim", async () => {
   const { service } = createService();
   const connection = fakeConnection();
 
@@ -123,7 +123,7 @@ test("record keeps the reason text verbatim", async () => {
   assert.equal(params[7], "分類已停用不再需要");
 });
 
-test("record serializes detail as JSON", async () => {
+test("ItemAuditLogService: record serializes detail as JSON", async () => {
   const { service } = createService();
   const connection = fakeConnection();
 
@@ -144,7 +144,7 @@ test("record serializes detail as JSON", async () => {
   );
 });
 
-test("record uses the connection it was given, not the constructor's database", async () => {
+test("ItemAuditLogService: record uses the connection it was given, not the constructor's database", async () => {
   // 這是稽核與變更同一個交易那條規則的斷言：constructor 拿到的 database 從來
   // 沒有被叫過 execute，唯一被寫入的是傳進 record() 的那個連線。
   const time = createTestTime({ clock: () => new Date(NOW_MS) });
@@ -172,7 +172,7 @@ test("record uses the connection it was given, not the constructor's database", 
   assert.equal(connection.calls.length, 1);
 });
 
-test("record truncates a detail payload larger than 4KB and warns", async () => {
+test("ItemAuditLogService: record truncates a detail payload larger than 4KB and warns", async () => {
   const { service, logger } = createService();
   const connection = fakeConnection();
   const huge = { blob: "x".repeat(5000) };
@@ -197,7 +197,7 @@ test("record truncates a detail payload larger than 4KB and warns", async () => 
   assert.equal(warning.context.action, "category.update");
 });
 
-test("record keeps a detail payload right at the 4KB boundary untouched", async () => {
+test("ItemAuditLogService: record keeps a detail payload right at the 4KB boundary untouched", async () => {
   const { service, logger } = createService();
   const connection = fakeConnection();
   // 先算出 {"blob":"..."} 的固定開銷，再補到剛好 4096 bytes——不猜測字面

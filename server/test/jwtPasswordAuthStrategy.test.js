@@ -270,7 +270,7 @@ test("a disabled account gets its own code, not the generic password-invalid one
   );
 });
 
-test("authType and service metadata are declared correctly", () => {
+test("JwtPasswordAuthStrategy: authType and service metadata are declared correctly", () => {
   assert.equal(JwtPasswordAuthStrategy.authType, "jwt-password");
   assert.deepEqual(JwtPasswordAuthStrategy.service.dependencies, [
     "jwt",

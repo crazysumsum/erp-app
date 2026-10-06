@@ -1062,6 +1062,14 @@ Service 不讀 HTTP claims，也不自行授權。採購／庫存／銷售 Handl
 
 Lookup projection 須回傳 `shelfLifeDays`、`minimumReceiptLifeDays` 及 `minimumSaleLifeDays`。Receiving 模組計算實際剩餘天數；低於最低收貨效期時預設拒絕，只有具備 `receiving.override_shelf_life` 的操作者可在提交非空白原因後繼續。Receiving audit 須保存 SKU、批次、到期日、門檻、實際剩餘天數、操作者、原因及時間；`item.mgmt` 不授予此豁免能力。該權限、流程及 audit 由 Receiving 模組建立，Item Management 本期只提供政策資料及 contract tests。
 
+#### 8.3.1 Sales具名確認契約（TASK009 source candidate）
+
+2026-10-02 Sam採納的Sales入口：`findManyForSale(skuIds,{atMs,purpose:"new_sale"})`、`findSaleUom(skuId,skuUomId,{atMs})`及`getSalesSnapshotsInTransaction(transaction,requests,{atMs})`。具名Sales採Item active＋SKU active＋sellable＋effective dates；generic sale的discontinued清貨語意保留。`skuUomId`是association ID；projection回mapping/masterUOM identity/status/code/name/factor/default及Item/SKU versions、stored decimal price/null、HKD/tax_not_applicable。最多100 unique requests；五階段caller-only query按UOM SHARE→Item SHARE→SKU SHARE→mapping SHARE，current association完整重驗，不補取更早rank的鎖。
+
+`getSalesInventoryProfilesInTransaction(transaction,skuIds,{atMs})`以一個Base discovery再重用五階段snapshot，1/100 SKUs均六個query；每SKU須恰有一個current Base且factor1，reassignment fail closed。只供new reserve執行，完成event replay與release不重驗new-sale資格。Lookup不自行授權、begin/commit或pool fallback。
+
+必要writer相容已實作：updateSku保留仍存在的(skuId,uomId) mapping ID，新association才insert；default slots於同transaction交換，barcode ownership保留。UOM SHARE→Item SHARE→SKU UPDATE→mapping UPDATE後重驗association，使用local READ COMMITTED及nonlocking current FK/optional archive reference probes；referenced Base/factor/tracking/removal fail closed，reason不繞過引用。Draft delete先鎖Item/SKU roots。真MySQL compatibility/concurrency仍待最終candidate CI；沒有宣稱所有InventoryPosting路徑均已驗證。
+
 ### 8.4 Reference guard
 
 Phase 1 尚無庫存、採購或銷售表，永久刪除 Draft 只需檢查 Item aggregate 自身。每增加一個下游表，必須：

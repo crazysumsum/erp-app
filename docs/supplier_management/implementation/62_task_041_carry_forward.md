@@ -319,3 +319,181 @@ surrogate guard removed), and the mutation counts reproduce (89, 87 killed, #63 
 - **I-4.** origin/main d6397e0 (inventory reservations, migration 0063, permission catalogue, lockfile) merged into the
   branch before merge.
 - **I-5.** Wording in this doc corrected ("finishes", not "refuses").
+
+## Status after TASK-044
+
+T44 adds `GET /api/v1/supplier-imports`, `GET /api/v1/supplier-imports/:id` and `POST /api/v1/supplier-imports/:id/cancel`
+(`handlers/supplier-imports/jobHandlers.js`, `SupplierImportService.list/get/cancel`) and the client service
+`client/src/services/supplierImport.js`. The open points were decided in HD-058 (1A 2A 3A 4A 5B).
+
+| Obligation | Status |
+| --- | --- |
+| REV-068 I-2: never serve rows of a `validating` job | **Done.** `get` answers no rows while the job is `uploaded` or `validating`; the integration test writes a batch into a validating job and sees none served. |
+| REV-064 I-3: uploads while the precheck job is disabled | **Decided, HD-058 5B.** Upload stays open; the job waits in `uploaded` and can be cancelled. The upload route description says so. |
+| REV-065 I-3: the precheck attempt bound must be stated | **Done.** The upload and detail route descriptions state the three-attempt bound and that a long outage fails the job. Cancel cannot touch a `validating` job (HD-058 2A) and is terminal, so it never shifts the `version - 1` attempt count. |
+| HD-043, T44 part: stored name from the job row; refuse `nlink > 1` before serving | **Moved to T46 by HD-058 4A.** T44 serves no file. Cancel deletes the source by the stored name it reads from the locked job row. |
+| HD-047 (3), T44 part: stored names only from the helpers | **Done.** Cancel removes the source through `removeSupplierImportFile` → `supplierImportFilePath`. |
+| T44 criterion "a purged file answers 410" | **Moved to T46 by HD-058 4A.** The job summary carries `filesPurged`; the 410 belongs to the download endpoint. |
+
+New obligations T44 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T45 | HD-058 1A covers list, get and cancel. Confirm must take a position too: a non-uploader cannot read the job (404), so the simplest consistent rule is that only the uploader confirms. Raise it with the confirm design if T45 wants otherwise. |
+| T45 | Confirm reads the job `WHERE id = ? AND created_by = ?` like cancel, so a foreign or missing job is the same 404. |
+| T46 | The result download answers 410 when `files_purged_at` is set, takes the stored name from the job row, reads the file the way `readSupplierImportSource` does (`O_NOFOLLOW`, regular file, `nlink === 1`, recorded SHA-256), and applies the uploader-only 404. |
+| T46 | Handlers register in file-name order and Express 5 cannot constrain `:id`. `jobHandlers.js` sorts after `importTemplateUploadHandlers.js` so `GET /:id` does not swallow `GET /template`. Any new static `GET /api/v1/supplier-imports/<word>` must sit in a file that sorts before `jobHandlers.js`. The integration test's template download catches a break. |
+| T48 | A cancelled job has `files_purged_at` set and its source is deleted at once; a delete that failed (logged as `supplier.import.source_cleanup_failed`) leaves a file whose job has `files_purged_at` set, which HD-044 already treats as unreferenced. |
+| Operations | HD-058 1A: a job whose uploader's user is deleted (`created_by` becomes NULL) is visible to no one through the API. It stays in the database with its audit; a `ready` job of that kind waits for T48's purge. |
+
+## Mutation record for TASK-044
+
+39 mutants against the T44 code, all killed (unit files and the two import integration files on real MySQL, run serially,
+each mutant applied to a committed tree and restored from the saved bytes):
+
+- **Service (33):** list, get or cancel reaching another user's job; the fresh-actor check dropped from each; list ignoring
+  the status filter or the offset, or sorting oldest first; get serving rows while prechecking (twice: the guard, and
+  `validating` dropped from the hidden set), ignoring the row-status filter or the offset; the page size unbounded or the
+  offset overflow unchecked; cancel in any state, `validating` cancellable, `queued` not; cancel ignoring the version, not
+  setting `files_purged_at` or `completed_at`, not bumping the version, keeping the source, not reporting a missing root,
+  not logging a failed delete, not auditing, or losing the before-state; the summary's `filesPurged` inverted and
+  `confirmedAt`, `completedAt` or `appliedCount` wrong; the row's `matchSupplierId` or `appliedSupplierId` dropped.
+- **Handlers and schemas (6):** cancel getting no root; list dropping the query; cancel not idempotent; the page size
+  1,000; the job schema open; an execution error without `field` rejected by the row schema.
+
+Four first survived and each got a test: the status filter and the list offset (the test user's two jobs were both
+cancelled and only page 1 was read), `appliedCount` (the unit fixture had equal applied and valid counts), and the
+field-less execution error (that mutant was first run against the unit files only; it dies on the integration test that
+serves a failed row).
+
+## REV-069 remediation (HD-059)
+
+REV-069 (`72_rev_069_independent_review.md`) requested changes on f43196f; the Product Owner chose every recommendation (HD-059).
+
+- **M-1, fixed.** The cancel's `UPDATE` now carries the status it read under the lock (`WHERE id = ? AND status = ?`) and
+  answers 409 `SUPPLIER_IMPORT_NOT_CANCELLABLE` unless exactly one row changed. A regression test holds the job in another
+  transaction, moves it uploaded→validating and queued→running, and requires the cancel to wait and then refuse, with the
+  source kept. The lock and the guard are each enough on their own for safety: removing either alone passes every test
+  (mutants #42 and #43). #42 is equivalent for safety only — in the stale-snapshot window it can change which 409 code comes
+  back (`SUPPLIER_IMPORT_NOT_CANCELLABLE` instead of `VERSION_CONFLICT` for ready→queued, REV-070 I-1). Removing the lock and
+  the guard (#40), or the lock and the `affectedRows` check (#41), is killed.
+- **L-1, fixed.** Cancel first reads ownership without a lock and answers 404 for a foreign or missing job before it takes
+  `FOR UPDATE`, so a stranger neither waits on nor locks someone else's job. The locking read is by ID only, since ownership
+  is only ever cleared (the uploader's user deleted), never reassigned. A test cancels a foreign job while it is locked and requires 404 in under a second (#44 killed).
+- **L-2, accepted (HD-059 3A).** HD-058 1A is a guarantee of the job API only. The Supplier audit API shows the import
+  lifecycle (uploader username, IP, status changes, precheck counts — never CSV content, stored names or paths) to its
+  readers on purpose, like every other Supplier action. The IMP-015 test title now says "the job API tells no one else".
+- **L-3, fixed.** A test whose transaction fails after the cancel's work requires the job to stay `uploaded` and its source
+  to remain (#45 killed).
+- **I-1.** The client comment now says each call sends a new key, so a second press gets 409 rather than a second cancel.
+- **I-2 to I-4** recorded, no change.
+
+The mutation list is now 45: the 39 above with three patterns updated for the new code, plus the six REV-069 mutants.
+43 killed; #42 and #43 survive as described.
+
+REV-070 (`73_rev_070_independent_review.md`) approved a2d577e with Info findings only. I-1 to I-3 were wording, corrected
+above and in the service comment; I-4 (an indeterminate commit leaves the source without a cleanup log) is covered by HD-044's
+retry obligation for T48.
+
+## Status after TASK-045
+
+T45 adds `POST /api/v1/supplier-imports/:id/confirm` (`jwt-password`, route idempotency) and the real row writer
+(`modules/supplier/import/applySupplierImportRow.js`), wired into `SupplierImportWorkerService` by default. The open points
+were decided in HD-060 (1A 2A 3A 4A 5A).
+
+| Obligation | Status |
+| --- | --- |
+| HD-048 (1): wire the real `applyRow` | **Done.** `createSupplierImportApplier` is the worker's default; a unit test pins it. |
+| HD-048 (2), REV-061 M-3: connection-taking helpers, never the public methods | **Done (HD-060 2A).** `SupplierAdminService.createSupplierInTransaction` / `updateSupplierInTransaction` and `createInTransaction` on the Address, Contact and Identifier services. The public methods now call the same helpers inside their own transaction (505 Supplier tests unchanged and green). A mutant that hands `applyRow` the pool instead of the row's connection is killed by the SIGKILL-before-commit test. |
+| HD-048 (3): a row, job lock included, inside `DB_TRANSACTION_TIMEOUT_MS` | **Measured.** 300 rows with address, contact and identifier: about 6 ms a row, slowest 11 ms, against 20,000 ms. Pinned loosely (< 2 s). |
+| HD-048 (4): real `applyRow`, failure after the Supplier write | **Done.** No Supplier, contact, identifier, name gram or audit row survives. |
+| REV-061 I-4: domain errors carry a Chinese `publicMessage` | **Holds.** Every refusal the helpers raise is a Supplier domain error with a Chinese message; generic failures still store the fixed pair. |
+| REV-061 I-3: retry transient errors? | **Decided, HD-060 4A, refined by HD-061 2A; wording measured by REV-072 L-2.** A deadlock, or a lock wait that clears before the row transaction's budget plus one more fail-marking wait (about 30 s with the defaults: 20 s transaction, 10 s query), fails the row as `SUPPLIER_IMPORT_ROW_BUSY` (driver or wrapped cause); the user re-imports the row. With the server's 50 s `innodb_lock_wait_timeout`, a lock wait reaches BUSY through `DATABASE_QUERY_TIMEOUT` / `DATABASE_TRANSACTION_TIMEOUT`, not `ER_LOCK_WAIT_TIMEOUT`. A longer wait leaves the row `valid`: the timed-out row transaction still holds the job lock on the server, so the fail-marking transaction cannot mark it in time, and the next worker resumes the row after the lease. Either way no Supplier and no marker are written (REV-071 L-2 and REV-072 L-2 measured both ends with a real lock; the test pins the long-wait end). |
+| Re-check the confirmer before each row | **Done (HD-060 5A).** Inactive, or without `supplier.mgmt`: pending rows fail with `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED`, applied rows stay, the job fails with counts rebuilt from rows. This also covers a confirmer whose user was deleted (`confirmed_by` NULL). |
+| Re-check at execution everything precheck checked | **Done.** Code taken since, Identifier taken since, target archived, expected version moved, currency retired: each fails its row with its domain code; other rows apply. |
+| Currency change needs a reason | **Done.** `CSV 匯入 #<job>`, visible in the `supplier.update` audit. |
+| Address and Contact through the same services | **Done.** The stored payload is re-normalised by the same `normalizeAddress` / `normalizeContact` inside the helpers. |
+| REV-064 I-4: update of a `pending_approval` Supplier | **Done.** A significant change invalidates the request and returns the Supplier to draft; any other change keeps the request and syncs its version. |
+| T45: who confirms (T44 carry-forward) | **Decided, HD-060 1A.** Only the uploader; others 404 like cancel. |
+| REV-063 I-23: state left on the pooled connection by a `SELECT` | **Holds.** The helpers use no named locks, user variables or stored functions. |
+| HD-043, T45 part: stored names and `nlink` when serving | **Not applicable.** T45 serves no file; the rule stays with T46's download endpoint. |
+
+Behaviour worth knowing:
+
+- **Activation** follows the snapshot taken at confirm (AC-013): a job confirmed with approval on opens requests even if
+  approval is switched off before it runs, and the other way round. Only create rows are activated; update rows never change
+  the status (design §6.9).
+- **The approval request** of an imported Supplier is opened after its children are written, so its snapshot already lists
+  the identifier. An approver who lost eligibility after confirm fails every activating create row (HD-060 3A, BR-012).
+- **Audit order** for an imported create row is the children's audits, `approval.submit`, then `supplier.create`: the public
+  create path already records `supplier.create` last, and the helper keeps that order.
+
+New obligations T45 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T46 | The confirm step must send the password and, for activate with approval on, an approver chosen from the eligible list; refresh must not resend confirm (the client creates a new key per call, so a second press answers 409). |
+| T46 | Show `SUPPLIER_IMPORT_ROW_BUSY` rows as retryable and `SUPPLIER_IMPORT_AUTHORIZATION_REVOKED` as a job-level stop. |
+| T46 | Say in the confirm step that the approval setting is read at confirm: a job confirmed with approval off activates its Suppliers directly even if approval is switched on before it runs (REV-071 I-3, AC-013). |
+| T49 | Execution throughput at 10,000 rows is not measured here (about 6 ms a row in the 300-row test). |
+
+## Mutation record for TASK-045
+
+34 mutants against the T45 code, all killed (unit files and both import integration files on real MySQL, serial, each
+mutant applied to a committed tree and restored from the saved bytes):
+
+- **Confirm (10):** reaching another user's job; any state; ignoring the version; never requiring approval; skipping the
+  approver's eligibility; accepting an approver when none is needed; not snapshotting the policy value or version; reading
+  the policy without `FOR SHARE`; not auditing.
+- **Execution (9):** no confirmer re-check; its permission or active check dropped; revocation leaving pending rows or losing
+  the applied count; `SUPPLIER_IMPORT_ROW_BUSY` never set, ignoring wrapped causes, or missing deadlock; `applyRow` writing
+  on a second connection.
+- **Row writer (11):** activation mode ignored; live policy instead of the snapshot; approver dropped; address, contact or
+  identifier skipped; children written after the approval request; the request summary without identifiers; blank update
+  cells cleared; the current instead of the expected version; no currency-change reason.
+- **Helpers, worker, route (4):** the identifier unique error not mapped inside the row; no default writer; confirm without
+  the password; confirm not idempotent.
+
+Three first survived: a deactivated confirmer (only a lost permission was tested; a test now deactivates the account); the
+share lock on the policy (a test now holds the settings row in a rolled-back transaction and requires confirm to wait); and
+the default-writer mutant, which was itself wrong (`null ?? x` is `x`) and was rewritten.
+
+**Shared state in tests.** `supplier_settings` is a singleton that the parallel test files share, and the settings tests
+change it only inside a rolled-back transaction. A first version of the T45 tests committed approval on and off, which
+breaks that rule; confirm's policy reader is now injectable (`SupplierImportService({ activationPolicy })`), approval-on
+cases confirm through a service with an injected policy, and the HTTP path reads the real (off) setting. The tests add
+short-lived currencies, as `customerIdentifierCredit` does, and remove them afterwards.
+
+The parallel failure of `supplierSettings.integration.test.js` that prompted this had a different cause, found in the InnoDB
+deadlock report: T43's 10,000-row test cleaned up with `DELETE FROM suppliers WHERE supplier_code_key LIKE …`, a full scan
+that locks every Supplier row, and deadlocked the settings test's request insert. A first guess (a gap lock taken by the
+identifier helper on a new pending Supplier) was tested both ways, did not reproduce, and was dropped with its code change.
+The first fix (`id IN (<2,000 ids>)`) was wrong too: REV-071 L-3 showed, and `EXPLAIN FORMAT=TRADITIONAL` confirms, that
+2,000 IDs still plan as `type ALL`. The second (chunks of 500) was wrong as well: REV-072 L-1 showed, and EXPLAIN confirms,
+that only the first chunk plans as `range` on `PRIMARY`; once a chunk is about a third of the shrinking table the optimizer
+picks a full scan again. The cleanup now deletes in chunks of 500 with `/*+ INDEX(suppliers PRIMARY) */` and asserts the
+plan before each chunk (all four chunks `range/PRIMARY`; without the hint the assertion fails on chunk 2). The tests'
+throw-away currencies are random codes outside ISO 4217 and absent from the database (REV-072 I-1).
+
+## REV-071 remediation (HD-061)
+
+REV-071 (`74_rev_071_independent_review.md`) approved 1138dc5 with three Low and four Info findings; the Product Owner chose
+every recommendation (HD-061).
+
+- **L-1, fixed.** `processNextRow` selects the next row before re-checking the confirmer; with no row left it returns `null`
+  and the job finalizes, so a fully applied job no longer fails when the confirmer loses access before the final call.
+- **L-2, wording corrected (HD-061 2A)** in the table above; a test holds HKD in another transaction past a 1.5 s
+  transaction budget in a real worker process and requires the row to stay `valid`, then the next worker to apply it once.
+- **L-3, fixed** as described under "Shared state in tests".
+- **I-1, tested.** A wrapped connection commits the same Code (in another currency, so it does not queue on HKD) between
+  the Code check and the insert; the row must fail as `SUPPLIER_CODE_TAKEN`.
+- **I-2, fixed.** An activating row whose snapshot needs approval but whose approver is NULL (the user was deleted; FK SET
+  NULL) fails as `APPROVER_NOT_ELIGIBLE`.
+- **I-3** recorded as a T46 obligation above. **I-4, fixed:** imported audits carry `requestId` `import-<jobId>`.
+
+The mutation list is now 38 (the 34 above, three patterns updated for the moved code, and four for L-1, I-1, I-2, I-4); all
+38 are killed.
+
+REV-072 (`75_rev_072_independent_review.md`) approved 7608699 with two Low and one Info finding, all test or wording only, and
+all three are closed above: the cleanup now forces `PRIMARY` and pins the plan (L-1), the 4A wording gives the measured
+boundary (L-2), and test currencies can no longer collide with real ISO codes (I-1).

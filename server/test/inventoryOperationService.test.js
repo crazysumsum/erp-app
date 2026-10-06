@@ -226,3 +226,20 @@ test("InventoryOperationService refuses a second completion and hides incomplete
   );
   assert.equal(await service.findBySource(connection, { source: SOURCE }), null);
 });
+
+test("Sales batch member staging is immutable and reads current bounded pages with explicit NULL completion", async () => {
+  const calls = [];
+  const connection = { async execute(sql, params) { calls.push({ sql, params }); return [{ affectedRows: 1 }]; },
+    async query(sql, params) { calls.push({ sql, params }); return [[{ id: 9, command_type: "SALES_LINE_RELEASE", source_line_id: "reservation:1",
+      request_hash: "h", result_summary: { rootOperationId: 8, sourceLineId: 1, releaseQuantity: 2 }, completed_at: null }]]; } };
+  const s = new InventoryOperationService();
+  await s.stageSalesBatchMember(connection, { operationId: 9, resultSummary: { rootOperationId: 8, sourceLineId: 1, releaseQuantity: 2 } });
+  assert.match(calls[0].sql, /command_type = 'SALES_LINE_RELEASE'.*completed_at IS NULL AND result_summary IS NULL/u);
+  const page = await s.listSalesBatchMembers(connection, { source: { module: "SALES", documentType: "SALES_ORDER", documentId: "42", eventId: "release" }, afterId: 8 });
+  assert.equal(page[0].completedAt, null);
+  assert.match(calls[1].sql, /ORDER BY id LIMIT 100 FOR SHARE/u);
+  assert.deepEqual(calls[1].params, ["SALES", "SALES_ORDER", "42", "release", 8]);
+  await assert.rejects(() => s.listSalesBatchMembers(connection, { source: SOURCE }), TypeError);
+  await assert.rejects(() => s.listSalesBatchMembers(connection, { source: { module: "SALES", documentType: "SALES_ORDER", documentId: "42", eventId: "release" }, afterId: -1 }), TypeError);
+  await assert.rejects(() => s.stageSalesBatchMember({ async execute() { return [{ affectedRows: 0 }]; } }, { operationId: 9, resultSummary: {} }), { code: "CONCURRENT_OPERATION" });
+});

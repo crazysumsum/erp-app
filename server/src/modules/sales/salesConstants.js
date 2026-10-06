@@ -1,0 +1,10 @@
+export const SALES_PERMISSIONS = Object.freeze(["sales.view", "sales.mgmt", "sales.import"]);
+export const MAX_DOCUMENT_LINES = 100;
+export const QUANTITY_DECIMAL_PLACES = 6;
+export const MONEY_DECIMAL_PLACES = 4;
+export const DOCUMENT_SEQUENCE_MAX = 999999;
+export const ARCHIVE_AFTER_MONTHS = 24;
+export const IMPORT_MAX_BYTES = 50 * 1024 * 1024;
+export const IMPORT_MAX_ROWS = 100000;
+export const IMPORT_MAX_ORDERS = 10000;
+export const EXPORT_MAX_ROWS = 250000;

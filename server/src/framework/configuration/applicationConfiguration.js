@@ -1,6 +1,7 @@
 import path from "node:path";
 import { getHeapStatistics } from "node:v8";
 import applicationConfig from "../../../config/application.js";
+import salesConfig from "../../../config/sales.js";
 import customerConfig from "../../../config/customer.js";
 import apiConfig from "../../../config/api.js";
 import databaseConfig from "../../../config/database.js";
@@ -27,6 +28,7 @@ import { normalizeDeviceBindingConfig } from "../../services/deviceBinding/norma
 import { normalizeIdempotencyConfig } from "../../services/idempotency/normalizeIdempotencyConfig.js";
 import { normalizeInventoryConfig } from "../../modules/inventory/normalizeInventoryConfig.js";
 import { normalizeItemConfig } from "../../modules/item/normalizeItemConfig.js";
+import { normalizeSalesConfig } from "../../modules/sales/normalizeSalesConfig.js";
 import { normalizeCustomerConfig } from "../../modules/customer/normalizeCustomerConfig.js";
 import { normalizeJwtConfig } from "./normalizeJwtConfig.js";
 import { normalizeRequestConfig } from "./normalizeRequestConfig.js";
@@ -40,6 +42,7 @@ export function defaultConfigurationSource() {
   return {
     application: applicationConfig,
     customer: customerConfig,
+    sales: salesConfig,
     api: apiConfig,
     database: databaseConfig,
     deviceBinding: deviceBindingConfig,
@@ -93,6 +96,7 @@ export function validateApplicationConfiguration(
   validateSection("application", () =>
     normalizeApplicationConfig(source?.application)
   );
+  validateSection("sales", () => normalizeSalesConfig(source?.sales ?? salesConfig, { requestTimeoutMs: normalized.application?.requestTimeoutMs }));
   validateSection("customer", () => normalizeCustomerConfig(source?.customer));
   validateSection("api", () => normalizeApiConfig(source?.api));
   validateSection("database", () => normalizeDatabaseConfig(source?.database));

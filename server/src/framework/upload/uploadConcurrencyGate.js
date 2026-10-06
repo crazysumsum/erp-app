@@ -17,11 +17,16 @@
  * 任何 buffer。
  */
 export class UploadConcurrencyGate {
-  constructor({ maxConcurrentUploads }) {
+  constructor({ maxConcurrentUploads, maxBytesInFlight = null }) {
     if (!Number.isInteger(maxConcurrentUploads) || maxConcurrentUploads <= 0) {
       throw new TypeError("Upload concurrency gate requires a positive maxConcurrentUploads");
     }
 
+    if (maxBytesInFlight !== null && (!Number.isSafeInteger(maxBytesInFlight) || maxBytesInFlight <= 0)) {
+      throw new TypeError("Upload gate bytes capacity must be a positive safe integer");
+    }
+    this.maxBytesInFlight = maxBytesInFlight;
+    this.bytesInFlight = 0;
     this.maxConcurrentUploads = maxConcurrentUploads;
     this.active = 0;
     this.peak = 0;
@@ -35,13 +40,16 @@ export class UploadConcurrencyGate {
    * 斷線、逾時），漏放一次會讓槽位永久消失，而那個洩漏是單向累積的——上傳會在
    * 某個時點之後全部開始回 503，且沒有任何錯誤指向原因。
    */
-  acquire() {
-    if (this.active >= this.maxConcurrentUploads) {
+  acquire(bytes = 0) {
+    if (!Number.isSafeInteger(bytes) || bytes < 0) throw new TypeError("Upload reservation bytes must be a non-negative safe integer");
+    if (this.active >= this.maxConcurrentUploads ||
+        (this.maxBytesInFlight !== null && bytes > this.maxBytesInFlight - this.bytesInFlight)) {
       this.rejected += 1;
       return null;
     }
 
     this.active += 1;
+    this.bytesInFlight += bytes;
     this.peak = Math.max(this.peak, this.active);
     let released = false;
 
@@ -52,6 +60,7 @@ export class UploadConcurrencyGate {
 
       released = true;
       this.active -= 1;
+      this.bytesInFlight -= bytes;
     };
   }
 
@@ -60,7 +69,8 @@ export class UploadConcurrencyGate {
       active: this.active,
       peak: this.peak,
       rejected: this.rejected,
-      maxConcurrentUploads: this.maxConcurrentUploads
+      maxConcurrentUploads: this.maxConcurrentUploads,
+      ...(this.maxBytesInFlight === null ? {} : { bytesInFlight: this.bytesInFlight, maxBytesInFlight: this.maxBytesInFlight })
     });
   }
 }
