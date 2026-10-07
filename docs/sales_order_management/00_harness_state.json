@@ -1,17 +1,17 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 169,
+  "revision": 170,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-029",
+  "current_task": "TASK-030",
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "419c2be02c01d0abf575e8e1339644a1c574046f",
+    "code_commit": "81f043b920b9ca5fe5bf7ffa1cad0ebe425603d3",
     "source_fingerprint": "25415f0dc2b8dbd9d05e5149db2808d16dcb70d5f356a9570e39a82346839e26",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
@@ -56,8 +56,8 @@
     "TASK-026": "DONE",
     "TASK-027": "DONE",
     "TASK-028": "DONE",
-    "TASK-029": "IN_PROGRESS",
-    "TASK-030": "PENDING",
+    "TASK-029": "DONE",
+    "TASK-030": "IN_PROGRESS",
     "TASK-031": "PENDING",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
@@ -5060,5 +5060,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit verified five-file TASK029 PhaseA slice/report46 then record actualcommit/DONE and implement TASK030 atomic confirmation with Inventory provider results, snapshot revalidation and rollback. Original fullPhase gates remain."
+  "next_safe_action": "Implement and verify TASK-030 Phase B atomic confirmation under adopted DEC-021; keep TASK-031–037 and whole Phase merge gate pending."
 }
