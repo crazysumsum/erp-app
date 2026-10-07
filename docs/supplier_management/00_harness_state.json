@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 283,
+  "revision": 284,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -989,6 +989,22 @@
       "scope": [
         "client/src/framework/http/HttpClient.js",
         "server/config/security.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-070-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-070 A. Authorises a separate PR (claude/deps-shell-quote, PR #186) that changes only package-lock.json to bump shell-quote past GHSA-pqg4-j6r4-53mv.",
+      "recorded_at": "2026-10-07T11:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+      "scope": [
+        "package-lock.json"
       ],
       "expires_at": null
     }
@@ -4543,6 +4559,17 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-07: '全部按建議'. L-2 (A) as recommended proved impossible: the Supplier update path (UI and import) refuses any change while the default currency or payment term is inactive, as requirement 01 §14 ('Default Currency 已停用 → 阻止啟用或修改') and §6.6 require, so the import cannot keep them. Asked again; Product Owner, 2026-10-07: 'A' = refuse such update rows at precheck (CURRENCY_NOT_ACTIVE / PAYMENT_TERM_NOT_ACTIVE) unless the row moves the field to an active value."
+    },
+    {
+      "id": "HD-070",
+      "impact": "MAJOR",
+      "question": "PR #185's Dependency audit fails on a new critical advisory GHSA-pqg4-j6r4-53mv (shell-quote >=1.8.4 <1.11.0, quote() command injection), reached only via the root devDependency concurrently@8.2.2 (shell-quote ^1.8.1); every branch is affected. (A) A separate lockfile-only PR (claude/deps-shell-quote) bumping shell-quote to the patched release, merged first, then main merged into #185; (B) the bump inside #185; (C) wait for another agent.",
+      "affected_ids": [
+        "package-lock.json",
+        "TASK-047"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: 'A'. PR #186 (claude/deps-shell-quote): shell-quote 1.10.0 -> 1.12.0, npm audit clean, concurrently smoke-tested."
     }
   ],
   "external_actions": [
@@ -5619,5 +5646,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-047: REV-075 APPROVED 950cfb1; HD-069 follow-ups done (L-1 inverse guard, L-2 precheck refusal, L-3 test, I-3 order, L-4 to T49). Re-run the CI-style suite and mutants, push PR #185, wait for CI and the Product Owner's word. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-047: PR #185 green except the Dependency audit (GHSA-pqg4-j6r4-53mv, not T47). HD-070 A: PR #186 bumps shell-quote; once #186 is merged on the Product Owner's word, merge main into #185 and wait for CI. Merge #185 only on the Product Owner's word."
 }
