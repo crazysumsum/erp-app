@@ -71,7 +71,7 @@ export const SALES_CONFIRMATION_PENDING_RESPONSE = object({ outcome: { const: "C
 export const SALES_OPERATION_EVENT_PARAMS = object({ eventId: SALES_CONFIRMATION_INPUT.properties.eventId });
 export const SALES_OPERATION_LOOKUP_RESPONSE = object({ eventId: SALES_CONFIRMATION_INPUT.properties.eventId,operationId: ID,
   status: { enum: ["IN_PROGRESS","SUCCEEDED","FAILED"] },result: { anyOf: [{ type: "null" },object({ id: ID,number: { type: "string",pattern: "^(SO|QT)-\\d{6}-\\d{6}$" },
-    status: { enum: ["DRAFT","ISSUED","EXPIRED","CANCELLED","CONVERTED","CONFIRMED"] },version: ID })] },errorCode: nullableString });
+    status: { enum: ["DRAFT","ISSUED","EXPIRED","CANCELLED","CONVERTED","CONFIRMED","CLOSED"] },version: ID })] },errorCode: nullableString });
 
 export function salesOrderCommandRequest(req,update=false){return {claims:salesActorClaims(req),input:validateSalesOrderInput(req.input.body,update),trace:{requestId:req.requestId ?? "",correlationId:req.correlationId ?? "",ipAddress:req.ip ?? ""}};}
 
@@ -84,6 +84,8 @@ const validateOrderQuery=validator.compile({query:SALES_ORDER_LIST_QUERY},"Sales
 export function salesOrderListRequest(req){const request={query:structuredClone(req.input.query)};try{validateOrderQuery(request);}catch(error){if(error.code==="REQUEST_VALIDATION_FAILED")throw salesError("SALES_INPUT_INVALID");throw error;}return {claims:salesActorClaims(req),input:request.input.query};}
 const summaryFields=["id","number","status","sourceType","sourceQuotationId","channelCode","externalOrderId","version","customerId","customerCode","customerName","currencyCode","fulfillmentWarehouseId","warehouseCode","warehouseName","orderDate","lineCount","totalAmount","hasBackorder","backorderLineCount","createdAt","updatedAt"];
 export const SALES_ORDER_LIST_RESPONSE=object({items:{type:"array",maxItems:100,items:object(Object.fromEntries(summaryFields.map(field=>[field,SALES_ORDER_DETAIL.properties[field]])))},total:{type:"integer",minimum:0},page:ID,pageSize:{type:"integer",minimum:1,maximum:100}});
-export const SALES_ORDER_READ_RESPONSE=object({...SALES_ORDER_DETAIL.properties,isArchived:{const:false},allowedActions:{type:"array",uniqueItems:true,items:{enum:["edit","confirm"]}},historyTruncated:{type:"boolean"},
+export const SALES_ORDER_READ_RESPONSE=object({...SALES_ORDER_DETAIL.properties,isArchived:{const:false},allowedActions:{type:"array",uniqueItems:true,items:{enum:["edit","confirm","withdraw","cancel","closeRemaining"]}},historyTruncated:{type:"boolean"},
  history:{type:"array",maxItems:100,items:object({id:ID,sequence:ID,fromStatus:{type:["string","null"]},toStatus:STRING,action:STRING,reason:STRING,version:ID,actorLabel:STRING,occurredAt:timestamp})},
  currentMaster:object({customer:{anyOf:[{type:"null"},object({customerCode:STRING,customerName:STRING,status:STRING})]},skus:{type:"array",maxItems:100,items:object({skuId:ID,skuCode:STRING,skuName:STRING,itemName:STRING,skuStatus:STRING,itemStatus:STRING})}})});
+
+export const SALES_LIFECYCLE_RESPONSE = object({ salesOrder: SALES_ORDER_DETAIL,operation: object({ id: ID,number: SALES_ORDER_DETAIL.properties.number,status: { enum: ["DRAFT","CANCELLED","CLOSED"] },version: ID }) });

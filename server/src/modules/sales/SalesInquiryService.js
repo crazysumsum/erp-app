@@ -49,7 +49,7 @@ export class SalesInquiryService{
    const [rows]=await tx.query("SELECT id,sequence_no,from_status,to_status,action,reason,order_version_after,actor_label,occurred_at FROM sales_order_status_history WHERE sales_order_id=? ORDER BY sequence_no DESC LIMIT 101",[id]);
    const customer=await new CustomerLookupService({database:tx}).findById(detail.customerId,{purpose:"history"});
    const skus=await new ItemLookupService({database:tx,time:this.time,logger:this.logger}).findManyByIds(detail.lines.map(line=>line.skuId),{includeInactive:true});
-   return {...detail,isArchived:false,allowedActions:detail.status==="DRAFT"&&actor.permissions.includes("sales.mgmt")?["edit","confirm"]:[],historyTruncated:rows.length>100,
+   return {...detail,isArchived:false,allowedActions:actor.permissions.includes("sales.mgmt")?(detail.status==="DRAFT"?["edit","confirm","cancel"]:detail.status==="CONFIRMED"&&detail.lines.every(line=>line.fulfilledBaseQuantity==="0")?["withdraw","cancel"]:detail.status==="PARTIALLY_FULFILLED"?["closeRemaining"]:[]):[],historyTruncated:rows.length>100,
     history:rows.slice(0,100).reverse().map(row=>({id:Number(row.id),sequence:Number(row.sequence_no),fromStatus:row.from_status,toStatus:row.to_status,action:row.action,reason:row.reason,version:Number(row.order_version_after),actorLabel:row.actor_label,occurredAt:Number(row.occurred_at)})),
     currentMaster:{customer:customer?{customerCode:customer.customerCode,customerName:customer.legalName,status:customer.status}:null,
      skus:[...skus.values()].map(sku=>({skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,itemName:sku.itemName,skuStatus:sku.skuStatus,itemStatus:sku.itemStatus}))}};

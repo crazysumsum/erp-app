@@ -3,8 +3,8 @@ import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 import { salesEventId } from "./salesValidation.js";
 
 const TARGETS = Object.freeze({ CREATE_QUOTATION: "QUOTATION", UPDATE_QUOTATION: "QUOTATION", ISSUE_QUOTATION: "QUOTATION",
-  CANCEL_QUOTATION: "QUOTATION", CONVERT_QUOTATION: "QUOTATION", CREATE_ORDER: "SALES_ORDER", UPDATE_ORDER: "SALES_ORDER" });
-const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMED"];
+  CANCEL_QUOTATION: "QUOTATION", CONVERT_QUOTATION: "QUOTATION", CREATE_ORDER: "SALES_ORDER", UPDATE_ORDER: "SALES_ORDER", WITHDRAW_ORDER: "SALES_ORDER", CANCEL_ORDER: "SALES_ORDER", CLOSE_REMAINING_ORDER: "SALES_ORDER" });
+const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMED", "CLOSED"];
 function identifier(value) {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError("Invalid Sales operation identifier");
   return value;
