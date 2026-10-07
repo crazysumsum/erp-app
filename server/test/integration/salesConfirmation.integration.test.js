@@ -196,3 +196,42 @@ integrationTest("TC-022 polling reads committed IN_PROGRESS without waiting for 
     assert.equal(result?.status,"IN_PROGRESS","A status read must not wait for Phase B's operation row lock");
   } finally {clearTimeout(timer);await f.db.query("ROLLBACK");await execution;await lookup;}
 });
+async function http(f) {
+  const {url}=await f.app.start();
+  const token=await f.app.services.require("jwt").issue({roles:f.claims.claimedRoles,permissions:f.claims.claimedPermissions},
+    {subject:String(f.userId),version:await f.app.services.require("tokenRevocation").currentVersion(String(f.userId)),authTime:Math.floor(f.now/1000)});
+  const headers={Authorization:`Bearer ${token}`,"Content-Type":"application/json","Idempotency-Key":f.request.input.eventId};
+  return {get:event=>fetch(new URL(`/api/v1/sales-operations/by-event/${event}`,url),{headers}),
+    confirm:body=>fetch(new URL(`/api/v1/sales-orders/${f.request.id}/confirm`,url),{method:"POST",headers,body:JSON.stringify(body??f.request.input)})};
+}
+integrationTest("TC-022 actual Confirm HTTP schema returns terminal detail and rejects type/identity injection",async t=>{
+  const f=await setup(t);await stock(f,10);
+  await f.db.execute("UPDATE item_skus SET tracking_policy='batch' WHERE id=?",[f.skuId]);
+  const lot=await f.insert("inventory_lots",{sku_id:f.skuId,lot_number:"Synthetic",normalized_lot_number:"synthetic",first_receipt_date:formatDateForFile(new Date(f.now),"Asia/Hong_Kong"),sku_code_snapshot:"Synthetic",created_at:f.now});
+  await f.db.execute("UPDATE inventory_stock_balances SET lot_id=? WHERE warehouse_id=?",[lot,f.warehouseId]);
+  const api=await http(f);
+  for(const body of [{...f.request.input,version:"1"},{...f.request.input,leaseOwner:randomUUID()}]){
+    const response=await api.confirm(body);assert.equal(response.status,400);assert.equal((await response.json()).error.code,"SALES_INPUT_INVALID");
+  }
+  const response=await api.confirm();assert.equal(response.status,200);const result=(await response.json()).data;
+  assert.equal(result.outcome,"CONFIRMED");assert.equal(result.salesOrder.status,"CONFIRMED");assert.equal(result.salesOrder.lines[0].trackingPolicy,"BATCH");
+  assert.deepEqual(Object.keys(result).sort(),["outcome","salesOrder","warnings"]);
+  const operation=await api.get(f.request.input.eventId);assert.equal(operation.status,200);assert.equal((await operation.json()).data.status,"SUCCEEDED");
+});
+integrationTest("TC-022 actual HTTP202 retains event/Retry-After and remains pollable before native Phase B commit",async t=>{
+  const f=await setup(t,{waitMs:100});await stock(f,10);const api=await http(f);
+  await f.db.query("START TRANSACTION");await f.db.query("SELECT id FROM inventory_warehouses WHERE id=? FOR UPDATE",[f.warehouseId]);
+  let accepted;
+  try {
+    const response=await api.confirm();assert.equal(response.status,202);assert.equal(response.headers.get("Retry-After"),"2");accepted=(await response.json()).data;
+    assert.equal(accepted.eventId,f.request.input.eventId);assert.equal(accepted.statusUrl,`/api/v1/sales-operations/by-event/${f.request.input.eventId}`);
+    assert.deepEqual(Object.keys(accepted).sort(),["eventId","operationId","outcome","retryAfterSeconds","statusUrl"]);
+    const pending=await api.get(accepted.eventId);assert.equal(pending.status,200);assert.equal((await pending.json()).data.status,"IN_PROGRESS");
+  } finally {await f.db.query("ROLLBACK");}
+  await f.database.withTransaction(tx=>tx.query("SELECT status FROM sales_operation_requests WHERE event_id=? LOCK IN SHARE MODE",[f.request.input.eventId]));
+  const terminal=await api.get(accepted.eventId);assert.equal(terminal.status,200);assert.equal((await terminal.json()).data.status,"SUCCEEDED");
+  const replay=await api.confirm();assert.equal(replay.status,202);assert.equal(replay.headers.get("Retry-After"),"2");assert.equal((await replay.json()).data.eventId,accepted.eventId);
+  assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM inventory_reservations WHERE warehouse_id=?",[f.warehouseId]))[0][0].n,1);
+  await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[f.roleId]);
+  const revoked=await api.confirm();assert.equal(revoked.status,403);assert.equal((await revoked.json()).error.code,"PERMISSION_STALE");
+});
