@@ -40,4 +40,9 @@ describe("Sales Quotation client contract", () => {
     await sales.getOrder(8,{signal:"abort-order"});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/sales-orders/8",{signal:"abort-order"});
   });
   it("maps bounded Active SO pagination and exact source filters",async()=>{httpClient.get.mockResolvedValue({items:[{id:8}],total:11});await expect(sales.listOrders({page:2,rowsPerPage:10,filter:"customer",number:"SO-202610-000008",externalOrderId:"case_%",channelCode:"WEB",hasBackorder:false,status:["DRAFT"],signal:"abort"})).resolves.toEqual({rows:[{id:8}],rowsNumber:11});expect(httpClient.get).toHaveBeenCalledWith("/api/v1/sales-orders",{params:{page:2,pageSize:10,q:"customer",number:"SO-202610-000008",externalOrderId:"case_%",channelCode:"WEB",hasBackorder:false,status:["DRAFT"]},signal:"abort"});});
+  it("confirms and polls by the same event and forwards cancellation without including the signal in the body",async()=>{
+    const payload={eventId:"original-event",version:3},signal=new AbortController().signal;
+    await sales.confirmOrder(8,payload,{signal});expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-orders/8/confirm",{idempotent:true,idempotencyKey:payload.eventId,body:payload,signal});
+    await sales.getOperation(payload.eventId,{signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/sales-operations/by-event/original-event",{signal});
+  });
 });

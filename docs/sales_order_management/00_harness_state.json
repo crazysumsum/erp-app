@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 175,
+  "revision": 177,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-003",
   "current_task": "TASK-031",
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "1a390d47da4add5a6ba2e7a8b5be4c24d460b46c",
-    "source_fingerprint": "25e003caebff894884c7934aeb1f5030a5fe23471fd13aac0f589df89bd60a95",
+    "code_commit": "be036025a6f9134966fbd719157aa358666a2182",
+    "source_fingerprint": "e1415650a46b5fda90047a176cfd49a750b0b91ea4554eb57e86f05c5912b040",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -2783,6 +2783,66 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-DEC022-proposal-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "d6735bfceebd8f7abc3300c13820a5e67d57fd6a6aeb197d37be0eea23557014",
+      "source_ref": "Actual DEC022-proposal-R1-20261007 APPROVE for concrete proposal only. Product22495f71/canonical94f5e6d0/prospectiveD d6735bfc P df9db7d0 independently verified; prospectiveunit28PASS; actualnative26PASS1FAIL RED retained. /private/tmp/sales-p2-private/dec022-proposal-reviewer-source.json. Shared/product patches remain unapplied.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-api-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "bb3ed9fdff63f31018c448900fdafecbdf25de7d2c63a33e40e431834ead4b20",
+      "source_ref": "Cached202dropsRetry-After; nativeRED26PASS1FAIL. DEC022proposal pending and sourceunapplied.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-client-intent-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "23aa7078aa50212c0e5095674adedd84eed4b4dd86665834b0f63181e674a311",
+      "source_ref": "FourfileReview: independent21PASS,2lint errors; lateabandon and falseuncertainty reproduced.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-client-intent-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "b687b98edf3eab197ca5e4ce6dfd3fe3ecc0bbe868f6f1b997f4cba33992c73c",
+      "source_ref": "Independent23PASS/lintPASS; oldterminalcallback error writesnewcontext. REDpreserved.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-client-intent-R3-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "1dc83949cb325aa6af365ece1db47d898be675e04cdd386afb3054fafc5d1552",
+      "source_ref": "Actual four-fileAPPROVE; independent24PASS/lintPASS. PerfileSHA/report52; outsideUI/API/browserexcluded.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4503,6 +4563,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual current Codex chat 2026-10-07 Sam「同意」directly answers delivered DEC021 full recommendation R2 and packet44: adopts worker reserve-only principal/types/lease/fresh authorization, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED constrained deployment exception and future quiesced activation, exact supplemental scope,28 developer contracts/unchanged formal60/UAT/floors and new owned synthetic MySQL26.7/browser/controlled owned crash/load runtime. D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing approved module/shared scope, commit/push/PR/main merge authority carries forward; no production/shared DB/deployment or later material exception."
+    },
+    {
+      "id": "DEC-022",
+      "impact": "MAJOR",
+      "question": "Adopt exact product22495f71bcf31c334eed3cee75a868e8aa8df6f79dd8127543a985c562c18a4c and canonical94f5e6d08f9a414029d52301b3491bcefc35cadb544147f0a105707e3eeee8a3 patches/newD d6735bfceebd8f7abc3300c13820a5e67d57fd6a6aeb197d37be0eea23557014/P df9db7d0d9f235d677bf39b113880bdcc666bb9672cdee12bcc57af29e6904b0 and supplemental IdempotencyService/idempotencyService.test scope; optional positive safe integer fixed202 replay Retry-After2, preserve freshauth/cache/event/28suite/floors/formal/UAT/unchangedNFR014/015NA. Packet implementation/51_phase2_retry_header_decision.md. Existing commit/PR/mainmerge/runtime retained.",
+      "affected_ids": [
+        "DES-004",
+        "TASK-031",
+        "PHASE-003"
+      ],
+      "status": "OPEN",
+      "answer_ref": "Direct human answer pending; proposal not applied."
     }
   ],
   "external_actions": [
@@ -5141,5 +5213,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit separately reviewed3file polling fix, then validate/commit nextAPI five-file slice with actualHTTP. Task031/UI/wholePhase remain pending."
+  "next_safe_action": "DEC022 decision remains OPEN; only unaffected authorized client preparation continues. Commit4 reviewedclientfiles+reports/state; finish actualUI/browser preparation, no header/canonical proposal applied."
 }
