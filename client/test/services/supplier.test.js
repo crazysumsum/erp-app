@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/framework/http/HttpClient.js", () => ({
-  httpClient: { get: vi.fn(), post: vi.fn() }
+  httpClient: { get: vi.fn(), post: vi.fn(), postBlob: vi.fn() }
 }));
 
 import { httpClient } from "@/framework/http/HttpClient.js";
@@ -57,6 +57,18 @@ describe("supplier service", () => {
     expect(result).toEqual({ rows: [{ id: 7 }], rowsNumber: 1 });
     expect(httpClient.get).toHaveBeenCalledWith("/api/v1/suppliers", {
       params: expect.objectContaining({ page: 1, pageSize: 20, q: "SUP", status: "active", sortBy: "supplierCode" })
+    });
+  });
+
+  it("exports with the list's filters and sort behind a password (HD-067)", async () => {
+    httpClient.postBlob.mockResolvedValue({ blob: "b", fileName: "suppliers-x.csv" });
+    const signal = new AbortController().signal;
+    const result = await supplierService.exportCsv({
+      filter: "SUP", status: null, sortBy: "supplierName", descending: false, password: "pw", signal
+    });
+    expect(result).toEqual({ blob: "b", fileName: "suppliers-x.csv" });
+    expect(httpClient.postBlob).toHaveBeenCalledWith("/api/v1/supplier-exports", {
+      body: { password: "pw", filters: { q: "SUP", status: undefined, sortBy: "supplierName", descending: false } }, signal
     });
   });
 
