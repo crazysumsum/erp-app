@@ -32,3 +32,7 @@ Default recommendation A. Affected shared path stays unapplied pending direct hu
 [Harness implement](/Users/sam/.agents/skills/software-engineering-harness/references/08-implement.md): “Do not silently change architecture, transaction semantics, security model, public interface, data ownership, acceptance criteria, or Phase boundaries.” This new optional framework route contract touches shared source outside the adopted allowed_write_paths.
 
 [Harness state/recovery](/Users/sam/.agents/skills/software-engineering-harness/references/19-state-and-recovery.md): “Do not rewrite an old approval's hash to make it look current. Obtain a new decision, retain the old record, and explicitly dispose of obsolete evidence.” The exact two-path scope addition changes DESIGN/PLAN; old approvals remain historical, not silently repinned. Actual current native evidence remains RED until corrected.
+
+## Actual human adoption — 2026-10-07
+
+Sam’s direct「批準」adopts DEC022. Both exact patches independently hash/apply-checked then applied; observed DESIGN d6735bfceebd8f7abc3300c13820a5e67d57fd6a6aeb197d37be0eea23557014 / PLAN df9db7d0d9f235d677bf39b113880bdcc666bb9672cdee12bcc57af29e6904b0 match the proposal. New approvals appended; old decisions/RED/reviews retained. Actual native correction remains to be verified; no Phase completion or merge claim.

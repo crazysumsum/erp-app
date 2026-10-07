@@ -2874,6 +2874,8 @@ Commit：`feat: confirm sales orders with atomic inventory reservation`。
 
 預計變更範圍：`confirmSalesOrderHandler.js`、`salesOperationLookupHandler.js`、`useSalesCommandEvent.js`、`SalesOrderDetailPage.vue`、一個client/server contract test。
 
+DEC-022 supplemental slice: `server/src/services/idempotency/IdempotencyService.js` and `server/test/idempotencyService.test.js` add/verify the optional fixed202 replay retry delay; actual native HTTP replay must retain Retry-After2 and fresh permission rejection. No cache/store/security weakening; all original Phase gates remain.
+
 依賴：P2-T03。
 
 規格追溯：FR-CONF-001～020、NFR availability；Design §5.5、§6.3–6.4。

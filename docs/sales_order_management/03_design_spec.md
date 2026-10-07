@@ -2808,3 +2808,8 @@ Active+Archive+keys+operations backup, isolated restore, reconciliation, RTO <=4
 ### Failure behavior
 
 本決定所述的邊界、交易、契約或不變量被違反時一律 fail closed，回穩定且可行動的業務錯誤，不得產生部分提交或以過時資料假裝成功；§11.8 enhanced by this review 所列的失敗處理與補償路徑為準，相關 Gate 在證據不足時記為 `BLOCKED`／`NOT_READY`，不得記為 PASS。
+
+
+### DEC-022 — Confirmation 202 replay header
+
+TASK031 actual HTTP regression proves the framework cache replays status/body but drops the original Retry-After. The confirm route declares optional idempotency.retryAfterSeconds=2. IdempotencyService validates a positive safe integer at startup and emits Retry-After only for replayed202 of a declaring route; absent declarations and200 responses retain original behavior. No response-header copying, schema/store changes, additional side effects, bypass of fresh actor authorization or change to command event identity. This is a reviewed supplemental shared-file scope correction, pending direct human adoption; complete P2 gates/thresholds and historical decisions remain unchanged.

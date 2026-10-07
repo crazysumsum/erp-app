@@ -36,7 +36,8 @@
       "server/src/handlers/sales-backorders/**",
       "client/src/composables/sales/**",
       "server/src/modules/inventory/InventoryReservationService.js",
-      "server/src/modules/inventory/inventoryConstants.js"
+      "server/src/modules/inventory/inventoryConstants.js",
+      "server/src/services/idempotency/IdempotencyService.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -76,7 +77,8 @@
       "server/test/serviceContainer.test.js",
       "server/test/business-master/http.integration.test.js",
       "server/test/inventorySalesWorkerContracts.test.js",
-      "client/test/composables/sales/**"
+      "client/test/composables/sales/**",
+      "server/test/idempotencyService.test.js"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -139,7 +141,9 @@
       "server/test/inventoryProviderContracts.test.js",
       "docs/inventory_management/03_design_spec.md",
       "docs/fulfillment_shipping_management/03_design_spec.md",
-      "server/src/modules/inventory/inventoryConstants.js"
+      "server/src/modules/inventory/inventoryConstants.js",
+      "server/src/services/idempotency/IdempotencyService.js",
+      "server/test/idempotencyService.test.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -203,7 +207,8 @@
       "server/test/inventorySalesWorkerContracts.test.js",
       "docs/inventory_management/03_design_spec.md",
       "docs/fulfillment_shipping_management/03_design_spec.md",
-      "server/src/modules/inventory/inventoryConstants.js"
+      "server/src/modules/inventory/inventoryConstants.js",
+      "server/test/idempotencyService.test.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -249,7 +254,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "11e2efe118b82c1c946a00a311b29043cdb182e975877846cbf42662f0f6d807",
+        "sha256": "a1a468ff6b91366f3e5328da5691ce61d3ae798a3265ed43196a4fe5a93a3577",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -303,7 +308,7 @@
         "id": "idempotency-service",
         "version": "observed-main-dd36250",
         "source": "server/src/services/idempotency/IdempotencyService.js",
-        "sha256": "a4bcd80a3c5b067515b3200ea9de1cad0ec5e6f96f8824c2103cd1af0e97a291",
+        "sha256": "b4a33f4abb73e16ec74d5f50c5ae25da308ac06049c8f8f4d1e20f8bf0412a28",
         "regression_suites": [
           "sales-technical"
         ]
