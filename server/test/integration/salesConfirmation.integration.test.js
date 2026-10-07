@@ -47,7 +47,7 @@ integrationTest("TC-022 Phase A required audit failure rolls back operation, CON
 });
 
 integrationTest("TC-021 Phase B confirms full, partial and zero ATP with exact mapping/backorder and stable replay", async t => {
-  for (const available of [10, 4, 0]) await t.test(`ATP ${available}`, async child => {
+  for (const available of [10, 4, 0]) await t.test(`TC-021 confirmation ATP ${available}`, async child => {
     const f = await setup(child);
     await stock(f, available);
     const intent = await f.service().startConfirmation(f.request);
@@ -80,7 +80,7 @@ integrationTest("TC-024 Phase B rejects newly inactive Customer and commits Draf
   assert.deepEqual(operation, { status: "FAILED",error_code: "CUSTOMER_NOT_SALEABLE" });
   assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM inventory_operation_requests WHERE source_module='SALES' AND source_document_id=?", [String(f.request.id)]))[0][0].n, 0);
 });
-integrationTest("TC-021 Phase B handles mixed multi-line ATP and freezes current Customer/Item snapshots", async t => {
+integrationTest("TC-023 multi-line failure rolls back every commitment before retry commits all snapshots", async t => {
   const f = await setup(t), [[uom]] = await f.db.query("SELECT uom_id FROM item_sku_uoms WHERE id=?", [f.skuUomId]);
   const lines = [{ skuId: f.skuId,skuUomId: f.skuUomId,quantity: "10.000000",unitSellingPrice: "1.0000" }];
   for (const n of [1,2]) {
@@ -94,6 +94,16 @@ integrationTest("TC-021 Phase B handles mixed multi-line ATP and freezes current
   const intent = await f.service().startConfirmation({ ...f.request,input: { ...f.request.input,version: updated.salesOrder.version } });
   await f.db.execute("UPDATE customers SET legal_name='Current synthetic name' WHERE id=?", [f.customerId]);
   await f.db.execute("UPDATE item_skus SET sku_name='Current SKU name' WHERE id=?", [f.skuId]);
+  await assert.rejects(() => f.service({ audit: { async record() { throw Error("Multi-line required audit fault"); } } }).completeConfirmation({ eventId: intent.eventId,claims: f.claims,leaseOwner: intent.leaseOwner }), error => error.cause?.message === "Multi-line required audit fault");
+  const [[failedOrder]] = await f.db.query("SELECT status,version FROM sales_orders WHERE id=?", [f.request.id]);
+  assert.deepEqual(failedOrder, { status: "CONFIRMING",version: updated.salesOrder.version + 1 });
+  const [failedLines] = await f.db.query("SELECT reserved_outstanding_base_quantity,backordered_base_quantity FROM sales_order_lines WHERE sales_order_id=? ORDER BY line_no", [f.request.id]);
+  assert.deepEqual(failedLines, lines.map(() => ({ reserved_outstanding_base_quantity: 0,backordered_base_quantity: 0 })));
+  for (const table of ["inventory_reservations","inventory_stock_controls"])
+    assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${table} WHERE warehouse_id=?`, [f.warehouseId]))[0][0].n, 0);
+  assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=?", [f.request.id]))[0][0].n, 0);
+  assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_backorder_entries WHERE sales_order_id=?", [f.request.id]))[0][0].n, 0);
+  assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM sales_audit_logs WHERE event_id=? AND action='sales_order.confirmed'", [intent.eventId]))[0][0].n, 0);
   const result = await f.service().completeConfirmation({ eventId: intent.eventId,claims: f.claims,leaseOwner: intent.leaseOwner });
   assert.equal(result.salesOrder.customerName, "Current synthetic name"); assert.equal(result.salesOrder.lines[0].skuName, "Current SKU name");
   assert.deepEqual(result.salesOrder.lines.map(line => Number(line.reservedBaseQuantity)), [10,4,0]);
