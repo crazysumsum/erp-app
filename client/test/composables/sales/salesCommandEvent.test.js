@@ -57,22 +57,13 @@ describe("TC-022 durable confirmation intent",()=>{
  it("rejects corrupt saved intent without silently generating a replacement",async()=>{
   sessionStorage.setItem(key,JSON.stringify({eventId:"bad",version:"3"}));open();await command.resume(8);expect(sales.getOperation).not.toHaveBeenCalled();expect(sales.confirmOrder).not.toHaveBeenCalled();expect(command.error.value).toContain("原操作");
  });
- it("explicit abandonment requires fresh missing-operation and Draft facts before clearing",async()=>{
+ it("snapshot404 and Draft cannot authorize abandonment or erase an original uncommitted event",async()=>{
   sessionStorage.setItem(key,JSON.stringify({eventId:uuid,version:3}));open();sales.getOperation.mockRejectedValue({status:404});await command.resume(8);
-  sales.getOrder.mockResolvedValue({id:8,status:"DRAFT",version:4});await command.abandon();expect(sessionStorage.getItem(key)).toBeNull();expect(terminal).toHaveBeenCalledWith({status:"NOT_COMMITTED",result:{id:8,status:"DRAFT",version:4}});
+  expect(command.abandon).toBeUndefined();expect(sessionStorage.getItem(key)).toBe(JSON.stringify({eventId:uuid,version:3}));expect(sales.getOrder).not.toHaveBeenCalled();expect(command.pending.value).toBe(true);
  });
- it("cannot abandon an executing operation or change the identity after a fresh non-Draft fact",async()=>{
-  sessionStorage.setItem(key,JSON.stringify({eventId:uuid,version:3}));open();sales.getOperation.mockRejectedValueOnce({status:404});await command.resume(8);
-  sales.getOperation.mockResolvedValue({status:"IN_PROGRESS"});await command.abandon();expect(sessionStorage.getItem(key)).not.toBeNull();
-  sales.getOperation.mockRejectedValue({status:404});sales.getOrder.mockResolvedValue({id:8,status:"CONFIRMING"});await command.abandon();expect(sessionStorage.getItem(key)).not.toBeNull();expect(terminal).not.toHaveBeenCalled();
- });
- it("late abandonment lookup cannot affect a newly selected order or issue a lookup using its ID",async()=>{
-  for(const missing of [false,true]){
-   sessionStorage.setItem(key,JSON.stringify({eventId:uuid,version:3}));open();sales.getOperation.mockRejectedValueOnce({status:404});await command.resume(8);
-   let resolve,reject;sales.getOperation.mockImplementationOnce(()=>new Promise((done,fail)=>{resolve=done;reject=fail;}));const work=command.abandon();await command.resume(9);
-   if(missing)reject({status:404});else resolve({status:"IN_PROGRESS"});await work;
-   expect(command.error.value).toBe("");expect(sales.getOrder).not.toHaveBeenCalled();expect(sessionStorage.getItem(key)).not.toBeNull();scope.stop();
-  }
+ it("same-event definitive stale-version rejection reloads known rejected facts and allows a later fresh intent",async()=>{
+  open();sales.confirmOrder.mockRejectedValue({status:409,code:"VERSION_CONFLICT"});await command.start(8,3);
+  expect(terminal).toHaveBeenCalledWith({status:"REJECTED",errorCode:"VERSION_CONFLICT"});expect(sessionStorage.getItem(key)).toBeNull();expect(command.pending.value).toBe(false);expect(vi.getTimerCount()).toBe(0);
  });
  it("render/refresh failure after terminal200 does not relabel committed confirmation as unknown or start polling",async()=>{
   open();terminal.mockRejectedValue(new Error("detail reload unavailable"));sales.confirmOrder.mockResolvedValue({outcome:"CONFIRMED",warnings:[]});await command.start(8,3);

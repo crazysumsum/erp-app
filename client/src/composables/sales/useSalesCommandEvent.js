@@ -51,7 +51,8 @@ export function useSalesCommandEvent({ userId,onTerminal }) {
       else throw new Error("Unknown confirmation outcome");
     }catch(e){
       if(!active(signal))return;
-      if(e.status===401||e.status===403)error.value=e.message||"權限已失效，請重新登入並核對權限。";
+      if(e.code==="VERSION_CONFLICT")await finish({status:"REJECTED",errorCode:e.code},signal);
+      else if(e.status===401||e.status===403)error.value=e.message||"權限已失效，請重新登入並核對權限。";
       else{error.value=e.status&&e.status<500?e.message||"確認遭拒，正在核對原操作。":"確認結果未確定，正在查詢原操作。";schedule(signal);}
     }finally{if(active(signal))busy.value=false;}
   }
@@ -66,21 +67,5 @@ export function useSalesCommandEvent({ userId,onTerminal }) {
   }
   async function resume(id){if(read(id)&&intent)await poll(controller.signal);}
   async function retry(){if(busy.value||!intent||!retryable.value)return;stop();controller=new AbortController();error.value="";await poll(controller.signal,{resubmit:true});}
-  async function abandon(){
-    if(busy.value||!intent||!retryable.value)return;
-    stop();controller=new AbortController();const signal=controller.signal;busy.value=true;
-    try{
-      try{const operation=await sales.getOperation(intent.eventId,{signal});if(!active(signal))return;
-        if(operation.status==="SUCCEEDED"||operation.status==="FAILED")await finish(operation,signal);
-        else error.value="原操作仍在處理，不能放棄。";
-      }catch(e){
-        if(!active(signal))return;if(e.status!==404)throw e;
-        const order=await sales.getOrder(orderId,{signal});if(!active(signal))return;
-        if(order.status!=="DRAFT"){error.value="訂單狀態已變更，請先核對原操作。";return;}
-        await finish({status:"NOT_COMMITTED",result:order},signal);
-      }
-    }catch(e){if(active(signal))error.value=e.message||"無法核對訂單狀態，原操作已保留。";}
-    finally{if(active(signal))busy.value=false;}
-  }
-  return {pending,busy,error,retryable,start,resume,retry,abandon,stop};
+  return {pending,busy,error,retryable,start,resume,retry,stop};
 }
