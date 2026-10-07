@@ -711,3 +711,27 @@ Notes:
   swapped for a symlink, another filesystem, and a non-regular file.
 - **HD-043** can close: no import file is served (HD-063 1B), and the only code that deletes files now applies the REV-059
   L-6 rules.
+
+## Mutation record for TASK-048
+
+19 mutants, all killed. Each was applied to a committed tree and restored from the saved bytes. They ran against the
+purge unit tests, the config tests, and the retention integration test on real MySQL and the real filesystem.
+
+- **File checks:** the directory identity not re-checked; a second hard link, a non-regular file or another filesystem
+  allowed; the file age ignored.
+- **Job:**
+  - both retention periods ignored;
+  - referenced files swept;
+  - the orphan age not passed;
+  - one batch only;
+  - the abort ignored between batches;
+  - running without a root;
+  - a failed delete not logged.
+- **Service:**
+  - `completed_with_errors` or failed-while-running never due;
+  - the expiry ignoring the current status or not audited;
+  - marking ignoring the status.
+- **Config:** the 30-day default changed.
+
+"Referenced files swept" survived the first run, because every referenced file in the tests was newer than a day. A test now
+keeps an old file that a live job still names.
