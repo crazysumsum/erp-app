@@ -6,6 +6,10 @@ import { migrationFixture } from "../sales/phase1/fixtures.js";
 import { up as jobsUp, inspectSalesImportJobSchema } from "../../database/migrations/0080_create_sales_import_jobs.js";
 import { up as ordersUp, inspectSalesIntakeSchema } from "../../database/migrations/0081_create_sales_intake_orders.js";
 import { up as errorsUp, inspectSalesIntakeErrorSchema } from "../../database/migrations/0082_create_sales_intake_errors.js";
+import { up as orderUp } from "../../database/migrations/0073_create_sales_orders.js";
+import { up as linesUp } from "../../database/migrations/0074_create_sales_order_lines.js";
+import { up as mappingUp } from "../../database/migrations/0078_create_sales_order_line_reservations.js";
+import { up as projectionUp } from "../../database/migrations/0083_extend_sales_reservation_intake_projection.js";
 import { up as keyUp } from "../../database/migrations/0072_create_sales_external_order_keys.js";
 
 const integrationTest=process.env.DB_INTEGRATION_TESTS==="1"?test:test.skip;
@@ -33,6 +37,94 @@ integrationTest("TC-037 Intake tables clean-create/upgrade/rerun preserve exact 
   await jobsUp(f.scoped);await ordersUp(f.scoped);await errorsUp(f.scoped);
   assert.equal(await inspectSalesImportJobSchema(f.scoped),true);assert.equal(await inspectSalesIntakeSchema(f.scoped),true);assert.equal(await inspectSalesIntakeErrorSchema(f.scoped),true);
   assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${f.names.sales_intake_orders}`))[0][0].n,1);
+});
+
+async function projectionFixture(t) {
+  const f=await setup(t,["sales_orders","sales_order_lines","sales_order_line_reservations"]);
+  await orderUp(f.scoped);await linesUp(f.scoped);await mappingUp(f.scoped);
+  f.salesOrder={sales_order_number:"SO-"+randomUUID().slice(0,16),status:"DRAFT",source_type:"MANUAL",customer_id:f.customerId,customer_code_snapshot:"Synthetic",customer_name_snapshot:"Synthetic",currency_code:f.currency,
+    fulfillment_warehouse_id:f.warehouseId,warehouse_code_snapshot:"Synthetic",warehouse_name_snapshot:"Synthetic",order_date:"2026-10-07",line_count:1,total_amount:"0.0000",created_at:f.now,updated_at:f.now,last_business_updated_at:f.now};
+  return f;
+}
+
+integrationTest("TC-037 forward migration preserves manual NULL rows and enforces one Intake-to-SO FK/unique on rerun",async t=>{
+  const f=await projectionFixture(t),table=f.names.sales_orders;
+  await f.db.query(`INSERT INTO ${table} SET ?`,f.salesOrder);
+  await projectionUp(f.scoped);await projectionUp(f.scoped);
+  const [intake]=await f.db.query(`INSERT INTO ${f.names.sales_intake_orders} SET ?`,f.order),intakeId=Number(intake.insertId);
+  await f.db.query(`INSERT INTO ${table} SET ?`,{...f.salesOrder,sales_order_number:"SO-"+randomUUID().slice(0,16),source_type:"CSV",source_intake_order_id:intakeId});
+  await assert.rejects(()=>f.db.query(`INSERT INTO ${table} SET ?`,{...f.salesOrder,sales_order_number:"SO-"+randomUUID().slice(0,16),source_intake_order_id:intakeId}),{code:"ER_DUP_ENTRY"});
+  await assert.rejects(()=>f.db.query(`INSERT INTO ${table} SET ?`,{...f.salesOrder,sales_order_number:"SO-"+randomUUID().slice(0,16),source_intake_order_id:intakeId+99999}),{code:"ER_NO_REFERENCED_ROW_2"});
+  await assert.rejects(()=>f.db.execute(`DELETE FROM ${f.names.sales_intake_orders} WHERE id=?`,[intakeId]),{code:"ER_ROW_IS_REFERENCED_2"});
+  assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${table} WHERE source_intake_order_id IS NULL`))[0][0].n,1);
+});
+
+integrationTest("TC-037 forward migration refuses orphan and duplicate source facts without repairing data",async t=>{
+  const f=await projectionFixture(t),table=f.names.sales_orders;
+  await f.db.query(`INSERT INTO ${table} SET ?`,{...f.salesOrder,source_intake_order_id:99999});
+  await assert.rejects(()=>projectionUp(f.scoped),/source drift/u);
+  assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n,1);
+  await f.db.execute(`DELETE FROM ${table}`);
+  const [intake]=await f.db.query(`INSERT INTO ${f.names.sales_intake_orders} SET ?`,f.order);
+  for(let i=0;i<2;i++)await f.db.query(`INSERT INTO ${table} SET ?`,{...f.salesOrder,sales_order_number:"SO-"+randomUUID().slice(0,16),source_intake_order_id:Number(intake.insertId)});
+  await assert.rejects(()=>projectionUp(f.scoped),/source drift/u);
+  assert.equal((await f.db.query(`SELECT COUNT(*) AS n FROM ${table}`))[0][0].n,2);
+});
+
+integrationTest("TC-037 interrupted projection guard replacement resumes without losing either guard",async t=>{
+  const f=await projectionFixture(t);let interrupted=false;
+  await assert.rejects(()=>projectionUp({async query(sql,args){
+    if(!interrupted&&sql.startsWith("CREATE TRIGGER trg_sales_mapping_update")) {interrupted=true;throw new Error("Synthetic DDL interruption");}
+    return f.scoped.query(sql,args);
+  }}),/Synthetic DDL interruption/u);
+  assert.equal(interrupted,true);
+  await projectionUp(f.scoped);await projectionUp(f.scoped);
+  const [guards]=await f.scoped.query("SELECT trigger_name AS name,action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND event_object_table='sales_order_line_reservations'");
+  assert.equal(guards.length,2);
+  for(const guard of guards)assert.match(guard.statement,/SALES_INTAKE_BATCH_RESERVE/u);
+});
+
+integrationTest("TC-037 projection drift is refused before replacing a changed guard or incompatible index",async t=>{
+  const f=await projectionFixture(t);
+  await f.scoped.query("ALTER TABLE sales_orders ADD KEY uq_sales_order_source_intake (source_intake_order_id)");
+  await assert.rejects(()=>projectionUp(f.scoped),/Incompatible Sales Intake unique index/u);
+  await f.scoped.query("ALTER TABLE sales_orders DROP INDEX uq_sales_order_source_intake");
+  await f.scoped.query("DROP TRIGGER trg_sales_mapping_insert");
+  await f.scoped.query("CREATE TRIGGER trg_sales_mapping_insert BEFORE INSERT ON sales_order_line_reservations FOR EACH ROW BEGIN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Synthetic drift'; END");
+  await assert.rejects(()=>projectionUp(f.scoped),/trigger/u);
+  const [guards]=await f.scoped.query("SELECT action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND trigger_name=?",["trg_sales_mapping_insert"]);
+  assert.match(guards[0].statement,/Synthetic drift/u);
+});
+
+integrationTest("TC-037 an Intake OR relocated outside the command pair cannot bypass owner/projection predicates",async t=>{
+  const f=await projectionFixture(t);
+  const [guards]=await f.scoped.query("SELECT action_statement AS statement FROM information_schema.triggers WHERE trigger_schema=DATABASE() AND trigger_name=?",["trg_sales_mapping_insert"]);
+  const pair=" OR (root.command_type='SALES_INTAKE_BATCH_RESERVE' AND child.command_type='SALES_INTAKE_LINE_RESERVE')";
+  const end="r.status=NEW.status AND r.version=NEW.inventory_version)";
+  assert.ok(guards[0].statement.includes(end));
+  const drift=guards[0].statement.replace(end,end.slice(0,-1)+pair+")");
+  await f.scoped.query("DROP TRIGGER trg_sales_mapping_insert");
+  await f.scoped.query("CREATE TRIGGER trg_sales_mapping_insert BEFORE INSERT ON sales_order_line_reservations FOR EACH ROW "+drift);
+  await assert.rejects(()=>projectionUp(f.scoped),/trigger/u);
+});
+
+integrationTest("TC-037 projection guards accept exact manual/backorder/Intake pairs and reject mixed pairs/current truth drift",async t=>{
+  const f=await projectionFixture(t);await projectionUp(f.scoped);
+  const [order]=await f.db.query(`INSERT INTO ${f.names.sales_orders} SET ?`,f.salesOrder),orderId=Number(order.insertId);
+  const [line]=await f.db.query(`INSERT INTO ${f.names.sales_order_lines} SET ?`,{sales_order_id:orderId,line_no:1,sku_id:f.skuId,item_name_snapshot:"Synthetic",sku_code_snapshot:"Synthetic",sku_name_snapshot:"Synthetic",sku_uom_id:f.skuUomId,uom_code_snapshot:"EA",uom_name_snapshot:"Each",to_base_factor_snapshot:1,tracking_policy_snapshot:"none",ordered_quantity:"10.000000",ordered_base_quantity:10,unit_selling_price:"0.0000",price_source:"MANUAL",line_amount:"0.0000",created_at:f.now,updated_at:f.now}),lineId=Number(line.insertId);
+  async function mapping(rootType,childType) {
+    const event=randomUUID(),operation=type=>({command_type:type,source_module:"SALES",source_document_type:"SALES_ORDER",source_document_id:String(orderId),source_line_id:type===rootType?"":String(lineId),source_event_id:event,request_hash:"a".repeat(64),actor_label:"Synthetic",created_at:f.now});
+    const rootId=await f.insert("inventory_operation_requests",operation(rootType)),childId=await f.insert("inventory_operation_requests",operation(childType));
+    const reservationId=await f.insert("inventory_reservations",{create_operation_id:childId,warehouse_id:f.warehouseId,sku_id:f.skuId,original_quantity:4,outstanding_quantity:4,purpose:"SALE",status:"ACTIVE",created_at:f.now,updated_at:f.now});
+    return {sales_order_line_id:lineId,inventory_reservation_id:reservationId,inventory_operation_id:rootId,source_event_id:event,original_base_quantity:4,outstanding_base_quantity:4,status:"ACTIVE",inventory_version:1,created_at:f.now,updated_at:f.now};
+  }
+  const table=f.names.sales_order_line_reservations;
+  for(const prefix of ["SALES","SALES_BACKORDER","SALES_INTAKE"])await f.db.query(`INSERT INTO ${table} SET ?`,await mapping(prefix+"_BATCH_RESERVE",prefix+"_LINE_RESERVE"));
+  for(const [root,child] of [["SALES_BATCH_RESERVE","SALES_INTAKE_LINE_RESERVE"],["SALES_INTAKE_BATCH_RESERVE","SALES_BACKORDER_LINE_RESERVE"]])
+    await assert.rejects(()=>mapping(root,child).then(row=>f.db.query(`INSERT INTO ${table} SET ?`,row)),{code:"ER_SIGNAL_EXCEPTION"});
+  const [stored]=await f.db.query(`SELECT id FROM ${table} LIMIT 1`);
+  await assert.rejects(()=>f.db.execute(`UPDATE ${table} SET outstanding_base_quantity=3,consumed_base_quantity=1 WHERE id=?`,[stored[0].id]),{code:"ER_SIGNAL_EXCEPTION"});
+  await assert.rejects(()=>f.db.execute(`UPDATE ${table} SET source_event_id=? WHERE id=?`,[randomUUID(),stored[0].id]),{code:"ER_SIGNAL_EXCEPTION"});
 });
 
 integrationTest("TC-037 Intake source/event/transport uniqueness and parent FK are actual DB guards",async t=>{
