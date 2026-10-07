@@ -19,6 +19,10 @@ const supplierConfig = {
     maxRows: Number(process.env.SUPPLIER_IMPORT_MAX_ROWS || 10_000),
     fileRetentionDays: Number(
       process.env.SUPPLIER_IMPORT_FILE_RETENTION_DAYS || 365
+    ),
+    // 從未確認嘅匯入工作（uploaded／ready）幾多日之後逾期：自動取消、刪來源檔（HD-071 B）。
+    unconfirmedRetentionDays: Number(
+      process.env.SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS || 30
     )
   }
 };
