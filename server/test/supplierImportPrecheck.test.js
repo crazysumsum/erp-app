@@ -50,7 +50,7 @@ async function precheck(records, { mode = "create_only", connection = database()
 
 const create = (overrides = {}) => ({ supplierCode: "SUP-1", supplierName: "Acme Trading", defaultCurrencyCode: "HKD", ...overrides });
 const codes = (row) => row.errors.map(({ field, code }) => [field, code]);
-const existing = { id: 7, supplier_code_key: "sup-7", status: "active", version: 4 };
+const existing = { id: 7, supplier_code_key: "sup-7", status: "active", version: 4, default_currency_code: "HKD", default_payment_term_id: null };
 
 test("a minimal create row is valid; blanks become empty values and the payload holds only whitelisted fields", async () => {
   const { rows, counts } = await precheck([create()]);
@@ -81,6 +81,26 @@ test("unguard is exactly the inverse of guard", () => {
     assert.equal(unguardSpreadsheetCell(guardSpreadsheetCell(value)), value, JSON.stringify(value));
   }
   for (const untouched of ["'x", "'", "''", "' +852", "a'=b"]) assert.equal(unguardSpreadsheetCell(untouched), untouched);
+});
+
+test("an update of a Supplier whose current currency or payment term is inactive is refused at precheck (HD-069 L-2 A)", async () => {
+  const target = { ...existing, default_currency_code: "XAU", default_payment_term_id: 9 };
+  const update = (overrides) => ({ supplierId: "7", supplierCode: "SUP-7", ...overrides });
+  const run = async (record, supplier = target) =>
+    (await precheck([record], { mode: "upsert", connection: database({ suppliers: [supplier] }) })).rows[0];
+  // 冇填 = 保留停用值；寫返停用值都一樣；兩者都要改做啟用中先得（需求 §14、§6.6）。
+  assert.deepEqual(codes(await run(update({ notes: "x" }))),
+    [["defaultCurrencyCode", "CURRENCY_NOT_ACTIVE"], ["paymentTermCode", "PAYMENT_TERM_NOT_ACTIVE"]]);
+  const restated = await run(update({ defaultCurrencyCode: "XAU" }));
+  assert.deepEqual(codes(restated), [["defaultCurrencyCode", "CURRENCY_NOT_ACTIVE"], ["paymentTermCode", "PAYMENT_TERM_NOT_ACTIVE"]],
+    "one error per field, not two");
+  const fixed = await run(update({ defaultCurrencyCode: "HKD", paymentTermCode: "NET 30" }));
+  assert.equal(fixed.status, "valid", JSON.stringify(fixed.errors));
+  assert.deepEqual([fixed.normalizedPayload.root.defaultCurrencyCode, fixed.normalizedPayload.root.defaultPaymentTermId], ["HKD", 3]);
+  assert.equal((await run(update({ notes: "x" }), { ...existing, default_payment_term_id: 3 })).status, "valid",
+    "an active current term and currency are fine");
+  assert.equal((await run(update({ notes: "x" }), existing)).status, "valid", "no payment term is fine");
+  assert.equal((await run(create({ supplierCode: "NEW-1" }), target)).status, "valid", "a create row is not affected");
 });
 
 test("create requires Supplier Code, name and currency, and uses the API's rules for everything else", async () => {
@@ -132,7 +152,7 @@ test("create rows may carry one primary Address, Contact and Identifier, validat
 });
 
 test("upsert matches by supplierId first and cross-checks the code; code alone also matches (IMP-011)", async () => {
-  const connection = database({ suppliers: [existing, { id: 8, supplier_code_key: "sup-8", status: "active", version: 1 }] });
+  const connection = database({ suppliers: [existing, { id: 8, supplier_code_key: "sup-8", status: "active", version: 1, default_currency_code: "HKD", default_payment_term_id: null }] });
   const { rows } = await precheck([
     { supplierId: "7", supplierCode: "SUP-7", supplierName: "Renamed" },
     { supplierId: "8", supplierCode: "SUP-9" },
@@ -151,7 +171,7 @@ test("upsert matches by supplierId first and cross-checks the code; code alone a
 });
 
 test("update rows reject child columns and archived Suppliers, and never carry the Supplier Code", async () => {
-  const connection = database({ suppliers: [existing, { id: 9, supplier_code_key: "old", status: "archived", version: 2 }] });
+  const connection = database({ suppliers: [existing, { id: 9, supplier_code_key: "old", status: "archived", version: 2, default_currency_code: "HKD", default_payment_term_id: null }] });
   const { rows } = await precheck([
     { supplierId: "7", contactName: "Alex" },
     { supplierId: "9" },

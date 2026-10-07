@@ -1474,3 +1474,24 @@ integrationTest("TASK-047 (HD-067 2A, HD-068 A): an exported file re-imports as 
   assert.deepEqual(await rowOutcomes(created.job.id), [[1, "applied", null]]);
   assert.deepEqual(fields(await supplierByCode(`RT-${tag}`)), before, "every field is as it was");
 });
+
+integrationTest("TASK-047 (HD-069 L-2 A): exporting a Supplier whose currency was retired re-imports as a precheck error, not a failed write", async () => {
+  const owner = await makeUser("rti", ["supplier.mgmt"], { withPassword: true });
+  const tag = randomUUID().slice(0, 6).toUpperCase();
+  const currency = await testCurrency(`Retired ${tag}`);
+  const id = await seedSupplier({ code: `RI-${tag}`, name: `Retired Currency ${tag}` });
+  await h.db.execute("UPDATE suppliers SET default_currency_code = ? WHERE id = ?", [currency, id]);
+  await h.db.execute("UPDATE currencies SET status = 'INACTIVE' WHERE code = ?", [currency]);
+  const before = await supplierByCode(`RI-${tag}`);
+
+  const exporter = new SupplierExportService({ database: h.db, time,
+    businessMaster: new BusinessMasterProvider({ database: h.db, repository: new BusinessMasterRepository() }) });
+  const { content } = await exporter.exportCsv({
+    actorId: owner.userId, claimedRoles: [owner.roleName], claimedPermissions: owner.permissions, filters: { q: `RI-${tag}` } });
+  const created = await httpUpload(owner, Buffer.from(content, "utf8"), { mode: "upsert" });
+  assert.equal(created.status, 201, JSON.stringify(created.body));
+  assert.equal((await precheck(created.job.id)).status, "ready_with_errors");
+  const [[row]] = await h.db.query("SELECT operation, status, errors FROM supplier_import_rows WHERE job_id = ?", [created.job.id]);
+  assert.deepEqual([row.operation, row.status, row.errors.map((error) => error.code)], ["update", "invalid", ["CURRENCY_NOT_ACTIVE"]]);
+  assert.equal(Number((await supplierByCode(`RI-${tag}`)).version), Number(before.version), "nothing was written");
+});
