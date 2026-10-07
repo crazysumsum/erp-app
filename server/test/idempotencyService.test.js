@@ -657,3 +657,24 @@ test("the container's shutdown closes the store", async () => {
   await (manager.shutdown || manager.close).call(manager);
   assert.equal(closed, 1);
 });
+
+
+test("declared 202 retry delay survives replay without copying response secrets or changing 200 routes", async () => {
+  for (const statusCode of [200,202]) {
+    const store = new MemoryIdempotencyStore({ maxEntries: 10 });
+    const { manager } = createManager(store,{ config: { cacheableStatusCodes: [200,202] } });
+    const options = manager.routeOptions({ enabled:true,retryAfterSeconds:2 },"post /api/v1/orders");
+    const first = createResponse();
+    await manager.execute(createRequest(),first,options,()=>{first.setHeader("Set-Cookie","private");first.status(statusCode).json({ ok:true });});
+    const replay = createResponse();
+    await manager.execute(createRequest(),replay,options,()=>assert.fail("replay must not execute effects"));
+    assert.equal(replay.headers["retry-after"],statusCode===202?"2":undefined);
+    assert.equal(replay.headers["set-cookie"],undefined);
+    assert.equal(replay.headers["idempotency-replayed"],"true");
+  }
+  const { manager } = createManager(recordingStore());
+  for (const retryAfterSeconds of [0,-1,1.5,"2",null,Number.MAX_SAFE_INTEGER+1]) {
+    assert.throws(()=>manager.routeOptions({ enabled:true,retryAfterSeconds },"post /api/v1/orders"),/positive integer/);
+  }
+  assert.deepEqual(manager.routeOptions({ enabled:true },"post /api/v1/orders"),routeOptions);
+});
