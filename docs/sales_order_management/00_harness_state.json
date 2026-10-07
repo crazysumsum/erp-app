@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 177,
+  "revision": 179,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "be036025a6f9134966fbd719157aa358666a2182",
-    "source_fingerprint": "e1415650a46b5fda90047a176cfd49a750b0b91ea4554eb57e86f05c5912b040",
+    "code_commit": "5ec5ca08363f1f49f04a8965d4d56d0aa36ecb3e",
+    "source_fingerprint": "529fded450b5f6f24325973d41e7c7b8952c0967f90224104d6f52dab836f83d",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -2843,6 +2843,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-ui-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "dd9eb763532be735f066c076299aae715853a0ef2ba486d9f98367f7a5a7e491",
+      "source_ref": "Genuine uncommittedPhaseA404/Draft cannot justify abandoning originalUUID; actual browser RED retained. Superseded by fixed R2. Exact nine/sevenfile digest755b7e40f8660ce8a7ed0661eeb57be625b8e6bc7c631ee91ffe18699ed0113b; report53/private source proof.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 1,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-ui-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "529fded450b5f6f24325973d41e7c7b8952c0967f90224104d6f52dab836f83d",
+      "source_ref": "Actual independent10realbrowser/83client/build/lintPASS, owned app/Vite stopped/fixtures cleaned, no outstanding HIGH/CRITICAL in UI scope; DEC022API finding remains outside approval. Exact nine/sevenfile digest212fdd2b9a04a50d74a5f674229a1b88894dc7788784c55dda4af30496c80017; report53/private source proof.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4286,6 +4310,17 @@
       "source_ref": "Actual native task031-poll-lock-fixed.log25PASS0skip, preservedRED blockedlookup>200ms with trueWarehousecontention. Unit68PASS0skip/npmrunlint0. Only3fixfiles covered; nextAPI uncommitted outside approval.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T01:52:35.305524+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK031 real UI/HTTP/Inventory browser developer verification and UUID race correction",
+      "code_commit": "5ec5ca08363f1f49f04a8965d4d56d0aa36ecb3e",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "529fded450b5f6f24325973d41e7c7b8952c0967f90224104d6f52dab836f83d",
+      "status": "PASS",
+      "source_ref": "Report53 actual Playwright10PASS/client83PASS/build+lint0; nativeactions4PASS. UI R1 genuine RED retained; separate R2APPROVE. API cached202RED outside this scope remains unresolved DEC022.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T02:25:04.607432+00:00"
     }
   ],
   "pending_decisions": [
@@ -5081,6 +5116,14 @@
       "idempotency_key": "sales-p2-final-migrations-erp_sales_phase2_final_bc29327195e3",
       "status": "CONFIRMED",
       "source_ref": "Actual fresh final schema create; fulloriginal migrator/rerun each exit0; finalnative11PASS0fail/skip. Private logs/env bind final source18429754; oldschema retained."
+    },
+    {
+      "id": "ACT-P2-TASK031-OWNED-BROWSER-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Existing owned MySQL erp_sales_phase2_final_bc29327195e3/runtime-f937f82592e9/mysql-primary; synthetic fixture-only real HTTP/Vite loopback ephemeral private ports and owned Playwright child; no auth bypass",
+      "idempotency_key": "sales-p2-task031-browser-20261007-actual-loopback-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual runs browser02/04 each8PASS then independent review10PASS with new native race cases. All failures retained privately. Actual reviewer app/Vite closed/fixtures cleaned; owned MySQL retained. Report53/exact source proof. No formal/merge claim."
     }
   ],
   "evidence_files": [
@@ -5213,5 +5256,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "DEC022 decision remains OPEN; only unaffected authorized client preparation continues. Commit4 reviewedclientfiles+reports/state; finish actualUI/browser preparation, no header/canonical proposal applied."
+  "next_safe_action": "DEC022 exact shared/canonical patches remain unapplied pending direct human adoption; retain original adopted scope. Commit independently reviewed UI/action/browser slices with explicit files; TASK032 may proceed independently under DEC021, wholePhase merge blocked."
 }
