@@ -28,5 +28,8 @@ export default {
   createOrder(payload) { return write("/api/v1/sales-orders/create", payload); },
   updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); },
   confirmOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirm`,payload,{signal}); },
+  withdrawOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirmation/withdraw`,payload,{signal}); },
+  cancelOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/cancel`,payload,{signal}); },
+  closeRemainingOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/close-remaining`,payload,{signal}); },
   getOperation(eventId,{signal}={}) { return httpClient.get(`/api/v1/sales-operations/by-event/${eventId}`,{signal}); }
 };
