@@ -1,4 +1,4 @@
-> Proposed P1 activation (DEC-015, pending human decision): TASK-012~027 / PHASE-002; P0 merged via PR #174. Historical TASK-001~011 approvals remain valid for their recorded baselines. No P1 implementation until the proposed scope/contract is approved.
+> P1 observed merged via PR #184 at main6936736; exact checkpoint160 and evidence recovered. P2 activation DEC-021 proposal covers TASK-028–037 / PHASE-003; existing human commit/PR/merge authorization persists. New worker/deployment/command scope remains pending its concrete decision.
 
 # Sales Order Management 開發執行計劃（Harness Aligned）
 
@@ -867,7 +867,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P2-T01、P1-T04。
 
-**Files likely touched：** `SalesOrderConfirmationService.js`、`salesOrderStateMachine.js`、`server/test/salesOrderConfirmationService.test.js`、`server/test-support/fakeSalesDatabase.js`。
+**Files likely touched：** `SalesOrderConfirmationService.js`、`salesOrderStateMachine.js`、`server/test/sales/phase2/SalesOrderConfirmationService.test.js`、`server/test-support/fakeSalesDatabase.js`。
 
 **Acceptance criteria：**
 - [ ] 同event同payload重送回原狀態；不同payload或stale version拒絕。
@@ -888,7 +888,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P2-T02、P0-T10。
 
-**Files likely touched：** `SalesOrderConfirmationService.js`、`salesProjections.js`、`server/test/salesOrderConfirmationService.test.js`、`server/test/integration/salesConfirmation.integration.test.js`。
+**Files likely touched：** `SalesOrderConfirmationService.js`、`salesProjections.js`、`server/test/sales/phase2/SalesOrderConfirmationService.test.js`、`server/test/integration/salesConfirmation.integration.test.js`。
 
 **Acceptance criteria：**
 - [ ] Full、partial、zero ATP都成功CONFIRMED，逐line`reserved + backorder = ordered`。
@@ -935,7 +935,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P2-T03。
 
-**Files likely touched：** `SalesJobRuntimeService.js`、`SalesConfirmationRecoveryJob.js`、`server/test/salesConfirmationRecoveryJob.test.js`、`server/config/scheduler.js`。
+**Files likely touched：** `SalesJobRuntimeService.js`、`SalesConfirmationRecoveryJob.js`、`server/test/sales/phase2/SalesConfirmationRecoveryJob.test.js`、`server/config/scheduler.js`。
 
 **Acceptance criteria：**
 - [ ] Job只claim過期lease，使用原event且遵守AbortSignal／bounded batch。
@@ -956,7 +956,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P2-T03、P0-T10。
 
-**Files likely touched：** `SalesOrderLifecycleService.js`、`salesOrderLifecycleHandlers.js`、`server/test/salesOrderLifecycleService.test.js`、一個lifecycle integration test。
+**Files likely touched：** `SalesOrderLifecycleService.js`、`salesOrderLifecycleHandlers.js`、`server/test/sales/phase2/SalesOrderLifecycleService.test.js`、一個lifecycle integration test。
 
 **Acceptance criteria：**
 - [ ] Withdraw只限零fulfilled Confirmed並要求5～500字原因；release完成後才回Draft。
@@ -1003,7 +1003,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P2-T01、P2-T03。
 
-**Files likely touched：** `SalesBackorderService.js`、`runSalesBackorderAllocationHandler.js`、`server/test/salesBackorderService.test.js`、一個Backorder integration test。
+**Files likely touched：** `SalesBackorderService.js`、`runSalesBackorderAllocationHandler.js`、`server/test/sales/phase2/SalesBackorderService.test.js`、一個Backorder integration test。
 
 **Acceptance criteria：**
 - [ ] 同Warehouse＋SKU按`priorityAt,orderId,lineNo`配貨，無priority input或插隊API。
@@ -1024,7 +1024,7 @@ P0 Inventory contract ─────────┘          |
 
 **Dependencies：** P2-T08。
 
-**Files likely touched：** `SalesBackorderAllocationJob.js`、`BackorderAllocationDialog.vue`、`SalesOrderDetailPage.vue`、`server/test/salesBackorderJob.test.js`、一個client dialog test。
+**Files likely touched：** `SalesBackorderAllocationJob.js`、`BackorderAllocationDialog.vue`、`SalesOrderDetailPage.vue`、`server/test/sales/phase2/SalesBackorderJob.test.js`、一個client dialog test。
 
 **Acceptance criteria：**
 - [ ] Scheduled與manual trigger共用global lease；manual只wake，不開第二個allocator。
@@ -1920,15 +1920,15 @@ Durable confirmation, Reservation/Backorder and lifecycle/recovery.
 
 ### Entry criteria
 
-PHASE-002 plus Inventory owner/DBA approval。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+PHASE-002 observedMERGED plus DEC-021 human/owner adoption of the exact worker/deployment contract and owned synthetic schema/migration runtime.另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
 
 ### Acceptance criteria
 
-TC-021–033; UAT-038–064。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+IMPLEMENT merge requires all28 approved developer contracts with actual assertions, zero prohibited skips, unchanged coverage/security thresholds, exactcandidate mandatory CI and actual separate review. Formal TC-021–033 and UAT-038–064 remain mandatory under later TEST_AND_VERIFY/business acceptance; implementation merge is not formal acceptance. TC-033 developer proof is the whole Phase gate, never an empty passing test.
 
 ### Integration and regression
 
-必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+必跑套件：全部23項 PHASE-002 developer regressions plus sales-phase003-unit/native/client/browser/performance，共28項。All10 Inventory native suites remain required; only the four historically named cross-module release/scale cases retain their original deferral: Customer TC064 import10k (`server/test/performance/customerImport.performance.test.js`), Customer TC028 100k lookup (`server/test/performance/customerManagement.performance.test.js`), Inventory TASK018 (`server/test/performance/inventoryCore.performance.test.js`), Item TC012/T35 2.1M (`server/test/performance/itemManagement.performance.test.js`), exactly as implementation/15_phase0_validation_decision.md.跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
 
 ### Git and merge plan
 
@@ -1940,7 +1940,7 @@ One commitment/lifecycle PR; rollback by route/job disable plus forward fix afte
 
 ### Exit criteria
 
-全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-021–033; UAT-038–064 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-001/002/004。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；全28 developer suites、exactcandidate CI、真應用 Playwright／native concurrency/crash/performance與 separate review 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：P2 activation proposal DEC-021 pending, not implemented.Gate 失敗時須重新執行整個對應 Phase 測試週期。
 
 ## PHASE-004 — CSV v1 and canonical Channel intake with dedupe, worker recovery and UI.
 
@@ -2766,6 +2766,20 @@ Commit：`feat: complete draft sales order inquiry`。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
 
+### P2 execution slices and supplemental scope — DEC-021 proposal
+
+TASK-028 uses the next two available migration numbers only after fresh owner coordination; patterns are create_sales_order_line_reservations and create_sales_backorder_entries, with real FK/quantity/owner/immutable-priority/clean-upgrade-rerun tests. No number is reserved here (observed main highest0077).
+
+TASK-029 adds confirmation command/status/lease behavior to the existing SalesOperationService and Phase-A service/tests in `server/test/sales/phase2/`; each atomic slice stays within five main files. TASK-030 adds Phase B/native/provider-output rollback assertions; recovery retains initiating user, while the separately owner-approved worker sibling is implemented/tested before TASK-035. Inventory worker source, exact inventoryConstants.js two worker reserve types, provider tests and owner Design are exact supplemental scope, not unrestricted Inventory rewrite.
+
+TASK-031 is split into API/operation lookup/schema and command-event composable/UI slices; composable lives in `client/src/composables/sales/`, tests in matching client/test scope. TASK-032/036 reuse SalesJobRuntimeService, a Sales-runtime adapter selecting the fixed actually registered job and calling Scheduler.execute(job) after enabled/started/not-stopped checks; the existing overlap/cluster lease and exact two SalesJobs job paths, config and strict serviceContainer metadata tests. No framework registry/wake API is added.
+
+TASK-033 first delivers and verifies the thin Sales-owned guard under the explicitly adopted deployment contract, then separate domain/HTTP lifecycle slices; no Fulfillment business tables or Shipment feature. TASK-034/036 deliver dialogs/status timeline/quantities/manual wake and real Playwright. Existing SalesInquiryService supplies truthful allowedActions, history and stable quantities for the new states.
+
+TASK-037 developer read-only reconciliation/controlled process crash/commit-ack-loss/performance checks live under existing Sales test/integration scope. The 50-user test times completed confirmation (200 terminal or 202 polled to terminal), including mixed1/100-line documents and actual recovery/backorder background, P95<=3seconds, no pool starvation. Concurrent20/100 orders must preserve ATP/quantities. Record workload duration/distribution/warmup/hardware/pool/version/samples/quantile and every excluded dependency failure. P3 import and full DR/release loads remain in their own stages; no reduced-capacity substitute.
+
+Shared `server/scripts/checkCoverageFloors.js` adds only confirmation/lifecycle/backorder service floors95%lines/90%branches/90%functions; all34 existing floors and global92/83/90 remain. Every scoped behavioral change starts with a reproducible failing test, has focused checks/lint and UI build/browser checks where relevant, and an atomic commit. New suites have no stub PASS; formal60 and UAT remain intact.
+
 ## TASK-028 — 建立Reservation mapping與Backorder persistence
 
 ### Goal
@@ -2802,7 +2816,7 @@ Commit：`feat: add sales commitment persistence`。
 
 ### Approach
 
-預計變更範圍：`SalesOrderConfirmationService.js`、`salesOrderStateMachine.js`、`server/test/salesOrderConfirmationService.test.js`、`server/test-support/fakeSalesDatabase.js`。
+預計變更範圍：`SalesOrderConfirmationService.js`、`salesOrderStateMachine.js`、`server/test/sales/phase2/SalesOrderConfirmationService.test.js`、`server/test-support/fakeSalesDatabase.js`。
 
 依賴：P2-T01、P1-T04。
 
@@ -2830,7 +2844,7 @@ Commit：`feat: persist recoverable sales confirmation intents`。
 
 ### Approach
 
-預計變更範圍：`SalesOrderConfirmationService.js`、`salesProjections.js`、`server/test/salesOrderConfirmationService.test.js`、`server/test/integration/salesConfirmation.integration.test.js`。
+預計變更範圍：`SalesOrderConfirmationService.js`、`salesProjections.js`、`server/test/sales/phase2/SalesOrderConfirmationService.test.js`、`server/test/integration/salesConfirmation.integration.test.js`。
 
 依賴：P2-T02、P0-T10。
 
@@ -2860,6 +2874,8 @@ Commit：`feat: confirm sales orders with atomic inventory reservation`。
 
 預計變更範圍：`confirmSalesOrderHandler.js`、`salesOperationLookupHandler.js`、`useSalesCommandEvent.js`、`SalesOrderDetailPage.vue`、一個client/server contract test。
 
+DEC-022 supplemental slice: `server/src/services/idempotency/IdempotencyService.js` and `server/test/idempotencyService.test.js` add/verify the optional fixed202 replay retry delay; actual native HTTP replay must retain Retry-After2 and fresh permission rejection. No cache/store/security weakening; all original Phase gates remain.
+
 依賴：P2-T03。
 
 規格追溯：FR-CONF-001～020、NFR availability；Design §5.5、§6.3–6.4。
@@ -2886,7 +2902,7 @@ Commit：`feat: expose recoverable sales confirmation flow`。
 
 ### Approach
 
-預計變更範圍：`SalesJobRuntimeService.js`、`SalesConfirmationRecoveryJob.js`、`server/test/salesConfirmationRecoveryJob.test.js`、`server/config/scheduler.js`。
+預計變更範圍：`SalesJobRuntimeService.js`、`SalesConfirmationRecoveryJob.js`、`server/test/sales/phase2/SalesConfirmationRecoveryJob.test.js`、`server/config/scheduler.js`。
 
 依賴：P2-T03。
 
@@ -2914,7 +2930,7 @@ Commit：`feat: recover interrupted sales confirmations`。
 
 ### Approach
 
-預計變更範圍：`SalesOrderLifecycleService.js`、`salesOrderLifecycleHandlers.js`、`server/test/salesOrderLifecycleService.test.js`、一個lifecycle integration test。
+預計變更範圍：`SalesOrderLifecycleService.js`、`salesOrderLifecycleHandlers.js`、`server/test/sales/phase2/SalesOrderLifecycleService.test.js`、一個lifecycle integration test。
 
 依賴：P2-T03、P0-T10。
 
@@ -2970,7 +2986,7 @@ Commit：`feat: add sales lifecycle controls`。
 
 ### Approach
 
-預計變更範圍：`SalesBackorderService.js`、`runSalesBackorderAllocationHandler.js`、`server/test/salesBackorderService.test.js`、一個Backorder integration test。
+預計變更範圍：`SalesBackorderService.js`、`runSalesBackorderAllocationHandler.js`、`server/test/sales/phase2/SalesBackorderService.test.js`、一個Backorder integration test。
 
 依賴：P2-T01、P2-T03。
 
@@ -2998,7 +3014,7 @@ Commit：`feat: allocate sales backorders in fifo order`。
 
 ### Approach
 
-預計變更範圍：`SalesBackorderAllocationJob.js`、`BackorderAllocationDialog.vue`、`SalesOrderDetailPage.vue`、`server/test/salesBackorderJob.test.js`、一個client dialog test。
+預計變更範圍：`SalesBackorderAllocationJob.js`、`BackorderAllocationDialog.vue`、`SalesOrderDetailPage.vue`、`server/test/sales/phase2/SalesBackorderJob.test.js`、一個client dialog test。
 
 依賴：P2-T08。
 

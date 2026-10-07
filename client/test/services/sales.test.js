@@ -40,4 +40,17 @@ describe("Sales Quotation client contract", () => {
     await sales.getOrder(8,{signal:"abort-order"});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/sales-orders/8",{signal:"abort-order"});
   });
   it("maps bounded Active SO pagination and exact source filters",async()=>{httpClient.get.mockResolvedValue({items:[{id:8}],total:11});await expect(sales.listOrders({page:2,rowsPerPage:10,filter:"customer",number:"SO-202610-000008",externalOrderId:"case_%",channelCode:"WEB",hasBackorder:false,status:["DRAFT"],signal:"abort"})).resolves.toEqual({rows:[{id:8}],rowsNumber:11});expect(httpClient.get).toHaveBeenCalledWith("/api/v1/sales-orders",{params:{page:2,pageSize:10,q:"customer",number:"SO-202610-000008",externalOrderId:"case_%",channelCode:"WEB",hasBackorder:false,status:["DRAFT"]},signal:"abort"});});
+  it("confirms and polls by the same event and forwards cancellation without including the signal in the body",async()=>{
+    const payload={eventId:"original-event",version:3},signal=new AbortController().signal;
+    await sales.confirmOrder(8,payload,{signal});expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-orders/8/confirm",{idempotent:true,idempotencyKey:payload.eventId,body:payload,signal});
+    await sales.getOperation(payload.eventId,{signal});expect(httpClient.get).toHaveBeenLastCalledWith("/api/v1/sales-operations/by-event/original-event",{signal});
+  });
+});
+it("TC-029 lifecycle routes retain original event/reason/version and request cancellation",async()=>{
+ const payload={eventId:"life-event",version:3,reason:"客戶調整訂單"},signal=new AbortController().signal;
+ for(const [method,path] of [["withdrawOrder","confirmation/withdraw"],["cancelOrder","cancel"],["closeRemainingOrder","close-remaining"]]){await sales[method](8,payload,{signal});expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/sales-orders/8/${path}`,{idempotent:true,idempotencyKey:payload.eventId,body:payload,signal});}
+});
+it("TC-027 manual FIFO wake sends only scope with a transport key and cancellation",async()=>{
+ const signal=new AbortController().signal;await sales.runBackorderAllocation({orderId:8},{idempotencyKey:"wake-intent",signal});
+ expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-backorders/allocations/run",{idempotent:true,idempotencyKey:"wake-intent",body:{orderId:8},signal});
 });
