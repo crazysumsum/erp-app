@@ -131,7 +131,8 @@ const exportAudits = async (userId) => (await h.db.query(
 integrationTest("TASK-047 (HD-067 2A): the export is the list's rows in the list's order, under the import template v1 header", async () => {
   const user = await makeUser("list", ["supplier.mgmt", "supplier.view"]);
   const tag = randomUUID().slice(0, 6).toUpperCase();
-  const term = await seedPaymentTerm(`T47-${tag}`, "INACTIVE");
+  // `=` 開頭：Business Master 接受呢種 Code，匯出都要防公式（REV-075 L-3）。
+  const term = await seedPaymentTerm(`=T47-${tag}`, "INACTIVE");
   const base = Date.now() - 60_000;
   const ids = {
     b: await seedSupplier({ code: `EXB-${tag}`, name: `Export B ${tag}`, updatedAt: base + 3, paymentTermId: term,
@@ -157,8 +158,8 @@ integrationTest("TASK-047 (HD-067 2A): the export is the list's rows in the list
   const b = Object.fromEntries(SUPPLIER_IMPORT_COLUMN_NAMES.map((name, index) => [name, all.records[1][index]]));
   assert.deepEqual(
     [b.supplierCode, b.supplierName, b.displayName, b.defaultCurrencyCode, b.paymentTermCode, b.website, b.generalEmail, b.notes],
-    [`EXB-${tag}`, `Export B ${tag}`, "Bee", "HKD", `T47-${tag}`, "https://b.example.com", "b@example.com", "plain note"],
-    "an inactive payment term still exports its code");
+    [`EXB-${tag}`, `Export B ${tag}`, "Bee", "HKD", `'=T47-${tag}`, "https://b.example.com", "b@example.com", "plain note"],
+    "an inactive payment term still exports its code, guarded");
   for (const name of SUPPLIER_IMPORT_COLUMN_NAMES.slice(column("addressLabel"))) assert.equal(b[name], "", `${name} stays empty`);
 
   for (const [filters, expected] of [

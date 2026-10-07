@@ -75,10 +75,12 @@ test("the apostrophe the export adds before a formula character is taken off aga
 });
 
 test("unguard is exactly the inverse of guard", () => {
-  for (const value of ["=1", "+852", "-2", "@x", "\tx", "\rx", "\nx", "＝1", "＋1", "－1", "＠x", "plain", "", "'x", "''=x", "a'=b"]) {
+  for (const value of ["=1", "+852", "-2", "@x", "\tx", "\rx", "\nx", "＝1", "＋1", "－1", "＠x", "plain", "", "'x", "''=x", "a'=b",
+    // 本身已經係 `'` 加公式字元開頭（REV-075 L-1）。
+    "'=x", "''=x", "'''+1", "'+852 desk", "'-", "'@x", "'\tx", "'＝x", "'＠x"]) {
     assert.equal(unguardSpreadsheetCell(guardSpreadsheetCell(value)), value, JSON.stringify(value));
   }
-  for (const untouched of ["'x", "'", "''=x", "' +852"]) assert.equal(unguardSpreadsheetCell(untouched), untouched);
+  for (const untouched of ["'x", "'", "''", "' +852", "a'=b"]) assert.equal(unguardSpreadsheetCell(untouched), untouched);
 });
 
 test("create requires Supplier Code, name and currency, and uses the API's rules for everything else", async () => {

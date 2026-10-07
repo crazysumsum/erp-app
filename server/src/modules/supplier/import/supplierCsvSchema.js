@@ -83,8 +83,10 @@ export const SUPPLIER_IMPORT_RESULT_COLUMNS = Object.freeze([
  * 試算表公式注入（設計 §6.9）：以 `=`、`+`、`-`、`@`、Tab 或換行開頭嘅 cell 會被試算表當公式，
  * 前面加 `'` 令佢變返文字。全形嘅 `＝＋－＠` 都計（OWASP CSV Injection；REV-073 L-1）。
  */
-const FORMULA_LEAD = /^[=+\-@\t\r\n＝＋－＠]/u;
-const GUARDED_FORMULA_LEAD = /^'[=+\-@\t\r\n＝＋－＠]/u;
+// Guard 會喺「零個或以上 `'`，跟住公式字元」前面加一個 `'`；unguard 只會喺「一個或以上 `'`，跟住公式字元」拎走一個。
+// 咁兩者就係真正嘅反函數：本身已經係 `'=…` 嘅值會變 `''=…`，匯返入又變返 `'=…`（REV-075 L-1）。
+const FORMULA_LEAD = /^'*[=+\-@\t\r\n＝＋－＠]/u;
+const GUARDED_FORMULA_LEAD = /^'+[=+\-@\t\r\n＝＋－＠]/u;
 
 export function guardSpreadsheetCell(value) {
   const text = value === null || value === undefined ? "" : String(value);

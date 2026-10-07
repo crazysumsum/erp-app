@@ -56,15 +56,13 @@ export class SupplierExportService {
       return guardSpreadsheetCell(ROOT_COLUMNS[name] ? row[ROOT_COLUMNS[name]] : "");
     }));
 
+    // 先砌好檔案先寫稽核：砌唔到就唔會有一條「已匯出」嘅紀錄（REV-075 I-3）。
+    const content = stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...records], SUPPLIER_CSV_STRINGIFY_OPTIONS);
     await this.database.withTransaction((connection) => this.audit.record(connection, {
       actorUserId: actorId, actorUsername: actor.username, action: "supplier.export", targetType: "export",
       targetLabel: "suppliers", detail: { metadata: { filters }, count: rows.length }, requestId, ip
     }));
     const stamp = new Date(this.time.nowMs()).toISOString().replace(/[-:]/gu, "").replace(/\.\d+Z$/u, "Z");
-    return {
-      fileName: `suppliers-${stamp}.csv`,
-      content: stringify([SUPPLIER_IMPORT_COLUMN_NAMES, ...records], SUPPLIER_CSV_STRINGIFY_OPTIONS),
-      rowCount: rows.length
-    };
+    return { fileName: `suppliers-${stamp}.csv`, content, rowCount: rows.length };
   }
 }

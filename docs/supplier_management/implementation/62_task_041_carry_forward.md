@@ -650,7 +650,7 @@ New obligations T47 creates:
 
 | Task | Obligation |
 | --- | --- |
-| T49 | Measure the export at 10,000 rows (built in memory, one query plus one Business Master lookup per distinct payment term). |
+| T49 | Measure the export at 10,000 rows (built in memory, one query plus one Business Master lookup per distinct payment term). REV-075 L-4 measured on the real API with 10,000 maximum-length Suppliers: a 69 MB file in about 394 ms, RSS from 146 MB to 678 MB; six concurrent exports by one user peaked at 1.35 GB RSS, with no concurrency limit. T49 decides whether to add a per-process concurrency gate or stream the CSV (`csv-stringify` stream into the response). |
 
 ## Mutation record for TASK-047
 

@@ -1445,9 +1445,10 @@ integrationTest("TASK-047 (HD-067 2A, HD-068 A): an exported file re-imports as 
   const owner = await makeUser("rt", ["supplier.mgmt"], { withPassword: true });
   const tag = randomUUID().slice(0, 6).toUpperCase();
   const id = await seedSupplier({ code: `RT-${tag}`, name: `=Round Trip ${tag}` });
+  // 本身已經係 `'` 加公式字元開頭嘅值（REV-075 L-1）。
   await h.db.execute(
-    "UPDATE suppliers SET display_name = '＠RT', general_phone = '+852 2123 4567', general_email = 'rt@example.com', notes = '-plain' WHERE id = ?",
-    [id]);
+    "UPDATE suppliers SET display_name = '＠RT', general_phone = '+852 2123 4567', general_email = 'rt@example.com', notes = ? WHERE id = ?",
+    ["'=SUM(1,2) kept literally", id]);
   const fields = (row) => [row.supplier_name, row.display_name, row.general_phone, row.general_email, row.notes, row.website,
     row.default_currency_code, row.default_payment_term_id, row.status];
   const before = fields(await supplierByCode(`RT-${tag}`));
@@ -1457,13 +1458,14 @@ integrationTest("TASK-047 (HD-067 2A, HD-068 A): an exported file re-imports as 
   const { content } = await exporter.exportCsv({
     actorId: owner.userId, claimedRoles: [owner.roleName], claimedPermissions: owner.permissions, filters: { q: `RT-${tag}` } });
   assert.match(content, /'\+852 2123 4567/u, "the exported file carries the formula guard");
+  assert.ok(content.includes("''=SUM(1,2) kept literally"), "an already-guarded-looking value gets one more apostrophe");
 
   const created = await httpUpload(owner, Buffer.from(content, "utf8"), { mode: "upsert" });
   assert.equal(created.status, 201, JSON.stringify(created.body));
   assert.equal((await precheck(created.job.id)).status, "ready");
   const [[row]] = await h.db.query("SELECT operation, status, normalized_payload FROM supplier_import_rows WHERE job_id = ?", [created.job.id]);
-  assert.deepEqual([row.operation, row.status, row.normalized_payload.root.generalPhone, row.normalized_payload.root.supplierName],
-    ["update", "valid", "+852 2123 4567", `=Round Trip ${tag}`]);
+  assert.deepEqual([row.operation, row.status, row.normalized_payload.root.generalPhone, row.normalized_payload.root.supplierName,
+    row.normalized_payload.root.notes], ["update", "valid", "+852 2123 4567", `=Round Trip ${tag}`, "'=SUM(1,2) kept literally"]);
 
   const { version } = await job(created.job.id);
   const confirmed = await confirmJob(owner, created.job.id, { version: Number(version), activationMode: "draft" });
