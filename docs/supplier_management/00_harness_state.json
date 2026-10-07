@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 282,
+  "revision": 283,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1793,6 +1793,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 4a1f488274afa8bedcbd7476cade04b798f11e6c (PR #181)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/77_rev_074_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-075",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-047)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 950cfb1f71c3b8f62c463fa71f4089b599c7760b (PR #185)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/78_rev_075_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4518,6 +4530,19 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-06: 'A'."
+    },
+    {
+      "id": "HD-069",
+      "impact": "MINOR",
+      "question": "REV-075 (TASK-047, approved) follow-ups: L-1 guard/unguard not inverse for values already starting with ' plus a formula character; L-2 an export of a Supplier whose payment term (or currency) is inactive does not re-import; L-3 no test for a formula-leading payment term code; L-4 memory at the 10,000-row cap; I-1 refused exports leave no Supplier audit; I-3 audit written before the CSV is built. Recommended: fix L-1, L-3, I-3; L-2 (A) accept the target's current inactive value on update rows; L-4 to T49; I-1 unchanged.",
+      "affected_ids": [
+        "TASK-047",
+        "TASK-043",
+        "TASK-049",
+        "REV-075"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: '全部按建議'. L-2 (A) as recommended proved impossible: the Supplier update path (UI and import) refuses any change while the default currency or payment term is inactive, as requirement 01 §14 ('Default Currency 已停用 → 阻止啟用或修改') and §6.6 require, so the import cannot keep them. Asked again; Product Owner, 2026-10-07: 'A' = refuse such update rows at precheck (CURRENCY_NOT_ACTIVE / PAYMENT_TERM_NOT_ACTIVE) unless the row moves the field to an active value."
     }
   ],
   "external_actions": [
@@ -5594,5 +5619,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-047 on claude/supplier-task-047 per HD-067 and HD-068 (A): implemented and tested; mutation sweep, PR, CI and independent review next. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-047: REV-075 APPROVED 950cfb1; HD-069 follow-ups done (L-1 inverse guard, L-2 precheck refusal, L-3 test, I-3 order, L-4 to T49). Re-run the CI-style suite and mutants, push PR #185, wait for CI and the Product Owner's word. Merge only on the Product Owner's word."
 }

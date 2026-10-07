@@ -97,4 +97,14 @@ Environment: all servers were stopped by PID, the worktree is clean at `950cfb1f
 
 - **I-2:** already covered. The T46 test `server/test/supplierImportResultHandlers.test.js:39` asserts that `\rx` and `\nx`
   are guarded, so M19 is killed by a file the reviewer did not include in its mutant runs.
-- **The other findings:** taken to the Product Owner (HD-069).
+- **The other findings:** taken to the Product Owner (HD-069, "全部按建議"). The table records what was done, at revision 283.
+
+| Finding | Follow-up |
+| --- | --- |
+| L-1 | **Fixed.** Guard and unguard are now exact inverses. The guard adds `'` to any value made of zero or more `'` followed by a formula character; the unguard strips one `'` only from one or more `'` followed by one. A stored `'=SUM(…)` now exports as `''=SUM(…)` and re-imports as `'=SUM(…)`. The inverse unit test covers `'=x`, `''=x`, `'''+1` and full-width forms, and the integration round trip includes such a note. |
+| L-2 | **Not as first recommended.** Accepting the Supplier's own inactive value on update rows proved impossible. The Supplier update path, which both the UI and the import use, refuses any change while the default currency or payment term is inactive. That is what requirement 01 §14 ("Default Currency 已停用 → 阻止啟用或修改") and §6.6 ask for. Re-asked; the Product Owner chose **A: refuse at precheck.** An update row for such a Supplier is now invalid at precheck with `CURRENCY_NOT_ACTIVE` / `PAYMENT_TERM_NOT_ACTIVE`, unless the row moves the field to an active value. Before this, it passed precheck and failed at execution. A unit test and an integration test (export a Supplier whose currency was retired, re-import it, precheck it, nothing written) cover this. Exporting such a Supplier is unchanged. |
+| L-3 | **Fixed.** The export integration test uses an inactive payment term coded `=T47-…` and expects `'=T47-…`. |
+| L-4 | **Recorded for T49** with the reviewer's numbers, in the carry-forward. No code change now. |
+| I-1 | **Unchanged** (recommended): refused exports keep no Supplier audit row; a wrong password stays in the auth system log. |
+| I-3 | **Fixed.** The CSV is built before the audit is written. |
+| I-4 | No change (the existing pattern). |
