@@ -10,7 +10,7 @@ import {
 } from "../supplierNormalization.js";
 import {
   isBankColumn, SUPPLIER_IMPORT_CHILD_COLUMNS, SUPPLIER_IMPORT_COLUMN_NAMES, SUPPLIER_IMPORT_COLUMNS,
-  SUPPLIER_IMPORT_TEMPLATE_DESCRIPTION_MARKER, SUPPLIER_IMPORT_TEMPLATE_EXAMPLE_MARKER
+  SUPPLIER_IMPORT_TEMPLATE_DESCRIPTION_MARKER, SUPPLIER_IMPORT_TEMPLATE_EXAMPLE_MARKER, unguardSpreadsheetCell
 } from "./supplierCsvSchema.js";
 
 /**
@@ -179,7 +179,9 @@ async function loadBatchLookups(connection, records) {
   if (ids.size) { conditions.push("id IN (?)"); params.push([...ids]); }
   if (codeKeys.size) { conditions.push("supplier_code_key IN (?)"); params.push([...codeKeys]); }
   const [suppliers] = conditions.length
-    ? await connection.query(`SELECT id, supplier_code_key, status, version FROM suppliers WHERE ${conditions.join(" OR ")}`, params)
+    ? await connection.query(
+      `SELECT id, supplier_code_key, status, version, default_currency_code, default_payment_term_id FROM suppliers
+        WHERE ${conditions.join(" OR ")}`, params)
     : [[]];
   const [identifiers] = identifierKeys.size
     ? await connection.query(
@@ -241,7 +243,7 @@ function match(record, mode, lookups, errors, bad) {
   return { operation: record.supplierId || target ? "update" : "create", code, target };
 }
 
-function rootPayload(record, operation, code, catalog, errors, bad) {
+function rootPayload(record, operation, code, target, catalog, errors, bad) {
   const create = operation === "create";
   const root = {};
   const given = (name) => Boolean(record[name]) && !bad.has(name);
@@ -265,6 +267,20 @@ function rootPayload(record, operation, code, catalog, errors, bad) {
     else issue(errors, "paymentTermCode", "PAYMENT_TERM_NOT_ACTIVE", "付款條款不存在或未啟用");
   } else if (create) {
     root.defaultPaymentTermId = null;
+  }
+  // 更新會保留冇填嘅幣別／付款條款，但修改一般資料時兩者都要係啟用中（需求 §14：Default Currency 已停用 → 阻止
+  // 修改；§6.6 付款條件同一方向），否則去到執行先失敗。喺預檢就講清楚（HD-069 L-2 A）。
+  if (target && !create) {
+    if (!root.defaultCurrencyCode && !errors.some((error) => error.field === "defaultCurrencyCode") &&
+        !catalog.currencies.has(target.default_currency_code)) {
+      issue(errors, "defaultCurrencyCode", "CURRENCY_NOT_ACTIVE", "供應商目前的預設幣別已停用，請改為啟用中的幣別");
+    }
+    const activeTermIds = new Set([...catalog.paymentTerms.values()].map((term) => Number(term.id)));
+    if (root.defaultPaymentTermId === undefined && !errors.some((error) => error.field === "paymentTermCode") &&
+        target.default_payment_term_id !== null && target.default_payment_term_id !== undefined &&
+        !activeTermIds.has(Number(target.default_payment_term_id))) {
+      issue(errors, "paymentTermCode", "PAYMENT_TERM_NOT_ACTIVE", "供應商目前的付款條款已停用，請改為啟用中的付款條款");
+    }
   }
   // 更新列：空白 = 保持原值（設計 §6.9），所以只放有填嘅欄位。
   const optional = [
@@ -329,7 +345,7 @@ async function checkRow(record, rowNumber, context) {
   const warnings = [];
   const bad = checkCells(record, errors);
   const { operation, code, target } = match(record, mode, lookups, errors, bad);
-  const root = rootPayload(record, operation, code, catalog, errors, bad);
+  const root = rootPayload(record, operation, code, target, catalog, errors, bad);
   let children = {};
   if (operation === "update") {
     if (SUPPLIER_IMPORT_CHILD_COLUMNS.some((name) => record[name])) {
@@ -434,8 +450,9 @@ export async function precheckSupplierCsv({
       if (isTemplateRow(values[0] ?? "") || values.every((value) => !value.trim())) continue;
       rowNumber += 1;
       if (rowNumber > maxRows) return jobError("SUPPLIER_IMPORT_TOO_MANY_ROWS", `CSV 超過 ${maxRows} 列上限`);
-      // 前導零、中英文照原樣保留；只去頭尾空白。
-      batch.push({ rowNumber, record: Object.fromEntries(headers.map((name, index) => [name, String(values[index] ?? "").trim()])) });
+      // 前導零、中英文照原樣保留；只去頭尾空白，同埋拎走匯出防公式加嘅 `'`（HD-068 A）。
+      batch.push({ rowNumber, record: Object.fromEntries(headers.map((name, index) =>
+        [name, unguardSpreadsheetCell(String(values[index] ?? "").trim())])) });
       if (batch.length >= batchSize) await flush();
     }
   } catch (error) {

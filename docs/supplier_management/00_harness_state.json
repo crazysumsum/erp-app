@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 280,
+  "revision": 285,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-046",
+  "current_task": "TASK-047",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t46-close",
-    "default_commit": "3c6561f67768ab17b5d0ad8e973b96abc82b5bd6",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t47-close",
+    "default_commit": "a1b8a6b351f596a768754dc4fd6888ad96b09c6b",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -74,7 +74,7 @@
     "TASK-044": "DONE",
     "TASK-045": "DONE",
     "TASK-046": "DONE",
-    "TASK-047": "PENDING",
+    "TASK-047": "DONE",
     "TASK-048": "PENDING",
     "TASK-049": "PENDING",
     "TASK-050": "PENDING",
@@ -974,6 +974,39 @@
         "framework_readme.en.md"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-067-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-067 1A. Authorises TASK-047 (claude/supplier-task-047) to change two shared files outside the Supplier module: the client HttpClient (a POST blob method and the file name from Content-Disposition) and server/config/security.js (expose Content-Disposition to the browser).",
+      "recorded_at": "2026-10-06T14:30:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "7717702acf7c40bad188ba61fb48c8e90b309be1",
+      "scope": [
+        "client/src/framework/http/HttpClient.js",
+        "server/config/security.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-070-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-070 A. Authorises a separate PR (claude/deps-shell-quote, PR #186) that changes only package-lock.json to bump shell-quote past GHSA-pqg4-j6r4-53mv.",
+      "recorded_at": "2026-10-07T11:20:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+      "scope": [
+        "package-lock.json"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1776,6 +1809,18 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 4a1f488274afa8bedcbd7476cade04b798f11e6c (PR #181)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/77_rev_074_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-075",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-047)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 950cfb1f71c3b8f62c463fa71f4089b599c7760b (PR #185)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/78_rev_075_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4252,7 +4297,7 @@
         "TASK-042"
       ],
       "status": "ANSWERED",
-      "answer_ref": "TASK-043's half discharged at revision 263 (PR #167). TASK-046's half (PR #181, merged at 3c6561f) holds by construction: under HD-063 1B the result CSV and the job's summary counts both come from supplier_import_rows, and an integration test compares them; recorded in implementation/62_task_041_carry_forward.md 'Status after TASK-046'. Reviewed by REV-073 and REV-074 (both APPROVED). PR #181 CI was all green on head 459722b before merge; main CI on the merge commit (run 37420985428) was still running when this was recorded."
+      "answer_ref": "TASK-043's half discharged at revision 263 (PR #167). TASK-046's half (PR #181, merged at 3c6561f) holds by construction: under HD-063 1B the result CSV and the job's summary counts both come from supplier_import_rows, and an integration test compares them; recorded in implementation/62_task_041_carry_forward.md 'Status after TASK-046'. Reviewed by REV-073 and REV-074 (both APPROVED). PR #181 CI was all green on head 459722b before merge; main CI on the merge commit (run 37420985428) completed green (revision 281)."
     },
     {
       "id": "HD-050",
@@ -4474,6 +4519,57 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-06: '建議' - as recommended."
+    },
+    {
+      "id": "HD-067",
+      "impact": "MAJOR",
+      "question": "TASK-047 general Supplier export, four points. (1) API: design §6.9 says GET /api/v1/supplier-exports with jwt-password, but passwordReauth reads the password from the request body, which a browser GET cannot send. (A) POST /api/v1/supplier-exports (jwt-password, supplier.mgmt), body {password, filters}, the response is the CSV itself: no job table, no stored file, nothing for T48 to purge (same reasoning as HD-063 1B); needs a POST blob method in the shared client HttpClient, and, while touching it, server/config/security.js exposes Content-Disposition and the client reads the file name from it (closes T46 I-2); (B) export jobs with a stored file like Customer (new table, schema sign-off, T48 scope grows); (C) keep GET with jwt only (weaker than the design). (2) Columns: (A) exactly the template v1 header; supplierId, supplierCode and root fields filled, the address/contact/identifier groups left empty, so the file re-imports as upsert without touching children; (B) template plus read-only status/version/updatedAt (breaks re-import); (C) A with one chosen primary child per group. (3) At most 10,000 rows, otherwise 422 SUPPLIER_EXPORT_TOO_LARGE asking for narrower filters. (4) An 'export CSV' button on the Supplier list using the current filters and a password prompt, validated with Playwright. Not decisions: no Bank table is read; csv-stringify with SUPPLIER_CSV_STRINGIFY_OPTIONS and the formula guard; filters and sort shared with the list; one supplier.export audit with the filters and row count only.",
+      "affected_ids": [
+        "TASK-047",
+        "TASK-046",
+        "TASK-048",
+        "DES-016",
+        "DES-011"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: '全部按建議' - 1A, 2A, 10,000-row cap, client button."
+    },
+    {
+      "id": "HD-068",
+      "impact": "MAJOR",
+      "question": "TASK-047 round trip: the formula guard prefixes ' to cells starting with = + - @ (and full-width forms, Tab, CR, LF), and the import kept the apostrophe, so re-importing an export turned '+852 2123 4567' into \"'+852 2123 4567\" and '=Beta' into \"'=Beta\" (seen in the real app at precheck; the job was cancelled). (A) The import strips exactly the apostrophe the guard adds (only when the next character is one the guard covers), in SupplierImportProcessor; a value genuinely starting with ' followed by such a character loses the apostrophe. (B) Leave the import and document that guarded cells must be edited before re-import. (C) Stop guarding the export (violates SEC-012).",
+      "affected_ids": [
+        "TASK-047",
+        "TASK-043",
+        "HD-067",
+        "SEC-012"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-06: 'A'."
+    },
+    {
+      "id": "HD-069",
+      "impact": "MINOR",
+      "question": "REV-075 (TASK-047, approved) follow-ups: L-1 guard/unguard not inverse for values already starting with ' plus a formula character; L-2 an export of a Supplier whose payment term (or currency) is inactive does not re-import; L-3 no test for a formula-leading payment term code; L-4 memory at the 10,000-row cap; I-1 refused exports leave no Supplier audit; I-3 audit written before the CSV is built. Recommended: fix L-1, L-3, I-3; L-2 (A) accept the target's current inactive value on update rows; L-4 to T49; I-1 unchanged.",
+      "affected_ids": [
+        "TASK-047",
+        "TASK-043",
+        "TASK-049",
+        "REV-075"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: '全部按建議'. L-2 (A) as recommended proved impossible: the Supplier update path (UI and import) refuses any change while the default currency or payment term is inactive, as requirement 01 §14 ('Default Currency 已停用 → 阻止啟用或修改') and §6.6 require, so the import cannot keep them. Asked again; Product Owner, 2026-10-07: 'A' = refuse such update rows at precheck (CURRENCY_NOT_ACTIVE / PAYMENT_TERM_NOT_ACTIVE) unless the row moves the field to an active value."
+    },
+    {
+      "id": "HD-070",
+      "impact": "MAJOR",
+      "question": "PR #185's Dependency audit fails on a new critical advisory GHSA-pqg4-j6r4-53mv (shell-quote >=1.8.4 <1.11.0, quote() command injection), reached only via the root devDependency concurrently@8.2.2 (shell-quote ^1.8.1); every branch is affected. (A) A separate lockfile-only PR (claude/deps-shell-quote) bumping shell-quote to the patched release, merged first, then main merged into #185; (B) the bump inside #185; (C) wait for another agent.",
+      "affected_ids": [
+        "package-lock.json",
+        "TASK-047"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: 'A'. PR #186 (claude/deps-shell-quote): shell-quote 1.10.0 -> 1.12.0, npm audit clean, concurrently smoke-tested."
     }
   ],
   "external_actions": [
@@ -5550,5 +5646,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-046 is DONE (PR #181 merged at 3c6561f; confirm main CI run 37420985428 is green). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting. Open carry-forward: HD-043 (closes with T48), HD-044 (T48), HD-057 (T51), and the T48/T49 obligations in implementation/62_task_041_carry_forward.md. Known limitations from T46: L-2 (DataTable pager page from a late request) and I-2 (result file name hard-coded on the client; exposing Content-Disposition is outside the module)."
+  "next_safe_action": "TASK-047 is DONE (PR #185 merged at a1b8a6b; PR CI on head 58ebb49 all green, main at 831bbe6 before the merge). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting (TASK-048 is ready; TASK-038 waits on the Item owner's approval of the supplier_sku_refs rename). Open carry-forward: HD-043 (closes with T48), HD-044 (T48), HD-057 (T51), and the T48/T49 obligations in implementation/62_task_041_carry_forward.md, including REV-075 L-4's 10,000-row export memory numbers for T49."
 }

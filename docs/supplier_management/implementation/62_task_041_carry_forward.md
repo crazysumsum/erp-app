@@ -612,3 +612,72 @@ the recommendations (HD-066).
 - **I-3** (the debounce flushes once on close) needs nothing.
 
 The T46 mutation list is now 35 (five more for HD-066, and patterns updated for the changed code); all 35 are killed.
+
+## Status after TASK-047
+
+T47 adds the general Supplier export: `POST /api/v1/supplier-exports` (`handlers/supplier-exports/supplierExportHandler.js`,
+`modules/supplier/SupplierExportService.js`) and an "匯出 CSV" button on `client/src/pages/suppliers/SuppliersPage.vue`.
+The open points were decided in HD-067 (1A, 2A, a 10,000-row cap, the button) and HD-068 (A).
+
+| Point | Status |
+| --- | --- |
+| HD-067 1A: method | **POST, not the design's GET.** `jwt-password` reads the password from the body, which a browser GET cannot send. The response is the CSV itself: no job table, no stored file, nothing for T48 to purge. No `Idempotency-Key`, because an export changes nothing. |
+| HD-067 2A: columns | **Exactly the import template v1 header.** `supplierId`, `supplierCode` and the root fields are filled; the address, contact and identifier groups stay empty, so the file re-imports as upsert without touching children. An inactive payment term still exports its code (looked up by ID through the Business Master provider). |
+| FR-IMPORT-009: filters, permission | **Shared with the list.** `supplierListQuery` was moved out of `listSuppliers`, so the list and the export run the same WHERE and ORDER BY; an integration test compares them for seven filter sets. `supplier.mgmt` plus the fresh-actor check. |
+| Cap | At most 10,000 rows: the query asks for one more, and finding it is a 422 `SUPPLIER_EXPORT_TOO_LARGE` with no audit and no file. |
+| BR-028, SEC-012: no Bank data, no live formula | **Done.** The query reads `suppliers` only. An integration test seeds a real encrypted bank account and finds none of its values in the file or the audit. Cells go through `guardSpreadsheetCell` and `SUPPLIER_CSV_STRINGIFY_OPTIONS` (BOM, CRLF, quoting). |
+| FR-AUDIT: one audit per export | `supplier.export`, target type `export`, with the effective filters (schema defaults included) and the count; a failed audit means no file. |
+| HD-068 A: round trip | The formula guard put `'` before an exported `+852 …` phone or `=…` name, and the import kept it, so re-importing the export changed data. The import now strips exactly the apostrophe the guard adds (`unguardSpreadsheetCell`, applied to every cell). An integration test exports, re-imports as upsert, executes, and finds every field unchanged. After REV-075 L-1 the two functions are exact inverses, so a value stored as `'=…` also survives. A hand-written CSV cell `'=x` is read as `=x`, as accepted in HD-068. One exception, by requirement: a Supplier whose default currency or payment term is inactive cannot be changed at all (requirement §14, §6.6), so its exported row is refused at precheck. |
+| T46 I-2: file name | **Closed.** `server/config/security.js` exposes `Content-Disposition`, `HttpClient.getBlob` returns `fileName`, and the new `HttpClient.postBlob` does the same; the export and both import downloads use the server's name and fall back to the old fixed one. Both shared files were approved for this task (APPROVAL-HD-067-SCOPE). |
+
+**Real-browser validation (CLAUDE.md §9).** The mocked spec `client/e2e/supplier-management/supplier-export.spec.js` runs in CI.
+The real app was also driven with Playwright: the real API on port 3000 against the T47 MySQL, Vite on 5203, and real logins.
+
+- **List:** `?q=T47` listed three Suppliers; the archived one was left out, as in the export.
+- **Wrong password:** "請確認你目前的密碼"; the session stayed.
+- **Export:** saved under the server's `suppliers-<UTC stamp>.csv`, with a BOM, CRLF and the 30 template columns; `'+852 …` and
+  `'=Beta …` guarded; a note with a newline, quotes and a comma quoted correctly; no Bank-like text.
+- **Status filter:** "草稿" exported only the draft Supplier.
+- **Audit:** three `supplier.export` rows with the filters and counts.
+- **CORS:** the response's `Access-Control-Expose-Headers` included `Content-Disposition`.
+- **Round trip:** uploading the export as upsert gave three valid update rows. This run was before HD-068, and is where the
+  apostrophe problem was found; the job was cancelled without confirming. The fixed behaviour is pinned by the integration
+  test.
+- **Viewer:** a `supplier.view` user has no export button.
+- **Errors:** console and network showed only the expected 403s (device check at first login, the wrong password).
+
+New obligations T47 creates:
+
+| Task | Obligation |
+| --- | --- |
+| T49 | Measure the export at 10,000 rows (built in memory, one query plus one Business Master lookup per distinct payment term). REV-075 L-4 measured on the real API with 10,000 maximum-length Suppliers: a 69 MB file in about 394 ms, RSS from 146 MB to 678 MB; six concurrent exports by one user peaked at 1.35 GB RSS, with no concurrency limit. T49 decides whether to add a per-process concurrency gate or stream the CSV (`csv-stringify` stream into the response). |
+
+## Mutation record for TASK-047
+
+25 mutants, all killed. Each was applied to a committed tree and restored from the saved bytes. They ran against server unit
+tests, integration tests on real MySQL, client vitest and the mocked Playwright spec.
+
+- **Server (16):**
+  - **row cap:** no cap; the query not asking for one row over the cap;
+  - **audit:** no audit; a wrong count;
+  - **content:** the filters ignored; no formula guard; the payment-term code dropped; no BOM or CRLF options;
+  - **access:** the fresh-actor check skipped; no password (`jwt` instead of `jwt-password`); no permission policy; paging
+    accepted as a filter;
+  - **headers:** no `Pragma`; `Content-Disposition` not exposed;
+  - **import:** the guard apostrophe kept; every leading apostrophe stripped.
+- **Client (9):**
+  - **file name:** not read; `filename*` ignored; the server's name ignored by the export, and by the template download;
+  - **request:** `postBlob` sending GET; the sort or the status not sent;
+  - **button:** offered to viewers; a cancelled prompt still exporting.
+
+The fresh-actor mutant survived the first run. A test was then added for a manager whose permission is withdrawn after the
+token was issued (403 `PERMISSION_STALE`, no audit), and it kills the mutant.
+
+After HD-069 the T47 list is 30 mutants, all killed. One pattern was updated for the changed guard, and five mutants were
+added:
+
+- the guard ignoring existing apostrophes, and the unguard handling only one (REV-075 L-1);
+- a retired currency, or a retired payment term, passing precheck (HD-069 L-2);
+- no guard on the payment-term code (the reviewer's M12; REV-075 L-3).
+
+The full server suite, run the CI way, passes: 2,567, 0 failed, coverage floors met.
