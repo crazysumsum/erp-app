@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 206,
+  "revision": 208,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "d7576e1670de1cb5360b1911a78b024c8fbfa555977374636112763eba48abe5",
     "plan": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
-    "code_commit": "42702b465cf3ca3613a01660b760686104b49afc",
-    "source_fingerprint": "5991e923eec62c98e5d979e836dc73468f31d5f4221ed57edc15ff0b1b7378e4",
+    "code_commit": "f09680b8a59568b70f3d160ee1c8c61a06d7e03e",
+    "source_fingerprint": "c40a793cbf4ebdb5cfea48229884e9d39a5f9488fac8fc09a96a44f981ba5ab7",
     "worktree": "/private/tmp/erp-sales-p2",
-    "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+    "default_commit": "831bbe6458b2ca7854ab14dc922b5557c35d5d05",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
@@ -3303,6 +3303,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-integrated-static-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c40a793cbf4ebdb5cfea48229884e9d39a5f9488fac8fc09a96a44f981ba5ab7",
+      "source_ref": "Report63 actual APPROVE wholeP2code candidatef09680b8/target831bbe6,60nondoc changedfilesfrozen/matchcommit; actualseparateagentstatic review. No newHIGH/CRITICAL. Full28/coverage/CI/Phase Gate stillpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-integrated-UI-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "c40a793cbf4ebdb5cfea48229884e9d39a5f9488fac8fc09a96a44f981ba5ab7",
+      "source_ref": "Report63 actual APPROVE finalintegrated17realPlaywright0skip94Salesclient/build/lintPASS;7filehashes/startendsource/head/D/Punchanged,SQLreleased. No formal/UAT/fullGate claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4845,6 +4869,17 @@
       "source_ref": "Report61 actual independent78native115unit/lint, allfourSIGKILLs,20/100contention,sixnegativecontrols,two50usercapacityP95<3s/backgroundeffects0mismatch. Scopedproof only; fullservercoverage/28/currentCI pending.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T06:30:38.345519+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P2 integrated current source independent UI/static and affected main regression",
+      "code_commit": "f09680b8a59568b70f3d160ee1c8c61a06d7e03e",
+      "spec_baseline": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
+      "source_fingerprint": "c40a793cbf4ebdb5cfea48229884e9d39a5f9488fac8fc09a96a44f981ba5ab7",
+      "status": "PASS",
+      "source_ref": "Report63 scoped actual independent17browser94client/build/lint/static; root23latestmainupload0skip/799clientcoverage/0auditvulnerabilities/focusedBackorder92.24branches. Complete28/fullservercoverage/currentCI stillpendingDEC023.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T06:36:02.445543+00:00"
     }
   ],
   "pending_decisions": [
@@ -5824,8 +5859,16 @@
       "kind": "MERGE",
       "target": "origin/main831bbe6458b2ca7854ab14dc922b5557c35d5d05 into isolated codex/sales-order-phase-2-commitment; no main target merge",
       "idempotency_key": "sales-p2-integrate-831bbe6-20261007",
-      "status": "PLANNED",
-      "source_ref": "Actual git fetch observes main moved from6936736 to831bbe6, only identical shell-quote1.12 lock and4lineTC004forcedGCsample fix. ReviewedP2code commit e10c261, rawmoduleevidence untracked excluded; preserve all work, no reset, reverify finalsource. ExistingGitcollaboration userauthorization; DEC023 adminoperation remains blocked."
+      "status": "CONFIRMED",
+      "source_ref": "Actual git fetch observes main moved from6936736 to831bbe6, only identical shell-quote1.12 lock and4lineTC004forcedGCsample fix. ReviewedP2code commit e10c261, rawmoduleevidence untracked excluded; preserve all work, no reset, reverify finalsource. ExistingGitcollaboration userauthorization; DEC023 adminoperation remains blocked. Actual conflict-free merge observed at f09680b8a59568b70f3d160ee1c8c61a06d7e03e; only four-line upstream memory test changed. Original feature commits and raw private proof preserved."
+    },
+    {
+      "id": "ACT-P2-INTEGRATED-UI-VERIFY-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Independent actual17Playwright/Sales94client/build/scopedlint against integrated feature; ownedMySQL36251/port0app/Vite/browser fixtures",
+      "idempotency_key": "sales-p2-integrated-ui-verify-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Reviewedproduct/task037slice e10c261 and conflict-free freshmain integration; allownedteardown required/noSQLrestore/grants; DEC023 remainsOPEN. Frozenfinalproductsource, rootnoSQL untilreviewerrelease. Report63 independent17browser94Salesclient/build/lintPASS, same HEAD/source/7hashes; ownedapp/Vite/browserfixturesclosed andSQLreleased."
     }
   ],
   "evidence_files": [
@@ -5957,8 +6000,10 @@
     "evidence/20261006T081405-dc647e942b6a/run.json",
     "evidence/20261006T081905-94e47b17883a/run.json",
     "docs/sales_order_management/implementation/60_task036_backorder_ui_review.md",
-    "docs/sales_order_management/implementation/61_task037_commitment_developer_checkpoint.md"
+    "docs/sales_order_management/implementation/61_task037_commitment_developer_checkpoint.md",
+    "docs/sales_order_management/implementation/62_phase2_restore_permission_decision.md",
+    "docs/sales_order_management/implementation/63_phase2_integrated_candidate_checkpoint.md"
   ],
   "defects": [],
-  "next_safe_action": "Commit independently reviewed TASK037 slice; integrate observed main831bbe6 in isolatedfeature; run unaffected finalUI/client checks. DEC023 restore privileges remains pending/rejected-operation unexecuted; full28/coverage/currentCI/Phase merge not yet complete."
+  "next_safe_action": "Await actual Sam DEC023 temporaryisolatedrestorefixtureprivilege decision; grant/revoke unexecuted. Onapproval execute reviewedprivategrant withoriginalgrantsguard, full28includingcoverage/restore, restoreexactrights, exactcandidateCI/freshmain/authorizedwholePhasePRmergecleanup. Product e10c261 integratedf09680b8 and actualfinalUI/static reviews ready; no furtherpermission forcommit/PR/merge."
 }
