@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 222,
+  "revision": 233,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,10 +11,10 @@
   "baseline": {
     "design": "c45760f51fd9ae03bb1632ba74fba727f4a8d9dc2e591e47fbc5c1a8f1819dcb",
     "plan": "fc7b1d89a82f7ae7f0563344f656d5de9ff8bf3f63fac7526275dc7c213eb621",
-    "code_commit": "ff44b3a90ff663587a58950724c43be3b45eb990",
-    "source_fingerprint": "433127e3a3340ff40377a15eb895734c07b477f86dce4237e0c4bc0ab58d742c",
+    "code_commit": "89a1b3b1898b43db8540ef0294dd0c64b4387861",
+    "source_fingerprint": "68b8adc3abe418898ef510c85d665b136ed9e7c64582e989d178c275593a8d31",
     "worktree": "/private/tmp/erp-sales-p2",
-    "default_commit": "831bbe6458b2ca7854ab14dc922b5557c35d5d05",
+    "default_commit": "8ac45e94e25962da0988e297ae0a93cfb65191e8",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
@@ -64,7 +64,7 @@
     "TASK-034": "DONE",
     "TASK-035": "DONE",
     "TASK-036": "DONE",
-    "TASK-037": "IN_PROGRESS"
+    "TASK-037": "DONE"
   },
   "approvals": [
     {
@@ -3533,6 +3533,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-final-integrated-static-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "22dbc1f4008d739aabd86ed4a19f79ed0373b6af5fa50d62d9a8dafff15cd578",
+      "source_ref": "Actual APPROVE P2-final-integrated-static-R2-20261007 HEAD89a1b3b/source22dbc1/Dc457/Pfc7, target8ac45e; fullP2diff/nativecorrection/sharedownership reviewed;23incomingfiles identicalmain, trace/boundary/diffPASS;74preintegrationJUnit proof parsed honestly. Private p2-final-integrated-r2-reviewer-proof.json. NoHIGH/CRITICAL, noSQL/browser; currentfull28/CI pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-browser-TC028-attribution-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "10ce2af27825d4856c256b7dfda45ed81f5dc256b12463d0fb0e9ba3a273ec88",
+      "source_ref": "Actual APPROVE exactone-line148 TC029→028 browsertitle. Canonical028releasefailure/genuineUI400retainsCONFIRMEDfacts/eventUUID thensameeventDRAFT recovery/history provenbyexistingassertions; TC029cancelcoverage remains. Proposalread beforecoordinatorapply, followupactuallyobservedappliedonly1linediff/reversecheck/fileSHA ccbee1b3c80644b2dff7e617d383ac1fc1592d31137b7aa64abbdda452dc5646. No reviewerSQL/browser/edits; source68b8 all28 rerun ongoing; original17PASS/HarnessBLOCKED/report61 misattribution retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-final-static-browser-TC028-R3-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "68b8adc3abe418898ef510c85d665b136ed9e7c64582e989d178c275593a8d31",
+      "source_ref": "Actual APPROVE P2-final-static-browser-TC028-R3-20261007 HEAD89a1b3b/source68b8/Dc457/Pfc7. Exactone-linebrowser148 attributionpatch10ce, genuineTC028assertions, other60sourcebytes unchanged from fullR2review, zeroHIGH/CRITICAL. Private p2-final-browser-tc028-r3-reviewer-proof.json. Historicalsource22browser17PASS/HarnessBLOCKED preserved; all28newsource ongoing, no reviewerSQL/browser.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-final-UI-68B8-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "68b8adc3abe418898ef510c85d665b136ed9e7c64582e989d178c275593a8d31",
+      "source_ref": "Actual finalUIdeveloperAPPROVE17Playwright0fail/error/skip+94client12files/lint/build on68b8/HEAD89/Dc457/Pfc7, all7hashes unchanged. Actualconsole/network monitorsincludingexpectedfailure flowsPASS, ownedfixtureteardown/SQLreleased. Private final-ui-review-68b8-start/end.json, browserlogSHAc93edf276423f782ad8d9760a1f64f29cbfe5d4d67e636ffc8a1ea57ee3b7a34 JUnitSHA4c843a94aadc1009c8c03fc683a051d21fe616982c9931ea585bdc5f30dc8727. Precommitproof/currentcommittedmappingstillrequired; noformal/CI/mergeclaim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -5119,6 +5167,28 @@
       "source_ref": "Actual approvedone-linepatch7a5418 applied; native Itemrestore1PASS0failure/skip/0cancel, realreadonly restoredschema. Private dec024-item-restore-r1.log; same authorizedruntimegrants; no originalfailure deletion/fullGateclaim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T06:58:53.126742+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "Current integrated candidate independent static compatibility review",
+      "code_commit": "89a1b3b1898b43db8540ef0294dd0c64b4387861",
+      "spec_baseline": "fc7b1d89a82f7ae7f0563344f656d5de9ff8bf3f63fac7526275dc7c213eb621",
+      "source_fingerprint": "22dbc1f4008d739aabd86ed4a19f79ed0373b6af5fa50d62d9a8dafff15cd578",
+      "status": "PASS",
+      "source_ref": "Actual backend static APPROVE P2-final-integrated-static-R2-20261007 plus UIstaticnofindings/exact7hashes JSONauth/idempotency/abortRetryAfter unchanged. Rootfull28SQL ongoing, UIbrowsernotyetrun; no Phase/CI claim.",
+      "actor": "Codex /root observed separateagents",
+      "observed_at": "2026-10-07T07:28:19.190627+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P2 exactsource all28 actual developer verification",
+      "code_commit": "89a1b3b1898b43db8540ef0294dd0c64b4387861",
+      "spec_baseline": "fc7b1d89a82f7ae7f0563344f656d5de9ff8bf3f63fac7526275dc7c213eb621",
+      "source_fingerprint": "68b8adc3abe418898ef510c85d665b136ed9e7c64582e989d178c275593a8d31",
+      "status": "PASS",
+      "source_ref": "Actual serialall28 reviewedcontractsPASS/code-specunchanged, originaltenInventorynativePASS, Phase1browser8PASS/P2browser17PASS0skip includesTC028, native74uniquePASS0skip021–031, capacity2PASS032; server2814discovered2800PASS0FAIL14approvedoptionalcoverage skips/37floorsPASS/global94.18/85.30/92.83; client808/105PASS/perfilefloorsPASS. Fullsource68b8; noformal/UAT/CI/PhaseMergeclaim. Private runJSON hashes/logs retained; report66 forthcoming.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T07:48:22.610564+00:00"
     }
   ],
   "pending_decisions": [
@@ -6164,8 +6234,40 @@
       "kind": "MERGE",
       "target": "origin/main8ac45e94e25962da0988e297ae0a93cfb65191e8 into isolated P2 feature, no main target merge",
       "idempotency_key": "sales-p2-integrate-8ac45e-20261007",
-      "status": "PLANNED",
-      "source_ref": "Actual fresh git fetch; separate reviewer APPROVE P2-upstream-8ac45e-integration-static-R1-20261007, 23 incoming Supplier/sharedHTTP/CORS files no conflicts, Sales JSON path unchanged. Existing merge authority; rerun all28 on new integrated fingerprint."
+      "status": "CONFIRMED",
+      "source_ref": "Actual fresh git fetch; separate reviewer APPROVE P2-upstream-8ac45e-integration-static-R1-20261007, 23 incoming Supplier/sharedHTTP/CORS files no conflicts, Sales JSON path unchanged. Existing merge authority; rerun all28 on new integrated fingerprint. Actual conflict-free merge89a1b3b; freshD/P identical, source22dbc1. Prior runs remain historical; all28 newsource rerun required."
+    },
+    {
+      "id": "ACT-P2-INTEGRATED-NATIVE-BINDINGS-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "eleven fresh synthetic native/P1 regression schemas on four alreadyowned exactPIDUIDargv MySQL; preserve earlier data/bindings",
+      "idempotency_key": "sales-p2-integrated-native-bindings-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Original native guard requires freshschema on rerun. Reviewed private refresh_native_bindings.py verifies each actualowned process before SQL, exactschema grant to existing nonSUPER dedicated P1 account, native025/P1 migrate; existing explicit isolatednative/migration authority, no new global privileges/reset. Actual refresh exit0:11freshschemas, native025/P1 fullmigrationPASS; original schemas/bindings saved, dedicatedP1appSUPER=N; primaryrights unchanged."
+    },
+    {
+      "id": "ACT-P2-BROWSER-TITLE-NATIVE-BINDINGS-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "fresh eleven native/P1 schemas on four verifiedalreadyowned instances for exactone-line browser TC028 titlefix source68b8; oldschemas/data/bindings preserved",
+      "idempotency_key": "sales-p2-browser-title-native-bindings-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Existing native/migrationisolatedauthority. refresh_native_bindings.py round2 reusesverifiedPIDUIDargv guards, explicitnewbackup/nooverwrite; same setup as confirmedpreviousround, no production/reset/globalright changes. Browser run17actualPASS butmissingTC028 correctlyBLOCKED retained; minimaltitlefix10ce withinapprovedscope, D/P same, independentproposalreview pendingnotPhaseapproval. Freshmain8ac unchanged actualfetch. Actualrefreshround2exit0:elevenfreshschemas/fullnative025/P1migrationPASS, originalbindings-round2 and P1env-round2 retained; primaryprivileges unchanged."
+    },
+    {
+      "id": "ACT-P2-RESTORE-RIGHTS-REVOKE-FINAL-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "OwnedprimaryPID36251 syntheticadmin exact originalgrants restoration after completedfull28; onlytemporaryDEC023rights",
+      "idempotency_key": "sales-p2-restore-rights-revoke-final-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "ExistinghumanDEC023grant/revokeauthority; separatelyreviewedcorrectscript d55f3e unchanged/exactoriginalsnapshot. No SQL reviewer untilactualrevoked/release; noreset/dropdata/globalotheraccounts. Actualcorrectedrevokeexit0; exactSHOWGRANTSoriginalrestored; CREATEUSER/tworestoreprefixgrantsabsent, ordinaryapp unchanged. Allfull28 finished/ownedfixturesclosed; source68b8/HEAD89 unchanged."
+    },
+    {
+      "id": "ACT-P2-FINAL-UI-VERIFY-68B8-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Independent final17actualPlaywright primaryownedPID36251/source68b8/HEAD89; rootexclusiveSQLreleased untilreviewerteardown/release",
+      "idempotency_key": "sales-p2-final-ui-verify-68b8-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Independentalready94Salesclient12files/build/scopedlintPASS atcurrent68b8 noSQL. All28rootactualPASS, temporaryrightsrevokedexactoriginal, rootnoSQLuntilreviewerrelease; frozenproduct/tests/spec/HEAD, separateownedport0app/Vite/browserfixtures/privateproof/noexport. Actualindependent17PlaywrightPASS0fail/error/skip28.079s/TC028present;94Salesclient12files/scopedlint/buildPASS; start/endHEAD89/source68b8/Dc457/Pfc7/7filehashesidentical; ownedapp/Vite/fixturesclosed runnernaturalexit/SQLreleased. Logc93edf/JUnit4c843a proofprivate."
     }
   ],
   "evidence_files": [
@@ -6324,8 +6426,63 @@
     "evidence/20261007T071311-41388257c130/run.json",
     "evidence/20261007T071322-5657680d0a82/run.json",
     "evidence/20261007T071324-64ee2e99e94c/run.json",
-    "evidence/20261007T072105-6ab0edf74847/run.json"
+    "evidence/20261007T072105-6ab0edf74847/run.json",
+    "evidence/20261007T072602-f55e862e503f/run.json",
+    "evidence/20261007T072607-2c2323ad0fed/run.json",
+    "evidence/20261007T072608-c36c49043530/run.json",
+    "evidence/20261007T072611-5f2fb7e7acc4/run.json",
+    "evidence/20261007T072620-6568d365e32f/run.json",
+    "evidence/20261007T072622-1f5eb67d9ade/run.json",
+    "evidence/20261007T072631-7531c88e6f08/run.json",
+    "evidence/20261007T072649-5fe88d9fef3d/run.json",
+    "evidence/20261007T072651-2838798f765e/run.json",
+    "evidence/20261007T072653-ca28a768558e/run.json",
+    "evidence/20261007T072654-11dbdcca0c72/run.json",
+    "evidence/20261007T072655-d7a786a18cf3/run.json",
+    "evidence/20261007T072656-dfeac725b6ac/run.json",
+    "evidence/20261007T072657-061d8130c821/run.json",
+    "evidence/20261007T072658-8ee8bb61e6b1/run.json",
+    "evidence/20261007T072659-567bff8d0559/run.json",
+    "evidence/20261007T072700-28153c58a293/run.json",
+    "evidence/20261007T072702-6f6855e1b766/run.json",
+    "evidence/20261007T072703-d0969eef9a84/run.json",
+    "evidence/20261007T072719-d8ab75aa5e6c/run.json",
+    "evidence/20261007T072722-3eba1a288552/run.json",
+    "evidence/20261007T072747-151cf8ffe47b/run.json",
+    "evidence/20261007T073342-bff6456e1438/run.json",
+    "evidence/20261007T073352-455c7246ddfa/run.json",
+    "evidence/20261007T073354-dd414c858aa7/run.json",
+    "evidence/20261007T073424-9f66429f44b1/run.json",
+    "evidence/20261007T073426-2a8465541d78/run.json",
+    "evidence/20261007T073759-781474f812b4/run.json",
+    "evidence/20261007T073804-ffded4bc8489/run.json",
+    "evidence/20261007T073806-e4a17194cdd7/run.json",
+    "evidence/20261007T073808-60db82d32bbe/run.json",
+    "evidence/20261007T073819-d2899ce8c3b8/run.json",
+    "evidence/20261007T073820-a15095d6bdd5/run.json",
+    "evidence/20261007T073830-b0a94187c084/run.json",
+    "evidence/20261007T073849-148fdb22f93d/run.json",
+    "evidence/20261007T073851-705a7402d101/run.json",
+    "evidence/20261007T073852-75faf0208c6b/run.json",
+    "evidence/20261007T073853-a1eaebdd8879/run.json",
+    "evidence/20261007T073854-d6243a944cfd/run.json",
+    "evidence/20261007T073856-9b82d79b441a/run.json",
+    "evidence/20261007T073857-a8553c35b374/run.json",
+    "evidence/20261007T073858-9fee87d96697/run.json",
+    "evidence/20261007T073900-eece46394651/run.json",
+    "evidence/20261007T073901-f47094974d15/run.json",
+    "evidence/20261007T073902-85baf99f9335/run.json",
+    "evidence/20261007T073904-a3ed32466fbb/run.json",
+    "evidence/20261007T073920-143c34a5f522/run.json",
+    "evidence/20261007T073924-4b5909aa30b4/run.json",
+    "evidence/20261007T073949-d462054cbefe/run.json",
+    "evidence/20261007T074617-7f7e0badd37c/run.json",
+    "evidence/20261007T074626-8ff66ac531e5/run.json",
+    "evidence/20261007T074628-9045fa659c28/run.json",
+    "evidence/20261007T074657-873ed5eccff3/run.json",
+    "evidence/20261007T074659-61844831d1e1/run.json",
+    "evidence/20261007T074728-897f7b84f305/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit approved DEC024 scope and independently reviewed genuine TC023/028 native tests; integrate freshmain8ac45e then fresh native schemas/full28 current-source developer checks. Native74PASS0skip actually recorded; all original failures retained."
+  "next_safe_action": "All28current-sourcePASS and independentstatic/UIAPPROVE, grantsoriginalrestored. Commitonlyonebrowsertitle+state+report66/no raw evidence; mapbothseparate reviews to exactcommittedcandidate, push/createwholeP2PR/attach; requirefiveactualcurrentGitHubCI and MERGE_READY PHASE003 beforeauthorizedmainmerge/safeownedcleanup. NoP3/formal/UAT/releaseclaim."
 }
