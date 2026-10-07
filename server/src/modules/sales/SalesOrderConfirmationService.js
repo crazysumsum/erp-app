@@ -54,6 +54,33 @@ export class SalesOrderConfirmationService {
     this.inventory = inventory;
   }
 
+  async confirm(request) {
+    const intent = await this.startConfirmation(request);
+    const pending = () => ({ statusCode: 202,retryAfterSeconds: 2,data: { outcome: "CONFIRMING",operationId: intent.operationId,eventId: intent.eventId,
+      statusUrl: `/api/v1/sales-operations/by-event/${intent.eventId}`,retryAfterSeconds: 2 } });
+    if (intent.outcomeUnknown) return pending();
+    // A 202 response ends the HTTP signal; the bounded durable execution owns its own signal.
+    const completion = this.completeConfirmation({ eventId: intent.eventId,claims: request.claims,leaseOwner: intent.leaseOwner,signal: new AbortController().signal })
+      .then(result => ({ result }), error => ({ error }));
+    let timer;
+    const outcome = await Promise.race([completion,new Promise(resolve => { timer = setTimeout(() => resolve(null), this.config.manualConfirmationWaitMs); })]);
+    clearTimeout(timer);
+    if (!outcome || outcome.error && (outcome.error.statusCode >= 500 || outcome.error.code === "CONCURRENT_OPERATION")) return pending();
+    if (outcome.error) throw outcome.error;
+    return { statusCode: 200,data: { outcome: "CONFIRMED",salesOrder: outcome.result.salesOrder,warnings: outcome.result.warnings.map(warning => warning.code) } };
+  }
+
+  async lookup({ claims,eventId }) {
+    salesEventId(eventId);
+    return this.database.withTransaction(async tx => {
+      const actor = await requireSalesWriteActor(tx, claims);
+      const [[row]] = await tx.query("SELECT id FROM sales_operation_requests WHERE event_id=? AND actor_user_id=? LOCK IN SHARE MODE", [eventId,actor.id]);
+      if (!row) throw salesError("SALES_ORDER_NOT_FOUND");
+      const operation = await this.operations.getForActor(tx, { eventId,actor,lock: true });
+      return { eventId,operationId: Number(row.id),status: operation.status,result: operation.result,errorCode: operation.errorCode ?? null };
+    });
+  }
+
   async completeConfirmation({ eventId, claims, leaseOwner, recovery = false, signal }) {
     salesEventId(eventId);
     if (!recovery && leaseOwner != null) salesEventId(leaseOwner);
@@ -177,10 +204,12 @@ export class SalesOrderConfirmationService {
         Object.keys(input).sort().join(",") !== "eventId,version" || !Number.isSafeInteger(input.version) || input.version < 1)
       throw salesError("SALES_INPUT_INVALID");
     salesEventId(input.eventId);
-    return this.operations.run(this.database, async tx => {
+    let stagedIntent;
+    try { return await this.operations.run(this.database, async tx => {
       const actor = await requireSalesWriteActor(tx, claims), nowMs = this.time.nowMs();
       const intent = await this.operations.claimConfirmation(tx, { ...trace, eventId: input.eventId, targetId: id, payload: { version: input.version },
         actor, nowMs, leaseOwner: randomUUID(), leaseMs: this.config.confirmationLeaseMs });
+      stagedIntent = intent;
       if (intent.replay) return intent;
       const [[order]] = await tx.query("SELECT id,sales_order_number,status,version,confirmation_event_id FROM sales_orders WHERE id=? FOR UPDATE", [id]);
       if (!order) throw salesError("SALES_ORDER_NOT_FOUND");
@@ -203,6 +232,10 @@ export class SalesOrderConfirmationService {
       await this.audit.record(tx, { ...trace, actor, action: "sales_order.confirm_started", targetId: id, targetNumber: order.sales_order_number,
         eventId: input.eventId, nowMs, details: { fromStatus: "DRAFT", toStatus: "CONFIRMING", version } });
       return intent;
-    });
+    }); } catch (error) {
+      // The ID was observed from INSERT/replay; commit uncertainty is not a durable success claim.
+      if (error.code === "TRANSACTION_OUTCOME_UNKNOWN" && stagedIntent) return { ...stagedIntent,outcomeUnknown: true };
+      throw error;
+    }
   }
 }

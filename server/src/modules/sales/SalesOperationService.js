@@ -93,9 +93,9 @@ export class SalesOperationService {
     if (Number(row.affectedRows) !== 1) throw salesError("CONCURRENT_OPERATION");
   }
 
-  async getForActor(connection, { eventId, actor }) {
+  async getForActor(connection, { eventId, actor, lock = false }) {
     const [[row]] = await connection.query(`SELECT status, result_summary, error_code FROM sales_operation_requests
-      WHERE event_id = ? AND actor_user_id = ?`, [salesEventId(eventId), identifier(actor.id)]);
+      WHERE event_id = ? AND actor_user_id = ?${lock ? " LOCK IN SHARE MODE" : ""}`, [salesEventId(eventId), identifier(actor.id)]);
     if (!row) return null;
     return { status: row.status, result: row.status === "SUCCEEDED" ? safeResult(row.result_summary) : null,
       ...(row.status === "FAILED" ? { errorCode: Object.hasOwn(SALES_ERROR_STATUS, row.error_code) ? row.error_code : "SALES_DEPENDENCY_UNAVAILABLE" } : {}) };

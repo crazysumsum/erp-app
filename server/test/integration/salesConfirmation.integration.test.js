@@ -195,3 +195,35 @@ integrationTest("TC-024 invalid SKU/UOM/Warehouse revalidation safely returns Dr
     assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM inventory_operation_requests WHERE source_module='SALES' AND source_document_id=?", [String(f.request.id)]))[0][0].n, 0);
   });
 });
+integrationTest("TC-026 confirmation exposes uncertain Phase A COMMIT and reconciles actual commit versus rollback by original event", async t => {
+  for (const outcome of ["committed","rolled_back"]) await t.test(outcome, async child => {
+    const f = await setup(child); await stock(f,10);
+    const acquire=f.database.acquireConnection;
+    f.database.acquireConnection=async function(...args){
+      const connection=await acquire.apply(this,args),commit=connection.commit.bind(connection),rollback=connection.rollback.bind(connection);
+      connection.commit=async()=>{if(outcome==="committed")await commit();else await rollback();throw Object.assign(new Error("Synthetic Phase A acknowledgement loss"),{code:"ECONNRESET"});};
+      return connection;
+    };
+    let accepted;
+    try {accepted=await f.service().confirm(f.request);} finally {f.database.acquireConnection=acquire;}
+    assert.equal(accepted.statusCode,202);assert.equal(accepted.data.eventId,f.request.input.eventId);assert.ok(accepted.data.operationId>0);
+    if(outcome==="committed") {
+      const operation=await f.service().lookup({claims:f.claims,eventId:f.request.input.eventId});
+      assert.equal(operation.operationId,accepted.data.operationId);assert.equal(operation.status,"IN_PROGRESS");
+    } else await assert.rejects(()=>f.service().lookup({claims:f.claims,eventId:f.request.input.eventId}),{code:"SALES_ORDER_NOT_FOUND"});
+    const confirmed=await f.service().confirm(f.request);assert.equal(confirmed.statusCode,200);assert.equal(confirmed.data.outcome,"CONFIRMED");
+    const operation=await f.service().lookup({claims:f.claims,eventId:f.request.input.eventId});assert.equal(operation.status,"SUCCEEDED");
+    assert.deepEqual(Object.keys(operation).sort(),["errorCode","eventId","operationId","result","status"]);
+    assert.equal((await f.db.query("SELECT COUNT(*) AS n FROM inventory_reservations WHERE warehouse_id=?",[f.warehouseId]))[0][0].n,1);
+  });
+});
+integrationTest("TC-022 operation lookup requires current original-user permissions and hides another actor's event",async t=>{
+  const f=await setup(t);await f.service().startConfirmation(f.request);
+  assert.equal((await f.service().lookup({claims:f.claims,eventId:f.request.input.eventId})).status,"IN_PROGRESS");
+  const other=await f.insert("users",{username:`other-${randomUUID()}`,password_hash:"synthetic",display_name:"Other",created_at:f.now,updated_at:f.now});
+  await f.db.execute("INSERT INTO user_roles (user_id,role_id) VALUES (?,?)",[other,f.roleId]);
+  f.beforeParents.push(()=>f.db.execute("DELETE FROM user_roles WHERE user_id=?",[other]));
+  await assert.rejects(()=>f.service().lookup({claims:{...f.claims,actorId:other},eventId:f.request.input.eventId}),{code:"SALES_ORDER_NOT_FOUND"});
+  await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[f.roleId]);
+  await assert.rejects(()=>f.service().lookup({claims:f.claims,eventId:f.request.input.eventId}),{code:"PERMISSION_STALE"});
+});

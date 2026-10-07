@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 172,
+  "revision": 174,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-030",
+  "current_task": "TASK-031",
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "8a8292ed296a5d66a087b9efb5ce07acf74f824c",
-    "source_fingerprint": "95dc31fac3ebafdd53513cd9b4cc32d6563d92e65d811f03011b2c553b079e4c",
+    "code_commit": "949c87edcb948763906632227ef854fdf63d5333",
+    "source_fingerprint": "b2d939c09e189623a092c8820441f8d8ddd5c93a8a68c68a8286df87e9b23bf0",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -57,8 +57,8 @@
     "TASK-027": "DONE",
     "TASK-028": "DONE",
     "TASK-029": "DONE",
-    "TASK-030": "IN_PROGRESS",
-    "TASK-031": "PENDING",
+    "TASK-030": "DONE",
+    "TASK-031": "IN_PROGRESS",
     "TASK-032": "PENDING",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
@@ -2759,6 +2759,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-flow-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "b2d939c09e189623a092c8820441f8d8ddd5c93a8a68c68a8286df87e9b23bf0",
+      "source_ref": "Actual scoped TASK031-flow-R1-20261007 APPROVE. Four-file digest5d456027b1a4eac1baec1383eef94c65902ccd65c7cea8779c5ab05d0893e318; /private/tmp/sales-p2-private/task031-flow-reviewer-source.json. Startsource b2d939c0; transient next-handler RED untracked test caused outside-scope endsource b40cfed9; test preserved privately then removed from this slice restoring exact b2d939c0. Four reviewed files unchanged. Independent65unit/lint PASS; actual native24 log read. Futurehandlers/UI/jobs/wholePhase excluded.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4180,6 +4192,17 @@
       "source_ref": "Actual task030-terminal-replay-final.log50PASS0fail/skip; current61unitPASS/lint0/diffcheckPASS and actual separateAPPROVE. REDs retained, including terminalnulllease replay. No formal/wholePhase/CI claim.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T01:43:16.930160+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK031 bounded confirm/originalactorlookup developer slice",
+      "code_commit": "949c87edcb948763906632227ef854fdf63d5333",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "b2d939c09e189623a092c8820441f8d8ddd5c93a8a68c68a8286df87e9b23bf0",
+      "status": "PASS",
+      "source_ref": "Actual65unitsPASS0skip/scopedlintPASS/native task031-flow-native.log24PASS0skip; real PhaseA COMMIT then lostack versus actualROLLBACK then lostack; originalevent lookup/retry and no duplicates. Handlers/UI not implemented yet.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T01:47:59.996433+00:00"
     }
   ],
   "pending_decisions": [
@@ -5095,5 +5118,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit validated TASK-030 atomic confirmation slice, observe commit then mark Task DONE and start TASK-031 API/polling/UI; whole Phase remains incomplete."
+  "next_safe_action": "Commit reviewed TASK031 bounded flow slice after global lint, then implement handlers/schema/native API and frontend/UI/Playwright. TASK031 remains IN_PROGRESS."
 }
