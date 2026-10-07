@@ -15,7 +15,7 @@ import { prepareSalesDocument } from "./prepareSalesDocument.js";
 import { documentTotal } from "./salesMoneyMath.js";
 import { assertQuantityConservation } from "./salesQuantityMath.js";
 import { salesEventId } from "./salesValidation.js";
-import { salesError } from "./salesErrors.js";
+import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 
 export function validateConfirmationInventoryResult(result, payload) {
   const mismatch = () => { throw salesError("INVENTORY_CONTRACT_MISMATCH"); };
@@ -80,6 +80,45 @@ export class SalesOrderConfirmationService {
       const operation = await this.operations.getForActor(tx, { eventId,actor });
       return { eventId,operationId: Number(row.id),status: operation.status,result: operation.result,errorCode: operation.errorCode ?? null };
     });
+  }
+
+  async recover({ signal } = {}) {
+    signal?.throwIfAborted();
+    const [rows] = await this.database.query(`SELECT event_id,
+      GREATEST(0,CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS DECIMAL(20,0))-CAST(created_at AS DECIMAL(20,0))) AS oldest_age_ms
+      FROM sales_operation_requests WHERE status='IN_PROGRESS' AND command_type='CONFIRM_ORDER' AND target_type='SALES_ORDER'
+      AND lease_until<=CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) ORDER BY lease_until,id LIMIT ?`,
+    [this.config.confirmationRecoveryBatchSize], { signal });
+    const result = { processed: 0,recovered: 0,failed: 0,deferred: 0,oldestAgeMs: 0 };
+    for (const row of rows) {
+      signal?.throwIfAborted();
+      result.processed++; result.oldestAgeMs = Math.max(result.oldestAgeMs, Number(row.oldest_age_ms));
+      try { await this.completeConfirmation({ eventId: row.event_id,recovery: true,signal }); result.recovered++; }
+      catch (error) {
+        signal?.throwIfAborted();
+        // Inspect committed facts after any failure/unknown COMMIT; never create another intent.
+        const outcome = await this.database.withTransaction(async tx => {
+          const [[operation]] = await tx.query(`SELECT status,lease_until,updated_at FROM sales_operation_requests
+            WHERE event_id=? AND command_type='CONFIRM_ORDER' AND target_type='SALES_ORDER' FOR UPDATE`, [row.event_id]);
+          if (operation?.status === "SUCCEEDED") return "recovered";
+          if (operation?.status === "FAILED") return "failed";
+          if (!operation || operation.status !== "IN_PROGRESS") throw salesError("SALES_EVENT_CONFLICT");
+          const [[clock]] = await tx.query("SELECT CAST(UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3))*1000 AS UNSIGNED) AS now_ms");
+          const now = Number(clock.now_ms);
+          if (Number(operation.lease_until) <= now) {
+            const delay = Math.min(300000, Math.max(30000, 2 * (Number(operation.lease_until) - Number(operation.updated_at))));
+            // A new owner fences the expired executor; the persisted window doubles up to five minutes.
+            await tx.execute("UPDATE sales_operation_requests SET lease_owner=?,lease_until=?,updated_at=? WHERE event_id=? AND status='IN_PROGRESS'",
+              [randomUUID(),now + delay,now,row.event_id]);
+          }
+          return "deferred";
+        }, { signal,timeoutMs: this.config.transactionTimeoutMs });
+        result[outcome]++;
+        if (outcome === "deferred") await this.logger?.warn("sales.confirmation_recovery_deferred", "Confirmation remains unresolved", {
+          eventId: row.event_id,errorCode: Object.hasOwn(SALES_ERROR_STATUS, error.code) ? error.code : "SALES_DEPENDENCY_UNAVAILABLE" });
+      }
+    }
+    return result;
   }
 
   async completeConfirmation({ eventId, claims, leaseOwner, recovery = false, signal }) {
