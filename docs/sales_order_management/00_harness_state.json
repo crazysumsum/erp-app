@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 167,
+  "revision": 169,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-028",
+  "current_task": "TASK-029",
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "5f070371e80925a87178f0ebc1c530ca313d3a8e",
-    "source_fingerprint": "1842975473d228a42bb3166ba8a3165b46345fd451225d0ea854043591492dac",
+    "code_commit": "419c2be02c01d0abf575e8e1339644a1c574046f",
+    "source_fingerprint": "25415f0dc2b8dbd9d05e5149db2808d16dcb70d5f356a9570e39a82346839e26",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -55,8 +55,8 @@
     "TASK-025": "DONE",
     "TASK-026": "DONE",
     "TASK-027": "DONE",
-    "TASK-028": "IN_PROGRESS",
-    "TASK-029": "PENDING",
+    "TASK-028": "DONE",
+    "TASK-029": "IN_PROGRESS",
     "TASK-030": "PENDING",
     "TASK-031": "PENDING",
     "TASK-032": "PENDING",
@@ -2723,6 +2723,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK029-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "25415f0dc2b8dbd9d05e5149db2808d16dcb70d5f356a9570e39a82346839e26",
+      "source_ref": "Actual final TASK029-R1-20261007 APPROVE; fivefiledigeste0156fbb53e771249da85a95b96d0430825d64a695c52726299ae87ad0acac42. Independentunit56/focusedlint, actualnative26log. OnlyPhaseA; PhaseB/recovery/crash/ackloss/fullP2 pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4122,6 +4134,17 @@
       "source_ref": "Actual final freshfullmigrator/rerun0, native11PASS0skip/migrateunit7PASS/lint0/diffcheck and separateAPPROVE. Report45/private rawlogs; formalTC/wholePhase/CI not claimed.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T01:21:15.168783+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK029 developer PhaseA intent",
+      "code_commit": "419c2be02c01d0abf575e8e1339644a1c574046f",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "25415f0dc2b8dbd9d05e5149db2808d16dcb70d5f356a9570e39a82346839e26",
+      "status": "PASS",
+      "source_ref": "Actual56unit+26native PASS0fail/skip,lint0/separateAPPROVE. Report46/private raw original failures/R2/R3 retained. No actualprocesskill/PhaseB/wholePhase claimed.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T01:27:23.943262+00:00"
     }
   ],
   "pending_decisions": [
@@ -5037,5 +5060,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit verified TASK028 four product/test files plus report45, then record actual atomiccommit and markDONE; start TASK029 durablePhaseA. Whole P2 28suites/CI/review/merge still required."
+  "next_safe_action": "Commit verified five-file TASK029 PhaseA slice/report46 then record actualcommit/DONE and implement TASK030 atomic confirmation with Inventory provider results, snapshot revalidation and rollback. Original fullPhase gates remain."
 }
