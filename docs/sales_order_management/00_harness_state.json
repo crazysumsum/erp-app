@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 179,
+  "revision": 184,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
   "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-003",
-  "current_task": "TASK-031",
+  "current_task": "TASK-032",
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "5ec5ca08363f1f49f04a8965d4d56d0aa36ecb3e",
-    "source_fingerprint": "529fded450b5f6f24325973d41e7c7b8952c0967f90224104d6f52dab836f83d",
+    "code_commit": "36c49ca5164bdadee325df4b63afaa85b46e88b1",
+    "source_fingerprint": "721e7a856153f8f9adda893ab45dc15008d0766211490e7c3d1b540f711f247e",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -59,7 +59,7 @@
     "TASK-029": "DONE",
     "TASK-030": "DONE",
     "TASK-031": "IN_PROGRESS",
-    "TASK-032": "PENDING",
+    "TASK-032": "IN_PROGRESS",
     "TASK-033": "PENDING",
     "TASK-034": "PENDING",
     "TASK-035": "PENDING",
@@ -2867,6 +2867,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK032-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "018d838ad91b4e11d76c3e51dd441e0c25a49f775811ad6ec9bfb642646de712",
+      "source_ref": "Actual independent8native/23unit/lintPASS; realclockRED unsignedageunderflow, staticfixture admissionwait/cleanup weakness. Exact8fileSHAauthorproof; allfailuresretainedprivate. No SQLheld afteractualcompletion.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK032-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "721e7a856153f8f9adda893ab45dc15008d0766211490e7c3d1b540f711f247e",
+      "source_ref": "Actual R2 APPROVE nine native/24recovery+registryunit/scopedlintPASS; exact8fileproof5d7ee2ac/report54. R1 failures retained. No processkill/fullPhase/formal/CI claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4321,6 +4345,17 @@
       "source_ref": "Report53 actual Playwright10PASS/client83PASS/build+lint0; nativeactions4PASS. UI R1 genuine RED retained; separate R2APPROVE. API cached202RED outside this scope remains unresolved DEC022.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T02:25:04.607432+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK032 bounded original-human recovery developer slice and clock correction",
+      "code_commit": "36c49ca5164bdadee325df4b63afaa85b46e88b1",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "721e7a856153f8f9adda893ab45dc15008d0766211490e7c3d1b540f711f247e",
+      "status": "PASS",
+      "source_ref": "Report54 actual root9native/92units/full lintPASS; independentR2 nine native/24units/scopedlintPASS. Clock RED/native8PASS1FAIL preserved; processkill/fullcapacity and fullTaskDoD pending.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T02:43:26.313303+00:00"
     }
   ],
   "pending_decisions": [
@@ -5124,6 +5159,54 @@
       "idempotency_key": "sales-p2-task031-browser-20261007-actual-loopback-01",
       "status": "CONFIRMED",
       "source_ref": "Actual runs browser02/04 each8PASS then independent review10PASS with new native race cases. All failures retained privately. Actual reviewer app/Vite closed/fixtures cleaned; owned MySQL retained. Report53/exact source proof. No formal/merge claim."
+    },
+    {
+      "id": "ACT-P2-TASK032-OWNED-NATIVE-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Existing owned PID19398/schemaerp_sales_phase2_final_bc29327195e3; synthetic real app and SQL lease/recovery fixtures only",
+      "idempotency_key": "sales-p2-task032-owned-native-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual task032native01 7PASS0skip. Original authority DEC021 remains; initial intended planning checkpoint failed because ps sandbox denied, then coordinator incorrectly continued native command; this records actual completed observation and does not fabricate priorPLANNED. Subsequent escalated read-only ps confirms UID501/PID19398/datadir/socket exactowned. Tests appshutdown/fixture cleanup succeeded. Originalfailure proof retained; currentlint1unusednewimport corrected, nextnative adds businessfailure/fencing cases. DEC022OPEN/unapplied."
+    },
+    {
+      "id": "ACT-P2-TASK032-OWNED-NATIVE-R2-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Sameverified owned synthetic schemaerp_sales_phase2_final_bc29327195e3/socketmysql-primary",
+      "idempotency_key": "sales-p2-task032-native-r2-20261007",
+      "status": "CONFIRMED",
+      "source_ref": "Actual task032-native02 exit0/8PASS0fail/skip; true old-executor fence/newinactiveCustomerFAILED/nativeCOMMITlostack/SQLschedulerlease/overlap/abort verified.91unitPASS/lint02exit0/boundaryLOCALCHECKSPASS/traceSTRUCTUREPASS. Appshutdown/fixtures clean; actualprocesscrash notyetverified."
+    },
+    {
+      "id": "ACT-P2-TASK032-REVIEW-NATIVE-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Sameowned synthetic schema/socket. Separate reviewer may independentlyexecute alreadyread8native plus narrowfuturecreatedclockprobe; fixtureappcleanuponly",
+      "idempotency_key": "sales-p2-task032-review-native-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual independent native8PASS/clockprobe1FAIL, appfixture teardown noerror. First8EPERMsandbox noDBeffect retained; elevated run began beforestate181 notice; retain timing, not priorledger fabrication. RootcauseSHA361dda44clockRED and actualsource018d. Allcommandsnaturallyexited; noSQLcurrentlyheld."
+    },
+    {
+      "id": "ACT-P2-TASK032-CLOCK-REGRESSION-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Existingownedsynthetic schemaerp_sales_phase2_final_bc29327195e3; actual9nativecases, appclockahead probe only",
+      "idempotency_key": "sales-p2-task032-clock-regression-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual ownnativeclockRED8PASS1FAIL then same9nativeGREEN9PASS0skip. Actual92unitsPASS/finallint0; decimal-safeageonly, testadmissionracehelper+cleanup corrected. RawREDsretained; no processkill/fullPhaseclaim."
+    },
+    {
+      "id": "ACT-P2-TASK032-R2-REVIEW-NATIVE-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Existingowned synthetic schema/socket; actual reviewer9native revalidation only",
+      "idempotency_key": "sales-p2-task032-r2-review-native-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual separateR2 native9PASS0skip/scopedunit24PASS/lintPASS, naturallyexited/fixtureteardownnoerror/noSQLheld. Exact source721e/perfileproof5d7e/report54. HistoricalR1 failures preserved."
+    },
+    {
+      "id": "ACT-P2-OWNED-RUNTIME-STOP-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Only verified owned MySQL PID19398 UID501/exactargv/datadir/socket under private sales-p2runtime",
+      "idempotency_key": "sales-p2-owned-runtime-stop-20261007-01",
+      "status": "PLANNED",
+      "source_ref": "DEC021cleanupauthority. Private reviewedstop_owned_runtime.py checksUID/PID/exactargv/root/socket, sendsSIGTERMonlythatprocess, waitsbounded20sec thenobservesexit/socketgone; noforcekill/drop/datadir/proof deletion. ReviewSQLfinished/idle."
     }
   ],
   "evidence_files": [
@@ -5256,5 +5339,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "DEC022 exact shared/canonical patches remain unapplied pending direct human adoption; retain original adopted scope. Commit independently reviewed UI/action/browser slices with explicit files; TASK032 may proceed independently under DEC021, wholePhase merge blocked."
+  "next_safe_action": "Save exact independently reviewed recovery slices with explicit stage only; execute recorded ownedruntime shutdown then observe actualexit/socket/noSQL. DEC022 stillOPEN exactproduct/canonicalunapplied; await directadoption before changing sharedidempotency. Task032 crashDoD/task033–037 pending."
 }
