@@ -681,3 +681,33 @@ added:
 - no guard on the payment-term code (the reviewer's M12; REV-075 L-3).
 
 The full server suite, run the CI way, passes: 2,567, 0 failed, coverage floors met.
+
+## Status after TASK-048
+
+T48 adds the retention job `server/src/services/supplierImport/jobs/SupplierImportFilePurgeJob.js`. It runs daily as
+`SUPPLIER_IMPORT_JOB_NAMES.purge`, with cluster scope because every instance shares the root. It is backed by
+`SupplierImportService.purgeCandidates`, `markExecutedFilesPurged`, `expireUnconfirmed` and `referencedStoredNames`, and by
+`supplierImportDirectory` / `removeVerifiedSupplierImportFile` in `supplierImportFiles.js`. There is no schema change. The
+open point was decided in HD-071 B: a 30-day period, confirmed by the Product Owner.
+
+| Obligation | Status |
+| --- | --- |
+| Design §12.5: executed jobs' files 365 days after completion | **Done.** `completed`, `completed_with_errors`, and `failed` after confirm are due `fileRetentionDays` after `completed_at`. `files_purged_at` is set first, so the result download answers 410 (T46), then the source is deleted. The job, its rows and audit are kept, and a file purge writes no audit. |
+| HD-071 B: jobs never confirmed | **Done.** Jobs in `uploaded`, `ready` or `ready_with_errors` for `unconfirmedRetentionDays` (default 30, env `SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS`) since upload are handled in one transaction: the job is cancelled with `SUPPLIER_IMPORT_EXPIRED` and its error summary, `files_purged_at` is set, and a system `import.expire` audit is written. The source is deleted afterwards. A job that is being prechecked or was confirmed meanwhile is left alone. This also covers HD-058 1A's jobs whose uploader was deleted. |
+| T48 (REV-059 M-1): the purge declares `SUPPLIER_IMPORT_JOB_NAMES.purge` | **Done.** |
+| T48 (REV-059 L-6): checks immediately before each `unlink` | **Done.** The kind directory is `lstat`ed and must keep the `dev`+`ino` recorded at the start of the run. The file must be `isFile()`, on the same `dev`, with `nlink === 1`. The bare stored name is unlinked from that verified directory. A failure is logged as `supplier.import.purge_failed` with IDs and an errno code only, and retried next run. |
+| HD-044 / HD-050 / HD-053: unreferenced files | **Done.** A file is unreferenced unless a job names it and that job's `files_purged_at` is NULL. Such files older than a day are deleted, which covers an upload that crashed before inserting its job, failed-precheck and cancel deletes that failed, and this job's own failed deletes. A newer file is kept for an upload still inserting its job. |
+| T46: files_purged_at on executed jobs | **Done** (row 1). |
+| T44: 410 for a purged file | Unchanged from T46: the integration test checks the result download answers 410 after the purge. |
+| Metrics (design §12.4 "file purge failures") | The run returns `{ expired, retained, raced, filesDeleted, orphansDeleted, failed }`, which the scheduler records in its job stats; a summary is logged as `supplier.import.purged`. |
+
+Notes:
+
+- **Bounded runs.** Each run handles at most 50 batches of 200 jobs and stops between items when aborted. A larger backlog
+  finishes over several days.
+- **Manual filesystem check.** The integration test `supplierImportRetention.integration.test.js` runs against the real
+  filesystem. It covers expired and not-yet-due jobs, a missing file, a symlink to a file outside the root, a hard-linked
+  file, and a permission-denied directory, plus the retry once permission is back. Separate unit tests cover a directory
+  swapped for a symlink, another filesystem, and a non-regular file.
+- **HD-043** can close: no import file is served (HD-063 1B), and the only code that deletes files now applies the REV-059
+  L-6 rules.

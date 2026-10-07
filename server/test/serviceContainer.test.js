@@ -331,6 +331,13 @@ test("service discovery finds the built-in public services", async () => {
       dependencies: ["scheduler", "mysqldatabase", "logging", "time"]
     },
     {
+      // Supplier import 檔案保留期（T48）。cluster scope：所有實例共用同一個 import root；
+      // 用 worker 開機驗過嘅 root。
+      name: "job.supplierImportFilePurge",
+      lifecycle: "singleton",
+      dependencies: ["scheduler", "mysqldatabase", "logging", "time", "job.supplierImportWorker"]
+    },
+    {
       name: "time",
       lifecycle: "singleton",
       dependencies: []
