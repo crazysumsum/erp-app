@@ -45,7 +45,7 @@ test("TC-022 Phase A durably records one CONFIRMING intent, event, lease and app
   assert.deepEqual(s.intents[0].recovery_payload, { version: 1 }); assert.equal(s.intents[0].actor_user_id, 7);
   assert.match(s.intents[0].lease_owner, /^[a-f0-9-]{36}$/u); assert.equal(s.history.length, 1); assert.equal(s.audits.length, 1);
 });
-test("TC-022 Phase A replay after a new service instance preserves original event/lease/version without a second effect", async () => {
+test("TC-024 Phase A replay after a new service instance preserves original event/lease/version without a second effect", async () => {
   const f = fixture(), request = f.request(); const first = await f.service().startConfirmation(request);
   assert.deepEqual(await f.service().startConfirmation(request), first);
   assert.equal(f.state().order.version, 2); assert.equal(f.state().intents.length, 1); assert.equal(f.state().history.length, 1);
@@ -68,7 +68,7 @@ test("TC-022 Phase A stale version, invalid input and non-Draft state leave no c
   await assert.rejects(() => confirmed.service().startConfirmation(confirmed.request()), { code: "SALES_STATE_CONFLICT" });
   assert.equal(confirmed.state().intents.length, 0);
 });
-test("TC-022 Phase A rechecks permissions before replay and rolls back required audit failure", async () => {
+test("TC-030 Phase A rechecks permissions before replay and rolls back required audit failure", async () => {
   const revoked = fixture({ revoked: true });
   await assert.rejects(() => revoked.service().startConfirmation(revoked.request()), { code: "PERMISSION_STALE" });
   assert.equal(revoked.state().intents.length, 0);

@@ -1,3 +1,8 @@
+import {fork} from "node:child_process";
+import {randomUUID} from "node:crypto";
+import {fileURLToPath} from "node:url";
+import process from "node:process";
+import {reconcileCommitments} from "../sales/phase2/commitmentReconciliation.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {setup,stock,waitForWorkerEntry} from "../sales/phase2/fixtures.js";
@@ -51,4 +56,17 @@ integrationTest("TC-026 registered cluster scheduler instances and overlap use r
 integrationTest("TC-026 aborted recovery keeps durable intent and shutdown cancels the registered worker",async t=>{
  const f=await pending(t);await expire(f);const controller=new AbortController();controller.abort();await assert.rejects(()=>f.service().recover({signal:controller.signal}));assert.equal((await effects(f)).status,"CONFIRMING");
  const scheduler=new SchedulerService({config:{scheduler:{enabled:true,clusterLeaseGraceMs:30000,defaultTimeoutMs:30000,startupJitterRatio:0,jobs:{}}},services:{require:name=>name==="logging"?{logger:f.logger}:name==="time"?f.time:f.database}});t.after(()=>scheduler.stop({timeoutMs:1000}));let entered;const started=new Promise(resolve=>{entered=resolve;});const job=new SalesConfirmationRecoveryJob({services:{require:name=>name==="scheduler"?scheduler:{recoverConfirmations:signal=>new Promise((resolve,reject)=>{entered();signal.addEventListener("abort",()=>reject(signal.reason),{once:true});})}}});scheduler.register(job);await scheduler.leaseStore.prepare(["sales.confirmationRecovery"]);const work=scheduler.execute(scheduler.jobs.get("sales.confirmationRecovery"));await waitForWorkerEntry(started,work);await scheduler.stop({timeoutMs:1000});await work;assert.equal(scheduler.running.size,0);assert.equal((await effects(f)).reservations,0);
+});
+
+for(const boundary of ["phaseA","inventory","beforeCommit","afterCommit"])integrationTest(`${boundary==="afterCommit"?"TC-026":"TC-025"} owned child SIGKILL at ${boundary} restarts from the same durable event exactly once`,async t=>{
+ const f=await setup(t);await stock(f,10);const runId=randomUUID(),script=fileURLToPath(new URL("../sales/phase2/confirmationCrashWorker.js",import.meta.url)),child=fork(script,{execArgv:[],stdio:["ignore","ignore","ignore","ipc"]}),exit=Promise.withResolvers();child.once("exit",(code,signal)=>exit.resolve({code,signal}));
+ const reached=Promise.withResolvers(),onMessage=value=>{if(value.runId!==runId)return;if(value.error)reached.reject(Error(`${value.error} at ${value.stage}: ${value.code} ${value.sections??[]}`));else reached.resolve(value);};child.on("message",onMessage);let timer;
+ try{
+  child.send({runId,boundary,request:f.request});const proof=await Promise.race([reached.promise,exit.promise.then(()=>{throw Error("Owned crash child exited before its boundary");}),new Promise((resolve,reject)=>{timer=setTimeout(()=>reject(Error("Owned crash child boundary timeout")),15000);})]);clearTimeout(timer);
+  assert.equal(proof.pid,child.pid);assert.equal(proof.uid,process.getuid());assert.equal(proof.script,script);assert.equal(proof.boundary,boundary);assert.equal(child.kill("SIGKILL"),true);assert.deepEqual(await exit.promise,{code:null,signal:"SIGKILL"});
+ }finally{clearTimeout(timer);child.removeListener("message",onMessage);if(child.exitCode===null&&child.signalCode===null)child.kill("SIGKILL");await exit.promise;}
+ // Locking this owned operation waits for the killed connection's transaction to settle before synthetic lease expiry/recovery.
+ await f.database.withTransaction(async tx=>{await tx.query("SELECT id FROM sales_operation_requests WHERE event_id=? FOR UPDATE",[f.request.input.eventId]);await tx.execute("UPDATE sales_operation_requests SET lease_until=0,updated_at=0 WHERE event_id=? AND status='IN_PROGRESS'",[f.request.input.eventId]);});
+ const result=await f.service().recover();assert.equal(result.deferred,0);assert.equal(result.recovered,boundary==="afterCommit"?0:1);const lookup=await f.service().lookup({claims:f.claims,eventId:f.request.input.eventId});assert.equal(lookup.status,"SUCCEEDED");await f.service().completeConfirmation({eventId:f.request.input.eventId,claims:f.claims});
+ const [[effects]]=await f.db.query("SELECT (SELECT COUNT(*) FROM sales_order_status_history WHERE sales_order_id=? AND action='confirmed') AS confirmations,(SELECT COUNT(*) FROM sales_order_line_reservations r JOIN sales_order_lines l ON l.id=r.sales_order_line_id WHERE l.sales_order_id=?) AS mappings",[f.request.id,f.request.id]);assert.equal(effects.confirmations,1);assert.equal(effects.mappings,1);assert.deepEqual((await reconcileCommitments(f)).mismatches,{conservation:0,mappings:0,queue:0,flags:0,reservations:0,controls:0});assert.equal((await f.service().recover()).processed,0);
 });

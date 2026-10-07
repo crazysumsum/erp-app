@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 200,
+  "revision": 205,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "IMPLEMENTING",
-  "resume_status": null,
+  "status": "BLOCKED",
+  "resume_status": "IMPLEMENTING",
   "current_phase": "PHASE-003",
-  "current_task": "TASK-036",
+  "current_task": "TASK-037",
   "baseline": {
     "design": "d7576e1670de1cb5360b1911a78b024c8fbfa555977374636112763eba48abe5",
     "plan": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
@@ -59,12 +59,12 @@
     "TASK-029": "DONE",
     "TASK-030": "DONE",
     "TASK-031": "DONE",
-    "TASK-032": "IN_PROGRESS",
+    "TASK-032": "DONE",
     "TASK-033": "DONE",
     "TASK-034": "DONE",
     "TASK-035": "DONE",
-    "TASK-036": "IN_PROGRESS",
-    "TASK-037": "PENDING"
+    "TASK-036": "DONE",
+    "TASK-037": "IN_PROGRESS"
   },
   "approvals": [
     {
@@ -3255,6 +3255,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK036-UI-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "921af513f9eec46bbf455e0d6935e5697081bc792d3dae7bdb05eddc37637847",
+      "source_ref": "Report60 actual APPROVE seven unchanged UI files; 17 real browser/94 client/scoped lint/build PASS; private hashes retained. Outside7 TASK037 drift excluded. SQL released.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK037-tests-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "55fe3f6488fe3633093a229e3ed15b725f666e225dbe983005e157f55f11e7fe",
+      "source_ref": "Report61 actual CHANGES_REQUESTED: JUnit multiple IDs and missing six seeded negative controls; scoped lint passed, no SQL. Corrected and superseded by actual R2; keep history.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK037-tests-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "f7fca562e4c1e962ad15e04cf6dab744e15fda13586e41e4378934ce86e37864",
+      "source_ref": "Report61 actual APPROVE scoped15server/test/lock unchanged digest892dae54;78native115unit/scopedlintPASS0skip. EndcurrentD/P unchanged; outsideUI test move/profile inverse excluded. WholePhase/fullcoverage/restore stillpending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK036-evidence-corrections-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "5ca22192932bfd124bc9ee1118efb808153754c919eec08c2e90e9a12babfccc",
+      "source_ref": "Actual APPROVE read-only narrow corrections: component moved unchanged SHAefb81ce…to originally approved salesBackorderDialog.test.js; lifecycle title029→028 only/no assertion edits. Dd757/Pf419 unchanged. Final integrated browser/client/build rerun required.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4775,6 +4823,28 @@
       "source_ref": "Report59 independent66native112unit/scopedlint; root16native94client/build/full lint/17browserPASS. Exactscopeproof mapping; UIindependentreview and TASK037 fullPhase gate pending.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T05:58:57.179641+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK036 actual independent Backorder UI developer checks",
+      "code_commit": "22ea626d73a2349086c0b294d1157d4aadeb8adb",
+      "spec_baseline": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
+      "source_fingerprint": "921af513f9eec46bbf455e0d6935e5697081bc792d3dae7bdb05eddc37637847",
+      "status": "PASS",
+      "source_ref": "Report60 scoped independent 17 Playwright/94 client/build/lint PASS, zero skips. No full Phase/formal/UAT claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T06:16:06.225884+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK032 actual owned child interruption proof and TASK037 scoped developer checks",
+      "code_commit": "22ea626d73a2349086c0b294d1157d4aadeb8adb",
+      "spec_baseline": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
+      "source_fingerprint": "6fdf90076204a3083cc677a3320f644e768174c6efab085e6fd511f8cd284376",
+      "status": "PASS",
+      "source_ref": "Report61 actual independent78native115unit/lint, allfourSIGKILLs,20/100contention,sixnegativecontrols,two50usercapacityP95<3s/backgroundeffects0mismatch. Scopedproof only; fullservercoverage/28/currentCI pending.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T06:30:38.345519+00:00"
     }
   ],
   "pending_decisions": [
@@ -5064,6 +5134,16 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual current Codex chat 2026-10-07 Sam「批準」directly answers pendingDEC022/packet51 after final request: adopts exact product22495f71/canonical94f5e6d patches, optionalpositivefixed202 replayRetry-After2, two supplementalsharedsource/testpaths, newD d6735bfceebd8f7abc3300c13820a5e67d57fd6a6aeb197d37be0eea23557014/P df9db7d0d9f235d677bf39b113880bdcc666bb9672cdee12bcc57af29e6904b0 and unchangedNFR014/015UATNA. Prior decisions/reviews/failures retained;28developer/fiveCI/formal60/UAT/fullPhaseGate unchanged. ExistingcommitPRmainmerge/ownedSQL/browser/crash/load/cleanupauthority persists; no production/latermaterialchange."
+    },
+    {
+      "id": "DEC-023",
+      "status": "OPEN",
+      "question": "Approve temporary isolated sales_p2_admin CREATE USER and ALL WITH GRANT OPTION only on item_recovery_it_* and erp_restore_* test schemas under verified ownedPID36251, revoke on completion. Existing two native restore tests; app unchanged; exact private prepare_restore_access.py; auto-review rejected original scope, no execution/workaround. Continue unaffected developer checks.",
+      "answer_ref": null,
+      "impact": "MAJOR",
+      "affected_ids": [
+        "TASK-037"
+      ]
     }
   ],
   "external_actions": [
@@ -5720,8 +5800,24 @@
       "kind": "LOCAL_RUNTIME",
       "target": "Independent7frozenUI files; exclusive17realPlaywright ownedDB36251 after rootrelease; ownedapp/Vite/browser/fixtures teardown",
       "idempotency_key": "sales-p2-backorder-ui-review-20261007-01",
-      "status": "PLANNED",
-      "source_ref": "Exact7 task036-ui-author-source.json; root94client/build/17browserPASS; no rawexport. Backend95491c9 fixed/frozen. Root newTASK037 scripts outside7 only, no SQL until reviewerrelease."
+      "status": "CONFIRMED",
+      "source_ref": "Exact7 task036-ui-author-source.json; root94client/build/17browserPASS; no rawexport. Backend95491c9 fixed/frozen. Root newTASK037 scripts outside7 only, no SQL until reviewerrelease. Report60 actual17 browser/94 client/lint/build PASS, frozen7 hashes unchanged; owned runtime/fixtures closed and SQL released."
+    },
+    {
+      "id": "ACT-P2-COMMITMENT-CRASH-CAPACITY-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Root exclusive owned syntheticDB36251 after independent UI teardown/release; 20/100 SO concurrency; forked ownedUID/argv/IPC-runUUID child process SIGKILL at four approved confirmation boundaries; 50distincthuman syntheticusers mixed1/100line HTTP with actualbackground workers",
+      "idempotency_key": "sales-p2-commitment-crash-capacity-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "ApprovedTASK037/DEC021022 isolated data/runtime/fault scope. New checks read-only reconciliation, originalevents, immutablepriority, norepair/no sharedprocesskill/reset. Childforkhandle+boundaryproof PID/UID/script/runUUID checked beforeSIGKILL, waitexit+lockoldtransaction settle; onlysyntheticlease expiry injection. Private reports only; original thresholds unchanged. Actual20/100 concurrency R5 PASS (peak10), four child crash boundaries passed R4, capacity R1 2PASS; full coverage R1 running, independent review pending. Original failed diagnostics retained. Report61 actual root/independentallfourcrashes/20/100/50users PASS, native78+units115. Owned children/app/fixtures teardown; fullPhasegate remains incomplete."
+    },
+    {
+      "id": "ACT-P2-RESTORE-FIXTURE-ADMIN-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Verified owned MySQL36251, synthetic sales_p2_admin only; existing native restore tests create/drop random item_recovery_it_ and erp_restore_ schemas/read-only users",
+      "idempotency_key": "sales-p2-restore-fixture-admin-20261007",
+      "status": "FAILED",
+      "source_ref": "Full coverage R1 native restore AccessDenied; retain failure. Existing isolated regression/data authority; grant admin CREATE USER and ALL WITH GRANT OPTION only on two synthetic restore-prefix schemas. App account unchanged, no production or shared runtime, no reset. Reviewed private prepare_restore_access.py. Automatic approval review REJECTED global CREATE USER and GRANT OPTION scope as not explicitly authorized; script not executed. Human precise temporary-grants/revoke decision pending; no workaround."
     }
   ],
   "evidence_files": [
@@ -5851,8 +5947,10 @@
     "evidence/20261006T081339-8279321fefd4/run.json",
     "evidence/20261006T081342-9ae36caf75b2/run.json",
     "evidence/20261006T081405-dc647e942b6a/run.json",
-    "evidence/20261006T081905-94e47b17883a/run.json"
+    "evidence/20261006T081905-94e47b17883a/run.json",
+    "docs/sales_order_management/implementation/60_task036_backorder_ui_review.md",
+    "docs/sales_order_management/implementation/61_task037_commitment_developer_checkpoint.md"
   ],
   "defects": [],
-  "next_safe_action": "Independent frozen TASK036 UI actual browser review; root TASK037 isolated tests/generator outside frozen7 and noSQL until reviewerrelease. TASK032actual processcrash/TASK037full28/coverage/capacity/CI/completePhasePR remain mandatory."
+  "next_safe_action": "Commit independently reviewed TASK037 slice; integrate observed main831bbe6 in isolatedfeature; run unaffected finalUI/client checks. DEC023 restore privileges remains pending/rejected-operation unexecuted; full28/coverage/currentCI/Phase merge not yet complete."
 }

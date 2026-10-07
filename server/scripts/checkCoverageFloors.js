@@ -14,6 +14,9 @@ import { fileURLToPath } from "node:url";
  * 「壞掉會很貴而且不容易在開發時發現」的才需要。
  */
 const FLOORS = {
+  "src/modules/sales/SalesOrderConfirmationService.js": { lines: 95, branches: 90, functions: 90 },
+  "src/modules/sales/SalesOrderLifecycleService.js": { lines: 95, branches: 90, functions: 90 },
+  "src/modules/sales/SalesBackorderService.js": { lines: 95, branches: 90, functions: 90 },
   "src/services/idempotency/IdempotencyService.js": { lines: 95, branches: 85 },
   // functions 在這裡是必要的：這個檔案曾經 lines 88%／branches 86% 穩穩過關，
   // 而 fail()（釋放 key 的唯一路徑）與過期清理的刪除分支從來沒有被呼叫過。

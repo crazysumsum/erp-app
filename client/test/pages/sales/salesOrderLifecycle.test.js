@@ -25,7 +25,7 @@ it("TC-030 server actions plus live session permission control all lifecycle but
 it("TC-029 network uncertainty preserves exact original event/version/reason across refresh then retries only after404",async()=>{
  sales.withdrawOrder.mockRejectedValueOnce(new Error("offline"));await open();await click("撤回確認");const input=document.querySelector('textarea');input.value="客戶要求重新確認";input.dispatchEvent(new Event("input",{bubbles:true}));await flushPromises();await click("提交訂單操作");const saved=JSON.parse(sessionStorage.getItem("sales.lifecycle:7:8"));expect(saved.action).toBe("withdraw");expect(wrapper.text()).not.toContain("取消訂單");wrapper.unmount();sales.getOperation.mockRejectedValue({status:404});await open();await click("重查並重試原訂單操作");expect(sales.withdrawOrder.mock.calls[1][1]).toEqual({eventId:saved.eventId,version:3,reason:saved.reason});expect(sessionStorage.length).toBe(0);
 });
-it("TC-029 release409 shows safe error and original operation without optimistic status",async()=>{
+it("TC-028 release409 shows safe error and original operation without optimistic status",async()=>{
  sales.withdrawOrder.mockRejectedValue({status:409,code:"RESERVATION_RELEASE_FAILED",message:"保留未能釋放"});sales.getOperation.mockRejectedValue({status:404});await open();await click("撤回確認");const input=document.querySelector('textarea');input.value="客戶要求重新確認";input.dispatchEvent(new Event("input",{bubbles:true}));await flushPromises();await click("提交訂單操作");expect(wrapper.text()).toContain("保留未能釋放");expect(wrapper.text()).toContain("Reserved 1");expect(wrapper.text()).not.toContain("訂單操作已完成");expect(sessionStorage.getItem("sales.lifecycle:7:8")).not.toBeNull();
 });
 it("TC-030 stale version reloads actual latest state before permitting another action",async()=>{
