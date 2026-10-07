@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 284,
+  "revision": 285,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -13,8 +13,8 @@
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t47",
-    "default_commit": "7717702acf7c40bad188ba61fb48c8e90b309be1",
+    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t47-close",
+    "default_commit": "a1b8a6b351f596a768754dc4fd6888ad96b09c6b",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -74,7 +74,7 @@
     "TASK-044": "DONE",
     "TASK-045": "DONE",
     "TASK-046": "DONE",
-    "TASK-047": "IN_PROGRESS",
+    "TASK-047": "DONE",
     "TASK-048": "PENDING",
     "TASK-049": "PENDING",
     "TASK-050": "PENDING",
@@ -5646,5 +5646,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-047: PR #185 green except the Dependency audit (GHSA-pqg4-j6r4-53mv, not T47). HD-070 A: PR #186 bumps shell-quote; once #186 is merged on the Product Owner's word, merge main into #185 and wait for CI. Merge #185 only on the Product Owner's word."
+  "next_safe_action": "TASK-047 is DONE (PR #185 merged at a1b8a6b; PR CI on head 58ebb49 all green, main at 831bbe6 before the merge). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting (TASK-048 is ready; TASK-038 waits on the Item owner's approval of the supplier_sku_refs rename). Open carry-forward: HD-043 (closes with T48), HD-044 (T48), HD-057 (T51), and the T48/T49 obligations in implementation/62_task_041_carry_forward.md, including REV-075 L-4's 10,000-row export memory numbers for T49."
 }
