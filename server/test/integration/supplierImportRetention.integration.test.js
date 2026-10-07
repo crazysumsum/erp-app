@@ -171,6 +171,9 @@ integrationTest("TASK-048 (HD-044/050/053): unreferenced files older than a day 
   await h.db.execute("UPDATE supplier_import_jobs SET files_purged_at = ? WHERE id = ?", [Date.now(), purgedJob.id]);
   const old2 = new Date(Date.now() - 2 * DAY);
   fs.utimesSync(sourcePath(purgedJob.storedName), old2, old2);
+  // 仲有 job 指住（未到期）嘅舊檔：唔係孤兒，唔刪。
+  const live = await seedJob({ status: "ready", createdDaysAgo: 3 });
+  fs.utimesSync(sourcePath(live.storedName), old2, old2);
   // Root 入面一個指去 root 外面嘅 symlink：唔跟、唔刪目標。
   const target = path.join(h.outside, "keep.txt");
   fs.writeFileSync(target, "outside");
@@ -182,6 +185,7 @@ integrationTest("TASK-048 (HD-044/050/053): unreferenced files older than a day 
   assert.equal(fs.existsSync(sourcePath(old)), false, "an old stray file is removed");
   assert.equal(fs.existsSync(sourcePath(purgedJob.storedName)), false, "a file whose job is already purged is removed (a failed earlier delete)");
   assert.ok(fs.existsSync(sourcePath(fresh)), "a file newer than a day may belong to an upload still inserting its job");
+  assert.ok(fs.existsSync(sourcePath(live.storedName)), "an old file a live job still names is kept");
   assert.ok(fs.lstatSync(sourcePath(link)).isSymbolicLink(), "a symlink is never followed or removed");
   assert.equal(fs.readFileSync(target, "utf8"), "outside");
   fs.unlinkSync(sourcePath(link));
