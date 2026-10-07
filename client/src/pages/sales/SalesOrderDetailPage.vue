@@ -12,6 +12,7 @@ import { statusLabels,statusColors,sourceLabels } from "@/components/sales/sales
 import sales from "@/services/sales.js";
 import { useSessionStore } from "@/stores/session.js";
 import { useSalesCommandEvent } from "@/composables/sales/useSalesCommandEvent.js";
+import BackorderAllocationDialog from "@/components/sales/BackorderAllocationDialog.vue";
 const route=useRoute(),session=useSessionStore(),document=ref(null),loading=ref(false),error=ref("");let controller,creditController;
 const dialog=ref(false),credit=ref(null),creditLoading=ref(false),creditError=ref(""),notice=ref(""),failed=ref(false);
 const warningLabels={PARTIAL_BACKORDER:"部分數量轉為 Backorder。",CREDIT_LIMIT_ADVISORY:"信用額度只供參考。",MASTER_DATA_CHANGED:"主檔已變更，已保存確認時的最新快照。"};
@@ -26,6 +27,9 @@ const lifecycleLabels={withdraw:"撤回確認",cancel:"取消訂單",closeRemain
 const lifecycle=useSalesCommandEvent({userId:()=>session.user?.id,commandType:"lifecycle",onTerminal:async operation=>{
  failed.value=["FAILED","REJECTED"].includes(operation.status);notice.value=failed.value?`操作未完成：${operation.errorCode}`:"訂單操作已完成。";await load();}});
 const {pending:lifecyclePending,busy:lifecycleBusy,error:lifecycleError,retryable:lifecycleRetryable}=lifecycle;
+const allocationDialog=ref(false);
+const canWake=computed(()=>session.permissions.includes("sales.mgmt")&&!pending.value&&!lifecyclePending.value&&document.value?.hasBackorder&&["CONFIRMED","PARTIALLY_FULFILLED"].includes(document.value?.status));
+async function allocationAccepted(){failed.value=false;notice.value="已提交 FIFO 排程喚醒；不保證即時配到，請重新讀取訂單查看結果。";await load();}
 const actions=computed(()=>session.permissions.includes("sales.mgmt")&&!pending.value&&!lifecyclePending.value?document.value?.allowedActions??[]:[]);
 const validReason=computed(()=>[...reason.value.trim()].length>=5&&[...reason.value.trim()].length<=500&&![...reason.value].some(c=>{const n=c.codePointAt(0);return n===127||n<32&&![9,10,13].includes(n);}));
 function openLifecycle(action){if(!actions.value.includes(action))return;lifecycleAction.value=action;reason.value="";lifecycleDialog.value=true;}
@@ -35,7 +39,7 @@ const canConfirm=computed(()=>session.permissions.includes("sales.mgmt")&&action
 const masterChanged=computed(()=>{const value=document.value;if(!value)return false;const current=value.currentMaster.customer;
  return !current||current.customerCode!==value.customerCode||current.customerName!==value.customerName||
   value.lines.some(line=>{const sku=value.currentMaster.skus.find(row=>row.skuId===line.skuId);return !sku||sku.skuName!==line.skuName||sku.skuCode!==line.skuCode;});});
-async function load(){command.stop();lifecycle.stop();controller?.abort();creditController?.abort();controller=new AbortController();const signal=controller.signal;loading.value=true;error.value="";document.value=null;dialog.value=false;lifecycleDialog.value=false;
+async function load(){command.stop();lifecycle.stop();controller?.abort();creditController?.abort();controller=new AbortController();const signal=controller.signal;loading.value=true;error.value="";document.value=null;dialog.value=false;lifecycleDialog.value=false;allocationDialog.value=false;
  try{const value=await sales.getOrder(Number(route.params.id),{signal});if(!signal.aborted){document.value=value;if(session.permissions.includes("sales.mgmt")){await command.resume(value.id);if(!signal.aborted)await lifecycle.resume(value.id);}}}
  catch(e){if(!signal.aborted)error.value=e.message||"載入銷售訂單失敗";}finally{if(!signal.aborted)loading.value=false;}}
 watch([()=>route.params.id,()=>session.user?.id,()=>session.permissions.join("|")],()=>{notice.value="";load();},{immediate:true});
@@ -61,7 +65,7 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
  <q-skeleton v-if="loading" type="rect" aria-label="載入銷售訂單" />
  <q-banner v-else-if="error" role="alert" class="bg-negative text-white">{{ error }}<template #action><q-btn flat label="重試" @click="load" /></template></q-banner>
  <template v-else-if="document"><div class="row items-center q-gutter-sm q-mb-md"><q-badge color="primary" label="Active" /><q-badge :color="statusColors[document.status]" :label="statusLabels[document.status]" /><span>版本 {{ document.version }}</span><q-btn v-if="actions.includes('edit')" label="編輯 Draft" :to="`/sales/orders/${document.id}/edit`" /><q-btn v-if="canConfirm" color="primary" label="確認訂單" :disable="busy" @click="openConfirm" /><q-btn v-for="action in actions.filter(value=>lifecycleLabels[value])" :key="action" :label="lifecycleLabels[action]" :disable="busy||lifecycleBusy" @click="openLifecycle(action)" /><q-btn flat label="返回訂單列表" to="/sales/orders" /></div>
-  <q-banner v-if="document.hasBackorder" role="status" class="bg-warning text-dark q-mb-md">有 Backorder：{{ document.backorderLineCount }} 行。</q-banner>
+  <q-banner v-if="document.hasBackorder" role="status" class="bg-warning text-dark q-mb-md">有 Backorder：{{ document.backorderLineCount }} 行。同一倉庫與 SKU 按確認順序 FIFO 補配；沒有可用庫存時等待下一輪。<template #action><q-btn v-if="canWake" flat label="喚醒 Backorder 補配" @click="allocationDialog=true" /><q-btn flat label="重新讀取訂單" @click="load" /></template></q-banner>
   <q-card flat bordered class="q-mb-md"><q-card-section><h2 class="text-h6 q-ma-none q-mb-md">訂單資料與快照</h2><dl class="row q-col-gutter-md break-word">
    <div class="col-12 col-md-6"><dt>客戶快照</dt><dd class="q-ml-none">{{ document.customerCode }} — {{ document.customerName }}</dd></div><div class="col-12 col-md-6"><dt>履約倉庫快照</dt><dd class="q-ml-none">{{ document.warehouseCode }} — {{ document.warehouseName }}</dd></div>
    <div class="col-12 col-md-6"><dt>總額</dt><dd class="q-ml-none">{{ document.currencyCode }} {{ document.totalAmount }}</dd></div><div class="col-12 col-md-6"><dt>訂單日期／要求送貨日期</dt><dd class="q-ml-none">{{ document.orderDate }}／{{ document.requestedDeliveryDate||'未設定' }}</dd></div>
@@ -94,5 +98,6 @@ function timestamp(value){return new Intl.DateTimeFormat("zh-HK",{timeZone:"Asia
   <p>{{ lifecycleAction==='withdraw'?'釋放所有剩餘保留及 Backorder，回到 Draft。':lifecycleAction==='cancel'?'取消全部尚未履約數量，釋放剩餘保留。':'保留已履約數量，取消其餘數量並釋放剩餘保留。' }}</p>
   <q-input v-model="reason" label="操作原因（5–500 字元）" type="textarea" outlined :rules="[()=>validReason||'請輸入 5–500 個有效字元']" />
  </q-card-section><q-card-actions align="right"><q-btn flat label="返回" @click="lifecycleDialog=false" /><q-btn color="negative" label="提交訂單操作" :disable="!validReason||lifecycleBusy" @click="submitLifecycle" /></q-card-actions></q-card></q-dialog>
+ <BackorderAllocationDialog v-model="allocationDialog" :order-id="document?.id" :user-id="session.user?.id" :enabled="Boolean(canWake)" @accepted="allocationAccepted" />
  </main></div></template>
 <style scoped>.confirmation-dialog { width:100%; max-width:36rem; overflow-wrap:anywhere; }.pre-line { white-space:pre-line; }.break-word { overflow-wrap:anywhere; }</style>

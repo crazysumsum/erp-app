@@ -4,7 +4,7 @@ import {Quasar} from "quasar";
 import {h} from "vue";
 import {RouterView,createMemoryHistory,createRouter} from "vue-router";
 import {afterEach,beforeEach,expect,it,vi} from "vitest";
-vi.mock("@/services/sales.js",()=>({default:{getOrder:vi.fn(),confirmOrder:vi.fn(),getOperation:vi.fn(),lookupCustomers:vi.fn(),withdrawOrder:vi.fn(),cancelOrder:vi.fn(),closeRemainingOrder:vi.fn()}}));
+vi.mock("@/services/sales.js",()=>({default:{getOrder:vi.fn(),confirmOrder:vi.fn(),getOperation:vi.fn(),lookupCustomers:vi.fn(),withdrawOrder:vi.fn(),cancelOrder:vi.fn(),closeRemainingOrder:vi.fn(),runBackorderAllocation:vi.fn()}}));
 import sales from "@/services/sales.js";
 import Detail,{page} from "@/pages/sales/SalesOrderDetailPage.vue";
 import {useSessionStore} from "@/stores/session.js";
@@ -30,4 +30,7 @@ it("TC-029 release409 shows safe error and original operation without optimistic
 });
 it("TC-030 stale version reloads actual latest state before permitting another action",async()=>{
  sales.cancelOrder.mockRejectedValue({status:409,code:"VERSION_CONFLICT"});await open();await click("取消訂單");const input=document.querySelector('textarea');input.value="客戶要求取消訂單";input.dispatchEvent(new Event("input",{bubbles:true}));await flushPromises();await click("提交訂單操作");expect(wrapper.text()).toContain("操作未完成：VERSION_CONFLICT");expect(sessionStorage.length).toBe(0);expect(wrapper.text()).toContain("撤回確認");
+});
+it("TC-027 accepted wake reloads server facts without optimistic quantity changes and Viewer cannot wake",async()=>{
+ sales.getOrder.mockResolvedValue({...order,hasBackorder:true,backorderLineCount:1});sales.runBackorderAllocation.mockResolvedValue({accepted:true});await open();await click("喚醒 Backorder 補配");await click("提交 FIFO 喚醒");expect(sales.runBackorderAllocation).toHaveBeenCalledTimes(1);expect(wrapper.text()).toContain("不保證即時配到");expect(wrapper.text()).toContain("Reserved 1");expect(wrapper.text()).toContain("Backorder 1");expect(sales.getOrder).toHaveBeenCalledTimes(2);sales.getOrder.mockResolvedValue({...order,version:4,hasBackorder:false,lines:[{...order.lines[0],reservedBaseQuantity:"2",backorderedBaseQuantity:"0"}]});await click("重新讀取訂單");expect(wrapper.text()).toContain("Reserved 2");expect(wrapper.text()).not.toContain("喚醒 Backorder 補配");wrapper.unmount();sales.getOrder.mockResolvedValue({...order,hasBackorder:true,backorderLineCount:1});await open(["sales.view"]);expect(wrapper.text()).not.toContain("喚醒 Backorder 補配");expect(wrapper.text()).toContain("FIFO");
 });

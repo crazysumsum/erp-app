@@ -31,5 +31,6 @@ export default {
   withdrawOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirmation/withdraw`,payload,{signal}); },
   cancelOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/cancel`,payload,{signal}); },
   closeRemainingOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/close-remaining`,payload,{signal}); },
+  runBackorderAllocation(scope,{idempotencyKey,signal}={}) { return write("/api/v1/sales-backorders/allocations/run",{...scope,idempotencyKey},{signal}); },
   getOperation(eventId,{signal}={}) { return httpClient.get(`/api/v1/sales-operations/by-event/${eventId}`,{signal}); }
 };

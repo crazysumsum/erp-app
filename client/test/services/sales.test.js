@@ -50,3 +50,7 @@ it("TC-029 lifecycle routes retain original event/reason/version and request can
  const payload={eventId:"life-event",version:3,reason:"客戶調整訂單"},signal=new AbortController().signal;
  for(const [method,path] of [["withdrawOrder","confirmation/withdraw"],["cancelOrder","cancel"],["closeRemainingOrder","close-remaining"]]){await sales[method](8,payload,{signal});expect(httpClient.post).toHaveBeenLastCalledWith(`/api/v1/sales-orders/8/${path}`,{idempotent:true,idempotencyKey:payload.eventId,body:payload,signal});}
 });
+it("TC-027 manual FIFO wake sends only scope with a transport key and cancellation",async()=>{
+ const signal=new AbortController().signal;await sales.runBackorderAllocation({orderId:8},{idempotencyKey:"wake-intent",signal});
+ expect(httpClient.post).toHaveBeenLastCalledWith("/api/v1/sales-backorders/allocations/run",{idempotent:true,idempotencyKey:"wake-intent",body:{orderId:8},signal});
+});
