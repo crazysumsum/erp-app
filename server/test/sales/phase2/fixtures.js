@@ -10,10 +10,10 @@ export function waitForWorkerEntry(started, execution) {
   return Promise.race([started, execution.then(() => { throw new Error("Recovery job did not enter its worker"); })]);
 }
 
-export async function setup(t, { waitMs = 2500 } = {}) {
+export async function setup(t, { waitMs = 2500, backorderEnabled = false } = {}) {
   const f = await migrationFixture(t, []), source = defaultConfigurationSource();
   const app = await createApplication({ configurationSource: { ...source, application: { ...source.application,port: 0 },sales: { ...source.sales,manualConfirmationWaitMs: waitMs },scheduler: { ...source.scheduler, jobs: { ...source.scheduler.jobs,
-    "sales.confirmationRecovery": { enabled: false }, "sales.backorderAllocate": { enabled: false } } } } });
+    "sales.confirmationRecovery": { enabled: false }, "sales.backorderAllocate": { enabled: backorderEnabled } } } } });
   t.after(() => app.shutdown("sales_phase2_confirmation_complete"));
   const database = app.services.require("mysqldatabase"), time = app.services.require("time"), logger = app.services.require("logging").logger;
   const label = `sales-p2-${randomUUID().slice(0, 8)}`;

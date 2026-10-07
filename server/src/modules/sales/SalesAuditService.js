@@ -8,8 +8,9 @@ const BUILDERS = Object.freeze({ "sales_quotation.created": DOCUMENT, "sales_quo
   "sales_order.created": DOCUMENT, "sales_order.updated": DOCUMENT, "sales_quotation.issued": TRANSITION,
   "sales_quotation.expired": TRANSITION, "sales_quotation.cancelled": TRANSITION, "sales_quotation.converted": CONVERSION,
   "sales_order.withdrawn": [...TRANSITION,"commitmentHash"], "sales_order.cancelled": [...TRANSITION,"commitmentHash"], "sales_order.remaining_closed": [...TRANSITION,"commitmentHash"],
+  "sales_order.backorder_allocated": [...TRANSITION,"commitmentHash"], "sales_order.backorder_deferred": [...TRANSITION,"commitmentHash"], "sales_order.backorder_stale": [...TRANSITION,"commitmentHash"],
   "sales_order.confirm_started": TRANSITION, "sales_order.confirmed": TRANSITION, "sales_order.confirm_failed": TRANSITION });
-const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMING", "CONFIRMED", "PARTIALLY_FULFILLED", "CLOSED"];
+const STATUSES = ["DRAFT", "ISSUED", "EXPIRED", "CANCELLED", "CONVERTED", "CONFIRMING", "CONFIRMED", "PARTIALLY_FULFILLED", "COMPLETED", "CLOSED"];
 function bounded(value, maximum, { ascii = false, empty = false } = {}) {
   if (typeof value !== "string" || !empty && !value || [...value].length > maximum ||
       (ascii ? /[^\x20-\x7e]/u.test(value) : [...value].some(character => character.codePointAt(0) < 32 || character.codePointAt(0) === 127))) throw new TypeError("Invalid Sales audit label");

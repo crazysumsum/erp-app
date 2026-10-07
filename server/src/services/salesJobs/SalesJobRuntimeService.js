@@ -1,6 +1,8 @@
 import { BaseService } from "../../framework/services/BaseService.js";
 import { SalesQuotationService } from "../../modules/sales/SalesQuotationService.js";
 import { SalesOrderConfirmationService } from "../../modules/sales/SalesOrderConfirmationService.js";
+import { SalesBackorderService } from "../../modules/sales/SalesBackorderService.js";
+import { salesError } from "../../modules/sales/salesErrors.js";
 
 export class SalesJobRuntimeService extends BaseService {
   static service = Object.freeze({ name: "salesJobs", lifecycle: "singleton", dependencies: ["mysqldatabase", "time", "logging"], eager: true });
@@ -24,6 +26,35 @@ export class SalesJobRuntimeService extends BaseService {
     await this.logger.info("sales.confirmation_recovery_completed", "Confirmation recovery batch completed", result);
     if (result.oldestAgeMs > 300000) await this.logger.error("sales.confirmation_recovery_overdue", "Confirmation recovery exceeds five minutes", result);
     if (result.deferred) throw new Error("Sales confirmation recovery incomplete");
+    return result;
+  }
+  bindBackorderScheduler(scheduler) {
+    const job=scheduler.jobs.get("sales.backorderAllocate");
+    if(job?.serviceName!=="job.salesBackorderAllocation"||job.scope!=="cluster"||job.method!=="run")throw new Error("Sales Backorder job registration invalid");
+    this.scheduler=scheduler;this.backorderJob=job;
+    this.backorder=new SalesBackorderService({database:this.services.require("mysqldatabase"),time:this.services.require("time"),logger:this.logger,config:this.config?.sales,authorizeSalesBackorder:()=>this.backorderPrincipal()});
+  }
+  #activeBackorderJob() {
+    const scheduler=this.scheduler,job=this.backorderJob;
+    return scheduler?.started===true&&scheduler.stopped===false&&scheduler.schedulerConfig.enabled===true&&job?.enabled===true&&scheduler.jobs.get("sales.backorderAllocate")===job?job:null;
+  }
+  backorderPrincipal() {
+    const job=this.#activeBackorderJob(),signal=job&&this.scheduler.running.get(job.name)?.controller.signal;
+    return signal?.aborted===false?{leaseOwner:this.scheduler.owner,signal}:null;
+  }
+  async allocateBackorders(signal) {
+    if(signal!==this.backorderPrincipal()?.signal)throw new Error("Sales Backorder worker unavailable");
+    let result;try{result=await this.backorder.runBatch({signal});}catch{throw new Error("Sales Backorder allocation failed");}
+    await this.logger.info("sales.backorder_allocation_completed","Backorder FIFO allocation batch completed",result);
+    if(result.deferred)throw new Error("Sales Backorder allocation incomplete");
+    return result;
+  }
+  async wakeBackorders(request) {
+    const job=this.#activeBackorderJob();if(!job)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+    const result=await this.backorder.wake(request);
+    if(this.#activeBackorderJob()!==job)throw salesError("SALES_DEPENDENCY_UNAVAILABLE");
+    // Use the scheduler's existing overlap and cluster-lease admission; no new timer or allocator.
+    void this.scheduler.execute(job).catch(()=>this.logger.error("sales.backorder_wake_failed","Backorder wake failed",{deferred:1}));
     return result;
   }
 }

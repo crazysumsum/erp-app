@@ -17,11 +17,11 @@ import { assertQuantityConservation } from "./salesQuantityMath.js";
 import { salesEventId } from "./salesValidation.js";
 import { salesError, SALES_ERROR_STATUS } from "./salesErrors.js";
 
-export function validateConfirmationInventoryResult(result, payload) {
+export function validateConfirmationInventoryResult(result, payload, backorder = false) {
   const mismatch = () => { throw salesError("INVENTORY_CONTRACT_MISMATCH"); };
   if (!result || !Number.isSafeInteger(result.operationId) || result.operationId < 1 ||
       result.lineCount !== payload.lines.length || !Array.isArray(result.lines) || result.lines.length !== payload.lines.length) mismatch();
-  const rootHash = inventoryOperationHash({ commandType: "SALES_BATCH_RESERVE", payload });
+  const rootHash = inventoryOperationHash({ commandType: backorder ? "SALES_BACKORDER_BATCH_RESERVE" : "SALES_BATCH_RESERVE", payload });
   const digest = createHash("sha256"), seen = new Set();
   for (const line of result.lines) {
     const expected = payload.lines.find(row => row.sourceLineId === line?.sourceLineId);
@@ -33,7 +33,7 @@ export function validateConfirmationInventoryResult(result, payload) {
     seen.add(line.sourceLineId);
   }
   for (const expected of payload.lines)
-    digest.update(`${expected.sourceLineId}:${inventoryOperationHash({ commandType: "SALES_LINE_RESERVE", payload: { rootOperationId: result.operationId,rootRequestHash: rootHash,...expected } })}\n`);
+    digest.update(`${expected.sourceLineId}:${inventoryOperationHash({ commandType: backorder ? "SALES_BACKORDER_LINE_RESERVE" : "SALES_LINE_RESERVE", payload: { rootOperationId: result.operationId,rootRequestHash: rootHash,...expected } })}\n`);
   if (result.membershipDigest !== digest.digest("hex")) mismatch();
 }
 
