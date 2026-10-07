@@ -341,6 +341,8 @@ export class SupplierImportService {
       if (cancelled.affectedRows !== 1) {
         throw supplierConflict("SUPPLIER_IMPORT_NOT_CANCELLABLE", "匯入工作正在預檢、執行或已結束，不可取消");
       }
+      // 取消咗嘅 job 從未寫入任何 Supplier：CSV 內容唔再保留，行號、狀態同錯誤碼照留（HD-073，同逾期一樣）。
+      await connection.execute("UPDATE supplier_import_rows SET normalized_payload = JSON_OBJECT() WHERE job_id = ?", [id]);
       await this.audit.record(connection, {
         actorUserId: actorId, actorUsername: actor.username, action: "import.cancel", targetType: "import",
         targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: { status: "cancelled" } },
@@ -789,4 +791,87 @@ export class SupplierImportService {
       return { id: jobId, status, ...counts };
     });
   }
+
+  /**
+   * T48 保留期（設計 §12.5；HD-071 B）：仲未清檔、而且到期嘅 job。
+   * - 已執行或者失敗咗（completed、completed_with_errors、failed）：完成日 ≤ `executedBefore`。失敗咗嘅預檢一早清咗檔；
+   *   未確認就被執行標為失敗嘅 job 都要計（REV-076 I-3），所以 failed 唔再要求 `confirmed_at`。
+   * - 從未確認（uploaded、ready、ready_with_errors）：上載日 ≤ `unconfirmedBefore`。
+   * 失敗嘅預檢同取消咗嘅 job 一早已經清咗檔，唔會出現。
+   */
+  async purgeCandidates({ executedBefore, unconfirmedBefore, limit = 200 }) {
+    const [rows] = await this.database.query(
+      `SELECT id, status FROM supplier_import_jobs
+        WHERE files_purged_at IS NULL
+          AND ((status IN (?) AND COALESCE(completed_at, updated_at) <= ?)
+            OR (status IN (?) AND created_at <= ?))
+        ORDER BY id LIMIT ?`,
+      [ENDED_JOB_STATUSES, executedBefore, UNCONFIRMED_JOB_STATUSES, unconfirmedBefore, limit]
+    );
+    return rows.map((row) => ({ id: Number(row.id), status: row.status }));
+  }
+
+  /**
+   * 已執行嘅 job 到期：先記 `files_purged_at`（之後下載結果回 410），再由呼叫方刪檔。刪唔到嘅檔冇 job 指住，
+   * 下一輪當冇人用嘅檔再刪（HD-053）。回要刪嘅檔名；另一個實例搶先咗就回 null。
+   */
+  async markExecutedFilesPurged({ id, nowMs }) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(
+        "SELECT source_stored_name, result_stored_name FROM supplier_import_jobs WHERE id = ? AND files_purged_at IS NULL FOR UPDATE", [id]);
+      if (!job) return null;
+      const [marked] = await connection.execute(
+        `UPDATE supplier_import_jobs SET files_purged_at = ?, updated_at = ?, version = version + 1
+          WHERE id = ? AND files_purged_at IS NULL AND status IN ('completed', 'completed_with_errors', 'failed')`,
+        [nowMs, nowMs, id]
+      );
+      return marked.affectedRows === 1 ? storedNames(job) : null;
+    });
+  }
+
+  /**
+   * 從未確認、逾期嘅 job（HD-071 B）：同一個 transaction 改做 cancelled、記 `files_purged_at` 同系統稽核，
+   * 清走逐列嘅 `normalized_payload`（CSV 內容；行號、狀態同錯誤碼保留；HD-072 I-5 A），再由呼叫方刪來源檔。
+   * 期間被預檢領咗或者被人確認／取消，就回 null、唔郁佢。
+   */
+  async expireUnconfirmed({ id, nowMs }) {
+    return this.database.withTransaction(async (connection) => {
+      const [[job]] = await connection.query(
+        "SELECT id, status, source_stored_name, result_stored_name FROM supplier_import_jobs WHERE id = ? AND files_purged_at IS NULL FOR UPDATE",
+        [id]);
+      if (!job || !UNCONFIRMED_JOB_STATUSES.includes(job.status)) return null;
+      assertJobTransition(job.status, "cancelled");
+      const [expired] = await connection.execute(
+        `UPDATE supplier_import_jobs SET status = 'cancelled', last_error_code = 'SUPPLIER_IMPORT_EXPIRED',
+                error_summary = '匯入工作逾期未確認，已自動取消並刪除來源檔', lease_owner = '', lease_until = NULL,
+                files_purged_at = ?, completed_at = ?, updated_at = ?, version = version + 1
+          WHERE id = ? AND status = ? AND files_purged_at IS NULL`,
+        [nowMs, nowMs, nowMs, id, job.status]
+      );
+      if (expired.affectedRows !== 1) return null;
+      await connection.execute("UPDATE supplier_import_rows SET normalized_payload = JSON_OBJECT() WHERE job_id = ?", [id]);
+      await this.audit.record(connection, {
+        actorUserId: null, actorUsername: "system", action: "import.expire", targetType: "import", targetId: Number(job.id),
+        targetLabel: `import-${job.id}`, detail: { before: { status: job.status }, after: { status: "cancelled" }, outcome: "SUPPLIER_IMPORT_EXPIRED" }
+      });
+      return storedNames(job);
+    });
+  }
+
+  /** 仲有 job 指住（`files_purged_at` 未記）嘅檔名；其餘嘅檔冇人用（HD-044／HD-053）。 */
+  async referencedStoredNames() {
+    // ponytail: 一次過讀晒；job 數以千計都只係幾百 KB，大到唔掂先改做逐批比對。
+    const [rows] = await this.database.query(
+      "SELECT source_stored_name, result_stored_name FROM supplier_import_jobs WHERE files_purged_at IS NULL");
+    return new Set(rows.flatMap((row) => storedNames(row).map(({ storedName }) => storedName)));
+  }
+}
+
+const UNCONFIRMED_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors"]);
+const ENDED_JOB_STATUSES = Object.freeze(["completed", "completed_with_errors", "failed"]);
+
+function storedNames(job) {
+  return [["source", job.source_stored_name], ["result", job.result_stored_name]]
+    .filter(([, storedName]) => storedName)
+    .map(([kind, storedName]) => ({ kind, storedName }));
 }

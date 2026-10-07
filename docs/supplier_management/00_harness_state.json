@@ -1,20 +1,20 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 285,
+  "revision": 289,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-047",
+  "current_task": "TASK-048",
   "baseline": {
     "design": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
     "plan": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
     "code_commit": "5b8aa9bbcf5217ab3a30f722ff241d167fa402f6",
     "source_fingerprint": "cd70f899bfaca539353988b320210dd24b2c3b8958b249224ad8dd55f701dc97",
-    "worktree": "/Users/sam/Documents/workspace/erp-app-worktrees/t47-close",
-    "default_commit": "a1b8a6b351f596a768754dc4fd6888ad96b09c6b",
+    "worktree": "/Users/sam/Documents/workspace/erp-supplier-t48",
+    "default_commit": "8ac45e94e25962da0988e297ae0a93cfb65191e8",
     "mode_entry_commit": "894cdc62f54dc3ea27efabfad8db5f14510fa953"
   },
   "runtime": {
@@ -75,7 +75,7 @@
     "TASK-045": "DONE",
     "TASK-046": "DONE",
     "TASK-047": "DONE",
-    "TASK-048": "PENDING",
+    "TASK-048": "IN_PROGRESS",
     "TASK-049": "PENDING",
     "TASK-050": "PENDING",
     "TASK-051": "PENDING"
@@ -1007,6 +1007,23 @@
         "package-lock.json"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-071-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-071 B, confirmed 'OK' on 2026-10-07. Authorises TASK-048 to add supplier.import.unconfirmedRetentionDays (default 30, env SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS) to server/config/supplier.js and server/.env.example.",
+      "recorded_at": "2026-10-07T15:30:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "8ac45e94e25962da0988e297ae0a93cfb65191e8",
+      "scope": [
+        "server/config/supplier.js",
+        "server/.env.example"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -1821,6 +1838,30 @@
       "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 950cfb1f71c3b8f62c463fa71f4089b599c7760b (PR #185)",
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/78_rev_075_independent_review.md",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-076",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-048)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing ea3ab091c1a9be77957bbaaee5ca73427f0c8c61 (PR #189)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/79_rev_076_independent_review.md",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-077",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-048 REV-076 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 1e1ad49e8b9e050e3c38c5256458cb4e50f5d36c (PR #189)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/80_rev_077_independent_review.md",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -4570,6 +4611,43 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-07: 'A'. PR #186 (claude/deps-shell-quote): shell-quote 1.10.0 -> 1.12.0, npm audit clean, concurrently smoke-tested."
+    },
+    {
+      "id": "HD-071",
+      "impact": "MAJOR",
+      "question": "TASK-048: design §12.5 only times retention from completion (365 days); jobs never confirmed (uploaded, ready, ready_with_errors) keep a source file that may hold personal data forever, including jobs whose uploader was deleted (HD-058 1A). (A) 365 days after upload: delete the source, set files_purged_at, status cancelled with SUPPLIER_IMPORT_EXPIRED and a system import.expire audit; (B) as A with a shorter period; (C) delete the file only and keep status ready; (D) keep forever. Not decisions (recorded defaults): executed jobs 365 days after completed_at (SUPPLIER_IMPORT_FILE_RETENTION_DAYS); unreferenced files older than a day removed (HD-044/050/053); REV-059 L-6 checks before each unlink; failures logged as supplier.import.purge_failed (errno only) and retried next run, counts via scheduler stats; daily cluster-scope job SUPPLIER_IMPORT_JOB_NAMES.purge; file purge logged, not audited; HD-043 closes with T48.",
+      "affected_ids": [
+        "TASK-048",
+        "HD-043",
+        "HD-044",
+        "HD-058"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: 'B'; then 'OK' to 30 days and to the config change (SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS in server/config/supplier.js and server/.env.example)."
+    },
+    {
+      "id": "HD-072",
+      "impact": "MAJOR",
+      "question": "REV-076 (TASK-048, changes requested): M-1 the scheduler discards a job's return value, so the purge counts never reach job stats and a run with failed deletes is recorded as succeeded (HD-071's 'counts via scheduler stats' was wrong); (a) throw a code-only SUPPLIER_IMPORT_PURGE_INCOMPLETE after logging when any file is left, or (b) correct the docs only. L-1 seven surviving reviewer mutants: add tests. I-3 a failed job with confirmed_at NULL is never purged: drop the confirmed_at condition. I-5 expired jobs keep prechecked normalized_payload for seven years: (A) clear it to {} on expiry, keeping row outcomes (a departure from §12.5), or (B) keep. I-4 orphan sweep trusts the database: document one root per environment. I-1, I-2 documented; I-6..I-8 no change.",
+      "affected_ids": [
+        "TASK-048",
+        "HD-071",
+        "REV-076"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: '全部按建議' - M-1 (a), L-1 tests, I-3 fix, I-5 (A), I-4 documented."
+    },
+    {
+      "id": "HD-073",
+      "impact": "MINOR",
+      "question": "REV-077 (TASK-048, approved) follow-ups: L-1 a run aborted by the timeout is recorded as succeeded: throw after the summary; L-2 add rows to the validating/queued expiry jobs so M7 is caught; I-a the scheduler keeps only the message, so put SUPPLIER_IMPORT_PURGE_INCOMPLETE in it; I-c a job the user cancels keeps normalized_payload while an expired one does not: clear it on cancel too (changes T44's cancel); I-b no change.",
+      "affected_ids": [
+        "TASK-048",
+        "TASK-044",
+        "REV-077"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: '全部按建議'."
     }
   ],
   "external_actions": [
@@ -5646,5 +5724,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-047 is DONE (PR #185 merged at a1b8a6b; PR CI on head 58ebb49 all green, main at 831bbe6 before the merge). PHASE-004 continues; re-derive the next ready task from 08_traceability.json against this ledger before starting (TASK-048 is ready; TASK-038 waits on the Item owner's approval of the supplier_sku_refs rename). Open carry-forward: HD-043 (closes with T48), HD-044 (T48), HD-057 (T51), and the T48/T49 obligations in implementation/62_task_041_carry_forward.md, including REV-075 L-4's 10,000-row export memory numbers for T49."
+  "next_safe_action": "TASK-048: REV-077 APPROVED 1e1ad49; HD-073 follow-ups done (abort throws, code in message, cancel clears payload, M7 test). Rerun the CI-style suite and mutants, push PR #189, wait for CI and the Product Owner's word. Merge only on the Product Owner's word."
 }

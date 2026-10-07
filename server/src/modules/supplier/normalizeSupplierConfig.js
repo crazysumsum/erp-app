@@ -105,7 +105,9 @@ export function normalizeSupplierConfig(source = {}) {
     root: root ? path.resolve(root) : null,
     maxFileBytes: positiveInteger(importSource.maxFileBytes ?? 10_485_760, "import.maxFileBytes", MAX_FILE_BYTES),
     maxRows: positiveInteger(importSource.maxRows ?? 10_000, "import.maxRows", MAX_IMPORT_ROWS),
-    fileRetentionDays: positiveInteger(importSource.fileRetentionDays ?? 365, "import.fileRetentionDays", MAX_RETENTION_DAYS)
+    fileRetentionDays: positiveInteger(importSource.fileRetentionDays ?? 365, "import.fileRetentionDays", MAX_RETENTION_DAYS),
+    // 從未確認嘅 job 幾耐之後當逾期、刪來源檔（HD-071 B）。
+    unconfirmedRetentionDays: positiveInteger(importSource.unconfirmedRetentionDays ?? 30, "import.unconfirmedRetentionDays", MAX_RETENTION_DAYS)
   });
 
   return Object.freeze({

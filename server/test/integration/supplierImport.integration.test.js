@@ -693,6 +693,7 @@ integrationTest("TASK-044 (HD-058 2A/3A): cancel ends the job, deletes the sourc
   const detail = await api(owner, "GET", `/api/v1/supplier-imports/${id}`);
   assert.deepEqual([detail.data.job.status, detail.data.total, detail.data.rows[0].status], ["cancelled", 1, "valid"],
     "summary and rows are kept");
+  assert.deepEqual(detail.data.rows[0].normalizedPayload, {}, "but not the CSV content of a job that never ran (HD-073)");
   const [audits] = await h.db.query(
     "SELECT actor_user_id, detail FROM supplier_audit_logs WHERE target_type = 'import' AND target_id = ? AND action = 'import.cancel'", [id]);
   assert.equal(audits.length, 1, "one audit row, however often it was sent");
