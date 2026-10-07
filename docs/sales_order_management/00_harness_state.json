@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 184,
+  "revision": 185,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -11,7 +11,7 @@
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "36c49ca5164bdadee325df4b63afaa85b46e88b1",
+    "code_commit": "aa4c5d26a3a3e788e5aeb509a649ee97220bc006",
     "source_fingerprint": "721e7a856153f8f9adda893ab45dc15008d0766211490e7c3d1b540f711f247e",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
@@ -23,7 +23,7 @@
     "resources": {
       "workspace": "/private/tmp/erp-sales-p2",
       "temp-directory": "/private/tmp/sales-p2-private",
-      "mysql-instance": "Owned PID19398 UID501; socket/private/tmp/sales-p2-private/runtime-f937f82592e9/mysql-primary/mysql.sock; datadir/private/tmp/sales-p2-private/runtime-f937f82592e9/mysql-primary/data; TCPlocalhost:64095; currentfreshfinal schemaerp_sales_phase2_final_bc29327195e3; prior schema retained;26.7.0 binlog1/trust0 appSUPER=N."
+      "mysql-instance": "STOPPED actual PID19398 observed exited and socket gone; UID501/private runtime-f937f82592e9/mysql-primary data and both synthetic schemas/proof preserved. Restart from exact private runtime.json argv with newly observedPID/UID/socket, never rerun initialization/schema reset."
     },
     "lease_ref": null
   },
@@ -4356,6 +4356,17 @@
       "source_ref": "Report54 actual root9native/92units/full lintPASS; independentR2 nine native/24units/scopedlintPASS. Clock RED/native8PASS1FAIL preserved; processkill/fullcapacity and fullTaskDoD pending.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T02:43:26.313303+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK032 reviewed-source commit and safe owned runtime cleanup reconciliation",
+      "code_commit": "aa4c5d26a3a3e788e5aeb509a649ee97220bc006",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "721e7a856153f8f9adda893ab45dc15008d0766211490e7c3d1b540f711f247e",
+      "status": "PASS",
+      "source_ref": "Actual committed9b13053 fixture/72fb9c1 recovery/aa4c5d2 native evidence; exact eight SHA unchanged from realR2. Private runtime.jsonSTOPPED/ownedexit/socketgone/datadirpreserved. DEC022 exacttwoapplychecksPASS in correctP2 worktree but unapplied; primarymainclean. No Phase completion/CI/PR/merge.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T02:44:37.037713+00:00"
     }
   ],
   "pending_decisions": [
@@ -5205,8 +5216,8 @@
       "kind": "LOCAL_RUNTIME",
       "target": "Only verified owned MySQL PID19398 UID501/exactargv/datadir/socket under private sales-p2runtime",
       "idempotency_key": "sales-p2-owned-runtime-stop-20261007-01",
-      "status": "PLANNED",
-      "source_ref": "DEC021cleanupauthority. Private reviewedstop_owned_runtime.py checksUID/PID/exactargv/root/socket, sendsSIGTERMonlythatprocess, waitsbounded20sec thenobservesexit/socketgone; noforcekill/drop/datadir/proof deletion. ReviewSQLfinished/idle."
+      "status": "CONFIRMED",
+      "source_ref": "Actual reviewed stop_owned_runtime.py checked UID501/PID19398/exactargv/data/socket then SIGTERM; observed ps missing process/socketgone, exit0; runtime.json runningfalse/stopped_at actual. No forcekill/drop/datadir/proofdelete. Separate reviewer confirmed no heldSQL/testprocess before cleanup."
     }
   ],
   "evidence_files": [
@@ -5339,5 +5350,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Save exact independently reviewed recovery slices with explicit stage only; execute recorded ownedruntime shutdown then observe actualexit/socket/noSQL. DEC022 stillOPEN exactproduct/canonicalunapplied; await directadoption before changing sharedidempotency. Task032 crashDoD/task033–037 pending."
+  "next_safe_action": "Await actual direct human DEC022adoption of packet51 exacttwo patches/newD/P/sharedscope; preserve historical approvals then apply exactpatches/currentchecks and baseline-bound newadoption. Before authorized native rerun, restart preservedownedsyntheticMySQL via exactargv/private runtime.json, record/verify newPIDUID/socket; do notinitialize/resetexistingdatadir. TASK031cached202RED, TASK032actualprocesskillDoD/TASK033–037 remain incomplete. ExistingcommitPRmainmergeauthority retains full28suite/currentCI/realreview/fullPhaseGate. Do notmerge partialPhase, export privateevidence, delete unmergedworktree/branch."
 }
