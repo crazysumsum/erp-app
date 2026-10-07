@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 189,
+  "revision": 195,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-033",
+  "current_task": "TASK-035",
   "baseline": {
     "design": "d7576e1670de1cb5360b1911a78b024c8fbfa555977374636112763eba48abe5",
     "plan": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
@@ -60,9 +60,9 @@
     "TASK-030": "DONE",
     "TASK-031": "DONE",
     "TASK-032": "IN_PROGRESS",
-    "TASK-033": "IN_PROGRESS",
-    "TASK-034": "PENDING",
-    "TASK-035": "PENDING",
+    "TASK-033": "DONE",
+    "TASK-034": "DONE",
+    "TASK-035": "IN_PROGRESS",
     "TASK-036": "PENDING",
     "TASK-037": "PENDING"
   },
@@ -3183,6 +3183,54 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK033-lifecycle-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "a73d183d19db5fe4427130aca902ed2d051a07960af8c03fe254da8be7066e79",
+      "source_ref": "Actual R1CHANGES_REQUESTED twoP1: latewithdrawmaster locks invert Inventory rank; actual scopedhasfalse hidesregisteredOPEN/missingregistry returnsNOT_REQUIRED. Native17/units85/scopedlintPASS, findings separatelyreproduced. Perfiledigestacf5804149a76d6de45f7d97e8df604dbf4cbe34cd551e24b656bf7d0c3d5d70; globalsourceclientdrift explicitly outside review. Fixednames/resolve/boundedmetadata and pre-releasehistorydisplay lookup; R2pending. Priorfailuresretained.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 2,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK033-lifecycle-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "08335757e84803b42a86e9b9568e24f32e3b0bf49fa7da82a8d6be92f2d36e7e",
+      "source_ref": "Actual APPROVE12-file digest ff46f456d5376074bf2643949552ad427b16858a994313fa3d47e6b66560e8a0. R1twoP1 corrected; independent18native/86units/scopedlintPASS0skip. Originalsource08335757 to40456698 changedclientoutside12scope only. Private reviewer proof retained; report56.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK034-lifecycle-UI-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "4045669803d6030ea1595a5d1ffc3fab5c76e15d7524d28612ae6f6d8c44dad4",
+      "source_ref": "Actual CHANGES_REQUESTED P2 nativeUTF16maxlength disagreeswith500Unicodecodepoints. Independent89client/14browser/lintPASS but boundarymissing. Actual new251emoji input RED showedtruncate250; removednativeattr, originalvalidator retained; root15browser89client/buildPASS. R2pending. Private R1JUnitb00824359df06df07a55954deee277a4f6d86de9d1bc1eb47883697769f720c4 retained.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK034-lifecycle-UI-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "8f6042bc960f2f2cf6a4148ea5ee984b2614ec13624740e986ec37596bc1c708",
+      "source_ref": "Actual APPROVE six-file start/end SHA matches task034-author-r2-source.json. Independent15realbrowser/89client/scopedlint/buildPASS.251keyboard/500nativepersist/501disabled checked. PrivateJUnit2f43941f48fb33dc21d684a5bd83633af300b800ec8d060855f55a558e0e6b2a; report57. R1actualRED retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4670,6 +4718,28 @@
       "source_ref": "Root36native/120unit/lintPASS; independent27native/121unit/lintPASS. Report55. Prior cached202RED retained; no wholePhase/formal/CI.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T03:20:03.660009+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK033 actual native rollback/HTTP and independent corrected-source review",
+      "code_commit": "9d1714d1471ec12b0d74d95b2e8c2d1c871c813f",
+      "spec_baseline": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
+      "source_fingerprint": "08335757e84803b42a86e9b9568e24f32e3b0bf49fa7da82a8d6be92f2d36e7e",
+      "status": "PASS",
+      "source_ref": "Report56: root18native0skip/reviewer18native86units0skip/fullnpm lintPASS; actual R1 findings corrected, perfile proof unchanged. UI independent review pending Unicode boundary. No Phase/formal/UAT/CI/PR/merge claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T03:43:54.357942+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK034 actual independent Unicode/lifecycle browser developer checks",
+      "code_commit": "95607989fcf39e0bfccb4d6982a92c52b9c7596a",
+      "spec_baseline": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
+      "source_fingerprint": "8f6042bc960f2f2cf6a4148ea5ee984b2614ec13624740e986ec37596bc1c708",
+      "status": "PASS",
+      "source_ref": "Report57: root+independent15realPlaywright89client/build/lintPASS; source sixfiles unchanged. OriginalR1review/251emojiRED retained. Developer only, no Phase/formal/UAT/CI/PR/merge.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T03:48:45.297076+00:00"
     }
   ],
   "pending_decisions": [
@@ -5545,6 +5615,46 @@
       "idempotency_key": "sales-p2-dec022-review-native-20261007-01",
       "status": "CONFIRMED",
       "source_ref": "Actual root36native/120unit/lintPASS; actual separate reviewer27native/121unit/lintPASS, zero fail/skip. Original cached202header and revocation now pass; fixtures/app teardown and reviewerSQLlease released. Private logs retained. No wholePhase/formal/CI claim."
+    },
+    {
+      "id": "ACT-P2-LIFECYCLE-DEV-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "OwnedsyntheticMySQL36251 existingfinalschema; root lifecycle/followup native fixtures, HTTP and browser only; serialSQL, teardown",
+      "idempotency_key": "sales-p2-lifecycle-dev-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual first task033-native ran before this checkpoint: nine startupfailures missingapi.description, no business lifecycle executed. Private RED retained. Description convention repaired; next native run planned now under existing DEC021/22 authorization. Record is retrospective for first failed run, not fabricated prior plan. Observed completed: rootnativeR9 18PASS; reviewerR2 18native86unitsPASS; browserR3 14PASS. Actual RED startup/R8projection/R1browser/R2incorrectnew400expectation retained; no rawexport. Owned apps/fixtures closed, persistent MySQL preserved."
+    },
+    {
+      "id": "ACT-P2-LIFECYCLE-REVIEW-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "OwnedsyntheticMySQL36251; separate reviewer may repeat13lifecycle/4read native serially while root noSQL",
+      "idempotency_key": "sales-p2-lifecycle-review-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Actual root17native/86units/lintPASS; approved original lifecycle/Fulfillment exception. Exact12files/source task033-author-source.json. No implementation delegation or rawexport. Observed completed: rootnativeR9 18PASS; reviewerR2 18native86unitsPASS; browserR3 14PASS. Actual RED startup/R8projection/R1browser/R2incorrectnew400expectation retained; no rawexport. Owned apps/fixtures closed, persistent MySQL preserved."
+    },
+    {
+      "id": "ACT-P2-LIFECYCLE-BROWSER-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "OwnedsyntheticMySQL36251 existingfinalschema; ownedport0app+Vite+realPlaywright original10 plus4lifecycle cases, no concurrentSQL",
+      "idempotency_key": "sales-p2-lifecycle-browser-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "ExistingDEC021runtimeauthorization; reviewedoriginalconfig and14current browser cases, syntheticJWT/role/data; privateproof only, deterministic assertions/console/network/error/teardown. Backend R1realfindings fixed, currentrootnative18/units87/lint rerun. No Phasecompletionclaim. Observed completed: rootnativeR9 18PASS; reviewerR2 18native86unitsPASS; browserR3 14PASS. Actual RED startup/R8projection/R1browser/R2incorrectnew400expectation retained; no rawexport. Owned apps/fixtures closed, persistent MySQL preserved."
+    },
+    {
+      "id": "ACT-P2-LIFECYCLE-UI-REVIEW-R2-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Ownedsynthetic MySQL36251; independent15realPlaywright after rootrelease; serialSQL; ownedfixture/app/Vite teardown",
+      "idempotency_key": "sales-p2-ui-review-r2-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Current six-file task034-author-r2-source.json; root15browser/89client/buildPASS. Original actual R1browser14PASS was run after directcoordinationbefore this separate checkpoint, retained retrospectiveproof. UnicodeRED retained. No rawexport. Observed15browser/89client/lint/buildPASS; app/Vite/browser/fixtureclosed;SQLreleased."
+    },
+    {
+      "id": "ACT-P2-BACKORDER-DEV-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Approved fixedInventoryworker/FIFO synthetic tests; rootnoSQLuntilUIreviewrelease; existing disposable schema/datadir noreset",
+      "idempotency_key": "sales-p2-backorder-dev-20261007-01",
+      "status": "STARTED",
+      "source_ref": "DEC021 approvedreserve-only fixedprincipal,DB-clockleasefence,worker2types,oneFIFOentryTx/currentmanualauthunchanged. Three workerunitRED reproduce missingimplementation before sourceedit; native/failure/concurrency follow in exclusiveSQL. ThreeworkerunitRED retained; minimalInventorysecondvariation implemented,12worker+existingmanualunitsPASS0skip. Native/FIFO stillpending."
     }
   ],
   "evidence_files": [
@@ -5677,5 +5787,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Implement approved lifecycle guard and atomic withdraw/cancel/close; TASK032 actual process-crash proof remains pending alongside TASK037. Complete full P2 before one Phase PR."
+  "next_safe_action": "TASK035 approved Inventoryworker native lease/auth/replay/rollback and FIFO allocation, then TASK036 job/UI. TASK032actualprocesscrash/TASK037fullPhaseverification remainpending; no partialPhasePR."
 }
