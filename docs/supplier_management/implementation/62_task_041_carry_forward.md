@@ -672,3 +672,12 @@ tests, integration tests on real MySQL, client vitest and the mocked Playwright 
 
 The fresh-actor mutant survived the first run. A test was then added for a manager whose permission is withdrawn after the
 token was issued (403 `PERMISSION_STALE`, no audit), and it kills the mutant.
+
+After HD-069 the T47 list is 30 mutants, all killed. One pattern was updated for the changed guard, and five mutants were
+added:
+
+- the guard ignoring existing apostrophes, and the unguard handling only one (REV-075 L-1);
+- a retired currency, or a retired payment term, passing precheck (HD-069 L-2);
+- no guard on the payment-term code (the reviewer's M12; REV-075 L-3).
+
+The full server suite, run the CI way, passes: 2,567, 0 failed, coverage floors met.
