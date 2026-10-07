@@ -87,4 +87,22 @@ was used, no API was started, and the worktree is clean.
 
 - The M-1 mechanism was checked: `SchedulerService.js:411` does discard the return value. The author had copied the
   "counts via scheduler stats" claim from Item's cleanup job.
-- The findings were taken to the Product Owner (HD-072).
+- The findings were taken to the Product Owner (HD-072). The answer was '全部按建議', and the follow-up is below.
+
+| Finding | Follow-up |
+| --- | --- |
+| M-1 | **Fixed (a).** After logging the summary, a run that leaves any file behind throws `SUPPLIER_IMPORT_PURGE_INCOMPLETE`, with a code-only message and the counts attached. The scheduler records the run as failed. The docstring, the carry-forward and the HD-072 note correct the earlier claim. |
+| L-1 | **Tests added.** The precheck-claim race in expiry (R); a kind directory that is a symlink, a file, or on another filesystem stops the run (O, A); an abort midway skips the next job and the orphan sweep (Q, B). C and D are covered under I-3. |
+| I-1 | Documented as the residual risk in the carry-forward. |
+| I-2 | Documented; no change. |
+| I-3 | **Fixed.** Every `failed` job without `files_purged_at` is due 365 days after completion. The `confirmed_at` condition is gone, and an integration test covers a job failed as not confirmed. |
+| I-4 | **Documented** for operators: one root per environment. No code change. |
+| I-5 | **Fixed (A).** Expiry also clears the job's rows' `normalized_payload` to `{}`; row numbers, outcomes and error codes stay. |
+| I-6, I-7, I-8 | No change. |
+
+While making the fixes, the author found and fixed two defects of their own:
+
+- `markExecutedFilesPurged` passed an array to `IN (?)` through `connection.execute`, which a prepared statement does not
+  expand. The integration test caught it: every mark became a "race". The status list is now written out.
+- An unsafe file that was also new was counted as two failures. The file-age check now runs before the safety checks; a new
+  file is left alone either way.

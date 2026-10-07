@@ -106,6 +106,8 @@ integrationTest("TASK-048: executed jobs past 365 days lose their files and answ
   const due = await seedJob({ status: "completed", createdDaysAgo: 400, completedDaysAgo: 366, confirmed: true });
   const failedRunning = await seedJob({ status: "failed", createdDaysAgo: 400, completedDaysAgo: 366, confirmed: true });
   const dueWithErrors = await seedJob({ status: "completed_with_errors", createdDaysAgo: 400, completedDaysAgo: 366, confirmed: true });
+  // 未確認就被執行標為失敗（SUPPLIER_IMPORT_NOT_CONFIRMED）：一樣到期（REV-076 I-3）。
+  const failedUnconfirmed = await seedJob({ status: "failed", createdDaysAgo: 400, completedDaysAgo: 366 });
   const young = await seedJob({ status: "completed_with_errors", createdDaysAgo: 400, completedDaysAgo: 364, confirmed: true });
   const queued = await seedJob({ status: "queued", createdDaysAgo: 400, confirmed: true });
   const audits = async () => Number((await h.db.query(
@@ -114,9 +116,9 @@ integrationTest("TASK-048: executed jobs past 365 days lose their files and answ
   assert.ok(auditsBefore >= 1, "the upload was audited");
 
   const counts = await purge();
-  assert.ok(counts.retained >= 3 && counts.failed === 0, JSON.stringify(counts));
+  assert.ok(counts.retained >= 4 && counts.failed === 0, JSON.stringify(counts));
 
-  for (const { id, storedName } of [due, failedRunning, dueWithErrors]) {
+  for (const { id, storedName } of [due, failedRunning, dueWithErrors, failedUnconfirmed]) {
     const row = await job(id);
     assert.ok(row.files_purged_at !== null, `job ${id} is marked purged`);
     assert.ok(["completed", "failed", "completed_with_errors"].includes(row.status), "the status is kept");
@@ -138,6 +140,12 @@ integrationTest("TASK-048 (HD-071 B): a job never confirmed for 30 days is cance
   const stale = [await seedJob({ status: "ready", createdDaysAgo: 31 }), await seedJob({ status: "uploaded", createdDaysAgo: 31 }),
     await seedJob({ status: "ready_with_errors", createdDaysAgo: 31 })];
   const fresh = await seedJob({ status: "ready", createdDaysAgo: 28 });
+  const now = Date.now();
+  for (const { id } of [stale[0], fresh]) {
+    await h.db.execute(`INSERT INTO supplier_import_rows (job_id, \`row_number\`, operation, normalized_payload, status, errors, warnings,
+      created_at, updated_at) VALUES (?, 1, 'create', ?, 'valid', JSON_ARRAY(), JSON_ARRAY(), ?, ?)`,
+    [id, JSON.stringify({ root: { supplierName: "Personal Name", generalEmail: "person@example.com" } }), now, now]);
+  }
   const validating = await seedJob({ status: "validating", createdDaysAgo: 31 });
 
   const counts = await purge();
@@ -153,9 +161,15 @@ integrationTest("TASK-048 (HD-071 B): a job never confirmed for 30 days is cance
       [null, "system", "cancelled", "SUPPLIER_IMPORT_EXPIRED"]);
   }
   assert.equal((await job(fresh.id)).status, "ready", "28 days is not yet due");
+  const payload = async (id) => (await h.db.query("SELECT status, normalized_payload FROM supplier_import_rows WHERE job_id = ?", [id]))[0][0];
+  assert.deepEqual([(await payload(stale[0].id)).status, (await payload(stale[0].id)).normalized_payload], ["valid", {}],
+    "an expired job's rows keep their outcome but lose the CSV content (HD-072 I-5 A)");
+  assert.equal((await payload(fresh.id)).normalized_payload.root.generalEmail, "person@example.com", "a job not yet due keeps it");
   assert.equal((await job(validating.id)).status, "validating", "a job being prechecked is left to the precheck");
 
   // 揀咗做候選之後先被確認或者已經清咗：唔郁佢。
+  assert.equal(await h.service.expireUnconfirmed({ id: validating.id, nowMs: Date.now() }), null, "claimed by the precheck meanwhile");
+  assert.equal((await job(validating.id)).status, "validating");
   const confirmedMeanwhile = await seedJob({ status: "queued", createdDaysAgo: 31, confirmed: true });
   assert.equal(await h.service.expireUnconfirmed({ id: confirmedMeanwhile.id, nowMs: Date.now() }), null);
   assert.deepEqual([(await job(confirmedMeanwhile.id)).status, (await job(confirmedMeanwhile.id)).files_purged_at], ["queued", null]);
@@ -201,11 +215,16 @@ integrationTest("TASK-048 (REV-059 L-6): a hard-linked or undeletable file is re
   fs.chmodSync(path.join(h.root, "source"), 0o500);
   let counts;
   try {
-    counts = await purge();
+    // 有檔刪唔到：記低摘要之後拋錯，scheduler 會記呢輪失敗（REV-076 M-1）。
+    await assert.rejects(purge(), (error) => {
+      counts = error.counts;
+      return error.code === "SUPPLIER_IMPORT_PURGE_INCOMPLETE" && !error.message.includes(h.root);
+    });
   } finally {
     fs.chmodSync(path.join(h.root, "source"), 0o700);
   }
   assert.ok(counts.failed >= 2, JSON.stringify(counts));
+  assert.ok(h.logs.some((entry) => entry.event === "supplier.import.purged" && entry.data.failed === counts.failed), "the summary is logged first");
   const failures = h.logs.filter((entry) => entry.event === "supplier.import.purge_failed");
   assert.ok(failures.some((entry) => entry.data.jobId === linked.id && entry.data.code === "SUPPLIER_IMPORT_PURGE_UNSAFE"));
   assert.ok(failures.some((entry) => entry.data.jobId === blocked.id && entry.data.code === "EACCES"));
@@ -218,7 +237,8 @@ integrationTest("TASK-048 (REV-059 L-6): a hard-linked or undeletable file is re
   const old = new Date(Date.now() - 2 * DAY);
   fs.utimesSync(sourcePath(blocked.storedName), old, old);
   fs.utimesSync(sourcePath(linked.storedName), old, old);
-  const retry = await purge();
+  let retry;
+  await assert.rejects(purge(), (error) => { retry = error.counts; return error.code === "SUPPLIER_IMPORT_PURGE_INCOMPLETE"; });
   assert.equal(fs.existsSync(sourcePath(blocked.storedName)), false, "the retry removes the file");
   assert.ok(fs.existsSync(outsideCopy) && fs.existsSync(sourcePath(linked.storedName)));
   assert.ok(retry.failed >= 1, "the hard link is refused again");

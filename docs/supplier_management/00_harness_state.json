@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 287,
+  "revision": 288,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1839,6 +1839,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/78_rev_075_independent_review.md",
       "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-076",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-048)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing ea3ab091c1a9be77957bbaaee5ca73427f0c8c61 (PR #189)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/79_rev_076_independent_review.md",
+      "status": "CHANGES_REQUESTED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -4600,6 +4612,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-07: 'B'; then 'OK' to 30 days and to the config change (SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS in server/config/supplier.js and server/.env.example)."
+    },
+    {
+      "id": "HD-072",
+      "impact": "MAJOR",
+      "question": "REV-076 (TASK-048, changes requested): M-1 the scheduler discards a job's return value, so the purge counts never reach job stats and a run with failed deletes is recorded as succeeded (HD-071's 'counts via scheduler stats' was wrong); (a) throw a code-only SUPPLIER_IMPORT_PURGE_INCOMPLETE after logging when any file is left, or (b) correct the docs only. L-1 seven surviving reviewer mutants: add tests. I-3 a failed job with confirmed_at NULL is never purged: drop the confirmed_at condition. I-5 expired jobs keep prechecked normalized_payload for seven years: (A) clear it to {} on expiry, keeping row outcomes (a departure from §12.5), or (B) keep. I-4 orphan sweep trusts the database: document one root per environment. I-1, I-2 documented; I-6..I-8 no change.",
+      "affected_ids": [
+        "TASK-048",
+        "HD-071",
+        "REV-076"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: '全部按建議' - M-1 (a), L-1 tests, I-3 fix, I-5 (A), I-4 documented."
     }
   ],
   "external_actions": [
@@ -5676,5 +5700,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-048 on claude/supplier-task-048 per HD-071 B (30 days, confirmed): CI-style suite, mutation sweep, carry-forward, PR, CI, independent review. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-048: REV-076 follow-ups done per HD-072; rerun the CI-style suite and the mutation sweep, push PR #189, then a fresh independent review of the changes (REV-076 requested changes). Merge only on the Product Owner's word."
 }

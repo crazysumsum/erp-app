@@ -18,7 +18,10 @@ const MAX_BATCHES = 50;
  *    上載寫咗檔但未入 job 就死機、或者之前刪唔到嘅檔，都喺呢度清；所以刪唔到嘅檔下一輪自然會再試。
  *
  * 每次刪之前再驗目錄同檔案（`removeVerifiedSupplierImportFile`，REV-059 L-6）。刪唔到只記 errno 代碼
- * （`supplier.import.purge_failed`）；job、逐列結果同稽核全部保留。回傳嘅數字由 scheduler 記入 job stats。
+ * （`supplier.import.purge_failed`）；job、逐列結果同稽核全部保留。
+ *
+ * Scheduler 唔會保存 job 嘅回傳值（REV-076 M-1），所以有檔刪唔到就喺記低摘要之後拋
+ * `SUPPLIER_IMPORT_PURGE_INCOMPLETE`：scheduler 記呢輪做失敗、`consecutiveFailures` 遞增，可以靠佢告警。
  */
 export class SupplierImportFilePurgeJob extends BaseService {
   static service = Object.freeze({
@@ -111,6 +114,11 @@ export class SupplierImportFilePurgeJob extends BaseService {
     }
 
     void this.logger?.info?.("supplier.import.purged", "Supplier import retention run finished", counts);
+    if (counts.failed > 0) {
+      // 只帶代碼同數字：scheduler 會將 message 寫入 system log 同 fr_job_stats。
+      throw Object.assign(new Error(`Supplier import purge left ${counts.failed} file(s) behind`),
+        { code: "SUPPLIER_IMPORT_PURGE_INCOMPLETE", counts });
+    }
     return counts;
   }
 }

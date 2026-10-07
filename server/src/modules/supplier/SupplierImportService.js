@@ -792,7 +792,8 @@ export class SupplierImportService {
 
   /**
    * T48 保留期（設計 §12.5；HD-071 B）：仲未清檔、而且到期嘅 job。
-   * - 已執行（completed、completed_with_errors、確認後失敗）：完成日 ≤ `executedBefore`。
+   * - 已執行或者失敗咗（completed、completed_with_errors、failed）：完成日 ≤ `executedBefore`。失敗咗嘅預檢一早清咗檔；
+   *   未確認就被執行標為失敗嘅 job 都要計（REV-076 I-3），所以 failed 唔再要求 `confirmed_at`。
    * - 從未確認（uploaded、ready、ready_with_errors）：上載日 ≤ `unconfirmedBefore`。
    * 失敗嘅預檢同取消咗嘅 job 一早已經清咗檔，唔會出現。
    */
@@ -800,11 +801,10 @@ export class SupplierImportService {
     const [rows] = await this.database.query(
       `SELECT id, status FROM supplier_import_jobs
         WHERE files_purged_at IS NULL
-          AND ((status IN ('completed', 'completed_with_errors') AND COALESCE(completed_at, updated_at) <= ?)
-            OR (status = 'failed' AND confirmed_at IS NOT NULL AND COALESCE(completed_at, updated_at) <= ?)
+          AND ((status IN (?) AND COALESCE(completed_at, updated_at) <= ?)
             OR (status IN (?) AND created_at <= ?))
         ORDER BY id LIMIT ?`,
-      [executedBefore, executedBefore, UNCONFIRMED_JOB_STATUSES, unconfirmedBefore, limit]
+      [ENDED_JOB_STATUSES, executedBefore, UNCONFIRMED_JOB_STATUSES, unconfirmedBefore, limit]
     );
     return rows.map((row) => ({ id: Number(row.id), status: row.status }));
   }
@@ -820,8 +820,7 @@ export class SupplierImportService {
       if (!job) return null;
       const [marked] = await connection.execute(
         `UPDATE supplier_import_jobs SET files_purged_at = ?, updated_at = ?, version = version + 1
-          WHERE id = ? AND files_purged_at IS NULL
-            AND (status IN ('completed', 'completed_with_errors') OR (status = 'failed' AND confirmed_at IS NOT NULL))`,
+          WHERE id = ? AND files_purged_at IS NULL AND status IN ('completed', 'completed_with_errors', 'failed')`,
         [nowMs, nowMs, id]
       );
       return marked.affectedRows === 1 ? storedNames(job) : null;
@@ -830,7 +829,8 @@ export class SupplierImportService {
 
   /**
    * 從未確認、逾期嘅 job（HD-071 B）：同一個 transaction 改做 cancelled、記 `files_purged_at` 同系統稽核，
-   * 再由呼叫方刪來源檔。期間被預檢領咗或者被人確認／取消，就回 null、唔郁佢。
+   * 清走逐列嘅 `normalized_payload`（CSV 內容；行號、狀態同錯誤碼保留；HD-072 I-5 A），再由呼叫方刪來源檔。
+   * 期間被預檢領咗或者被人確認／取消，就回 null、唔郁佢。
    */
   async expireUnconfirmed({ id, nowMs }) {
     return this.database.withTransaction(async (connection) => {
@@ -847,6 +847,7 @@ export class SupplierImportService {
         [nowMs, nowMs, nowMs, id, job.status]
       );
       if (expired.affectedRows !== 1) return null;
+      await connection.execute("UPDATE supplier_import_rows SET normalized_payload = JSON_OBJECT() WHERE job_id = ?", [id]);
       await this.audit.record(connection, {
         actorUserId: null, actorUsername: "system", action: "import.expire", targetType: "import", targetId: Number(job.id),
         targetLabel: `import-${job.id}`, detail: { before: { status: job.status }, after: { status: "cancelled" }, outcome: "SUPPLIER_IMPORT_EXPIRED" }
@@ -865,6 +866,7 @@ export class SupplierImportService {
 }
 
 const UNCONFIRMED_JOB_STATUSES = Object.freeze(["uploaded", "ready", "ready_with_errors"]);
+const ENDED_JOB_STATUSES = Object.freeze(["completed", "completed_with_errors", "failed"]);
 
 function storedNames(job) {
   return [["source", job.source_stored_name], ["result", job.result_stored_name]]

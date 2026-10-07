@@ -55,6 +55,25 @@ test("a verified delete refuses a changed directory, a symlink, a second hard li
   assert.ok(fs.existsSync(path.join(swapped, NAME)));
 });
 
+test("a kind directory that is a symlink, not a directory, or on another filesystem stops the run before anything is changed", async (t) => {
+  const root = tempRoot(t);
+  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), "supplier-purge-elsewhere-"));
+  t.after(() => fs.rmSync(elsewhere, { recursive: true, force: true }));
+  fs.rmdirSync(path.join(root, "source"));
+  fs.symlinkSync(elsewhere, path.join(root, "source"));
+  await assert.rejects(supplierImportDirectory(root, "source"), /regular directory/u, "symlinked kind directory (REV-076 L-1 O)");
+  fs.unlinkSync(path.join(root, "source"));
+  fs.writeFileSync(path.join(root, "source"), "not a directory");
+  await assert.rejects(supplierImportDirectory(root, "source"), /regular directory/u);
+  fs.unlinkSync(path.join(root, "source"));
+  fs.mkdirSync(path.join(root, "source"));
+  const otherDevice = async (target) => {
+    const info = await lstat(target);
+    return target.endsWith(`${path.sep}source`) ? Object.assign(info, { dev: info.dev + 1 }) : info;
+  };
+  await assert.rejects(supplierImportDirectory(root, "source", { lstat: otherDevice }), /filesystem/u, "another filesystem (L-1 A)");
+});
+
 test("a file changed after the cut-off is kept for an upload still inserting its job", async (t) => {
   const root = tempRoot(t);
   fs.writeFileSync(path.join(root, "source", NAME), "x");
@@ -63,13 +82,14 @@ test("a file changed after the cut-off is kept for an upload still inserting its
   assert.equal(await removeVerifiedSupplierImportFile(directory, NAME, { notNewerThanMs: Date.now() + 1000 }), "deleted");
 });
 
-function purgeJob({ root, candidates = [], expire = (id) => [{ kind: "source", storedName: `${id}`.padStart(64, "0") }], referenced = [] } = {}) {
-  const calls = { candidates: [], expired: [], marked: [] };
+function purgeJob({ root, candidates = [], expire = (id) => [{ kind: "source", storedName: `${id}`.padStart(64, "0") }], referenced = [],
+  onMark = () => {} } = {}) {
+  const calls = { candidates: [], expired: [], marked: [], referenced: 0 };
   const importService = {
     async purgeCandidates(input) { calls.candidates.push(input); return candidates.splice(0, input.limit); },
     async expireUnconfirmed({ id }) { calls.expired.push(id); return expire(id); },
-    async markExecutedFilesPurged({ id }) { calls.marked.push(id); return expire(id); },
-    async referencedStoredNames() { return new Set(referenced); }
+    async markExecutedFilesPurged({ id }) { calls.marked.push(id); onMark(id); return expire(id); },
+    async referencedStoredNames() { calls.referenced += 1; return new Set(referenced); }
   };
   const services = { require: (name) => ({
     scheduler: { register() {} }, logging: { logger: { info() {}, error() {} } }, time: { nowMs: () => 1_000 * 86_400_000 },
@@ -109,4 +129,21 @@ test("the job pages through a backlog and stops at once when aborted", async (t)
   const stopped = purgeJob({ root, candidates: [{ id: 1, status: "completed" }], expire: () => [] });
   const counts = await stopped.job.purge(aborted.signal);
   assert.deepEqual([counts.retained, stopped.calls.marked, stopped.calls.candidates], [0, [], []], "not even a query once aborted");
+
+  // 做到一半先 abort（600 秒 timeout）：下一個 job 同孤兒清理都唔做（REV-076 L-1 B／Q）。
+  const midway = new AbortController();
+  const partial = purgeJob({ root, expire: () => [], onMark: () => midway.abort(),
+    candidates: [{ id: 1, status: "completed" }, { id: 2, status: "completed" }] });
+  await partial.job.purge(midway.signal);
+  assert.deepEqual([partial.calls.marked, partial.calls.referenced], [[1], 0]);
+});
+
+test("a run that leaves a file behind fails with a code and its counts, after logging the summary (REV-076 M-1)", async (t) => {
+  const root = tempRoot(t);
+  const name = "c".repeat(64);
+  fs.writeFileSync(path.join(root, "source", name), "x");
+  fs.linkSync(path.join(root, "source", name), path.join(root, "second-link"));
+  const { job } = purgeJob({ root, candidates: [{ id: 7, status: "completed" }], expire: () => [{ kind: "source", storedName: name }] });
+  await assert.rejects(job.purge(new AbortController().signal),
+    (error) => error.code === "SUPPLIER_IMPORT_PURGE_INCOMPLETE" && error.counts.failed === 1 && !error.message.includes(root));
 });

@@ -169,10 +169,11 @@ export async function removeVerifiedSupplierImportFile(directory, storedName, { 
     if (error.code === "ENOENT") return "missing";
     throw error;
   }
+  // 太新嘅檔乜都唔做（未算失敗）：可能係 upload 寫咗檔、未入 job。
+  if (notNewerThanMs !== undefined && info.mtimeMs > notNewerThanMs) return "too_new";
   if (!info.isFile() || info.dev !== directory.dev || info.nlink !== 1) {
     throw purgeError("SUPPLIER_IMPORT_PURGE_UNSAFE", "Supplier import file is not a single-link regular file on the root's filesystem");
   }
-  if (notNewerThanMs !== undefined && info.mtimeMs > notNewerThanMs) return "too_new";
   try {
     await unlink(file);
   } catch (error) {

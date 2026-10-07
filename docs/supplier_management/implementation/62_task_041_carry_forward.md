@@ -692,14 +692,14 @@ open point was decided in HD-071 B: a 30-day period, confirmed by the Product Ow
 
 | Obligation | Status |
 | --- | --- |
-| Design §12.5: executed jobs' files 365 days after completion | **Done.** `completed`, `completed_with_errors`, and `failed` after confirm are due `fileRetentionDays` after `completed_at`. `files_purged_at` is set first, so the result download answers 410 (T46), then the source is deleted. The job, its rows and audit are kept, and a file purge writes no audit. |
-| HD-071 B: jobs never confirmed | **Done.** Jobs in `uploaded`, `ready` or `ready_with_errors` for `unconfirmedRetentionDays` (default 30, env `SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS`) since upload are handled in one transaction: the job is cancelled with `SUPPLIER_IMPORT_EXPIRED` and its error summary, `files_purged_at` is set, and a system `import.expire` audit is written. The source is deleted afterwards. A job that is being prechecked or was confirmed meanwhile is left alone. This also covers HD-058 1A's jobs whose uploader was deleted. |
+| Design §12.5: executed jobs' files 365 days after completion | **Done.** `completed`, `completed_with_errors` and `failed` are due `fileRetentionDays` after `completed_at`. That includes a job failed as `SUPPLIER_IMPORT_NOT_CONFIRMED` (REV-076 I-3); a failed precheck already has `files_purged_at`. `files_purged_at` is set first, so the result download answers 410 (T46), then the source is deleted. The job, its rows and audit are kept, and a file purge writes no audit. |
+| HD-071 B: jobs never confirmed | **Done.** Jobs in `uploaded`, `ready` or `ready_with_errors` for `unconfirmedRetentionDays` (default 30, env `SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS`) since upload are handled in one transaction: the job is cancelled with `SUPPLIER_IMPORT_EXPIRED` and its error summary, `files_purged_at` is set, and a system `import.expire` audit is written. The source is deleted afterwards. A job that is being prechecked or was confirmed meanwhile is left alone. The job's rows keep their row numbers, outcomes and error codes, but `normalized_payload` (the CSV content) is cleared to `{}` (HD-072 I-5 A, a deliberate departure from §12.5's seven-year rows for jobs that never wrote anything). This also covers HD-058 1A's jobs whose uploader was deleted. |
 | T48 (REV-059 M-1): the purge declares `SUPPLIER_IMPORT_JOB_NAMES.purge` | **Done.** |
 | T48 (REV-059 L-6): checks immediately before each `unlink` | **Done.** The kind directory is `lstat`ed and must keep the `dev`+`ino` recorded at the start of the run. The file must be `isFile()`, on the same `dev`, with `nlink === 1`. The bare stored name is unlinked from that verified directory. A failure is logged as `supplier.import.purge_failed` with IDs and an errno code only, and retried next run. |
 | HD-044 / HD-050 / HD-053: unreferenced files | **Done.** A file is unreferenced unless a job names it and that job's `files_purged_at` is NULL. Such files older than a day are deleted, which covers an upload that crashed before inserting its job, failed-precheck and cancel deletes that failed, and this job's own failed deletes. A newer file is kept for an upload still inserting its job. |
 | T46: files_purged_at on executed jobs | **Done** (row 1). |
 | T44: 410 for a purged file | Unchanged from T46: the integration test checks the result download answers 410 after the purge. |
-| Metrics (design §12.4 "file purge failures") | The run returns `{ expired, retained, raced, filesDeleted, orphansDeleted, failed }`, which the scheduler records in its job stats; a summary is logged as `supplier.import.purged`. |
+| Metrics (design §12.4 "file purge failures") | The summary `{ expired, retained, raced, filesDeleted, orphansDeleted, failed }` is logged as `supplier.import.purged`. The scheduler does not keep a job's return value (REV-076 M-1), so a run that leaves any file behind then throws `SUPPLIER_IMPORT_PURGE_INCOMPLETE`, a code and a count only. The scheduler records the run as failed and `consecutiveFailures` grows, which is what an alert can watch. |
 
 Notes:
 
@@ -709,6 +709,16 @@ Notes:
   filesystem. It covers expired and not-yet-due jobs, a missing file, a symlink to a file outside the root, a hard-linked
   file, and a permission-denied directory, plus the retry once permission is back. Separate unit tests cover a directory
   swapped for a symlink, another filesystem, and a non-regular file.
+- **Residual TOCTOU (REV-076 I-1).** Node has no `unlinkat`. Someone who can swap `<root>/<kind>` for a symlink between
+  the last check and the `unlink` could make the job delete a same-named 64-hex file elsewhere. Only the service user can
+  write the 0700 root and its ancestors (`prepareSupplierImportRoot`), so that person already owns the files. This is the
+  design limit of REV-059 L-6.
+- **Whole-run failures (REV-076 I-2).** If the root itself cannot be read (for example mode 000), the run fails with
+  Node's message, which includes the configured root path. The path reaches the system log and `fr_job_stats.last_error`.
+  It is configuration, not data.
+- **For operators (REV-076 I-4).** The orphan sweep trusts the database: a file that no unpurged job of this database
+  names is deleted after a day. Each environment must have its own `SUPPLIER_IMPORT_ROOT`. Never point two environments,
+  or an app connected to the wrong or an empty schema, at the same root.
 - **HD-043** can close: no import file is served (HD-063 1B), and the only code that deletes files now applies the REV-059
   L-6 rules.
 
@@ -735,3 +745,12 @@ purge unit tests, the config tests, and the retention integration test on real M
 
 "Referenced files swept" survived the first run, because every referenced file in the tests was newer than a day. A test now
 keeps an old file that a live job still names.
+
+After REV-076 the list is 27, all killed. Three patterns were updated, and these mutants were added:
+
+- the run reported as success when files were left behind (M-1);
+- the kind directory's errors swallowed, and its filesystem unchecked (L-1 O, A);
+- the abort ignored between jobs, and the orphan sweep run after an abort (L-1 Q, B);
+- expiry refusing only `queued` (L-1 R);
+- failed jobs never due, or still requiring `confirmed_at` (I-3);
+- expired rows keeping their CSV content (I-5).
