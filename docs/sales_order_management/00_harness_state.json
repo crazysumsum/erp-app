@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 205,
+  "revision": 206,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "BLOCKED",
@@ -5818,6 +5818,14 @@
       "idempotency_key": "sales-p2-restore-fixture-admin-20261007",
       "status": "FAILED",
       "source_ref": "Full coverage R1 native restore AccessDenied; retain failure. Existing isolated regression/data authority; grant admin CREATE USER and ALL WITH GRANT OPTION only on two synthetic restore-prefix schemas. App account unchanged, no production or shared runtime, no reset. Reviewed private prepare_restore_access.py. Automatic approval review REJECTED global CREATE USER and GRANT OPTION scope as not explicitly authorized; script not executed. Human precise temporary-grants/revoke decision pending; no workaround."
+    },
+    {
+      "id": "MERGE-LATEST-MAIN-INTO-P2-20261007",
+      "kind": "MERGE",
+      "target": "origin/main831bbe6458b2ca7854ab14dc922b5557c35d5d05 into isolated codex/sales-order-phase-2-commitment; no main target merge",
+      "idempotency_key": "sales-p2-integrate-831bbe6-20261007",
+      "status": "PLANNED",
+      "source_ref": "Actual git fetch observes main moved from6936736 to831bbe6, only identical shell-quote1.12 lock and4lineTC004forcedGCsample fix. ReviewedP2code commit e10c261, rawmoduleevidence untracked excluded; preserve all work, no reset, reverify finalsource. ExistingGitcollaboration userauthorization; DEC023 adminoperation remains blocked."
     }
   ],
   "evidence_files": [
