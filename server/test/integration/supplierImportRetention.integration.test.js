@@ -140,13 +140,15 @@ integrationTest("TASK-048 (HD-071 B): a job never confirmed for 30 days is cance
   const stale = [await seedJob({ status: "ready", createdDaysAgo: 31 }), await seedJob({ status: "uploaded", createdDaysAgo: 31 }),
     await seedJob({ status: "ready_with_errors", createdDaysAgo: 31 })];
   const fresh = await seedJob({ status: "ready", createdDaysAgo: 28 });
+  const validating = await seedJob({ status: "validating", createdDaysAgo: 31 });
+  // 預檢領咗（validating）同已經確認（queued）嘅 job 都有列：佢哋嘅 payload 唔可以被清（REV-077 L-2）。
+  const confirmedMeanwhile = await seedJob({ status: "queued", createdDaysAgo: 31, confirmed: true });
   const now = Date.now();
-  for (const { id } of [stale[0], fresh]) {
+  for (const { id } of [stale[0], fresh, validating, confirmedMeanwhile]) {
     await h.db.execute(`INSERT INTO supplier_import_rows (job_id, \`row_number\`, operation, normalized_payload, status, errors, warnings,
       created_at, updated_at) VALUES (?, 1, 'create', ?, 'valid', JSON_ARRAY(), JSON_ARRAY(), ?, ?)`,
     [id, JSON.stringify({ root: { supplierName: "Personal Name", generalEmail: "person@example.com" } }), now, now]);
   }
-  const validating = await seedJob({ status: "validating", createdDaysAgo: 31 });
 
   const counts = await purge();
   assert.ok(counts.expired >= 3, JSON.stringify(counts));
@@ -170,9 +172,11 @@ integrationTest("TASK-048 (HD-071 B): a job never confirmed for 30 days is cance
   // 揀咗做候選之後先被確認或者已經清咗：唔郁佢。
   assert.equal(await h.service.expireUnconfirmed({ id: validating.id, nowMs: Date.now() }), null, "claimed by the precheck meanwhile");
   assert.equal((await job(validating.id)).status, "validating");
-  const confirmedMeanwhile = await seedJob({ status: "queued", createdDaysAgo: 31, confirmed: true });
+  assert.equal((await payload(validating.id)).normalized_payload.root.generalEmail, "person@example.com");
   assert.equal(await h.service.expireUnconfirmed({ id: confirmedMeanwhile.id, nowMs: Date.now() }), null);
   assert.deepEqual([(await job(confirmedMeanwhile.id)).status, (await job(confirmedMeanwhile.id)).files_purged_at], ["queued", null]);
+  assert.equal((await payload(confirmedMeanwhile.id)).normalized_payload.root.generalEmail, "person@example.com",
+    "a job confirmed meanwhile keeps its payload for execution");
   assert.equal(await h.service.expireUnconfirmed({ id: stale[0].id, nowMs: Date.now() }), null, "already expired");
   assert.equal(await h.service.markExecutedFilesPurged({ id: fresh.id, nowMs: Date.now() }), null, "not an executed job");
   assert.equal((await job(fresh.id)).files_purged_at, null);

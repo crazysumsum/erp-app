@@ -341,6 +341,8 @@ export class SupplierImportService {
       if (cancelled.affectedRows !== 1) {
         throw supplierConflict("SUPPLIER_IMPORT_NOT_CANCELLABLE", "匯入工作正在預檢、執行或已結束，不可取消");
       }
+      // 取消咗嘅 job 從未寫入任何 Supplier：CSV 內容唔再保留，行號、狀態同錯誤碼照留（HD-073，同逾期一樣）。
+      await connection.execute("UPDATE supplier_import_rows SET normalized_payload = JSON_OBJECT() WHERE job_id = ?", [id]);
       await this.audit.record(connection, {
         actorUserId: actorId, actorUsername: actor.username, action: "import.cancel", targetType: "import",
         targetId: id, targetLabel: `import-${id}`, detail: { before: { status: job.status }, after: { status: "cancelled" } },

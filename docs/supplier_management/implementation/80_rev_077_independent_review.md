@@ -69,4 +69,12 @@ was killed, and the worktree is clean.
 
 ## Author's follow-up
 
-Taken to the Product Owner (HD-073).
+Taken to the Product Owner (HD-073), whose answer was '全部按建议'.
+
+| Finding | Follow-up |
+| --- | --- |
+| L-1 | **Fixed.** After the summary is logged, `signal?.throwIfAborted()` runs, so the scheduler records a timed-out run as timed out. The unit tests expect an `AbortError`. |
+| L-2 | **Tested.** The `validating` and `queued` jobs in the expiry test now have rows, and their payload must survive; M7 is killed. |
+| I-a | **Fixed.** The message starts with `SUPPLIER_IMPORT_PURGE_INCOMPLETE`, and the docs now say what the scheduler actually keeps. |
+| I-c | **Fixed.** A user cancel clears the rows' `normalized_payload` in the same transaction, keeping outcomes and error codes. The T44 cancel test asserts it. |
+| I-b | No change: only the service user, or a large clock step back, can make an orphan's mtime lie in the future. |

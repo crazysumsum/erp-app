@@ -21,7 +21,9 @@ const MAX_BATCHES = 50;
  * （`supplier.import.purge_failed`）；job、逐列結果同稽核全部保留。
  *
  * Scheduler 唔會保存 job 嘅回傳值（REV-076 M-1），所以有檔刪唔到就喺記低摘要之後拋
- * `SUPPLIER_IMPORT_PURGE_INCOMPLETE`：scheduler 記呢輪做失敗、`consecutiveFailures` 遞增，可以靠佢告警。
+ * `SUPPLIER_IMPORT_PURGE_INCOMPLETE`：scheduler 記呢輪做失敗、`consecutiveFailures` 遞增，可以靠佢告警。Scheduler 只記
+ * 錯誤嘅 message，所以代碼寫喺 message 開頭（REV-077 I-a）。逾時被中止嘅一輪都要拋，scheduler 先會記做逾時，
+ * 唔會當成功（REV-077 L-1）。
  */
 export class SupplierImportFilePurgeJob extends BaseService {
   static service = Object.freeze({
@@ -114,9 +116,10 @@ export class SupplierImportFilePurgeJob extends BaseService {
     }
 
     void this.logger?.info?.("supplier.import.purged", "Supplier import retention run finished", counts);
+    signal?.throwIfAborted?.();
     if (counts.failed > 0) {
       // 只帶代碼同數字：scheduler 會將 message 寫入 system log 同 fr_job_stats。
-      throw Object.assign(new Error(`Supplier import purge left ${counts.failed} file(s) behind`),
+      throw Object.assign(new Error(`SUPPLIER_IMPORT_PURGE_INCOMPLETE: ${counts.failed} file(s) left behind`),
         { code: "SUPPLIER_IMPORT_PURGE_INCOMPLETE", counts });
     }
     return counts;

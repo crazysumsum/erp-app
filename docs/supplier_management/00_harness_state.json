@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 288,
+  "revision": 289,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1851,6 +1851,18 @@
       "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
       "source_ref": "docs/supplier_management/implementation/79_rev_076_independent_review.md",
       "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-077",
+      "method": "SEPARATE_AGENT",
+      "author": "Claude Opus 5.5 (TASK-048 REV-076 remediation)",
+      "reviewer": "agent-skills:security-auditor, independent of the author, reviewing 1e1ad49e8b9e050e3c38c5256458cb4e50f5d36c (PR #189)",
+      "reviewed_baseline": "e4083319e526682f70b40a0b2676ae5b50cc72d8f03e9e07c6d6fbb671f211e4",
+      "source_ref": "docs/supplier_management/implementation/80_rev_077_independent_review.md",
+      "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
@@ -4624,6 +4636,18 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Product Owner, 2026-10-07: '全部按建議' - M-1 (a), L-1 tests, I-3 fix, I-5 (A), I-4 documented."
+    },
+    {
+      "id": "HD-073",
+      "impact": "MINOR",
+      "question": "REV-077 (TASK-048, approved) follow-ups: L-1 a run aborted by the timeout is recorded as succeeded: throw after the summary; L-2 add rows to the validating/queued expiry jobs so M7 is caught; I-a the scheduler keeps only the message, so put SUPPLIER_IMPORT_PURGE_INCOMPLETE in it; I-c a job the user cancels keeps normalized_payload while an expired one does not: clear it on cancel too (changes T44's cancel); I-b no change.",
+      "affected_ids": [
+        "TASK-048",
+        "TASK-044",
+        "REV-077"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Product Owner, 2026-10-07: '全部按建議'."
     }
   ],
   "external_actions": [
@@ -5700,5 +5724,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-048: REV-076 follow-ups done per HD-072; rerun the CI-style suite and the mutation sweep, push PR #189, then a fresh independent review of the changes (REV-076 requested changes). Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-048: REV-077 APPROVED 1e1ad49; HD-073 follow-ups done (abort throws, code in message, cancel clears payload, M7 test). Rerun the CI-style suite and mutants, push PR #189, wait for CI and the Product Owner's word. Merge only on the Product Owner's word."
 }
