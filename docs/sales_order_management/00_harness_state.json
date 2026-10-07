@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 163,
+  "revision": 167,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,18 +11,19 @@
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
-    "source_fingerprint": "137bd360f0f8da58b7efa9bdee607e4884367d1c6ae3d4e833a4f3e60e16f3fa",
+    "code_commit": "5f070371e80925a87178f0ebc1c530ca313d3a8e",
+    "source_fingerprint": "1842975473d228a42bb3166ba8a3165b46345fd451225d0ea854043591492dac",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
-    "instance_id": "sales-p2-preparation-20261007",
+    "instance_id": "sales-p2-runtime-f937f82592e9",
     "owner": "Codex /root",
     "resources": {
       "workspace": "/private/tmp/erp-sales-p2",
-      "temp-directory": "/private/tmp/sales-p2-private"
+      "temp-directory": "/private/tmp/sales-p2-private",
+      "mysql-instance": "Owned PID19398 UID501; socket/private/tmp/sales-p2-private/runtime-f937f82592e9/mysql-primary/mysql.sock; datadir/private/tmp/sales-p2-private/runtime-f937f82592e9/mysql-primary/data; TCPlocalhost:64095; currentfreshfinal schemaerp_sales_phase2_final_bc29327195e3; prior schema retained;26.7.0 binlog1/trust0 appSUPER=N."
     },
     "lease_ref": null
   },
@@ -2698,6 +2699,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK028-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
+      "source_ref": "Actual reviewer MESSAGE TASK028R1 against current approved DESIGNdbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f found mapping root reference could use existingchild; no pre-fix source hash supplied. Preserve factual finding, corrected and verified in actual R2.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK028-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "1842975473d228a42bb3166ba8a3165b46345fd451225d0ea854043591492dac",
+      "source_ref": "Actual collaboration final TASK028-R2-20261007 APPROVE; nativeR4log4PASS0skip examined, reviewerindependent migrateunit7PASS/focusedlint/diffcheck. Final freshschema migration/native required beforeDONE. Code5f070371, Ddbb9b2ea/Pe61659d8.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4086,6 +4111,17 @@
       "source_ref": "Actual trace STRUCTURE_PASS0issues, deterministic matrix/diffcheck; two actual separate proposal APPROVE. No P2 product or SQL executed; runtime only current worktree/private temp. P1 stopped MySQL historical descriptors retained in recovered checkpoint160, not live P2 resources.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T01:06:26.056354+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK028 developer persistence checks",
+      "code_commit": "5f070371e80925a87178f0ebc1c530ca313d3a8e",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "1842975473d228a42bb3166ba8a3165b46345fd451225d0ea854043591492dac",
+      "status": "PASS",
+      "source_ref": "Actual final freshfullmigrator/rerun0, native11PASS0skip/migrateunit7PASS/lint0/diffcheck and separateAPPROVE. Report45/private rawlogs; formalTC/wholePhase/CI not claimed.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T01:21:15.168783+00:00"
     }
   ],
   "pending_decisions": [
@@ -4845,6 +4881,30 @@
       "idempotency_key": "mode-change-162",
       "status": "CONFIRMED",
       "source_ref": "Actual current Codex chat 2026-10-07 Sam「繼續下一階段」authorizes IMPLEMENT P2 on fresh merged main6936736; entry observation only, pending DEC021 new worker/deployment contract not implicitly adopted."
+    },
+    {
+      "id": "ACT-P2-OWNED-RUNTIME-20261007",
+      "kind": "MIGRATION",
+      "target": "/private/tmp/sales-p2-private/runtime-f937f82592e9; fresh synthetic schema/accounts only",
+      "idempotency_key": "sales-p2-owned-runtime-20261007-f77dffd2dc7d49db9a62503ab0cb14f2",
+      "status": "CONFIRMED",
+      "source_ref": "Actual initialize_runtime.py success; observed PID19398/version26.7/datadir/socket/binlog1/trust0/appSUPER=N. Private runtime.json/env.json/logs, allsynthetic. Sam DEC021."
+    },
+    {
+      "id": "ACT-P2-TASK028-MIGRATIONS-20261007",
+      "kind": "MIGRATION",
+      "target": "erp_sales_phase2_37cc1e51f938 on owned/private/tmp/sales-p2-private/runtime-f937f82592e9/mysql-primary/mysql.sock; original migrator through0079",
+      "idempotency_key": "sales-p2-task028-migrations-erp_sales_phase2_37cc1e51f938",
+      "status": "CONFIRMED",
+      "source_ref": "Actual original migrator exit0 on first fresh owned schema through0079, logs migrate-task028. First synthetic schema retained with earlier trigger bytes; final migration source changed following actual reviewer finding, no drop/reset/rewrite history."
+    },
+    {
+      "id": "ACT-P2-TASK028-FINAL-MIGRATIONS-20261007",
+      "kind": "MIGRATION",
+      "target": "erp_sales_phase2_final_bc29327195e3 on actualowned/private/tmp/sales-p2-private/runtime-f937f82592e9/mysql-primary/mysql.sock",
+      "idempotency_key": "sales-p2-final-migrations-erp_sales_phase2_final_bc29327195e3",
+      "status": "CONFIRMED",
+      "source_ref": "Actual fresh final schema create; fulloriginal migrator/rerun each exit0; finalnative11PASS0fail/skip. Private logs/env bind final source18429754; oldschema retained."
     }
   ],
   "evidence_files": [
@@ -4977,5 +5037,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK028 two commitment migrations with constraints and real owned MySQL clean/upgrade/rerun tests; no second approval needed for DEC021 scope/runtime or Git. All28 suites/currentCI/review/freshmain required for wholeP2 merge."
+  "next_safe_action": "Commit verified TASK028 four product/test files plus report45, then record actual atomiccommit and markDONE; start TASK029 durablePhaseA. Whole P2 28suites/CI/review/merge still required."
 }

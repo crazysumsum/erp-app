@@ -34,6 +34,8 @@ test("migrations directory files are named for a stable execution order", async 
       `${name} 應該用 4 位數字前綴命名，讓執行順序不必依賴檔案系統列出順序`
     );
   }
+  assert.equal(new Set(names.map(name => name.slice(0, 4))).size, names.length,
+    "Shared migration numbers must be unique across module worktrees");
 });
 
 test("0001_add_idempotency_lease_owner adds the column when it's missing", async () => {
