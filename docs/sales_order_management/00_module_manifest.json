@@ -37,7 +37,11 @@
       "client/src/composables/sales/**",
       "server/src/modules/inventory/InventoryReservationService.js",
       "server/src/modules/inventory/inventoryConstants.js",
-      "server/src/services/idempotency/IdempotencyService.js"
+      "server/src/services/idempotency/IdempotencyService.js",
+      "server/src/services/salesJobs/jobs/SalesImportJob.js",
+      "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+      "server/src/handlers/sales-import-templates/**",
+      "server/src/modules/customer/CustomerLookupService.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -79,7 +83,8 @@
       "server/test/inventorySalesWorkerContracts.test.js",
       "client/test/composables/sales/**",
       "server/test/idempotencyService.test.js",
-      "server/test/integration/itemRecoveryAcceptance.integration.test.js"
+      "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+      "server/test/sales/phase3/**"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -145,7 +150,22 @@
       "server/src/modules/inventory/inventoryConstants.js",
       "server/src/services/idempotency/IdempotencyService.js",
       "server/test/idempotencyService.test.js",
-      "server/test/integration/itemRecoveryAcceptance.integration.test.js"
+      "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+      "server/src/services/salesJobs/jobs/SalesImportJob.js",
+      "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
+      "server/src/handlers/sales-import-templates/**",
+      "server/src/modules/customer/CustomerLookupService.js",
+      "server/test/sales/phase3/**",
+      "server/database/migrations/*_create_sales_import_jobs.js",
+      "server/database/migrations/*_create_sales_intake_orders.js",
+      "server/database/migrations/*_create_sales_intake_errors.js",
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js",
+      "server/test/itemLookupService.test.js",
+      "server/test/customerLookupService.test.js",
+      "server/test/configNormalizers.test.js",
+      "server/test/configuration.test.js",
+      "docs/customer_management/03_design_spec.md",
+      "docs/items_management/03_design_spec.md"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -211,7 +231,14 @@
       "docs/fulfillment_shipping_management/03_design_spec.md",
       "server/src/modules/inventory/inventoryConstants.js",
       "server/test/idempotencyService.test.js",
-      "server/test/integration/itemRecoveryAcceptance.integration.test.js"
+      "server/test/integration/itemRecoveryAcceptance.integration.test.js",
+      "server/src/modules/customer/CustomerLookupService.js",
+      "docs/customer_management/03_design_spec.md",
+      "docs/items_management/03_design_spec.md",
+      "server/database/migrations/*_create_sales_import_jobs.js",
+      "server/database/migrations/*_create_sales_intake_orders.js",
+      "server/database/migrations/*_create_sales_intake_errors.js",
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -236,7 +263,11 @@
       "server/database/migrations/*_create_sales_quotation_conversions.js",
       "server/database/migrations/*_create_sales_external_order_keys.js",
       "server/database/migrations/*_create_sales_order_line_reservations.js",
-      "server/database/migrations/*_create_sales_backorder_entries.js"
+      "server/database/migrations/*_create_sales_backorder_entries.js",
+      "server/database/migrations/*_create_sales_import_jobs.js",
+      "server/database/migrations/*_create_sales_intake_orders.js",
+      "server/database/migrations/*_create_sales_intake_errors.js",
+      "server/database/migrations/*_extend_sales_reservation_intake_projection.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -257,7 +288,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "a1a468ff6b91366f3e5328da5691ce61d3ae798a3265ed43196a4fe5a93a3577",
+        "sha256": "6b3ac5bc3e743dd5f911f913f0eab30213c2a9eb271ba391d3d82c50a823b205",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",

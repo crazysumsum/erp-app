@@ -1952,15 +1952,15 @@ CSV v1 and canonical Channel intake with dedupe, worker recovery and UI.
 
 ### Entry criteria
 
-PHASE-001 disk gate, PHASE-003 core confirmation。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
+PHASE-001 disk gate and PHASE-003 core confirmation observed merged; DEC-025 exact supplemental owner/schema/job/developer contract adopted before affected writes. DR-003 delivered by P0 and DR-007 canonical-only scope already resolved; stale table wording does not reopen them。另須滿足本文件 §1.4 實作前硬性 Gate 的全部項目；任一硬依賴未落地時該依賴鏈回報 `BLOCKED` 並停止，不得建立影子資料表或可被誤用的 feature 入口。
 
 ### Acceptance criteria
 
-TC-034–043; UAT-065–091。全部案例必須在當前已批准基線上被實際觀察為 PASS；零發現案例、被 skip 的案例或缺失證據一律記為 `BLOCKED`／`NOT_READY`。
+IMPLEMENT merge requires all33 developer suites with actual assertions, zero prohibited skips, unchanged coverage/security thresholds, exact-candidate five mandatory CI checks and actual separate review. Formal TC-034–043/UAT-065–091 remain mandatory for TEST_AND_VERIFY/business acceptance. TC-043 developer evidence is the complete Phase aggregate, never an empty passing test.
 
 ### Integration and regression
 
-必跑套件：`lint`、`client-build`、`security-audit`、`sales-technical`。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
+必跑套件：保留 PHASE-003 全28 developer regressions，新增 sales-phase004-unit/native/client/browser/performance，共33項。All10 native Inventory suites remain mandatory; only the four specifically named historical large performance deferrals remain in their original flows。跨模組共用資源為 permission catalogue、framework idempotency identity scope、scheduler registry、client menu registry 及全域 migration 序號，同一時間只由一個 Task 修改。
 
 ### Git and merge plan
 
@@ -1972,7 +1972,7 @@ One intake PR; no public Channel route; disable upload/jobs for safe stop。已�
 
 ### Exit criteria
 
-全部 Task 完成且沒有 TODO stub 或未解決 blocker；TC-034–043; UAT-065–091 全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：PLANNED / BLOCKED by DR-003/007。Gate 失敗時須重新執行整個對應 Phase 測試週期。
+全部 Task 完成且沒有 TODO stub 或未解決 blocker；全33 current developer suites、real MySQL/HTTP/Playwright/recovery/security/capacity及exact-candidate CI/review全部通過；PR 描述列出需求追溯、migration／rollback 影響、測試命令與結果及已知限制；人工 review 批准後才合併。目前狀態：DEC-025 activation proposal pending, product implementation not started。Gate 失敗時須重新執行整個對應 Phase 測試週期。
 
 ## PHASE-005 — Inquiry/export/audit/archive/reconciliation, capacity and DR release evidence.
 
@@ -3061,6 +3061,18 @@ Commit：`feat: operate sales backorder allocation`。
 Commit：`test: validate sales commitment concurrency and recovery`。
 
 另須滿足 §1.1 每個 Task 的 Definition of Done：只修改本 Task 列明範圍；行為變更先有可重現失敗再完成實作；focused tests、受影響 workspace regression 及 `npm run lint` 通過，有前端改動時 `npm run build --workspace client` 通過；不 skip／刪除測試、不降低 coverage floor、不增加 lint suppression；log／audit／error／test evidence 不含 Token、完整地址或聯絡資料、Customer 銀行資料、SQL、stack 或完整輸入 payload；形成一個可獨立 revert 的 atomic commit；並把本 Task 的測試案例 ID 回填 `08_traceability.json`。
+
+### P3 execution slices and exact supplemental scope — DEC-025 proposal
+
+TASK-038 discovers the next four contiguous available migration numbers (current main highest0079, not a reservation), adds Import/Intake/errors per Design4.14–4.16 and the forward reservation projection trigger extension, verifies the existing External Key schema from TASK-013 and source-to-SO uniqueness. Global sequence must be rechecked/owned immediately before writes. Table creation and the trigger extension are separate <=5-main-file atomic slices with native clean/upgrade/rerun/FK/unique/hash/lease/old-new-command-pair proof; applied migrations remain immutable.
+
+TASK-039 separates pure `modules/sales/salesCsv.js`/fixtures/tests from template Handler under `handlers/sales-import-templates/`, matching the URL prefix. TASK-040/041 separate storage/upload/core tests from the owner Customer/Item batch provider and native integration slices. TASK-042 uses bounded Job/Intake/error query handlers and exact parent relations; TASK-043 separates confirm/cancel and formula-safe result streams. TASK-044 first fixes and independently verifies the exact Inventory reserve-only sibling/owner contract, then adds Sales atomic intake and shared confirmation core integration in separate <=5-file slices; no manual/backorder privilege widening. TASK-045 uses `salesJobs/jobs/SalesImportJob.js`, existing runtime and actual scheduler lease. TASK-046 publishes the canonical schema and server-wired verifier boundary only, no route/transport/address contract. TASK-047/048 reuse existing Sales client service/components/composables and registered pages/menu permission rules. TASK-049 adds `salesJobs/jobs/SalesFileRetentionJob.js`, retention/native security/recovery and capacity, then the complete33-contract gate.
+
+Capacity uses actual 10,000 valid orders/50,000 lines, <=50MiB, <=30minutes upload-to-terminal while50 foreground users run existing interactions; completed confirmation P95<=3seconds with zero pool starvation. Include a second adversarial noncontiguous grouping/50MiB bounded-memory case, measured against the original Phase0 bound rather than a new reduced threshold. Record samples/hardware/pool/Node/MySQL/workload/warmup/quantile, counts/reconciliation and all excluded dependency failures. No mock-only capacity/kill/COMMIT proof. Intake floor95/90/90 plus every prior/global/client floor retained. Five new suite minima16/18/10/10/2 are discovery guards, not sufficient coverage by themselves. Required TC IDs label DEVELOPER evidence, never formal acceptance.
+
+Existing commit/push/PR/main merge and owned synthetic MySQL/browser/migration/crash/load/cleanup authorization persists, subject to whole Phase/fresh main/current CI/separate review. No real platforms/shared DB/production/reset/raw evidence export. Fixture-admin rights follow the prior owned-only narrow restore prefixes `item_recovery_it_*` / `erp_restore_*` with exact escaped underscores and temporary CREATE USER/schema GRANT OPTION only if needed for unchanged native restore regressions, confirmed on this fresh owned instance and reverted to original grants after tests; ordinary app stays DML and SUPER=N. This new-instance fixture authority is part of the exact pending DEC-025 scope, not reuse of the old PID-bound DEC-023 grant.
+
+New approval binds the complete prior approved module scope plus these exact supplements to the new DESIGN/PLAN, preserves unchanged NFR014/015 UAT-NA reasons under APR-PHASE3-UATNA-DEC025, and retains all old approvals/hashes. Pure mechanical source-pin/hash/matrix/reference bindings may follow observed already-approved implementation bytes with a new history-preserving record, only within these exact paths/contracts/test thresholds; no new business/security/permission/schema semantics, paths, tasks, lowered gates or later material exception is preapproved.
 
 ## TASK-038 — 建立External Key及Import／Intake persistence
 
