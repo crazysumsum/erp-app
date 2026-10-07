@@ -1119,6 +1119,10 @@ Release payload `{warehouseId,expectedOrderVersion,intent:"ALL_OUTSTANDING"}`不
 
 1/100 demand的Item snapshot與ATP聚合查詢數為常數；child claims/completions及Reservation/audit writes按line數增加，release及lot/result traversal每頁100僅保證returned memory pages；完整control scope仍按unique SKUs，既有indexes的scan/lock footprint需CI EXPLAIN及實際並發/300 mappings計時，不聲稱LIMIT100等於bounded DB work。所有新MySQL回歸只在CI執行，本地SQL未授權；Fulfillment全域互鎖/worker delegation/後續formal acceptance仍pending。
 
+### 5.7.2 P2 Backorder worker sibling — DEC-021 owner adoption proposal
+
+Only `reserveAvailableForSalesBackorderInTransaction(transaction,command)` is added. Trusted server registration binds `sales.backorderAllocate` / NULL user to reserve-only system authority, a fresh authorization callback and current fixed-job lease owner; arbitrary caller serviceName/permissions are not authority. Scheduler stopped/disabled, aborted signal, missing registration or expired/wrong lease fails before any effect and on replay. The lease row is locked before Sales owners and uses DB-clock expiry; the same row lock fences takeover until caller commit. Manual entry and hashes remain unchanged; P3 intake and worker release are not enabled. Add only `SALES_BACKORDER_BATCH_RESERVE` / `SALES_BACKORDER_LINE_RESERVE` to inventoryConstants.INVENTORY_COMMAND_TYPES; preserve every existing manual member and hash. Worker operation types/purpose bind service, actual SALES/SALES_ORDER owner, persistent event/line and original root/child membership. No Inventory schema or role grants are added. Reuse the established sorted claims, ATP locking, exact partial/zero results and replay validation. One FIFO entry per transaction respects the single-SO batch boundary; never claim later Inventory operations after stock locks. Inventory owner/human adoption is required; this text is a pending proposal, not observed implementation or authorization.
+
 ---
 
 ## 6. 權限、安全與威脅模型

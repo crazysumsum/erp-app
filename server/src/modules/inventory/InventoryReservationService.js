@@ -183,7 +183,7 @@ function allocationReleaseFromSummary(summary, lines) {
 }
 
 export class InventoryReservationService {
-  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, audit, operations, locks } = {}) {
+  constructor({ database, logger, time, itemLookup, authorize = assertActorFresh, authorizeSalesBackorder, audit, operations, locks } = {}) {
     if (!database || typeof database.withTransaction !== "function" || !time ||
         typeof time.nowMs !== "function" || typeof time.fileDate !== "function" ||
         typeof authorize !== "function") {
@@ -193,12 +193,13 @@ export class InventoryReservationService {
     this.time = time;
     this.itemLookup = itemLookup ?? new ItemLookupService({ database, logger, time });
     this.authorize = authorize;
+    this.authorizeSalesBackorder = authorizeSalesBackorder;
     this.audit = audit ?? new InventoryAuditService({ database, logger, time });
     this.operations = operations ?? new InventoryOperationService();
     this.locks = locks ?? new InventoryLockService();
   }
 
-  async #salesBatchContext(transaction, command, action) {
+  async #salesBatchContext(transaction, command, action, worker = false) {
     const raw = command?.payload;
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
     exactFields(raw, new Set(action === "reserve" ? ["warehouseId", "expectedOrderVersion", "lines"] :
@@ -225,13 +226,26 @@ export class InventoryReservationService {
     // Fixed scalars and 100 demand lines bound serialization before the generic JSON copier/hash.
     if (Buffer.byteLength(JSON.stringify(payload)) > 65_536) throw inventoryError("INVENTORY_INPUT_INVALID", { field: "payload" });
     const contract = { module: "SALES", documentType: "SALES_ORDER",
-      authorization: { purpose: `sales.batch.${action}`, requiredCallerPermission: "sales.mgmt" } };
+      authorization: { purpose: worker ? "sales.backorder.reserve" : `sales.batch.${action}`, requiredCallerPermission: worker ? "sales.backorderAllocate" : "sales.mgmt" } };
     const context = validateInventoryCommandContext(transaction,
       providerInventoryCommand(transaction, { ...command, payload }, contract), contract.authorization);
-    if (context.actor.userId === null || context.actor.serviceName !== "" || context.source.lineId !== "" ||
+    if (context.source.lineId !== "" ||
         !/^[1-9][0-9]*$/u.test(context.source.documentId) || !Number.isSafeInteger(Number(context.source.documentId))) {
       throw inventoryError("INVENTORY_INPUT_INVALID", { field: "source/actor" });
     }
+    if (worker) {
+      if (context.actor.userId !== null || context.actor.serviceName !== "sales.backorderAllocate" || context.actor.claimedRoles.length ||
+          context.actor.claimedPermissions.length !== 1 || context.actor.claimedPermissions[0] !== "sales.backorderAllocate") throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
+      const principal = await this.authorizeSalesBackorder?.();
+      if (!principal || typeof principal.leaseOwner !== "string" || !principal.leaseOwner || principal.leaseOwner.length > 190 || principal.signal?.aborted !== false) throw inventoryError("PERMISSION_STALE");
+      const [[lease]] = await transaction.query("SELECT owner,expires_at FROM fr_job_leases WHERE job_name='sales.backorderAllocate' FOR UPDATE");
+      const [[clock]] = await transaction.query("SELECT UNIX_TIMESTAMP() AS now");
+      const fresh = await this.authorizeSalesBackorder?.();
+      if (!lease || lease.owner !== principal.leaseOwner || !Number.isSafeInteger(Number(lease.expires_at)) || !Number.isSafeInteger(Number(clock.now)) || Number(lease.expires_at) <= Number(clock.now) ||
+          fresh?.leaseOwner !== principal.leaseOwner || fresh.signal?.aborted !== false) throw inventoryError("PERMISSION_STALE");
+      return { ...context,actorLabel: "sales.backorderAllocate",timestamp: this.time.nowMs() };
+    }
+    if (context.actor.userId === null || context.actor.serviceName !== "") throw inventoryError("INVENTORY_INPUT_INVALID", { field: "actor" });
     const actor = await this.authorize(transaction, { actorId: context.actor.userId,
       claimedRoles: context.actor.claimedRoles, claimedPermissions: context.actor.claimedPermissions });
     if (!actor?.permissions?.includes("sales.mgmt")) throw inventoryError("PERMISSION_STALE");
@@ -264,7 +278,8 @@ export class InventoryReservationService {
 
   async #verifySalesMembers(transaction, context, root, rootHash, type, expectedLines = null) {
     const summary = root.replay.resultSummary;
-    if (!summary || root.replay.resultType !== (type === "SALES_LINE_RESERVE" ? "SALES_RESERVATION_BATCH" : "SALES_RELEASE_BATCH") ||
+    const reserve = type === "SALES_LINE_RESERVE" || type === "SALES_BACKORDER_LINE_RESERVE";
+    if (!summary || root.replay.resultType !== (reserve ? "SALES_RESERVATION_BATCH" : "SALES_RELEASE_BATCH") ||
         root.replay.resultId !== context.source.documentId || summary.operationId !== root.operationId || summary.warehouseId !== context.payload.warehouseId ||
         summary.expectedOrderVersion !== context.payload.expectedOrderVersion || !Number.isSafeInteger(summary.lineCount) || summary.lineCount < 0) {
       throw inventoryError("INVENTORY_SOURCE_CONFLICT");
@@ -279,10 +294,10 @@ export class InventoryReservationService {
         const s = member.resultSummary;
         if (member.operationId <= afterId || member.commandType !== type || member.completedAt === null || member.completedAt === undefined ||
             !s || s.rootOperationId !== root.operationId || s.rootRequestHash !== rootHash) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
-        const input = type === "SALES_LINE_RESERVE" ? expectedLines?.[count] : {
+        const input = reserve ? expectedLines?.[count] : {
           reservationId: s.reservationId, sourceLineId: s.sourceLineId, skuId: s.skuId,
           expectedVersion: s.expectedVersion, releaseQuantity: s.releaseQuantity };
-        if (!input || member.sourceLineId !== (type === "SALES_LINE_RESERVE" ? String(input.sourceLineId) : `reservation:${input.reservationId}`) ||
+        if (!input || member.sourceLineId !== (reserve ? String(input.sourceLineId) : `reservation:${input.reservationId}`) ||
             member.requestHash !== inventoryOperationHash({ commandType: type, payload: { rootOperationId: root.operationId, rootRequestHash: rootHash, ...input } })) {
           throw inventoryError("INVENTORY_SOURCE_CONFLICT");
         }
@@ -305,14 +320,23 @@ export class InventoryReservationService {
 
   async reserveAvailableForSalesBatchInTransaction(transaction, command) {
     const context = await this.#salesBatchContext(transaction, command, "reserve");
-    const rootInput = this.#salesClaimInput(context, "SALES_BATCH_RESERVE", context.payload);
+    return this.#reserveSalesBatch(transaction, context, "SALES_BATCH_RESERVE", "SALES_LINE_RESERVE");
+  }
+
+  async reserveAvailableForSalesBackorderInTransaction(transaction, command) {
+    const context = await this.#salesBatchContext(transaction, command, "reserve", true);
+    return this.#reserveSalesBatch(transaction, context, "SALES_BACKORDER_BATCH_RESERVE", "SALES_BACKORDER_LINE_RESERVE");
+  }
+
+  async #reserveSalesBatch(transaction, context, rootType, childType) {
+    const rootInput = this.#salesClaimInput(context, rootType, context.payload);
     const rootHash = inventoryOperationHash(rootInput);
     const root = await this.operations.claim(transaction, rootInput);
-    if (root.replay) return this.#verifySalesMembers(transaction, context, root, rootHash, "SALES_LINE_RESERVE", context.payload.lines);
+    if (root.replay) return this.#verifySalesMembers(transaction, context, root, rootHash, childType, context.payload.lines);
     const digest = createHash("sha256");
     const members = [];
     for (const line of context.payload.lines) {
-      const input = this.#salesClaimInput(context, "SALES_LINE_RESERVE", { rootOperationId: root.operationId, rootRequestHash: rootHash, ...line }, String(line.sourceLineId));
+      const input = this.#salesClaimInput(context, childType, { rootOperationId: root.operationId, rootRequestHash: rootHash, ...line }, String(line.sourceLineId));
       const child = await this.operations.claim(transaction, input);
       if (child.replay) throw inventoryError("INVENTORY_SOURCE_CONFLICT");
       digest.update(`${input.source.lineId}:${inventoryOperationHash(input)}\n`);

@@ -1,0 +1,7 @@
+# TASK-031 polling availability correction
+
+Actual native contention exposed a root-cause defect in implementation49: status lookup requested the same operation row lock held by Phase B and could block until confirmation finished. The preserved task031-poll-lock-red.log has24PASS/1FAIL. Lookup now retains fresh original-actor authorization, reads one committed REPEATABLE READ snapshot and never requests that lock. Prior committed IN_PROGRESS is safe until nextpoll; uncommitted success/effects never surface. All effect operations retain FOR UPDATE. Removed the newly orphaned optional locking flag from getForActor.
+
+Actual fixed native25PASS/zero failures/cancellations/skips at /private/tmp/sales-p2-private/task031-poll-lock-fixed.log; Phase1+Phase2 unit68PASS/zero skips and npm run lint exit0. Actual separate /root/sales_p1_review APPROVE TASK031-polling-R1-20261007. Three-file digest7a404bd85aabec3cfd576f0fe9908096f02738b501ae50cdd44801e3c8c5cec0; private proof task031-polling-reviewer-source.json. Observed source25e003caebff894884c7934aeb1f5030a5fe23471fd13aac0f589df89bd60a95 includes nextAPI uncommitted handlers/schema/unit outside this three-file approval; no approval of those files is claimed.
+
+DEC-021 D/P unchanged. Historical implementation49/review remains preserved and this report supersedes its locking-read approach. TASK031 remains in progress pending actualHTTP contracts, frontend and Playwright; wholePhase/formal/CI/main merge remain pending.

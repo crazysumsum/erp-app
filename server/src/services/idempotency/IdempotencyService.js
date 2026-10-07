@@ -146,7 +146,11 @@ export class IdempotencyService {
       throw new Error(`Idempotency ttlMs must be a positive integer for ${routeKey}`);
     }
 
-    return Object.freeze({ enabled, ttlMs });
+    const retryAfterSeconds = routeConfig.retryAfterSeconds;
+    if (retryAfterSeconds !== undefined && (!Number.isSafeInteger(retryAfterSeconds) || retryAfterSeconds <= 0)) {
+      throw new Error(`Idempotency retryAfterSeconds must be a positive integer for ${routeKey}`);
+    }
+    return Object.freeze({ enabled, ttlMs, ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }) });
   }
 
   async execute(req, res, routeOptions, work) {
@@ -273,6 +277,9 @@ export class IdempotencyService {
       // dispatcher 靠這個旗標知道 handler 沒有跑過，得清掉這次上傳的檔案。
       req.idempotentReplay = true;
       res.setHeader("Idempotency-Replayed", "true");
+      if (begin.response.statusCode === 202 && routeOptions.retryAfterSeconds !== undefined) {
+        res.setHeader("Retry-After", String(routeOptions.retryAfterSeconds));
+      }
       void this.logger?.info?.("idempotency.response.replayed", "Idempotent response replayed", {
         requestId:
           req.requestId ||

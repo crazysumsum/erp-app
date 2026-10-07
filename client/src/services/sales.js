@@ -1,7 +1,7 @@
 import { httpClient } from "@/framework/http/HttpClient.js";
 
 export const service = { name: "sales" };
-const write = (path, { idempotencyKey, ...body } = {}) => httpClient.post(path, { idempotent: true, idempotencyKey: idempotencyKey ?? body.eventId, body });
+const write = (path, { idempotencyKey, ...body } = {}, options = {}) => httpClient.post(path, { idempotent: true, idempotencyKey: idempotencyKey ?? body.eventId, body, ...options });
 const lookup = (kind, { signal, ...params } = {}) => httpClient.get(`/api/v1/sales-lookups/${kind}`, { params, signal });
 
 export default {
@@ -26,5 +26,11 @@ export default {
     return httpClient.get("/api/v1/sales-orders",{params,signal}).then(({items,total})=>({rows:items,rowsNumber:total}));
   },
   createOrder(payload) { return write("/api/v1/sales-orders/create", payload); },
-  updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); }
+  updateOrder(id, payload) { return write(`/api/v1/sales-orders/${id}/update`, payload); },
+  confirmOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirm`,payload,{signal}); },
+  withdrawOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/confirmation/withdraw`,payload,{signal}); },
+  cancelOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/cancel`,payload,{signal}); },
+  closeRemainingOrder(id,payload,{signal}={}) { return write(`/api/v1/sales-orders/${id}/close-remaining`,payload,{signal}); },
+  runBackorderAllocation(scope,{idempotencyKey,signal}={}) { return write("/api/v1/sales-backorders/allocations/run",{...scope,idempotencyKey},{signal}); },
+  getOperation(eventId,{signal}={}) { return httpClient.get(`/api/v1/sales-operations/by-event/${eventId}`,{signal}); }
 };
