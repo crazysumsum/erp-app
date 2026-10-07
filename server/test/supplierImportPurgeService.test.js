@@ -108,5 +108,5 @@ test("the job pages through a backlog and stops at once when aborted", async (t)
   aborted.abort();
   const stopped = purgeJob({ root, candidates: [{ id: 1, status: "completed" }], expire: () => [] });
   const counts = await stopped.job.purge(aborted.signal);
-  assert.deepEqual([counts.retained, stopped.calls.marked], [0, []]);
+  assert.deepEqual([counts.retained, stopped.calls.marked, stopped.calls.candidates], [0, [], []], "not even a query once aborted");
 });

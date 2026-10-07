@@ -105,6 +105,7 @@ const purge = () => h.purge.purge(new AbortController().signal);
 integrationTest("TASK-048: executed jobs past 365 days lose their files and answer 410; the job, its rows and audit stay", async () => {
   const due = await seedJob({ status: "completed", createdDaysAgo: 400, completedDaysAgo: 366, confirmed: true });
   const failedRunning = await seedJob({ status: "failed", createdDaysAgo: 400, completedDaysAgo: 366, confirmed: true });
+  const dueWithErrors = await seedJob({ status: "completed_with_errors", createdDaysAgo: 400, completedDaysAgo: 366, confirmed: true });
   const young = await seedJob({ status: "completed_with_errors", createdDaysAgo: 400, completedDaysAgo: 364, confirmed: true });
   const queued = await seedJob({ status: "queued", createdDaysAgo: 400, confirmed: true });
   const audits = async () => Number((await h.db.query(
@@ -113,12 +114,12 @@ integrationTest("TASK-048: executed jobs past 365 days lose their files and answ
   assert.ok(auditsBefore >= 1, "the upload was audited");
 
   const counts = await purge();
-  assert.ok(counts.retained >= 2 && counts.failed === 0, JSON.stringify(counts));
+  assert.ok(counts.retained >= 3 && counts.failed === 0, JSON.stringify(counts));
 
-  for (const { id, storedName } of [due, failedRunning]) {
+  for (const { id, storedName } of [due, failedRunning, dueWithErrors]) {
     const row = await job(id);
     assert.ok(row.files_purged_at !== null, `job ${id} is marked purged`);
-    assert.ok(["completed", "failed"].includes(row.status), "the status is kept");
+    assert.ok(["completed", "failed", "completed_with_errors"].includes(row.status), "the status is kept");
     assert.equal(fs.existsSync(sourcePath(storedName)), false, "the source is deleted");
   }
   await assert.rejects(h.service.resultCsv({ actorId: h.userId, claimedRoles: [], claimedPermissions: [], id: due.id }),
@@ -159,7 +160,8 @@ integrationTest("TASK-048 (HD-071 B): a job never confirmed for 30 days is cance
   assert.equal(await h.service.expireUnconfirmed({ id: confirmedMeanwhile.id, nowMs: Date.now() }), null);
   assert.deepEqual([(await job(confirmedMeanwhile.id)).status, (await job(confirmedMeanwhile.id)).files_purged_at], ["queued", null]);
   assert.equal(await h.service.expireUnconfirmed({ id: stale[0].id, nowMs: Date.now() }), null, "already expired");
-  assert.equal(await h.service.markExecutedFilesPurged({ id: stale[0].id, nowMs: Date.now() }), null, "not an executed job");
+  assert.equal(await h.service.markExecutedFilesPurged({ id: fresh.id, nowMs: Date.now() }), null, "not an executed job");
+  assert.equal((await job(fresh.id)).files_purged_at, null);
 });
 
 integrationTest("TASK-048 (HD-044/050/053): unreferenced files older than a day are removed; newer ones and symlinks are not", async () => {

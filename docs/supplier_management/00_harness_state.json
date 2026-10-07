@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "supplier-management",
-  "revision": 286,
+  "revision": 287,
   "mode": "FULL_LIFECYCLE",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -1005,6 +1005,23 @@
       "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
       "scope": [
         "package-lock.json"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APPROVAL-HD-071-SCOPE",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "ERP Product Owner (Sam)",
+      "decision": "APPROVED",
+      "source_ref": "HD-071 B, confirmed 'OK' on 2026-10-07. Authorises TASK-048 to add supplier.import.unconfirmedRetentionDays (default 30, env SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS) to server/config/supplier.js and server/.env.example.",
+      "recorded_at": "2026-10-07T15:30:00+08:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "db5296785c7f74a5925e8f0f4e7edecb3ef4fa48f26fdcd33ffe4d7e0b95e087",
+      "code_commit": "8ac45e94e25962da0988e297ae0a93cfb65191e8",
+      "scope": [
+        "server/config/supplier.js",
+        "server/.env.example"
       ],
       "expires_at": null
     }
@@ -4582,7 +4599,7 @@
         "HD-058"
       ],
       "status": "ANSWERED",
-      "answer_ref": "Product Owner, 2026-10-07: 'B' without a period. Implemented with 30 days (the example given), configurable as SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS; the Product Owner was told and can change the default before merge."
+      "answer_ref": "Product Owner, 2026-10-07: 'B'; then 'OK' to 30 days and to the config change (SUPPLIER_IMPORT_UNCONFIRMED_RETENTION_DAYS in server/config/supplier.js and server/.env.example)."
     }
   ],
   "external_actions": [
@@ -5659,5 +5676,5 @@
       "risk_approval_id": null
     }
   ],
-  "next_safe_action": "TASK-048 in progress on claude/supplier-task-048 per HD-071 B (30 days for unconfirmed jobs, pending confirmation of the period): purge service and job, tests, then PR, CI, independent review. Merge only on the Product Owner's word."
+  "next_safe_action": "TASK-048 on claude/supplier-task-048 per HD-071 B (30 days, confirmed): CI-style suite, mutation sweep, carry-forward, PR, CI, independent review. Merge only on the Product Owner's word."
 }
