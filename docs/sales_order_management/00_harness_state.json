@@ -1,30 +1,28 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 146,
+  "revision": 163,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
-  "current_phase": "PHASE-002",
-  "current_task": "TASK-027",
+  "current_phase": "PHASE-003",
+  "current_task": "TASK-028",
   "baseline": {
-    "design": "52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d",
-    "plan": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
-    "code_commit": "c3bda27236dc91761487faefdac4765534cfd7fe",
-    "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
-    "worktree": "/private/tmp/erp-sales-p1",
-    "default_commit": "7717702acf7c40bad188ba61fb48c8e90b309be1",
-    "mode_entry_commit": "8bc4a4cfe68710f384cebca8395b78343bef1db9"
+    "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
+    "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+    "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+    "source_fingerprint": "137bd360f0f8da58b7efa9bdee607e4884367d1c6ae3d4e833a4f3e60e16f3fa",
+    "worktree": "/private/tmp/erp-sales-p2",
+    "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+    "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
   },
   "runtime": {
-    "instance_id": "sales-p1-development",
+    "instance_id": "sales-p2-preparation-20261007",
     "owner": "Codex /root",
     "resources": {
-      "workspace": "/private/tmp/erp-sales-p1",
-      "temp-directory": "/private/tmp/sales-p1-private",
-      "mysql-instance": "Owned primary26.7 PID68197 socket/private/tmp/sales-p1-private/mysql-primary/mysql.sock; fresh r2 schema erp_sales_phase1_r2_225666137376 ordinary app/admin; serial coordinator.",
-      "mysql-inventory-diagnostics": "Owned secondary26.7 localhost63960 plus3dedicated021/022/025;fresh r2 tenInventory+coverage schemas;private dec020-r2-runtime-bindings.json."
+      "workspace": "/private/tmp/erp-sales-p2",
+      "temp-directory": "/private/tmp/sales-p2-private"
     },
     "lease_ref": null
   },
@@ -55,7 +53,17 @@
     "TASK-024": "DONE",
     "TASK-025": "DONE",
     "TASK-026": "DONE",
-    "TASK-027": "DONE"
+    "TASK-027": "DONE",
+    "TASK-028": "IN_PROGRESS",
+    "TASK-029": "PENDING",
+    "TASK-030": "PENDING",
+    "TASK-031": "PENDING",
+    "TASK-032": "PENDING",
+    "TASK-033": "PENDING",
+    "TASK-034": "PENDING",
+    "TASK-035": "PENDING",
+    "TASK-036": "PENDING",
+    "TASK-037": "PENDING"
   },
   "approvals": [
     {
@@ -1541,6 +1549,145 @@
       ],
       "baseline_kind": "PLAN",
       "baseline_sha256": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8"
+    },
+    {
+      "id": "APR-PHASE2-DESIGN-DEC021",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-07 Sam「同意」directly answers delivered DEC021 full recommendation R2 and packet44: adopts worker reserve-only principal/types/lease/fresh authorization, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED constrained deployment exception and future quiesced activation, exact supplemental scope,28 developer contracts/unchanged formal60/UAT/floors and new owned synthetic MySQL26.7/browser/controlled owned crash/load runtime. D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing approved module/shared scope, commit/push/PR/main merge authority carries forward; no production/shared DB/deployment or later material exception.",
+      "recorded_at": "2026-10-07T01:10:01.734869+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE2-PLAN-DEC021",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-07 Sam「同意」directly answers delivered DEC021 full recommendation R2 and packet44: adopts worker reserve-only principal/types/lease/fresh authorization, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED constrained deployment exception and future quiesced activation, exact supplemental scope,28 developer contracts/unchanged formal60/UAT/floors and new owned synthetic MySQL26.7/browser/controlled owned crash/load runtime. D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing approved module/shared scope, commit/push/PR/main merge authority carries forward; no production/shared DB/deployment or later material exception.",
+      "recorded_at": "2026-10-07T01:10:01.734869+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management",
+        "PHASE-003",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033",
+        "TASK-034",
+        "TASK-035",
+        "TASK-036",
+        "TASK-037"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE2-SCOPE-DEC021",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-07 Sam「同意」directly answers delivered DEC021 full recommendation R2 and packet44: adopts worker reserve-only principal/types/lease/fresh authorization, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED constrained deployment exception and future quiesced activation, exact supplemental scope,28 developer contracts/unchanged formal60/UAT/floors and new owned synthetic MySQL26.7/browser/controlled owned crash/load runtime. D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing approved module/shared scope, commit/push/PR/main merge authority carries forward; no production/shared DB/deployment or later material exception.",
+      "recorded_at": "2026-10-07T01:10:01.734869+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "code_commit": null,
+      "scope": [
+        ".github/workflows/**",
+        ".github/workflows/ci.yml",
+        "client/config/menu.js",
+        "client/package.json",
+        "client/src/framework/http/errorMessages.js",
+        "docs/customer_management/**",
+        "docs/fulfillment_shipping_management/**",
+        "docs/fulfillment_shipping_management/03_design_spec.md",
+        "docs/inventory_management/**",
+        "docs/inventory_management/03_design_spec.md",
+        "docs/items_management/**",
+        "package-lock.json",
+        "package.json",
+        "server/config/api.js",
+        "server/config/scheduler.js",
+        "server/database/migrations/**",
+        "server/database/migrations/*_create_sales_backorder_entries.js",
+        "server/database/migrations/*_create_sales_order_line_reservations.js",
+        "server/package.json",
+        "server/scripts/checkCoverageFloors.js",
+        "server/src/framework/configuration/applicationConfiguration.js",
+        "server/src/framework/middleware/apiDispatcher.js",
+        "server/src/framework/upload/**",
+        "server/src/modules/authorization/permissionCatalogue.js",
+        "server/src/modules/businessMaster/businessMasterFactory.js",
+        "server/src/modules/customer/**",
+        "server/src/modules/fulfillment/**",
+        "server/src/modules/inventory/**",
+        "server/src/modules/inventory/InventoryReservationService.js",
+        "server/src/modules/inventory/inventoryConstants.js",
+        "server/src/modules/item/ItemAdminService.js",
+        "server/src/modules/item/ItemLookupService.js",
+        "server/src/services/filetype/FileTypeService.js",
+        "server/src/services/filetype/builtInFileTypes.js",
+        "server/src/services/idempotency/IdempotencyService.js",
+        "server/src/services/scheduler/**",
+        "server/test/apiDispatcher.test.js",
+        "server/test/applicationFactory.test.js",
+        "server/test/business-master/http.integration.test.js",
+        "server/test/configNormalizers.test.js",
+        "server/test/configuration.test.js",
+        "server/test/customerCreditService.test.js",
+        "server/test/customerLookupService.test.js",
+        "server/test/directoryLookups.test.js",
+        "server/test/fileTransfer.test.js",
+        "server/test/fileTransferFailureModes.test.js",
+        "server/test/integration/inventoryTask025Api.integration.test.js",
+        "server/test/integration/itemConcurrency.integration.test.js",
+        "server/test/integration/itemLookup.integration.test.js",
+        "server/test/integration/itemUpdate.integration.test.js",
+        "server/test/integration/migrations.integration.test.js",
+        "server/test/integration/passwordChange.integration.test.js",
+        "server/test/integration/roleManagement.integration.test.js",
+        "server/test/integration/userManagement.integration.test.js",
+        "server/test/inventoryLockService.test.js",
+        "server/test/inventoryOperationService.test.js",
+        "server/test/inventoryProviderContracts.test.js",
+        "server/test/inventorySalesWorkerContracts.test.js",
+        "server/test/itemLookupService.test.js",
+        "server/test/migrate.test.js",
+        "server/test/permissionCatalogueConventions.test.js",
+        "server/test/permissionCatalogueStartupGuard.test.js",
+        "server/test/serviceContainer.test.js",
+        "server/test/uploadLimits.test.js"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE2-UATNA-DEC021",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual current Codex chat 2026-10-07 Sam「同意」directly answers delivered DEC021 full recommendation R2 and packet44: adopts worker reserve-only principal/types/lease/fresh authorization, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED constrained deployment exception and future quiesced activation, exact supplemental scope,28 developer contracts/unchanged formal60/UAT/floors and new owned synthetic MySQL26.7/browser/controlled owned crash/load runtime. D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing approved module/shared scope, commit/push/PR/main merge authority carries forward; no production/shared DB/deployment or later material exception.",
+      "recorded_at": "2026-10-07T01:10:01.734869+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -2499,6 +2646,54 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
       "source_ref": "Actual final evidence APPROVE at state145; all23 required suites/64 artifacts/606 typed PASS0fail/skip/notrun; raw2670/2656PASS0FAIL14optin skips,34floors PASS; trace/matrix/gate consistency0issues. Source 3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372; D52bcb72e3a9ce8cbb46531d5367454da6bad05565a6dbadaa1e504d4a1d08e3d Pf6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8. Actual collaboration final message P1-DEC020-final-evidence-R2-20261006",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-DEC021-sales_p1_review-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "e6f11933a976ef50c3b06f24bc3c5e2b1f2b2c9c40f1a1fb1b58629c900ca568",
+      "source_ref": "R1 requires actual Scheduler.execute(job), not nonexistent runJob; exact inventoryConstants.js scope for independent worker reserve command types. Old PLAN 37169874bb4e1333826da846682652de22345b134a46d6a92711481e8eb390c3; patch 11126f9f5d28a6a7acb5831c00702e12a696a1b668d3b1de172f7a655a4f1239. Actual collaboration final R1, no SQL/product.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-DEC021-sales_p1_review-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
+      "source_ref": "Actual collaboration final DEC021-proposal-R2-20261007 APPROVE; D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 source 137bd360f0f8da58b7efa9bdee607e4884367d1c6ae3d4e833a4f3e60e16f3fa patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. R1 corrections confirmed; no product/SQL/browser. Proposal review only, not human adoption or implementation PASS.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-DEC021-sales_readiness_review-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "e6f11933a976ef50c3b06f24bc3c5e2b1f2b2c9c40f1a1fb1b58629c900ca568",
+      "source_ref": "R1 requires exact inventoryConstants.js scope, consistent sales.backorderAllocate lease key and exact original cross-module four performance deferrals. Old PLAN 37169874bb4e1333826da846682652de22345b134a46d6a92711481e8eb390c3; patch 11126f9f5d28a6a7acb5831c00702e12a696a1b668d3b1de172f7a655a4f1239. Actual collaboration final R1, no SQL/product.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P2-DEC021-sales_readiness_review-R2-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
+      "source_ref": "Actual collaboration final DEC021-proposal-R2-20261007 APPROVE; D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 source 137bd360f0f8da58b7efa9bdee607e4884367d1c6ae3d4e833a4f3e60e16f3fa patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. R1 corrections confirmed; no product/SQL/browser. Proposal review only, not human adoption or implementation PASS.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -3770,6 +3965,127 @@
       "source_ref": "Fresh actual gh pr view184: OPEN/draft remote53; audit/lint/browser/build SUCCESS, Test FAILURE. Actual local current MERGE_READY PHASE002 BLOCKED14 issues: HUMAN_DECISION_REQUIRED,EVIDENCE_NOT_PASS,TASK_INCOMPLETE,CI_MISSING_OR_STALE,PR_REVIEW_MISSING; private dec020-pending-merge-gate.json. No push of localc3/DEC020 and no current-candidate CI/merge inferred. https://github.com/crazysumsum/erp-app/pull/184",
       "actor": "Codex /root",
       "observed_at": "2026-10-06T07:53:48.507406+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "P1 independent implemented-candidate review",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "Actual /root/sales_p1_review final APPROVE P1-DEC020-final-R2-20261006 and /root/sales_readiness_review final APPROVE; committed/published candidate fingerprint equals reviewed3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372; zero unresolvedHIGH/CRITICAL; 23/64 evidence checked. PR184 exactcandidate observed via gh.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T08:26:25.811539+00:00"
+    },
+    {
+      "kind": "PR_REVIEW",
+      "subject": "P1 frozen candidate independent approval mapping",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "Actual independent reviewer /root/sales_p1_review final: APPROVE P1-DEC020-final-R2-20261006 explicitly applies5d17a075605ba25e41e76c6fcc2cdeb9d689e02a; independently96committedfiles allSHA256identical reviewed bytes,source3e5/D52bc/Pf602; only state/evidence uncommitted, no newfindings;origin/main771/HEAD..main0.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T08:28:13.343117+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Dependency audit",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37436045323/job/112177987720 Actual trusted gh run37436045323 exacthead5d17a075605ba25e41e76c6fcc2cdeb9d689e02a completed success and currentPR checkSUCCESS. No skip/neutral/waiver.",
+      "actor": "GitHub Actions / observed by Codex /root",
+      "observed_at": "2026-10-06T08:39:49.816827+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Lint",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37436045323/job/112177987626 Actual trusted gh run37436045323 exacthead5d17a075605ba25e41e76c6fcc2cdeb9d689e02a completed success and currentPR checkSUCCESS. No skip/neutral/waiver.",
+      "actor": "GitHub Actions / observed by Codex /root",
+      "observed_at": "2026-10-06T08:39:49.816900+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Browser tests (Playwright)",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37436045323/job/112177987326 Actual trusted gh run37436045323 exacthead5d17a075605ba25e41e76c6fcc2cdeb9d689e02a completed success and currentPR checkSUCCESS. No skip/neutral/waiver.",
+      "actor": "GitHub Actions / observed by Codex /root",
+      "observed_at": "2026-10-06T08:39:49.816902+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Test (server + client, MySQL integration)",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37436045323/job/112177988309 Actual trusted gh run37436045323 exacthead5d17a075605ba25e41e76c6fcc2cdeb9d689e02a completed success and currentPR checkSUCCESS. No skip/neutral/waiver.",
+      "actor": "GitHub Actions / observed by Codex /root",
+      "observed_at": "2026-10-06T08:39:49.816903+00:00"
+    },
+    {
+      "kind": "CI",
+      "subject": "Build frontend",
+      "code_commit": "5d17a075605ba25e41e76c6fcc2cdeb9d689e02a",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "https://github.com/crazysumsum/erp-app/actions/runs/37436045323/job/112177987669 Actual trusted gh run37436045323 exacthead5d17a075605ba25e41e76c6fcc2cdeb9d689e02a completed success and currentPR checkSUCCESS. No skip/neutral/waiver.",
+      "actor": "GitHub Actions / observed by Codex /root",
+      "observed_at": "2026-10-06T08:39:49.816904+00:00"
+    },
+    {
+      "kind": "MERGE",
+      "subject": "PHASE-002 P1 PR184 integrated main",
+      "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "Actual23 developer PASS,2separate finalAPPROVE/exact96filemapping,5GitHubCI SUCCESS run37436045323 exactcandidate,MERGE_READY PHASE002 LOCAL_CHECKS_PASS0issues. User main merge authorization persists. Protection404/rulesets[] observed; no waiver. Actual gh merge exit0, ghPR MERGED at2026-10-06T08:40:32Z mergecommit6936736ba1fb98f4fcb8365377f59f0a0f7a4897; fetchedorigin/main exact6936736ba1fb98f4fcb8365377f59f0a0f7a4897, actualparents771+5d17, Git tree diff candidate→merged empty. https://github.com/crazysumsum/erp-app/pull/184 Developer proof maps by actual full Git tree equality; no wholemoduleREADY/formal/UAT/release claim.",
+      "actor": "GitHub / observed by Codex /root",
+      "observed_at": "2026-10-06T08:41:02.037366+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P1 final integration and cleanup observation",
+      "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "Actual merge parent771+5d17 and fulltree equality; shared main fastforward-only clean; owned5MySQL stopped; featureworktree/localremote refs removed, no openPR dependency; complete private evidence retained. Private snapshot is recovery history, not activeGitcheckout. P2 activation and formal/UAT remain under original authorized boundaries.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-06T08:43:07.389271+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P2 entry observed P1 merge and checkpoint recovery",
+      "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+      "spec_baseline": "f6020e25ec28d09bcef6029b1eea9e3c648cd248c222f4b08527518c05bf1ee8",
+      "source_fingerprint": "3e5e740050740f25fe26ab5efaa42f7113375cc8a295859b917be0c5ec759372",
+      "status": "PASS",
+      "source_ref": "Actual ghPR184MERGED/main6936736, freshfetch/head=originmain, primaryclean; owned P2 isolatedworktree created fromfreshdefault. RetainedP1checkpoint160/state/report hashes verified and evidence copied; no P2 productchanges/SQL. Previous Python symlink stale; bundledPython3.12.14 verified, no install.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T00:51:26.802639+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "P2 activation proposal R2 structure and independent review",
+      "code_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "137bd360f0f8da58b7efa9bdee607e4884367d1c6ae3d4e833a4f3e60e16f3fa",
+      "status": "PASS",
+      "source_ref": "Actual trace STRUCTURE_PASS0issues, deterministic matrix/diffcheck; two actual separate proposal APPROVE. No P2 product or SQL executed; runtime only current worktree/private temp. P1 stopped MySQL historical descriptors retained in recovered checkpoint160, not live P2 resources.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T01:06:26.056354+00:00"
     }
   ],
   "pending_decisions": [
@@ -4027,6 +4343,26 @@
       ],
       "status": "ANSWERED",
       "answer_ref": "Actual current Codex chat 2026-10-06 Sam「同意」 directly answers delivered DEC-020 recommendation/packet42: exact patch75cdcf026241b88abe0f3434bdc51db0ae6552b28486c5851ea0643537f684b8, Sales consumer impact classification and three shared factory/HTTP-test/CI scopes, admin-only fixture trigger DDL, new D52bcb72e/Pf6020e25, unchanged UAT-NA and narrowly bounded hash/source-pin/matrix/reference alignment. Existing commit/PR/main merge/owned synthetic SQL/browser authority retained. No later material change, production grants/deployment or lowered gates authorized."
+    },
+    {
+      "id": "DEC-021",
+      "impact": "MAJOR",
+      "question": "Adopt exact P2 worker reserve-only authority and constants, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED exception with locked zero-schema/history proof, quiesced future activation, 28 developer contracts, unchanged formal60/UAT/floors, exact supplemental scopes/owned synthetic MySQL+browser+controlled owned crash/load runtime and unchanged NFR014/015 UAT-NA binding. Packet implementation/44_phase2_activation_decision.md; D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing commit/PR/main merge authority retained; full Phase gate remains. Human answer pending.",
+      "affected_ids": [
+        "PHASE-003",
+        "TASK-028",
+        "TASK-029",
+        "TASK-030",
+        "TASK-031",
+        "TASK-032",
+        "TASK-033",
+        "TASK-034",
+        "TASK-035",
+        "TASK-036",
+        "TASK-037"
+      ],
+      "status": "ANSWERED",
+      "answer_ref": "Actual current Codex chat 2026-10-07 Sam「同意」directly answers delivered DEC021 full recommendation R2 and packet44: adopts worker reserve-only principal/types/lease/fresh authorization, original-user recovery, explicit UNINSTALLED_FULFILLMENT_V1/NO_PROVIDER_REQUIRED constrained deployment exception and future quiesced activation, exact supplemental scope,28 developer contracts/unchanged formal60/UAT/floors and new owned synthetic MySQL26.7/browser/controlled owned crash/load runtime. D dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f P e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4 patch 3462cb6cf517e751d24f132ad5bebc700a0d4f057a62e6623ac474042287e1cc. Existing approved module/shared scope, commit/push/PR/main merge authority carries forward; no production/shared DB/deployment or later material exception."
     }
   ],
   "external_actions": [
@@ -4469,6 +4805,46 @@
       "idempotency_key": "sales-p1-dec020-r2-fresh-owned-schemas-20261006",
       "status": "CONFIRMED",
       "source_ref": "Actual private refresh_dec020_r2.mjs succeeded:12 newunique owned synthetic schemas, primary/coverage/025 full migrator passed;socket/version/datadir checked before every creation; existing ordinary app schema grants/admin accounts preserved, no reset/drop/server policy change. Private r2 env600/bindings/migrationlogs retained."
+    },
+    {
+      "id": "P1-DEC020-PUBLISH-20261006",
+      "kind": "PR_UPDATE",
+      "target": "origin codex/sales-order-phase-1-draft / PR184; verified fresh main7717702acf7c40bad188ba61fb48c8e90b309be1",
+      "idempotency_key": "sales-p1-dec020-candidate5d17a07",
+      "status": "CONFIRMED",
+      "source_ref": "User existing push/PR/main merge authorization; actual23 developer PASS/two independent final APPROVE; candidate5d17a07 source3e5e7400/D52bc/Pf602. Publish same branch and update existing PR body/ready, no raw artifacts. Actual gitpush53→5d17a07 exit0, gh body update/ready exit0 and trusted gh PR view exact5d17a075605ba25e41e76c6fcc2cdeb9d689e02a OPEN/nondraft confirmed. https://github.com/crazysumsum/erp-app/pull/184"
+    },
+    {
+      "id": "MYSQL-SALES-P1-DEC020-FINAL-SHUTDOWN-20261006",
+      "kind": "CLEANUP",
+      "target": "68197 /private/tmp/sales-p1-private/mysql-primary/mysql.sock; 68202 /private/tmp/sales-p1-private/mysql-inventory-final/mysql.sock; 68214 /private/tmp/erp-inventory-task021-mysql-2670.u3185j0z/mysql.sock; 68220 /private/tmp/erp-inventory-task022-mysql-2670.mz168mu2/mysql.sock; 68236 /private/tmp/erp-inventory-task025-mysql-2670.0ohsjmmb/mysql.sock",
+      "idempotency_key": "sales-p1-dec020-final-shutdown-20261006",
+      "status": "CONFIRMED",
+      "source_ref": "Actual UID/PID/argv/version/datadir/socket and idle-state probes verified5 owned disposable instances in dec020-r2bindings; all23checks finished. Graceful mysqladmin shutdown only; preserve datadirs/logs/evidence and PR worktree/branch; unrelated resources untouched. Actual5 mysqladmin exit0; ownedPIDs/sockets subsequently absent, datadirs preserved. dec020-final-shutdown-results.json."
+    },
+    {
+      "id": "P1-DEC020-MERGE-184-20261006",
+      "kind": "MERGE",
+      "target": "PR184 candidate5d17a075605ba25e41e76c6fcc2cdeb9d689e02a into freshlyverified main7717702acf7c40bad188ba61fb48c8e90b309be1",
+      "idempotency_key": "sales-p1-dec020-merge-pr184-candidate5d17a07",
+      "status": "CONFIRMED",
+      "source_ref": "Actual23 developer PASS,2separate finalAPPROVE/exact96filemapping,5GitHubCI SUCCESS run37436045323 exactcandidate,MERGE_READY PHASE002 LOCAL_CHECKS_PASS0issues. User main merge authorization persists. Protection404/rulesets[] observed; no waiver. Actual gh merge exit0, ghPR MERGED at2026-10-06T08:40:32Z mergecommit6936736ba1fb98f4fcb8365377f59f0a0f7a4897; fetchedorigin/main exact6936736ba1fb98f4fcb8365377f59f0a0f7a4897, actualparents771+5d17, Git tree diff candidate→merged empty. https://github.com/crazysumsum/erp-app/pull/184"
+    },
+    {
+      "id": "P1-DEC020-GIT-CLEANUP-20261006",
+      "kind": "CLEANUP",
+      "target": "Owned /private/tmp/erp-sales-p1 worktree and merged local/remote codex/sales-order-phase-1-draft only",
+      "idempotency_key": "sales-p1-dec020-git-cleanup-merged184",
+      "status": "CONFIRMED",
+      "source_ref": "ActualPR184MERGED/main6936736, allfeaturecommits contained; no openPR source/base dependencies; primarymainclean and fastforwarded only. Preserve complete final private module/evidence snapshot and validate hashes before restoring only own state/report bookkeeping/removing evidence from resolved worktree; git worktree remove withoutforce, local branch -d, remote branch deletion only this mergedbranch. Otherworktrees unchanged. Actual git worktree remove exit0/nonforce, localbranch -d exit0 and remote push --delete exit0; worktree/localref absent, remote ls-remote empty; shared main6936736 clean. Final159/raw567files preserved with per-file SHA/byte equality. Other worktrees remain unchanged. Actual verification at final cleanup."
+    },
+    {
+      "id": "MODE-CHANGE-162",
+      "kind": "MODE_CHANGE",
+      "target": "IMPLEMENT",
+      "idempotency_key": "mode-change-162",
+      "status": "CONFIRMED",
+      "source_ref": "Actual current Codex chat 2026-10-07 Sam「繼續下一階段」authorizes IMPLEMENT P2 on fresh merged main6936736; entry observation only, pending DEC021 new worker/deployment contract not implicitly adopted."
     }
   ],
   "evidence_files": [
@@ -4601,5 +4977,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Current23 developer suites allPASS at3e5e7400/approvedD52bc Pf602; actualservercoverage0fail/global+34perfilefloorsPASS. Await final separate implementation/readiness evidence inspection; then freeze exactsource/docs, push candidate, require5currentCI/actualPRreview/freshmain/MERGE_READY beforeauthorizedmerge. No formal/UAT/globalREADY claim."
+  "next_safe_action": "Implement TASK028 two commitment migrations with constraints and real owned MySQL clean/upgrade/rerun tests; no second approval needed for DEC021 scope/runtime or Git. All28 suites/currentCI/review/freshmain required for wholeP2 merge."
 }

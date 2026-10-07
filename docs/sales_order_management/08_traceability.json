@@ -1231,7 +1231,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-PHASE1-UATNA-DEC020"
+        "approval_id": "APR-PHASE2-UATNA-DEC021"
       }
     },
     {
@@ -1239,7 +1239,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-PHASE1-UATNA-DEC020"
+        "approval_id": "APR-PHASE2-UATNA-DEC021"
       }
     },
     {
@@ -2775,7 +2775,31 @@
         "lint",
         "client-build",
         "security-audit",
-        "sales-technical"
+        "sales-foundation-developer",
+        "sales-provider-regression",
+        "sales-phase001-native",
+        "sales-item-compatibility-native",
+        "sales-inventory-native-007",
+        "sales-inventory-native-008",
+        "sales-inventory-native-009",
+        "sales-inventory-native-012",
+        "sales-inventory-native-014",
+        "sales-inventory-native-019",
+        "sales-inventory-native-020",
+        "sales-inventory-native-021",
+        "sales-inventory-native-022",
+        "sales-inventory-native-025",
+        "sales-phase002-unit",
+        "sales-phase002-native",
+        "sales-phase002-client",
+        "sales-phase002-browser",
+        "sales-phase002-server-coverage",
+        "sales-phase002-client-coverage",
+        "sales-phase003-unit",
+        "sales-phase003-native",
+        "sales-phase003-client",
+        "sales-phase003-browser",
+        "sales-phase003-performance"
       ]
     },
     {
@@ -8586,7 +8610,9 @@
         "DES-019",
         "DES-020"
       ],
-      "depends_on": [],
+      "depends_on": [
+        "TASK-013"
+      ],
       "technical_test_ids": [
         "TC-021",
         "TC-033",
@@ -8689,7 +8715,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-028"
+        "TASK-028",
+        "TASK-015"
       ],
       "technical_test_ids": [
         "TC-021",
@@ -8798,7 +8825,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-029"
+        "TASK-029",
+        "TASK-010"
       ],
       "technical_test_ids": [
         "TC-021",
@@ -9011,7 +9039,7 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-031"
+        "TASK-030"
       ],
       "technical_test_ids": [
         "TC-025",
@@ -9102,7 +9130,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-032"
+        "TASK-030",
+        "TASK-010"
       ],
       "technical_test_ids": [
         "TC-026",
@@ -9285,7 +9314,8 @@
         "DES-020"
       ],
       "depends_on": [
-        "TASK-034"
+        "TASK-028",
+        "TASK-030"
       ],
       "technical_test_ids": [
         "TC-027",
@@ -9473,6 +9503,11 @@
         "DES-020"
       ],
       "depends_on": [
+        "TASK-031",
+        "TASK-032",
+        "TASK-033",
+        "TASK-034",
+        "TASK-035",
         "TASK-036"
       ],
       "technical_test_ids": [

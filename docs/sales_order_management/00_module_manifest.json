@@ -30,7 +30,13 @@
       "server/src/modules/item/ItemLookupService.js",
       "README.md",
       "server/src/modules/businessMaster/businessMasterFactory.js",
-      ".github/workflows/ci.yml"
+      ".github/workflows/ci.yml",
+      "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+      "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+      "server/src/handlers/sales-backorders/**",
+      "client/src/composables/sales/**",
+      "server/src/modules/inventory/InventoryReservationService.js",
+      "server/src/modules/inventory/inventoryConstants.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -68,7 +74,9 @@
       "client/test/components/sales/**",
       "client/test/services/sales.test.js",
       "server/test/serviceContainer.test.js",
-      "server/test/business-master/http.integration.test.js"
+      "server/test/business-master/http.integration.test.js",
+      "server/test/inventorySalesWorkerContracts.test.js",
+      "client/test/composables/sales/**"
     ],
     "allowed_write_paths": [
       "docs/sales_order_management/**",
@@ -117,7 +125,21 @@
       "README.md",
       "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/test/business-master/http.integration.test.js",
-      ".github/workflows/ci.yml"
+      ".github/workflows/ci.yml",
+      "server/src/services/salesJobs/jobs/SalesConfirmationRecoveryJob.js",
+      "server/src/services/salesJobs/jobs/SalesBackorderAllocationJob.js",
+      "server/src/handlers/sales-backorders/**",
+      "client/src/composables/sales/**",
+      "server/src/modules/inventory/InventoryReservationService.js",
+      "server/test/inventorySalesWorkerContracts.test.js",
+      "client/test/composables/sales/**",
+      "server/database/migrations/*_create_sales_order_line_reservations.js",
+      "server/database/migrations/*_create_sales_backorder_entries.js",
+      "server/scripts/checkCoverageFloors.js",
+      "server/test/inventoryProviderContracts.test.js",
+      "docs/inventory_management/03_design_spec.md",
+      "docs/fulfillment_shipping_management/03_design_spec.md",
+      "server/src/modules/inventory/inventoryConstants.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -174,7 +196,14 @@
       "server/config/scheduler.js",
       "server/src/modules/businessMaster/businessMasterFactory.js",
       "server/test/business-master/http.integration.test.js",
-      ".github/workflows/ci.yml"
+      ".github/workflows/ci.yml",
+      "server/test/serviceContainer.test.js",
+      "server/scripts/checkCoverageFloors.js",
+      "server/src/modules/inventory/InventoryReservationService.js",
+      "server/test/inventorySalesWorkerContracts.test.js",
+      "docs/inventory_management/03_design_spec.md",
+      "docs/fulfillment_shipping_management/03_design_spec.md",
+      "server/src/modules/inventory/inventoryConstants.js"
     ],
     "forbidden_paths": [
       ".env",
@@ -197,7 +226,9 @@
       "server/database/migrations/*_create_sales_order_status_history.js",
       "server/database/migrations/*_create_sales_audit_logs.js",
       "server/database/migrations/*_create_sales_quotation_conversions.js",
-      "server/database/migrations/*_create_sales_external_order_keys.js"
+      "server/database/migrations/*_create_sales_external_order_keys.js",
+      "server/database/migrations/*_create_sales_order_line_reservations.js",
+      "server/database/migrations/*_create_sales_backorder_entries.js"
     ],
     "shared_resources": [
       "global-migration-sequence",
@@ -218,7 +249,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "ce126dda3c217576cce1efd0d7558ac07e87f5eeb2bae13234e454185bef7ac0",
+        "sha256": "11e2efe118b82c1c946a00a311b29043cdb182e975877846cbf42662f0f6d807",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
@@ -232,7 +263,7 @@
         "id": "inventory-batch-reserve-release-contract",
         "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/inventory_management/03_design_spec.md",
-        "sha256": "4a3834d65bdde92ac0f532ace7fe3fdaab05bc076b61da98977802b5474c6b29",
+        "sha256": "d24d46d353a62db558901dd87b44b77e75cf97ff8b5a23fc6922657ab95eddaa",
         "regression_suites": [
           "sales-technical"
         ]

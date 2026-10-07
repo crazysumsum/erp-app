@@ -43,3 +43,15 @@ Original failures and the two human decisions remain in state/packet42. DEC020 a
 Actual separate reviewers `/root/sales_p1_review` (P1-DEC020-final-R2-20261006) and `/root/sales_readiness_review` both APPROVED the current source and all23/64 actual evidence artifacts, with zero unresolved HIGH/CRITICAL findings. TASK-012–027 are DONE for the P1 implementation boundary. PR184 currently remains draft at its earlier remote commit; the new code must be frozen/published and receive all five current-candidate GitHub Actions checks, actual independent PR review and fresh main reconciliation. MERGE_READY has not yet passed and no merge is claimed here.
 
 P1 implementation verification does not constitute formal technical acceptance, business UAT or release approval. All60 formal technical cases and later Phases remain under their approved plans. Final actual CI/merge/recovery observations will be appended locally and retained with private checkpoint evidence after safe topic cleanup.
+
+## Observed current candidate CI
+
+Published candidate `5d17a075605ba25e41e76c6fcc2cdeb9d689e02a` received all five required checks SUCCESS in [GitHub Actions37436045323](https://github.com/crazysumsum/erp-app/actions/runs/37436045323). Exact-candidate review mapping was independently confirmed by `/root/sales_p1_review`, with all96 committed reviewed file hashes unchanged. Freshmain `7717702acf7c40bad188ba61fb48c8e90b309be1` is fully contained in candidate; branch protection endpoint404/rulesets[] observed, mandatory Harness CI/review still enforced. Five owned MySQL servers gracefully shut down after actual ownership/idle checks; datadirs and all private evidence preserved. Final merge not yet performed at this observation.
+
+## Observed Phase merge
+
+PR184 is MERGED at `2026-10-06T08:40:32Z`; actual main commit `6936736ba1fb98f4fcb8365377f59f0a0f7a4897`, parents latest target7717702 and verified candidate5d17a07. Full committed Git tree equals the reviewed and CI-tested candidate, allowing precise integrated evidence mapping. MERGE_READY PHASE-002 passed with zero issues before merge. P1 TASK-012–027 implementation boundary complete; module remains IMPLEMENTING for later phases, with formal technical acceptance/UAT/release not executed or approved. Safe branch/worktree cleanup follows preservation of final state, report and local raw evidence.
+
+## Final cleanup and recovery
+
+Actual5 owned MySQL PIDs/sockets stopped gracefully; datadirs retained. P1 worktree `/private/tmp/erp-sales-p1` removed withoutforce; local branch deleted using `-d`, remote branch deletion confirmed by empty `ls-remote`. No open dependent PRs or unique unmerged commits. Primarymain fastforwarded to `6936736ba1fb98f4fcb8365377f59f0a0f7a4897` and clean; unrelated worktrees unchanged. Full final state/report and all567 local document/evidence files retained privately under `/private/tmp/sales-p1-private/final-preservation`; snapshot is recovery history and not a Git checkout. Next safe action is approved P2 activation planning from newly fetched main; formal acceptance/business UAT/release remain unexecuted.

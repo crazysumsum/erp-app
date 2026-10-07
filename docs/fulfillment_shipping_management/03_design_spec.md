@@ -1085,6 +1085,8 @@ PICKING、PICKED、SHIPPING、REVERSING、active Claim、outstanding Allocation�
 
 `assertSalesLifecycleAllowedInTransaction()`由已鎖Sales Order／Lines的withdraw／cancel／close remaining流程呼叫；它按Fulfillment ID鎖相關非terminal工作及Claims。任何active工作回`OPEN_FULFILLMENT_EXISTS`，依賴失效回UNKNOWN／503，不能讓Sales先行release Reservation。固定lock order仍為Sales → Fulfillment → Inventory。
 
+Sales P2 DEC-021 proposes an explicit UNINSTALLED_FULFILLMENT_V1 / NO_PROVIDER_REQUIRED deployment boundary only before any Fulfillment/Shipment schema or migration history and with no registered active provider. Sales returns distinct NOT_REQUIRED, not CLOSED, after a current check in its locked transaction. Any schema/history/provider presence, partial/archive installation or UNKNOWN requires the real lifecycle provider. Activation quiesces Sales release, migrates first, removes this exception, registers/verifies all nodes and proves Sales -> Fulfillment -> Inventory writer locks before resuming. Metadata alone does not prove live rollout safety; no negative cache or drop-to-reenable policy. Archive remains required and unchanged. Human/owner adoption remains pending.
+
 Returns／Invoicing未上線時，Downstream Matter registry顯式註冊`NO_PROVIDER_REQUIRED`版本。對應模組上線後必須成為required provider；缺失或UNKNOWN即阻止Reversal／Archive，不可默認false。
 
 ---
