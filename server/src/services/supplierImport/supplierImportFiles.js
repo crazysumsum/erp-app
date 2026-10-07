@@ -123,6 +123,66 @@ export async function listSupplierImportFiles(root, kind, { lstat: lstatFn = lst
     .map((entry) => ({ storedName: entry.name, path: path.join(directory, entry.name) }));
 }
 
+function purgeError(code, message) {
+  return Object.assign(new Error(message), { code });
+}
+
+/**
+ * 清理開始時記低 `<root>/<kind>` 嘅身份（`dev`＋`ino`）。刪每個檔之前都要再對一次（REV-059 L-6）：
+ * 中途目錄被換成 symlink 或者第二個目錄，就唔刪。目錄未建立 → null（冇檔可刪）。
+ */
+export async function supplierImportDirectory(root, kind, { lstat: lstatFn = lstat } = {}) {
+  const directory = path.dirname(supplierImportFilePath(root, kind, "0".repeat(64)));
+  const rootInfo = await realDirectory(path.resolve(root), lstatFn);
+  try {
+    const info = await realDirectory(directory, lstatFn);
+    if (info.dev !== rootInfo.dev) throw new Error("Supplier import directory must be on the root's filesystem");
+    return { kind, path: directory, dev: info.dev, ino: info.ino };
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+/**
+ * T48 刪檔（設計 §12.5；REV-059 L-6）：緊接 unlink 之前再驗一次——
+ * 目錄仲係清理開始時嗰個（同 `dev`＋`ino`）；檔案係普通檔、同一個 filesystem、只有一個 hard link。
+ * 然後 unlink 驗過嘅目錄 + server 產生嘅檔名，所以唔會跟 symlink、唔會離開 root。
+ *
+ * 回 `"deleted"`、`"missing"`（本身已經冇，idempotent），或者 `"too_new"`（`notNewerThanMs` 之後先改過，
+ * 留俾 upload 寫完 job 先）。唔安全就拋 `SUPPLIER_IMPORT_PURGE_UNSAFE`。
+ */
+export async function removeVerifiedSupplierImportFile(directory, storedName, { notNewerThanMs, lstat: lstatFn = lstat } = {}) {
+  if (!STORED_NAME.test(String(storedName ?? ""))) throw new TypeError("Supplier import stored name is invalid");
+  const now = await lstatFn(directory.path).catch((error) => {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  });
+  if (!now?.isDirectory() || now.dev !== directory.dev || now.ino !== directory.ino) {
+    throw purgeError("SUPPLIER_IMPORT_PURGE_UNSAFE", "Supplier import directory changed since the purge started");
+  }
+  const file = path.join(directory.path, storedName);
+  let info;
+  try {
+    info = await lstatFn(file);
+  } catch (error) {
+    if (error.code === "ENOENT") return "missing";
+    throw error;
+  }
+  // 太新嘅檔乜都唔做（未算失敗）：可能係 upload 寫咗檔、未入 job。
+  if (notNewerThanMs !== undefined && info.mtimeMs > notNewerThanMs) return "too_new";
+  if (!info.isFile() || info.dev !== directory.dev || info.nlink !== 1) {
+    throw purgeError("SUPPLIER_IMPORT_PURGE_UNSAFE", "Supplier import file is not a single-link regular file on the root's filesystem");
+  }
+  try {
+    await unlink(file);
+  } catch (error) {
+    if (error.code === "ENOENT") return "missing";
+    throw error;
+  }
+  return "deleted";
+}
+
 function contains(parent, child) {
   const relative = path.relative(parent, child);
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
