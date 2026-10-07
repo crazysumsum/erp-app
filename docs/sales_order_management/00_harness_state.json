@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 174,
+  "revision": 175,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
@@ -11,8 +11,8 @@
   "baseline": {
     "design": "dbb9b2eabe3c1089b748c22bbafec53abae8d77fbedda13e749197227af2420f",
     "plan": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
-    "code_commit": "949c87edcb948763906632227ef854fdf63d5333",
-    "source_fingerprint": "b2d939c09e189623a092c8820441f8d8ddd5c93a8a68c68a8286df87e9b23bf0",
+    "code_commit": "1a390d47da4add5a6ba2e7a8b5be4c24d460b46c",
+    "source_fingerprint": "25e003caebff894884c7934aeb1f5030a5fe23471fd13aac0f589df89bd60a95",
     "worktree": "/private/tmp/erp-sales-p2",
     "default_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -2771,6 +2771,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK031-polling-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "25e003caebff894884c7934aeb1f5030a5fe23471fd13aac0f589df89bd60a95",
+      "source_ref": "Actual TASK031-polling-R1-20261007 APPROVE; three-file digest7a404bd85aabec3cfd576f0fe9908096f02738b501ae50cdd44801e3c8c5cec0; /private/tmp/sales-p2-private/task031-polling-reviewer-source.json. Independent68unitPASS/scopedlint; actualRED+native25fixedPASS0skip. Globalsource includes uncommitted nextAPI handlers/schema/test outside approval; they are not approved.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4203,6 +4215,17 @@
       "source_ref": "Actual65unitsPASS0skip/scopedlintPASS/native task031-flow-native.log24PASS0skip; real PhaseA COMMIT then lostack versus actualROLLBACK then lostack; originalevent lookup/retry and no duplicates. Handlers/UI not implemented yet.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T01:47:59.996433+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK031 nonblocking committed polling regression",
+      "code_commit": "1a390d47da4add5a6ba2e7a8b5be4c24d460b46c",
+      "spec_baseline": "e61659d852b66566085d80a53f0437ef79f101a1449fc15c52f9e59223b068e4",
+      "source_fingerprint": "25e003caebff894884c7934aeb1f5030a5fe23471fd13aac0f589df89bd60a95",
+      "status": "PASS",
+      "source_ref": "Actual native task031-poll-lock-fixed.log25PASS0skip, preservedRED blockedlookup>200ms with trueWarehousecontention. Unit68PASS0skip/npmrunlint0. Only3fixfiles covered; nextAPI uncommitted outside approval.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T01:52:35.305524+00:00"
     }
   ],
   "pending_decisions": [
@@ -5118,5 +5141,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "Commit reviewed TASK031 bounded flow slice after global lint, then implement handlers/schema/native API and frontend/UI/Playwright. TASK031 remains IN_PROGRESS."
+  "next_safe_action": "Commit separately reviewed3file polling fix, then validate/commit nextAPI five-file slice with actualHTTP. Task031/UI/wholePhase remain pending."
 }

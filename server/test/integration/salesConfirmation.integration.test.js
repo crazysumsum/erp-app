@@ -227,3 +227,17 @@ integrationTest("TC-022 operation lookup requires current original-user permissi
   await f.db.execute("DELETE FROM role_permissions WHERE role_id=?",[f.roleId]);
   await assert.rejects(()=>f.service().lookup({claims:f.claims,eventId:f.request.input.eventId}),{code:"PERMISSION_STALE"});
 });
+integrationTest("TC-022 polling reads committed IN_PROGRESS without waiting for the executing operation lock",async t=>{
+  const f=await setup(t);await stock(f,10);const intent=await f.service().startConfirmation(f.request);
+  let entered;const inside=new Promise(resolve=>{entered=resolve;});
+  const real=new InventoryReservationService(f),service=f.service({inventory:{reserveAvailableForSalesBatchInTransaction(tx,command){entered();return real.reserveAvailableForSalesBatchInTransaction(tx,command);}}});
+  await f.db.query("START TRANSACTION");await f.db.query("SELECT id FROM inventory_warehouses WHERE id=? FOR UPDATE",[f.warehouseId]);
+  const execution=service.completeConfirmation({eventId:intent.eventId,claims:f.claims,leaseOwner:intent.leaseOwner});
+  let lookup,timer;
+  try {
+    await inside;
+    lookup=f.service().lookup({claims:f.claims,eventId:intent.eventId});
+    const result=await Promise.race([lookup,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),200);})]);
+    assert.equal(result?.status,"IN_PROGRESS","A status read must not wait for Phase B's operation row lock");
+  } finally {clearTimeout(timer);await f.db.query("ROLLBACK");await execution;await lookup;}
+});

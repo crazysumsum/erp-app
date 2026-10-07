@@ -74,9 +74,10 @@ export class SalesOrderConfirmationService {
     salesEventId(eventId);
     return this.database.withTransaction(async tx => {
       const actor = await requireSalesWriteActor(tx, claims);
-      const [[row]] = await tx.query("SELECT id FROM sales_operation_requests WHERE event_id=? AND actor_user_id=? LOCK IN SHARE MODE", [eventId,actor.id]);
+      // Committed status reads must remain available while Phase B owns the operation row lock.
+      const [[row]] = await tx.query("SELECT id FROM sales_operation_requests WHERE event_id=? AND actor_user_id=?", [eventId,actor.id]);
       if (!row) throw salesError("SALES_ORDER_NOT_FOUND");
-      const operation = await this.operations.getForActor(tx, { eventId,actor,lock: true });
+      const operation = await this.operations.getForActor(tx, { eventId,actor });
       return { eventId,operationId: Number(row.id),status: operation.status,result: operation.result,errorCode: operation.errorCode ?? null };
     });
   }
