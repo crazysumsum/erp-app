@@ -1,13 +1,13 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 195,
+  "revision": 200,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-003",
-  "current_task": "TASK-035",
+  "current_task": "TASK-036",
   "baseline": {
     "design": "d7576e1670de1cb5360b1911a78b024c8fbfa555977374636112763eba48abe5",
     "plan": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
@@ -62,8 +62,8 @@
     "TASK-032": "IN_PROGRESS",
     "TASK-033": "DONE",
     "TASK-034": "DONE",
-    "TASK-035": "IN_PROGRESS",
-    "TASK-036": "PENDING",
+    "TASK-035": "DONE",
+    "TASK-036": "IN_PROGRESS",
     "TASK-037": "PENDING"
   },
   "approvals": [
@@ -3231,6 +3231,30 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK035-Inventory-worker-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "45b9ba97067e5df99d8282945b19394602522555aaa06552ee7a29883f9ae16a",
+      "source_ref": "Actual APPROVE4-file digest2aceed7dc30d5d9da5622b65e9ccf1f69c97979799bc8d53d3c24f8068e06349; independent32native16units/scopedlintPASS0skip. Sharedmanualroot/hash/auth regressions unchanged. Caller-owned Inventory boundary callback fixtures only; actualregisteredScheduler/fullallocator stillpending. Reviewedbytes committed6f1c810. Private proof task035-worker-reviewer-source.json retained.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-TASK035-036-backend-R1-20261007",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "97d3f2af3ebc275a33e032ebb233652f1a7311c5eafefaf5a1e5726d567fd72b",
+      "source_ref": "Report59 actual APPROVE final11digest7ed9e6e70a6221b13b7e8a681a3aa8524327beccfc9d619feee7cd8a30c3029e; independent66native112unitPASS0skip, lintPASS after test-onlybraces inversehash proof. Reviewedbackendbytes committed95491c9; private task035-036-backend-reviewer-source.json. Outside11UI drift excluded. SQLreleased.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -4740,6 +4764,17 @@
       "source_ref": "Report57: root+independent15realPlaywright89client/build/lintPASS; source sixfiles unchanged. OriginalR1review/251emojiRED retained. Developer only, no Phase/formal/UAT/CI/PR/merge.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T03:48:45.297076+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK035 FIFO and TASK036 registered backend/UI developer checkpoints",
+      "code_commit": "95491c9ce4cfea73ccf43c6c1eaefd3a8936b31b",
+      "spec_baseline": "f419777dfdab77daa18ea2055c6fc77d0cf56d90fd8ce55ac557e8e2f78e9d05",
+      "source_fingerprint": "921af513f9eec46bbf455e0d6935e5697081bc792d3dae7bdb05eddc37637847",
+      "status": "PASS",
+      "source_ref": "Report59 independent66native112unit/scopedlint; root16native94client/build/full lint/17browserPASS. Exactscopeproof mapping; UIindependentreview and TASK037 fullPhase gate pending.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-07T05:58:57.179641+00:00"
     }
   ],
   "pending_decisions": [
@@ -5655,6 +5690,38 @@
       "idempotency_key": "sales-p2-backorder-dev-20261007-01",
       "status": "STARTED",
       "source_ref": "DEC021 approvedreserve-only fixedprincipal,DB-clockleasefence,worker2types,oneFIFOentryTx/currentmanualauthunchanged. Three workerunitRED reproduce missingimplementation before sourceedit; native/failure/concurrency follow in exclusiveSQL. ThreeworkerunitRED retained; minimalInventorysecondvariation implemented,12worker+existingmanualunitsPASS0skip. Native/FIFO stillpending."
+    },
+    {
+      "id": "ACT-P2-BACKORDER-WORKER-REVIEW-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "OwnedsyntheticMySQL36251 fixed schema; independentworker/manualconfirmation32native serial; root noSQLuntilrelease",
+      "idempotency_key": "sales-p2-backorder-worker-review-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Exact4scope task035-worker-author-source.json; root12worker/manualunits+32nativePASS0skip/scopedlint. Native callback tests are Inventory boundary fixtures, not yet realScheduler/jobprincipal. Existingsharedmanualhash/authorization regressions mandatory. No rawexport or workerTaskDONEclaim. Observed32native16unit/lintPASS0skip; exact4filesunchanged,app/fixturesclosed/SQLreleased. Sourceglobaloutside4scope drift excluded."
+    },
+    {
+      "id": "ACT-P2-BACKORDER-BACKEND-REVIEW-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Independent actual FIFO/Scheduler/API review on owned synthetic schema, exclusive SQL until release; root UI reads/edits only outside frozen11 backend files",
+      "idempotency_key": "sales-p2-backorder-backend-review-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "Exact11 task035-036-backend-author-source.json; root16nativePASS including actual Scheduler principal, SQL leader/overlap/shutdown/202freshauth/rollback/ackreconcile and bounded durable technical backoff; no rawexport/no formal or wholePhase claim. Observed66native112unitPASS0skip; realAPPROVE scopedlintPASS after singlebracesfix; exact11proof retained,app/fixturesclosed/SQLreleased."
+    },
+    {
+      "id": "ACT-P2-BACKORDER-BROWSER-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Root17realPlaywright cases actual5minregisteredBackorder worker; ownedsyntheticDB36251 exclusiveafter independentreview66nativeSQLrelease; ownedport0app/Vite/teardown",
+      "idempotency_key": "sales-p2-backorder-browser-20261007-01",
+      "status": "CONFIRMED",
+      "source_ref": "ExistingDEC021authorization covers task036 UI actualFIFO and Scheduler wake; root94client/buildPASS; twoisolatedWarehouse browser cases after original15, zeroATP/nonerror/disabled503/Viewer/320keyboard/202beforeeffect/refresh. No mockauth/Inventory, no rawexport; backendreview functionalprovisional only/lintnarrowfixpendingactual final disposition. ObservedR1 16PASS1drawerfailure retained, R2same17casesPASS afterviewportrestore desktopnavigation; actual320keyboard checks unchanged. Ownedapp/Vite/browser/fixturesclosed/SQLreleased."
+    },
+    {
+      "id": "ACT-P2-BACKORDER-UI-REVIEW-20261007",
+      "kind": "LOCAL_RUNTIME",
+      "target": "Independent7frozenUI files; exclusive17realPlaywright ownedDB36251 after rootrelease; ownedapp/Vite/browser/fixtures teardown",
+      "idempotency_key": "sales-p2-backorder-ui-review-20261007-01",
+      "status": "PLANNED",
+      "source_ref": "Exact7 task036-ui-author-source.json; root94client/build/17browserPASS; no rawexport. Backend95491c9 fixed/frozen. Root newTASK037 scripts outside7 only, no SQL until reviewerrelease."
     }
   ],
   "evidence_files": [
@@ -5787,5 +5854,5 @@
     "evidence/20261006T081905-94e47b17883a/run.json"
   ],
   "defects": [],
-  "next_safe_action": "TASK035 approved Inventoryworker native lease/auth/replay/rollback and FIFO allocation, then TASK036 job/UI. TASK032actualprocesscrash/TASK037fullPhaseverification remainpending; no partialPhasePR."
+  "next_safe_action": "Independent frozen TASK036 UI actual browser review; root TASK037 isolated tests/generator outside frozen7 and noSQL until reviewerrelease. TASK032actual processcrash/TASK037full28/coverage/capacity/CI/completePhasePR remain mandatory."
 }
