@@ -3,6 +3,7 @@ const salesConfig = {
   manualConfirmationWaitMs: Number(process.env.SALES_MANUAL_CONFIRMATION_WAIT_MS ?? 2500),
   confirmationLeaseMs: Number(process.env.SALES_CONFIRMATION_LEASE_MS ?? 60000),
   confirmationRecoveryBatchSize: Number(process.env.SALES_CONFIRMATION_RECOVERY_BATCH_SIZE ?? 50),
+  importChannelCodes: process.env.SALES_IMPORT_CHANNEL_CODES?.trim() ? process.env.SALES_IMPORT_CHANNEL_CODES.split(",").map(code => code.trim()) : [],
   importMaxBytes: Number(process.env.SALES_IMPORT_MAX_BYTES ?? 50 * 1024 * 1024),
   importMaxRows: Number(process.env.SALES_IMPORT_MAX_ROWS ?? 100000),
   importMaxOrders: Number(process.env.SALES_IMPORT_MAX_ORDERS ?? 10000),
