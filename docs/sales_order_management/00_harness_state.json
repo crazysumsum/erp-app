@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 244,
+  "revision": 247,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
-  "status": "BLOCKED",
-  "resume_status": "IMPLEMENTING",
+  "status": "IMPLEMENTING",
+  "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-040",
+  "current_task": "TASK-041",
   "baseline": {
-    "design": "e9995444bf53fe06b2a9fd106631343ac95bfb4d81ed5c8e448f1bb3349ab629",
-    "plan": "0a77edbc9764415f4bd8d96046e47d3f24832700eff0e9dc62a06caba8cc53fe",
-    "code_commit": "94707b2a12d71d1c7977a5b6a6fe1286358b8bab",
-    "source_fingerprint": "2a5e57ac5c358843f800888d0a043b717f74fe232ec85ef697ad2f1c4fff6484",
+    "design": "20b065e88164b06e91c89116f211e2e44d143e2948d18c0578281e3338925a33",
+    "plan": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+    "code_commit": "bad2d1d50b64522d686cacd6e9cda605fda473b2",
+    "source_fingerprint": "efd89ff0adc06b7458bc64748c31880c64b9224499cfd37c26940e4c2976ae86",
     "worktree": "/private/tmp/erp-sales-p3",
     "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -67,8 +67,8 @@
     "TASK-037": "DONE",
     "TASK-038": "DONE",
     "TASK-039": "DONE",
-    "TASK-040": "IN_PROGRESS",
-    "TASK-041": "PENDING",
+    "TASK-040": "DONE",
+    "TASK-041": "IN_PROGRESS",
     "TASK-042": "PENDING",
     "TASK-043": "PENDING",
     "TASK-044": "PENDING",
@@ -2376,6 +2376,172 @@
         "NFR-015"
       ],
       "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-DESIGN-DEC026",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Codex chat Sam「請繼續」responds to next-step explanation identifying DEC026 two shared files and pending scope approval, following concrete reviewed Decision Required packet71. Coordinator explicitly states interpretation as adoption; applies exactpatchdf3fbbfe/D728edbc6/Pc29fa71c. All previous approvals and R1 failures retained; no cap/timeout/authorization/CI/formal/UAT exception; prior commitPRmainmerge and ownedsynthetic runtime authority persists.",
+      "recorded_at": "2026-10-08T01:12:25.817865+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "728edbc6d4146e0d373b7f07b97a0df1820c95493554608755541647f39c98b2",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-PLAN-DEC026",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Codex chat Sam「請繼續」responds to next-step explanation identifying DEC026 two shared files and pending scope approval, following concrete reviewed Decision Required packet71. Coordinator explicitly states interpretation as adoption; applies exactpatchdf3fbbfe/D728edbc6/Pc29fa71c. All previous approvals and R1 failures retained; no cap/timeout/authorization/CI/formal/UAT exception; prior commitPRmainmerge and ownedsynthetic runtime authority persists.",
+      "recorded_at": "2026-10-08T01:12:25.817865+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "code_commit": null,
+      "scope": [
+        "PHASE-004"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-SCOPE-DEC026",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Codex chat Sam「請繼續」responds to next-step explanation identifying DEC026 two shared files and pending scope approval, following concrete reviewed Decision Required packet71. Coordinator explicitly states interpretation as adoption; applies exactpatchdf3fbbfe/D728edbc6/Pc29fa71c. All previous approvals and R1 failures retained; no cap/timeout/authorization/CI/formal/UAT exception; prior commitPRmainmerge and ownedsynthetic runtime authority persists.",
+      "recorded_at": "2026-10-08T01:12:25.817865+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "code_commit": null,
+      "scope": [
+        "PHASE-004",
+        "TASK-040",
+        "TASK-041"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-RISK-DEC026",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Codex chat Sam「請繼續」responds to next-step explanation identifying DEC026 two shared files and pending scope approval, following concrete reviewed Decision Required packet71. Coordinator explicitly states interpretation as adoption; applies exactpatchdf3fbbfe/D728edbc6/Pc29fa71c. All previous approvals and R1 failures retained; no cap/timeout/authorization/CI/formal/UAT exception; prior commitPRmainmerge and ownedsynthetic runtime authority persists.",
+      "recorded_at": "2026-10-08T01:12:25.817865+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "code_commit": null,
+      "scope": [
+        "PHASE-004"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-UATNA-DEC026",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "Actual Codex chat Sam「請繼續」responds to next-step explanation identifying DEC026 two shared files and pending scope approval, following concrete reviewed Decision Required packet71. Coordinator explicitly states interpretation as adoption; applies exactpatchdf3fbbfe/D728edbc6/Pc29fa71c. All previous approvals and R1 failures retained; no cap/timeout/authorization/CI/formal/UAT exception; prior commitPRmainmerge and ownedsynthetic runtime authority persists.",
+      "recorded_at": "2026-10-08T01:12:25.817865+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-DESIGN-DEC026-SOURCE041",
+      "kind": "DESIGN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical source-pin and unchanged UAT_NA reference rebinding under actual Sam DEC025/DEC026 approvals expressly authorizing narrow mechanical bindings. Computed by Codex; Sam did not separately inspect this computed hash. Only current approved Item provider byte SHA and two unchanged UAT_NA references changed; no scope/rule/API/threshold/command/formal acceptance change. Historical human records retained verbatim. Origin APR-PHASE3-DESIGN-DEC026; original DEC026 actual chat「請繼續」retained.",
+      "recorded_at": "2026-10-08T01:40:55.103698+00:00",
+      "baseline_kind": "DESIGN",
+      "baseline_sha256": "20b065e88164b06e91c89116f211e2e44d143e2948d18c0578281e3338925a33",
+      "code_commit": null,
+      "scope": [
+        "sales-order-management"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-PLAN-DEC026-SOURCE041",
+      "kind": "PLAN",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical source-pin and unchanged UAT_NA reference rebinding under actual Sam DEC025/DEC026 approvals expressly authorizing narrow mechanical bindings. Computed by Codex; Sam did not separately inspect this computed hash. Only current approved Item provider byte SHA and two unchanged UAT_NA references changed; no scope/rule/API/threshold/command/formal acceptance change. Historical human records retained verbatim. Origin APR-PHASE3-PLAN-DEC026; original DEC026 actual chat「請繼續」retained.",
+      "recorded_at": "2026-10-08T01:40:55.103698+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "code_commit": null,
+      "scope": [
+        "PHASE-004"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-SCOPE-DEC026-SOURCE041",
+      "kind": "SCOPE",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical source-pin and unchanged UAT_NA reference rebinding under actual Sam DEC025/DEC026 approvals expressly authorizing narrow mechanical bindings. Computed by Codex; Sam did not separately inspect this computed hash. Only current approved Item provider byte SHA and two unchanged UAT_NA references changed; no scope/rule/API/threshold/command/formal acceptance change. Historical human records retained verbatim. Origin APR-PHASE3-SCOPE-DEC026; original DEC026 actual chat「請繼續」retained.",
+      "recorded_at": "2026-10-08T01:40:55.103698+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "code_commit": null,
+      "scope": [
+        "PHASE-004",
+        "TASK-040",
+        "TASK-041"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-RISK-DEC026-SOURCE041",
+      "kind": "RISK",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical source-pin and unchanged UAT_NA reference rebinding under actual Sam DEC025/DEC026 approvals expressly authorizing narrow mechanical bindings. Computed by Codex; Sam did not separately inspect this computed hash. Only current approved Item provider byte SHA and two unchanged UAT_NA references changed; no scope/rule/API/threshold/command/formal acceptance change. Historical human records retained verbatim. Origin APR-PHASE3-RISK-DEC026; original DEC026 actual chat「請繼續」retained.",
+      "recorded_at": "2026-10-08T01:40:55.103698+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "code_commit": null,
+      "scope": [
+        "PHASE-004"
+      ],
+      "expires_at": null
+    },
+    {
+      "id": "APR-PHASE3-UATNA-DEC026-SOURCE041",
+      "kind": "UAT_NA",
+      "authority_kind": "HUMAN",
+      "actor": "Sam (ERP Product Owner)",
+      "decision": "APPROVED",
+      "source_ref": "DERIVED mechanical source-pin and unchanged UAT_NA reference rebinding under actual Sam DEC025/DEC026 approvals expressly authorizing narrow mechanical bindings. Computed by Codex; Sam did not separately inspect this computed hash. Only current approved Item provider byte SHA and two unchanged UAT_NA references changed; no scope/rule/API/threshold/command/formal acceptance change. Historical human records retained verbatim. Origin APR-PHASE3-UATNA-DEC026; original DEC026 actual chat「請繼續」retained.",
+      "recorded_at": "2026-10-08T01:40:55.103698+00:00",
+      "baseline_kind": "PLAN",
+      "baseline_sha256": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "code_commit": null,
+      "scope": [
+        "NFR-014",
+        "NFR-015"
+      ],
+      "expires_at": null
     }
   ],
   "reviews": [
@@ -3994,6 +4160,54 @@
       "reviewer": "Codex /root/sales_readiness_review",
       "reviewed_baseline": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
       "source_ref": "Actual collaborator FINAL proposal-onlyAPPROVE; private dec026-reviewer-r2-proof.json. Independently exactsixpatchSHA/sourcepin/UATNArefs/unchangedrequirementsformalUATprofile and applicability; ownJSON/slowbody/slot3PASS; independently readnative8/shared140PASS0skip. Originalproposal genuineJSON408/R1proof retained. Patchdf3fbbfe not applied; humanchoice pending.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T040-ACTIVATION-ACTUAL",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_readiness_review",
+      "reviewed_baseline": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "source_ref": "Actual FINAL APPROVE at6f6c271 exacttwofix+sevenTask040fileSHA; private task040-activation-actual-reviewer-proof.json. Ownno-overlaywatchdog3PASS/lint; independently actualnative8/shared140PASS0skip, appliedD/Pandhistoryverified. NoPhaseCI/formal/merge disposition.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T041-PROVIDERS-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "Actual scoped review provenance /private/tmp/sales-p3-private/task041-provider-r1-reviewer-proof.json; original review binds exact files/HEAD noted in proof, mechanical spec binding only. R1 sparse configuration bug reproduced and corrected R2; no wholeTASK041/Phase/formal/CI claim.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T041-CATALOGUE-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "Actual scoped review provenance /private/tmp/sales-p3-private/task041-catalogue-r1-reviewer-proof.json; original review binds exact files/HEAD noted in proof, mechanical spec binding only. R1 sparse configuration bug reproduced and corrected R2; no wholeTASK041/Phase/formal/CI claim.",
+      "status": "CHANGES_REQUESTED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T041-CATALOGUE-R2",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "Actual scoped review provenance /private/tmp/sales-p3-private/task041-catalogue-r2-reviewer-proof.json; original review binds exact files/HEAD noted in proof, mechanical spec binding only. R1 sparse configuration bug reproduced and corrected R2; no wholeTASK041/Phase/formal/CI claim.",
       "status": "APPROVED",
       "open_critical": 0,
       "open_high": 0,
@@ -5749,6 +5963,28 @@
       "source_ref": "Scopedfunctionalcore independentR2APPROVE; unit6PASS/lint and pathboundaryPASS. Native race actualRED thenGREEN. Exact private proposed shared overlay current task040-native-candidate-r2.xml8PASS0skip andtask040-shared-candidate-r2.xml140PASS0skip; candidate-only, not currentdefault activation/wholeTask/P3. Currentlive defaultstartup/HTTP failures preserved; TASK040 remainsIN_PROGRESS. Report71.",
       "actor": "Codex /root",
       "observed_at": "2026-10-07T10:10:55.668324+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK040 actual source activation DoD",
+      "code_commit": "6f6c2715632dcc2f195f7e55099eb3ca28347ebc",
+      "spec_baseline": "c29fa71caed564d3fc0dc4b4d609a0b3e9a73a0af34b47bd29875f45fcea4b50",
+      "source_fingerprint": "ed1c54ee26e4bef954e846d2799d5a6a36970151b77b2f2d587f0aea11bfe5e2",
+      "status": "PASS",
+      "source_ref": "Actual no-overlay task040-native-actual.xml8PASS0fail0skip/shared-actual140PASS0fail0skip; coreR2+actualactivationindependentAPPROVE exactSHA. Shared lintPASS, deterministicmatrixwritten. New provider work currentfingerprintdoesnotchangeTask040exactbytes; no wholePhase/formalCIclaim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-08T01:17:05.309896+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK041 completed provider and controlled catalogue slices; worker in progress",
+      "code_commit": "bad2d1d50b64522d686cacd6e9cda605fda473b2",
+      "spec_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_fingerprint": "efd89ff0adc06b7458bc64748c31880c64b9224499cfd37c26940e4c2976ae86",
+      "status": "PASS",
+      "source_ref": "Exact provider commit4afa5ec real55unit/1native/lint +separateAPPROVE; catalogueef4ee5a/bad2d1d actual7unit0skip/lint +separateR2APPROVE. task041-catalogue-sparse-red.xml retained. Classifier/worker dirty newer bytes not claimed by this slice observation.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-08T01:40:55.103698+00:00"
     }
   ],
   "pending_decisions": [
@@ -6091,8 +6327,8 @@
         "TASK-041",
         "DES-010"
       ],
-      "status": "OPEN",
-      "answer_ref": null
+      "status": "ANSWERED",
+      "answer_ref": "Actual Codex chat Sam「請繼續」responds to next-step explanation identifying DEC026 two shared files and pending scope approval, following concrete reviewed Decision Required packet71. Coordinator explicitly states interpretation as adoption; applies exactpatchdf3fbbfe/D728edbc6/Pc29fa71c. All previous approvals and R1 failures retained; no cap/timeout/authorization/CI/formal/UAT exception; prior commitPRmainmerge and ownedsynthetic runtime authority persists."
     }
   ],
   "external_actions": [
@@ -7146,5 +7382,5 @@
     "implementation/71_phase3_upload_activation_decision.md"
   ],
   "defects": [],
-  "next_safe_action": "Await human adoption of independently reviewed exactDEC026 patchdf3fbbfe/D728edbc6/Pc29fa71c; sharedtwofiles remainunapplied. On adoption applyexactpatch, preserveoldapprovals and addnewbaselinebindings, rerun actualunmodifiedsource native8/shared140+lint/boundary beforeDONE040 and continueTASK041. ExistingcommitPRmainmergeauthority remainsvalid."
+  "next_safe_action": "Complete TASK041 classifier separate R2 and real registered worker lease/abort/crash/zero-effect checks; then TASK042–049, all33 developer suites/exactcandidate5CI/separatefullPhase review/freshmain/authorizedPRmerge. Preserve all failures and actual runtime; no formal acceptance or production effects."
 }

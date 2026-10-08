@@ -326,7 +326,7 @@
         "id": "item-lookup-service",
         "version": "observed-main-dd36250-PARTIAL-SALES-CONTRACT-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "server/src/modules/item/ItemLookupService.js",
-        "sha256": "30d6807978b27252fde194cc821c8fef5de000f27fa7eed404ed204abab2764a",
+        "sha256": "d4641ec09b5f6d5194f17fb54b8cc10c338ea9c202c6f9793f01eb6e64674b31",
         "regression_suites": [
           "sales-technical"
         ]
