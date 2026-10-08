@@ -1231,7 +1231,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-PHASE3-UATNA-DEC025"
+        "approval_id": "APR-PHASE3-UATNA-DEC026"
       }
     },
     {
@@ -1239,7 +1239,7 @@
       "uat": {
         "status": "NOT_APPLICABLE",
         "reason": "Objective disaster-recovery exercise measured by timed restore and reconciliation evidence, not by a business-user observable UAT case (08 matrix row NFR-014/015).",
-        "approval_id": "APR-PHASE3-UATNA-DEC025"
+        "approval_id": "APR-PHASE3-UATNA-DEC026"
       }
     },
     {

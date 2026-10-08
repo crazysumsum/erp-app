@@ -41,7 +41,9 @@
       "server/src/services/salesJobs/jobs/SalesImportJob.js",
       "server/src/services/salesJobs/jobs/SalesFileRetentionJob.js",
       "server/src/handlers/sales-import-templates/**",
-      "server/src/modules/customer/CustomerLookupService.js"
+      "server/src/modules/customer/CustomerLookupService.js",
+      "server/config/api.js",
+      "server/src/framework/middleware/bodyReceiveTimeout.js"
     ],
     "test_paths": [
       "server/test/sales/**",
@@ -165,7 +167,9 @@
       "server/test/configNormalizers.test.js",
       "server/test/configuration.test.js",
       "docs/customer_management/03_design_spec.md",
-      "docs/items_management/03_design_spec.md"
+      "docs/items_management/03_design_spec.md",
+      "server/config/api.js",
+      "server/src/framework/middleware/bodyReceiveTimeout.js"
     ],
     "approval_required_paths": [
       "server/database/migrations/**",
@@ -288,7 +292,7 @@
         "id": "sales-fulfillment-projection-and-lifecycle-contract",
         "version": "planning-only-NOT_IMPLEMENTED; TASK009-010 source pins reconciled, Sales additions CI pending",
         "source": "docs/sales_order_management/03_design_spec.md",
-        "sha256": "6b3ac5bc3e743dd5f911f913f0eab30213c2a9eb271ba391d3d82c50a823b205",
+        "sha256": "5f82a24962a4f8e853acba56a83dedb7ceec94513497895f29966024100cbfdc",
         "consumers": [
           "fulfillment-shipping-management",
           "inventory-management",
