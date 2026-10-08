@@ -1,18 +1,18 @@
 {
   "schema_version": "2.0",
   "module_id": "sales-order-management",
-  "revision": 249,
+  "revision": 250,
   "mode": "IMPLEMENT",
   "active_mode": "IMPLEMENT",
   "status": "IMPLEMENTING",
   "resume_status": null,
   "current_phase": "PHASE-004",
-  "current_task": "TASK-042",
+  "current_task": "TASK-043",
   "baseline": {
     "design": "20b065e88164b06e91c89116f211e2e44d143e2948d18c0578281e3338925a33",
     "plan": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
-    "code_commit": "b44fb0ebd4dff64a486c8153aefae5a4b6af3a16",
-    "source_fingerprint": "7b9529839e21edcb5e386591f8f20e7afeaa47b635a6d2fe313d862d0af2474d",
+    "code_commit": "f49af1a83b8e547ef97b2583670ba061498c485c",
+    "source_fingerprint": "55081ca86002c5da4fd1a0d71d953979dab9a6de1edf7aa9e4af494a0290ee37",
     "worktree": "/private/tmp/erp-sales-p3",
     "default_commit": "2afef5cdb271dbfa3ccefd913f7042c52c7be92b",
     "mode_entry_commit": "6936736ba1fb98f4fcb8365377f59f0a0f7a4897"
@@ -69,8 +69,8 @@
     "TASK-039": "DONE",
     "TASK-040": "DONE",
     "TASK-041": "DONE",
-    "TASK-042": "IN_PROGRESS",
-    "TASK-043": "PENDING",
+    "TASK-042": "DONE",
+    "TASK-043": "IN_PROGRESS",
     "TASK-044": "PENDING",
     "TASK-045": "PENDING",
     "TASK-046": "PENDING",
@@ -4432,6 +4432,18 @@
       "open_critical": 0,
       "open_high": 0,
       "risk_approval_id": null
+    },
+    {
+      "id": "REV-P3-T042-READ-R1",
+      "method": "SEPARATE_AGENT",
+      "author": "Codex /root",
+      "reviewer": "Codex /root/sales_p1_review",
+      "reviewed_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_ref": "Actual exact6file separate APPROVE /private/tmp/sales-p3-private/task042-r1-reviewer-proof.json; own4unit/lint/adversarialSQLUnicode probes, author1nativeHTTP observed. Committed0986c5d/f49af1a unchanged source hashes. No wholePhase gate.",
+      "status": "APPROVED",
+      "open_critical": 0,
+      "open_high": 0,
+      "risk_approval_id": null
     }
   ],
   "observations": [
@@ -6216,6 +6228,17 @@
       "source_ref": "task041-precheck-unit-final.xml32leafPASS; affected-regression-final.xml214leafPASS0fail0skip; full-lint.logexit0; worker-capacity.xml10leafPASS/Node11inclparent0skip, registered50MiB100krow/1000orders20913ms and10000orders18492ms; classifierR3/workerR2 exact sourceAPPROVE. report72. No PhaseCI/formal/production guarantee.",
       "actor": "Codex /root",
       "observed_at": "2026-10-08T01:59:22.268409+00:00"
+    },
+    {
+      "kind": "MANUAL_TEST",
+      "subject": "TASK042 Import read APIs developer DoD",
+      "code_commit": "f49af1a83b8e547ef97b2583670ba061498c485c",
+      "spec_baseline": "c11e2acd3288a4b2a807e894cbf09edc9900daa34042b643d3994617e6a0605d",
+      "source_fingerprint": "55081ca86002c5da4fd1a0d71d953979dab9a6de1edf7aa9e4af494a0290ee37",
+      "status": "PASS",
+      "source_ref": "Actual Sales regression161+owner/registry57 unit cases and nativeHTTP1 case zero failure/skip; full lint exit0; separateR1APPROVE exactbytes. Private task042 XML/lint/reviewer proof retained. No PhaseCI/formal claim.",
+      "actor": "Codex /root",
+      "observed_at": "2026-10-08T02:13:03.803844+00:00"
     }
   ],
   "pending_decisions": [
@@ -7613,5 +7636,5 @@
     "implementation/71_phase3_upload_activation_decision.md"
   ],
   "defects": [],
-  "next_safe_action": "Implement TASK042 bounded owner-safe Import Job/Intake/error APIs with actual tests, then TASK043–049 and full33 developer suites/currentcandidate5CI/separatephase review/freshmain/authorizedPRmerge. TASK041 developerDONE; no formal acceptance or production effects."
+  "next_safe_action": "Implement TASK043 confirm/cancel/result APIs with native replay/race/fresh authorization/CSV security tests, then TASK044–049 and whole33/5CI/review/freshmain/authorizedPRmerge; no formal acceptance."
 }
