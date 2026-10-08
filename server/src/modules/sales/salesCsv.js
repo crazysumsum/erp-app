@@ -69,7 +69,7 @@ function appendErrors(group,errors,rowNo) {
 const safePayload=group=>({...group.payload,lines:group.payload.lines.map(({formulaPrefixed: _formulaPrefixed,...line})=>line)});
 
 // A group file holds at most100 rows/128KiB; there is no file-wide in-memory order map.
-export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder}={}) {
+export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder,onFileValidated}={}) {
   if(!path.isAbsolute(spoolRoot)||typeof onOrder!=="function")throw new TypeError("Sales CSV requires a managed spool root and bounded order consumer");
   abortSignal?.throwIfAborted();const directory=await mkdtemp(path.join(spoolRoot,"sales-csv-"));
   let rowCount=0,orderCount=0;
@@ -122,6 +122,7 @@ export async function parseSalesCsv(source,{spoolRoot,abortSignal,onOrder}={}) {
       if(error instanceof CsvError)throw salesError("SALES_IMPORT_FILE_INVALID",{field:"file"});
       throw error;
     }
+    await onFileValidated?.({rowCount,orderCount});
     for await(const entry of await opendir(directory)) {
       abortSignal?.throwIfAborted();const group=JSON.parse(await readFile(path.join(directory,entry.name),"utf8"));
       delete group.header;delete group.limited;

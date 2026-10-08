@@ -127,3 +127,9 @@ test("TC-034 live abort settles and cleans while the source iterator is stalled"
     assert.deepEqual(await readdir(spoolRoot),[]);
   } finally {timer.abort();gate.resolve();await operation.catch(()=>{});}
 });
+test("TC-035 precheck structural counts precede order persistence only after the complete file validates",async t=>{
+ const spoolRoot=await fixture(t),events=[];
+ await parseSalesCsv(csv([row,{...row,sourceOrderKey:"Other"}]),{spoolRoot,onFileValidated:counts=>events.push(counts),onOrder:()=>events.push("order")});
+ assert.deepEqual(events,[{rowCount:2,orderCount:2},"order","order"]);
+ events.length=0;await assert.rejects(()=>parseSalesCsv(Buffer.concat([csv([row]),Buffer.from(names.join(",")+"\n")]),{spoolRoot,onFileValidated:counts=>events.push(counts),onOrder:()=>events.push("order")}),{code:"SALES_IMPORT_FILE_INVALID"});assert.deepEqual(events,[]);assert.deepEqual(await readdir(spoolRoot),[]);
+});
